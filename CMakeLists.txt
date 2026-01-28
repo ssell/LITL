@@ -39,6 +39,7 @@ set(LITL_SHARED_SOURCE PRIVATE
 	"${LITL_SHARED_SOURCE_DIR}/renderer/queueFamily.cpp"
 	"${LITL_SHARED_SOURCE_DIR}/renderer/swapChainSupport.cpp"
 	"${LITL_SHARED_SOURCE_DIR}/renderer/commandBuffer.cpp"
+	"${LITL_SHARED_SOURCE_DIR}/renderer/mesh.cpp"
 	"${LITL_SHARED_SOURCE_DIR}/renderer/shader/shader.cpp"
 	"${LITL_SHARED_SOURCE_DIR}/renderer/shader/vertexShader.cpp"
 	"${LITL_SHARED_SOURCE_DIR}/renderer/shader/preTessellationShader.cpp"

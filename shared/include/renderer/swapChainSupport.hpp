@@ -4,7 +4,7 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 
-namespace LITL
+namespace LITL::Renderer
 {
     struct SwapChainSupport
     {

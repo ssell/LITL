@@ -4,7 +4,7 @@
 #include "renderer/common.inl"
 #include "renderer/shader/shader.hpp"
 
-namespace LITL
+namespace LITL::Renderer
 {
     Shader::Shader(RenderContext const* const pContext, ShaderStage shaderStage)
         : m_pContext(new ShaderContext{}), m_ShaderStage(shaderStage)

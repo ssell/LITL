@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-namespace LITL
+namespace LITL::Renderer
 {
     struct RenderContext;
     struct ShaderContext;

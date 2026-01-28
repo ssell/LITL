@@ -5,7 +5,7 @@
 #include "math/mathCommon.hpp"
 #include "renderer/swapChainSupport.hpp"
 
-namespace LITL
+namespace LITL::Renderer
 {
     SwapChainSupport SwapChainSupport::querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface)
     {
@@ -77,8 +77,8 @@ namespace LITL
         {
             VkExtent2D actualExtent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
 
-            actualExtent.width = clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
-            actualExtent.height = clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+            actualExtent.width = Math::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+            actualExtent.height = Math::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
 
             return actualExtent;
         }

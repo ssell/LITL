@@ -3,7 +3,7 @@
 
 #include "renderer/shader/shader.hpp"
 
-namespace LITL
+namespace LITL::Renderer
 {
     class ComputeShader : public Shader
     {

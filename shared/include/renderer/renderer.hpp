@@ -5,7 +5,7 @@
 #include "renderer/shader/shaderProgram.hpp"
 #include "renderer/commandBuffer.hpp"
 
-namespace LITL
+namespace LITL::Renderer
 {
     class Renderer
     {

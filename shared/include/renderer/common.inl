@@ -6,7 +6,7 @@
 
 #include "renderer/common.hpp"
 
-namespace LITL
+namespace LITL::Renderer
 {
     static const uint32_t FRAMES_IN_FLIGHT = 2;
 

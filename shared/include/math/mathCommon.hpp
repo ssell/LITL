@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-namespace LITL
+namespace LITL::Math
 {
     template<typename T>
     constexpr static T clamp(T value, T min, T max) noexcept
