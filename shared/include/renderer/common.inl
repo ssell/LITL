@@ -4,7 +4,6 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 
-#include <glfw/glfw3.h>
 #include "renderer/common.hpp"
 
 namespace LITL
@@ -24,9 +23,9 @@ namespace LITL
         bool wasResized = false;
 
         /// <summary>
-        /// Our window.
+        /// Our window. Typically a GLFWwindow.
         /// </summary>
-        GLFWwindow* window = nullptr;
+        void* window = nullptr;
 
         /// <summary>
         /// Connection to the Vulkan library.

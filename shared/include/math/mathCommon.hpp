@@ -22,8 +22,6 @@ namespace LITL
     {
         return (a >= b ? a : b);
     }
-
-
 }
 
 #endif

@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.8)
-project (LITL VERSION 1.0.0 LANGUAGES CXX)
+project (LITL VERSION 1.0.0 LANGUAGES C CXX)
 
 include(FetchContent)
 
@@ -14,6 +14,14 @@ if (VULKAN_FOUND)
 elseif (VULKAN_FOUND)
 	message(FATAL_ERROR "Vulkan SDK not found!")
 endif (VULKAN_FOUND)
+
+# -- GLFW --
+
+FetchContent_Declare(glfw GIT_REPOSITORY https://github.com/glfw/glfw.git GIT_TAG 3.4)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_DOCS     OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(glfw)
 
 # -- GLM --
 
@@ -42,13 +50,6 @@ set(LITL_SHARED_SOURCE PRIVATE
 )
 
 include_directories("${CMAKE_SOURCE_DIR}/shared/include")
-
-# -- GLFW --
-
-add_library(GLFW STATIC IMPORTED)
-set_target_properties(GLFW PROPERTIES
-	INTERFACE_INCLUDE_DIRECTORIES "${LITL_DEPS}/include/"
-	IMPORTED_LOCATION "${LITL_DEPS}/lib/Debug/x64/glfw3.lib")
 
 # -- Child Directories --
 

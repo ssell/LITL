@@ -100,7 +100,7 @@ namespace LITL
     bool Renderer::shouldRun() const
     {
         glfwPollEvents();
-        return !glfwWindowShouldClose(m_pContext->window);
+        return !glfwWindowShouldClose(static_cast<GLFWwindow*>(m_pContext->window));
     }
 
     // -------------------------------------------------------------------------------------
@@ -175,7 +175,7 @@ namespace LITL
 
         if (m_pContext->window != nullptr)
         {
-            closeGlfwWindow(m_pContext->window);
+            closeGlfwWindow(static_cast<GLFWwindow*>(m_pContext->window));
         }
 
         delete m_pContext;
@@ -299,7 +299,7 @@ namespace LITL
     /// <returns></returns>
     bool Renderer::createWindowSurface() const
     {
-        VkResult result = glfwCreateWindowSurface(m_pContext->vkInstance, m_pContext->window, nullptr, &m_pContext->surface);
+        VkResult result = glfwCreateWindowSurface(m_pContext->vkInstance, static_cast<GLFWwindow*>(m_pContext->window), nullptr, &m_pContext->surface);
 
         if (result != VK_SUCCESS)
         {
@@ -531,7 +531,7 @@ namespace LITL
         int32_t frameBufferWidth = 0;
         int32_t frameBufferHeight = 0;
 
-        glfwGetFramebufferSize(m_pContext->window, &frameBufferWidth, &frameBufferHeight);
+        glfwGetFramebufferSize(static_cast<GLFWwindow*>(m_pContext->window), &frameBufferWidth, &frameBufferHeight);
 
         auto swapChainSupport = SwapChainSupport::querySwapChainSupport(m_pContext->physicalDevice, m_pContext->surface);
         auto surfaceFormat = swapChainSupport.chooseSwapSurfaceFormat();
