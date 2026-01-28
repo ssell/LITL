@@ -10,9 +10,12 @@
 #include "renderer/renderer.hpp"
 #include "renderer/queueFamily.hpp"
 #include "renderer/swapChainSupport.hpp"
+#include "renderer/shader/shaderProgram.hpp"
 #include "renderer/shader/vertexShader.hpp"
 #include "renderer/shader/geometryShader.hpp"
 #include "renderer/shader/fragmentShader.hpp"
+#include "renderer/commandBuffer.hpp"
+#include "renderer/mesh.hpp"
 
 namespace LITL::Renderer
 {
@@ -463,31 +466,31 @@ namespace LITL::Renderer
 
 
         // query for Vulkan advanced feature set
-        auto vulkanDyanmicStateFeatures = VkPhysicalDeviceExtendedDynamicStateFeaturesEXT{
+        auto vulkanDyanmicStateFeatures = VkPhysicalDeviceExtendedDynamicStateFeaturesEXT {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT,
             .pNext = nullptr,
             .extendedDynamicState = true
         };
 
-        auto vulkan13Features = VkPhysicalDeviceVulkan13Features{
+        auto vulkan13Features = VkPhysicalDeviceVulkan13Features {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
             .pNext = &vulkanDyanmicStateFeatures,
             .synchronization2 = true,
             .dynamicRendering = true
         };
 
-        auto vulkan12Features = VkPhysicalDeviceVulkan12Features{
+        auto vulkan12Features = VkPhysicalDeviceVulkan12Features {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
             .pNext = &vulkan13Features
         };
 
-        auto vulkan11Features = VkPhysicalDeviceVulkan11Features{
+        auto vulkan11Features = VkPhysicalDeviceVulkan11Features {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES,
             .pNext = &vulkan12Features,
             .shaderDrawParameters = true
         };
 
-        auto physicalDeviceFeatures = VkPhysicalDeviceFeatures2{
+        auto physicalDeviceFeatures = VkPhysicalDeviceFeatures2 {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
             .pNext = &vulkan11Features,
             .features = VkPhysicalDeviceFeatures {
@@ -652,7 +655,7 @@ namespace LITL::Renderer
             .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
         };
 
-        const auto renderSemaphoreInfo = VkSemaphoreCreateInfo{
+        const auto renderSemaphoreInfo = VkSemaphoreCreateInfo {
             .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
         };
 
@@ -736,6 +739,12 @@ namespace LITL::Renderer
         commandBuffer->build();
 
         return commandBuffer;
+    }
+
+    Mesh* Renderer::createMesh() const noexcept
+    {
+        auto mesh = new Mesh(m_pContext);
+        return mesh;
     }
 
     // -------------------------------------------------------------------------------------

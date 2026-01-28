@@ -1,4 +1,7 @@
 #include "triangleProgram.hpp"
+#include "renderer/shader/shaderProgram.hpp"
+#include "renderer/commandBuffer.hpp"
+#include "renderer/mesh.hpp"
 
 namespace LITL
 {
@@ -35,6 +38,7 @@ namespace LITL
         }
 
         m_pCommandBuffer = m_renderer.createCommandBuffer();
+        m_pMesh = m_renderer.createMesh();
 
         return true;
     }
@@ -51,6 +55,12 @@ namespace LITL
         {
             delete m_pCommandBuffer;
             m_pCommandBuffer = nullptr;
+        }
+
+        if (m_pMesh != nullptr)
+        {
+            delete m_pMesh;
+            m_pMesh = nullptr;
         }
     }
 

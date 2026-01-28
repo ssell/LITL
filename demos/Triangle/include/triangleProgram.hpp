@@ -29,6 +29,7 @@ namespace LITL
 
         Renderer::ShaderProgram* m_pShaderProgram;
         Renderer::CommandBuffer* m_pCommandBuffer;
+        Renderer::Mesh* m_pMesh;
     };
 }
 

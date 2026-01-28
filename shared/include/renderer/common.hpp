@@ -8,6 +8,13 @@ namespace LITL::Renderer
     struct RenderContext;
     struct ShaderContext;
     struct CommandBufferContext;
+    struct MeshContext;
+
+    class Shader;
+    class ShaderProgram;
+    enum class ShaderStage;
+    class CommandBuffer;
+    class Mesh;
 }
 
 #endif
