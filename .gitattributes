@@ -1,0 +1,4 @@
+*.litlbmsh filter=lfs diff=lfs merge=lfs -text
+*.litlbmat filter=lfs diff=lfs merge=lfs -text
+*.litlbshd filter=lfs diff=lfs merge=lfs -text
+*.litlbtex filter=lfs diff=lfs merge=lfs -text
