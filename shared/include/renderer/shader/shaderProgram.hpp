@@ -8,7 +8,7 @@
 #include "renderer/shader/fragmentShader.hpp"
 #include "renderer/shader/computeShader.hpp"
 
-namespace LITL
+namespace LITL::Renderer
 {
     class ShaderProgram
     {

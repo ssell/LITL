@@ -14,7 +14,7 @@
 #include "renderer/shader/geometryShader.hpp"
 #include "renderer/shader/fragmentShader.hpp"
 
-namespace LITL
+namespace LITL::Renderer
 {
     // -------------------------------------------------------------------------------------
     // Required Features
@@ -541,7 +541,7 @@ namespace LITL
 
         if (swapChainSupport.capabilities.maxImageCount > 0)        // == 0 means no limit
         {
-            imageCount = minimum(imageCount, swapChainSupport.capabilities.maxImageCount);
+            imageCount = Math::minimum(imageCount, swapChainSupport.capabilities.maxImageCount);
         }
 
         VkSwapchainCreateInfoKHR createSwapChainInfo{};

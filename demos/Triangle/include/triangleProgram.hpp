@@ -27,8 +27,8 @@ namespace LITL
 
         void draw();
 
-        ShaderProgram* m_pShaderProgram;
-        CommandBuffer* m_pCommandBuffer;
+        Renderer::ShaderProgram* m_pShaderProgram;
+        Renderer::CommandBuffer* m_pCommandBuffer;
     };
 }
 

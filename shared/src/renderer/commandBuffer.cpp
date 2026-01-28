@@ -1,7 +1,7 @@
 #include "renderer/common.inl"
 #include "renderer/commandBuffer.hpp"
 
-namespace LITL
+namespace LITL::Renderer
 {
     // https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/03_Drawing/01_Command_buffers.html
 

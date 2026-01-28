@@ -1,6 +1,6 @@
 #include "renderer/queueFamily.hpp"
 
-namespace LITL
+namespace LITL::Renderer
 {
     void QueueFamilyIndices::setGraphicsIndex(uint32_t index) noexcept
     {

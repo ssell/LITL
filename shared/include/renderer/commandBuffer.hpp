@@ -3,7 +3,7 @@
 
 #include "renderer/common.hpp"
 
-namespace LITL
+namespace LITL::Renderer
 {
     class CommandBuffer
     {

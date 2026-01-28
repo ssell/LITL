@@ -25,7 +25,7 @@ namespace LITL
 
     protected:
 
-        Renderer m_renderer;
+        Renderer::Renderer m_renderer;
         ProgramState m_state;
 
     private:

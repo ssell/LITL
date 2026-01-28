@@ -1,7 +1,7 @@
 #include "renderer/shader/shaderProgram.hpp"
 #include "renderer/common.inl"
 
-namespace LITL
+namespace LITL::Renderer
 {
     ShaderProgram::ShaderProgram(RenderContext const* const context)
         : m_vertexShader({ context }), 
