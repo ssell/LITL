@@ -1,4 +1,6 @@
-# Learning Vulkan
+# LITL Engine
+
+Brushing the C++ dust off with a new little engine.
 
 ## Requirements
 
