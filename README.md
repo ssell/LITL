@@ -8,7 +8,16 @@ Brushing the C++ dust off with a new little engine.
 
 ## Engine Compilation
 
-    cmake .
+Build from within Visual Studio 2022, or via command line.
+
+From the command line:
+
+```
+    mkdir out/build/x64-Debug
+    cmake -S . -B out/build/x64-Debug -G "Visual Studio 17 2022"
+    cd out/build/x64-Debug
+    cmake --build . --config Debug
+```
 
 ## Shader Compilation
 
