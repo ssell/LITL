@@ -2,8 +2,6 @@
 #define LITL_RENDERER_H__
 
 #include "renderer/common.hpp"
-#include "renderer/shader/shaderProgram.hpp"
-#include "renderer/commandBuffer.hpp"
 
 namespace LITL::Renderer
 {
@@ -22,6 +20,7 @@ namespace LITL::Renderer
         Shader* createShader(ShaderStage shaderStage) const noexcept;
         ShaderProgram* createShaderProgram() const noexcept;
         CommandBuffer* createCommandBuffer() const noexcept;
+        Mesh* createMesh() const noexcept;
 
         void render(CommandBuffer const* pCommandBuffers, uint32_t numCommandBuffers) const;
 

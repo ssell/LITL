@@ -6,10 +6,10 @@
 
 namespace LITL::Renderer
 {
-    Shader::Shader(RenderContext const* const pContext, ShaderStage shaderStage)
+    Shader::Shader(RenderContext const* const pRenderContext, ShaderStage shaderStage)
         : m_pContext(new ShaderContext{}), m_ShaderStage(shaderStage)
     {
-        m_pContext->device = pContext->device;
+        m_pContext->device = pRenderContext->device;
     }
 
     Shader::~Shader()

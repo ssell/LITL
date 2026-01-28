@@ -158,6 +158,13 @@ namespace LITL::Renderer
             return commandBuffers[pRenderContext->getFrameIndex()];
         }
     };
+
+    struct MeshContext
+    {
+        VkDevice device = VK_NULL_HANDLE;
+        uint32_t vertexCount = 0;
+        VkBuffer vertexBuffer = VK_NULL_HANDLE;
+    };
 }
 
 #endif

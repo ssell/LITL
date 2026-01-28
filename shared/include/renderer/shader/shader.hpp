@@ -19,7 +19,7 @@ namespace LITL::Renderer
     {
     public:
 
-        Shader(RenderContext const* const pContext, ShaderStage shaderStage);
+        Shader(RenderContext const* const pRenderContext, ShaderStage shaderStage);
         ~Shader();
 
         Shader(Shader const& other) = delete;
