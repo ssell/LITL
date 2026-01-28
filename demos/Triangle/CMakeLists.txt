@@ -12,7 +12,7 @@ target_include_directories(triangle PUBLIC
 	${Vulkan_INCLUDE_DIRS} 
 	"${PROJECT_SOURCE_DIR}/include")
 
-target_link_libraries(triangle PRIVATE GLFW ${Vulkan_LIBRARIES})
+target_link_libraries(triangle PRIVATE GLFW glm::glm ${Vulkan_LIBRARIES})
 target_compile_definitions(triangle PRIVATE $<$<CONFIG:Debug>:DEBUG>)
 
 add_custom_command(TARGET triangle POST_BUILD
