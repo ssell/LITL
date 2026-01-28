@@ -4,7 +4,11 @@ Brushing the C++ dust off with a new little engine.
 
 ## Requirements
 
-* Install the [Vulkan SDK](https://vulkan.lunarg.com/) with GLM and Slang
+* Install the [Vulkan SDK](https://vulkan.lunarg.com/) with Slang
+
+## Engine Compilation
+
+    cmake .
 
 ## Shader Compilation
 
