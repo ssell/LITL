@@ -4,7 +4,8 @@ Brushing the C++ dust off with a new little engine.
 
 ## Requirements
 
-* Install the [Vulkan SDK](https://vulkan.lunarg.com/) with Slang
+* [Vulkan SDK](https://vulkan.lunarg.com/) with Slang
+* [clang-cl](https://github.com/llvm/llvm-project/releases/tag/llvmorg-21.1.8) (select _Add LLVM to PATH_)
 
 ## Engine Compilation
 
