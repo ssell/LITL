@@ -5,16 +5,22 @@
 
 namespace LITL::Renderer
 {
+    // Contexts
     struct RenderContext;
     struct ShaderContext;
     struct CommandBufferContext;
     struct MeshContext;
 
+    // Classes
     class Shader;
     class ShaderProgram;
     enum class ShaderStage;
     class CommandBuffer;
     class Mesh;
+
+    // Descriptors and Results
+    struct GetMemoryTypeDescriptor;
+    struct GetMemoryTypeResult;
 }
 
 #endif

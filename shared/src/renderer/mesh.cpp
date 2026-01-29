@@ -8,6 +8,7 @@ namespace LITL::Renderer
         : m_pContext(new MeshContext{})
     {
         m_pContext->device = pRenderContext->device;
+        m_pContext->physicalDevice = pRenderContext->physicalDevice;
     }
 
     Mesh::~Mesh()
@@ -29,9 +30,18 @@ namespace LITL::Renderer
             .sharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE
         };
 
-        const auto result = vkCreateBuffer(m_pContext->device, &bufferInfo, nullptr, &m_pContext->vertexBuffer);
+        const auto createBufferResult = vkCreateBuffer(m_pContext->device, &bufferInfo, nullptr, &m_pContext->vertexBuffer);
 
-        return (result == VK_SUCCESS);
+        if (createBufferResult != VK_SUCCESS)
+        {
+            // todo log error
+            return false;
+        }
+
+        auto memoryRequirements = VkMemoryRequirements{};
+        vkGetBufferMemoryRequirements(m_pContext->device, m_pContext->vertexBuffer, &memoryRequirements);
+
+        return true;
     }
 
     // -------------------------------------------------------------------------------------
