@@ -16,9 +16,11 @@ namespace LITL::Vulkan
     struct Window::Impl
     {
         void* pWindow;
-        LITL::Core::WindowState state;
+        Core::WindowState state;
         uint32_t width;
         uint32_t height;
+
+        GLFWwindow* getGLFWwindow() { return static_cast<GLFWwindow*>(pWindow); }
     };
 
     // -------------------------------------------------------------------------------------
@@ -32,13 +34,35 @@ namespace LITL::Vulkan
 
     Window::~Window()
     {
-
+        if (m_impl->getGLFWwindow() != nullptr)
+        {
+            glfwDestroyWindow(m_impl->getGLFWwindow());
+            glfwTerminate();
+        }
     }
 
     bool Window::open(char const* title, uint32_t width, uint32_t height)
     {
         m_impl->width = width;
         m_impl->height = height;
+
+        glfwInit();
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
+        m_impl->pWindow = glfwCreateWindow(width, height, title, nullptr, nullptr);
+
+        if (!m_impl->pWindow)
+        {
+            glfwTerminate();
+            return false;
+        }
+
+        glfwSetWindowUserPointer(m_impl->getGLFWwindow(), this);
+        glfwSetFramebufferSizeCallback(m_impl->getGLFWwindow(), [](GLFWwindow* pWindow, int width, int height)
+            {
+                auto litlWindow = static_cast<Window*>(glfwGetWindowUserPointer(pWindow));
+                litlWindow->onResize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+            });
 
         return true;
     }
@@ -48,18 +72,25 @@ namespace LITL::Vulkan
         return true;
     }
 
+    void Window::onResize(uint32_t width, uint32_t height)
+    {
+        m_impl->state = (width == 0 && height == 0) ? Core::WindowState::Minimized : Core::WindowState::Open;
+        m_impl->width = width;
+        m_impl->height = height;
+    }
+
     LITL::Core::WindowState Window::getState() const
     {
-        return LITL::Core::WindowState::Open;
+        return m_impl->state;
     }
 
     uint32_t Window::getWidth() const
     {
-        return 0;
+        return m_impl->width;
     }
 
     uint32_t Window::getHeight() const
     {
-        return 0;
+        return m_impl->height;
     }
 }
