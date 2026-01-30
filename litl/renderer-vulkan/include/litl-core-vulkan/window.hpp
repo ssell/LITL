@@ -2,9 +2,7 @@
 #define LITL_VULKAN_WINDOW_H__
 
 #include "litl-core/window.hpp"
-
-#include <cstddef>
-#include <type_traits>
+#include "litl-core/impl.hpp"
 
 namespace LITL::Vulkan
 {
@@ -31,13 +29,8 @@ namespace LITL::Vulkan
 
     private:
 
-        static constexpr std::size_t ImplSize = 32;
-        static constexpr std::size_t ImplAlignment = alignof(std::max_align_t);
-        alignas(ImplAlignment) std::byte m_storage[ImplSize];
-
         struct Impl;
-        Impl* impl() noexcept;
-        Impl const* cimpl() const noexcept;
+        LITL::Core::ImplPtr<Impl, 32> m_impl;
     };
 }
 
