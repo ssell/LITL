@@ -47,7 +47,7 @@ namespace LITL::Core
 
         T const* operator->() const
         {
-            return *get();
+            return get();
         }
 
         T& operator*()

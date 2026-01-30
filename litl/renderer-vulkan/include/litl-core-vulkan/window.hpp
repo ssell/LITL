@@ -27,6 +27,8 @@ namespace LITL::Vulkan
 
     protected:
 
+        void onResize(uint32_t width, uint32_t height) override;
+
     private:
 
         struct Impl;

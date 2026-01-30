@@ -24,6 +24,8 @@ namespace LITL::Core
 
     protected:
 
+        virtual void onResize(uint32_t width, uint32_t height) = 0;
+
     private:
     };
 }
