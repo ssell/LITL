@@ -1,6 +1,5 @@
-#include "litl-engine/engine.hpp"
-
 #include <new>
+#include "litl-engine/engine.hpp"
 
 namespace LITL::Engine
 {
@@ -10,17 +9,17 @@ namespace LITL::Engine
 
     struct Engine::Impl
     {
-        //LITL::Renderer::Renderer* pRenderer;
+        uint8_t unused;
     };
 
     Engine::Impl* Engine::impl() noexcept
     {
-        return std::launder(reinterpret_cast<Impl*>(m_storage));
+        return std::launder(reinterpret_cast<Engine::Impl*>(&m_storage));
     }
 
     Engine::Impl const* Engine::cimpl() const noexcept
     {
-        return std::launder(reinterpret_cast<Impl const*>(m_storage));
+        return std::launder(reinterpret_cast<Engine::Impl const*>(&m_storage));
     }
 
     // -------------------------------------------------------------------------------------
@@ -29,12 +28,10 @@ namespace LITL::Engine
 
     Engine::Engine()
     {
-        static_assert(sizeof(Impl) <= ImplSize, "Engine::Impl too large for Engine::m_storage");
-        static_assert(alignof(Impl) <= ImplAlign, "Engine::Impl alignment too large.");
+        static_assert(sizeof(Engine::Impl) <= ImplSize, "Dedicated storage for Engine IMPL is too small");
+        static_assert(alignof(Engine::Impl) <= ImplAlignment, "Alignment for Engine IMPL is too small");
 
-        new (&m_storage) Impl{};
-
-        //impl()->pRenderer = new LITL::Vulkan::Renderer::Renderer();
+        new (&m_storage) Engine::Impl{};
     }
 
     Engine::~Engine()

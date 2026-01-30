@@ -14,19 +14,19 @@ namespace LITL::Engine
         ~Engine();
 
         Engine(Engine&&) = delete;
-        Engine(const Engine&) = delete;
+        Engine(Engine const&) = delete;
         Engine& operator=(Engine&&) = delete;
-        Engine& operator=(const Engine&) = delete;
+        Engine& operator=(Engine const&) = delete;
 
-        bool configureWindow(const char* title, uint32_t width, uint32_t height) const noexcept;
+        bool configureWindow(char const* title, uint32_t width, uint32_t height) const noexcept;
 
     protected:
 
     private:
 
         static constexpr std::size_t ImplSize = 64;
-        static constexpr std::size_t ImplAlign = alignof(std::max_align_t);
-        alignas(ImplAlign) std::byte m_storage[ImplSize];
+        static constexpr std::size_t ImplAlignment = alignof(std::max_align_t);
+        alignas(ImplAlignment) std::byte m_storage[ImplSize];
 
         struct Impl;
         Impl* impl() noexcept;
