@@ -11,7 +11,7 @@ namespace LITL::Engine
 
     struct Engine::Impl
     {
-        LITL::Vulkan::Renderer::Renderer renderer;
+        LITL::Renderer::Renderer* pRenderer;
     };
 
     Engine::Impl* Engine::impl() noexcept
@@ -19,7 +19,7 @@ namespace LITL::Engine
         return std::launder(reinterpret_cast<Impl*>(m_storage));
     }
 
-    Engine::Impl const* Engine::impl() const noexcept
+    Engine::Impl const* Engine::cimpl() const noexcept
     {
         return std::launder(reinterpret_cast<Impl const*>(m_storage));
     }
@@ -34,6 +34,8 @@ namespace LITL::Engine
         static_assert(alignof(Impl) <= ImplAlign, "Engine::Impl alignment too large.");
 
         new (&m_storage) Impl{};
+
+        impl()->pRenderer = new LITL::Vulkan::Renderer::Renderer();
     }
 
     Engine::~Engine()
@@ -43,6 +45,6 @@ namespace LITL::Engine
 
     bool Engine::configureWindow(const char* title, uint32_t width, uint32_t height) const noexcept
     {
-        return impl()->renderer.initialize(title, width, height);
+        return cimpl()->pRenderer->initialize(title, width, height);
     }
 }
