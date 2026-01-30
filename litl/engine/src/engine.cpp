@@ -1,5 +1,4 @@
-#include "litl/engine/engine.hpp"
-#include "litl/vulkan/renderer.hpp"
+#include "litl-engine/engine.hpp"
 
 #include <new>
 
@@ -11,7 +10,7 @@ namespace LITL::Engine
 
     struct Engine::Impl
     {
-        LITL::Renderer::Renderer* pRenderer;
+        //LITL::Renderer::Renderer* pRenderer;
     };
 
     Engine::Impl* Engine::impl() noexcept
@@ -35,7 +34,7 @@ namespace LITL::Engine
 
         new (&m_storage) Impl{};
 
-        impl()->pRenderer = new LITL::Vulkan::Renderer::Renderer();
+        //impl()->pRenderer = new LITL::Vulkan::Renderer::Renderer();
     }
 
     Engine::~Engine()
@@ -45,6 +44,7 @@ namespace LITL::Engine
 
     bool Engine::configureWindow(const char* title, uint32_t width, uint32_t height) const noexcept
     {
-        return cimpl()->pRenderer->initialize(title, width, height);
+        //return cimpl()->pRenderer->initialize(title, width, height);
+        return true;
     }
 }
