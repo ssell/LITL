@@ -1,5 +1,6 @@
-#include <new>
+#include "litl-core/window.hpp"
 #include "litl-engine/engine.hpp"
+#include "litl-engine/windowFactory.hpp"
 
 namespace LITL::Engine
 {
@@ -9,16 +10,17 @@ namespace LITL::Engine
 
     struct Engine::Impl
     {
-        uint8_t unused;
+        LITL::Renderer::RendererBackendType rendererType;
+        LITL::Core::Window* pWindow;
     };
 
     // -------------------------------------------------------------------------------------
     // Engine
     // -------------------------------------------------------------------------------------
 
-    Engine::Engine()
+    Engine::Engine(LITL::Renderer::RendererBackendType rendererType)
     {
-
+        m_impl->rendererType = rendererType;
     }
 
     Engine::~Engine()
@@ -26,9 +28,15 @@ namespace LITL::Engine
 
     }
 
-    bool Engine::configureWindow(const char* title, uint32_t width, uint32_t height) const noexcept
+    bool Engine::openWindow(const char* title, uint32_t width, uint32_t height) noexcept
     {
-        //return cimpl()->pRenderer->initialize(title, width, height);
-        return true;
+        m_impl->pWindow = createWindow(m_impl->rendererType);
+
+        if (m_impl->pWindow == nullptr)
+        {
+            return false;
+        }
+
+        return m_impl->pWindow->open(title, width, height);
     }
 }

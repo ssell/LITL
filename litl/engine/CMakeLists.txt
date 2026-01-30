@@ -1,6 +1,6 @@
 add_library(litl-engine STATIC
 	"src/engine.cpp"
-)
+ "src/windowFactory.cpp")
 
 target_include_directories(litl-engine
 	PUBLIC

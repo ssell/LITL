@@ -3,13 +3,9 @@
 
 int main()
 {
-    const LITL::Engine::Engine engine{};
+    LITL::Engine::Engine engine(LITL::Renderer::RendererBackendType::Vulkan);
 
-    if (engine.configureWindow("LITL - Triangle Sample", 1024, 1024))
-    {
-        std::cout << "Successfully created window!" << std::endl;
-    }
-    else
+    if (!engine.openWindow("LITL - Triangle Sample", 1024, 1024))
     {
         std::cout << "Failed creating window!" << std::endl;
     }

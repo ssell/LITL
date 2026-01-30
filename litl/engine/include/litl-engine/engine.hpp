@@ -1,6 +1,7 @@
 #ifndef LITL_ENGINE_H__
 #define LITL_ENGINE_H__
 
+#include "litl-renderer/rendererTypes.hpp"
 #include "litl-core/impl.hpp"
 
 namespace LITL::Engine
@@ -9,7 +10,7 @@ namespace LITL::Engine
     {
     public:
 
-        Engine();
+        Engine(LITL::Renderer::RendererBackendType rendererType);
         ~Engine();
 
         Engine(Engine&&) = delete;
@@ -17,7 +18,7 @@ namespace LITL::Engine
         Engine& operator=(Engine&&) = delete;
         Engine& operator=(Engine const&) = delete;
 
-        bool configureWindow(char const* title, uint32_t width, uint32_t height) const noexcept;
+        bool openWindow(char const* title, uint32_t width, uint32_t height) noexcept;
 
     protected:
 
