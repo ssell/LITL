@@ -15,6 +15,8 @@ namespace LITL::Core
     {
     public:
 
+        virtual ~Window() = default;
+
         virtual bool open(const char* title, uint32_t width, uint32_t height) = 0;
         virtual bool close() = 0;
 

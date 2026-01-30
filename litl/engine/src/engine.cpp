@@ -12,6 +12,14 @@ namespace LITL::Engine
     {
         LITL::Renderer::RendererBackendType rendererType;
         LITL::Core::Window* pWindow;
+
+        ~Impl()
+        {
+            if (pWindow != nullptr)
+            {
+                delete pWindow;
+            }
+        }
     };
 
     // -------------------------------------------------------------------------------------
