@@ -1,8 +1,7 @@
 #ifndef LITL_ENGINE_H__
 #define LITL_ENGINE_H__
 
-#include <cstddef>
-#include <type_traits>
+#include "litl-core/impl.hpp"
 
 namespace LITL::Engine
 {
@@ -24,13 +23,8 @@ namespace LITL::Engine
 
     private:
 
-        static constexpr std::size_t ImplSize = 64;
-        static constexpr std::size_t ImplAlignment = alignof(std::max_align_t);
-        alignas(ImplAlignment) std::byte m_storage[ImplSize];
-
         struct Impl;
-        Impl* impl() noexcept;
-        Impl const* cimpl() const noexcept;
+        LITL::Core::ImplPtr<Impl, 64> m_impl;
     };
 }
 

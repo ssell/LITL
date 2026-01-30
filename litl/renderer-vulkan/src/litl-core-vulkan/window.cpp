@@ -21,26 +21,13 @@ namespace LITL::Vulkan
         uint32_t height;
     };
 
-    Window::Impl* Window::impl() noexcept
-    {
-        return std::launder(reinterpret_cast<Window::Impl*>(&m_storage));
-    }
-
-    Window::Impl const* Window::cimpl() const noexcept
-    {
-        return std::launder(reinterpret_cast<Window::Impl const*>(&m_storage));
-    }
-
     // -------------------------------------------------------------------------------------
     // Vulkan Window w/ GLFW
     // -------------------------------------------------------------------------------------
 
     Window::Window()
     {
-        static_assert(sizeof(Window::Impl) <= ImplSize, "Dedicated storage for Vulkan Window IMPL is too small");
-        static_assert(alignof(Window::Impl) <= ImplAlignment, "Alignment for Vulkan Window IMPL is too small");
 
-        new (&m_storage) Window::Impl{};
     }
 
     Window::~Window()
@@ -50,6 +37,9 @@ namespace LITL::Vulkan
 
     bool Window::open(char const* title, uint32_t width, uint32_t height)
     {
+        m_impl->width = width;
+        m_impl->height = height;
+
         return true;
     }
 
