@@ -30,7 +30,7 @@ namespace LITL::Engine
 
         struct Impl;
         Impl* impl() noexcept;
-        Impl const* impl() const noexcept;
+        Impl const* cimpl() const noexcept;
     };
 }
 

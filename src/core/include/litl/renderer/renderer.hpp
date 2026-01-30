@@ -9,7 +9,7 @@ namespace LITL::Renderer
     {
     public:
 
-        virtual bool initialize(const char* title, uint32_t width, uint32_t height) const noexcept;
+        virtual bool initialize(const char* title, uint32_t width, uint32_t height) const noexcept = 0;
 
     protected:
         

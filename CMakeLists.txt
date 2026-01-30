@@ -31,15 +31,15 @@ FetchContent_MakeAvailable(glm)
 
 # -- Shared Common and Deps --
 
-set(LITL_SHARED_HEADER_DIR "${CMAKE_SOURCE_DIR}/litl/include")
-set(LITL_SHARED_SOURCE_DIR "${CMAKE_SOURCE_DIR}/litl/src")
-set(LITL_VULKAN_HEADER_DIR "${CMAKE_SOURCE_DIR}/libs/vulkan/include")
-set(LITL_VULKAN_SOURCE_DIR "${CMAKE_SOURCE_DIR}/libs/vulkan/src")
+set(LITL_CORE_HEADER_DIR   "${CMAKE_SOURCE_DIR}/src/core/include")
+set(LITL_CORE_SOURCE_DIR   "${CMAKE_SOURCE_DIR}/src/core/src")
+set(LITL_VULKAN_HEADER_DIR "${CMAKE_SOURCE_DIR}/src/vulkan/include")
+set(LITL_VULKAN_SOURCE_DIR "${CMAKE_SOURCE_DIR}/src/vulkan/src")
 set(LITL_ASSETS_DIR        "${CMAKE_SOURCE_DIR}/assets")
 
-SET(LITL_SHARED_SOURCE 
+SET(LITL_CORE_SOURCE 
     PRIVATE
-        "${LITL_SHARED_SOURCE_DIR}/engine.cpp"
+        "${LITL_CORE_SOURCE_DIR}/engine.cpp"
 )
 
 SET(LITL_VULKAN_SOURCE
@@ -48,7 +48,7 @@ SET(LITL_VULKAN_SOURCE
 )
 
 include_directories(
-	"${LITL_SHARED_HEADER_DIR}"
+	"${LITL_CORE_HEADER_DIR}"
 	"${LITL_VULKAN_HEADER_DIR}"
 )
 
