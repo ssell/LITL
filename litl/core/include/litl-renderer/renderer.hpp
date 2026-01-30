@@ -1,5 +1,5 @@
-#ifndef LITL_RENDERER_H__
-#define LITL_RENDERER_H__
+#ifndef LITL_CORE_RENDERER_H__
+#define LITL_CORE_RENDERER_H__
 
 #include <cstdint>
 

@@ -1,6 +1,6 @@
-add_library(litl-core STATIC
-	"src/deleteme.cpp"
-)
+add_library(litl-core 
+	STATIC
+		"src/litl-core/deleteme.cpp")
 
 target_include_directories(litl-core
 	PUBLIC
