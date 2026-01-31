@@ -1,6 +1,7 @@
 #ifndef LITL_VULKAN_RENDERER_H__
 #define LITL_VULKAN_RENDERER_H__
 
+#include "litl-core/impl.hpp"
 #include "litl-renderer/renderer.hpp"
 
 namespace LITL::Vulkan::Renderer
@@ -9,7 +10,7 @@ namespace LITL::Vulkan::Renderer
     {
     public:
 
-        Renderer();
+        Renderer(LITL::Renderer::RendererDescriptor const& rendererDescriptor);
         ~Renderer();
 
         Renderer(Renderer const&) = delete;
@@ -17,12 +18,17 @@ namespace LITL::Vulkan::Renderer
         Renderer& operator=(Renderer const&) = delete;
         Renderer& operator=(Renderer&&) = delete;
 
-        bool initialize(char const* title, uint32_t width, uint32_t height) const noexcept override;
+        bool initialize() const noexcept override;
 
     protected:
 
     private:
+
+        struct Impl;
+        Core::ImplPtr<Impl, 64> m_impl;
     };
+
+    LITL::Renderer::Renderer* createVulkanRenderer(LITL::Renderer::RendererDescriptor const& rendererDescriptor);
 }
 
 #endif
