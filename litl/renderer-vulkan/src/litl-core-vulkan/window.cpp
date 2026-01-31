@@ -34,7 +34,7 @@ namespace LITL::Vulkan
 
     Window::~Window()
     {
-        if (m_impl->getGLFWwindow() != nullptr)
+        if (m_impl->pWindow != nullptr)
         {
             glfwDestroyWindow(m_impl->getGLFWwindow());
             glfwTerminate();
@@ -69,7 +69,20 @@ namespace LITL::Vulkan
 
     bool Window::close()
     {
+        if (m_impl->pWindow != nullptr)
+        {
+            glfwDestroyWindow(m_impl->getGLFWwindow());
+            m_impl->pWindow = nullptr;
+        }
+
         return true;
+    }
+
+    bool Window::shouldClose()
+    {
+        // Has the (GLFW) window received a close event?
+        glfwPollEvents();
+        return glfwWindowShouldClose(m_impl->getGLFWwindow());
     }
 
     void Window::onResize(uint32_t width, uint32_t height)

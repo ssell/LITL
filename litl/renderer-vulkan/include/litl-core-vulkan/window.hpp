@@ -20,8 +20,9 @@ namespace LITL::Vulkan
 
         bool open(char const* title, uint32_t width, uint32_t height) override;
         bool close() override;
+        bool shouldClose() override;
 
-        LITL::Core::WindowState getState() const override;
+        Core::WindowState getState() const override;
         uint32_t getWidth() const override;
         uint32_t getHeight() const override;
 

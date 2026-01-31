@@ -10,6 +10,10 @@ int main()
         std::cout << "Failed creating window!" << std::endl;
     }
 
-    int a = 0;
-    std::cin >> a;
+    while (engine.shouldRun())
+    {
+
+    }
+
+    return 0;
 }
