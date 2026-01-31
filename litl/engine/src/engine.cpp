@@ -45,6 +45,23 @@ namespace LITL::Engine
             return false;
         }
 
-        return m_impl->pWindow->open(title, width, height);
+        if (!m_impl->pWindow->open(title, width, height))
+        {
+            return false;
+        }
+
+        // ... init renderer ...
+
+        return true;
+    }
+
+    bool Engine::shouldRun() noexcept
+    {
+        if (m_impl->pWindow == nullptr)
+        {
+            return false;
+        }
+
+        return !m_impl->pWindow->shouldClose();
     }
 }

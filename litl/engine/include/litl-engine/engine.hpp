@@ -19,6 +19,7 @@ namespace LITL::Engine
         Engine& operator=(Engine const&) = delete;
 
         bool openWindow(char const* title, uint32_t width, uint32_t height) noexcept;
+        bool shouldRun() noexcept;
 
     protected:
 
