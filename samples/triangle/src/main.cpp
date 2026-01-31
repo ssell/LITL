@@ -3,11 +3,12 @@
 
 int main()
 {
-    LITL::Engine::Engine engine(LITL::Renderer::RendererBackendType::Vulkan);
+    LITL::Engine::Engine engine({});
 
     if (!engine.openWindow("LITL - Triangle Sample", 1024, 1024))
     {
         std::cout << "Failed creating window!" << std::endl;
+        return 1;
     }
 
     while (engine.shouldRun())

@@ -6,7 +6,12 @@
 
 namespace LITL::Engine
 {
-    Core::Window * createWindow(Renderer::RendererBackendType rendererType);
+    /// <summary>
+    /// Creates a new Window that supports the specified renderer type.
+    /// </summary>
+    /// <param name="rendererType"></param>
+    /// <returns>May return nullptr if no Window implementation found for the specified type.</returns>
+    Core::Window* createWindow(Renderer::RendererBackendType rendererType);
 }
 
 #endif

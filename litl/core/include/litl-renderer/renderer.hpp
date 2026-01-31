@@ -2,6 +2,7 @@
 #define LITL_CORE_RENDERER_H__
 
 #include <cstdint>
+#include "litl-renderer/rendererDescriptor.hpp"
 
 namespace LITL::Renderer
 {
@@ -9,7 +10,9 @@ namespace LITL::Renderer
     {
     public:
 
-        virtual bool initialize(const char* title, uint32_t width, uint32_t height) const noexcept = 0;
+        virtual ~Renderer() = default;
+
+        virtual bool initialize() const noexcept = 0;
 
     protected:
         

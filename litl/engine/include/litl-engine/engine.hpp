@@ -1,7 +1,7 @@
 #ifndef LITL_ENGINE_H__
 #define LITL_ENGINE_H__
 
-#include "litl-renderer/rendererTypes.hpp"
+#include "litl-renderer/rendererDescriptor.hpp"
 #include "litl-core/impl.hpp"
 
 namespace LITL::Engine
@@ -10,7 +10,7 @@ namespace LITL::Engine
     {
     public:
 
-        Engine(LITL::Renderer::RendererBackendType rendererType);
+        Engine(Renderer::RendererDescriptor const& rendererDescriptor);
         ~Engine();
 
         Engine(Engine&&) = delete;
