@@ -3,7 +3,18 @@
 
 namespace LITL::Core
 {
+    class Logger
+    {
+    public:
 
+        static void initialize(bool consoleSink = true, bool fileSink = true, char const* fileName = "litl-engine.log");
+        static void shutdown();
+
+    protected:
+
+    private:
+
+    };
 }
 
 #endif
