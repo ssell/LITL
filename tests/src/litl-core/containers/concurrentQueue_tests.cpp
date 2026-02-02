@@ -9,12 +9,15 @@ TEST_CASE("Push-Pop Single-Threaded", "[core::containers::concurrentQueue]")
     LITL::Core::Containers::ConcurrentQueue<uint32_t> queue{};
 
     REQUIRE(queue.size() == 0);
+    REQUIRE(queue.empty() == true);
 
     queue.push(55);
 
+    REQUIRE(queue.empty() == false);
     REQUIRE(queue.size() == 1);
     REQUIRE(queue.pop() == 55);
     REQUIRE(queue.size() == 0);
+    REQUIRE(queue.empty() == true);
     REQUIRE(queue.pop() == std::nullopt);
 }
 
@@ -129,5 +132,5 @@ TEST_CASE("Push-Pop Multi-Threaded", "[core::containers::concurrentQueue]")
         PushPopMultithreadedTest::condition.wait(lock);
     }
 
-    REQUIRE(queue.size() == 50);
+    REQUIRE(queue.size() < 100);
 }

@@ -17,7 +17,7 @@ namespace LITL::Core::Containers
     public:
 
         explicit ConcurrentSingleQueue(uint32_t capacity)
-            : m_buffer(capacity + 1)
+            : m_capacity(capacity), m_buffer(capacity + 1)
         {
 
         }
@@ -53,6 +53,55 @@ namespace LITL::Core::Containers
             return value;
         }
 
+        std::optional<T> peek()
+        {
+            auto readAt = m_readAt.load(std::memory_order_relaxed);
+
+            if (readAt == m_writeAt.load(std::memory_order_acquire))
+            {
+                return std::nullopt;        // queue is empty
+            }
+
+            T value = std::move(m_buffer[readAt]);
+            return value;
+        }
+
+        uint32_t size() const
+        {
+            const auto writeAt = m_writeAt.load(std::memory_order_acquire);
+            const auto readAt = m_readAt.load(std::memory_order_acquire);
+
+            if (writeAt >= readAt)
+            {
+                return (writeAt - readAt);
+            }
+            else
+            {
+                return (m_capacity - readAt) + writeAt;
+            }
+        }
+
+        uint32_t capacity() const
+        {
+            return m_capacity;
+        }
+
+        bool empty() const
+        {
+            return (size() == 0);
+        }
+
+        bool full() const
+        {
+            return (size() == m_capacity);
+        }
+
+        void clear()
+        {
+            m_writeAt.store(0, std::memory_order_release);
+            m_readAt.store(0, std::memory_order_release);
+        }
+
     protected:
 
     private:
@@ -62,9 +111,10 @@ namespace LITL::Core::Containers
             return (curr + 1) % m_buffer.size();
         }
 
-        std::vector<T> m_buffer;
+        const uint32_t m_capacity;
         std::atomic<uint32_t> m_writeAt;        // aka head
         std::atomic<uint32_t> m_readAt;         // aka tail
+        std::vector<T> m_buffer;
         // ^ both always moving "forward", with the tail chasing the head
     };
 }
