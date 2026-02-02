@@ -4,7 +4,7 @@
 
 #include "litl-core/containers/concurrentQueue.hpp"
 
-TEST_CASE("Push-Pop Single-Threaded", "[core::containers]")
+TEST_CASE("Push-Pop Single-Threaded", "[core::containers::concurrentQueue]")
 {
     LITL::Core::Containers::ConcurrentQueue<uint32_t> queue{};
 
@@ -18,7 +18,7 @@ TEST_CASE("Push-Pop Single-Threaded", "[core::containers]")
     REQUIRE(queue.pop() == std::nullopt);
 }
 
-TEST_CASE("Push-Peek Single-Threaded", "[core::containers]")
+TEST_CASE("Push-Peek Single-Threaded", "[core::containers::concurrentQueue]")
 {
     LITL::Core::Containers::ConcurrentQueue<uint32_t> queue{};
 
@@ -35,7 +35,7 @@ TEST_CASE("Push-Peek Single-Threaded", "[core::containers]")
     REQUIRE(queue.size() == 0);
 }
 
-TEST_CASE("Push-Clear Single-Threaded", "[core::containers]")
+TEST_CASE("Push-Clear Single-Threaded", "[core::containers::concurrentQueue]")
 {
     LITL::Core::Containers::ConcurrentQueue<uint32_t> queue{};
 
@@ -115,7 +115,7 @@ namespace PushPopMultithreadedTest
 }
 
 
-TEST_CASE("Push-Pop Multi-Threaded", "[core::containers]")
+TEST_CASE("Push-Pop Multi-Threaded", "[core::containers::concurrentQueue]")
 {
     LITL::Core::Containers::ConcurrentQueue<uint32_t> queue{};
 
