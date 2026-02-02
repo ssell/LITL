@@ -11,5 +11,10 @@ target_link_libraries(litl-tests
 		Catch2::Catch2WithMain
 )
 
+target_compile_features(litl-tests
+	PUBLIC
+		cxx_std_20
+)
+
 include (Catch)
 catch_discover_tests(litl-tests)
