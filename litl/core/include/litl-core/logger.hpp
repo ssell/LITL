@@ -1,6 +1,8 @@
 #ifndef LITL_CORE_LOGGER_H__
 #define LITL_CORE_LOGGER_H__
 
+#include "litl-core/containers/concurrentQueue.hpp"
+
 namespace LITL::Core
 {
     class Logger
