@@ -7,6 +7,7 @@ include(FetchContent)
 # -- Options
 # ------------------------------------------------------------------------------------------
 
+option(LITL_BUILD_TESTS "Build Tests" ON)
 option(LITL_ENABLE_VULKAN "Enable Vulkan Renderer" ON)
 
 # ------------------------------------------------------------------------------------------
@@ -37,4 +38,8 @@ add_subdirectory(samples)
 
 if (LITL_ENABLE_VULKAN)
 	add_subdirectory(litl/renderer-vulkan)
+endif()
+
+if (LITL_BUILD_TESTS)
+	add_subdirectory(tests)
 endif()
