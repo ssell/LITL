@@ -1,12 +1,12 @@
 #include <vector>
 #include <thread>
 #include <optional>
-#include <string_view>
 
 #include "litl-core/containers/concurrentQueue.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/logging/sinks/loggingSink.hpp"
 #include "litl-core/logging/sinks/consoleSink.hpp"
+#include "litl-core/logging/sinks/fileSink.hpp"
 
 namespace LITL::Core
 {
@@ -22,6 +22,11 @@ namespace LITL::Core
             if (consoleSink)
             {
                 m_sinks.emplace_back(new ConsoleLoggingSink());
+            }
+
+            if (fileSink)
+            {
+                m_sinks.emplace_back(new FileLoggingSink("litl-engine.log"));
             }
         }
 
