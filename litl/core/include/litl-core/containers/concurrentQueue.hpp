@@ -8,7 +8,7 @@
 
 #include "litl-core/impl.hpp"
 
-namespace LITL::Core::Containers
+namespace LITL::Core
 {
     /// <summary>
     /// Implementation of a Multiple-Producer, Multiple-Consumer (MPMC) thread-safe queue.
@@ -22,7 +22,7 @@ namespace LITL::Core::Containers
         ConcurrentQueue(ConcurrentQueue const&) = delete;
         ConcurrentQueue& operator=(ConcurrentQueue const&) = delete;
 
-        void push(T value)
+        void enqueue(T value)
         {
             {
                 std::lock_guard<std::mutex> lock(m_mutex);
@@ -33,7 +33,7 @@ namespace LITL::Core::Containers
             m_condition.notify_one();
         }
 
-        std::optional<T> pop()
+        std::optional<T> dequeue()
         {
             std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -48,7 +48,7 @@ namespace LITL::Core::Containers
             return value;
         }
 
-        std::optional<T> popWait()
+        std::optional<T> dequeueWait()
         {
             std::unique_lock<std::mutex> lock(m_mutex);
             m_condition.wait(lock, [&] { return m_shouldShutdown || !m_queue.empty(); });       // Blocking wait until either: cv has been notified, shutdown is requested, or queue is no longer empty.

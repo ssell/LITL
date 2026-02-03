@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <vector>
 
-namespace LITL::Core::Containers
+namespace LITL::Core
 {
     /// <summary>
     /// Implementation of a Single-Producer, Single-Consumer (SPSC) thread-safe queue.
@@ -22,7 +22,10 @@ namespace LITL::Core::Containers
 
         }
 
-        bool push(T const& value)
+        ConcurrentSingleQueue(ConcurrentSingleQueue const& other) = delete;
+        ConcurrentSingleQueue& operator=(ConcurrentSingleQueue const& other) = delete;
+
+        bool enqueue(T const& value)
         {
             auto writeAt = m_writeAt.load(std::memory_order_relaxed);
             auto next = increment(writeAt);
@@ -38,7 +41,7 @@ namespace LITL::Core::Containers
             return true;
         }
 
-        std::optional<T> pop()
+        std::optional<T> dequeue()
         {
             auto readAt = m_readAt.load(std::memory_order_relaxed);
 
