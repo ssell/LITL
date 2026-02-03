@@ -147,3 +147,36 @@ TEST_CASE_METHOD(LoggingWrapper, "Multithreaded Logging", "[core::logging]")
 
     REQUIRE(pSink->messageBuffer.size() == 30);
 }
+
+TEST_CASE_METHOD(LoggingWrapper, "Parameterized Logging", "[core::logging]")
+{
+    LITL::Core::Logger::info("This message is composed of ", 3, " distinct parameters.");
+
+    wait();
+
+    REQUIRE(pSink->messageBuffer.size() == 1);
+    REQUIRE(pSink->messageBuffer[0] == "This message is composed of 3 distinct parameters.");
+}
+
+TEST_CASE_METHOD(LoggingWrapper, "Convenience Logging", "[core::logging]")
+{
+    LITL::logInfo("Hello, World!");
+    LITL::logInfo("Hello, ", "World!");
+
+    wait();
+
+    REQUIRE(pSink->messageBuffer.size() == 2);
+    REQUIRE(pSink->messageBuffer[0] == "Hello, World!");
+    REQUIRE(pSink->messageBuffer[1] == "Hello, World!");
+}
+
+TEST_CASE_METHOD(LoggingWrapper, "File Capture Logging", "[core::logging]")
+{
+    LITL_LOG_CRITICAL_CAPTURE("Something really bad happened!");
+
+    wait();
+
+    REQUIRE(pSink->messageBuffer.size() == 1);
+    REQUIRE(pSink->messageBuffer[0].find("Something really bad happened!") >= 0);
+    REQUIRE(pSink->messageBuffer[0].find("logging_tests.cpp@") >= 0);
+}

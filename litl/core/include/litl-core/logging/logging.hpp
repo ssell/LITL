@@ -79,6 +79,14 @@ namespace LITL::Core
 #endif
         }
 
+        static std::string formatFileCapture(char const* file, int line)
+        {
+            std::ostringstream oss;
+            (oss << " [" << file << "@" << line << "]");
+
+            return oss.str();
+        }
+
     protected:
 
     private:
@@ -96,5 +104,63 @@ namespace LITL::Core
     };
 }
 
+namespace LITL
+{
+    /**
+     * Note here we prefer a free forwarding convenience function instead of macros.
+     * A macro such as the one below suffers from several problems.
+     *
+     *     #define LITL_LOG_TRACE(...) LITL::Core::Logger::trace(__VA_ARGS__)
+     *
+     * 1. No type safety or scope awareness. Macros are text substitution.
+     * 2. Loss of overload resolution. If logger is updated to support std::format as an overload, then the macro can not resolve the target.
+     * 3. Debugging is worse. Breakpoints go to logger, not the call site, and errors reference the macro body not the user code.
+     */
+
+    template<typename... Args>
+    inline void logTrace(Args&&... args)
+    {
+        LITL::Core::Logger::trace(std::forward<Args>(args)...);
+    }
+
+    template<typename... Args>
+    inline void logDebug(Args&&... args)
+    {
+        LITL::Core::Logger::debug(std::forward<Args>(args)...);
+    }
+
+    template<typename... Args>
+    inline void logInfo(Args&&... args)
+    {
+        LITL::Core::Logger::info(std::forward<Args>(args)...);
+    }
+
+    template<typename... Args>
+    inline void logWarning(Args&&... args)
+    {
+        LITL::Core::Logger::warning(std::forward<Args>(args)...);
+    }
+
+    template<typename... Args>
+    inline void logError(Args&&... args)
+    {
+        LITL::Core::Logger::error(std::forward<Args>(args)...);
+    }
+
+    template<typename... Args>
+    inline void logCritical(Args&&... args)
+    {
+        LITL::Core::Logger::critical(std::forward<Args>(args)...);
+    }
+}
+
+// Macro here only for file/line capture. Use other options if file/line capture is not needed.
+
+#define LITL_LOG_TRACE_CAPTURE(...)    LITL::Core::Logger::trace(__VA_ARGS__, LITL::Core::Logger::formatFileCapture(__FILE__, __LINE__))
+#define LITL_LOG_DEBUG_CAPTURE(...)    LITL::Core::Logger::debug(__VA_ARGS__, LITL::Core::Logger::formatFileCapture(__FILE__, __LINE__))
+#define LITL_LOG_INFO_CAPTURE(...)     LITL::Core::Logger::info(__VA_ARGS__, LITL::Core::Logger::formatFileCapture(__FILE__, __LINE__))
+#define LITL_LOG_WARNING_CAPTURE(...)  LITL::Core::Logger::warning(__VA_ARGS__, LITL::Core::Logger::formatFileCapture(__FILE__, __LINE__))
+#define LITL_LOG_ERROR_CAPTURE(...)    LITL::Core::Logger::error(__VA_ARGS__, LITL::Core::Logger::formatFileCapture(__FILE__, __LINE__))
+#define LITL_LOG_CRITICAL_CAPTURE(...) LITL::Core::Logger::critical(__VA_ARGS__, LITL::Core::Logger::formatFileCapture(__FILE__, __LINE__))
 
 #endif
