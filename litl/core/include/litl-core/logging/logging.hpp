@@ -13,6 +13,11 @@ namespace LITL::Core
         static void initialize(char const* logName, bool consoleSink, bool fileSink);
         static void shutdown();
 
+        static void log(LogLevel logLevel, std::string_view message)
+        {
+            logMessage(logLevel, message);
+        }
+
     protected:
 
     private:
