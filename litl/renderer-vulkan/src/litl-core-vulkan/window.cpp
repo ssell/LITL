@@ -5,6 +5,7 @@
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
+#include "litl-core/logging/logging.hpp"
 #include "litl-core-vulkan/window.hpp"
 
 namespace LITL::Vulkan
@@ -36,13 +37,15 @@ namespace LITL::Vulkan
     {
         if (m_impl->pWindow != nullptr)
         {
-            glfwDestroyWindow(m_impl->getGLFWwindow());
+            close();
             glfwTerminate();
         }
     }
 
     bool Window::open(char const* title, uint32_t width, uint32_t height)
     {
+        logInfo("Opening Vulkan Window");
+
         m_impl->width = width;
         m_impl->height = height;
 
@@ -53,6 +56,7 @@ namespace LITL::Vulkan
 
         if (!m_impl->pWindow)
         {
+            logCritical("GLFW window creation failed. Shutting down GLFW.");
             glfwTerminate();
             return false;
         }
@@ -71,6 +75,7 @@ namespace LITL::Vulkan
     {
         if (m_impl->pWindow != nullptr)
         {
+            logInfo("Closing Vulkan Window");
             glfwDestroyWindow(m_impl->getGLFWwindow());
             m_impl->pWindow = nullptr;
         }
