@@ -43,7 +43,7 @@ namespace LITL::Core
             m_sinks.emplace_back(pSink);
         }
 
-        void enqueueMessage(std::string_view message)
+        void enqueueMessage(std::string const& message)
         {
             m_messageQueue.enqueue(message);
         }
@@ -69,7 +69,7 @@ namespace LITL::Core
         }
 
         std::vector<LoggingSink*> m_sinks;
-        ConcurrentQueue<std::string_view> m_messageQueue;
+        ConcurrentQueue<std::string> m_messageQueue;
         std::jthread m_processingThread;
     };
 
@@ -101,7 +101,7 @@ namespace LITL::Core
         }
     }
 
-    void Logger::logMessage(LogLevel logLevel, std::string_view message)
+    void Logger::logMessage(LogLevel logLevel, std::string const& message)
     {
         if (pProcessor != nullptr)
         {

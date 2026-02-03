@@ -11,7 +11,7 @@ namespace LITL::Core
 
     protected:
 
-        void processMessage(std::string_view message) override;
+        void processMessage(std::string const& message) override;
 
     private:
     };

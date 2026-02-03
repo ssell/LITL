@@ -13,11 +13,11 @@ namespace LITL::Core
         LoggingSink();
         virtual ~LoggingSink();
 
-        void enqueue(std::string_view message);
+        void enqueue(std::string const& message);
 
     protected:
 
-        virtual void processMessage(std::string_view message) = 0;
+        virtual void processMessage(std::string const& message) = 0;
 
     private:
 

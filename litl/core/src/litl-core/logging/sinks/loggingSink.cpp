@@ -2,7 +2,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <optional>
-#include <string_view>
+#include <string>
 
 #include "litl-core/logging/sinks/loggingSink.hpp"
 #include "litl-core/containers/concurrentSingleQueue.hpp"
@@ -11,7 +11,7 @@ namespace LITL::Core
 {
     struct LoggingSink::Impl
     {
-        ConcurrentSingleQueue<std::string_view> queue;
+        ConcurrentSingleQueue<std::string> queue;
         std::mutex mutex;
         std::condition_variable condition;
         bool pendingMessages;
@@ -21,7 +21,7 @@ namespace LITL::Core
     LoggingSink::LoggingSink()
         : m_pImpl(
             new Impl{
-                ConcurrentSingleQueue<std::string_view>(50),
+                ConcurrentSingleQueue<std::string>(50),
                 std::mutex{},
                 std::condition_variable{},
                 false,
@@ -36,7 +36,7 @@ namespace LITL::Core
         delete m_pImpl;
     }
 
-    void LoggingSink::enqueue(std::string_view message)
+    void LoggingSink::enqueue(std::string const& message)
     {
         if (m_pImpl->queue.enqueue(message))
         {
@@ -54,7 +54,7 @@ namespace LITL::Core
     {
         while (!stoppingToken.stop_requested())
         {
-            std::optional<std::string_view> messageOpt{ std::nullopt };
+            std::optional<std::string> messageOpt{ std::nullopt };
 
             do
             {
