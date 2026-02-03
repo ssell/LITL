@@ -75,7 +75,7 @@ namespace LITL::Core
 
     namespace
     {
-        std::unique_ptr<LogProcessor> pProcessor;
+        static std::unique_ptr<LogProcessor> pProcessor;
     }
 
     void Logger::initialize(char const* logName, bool consoleSink, bool fileSink)
