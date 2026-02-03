@@ -1,6 +1,9 @@
 #ifndef LITL_CORE_LOGGING_LOGGING_H__
 #define LITL_CORE_LOGGING_LOGGING_H__
 
+#include <array>
+#include <chrono>
+#include <format>
 #include <string>
 #include <sstream>
 
@@ -91,10 +94,15 @@ namespace LITL::Core
 
     private:
 
+        static const std::array<std::string, 7> LogLevelNames;
+
         template<typename... Args>
         static void formatMessage(LogLevel logLevel, Args&&... args)
         {
+            const auto now = std::chrono::system_clock::now();
+
             std::ostringstream oss;
+            oss << std::format("[{:%Y-%m-%dT%H:%M:%S}] ", now) << LogLevelNames.at(logLevel);
             (oss << ... << std::forward<Args>(args));
 
             logMessage(logLevel, oss.str());
