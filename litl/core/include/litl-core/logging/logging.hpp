@@ -1,6 +1,7 @@
 #ifndef LITL_CORE_LOGGING_LOGGING_H__
 #define LITL_CORE_LOGGING_LOGGING_H__
 
+#include <string_view>
 #include "litl-core/logging/logLevel.hpp"
 
 namespace LITL::Core
@@ -16,7 +17,7 @@ namespace LITL::Core
 
     private:
 
-        static void logMessage(LogLevel logLevel, char const* message);
+        static void logMessage(LogLevel logLevel, std::string_view message);
     };
 }
 
