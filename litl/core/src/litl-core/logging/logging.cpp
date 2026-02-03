@@ -78,6 +78,8 @@ namespace LITL::Core
         static std::unique_ptr<LogProcessor> pProcessor;
     }
 
+    const std::array<std::string, 7> Logger::LogLevelNames = { "[CRITICAL] ", "[ERROR] ", "[WARNING] ", "[INFO] ", "[DEBUG] ", "[TRACE] ", "[?] " };
+
     void Logger::initialize(char const* logName, bool consoleSink, bool fileSink)
     {
         if (pProcessor != nullptr)

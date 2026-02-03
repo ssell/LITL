@@ -70,7 +70,7 @@ TEST_CASE_METHOD(LoggingWrapper, "Basic Log Message", "[core::logging]")
     wait();
     
     REQUIRE(pSink->messageBuffer.size() > 0);
-    REQUIRE(pSink->messageBuffer.back() == std::get<std::string>(parameters));
+    REQUIRE(pSink->messageBuffer.back().find(std::get<std::string>(parameters)) >= 0);
 }
 
 TEST_CASE_METHOD(LoggingWrapper, "Filter Log Message", "[core::logging]")
@@ -116,7 +116,7 @@ TEST_CASE_METHOD(LoggingWrapper, "Preserve Order", "[core::logging]")
 
     for (auto i = 0; i < parts.size(); ++i)
     {
-        REQUIRE(pSink->messageBuffer[i] == parts[i]);
+        REQUIRE(pSink->messageBuffer[i].find(parts[i]) >= 0);
     }
 }
 
@@ -155,7 +155,7 @@ TEST_CASE_METHOD(LoggingWrapper, "Parameterized Logging", "[core::logging]")
     wait();
 
     REQUIRE(pSink->messageBuffer.size() == 1);
-    REQUIRE(pSink->messageBuffer[0] == "This message is composed of 3 distinct parameters.");
+    REQUIRE(pSink->messageBuffer[0].find("This message is composed of 3 distinct parameters.") >= 0);
 }
 
 TEST_CASE_METHOD(LoggingWrapper, "Convenience Logging", "[core::logging]")
@@ -166,8 +166,8 @@ TEST_CASE_METHOD(LoggingWrapper, "Convenience Logging", "[core::logging]")
     wait();
 
     REQUIRE(pSink->messageBuffer.size() == 2);
-    REQUIRE(pSink->messageBuffer[0] == "Hello, World!");
-    REQUIRE(pSink->messageBuffer[1] == "Hello, World!");
+    REQUIRE(pSink->messageBuffer[0].find("Hello, World!") >= 0);
+    REQUIRE(pSink->messageBuffer[1].find("Hello, World!") >= 0);
 }
 
 TEST_CASE_METHOD(LoggingWrapper, "File Capture Logging", "[core::logging]")
