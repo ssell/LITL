@@ -1,3 +1,4 @@
+#include "litl-core/logging/logging.hpp"
 #include "litl-core/window.hpp"
 #include "litl-engine/engine.hpp"
 #include "litl-engine/windowFactory.hpp"
@@ -36,12 +37,13 @@ namespace LITL::Engine
 
     Engine::Engine(Renderer::RendererDescriptor const& rendererDescriptor)
     {
+        LITL::Core::Logger::initialize("litl-engine", true, false);
         m_impl->rendererDescriptor = rendererDescriptor;
     }
 
     Engine::~Engine()
     {
-
+        LITL::Core::Logger::shutdown();
     }
 
     bool Engine::openWindow(const char* title, uint32_t width, uint32_t height) noexcept

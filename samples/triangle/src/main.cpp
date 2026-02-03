@@ -1,13 +1,15 @@
 #include "litl-engine/engine.hpp"
-#include <iostream>
+#include "litl-core/logging/logging.hpp"
 
 int main()
 {
     LITL::Engine::Engine engine({});
 
+    LITL::Core::Logger::log(LITL::Core::LogLevel::Info, "Starting Triangle Sample");
+
     if (!engine.openWindow("LITL - Triangle Sample", 1024, 1024))
     {
-        std::cout << "Failed creating window!" << std::endl;
+        LITL::Core::Logger::log(LITL::Core::LogLevel::Critical, "Failed to open window!");
         return 1;
     }
 

@@ -1,10 +1,9 @@
 #include <vector>
-
-#include "litl-core/containers/concurrentQueue.hpp"
 #include <thread>
 #include <optional>
 #include <string_view>
 
+#include "litl-core/containers/concurrentQueue.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/logging/sinks/loggingSink.hpp"
 #include "litl-core/logging/sinks/consoleSink.hpp"
@@ -16,7 +15,7 @@ namespace LITL::Core
     public:
 
         LogProcessor(bool consoleSink, bool fileSink)
-            : m_sinks(2),
+            : m_sinks(),
               m_messageQueue(),
               m_processingThread(std::jthread{ [this](std::stop_token stoppingToken) { this->run(stoppingToken); } })
         {
@@ -30,6 +29,18 @@ namespace LITL::Core
         {
             m_messageQueue.shutdown();
             m_processingThread.request_stop();
+
+            for (auto iter = m_sinks.begin(); iter != m_sinks.end(); ++iter)
+            {
+                delete (*iter);
+            }
+
+            m_sinks.clear();
+        }
+
+        void addSink(LoggingSink* pSink)
+        {
+            m_sinks.emplace_back(pSink);
         }
 
         void enqueueMessage(std::string_view message)
@@ -64,7 +75,7 @@ namespace LITL::Core
 
     namespace
     {
-        LogProcessor* pProcessor = nullptr;
+        std::unique_ptr<LogProcessor> pProcessor;
     }
 
     void Logger::initialize(char const* logName, bool consoleSink, bool fileSink)
@@ -74,15 +85,19 @@ namespace LITL::Core
             return;
         }
 
-        pProcessor = new LogProcessor(consoleSink, fileSink);
+        pProcessor = std::make_unique<LogProcessor>(consoleSink, fileSink);
     }
 
     void Logger::shutdown()
     {
+
+    }
+
+    void Logger::addSink(LoggingSink* sink)
+    {
         if (pProcessor != nullptr)
         {
-            delete pProcessor;
-            pProcessor = nullptr;
+            pProcessor->addSink(sink);
         }
     }
 
