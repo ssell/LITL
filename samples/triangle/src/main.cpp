@@ -4,12 +4,10 @@
 int main()
 {
     LITL::Engine::Engine engine({});
-
-    LITL::Core::Logger::log(LITL::Core::LogLevel::Info, "Starting Triangle Sample");
+    LITL::logInfo("Starting Triangle Sample");
 
     if (!engine.openWindow("LITL - Triangle Sample", 1024, 1024))
     {
-        LITL::Core::Logger::log(LITL::Core::LogLevel::Critical, "Failed to open window!");
         return 1;
     }
 

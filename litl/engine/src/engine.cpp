@@ -51,7 +51,7 @@ namespace LITL::Engine
 
     bool Engine::openWindow(const char* title, uint32_t width, uint32_t height) noexcept
     {
-        logInfo("Opening window \"", title, "\" (", width, "x", height, ") ...");
+        logInfo("Opening window \"", title, "\" (", width, "x", height, ") with ", Renderer::RendererBackendNames[m_impl->rendererDescriptor.rendererType], " backend ...");
         m_impl->pWindow = createWindow(m_impl->rendererDescriptor.rendererType);
 
         if (m_impl->pWindow == nullptr)
