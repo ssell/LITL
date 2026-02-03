@@ -66,7 +66,7 @@ namespace LITL::Engine
             return false;
         }
 
-        m_impl->pRenderer = createRenderer(m_impl->rendererDescriptor);
+        m_impl->pRenderer = createRenderer(m_impl->pWindow, m_impl->rendererDescriptor);
 
         if (m_impl->pRenderer == nullptr)
         {
