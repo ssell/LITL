@@ -6,45 +6,45 @@
 
 TEST_CASE("Push-Pop Single-Threaded", "[core::containers::concurrentQueue]")
 {
-    LITL::Core::Containers::ConcurrentQueue<uint32_t> queue{};
+    LITL::Core::ConcurrentQueue<uint32_t> queue{};
 
     REQUIRE(queue.size() == 0);
     REQUIRE(queue.empty() == true);
 
-    queue.push(55);
+    queue.enqueue(55);
 
     REQUIRE(queue.empty() == false);
     REQUIRE(queue.size() == 1);
-    REQUIRE(queue.pop() == 55);
+    REQUIRE(queue.dequeue() == 55);
     REQUIRE(queue.size() == 0);
     REQUIRE(queue.empty() == true);
-    REQUIRE(queue.pop() == std::nullopt);
+    REQUIRE(queue.dequeue() == std::nullopt);
 }
 
 TEST_CASE("Push-Peek Single-Threaded", "[core::containers::concurrentQueue]")
 {
-    LITL::Core::Containers::ConcurrentQueue<uint32_t> queue{};
+    LITL::Core::ConcurrentQueue<uint32_t> queue{};
 
     REQUIRE(queue.size() == 0);
     REQUIRE(queue.peek() == std::nullopt);
 
-    queue.push(55);
+    queue.enqueue(55);
 
     REQUIRE(queue.size() == 1);
     REQUIRE(queue.peek() == 55);
     REQUIRE(queue.size() == 1);
-    REQUIRE(queue.pop() == 55);
+    REQUIRE(queue.dequeue() == 55);
     REQUIRE(queue.peek() == std::nullopt);
     REQUIRE(queue.size() == 0);
 }
 
 TEST_CASE("Push-Clear Single-Threaded", "[core::containers::concurrentQueue]")
 {
-    LITL::Core::Containers::ConcurrentQueue<uint32_t> queue{};
+    LITL::Core::ConcurrentQueue<uint32_t> queue{};
 
     for (int i = 0; i < 50; ++i)
     {
-        queue.push(i);
+        queue.enqueue(i);
     }
 
     REQUIRE(queue.size() == 50);
@@ -67,13 +67,13 @@ namespace PushPopMultithreadedTest
     /// <param name="stopToken"></param>
     /// <param name="queue"></param>
     /// <param name="workerId"></param>
-    void pushThread(std::stop_token stopToken, LITL::Core::Containers::ConcurrentQueue<uint32_t>& queue, uint32_t workerId)
+    void pushThread(std::stop_token stopToken, LITL::Core::ConcurrentQueue<uint32_t>& queue, uint32_t workerId)
     {
         int iterations = 1000;
 
         while (!stopToken.stop_requested() && queue.size() < 100 && iterations > 0)
         {
-            queue.push(workerId);
+            queue.enqueue(workerId);
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
             iterations--;
         }
@@ -85,7 +85,7 @@ namespace PushPopMultithreadedTest
     /// <param name="stopToken"></param>
     /// <param name="queue"></param>
     /// <param name="workerId"></param>
-    void popThread(std::stop_token stopToken, LITL::Core::Containers::ConcurrentQueue<uint32_t>& queue, uint32_t workerId)
+    void popThread(std::stop_token stopToken, LITL::Core::ConcurrentQueue<uint32_t>& queue, uint32_t workerId)
     {
         int iterations = 1000;
         bool readyToPop = false;
@@ -105,7 +105,7 @@ namespace PushPopMultithreadedTest
                 }
                 else
                 {
-                    queue.pop();
+                    queue.dequeue();
                 }
             }
 
@@ -120,7 +120,7 @@ namespace PushPopMultithreadedTest
 
 TEST_CASE("Push-Pop Multi-Threaded", "[core::containers::concurrentQueue]")
 {
-    LITL::Core::Containers::ConcurrentQueue<uint32_t> queue{};
+    LITL::Core::ConcurrentQueue<uint32_t> queue{};
 
     std::jthread thread0(PushPopMultithreadedTest::pushThread, std::ref(queue), 0);
     std::jthread thread1(PushPopMultithreadedTest::pushThread, std::ref(queue), 1);

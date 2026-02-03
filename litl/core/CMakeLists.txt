@@ -1,6 +1,6 @@
 add_library(litl-core 
 	STATIC
-		 "src/litl-core/logger.cpp")
+		"src/litl-core/logging/logging.cpp")
 
 target_include_directories(litl-core
 	PUBLIC
