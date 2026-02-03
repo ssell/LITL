@@ -48,15 +48,15 @@ The main `LogProcessor` runs on it's own thread and is fed messages via a Multip
 
 Each sink, like the primary processor, run on their own threads and are fed by dedicated queues. However the sinks use a Single-Producer Single-Consumer (SPSC) concurrent queue (`LITL::Core::Containers::ConcurrentSingleQueue`) which is implemented via a lock-less ring buffer. As the sinks operate on independent threads, any slowness they may encounter does not affect any other processes - logging or otherwise.
 
-                                                                                               ┌ Thread B
-                                                                             ┌────────────┐    ┌──────────────────┐
+                                                                                                ┌ Thread B
+                                                                             ┌────────────┐    ┌┴─────────────────┐
     ┌──────────┐                                                         ┌──>│ SPSC Queue │───>│ Sink 0 (Console) │
     │ Thread 0 │──┐                                                      │   └────────────┘    └──────────────────┘
-    └──────────┘  │                                    ┌ Thread A        │                     ┌ Thread C
-    ┌──────────┐  │   ┌────────┐    ┌────────────┐    ┌┴──────────────┐  │   ┌────────────┐    ┌──────────────────┐
+    └──────────┘  │                                    ┌ Thread A        │                      ┌ Thread C
+    ┌──────────┐  │   ┌────────┐    ┌────────────┐    ┌┴──────────────┐  │   ┌────────────┐    ┌┴─────────────────┐
     │ Thread 1 │──┼──>│ Logger │───>│ MPSC Queue │───>│ Log Processor |──┼──>│ SPSC Queue │───>│ Sink 1 (File)    │
     └──────────┘  │   └────────┘    └────────────┘    └───────────────┘  │   └────────────┘    └──────────────────┘
-    ┌──────────┐  │                                                      │                     ┌ Thread D
-    │ Thread 2 │──┘                                                      │   ┌────────────┐    ┌──────────────────┐
+    ┌──────────┐  │                                                      │                      ┌ Thread D
+    │ Thread 2 │──┘                                                      │   ┌────────────┐    ┌┴─────────────────┐
     └──────────┘                                                         └──>│ SPSC Queue │───>│ Sink N           │
                                                                              └────────────┘    └──────────────────┘
