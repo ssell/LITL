@@ -4,14 +4,14 @@
 
 namespace LITL::Engine
 {
-    Renderer::Renderer* createRenderer(Renderer::RendererDescriptor const& rendererDescriptor)
+    Renderer::Renderer* createRenderer(Core::Window* pWindow, Renderer::RendererDescriptor const& rendererDescriptor)
     {
         logInfo("Creating Renderer of type ", Renderer::RendererBackendNames[rendererDescriptor.rendererType]);
 
         switch (rendererDescriptor.rendererType)
         {
         case Renderer::RendererBackendType::Vulkan:
-            return Vulkan::Renderer::createVulkanRenderer(rendererDescriptor);
+            return Vulkan::Renderer::createVulkanRenderer(pWindow, rendererDescriptor);
 
         case Renderer::RendererBackendType::None:
         default:
