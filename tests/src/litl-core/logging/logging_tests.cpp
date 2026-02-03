@@ -1,10 +1,16 @@
+
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
 #include <chrono>
 #include <optional>
-#include <string_view>
+#include <string>
 #include <thread>
+#include <tuple>
 
+#include "litl-core/logging/logLevel.hpp"
+#define LITL_LOG_LEVEL LITL_LOG_LEVEL_INFO
+// ^ intentionally hide debug/trace logs for testing purposes
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/logging/sinks/loggingSink.hpp"
 
@@ -15,11 +21,11 @@ class TestLoggingSink : public LITL::Core::LoggingSink
 {
 public:
 
-    std::optional<std::string_view> lastMessage = std::nullopt;
+    std::optional<std::string> lastMessage = std::nullopt;
 
 protected:
 
-    void processMessage(std::string_view message) override
+    void processMessage(std::string const& message) override
     {
         lastMessage = message;
     }
@@ -51,16 +57,29 @@ public:
 
 TEST_CASE_METHOD(LoggingWrapper, "Basic Log Message", "[core::logging]")
 {
-    const LITL::Core::LogLevel logLevel = GENERATE(
-        LITL::Core::LogLevel::Info, 
-        LITL::Core::LogLevel::Error);
+    const auto parameters = GENERATE(
+        std::make_tuple<LITL::Core::LogLevel, std::string>(LITL::Core::LogLevel::Info, "Hello, World!"),
+        std::make_tuple<LITL::Core::LogLevel, std::string>(LITL::Core::LogLevel::Error, "Hello, Error!")
+    );
 
-    const std::string_view message = GENERATE(
-        "Hello, World!", 
-        "Hello, Error!");
-
-    LITL::Core::Logger::log(logLevel, message);
+    LITL::Core::Logger::log(std::get<LITL::Core::LogLevel>(parameters), std::get<std::string>(parameters));
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
     
-    REQUIRE(pSink->lastMessage == message);
+    REQUIRE(pSink->lastMessage == std::get<std::string>(parameters));
+}
+
+TEST_CASE_METHOD(LoggingWrapper, "Filter Log Message", "[core::logging]")
+{
+    // See: "#define LITL_LOG_LEVEL LITL_LOG_LEVEL_INFO" at top of this file
+    const auto parameters = GENERATE(
+        std::make_tuple(LITL::Core::LogLevel::Trace, false),
+        std::make_tuple(LITL::Core::LogLevel::Debug, false),
+        std::make_tuple(LITL::Core::LogLevel::Info, true),
+        std::make_tuple(LITL::Core::LogLevel::Warning, true)
+    );
+
+    LITL::Core::Logger::log(std::get<LITL::Core::LogLevel>(parameters), "Hello, World!");
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
+    REQUIRE((pSink->lastMessage == std::nullopt) == !std::get<bool>(parameters));
 }
