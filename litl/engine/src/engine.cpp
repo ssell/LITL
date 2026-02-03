@@ -37,28 +37,32 @@ namespace LITL::Engine
 
     Engine::Engine(Renderer::RendererDescriptor const& rendererDescriptor)
     {
-        LITL::Core::Logger::initialize("litl-engine", true, false);
+        LITL::Core::Logger::initialize("litl-engine", true, true);
+        logInfo("LITL Engine Startup");
+
         m_impl->rendererDescriptor = rendererDescriptor;
     }
 
     Engine::~Engine()
     {
+        logInfo("LITL Engine Shutdown");
         LITL::Core::Logger::shutdown();
     }
 
     bool Engine::openWindow(const char* title, uint32_t width, uint32_t height) noexcept
     {
+        logInfo("Opening window \"", title, "\" (", width, "x", height, ") ...");
         m_impl->pWindow = createWindow(m_impl->rendererDescriptor.rendererType);
 
         if (m_impl->pWindow == nullptr)
         {
-            // todo log error
+            logCritical("Failed to create Window");
             return false;
         }
 
         if (!m_impl->pWindow->open(title, width, height))
         {
-            // todo log error
+            logCritical("Failed to open Window");
             return false;
         }
 
@@ -66,16 +70,17 @@ namespace LITL::Engine
 
         if (m_impl->pRenderer == nullptr)
         {
-            // todo log error
+            logCritical("Failed to create Renderer");
             return false;
         }
 
         if (!m_impl->pRenderer->initialize())
         {
-            // todo log error
+            logCritical("Failed to initialize Renderer");
             return false;
         }
 
+        logInfo("... Window and Renderer creation successful.");
         return true;
     }
 
