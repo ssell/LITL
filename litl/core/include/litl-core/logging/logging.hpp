@@ -6,12 +6,15 @@
 
 namespace LITL::Core
 {
+    class LoggingSink;
+
     class Logger
     {
     public:
 
         static void initialize(char const* logName, bool consoleSink, bool fileSink);
         static void shutdown();
+        static void addSink(LoggingSink* sink);
 
         static void log(LogLevel logLevel, std::string_view message)
         {

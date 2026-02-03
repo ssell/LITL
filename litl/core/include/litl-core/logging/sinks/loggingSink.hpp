@@ -11,7 +11,7 @@ namespace LITL::Core
     public:
 
         LoggingSink();
-        ~LoggingSink();
+        virtual ~LoggingSink();
 
         void enqueue(std::string_view message);
 

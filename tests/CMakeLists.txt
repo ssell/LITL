@@ -3,7 +3,8 @@ FetchContent_MakeAvailable(Catch2)
 
 add_executable(litl-tests
 	"src/litl-core/containers/concurrentQueue_tests.cpp"
- "src/litl-core/containers/concurrentSingleQueue_tests.cpp")
+	"src/litl-core/containers/concurrentSingleQueue_tests.cpp" 
+	"src/litl-core/logging/logging_tests.cpp")
 
 target_link_libraries(litl-tests
 	PRIVATE
