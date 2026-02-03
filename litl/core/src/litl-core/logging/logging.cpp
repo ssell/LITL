@@ -17,7 +17,7 @@ namespace LITL::Core
 
     }
 
-    void Logger::logMessage(LogLevel logLevel, char const* message)
+    void Logger::logMessage(LogLevel logLevel, std::string_view message)
     {
 
     }

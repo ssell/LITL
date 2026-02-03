@@ -4,6 +4,7 @@
 #include <atomic>
 #include <cstddef>
 #include <vector>
+#include <optional>
 
 namespace LITL::Core
 {
