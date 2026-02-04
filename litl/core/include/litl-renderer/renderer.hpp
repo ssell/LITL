@@ -5,6 +5,7 @@
 
 #include "litl-renderer/rendererDescriptor.hpp"
 #include "litl-renderer/commands/commandBuffer.hpp"
+#include "litl-renderer/pipeline/pipelineLayout.hpp"
 
 namespace LITL::Renderer
 {
@@ -18,6 +19,7 @@ namespace LITL::Renderer
         virtual uint32_t getFrame() const noexcept = 0;
         virtual uint32_t getFrameIndex() const noexcept = 0;
 
+        virtual std::unique_ptr<PipelineLayout> createPipelineLayout(PipelineLayoutDescriptor const& descriptor) const noexcept = 0;
         virtual std::unique_ptr<CommandBuffer> createCommandBuffer() const noexcept = 0;
 
         virtual void render(CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers) = 0;

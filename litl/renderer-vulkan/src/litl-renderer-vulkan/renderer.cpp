@@ -14,6 +14,7 @@
 #include "litl-renderer-vulkan/renderer.hpp"
 #include "litl-renderer-vulkan/swapchainSupport.hpp"
 #include "litl-renderer-vulkan/commands/commandBuffer.hpp"
+#include "litl-renderer-vulkan/pipeline/pipelineLayout.hpp"
 
 namespace LITL::Vulkan::Renderer
 {
@@ -105,16 +106,6 @@ namespace LITL::Vulkan::Renderer
         /// The size of the swap chain images.
         /// </summary>
         VkExtent2D vkSwapChainExtent;
-
-        /// <summary>
-        /// The fixed function pipeline layout.
-        /// </summary>
-        VkPipelineLayout vkPipelineLayout = VK_NULL_HANDLE;
-
-        /// <summary>
-        /// The fixed function pipeline.
-        /// </summary>
-        VkPipeline vkPipeline = VK_NULL_HANDLE;
 
         /// <summary>
         /// Manage memory that is used to store command buffers.
@@ -250,16 +241,6 @@ namespace LITL::Vulkan::Renderer
         if (m_pImpl->vkCommandPool != VK_NULL_HANDLE)
         {
             vkDestroyCommandPool(m_pImpl->vkDevice, m_pImpl->vkCommandPool, nullptr);
-        }
-
-        if (m_pImpl->vkPipeline != VK_NULL_HANDLE)
-        {
-            vkDestroyPipeline(m_pImpl->vkDevice, m_pImpl->vkPipeline, nullptr);
-        }
-
-        if (m_pImpl->vkPipelineLayout != VK_NULL_HANDLE)
-        {
-            vkDestroyPipelineLayout(m_pImpl->vkDevice, m_pImpl->vkPipelineLayout, nullptr);
         }
 
         cleanupSwapchain();
@@ -809,13 +790,26 @@ namespace LITL::Vulkan::Renderer
     // Object Creation
     // -------------------------------------------------------------------------------------
 
+    std::unique_ptr<LITL::Renderer::PipelineLayout> Renderer::createPipelineLayout(LITL::Renderer::PipelineLayoutDescriptor const& descriptor) const noexcept
+    {
+        auto pipelineLayout = std::make_unique<PipelineLayout>(m_pImpl->vkDevice, descriptor);
+
+        if (!pipelineLayout->build())
+        {
+            logError("Failed to construct new Vulkan Pipeline Layout object");
+            return nullptr;
+        }
+
+        return pipelineLayout;
+    }
+
     std::unique_ptr<LITL::Renderer::CommandBuffer> Renderer::createCommandBuffer() const noexcept
     {
         auto commandBuffer = std::make_unique<CommandBuffer>(m_pImpl->vkDevice, m_pImpl->vkCommandPool, m_pImpl->framesInFlight);
 
         if (!commandBuffer->build())
         {
-            logError("Failed to construct new Vulkan Command Buffer");
+            logError("Failed to construct new Vulkan Command Buffer object");
             return nullptr;
         }
 

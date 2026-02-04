@@ -12,16 +12,20 @@ namespace LITL::Renderer
     {
     public:
 
-        PipelineLayoutDescriptor const& getDescriptor()
+        ~PipelineLayout() = default;
+
+        virtual bool rebuild(PipelineLayoutDescriptor const& descriptor) noexcept = 0;
+
+        PipelineLayoutDescriptor const& getDescriptor() const noexcept
         {
             return m_descriptor;
         }
 
     protected:
 
-    private:
-
         PipelineLayoutDescriptor m_descriptor;
+
+    private:
     };
 }
 
