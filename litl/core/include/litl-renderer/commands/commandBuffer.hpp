@@ -11,9 +11,11 @@ namespace LITL::Renderer
 
         virtual bool build() = 0;
         virtual bool begin(uint32_t frame) = 0;
-        virtual bool end(uint32_t frame) = 0;
+        virtual bool end() = 0;
 
     protected:
+
+        uint32_t m_currFrame;
 
     private:
     };

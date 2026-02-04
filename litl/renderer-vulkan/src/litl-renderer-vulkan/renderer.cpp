@@ -179,7 +179,7 @@ namespace LITL::Vulkan::Renderer
 
     Renderer::~Renderer()
     {
-
+        cleanup();
     }
 
     bool Renderer::initialize() noexcept
@@ -198,6 +198,113 @@ namespace LITL::Vulkan::Renderer
             createSwapChain() &&
             createCommandPool() &&
             createSyncObjects();
+    }
+
+    uint32_t Renderer::getFrame() const noexcept
+    {
+        return m_pImpl->frame;
+    }
+
+    uint32_t Renderer::getFrameIndex() const noexcept
+    {
+        return (m_pImpl->frame % m_pImpl->framesInFlight);
+    }
+
+    // -------------------------------------------------------------------------------------
+    // Cleanup
+    // -------------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------------------
+
+    void Renderer::cleanup()
+    {
+        for (auto i = 0; i < m_pImpl->vkPresentCompleteSemaphores.size(); ++i)
+        {
+            if (m_pImpl->vkPresentCompleteSemaphores[i] != VK_NULL_HANDLE)
+            {
+                vkDestroySemaphore(m_pImpl->vkDevice, m_pImpl->vkPresentCompleteSemaphores[i], nullptr);
+            }
+
+            m_pImpl->vkPresentCompleteSemaphores.clear();
+        }
+
+        for (auto i = 0; i < m_pImpl->vkRenderCompleteSemaphores.size(); ++i)
+        {
+            if (m_pImpl->vkRenderCompleteSemaphores[i] != VK_NULL_HANDLE)
+            {
+                vkDestroySemaphore(m_pImpl->vkDevice, m_pImpl->vkRenderCompleteSemaphores[i], nullptr);
+            }
+
+            m_pImpl->vkRenderCompleteSemaphores.clear();
+        }
+
+        for (auto i = 0; i < m_pImpl->vkRenderFences.size(); ++i)
+        {
+            if (m_pImpl->vkRenderFences[i] != VK_NULL_HANDLE)
+            {
+                vkDestroyFence(m_pImpl->vkDevice, m_pImpl->vkRenderFences[i], nullptr);
+            }
+
+            m_pImpl->vkRenderFences.clear();
+        }
+
+        if (m_pImpl->vkCommandPool != VK_NULL_HANDLE)
+        {
+            vkDestroyCommandPool(m_pImpl->vkDevice, m_pImpl->vkCommandPool, nullptr);
+        }
+
+        if (m_pImpl->vkPipeline != VK_NULL_HANDLE)
+        {
+            vkDestroyPipeline(m_pImpl->vkDevice, m_pImpl->vkPipeline, nullptr);
+        }
+
+        if (m_pImpl->vkPipelineLayout != VK_NULL_HANDLE)
+        {
+            vkDestroyPipelineLayout(m_pImpl->vkDevice, m_pImpl->vkPipelineLayout, nullptr);
+        }
+
+        cleanupSwapchain();
+
+        if (m_pImpl->vkSurface != VK_NULL_HANDLE)
+        {
+            vkDestroySurfaceKHR(m_pImpl->vkInstance, m_pImpl->vkSurface, nullptr);
+        }
+
+        if (m_pImpl->vkDevice != VK_NULL_HANDLE)
+        {
+            vkDestroyDevice(m_pImpl->vkDevice, nullptr);
+        }
+
+        if (m_pImpl->vkInstance != VK_NULL_HANDLE)
+        {
+            vkDestroyInstance(m_pImpl->vkInstance, nullptr);
+        }
+    }
+
+    void Renderer::cleanupSwapchain()
+    {
+        if (!m_pImpl->vkSwapChainImageViews.empty())
+        {
+            // Note: only have to destroy the views since we explicitly made them, and not the underlying images.
+            // Those will be destroyed alongside the swap chain itself since it made them.
+            for (auto imageView : m_pImpl->vkSwapChainImageViews)
+            {
+                vkDestroyImageView(m_pImpl->vkDevice, imageView, nullptr);
+            }
+        }
+
+        if (m_pImpl->vkSwapChain != VK_NULL_HANDLE)
+        {
+            vkDestroySwapchainKHR(m_pImpl->vkDevice, m_pImpl->vkSwapChain, nullptr);
+        }
+    }
+
+    void Renderer::recreateSwapchain()
+    {
+        // Wait for our resources to be unused.
+        vkDeviceWaitIdle(m_pImpl->vkDevice);
+
+        cleanupSwapchain();
+        createSwapChain();
     }
 
     // -------------------------------------------------------------------------------------
@@ -718,4 +825,239 @@ namespace LITL::Vulkan::Renderer
     // -------------------------------------------------------------------------------------
     // Pipeline Creation
     // -------------------------------------------------------------------------------------
+
+    // -------------------------------------------------------------------------------------
+    // Rendering
+    // -------------------------------------------------------------------------------------
+
+    void Renderer::render(LITL::Renderer::CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers)
+    {
+        // ---------------------------------------------------------------------------------
+        // Wait & Prepare 
+
+        if (!isRenderReady())
+        {
+            return;
+        }
+
+        const auto frameIndex = getFrameIndex();
+        uint32_t swapChainImageIndex = 0;
+
+        if (!acquireSwapChainIndex(1000000, frameIndex, &swapChainImageIndex))                              // 1000000 ns = 1 ms
+        {
+            return;
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Record Commands
+
+        CommandBuffer* vulkanCommandBuffers = dynamic_cast<CommandBuffer*>(pCommandBuffers);
+
+        vkResetFences(m_pImpl->vkDevice, 1, &m_pImpl->vkRenderFences[frameIndex]);
+        recordCommandBuffers(vulkanCommandBuffers, numCommandBuffers, swapChainImageIndex);
+
+        // ---------------------------------------------------------------------------------
+        // Submit Commands
+
+        const auto waitDestinationStageMask = VkPipelineStageFlags(VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
+
+        // Only 1 expected command buffer atm. If we move to actually have multiple, reconsider redesigning CommandBuffer for AoS vs SoA.
+        const auto vkCommandBuffer = (&vulkanCommandBuffers)[0]->getCurrentCommandBuffer(m_pImpl->frame);
+
+        const auto submitInfo = VkSubmitInfo{
+            .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+            .waitSemaphoreCount = 1,
+            .pWaitSemaphores = &m_pImpl->vkPresentCompleteSemaphores[frameIndex],              // Wait for current swapchain image to be done presenting
+            .pWaitDstStageMask = &waitDestinationStageMask,                                     // Wait for writing colors to the image until's available
+            .commandBufferCount = 1,
+            .pCommandBuffers = &vkCommandBuffer,
+            .signalSemaphoreCount = 1,
+            .pSignalSemaphores = &m_pImpl->vkRenderCompleteSemaphores[swapChainImageIndex]     // The semaphore to signal once the command buffer(s) have finished execution.
+        };
+
+        const auto submitResult = vkQueueSubmit(m_pImpl->vkGraphicsQueue, 1, &submitInfo, m_pImpl->vkRenderFences[frameIndex]);      // Submit the command buffer
+
+        if (submitResult != VK_SUCCESS)
+        {
+            logWarning("Vulkan Renderer: vkQueueSubmit failed with result ", submitResult);
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Present
+
+        const auto presentInfo = VkPresentInfoKHR{
+            .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+            .waitSemaphoreCount = 1,
+            .pWaitSemaphores = &m_pImpl->vkRenderCompleteSemaphores[swapChainImageIndex],      // Wait for the command buffer to finish executing
+            .swapchainCount = 1,
+            .pSwapchains = &m_pImpl->vkSwapChain,
+            .pImageIndices = &swapChainImageIndex,                                              // Which image to draw onto
+            .pResults = nullptr                                                                 // (Optional) If using multiple swapchains, the success of each present will be stored in this array as opposed to the singular result from the upcoming call.
+        };
+
+        const auto presentResult = vkQueuePresentKHR(m_pImpl->vkGraphicsQueue, &presentInfo);
+
+        if (presentResult != VK_SUCCESS)
+        {
+            logWarning("Vulkan Renderer: vkQueuePresentKHR failed with result ", presentResult);
+        }
+
+        m_pImpl->frame++;
+    }
+
+    /// <summary>
+    /// Checks if the render fence is open. If not, we are still rendering the last frame and need to wait.
+    /// </summary>
+    /// <returns></returns>
+    bool Renderer::isRenderReady() const
+    {
+        VkResult fenceResult = vkGetFenceStatus(m_pImpl->vkDevice, m_pImpl->vkRenderFences[getFrameIndex()]);
+
+        if (fenceResult != VK_SUCCESS)
+        {
+            // Fence is not signaled OR is in error state.
+            if (fenceResult == VK_NOT_READY)
+            {
+                // Exit out of rendering so time can be spent on logic, etc.
+                return false;
+            }
+            else
+            {
+                // todo log error
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Acquires the index into our swapchain array for the next image to render to.
+    /// </summary>
+    /// <param name="timeoutNs"></param>
+    /// <param name="frameIndex"></param>
+    /// <param name="imageIndex"></param>
+    /// <returns></returns>
+    bool Renderer::acquireSwapChainIndex(uint32_t timeoutNs, uint32_t frameIndex, uint32_t* imageIndex)
+    {
+        const auto result = vkAcquireNextImageKHR(
+            m_pImpl->vkDevice,
+            m_pImpl->vkSwapChain,
+            timeoutNs,
+            m_pImpl->vkPresentCompleteSemaphores[frameIndex],
+            VK_NULL_HANDLE,
+            imageIndex);
+
+        if ((result == VK_ERROR_OUT_OF_DATE_KHR) || (result == VK_SUBOPTIMAL_KHR) || m_pImpl->wasResized)
+        {
+            recreateSwapchain();
+            return false;
+        }
+        else
+        {
+            return (result == VK_SUCCESS);
+        }
+    }
+
+    /// <summary>
+    /// Records all command buffers and reets the render fence.
+    /// </summary>
+    /// <param name="pCommandBuffers"></param>
+    /// <param name="numCommandBuffers"></param>
+    /// <param name="swapChainImageIndex"></param>
+    void Renderer::recordCommandBuffers(CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers, uint32_t swapChainImageIndex)
+    {
+        for (uint32_t i = 0; i < numCommandBuffers; ++i)
+        {
+            renderCommandBuffer(&pCommandBuffers[i], swapChainImageIndex);  // Record our render commands
+        }
+
+        vkResetFences(m_pImpl->vkDevice, 1, &m_pImpl->vkRenderFences[getFrameIndex()]);     // Reset our draw frame fence
+    }
+
+    /// <summary>
+    /// Renders the specified command buffer onto the specified image.
+    /// </summary>
+    /// <param name="pCommandBuffer"></param>
+    /// <param name="imageIndex"></param>
+    void Renderer::renderCommandBuffer(CommandBuffer* pCommandBuffer, uint32_t imageIndex)
+    {
+        pCommandBuffer->begin(m_pImpl->frame);
+
+        // We are perfmorming dynamic rendering, so need to specify the image layout we are writing to.
+        // Transition from undefined to color
+        pCommandBuffer->cmdTransitionImageLayout(
+            m_pImpl->vkSwapChainImages[imageIndex],
+            VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,                   // From Layout
+            VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,    // To Layout
+            {},                                                         // Source Access Mask
+            VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,                     // Dest Access Mask
+            VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,            // Source Stage Mask
+            VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT             // Dest Stage Mask
+        );
+
+        const auto attachmentInfo = VkRenderingAttachmentInfo{
+            .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+            .imageView = m_pImpl->vkSwapChainImageViews[imageIndex],
+            .imageLayout = VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            .loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR,
+            .storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE,
+            .clearValue = {{ 0.05f, 0.05f, 0.075f, 1.0f }}
+        };
+
+        const auto renderingInfo = VkRenderingInfo{
+            .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
+            .renderArea = {
+                .offset = {0, 0},
+                .extent = m_pImpl->vkSwapChainExtent
+            },
+            .layerCount = 1,
+            .colorAttachmentCount = 1,
+            .pColorAttachments = &attachmentInfo
+        };
+
+        const auto viewport = VkViewport{
+            .x = 0.0f,
+            .y = 0.0f,
+            .width = static_cast<float>(m_pImpl->vkSwapChainExtent.width),
+            .height = static_cast<float>(m_pImpl->vkSwapChainExtent.height),
+            .minDepth = 0.0f,
+            .maxDepth = 1.0f
+        };
+
+        const auto scissor = VkRect2D{
+            .offset = {
+                .x = 0,
+                .y = 0
+            },
+            .extent = {
+                .width = m_pImpl->vkSwapChainExtent.width,
+                .height = m_pImpl->vkSwapChainExtent.height
+            }
+        };
+
+        const VkCommandBuffer vkCommandBuffer = pCommandBuffer->getCurrentCommandBuffer(m_pImpl->frame);
+
+        vkCmdBeginRendering(vkCommandBuffer, &renderingInfo);
+
+        vkCmdBindPipeline(vkCommandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_pImpl->vkPipeline);
+        vkCmdSetViewport(vkCommandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(vkCommandBuffer, 0, 1, &scissor);
+        vkCmdDraw(vkCommandBuffer, 3, 1, 0, 0);
+
+        vkCmdEndRendering(vkCommandBuffer);
+
+        // Transition from color to present
+        pCommandBuffer->cmdTransitionImageLayout(
+            m_pImpl->vkSwapChainImages[imageIndex],
+            VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,    // From Layout
+            VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,             // To Layout
+            VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,                     // Source Access Mask
+            {},                                                         // Dest Access Mask
+            VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,            // Source Stage Mask
+            VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT                      // Dest Stage Mask
+        );
+
+        pCommandBuffer->end();
+    }
 }
