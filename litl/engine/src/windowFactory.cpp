@@ -4,14 +4,14 @@
 
 namespace LITL::Engine
 {
-    Core::Window* createWindow(Renderer::RendererBackendType rendererType)
+    std::unique_ptr<Core::Window> createWindow(Renderer::RendererBackendType rendererType)
     {
         logInfo("Creating Window of type ", Renderer::RendererBackendNames[rendererType]);
 
         switch (rendererType)
         {
         case Renderer::RendererBackendType::Vulkan:
-            return new Vulkan::Window();
+            return std::make_unique<Vulkan::Window>();
 
         case Renderer::RendererBackendType::None:
         default:

@@ -14,6 +14,7 @@
 #include "litl-renderer-vulkan/renderer.hpp"
 #include "litl-renderer-vulkan/renderContext.hpp"
 #include "litl-renderer-vulkan/swapchainSupport.hpp"
+#include "litl-renderer-vulkan/commands/commandBuffer.hpp"
 
 namespace LITL::Vulkan::Renderer
 {
@@ -55,9 +56,9 @@ namespace LITL::Vulkan::Renderer
     // Renderer Creation
     // -------------------------------------------------------------------------------------
 
-    LITL::Renderer::Renderer* createVulkanRenderer(Core::Window* pWindow, LITL::Renderer::RendererDescriptor const& rendererDescriptor)
+    std::unique_ptr<LITL::Renderer::Renderer> createVulkanRenderer(Core::Window* pWindow, LITL::Renderer::RendererDescriptor const& rendererDescriptor)
     {
-        return dynamic_cast<LITL::Renderer::Renderer*>(new Renderer(pWindow, rendererDescriptor));
+        return std::make_unique<Renderer>(pWindow, rendererDescriptor);
     }
 
     Renderer::Renderer(Core::Window* pWindow, LITL::Renderer::RendererDescriptor const& rendererDescriptor)
@@ -593,9 +594,18 @@ namespace LITL::Vulkan::Renderer
     // Object Creation
     // -------------------------------------------------------------------------------------
 
-    // ... shader
-    // ... command buffer
-    // ... mesh
+    std::unique_ptr<LITL::Renderer::CommandBuffer> Renderer::createCommandBuffer() const noexcept
+    {
+        auto commandBuffer = std::make_unique<CommandBuffer>(m_impl->pContext->device, m_impl->pContext->commandPool, m_impl->pContext->framesInFlight);
+
+        if (!commandBuffer->build())
+        {
+            logError("Failed to construct new Vulkan Command Buffer");
+            return nullptr;
+        }
+
+        return commandBuffer;
+    }
 
     // -------------------------------------------------------------------------------------
     // Pipeline Creation

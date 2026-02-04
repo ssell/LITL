@@ -11,7 +11,7 @@ namespace LITL::Engine
     /// </summary>
     /// <param name="rendererDescriptor"></param>
     /// <returns>May return nullptr if no Renderer implementation found for the specified type.</returns>
-    Renderer::Renderer* createRenderer(Core::Window* pWindow, Renderer::RendererDescriptor const& rendererDescriptor);
+    std::unique_ptr<LITL::Renderer::Renderer> createRenderer(Core::Window* pWindow, Renderer::RendererDescriptor const& rendererDescriptor);
 }
 
 #endif

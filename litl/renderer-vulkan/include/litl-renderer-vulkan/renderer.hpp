@@ -21,6 +21,8 @@ namespace LITL::Vulkan::Renderer
 
         bool initialize() const noexcept override;
 
+        std::unique_ptr<LITL::Renderer::CommandBuffer> createCommandBuffer() const noexcept override;
+
     protected:
 
     private:
@@ -47,7 +49,7 @@ namespace LITL::Vulkan::Renderer
         Core::ImplPtr<Impl, 64> m_impl;
     };
 
-    LITL::Renderer::Renderer* createVulkanRenderer(Core::Window* pWindow, LITL::Renderer::RendererDescriptor const& rendererDescriptor);
+    std::unique_ptr<LITL::Renderer::Renderer> createVulkanRenderer(Core::Window* pWindow, LITL::Renderer::RendererDescriptor const& rendererDescriptor);
 }
 
 #endif

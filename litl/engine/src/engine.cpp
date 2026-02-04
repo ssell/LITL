@@ -12,23 +12,10 @@ namespace LITL::Engine
 
     struct Engine::Impl
     {
-        LITL::Core::Window* pWindow;
+        std::unique_ptr<LITL::Core::Window> pWindow;
+        std::unique_ptr<LITL::Renderer::Renderer> pRenderer;
 
         Renderer::RendererDescriptor rendererDescriptor;
-        LITL::Renderer::Renderer* pRenderer;
-
-        ~Impl()
-        {
-            if (pRenderer != nullptr)
-            {
-                delete pRenderer;
-            }
-
-            if (pWindow != nullptr)
-            {
-                delete pWindow;
-            }
-        }
     };
 
     // -------------------------------------------------------------------------------------
@@ -66,7 +53,7 @@ namespace LITL::Engine
             return false;
         }
 
-        m_impl->pRenderer = createRenderer(m_impl->pWindow, m_impl->rendererDescriptor);
+        m_impl->pRenderer = createRenderer(m_impl->pWindow.get(), m_impl->rendererDescriptor);
 
         if (m_impl->pRenderer == nullptr)
         {

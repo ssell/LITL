@@ -1,0 +1,32 @@
+#ifndef LITL_VULKAN_RENDERER_COMMAND_BUFFER_H__
+#define LITL_VULKAN_RENDERER_COMMAND_BUFFER_H__
+
+#include <vector>
+#include <vulkan/vulkan.h>
+#include "litl-renderer/commands/commandBuffer.hpp"
+
+namespace LITL::Vulkan::Renderer
+{
+    class CommandBuffer : public LITL::Renderer::CommandBuffer
+    {
+    public:
+
+        CommandBuffer(VkDevice vkDevice, VkCommandPool vkCommandPool, uint32_t framesInFlight);
+        CommandBuffer(CommandBuffer const&) = delete;
+        CommandBuffer const& operator=(CommandBuffer const&) = delete;
+
+        ~CommandBuffer();
+
+        bool build() override;
+
+    protected:
+
+    private:
+
+        VkDevice m_vkDevice;
+        VkCommandPool m_vkCommandPool;
+        std::vector<VkCommandBuffer> m_vkCommandBuffers;
+    };
+}
+
+#endif

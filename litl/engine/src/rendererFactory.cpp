@@ -4,7 +4,7 @@
 
 namespace LITL::Engine
 {
-    Renderer::Renderer* createRenderer(Core::Window* pWindow, Renderer::RendererDescriptor const& rendererDescriptor)
+    std::unique_ptr<LITL::Renderer::Renderer> createRenderer(Core::Window* pWindow, Renderer::RendererDescriptor const& rendererDescriptor)
     {
         logInfo("Creating Renderer of type ", Renderer::RendererBackendNames[rendererDescriptor.rendererType]);
 
