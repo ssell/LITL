@@ -13,14 +13,14 @@ namespace LITL::Renderer
     public:
 
         virtual ~Renderer() = default;
-
         virtual bool initialize() noexcept = 0;
 
-        /// <summary>
-        /// Creates a new command buffer for the active backend. If successful, the caller assumes ownership (and responsibilil
-        /// </summary>
-        /// <returns></returns>
+        virtual uint32_t getFrame() const noexcept = 0;
+        virtual uint32_t getFrameIndex() const noexcept = 0;
+
         virtual std::unique_ptr<CommandBuffer> createCommandBuffer() const noexcept = 0;
+
+        virtual void render(CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers) = 0;
 
     protected:
         

@@ -47,12 +47,14 @@ namespace LITL::Vulkan::Renderer
 
     bool CommandBuffer::begin(uint32_t frame)
     {
+        m_currFrame = frame;
+
         const auto info = VkCommandBufferBeginInfo{
             .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO
             // .flags = ...; // (Optional)
         };
 
-        VkResult result = vkBeginCommandBuffer(getCurrentCommandBuffer(frame), &info);
+        VkResult result = vkBeginCommandBuffer(getCurrentCommandBuffer(m_currFrame), &info);
 
         if (result != VK_SUCCESS)
         {
@@ -63,9 +65,9 @@ namespace LITL::Vulkan::Renderer
         return true;
     }
 
-    bool CommandBuffer::end(uint32_t frame)
+    bool CommandBuffer::end()
     {
-        VkResult result = vkEndCommandBuffer(getCurrentCommandBuffer(frame));
+        VkResult result = vkEndCommandBuffer(getCurrentCommandBuffer(m_currFrame));
 
         if (result != VK_SUCCESS)
         {
@@ -79,5 +81,37 @@ namespace LITL::Vulkan::Renderer
     VkCommandBuffer CommandBuffer::getCurrentCommandBuffer(uint32_t frame) const noexcept
     {
         return m_vkCommandBuffers[frame % m_vkCommandBuffers.size()];
+    }
+
+    void CommandBuffer::cmdTransitionImageLayout(VkImage vkImage, uint32_t oldLayout, uint32_t newLayout, uint32_t srcAccessMask, uint32_t dstAccessMask, uint32_t srcStageMask, uint32_t dstStageMask)
+    {
+        const auto barrier = VkImageMemoryBarrier2{
+            .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+            .srcStageMask = srcStageMask,
+            .srcAccessMask = srcAccessMask,
+            .dstStageMask = dstStageMask,
+            .dstAccessMask = dstAccessMask,
+            .oldLayout = static_cast<VkImageLayout>(oldLayout),
+            .newLayout = static_cast<VkImageLayout>(newLayout),
+            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .image = vkImage,
+            .subresourceRange = VkImageSubresourceRange {
+                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                .baseMipLevel = 0,
+                .levelCount = 1,
+                .baseArrayLayer = 0,
+                .layerCount = 1
+            }
+        };
+
+        const auto info = VkDependencyInfo{
+            .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+            .dependencyFlags = {},
+            .imageMemoryBarrierCount = 1,
+            .pImageMemoryBarriers = &barrier
+        };
+
+        vkCmdPipelineBarrier2(getCurrentCommandBuffer(m_currFrame), &info);
     }
 }

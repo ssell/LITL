@@ -6,6 +6,8 @@
 
 namespace LITL::Vulkan::Renderer
 {
+    class CommandBuffer;
+
     class Renderer : public LITL::Renderer::Renderer
     {
     public:
@@ -20,7 +22,12 @@ namespace LITL::Vulkan::Renderer
 
         bool initialize() noexcept override;
 
+        uint32_t getFrame() const noexcept override;
+        uint32_t getFrameIndex() const noexcept override;
+
         std::unique_ptr<LITL::Renderer::CommandBuffer> createCommandBuffer() const noexcept override;
+
+        void render(LITL::Renderer::CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers) override;
 
     protected:
 
@@ -40,9 +47,9 @@ namespace LITL::Vulkan::Renderer
         bool createSyncObjects();
 
         bool isRenderReady() const;
-        bool acquireSwapChainIndex(uint32_t timeoutNs, uint32_t frameIndex, uint32_t* imageIndex) const;
-        //void recordCommandBuffers(CommandBuffer const* pCommandBuffers, uint32_t numCommandBuffers, uint32_t swapChainImageIndex) const;
-        //void renderCommandBuffer(CommandBuffer const* pCommandBuffer, uint32_t imageIndex) const;
+        bool acquireSwapChainIndex(uint32_t timeoutNs, uint32_t frameIndex, uint32_t* imageIndex);
+        void recordCommandBuffers(CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers, uint32_t swapChainImageIndex);
+        void renderCommandBuffer(CommandBuffer* pCommandBuffer, uint32_t imageIndex);
 
         struct Impl;
         std::unique_ptr<Impl> m_pImpl;
