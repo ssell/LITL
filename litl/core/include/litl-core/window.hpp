@@ -25,6 +25,8 @@ namespace LITL::Core
         virtual uint32_t getWidth() const = 0;
         virtual uint32_t getHeight() const = 0;
 
+        virtual void* getSurfaceWindow() const = 0;
+
     protected:
 
         virtual void onResize(uint32_t width, uint32_t height) = 0;

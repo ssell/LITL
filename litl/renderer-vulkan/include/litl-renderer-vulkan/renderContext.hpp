@@ -25,9 +25,9 @@ namespace LITL::Vulkan::Renderer
         bool wasResized = false;
 
         /// <summary>
-        /// Our window. Typically a GLFWwindow.
+        /// Our window surface. Typically a GLFWwindow.
         /// </summary>
-        void* window = nullptr;
+        void* pSurfaceWindow = nullptr;
 
         /// <summary>
         /// Connection to the Vulkan library.

@@ -26,6 +26,8 @@ namespace LITL::Vulkan
         uint32_t getWidth() const override;
         uint32_t getHeight() const override;
 
+        void* getSurfaceWindow() const override;
+
     protected:
 
         void onResize(uint32_t width, uint32_t height) override;
