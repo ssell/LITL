@@ -11,6 +11,9 @@ namespace LITL::Vulkan::Renderer
     public:
 
         PipelineLayout(VkDevice vkDevice, LITL::Renderer::PipelineLayoutDescriptor const& descriptor);
+        PipelineLayout(PipelineLayout const&) = delete;
+        PipelineLayout& operator=(PipelineLayout const&) = delete;
+
         ~PipelineLayout();
 
         bool build() noexcept;

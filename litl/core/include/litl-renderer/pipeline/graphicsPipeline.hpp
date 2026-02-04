@@ -27,9 +27,13 @@ namespace LITL::Renderer
     {
     public:
 
-        void bind(CommandBuffer& commandBuffer) const;
+        ~GraphicsPipeline() = default;
+
+        virtual void bind(CommandBuffer* pCommandBuffer) noexcept = 0;
 
     protected:
+
+        const GraphicsPipelineDescriptor m_descriptor;
 
     private:
     };
