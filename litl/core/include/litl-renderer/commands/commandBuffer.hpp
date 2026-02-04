@@ -8,7 +8,10 @@ namespace LITL::Renderer
     public:
 
         virtual ~CommandBuffer() = default;
+
         virtual bool build() = 0;
+        virtual bool begin(uint32_t frame) = 0;
+        virtual bool end(uint32_t frame) = 0;
 
     protected:
 
