@@ -1,7 +1,6 @@
 #ifndef LITL_VULKAN_RENDERER_H__
 #define LITL_VULKAN_RENDERER_H__
 
-#include "litl-core/impl.hpp"
 #include "litl-core/window.hpp"
 #include "litl-renderer/renderer.hpp"
 
@@ -19,7 +18,7 @@ namespace LITL::Vulkan::Renderer
         Renderer& operator=(Renderer const&) = delete;
         Renderer& operator=(Renderer&&) = delete;
 
-        bool initialize() const noexcept override;
+        bool initialize() noexcept override;
 
         std::unique_ptr<LITL::Renderer::CommandBuffer> createCommandBuffer() const noexcept override;
 
@@ -27,18 +26,18 @@ namespace LITL::Vulkan::Renderer
 
     private:
 
-        void cleanup() const;
-        void cleanupSwapchain() const;
-        void recreateSwapchain() const;
+        void cleanup();
+        void cleanupSwapchain();
+        void recreateSwapchain();
 
-        bool createInstance() const;
-        bool verifyValidationLayers() const;
-        bool createWindowSurface() const;
-        bool selectPhysicalDevice() const;
-        bool createLogicalDevice() const;
-        bool createSwapChain() const;
-        bool createCommandPool() const;
-        bool createSyncObjects() const;
+        bool createInstance();
+        bool verifyValidationLayers();
+        bool createWindowSurface();
+        bool selectPhysicalDevice();
+        bool createLogicalDevice();
+        bool createSwapChain();
+        bool createCommandPool();
+        bool createSyncObjects();
 
         bool isRenderReady() const;
         bool acquireSwapChainIndex(uint32_t timeoutNs, uint32_t frameIndex, uint32_t* imageIndex) const;
@@ -46,7 +45,7 @@ namespace LITL::Vulkan::Renderer
         //void renderCommandBuffer(CommandBuffer const* pCommandBuffer, uint32_t imageIndex) const;
 
         struct Impl;
-        Core::ImplPtr<Impl, 64> m_impl;
+        std::unique_ptr<Impl> m_pImpl;
     };
 
     std::unique_ptr<LITL::Renderer::Renderer> createVulkanRenderer(Core::Window* pWindow, LITL::Renderer::RendererDescriptor const& rendererDescriptor);

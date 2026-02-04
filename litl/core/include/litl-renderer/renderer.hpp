@@ -14,7 +14,7 @@ namespace LITL::Renderer
 
         virtual ~Renderer() = default;
 
-        virtual bool initialize() const noexcept = 0;
+        virtual bool initialize() noexcept = 0;
 
         /// <summary>
         /// Creates a new command buffer for the active backend. If successful, the caller assumes ownership (and responsibilil

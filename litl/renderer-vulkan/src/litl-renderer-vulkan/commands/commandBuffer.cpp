@@ -44,4 +44,40 @@ namespace LITL::Vulkan::Renderer
 
         return true;
     }
+
+    bool CommandBuffer::begin(uint32_t frame)
+    {
+        const auto info = VkCommandBufferBeginInfo{
+            .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO
+            // .flags = ...; // (Optional)
+        };
+
+        VkResult result = vkBeginCommandBuffer(getCurrentCommandBuffer(frame), &info);
+
+        if (result != VK_SUCCESS)
+        {
+            // todo log out error
+            return false;
+        }
+
+        return true;
+    }
+
+    bool CommandBuffer::end(uint32_t frame)
+    {
+        VkResult result = vkEndCommandBuffer(getCurrentCommandBuffer(frame));
+
+        if (result != VK_SUCCESS)
+        {
+            // todo log out error
+            return false;
+        }
+
+        return true;
+    }
+
+    VkCommandBuffer CommandBuffer::getCurrentCommandBuffer(uint32_t frame) const noexcept
+    {
+        return m_vkCommandBuffers[frame % m_vkCommandBuffers.size()];
+    }
 }
