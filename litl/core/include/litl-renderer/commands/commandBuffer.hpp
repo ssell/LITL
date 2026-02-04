@@ -7,6 +7,9 @@ namespace LITL::Renderer
     {
     public:
 
+        virtual ~CommandBuffer() = default;
+        virtual bool build() = 0;
+
     protected:
 
     private:

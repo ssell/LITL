@@ -11,7 +11,7 @@ namespace LITL::Engine
     /// </summary>
     /// <param name="rendererType"></param>
     /// <returns>May return nullptr if no Window implementation found for the specified type.</returns>
-    Core::Window* createWindow(Renderer::RendererBackendType rendererType);
+    std::unique_ptr<Core::Window> createWindow(Renderer::RendererBackendType rendererType);
 }
 
 #endif
