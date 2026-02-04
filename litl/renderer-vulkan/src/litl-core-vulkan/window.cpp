@@ -111,4 +111,9 @@ namespace LITL::Vulkan
     {
         return m_impl->height;
     }
+
+    void* Window::getSurfaceWindow() const
+    {
+        return m_impl->pWindow;
+    }
 }

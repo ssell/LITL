@@ -8,6 +8,7 @@
 #include <GLFW/glfw3native.h>
 
 #include "litl-core/logging/logging.hpp"
+#include "litl-core/math/math.hpp"
 #include "litl-renderer/pipeline/graphicsPipeline.hpp"
 #include "litl-renderer-vulkan/queueFamily.hpp"
 #include "litl-renderer-vulkan/renderer.hpp"
@@ -63,7 +64,8 @@ namespace LITL::Vulkan::Renderer
     {
         m_impl->pWindow = pWindow;
         m_impl->pContext = new RenderContext{
-            .framesInFlight = rendererDescriptor.framesInFlight
+            .framesInFlight = rendererDescriptor.framesInFlight,
+            .pSurfaceWindow = pWindow->getSurfaceWindow()
         };
     }
 
@@ -132,7 +134,7 @@ namespace LITL::Vulkan::Renderer
 
         if (result != VK_SUCCESS)
         {
-            logCritical("Failed to create Vulkan Instance with result ", result);
+            logError("Failed to create Vulkan Instance with result ", result);
             return false;
         }
 
@@ -180,11 +182,11 @@ namespace LITL::Vulkan::Renderer
     /// <returns></returns>
     bool Renderer::createWindowSurface() const
     {
-        VkResult result = glfwCreateWindowSurface(m_impl->pContext->vkInstance, static_cast<GLFWwindow*>(m_impl->pContext->window), nullptr, &m_impl->pContext->surface);
+        VkResult result = glfwCreateWindowSurface(m_impl->pContext->vkInstance, static_cast<GLFWwindow*>(m_impl->pContext->pSurfaceWindow), nullptr, &m_impl->pContext->surface);
 
         if (result != VK_SUCCESS)
         {
-            logCritical("Failed to create Vulkan Window Surface with result ", result);
+            logError("Failed to create Vulkan Window Surface with result ", result);
             return false;
         }
 
@@ -389,16 +391,22 @@ namespace LITL::Vulkan::Renderer
 
         if (result != VK_SUCCESS)
         {
-            // todo log out
+            logError("Failed to create Vulkan Device with result ", result);
             return false;
         }
 
         vkGetDeviceQueue(m_impl->pContext->device, queueFamilies.getGraphicsIndex(), 0, &m_impl->pContext->graphicsQueue);
         vkGetDeviceQueue(m_impl->pContext->device, queueFamilies.getPresentIndex(), 0, &m_impl->pContext->presentQueue);
 
-        if ((m_impl->pContext->graphicsQueue == VK_NULL_HANDLE) || (m_impl->pContext->presentQueue == VK_NULL_HANDLE))
+        if (m_impl->pContext->graphicsQueue == VK_NULL_HANDLE)
         {
-            // todo log out
+            logError("Failed to retrieved Vulkan Graphics Queue");
+            return false;
+        }
+
+        if (m_impl->pContext->presentQueue == VK_NULL_HANDLE)
+        {
+            logError("Failed to retrieve Vulkan Present Queue");
             return false;
         }
 
@@ -412,7 +420,7 @@ namespace LITL::Vulkan::Renderer
         int32_t frameBufferWidth = 0;
         int32_t frameBufferHeight = 0;
 
-        glfwGetFramebufferSize(static_cast<GLFWwindow*>(m_impl->pContext->window), &frameBufferWidth, &frameBufferHeight);
+        glfwGetFramebufferSize(static_cast<GLFWwindow*>(m_impl->pContext->pSurfaceWindow), &frameBufferWidth, &frameBufferHeight);
 
         auto swapChainSupport = SwapChainSupport::querySwapChainSupport(m_impl->pContext->physicalDevice, m_impl->pContext->surface);
         auto surfaceFormat = swapChainSupport.chooseSwapSurfaceFormat();
@@ -460,7 +468,7 @@ namespace LITL::Vulkan::Renderer
 
         if (result != VK_SUCCESS)
         {
-            // todo log error
+            logError("Failed to create Vulkan Swap Chain with result ", result);
             return false;
         }
 
@@ -493,7 +501,7 @@ namespace LITL::Vulkan::Renderer
 
             if (result != VK_SUCCESS)
             {
-                // todo log error
+                logError("Failed to create Vulkan Swap Chain Image View with result ", result);
                 return false;
             }
         }
@@ -515,7 +523,7 @@ namespace LITL::Vulkan::Renderer
 
         if (result != VK_SUCCESS)
         {
-            // todo log error
+            logError("Failed to create Vulkan Command Buffer Pool with result ", result);
             return false;
         }
 
@@ -555,7 +563,7 @@ namespace LITL::Vulkan::Renderer
 
             if (renderCompleteSemaphoreResult != VK_SUCCESS)
             {
-                // todo log error
+                logError("Failed to create Vulkan Render Complete Semaphore with result ", renderCompleteSemaphoreResult);
                 return false;
             }
         }
@@ -565,9 +573,15 @@ namespace LITL::Vulkan::Renderer
             const auto presentCompleteSemaphoreResult = vkCreateSemaphore(m_impl->pContext->device, &presentSemaphoreInfo, nullptr, &m_impl->pContext->presentCompleteSemaphores[i]);
             const auto renderFenceResult = vkCreateFence(m_impl->pContext->device, &renderFenceInfo, nullptr, &m_impl->pContext->renderFences[i]);
 
-            if ((presentCompleteSemaphoreResult != VK_SUCCESS) || (renderFenceResult != VK_SUCCESS))
+            if (presentCompleteSemaphoreResult != VK_SUCCESS)
             {
-                // todo log error
+                logError("Failed to create Vulkan Present Complete Semaphore with result ", presentCompleteSemaphoreResult);
+                return false;
+            }
+
+            if (renderFenceResult != VK_SUCCESS)
+            {
+                logError("Failed to create Vulkan Render Fence with result ", renderFenceResult);
                 return false;
             }
         }
