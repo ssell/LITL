@@ -190,7 +190,7 @@ namespace LITL::Vulkan::Renderer
     bool createCommandPool(RendererHandle* handle);
     bool createSyncObjects(RendererHandle* handle);
 
-    bool initialize(LITL::Renderer::RendererHandle const& litlHandle) noexcept
+    bool build(LITL::Renderer::RendererHandle const& litlHandle) noexcept
     {
         auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
 

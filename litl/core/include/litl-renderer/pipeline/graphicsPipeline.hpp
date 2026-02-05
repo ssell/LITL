@@ -1,6 +1,9 @@
 #ifndef LITL_RENDERER_GRAPHICS_PIPELINE_H__
 #define LITL_RENDERER_GRAPHICS_PIPELINE_H__
 
+#include <memory>
+
+#include "litl-renderer/handles.hpp"
 #include "litl-renderer/commands/commandBuffer.hpp"
 #include "litl-renderer/pipeline/fixedPipeline.hpp"
 #include "litl-renderer/pipeline/pipelineLayout.hpp"
@@ -8,6 +11,8 @@
 
 namespace LITL::Renderer
 {
+    DEFINE_LITL_HANDLE(GraphicsPipelineHandle);
+
     struct GraphicsPipelineDescriptor
     {
         PipelineLayout* pPipelineLayout;
@@ -23,19 +28,56 @@ namespace LITL::Renderer
         ShaderModule* pTessellationEvaulationShader;
     };
 
+    struct GraphicsPipelineOperations
+    {
+        bool (*build)(GraphicsPipelineHandle const&);
+        void (*destroy)(GraphicsPipelineHandle const&);
+    };
+
     class GraphicsPipeline
     {
     public:
 
-        ~GraphicsPipeline() = default;
+        GraphicsPipeline(GraphicsPipelineOperations const* pOperations, GraphicsPipelineHandle handle)
+            : m_pBackendOperations(pOperations), m_backendHandle(handle)
+        {
 
-        virtual void bind(CommandBuffer* pCommandBuffer) noexcept = 0;
+        }
+
+        GraphicsPipeline(GraphicsPipeline const&) = delete;
+        GraphicsPipeline& operator=(GraphicsPipeline const&) = delete;
+
+        ~GraphicsPipeline()
+        {
+            destroy();
+        }
+
+        bool build()
+        {
+            return m_pBackendOperations->build(m_backendHandle);
+        }
+
+        void destroy()
+        {
+            if (m_backendHandle.handle != nullptr)
+            {
+                m_pBackendOperations->destroy(m_backendHandle);
+                m_backendHandle.handle = nullptr;
+            }
+        }
+
+        GraphicsPipelineHandle const* getHandle() const
+        {
+            return &m_backendHandle;
+        }
+
 
     protected:
 
-        GraphicsPipelineDescriptor m_descriptor;
-
     private:
+
+        GraphicsPipelineOperations const* m_pBackendOperations;
+        GraphicsPipelineHandle m_backendHandle;
     };
 }
 

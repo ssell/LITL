@@ -18,7 +18,7 @@ namespace LITL::Renderer
     /// </summary>
     struct RendererOperations
     {
-        bool (*initialize)(RendererHandle const&);
+        bool (*build)(RendererHandle const&);
         void (*destroy)(RendererHandle const&);
         uint32_t (*getFrame)(RendererHandle const&);
         uint32_t (*getFrameIndex)(RendererHandle const&);
@@ -42,12 +42,21 @@ namespace LITL::Renderer
 
         ~Renderer()
         {
-            m_pBackendOperations->destroy(m_backendHandle);
+            destroy();
         }
 
-        bool initialize()
+        bool build()
         {
-            return m_pBackendOperations->initialize(m_backendHandle);
+            return m_pBackendOperations->build(m_backendHandle);
+        }
+
+        void destroy()
+        {
+            if (m_backendHandle.handle != nullptr)
+            {
+                m_pBackendOperations->destroy(m_backendHandle);
+                m_backendHandle.handle = nullptr;
+            }
         }
 
         uint32_t getFrame() const noexcept
