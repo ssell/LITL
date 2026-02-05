@@ -79,9 +79,9 @@ namespace LITL::Renderer
 
     private:
 
-        PipelineLayoutDescriptor m_descriptor;
-        PipelineLayoutHandle m_backendHandle;
         PipelineLayoutOperations const* m_pBackendOperations;
+        PipelineLayoutHandle m_backendHandle;
+        PipelineLayoutDescriptor m_descriptor;
     };
 }
 

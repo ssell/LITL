@@ -84,8 +84,8 @@ namespace LITL::Renderer
         
     private:
 
-        RendererHandle m_backendHandle;
         RendererOperations const* m_pBackendOperations;
+        RendererHandle m_backendHandle;
     };
 }
 

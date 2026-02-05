@@ -716,6 +716,7 @@ namespace LITL::Vulkan::Renderer
     {
         auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
         cleanup(handle);
+        delete handle;
     }
 
     void cleanup(RendererHandle* handle)
@@ -808,6 +809,7 @@ namespace LITL::Vulkan::Renderer
     bool acquireSwapChainIndex(RendererHandle* handle, uint32_t timeoutNs, uint32_t frameIndex, uint32_t* imageIndex);
     void recordCommandBuffers(RendererHandle* handle, LITL::Renderer::CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers, uint32_t swapChainImageIndex);
     void renderCommandBuffer(RendererHandle* handle, LITL::Renderer::CommandBuffer* pCommandBuffer, uint32_t imageIndex);
+    void transitionImageLayout(VkCommandBuffer vkCommandBuffer, VkImage vkImage, uint32_t oldLayout, uint32_t newLayout, uint32_t srcAccessMask, uint32_t dstAccessMask, uint32_t srcStageMask, uint32_t dstStageMask);
 
     void render(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers)
     {
@@ -963,10 +965,12 @@ namespace LITL::Vulkan::Renderer
     void renderCommandBuffer(RendererHandle* handle, LITL::Renderer::CommandBuffer* pCommandBuffer, uint32_t imageIndex)
     {
         pCommandBuffer->begin(handle->context.frame);
+        auto vkCommandBuffer = extractCurrentVkCommandBuffer(pCommandBuffer);
 
         // We are perfmorming dynamic rendering, so need to specify the image layout we are writing to.
         // Transition from undefined to color
-        pCommandBuffer->cmdTransitionImageLayout(
+        transitionImageLayout(
+            vkCommandBuffer,
             handle->context.vkSwapChainImages[imageIndex],
             VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,                   // From Layout
             VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,    // To Layout
@@ -1016,8 +1020,6 @@ namespace LITL::Vulkan::Renderer
             }
         };
 
-        const VkCommandBuffer vkCommandBuffer = extractCurrentVkCommandBuffer(pCommandBuffer);
-
         vkCmdBeginRendering(vkCommandBuffer, &renderingInfo);
 
         // !todo! vkCmdBindPipeline(vkCommandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, handle->context.vkPipeline);
@@ -1028,7 +1030,8 @@ namespace LITL::Vulkan::Renderer
         vkCmdEndRendering(vkCommandBuffer);
 
         // Transition from color to present
-        pCommandBuffer->cmdTransitionImageLayout(
+        transitionImageLayout(
+            vkCommandBuffer,
             handle->context.vkSwapChainImages[imageIndex],
             VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,    // From Layout
             VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,             // To Layout
@@ -1041,13 +1044,46 @@ namespace LITL::Vulkan::Renderer
         pCommandBuffer->end();
     }
 
+    void transitionImageLayout(VkCommandBuffer vkCommandBuffer, VkImage vkImage, uint32_t oldLayout, uint32_t newLayout, uint32_t srcAccessMask, uint32_t dstAccessMask, uint32_t srcStageMask, uint32_t dstStageMask)
+    {
+        const auto barrier = VkImageMemoryBarrier2{
+            .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+            .srcStageMask = srcStageMask,
+            .srcAccessMask = srcAccessMask,
+            .dstStageMask = dstStageMask,
+            .dstAccessMask = dstAccessMask,
+            .oldLayout = static_cast<VkImageLayout>(oldLayout),
+            .newLayout = static_cast<VkImageLayout>(newLayout),
+            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .image = vkImage,
+            .subresourceRange = VkImageSubresourceRange {
+                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                .baseMipLevel = 0,
+                .levelCount = 1,
+                .baseArrayLayer = 0,
+                .layerCount = 1
+            }
+        };
+
+        const auto info = VkDependencyInfo{
+            .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+            .dependencyFlags = {},
+            .imageMemoryBarrierCount = 1,
+            .pImageMemoryBarriers = &barrier
+        };
+
+        vkCmdPipelineBarrier2(vkCommandBuffer, &info);
+    }
+
     // -------------------------------------------------------------------------------------
     // Object Creation
     // -------------------------------------------------------------------------------------
 
     std::unique_ptr<LITL::Renderer::CommandBuffer> createCommandBuffer(LITL::Renderer::RendererHandle const& litlHandle)
     {
-        return nullptr;
+        auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
+        return createCommandBuffer(handle->context.vkDevice, handle->context.vkCommandPool, handle->context.frame, handle->context.framesInFlight);
     }
 
     std::unique_ptr<LITL::Renderer::PipelineLayout> createPipelineLayout(LITL::Renderer::RendererHandle const& litlHandle)

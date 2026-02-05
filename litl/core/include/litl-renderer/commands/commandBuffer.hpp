@@ -67,8 +67,8 @@ namespace LITL::Renderer
 
     private:
 
-        CommandBufferHandle m_backendHandle;
         CommandBufferOperations const* m_pBackendOperations;
+        CommandBufferHandle m_backendHandle;
     };
 }
 

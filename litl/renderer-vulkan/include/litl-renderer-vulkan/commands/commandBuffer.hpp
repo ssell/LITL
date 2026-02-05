@@ -6,7 +6,7 @@
 
 namespace LITL::Vulkan::Renderer
 {
-    std::unique_ptr<LITL::Renderer::CommandBuffer> createCommandBuffer(VkDevice vkDevice, VkCommandPool vkCommandPool, uint32_t framesInFlight);
+    std::unique_ptr<LITL::Renderer::CommandBuffer> createCommandBuffer(VkDevice vkDevice, VkCommandPool vkCommandPool, uint32_t currFrame, uint32_t framesInFlight);
 
     bool build(LITL::Renderer::CommandBufferHandle const& litlHandle);
     void destroy(LITL::Renderer::CommandBufferHandle const& litlHandle);
