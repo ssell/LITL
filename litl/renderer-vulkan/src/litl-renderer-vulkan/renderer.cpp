@@ -173,8 +173,10 @@ namespace LITL::Vulkan::Renderer
         handle->context.framesInFlight = rendererDescriptor.framesInFlight;
 
         return std::make_unique<LITL::Renderer::Renderer>(
-            VulkanRendererOperations,
-            handle
+            &VulkanRendererOperations,
+            LITL::Renderer::RendererHandle{
+                handle
+            }
         );
     }
 

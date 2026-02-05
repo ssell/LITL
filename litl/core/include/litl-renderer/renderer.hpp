@@ -37,9 +37,9 @@ namespace LITL::Renderer
     {
     public:
 
-        Renderer(std::unique_ptr<RendererOperations> operations, RendererHandle handle)
+        Renderer(RendererOperations const* operations, RendererHandle handle)
         {
-            m_backendOperations = std::move(operations);
+            m_backendOperations = operations;
             m_backendHandle = handle;
         }
 
@@ -86,7 +86,7 @@ namespace LITL::Renderer
     private:
 
         RendererHandle m_backendHandle;
-        std::unique_ptr<RendererOperations> m_backendOperations;
+        RendererOperations const* m_backendOperations;
     };
 }
 
