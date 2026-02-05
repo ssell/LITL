@@ -174,9 +174,7 @@ namespace LITL::Vulkan::Renderer
 
         return std::make_unique<LITL::Renderer::Renderer>(
             &VulkanRendererOperations,
-            LITL::Renderer::RendererHandle{
-                handle
-            }
+            LITL_PACK_HANDLE(LITL::Renderer::RendererHandle, handle)
         );
     }
 
@@ -808,8 +806,8 @@ namespace LITL::Vulkan::Renderer
 
     bool isRenderReady(RendererHandle* handle);
     bool acquireSwapChainIndex(RendererHandle* handle, uint32_t timeoutNs, uint32_t frameIndex, uint32_t* imageIndex);
-    void recordCommandBuffers(RendererHandle* handle, CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers, uint32_t swapChainImageIndex);
-    void renderCommandBuffer(RendererHandle* handle, CommandBuffer* pCommandBuffer, uint32_t imageIndex);
+    void recordCommandBuffers(RendererHandle* handle, LITL::Renderer::CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers, uint32_t swapChainImageIndex);
+    void renderCommandBuffer(RendererHandle* handle, LITL::Renderer::CommandBuffer* pCommandBuffer, uint32_t imageIndex);
 
     void render(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers)
     {
@@ -834,10 +832,8 @@ namespace LITL::Vulkan::Renderer
         // ---------------------------------------------------------------------------------
         // Record Commands
 
-        CommandBuffer* vulkanCommandBuffers = dynamic_cast<CommandBuffer*>(pCommandBuffers);
-
         vkResetFences(handle->context.vkDevice, 1, &handle->context.vkRenderFences[frameIndex]);
-        recordCommandBuffers(handle, vulkanCommandBuffers, numCommandBuffers, swapChainImageIndex);
+        recordCommandBuffers(handle, pCommandBuffers, numCommandBuffers, swapChainImageIndex);
 
         // ---------------------------------------------------------------------------------
         // Submit Commands
@@ -845,12 +841,12 @@ namespace LITL::Vulkan::Renderer
         const auto waitDestinationStageMask = VkPipelineStageFlags(VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
 
         // Only 1 expected command buffer atm. If we move to actually have multiple, reconsider redesigning CommandBuffer for AoS vs SoA.
-        const auto vkCommandBuffer = (&vulkanCommandBuffers)[0]->getCurrentCommandBuffer(handle->context.frame);
+        const auto vkCommandBuffer = extractCurrentVkCommandBuffer((&pCommandBuffers)[0]);
 
         const auto submitInfo = VkSubmitInfo{
             .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
             .waitSemaphoreCount = 1,
-            .pWaitSemaphores = &handle->context.vkPresentCompleteSemaphores[frameIndex],              // Wait for current swapchain image to be done presenting
+            .pWaitSemaphores = &handle->context.vkPresentCompleteSemaphores[frameIndex],        // Wait for current swapchain image to be done presenting
             .pWaitDstStageMask = &waitDestinationStageMask,                                     // Wait for writing colors to the image until's available
             .commandBufferCount = 1,
             .pCommandBuffers = &vkCommandBuffer,
@@ -949,7 +945,7 @@ namespace LITL::Vulkan::Renderer
     /// <param name="pCommandBuffers"></param>
     /// <param name="numCommandBuffers"></param>
     /// <param name="swapChainImageIndex"></param>
-    void recordCommandBuffers(RendererHandle* handle, CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers, uint32_t swapChainImageIndex)
+    void recordCommandBuffers(RendererHandle* handle, LITL::Renderer::CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers, uint32_t swapChainImageIndex)
     {
         for (uint32_t i = 0; i < numCommandBuffers; ++i)
         {
@@ -964,7 +960,7 @@ namespace LITL::Vulkan::Renderer
     /// </summary>
     /// <param name="pCommandBuffer"></param>
     /// <param name="imageIndex"></param>
-    void renderCommandBuffer(RendererHandle* handle, CommandBuffer* pCommandBuffer, uint32_t imageIndex)
+    void renderCommandBuffer(RendererHandle* handle, LITL::Renderer::CommandBuffer* pCommandBuffer, uint32_t imageIndex)
     {
         pCommandBuffer->begin(handle->context.frame);
 
@@ -1020,7 +1016,7 @@ namespace LITL::Vulkan::Renderer
             }
         };
 
-        const VkCommandBuffer vkCommandBuffer = pCommandBuffer->getCurrentCommandBuffer(handle->context.frame);
+        const VkCommandBuffer vkCommandBuffer = extractCurrentVkCommandBuffer(pCommandBuffer);
 
         vkCmdBeginRendering(vkCommandBuffer, &renderingInfo);
 

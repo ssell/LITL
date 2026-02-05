@@ -11,13 +11,7 @@
 
 namespace LITL::Renderer
 {
-    /// <summary>
-    /// Backend-specific data required for the renderer to operate.
-    /// </summary>
-    struct RendererHandle
-    {
-        LITLHandle handle;
-    };
+    DEFINE_LITL_HANDLE(RendererHandle);
 
     /// <summary>
     /// Backend implemented renderer operations.
@@ -37,10 +31,10 @@ namespace LITL::Renderer
     {
     public:
 
-        Renderer(RendererOperations const* operations, RendererHandle handle)
+        Renderer(RendererOperations const* pOperations, RendererHandle handle)
+            : m_pBackendOperations(pOperations), m_backendHandle(handle)
         {
-            m_backendOperations = operations;
-            m_backendHandle = handle;
+
         }
 
         Renderer(Renderer const&) = delete;
@@ -48,37 +42,42 @@ namespace LITL::Renderer
 
         ~Renderer()
         {
-            m_backendOperations->destroy(m_backendHandle);
+            m_pBackendOperations->destroy(m_backendHandle);
         }
 
         bool initialize()
         {
-            return m_backendOperations->initialize(m_backendHandle);
+            return m_pBackendOperations->initialize(m_backendHandle);
         }
 
         uint32_t getFrame() const noexcept
         {
-            return m_backendOperations->getFrame(m_backendHandle);
+            return m_pBackendOperations->getFrame(m_backendHandle);
         }
 
         uint32_t getFrameIndex() const noexcept
         {
-            return m_backendOperations->getFrameIndex(m_backendHandle);
+            return m_pBackendOperations->getFrameIndex(m_backendHandle);
         }
 
         void render(CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers)
         {
-            m_backendOperations->render(m_backendHandle, pCommandBuffers, numCommandBuffers);
+            m_pBackendOperations->render(m_backendHandle, pCommandBuffers, numCommandBuffers);
         }
 
         std::unique_ptr<CommandBuffer> createCommandBuffer() const noexcept
         {
-            return m_backendOperations->createCommandBuffer(m_backendHandle);
+            return m_pBackendOperations->createCommandBuffer(m_backendHandle);
         }
 
         std::unique_ptr<PipelineLayout> createPipelineLayout() const noexcept
         {
-            return m_backendOperations->createPipelineLayout(m_backendHandle);
+            return m_pBackendOperations->createPipelineLayout(m_backendHandle);
+        }
+
+        RendererHandle const* getHandle() const
+        {
+            return &m_backendHandle;
         }
 
     protected:
@@ -86,7 +85,7 @@ namespace LITL::Renderer
     private:
 
         RendererHandle m_backendHandle;
-        RendererOperations const* m_backendOperations;
+        RendererOperations const* m_pBackendOperations;
     };
 }
 
