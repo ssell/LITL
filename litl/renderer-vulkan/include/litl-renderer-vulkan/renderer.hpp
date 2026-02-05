@@ -6,56 +6,25 @@
 
 namespace LITL::Vulkan::Renderer
 {
-    class CommandBuffer;
-
-    class Renderer : public LITL::Renderer::Renderer
-    {
-    public:
-
-        Renderer(Core::Window* pWindow, LITL::Renderer::RendererDescriptor const& rendererDescriptor);
-        ~Renderer();
-
-        Renderer(Renderer const&) = delete;
-        Renderer(Renderer&&) = delete;
-        Renderer& operator=(Renderer const&) = delete;
-        Renderer& operator=(Renderer&&) = delete;
-
-        bool initialize() noexcept override;
-
-        uint32_t getFrame() const noexcept override;
-        uint32_t getFrameIndex() const noexcept override;
-
-        std::unique_ptr<LITL::Renderer::CommandBuffer> createCommandBuffer() const noexcept override;
-
-        void render(LITL::Renderer::CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers) override;
-
-    protected:
-
-    private:
-
-        void cleanup();
-        void cleanupSwapchain();
-        void recreateSwapchain();
-
-        bool createInstance();
-        bool verifyValidationLayers();
-        bool createWindowSurface();
-        bool selectPhysicalDevice();
-        bool createLogicalDevice();
-        bool createSwapChain();
-        bool createCommandPool();
-        bool createSyncObjects();
-
-        bool isRenderReady() const;
-        bool acquireSwapChainIndex(uint32_t timeoutNs, uint32_t frameIndex, uint32_t* imageIndex);
-        void recordCommandBuffers(CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers, uint32_t swapChainImageIndex);
-        void renderCommandBuffer(CommandBuffer* pCommandBuffer, uint32_t imageIndex);
-
-        struct Impl;
-        std::unique_ptr<Impl> m_pImpl;
-    };
-
     std::unique_ptr<LITL::Renderer::Renderer> createVulkanRenderer(Core::Window* pWindow, LITL::Renderer::RendererDescriptor const& rendererDescriptor);
+
+    bool initialize(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
+    void destroy(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
+    uint32_t getFrame(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
+    uint32_t getFrameIndex(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
+    void render(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::CommandBuffer* pBuffers, uint32_t numCommandBuffers);
+    std::unique_ptr<LITL::Renderer::CommandBuffer> createCommandBuffer(LITL::Renderer::RendererHandle const& litlHandle);
+    std::unique_ptr<LITL::Renderer::PipelineLayout> createPipelineLayout(LITL::Renderer::RendererHandle const& litlHandle);
+
+    const LITL::Renderer::RendererOperations VulkanRendererOperations = {
+        &initialize,
+        &destroy,
+        &getFrame,
+        &getFrameIndex,
+        &render,
+        &createCommandBuffer,
+        &createPipelineLayout
+    };
 }
 
 #endif

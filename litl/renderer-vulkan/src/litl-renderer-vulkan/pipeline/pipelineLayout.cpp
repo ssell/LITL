@@ -3,13 +3,24 @@
 
 namespace LITL::Vulkan::Renderer
 {
-    bool build(
-        LITL::Renderer::PipelineLayoutData const& data,
-        LITL::Renderer::PipelineLayoutDescriptor const& descriptor, 
-        LITL::Renderer::PipelineLayoutHandle& handle)
+    struct PipelineLayoutHandle
     {
-        auto* pipelineData = static_cast<PipelineLayoutData*>(data.handle);
-        auto pipelineHandle = new PipelineLayoutHandle{ pipelineData->device, VK_NULL_HANDLE };
+        VkDevice device;
+        VkPipelineLayout pipelineLayout;
+    };
+
+    std::unique_ptr<LITL::Renderer::PipelineLayout> createPipelineLayout(VkDevice vkDevice)
+    {
+        return std::make_unique<LITL::Renderer::PipelineLayout>(VulkanPipelineLayoutOperations, LITL::Renderer::PipelineLayoutHandle{
+            new PipelineLayoutHandle{ vkDevice }
+        });
+    }
+
+    bool build(
+        LITL::Renderer::PipelineLayoutDescriptor const& descriptor, 
+        LITL::Renderer::PipelineLayoutHandle const& litlHandle)
+    {
+        auto* pipelineLayoutHandle = LITL_UNPACK_HANDLE(PipelineLayoutHandle, litlHandle);
 
         // v todo pull from layout descriptor v
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
@@ -17,7 +28,7 @@ namespace LITL::Vulkan::Renderer
         pipelineLayoutInfo.setLayoutCount = 0;
         pipelineLayoutInfo.pushConstantRangeCount = 0;
 
-        const VkResult result = vkCreatePipelineLayout(pipelineData->device, &pipelineLayoutInfo, nullptr, &pipelineHandle->pipelineLayout);
+        const VkResult result = vkCreatePipelineLayout(pipelineLayoutHandle->device, &pipelineLayoutInfo, nullptr, &pipelineLayoutHandle->pipelineLayout);
 
         if (result != VK_SUCCESS)
         {
@@ -25,13 +36,12 @@ namespace LITL::Vulkan::Renderer
             return false;
         }
 
-        handle.handle = { pipelineHandle };
         return true;
     }
 
-    void destroy(LITL::Renderer::PipelineLayoutHandle const& handle)
+    void destroy(LITL::Renderer::PipelineLayoutHandle const& litlHandle)
     {
-        auto* pipelineLayoutHandle = static_cast<PipelineLayoutHandle*>(handle.handle);
+        auto* pipelineLayoutHandle = LITL_UNPACK_HANDLE(PipelineLayoutHandle, litlHandle);
 
         if (pipelineLayoutHandle->pipelineLayout != VK_NULL_HANDLE)
         {

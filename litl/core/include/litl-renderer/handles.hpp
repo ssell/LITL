@@ -9,6 +9,8 @@ namespace LITL::Renderer
     {
         LITLHandle handle = nullptr;
     };
+
+#define LITL_UNPACK_HANDLE(HandleType, HandleObj) static_cast<HandleType*>(HandleObj.handle)
 }
 
 #endif
