@@ -35,9 +35,9 @@ namespace LITL::Renderer
     {
     public:
 
-        PipelineLayout(std::unique_ptr<PipelineLayoutOperations> operations, PipelineLayoutHandle handle)
+        PipelineLayout(PipelineLayoutOperations const* operations, PipelineLayoutHandle handle)
         {
-            m_backendOperations = std::move(operations);
+            m_backendOperations = operations;
             m_backendHandle = handle;
         }
 
@@ -81,7 +81,7 @@ namespace LITL::Renderer
 
         PipelineLayoutDescriptor m_descriptor;
         PipelineLayoutHandle m_backendHandle;
-        std::unique_ptr<PipelineLayoutOperations> m_backendOperations;
+        PipelineLayoutOperations const* m_backendOperations;
     };
 }
 
