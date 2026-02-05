@@ -14,12 +14,12 @@ namespace LITL::Vulkan::Renderer
         std::vector<VkCommandBuffer> vkCommandBuffers;
     };
 
-    std::unique_ptr<LITL::Renderer::CommandBuffer> createCommandBuffer(VkDevice vkDevice, VkCommandPool vkCommandPool, uint32_t framesInFlight)
+    std::unique_ptr<LITL::Renderer::CommandBuffer> createCommandBuffer(VkDevice vkDevice, VkCommandPool vkCommandPool, uint32_t currFrame, uint32_t framesInFlight)
     {
         auto* handle = new CommandBufferHandle{ 
             vkDevice, 
             vkCommandPool, 
-            0,
+            currFrame,
             std::vector<VkCommandBuffer>{ framesInFlight } 
         };
 
@@ -73,6 +73,8 @@ namespace LITL::Vulkan::Renderer
             vkFreeCommandBuffers(handle->vkDevice, handle->vkCommandPool, handle->vkCommandBuffers.size(), handle->vkCommandBuffers.data());
             std::fill(handle->vkCommandBuffers.begin(), handle->vkCommandBuffers.end(), VK_NULL_HANDLE);
         }
+
+        delete handle;
     }
 
     bool begin(LITL::Renderer::CommandBufferHandle const& litlHandle, uint32_t frame)
@@ -116,4 +118,40 @@ namespace LITL::Vulkan::Renderer
         auto* handle = LITL_UNPACK_HANDLE_PTR(CommandBufferHandle, commandBuffer->getHandle());
         return getCurrentCommandBuffer(handle);
     }
+
+    /*
+
+
+    void CommandBuffer::cmdTransitionImageLayout(VkImage vkImage, uint32_t oldLayout, uint32_t newLayout, uint32_t srcAccessMask, uint32_t dstAccessMask, uint32_t srcStageMask, uint32_t dstStageMask)
+    {
+        const auto barrier = VkImageMemoryBarrier2{
+            .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+            .srcStageMask = srcStageMask,
+            .srcAccessMask = srcAccessMask,
+            .dstStageMask = dstStageMask,
+            .dstAccessMask = dstAccessMask,
+            .oldLayout = static_cast<VkImageLayout>(oldLayout),
+            .newLayout = static_cast<VkImageLayout>(newLayout),
+            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .image = vkImage,
+            .subresourceRange = VkImageSubresourceRange {
+                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                .baseMipLevel = 0,
+                .levelCount = 1,
+                .baseArrayLayer = 0,
+                .layerCount = 1
+            }
+        };
+
+        const auto info = VkDependencyInfo{
+            .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+            .dependencyFlags = {},
+            .imageMemoryBarrierCount = 1,
+            .pImageMemoryBarriers = &barrier
+        };
+
+        vkCmdPipelineBarrier2(getCurrentCommandBuffer(m_currFrame), &info);
+    }
+    */
 }

@@ -49,6 +49,6 @@ namespace LITL::Vulkan::Renderer
             vkDestroyPipelineLayout(handle->device, handle->pipelineLayout, nullptr);
         }
 
-        delete pipelineLayoutHandle;
+        delete handle;
     }
 }
