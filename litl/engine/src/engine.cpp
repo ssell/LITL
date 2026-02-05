@@ -61,7 +61,7 @@ namespace LITL::Engine
             return false;
         }
 
-        if (!m_impl->pRenderer->initialize())
+        if (!m_impl->pRenderer->build())
         {
             logCritical("Failed to initialize Renderer");
             return false;

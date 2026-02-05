@@ -8,7 +8,7 @@ namespace LITL::Vulkan::Renderer
 {
     std::unique_ptr<LITL::Renderer::Renderer> createVulkanRenderer(Core::Window* pWindow, LITL::Renderer::RendererDescriptor const& rendererDescriptor);
 
-    bool initialize(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
+    bool build(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
     void destroy(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
     uint32_t getFrame(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
     uint32_t getFrameIndex(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
@@ -17,7 +17,7 @@ namespace LITL::Vulkan::Renderer
     std::unique_ptr<LITL::Renderer::PipelineLayout> createPipelineLayout(LITL::Renderer::RendererHandle const& litlHandle);
 
     const LITL::Renderer::RendererOperations VulkanRendererOperations = {
-        &initialize,
+        &build,
         &destroy,
         &getFrame,
         &getFrameIndex,
