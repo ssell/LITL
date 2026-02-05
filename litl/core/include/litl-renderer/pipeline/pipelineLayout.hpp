@@ -1,6 +1,7 @@
 #ifndef LITL_RENDERER_PIPELINE_LAYOUT_H__
 #define LITL_RENDERER_PIPELINE_LAYOUT_H__
 
+#include <memory>
 #include "litl-renderer/handles.hpp"
 
 namespace LITL::Renderer
@@ -14,14 +15,6 @@ namespace LITL::Renderer
     };
 
     /// <summary>
-    /// Optional additional data needed by the backend to create object.
-    /// </summary>
-    struct PipelineLayoutData
-    {
-        LITLHandle handle;
-    };
-
-    /// <summary>
     /// Opaque handle to the backend pipeline layout object.
     /// </summary>
     struct PipelineLayoutHandle
@@ -30,11 +23,11 @@ namespace LITL::Renderer
     };
 
     /// <summary>
-    /// Backend provided pipeline layout operations.
+    /// Backend implemented pipeline layout operations.
     /// </summary>
     struct PipelineLayoutOperations
     {
-        bool (*build)(PipelineLayoutData const&, PipelineLayoutDescriptor const&, PipelineLayoutHandle&);
+        bool (*build)(PipelineLayoutDescriptor const&, PipelineLayoutHandle const&);
         void (*destroy)(PipelineLayoutHandle const&);
     };
 
@@ -42,7 +35,12 @@ namespace LITL::Renderer
     {
     public:
 
-        PipelineLayout() = default;
+        PipelineLayout(std::unique_ptr<PipelineLayoutOperations> operations, PipelineLayoutHandle handle)
+        {
+            m_backendOperations = std::move(operations);
+            m_backendHandle = handle;
+        }
+
         PipelineLayout(PipelineLayout const&) = delete;
         PipelineLayout& operator=(PipelineLayout const&) = delete;
 
@@ -51,18 +49,16 @@ namespace LITL::Renderer
             destroy();
         }
 
-        bool build(PipelineLayoutData const& data, PipelineLayoutDescriptor const& descriptor)
+        bool build(PipelineLayoutDescriptor const& descriptor)
         {
-            m_backendData = data;
             m_descriptor = descriptor;
-
             return rebuild();
         }
 
         bool rebuild()
         {
             destroy();
-            return m_backendOperations->build(m_backendData, m_descriptor, m_backendHandle);
+            return m_backendOperations->build(m_descriptor, m_backendHandle);
         }
 
         void destroy()
@@ -84,9 +80,8 @@ namespace LITL::Renderer
     private:
 
         PipelineLayoutDescriptor m_descriptor;
-        PipelineLayoutData m_backendData;
         PipelineLayoutHandle m_backendHandle;
-        PipelineLayoutOperations const* m_backendOperations;
+        std::unique_ptr<PipelineLayoutOperations> m_backendOperations;
     };
 }
 
