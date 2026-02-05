@@ -6,6 +6,8 @@
 
 namespace LITL::Renderer
 {
+    DEFINE_LITL_HANDLE(PipelineLayoutHandle);
+
     /// <summary>
     /// Configuration for the pipeline layout.
     /// </summary>
@@ -14,13 +16,6 @@ namespace LITL::Renderer
         // ... todo ...
     };
 
-    /// <summary>
-    /// Opaque handle to the backend pipeline layout object.
-    /// </summary>
-    struct PipelineLayoutHandle
-    {
-        LITLHandle handle;
-    };
 
     /// <summary>
     /// Backend implemented pipeline layout operations.
@@ -35,10 +30,10 @@ namespace LITL::Renderer
     {
     public:
 
-        PipelineLayout(PipelineLayoutOperations const* operations, PipelineLayoutHandle handle)
+        PipelineLayout(PipelineLayoutOperations const* pOperations, PipelineLayoutHandle handle)
+            : m_pBackendOperations(pOperations), m_backendHandle(handle)
         {
-            m_backendOperations = operations;
-            m_backendHandle = handle;
+
         }
 
         PipelineLayout(PipelineLayout const&) = delete;
@@ -58,14 +53,14 @@ namespace LITL::Renderer
         bool rebuild()
         {
             destroy();
-            return m_backendOperations->build(m_descriptor, m_backendHandle);
+            return m_pBackendOperations->build(m_descriptor, m_backendHandle);
         }
 
         void destroy()
         {
             if (m_backendHandle.handle != nullptr)
             {
-                m_backendOperations->destroy(m_backendHandle);
+                m_pBackendOperations->destroy(m_backendHandle);
                 m_backendHandle.handle = nullptr;
             }
         }
@@ -75,13 +70,18 @@ namespace LITL::Renderer
             return m_descriptor;
         }
 
+        PipelineLayoutHandle const* getHandle() const
+        {
+            return &m_backendHandle;
+        }
+
     protected:
 
     private:
 
         PipelineLayoutDescriptor m_descriptor;
         PipelineLayoutHandle m_backendHandle;
-        PipelineLayoutOperations const* m_backendOperations;
+        PipelineLayoutOperations const* m_pBackendOperations;
     };
 }
 

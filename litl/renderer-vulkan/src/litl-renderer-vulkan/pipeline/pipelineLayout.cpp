@@ -13,16 +13,15 @@ namespace LITL::Vulkan::Renderer
     {
         return std::make_unique<LITL::Renderer::PipelineLayout>(
             &VulkanPipelineLayoutOperations, 
-            LITL::Renderer::PipelineLayoutHandle {
-                new PipelineLayoutHandle{ vkDevice }
-        });
+            LITL_PACK_HANDLE(LITL::Renderer::PipelineLayoutHandle, new PipelineLayoutHandle{ vkDevice })
+        );
     }
 
     bool build(
         LITL::Renderer::PipelineLayoutDescriptor const& descriptor, 
         LITL::Renderer::PipelineLayoutHandle const& litlHandle)
     {
-        auto* pipelineLayoutHandle = LITL_UNPACK_HANDLE(PipelineLayoutHandle, litlHandle);
+        auto* handle = LITL_UNPACK_HANDLE(PipelineLayoutHandle, litlHandle);
 
         // v todo pull from layout descriptor v
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
@@ -30,7 +29,7 @@ namespace LITL::Vulkan::Renderer
         pipelineLayoutInfo.setLayoutCount = 0;
         pipelineLayoutInfo.pushConstantRangeCount = 0;
 
-        const VkResult result = vkCreatePipelineLayout(pipelineLayoutHandle->device, &pipelineLayoutInfo, nullptr, &pipelineLayoutHandle->pipelineLayout);
+        const VkResult result = vkCreatePipelineLayout(handle->device, &pipelineLayoutInfo, nullptr, &handle->pipelineLayout);
 
         if (result != VK_SUCCESS)
         {
@@ -43,11 +42,11 @@ namespace LITL::Vulkan::Renderer
 
     void destroy(LITL::Renderer::PipelineLayoutHandle const& litlHandle)
     {
-        auto* pipelineLayoutHandle = LITL_UNPACK_HANDLE(PipelineLayoutHandle, litlHandle);
+        auto* handle = LITL_UNPACK_HANDLE(PipelineLayoutHandle, litlHandle);
 
-        if (pipelineLayoutHandle->pipelineLayout != VK_NULL_HANDLE)
+        if (handle->pipelineLayout != VK_NULL_HANDLE)
         {
-            vkDestroyPipelineLayout(pipelineLayoutHandle->device, pipelineLayoutHandle->pipelineLayout, nullptr);
+            vkDestroyPipelineLayout(handle->device, handle->pipelineLayout, nullptr);
         }
 
         delete pipelineLayoutHandle;
