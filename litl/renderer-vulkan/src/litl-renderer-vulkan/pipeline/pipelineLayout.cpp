@@ -3,32 +3,13 @@
 
 namespace LITL::Vulkan::Renderer
 {
-    PipelineLayout::PipelineLayout(VkDevice vkDevice, LITL::Renderer::PipelineLayoutDescriptor const& descriptor)
-        : m_vkDevice(vkDevice), m_vkPipelineLayout(VK_NULL_HANDLE)
+    bool build(
+        LITL::Renderer::PipelineLayoutData const& data,
+        LITL::Renderer::PipelineLayoutDescriptor const& descriptor, 
+        LITL::Renderer::PipelineLayoutHandle& handle)
     {
-        m_descriptor = descriptor;
-    }
-
-    PipelineLayout::~PipelineLayout()
-    {
-        cleanup();
-    }
-
-    void PipelineLayout::cleanup()
-    {
-        if (m_vkPipelineLayout != VK_NULL_HANDLE)
-        {
-            vkDestroyPipelineLayout(m_vkDevice, m_vkPipelineLayout, nullptr);
-            m_vkPipelineLayout = VK_NULL_HANDLE;
-        }
-    }
-
-    bool PipelineLayout::build() noexcept
-    {
-        if (m_vkPipelineLayout != VK_NULL_HANDLE)
-        {
-            return false;
-        }
+        auto* pipelineData = static_cast<PipelineLayoutData*>(data.handle);
+        auto pipelineHandle = new PipelineLayoutHandle{ pipelineData->device, VK_NULL_HANDLE };
 
         // v todo pull from layout descriptor v
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
@@ -36,26 +17,27 @@ namespace LITL::Vulkan::Renderer
         pipelineLayoutInfo.setLayoutCount = 0;
         pipelineLayoutInfo.pushConstantRangeCount = 0;
 
-        const VkResult result = vkCreatePipelineLayout(m_vkDevice, &pipelineLayoutInfo, nullptr, &m_vkPipelineLayout);
+        const VkResult result = vkCreatePipelineLayout(pipelineData->device, &pipelineLayoutInfo, nullptr, &pipelineHandle->pipelineLayout);
 
         if (result != VK_SUCCESS)
         {
             logError("Failed to create Vulkan Pipeline Layout with result ", result);
             return false;
         }
+
+        handle.handle = { pipelineHandle };
         return true;
     }
 
-    bool PipelineLayout::rebuild(LITL::Renderer::PipelineLayoutDescriptor const& descriptor) noexcept
+    void destroy(LITL::Renderer::PipelineLayoutHandle const& handle)
     {
-        cleanup();
-        m_descriptor = descriptor;
+        auto* pipelineLayoutHandle = static_cast<PipelineLayoutHandle*>(handle.handle);
 
-        return build();
-    }
+        if (pipelineLayoutHandle->pipelineLayout != VK_NULL_HANDLE)
+        {
+            vkDestroyPipelineLayout(pipelineLayoutHandle->device, pipelineLayoutHandle->pipelineLayout, nullptr);
+        }
 
-    VkPipelineLayout PipelineLayout::getVkPipelineLayout() const noexcept
-    {
-        return m_vkPipelineLayout;
+        delete pipelineLayoutHandle;
     }
 }

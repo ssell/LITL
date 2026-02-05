@@ -25,7 +25,6 @@ namespace LITL::Vulkan::Renderer
         uint32_t getFrame() const noexcept override;
         uint32_t getFrameIndex() const noexcept override;
 
-        std::unique_ptr<LITL::Renderer::PipelineLayout> createPipelineLayout(LITL::Renderer::PipelineLayoutDescriptor const& descriptor) const noexcept override;
         std::unique_ptr<LITL::Renderer::CommandBuffer> createCommandBuffer() const noexcept override;
 
         void render(LITL::Renderer::CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers) override;

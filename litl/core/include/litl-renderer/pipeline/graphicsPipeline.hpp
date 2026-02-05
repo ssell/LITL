@@ -33,7 +33,7 @@ namespace LITL::Renderer
 
     protected:
 
-        const GraphicsPipelineDescriptor m_descriptor;
+        GraphicsPipelineDescriptor m_descriptor;
 
     private:
     };

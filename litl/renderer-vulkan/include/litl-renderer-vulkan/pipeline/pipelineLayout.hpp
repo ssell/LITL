@@ -6,30 +6,19 @@
 
 namespace LITL::Vulkan::Renderer
 {
-    class PipelineLayout : public LITL::Renderer::PipelineLayout
+    struct PipelineLayoutData
     {
-    public:
-
-        PipelineLayout(VkDevice vkDevice, LITL::Renderer::PipelineLayoutDescriptor const& descriptor);
-        PipelineLayout(PipelineLayout const&) = delete;
-        PipelineLayout& operator=(PipelineLayout const&) = delete;
-
-        ~PipelineLayout();
-
-        bool build() noexcept;
-        bool rebuild(LITL::Renderer::PipelineLayoutDescriptor const& descriptor) noexcept override;
-
-        VkPipelineLayout getVkPipelineLayout() const noexcept;
-
-    protected:
-
-    private:
-
-        void cleanup();
-
-        VkDevice m_vkDevice;
-        VkPipelineLayout m_vkPipelineLayout;
+        VkDevice device;
     };
+
+    struct PipelineLayoutHandle
+    {
+        VkDevice device;
+        VkPipelineLayout pipelineLayout;
+    };
+
+    bool build(LITL::Renderer::PipelineLayoutData const& data, LITL::Renderer::PipelineLayoutDescriptor const& descriptor, LITL::Renderer::PipelineLayoutHandle& handle);
+    void destroy(LITL::Renderer::PipelineLayoutHandle const& handle);
 }
 
 #endif
