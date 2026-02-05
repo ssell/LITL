@@ -790,19 +790,6 @@ namespace LITL::Vulkan::Renderer
     // Object Creation
     // -------------------------------------------------------------------------------------
 
-    std::unique_ptr<LITL::Renderer::PipelineLayout> Renderer::createPipelineLayout(LITL::Renderer::PipelineLayoutDescriptor const& descriptor) const noexcept
-    {
-        auto pipelineLayout = std::make_unique<PipelineLayout>(m_pImpl->vkDevice, descriptor);
-
-        if (!pipelineLayout->build())
-        {
-            logError("Failed to construct new Vulkan Pipeline Layout object");
-            return nullptr;
-        }
-
-        return pipelineLayout;
-    }
-
     std::unique_ptr<LITL::Renderer::CommandBuffer> Renderer::createCommandBuffer() const noexcept
     {
         auto commandBuffer = std::make_unique<CommandBuffer>(m_pImpl->vkDevice, m_pImpl->vkCommandPool, m_pImpl->framesInFlight);
@@ -1034,7 +1021,7 @@ namespace LITL::Vulkan::Renderer
 
         vkCmdBeginRendering(vkCommandBuffer, &renderingInfo);
 
-        vkCmdBindPipeline(vkCommandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_pImpl->vkPipeline);
+        // !todo! vkCmdBindPipeline(vkCommandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, m_pImpl->vkPipeline);
         vkCmdSetViewport(vkCommandBuffer, 0, 1, &viewport);
         vkCmdSetScissor(vkCommandBuffer, 0, 1, &scissor);
         vkCmdDraw(vkCommandBuffer, 3, 1, 0, 0);
