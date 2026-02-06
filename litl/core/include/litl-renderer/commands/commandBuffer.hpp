@@ -73,12 +73,12 @@ namespace LITL::Renderer
             }
         }
 
-        bool begin(uint32_t frame)
+        bool begin(uint32_t frame) const
         {
             return m_pBackendOperations->begin(m_backendHandle, frame);
         }
 
-        bool end()
+        bool end() const
         {
             return m_pBackendOperations->end(m_backendHandle);
         }
@@ -88,102 +88,102 @@ namespace LITL::Renderer
             return &m_backendHandle;
         }
 
-        void cmdBeginRenderPass()
+        void cmdBeginRenderPass() const
         {
             m_pBackendOperations->cmdBeginRenderPass(m_backendHandle);
         }
 
-        void cmdEndRenderPass()
+        void cmdEndRenderPass() const
         {
             m_pBackendOperations->cmdEndRenderPass(m_backendHandle);
         }
 
-        void cmdBindGraphicsPipeline(GraphicsPipelineHandle const& graphicsPipelineHandle)
+        void cmdBindGraphicsPipeline(GraphicsPipelineHandle const& graphicsPipelineHandle) const
         {
             m_pBackendOperations->cmdBindGraphicsPipeline(m_backendHandle, graphicsPipelineHandle);
         }
 
-        void cmdBeginComputePass()
+        void cmdBeginComputePass() const
         {
             m_pBackendOperations->cmdBeginComputePass(m_backendHandle);
         }
 
-        void cmdEndComputePass()
+        void cmdEndComputePass() const
         {
             m_pBackendOperations->cmdEndComputePass(m_backendHandle);
         }
 
-        void cmdBindComputePipeline(ComputePipelineHandle const& computePipelineHandle)
+        void cmdBindComputePipeline(ComputePipelineHandle const& computePipelineHandle) const
         {
             m_pBackendOperations->cmdBindComputePipeline(m_backendHandle, computePipelineHandle);
         }
 
-        void cmdSetViewport()
+        void cmdSetViewport() const
         {
             m_pBackendOperations->cmdSetViewport(m_backendHandle);
         }
 
-        void cmdSetScissor()
+        void cmdSetScissor() const
         {
             m_pBackendOperations->cmdSetScissor(m_backendHandle);
         }
 
-        void cmdBindResourceSet()
+        void cmdBindResourceSet() const
         {
             m_pBackendOperations->cmdBindResourceSet(m_backendHandle);
         }
 
-        void cmdBindVertexBuffer()
+        void cmdBindVertexBuffer() const
         {
             m_pBackendOperations->cmdBindVertexBuffer(m_backendHandle);
         }
 
-        void cmdBindIndexBuffer()
+        void cmdBindIndexBuffer() const
         {
             m_pBackendOperations->cmdBindIndexBuffer(m_backendHandle);
         }
 
-        void cmdCopyBuffer()
+        void cmdCopyBuffer() const
         {
             m_pBackendOperations->cmdCopyBuffer(m_backendHandle);
         }
 
-        void cmdCopyBufferToTexture()
+        void cmdCopyBufferToTexture() const
         {
             m_pBackendOperations->cmdCopyBufferToTexture(m_backendHandle);
         }
 
-        void cmdCopyTexture()
+        void cmdCopyTexture() const
         {
             m_pBackendOperations->cmdCopyTexture(m_backendHandle);
         }
 
-        void cmdTransitionResource()
+        void cmdTransitionResource() const
         {
             m_pBackendOperations->cmdTransitionResource(m_backendHandle);
         }
 
-        void cmdDraw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstIndex)
+        void cmdDraw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstIndex) const
         {
             m_pBackendOperations->cmdDraw(m_backendHandle, vertexCount, instanceCount, firstVertex, firstIndex);
         }
 
-        void cmdDrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance)
+        void cmdDrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance) const
         {
             m_pBackendOperations->cmdDrawIndexed(m_backendHandle, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
         }
 
-        void cmdDrawInstanced()
+        void cmdDrawInstanced() const
         {
             m_pBackendOperations->cmdDrawInstanced(m_backendHandle);
         }
 
-        void cmdDrawInstancedIndexed()
+        void cmdDrawInstancedIndexed() const
         {
             m_pBackendOperations->cmdDrawInstancedIndexed(m_backendHandle);
         }
 
-        void cmdDispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+        void cmdDispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) const
         {
             m_pBackendOperations->cmdDispatch(m_backendHandle, groupCountX, groupCountY, groupCountZ);
         }
