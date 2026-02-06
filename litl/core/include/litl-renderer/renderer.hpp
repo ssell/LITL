@@ -11,8 +11,6 @@
 
 namespace LITL::Renderer
 {
-    DEFINE_LITL_HANDLE(RendererHandle);
-
     /// <summary>
     /// Backend implemented renderer operations.
     /// </summary>

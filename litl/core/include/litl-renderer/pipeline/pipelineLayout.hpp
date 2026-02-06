@@ -6,8 +6,6 @@
 
 namespace LITL::Renderer
 {
-    DEFINE_LITL_HANDLE(PipelineLayoutHandle);
-
     /// <summary>
     /// Configuration for the pipeline layout.
     /// </summary>

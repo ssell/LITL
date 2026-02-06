@@ -1020,14 +1020,23 @@ namespace LITL::Vulkan::Renderer
             }
         };
 
-        vkCmdBeginRendering(vkCommandBuffer, &renderingInfo);
+        pCommandBuffer->cmdTransitionResource(/* ... todo ... */);
+        pCommandBuffer->cmdBeginRenderPass();
+        pCommandBuffer->cmdBindGraphicsPipeline(/* ... todo ... */);
+        pCommandBuffer->cmdSetViewport(/* ... todo ... */);
+        pCommandBuffer->cmdSetScissor(/* ... todo ... */);
+        pCommandBuffer->cmdDraw(3, 1, 0, 0);
+        pCommandBuffer->cmdEndRenderPass();
+        pCommandBuffer->cmdTransitionResource(/* ... todo ... */);
 
-        // !todo! vkCmdBindPipeline(vkCommandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, handle->context.vkPipeline);
-        vkCmdSetViewport(vkCommandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(vkCommandBuffer, 0, 1, &scissor);
-        vkCmdDraw(vkCommandBuffer, 3, 1, 0, 0);
-
-        vkCmdEndRendering(vkCommandBuffer);
+        //vkCmdBeginRendering(vkCommandBuffer, &renderingInfo);
+        //
+        //vkCmdBindPipeline(vkCommandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, handle->context.vkPipeline);
+        //vkCmdSetViewport(vkCommandBuffer, 0, 1, &viewport);
+        //vkCmdSetScissor(vkCommandBuffer, 0, 1, &scissor);
+        //vkCmdDraw(vkCommandBuffer, 3, 1, 0, 0);
+        //
+        //vkCmdEndRendering(vkCommandBuffer);
 
         // Transition from color to present
         transitionImageLayout(
