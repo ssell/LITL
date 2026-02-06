@@ -25,6 +25,16 @@ namespace LITL::Renderer
         /// Non-owning view of the compiled bytecode (SPIR-V, DXIL, etc.)
         /// </summary>
         std::span<uint8_t const> bytes;
+
+        /// <summary>
+        /// Calculated once at load time.
+        /// </summary>
+        uint64_t hashedEntryPoint;
+
+        /// <summary>
+        /// Calculated once at load time.
+        /// </summary>
+        uint64_t hashedBytes;
     };
 
     /// <summary>
