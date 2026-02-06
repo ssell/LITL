@@ -1020,14 +1020,14 @@ namespace LITL::Vulkan::Renderer
             }
         };
 
-        pCommandBuffer->cmdTransitionResource(/* ... todo ... */);
-        pCommandBuffer->cmdBeginRenderPass();
-        pCommandBuffer->cmdBindGraphicsPipeline(/* ... todo ... */);
-        pCommandBuffer->cmdSetViewport(/* ... todo ... */);
-        pCommandBuffer->cmdSetScissor(/* ... todo ... */);
-        pCommandBuffer->cmdDraw(3, 1, 0, 0);
-        pCommandBuffer->cmdEndRenderPass();
-        pCommandBuffer->cmdTransitionResource(/* ... todo ... */);
+       // pCommandBuffer->cmdTransitionResource(/* ... todo ... */);
+       // pCommandBuffer->cmdBeginRenderPass();
+       // pCommandBuffer->cmdBindGraphicsPipeline(/* ... todo ... */);
+       // pCommandBuffer->cmdSetViewport(/* ... todo ... */);
+       // pCommandBuffer->cmdSetScissor(/* ... todo ... */);
+       // pCommandBuffer->cmdDraw(3, 1, 0, 0);
+       // pCommandBuffer->cmdEndRenderPass();
+       // pCommandBuffer->cmdTransitionResource(/* ... todo ... */);
 
         //vkCmdBeginRendering(vkCommandBuffer, &renderingInfo);
         //

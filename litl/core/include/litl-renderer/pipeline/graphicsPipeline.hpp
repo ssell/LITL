@@ -104,7 +104,6 @@ namespace LITL::Renderer
                     break;
 
                 default:
-                    logWarning("Requested to set unsupported shader stage ", stage, " in Graphics Pipeline.");
                     return false;
             }
 
