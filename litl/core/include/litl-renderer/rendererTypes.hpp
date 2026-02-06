@@ -15,6 +15,12 @@ namespace LITL::Renderer
         "None",
         "Vulkan"
     };
+
+    enum PipelineBindType
+    {
+        Graphics = 0,
+        Compute = 1
+    };
 }
 
 #endif

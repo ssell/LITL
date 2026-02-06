@@ -11,8 +11,6 @@
 
 namespace LITL::Renderer
 {
-    DEFINE_LITL_HANDLE(GraphicsPipelineHandle);
-
     struct GraphicsPipelineDescriptor
     {
         PipelineLayout* pPipelineLayout;
@@ -70,7 +68,6 @@ namespace LITL::Renderer
         {
             return &m_backendHandle;
         }
-
 
     protected:
 
