@@ -64,9 +64,86 @@ namespace LITL::Renderer
             }
         }
 
+        void setPipelineLayout(PipelineLayout* pPipelineLayout)
+        {
+            m_descriptor.pPipelineLayout = pPipelineLayout;
+        }
+
+        void setRasterState(RasterState rasterState)
+        {
+            m_descriptor.rasterState = rasterState;
+        }
+
+        void setBlendState(BlendState blendState)
+        {
+            m_descriptor.blendState = blendState;
+        }
+
+        bool setShader(ShaderModule* pShader, ShaderStage stage)
+        {
+            switch (stage)
+            {
+                case ShaderStage::Vertex:
+                    setVertexShader(pShader);
+                    break;
+                
+                case ShaderStage::Fragment:
+                    setFragmentShader(pShader);
+                    break;
+
+                case ShaderStage::Geometry:
+                    setGeometryShader(pShader);
+                    break;
+
+                case ShaderStage::TessellationControl:
+                    setTessellationControlShader(pShader);
+                    break;
+
+                case ShaderStage::TessellationEvaluation:
+                    setTessellationEvaluationShader(pShader);
+                    break;
+
+                default:
+                    logWarning("Requested to set unsupported shader stage ", stage, " in Graphics Pipeline.");
+                    return false;
+            }
+
+            return true;
+        }
+
+        void setVertexShader(ShaderModule* pShader)
+        {
+            m_descriptor.pVertexShader = pShader;
+        }
+
+        void setFragmentShader(ShaderModule* pShader)
+        {
+            m_descriptor.pFragmentShader = pShader;
+        }
+
+        void setGeometryShader(ShaderModule* pShader)
+        {
+            m_descriptor.pGeometryShader = pShader;
+        }
+
+        void setTessellationControlShader(ShaderModule* pShader)
+        {
+            m_descriptor.pTessellationControlShader = pShader;
+        }
+
+        void setTessellationEvaluationShader(ShaderModule* pShader)
+        {
+            m_descriptor.pTessellationEvaulationShader = pShader;
+        }
+
         GraphicsPipelineHandle const* getHandle() const
         {
             return &m_backendHandle;
+        }
+
+        void bind(CommandBuffer const* commandBuffer)
+        {
+            commandBuffer->cmdBindGraphicsPipeline(m_backendHandle);
         }
 
     protected:
@@ -75,6 +152,7 @@ namespace LITL::Renderer
 
         GraphicsPipelineOperations const* m_pBackendOperations;
         GraphicsPipelineHandle m_backendHandle;
+        GraphicsPipelineDescriptor m_descriptor;
     };
 }
 
