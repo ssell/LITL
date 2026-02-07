@@ -11,7 +11,23 @@ namespace LITL::Renderer
     /// </summary>
     struct PipelineLayoutDescriptor
     {
-        // ... todo ...
+        inline uint64_t hash() const
+        {
+            return m_hash;
+        }
+
+        static PipelineLayoutDescriptor create()
+        {
+            PipelineLayoutDescriptor descriptor{};
+            descriptor.m_hash = 0;
+            return descriptor;
+        }
+
+    private:
+
+        PipelineLayoutDescriptor() {}
+
+        uint64_t m_hash;
     };
 
 
@@ -28,8 +44,8 @@ namespace LITL::Renderer
     {
     public:
 
-        PipelineLayout(PipelineLayoutOperations const* pOperations, PipelineLayoutHandle handle)
-            : m_pBackendOperations(pOperations), m_backendHandle(handle)
+        PipelineLayout(PipelineLayoutOperations const* pOperations, PipelineLayoutHandle handle, PipelineLayoutDescriptor const& descriptor)
+            : m_pBackendOperations(pOperations), m_backendHandle(handle), m_descriptor(descriptor)
         {
 
         }
@@ -42,16 +58,16 @@ namespace LITL::Renderer
             destroy();
         }
 
-        bool build(PipelineLayoutDescriptor const& descriptor)
+        bool build()
         {
-            m_descriptor = descriptor;
-            return rebuild();
-        }
-
-        bool rebuild()
-        {
-            destroy();
-            return m_pBackendOperations->build(m_descriptor, m_backendHandle);
+            if (m_backendHandle.handle == nullptr)
+            {
+                return m_pBackendOperations->build(m_descriptor, m_backendHandle);
+            }
+            else
+            {
+                return false;
+            }
         }
 
         void destroy()
