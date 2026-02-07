@@ -3,7 +3,7 @@ FetchContent_MakeAvailable(abseil-cpp)
 
 add_library(litl-core 
 	STATIC
-		"src/litl-core/logging/logging.cpp" "src/litl-core/logging/sinks/consoleSink.cpp" "src/litl-core/logging/sinks/loggingSink.cpp" "src/litl-core/logging/sinks/fileSink.cpp" "src/litl-core/hash.cpp")
+		"src/litl-core/logging/logging.cpp" "src/litl-core/logging/sinks/consoleSink.cpp" "src/litl-core/logging/sinks/loggingSink.cpp" "src/litl-core/logging/sinks/fileSink.cpp" "src/litl-core/hash.cpp" "src/litl-core/containers/flatHashMap.cpp")
 
 target_include_directories(litl-core
 	PUBLIC
@@ -12,7 +12,10 @@ target_include_directories(litl-core
 		"${CMAKE_SOURCE_DIR}/deps/xxHash"
 )
 
-target_link_libraries(litl-core PRIVATE absl)
+target_link_libraries(litl-core 
+	PRIVATE 
+		absl::flat_hash_map
+)
 
 target_compile_features(litl-core
 	PUBLIC
