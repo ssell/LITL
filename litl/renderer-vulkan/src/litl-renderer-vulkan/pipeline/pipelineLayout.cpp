@@ -11,10 +11,14 @@ namespace LITL::Vulkan::Renderer
 
     std::unique_ptr<LITL::Renderer::PipelineLayout> createPipelineLayout(VkDevice vkDevice)
     {
+        return nullptr;
+        // todo
+        /*
         return std::make_unique<LITL::Renderer::PipelineLayout>(
             &VulkanPipelineLayoutOperations, 
             LITL_PACK_HANDLE(LITL::Renderer::PipelineLayoutHandle, new PipelineLayoutHandle{ vkDevice })
         );
+        */
     }
 
     bool build(
