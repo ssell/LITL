@@ -1,3 +1,6 @@
+FetchContent_Declare(abseil-cpp GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git GIT_TAG 20260107.0)
+FetchContent_MakeAvailable(abseil-cpp)
+
 add_library(litl-core 
 	STATIC
 		"src/litl-core/logging/logging.cpp" "src/litl-core/logging/sinks/consoleSink.cpp" "src/litl-core/logging/sinks/loggingSink.cpp" "src/litl-core/logging/sinks/fileSink.cpp" "src/litl-core/hash.cpp")
@@ -8,6 +11,8 @@ target_include_directories(litl-core
 	PRIVATE
 		"${CMAKE_SOURCE_DIR}/deps/xxHash"
 )
+
+target_link_libraries(litl-core PRIVATE absl)
 
 target_compile_features(litl-core
 	PUBLIC
