@@ -1,7 +1,9 @@
 #ifndef LITL_ENGINE_PIPELINE_LAYOUT_CACHE_H__
 #define LITL_ENGINE_PIPELINE_LAYOUT_CACHE_H__
 
+#include "litl-core/impl.hpp"
 #include "litl-renderer/pipeline/pipelineLayout.hpp"
+#include "litl-renderer/renderer.hpp"
 
 namespace LITL::Engine
 {
@@ -9,7 +11,7 @@ namespace LITL::Engine
     {
     public:
 
-        PipelineLayoutCache();
+        PipelineLayoutCache(Renderer::Renderer const* pRenderer);
         ~PipelineLayoutCache();
 
         PipelineLayoutCache(PipelineLayoutCache const&) = delete;
@@ -21,7 +23,8 @@ namespace LITL::Engine
 
     private:
 
-
+        struct Impl;
+        Core::ImplPtr<Impl, 64> m_impl;
     };
 }
 
