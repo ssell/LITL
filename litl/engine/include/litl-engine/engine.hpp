@@ -26,7 +26,7 @@ namespace LITL::Engine
     private:
 
         struct Impl;
-        LITL::Core::ImplPtr<Impl, 64> m_impl;
+        Core::ImplPtr<Impl, 64> m_impl;
     };
 }
 
