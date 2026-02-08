@@ -56,7 +56,7 @@ namespace LITL::Core
     public:
 
         RefPtr()
-            : m_ptrPtr(nullptr)
+            : m_pPtr(nullptr)
         {
 
         }
