@@ -149,6 +149,12 @@ namespace LITL::Core
 
         T* m_pPtr = nullptr;
     };
+
+    template<IntrusiveRefCounted T, typename... Args>
+    RefPtr<T> make_refptr(Args&&... args)
+    {
+        return RefPtr<T>(new T(std::forward<Args>(args)...));
+    }
 }
 
 #endif
