@@ -11,14 +11,27 @@ namespace LITL::Vulkan::Renderer
 
     LITL::Renderer::PipelineLayout* createPipelineLayout(VkDevice vkDevice, LITL::Renderer::PipelineLayoutDescriptor const& descriptor)
     {
-        return nullptr;
-        // todo
-        /*
-        return std::make_unique<LITL::Renderer::PipelineLayout>(
-            &VulkanPipelineLayoutOperations, 
-            LITL_PACK_HANDLE(LITL::Renderer::PipelineLayoutHandle, new PipelineLayoutHandle{ vkDevice })
-        );
-        */
+        const auto pipelineLayoutInfo = VkPipelineLayoutCreateInfo{
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+            .setLayoutCount = 0,
+            .pushConstantRangeCount = 0
+        };
+
+        auto* pipelineLayoutHandle = new PipelineLayoutHandle {
+            .device = vkDevice,
+            .pipelineLayout = VK_NULL_HANDLE
+        };
+
+        const auto result = vkCreatePipelineLayout(vkDevice, &pipelineLayoutInfo, nullptr, &pipelineLayoutHandle->pipelineLayout);
+
+        if (result == VK_SUCCESS)
+        {
+            return new LITL::Renderer::PipelineLayout(&VulkanPipelineLayoutOperations, LITL_PACK_HANDLE(LITL::Renderer::PipelineLayoutHandle, pipelineLayoutHandle), descriptor);
+        }
+        else
+        {
+            logError("vkCreatePipelineLayout failed with result ", result);
+        }
     }
 
     bool build(

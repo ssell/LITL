@@ -189,3 +189,13 @@ TEST_CASE("Indirect Creation", "[core::refptr]")
 
     REQUIRE(destroyedFlag == true);
 }
+
+TEST_CASE("nullptr", "[core::refptr]")
+{
+    {
+        auto refPtr = LITL::Core::RefPtr<Foo>(nullptr);
+    }
+
+    // The goal is to not crash when the above refptr goes out of scope. Make sure it doesn't try to delete nullptr.
+    REQUIRE(true == true);
+}
