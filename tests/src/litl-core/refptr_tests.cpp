@@ -172,3 +172,20 @@ TEST_CASE("make_refptr", "[core::refptr]")
 
     REQUIRE(a == 0); REQUIRE(b == 0); REQUIRE(c == 0);
 }
+
+Foo* createNewFoo(bool* destroyedFlag)
+{
+    return new Foo(destroyedFlag);
+}
+
+TEST_CASE("Indirect Creation", "[core::refptr]")
+{
+    bool destroyedFlag = false;
+
+    {
+        auto refPtr = LITL::Core::RefPtr<Foo>(createNewFoo(&destroyedFlag));
+        REQUIRE(destroyedFlag == false);
+    }
+
+    REQUIRE(destroyedFlag == true);
+}

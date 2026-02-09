@@ -6,7 +6,13 @@
 
 namespace LITL::Vulkan::Renderer
 {
-    std::unique_ptr<LITL::Renderer::PipelineLayout> createPipelineLayout(VkDevice vkDevice);
+    /// <summary>
+    /// Instantiates a new PipelineLayout and returns the raw owning pointer to it.
+    /// </summary>
+    /// <param name="vkDevice"></param>
+    /// <param name="descriptor"></param>
+    /// <returns></returns>
+    LITL::Renderer::PipelineLayout* createPipelineLayout(VkDevice vkDevice, LITL::Renderer::PipelineLayoutDescriptor const& descriptor);
 
     bool build(LITL::Renderer::PipelineLayoutDescriptor const& descriptor, LITL::Renderer::PipelineLayoutHandle const& litlHandle);
     void destroy(LITL::Renderer::PipelineLayoutHandle const& litlHandle);

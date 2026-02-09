@@ -2,6 +2,8 @@
 #define LITL_RENDERER_COMMAND_BUFFER_H__
 
 #include <memory>
+
+#include "litl-core/refPtr.hpp"
 #include "litl-renderer/handles.hpp"
 
 namespace LITL::Renderer
@@ -41,7 +43,7 @@ namespace LITL::Renderer
         void (*cmdDispatch)(CommandBufferHandle const&, uint32_t, uint32_t, uint32_t);                          // todo
     };
 
-    class CommandBuffer
+    class CommandBuffer final : public Core::RefCounted
     {
     public:
 

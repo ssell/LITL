@@ -9,7 +9,7 @@ namespace LITL::Vulkan::Renderer
         VkPipelineLayout pipelineLayout;
     };
 
-    std::unique_ptr<LITL::Renderer::PipelineLayout> createPipelineLayout(VkDevice vkDevice)
+    LITL::Renderer::PipelineLayout* createPipelineLayout(VkDevice vkDevice, LITL::Renderer::PipelineLayoutDescriptor const& descriptor)
     {
         return nullptr;
         // todo

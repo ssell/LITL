@@ -1,13 +1,12 @@
-#ifndef LITL_CORE_RENDERER_H__
-#define LITL_CORE_RENDERER_H__
+#ifndef LITL_RENDERER_RENDERER_H__
+#define LITL_RENDERER_RENDERER_H__
 
 #include <cstdint>
 #include <memory>
 
 #include "litl-renderer/handles.hpp"
 #include "litl-renderer/rendererDescriptor.hpp"
-#include "litl-renderer/commands/commandBuffer.hpp"
-#include "litl-renderer/pipeline/pipelineLayout.hpp"
+#include "litl-renderer/resourceAllocator.hpp"
 
 namespace LITL::Renderer
 {
@@ -21,11 +20,10 @@ namespace LITL::Renderer
         uint32_t (*getFrame)(RendererHandle const&);
         uint32_t (*getFrameIndex)(RendererHandle const&);
         void (*render)(RendererHandle const&, CommandBuffer*, uint32_t);
-        std::unique_ptr<CommandBuffer>(*createCommandBuffer)(RendererHandle const&);
-        std::unique_ptr<PipelineLayout>(*createPipelineLayout)(RendererHandle const&);
+        ResourceAllocator* (*buildResourceAllocator)(RendererHandle const&);
     };
 
-    class Renderer
+    class Renderer final
     {
     public:
 
@@ -45,7 +43,16 @@ namespace LITL::Renderer
 
         bool build()
         {
-            return m_pBackendOperations->build(m_backendHandle);
+            const auto buildResult = m_pBackendOperations->build(m_backendHandle);
+
+            if (!buildResult)
+            {
+                return false;
+            }
+
+            m_pResourceAllocator.reset(m_pBackendOperations->buildResourceAllocator(m_backendHandle));
+
+            return true;
         }
 
         void destroy()
@@ -72,19 +79,14 @@ namespace LITL::Renderer
             m_pBackendOperations->render(m_backendHandle, pCommandBuffers, numCommandBuffers);
         }
 
-        std::unique_ptr<CommandBuffer> createCommandBuffer() const noexcept
-        {
-            return m_pBackendOperations->createCommandBuffer(m_backendHandle);
-        }
-
-        std::unique_ptr<PipelineLayout> createPipelineLayout() const noexcept
-        {
-            return m_pBackendOperations->createPipelineLayout(m_backendHandle);
-        }
-
         RendererHandle const* getHandle() const
         {
             return &m_backendHandle;
+        }
+
+        inline ResourceAllocator const* getResourceAllocator() const
+        {
+            return m_pResourceAllocator.get();
         }
 
     protected:
@@ -93,6 +95,7 @@ namespace LITL::Renderer
 
         RendererOperations const* m_pBackendOperations;
         RendererHandle m_backendHandle;
+        std::unique_ptr<ResourceAllocator> m_pResourceAllocator;
     };
 }
 
