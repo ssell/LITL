@@ -11,7 +11,7 @@ namespace LITL::Engine
     struct PipelineLayoutCache::Impl
     {
         Renderer::Renderer const* pRenderer;
-        Core::FlatHashMap<uint64_t, std::unique_ptr<Renderer::PipelineLayout>> cache;
+        Core::FlatHashMap<uint64_t, Core::RefPtr<Renderer::PipelineLayout>> cache;
         std::mutex cacheMutex;
     };
 
@@ -37,21 +37,23 @@ namespace LITL::Engine
         }
         else
         {
-            /* todo
-            auto newObj = m_impl->pRenderer->createPipelineLayout();
-            auto raw = newObj.get();
-            
-            if (m_impl->cache.insert(descriptor.hash(), std::move(newObj)))
+            auto refPipelineLayout = m_impl->pRenderer->getResourceAllocator()->createPipelineLayout(descriptor);
+
+            if (refPipelineLayout.get() != nullptr)
             {
-                return raw;
+                if (m_impl->cache.insert(descriptor.hash(), refPipelineLayout))
+                {
+                    return refPipelineLayout.get();
+                }
+                else
+                {
+                    logError("PipelineLayoutCache failed to cache new PipelineLayout with hash ", descriptor.hash());
+                }
             }
             else
             {
-                // Failed to cache for some reason?
-                logError("Failed to cache PipelineLayout with hash ", descriptor.hash());
-                
+                logError("PipelineLayoutCache failed to instantiate new PipelineLayout");
             }
-            */
         }
 
         return nullptr;
