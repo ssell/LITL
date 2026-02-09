@@ -2,6 +2,7 @@
 #define LITL_CORE_REF_PTR_H__
 
 #include <atomic>
+#include <concepts>
 #include <cstdint>
 #include <type_traits>
 

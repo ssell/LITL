@@ -14,7 +14,7 @@ namespace LITL::Vulkan::Renderer
         std::vector<VkCommandBuffer> vkCommandBuffers;
     };
 
-    std::unique_ptr<LITL::Renderer::CommandBuffer> createCommandBuffer(VkDevice vkDevice, VkCommandPool vkCommandPool, uint32_t currFrame, uint32_t framesInFlight)
+    LITL::Renderer::CommandBuffer* createCommandBuffer(VkDevice vkDevice, VkCommandPool vkCommandPool, uint32_t currFrame, uint32_t framesInFlight)
     {
         auto* handle = new CommandBufferHandle{ 
             vkDevice, 
@@ -25,10 +25,7 @@ namespace LITL::Vulkan::Renderer
 
         std::fill(handle->vkCommandBuffers.begin(), handle->vkCommandBuffers.end(), VK_NULL_HANDLE);
 
-        return std::make_unique<LITL::Renderer::CommandBuffer>(
-            &VulkanCommandBufferOperations,
-            LITL_PACK_HANDLE(LITL::Renderer::CommandBufferHandle, handle)
-        );
+        return new LITL::Renderer::CommandBuffer(&VulkanCommandBufferOperations, LITL_PACK_HANDLE(LITL::Renderer::CommandBufferHandle, handle));
     }
 
     VkCommandBuffer getCurrentCommandBuffer(CommandBufferHandle const* handle)

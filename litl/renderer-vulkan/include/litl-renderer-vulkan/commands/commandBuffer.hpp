@@ -6,7 +6,15 @@
 
 namespace LITL::Vulkan::Renderer
 {
-    std::unique_ptr<LITL::Renderer::CommandBuffer> createCommandBuffer(VkDevice vkDevice, VkCommandPool vkCommandPool, uint32_t currFrame, uint32_t framesInFlight);
+    /// <summary>
+    /// Instantiates a new CommandBuffer and returns the raw owning pointer to it.
+    /// </summary>
+    /// <param name="vkDevice"></param>
+    /// <param name="vkCommandPool"></param>
+    /// <param name="currFrame"></param>
+    /// <param name="framesInFlight"></param>
+    /// <returns></returns>
+    LITL::Renderer::CommandBuffer* createCommandBuffer(VkDevice vkDevice, VkCommandPool vkCommandPool, uint32_t currFrame, uint32_t framesInFlight);
 
     bool build(LITL::Renderer::CommandBufferHandle const& litlHandle);
     void destroy(LITL::Renderer::CommandBufferHandle const& litlHandle);

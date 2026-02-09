@@ -2,6 +2,8 @@
 #define LITL_RENDERER_PIPELINE_LAYOUT_H__
 
 #include <memory>
+
+#include "litl-core/refPtr.hpp"
 #include "litl-renderer/handles.hpp"
 
 namespace LITL::Renderer
@@ -40,7 +42,7 @@ namespace LITL::Renderer
         void (*destroy)(PipelineLayoutHandle const&);
     };
 
-    class PipelineLayout
+    class PipelineLayout final : public Core::RefCounted
     {
     public:
 

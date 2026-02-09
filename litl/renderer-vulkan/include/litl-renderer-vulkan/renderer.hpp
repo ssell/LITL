@@ -13,8 +13,7 @@ namespace LITL::Vulkan::Renderer
     uint32_t getFrame(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
     uint32_t getFrameIndex(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
     void render(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::CommandBuffer* pBuffers, uint32_t numCommandBuffers);
-    std::unique_ptr<LITL::Renderer::CommandBuffer> createCommandBuffer(LITL::Renderer::RendererHandle const& litlHandle);
-    std::unique_ptr<LITL::Renderer::PipelineLayout> createPipelineLayout(LITL::Renderer::RendererHandle const& litlHandle);
+    LITL::Renderer::ResourceAllocator* buildResourceAllocator(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
 
     const LITL::Renderer::RendererOperations VulkanRendererOperations = {
         &build,
@@ -22,8 +21,7 @@ namespace LITL::Vulkan::Renderer
         &getFrame,
         &getFrameIndex,
         &render,
-        &createCommandBuffer,
-        &createPipelineLayout
+        &buildResourceAllocator
     };
 }
 
