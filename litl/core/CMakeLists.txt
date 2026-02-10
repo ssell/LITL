@@ -1,7 +1,12 @@
+# abseil-cpp
 FetchContent_Declare(abseil-cpp GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git GIT_TAG 20260107.0)
 FetchContent_MakeAvailable(abseil-cpp)
 
+# SPIRV-Reflect
 FetchContent_Declare(spirv_reflect GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Reflect.git GIT_TAG vulkan-sdk-1.4.335.0)
+set(SPIRV_REFLECT_EXECUTABLE OFF)
+set(SPIRV_REFLECT_BUILD_TESTS OFF)
+set(SPIRV_REFLECT_STATIC_LIB ON)
 FetchContent_MakeAvailable(spirv_reflect)
 
 add_library(litl-core 
