@@ -1,7 +1,9 @@
 #ifndef LITL_RENDERER_SHADER_REFLECTION_H__
 #define LITL_RENDERER_SHADER_REFLECTION_H__
 
+#include <cstdint>
 #include <optional>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -139,6 +141,8 @@ namespace LITL::Renderer
 
         std::optional<ComputeInfo> computeInfo;
     };
+
+    std::optional<ShaderReflection> reflectSPIRV(std::span<uint8_t const> spirvByteCode);
 }
 
 #endif
