@@ -5,11 +5,16 @@
 
 namespace LITL::Renderer
 {
+    /// <summary>
+    /// Stage of the compiled shader program.
+    /// The bit fields are also used in visibility masks.
+    /// </summary>
     enum class ShaderStage : uint32_t
     {
-        Vertex                 = 0b0001,
-        Fragment               = 0b0010,
-        Geometry               = 0b0100,
+        Unknown                = 0b00000000,
+        Vertex                 = 0b00000001,
+        Fragment               = 0b00000010,
+        Geometry               = 0b00000100,
         TessellationControl    = 0b00001000,
         TessellationEvaluation = 0b00010000,
         Compute                = 0b00100000,
@@ -17,6 +22,9 @@ namespace LITL::Renderer
         Task                   = 0b10000000
     };
 
+    /// <summary>
+    /// Resource types that can be bound to shader stages.
+    /// </summary>
     enum class ShaderResourceType : uint32_t
     {
         Unknown = 0,
@@ -28,6 +36,9 @@ namespace LITL::Renderer
         AccelerationStructure = 6
     };
 
+    /// <summary>
+    /// Scalar types that can be bound to shader stages.
+    /// </summary>
     enum class ShaderScalarType : uint32_t
     {
         Unknown = 0,
