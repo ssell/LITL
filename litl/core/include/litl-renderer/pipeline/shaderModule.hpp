@@ -4,7 +4,8 @@
 #include <span>
 #include <string>
 
-#include "litl-renderer/pipeline/shaderStage.hpp"
+#include "litl-core/refPtr.hpp"
+#include "litl-renderer/pipeline/shaderEnums.hpp"
 #include "litl-renderer/pipeline/shaderReflection.hpp"
 
 namespace LITL::Renderer
@@ -40,14 +41,9 @@ namespace LITL::Renderer
     /// <summary>
     /// Represent a single shader stage 
     /// </summary>
-    class ShaderModule
+    class ShaderModule final : public Core::RefCounted
     {
     public:
-
-        ShaderStage getStage() const noexcept
-        {
-            return m_stage;
-        }
 
         ShaderReflection const& getReflection() const noexcept
         {
@@ -58,7 +54,6 @@ namespace LITL::Renderer
 
     private:
 
-        ShaderStage m_stage;
         ShaderReflection m_reflection;
     };
 }
