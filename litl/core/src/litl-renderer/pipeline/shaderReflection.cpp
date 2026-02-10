@@ -6,10 +6,15 @@
 #include "litl-core/logging/logging.hpp"
 #include "litl-renderer/pipeline/shaderReflection.hpp"
 
+/**
+ * Reflection is done using the SPIRV-Reflect library to reflect from the raw SPIR-V bytecode.
+ * The results of said reflection are then transposed into our common LITL::Renderer::ShaderReflection data structure.
+ */
+
 namespace LITL::Renderer
 {
     ShaderResourceType fromSpvReflectResourceType(SpvReflectDescriptorType descriptorType);
-    void reflectIntoVertexAttribute(VertexAttribute* attribute, SpvReflectInterfaceVariable* inputVariable);
+    void reflectIntoInputOutputVariable(ShaderInputOutputVariable* inputOutputVariable, SpvReflectInterfaceVariable* interfaceVariable);
 
     bool reflectShaderStage(ShaderReflection* litlReflection, SpvReflectShaderModule* reflectedModule);
     bool reflectResourceBindings(ShaderReflection* litlReflection, SpvReflectShaderModule* reflectedModule);
@@ -153,12 +158,12 @@ namespace LITL::Renderer
         {
             auto inputVariable = *inputVariables[i];
 
-            litlReflection->vertexInputs.push_back(VertexAttribute{
+            litlReflection->vertexInputs.push_back(ShaderInputOutputVariable{
                     .name = inputVariable.name,
                     .location = inputVariable.location
                 });
 
-            reflectIntoVertexAttribute(&litlReflection->vertexInputs[i], &inputVariable);
+            reflectIntoInputOutputVariable(&litlReflection->vertexInputs[i], &inputVariable);
         }
 
         return true;
@@ -166,6 +171,38 @@ namespace LITL::Renderer
 
     bool reflectFragmentOutputs(ShaderReflection* litlReflection, SpvReflectShaderModule* reflectedModule)
     {
+        uint32_t fragmentOutputsCount = 0;
+        auto result = spvReflectEnumerateOutputVariables(reflectedModule, &fragmentOutputsCount, nullptr);
+
+        if (result != SPV_REFLECT_RESULT_SUCCESS)
+        {
+            logError("SPIRV reflection failed to enumerate fragment output variable count with result ", result);
+            return false;
+        }
+
+        SpvReflectInterfaceVariable** outputVariables = (SpvReflectInterfaceVariable**)malloc(fragmentOutputsCount * sizeof(SpvReflectInterfaceVariable*));
+        result = spvReflectEnumerateInputVariables(reflectedModule, &fragmentOutputsCount, outputVariables);
+
+        if (result != SPV_REFLECT_RESULT_SUCCESS)
+        {
+            logError("SPIRV reflection failed to enumerate fragment output variables with result ", result);
+            return false;
+        }
+
+        litlReflection->fragmentOutputs.reserve(fragmentOutputsCount);
+
+        for (uint32_t i = 0; i < fragmentOutputsCount; ++i)
+        {
+            auto outputVariable = *outputVariables[i];
+
+            litlReflection->fragmentOutputs.push_back(ShaderInputOutputVariable{
+                    .name = outputVariable.name,
+                    .location = outputVariable.location
+                });
+
+            reflectIntoInputOutputVariable(&litlReflection->fragmentOutputs[i], &outputVariable);
+        }
+
         return true;
     }
 
@@ -205,157 +242,157 @@ namespace LITL::Renderer
         }
     }
 
-    void reflectIntoVertexAttribute(VertexAttribute* attribute, SpvReflectInterfaceVariable* inputVariable)
+    void reflectIntoInputOutputVariable(ShaderInputOutputVariable* inputOutputVariable, SpvReflectInterfaceVariable* interfaceVariable)
     {
-        switch (inputVariable->format)
+        switch (interfaceVariable->format)
         {
         case SPV_REFLECT_FORMAT_UNDEFINED:
-            attribute->scalarType = ShaderScalarType::Unknown;
-            attribute->componentCount = 1;
+            inputOutputVariable->scalarType = ShaderScalarType::Unknown;
+            inputOutputVariable->componentCount = 1;
             break;
         case SPV_REFLECT_FORMAT_R16_UINT:
-            attribute->scalarType = ShaderScalarType::Uint;
-            attribute->componentCount = 1;
+            inputOutputVariable->scalarType = ShaderScalarType::Uint;
+            inputOutputVariable->componentCount = 1;
             break;
         case SPV_REFLECT_FORMAT_R16_SINT:
-            attribute->scalarType = ShaderScalarType::Int;
-            attribute->componentCount = 1;
+            inputOutputVariable->scalarType = ShaderScalarType::Int;
+            inputOutputVariable->componentCount = 1;
             break;
         case SPV_REFLECT_FORMAT_R16_SFLOAT:
-            attribute->scalarType = ShaderScalarType::Float;
-            attribute->componentCount = 1;
+            inputOutputVariable->scalarType = ShaderScalarType::Float;
+            inputOutputVariable->componentCount = 1;
             break;
         case SPV_REFLECT_FORMAT_R16G16_UINT:
-            attribute->scalarType = ShaderScalarType::Uint;
-            attribute->componentCount = 2;
+            inputOutputVariable->scalarType = ShaderScalarType::Uint;
+            inputOutputVariable->componentCount = 2;
             break;
         case SPV_REFLECT_FORMAT_R16G16_SINT:
-            attribute->scalarType = ShaderScalarType::Int;
-            attribute->componentCount = 2;
+            inputOutputVariable->scalarType = ShaderScalarType::Int;
+            inputOutputVariable->componentCount = 2;
             break;
         case SPV_REFLECT_FORMAT_R16G16_SFLOAT:
-            attribute->scalarType = ShaderScalarType::Float;
-            attribute->componentCount = 2;
+            inputOutputVariable->scalarType = ShaderScalarType::Float;
+            inputOutputVariable->componentCount = 2;
             break;
         case SPV_REFLECT_FORMAT_R16G16B16_UINT:
-            attribute->scalarType = ShaderScalarType::Uint;
-            attribute->componentCount = 3;
+            inputOutputVariable->scalarType = ShaderScalarType::Uint;
+            inputOutputVariable->componentCount = 3;
             break;
         case SPV_REFLECT_FORMAT_R16G16B16_SINT:
-            attribute->scalarType = ShaderScalarType::Int;
-            attribute->componentCount = 3;
+            inputOutputVariable->scalarType = ShaderScalarType::Int;
+            inputOutputVariable->componentCount = 3;
             break;
         case SPV_REFLECT_FORMAT_R16G16B16_SFLOAT:
-            attribute->scalarType = ShaderScalarType::Float;
-            attribute->componentCount = 3;
+            inputOutputVariable->scalarType = ShaderScalarType::Float;
+            inputOutputVariable->componentCount = 3;
             break;
         case SPV_REFLECT_FORMAT_R16G16B16A16_UINT:
-            attribute->scalarType = ShaderScalarType::Uint;
-            attribute->componentCount = 4;
+            inputOutputVariable->scalarType = ShaderScalarType::Uint;
+            inputOutputVariable->componentCount = 4;
             break;
         case SPV_REFLECT_FORMAT_R16G16B16A16_SINT:
-            attribute->scalarType = ShaderScalarType::Int;
-            attribute->componentCount = 4;
+            inputOutputVariable->scalarType = ShaderScalarType::Int;
+            inputOutputVariable->componentCount = 4;
             break;
         case SPV_REFLECT_FORMAT_R16G16B16A16_SFLOAT:
-            attribute->scalarType = ShaderScalarType::Float;
-            attribute->componentCount = 4;
+            inputOutputVariable->scalarType = ShaderScalarType::Float;
+            inputOutputVariable->componentCount = 4;
             break;
         case SPV_REFLECT_FORMAT_R32_UINT:
-            attribute->scalarType = ShaderScalarType::Uint;
-            attribute->componentCount = 1;
+            inputOutputVariable->scalarType = ShaderScalarType::Uint;
+            inputOutputVariable->componentCount = 1;
             break;
         case SPV_REFLECT_FORMAT_R32_SINT:
-            attribute->scalarType = ShaderScalarType::Int;
-            attribute->componentCount = 1;
+            inputOutputVariable->scalarType = ShaderScalarType::Int;
+            inputOutputVariable->componentCount = 1;
             break;
         case SPV_REFLECT_FORMAT_R32_SFLOAT:
-            attribute->scalarType = ShaderScalarType::Float;
-            attribute->componentCount = 1;
+            inputOutputVariable->scalarType = ShaderScalarType::Float;
+            inputOutputVariable->componentCount = 1;
             break;
         case SPV_REFLECT_FORMAT_R32G32_UINT:
-            attribute->scalarType = ShaderScalarType::Uint;
-            attribute->componentCount = 2;
+            inputOutputVariable->scalarType = ShaderScalarType::Uint;
+            inputOutputVariable->componentCount = 2;
             break;
         case SPV_REFLECT_FORMAT_R32G32_SINT:
-            attribute->scalarType = ShaderScalarType::Int;
-            attribute->componentCount = 2;
+            inputOutputVariable->scalarType = ShaderScalarType::Int;
+            inputOutputVariable->componentCount = 2;
             break;
         case SPV_REFLECT_FORMAT_R32G32_SFLOAT:
-            attribute->scalarType = ShaderScalarType::Float;
-            attribute->componentCount = 2;
+            inputOutputVariable->scalarType = ShaderScalarType::Float;
+            inputOutputVariable->componentCount = 2;
             break;
         case SPV_REFLECT_FORMAT_R32G32B32_UINT:
-            attribute->scalarType = ShaderScalarType::Uint;
-            attribute->componentCount = 3;
+            inputOutputVariable->scalarType = ShaderScalarType::Uint;
+            inputOutputVariable->componentCount = 3;
             break;
         case SPV_REFLECT_FORMAT_R32G32B32_SINT:
-            attribute->scalarType = ShaderScalarType::Int;
-            attribute->componentCount = 3;
+            inputOutputVariable->scalarType = ShaderScalarType::Int;
+            inputOutputVariable->componentCount = 3;
             break;
         case SPV_REFLECT_FORMAT_R32G32B32_SFLOAT:
-            attribute->scalarType = ShaderScalarType::Float;
-            attribute->componentCount = 3;
+            inputOutputVariable->scalarType = ShaderScalarType::Float;
+            inputOutputVariable->componentCount = 3;
             break;
         case SPV_REFLECT_FORMAT_R32G32B32A32_UINT:
-            attribute->scalarType = ShaderScalarType::Uint;
-            attribute->componentCount = 4;
+            inputOutputVariable->scalarType = ShaderScalarType::Uint;
+            inputOutputVariable->componentCount = 4;
             break;
         case SPV_REFLECT_FORMAT_R32G32B32A32_SINT:
-            attribute->scalarType = ShaderScalarType::Int;
-            attribute->componentCount = 4;
+            inputOutputVariable->scalarType = ShaderScalarType::Int;
+            inputOutputVariable->componentCount = 4;
             break;
         case SPV_REFLECT_FORMAT_R32G32B32A32_SFLOAT:
-            attribute->scalarType = ShaderScalarType::Float;
-            attribute->componentCount = 4;
+            inputOutputVariable->scalarType = ShaderScalarType::Float;
+            inputOutputVariable->componentCount = 4;
             break;
         case SPV_REFLECT_FORMAT_R64_UINT:
-            attribute->scalarType = ShaderScalarType::Uint;
-            attribute->componentCount = 1;
+            inputOutputVariable->scalarType = ShaderScalarType::Uint;
+            inputOutputVariable->componentCount = 1;
             break;
         case SPV_REFLECT_FORMAT_R64_SINT:
-            attribute->scalarType = ShaderScalarType::Int;
-            attribute->componentCount = 1;
+            inputOutputVariable->scalarType = ShaderScalarType::Int;
+            inputOutputVariable->componentCount = 1;
             break;
         case SPV_REFLECT_FORMAT_R64_SFLOAT:
-            attribute->scalarType = ShaderScalarType::Float;
-            attribute->componentCount = 1;
+            inputOutputVariable->scalarType = ShaderScalarType::Float;
+            inputOutputVariable->componentCount = 1;
             break;
         case SPV_REFLECT_FORMAT_R64G64_UINT:
-            attribute->scalarType = ShaderScalarType::Uint;
-            attribute->componentCount = 2;
+            inputOutputVariable->scalarType = ShaderScalarType::Uint;
+            inputOutputVariable->componentCount = 2;
             break;
         case SPV_REFLECT_FORMAT_R64G64_SINT:
-            attribute->scalarType = ShaderScalarType::Int;
-            attribute->componentCount = 2;
+            inputOutputVariable->scalarType = ShaderScalarType::Int;
+            inputOutputVariable->componentCount = 2;
             break;
         case SPV_REFLECT_FORMAT_R64G64_SFLOAT:
-            attribute->scalarType = ShaderScalarType::Float;
-            attribute->componentCount = 2;
+            inputOutputVariable->scalarType = ShaderScalarType::Float;
+            inputOutputVariable->componentCount = 2;
             break;
         case SPV_REFLECT_FORMAT_R64G64B64_UINT:
-            attribute->scalarType = ShaderScalarType::Uint;
-            attribute->componentCount = 3;
+            inputOutputVariable->scalarType = ShaderScalarType::Uint;
+            inputOutputVariable->componentCount = 3;
             break;
         case SPV_REFLECT_FORMAT_R64G64B64_SINT:
-            attribute->scalarType = ShaderScalarType::Int;
-            attribute->componentCount = 3;
+            inputOutputVariable->scalarType = ShaderScalarType::Int;
+            inputOutputVariable->componentCount = 3;
             break;
         case SPV_REFLECT_FORMAT_R64G64B64_SFLOAT:
-            attribute->scalarType = ShaderScalarType::Float;
-            attribute->componentCount = 3;
+            inputOutputVariable->scalarType = ShaderScalarType::Float;
+            inputOutputVariable->componentCount = 3;
             break;
         case SPV_REFLECT_FORMAT_R64G64B64A64_UINT:
-            attribute->scalarType = ShaderScalarType::Uint;
-            attribute->componentCount = 4;
+            inputOutputVariable->scalarType = ShaderScalarType::Uint;
+            inputOutputVariable->componentCount = 4;
             break;
         case SPV_REFLECT_FORMAT_R64G64B64A64_SINT:
-            attribute->scalarType = ShaderScalarType::Int;
-            attribute->componentCount = 4;
+            inputOutputVariable->scalarType = ShaderScalarType::Int;
+            inputOutputVariable->componentCount = 4;
             break;
         case SPV_REFLECT_FORMAT_R64G64B64A64_SFLOAT:
-            attribute->scalarType = ShaderScalarType::Float;
-            attribute->componentCount = 4;
+            inputOutputVariable->scalarType = ShaderScalarType::Float;
+            inputOutputVariable->componentCount = 4;
             break;
         }
     }
