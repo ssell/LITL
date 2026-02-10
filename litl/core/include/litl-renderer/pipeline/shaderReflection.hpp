@@ -116,7 +116,7 @@ namespace LITL::Renderer
         std::optional<ComputeInfo> computeInfo;
     };
 
-    std::optional<ShaderReflection> reflectSPIRV(std::span<uint8_t const> spirvByteCode);
+    std::optional<ShaderReflection> reflectSPIRV(const char* entryPoint, std::span<uint8_t const> spirvByteCode);
 }
 
 #endif
