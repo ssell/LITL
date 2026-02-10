@@ -1,5 +1,13 @@
 # Third-Party Dependencies
 
+## abseil-cpp
+
+Used for `flat_hash_map` which is employed by caches, etc. as a fast map.
+
+* License: Apache-2.0
+* Source: https://github.com/abseil/abseil-cpp
+* Included via: CMake `FetchContent`
+
 ## Catch2
 
 Used for Unit testing.
@@ -22,6 +30,14 @@ Used for general math structures and operations.
 
 * License: MIT / Happy Bunny
 * Source: https://github.com/g-truc/glm
+* Included via: CMake `FetchContent`
+
+## SPIRV-Reflect
+
+Used for SPIRV bytecode reflection.
+
+* License: Apache-2.0
+* Source: https://github.com/KhronosGroup/SPIRV-Reflect
 * Included via: CMake `FetchContent`
 
 ## xxHash

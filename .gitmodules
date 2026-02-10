@@ -1,3 +1,6 @@
 [submodule "deps/xxHash"]
 	path = deps/xxHash
 	url = https://github.com/Cyan4973/xxHash.git
+[submodule "deps/SPIRV-Reflect"]
+	path = deps/SPIRV-Reflect
+	url = https://github.com/KhronosGroup/SPIRV-Reflect.git
