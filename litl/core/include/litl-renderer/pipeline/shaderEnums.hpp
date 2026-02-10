@@ -28,12 +28,14 @@ namespace LITL::Renderer
     enum class ShaderResourceType : uint32_t
     {
         Unknown = 0,
-        UniformBuffer = 1,
-        StorageBuffer = 2,
-        SampledImage = 3,
-        StorageImage = 4,
-        Sampler = 5,
-        AccelerationStructure = 6
+        Sampler = 1,
+        UniformBuffer = 2,
+        StorageBuffer = 3,
+        ImageBuffer = 4,
+        SampledImage = 5,
+        StorageImage = 6,
+        InputAttachment = 7,
+        AccelerationStructure = 8
     };
 
     /// <summary>
