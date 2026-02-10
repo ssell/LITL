@@ -15,12 +15,15 @@ namespace LITL::Renderer
 {
     ShaderResourceType fromSpvReflectResourceType(SpvReflectDescriptorType descriptorType);
     void reflectIntoInputOutputVariable(ShaderInputOutputVariable* inputOutputVariable, SpvReflectInterfaceVariable* interfaceVariable);
+    ShaderScalarType fromSpvReflectTypeFlagBits(uint32_t typeFlag);
 
-    bool reflectShaderStage(ShaderReflection* litlReflection, SpvReflectShaderModule* reflectedModule);
-    bool reflectResourceBindings(ShaderReflection* litlReflection, SpvReflectShaderModule* reflectedModule);
-    bool reflectPushConstants(ShaderReflection* litlReflection, SpvReflectShaderModule* reflectedModule);
-    bool reflectVertexInputs(ShaderReflection* litlReflection, SpvReflectShaderModule* reflectedModule);
-    bool reflectFragmentOutputs(ShaderReflection* litlReflection, SpvReflectShaderModule* reflectedModule);
+    bool reflectShaderStage(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule);
+    bool reflectResourceBindings(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule);
+    bool reflectPushConstants(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule);
+    bool reflectVertexInputs(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule);
+    bool reflectFragmentOutputs(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule);
+    bool reflectSpecializationConstants(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule);
+    bool reflectComputeInfo(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule);
 
     std::optional<ShaderReflection> reflectSPIRV(std::span<uint8_t const> spirvByteCode)
     {
@@ -37,7 +40,9 @@ namespace LITL::Renderer
             if (reflectShaderStage(&reflected, &module) &&
                 reflectResourceBindings(&reflected, &module) &&
                 reflectVertexInputs(&reflected, &module) &&
-                reflectFragmentOutputs(&reflected, &module))
+                reflectFragmentOutputs(&reflected, &module) &&
+                reflectSpecializationConstants(&reflected, &module) &&
+                reflectComputeInfo(&reflected, &module))
             {
                 returnVal = reflected;
             }
@@ -51,13 +56,13 @@ namespace LITL::Renderer
         return returnVal;
     }
 
-    bool reflectShaderStage(ShaderReflection* litlReflection, SpvReflectShaderModule* reflectedModule)
+    bool reflectShaderStage(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule)
     {
         litlReflection->stage = static_cast<ShaderStage>(reflectedModule->shader_stage);
         return true;
     }
 
-    bool reflectResourceBindings(ShaderReflection* litlReflection, SpvReflectShaderModule* reflectedModule)
+    bool reflectResourceBindings(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule)
     {
         uint32_t resourceBindingsCount = 0;
         auto result = spvReflectEnumerateDescriptorBindings(reflectedModule, &resourceBindingsCount, nullptr);
@@ -97,7 +102,7 @@ namespace LITL::Renderer
         return true;
     }
 
-    bool reflectPushConstants(ShaderReflection* litlReflection, SpvReflectShaderModule* reflectedModule)
+    bool reflectPushConstants(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule)
     {
         uint32_t pushConstantBlocksCount = 0;
         auto result = spvReflectEnumeratePushConstantBlocks(reflectedModule, &pushConstantBlocksCount, nullptr);
@@ -110,7 +115,7 @@ namespace LITL::Renderer
 
         SpvReflectBlockVariable** pushConstantBlocks = (SpvReflectBlockVariable**)malloc(pushConstantBlocksCount * sizeof(SpvReflectBlockVariable*));
         result = spvReflectEnumeratePushConstantBlocks(reflectedModule, &pushConstantBlocksCount, pushConstantBlocks);
-        
+
         if (result != SPV_REFLECT_RESULT_SUCCESS)
         {
             logError("SPIRV reflection failed to enumerate push constant blocks with result ", result);
@@ -132,8 +137,13 @@ namespace LITL::Renderer
         return true;
     }
 
-    bool reflectVertexInputs(ShaderReflection* litlReflection, SpvReflectShaderModule* reflectedModule)
+    bool reflectVertexInputs(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule)
     {
+        if (litlReflection->stage != ShaderStage::Vertex)
+        {
+            return true;
+        }
+
         uint32_t vertexInputsCount = 0;
         auto result = spvReflectEnumerateInputVariables(reflectedModule, &vertexInputsCount, nullptr);
 
@@ -169,8 +179,13 @@ namespace LITL::Renderer
         return true;
     }
 
-    bool reflectFragmentOutputs(ShaderReflection* litlReflection, SpvReflectShaderModule* reflectedModule)
+    bool reflectFragmentOutputs(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule)
     {
+        if (litlReflection->stage != ShaderStage::Fragment)
+        {
+            return true;
+        }
+
         uint32_t fragmentOutputsCount = 0;
         auto result = spvReflectEnumerateOutputVariables(reflectedModule, &fragmentOutputsCount, nullptr);
 
@@ -202,6 +217,64 @@ namespace LITL::Renderer
 
             reflectIntoInputOutputVariable(&litlReflection->fragmentOutputs[i], &outputVariable);
         }
+
+        return true;
+    }
+
+    bool reflectSpecializationConstants(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule)
+    {
+        uint32_t constantsCount = 0;
+        auto result = spvReflectEnumerateSpecializationConstants(reflectedModule, &constantsCount, nullptr);
+
+        if (result != SPV_REFLECT_RESULT_SUCCESS)
+        {
+            logError("SPIRV reflection failed to enumerate specialization cosntants count with result ", result);
+            return false;
+        }
+
+        SpvReflectSpecializationConstant** constants = (SpvReflectSpecializationConstant**)malloc(constantsCount * sizeof(SpvReflectSpecializationConstant*));
+        result = spvReflectEnumerateSpecializationConstants(reflectedModule, &constantsCount, constants);
+
+        if (result != SPV_REFLECT_RESULT_SUCCESS)
+        {
+            logError("SPIRV reflection failed to enumerate specialization constants with result ", result);
+            return false;
+        }
+
+        litlReflection->specializationConstants.reserve(constantsCount);
+
+        for (uint32_t i = 0; i < constantsCount; ++i)
+        {
+            auto constant = *constants[i];
+
+            litlReflection->specializationConstants.push_back(SpecializationConstant{
+                    .name = constant.name,
+                    .id = constant.constant_id,
+                    .scalarType = fromSpvReflectTypeFlagBits(constant.type_description->type_flags)
+                });
+        }
+
+        return true;
+    }
+
+    bool reflectComputeInfo(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule)
+    {
+        if (litlReflection->stage != ShaderStage::Compute)
+        {
+            return true;
+        }
+
+        if (reflectedModule->entry_point_count == 0)
+        {
+            logError("SPIRV reflection of compute info failed due to 0 count entry points.");
+            return false;
+        }
+
+        litlReflection->computeInfo = ComputeInfo{
+            .localSizeX = reflectedModule->entry_points[0].local_size.x,
+            .localSizeY = reflectedModule->entry_points[1].local_size.y,
+            .localSizeZ = reflectedModule->entry_points[2].local_size.z
+        };
 
         return true;
     }
@@ -394,6 +467,22 @@ namespace LITL::Renderer
             inputOutputVariable->scalarType = ShaderScalarType::Float;
             inputOutputVariable->componentCount = 4;
             break;
+        }
+    }
+
+    ShaderScalarType fromSpvReflectTypeFlagBits(uint32_t typeFlag)
+    {
+        if (typeFlag & SPV_REFLECT_TYPE_FLAG_BOOL)
+        {
+            return ShaderScalarType::Bool;
+        }
+        else if (typeFlag & SPV_REFLECT_TYPE_FLAG_INT)
+        {
+            return ShaderScalarType::Int;
+        }
+        else if (typeFlag & SPV_REFLECT_TYPE_FLAG_FLOAT)
+        {
+            return ShaderScalarType::Float;
         }
     }
 }
