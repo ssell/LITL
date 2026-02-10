@@ -38,7 +38,7 @@ Used for SPIRV bytecode reflection.
 
 * License: Apache-2.0
 * Source: https://github.com/KhronosGroup/SPIRV-Reflect
-* Included via: CMake `FetchContent`
+* Include via: Submodule
 
 ## xxHash
 
