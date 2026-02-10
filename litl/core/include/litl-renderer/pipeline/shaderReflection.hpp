@@ -55,7 +55,6 @@ namespace LITL::Renderer
     {
         uint32_t offset;
         uint32_t sizeBytes;
-        uint32_t stageMask;
     };
 
     /// <summary>
