@@ -58,9 +58,9 @@ namespace LITL::Renderer
     };
 
     /// <summary>
-    /// Describes an attribute used as input to the vertex shader.
+    /// Describes a variable used as either input to a Vertex shader or output from a Fragment shader.
     /// </summary>
-    struct VertexAttribute
+    struct ShaderInputOutputVariable
     {
         /// <summary>
         /// Optional semantic name.
@@ -76,27 +76,6 @@ namespace LITL::Renderer
         /// The scalar type (float, uint, etc.)
         /// </summary>
         ShaderScalarType scalarType;
-
-        /// <summary>
-        /// Number of scalars in the attribute. For example float vs vec2 vs vec3 vs vec4.
-        /// </summary>
-        uint32_t componentCount;
-    };
-
-    /// <summary>
-    /// Describes an attribute output from the fragment shader.
-    /// </summary>
-    struct FragmentOutput
-    {
-        /// <summary>
-        /// Optional semantic name.
-        /// </summary>
-        std::string name;
-
-        /// <summary>
-        /// Maps to `layout(location)`
-        /// </summary>
-        uint32_t location;
 
         /// <summary>
         /// Number of scalars in the attribute. For example float vs vec2 vs vec3 vs vec4.
@@ -130,8 +109,8 @@ namespace LITL::Renderer
 
         std::vector<ResourceBinding> resources;
         std::vector<PushConstantRange> pushConstants;
-        std::vector<VertexAttribute> vertexInputs;
-        std::vector<FragmentOutput> fragmentOutputs;
+        std::vector<ShaderInputOutputVariable> vertexInputs;
+        std::vector<ShaderInputOutputVariable> fragmentOutputs;
         std::vector<SpecializationConstant> specializationConstants;
 
         std::optional<ComputeInfo> computeInfo;
