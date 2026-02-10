@@ -13,6 +13,7 @@ namespace LITL::Renderer
 {
     /// <summary>
     /// Describes a single resource bound to one or more shader stages.
+    /// In Vulkan these are descriptor bindings.
     /// </summary>
     struct ResourceBinding
     {
@@ -40,11 +41,6 @@ namespace LITL::Renderer
         /// If the resource is not an array, size is 1.
         /// </summary>
         uint32_t arraySize;
-
-        /// <summary>
-        /// Which shader stage(s) this resource is visible to.
-        /// </summary>
-        uint32_t stageMask;
 
         /// <summary>
         /// For buffer validation only.
