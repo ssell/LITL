@@ -2,6 +2,8 @@
 
 Brushing the C++ dust off with a new little engine.
 
+This is a learning engine and very (very) early in development. It is public merely to show that it exists, but not for it to see any use.
+
 ## Requirements
 
 * [Vulkan SDK](https://vulkan.lunarg.com/) with Slang
