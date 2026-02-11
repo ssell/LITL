@@ -15,7 +15,7 @@ namespace LITL::Renderer
         bool (*begin)(CommandBufferHandle const&, uint32_t);
         bool (*end)(CommandBufferHandle const&);
 
-        void (*cmdBeginRenderPass)(CommandBufferHandle const&);                                                 // todo
+        void (*cmdBeginRenderPass)(CommandBufferHandle const&, RendererHandle const*, uint32_t);
         void (*cmdEndRenderPass)(CommandBufferHandle const&);                                                   // todo
         void (*cmdBindGraphicsPipeline)(CommandBufferHandle const&, GraphicsPipelineHandle const&);             // todo
 
@@ -90,9 +90,9 @@ namespace LITL::Renderer
             return &m_backendHandle;
         }
 
-        void cmdBeginRenderPass() const
+        void cmdBeginRenderPass(LITL::Renderer::RendererHandle const* pRendererHandle, uint32_t swapChainIndex) const
         {
-            m_pBackendOperations->cmdBeginRenderPass(m_backendHandle);
+            m_pBackendOperations->cmdBeginRenderPass(m_backendHandle, pRendererHandle, swapChainIndex);
         }
 
         void cmdEndRenderPass() const

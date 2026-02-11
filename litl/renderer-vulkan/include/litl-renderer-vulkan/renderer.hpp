@@ -12,7 +12,12 @@ namespace LITL::Vulkan::Renderer
     void destroy(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
     uint32_t getFrame(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
     uint32_t getFrameIndex(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
-    void render(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::CommandBuffer* pBuffers, uint32_t numCommandBuffers);
+
+    bool beginRender(LITL::Renderer::RendererHandle const& litlHandle);
+    void submitCommands(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers);
+    void endRender(LITL::Renderer::RendererHandle const& litlHandle);
+
+    //void render(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::CommandBuffer* pBuffers, uint32_t numCommandBuffers);
     LITL::Renderer::ResourceAllocator* buildResourceAllocator(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
 
     const LITL::Renderer::RendererOperations VulkanRendererOperations = {
@@ -20,7 +25,9 @@ namespace LITL::Vulkan::Renderer
         &destroy,
         &getFrame,
         &getFrameIndex,
-        &render,
+        &beginRender,
+        &submitCommands,
+        &endRender,
         &buildResourceAllocator
     };
 }

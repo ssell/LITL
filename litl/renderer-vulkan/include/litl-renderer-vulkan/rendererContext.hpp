@@ -30,6 +30,11 @@ namespace LITL::Vulkan::Renderer
         uint32_t frameIndex = 0;
 
         /// <summary>
+        /// The currently secured swapchain image index.
+        /// </summary>
+        uint32_t swapChainImageIndex = 0;
+
+        /// <summary>
         /// Number of frames in flight.
         /// </summary>
         uint32_t framesInFlight = 2;
