@@ -1,15 +1,28 @@
 #include "litl-engine/engine.hpp"
-#include "litl-core/logging/logging.hpp"
+
+class TriangleObj : public LITL::Engine::SceneObject
+{
+public:
+
+    void onSetup() override {}
+    void onUpdate() override {}
+    void onRender(LITL::Renderer::CommandBuffer* pCommandBuffer) override {}
+
+protected:
+
+private:
+};
 
 int main()
 {
     LITL::Engine::Engine engine({});
-    LITL::logInfo("Starting Triangle Sample");
 
     if (!engine.openWindow("LITL - Triangle Sample", 1024, 1024))
     {
         return 1;
     }
+
+    engine.addSceneObject<TriangleObj>();
 
     while (engine.shouldRun())
     {
