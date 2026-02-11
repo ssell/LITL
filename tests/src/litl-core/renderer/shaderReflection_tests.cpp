@@ -4,9 +4,9 @@
 
 #include "litl-renderer/pipeline/shaderReflection.hpp"
 
-TEST_CASE("a", "[renderer::shaderReflection]")
+TEST_CASE("Basic Reflection", "[renderer::shaderReflection]")
 {
-    std::ifstream file("C:\\Projects\\LITL\\assets\\shaders\\spirv\\flat.spv", std::ios::ate | std::ios::binary);
+    std::ifstream file("data/test.spv", std::ios::ate | std::ios::binary);
 
     REQUIRE(file.is_open());
 
@@ -21,7 +21,9 @@ TEST_CASE("a", "[renderer::shaderReflection]")
 
     auto reflectedVertex = LITL::Renderer::reflectSPIRV("vertexMain", bytes);
     auto reflectedFragment = LITL::Renderer::reflectSPIRV("fragmentMain", bytes);
+    auto reflectedGeometry = LITL::Renderer::reflectSPIRV("geometryMain", bytes);
 
     REQUIRE(reflectedVertex != std::nullopt);
     REQUIRE(reflectedFragment != std::nullopt);
+    REQUIRE(reflectedGeometry == std::nullopt);
 }
