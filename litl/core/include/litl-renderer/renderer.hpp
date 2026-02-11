@@ -19,7 +19,9 @@ namespace LITL::Renderer
         void (*destroy)(RendererHandle const&);
         uint32_t (*getFrame)(RendererHandle const&);
         uint32_t (*getFrameIndex)(RendererHandle const&);
-        void (*render)(RendererHandle const&, CommandBuffer*, uint32_t);
+        bool (*beginRender)(RendererHandle const&);
+        void (*submitCommands)(RendererHandle const&, CommandBuffer*, uint32_t);
+        void (*endRender)(RendererHandle const&);
         ResourceAllocator* (*buildResourceAllocator)(RendererHandle const&);
     };
 
@@ -74,9 +76,19 @@ namespace LITL::Renderer
             return m_pBackendOperations->getFrameIndex(m_backendHandle);
         }
 
-        void render(CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers)
+        bool beginRender()
         {
-            m_pBackendOperations->render(m_backendHandle, pCommandBuffers, numCommandBuffers);
+            return m_pBackendOperations->beginRender(m_backendHandle);
+        }
+
+        void submitCommands(CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers)
+        {
+            m_pBackendOperations->submitCommands(m_backendHandle, pCommandBuffers, numCommandBuffers);
+        }
+
+        void endRender()
+        {
+            m_pBackendOperations->endRender(m_backendHandle);
         }
 
         RendererHandle const* getHandle() const

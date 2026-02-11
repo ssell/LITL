@@ -80,4 +80,13 @@ namespace LITL::Engine
 
         return !m_impl->pWindow->shouldClose();
     }
+
+    void Engine::run()
+    {
+        if (m_impl->pRenderer->beginRender())
+        {
+            m_impl->pRenderer->submitCommands(nullptr, 0);
+            m_impl->pRenderer->endRender();
+        }
+    }
 }

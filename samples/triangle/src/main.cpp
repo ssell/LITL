@@ -13,7 +13,7 @@ int main()
 
     while (engine.shouldRun())
     {
-
+        engine.run();
     }
 
     return 0;

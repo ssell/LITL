@@ -690,69 +690,72 @@ namespace LITL::Vulkan::Renderer
     void renderCommandBuffer(RendererHandle* handle, LITL::Renderer::CommandBuffer* pCommandBuffer, uint32_t imageIndex);
     void transitionImageLayout(VkCommandBuffer vkCommandBuffer, VkImage vkImage, uint32_t oldLayout, uint32_t newLayout, uint32_t srcAccessMask, uint32_t dstAccessMask, uint32_t srcStageMask, uint32_t dstStageMask);
 
-    void render(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers)
+
+    bool beginRender(LITL::Renderer::RendererHandle const& litlHandle)
     {
         auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
 
-        // ---------------------------------------------------------------------------------
-        // Wait & Prepare 
-
         if (!isRenderReady(handle))
         {
-            return;
+            // Fence not ready. Previous frame is still rendering.
+            return false;
         }
 
-        const auto frameIndex = getFrameIndex(litlHandle);
         uint32_t swapChainImageIndex = 0;
 
-        if (!acquireSwapChainIndex(handle, 1000000, frameIndex, &swapChainImageIndex))                              // 1000000 ns = 1 ms
+        if (!acquireSwapChainIndex(handle, 1000000, handle->context.frameIndex, &swapChainImageIndex))  // 1000000 ns = 1 ms
         {
-            return;
+            // Swapchain not ready.
+            return false;
         }
 
-        // ---------------------------------------------------------------------------------
-        // Record Commands
+        handle->context.swapChainImageIndex = swapChainImageIndex;
 
-        vkResetFences(handle->context.vkDevice, 1, &handle->context.vkRenderFences[frameIndex]);
-        recordCommandBuffers(handle, pCommandBuffers, numCommandBuffers, swapChainImageIndex);
+        vkResetFences(handle->context.vkDevice, 1, &(handle->context.vkRenderFences[handle->context.frameIndex]));
 
-        // ---------------------------------------------------------------------------------
-        // Submit Commands
+        return true;
+    }
+
+    void submitCommands(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::CommandBuffer* pCommandBuffers, uint32_t const numCommandBuffers)
+    {
+        auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
 
         const auto waitDestinationStageMask = VkPipelineStageFlags(VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
 
         // Only 1 expected command buffer atm. If we move to actually have multiple, reconsider redesigning CommandBuffer for AoS vs SoA.
-        const auto vkCommandBuffer = extractCurrentVkCommandBuffer((&pCommandBuffers)[0]);
+        const auto vkCommandBuffer = (pCommandBuffers != nullptr ? extractCurrentVkCommandBuffer((&pCommandBuffers)[0]) : VK_NULL_HANDLE);
 
         const auto submitInfo = VkSubmitInfo{
             .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
             .waitSemaphoreCount = 1,
-            .pWaitSemaphores = &handle->context.vkPresentCompleteSemaphores[frameIndex],        // Wait for current swapchain image to be done presenting
-            .pWaitDstStageMask = &waitDestinationStageMask,                                     // Wait for writing colors to the image until's available
-            .commandBufferCount = 1,
+            .pWaitSemaphores = &handle->context.vkPresentCompleteSemaphores[handle->context.frameIndex],            // Wait for current swapchain image to be done presenting
+            .pWaitDstStageMask = &waitDestinationStageMask,                                                         // Wait for writing colors to the image until's available
+            .commandBufferCount = numCommandBuffers,
             .pCommandBuffers = &vkCommandBuffer,
             .signalSemaphoreCount = 1,
-            .pSignalSemaphores = &handle->context.vkRenderCompleteSemaphores[swapChainImageIndex]     // The semaphore to signal once the command buffer(s) have finished execution.
+            .pSignalSemaphores = &handle->context.vkRenderCompleteSemaphores[handle->context.swapChainImageIndex]   // The semaphore to signal once the command buffer(s) have finished execution.
         };
 
-        const auto submitResult = vkQueueSubmit(handle->context.vkGraphicsQueue, 1, &submitInfo, handle->context.vkRenderFences[frameIndex]);      // Submit the command buffer
+        const auto submitResult = vkQueueSubmit(handle->context.vkGraphicsQueue, 1, &submitInfo, handle->context.vkRenderFences[handle->context.frameIndex]);   // Submit the command buffer
 
         if (submitResult != VK_SUCCESS)
         {
             logWarning("Vulkan Renderer: vkQueueSubmit failed with result ", submitResult);
         }
+    }
 
-        // ---------------------------------------------------------------------------------
-        // Present
+    void endRender(LITL::Renderer::RendererHandle const& litlHandle)
+    {
+        auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
 
         const auto presentInfo = VkPresentInfoKHR{
             .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
             .waitSemaphoreCount = 1,
-            .pWaitSemaphores = &handle->context.vkRenderCompleteSemaphores[swapChainImageIndex],      // Wait for the command buffer to finish executing
+            .pWaitSemaphores = &handle->context.vkRenderCompleteSemaphores[handle->context.swapChainImageIndex],    // Wait for the command buffer to finish executing
             .swapchainCount = 1,
             .pSwapchains = &handle->context.vkSwapChain,
-            .pImageIndices = &swapChainImageIndex,                                              // Which image to draw onto
-            .pResults = nullptr                                                                 // (Optional) If using multiple swapchains, the success of each present will be stored in this array as opposed to the singular result from the upcoming call.
+            .pImageIndices = &handle->context.swapChainImageIndex,                                                  // Which image to draw onto
+            .pResults = nullptr                                                                                     // (Optional) If using multiple swapchains, the success of each present will be stored in this array as opposed to the singular result from the upcoming call.
         };
 
         const auto presentResult = vkQueuePresentKHR(handle->context.vkGraphicsQueue, &presentInfo);
@@ -764,6 +767,18 @@ namespace LITL::Vulkan::Renderer
 
         handle->context.frame++;
         handle->context.frameIndex = handle->context.frame % handle->context.framesInFlight;
+    }
+
+
+
+    void render(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::CommandBuffer* pCommandBuffers, uint32_t const numCommandBuffers)
+    {
+        beginRender(litlHandle);
+
+        //recordCommandBuffers(handle, pCommandBuffers, numCommandBuffers, swapChainImageIndex);
+
+        submitCommands(litlHandle, pCommandBuffers, numCommandBuffers);
+        endRender(litlHandle);
     }
 
     /// <summary>
@@ -859,26 +874,6 @@ namespace LITL::Vulkan::Renderer
             VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT             // Dest Stage Mask
         );
 
-        const auto attachmentInfo = VkRenderingAttachmentInfo{
-            .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
-            .imageView = handle->context.vkSwapChainImageViews[imageIndex],
-            .imageLayout = VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-            .loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR,
-            .storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE,
-            .clearValue = {{ 0.05f, 0.05f, 0.075f, 1.0f }}
-        };
-
-        const auto renderingInfo = VkRenderingInfo{
-            .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
-            .renderArea = {
-                .offset = {0, 0},
-                .extent = handle->context.vkSwapChainExtent
-            },
-            .layerCount = 1,
-            .colorAttachmentCount = 1,
-            .pColorAttachments = &attachmentInfo
-        };
-
         const auto viewport = VkViewport{
             .x = 0.0f,
             .y = 0.0f,
@@ -898,6 +893,10 @@ namespace LITL::Vulkan::Renderer
                 .height = handle->context.vkSwapChainExtent.height
             }
         };
+
+        pCommandBuffer->cmdBeginRenderPass(nullptr, imageIndex);
+
+        pCommandBuffer->cmdEndRenderPass();
 
        // pCommandBuffer->cmdTransitionResource(/* ... todo ... */);
        // pCommandBuffer->cmdBeginRenderPass();

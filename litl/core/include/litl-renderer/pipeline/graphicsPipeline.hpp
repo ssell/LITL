@@ -63,11 +63,6 @@ namespace LITL::Renderer
             m_backendHandle.handle = nullptr;
         }
 
-        void bind(CommandBuffer const* commandBuffer)
-        {
-            commandBuffer->cmdBindGraphicsPipeline(m_backendHandle);
-        }
-
         GraphicsPipelineHandle const* getHandle() const
         {
             return &m_backendHandle;
