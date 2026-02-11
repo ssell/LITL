@@ -15,6 +15,7 @@ namespace LITL::Renderer
     DEFINE_LITL_HANDLE(GraphicsPipelineHandle);
     DEFINE_LITL_HANDLE(ComputePipelineHandle);
     DEFINE_LITL_HANDLE(CommandBufferHandle);
+    DEFINE_LITL_HANDLE(ShaderModuleHandle);
 }
 
 #endif

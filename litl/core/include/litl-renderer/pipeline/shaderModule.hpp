@@ -1,10 +1,12 @@
 #ifndef LITL_RENDERER_SHADER_MODULE_H__
 #define LITL_RENDERER_SHADER_MODULE_H__
 
+#include <optional>
 #include <span>
 #include <string>
 
 #include "litl-core/refPtr.hpp"
+#include "litl-renderer/handles.hpp"
 #include "litl-renderer/pipeline/shaderEnums.hpp"
 #include "litl-renderer/pipeline/shaderReflection.hpp"
 
@@ -38,23 +40,41 @@ namespace LITL::Renderer
         uint64_t hashedBytes;
     };
 
+    struct ShaderModuleOperations
+    {
+        bool (*build)(ShaderModuleDescriptor const&, ShaderModuleHandle const&, ShaderReflection const*);
+        void (*destroy)(ShaderModuleHandle const&);
+    };
+
     /// <summary>
-    /// Represent a single shader stage 
+    /// The entry point to a single shader stage.
     /// </summary>
     class ShaderModule final : public Core::RefCounted
     {
     public:
 
-        ShaderReflection const& getReflection() const noexcept
+        ShaderModule(ShaderModuleOperations const* pOperations, ShaderModuleHandle handle, ShaderModuleDescriptor const& descriptor)
+            : m_pBackendOperations(pOperations), m_backendHandle(handle), m_descriptor(descriptor), m_reflection(std::nullopt)
         {
-            return m_reflection;
+
+        }
+
+        bool build();
+        void destroy();
+
+        ShaderReflection const* getReflection() const noexcept
+        {
+            return std::to_address(m_reflection);
         }
 
     protected:
 
     private:
 
-        ShaderReflection m_reflection;
+        ShaderModuleOperations const* m_pBackendOperations;
+        ShaderModuleHandle m_backendHandle;
+        ShaderModuleDescriptor m_descriptor;
+        std::optional<ShaderReflection> m_reflection;
     };
 }
 

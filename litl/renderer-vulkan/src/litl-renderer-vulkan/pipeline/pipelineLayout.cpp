@@ -5,33 +5,21 @@ namespace LITL::Vulkan::Renderer
 {
     struct PipelineLayoutHandle
     {
-        VkDevice device;
-        VkPipelineLayout pipelineLayout;
+        VkDevice vkDevice;
+        VkPipelineLayout vkPipelineLayout;
     };
 
     LITL::Renderer::PipelineLayout* createPipelineLayout(VkDevice vkDevice, LITL::Renderer::PipelineLayoutDescriptor const& descriptor)
     {
-        const auto pipelineLayoutInfo = VkPipelineLayoutCreateInfo{
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-            .setLayoutCount = 0,
-            .pushConstantRangeCount = 0
-        };
-
         auto* pipelineLayoutHandle = new PipelineLayoutHandle {
-            .device = vkDevice,
-            .pipelineLayout = VK_NULL_HANDLE
+            .vkDevice = vkDevice,
+            .vkPipelineLayout = VK_NULL_HANDLE
         };
 
-        const auto result = vkCreatePipelineLayout(vkDevice, &pipelineLayoutInfo, nullptr, &pipelineLayoutHandle->pipelineLayout);
-
-        if (result == VK_SUCCESS)
-        {
-            return new LITL::Renderer::PipelineLayout(&VulkanPipelineLayoutOperations, LITL_PACK_HANDLE(LITL::Renderer::PipelineLayoutHandle, pipelineLayoutHandle), descriptor);
-        }
-        else
-        {
-            logError("vkCreatePipelineLayout failed with result ", result);
-        }
+        return new LITL::Renderer::PipelineLayout(
+            &VulkanPipelineLayoutOperations,
+            LITL_PACK_HANDLE(LITL::Renderer::PipelineLayoutHandle, pipelineLayoutHandle),
+            descriptor);
     }
 
     bool build(
@@ -40,13 +28,20 @@ namespace LITL::Vulkan::Renderer
     {
         auto* handle = LITL_UNPACK_HANDLE(PipelineLayoutHandle, litlHandle);
 
-        // v todo pull from layout descriptor v
-        VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-        pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.setLayoutCount = 0;
-        pipelineLayoutInfo.pushConstantRangeCount = 0;
+        if (handle->vkPipelineLayout != VK_NULL_HANDLE)
+        {
+            // already exists
+            return true;
+        }
 
-        const VkResult result = vkCreatePipelineLayout(handle->device, &pipelineLayoutInfo, nullptr, &handle->pipelineLayout);
+        // v todo pull from layout descriptor v
+        const VkPipelineLayoutCreateInfo pipelineLayoutInfo{
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+            .setLayoutCount = 0,
+            .pushConstantRangeCount = 0
+        };
+
+        const VkResult result = vkCreatePipelineLayout(handle->vkDevice, &pipelineLayoutInfo, nullptr, &handle->vkPipelineLayout);
 
         if (result != VK_SUCCESS)
         {
@@ -61,9 +56,9 @@ namespace LITL::Vulkan::Renderer
     {
         auto* handle = LITL_UNPACK_HANDLE(PipelineLayoutHandle, litlHandle);
 
-        if (handle->pipelineLayout != VK_NULL_HANDLE)
+        if (handle->vkPipelineLayout != VK_NULL_HANDLE)
         {
-            vkDestroyPipelineLayout(handle->device, handle->pipelineLayout, nullptr);
+            vkDestroyPipelineLayout(handle->vkDevice, handle->vkPipelineLayout, nullptr);
         }
 
         delete handle;
