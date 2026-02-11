@@ -62,23 +62,13 @@ namespace LITL::Renderer
 
         bool build()
         {
-            if (m_backendHandle.handle == nullptr)
-            {
-                return m_pBackendOperations->build(m_descriptor, m_backendHandle);
-            }
-            else
-            {
-                return false;
-            }
+            return m_pBackendOperations->build(m_descriptor, m_backendHandle);
         }
 
         void destroy()
         {
-            if (m_backendHandle.handle != nullptr)
-            {
-                m_pBackendOperations->destroy(m_backendHandle);
-                m_backendHandle.handle = nullptr;
-            }
+            m_pBackendOperations->destroy(m_backendHandle);
+            m_backendHandle.handle = nullptr;
         }
 
         PipelineLayoutDescriptor const& getDescriptor() const noexcept

@@ -60,11 +60,21 @@ namespace LITL::Renderer
         }
 
         bool build();
-        void destroy();
+
+        void destroy()
+        {
+            m_pBackendOperations->destroy(m_backendHandle);
+            m_backendHandle.handle = nullptr;
+        }
 
         ShaderReflection const* getReflection() const noexcept
         {
             return std::to_address(m_reflection);
+        }
+
+        ShaderModuleHandle const* getHandle() const
+        {
+            return &m_backendHandle;
         }
 
     protected:

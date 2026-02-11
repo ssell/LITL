@@ -20,11 +20,13 @@ namespace LITL::Vulkan::Renderer
     Core::RefPtr<LITL::Renderer::CommandBuffer> createCommandBuffer(LITL::Renderer::RendererHandle const& litlHandle);
     Core::RefPtr<LITL::Renderer::PipelineLayout> createPipelineLayout(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::PipelineLayoutDescriptor const& descriptor);
     Core::RefPtr<LITL::Renderer::ShaderModule> createShaderModule(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::ShaderModuleDescriptor const& descriptor);
+    Core::RefPtr<LITL::Renderer::GraphicsPipeline> createGraphicsPipeline(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::GraphicsPipelineDescriptor const& descriptor);
 
     const LITL::Renderer::ResourceAllocatorOperations VulkanResourceAllocatorOperations = {
         &createCommandBuffer,
         &createPipelineLayout,
-        &createShaderModule
+        &createShaderModule,
+        &createGraphicsPipeline
     };
 }
 

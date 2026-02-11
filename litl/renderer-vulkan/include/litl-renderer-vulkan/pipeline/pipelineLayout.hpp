@@ -6,6 +6,12 @@
 
 namespace LITL::Vulkan::Renderer
 {
+    struct PipelineLayoutHandle
+    {
+        VkDevice vkDevice;
+        VkPipelineLayout vkPipelineLayout;
+    };
+
     /// <summary>
     /// Instantiates a new PipelineLayout and returns the raw owning pointer to it.
     /// </summary>
