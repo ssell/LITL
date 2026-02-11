@@ -4,6 +4,7 @@
 #include "litl-core/refPtr.hpp"
 #include "litl-renderer/handles.hpp"
 #include "litl-renderer/commands/commandBuffer.hpp"
+#include "litl-renderer/pipeline/graphicsPipeline.hpp"
 #include "litl-renderer/pipeline/pipelineLayout.hpp"
 #include "litl-renderer/pipeline/shaderModule.hpp"
 
@@ -18,6 +19,7 @@ namespace LITL::Renderer
         Core::RefPtr<CommandBuffer> (*createCommandBuffer)(RendererHandle const&);
         Core::RefPtr<PipelineLayout> (*createPipelineLayout)(RendererHandle const&, PipelineLayoutDescriptor const&);
         Core::RefPtr<ShaderModule> (*createShaderModule)(RendererHandle const&, ShaderModuleDescriptor const&);
+        Core::RefPtr<GraphicsPipeline>(*createGraphicsPipeline)(RendererHandle const&, GraphicsPipelineDescriptor const&);
     };
 
     class ResourceAllocator final
@@ -47,6 +49,11 @@ namespace LITL::Renderer
         Core::RefPtr<ShaderModule> createShaderModule(ShaderModuleDescriptor const& descriptor) const noexcept
         {
             return m_pBackendOperations->createShaderModule(m_backendRendererHandle, descriptor);
+        }
+
+        Core::RefPtr<GraphicsPipeline> createGraphicsPipeline(GraphicsPipelineDescriptor const& descriptor) const noexcept
+        {
+            return m_pBackendOperations->createGraphicsPipeline(m_backendRendererHandle, descriptor);
         }
 
     protected:

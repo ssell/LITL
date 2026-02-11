@@ -3,12 +3,6 @@
 
 namespace LITL::Vulkan::Renderer
 {
-    struct PipelineLayoutHandle
-    {
-        VkDevice vkDevice;
-        VkPipelineLayout vkPipelineLayout;
-    };
-
     LITL::Renderer::PipelineLayout* createPipelineLayout(VkDevice vkDevice, LITL::Renderer::PipelineLayoutDescriptor const& descriptor)
     {
         auto* pipelineLayoutHandle = new PipelineLayoutHandle {

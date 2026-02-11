@@ -1,6 +1,7 @@
 #include "litl-renderer-vulkan/resourceAllocator.hpp"
 #include "litl-renderer-vulkan/rendererContext.hpp"
 #include "litl-renderer-vulkan/commands/commandBuffer.hpp"
+#include "litl-renderer-vulkan/pipeline/graphicsPipeline.hpp"
 #include "litl-renderer-vulkan/pipeline/pipelineLayout.hpp"
 #include "litl-renderer-vulkan/pipeline/shaderModule.hpp"
 
@@ -37,6 +38,17 @@ namespace LITL::Vulkan::Renderer
 
         return Core::RefPtr<LITL::Renderer::ShaderModule>(createShaderModule(
             handle->context.vkDevice,
+            descriptor
+        ));
+    }
+
+    Core::RefPtr<LITL::Renderer::GraphicsPipeline> createGraphicsPipeline(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::GraphicsPipelineDescriptor const& descriptor)
+    {
+        auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
+
+        return Core::RefPtr<LITL::Renderer::GraphicsPipeline>(createGraphicsPipeline(
+            handle->context.vkDevice,
+            handle->context.vkSwapChainImageFormat,
             descriptor
         ));
     }

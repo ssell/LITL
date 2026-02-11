@@ -3,13 +3,6 @@
 
 namespace LITL::Vulkan::Renderer
 {
-    struct ShaderModuleHandle
-    {
-        VkDevice vkDevice;
-        VkShaderModule vkShaderModule;
-        VkPipelineShaderStageCreateInfo vkShaderStageInfo;
-    };
-
     LITL::Renderer::ShaderModule* createShaderModule(VkDevice vkDevice, LITL::Renderer::ShaderModuleDescriptor const& descriptor)
     {
         auto* shaderModuleHandle = new ShaderModuleHandle{

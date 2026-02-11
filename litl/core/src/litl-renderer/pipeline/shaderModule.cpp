@@ -22,22 +22,6 @@ namespace LITL::Renderer
             }
         }
 
-        if (m_backendHandle.handle == nullptr)
-        {
-            return m_pBackendOperations->build(m_descriptor, m_backendHandle, std::to_address(m_reflection));
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    void ShaderModule::destroy()
-    {
-        if (m_backendHandle.handle != nullptr)
-        {
-            m_pBackendOperations->destroy(m_backendHandle);
-            m_backendHandle.handle = nullptr;
-        }
+        return m_pBackendOperations->build(m_descriptor, m_backendHandle, std::to_address(m_reflection));
     }
 }
