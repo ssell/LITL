@@ -2,6 +2,7 @@
 #include "litl-renderer-vulkan/rendererContext.hpp"
 #include "litl-renderer-vulkan/commands/commandBuffer.hpp"
 #include "litl-renderer-vulkan/pipeline/pipelineLayout.hpp"
+#include "litl-renderer-vulkan/pipeline/shaderModule.hpp"
 
 namespace LITL::Vulkan::Renderer
 {
@@ -28,5 +29,15 @@ namespace LITL::Vulkan::Renderer
         return Core::RefPtr<LITL::Renderer::PipelineLayout>(createPipelineLayout(
             handle->context.vkDevice,
             descriptor));
+    }
+
+    Core::RefPtr<LITL::Renderer::ShaderModule> createShaderModule(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::ShaderModuleDescriptor const& descriptor)
+    {
+        auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
+
+        return Core::RefPtr<LITL::Renderer::ShaderModule>(createShaderModule(
+            handle->context.vkDevice,
+            descriptor
+        ));
     }
 }
