@@ -769,18 +769,6 @@ namespace LITL::Vulkan::Renderer
         handle->context.frameIndex = handle->context.frame % handle->context.framesInFlight;
     }
 
-
-
-    void render(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::CommandBuffer* pCommandBuffers, uint32_t const numCommandBuffers)
-    {
-        beginRender(litlHandle);
-
-        //recordCommandBuffers(handle, pCommandBuffers, numCommandBuffers, swapChainImageIndex);
-
-        submitCommands(litlHandle, pCommandBuffers, numCommandBuffers);
-        endRender(litlHandle);
-    }
-
     /// <summary>
     /// Checks if the render fence is open. If not, we are still rendering the last frame and need to wait.
     /// </summary>

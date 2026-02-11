@@ -1,12 +1,13 @@
 #ifndef LITL_ENGINE_H__
 #define LITL_ENGINE_H__
 
-#include "litl-renderer/rendererDescriptor.hpp"
 #include "litl-core/impl.hpp"
+#include "litl-renderer/rendererDescriptor.hpp"
+#include "litl-engine/scene/sceneObject.hpp"
 
 namespace LITL::Engine
 {
-    class Engine
+    class Engine final
     {
     public:
 
@@ -21,11 +22,22 @@ namespace LITL::Engine
         bool openWindow(char const* title, uint32_t width, uint32_t height) noexcept;
         bool shouldRun() noexcept;
 
+        template<SceneObjectImpl T>
+        void addSceneObject()
+        {
+            track(Core::RefPtr<SceneObject>(new T));
+        }
+
         void run();
 
     protected:
 
     private:
+
+        void track(Core::RefPtr<SceneObject> pSceneObject);
+
+        void update();
+        void render();
 
         struct Impl;
         Core::ImplPtr<Impl, 64> m_impl;

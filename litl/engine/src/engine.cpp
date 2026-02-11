@@ -1,8 +1,10 @@
-#include "litl-core/logging/logging.hpp"
+#include "litl-core/refPtr.hpp"
 #include "litl-core/window.hpp"
+#include "litl-core/logging/logging.hpp"
 #include "litl-engine/engine.hpp"
 #include "litl-engine/windowFactory.hpp"
 #include "litl-engine/rendererFactory.hpp"
+#include "litl-engine/scene/sceneTree.hpp"
 
 namespace LITL::Engine
 {
@@ -14,8 +16,11 @@ namespace LITL::Engine
     {
         std::unique_ptr<LITL::Core::Window> pWindow;
         std::unique_ptr<LITL::Renderer::Renderer> pRenderer;
+        Core::RefPtr<LITL::Renderer::CommandBuffer> pFrameCommandBuffer;
 
         Renderer::RendererDescriptor rendererDescriptor;
+
+        SceneTree sceneTree;
     };
 
     // -------------------------------------------------------------------------------------
@@ -67,6 +72,8 @@ namespace LITL::Engine
             return false;
         }
 
+        m_impl->pFrameCommandBuffer = m_impl->pRenderer->getResourceAllocator()->createCommandBuffer();
+
         logInfo("... Window and Renderer creation successful.");
         return true;
     }
@@ -81,11 +88,28 @@ namespace LITL::Engine
         return !m_impl->pWindow->shouldClose();
     }
 
+    void Engine::track(Core::RefPtr<SceneObject> pSceneObject)
+    {
+        m_impl->sceneTree.track(pSceneObject);
+    }
+
     void Engine::run()
+    {
+        update();
+        render();
+    }
+
+    void Engine::update()
+    {
+        m_impl->sceneTree.onUpdate();
+    }
+
+    void Engine::render()
     {
         if (m_impl->pRenderer->beginRender())
         {
-            m_impl->pRenderer->submitCommands(nullptr, 0);
+            m_impl->sceneTree.onRender(m_impl->pFrameCommandBuffer.get());
+            m_impl->pRenderer->submitCommands(m_impl->pFrameCommandBuffer.get(), 0);
             m_impl->pRenderer->endRender();
         }
     }
