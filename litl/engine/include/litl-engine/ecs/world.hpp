@@ -2,6 +2,7 @@
 #define LITL_ENGINE_ECS_WORLD_H__
 
 #include "litl-engine/ecs/entity.hpp"
+#include "litl-engine/ecs/component.hpp"
 
 namespace LITL::Engine::ECS
 {
@@ -19,6 +20,7 @@ namespace LITL::Engine::ECS
     protected:
 
     private:
+
     };
 }
 

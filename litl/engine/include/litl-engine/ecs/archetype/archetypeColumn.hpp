@@ -56,7 +56,13 @@ namespace LITL::Engine::ECS
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        void* get(size_t index) ;
+        void* get(size_t index);
+
+        /// <summary>
+        /// Returns a pointer directly to the inner buffer.
+        /// </summary>
+        /// <returns></returns>
+        void* data();
 
         /// <summary>
         /// Returns the type of components stored in this column.
