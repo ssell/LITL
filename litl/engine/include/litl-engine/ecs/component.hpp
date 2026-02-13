@@ -33,25 +33,24 @@ namespace LITL::Engine::ECS
 
     private:
 
-        /// <summary>
-        /// Utility for creating ComponentDescriptors.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="id"></param>
-        /// <returns></returns>
         template<typename T>
         static ComponentDescriptor create()
         {
-            static ComponentTypeId NextId = 0;
-
             return {
-                NextId++,
+                nextId(),
                 sizeof(T),
                 alignof(T),
                 [](void* to) { new (to) T(); },                                                     // allocate into the pre-existing buffer location being pointed to
                 [](void* from, void* to) { new (to) T(std::move(*reinterpret_cast<T*>(from))); },   // move into the other specified location
                 [](void* ptr) { reinterpret_cast<T*>(ptr)->~T(); }                                  // invoke the destructor for T
             };
+        }
+
+        static ComponentTypeId nextId()
+        {
+            // Never assign id 0 to let it indicate an uninitialized component type id.
+            static ComponentTypeId NextId = 1;
+            return NextId++;
         }
     };
 }
