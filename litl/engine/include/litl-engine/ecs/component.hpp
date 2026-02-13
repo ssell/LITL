@@ -36,7 +36,7 @@ namespace LITL::Engine::ECS
             id,
             sizeof(T),
             alignof(T),
-            [](void* destination) { new (dst) T(); },                                           // allocate into the pre-existing buffer location being pointed to
+            [](void* to) { new (to) T(); },                                                     // allocate into the pre-existing buffer location being pointed to
             [](void* from, void* to) { new (to) T(std::move(*reinterpret_cast<T*>(from))); },   // move into the other specified location
             [](void* ptr) { reinterpret_cast<T*>(ptr)->~T(); }                                  // invoke the destructor for T
         };
