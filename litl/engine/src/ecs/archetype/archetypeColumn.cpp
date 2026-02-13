@@ -114,6 +114,11 @@ namespace LITL::Engine::ECS
         return (m_impl->data + (index * m_impl->descriptor->size));
     }
 
+    void* ArchetypeColumn::data()
+    {
+        return m_impl->data;
+    }
+
     ComponentTypeId ArchetypeColumn::componentType() const noexcept
     {
         return m_impl->descriptor->id;

@@ -19,6 +19,12 @@ namespace LITL::Engine::ECS
         size_t entityCount() const noexcept;
         size_t componentCount() const noexcept;
 
+        template<typename T>
+        T* getTypedArray(ArchetypeColumn* column)
+        {
+            return reinterpret_cast<T*>(column->data());
+        }
+
         static void move(Archetype* from, Archetype* to, Entity entity, size_t entityIndex);
 
     protected:
