@@ -22,4 +22,8 @@ TEST_CASE("Component Descriptor", "[engine::ecs::component]")
     REQUIRE(fooDescriptor0 == fooDescriptor1);
     REQUIRE(fooDescriptor0 != barDescriptor0);
     REQUIRE(barDescriptor0 == barDescriptor1);
+
+    REQUIRE(fooDescriptor0->id == fooDescriptor1->id);
+    REQUIRE(fooDescriptor0->id != barDescriptor0->id);
+    REQUIRE(barDescriptor0->id == barDescriptor1->id);
 }
