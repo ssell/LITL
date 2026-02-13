@@ -63,15 +63,29 @@ namespace LITL::Engine::ECS
         m_impl->capacity = newCapacity;
     }
 
-    void ArchetypeColumn::add()
+    void ArchetypeColumn::resize()
     {
         if (m_impl->count == m_impl->capacity)
         {
             reserve(m_impl->capacity ? m_impl->capacity * 2 : 8);
         }
+    }
+
+    void ArchetypeColumn::add()
+    {
+        resize();
 
         void* target = m_impl->data + (m_impl->count * m_impl->descriptor->size);
         m_impl->descriptor->build(target);
+        m_impl->count++;
+    }
+
+    void ArchetypeColumn::move(void* from)
+    {
+        resize();
+
+        void* target = m_impl->data + (m_impl->count * m_impl->descriptor->size);
+        m_impl->descriptor->move(from, target);
         m_impl->count++;
     }
 
@@ -100,6 +114,11 @@ namespace LITL::Engine::ECS
         return (m_impl->data + (index * m_impl->descriptor->size));
     }
 
+    ComponentTypeId ArchetypeColumn::componentType() const noexcept
+    {
+        return m_impl->descriptor->id;
+    }
+
     size_t ArchetypeColumn::count() const noexcept
     {
         return m_impl->count;
@@ -108,5 +127,10 @@ namespace LITL::Engine::ECS
     size_t ArchetypeColumn::capacity() const noexcept
     {
         return m_impl->capacity;
+    }
+
+    ComponentDescriptor const* ArchetypeColumn::descriptor() const noexcept
+    {
+        return m_impl->descriptor;
     }
 }

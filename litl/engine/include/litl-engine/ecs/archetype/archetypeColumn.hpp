@@ -38,6 +38,12 @@ namespace LITL::Engine::ECS
         void add();
 
         /// <summary>
+        /// Places the component at the specified source into this column.
+        /// </summary>
+        /// <param name="source"></param>
+        void move(void* from);
+
+        /// <summary>
         /// Removes the component at the specified index.
         /// The caller assumes the responsibility of providing a valid index.
         /// </summary>
@@ -50,7 +56,13 @@ namespace LITL::Engine::ECS
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        void* get(size_t index);
+        void* get(size_t index) ;
+
+        /// <summary>
+        /// Returns the type of components stored in this column.
+        /// </summary>
+        /// <returns></returns>
+        ComponentTypeId componentType() const noexcept;
 
         /// <summary>
         /// Returns the number of components stored in the buffer.
@@ -64,9 +76,17 @@ namespace LITL::Engine::ECS
         /// <returns></returns>
         size_t capacity() const noexcept;
 
+        /// <summary>
+        /// Returns the component descriptor for this column.
+        /// </summary>
+        /// <returns></returns>
+        ComponentDescriptor const* descriptor() const noexcept;
+
     protected:
 
     private:
+
+        void resize();
 
         struct Impl;
         Core::ImplPtr<Impl, 32> m_impl;
