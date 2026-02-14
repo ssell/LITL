@@ -11,6 +11,8 @@ namespace LITL::Engine::ECS
     /// <summary>
     /// Storage for a singular component type in an Archetype.
     /// The component is described (and managed) by its ComponentDescriptor.
+    /// 
+    /// @todo Update this to perform chunked-based storage. Work can be split along chunks as well for MT
     /// </summary>
     class ArchetypeColumn
     {
@@ -36,6 +38,13 @@ namespace LITL::Engine::ECS
         /// If the buffer is at capacity, the capacity is increased first.
         /// </summary>
         void add();
+
+        /// <summary>
+        /// Removes the entity at the specified index.
+        /// The caller assumes the responsibility of prodiving the correct index.
+        /// </summary>
+        /// <param name="entityIndex"></param>
+        void removeEntity(size_t entityIndex);
 
         /// <summary>
         /// Places the component at the specified source into this column.
