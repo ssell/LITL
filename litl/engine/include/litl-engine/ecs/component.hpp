@@ -27,24 +27,19 @@ namespace LITL::Engine::ECS
         {
             // Use a static descriptor that is different for each specialization of this template.
             // This ensures a stable pointer to the descriptor that exists for the lifetime of the application.
-            static ComponentDescriptor descriptor = create<T>();
+            static ComponentDescriptor descriptor = {
+                .id        = nextId(),
+                .size      = sizeof(T),
+                .alignment = alignof(T),
+                .build     = [](void* to) { new (to) T(); },                                                     // allocate into the pre-existing buffer location being pointed to
+                .move      = [](void* from, void* to) { new (to) T(std::move(*reinterpret_cast<T*>(from))); },   // move into the other specified location
+                .destroy   = [](void* ptr) { reinterpret_cast<T*>(ptr)->~T(); }                                  // invoke the destructor for T
+            };
+
             return &descriptor;
         }
 
     private:
-
-        template<typename T>
-        static ComponentDescriptor create()
-        {
-            return {
-                nextId(),
-                sizeof(T),
-                alignof(T),
-                [](void* to) { new (to) T(); },                                                     // allocate into the pre-existing buffer location being pointed to
-                [](void* from, void* to) { new (to) T(std::move(*reinterpret_cast<T*>(from))); },   // move into the other specified location
-                [](void* ptr) { reinterpret_cast<T*>(ptr)->~T(); }                                  // invoke the destructor for T
-            };
-        }
 
         static ComponentTypeId nextId()
         {
