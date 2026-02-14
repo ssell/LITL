@@ -10,6 +10,10 @@
 
 namespace LITL::Engine::ECS
 {
+    /// <summary>
+    /// An Archetype is an ordered component set.
+    /// All entities fit into exactly one Archetype.
+    /// </summary>
     class Archetype
     {
     public:
