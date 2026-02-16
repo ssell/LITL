@@ -17,7 +17,14 @@ namespace LITL::Engine::ECS
     /// </summary>
     struct EntityRecord
     {
+        /// <summary>
+        /// The archetype to which this Entity matches.
+        /// </summary>
         Archetype* archetype;
+
+        /// <summary>
+        /// The index into the Archetype.
+        /// </summary>
         size_t index;
     };
 }
