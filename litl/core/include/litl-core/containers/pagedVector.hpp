@@ -13,30 +13,23 @@ namespace LITL::Core
     /// <summary>
     /// Vector/dynamic array implementation using stable pages.
     /// 
-    /// When the container is initialized or the capacity is increased,
-    /// additional pages/chunks are allocated. Existing pages/elements are
-    /// not modified (copied/moved) during allocation in contrast to a standard
-    /// dynamic array implementation which typically works on a single large
-    /// buffer and must move it's elements when a larger buffer is required.
+    /// When the container is initialized or the capacity is increased, additional pages/chunks are allocated. Existing pages/elements are
+    /// not modified (copied/moved) during allocation in contrast to a standard dynamic array implementation which typically works
+    /// on a single large buffer and must move it's elements when a larger buffer is required.
     /// 
     /// Paged vectors are a good alternative for situations such as:
     /// 
-    ///   * Large memory requirements. As memory becomes more fragmented during 
-    /// the application life, it can become harder to find a single contiguous
-    /// available block large enough to accomate certain buffers.
+    ///   * Large memory requirements. As memory becomes more fragmented during the application life, it can become harder to find a single contiguous
+    ///     available block large enough to accommodate certain buffers.
     /// 
-    ///   * Stable memory addresses. References to elements within a vector are
-    /// not stable as they are moved when a standard vector resizes. Pages on
-    /// the otherhand are stable and are unaffected when additional are allocated.
+    ///   * Stable memory addresses. References to elements within a vector are not stable as they are moved when a standard vector resizes. Pages on
+    ///     the otherhand are stable and are unaffected when additional are allocated.
     /// 
     ///   * Sizing up is generally faster for large paged vectors vs standard ones.
     /// 
-    /// However standard vectors do still have the edge in a few spaces such as
-    /// cache locality, internal fragmentation, and random access.
+    /// However standard vectors do still have the edge in a few spaces such as cache locality, internal fragmentation, and random access.
     /// 
-    /// Note: as one of the primary use cases for this container is stable memory
-    /// addresses, there is (currently) no delete/remove operator available, aside
-    /// from pop_back.
+    /// Note: as one of the primary uses for this are stable memory addresses, there is (currently) no delete/remove operator available aside from pop_back.
     /// </summary>
     template<typename T>
     class PagedVector

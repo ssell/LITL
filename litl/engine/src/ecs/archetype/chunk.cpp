@@ -5,7 +5,7 @@
 
 namespace LITL::Engine::ECS
 {
-    Chunk::Chunk(uint32_t const index, ChunkDescriptor const* descriptor)
+    Chunk::Chunk(uint32_t const index, ChunkLayout const* descriptor)
     {
         new (m_data) ChunkHeader();
         auto header = getHeader();
