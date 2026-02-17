@@ -20,11 +20,7 @@ namespace LITL::Engine::ECS
     public:
 
         ArchetypeKey key() const noexcept;
-        ArchetypeColumn* column(ComponentTypeId componentType) noexcept;
         size_t entityCount() const noexcept;
-        size_t componentCount() const noexcept;
-
-        static void move(Archetype* from, Archetype* to, Entity entity, size_t entityIndex);
 
     protected:
 
@@ -32,7 +28,6 @@ namespace LITL::Engine::ECS
 
         ArchetypeKey m_key;
         std::vector<Entity> m_entities;
-        std::vector<ArchetypeColumn> m_columns;
     };
 }
 

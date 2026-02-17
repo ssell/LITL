@@ -2,6 +2,7 @@
 #define LITL_ENGINE_ECS_ARCHETYPE_CHUNK_H__
 
 #include <cstdint>
+#include <vector>
 
 namespace LITL::Engine::ECS
 {
@@ -22,6 +23,11 @@ namespace LITL::Engine::ECS
         /// The number of entities and each component that can be stored within a Chunk.
         /// </summary>
         uint16_t chunkElementCapacity;
+
+        /// <summary>
+        /// The offset into the chunk that each component begins.
+        /// </summary>
+        std::vector<uint16_t> componentOffsets;
     };
 
     /// <summary>
