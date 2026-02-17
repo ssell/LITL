@@ -1,6 +1,7 @@
 #ifndef LITL_ENGINE_ECS_ARCHETYPE_CHUNK_LAYOUT_H__
 #define LITL_ENGINE_ECS_ARCHETYPE_CHUNK_LAYOUT_H__
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <utility>
@@ -97,11 +98,20 @@ namespace LITL::Engine::ECS
         layout->reset();
 
         populateChunkLayoutComponents<ComponentTypes...>(layout, std::index_sequence_for<ComponentTypes...>{});
+
+        // Sort components based on their ascending component type id. NULL components placed at the back.
+        std::sort(layout->componentOrder.begin(), layout->componentOrder.end(), [](ComponentDescriptor* a, ComponentDescriptor* b)
+            {
+                return ((a == nullptr) ? false : (b == nullptr) ? true : a->id <= b->id);
+            });
         
         for (auto i = 0; i < layout->componentOrder.size() && layout->componentOrder[i] != nullptr; ++i)
         {
             layout->componentTypeCount++;
         }
+
+        // ... todo ... calculate capacity
+        // ... todo ... calculate offsets
     }
 }
 
