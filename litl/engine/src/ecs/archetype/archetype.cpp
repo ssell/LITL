@@ -8,6 +8,12 @@
 
 namespace LITL::Engine::ECS
 {
+    Archetype::Archetype()
+        : m_chunks(16)      // 16kb chunks * 16 = 256kb pages
+    {
+
+    }
+
     ArchetypeKey Archetype::key() const noexcept
     {
         return m_key;

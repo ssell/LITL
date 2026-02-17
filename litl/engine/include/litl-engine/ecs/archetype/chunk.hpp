@@ -2,33 +2,12 @@
 #define LITL_ENGINE_ECS_ARCHETYPE_CHUNK_H__
 
 #include <cstdint>
-#include <vector>
+#include "litl-engine/ecs/archetype/chunkLayout.hpp"
 
 namespace LITL::Engine::ECS
 {
-    struct Entity;
     class Archetype;
-
-    /// <summary>
-    /// Describe the memory layout of all chunks within a single Archetype specialization.
-    /// </summary>
-    struct ChunkDescriptor
-    {
-        /// <summary>
-        /// Pointer back to the owning Archetype.
-        /// </summary>
-        Archetype* archetype;
-
-        /// <summary>
-        /// The number of entities and each component that can be stored within a Chunk.
-        /// </summary>
-        uint16_t chunkElementCapacity;
-
-        /// <summary>
-        /// The offset into the chunk that each component begins.
-        /// </summary>
-        std::vector<uint16_t> componentOffsets;
-    };
+    struct Entity;
 
     /// <summary>
     /// Every Chunk buffer starts with this.
@@ -102,7 +81,7 @@ namespace LITL::Engine::ECS
     {
     public:
 
-        Chunk(uint32_t index, ChunkDescriptor const* descriptor);
+        Chunk(uint32_t index, ChunkLayout const* descriptor);
         Chunk(Chunk const&) = delete;
         Chunk& operator=(Chunk const&) = delete;
         ~Chunk();

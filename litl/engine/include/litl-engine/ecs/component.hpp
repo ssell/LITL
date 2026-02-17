@@ -2,11 +2,10 @@
 #define LITL_ENGINE_ECS_COMPONENT_H__
 
 #include <utility>
+#include "litl-engine/ecs/constants.hpp"
 
 namespace LITL::Engine::ECS
 {
-    using ComponentTypeId = uint32_t;
-
     /// <summary>
     /// Components are stored in raw byte buffers.
     /// These descriptors define the shape and how to interact with them.
@@ -23,7 +22,7 @@ namespace LITL::Engine::ECS
         void (*destroy)(void* ptr);
 
         template<typename T>
-        static ComponentDescriptor* get()
+        static ComponentDescriptor* get() noexcept
         {
             // Use a static descriptor that is different for each specialization of this template.
             // This ensures a stable pointer to the descriptor that exists for the lifetime of the application.
@@ -41,13 +40,19 @@ namespace LITL::Engine::ECS
 
     private:
 
-        static ComponentTypeId nextId()
+        static ComponentTypeId nextId() noexcept
         {
             // Never assign id 0 to let it indicate an uninitialized component type id.
             static ComponentTypeId NextId = 1;
             return NextId++;
         }
     };
+
+    template<typename T>
+    ComponentTypeId getComponentTypeId() noexcept
+    {
+        return ComponentDescriptor::get<T>()->id;
+    }
 }
 
 #endif

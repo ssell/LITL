@@ -27,3 +27,13 @@ TEST_CASE("Component Descriptor", "[engine::ecs::component]")
     REQUIRE(fooDescriptor0->id != barDescriptor0->id);
     REQUIRE(barDescriptor0->id == barDescriptor1->id);
 }
+
+TEST_CASE("ComponentTypeId", "[engine::ecs::component]")
+{
+    auto fooDescriptor = LITL::Engine::ECS::ComponentDescriptor::get<Foo>();
+    auto barDescriptor = LITL::Engine::ECS::ComponentDescriptor::get<Bar>();
+
+    REQUIRE(LITL::Engine::ECS::getComponentTypeId<Foo>() == fooDescriptor->id);
+    REQUIRE(LITL::Engine::ECS::getComponentTypeId<Bar>() == barDescriptor->id);
+    REQUIRE(LITL::Engine::ECS::getComponentTypeId<Foo>() != LITL::Engine::ECS::getComponentTypeId<Bar>());
+}

@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include "litl-core/containers/pagedVector.hpp"
 #include "litl-engine/ecs/component.hpp"
 #include "litl-engine/ecs/entity.hpp"
 #include "litl-engine/ecs/archetype/archetypeKey.hpp"
@@ -19,6 +20,8 @@ namespace LITL::Engine::ECS
     {
     public:
 
+        Archetype();
+
         ArchetypeKey key() const noexcept;
         size_t entityCount() const noexcept;
 
@@ -28,6 +31,7 @@ namespace LITL::Engine::ECS
 
         ArchetypeKey m_key;
         std::vector<Entity> m_entities;
+        Core::PagedVector<Chunk> m_chunks;
     };
 }
 
