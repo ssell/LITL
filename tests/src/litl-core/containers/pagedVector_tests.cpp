@@ -3,7 +3,7 @@
 
 TEST_CASE("Push-Pop", "[core::containers::pagedVector]")
 {
-    LITL::Core::PagedVector<uint32_t, 32> vector;
+    LITL::Core::PagedVector<uint32_t> vector(32);
 
     REQUIRE(vector.size() == 0);
     REQUIRE(vector.capacity() == 0);
@@ -50,4 +50,79 @@ TEST_CASE("Push-Pop", "[core::containers::pagedVector]")
     REQUIRE(vector.capacity() == 64);
     REQUIRE(vector.empty() == true);
     REQUIRE(vector.full() == false);
+}
+
+TEST_CASE("Random Access", "[core::containers::pagedVector]")
+{
+    LITL::Core::PagedVector<uint32_t> vector(32);
+
+    for (auto i = 0; i < 32; ++i)
+    {
+        vector.push_back(i);
+    }
+
+    REQUIRE(vector[0] == 0);
+    REQUIRE(vector[13] == 13);
+    REQUIRE(vector.at(27) == 27);
+
+    vector[27] = 127;
+
+    REQUIRE(vector[27] == 127);
+}
+
+TEST_CASE("Fixed Access", "[core::containers::pagedVector]")
+{
+    LITL::Core::PagedVector<uint32_t> vector(32);
+
+    REQUIRE_THROWS(vector.front());
+    REQUIRE_THROWS(vector.back());
+
+    vector.push_back(1);
+    
+    REQUIRE(vector.front() == vector.back());
+
+    vector.push_back(2);
+    vector.push_back(3);
+
+    REQUIRE(vector.front() == 1);
+    REQUIRE(vector.back() == 3);
+
+    vector.pop_back();
+
+    REQUIRE(vector.front() == 1);
+    REQUIRE(vector.back() == 2);
+
+    vector.pop_back();
+
+    REQUIRE(vector.front() == 1);
+    REQUIRE(vector.front() == vector.back());
+}
+
+TEST_CASE("Iterator", "[core::containers::pagedVector]")
+{
+    LITL::Core::PagedVector<uint32_t> vector(32);
+
+    const auto count = 13;
+
+    for (auto i = 0; i < count; ++i)
+    {
+        vector.push_back(i);
+    }
+
+    REQUIRE(vector.size() == count);
+    REQUIRE(*(vector.begin()) == 0);
+
+    size_t i = 0;
+
+    for (auto x : vector)
+    {
+        REQUIRE(x == i++);
+    }
+
+    i = 0;
+
+    for (auto iter = vector.begin(); iter != vector.end(); ++iter)
+    {
+        REQUIRE(*iter == i++);
+    }
 }

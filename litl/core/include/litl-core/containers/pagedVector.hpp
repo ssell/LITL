@@ -7,6 +7,9 @@
 
 namespace LITL::Core
 {
+    template<typename T>
+    class PagedVectorIterator;
+
     /// <summary>
     /// Vector/dynamic array implementation using stable pages.
     /// 
@@ -30,15 +33,23 @@ namespace LITL::Core
     /// 
     /// However standard vectors do still have the edge in a few spaces such as
     /// cache locality, internal fragmentation, and random access.
+    /// 
+    /// Note: as one of the primary use cases for this container is stable memory
+    /// addresses, there is (currently) no delete/remove operator available, aside
+    /// from pop_back.
     /// </summary>
-    template<typename T, size_t PageSize = 256>
+    template<typename T>
     class PagedVector
     {
-        static_assert(PageSize > 0);
-
     public:
 
-        PagedVector() : m_size(0) {}
+        using iterator = PagedVectorIterator<T>;
+
+        PagedVector() 
+            : m_pageSize(256), m_size(0) {}
+
+        PagedVector(size_t pageSize) 
+            : m_pageSize(pageSize), m_size(0) {}
 
         size_t size() const noexcept
         {
@@ -47,7 +58,7 @@ namespace LITL::Core
 
         size_t capacity() const noexcept
         {
-            return m_pages.size() * PageSize;
+            return m_pages.size() * m_pageSize;
         }
 
         bool empty() const noexcept
@@ -57,7 +68,7 @@ namespace LITL::Core
 
         bool full() const noexcept
         {
-            return m_size == (m_pages.size() * PageSize);
+            return m_size == (m_pages.size() * m_pageSize);
         }
 
         void push_back(T const& value)
@@ -75,7 +86,7 @@ namespace LITL::Core
         {
             if (full())
             {
-                m_pages.emplace_back();
+                m_pages.emplace_back(m_pageSize);
             }
 
             const size_t index = m_size++;
@@ -95,13 +106,13 @@ namespace LITL::Core
             }
         }
 
-        T& operator[](size_t i) noexcept
+        T& operator[](size_t i)
         {
             if (i >= m_size) throw std::out_of_range("PagedVector");
             return *getElementPtr(i);
         }
 
-        T const& operator[](size_t i) const noexcept
+        T const& operator[](size_t i) const
         {
             if (i >= m_size) throw std::out_of_range("PagedVector");
             return *getElementPtr(i);
@@ -113,33 +124,49 @@ namespace LITL::Core
             return *getElementPtr(i);
         }
 
+        T const& at(size_t i) const
+        {
+            return *getElementPtr(i);
+        }
+
+        iterator begin()
+        {
+            return iterator(this, static_cast<size_t>(0));
+        }
+
+        iterator end()
+        {
+            // One past the end of the container
+            return iterator(this, m_size);
+        }
+
+        T& front()
+        {
+            return at(0);
+        }
+
+        T const& front() const
+        {
+            return at(0);
+        }
+
+        T& back()
+        {
+            return at((m_size > 0) ? m_size - 1 : 0);
+        }
+
+        T const& back() const
+        {
+            return at((m_size > 0) ? m_size - 1 : 0);
+        }
+
     protected:
 
     private:
 
-        /// <summary>
-        /// Returns the index of the page in which the element resides.
-        /// </summary>
-        /// <param name="elementIndex"></param>
-        /// <returns></returns>
-        static constexpr size_t getPageIndex(size_t elementIndex) noexcept
-        {
-            return elementIndex / PageSize;
-        }
-
-        /// <summary>
-        /// Returns the index inside of the page for where the element resides.
-        /// </summary>
-        /// <param name="elementIndex"></param>
-        /// <returns></returns>
-        static constexpr size_t getPageOffset(size_t elementIndex) noexcept
-        {
-            return elementIndex % PageSize;
-        }
-
         T* getElementPtr(size_t elementIndex) noexcept
         {
-            return &m_pages[getPageIndex(elementIndex)].dataPtr[getPageOffset(elementIndex)];
+            return &m_pages[elementIndex / m_pageSize].dataPtr[elementIndex % m_pageSize];
         }
 
         /// <summary>
@@ -147,7 +174,7 @@ namespace LITL::Core
         /// </summary>
         struct PagedVectorPage
         {
-            PagedVectorPage() : dataPtr(std::make_unique<T[]>(PageSize)) {}
+            PagedVectorPage(size_t const pageSize) : dataPtr(std::make_unique<T[]>(pageSize)) {}
             std::unique_ptr<T[]> dataPtr;
         };
         
@@ -157,9 +184,62 @@ namespace LITL::Core
         std::vector<PagedVectorPage> m_pages;
 
         /// <summary>
+        /// The number of elements per page.
+        /// </summary>
+        const size_t m_pageSize;
+
+        /// <summary>
         /// Total number of elements.
         /// </summary>
         size_t m_size;
+    };
+
+    template<typename T>
+    class PagedVectorIterator
+    {
+    public:
+
+        using iterator_category = std::random_access_iterator_tag;
+        using value_type = T;
+        using reference = T&;
+
+        PagedVectorIterator(PagedVector<T>* vector, size_t i)
+            : m_vector(vector), m_index(i) {
+        }
+
+        reference operator*() const
+        {
+            return (*m_vector)[m_index];
+        }
+
+        PagedVectorIterator& operator++()
+        {
+            ++m_index;
+            return *this;
+        }
+
+        PagedVectorIterator& operator--()
+        {
+            if (m_index > 0) { --m_index; }
+            return *this;
+        }
+
+        friend bool operator==(PagedVectorIterator const& a, PagedVectorIterator const& b)
+        {
+            return a.m_index == b.m_index;
+        }
+
+        friend bool operator!=(PagedVectorIterator const& a, PagedVectorIterator const& b)
+        {
+            return a.m_index != b.m_index;
+        }
+
+    protected:
+
+    private:
+
+        PagedVector<T>* m_vector;
+        size_t m_index;
     };
 }
 
