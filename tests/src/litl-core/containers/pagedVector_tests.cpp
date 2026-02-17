@@ -126,3 +126,25 @@ TEST_CASE("Iterator", "[core::containers::pagedVector]")
         REQUIRE(*iter == i++);
     }
 }
+
+TEST_CASE("Stable Memory", "[core::containers::pagedVector]")
+{
+    // As comparison, use a standard vector and see how the memory address of element 0 changes.
+    // std::vector<uint32_t> vector;
+    // vector.reserve(4);
+
+    LITL::Core::PagedVector<uint32_t> vector(4);
+    
+    vector.push_back(1337);
+    uint32_t* ptr0 = &vector.at(0);
+
+    for (auto i = 0; i < 1024; ++i)
+    {
+        vector.push_back(i);
+    }
+
+    uint32_t* ptr1 = &vector.at(0);
+
+    REQUIRE(*ptr0 == 1337);
+    REQUIRE(ptr0 == ptr1);
+}
