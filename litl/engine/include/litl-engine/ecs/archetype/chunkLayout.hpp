@@ -1,9 +1,9 @@
 #ifndef LITL_ENGINE_ECS_ARCHETYPE_CHUNK_LAYOUT_H__
 #define LITL_ENGINE_ECS_ARCHETYPE_CHUNK_LAYOUT_H__
 
-#include <algorithm>
 #include <array>
 #include <cstdint>
+#include <span>
 #include <utility>
 #include <vector>
 
@@ -21,20 +21,9 @@ namespace LITL::Engine::ECS
     /// </summary>
     struct ChunkLayout
     {
-        ChunkLayout()
-            : archetype(nullptr), chunkElementCapacity(0), componentTypeCount(0)
-        {
-            componentOrder.fill(nullptr);
-            componentOffsets.fill(0);
-        }
+        ChunkLayout();
 
-        void reset() noexcept
-        {
-            chunkElementCapacity = 0;
-            componentTypeCount = 0;
-            componentOrder.fill(nullptr);
-            componentOffsets.fill(0);
-        }
+        void calculate() noexcept;
 
         /// <summary>
         /// Pointer back to the owning Archetype.
@@ -60,7 +49,7 @@ namespace LITL::Engine::ECS
         /// The order which the components appear within the chunk.
         /// The value is the component id.
         /// </summary>
-        std::array<ComponentDescriptor*, MAX_COMPONENTS> componentOrder;
+        std::array<ComponentDescriptor const*, MAX_COMPONENTS> componentOrder;
 
         /// <summary>
         /// The offset into the chunk that each component begins.
@@ -94,6 +83,13 @@ namespace LITL::Engine::ECS
     }
 
     /// <summary>
+    /// Fills out the ChunkLayout from the provided runtime list of type ids.
+    /// </summary>
+    /// <param name="layout"></param>
+    /// <param name="orderedComponentTypes"></param>
+    void populateChunkLayout(ChunkLayout* layout, std::span<ComponentTypeId> orderedComponentTypes);
+
+    /// <summary>
     /// Fills out the ChunkLayout to fit the provided component types.
     /// </summary>
     /// <typeparam name="...ComponentTypes"></typeparam>
@@ -101,64 +97,8 @@ namespace LITL::Engine::ECS
     template<typename... ComponentTypes>
     void populateChunkLayout(ChunkLayout* layout)
     {
-        layout->reset();
-
         populateChunkLayoutComponents<ComponentTypes...>(layout, std::index_sequence_for<ComponentTypes...>{});
-
-        // Sort components based on their ascending component type id. NULL components placed at the back.
-        std::sort(layout->componentOrder.begin(), layout->componentOrder.end(), [](ComponentDescriptor* a, ComponentDescriptor* b)
-            {
-                return ((a == nullptr) ? false : (b == nullptr) ? true : a->id <= b->id);
-            });
-
-        uint32_t componentBytesPerEntity = 0;
-        
-        for (auto i = 0; i < layout->componentOrder.size() && layout->componentOrder[i] != nullptr; ++i)
-        {
-            componentBytesPerEntity += layout->componentOrder[i]->size;
-            layout->componentTypeCount++;
-        }
-
-        const uint32_t chunkHeaderSize = static_cast<uint32_t>(sizeof(ChunkHeader));
-        const uint32_t chunkEntityArraySize = static_cast<uint32_t>(sizeof(ChunkEntities));
-        uint32_t remaining = CHUNK_SIZE_BYTES - chunkHeaderSize - chunkEntityArraySize;
-
-        // First estimate of how many entities can fit. This is close, but may not be exact due to alignment.
-        layout->chunkElementCapacity = remaining / componentBytesPerEntity;
-
-        // Get memory position of entity array
-        uint32_t offset = chunkHeaderSize;
-        offset = Math::alignMemoryOffsetUp(offset, alignof(Entity));
-        layout->entityArrayOffset = static_cast<uint32_t>(offset);
-        offset += chunkEntityArraySize;
-
-        const uint32_t componentStartOffset = offset;
-        uint32_t maxAttempts = 10; // loop guard
-
-        // Calculate the starting offset of each aligned component column. May take a couple of reductions in the previous estimated capacity.
-        while (maxAttempts-- > 0)
-        {
-            offset = componentStartOffset;
-
-            for (size_t i = 0; i < layout->componentOrder.size() && layout->componentOrder[i] != nullptr; ++i)
-            {
-                // Get memory address for start of this component column
-                offset = Math::alignMemoryOffsetUp(offset, layout->componentOrder[i]->alignment);
-                layout->componentOffsets[i] = offset;
-
-                // Move to the end of this column
-                offset += layout->componentOrder[i]->size * layout->chunkElementCapacity;
-            }
-
-            if (offset <= CHUNK_SIZE_BYTES)
-            {
-                // All component columns fit in the chunk
-                break;
-            }
-
-            // Remove one capacity to make room for alignment adjustments
-            layout->chunkElementCapacity--;
-        }
+        layout->calculate();
     }
 }
 

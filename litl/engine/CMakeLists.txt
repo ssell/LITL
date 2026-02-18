@@ -1,7 +1,7 @@
 add_library(litl-engine STATIC
 	"src/engine.cpp"
 	"src/windowFactory.cpp" 
-	"src/rendererFactory.cpp" "src/cache/pipelineLayoutCache.cpp" "src/scene/sceneTree.cpp"  "src/scene/sceneObject.cpp"   "src/ecs/world.cpp"  "src/ecs/archetype/archetype.cpp" "src/ecs/archetype/chunk.cpp" )
+	"src/rendererFactory.cpp" "src/cache/pipelineLayoutCache.cpp" "src/scene/sceneTree.cpp"  "src/scene/sceneObject.cpp"   "src/ecs/world.cpp"  "src/ecs/archetype/archetype.cpp" "src/ecs/archetype/chunk.cpp"  "src/ecs/archetype/archetypeRegistry.cpp" "src/ecs/archetype/chunkLayout.cpp" "src/ecs/component.cpp")
 
 target_include_directories(litl-engine
 	PUBLIC

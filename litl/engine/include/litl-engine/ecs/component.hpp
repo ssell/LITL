@@ -24,7 +24,7 @@ namespace LITL::Engine::ECS
         void (*destroy)(void* ptr);
 
         template<typename T>
-        static ComponentDescriptor* get() noexcept
+        static ComponentDescriptor const* get() noexcept
         {
             static_assert(std::is_trivially_copyable_v<T> && std::is_standard_layout_v<T>);
 
@@ -42,14 +42,11 @@ namespace LITL::Engine::ECS
             return &descriptor;
         }
 
+        static ComponentDescriptor const* get(ComponentTypeId componentTypeId) noexcept;
+
     private:
 
-        static ComponentTypeId nextId() noexcept
-        {
-            // Never assign id 0 to let it indicate an uninitialized component type id.
-            static ComponentTypeId NextId = 1;
-            return NextId++;
-        }
+        static ComponentTypeId nextId() noexcept;
     };
 
     template<typename T>

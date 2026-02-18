@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <vector>
 
 #include "litl-core/hash.hpp"
@@ -13,15 +14,17 @@ namespace LITL::Engine::ECS
 
     void Archetype::buildArchetypeKey() noexcept
     {
+        std::vector<ComponentTypeId> archetypeComponentTypeIds;
+        archetypeComponentTypeIds.reserve(m_chunkLayout.componentTypeCount);
+
         if (m_chunkLayout.componentTypeCount > 0)
         {
-            m_key = Core::hash32(&m_chunkLayout.componentOrder[0]->id, sizeof(ComponentTypeId));
-
-            for (size_t i = 1; i < m_chunkLayout.componentOrder.size() && m_chunkLayout.componentOrder[i] != nullptr; ++i)
+            for (uint32_t i = 0; i < m_chunkLayout.componentTypeCount; ++i)
             {
-                uint32_t hashed = Core::hash32(&m_chunkLayout.componentOrder[i]->id, sizeof(ComponentTypeId));
-                Core::hashCombine32(m_key, hashed);
+                archetypeComponentTypeIds.push_back(m_chunkLayout.componentOrder[i]->id);
             }
+
+            m_key = Core::hashArray<ComponentTypeId>(archetypeComponentTypeIds);
         }
     }
 

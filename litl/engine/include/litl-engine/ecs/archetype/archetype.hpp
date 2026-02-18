@@ -1,6 +1,7 @@
 #ifndef LITL_ENGINE_ECS_ARCHETYPE_H__
 #define LITL_ENGINE_ECS_ARCHETYPE_H__
 
+#include <span>
 #include <vector>
 
 #include "litl-core/containers/pagedVector.hpp"
@@ -20,11 +21,27 @@ namespace LITL::Engine::ECS
     public:
 
         template<typename... ComponentTypes>
-        static Archetype* build() noexcept
+        static Archetype* buildFromTypes() noexcept
         {
             Archetype* archetype = new Archetype();
             populateChunkLayout<ComponentTypes...>(&archetype->m_chunkLayout);
             archetype->buildArchetypeKey();
+            return archetype;
+        }
+
+        template<typename... ComponentTypeIds>
+        static Archetype* buildFromTypeIds(ComponentTypeIds... componentTypeIds)
+        {
+            Archetype* archetype = new Archetype();
+            populateChunkLayout<ComponentTypeIds...>(&archetype->m_chunkLayout);
+            archetype->buildArchetypeKey();
+            return archetype;
+        }
+
+        static Archetype* buildFromTypeIdsSpan(std::span<ComponentTypeId> orderedComponentTypeIds)
+        {
+            Archetype* archetype = new Archetype();
+            populateChunkLayout(&archetype->m_chunkLayout, orderedComponentTypeIds);
             return archetype;
         }
 
