@@ -48,7 +48,7 @@ namespace LITL::Core
     }
 
     template<typename K, typename V>
-    std::optional<std::reference_wrapper<V>> FlatHashMap<K, V>::find(K const& key) const
+    std::optional<V> FlatHashMap<K, V>::find(K const& key) const
     {
         auto iter = m_pImpl->map.find(key);
 

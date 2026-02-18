@@ -57,7 +57,7 @@ namespace LITL::Core
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        std::optional<std::reference_wrapper<V>> find(K const& key) const;
+        std::optional<V> find(K const& key) const;
 
         /// <summary>
         /// Returns the number of values stored in the map.

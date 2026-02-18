@@ -33,7 +33,7 @@ namespace LITL::Engine
 
         if (cached != std::nullopt)
         {
-            return cached->get().get();
+            return cached->get();
         }
         else
         {

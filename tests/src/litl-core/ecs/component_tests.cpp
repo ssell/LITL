@@ -1,5 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
+
+#include "litl-core/hash.hpp"
 #include "litl-engine/ecs/component.hpp"
+#include "litl-engine/ecs/componentRegistry.hpp"
 
 struct Foo
 {
@@ -36,4 +39,33 @@ TEST_CASE("ComponentTypeId", "[engine::ecs::component]")
     REQUIRE(LITL::Engine::ECS::getComponentTypeId<Foo>() == fooDescriptor->id);
     REQUIRE(LITL::Engine::ECS::getComponentTypeId<Bar>() == barDescriptor->id);
     REQUIRE(LITL::Engine::ECS::getComponentTypeId<Foo>() != LITL::Engine::ECS::getComponentTypeId<Bar>());
+}
+
+TEST_CASE("StableComponentTypeId", "[engine::ecs::component]")
+{
+    auto fooDescriptor = LITL::Engine::ECS::ComponentDescriptor::get<Foo>();
+    auto barDescriptor = LITL::Engine::ECS::ComponentDescriptor::get<Bar>();
+
+    const auto expectedFooStableId = LITL::Core::hashString("struct Foo");
+    const auto expectedBarStableId = LITL::Core::hashString("struct Bar");
+
+    REQUIRE(fooDescriptor->stableId == expectedFooStableId);
+    REQUIRE(LITL::Engine::ECS::getStableComponentTypeId<Foo>() == fooDescriptor->stableId);
+
+    REQUIRE(barDescriptor->stableId == expectedBarStableId);
+    REQUIRE(LITL::Engine::ECS::getStableComponentTypeId<Bar>() == barDescriptor->stableId);
+
+    REQUIRE(LITL::Engine::ECS::getStableComponentTypeId<Foo>() != LITL::Engine::ECS::getStableComponentTypeId<Bar>());
+}
+
+TEST_CASE("ComponentRegistry Tracking", "[engine::ecs::component]")
+{
+    auto fooDescriptor = LITL::Engine::ECS::ComponentDescriptor::get<Foo>();
+    auto barDescriptor = LITL::Engine::ECS::ComponentDescriptor::get<Bar>();
+
+    REQUIRE(LITL::Engine::ECS::ComponentRegistry::find(fooDescriptor->id) == fooDescriptor);
+    REQUIRE(LITL::Engine::ECS::ComponentRegistry::findByStableId(fooDescriptor->stableId) == fooDescriptor);
+
+    REQUIRE(LITL::Engine::ECS::ComponentRegistry::find(barDescriptor->id) == barDescriptor);
+    REQUIRE(LITL::Engine::ECS::ComponentRegistry::findByStableId(barDescriptor->stableId) == barDescriptor);
 }

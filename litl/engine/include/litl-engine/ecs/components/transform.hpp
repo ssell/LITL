@@ -11,6 +11,8 @@ namespace LITL::Engine::ECS::Component
         glm::vec3 rotation;
         glm::vec3 scale;
     };
+
+    
 }
 
 #endif
