@@ -26,6 +26,11 @@ TEST_CASE("Chunk Layout", "[engine::ecs::chunk]")
     // Even though they are declared in opposite orders, these should resolve to the same layout.
     REQUIRE(layoutFooBar.componentOrder[0] == layoutBarFoo.componentOrder[0]);
     REQUIRE(layoutFooBar.componentOrder[1] == layoutBarFoo.componentOrder[1]);
+
+    REQUIRE(layoutFooBar.chunkElementCapacity > 0);
+    REQUIRE(layoutFooBar.chunkElementCapacity == layoutBarFoo.chunkElementCapacity);
+
+    // ... todo add more concrete tests (memory address locations, etc.) after the chunk header has stabilized ...
 }
 
 TEST_CASE("Header Creation", "[engine::ecs::chunk]")

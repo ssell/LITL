@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 
+#include "litl-core/math/math.hpp"
 #include "litl-engine/ecs/constants.hpp"
 #include "litl-engine/ecs/component.hpp"
 #include "litl-engine/ecs/archetype/chunkHeader.hpp"
@@ -29,7 +30,6 @@ namespace LITL::Engine::ECS
 
         void reset() noexcept
         {
-            archetype = nullptr;
             chunkElementCapacity = 0;
             componentTypeCount = 0;
             componentOrder.fill(nullptr);
@@ -44,12 +44,17 @@ namespace LITL::Engine::ECS
         /// <summary>
         /// The number of entities and each component that can be stored within a Chunk.
         /// </summary>
-        uint16_t chunkElementCapacity;
+        uint32_t chunkElementCapacity;
 
         /// <summary>
         /// The number of different component types stored in the chunk.
         /// </summary>
-        uint8_t componentTypeCount;
+        uint32_t componentTypeCount;
+
+        /// <summary>
+        /// The offset into the chunk that the entity array begins.
+        /// </summary>
+        uint32_t entityArrayOffset;
 
         /// <summary>
         /// The order which the components appear within the chunk.
@@ -60,7 +65,7 @@ namespace LITL::Engine::ECS
         /// <summary>
         /// The offset into the chunk that each component begins.
         /// </summary>
-        std::array<uint16_t, MAX_COMPONENTS> componentOffsets;
+        std::array<uint32_t, MAX_COMPONENTS> componentOffsets;
     };
 
     /// <summary>
@@ -105,20 +110,55 @@ namespace LITL::Engine::ECS
             {
                 return ((a == nullptr) ? false : (b == nullptr) ? true : a->id <= b->id);
             });
+
+        uint32_t componentBytesPerEntity = 0;
         
         for (auto i = 0; i < layout->componentOrder.size() && layout->componentOrder[i] != nullptr; ++i)
         {
+            componentBytesPerEntity += layout->componentOrder[i]->size;
             layout->componentTypeCount++;
         }
 
-        const auto chunkHeaderSize = static_cast<uint32_t>(sizeof(ChunkHeader));
-        const auto chunkEntityArraySize = static_cast<uint32_t>(sizeof(ChunkEntities));
+        const uint32_t chunkHeaderSize = static_cast<uint32_t>(sizeof(ChunkHeader));
+        const uint32_t chunkEntityArraySize = static_cast<uint32_t>(sizeof(ChunkEntities));
+        uint32_t remaining = CHUNK_SIZE_BYTES - chunkHeaderSize - chunkEntityArraySize;
 
-        auto remaining = CHUNK_SIZE_BYTES - chunkHeaderSize - chunkEntityArraySize;
-        auto offset = chunkHeaderSize;
+        // First estimate of how many entities can fit. This is close, but may not be exact due to alignment.
+        layout->chunkElementCapacity = remaining / componentBytesPerEntity;
 
-        // ... todo ... calculate capacity
-        // ... todo ... calculate offsets
+        // Get memory position of entity array
+        uint32_t offset = chunkHeaderSize;
+        offset = Math::alignMemoryOffsetUp(offset, alignof(Entity));
+        layout->entityArrayOffset = static_cast<uint32_t>(offset);
+        offset += chunkEntityArraySize;
+
+        const uint32_t componentStartOffset = offset;
+        uint32_t maxAttempts = 10; // loop guard
+
+        // Calculate the starting offset of each aligned component column. May take a couple of reductions in the previous estimated capacity.
+        while (maxAttempts-- > 0)
+        {
+            offset = componentStartOffset;
+
+            for (size_t i = 0; i < layout->componentOrder.size() && layout->componentOrder[i] != nullptr; ++i)
+            {
+                // Get memory address for start of this component column
+                offset = Math::alignMemoryOffsetUp(offset, layout->componentOrder[i]->alignment);
+                layout->componentOffsets[i] = offset;
+
+                // Move to the end of this column
+                offset += layout->componentOrder[i]->size * layout->chunkElementCapacity;
+            }
+
+            if (offset <= CHUNK_SIZE_BYTES)
+            {
+                // All component columns fit in the chunk
+                break;
+            }
+
+            // Remove one capacity to make room for alignment adjustments
+            layout->chunkElementCapacity--;
+        }
     }
 }
 

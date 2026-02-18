@@ -49,16 +49,12 @@ namespace LITL::Math
     /// <summary>
     /// Returns the smallest value >= offset that is aligned to alignment.
     /// Mathematically it is equivalent to: ceil(offset / alignment) * alignment
+    /// Note: alignment MUST be a power of 2.
     /// </summary>
     /// <param name="offset"></param>
     /// <param name="alignment"></param>
     /// <returns></returns>
-    size_t alignMemoryOffsetUp(size_t offset, size_t alignment) noexcept
-    {
-        assert(offset > 0);
-        assert(alignment > 0);
-        return (offset + alignment - 1) & ~(alignment - 1);
-    }
+    size_t alignMemoryOffsetUp(size_t offset, size_t alignment) noexcept;
 }
 
 #endif
