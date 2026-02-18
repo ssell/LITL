@@ -15,9 +15,9 @@ struct Bar
 
 TEST_CASE("Archetype Key", "[engine::ecs::archetype]")
 {
-    std::unique_ptr<LITL::Engine::ECS::Archetype> archetypeFoo(LITL::Engine::ECS::Archetype::build<Foo>());
-    std::unique_ptr<LITL::Engine::ECS::Archetype> archetypeFooBar(LITL::Engine::ECS::Archetype::build<Foo, Bar>());
-    std::unique_ptr<LITL::Engine::ECS::Archetype> archetypeBarFoo(LITL::Engine::ECS::Archetype::build<Bar, Foo>());
+    std::unique_ptr<LITL::Engine::ECS::Archetype> archetypeFoo(LITL::Engine::ECS::Archetype::buildFromTypes<Foo>());
+    std::unique_ptr<LITL::Engine::ECS::Archetype> archetypeFooBar(LITL::Engine::ECS::Archetype::buildFromTypes<Foo, Bar>());
+    std::unique_ptr<LITL::Engine::ECS::Archetype> archetypeBarFoo(LITL::Engine::ECS::Archetype::buildFromTypes<Bar, Foo>());
 
     REQUIRE(archetypeFoo->key() != archetypeFooBar->key());
     REQUIRE(archetypeFoo->key() != archetypeFooBar->key());
@@ -27,7 +27,7 @@ TEST_CASE("Archetype Key", "[engine::ecs::archetype]")
 
 TEST_CASE("Build Archetype", "[engine::ecs::archetype]")
 {
-    std::unique_ptr<LITL::Engine::ECS::Archetype> archetype(LITL::Engine::ECS::Archetype::build<Foo, Bar>());
+    std::unique_ptr<LITL::Engine::ECS::Archetype> archetype(LITL::Engine::ECS::Archetype::buildFromTypes<Foo, Bar>());
     auto archetypeChunkLayout = archetype->layout();
 
     REQUIRE(archetypeChunkLayout->archetype == archetype.get());

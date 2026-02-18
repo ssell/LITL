@@ -156,6 +156,17 @@ TEST_CASE("Hash Array", "[core::hash]")
     REQUIRE(hashedASeedless != hashedDSeedless);
 }
 
+TEST_CASE("Hash Unordered Array", "[core::hash]")
+{
+    uint32_t a[5] = { 1, 2, 3, 4, 5 };
+    uint32_t b[5] = { 5, 4, 3, 2, 1 };
+
+    const auto hashedA = LITL::Core::hashArray<uint32_t>(a, Seed64);
+    const auto hashedB = LITL::Core::hashArray<uint32_t>(b, Seed64);
+
+    REQUIRE(hashedA != hashedB);
+}
+
 TEST_CASE("Hash Combine", "[core::hash]")
 {
     const uint32_t a = 55;
