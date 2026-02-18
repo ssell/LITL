@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <array>
+#include <string_view>
 #include <vector>
 
 #include "litl-core/hash.hpp"
@@ -215,4 +216,18 @@ TEST_CASE("Hash Combine", "[core::hash]")
 
     LITL::Core::hashCombine64(hashedComboB64, hashedC64);
     REQUIRE(hashedComboA64 == hashedComboB64);
+}
+
+TEST_CASE("Hash String", "[core::hash]")
+{
+    std::string str0 = "Hello, World!";
+    char const* str1 = "Hello, World!";
+    char const* str2 = "World, Hello?";
+
+    const auto str0Hash = LITL::Core::hashString(str0);
+    const auto str1Hash = LITL::Core::hashString(str1);
+    const auto str2Hash = LITL::Core::hashString(str2);
+
+    REQUIRE(str0Hash == str1Hash);
+    REQUIRE(str0Hash != str2Hash);
 }

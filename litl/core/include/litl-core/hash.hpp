@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <span>
+#include <string_view>
 #include <type_traits>
 
 namespace LITL::Core
@@ -43,6 +44,9 @@ namespace LITL::Core
         static_assert(std::is_trivially_copyable_v<T>);
         return hash64(data.data(), data.size_bytes(), seed);
     }
+
+    uint64_t hashString(std::string_view str);
+    uint64_t hashString(std::string_view str, uint64_t seed);
 }
 
 #endif

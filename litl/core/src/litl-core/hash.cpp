@@ -44,4 +44,14 @@ namespace LITL::Core
     {
         lhs ^= rhs + goldenRatioHash64 + (lhs << 6) + (lhs >> 2);
     }
+
+    uint64_t hashString(std::string_view str)
+    {
+        return hash64(str.data(), str.size());
+    }
+
+    uint64_t hashString(std::string_view str, uint64_t seed)
+    {
+        return hash64(str.data(), str.size(), seed);
+    }
 }
