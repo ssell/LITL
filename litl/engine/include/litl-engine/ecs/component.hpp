@@ -1,7 +1,9 @@
 #ifndef LITL_ENGINE_ECS_COMPONENT_H__
 #define LITL_ENGINE_ECS_COMPONENT_H__
 
+#include <type_traits>
 #include <utility>
+
 #include "litl-engine/ecs/constants.hpp"
 
 namespace LITL::Engine::ECS
@@ -24,6 +26,8 @@ namespace LITL::Engine::ECS
         template<typename T>
         static ComponentDescriptor* get() noexcept
         {
+            static_assert(std::is_trivially_copyable_v<T> && std::is_standard_layout_v<T>);
+
             // Use a static descriptor that is different for each specialization of this template.
             // This ensures a stable pointer to the descriptor that exists for the lifetime of the application.
             static ComponentDescriptor descriptor = {
