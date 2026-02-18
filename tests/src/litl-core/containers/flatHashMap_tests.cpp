@@ -26,7 +26,7 @@ TEST_CASE("Basic Operation", "[core::containers::flatHashMap]")
     auto value = map.find(key0);
 
     REQUIRE(value != std::nullopt);
-    REQUIRE(value->get() == value0);
+    REQUIRE(value == value0);
 
     // Try to overwrite key (should fail)
     REQUIRE(map.insert(key0, value1) == false);
@@ -35,7 +35,7 @@ TEST_CASE("Basic Operation", "[core::containers::flatHashMap]")
 
     value = map.find(key0);
 
-    REQUIRE(value->get() == value0);
+    REQUIRE(value == value0);
 
     // Add new value
     REQUIRE(map.insert(key1, value1) == true);
@@ -44,7 +44,7 @@ TEST_CASE("Basic Operation", "[core::containers::flatHashMap]")
 
     value = map.find(key1);
 
-    REQUIRE(value->get() == value1);
+    REQUIRE(value == value1);
 
     // Fetch non-existent value
     value = map.find(key2);

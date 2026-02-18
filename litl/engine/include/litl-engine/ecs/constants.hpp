@@ -6,9 +6,11 @@
 namespace LITL::Engine::ECS
 {
     using ComponentTypeId = uint32_t;
+    using StableComponentTypeId = uint64_t;
 
     constexpr ComponentTypeId NULL_COMPONENT = 0;
     constexpr uint32_t MAX_COMPONENTS = 64;
+    constexpr uint32_t MAX_COMPONENT_VARIANTS = 4096;
     constexpr uint32_t CHUNK_SIZE_BYTES = 16384;
     constexpr uint32_t MAX_ENTITIES_PER_CHUNK = 512;
 }

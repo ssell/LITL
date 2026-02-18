@@ -1,7 +1,10 @@
 ﻿#define XXH_STATIC_LINKING_ONLY
 #define XXH_IMPLEMENTATION
 
+#include <cstdint>
+#include <string_view>
 #include <xxhash.h>
+
 #include "litl-core/hash.hpp"
 
 namespace LITL::Core
