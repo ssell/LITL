@@ -19,16 +19,18 @@ namespace LITL::Engine::ECS
     {
     public:
 
-        ChunkLayout const* layout() const noexcept;
-        size_t entityCount() const noexcept;
-
         template<typename... ComponentTypes>
         static Archetype* build() noexcept
         {
             Archetype* archetype = new Archetype();
             populateChunkLayout<ComponentTypes...>(&archetype->m_chunkLayout);
+            archetype->buildArchetypeKey();
             return archetype;
         }
+
+        uint32_t key() const noexcept;
+        ChunkLayout const* layout() const noexcept;
+        size_t entityCount() const noexcept;
 
     protected:
 
@@ -36,6 +38,9 @@ namespace LITL::Engine::ECS
 
         Archetype();
 
+        void buildArchetypeKey() noexcept;
+
+        uint32_t m_key;
         ChunkLayout m_chunkLayout;
         std::vector<Entity> m_entities;
         Core::PagedVector<Chunk> m_chunks;
