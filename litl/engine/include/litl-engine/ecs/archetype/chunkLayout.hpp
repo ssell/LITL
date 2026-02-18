@@ -9,6 +9,7 @@
 
 #include "litl-engine/ecs/constants.hpp"
 #include "litl-engine/ecs/component.hpp"
+#include "litl-engine/ecs/archetype/chunkHeader.hpp"
 
 namespace LITL::Engine::ECS
 {
@@ -109,6 +110,12 @@ namespace LITL::Engine::ECS
         {
             layout->componentTypeCount++;
         }
+
+        const auto chunkHeaderSize = static_cast<uint32_t>(sizeof(ChunkHeader));
+        const auto chunkEntityArraySize = static_cast<uint32_t>(sizeof(ChunkEntities));
+
+        auto remaining = CHUNK_SIZE_BYTES - chunkHeaderSize - chunkEntityArraySize;
+        auto offset = chunkHeaderSize;
 
         // ... todo ... calculate capacity
         // ... todo ... calculate offsets
