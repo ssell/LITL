@@ -19,14 +19,14 @@ namespace LITL::Core
     template<typename T>
     uint64_t hashPOD(T const& pod)
     {
-        static_assert(std::is_trivially_copyable_v<T>);
+        static_assert(std::is_trivially_copyable_v<T> && std::is_standard_layout_v<T>);
         return hash64(&pod, sizeof(T));
     }
 
     template<typename T>
     uint64_t hashPOD(T const& pod, uint64_t seed)
     {
-        static_assert(std::is_trivially_copyable_v<T>);
+        static_assert(std::is_trivially_copyable_v<T> && std::is_standard_layout_v<T>);
         return hash64(&pod, sizeof(T), seed);
     }
 
