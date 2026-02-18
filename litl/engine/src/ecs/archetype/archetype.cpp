@@ -1,6 +1,5 @@
 #include <vector>
 #include "litl-engine/ecs/archetype/archetype.hpp"
-#include "litl-engine/ecs/archetype/archetypeKey.hpp"
 
 namespace LITL::Engine::ECS
 {
@@ -13,11 +12,6 @@ namespace LITL::Engine::ECS
     ChunkLayout const* Archetype::layout() const noexcept
     {
         return &m_chunkLayout;
-    }
-
-    ArchetypeKey Archetype::key() const noexcept
-    {
-        return m_key;
     }
 
     size_t Archetype::entityCount() const noexcept
