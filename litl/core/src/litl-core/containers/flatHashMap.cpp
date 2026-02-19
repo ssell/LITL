@@ -48,7 +48,7 @@ namespace LITL::Core
     }
 
     template<typename K, typename V>
-    std::optional<V> FlatHashMap<K, V>::find(K const& key) const
+    std::optional<std::reference_wrapper<V>> FlatHashMap<K, V>::find(K const& key) const
     {
         auto iter = m_pImpl->map.find(key);
 
@@ -67,8 +67,13 @@ namespace LITL::Core
     }
 
     // -------------------------------------------------------------------------------------
-    // Implementations
+    // To keep the implementation private (and not expose absl::flat_hash_map) the trade off
+    // is that FlashHashMap only works on the pre-declared specializations below. This is
+    // fine for now as it is only intended for internal usage.
     // -------------------------------------------------------------------------------------
 
     template class FlatHashMap<uint32_t, uint32_t>;
+    template class FlatHashMap<uint32_t, uint64_t>;
+    template class FlatHashMap<uint64_t, uint64_t>;
+    template class FlatHashMap<uint64_t, uint32_t>;
 }

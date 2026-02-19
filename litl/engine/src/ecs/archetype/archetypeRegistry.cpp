@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cstdint>
+#include <memory>
 #include <mutex>
 #include <optional>
 #include <vector>
@@ -49,7 +50,11 @@ namespace LITL::Engine::ECS
             else
             {
                 const auto newArchetypeIndex = registry.archetypes.size();
-                registry.archetypes.push_back(std::unique_ptr<Archetype>(Archetype::buildFromTypeIdsSpan(components)));
+                const auto archetype = new Archetype(newArchetypeIndex, archetypeHash);
+
+                populateChunkLayout(&archetype->m_chunkLayout, components);
+
+                registry.archetypes.push_back(std::unique_ptr<Archetype>(archetype));
                 registry.archetypeMap.insert(archetypeHash, newArchetypeIndex);
 
                 return registry.archetypes[newArchetypeIndex].get();

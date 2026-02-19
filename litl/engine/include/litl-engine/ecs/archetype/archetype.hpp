@@ -12,40 +12,17 @@
 
 namespace LITL::Engine::ECS
 {
+    class ArchetypeRegistry;
+
     /// <summary>
-    /// An Archetype is an ordered component set.
-    /// All entities fit into exactly one Archetype.
+    /// An Archetype is an ordered component set. All entities fit into exactly one Archetype.
     /// </summary>
     class Archetype
     {
     public:
 
-        template<typename... ComponentTypes>
-        static Archetype* buildFromTypes() noexcept
-        {
-            Archetype* archetype = new Archetype();
-            populateChunkLayout<ComponentTypes...>(&archetype->m_chunkLayout);
-            archetype->buildArchetypeKey();
-            return archetype;
-        }
-
-        template<typename... ComponentTypeIds>
-        static Archetype* buildFromTypeIds(ComponentTypeIds... componentTypeIds)
-        {
-            Archetype* archetype = new Archetype();
-            populateChunkLayout<ComponentTypeIds...>(&archetype->m_chunkLayout);
-            archetype->buildArchetypeKey();
-            return archetype;
-        }
-
-        static Archetype* buildFromTypeIdsSpan(std::span<ComponentTypeId> orderedComponentTypeIds)
-        {
-            Archetype* archetype = new Archetype();
-            populateChunkLayout(&archetype->m_chunkLayout, orderedComponentTypeIds);
-            return archetype;
-        }
-
         uint32_t key() const noexcept;
+        uint32_t stableKey() const noexcept;
         ChunkLayout const* layout() const noexcept;
         size_t entityCount() const noexcept;
 
@@ -53,14 +30,18 @@ namespace LITL::Engine::ECS
 
     private:
 
-        Archetype();
+        Archetype(uint32_t key, uint32_t stableKey);
 
         void buildArchetypeKey() noexcept;
 
-        uint32_t m_key;
+        const uint32_t m_key;
+        const uint32_t m_stableKey;
+
         ChunkLayout m_chunkLayout;
         std::vector<Entity> m_entities;
         Core::PagedVector<Chunk> m_chunks;
+
+        friend class ArchetypeRegistry;
     };
 }
 
