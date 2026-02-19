@@ -5,20 +5,22 @@
 
 namespace LITL::Engine::ECS
 {
-    Archetype::Archetype(uint32_t key, uint32_t stableKey)
-        : m_key(key), m_stableKey(stableKey), m_chunks(16)      // 16kb chunks * 16 = 256kb pages
+    Archetype::Archetype(uint32_t registryIndex, uint64_t componentHash) : 
+        m_registryIndex(registryIndex),
+        m_componentHash(componentHash),
+        m_chunks(16)      // 16kb chunks * 16 = 256kb pages
     {
         m_chunkLayout.archetype = this;
     }
 
-    uint32_t Archetype::key() const noexcept
+    uint32_t Archetype::registryIndex() const noexcept
     {
-        return m_key;
+        return m_registryIndex;
     }
 
-    uint32_t Archetype::stableKey() const noexcept
+    uint64_t Archetype::componentHash() const noexcept
     {
-        return m_stableKey;
+        return m_componentHash;
     }
 
     ChunkLayout const* Archetype::layout() const noexcept

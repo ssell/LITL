@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <assert.h>
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -15,12 +16,12 @@ namespace LITL::Engine::ECS
     {
         std::mutex archetypeMutex;
         std::vector<std::unique_ptr<Archetype>> archetypes;
-        Core::FlatHashMap<uint64_t, size_t> archetypeMap;           // key = archetype component hash, value = archetypes index.
+        Core::FlatHashMap<uint64_t, uint32_t> archetypeMap;           // key = archetype component hash, value = archetypes index.
     };
 
     namespace
     {
-        static ArchetypeRegistryState& instance()
+        static ArchetypeRegistryState& instance() noexcept
         {
             // Ensure a single registry that persists for the lifetime of the application.
             // Also thread-safe, lazy, and handles static initialization ordering issues.
@@ -29,18 +30,18 @@ namespace LITL::Engine::ECS
         }
     }
 
-    Archetype const* ArchetypeRegistry::get_internal(std::vector<ComponentTypeId>& components)
+    Archetype const* ArchetypeRegistry::get_internal(std::vector<ComponentTypeId> componentTypeIds) noexcept
     {
-        // Sort and remove duplicates
-        std::sort(components.begin(), components.end());
-        components.erase(std::unique(components.begin(), components.end()), components.end());
+        // Convert to modifiable vector (span is readonly) and then sort and remove duplicates
+        std::sort(componentTypeIds.begin(), componentTypeIds.end());
+        componentTypeIds.erase(std::unique(componentTypeIds.begin(), componentTypeIds.end()), componentTypeIds.end());
 
-        const auto archetypeHash = Core::hashArray<ComponentTypeId>(components);
+        const auto archetypeHash = Core::hashArray<ComponentTypeId>(componentTypeIds);
         auto& registry = instance();
 
         {
             std::lock_guard<std::mutex> lock(registry.archetypeMutex);
-            
+
             const auto archetypeIndex = registry.archetypeMap.find(archetypeHash);
 
             if (archetypeIndex != std::nullopt)
@@ -49,10 +50,10 @@ namespace LITL::Engine::ECS
             }
             else
             {
-                const auto newArchetypeIndex = registry.archetypes.size();
+                const auto newArchetypeIndex = static_cast<uint32_t>(registry.archetypes.size());
                 const auto archetype = new Archetype(newArchetypeIndex, archetypeHash);
 
-                populateChunkLayout(&archetype->m_chunkLayout, components);
+                populateChunkLayout(&archetype->m_chunkLayout, componentTypeIds);
 
                 registry.archetypes.push_back(std::unique_ptr<Archetype>(archetype));
                 registry.archetypeMap.insert(archetypeHash, newArchetypeIndex);
@@ -60,5 +61,34 @@ namespace LITL::Engine::ECS
                 return registry.archetypes[newArchetypeIndex].get();
             }
         }
+    }
+
+    Archetype const* ArchetypeRegistry::getByIndex(uint32_t const index) noexcept
+    {
+        assert(index < instance().archetypes.size());
+
+        if (index < instance().archetypes.size())
+        {
+            return instance().archetypes[index].get();
+        }
+
+        return nullptr;
+    }
+    
+    Archetype const* ArchetypeRegistry::getByComponentHash(uint64_t const componentHash) noexcept
+    {
+        auto find = instance().archetypeMap.find(componentHash);
+
+        if (find != std::nullopt)
+        {
+            return instance().archetypes[find.value()].get();
+        }
+
+        return nullptr;
+    }
+
+    Archetype const* ArchetypeRegistry::getByComponents(std::initializer_list<ComponentTypeId> componentTypeIds) noexcept
+    {
+        return get_internal(componentTypeIds);
     }
 }
