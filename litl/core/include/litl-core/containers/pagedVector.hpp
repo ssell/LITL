@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
+#include <vector>
 
 namespace LITL::Core
 {
@@ -151,6 +152,12 @@ namespace LITL::Core
         T const& back() const
         {
             return at((m_size > 0) ? m_size - 1 : 0);
+        }
+
+        void clear()
+        {
+            m_pages.clear();
+            m_size = 0;
         }
 
     protected:

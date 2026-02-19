@@ -1,10 +1,14 @@
 #ifndef LITL_ENGINE_ECS_ENTITY_RECORD_H__
 #define LITL_ENGINE_ECS_ENTITY_RECORD_H__
 
-#include "litl-engine/ecs/archetype.hpp"
+#include <cstdint>
+
+#include "litl-engine/ecs/entity.hpp"
 
 namespace LITL::Engine::ECS
 {
+    class Archetype;
+
     /// <summary>
     /// big-ol' todo
     /// 
@@ -17,15 +21,18 @@ namespace LITL::Engine::ECS
     /// </summary>
     struct EntityRecord
     {
-        /// <summary>
-        /// The archetype to which this Entity matches.
-        /// </summary>
-        Archetype* archetype;
+        Entity entity;
 
         /// <summary>
         /// The index into the Archetype.
         /// </summary>
         size_t index;
+
+        /// <summary>
+        /// The archetype to which this Entity matches.
+        /// If this is null, then the Entity is currently dead.
+        /// </summary>
+        Archetype* archetype;
     };
 }
 
