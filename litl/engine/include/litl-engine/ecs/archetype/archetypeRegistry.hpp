@@ -1,9 +1,6 @@
 #ifndef LITL_ENGINE_ECS_ARCHETYPE_REGISTRY_H__
 #define LITL_ENGINE_ECS_ARCHETYPE_REGISTRY_H__
 
-#include <memory>
-#include <span>
-#include <type_traits>
 #include <vector>
 
 #include "litl-engine/ecs/component.hpp"
@@ -18,12 +15,8 @@ namespace LITL::Engine::ECS
     {
     public:
 
-        ArchetypeRegistry();
-        ArchetypeRegistry(ArchetypeRegistry const&) = delete;
-        ArchetypeRegistry& operator=(ArchetypeRegistry const&) = delete;
-
         template<typename... ComponentTypes>
-        Archetype const* get()
+        static Archetype const* get()
         {
             std::vector<ComponentTypeId> componentTypeIds;
             componentTypeIds.reserve(sizeof...(ComponentTypes));
@@ -33,7 +26,7 @@ namespace LITL::Engine::ECS
         }
 
         template<typename... ComponentTypeIds>
-        Archetype const* get(ComponentTypeIds... componentTypes)
+        static Archetype const* get(ComponentTypeIds... componentTypes)
         {
             static_assert((std::is_convertible_v<ComponentTypeIds, ComponentTypeId> && ...));
             std::vector<ComponentTypeId> componentTypeIds{ static_cast<ComponentTypeId>(componentTypes)... };
@@ -50,10 +43,7 @@ namespace LITL::Engine::ECS
             componentTypeIds.emplace_back(ComponentDescriptor::get<ComponentType>()->id);
         }
 
-        Archetype const* get_internal(std::vector<ComponentTypeId>& components);
-
-        struct Impl;
-        std::unique_ptr<Impl> m_pImpl;
+        static Archetype const* get_internal(std::vector<ComponentTypeId>& components);
     };
 }
 

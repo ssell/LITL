@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <cstdint>
-#include <memory>
 #include <mutex>
 #include <optional>
 #include <vector>
@@ -11,17 +10,22 @@
 
 namespace LITL::Engine::ECS
 {
-    struct ArchetypeRegistry::Impl
+    struct ArchetypeRegistryState
     {
-        mutable std::mutex archetypeMutex;
+        std::mutex archetypeMutex;
         std::vector<std::unique_ptr<Archetype>> archetypes;
         Core::FlatHashMap<uint64_t, size_t> archetypeMap;           // key = archetype component hash, value = archetypes index.
     };
 
-    ArchetypeRegistry::ArchetypeRegistry()
-        : m_pImpl(std::make_unique<Impl>())
+    namespace
     {
-
+        static ArchetypeRegistryState& instance()
+        {
+            // Ensure a single registry that persists for the lifetime of the application.
+            // Also thread-safe, lazy, and handles static initialization ordering issues.
+            static ArchetypeRegistryState registry;
+            return registry;
+        }
     }
 
     Archetype const* ArchetypeRegistry::get_internal(std::vector<ComponentTypeId>& components)
@@ -31,23 +35,24 @@ namespace LITL::Engine::ECS
         components.erase(std::unique(components.begin(), components.end()), components.end());
 
         const auto archetypeHash = Core::hashArray<ComponentTypeId>(components);
+        auto& registry = instance();
 
         {
-            std::lock_guard<std::mutex> lock(m_pImpl->archetypeMutex); 
+            std::lock_guard<std::mutex> lock(registry.archetypeMutex);
             
-            const auto archetypeIndex = m_pImpl->archetypeMap.find(archetypeHash);
+            const auto archetypeIndex = registry.archetypeMap.find(archetypeHash);
 
             if (archetypeIndex != std::nullopt)
             {
-                return m_pImpl->archetypes[archetypeIndex.value()].get();
+                return registry.archetypes[archetypeIndex.value()].get();
             }
             else
             {
-                const auto newArchetypeIndex = m_pImpl->archetypes.size();
-                m_pImpl->archetypes.push_back(std::unique_ptr<Archetype>(Archetype::buildFromTypeIdsSpan(components)));
-                m_pImpl->archetypeMap.insert(archetypeHash, newArchetypeIndex);
+                const auto newArchetypeIndex = registry.archetypes.size();
+                registry.archetypes.push_back(std::unique_ptr<Archetype>(Archetype::buildFromTypeIdsSpan(components)));
+                registry.archetypeMap.insert(archetypeHash, newArchetypeIndex);
 
-                return m_pImpl->archetypes[newArchetypeIndex].get();
+                return registry.archetypes[newArchetypeIndex].get();
             }
         }
     }
