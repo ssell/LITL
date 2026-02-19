@@ -11,49 +11,17 @@ namespace LITL::Engine::ECS
 {
     struct ComponentRegistryState
     {
-        void track(ComponentDescriptor const* descriptor)
-        {
-            assert(descriptor->id < MAX_COMPONENT_VARIANTS);
-
-            {
-                std::lock_guard<std::mutex> lock(m_mutex);
-
-                if (m_unstableIdLookup[descriptor->id] == nullptr)
-                {
-                    m_unstableIdLookup[descriptor->id] = descriptor;
-                }
-
-                if (m_stableIdLookup.find(descriptor->stableId) == m_stableIdLookup.end())
-                {
-                    m_stableIdLookup[descriptor->stableId] = descriptor->id;
-                }
-            }
-        }
-
-        ComponentDescriptor const* findViaUnstableId(ComponentTypeId id) const noexcept
-        {
-            assert(id < MAX_COMPONENT_VARIANTS);
-            return m_unstableIdLookup[id];
-        }
-
-        ComponentDescriptor const* findViaStableId(StableComponentTypeId id) const noexcept
-        {
-            auto find = m_stableIdLookup.find(id);
-            return (find == m_stableIdLookup.end() ? nullptr : findViaUnstableId(find->second));
-        }
-
-    private:
-
-        std::mutex m_mutex;
-
-        std::array<ComponentDescriptor const*, MAX_COMPONENT_VARIANTS> m_unstableIdLookup;
-        std::unordered_map<StableComponentTypeId, ComponentTypeId> m_stableIdLookup;
+        std::mutex mutex;
+        std::array<ComponentDescriptor const*, MAX_COMPONENT_VARIANTS> unstableIdLookup;
+        std::unordered_map<StableComponentTypeId, ComponentTypeId> stableIdLookup;
     };
 
     namespace
     {
-        static ComponentRegistryState& registry()
+        static ComponentRegistryState& instance()
         {
+            // Ensure a single registry that persists for the lifetime of the application.
+            // Also thread-safe, lazy, and handles static initialization ordering issues.
             static ComponentRegistryState registry;
             return registry;
         }
@@ -61,16 +29,35 @@ namespace LITL::Engine::ECS
 
     void ComponentRegistry::track(ComponentDescriptor const* descriptor) noexcept
     {
-        registry().track(descriptor);
+        assert(descriptor->id < MAX_COMPONENT_VARIANTS);
+
+        auto& registry = instance();
+
+        {
+            std::lock_guard<std::mutex> lock(registry.mutex);
+
+            if (registry.unstableIdLookup[descriptor->id] == nullptr)
+            {
+                registry.unstableIdLookup[descriptor->id] = descriptor;
+            }
+
+            if (registry.stableIdLookup.find(descriptor->stableId) == registry.stableIdLookup.end())
+            {
+                registry.stableIdLookup[descriptor->stableId] = descriptor->id;
+            }
+        }
     }
 
     ComponentDescriptor const* ComponentRegistry::find(ComponentTypeId id) noexcept
     {
-        return registry().findViaUnstableId(id);
+        assert(id < MAX_COMPONENT_VARIANTS);
+        return instance().unstableIdLookup[id];
     }
 
     ComponentDescriptor const* ComponentRegistry::findByStableId(StableComponentTypeId stableId) noexcept
     {
-        return registry().findViaStableId(stableId);
+        auto& registry = instance();
+        auto result = registry.stableIdLookup.find(stableId);
+        return (result == registry.stableIdLookup.end() ? nullptr : find(result->second));
     }
 }
