@@ -1,8 +1,11 @@
 #ifndef LITL_ENGINE_ECS_ARCHETYPE_REGISTRY_H__
 #define LITL_ENGINE_ECS_ARCHETYPE_REGISTRY_H__
 
+#include <initializer_list>
+#include <span>
 #include <vector>
 
+#include "litl-engine/ecs/constants.hpp"
 #include "litl-engine/ecs/component.hpp"
 #include "litl-engine/ecs/archetype/archetype.hpp"
 
@@ -10,18 +13,20 @@ namespace LITL::Engine::ECS
 {
     /// <summary>
     /// Responsible for owning and tracking all Archetype specializations.
+    /// Each component in an archetype definition is unique and the set is ordered based on component id.
+    /// For example: Archetype<Foo, Bar> == Archetype<Bar, Bar, Foo, Foo, Foo>
     /// </summary>
     class ArchetypeRegistry
     {
     private:
 
         template<typename ComponentType>
-        static void addComponentFold(std::vector<ComponentTypeId>& componentTypeIds)
+        static void fold(std::vector<ComponentTypeId>& componentTypeIds) noexcept
         {
             componentTypeIds.emplace_back(ComponentDescriptor::get<ComponentType>()->id);
         }
 
-        static Archetype const* get_internal(std::vector<ComponentTypeId>& components);
+        static Archetype const* get_internal(std::vector<ComponentTypeId> componentTypeIds) noexcept;
 
     public:
 
@@ -31,28 +36,35 @@ namespace LITL::Engine::ECS
         /// <typeparam name="...ComponentTypes"></typeparam>
         /// <returns></returns>
         template<typename... ComponentTypes>
-        static Archetype const* get()
+        static Archetype const* get() noexcept
         {
             std::vector<ComponentTypeId> componentTypeIds;
             componentTypeIds.reserve(sizeof...(ComponentTypes));
-            (addComponentFold<ComponentTypes>(componentTypeIds), ...);
+            (fold<ComponentTypes>(componentTypeIds), ...);
 
             return get_internal(componentTypeIds);
         }
 
         /// <summary>
-        /// Retrieves (or creates) the archetype matching the specified component set.
+        /// Retrieves the archetype by the internal registry index.
         /// </summary>
-        /// <typeparam name="...ComponentTypeIds"></typeparam>
-        /// <param name="...componentTypes"></param>
+        /// <param name="index"></param>
         /// <returns></returns>
-        template<typename... ComponentTypeIds>
-        static Archetype const* get(ComponentTypeIds... componentTypes)
-        {
-            static_assert((std::is_convertible_v<ComponentTypeIds, ComponentTypeId> && ...));
-            std::vector<ComponentTypeId> componentTypeIds{ static_cast<ComponentTypeId>(componentTypes)... };
-            return get_internal(componentTypeIds);
-        }
+        static Archetype const* getByIndex(uint32_t index) noexcept;
+
+        /// <summary>
+        /// Retrieves the archetype by the component hash.
+        /// </summary>
+        /// <param name="componentHash"></param>
+        /// <returns></returns>
+        static Archetype const* getByComponentHash(uint64_t componentHash) noexcept;
+
+        /// <summary>
+        /// Retrieves the archetype by the provided list of component ids.
+        /// </summary>
+        /// <param name="components"></param>
+        /// <returns></returns>
+        static Archetype const* getByComponents(std::initializer_list<ComponentTypeId> componentTypeIds) noexcept;
     };
 }
 

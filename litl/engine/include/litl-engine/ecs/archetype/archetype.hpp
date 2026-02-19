@@ -21,8 +21,8 @@ namespace LITL::Engine::ECS
     {
     public:
 
-        uint32_t key() const noexcept;
-        uint32_t stableKey() const noexcept;
+        uint32_t registryIndex() const noexcept;
+        uint64_t componentHash() const noexcept;
         ChunkLayout const* layout() const noexcept;
         size_t entityCount() const noexcept;
 
@@ -30,12 +30,12 @@ namespace LITL::Engine::ECS
 
     private:
 
-        Archetype(uint32_t key, uint32_t stableKey);
+        Archetype(uint32_t registryIndex, uint64_t componentHash);
 
         void buildArchetypeKey() noexcept;
 
-        const uint32_t m_key;
-        const uint32_t m_stableKey;
+        const uint32_t m_registryIndex;
+        const uint64_t m_componentHash;
 
         ChunkLayout m_chunkLayout;
         std::vector<Entity> m_entities;
