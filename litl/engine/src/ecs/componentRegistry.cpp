@@ -1,8 +1,9 @@
 #include <array>
 #include <assert.h>
 #include <mutex>
-#include <unordered_map>
+#include <optional>
 
+#include "litl-core/containers/flatHashMap.hpp"
 #include "litl-engine/ecs/constants.hpp"
 #include "litl-engine/ecs/componentRegistry.hpp"
 #include "litl-engine/ecs/component.hpp"
@@ -13,7 +14,7 @@ namespace LITL::Engine::ECS
     {
         std::mutex mutex;
         std::array<ComponentDescriptor const*, MAX_COMPONENT_VARIANTS> unstableIdLookup;
-        std::unordered_map<StableComponentTypeId, ComponentTypeId> stableIdLookup;
+        Core::FlatHashMap<StableComponentTypeId, ComponentTypeId> stableIdLookup;
     };
 
     namespace
@@ -41,9 +42,9 @@ namespace LITL::Engine::ECS
                 registry.unstableIdLookup[descriptor->id] = descriptor;
             }
 
-            if (registry.stableIdLookup.find(descriptor->stableId) == registry.stableIdLookup.end())
+            if (registry.stableIdLookup.find(descriptor->stableId) == std::nullopt)
             {
-                registry.stableIdLookup[descriptor->stableId] = descriptor->id;
+                registry.stableIdLookup.insert(descriptor->stableId, descriptor->id);
             }
         }
     }
@@ -57,7 +58,7 @@ namespace LITL::Engine::ECS
     ComponentDescriptor const* ComponentRegistry::findByStableId(StableComponentTypeId stableId) noexcept
     {
         auto& registry = instance();
-        auto result = registry.stableIdLookup.find(stableId);
-        return (result == registry.stableIdLookup.end() ? nullptr : find(result->second));
+        auto find = registry.stableIdLookup.find(stableId);
+        return (find == std::nullopt ? nullptr : registry.unstableIdLookup[find.value()]);
     }
 }
