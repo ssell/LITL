@@ -30,7 +30,7 @@ namespace LITL::Engine::ECS
         uint32_t remaining = CHUNK_SIZE_BYTES - chunkHeaderSize - chunkEntityArraySize;
 
         // First estimate of how many entities can fit. This is close, but may not be exact due to alignment.
-        chunkElementCapacity = remaining / componentBytesPerEntity;
+        chunkElementCapacity = (componentBytesPerEntity == 0 ? MAX_ENTITIES_PER_CHUNK : remaining / componentBytesPerEntity);
 
         // Get memory position of entity array
         uint32_t offset = chunkHeaderSize;
@@ -73,5 +73,7 @@ namespace LITL::Engine::ECS
         {
             layout->componentOrder[i] = ComponentDescriptor::get(orderedComponentTypes[i]);
         }
+
+        layout->calculate();
     }
 }

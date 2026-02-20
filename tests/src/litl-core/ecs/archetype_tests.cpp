@@ -29,6 +29,9 @@ TEST_CASE("ArchetypeRegistry::get (Static)", "[engine::ecs::archetype]")
     auto archetypeFun = LITL::Engine::ECS::ArchetypeRegistry::get<Bar, Bar, Foo, Foo, Foo, Bar, Foo, Foo, Bar, Foo>();
 
     REQUIRE(archetypeFun == archetypeFooBar);
+
+    REQUIRE(archetypeFoo->componentCount() == 1);
+    REQUIRE(archetypeFooBar->componentCount() == 2);
 }
 
 TEST_CASE("ArchetypeRegistry::get (Dynamic)", "[engine::ecs::archetype]")
@@ -67,4 +70,12 @@ TEST_CASE("ArchetypeRegistry::getByComponentHash", "[engine::ecs::archetype]")
 
     REQUIRE(LITL::Engine::ECS::ArchetypeRegistry::getByComponentHash(archetypeFoo->componentHash()) == archetypeFoo);
     REQUIRE(LITL::Engine::ECS::ArchetypeRegistry::getByComponentHash(archetypeFooBar->componentHash()) == archetypeFooBar);
+}
+
+TEST_CASE("Empty Archetype", "[engine::ecs::archetype]")
+{
+    auto emptyArchetype = LITL::Engine::ECS::ArchetypeRegistry::getByComponents({});
+
+    REQUIRE(emptyArchetype != nullptr);
+    REQUIRE(emptyArchetype->componentCount() == 0);
 }

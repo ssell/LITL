@@ -24,7 +24,6 @@ namespace LITL::Engine::ECS
 
     ComponentDescriptor const* ComponentDescriptor::get(ComponentTypeId componentTypeId) noexcept
     {
-        // ... next todo ... 
-        return nullptr;
+        return ComponentRegistry::find(componentTypeId);
     }
 }

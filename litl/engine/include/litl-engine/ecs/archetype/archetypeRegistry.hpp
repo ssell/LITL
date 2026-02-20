@@ -33,7 +33,7 @@ namespace LITL::Engine::ECS
             componentTypeIds.reserve(sizeof...(ComponentTypes));
             (foldComponentTypesIntoVector<ComponentTypes>(componentTypeIds), ...);
 
-            return getByComponentsV(componentTypeIds);
+            return getByComponents(componentTypeIds);
         }
 
         /// <summary>
@@ -55,14 +55,7 @@ namespace LITL::Engine::ECS
         /// </summary>
         /// <param name="components"></param>
         /// <returns></returns>
-        static Archetype* getByComponents(std::initializer_list<ComponentTypeId> componentTypeIds) noexcept;
-
-        /// <summary>
-        /// Retrieves the archetype by the provided list of component ids.
-        /// </summary>
-        /// <param name="componentTypeIds"></param>
-        /// <returns></returns>
-        static Archetype* getByComponentsV(std::vector<ComponentTypeId> componentTypeIds) noexcept;
+        static Archetype* getByComponents(std::vector<ComponentTypeId> componentTypeIds) noexcept;
 
         /// <summary>
         /// 
