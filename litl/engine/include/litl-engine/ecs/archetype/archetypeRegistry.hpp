@@ -7,6 +7,7 @@
 
 #include "litl-engine/ecs/constants.hpp"
 #include "litl-engine/ecs/component.hpp"
+#include "litl-engine/ecs/entityRecord.hpp"
 #include "litl-engine/ecs/archetype/archetype.hpp"
 
 namespace LITL::Engine::ECS
@@ -65,6 +66,14 @@ namespace LITL::Engine::ECS
         /// <param name="components"></param>
         /// <returns></returns>
         static Archetype const* getByComponents(std::initializer_list<ComponentTypeId> componentTypeIds) noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="record"></param>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        static void move(EntityRecord* record, Archetype* from, Archetype* to) noexcept;
     };
 }
 

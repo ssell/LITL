@@ -2,6 +2,7 @@
 #define LITL_ENGINE_ECS_ARCHETYPE_CHUNK_H__
 
 #include <cstdint>
+#include <optional>
 
 #include "litl-engine/ecs/constants.hpp"
 #include "litl-engine/ecs/archetype/chunkLayout.hpp"
@@ -34,13 +35,16 @@ namespace LITL::Engine::ECS
     {
     public:
 
-        Chunk(uint32_t index, ChunkLayout const* descriptor);
+        Chunk(uint32_t index, ChunkLayout const* layout);
         Chunk(Chunk const&) = delete;
         Chunk& operator=(Chunk const&) = delete;
         ~Chunk();
 
         ChunkHeader* getHeader() noexcept;
         ChunkEntities* getEntities() noexcept;
+        std::byte* data() noexcept;
+
+        std::optional<Entity> removeAndSwap(ChunkLayout const& layout, uint32_t removeAtIndex, Chunk* swapFromChunk, uint32_t swapFromChunkIndex) noexcept;
 
     protected:
 

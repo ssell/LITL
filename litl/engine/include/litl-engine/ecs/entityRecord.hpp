@@ -24,15 +24,15 @@ namespace LITL::Engine::ECS
         Entity entity;
 
         /// <summary>
-        /// The index into the Archetype.
-        /// </summary>
-        size_t index;
-
-        /// <summary>
         /// The archetype to which this Entity matches.
         /// If this is null, then the Entity is currently dead.
         /// </summary>
         Archetype* archetype;
+
+        /// <summary>
+        /// The index into the Archetype.
+        /// </summary>
+        uint32_t archetypeIndex;
     };
 }
 
