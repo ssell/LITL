@@ -3,12 +3,20 @@
 
 #include "litl-core/containers/pagedVector.hpp"
 #include "litl-engine/ecs/entityRegistry.hpp"
+#include "litl-engine/ecs/archetype/archetypeRegistry.hpp"
 
 namespace LITL::Engine::ECS
 {
     struct EntityRegistryState
     {
+        /// <summary>
+        /// Growing buffer of all entities.
+        /// </summary>
         Core::PagedVector<EntityRecord> entityRecords;
+
+        /// <summary>
+        /// Entities that have been "deleted" and their index has been freed up.
+        /// </summary>
         std::vector<uint32_t> deadEntities;
     };
 
@@ -38,8 +46,8 @@ namespace LITL::Engine::ECS
                     .index = index,
                     .version = 1
                 },
-                .index = index, 
-                .archetype = nullptr
+                .archetype = nullptr,
+                .archetypeIndex = index
             });
         }
 
@@ -77,8 +85,8 @@ namespace LITL::Engine::ECS
 
                 registry.entityRecords.emplace_back(EntityRecord{
                     .entity = entity,
-                    .index = index,
-                    .archetype = nullptr
+                    .archetype = nullptr,
+                    .archetypeIndex = index
                     });
 
                 result.emplace_back(entity);
@@ -93,10 +101,10 @@ namespace LITL::Engine::ECS
 
         if (record.entity.version == entity.version)
         {
-            // ... todo remove from archetype ...
+            ArchetypeRegistry::move(&record, record.archetype, nullptr);
 
             record.entity.version++;    // increment on death to invalidate any lingering handles
-            instance().deadEntities.emplace_back(record.index);
+            instance().deadEntities.emplace_back(record.entity.index);
         }
     }
 

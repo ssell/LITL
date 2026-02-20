@@ -42,8 +42,6 @@ namespace LITL::Engine::ECS
         /// The ECS world maintains a current version for the entire system.
         /// </summary>
         uint32_t version;
-
-        // ... todo in the future when adding shared components ...
     };
 
     /// <summary>

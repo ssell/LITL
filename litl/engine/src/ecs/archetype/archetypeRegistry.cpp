@@ -91,4 +91,18 @@ namespace LITL::Engine::ECS
     {
         return get_internal(componentTypeIds);
     }
+
+    void ArchetypeRegistry::move(EntityRecord* record, Archetype* from, Archetype* to) noexcept
+    {
+        if ((from != nullptr) && (to != nullptr))
+        {
+            // ... move ...
+        }
+        else if (from != nullptr)
+        {
+            from->remove(record);
+        }
+
+        record->archetype = to;
+    }
 }

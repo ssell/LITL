@@ -6,7 +6,7 @@
 
 #include "litl-core/containers/pagedVector.hpp"
 #include "litl-engine/ecs/component.hpp"
-#include "litl-engine/ecs/entity.hpp"
+#include "litl-engine/ecs/entityRecord.hpp"
 #include "litl-engine/ecs/archetype/chunkLayout.hpp"
 #include "litl-engine/ecs/archetype/chunk.hpp"
 
@@ -24,7 +24,6 @@ namespace LITL::Engine::ECS
         uint32_t registryIndex() const noexcept;
         uint64_t componentHash() const noexcept;
         ChunkLayout const* layout() const noexcept;
-        size_t entityCount() const noexcept;
 
     protected:
 
@@ -32,14 +31,14 @@ namespace LITL::Engine::ECS
 
         Archetype(uint32_t registryIndex, uint64_t componentHash);
 
-        void buildArchetypeKey() noexcept;
+        void remove(EntityRecord* record) noexcept;
 
         const uint32_t m_registryIndex;
         const uint64_t m_componentHash;
 
         ChunkLayout m_chunkLayout;
-        std::vector<Entity> m_entities;
         Core::PagedVector<Chunk> m_chunks;
+        uint32_t m_entityCount;
 
         friend class ArchetypeRegistry;
     };
