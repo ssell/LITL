@@ -83,11 +83,7 @@ namespace LITL::Core
                 m_pages.emplace_back(m_pageSize);
             }
 
-            const size_t index = m_size++;
-            T* element = getElementPtr(index);
-            std::construct_at(element, std::forward<Args>(args)...);
-
-            return *element;
+            return *std::construct_at(getElementPtr(m_size++), std::forward<Args>(args)...);
         }
 
         void pop_back()

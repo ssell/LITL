@@ -19,16 +19,6 @@ namespace LITL::Engine::ECS
     /// </summary>
     class ArchetypeRegistry
     {
-    private:
-
-        template<typename ComponentType>
-        static void fold(std::vector<ComponentTypeId>& componentTypeIds) noexcept
-        {
-            componentTypeIds.emplace_back(ComponentDescriptor::get<ComponentType>()->id);
-        }
-
-        static Archetype const* get_internal(std::vector<ComponentTypeId> componentTypeIds) noexcept;
-
     public:
 
         /// <summary>
@@ -41,9 +31,9 @@ namespace LITL::Engine::ECS
         {
             std::vector<ComponentTypeId> componentTypeIds;
             componentTypeIds.reserve(sizeof...(ComponentTypes));
-            (fold<ComponentTypes>(componentTypeIds), ...);
+            (foldComponentTypesIntoVector<ComponentTypes>(componentTypeIds), ...);
 
-            return get_internal(componentTypeIds);
+            return getByComponentsV(componentTypeIds);
         }
 
         /// <summary>
@@ -66,6 +56,13 @@ namespace LITL::Engine::ECS
         /// <param name="components"></param>
         /// <returns></returns>
         static Archetype const* getByComponents(std::initializer_list<ComponentTypeId> componentTypeIds) noexcept;
+
+        /// <summary>
+        /// Retrieves the archetype by the provided list of component ids.
+        /// </summary>
+        /// <param name="componentTypeIds"></param>
+        /// <returns></returns>
+        static Archetype const* getByComponentsV(std::vector<ComponentTypeId> componentTypeIds) noexcept;
 
         /// <summary>
         /// 

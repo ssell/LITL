@@ -5,6 +5,7 @@
 #include <type_traits>
 #include <typeinfo>
 #include <utility>
+#include <vector>
 
 #include "litl-engine/ecs/constants.hpp"
 
@@ -81,6 +82,12 @@ namespace LITL::Engine::ECS
     StableComponentTypeId getStableComponentTypeId() noexcept
     {
         return ComponentDescriptor::get<T>()->stableId;
+    }
+
+    template<typename ComponentType>
+    void foldComponentTypesIntoVector(std::vector<ComponentTypeId>& componentTypeIds) noexcept
+    {
+        componentTypeIds.emplace_back(ComponentDescriptor::get<ComponentType>()->id);
     }
 }
 

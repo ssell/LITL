@@ -1,12 +1,14 @@
 #include "litl-engine/ecs/world.hpp"
-#include "litl-engine/ecs/archetype/archetype.hpp"
-#include "litl-engine/ecs/components/transform.hpp"
+#include "litl-engine/ecs/constants.hpp"
+#include "litl-engine/ecs/entityRegistry.hpp"
+#include "litl-engine/ecs/componentRegistry.hpp"
+#include "litl-engine/ecs/archetype/archetypeRegistry.hpp"
 
 namespace LITL::Engine::ECS
 {
     World::World()
     {
-        auto* transformDescriptor = ComponentDescriptor::get<Component::Transform>();
+
     }
 
     World::~World()
@@ -14,9 +16,44 @@ namespace LITL::Engine::ECS
 
     }
 
-    Entity World::create() noexcept
+    // -------------------------------------------------------------------------------------
+    // Entity Operations
+    // -------------------------------------------------------------------------------------
+
+    // -------------------------------------------------------------------------------------
+    // Entity Creation
+    // -------------------------------------------------------------------------------------
+
+    Entity World::createImmediate() noexcept
     {
-        // p cool
-        return { 0, 0 };
+        return EntityRegistry::create();
+    }
+
+    // -------------------------------------------------------------------------------------
+    // Entity Component Add
+    // -------------------------------------------------------------------------------------
+
+    void World::addComponentImmediate(Entity entity, ComponentTypeId component)
+    {
+        if (!EntityRegistry::isAlive(entity))
+        {
+            return;
+        }
+
+        auto entityRecord = EntityRegistry::getRecord(entity);
+        auto entityCurrentArchetype = entityRecord.archetype;
+
+        std::vector<ComponentTypeId> desiredComponents(entityCurrentArchetype->componentTypes());
+        desiredComponents.emplace_back(component);
+
+        auto entityNewArchetype = ArchetypeRegistry::getByComponentsV(desiredComponents);
+    }
+
+    void World::addComponentsImmediate(Entity entity, std::vector<ComponentTypeId>& components)
+    {
+        if (!EntityRegistry::isAlive(entity))
+        {
+            return;
+        }
     }
 }
