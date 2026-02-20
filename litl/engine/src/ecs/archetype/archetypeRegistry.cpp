@@ -96,7 +96,7 @@ namespace LITL::Engine::ECS
     {
         if ((from != nullptr) && (to != nullptr))
         {
-            // ... move ...
+            from->move(record, to);
         }
         else if (from != nullptr)
         {

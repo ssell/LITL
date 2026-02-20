@@ -41,27 +41,13 @@ namespace LITL::Engine::ECS
         auto header = getHeader();
 
         // First remove the entity and its components from this chunk
-        
-        /**
-         * Clearing the memory here likely isn't even needed, and may be detrimental to maximum performance.
-         * All deletions are remove+swaps, so we really only need the swap. Iteration through the chunk
-         * is based on the number of entities stored within it, so "dirty" memory regions that have been
-         * deleted are never even touched as long as the iteration itself is correct AND deletion itself
-         * is done during ECS sync points.
-         * 
-         * The deletion code is left in place to punctuate the fact that it is knowingly excluded.
-         * And to make it easier to put back in incase it is needed :)
-         */
-
-        /*
         memset(m_data + layout.entityArrayOffset + (sizeof(Entity) * removeAtIndex), 0, sizeof(Entity));
 
         for (auto i = 0; i < layout.componentTypeCount; ++i)
         {
-            const auto componentSize = layout.componentOrder[i]->size;
-            memset(m_data + layout.componentOffsets[i] + (componentSize * removeAtIndex), 0, componentSize);
+            const auto component = layout.componentOrder[i];
+            component->destroy((m_data + layout.componentOffsets[i] + (component->size * removeAtIndex)));
         }
-        */
 
         header->count--;
 
@@ -88,12 +74,11 @@ namespace LITL::Engine::ECS
                 // Components
                 for (auto i = 0; i < layout.componentTypeCount; ++i)
                 {
-                    const auto componentSize = layout.componentOrder[i]->size;
+                    const auto component = layout.componentOrder[i];
 
-                    memcpy(
-                        to + layout.componentOffsets[i] + (componentSize * removeAtIndex),
-                        from + layout.componentOffsets[i] + (componentSize * swapFromChunkIndex),
-                        componentSize);
+                    component->move(
+                        from + layout.componentOffsets[i] + (component->size * swapFromChunkIndex),
+                        to + layout.componentOffsets[i] + (component->size * removeAtIndex));
                 }
 
                 header->count++;
