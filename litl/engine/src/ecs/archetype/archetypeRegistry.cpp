@@ -30,13 +30,13 @@ namespace LITL::Engine::ECS
         }
     }
 
-    Archetype* ArchetypeRegistry::getByComponentsV(std::vector<ComponentTypeId> componentTypeIds) noexcept
+    Archetype* ArchetypeRegistry::getByComponents(std::vector<ComponentTypeId> componentTypeIds) noexcept
     {
         // Convert to modifiable vector (span is readonly) and then sort and remove duplicates
         std::sort(componentTypeIds.begin(), componentTypeIds.end());
         componentTypeIds.erase(std::unique(componentTypeIds.begin(), componentTypeIds.end()), componentTypeIds.end());
 
-        const auto archetypeHash = Core::hashArray<ComponentTypeId>(componentTypeIds);
+        const auto archetypeHash = (componentTypeIds.empty() ? 0 : Core::hashArray<ComponentTypeId>(componentTypeIds));
         auto& registry = instance();
 
         {
@@ -95,11 +95,6 @@ namespace LITL::Engine::ECS
         }
 
         return nullptr;
-    }
-
-    Archetype* ArchetypeRegistry::getByComponents(std::initializer_list<ComponentTypeId> componentTypeIds) noexcept
-    {
-        return getByComponentsV(componentTypeIds);
     }
 
     void ArchetypeRegistry::move(EntityRecord* record, Archetype* from, Archetype* to) noexcept

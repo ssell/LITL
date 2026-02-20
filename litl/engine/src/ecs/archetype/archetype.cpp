@@ -10,7 +10,8 @@ namespace LITL::Engine::ECS
     Archetype::Archetype(uint32_t registryIndex, uint64_t componentHash) : 
         m_registryIndex(registryIndex),
         m_componentHash(componentHash),
-        m_chunks(16)      // 16kb chunks * 16 = 256kb pages
+        m_chunks(16),     // 16kb chunks * 16 = 256kb pages
+        m_entityCount(0)
     {
         m_chunkLayout.archetype = this;
         m_components.reserve(MAX_COMPONENTS);

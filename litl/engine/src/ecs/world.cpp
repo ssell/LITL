@@ -86,7 +86,7 @@ namespace LITL::Engine::ECS
         std::vector<ComponentTypeId> desiredComponents(entityCurrentArchetype->componentTypes());
         desiredComponents.emplace_back(component);
 
-        auto entityNewArchetype = ArchetypeRegistry::getByComponentsV(desiredComponents);
+        auto entityNewArchetype = ArchetypeRegistry::getByComponents(desiredComponents);
 
         // Move
         ArchetypeRegistry::move(&entityRecord, entityCurrentArchetype, entityNewArchetype);
