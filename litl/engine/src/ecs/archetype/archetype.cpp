@@ -2,6 +2,7 @@
 #include <optional>
 #include <vector>
 
+#include "litl-core/math/math.hpp"
 #include "litl-engine/ecs/archetype/archetype.hpp"
 #include "litl-engine/ecs/entityRegistry.hpp"
 
@@ -28,6 +29,31 @@ namespace LITL::Engine::ECS
     ChunkLayout const* Archetype::layout() const noexcept
     {
         return &m_chunkLayout;
+    }
+
+    uint32_t Archetype::getNextIndex() noexcept
+    {
+        if (((m_entityCount == 0) && (m_chunks.size() == 0)) ||         // First entity in this archetype. Allocate the first chunk
+            (m_entityCount % m_chunkLayout.chunkElementCapacity == 0))  // The last chunk is currently full.
+        {
+            m_chunks.emplace_back(Chunk(m_chunks.size(), &m_chunkLayout));
+        }
+
+        return m_entityCount + 1;
+    }
+
+    bool Archetype::hasComponent(ComponentTypeId component, size_t& index)
+    {
+        for (auto i = 0; i < m_chunkLayout.componentTypeCount; ++i)
+        {
+            if (m_chunkLayout.componentOrder[i]->id == component)
+            {
+                index = i;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     void Archetype::remove(EntityRecord* record) noexcept
@@ -59,5 +85,59 @@ namespace LITL::Engine::ECS
 
         record->archetype = nullptr;
         record->archetypeIndex = 0;
+
+        m_entityCount = Math::maximum(m_entityCount - 1, 0u);
+    }
+
+    void Archetype::move(EntityRecord* record, Archetype* to) noexcept
+    {
+        if ((record->archetype != this) || (to == this))
+        {
+            return;
+        }
+
+        // Get the chunk and element index for where we are removing
+        const auto fromArchetypeIndex = record->archetypeIndex;
+        const auto fromChunkIndex = fromArchetypeIndex / m_chunkLayout.chunkElementCapacity;
+        const auto fromChunkElementIndex = fromArchetypeIndex % m_chunkLayout.chunkElementCapacity;
+
+        // Get the chunk and element index for where we are adding to
+        const auto toArchetypeIndex = to->getNextIndex();
+        const auto toChunkIndex = toArchetypeIndex / to->m_chunkLayout.chunkElementCapacity;
+        const auto toChunkElementIndex = toArchetypeIndex % m_chunkLayout.chunkElementCapacity;
+
+        auto fromChunkData = m_chunks[fromChunkIndex].data();
+        auto toChunkData = to->m_chunks[toChunkIndex].data();
+
+        // Move entity
+        auto fromChunkEntityAddr = (toChunkData + to->m_chunkLayout.entityArrayOffset + (toChunkElementIndex * sizeof(Entity)));
+        auto toChunkEntityAddr = (toChunkData + to->m_chunkLayout.entityArrayOffset + (toChunkElementIndex * sizeof(Entity)));
+        new (toChunkEntityAddr) Entity(std::move(*reinterpret_cast<Entity*>(fromChunkEntityAddr)));
+        
+        // Move components
+        for (auto i = 0; i < to->m_chunkLayout.componentTypeCount; ++i)
+        {
+            // A component in the new archetype.
+            auto toComponent = to->m_chunkLayout.componentOrder[i];
+            auto toComponentAddress = (toChunkData + to->m_chunkLayout.componentOffsets[i] + (toChunkElementIndex * toComponent->size));
+            auto fromComponentIndex = static_cast<size_t>(0);
+
+            // Does this entity already have this component?
+            if (hasComponent(toComponent->id, fromComponentIndex))
+            {
+                auto fromComponentAddress = (fromChunkData + m_chunkLayout.componentOffsets[fromComponentIndex] + (fromChunkElementIndex * toComponent->size));
+                toComponent->move(fromComponentAddress, toComponentAddress);
+            }
+            // Otherwise instantiate a new component
+            else
+            {
+                toComponent->build(toComponentAddress);
+            }
+        }
+        
+        to->m_entityCount++;
+
+        // Finally remove the entity from this archetype
+        remove(record);
     }
 }
