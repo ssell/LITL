@@ -30,7 +30,7 @@ namespace LITL::Engine::ECS
         }
     }
 
-    Archetype const* ArchetypeRegistry::getByComponentsV(std::vector<ComponentTypeId> componentTypeIds) noexcept
+    Archetype* ArchetypeRegistry::getByComponentsV(std::vector<ComponentTypeId> componentTypeIds) noexcept
     {
         // Convert to modifiable vector (span is readonly) and then sort and remove duplicates
         std::sort(componentTypeIds.begin(), componentTypeIds.end());
@@ -73,7 +73,7 @@ namespace LITL::Engine::ECS
         }
     }
 
-    Archetype const* ArchetypeRegistry::getByIndex(uint32_t const index) noexcept
+    Archetype* ArchetypeRegistry::getByIndex(uint32_t const index) noexcept
     {
         assert(index < instance().archetypes.size());
 
@@ -85,7 +85,7 @@ namespace LITL::Engine::ECS
         return nullptr;
     }
     
-    Archetype const* ArchetypeRegistry::getByComponentHash(uint64_t const componentHash) noexcept
+    Archetype* ArchetypeRegistry::getByComponentHash(uint64_t const componentHash) noexcept
     {
         auto find = instance().archetypeMap.find(componentHash);
 
@@ -97,7 +97,7 @@ namespace LITL::Engine::ECS
         return nullptr;
     }
 
-    Archetype const* ArchetypeRegistry::getByComponents(std::initializer_list<ComponentTypeId> componentTypeIds) noexcept
+    Archetype* ArchetypeRegistry::getByComponents(std::initializer_list<ComponentTypeId> componentTypeIds) noexcept
     {
         return getByComponentsV(componentTypeIds);
     }

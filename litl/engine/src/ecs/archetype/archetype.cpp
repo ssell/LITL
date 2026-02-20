@@ -36,6 +36,11 @@ namespace LITL::Engine::ECS
         return m_components;
     }
 
+    uint32_t Archetype::componentCount() const noexcept
+    {
+        return static_cast<uint32_t>(m_components.size());
+    }
+
     uint32_t Archetype::getNextIndex() noexcept
     {
         if (((m_entityCount == 0) && (m_chunks.size() == 0)) ||         // First entity in this archetype. Allocate the first chunk

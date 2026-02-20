@@ -41,28 +41,28 @@ namespace LITL::Engine::ECS
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        static Archetype const* getByIndex(uint32_t index) noexcept;
+        static Archetype* getByIndex(uint32_t index) noexcept;
 
         /// <summary>
         /// Retrieves the archetype by the component hash.
         /// </summary>
         /// <param name="componentHash"></param>
         /// <returns></returns>
-        static Archetype const* getByComponentHash(uint64_t componentHash) noexcept;
+        static Archetype* getByComponentHash(uint64_t componentHash) noexcept;
 
         /// <summary>
         /// Retrieves the archetype by the provided list of component ids.
         /// </summary>
         /// <param name="components"></param>
         /// <returns></returns>
-        static Archetype const* getByComponents(std::initializer_list<ComponentTypeId> componentTypeIds) noexcept;
+        static Archetype* getByComponents(std::initializer_list<ComponentTypeId> componentTypeIds) noexcept;
 
         /// <summary>
         /// Retrieves the archetype by the provided list of component ids.
         /// </summary>
         /// <param name="componentTypeIds"></param>
         /// <returns></returns>
-        static Archetype const* getByComponentsV(std::vector<ComponentTypeId> componentTypeIds) noexcept;
+        static Archetype* getByComponentsV(std::vector<ComponentTypeId> componentTypeIds) noexcept;
 
         /// <summary>
         /// 
