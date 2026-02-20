@@ -30,7 +30,7 @@ namespace LITL::Engine::ECS
         }
     }
 
-    Archetype const* ArchetypeRegistry::get_internal(std::vector<ComponentTypeId> componentTypeIds) noexcept
+    Archetype const* ArchetypeRegistry::getByComponentsV(std::vector<ComponentTypeId> componentTypeIds) noexcept
     {
         // Convert to modifiable vector (span is readonly) and then sort and remove duplicates
         std::sort(componentTypeIds.begin(), componentTypeIds.end());
@@ -54,6 +54,16 @@ namespace LITL::Engine::ECS
                 const auto archetype = new Archetype(newArchetypeIndex, archetypeHash);
 
                 populateChunkLayout(&archetype->m_chunkLayout, componentTypeIds);
+
+                for (auto component : archetype->m_chunkLayout.componentOrder)
+                {
+                    if (component == nullptr)
+                    {
+                        break;
+                    }
+
+                    archetype->m_components.emplace_back(component->id);
+                }
 
                 registry.archetypes.push_back(std::unique_ptr<Archetype>(archetype));
                 registry.archetypeMap.insert(archetypeHash, newArchetypeIndex);
@@ -89,7 +99,7 @@ namespace LITL::Engine::ECS
 
     Archetype const* ArchetypeRegistry::getByComponents(std::initializer_list<ComponentTypeId> componentTypeIds) noexcept
     {
-        return get_internal(componentTypeIds);
+        return getByComponentsV(componentTypeIds);
     }
 
     void ArchetypeRegistry::move(EntityRecord* record, Archetype* from, Archetype* to) noexcept

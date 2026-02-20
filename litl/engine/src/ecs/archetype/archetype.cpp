@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <optional>
-#include <vector>
 
 #include "litl-core/math/math.hpp"
 #include "litl-engine/ecs/archetype/archetype.hpp"
@@ -14,6 +13,7 @@ namespace LITL::Engine::ECS
         m_chunks(16)      // 16kb chunks * 16 = 256kb pages
     {
         m_chunkLayout.archetype = this;
+        m_components.reserve(MAX_COMPONENTS);
     }
 
     uint32_t Archetype::registryIndex() const noexcept
@@ -31,12 +31,18 @@ namespace LITL::Engine::ECS
         return &m_chunkLayout;
     }
 
+    std::vector<ComponentTypeId> const& Archetype::componentTypes() const noexcept
+    {
+        return m_components;
+    }
+
     uint32_t Archetype::getNextIndex() noexcept
     {
         if (((m_entityCount == 0) && (m_chunks.size() == 0)) ||         // First entity in this archetype. Allocate the first chunk
             (m_entityCount % m_chunkLayout.chunkElementCapacity == 0))  // The last chunk is currently full.
         {
-            m_chunks.emplace_back(Chunk(m_chunks.size(), &m_chunkLayout));
+            // to do this is broken booooiii
+          //  m_chunks.push_back(Chunk(m_chunks.size(), &m_chunkLayout));
         }
 
         return m_entityCount + 1;
@@ -137,7 +143,11 @@ namespace LITL::Engine::ECS
         
         to->m_entityCount++;
 
-        // Finally remove the entity from this archetype
+        // Remove the entity from this archetype
         remove(record);
+
+        // Update it's record to point to it's new archetype
+        record->archetype = to;
+        record->archetypeIndex = toArchetypeIndex;
     }
 }

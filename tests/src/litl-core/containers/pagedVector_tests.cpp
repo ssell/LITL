@@ -1,4 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
+#include <cstdint>
+
 #include "litl-core/containers/pagedVector.hpp"
 
 TEST_CASE("Push-Pop", "[core::containers::pagedVector]")
@@ -147,4 +149,70 @@ TEST_CASE("Stable Memory", "[core::containers::pagedVector]")
 
     REQUIRE(*ptr0 == 1337);
     REQUIRE(ptr0 == ptr1);
+}
+
+namespace PushPopClassTest
+{
+    class Foo
+    {
+    public:
+
+        Foo()
+            : a(0), b(0), destroyRecord(nullptr)
+        {
+
+        }
+
+        Foo(uint32_t ia, uint32_t ib, uint32_t* id) 
+            : a(ia), b(ib), destroyRecord(id)  
+        { 
+        
+        }
+
+        ~Foo() 
+        {
+            if (destroyRecord != nullptr)
+            {
+               (*destroyRecord)++;
+            }
+        }
+
+        uint32_t a;
+        uint32_t b;
+        uint32_t* destroyRecord;
+    };
+}
+
+TEST_CASE("Push-Pop Class", "[core::containers::pagedVector]")
+{
+    LITL::Core::PagedVector<PushPopClassTest::Foo> vector;
+    uint32_t destroyCount = 0;
+
+    {
+        PushPopClassTest::Foo foo{ 5, 10, &destroyCount };
+        vector.push_back(foo);
+
+        REQUIRE(vector.size() == 1);
+        REQUIRE(vector[0].a == 5);
+        REQUIRE(vector[0].b == 10);
+
+        vector.emplace_back(20, 30, &destroyCount);
+
+        REQUIRE(vector.size() == 2);
+        REQUIRE(vector[1].a == 20);
+        REQUIRE(vector[1].b == 30);
+
+        vector.pop_back();
+
+        REQUIRE(vector.size() == 1);
+        REQUIRE(destroyCount == 1);
+
+        vector.pop_back();
+
+        REQUIRE(vector.size() == 0);
+        REQUIRE(destroyCount == 2);
+    }
+
+    // 2 in the container + 1 local to the scope that was pushed in.
+    REQUIRE(destroyCount == 3);
 }

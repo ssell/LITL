@@ -24,6 +24,7 @@ namespace LITL::Engine::ECS
         uint32_t registryIndex() const noexcept;
         uint64_t componentHash() const noexcept;
         ChunkLayout const* layout() const noexcept;
+        std::vector<ComponentTypeId> const& componentTypes() const noexcept;
 
     protected:
 
@@ -39,10 +40,11 @@ namespace LITL::Engine::ECS
 
         const uint32_t m_registryIndex;
         const uint64_t m_componentHash;
+        uint32_t m_entityCount;
 
         ChunkLayout m_chunkLayout;
+        std::vector<ComponentTypeId> m_components;
         Core::PagedVector<Chunk> m_chunks;
-        uint32_t m_entityCount;
 
         friend class ArchetypeRegistry;
     };
