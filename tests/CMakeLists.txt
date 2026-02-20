@@ -18,7 +18,7 @@ add_executable(litl-tests
 	"src/litl-core/hash_tests.cpp" 
 	"src/litl-core/containers/flatHashMap_tests.cpp" 
 	"src/litl-core/refptr_tests.cpp" 
-	"src/litl-core/renderer/shaderReflection_tests.cpp" "src/litl-core/ecs/component_tests.cpp" "src/litl-core/ecs/chunk_tests.cpp" "src/litl-core/containers/pagedVector_tests.cpp" "src/litl-core/math/general_tests.cpp" "src/litl-core/ecs/archetype_tests.cpp" "src/litl-core/ecs/entity_tests.cpp")
+	"src/litl-core/renderer/shaderReflection_tests.cpp" "src/litl-core/ecs/component_tests.cpp" "src/litl-core/ecs/chunk_tests.cpp" "src/litl-core/containers/pagedVector_tests.cpp" "src/litl-core/math/general_tests.cpp" "src/litl-core/ecs/archetype_tests.cpp" "src/litl-core/ecs/entity_tests.cpp" "src/litl-core/ecs/world_tests.cpp")
 
 target_link_libraries(litl-tests
 	PRIVATE
