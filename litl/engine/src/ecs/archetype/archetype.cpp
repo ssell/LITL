@@ -3,6 +3,7 @@
 
 #include "litl-core/math/math.hpp"
 #include "litl-engine/ecs/archetype/archetype.hpp"
+#include "litl-engine/ecs/archetype/archetypeRegistry.hpp"
 #include "litl-engine/ecs/entityRegistry.hpp"
 
 namespace LITL::Engine::ECS
@@ -10,8 +11,8 @@ namespace LITL::Engine::ECS
     Archetype::Archetype(uint32_t registryIndex, uint64_t componentHash) : 
         m_registryIndex(registryIndex),
         m_componentHash(componentHash),
-        m_chunks(16),     // 16kb chunks * 16 = 256kb pages
-        m_entityCount(0)
+        m_entityCount(0),
+        m_chunks(16)                        // 16kb chunks * 16 = 256kb pages
     {
         m_chunkLayout.archetype = this;
         m_components.reserve(MAX_COMPONENTS);
@@ -66,6 +67,17 @@ namespace LITL::Engine::ECS
         }
 
         return false;
+    }
+
+    void Archetype::add(EntityRecord const& record) noexcept
+    {
+       const auto archetypeIndex = getNextIndex();
+       const auto chunkIndex = archetypeIndex / m_chunkLayout.chunkElementCapacity;
+       const auto chunkElementIndex = archetypeIndex % m_chunkLayout.chunkElementCapacity;
+
+       m_chunks[chunkIndex].add(m_chunkLayout, chunkElementIndex);
+
+       EntityRegistry::updateRecordArchetype(record.entity, this, archetypeIndex);
     }
 
     void Archetype::remove(EntityRecord const& record) noexcept

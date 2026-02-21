@@ -36,6 +36,23 @@ namespace LITL::Engine::ECS
         return m_data;
     }
 
+    void Chunk::add(ChunkLayout const& layout, uint32_t addAtIndex) noexcept
+    {
+        auto header = getHeader();
+        auto to = data();
+
+        // ? construct_at or memcpy here ?
+        std::construct_at(to + layout.entityArrayOffset + (sizeof(Entity) * addAtIndex));
+
+        for (auto i = 0; i < layout.componentTypeCount; ++i)
+        {
+            const auto component = layout.componentOrder[i];
+            component->build(to + layout.componentOffsets[i] + (component->size * addAtIndex));
+        }
+
+        header->count++;
+    }
+
     std::optional<Entity> Chunk::removeAndSwap(ChunkLayout const& layout, uint32_t const removeAtIndex, Chunk* swapFromChunk, uint32_t const swapFromChunkIndex) noexcept
     {
         auto header = getHeader();
@@ -67,7 +84,7 @@ namespace LITL::Engine::ECS
 
                 // Entity
                 memcpy(
-                    to + layout.entityArrayOffset + (sizeof(Entity) + removeAtIndex),
+                    to + layout.entityArrayOffset + (sizeof(Entity) * removeAtIndex),
                     from + layout.entityArrayOffset + (sizeof(Entity) * swapFromChunkIndex),
                     sizeof(Entity));
 
