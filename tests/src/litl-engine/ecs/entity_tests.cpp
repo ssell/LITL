@@ -7,73 +7,73 @@
 TEST_CASE("Entity Creation", "[engine::ecs::entityRegistry]")
 {
     LITL::Engine::ECS::EntityRegistry::clear();
-    const auto entity = LITL::Engine::ECS::EntityRegistry::create();
+    const auto entityRecord = LITL::Engine::ECS::EntityRegistry::create();
 
-    REQUIRE(entity.version > 0);
+    REQUIRE(entityRecord.entity.version > 0);
 }
 
 TEST_CASE("Entity Destruction", "[engine::ecs::entityRegistry]")
 {
     LITL::Engine::ECS::EntityRegistry::clear();
-    const auto entity = LITL::Engine::ECS::EntityRegistry::create();
+    const auto entityRecord = LITL::Engine::ECS::EntityRegistry::create();
 
-    REQUIRE(entity.version > 0);
-    REQUIRE(LITL::Engine::ECS::EntityRegistry::isAlive(entity) == true);
+    REQUIRE(entityRecord.entity.version > 0);
+    REQUIRE(LITL::Engine::ECS::EntityRegistry::isAlive(entityRecord.entity) == true);
 
-    const auto oldVersion = entity.version;
-    LITL::Engine::ECS::EntityRegistry::destroy(entity);
+    const auto oldVersion = entityRecord.entity.version;
+    LITL::Engine::ECS::EntityRegistry::destroy(entityRecord.entity);
 
-    REQUIRE(LITL::Engine::ECS::EntityRegistry::isAlive(entity) == false);
-    REQUIRE(oldVersion < LITL::Engine::ECS::EntityRegistry::getRecord(entity).entity.version);
+    REQUIRE(LITL::Engine::ECS::EntityRegistry::isAlive(entityRecord.entity) == false);
+    REQUIRE(oldVersion < LITL::Engine::ECS::EntityRegistry::getRecord(entityRecord.entity).entity.version);
 }
 
 TEST_CASE("Entity Reuse", "[engine::ecs::entityRegistry]")
 {
     LITL::Engine::ECS::EntityRegistry::clear();
 
-    const auto entity0 = LITL::Engine::ECS::EntityRegistry::create();
-    const auto entity1 = LITL::Engine::ECS::EntityRegistry::create();
-    const auto entity2 = LITL::Engine::ECS::EntityRegistry::create();
+    const auto entityRecord0 = LITL::Engine::ECS::EntityRegistry::create();
+    const auto entityRecord1 = LITL::Engine::ECS::EntityRegistry::create();
+    const auto entityRecord2 = LITL::Engine::ECS::EntityRegistry::create();
 
-    LITL::Engine::ECS::EntityRegistry::destroy(entity0);
-    LITL::Engine::ECS::EntityRegistry::destroy(entity1);
-    LITL::Engine::ECS::EntityRegistry::destroy(entity2);
+    LITL::Engine::ECS::EntityRegistry::destroy(entityRecord0.entity);
+    LITL::Engine::ECS::EntityRegistry::destroy(entityRecord1.entity);
+    LITL::Engine::ECS::EntityRegistry::destroy(entityRecord2.entity);
 
-    const auto entity3 = LITL::Engine::ECS::EntityRegistry::create();
-    const auto entity4 = LITL::Engine::ECS::EntityRegistry::create();
-    const auto entity5 = LITL::Engine::ECS::EntityRegistry::create();
+    const auto entityRecord3 = LITL::Engine::ECS::EntityRegistry::create();
+    const auto entityRecord4 = LITL::Engine::ECS::EntityRegistry::create();
+    const auto entityRecord5 = LITL::Engine::ECS::EntityRegistry::create();
 
     // Make sure still considered dead even though the index is being reused
-    REQUIRE(LITL::Engine::ECS::EntityRegistry::isAlive(entity0) == false);
-    REQUIRE(LITL::Engine::ECS::EntityRegistry::isAlive(entity1) == false);
-    REQUIRE(LITL::Engine::ECS::EntityRegistry::isAlive(entity2) == false);
+    REQUIRE(LITL::Engine::ECS::EntityRegistry::isAlive(entityRecord0.entity) == false);
+    REQUIRE(LITL::Engine::ECS::EntityRegistry::isAlive(entityRecord1.entity) == false);
+    REQUIRE(LITL::Engine::ECS::EntityRegistry::isAlive(entityRecord2.entity) == false);
 
     // Indices are reused in reverse order in which they were freed.
-    REQUIRE(entity3.index == entity2.index);
-    REQUIRE(entity3.version > entity2.version);
+    REQUIRE(entityRecord3.entity.index == entityRecord2.entity.index);
+    REQUIRE(entityRecord3.entity.version > entityRecord2.entity.version);
 
-    REQUIRE(entity4.index == entity1.index);
-    REQUIRE(entity4.version > entity1.version);
+    REQUIRE(entityRecord4.entity.index == entityRecord1.entity.index);
+    REQUIRE(entityRecord4.entity.version > entityRecord1.entity.version);
 
-    REQUIRE(entity5.index == entity0.index);
-    REQUIRE(entity5.version > entity0.version);
+    REQUIRE(entityRecord5.entity.index == entityRecord0.entity.index);
+    REQUIRE(entityRecord5.entity.version > entityRecord0.entity.version);
 }
 
 TEST_CASE("Entity Bulk Create", "[engine::ecs::entityRegistry]")
 {
     LITL::Engine::ECS::EntityRegistry::clear();
 
-    const auto entities = LITL::Engine::ECS::EntityRegistry::createMany(10);
+    const auto entityRecords = LITL::Engine::ECS::EntityRegistry::createMany(10);
 
-    REQUIRE(entities.size() == 10);
+    REQUIRE(entityRecords.size() == 10);
 
     std::array<bool, 10> indexInUseMap;
     indexInUseMap.fill(false);
 
-    for (auto entity : entities)
+    for (auto entityRecord : entityRecords)
     {
-        REQUIRE(indexInUseMap[entity.index] == false);
-        indexInUseMap[entity.index] = true;
+        REQUIRE(indexInUseMap[entityRecord.entity.index] == false);
+        indexInUseMap[entityRecord.entity.index] = true;
     }
 }
 
@@ -81,12 +81,12 @@ TEST_CASE("Entity Bulk Destroy", "[engine::ecs::entityRegistry]")
 {
     LITL::Engine::ECS::EntityRegistry::clear();
 
-    const auto entities = LITL::Engine::ECS::EntityRegistry::createMany(10);
-    LITL::Engine::ECS::EntityRegistry::destroyMany(entities);
+    const auto entityRecords = LITL::Engine::ECS::EntityRegistry::createMany(10);
+    LITL::Engine::ECS::EntityRegistry::destroyMany(entityRecords);
 
-    for (auto entity : entities)
+    for (auto entityRecord : entityRecords)
     {
-        REQUIRE(LITL::Engine::ECS::EntityRegistry::isAlive(entity) == false);
+        REQUIRE(LITL::Engine::ECS::EntityRegistry::isAlive(entityRecord.entity) == false);
     }
 }
 
@@ -94,29 +94,29 @@ TEST_CASE("Entity Bulk Reuse", "[engine::ecs::entityRegistry]")
 {
     LITL::Engine::ECS::EntityRegistry::clear();
 
-    const auto entities = LITL::Engine::ECS::EntityRegistry::createMany(10);
-    LITL::Engine::ECS::EntityRegistry::destroyMany(entities);
-    const auto newEntities = LITL::Engine::ECS::EntityRegistry::createMany(5);
+    const auto entityRecords = LITL::Engine::ECS::EntityRegistry::createMany(10);
+    LITL::Engine::ECS::EntityRegistry::destroyMany(entityRecords);
+    const auto newEntityRecords = LITL::Engine::ECS::EntityRegistry::createMany(5);
 
-    for (auto i = 0; i < newEntities.size(); ++i)
+    for (auto i = 0; i < newEntityRecords.size(); ++i)
     {
-        const auto newEntity = newEntities[i];
-        const auto oldEntity = entities[entities.size() - i - 1];
+        const auto newEntityRecord = newEntityRecords[i];
+        const auto oldEntityRecord = entityRecords[entityRecords.size() - i - 1];
 
-        REQUIRE(newEntity.index == oldEntity.index);
-        REQUIRE(newEntity.version > oldEntity.version);
-        REQUIRE(LITL::Engine::ECS::EntityRegistry::isAlive(oldEntity) == false);
+        REQUIRE(newEntityRecord.entity.index == oldEntityRecord.entity.index);
+        REQUIRE(newEntityRecord.entity.version > oldEntityRecord.entity.version);
+        REQUIRE(LITL::Engine::ECS::EntityRegistry::isAlive(oldEntityRecord.entity) == false);
     }
 }
 
 TEST_CASE("Entity Bulk Destroy Initializer List", "[engine::ecs::entityRegistry]")
 {
     LITL::Engine::ECS::EntityRegistry::clear();
-    const auto entities = LITL::Engine::ECS::EntityRegistry::createMany(4);
-    LITL::Engine::ECS::EntityRegistry::destroyMany({ entities[0], entities[2], entities[3] });
+    const auto entityRecords = LITL::Engine::ECS::EntityRegistry::createMany(4);
+    LITL::Engine::ECS::EntityRegistry::destroyMany({ entityRecords[0], entityRecords[2], entityRecords[3] });
 
-    REQUIRE(LITL::Engine::ECS::EntityRegistry::isAlive(entities[0]) == false);
-    REQUIRE(LITL::Engine::ECS::EntityRegistry::isAlive(entities[1]) == true);
-    REQUIRE(LITL::Engine::ECS::EntityRegistry::isAlive(entities[2]) == false);
-    REQUIRE(LITL::Engine::ECS::EntityRegistry::isAlive(entities[3]) == false);
+    REQUIRE(LITL::Engine::ECS::EntityRegistry::isAlive(entityRecords[0].entity) == false);
+    REQUIRE(LITL::Engine::ECS::EntityRegistry::isAlive(entityRecords[1].entity) == true);
+    REQUIRE(LITL::Engine::ECS::EntityRegistry::isAlive(entityRecords[2].entity) == false);
+    REQUIRE(LITL::Engine::ECS::EntityRegistry::isAlive(entityRecords[3].entity) == false);
 }

@@ -84,7 +84,7 @@ namespace LITL::Engine::ECS
                 header->count++;
                 
                 // Finally remove the swapped entity from the other chunk
-                swapFromChunk->removeAndSwap(layout, swapFromChunkIndex, nullptr, 0);
+                return swapFromChunk->removeAndSwap(layout, swapFromChunkIndex, nullptr, 0);
             }
         }
         else

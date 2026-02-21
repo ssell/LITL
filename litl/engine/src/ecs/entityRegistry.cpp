@@ -12,12 +12,12 @@ namespace LITL::Engine::ECS
         /// <summary>
         /// Growing buffer of all entities.
         /// </summary>
-        Core::PagedVector<EntityRecord> entityRecords;
+Core::PagedVector<EntityRecord> entityRecords;
 
-        /// <summary>
-        /// Entities that have been "deleted" and their index has been freed up.
-        /// </summary>
-        std::vector<uint32_t> deadEntities;
+/// <summary>
+/// Entities that have been "deleted" and their index has been freed up.
+/// </summary>
+std::vector<uint32_t> deadEntities;
     };
 
     namespace
@@ -29,7 +29,7 @@ namespace LITL::Engine::ECS
         }
     }
 
-    Entity EntityRegistry::create() noexcept
+    EntityRecord EntityRegistry::create() noexcept
     {
         EntityRegistryState& registry = instance();
         uint32_t index = static_cast<uint32_t>(registry.entityRecords.size());
@@ -41,22 +41,21 @@ namespace LITL::Engine::ECS
         }
         else
         {
-            registry.entityRecords.emplace_back(EntityRecord{
-                .entity = Entity {
+            registry.entityRecords.emplace_back(
+                Entity{
                     .index = index,
                     .version = 1
                 },
-                .archetype = nullptr,
-                .archetypeIndex = index
-            });
+                nullptr,
+                index);
         }
 
-        return registry.entityRecords[index].entity;
+        return registry.entityRecords[index];
     }
 
-    std::vector<Entity> EntityRegistry::createMany(uint32_t count) noexcept
+    std::vector<EntityRecord> EntityRegistry::createMany(uint32_t count) noexcept
     {
-        std::vector<Entity> result;
+        std::vector<EntityRecord> result;
         result.reserve(count);
 
         EntityRegistryState& registry = instance();
@@ -78,18 +77,15 @@ namespace LITL::Engine::ECS
 
             for (auto index = startIndex; index < endIndex; ++index)
             {
-                Entity entity = {
-                    .index = index,
-                    .version = 1
-                };
+                registry.entityRecords.emplace_back(
+                    Entity{
+                        .index = index,
+                        .version = 1
+                    },
+                    nullptr,
+                    index);
 
-                registry.entityRecords.emplace_back(EntityRecord{
-                    .entity = entity,
-                    .archetype = nullptr,
-                    .archetypeIndex = index
-                    });
-
-                result.emplace_back(entity);
+                result.emplace_back(registry.entityRecords[index]);
             }
         }
         return result;
@@ -97,15 +93,25 @@ namespace LITL::Engine::ECS
 
     void EntityRegistry::destroy(Entity entity) noexcept
     {
-        auto& record = getRecord(entity);
+        if (!isAlive(entity))
+        {
+            return;
+        }
+
+        auto& record = instance().entityRecords[entity.index];
 
         if (record.entity.version == entity.version)
         {
-            ArchetypeRegistry::move(&record, record.archetype, nullptr);
+            ArchetypeRegistry::move(record, record.archetype, nullptr);
 
             record.entity.version++;    // increment on death to invalidate any lingering handles
             instance().deadEntities.emplace_back(record.entity.index);
         }
+    }
+
+    void EntityRegistry::destroy(EntityRecord entityRecord) noexcept
+    {
+        destroy(entityRecord.entity);
     }
 
     void EntityRegistry::destroyMany(std::initializer_list<Entity> entities) noexcept
@@ -113,6 +119,14 @@ namespace LITL::Engine::ECS
         for (auto entity : entities)
         {
             destroy(entity);
+        }
+    }
+
+    void EntityRegistry::destroyMany(std::initializer_list<EntityRecord> entityRecords) noexcept
+    {
+        for (auto entityRecord : entityRecords)
+        {
+            destroy(entityRecord.entity);
         }
     }
 
@@ -124,9 +138,33 @@ namespace LITL::Engine::ECS
         }
     }
 
-    EntityRecord& EntityRegistry::getRecord(Entity entity) noexcept
+    void EntityRegistry::destroyMany(std::span<EntityRecord const> entityRecords) noexcept
+    {
+        for (auto i = 0; i < entityRecords.size(); ++i)
+        {
+            destroy(entityRecords[i].entity);
+        }
+    }
+
+    EntityRecord EntityRegistry::getRecord(Entity entity) noexcept
     {
         return instance().entityRecords[entity.index];
+    }
+
+    void EntityRegistry::updateRecordArchetype(Entity entity, Archetype* archetype, uint32_t archetypeIndex) noexcept
+    {
+        if (isAlive(entity))
+        {
+            instance().entityRecords[entity.index].update(archetype, archetypeIndex);
+        }
+    }
+
+    void EntityRegistry::updateRecordArchetypeIndex(Entity entity, uint32_t archetypeIndex) noexcept
+    {
+        if (isAlive(entity))
+        {
+            instance().entityRecords[entity.index].archetypeIndex = archetypeIndex;
+        }
     }
 
     bool EntityRegistry::isAlive(Entity entity) noexcept

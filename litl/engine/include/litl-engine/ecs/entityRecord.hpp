@@ -8,6 +8,7 @@
 namespace LITL::Engine::ECS
 {
     class Archetype;
+    class EntityRegistry;
 
     /// <summary>
     /// big-ol' todo
@@ -33,6 +34,16 @@ namespace LITL::Engine::ECS
         /// The index into the Archetype.
         /// </summary>
         uint32_t archetypeIndex;
+
+    private:
+
+        friend class EntityRegistry;
+
+        void update(Archetype* pArchetype, uint32_t index)
+        {
+            archetype = pArchetype;
+            archetypeIndex = index;
+        }
     };
 }
 

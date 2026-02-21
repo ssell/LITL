@@ -36,8 +36,8 @@ namespace LITL::Engine::ECS
         uint32_t getNextIndex() noexcept;
         bool hasComponent(ComponentTypeId component, size_t& index);
 
-        void remove(EntityRecord* record) noexcept;
-        void move(EntityRecord* record, Archetype* to) noexcept;
+        void remove(EntityRecord const& record) noexcept;
+        void move(EntityRecord const& record, Archetype* to) noexcept;
 
         const uint32_t m_registryIndex;
         const uint64_t m_componentHash;

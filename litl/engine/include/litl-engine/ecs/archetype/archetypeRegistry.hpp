@@ -63,7 +63,7 @@ namespace LITL::Engine::ECS
         /// <param name="record"></param>
         /// <param name="from"></param>
         /// <param name="to"></param>
-        static void move(EntityRecord* record, Archetype* from, Archetype* to) noexcept;
+        static void move(EntityRecord const& record, Archetype* from, Archetype* to) noexcept;
     };
 }
 

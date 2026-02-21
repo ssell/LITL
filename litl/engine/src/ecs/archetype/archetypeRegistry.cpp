@@ -9,6 +9,7 @@
 #include "litl-core/hash.hpp"
 #include "litl-core/containers/flatHashMap.hpp"
 #include "litl-engine/ecs/archetype/archetypeRegistry.hpp"
+#include "litl-engine/ecs/entityRegistry.hpp"
 
 namespace LITL::Engine::ECS
 {
@@ -97,7 +98,7 @@ namespace LITL::Engine::ECS
         return nullptr;
     }
 
-    void ArchetypeRegistry::move(EntityRecord* record, Archetype* from, Archetype* to) noexcept
+    void ArchetypeRegistry::move(EntityRecord const& record, Archetype* from, Archetype* to) noexcept
     {
         if ((from != nullptr) && (to != nullptr))
         {
@@ -107,7 +108,5 @@ namespace LITL::Engine::ECS
         {
             from->remove(record);
         }
-
-        record->archetype = to;
     }
 }
