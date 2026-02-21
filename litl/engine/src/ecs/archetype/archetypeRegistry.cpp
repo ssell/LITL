@@ -9,7 +9,6 @@
 #include "litl-core/hash.hpp"
 #include "litl-core/containers/flatHashMap.hpp"
 #include "litl-engine/ecs/archetype/archetypeRegistry.hpp"
-#include "litl-engine/ecs/entityRegistry.hpp"
 
 namespace LITL::Engine::ECS
 {
@@ -29,6 +28,37 @@ namespace LITL::Engine::ECS
             static ArchetypeRegistryState registry;
             return registry;
         }
+    }
+
+    Archetype* ArchetypeRegistry::Empty() noexcept
+    {
+        static Archetype* EmptyArchetype = buildArchetype(0, {});
+        return EmptyArchetype;
+    }
+
+    Archetype* ArchetypeRegistry::buildArchetype(uint64_t const archetypeHash, std::vector<ComponentTypeId> const& componentTypeIds) noexcept
+    {
+        auto& registry = instance();
+
+        const auto newArchetypeIndex = static_cast<uint32_t>(registry.archetypes.size());
+        const auto archetype = new Archetype(newArchetypeIndex, archetypeHash);
+
+        populateChunkLayout(&archetype->m_chunkLayout, componentTypeIds);
+
+        for (auto component : archetype->m_chunkLayout.componentOrder)
+        {
+            if (component == nullptr)
+            {
+                break;
+            }
+
+            archetype->m_components.emplace_back(component->id);
+        }
+
+        registry.archetypes.push_back(std::unique_ptr<Archetype>(archetype));
+        registry.archetypeMap.insert(archetypeHash, newArchetypeIndex);
+
+        return registry.archetypes[newArchetypeIndex].get();
     }
 
     Archetype* ArchetypeRegistry::getByComponents(std::vector<ComponentTypeId> componentTypeIds) noexcept
@@ -51,25 +81,7 @@ namespace LITL::Engine::ECS
             }
             else
             {
-                const auto newArchetypeIndex = static_cast<uint32_t>(registry.archetypes.size());
-                const auto archetype = new Archetype(newArchetypeIndex, archetypeHash);
-
-                populateChunkLayout(&archetype->m_chunkLayout, componentTypeIds);
-
-                for (auto component : archetype->m_chunkLayout.componentOrder)
-                {
-                    if (component == nullptr)
-                    {
-                        break;
-                    }
-
-                    archetype->m_components.emplace_back(component->id);
-                }
-
-                registry.archetypes.push_back(std::unique_ptr<Archetype>(archetype));
-                registry.archetypeMap.insert(archetypeHash, newArchetypeIndex);
-
-                return registry.archetypes[newArchetypeIndex].get();
+                return buildArchetype(archetypeHash, componentTypeIds);
             }
         }
     }
@@ -100,13 +112,10 @@ namespace LITL::Engine::ECS
 
     void ArchetypeRegistry::move(EntityRecord const& record, Archetype* from, Archetype* to) noexcept
     {
-        if ((from != nullptr) && (to != nullptr))
-        {
-            from->move(record, to);
-        }
-        else if (from != nullptr)
-        {
-            from->remove(record);
-        }
+        // Every entity should belong to an archetype. If the entity is empty (or dead) it should be in the Empty archetype (ArchetypeRegistry::Empty())
+        assert(from != nullptr);
+        assert(to != nullptr);
+
+        from->move(record, to);
     }
 }

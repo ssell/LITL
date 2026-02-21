@@ -44,6 +44,7 @@ namespace LITL::Engine::ECS
         ChunkEntities* getEntities() noexcept;
         std::byte* data() noexcept;
 
+        void add(ChunkLayout const& layout, uint32_t addAtIndex) noexcept;
         std::optional<Entity> removeAndSwap(ChunkLayout const& layout, uint32_t removeAtIndex, Chunk* swapFromChunk, uint32_t swapFromChunkIndex) noexcept;
 
     protected:

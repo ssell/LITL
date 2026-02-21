@@ -12,12 +12,12 @@ namespace LITL::Engine::ECS
         /// <summary>
         /// Growing buffer of all entities.
         /// </summary>
-Core::PagedVector<EntityRecord> entityRecords;
+        Core::PagedVector<EntityRecord> entityRecords;
 
-/// <summary>
-/// Entities that have been "deleted" and their index has been freed up.
-/// </summary>
-std::vector<uint32_t> deadEntities;
+        /// <summary>
+        /// Entities that have been "deleted" and their index has been freed up.
+        /// </summary>
+        std::vector<uint32_t> deadEntities;
     };
 
     namespace
@@ -46,7 +46,7 @@ std::vector<uint32_t> deadEntities;
                     .index = index,
                     .version = 1
                 },
-                nullptr,
+                ArchetypeRegistry::Empty(),
                 index);
         }
 
@@ -82,7 +82,7 @@ std::vector<uint32_t> deadEntities;
                         .index = index,
                         .version = 1
                     },
-                    nullptr,
+                    ArchetypeRegistry::Empty(),
                     index);
 
                 result.emplace_back(registry.entityRecords[index]);
@@ -102,7 +102,7 @@ std::vector<uint32_t> deadEntities;
 
         if (record.entity.version == entity.version)
         {
-            ArchetypeRegistry::move(record, record.archetype, nullptr);
+            ArchetypeRegistry::move(record, record.archetype, ArchetypeRegistry::Empty());
 
             record.entity.version++;    // increment on death to invalidate any lingering handles
             instance().deadEntities.emplace_back(record.entity.index);

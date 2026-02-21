@@ -67,7 +67,7 @@ namespace LITL::Engine::ECS
         }
     }
 
-    void populateChunkLayout(ChunkLayout* layout, std::span<ComponentTypeId> orderedComponentTypes)
+    void populateChunkLayout(ChunkLayout* layout, std::span<ComponentTypeId const> orderedComponentTypes)
     {
         for (size_t i = 0; i < orderedComponentTypes.size(); ++i)
         {

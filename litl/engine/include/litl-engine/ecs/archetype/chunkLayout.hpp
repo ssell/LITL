@@ -87,7 +87,7 @@ namespace LITL::Engine::ECS
     /// </summary>
     /// <param name="layout"></param>
     /// <param name="orderedComponentTypes"></param>
-    void populateChunkLayout(ChunkLayout* layout, std::span<ComponentTypeId> orderedComponentTypes);
+    void populateChunkLayout(ChunkLayout* layout, std::span<ComponentTypeId const> orderedComponentTypes);
 
     /// <summary>
     /// Fills out the ChunkLayout to fit the provided component types.

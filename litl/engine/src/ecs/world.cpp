@@ -26,7 +26,7 @@ namespace LITL::Engine::ECS
     Entity World::createImmediate() const noexcept
     {
         auto entityRecord = EntityRegistry::create();
-        ArchetypeRegistry::move(entityRecord, nullptr, nullptr);///1
+        ArchetypeRegistry::Empty()->add(entityRecord);
         return entityRecord.entity;
     }
 

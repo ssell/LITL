@@ -22,12 +22,18 @@ namespace LITL::Engine::ECS
     public:
 
         /// <summary>
+        /// Returns the empty archetype.
+        /// </summary>
+        /// <returns></returns>
+        static Archetype* Empty() noexcept;
+
+        /// <summary>
         /// Retrieves (or creates) the archetype matching the specified component set.
         /// </summary>
         /// <typeparam name="...ComponentTypes"></typeparam>
         /// <returns></returns>
         template<typename... ComponentTypes>
-        static Archetype const* get() noexcept
+        static Archetype* get() noexcept
         {
             std::vector<ComponentTypeId> componentTypeIds;
             componentTypeIds.reserve(sizeof...(ComponentTypes));
@@ -64,6 +70,10 @@ namespace LITL::Engine::ECS
         /// <param name="from"></param>
         /// <param name="to"></param>
         static void move(EntityRecord const& record, Archetype* from, Archetype* to) noexcept;
+
+    private:
+
+        static Archetype* buildArchetype(uint64_t archetypeHash, std::vector<ComponentTypeId> const& componentTypeIds) noexcept;
     };
 }
 

@@ -13,6 +13,7 @@
 namespace LITL::Engine::ECS
 {
     class ArchetypeRegistry;
+    class World;
 
     /// <summary>
     /// An Archetype is an ordered component set. All entities fit into exactly one Archetype.
@@ -36,6 +37,7 @@ namespace LITL::Engine::ECS
         uint32_t getNextIndex() noexcept;
         bool hasComponent(ComponentTypeId component, size_t& index);
 
+        void add(EntityRecord const& record) noexcept;
         void remove(EntityRecord const& record) noexcept;
         void move(EntityRecord const& record, Archetype* to) noexcept;
 
@@ -48,6 +50,7 @@ namespace LITL::Engine::ECS
         Core::PagedVector<Chunk> m_chunks;
 
         friend class ArchetypeRegistry;
+        friend class World;
     };
 }
 
