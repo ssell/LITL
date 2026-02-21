@@ -23,14 +23,19 @@ namespace LITL::Engine::ECS
     {
     public:
 
-        static Entity create() noexcept;
-        static std::vector<Entity> createMany(uint32_t count) noexcept;
+        static EntityRecord create() noexcept;
+        static std::vector<EntityRecord> createMany(uint32_t count) noexcept;
 
         static void destroy(Entity entity) noexcept;
+        static void destroy(EntityRecord entityRecord) noexcept;
         static void destroyMany(std::initializer_list<Entity> entities) noexcept;
+        static void destroyMany(std::initializer_list<EntityRecord> entityRecords) noexcept;
         static void destroyMany(std::span<Entity const> entities) noexcept;
+        static void destroyMany(std::span<EntityRecord const> entityRecords) noexcept;
 
-        static EntityRecord& getRecord(Entity entity) noexcept;
+        static EntityRecord getRecord(Entity entity) noexcept;
+        static void updateRecordArchetype(Entity entity, Archetype* archetype, uint32_t archetypeIndex) noexcept;
+        static void updateRecordArchetypeIndex(Entity entity, uint32_t archetypeIndex) noexcept;
         static bool isAlive(Entity entity) noexcept;
 
         /// <summary>

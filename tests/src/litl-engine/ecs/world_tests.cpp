@@ -23,7 +23,6 @@ TEST_CASE("Empty Entity Creation and Destructon", "[engine::ecs::world]")
     REQUIRE(world.isAlive(entity) == false);
 }
 
-/*
 TEST_CASE("Entity Add Component", "[engine::ecs::world]")
 {
     LITL::Engine::ECS::World world;
@@ -43,4 +42,3 @@ TEST_CASE("Entity Add Component", "[engine::ecs::world]")
 
     REQUIRE(world.componentCount(entity) == 2);
 }
-*/
