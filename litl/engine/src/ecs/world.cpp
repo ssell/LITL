@@ -99,7 +99,18 @@ namespace LITL::Engine::ECS
             return;
         }
 
-        // ... todo ...
+        // Get the current archetype and the archetype we will be moving the entity into.
+        // Remember, adding/removing components is simply moving from one archetype to another.
+        auto entityRecord = EntityRegistry::getRecord(entity);
+        auto entityCurrentArchetype = entityRecord.archetype;
+
+        std::vector<ComponentTypeId> desiredComponents(entityCurrentArchetype->componentTypes());
+        desiredComponents.insert(desiredComponents.end(), components.begin(), components.end());
+
+        auto entityNewArchetype = ArchetypeRegistry::getByComponents(desiredComponents);
+
+        // Move
+        ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
     }
 
     // -------------------------------------------------------------------------------------
@@ -134,6 +145,23 @@ namespace LITL::Engine::ECS
             return;
         }
 
-        // ... todo ...
+        // Get the current archetype and the archetype we will be moving the entity into.
+        // Remember, adding/removing components is simply moving from one archetype to another.
+        auto entityRecord = EntityRegistry::getRecord(entity);
+        auto entityCurrentArchetype = entityRecord.archetype;
+
+        std::vector<ComponentTypeId> desiredComponents(entityCurrentArchetype->componentTypes());
+        desiredComponents.erase(
+            std::remove_if(
+                desiredComponents.begin(),
+                desiredComponents.end(),
+                [&](ComponentTypeId componentType) { return std::find(components.begin(), components.end(), componentType) != components.end(); }
+            ),
+            desiredComponents.end());
+
+        auto entityNewArchetype = ArchetypeRegistry::getByComponents(desiredComponents);
+
+        // Move
+        ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
     }
 }
