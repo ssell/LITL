@@ -21,6 +21,7 @@ TEST_CASE("Empty Entity Creation and Destructon", "[engine::ecs::world]")
     world.destroyImmediate(entity);
 
     REQUIRE(world.isAlive(entity) == false);
+
 }
 
 TEST_CASE("Entity Add Component", "[engine::ecs::world]")
