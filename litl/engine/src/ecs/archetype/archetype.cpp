@@ -45,11 +45,17 @@ namespace LITL::Engine::ECS
 
     uint32_t Archetype::getNextIndex() noexcept
     {
-        if (((m_entityCount == 0) && (m_chunks.size() == 0)) ||         // First entity in this archetype. Allocate the first chunk
-            (m_entityCount % m_chunkLayout.entityCapacity == 0))  // The last chunk is currently full.
+        // First entity in this archetype. Allocate the first chunk
+        if ((m_entityCount == 0) && (m_chunks.size() == 0))
         {
-            // to do this is broken booooiii
-          //  m_chunks.push_back(Chunk(m_chunks.size(), &m_chunkLayout));
+            m_chunks.emplace_back(m_chunks.size(), &m_chunkLayout);
+            return 0;
+        }
+
+        // The last chunk is currently full.
+        if (m_entityCount % m_chunkLayout.entityCapacity == 0)
+        {
+            m_chunks.emplace_back(m_chunks.size(), &m_chunkLayout);
         }
 
         return m_entityCount + 1;
@@ -77,6 +83,7 @@ namespace LITL::Engine::ECS
 
        m_chunks[chunkIndex].add(m_chunkLayout, chunkElementIndex);
 
+       m_entityCount++;
        EntityRegistry::updateRecordArchetype(record.entity, this, archetypeIndex);
     }
 
@@ -132,34 +139,50 @@ namespace LITL::Engine::ECS
         auto toChunkData = to->m_chunks[toChunkIndex].data();
 
         // Move entity
-        auto fromChunkEntityAddr = (toChunkData + to->m_chunkLayout.entityArrayOffset + (toChunkElementIndex * sizeof(Entity)));
+        auto fromChunkEntityAddr = (fromChunkData + m_chunkLayout.entityArrayOffset + (toChunkElementIndex * sizeof(Entity)));
         auto toChunkEntityAddr = (toChunkData + to->m_chunkLayout.entityArrayOffset + (toChunkElementIndex * sizeof(Entity)));
         new (toChunkEntityAddr) Entity(std::move(*reinterpret_cast<Entity*>(fromChunkEntityAddr)));
         
-        // Move components
+        // Move components into the new archetype AND instantiate any missing ones
+        ComponentDescriptor const* component = nullptr;
+        std::byte* componentAddress = nullptr;
+        size_t componentIndex = 0;
+
         for (auto i = 0; i < to->m_chunkLayout.componentTypeCount; ++i)
         {
             // A component in the new archetype.
-            auto toComponent = to->m_chunkLayout.componentOrder[i];
-            auto toComponentAddress = (toChunkData + to->m_chunkLayout.componentOffsets[i] + (toChunkElementIndex * toComponent->size));
-            auto fromComponentIndex = static_cast<size_t>(0);
+            component = to->m_chunkLayout.componentOrder[i];
+            componentAddress = (toChunkData + to->m_chunkLayout.componentOffsets[i] + (toChunkElementIndex * component->size));
+            componentIndex = static_cast<size_t>(0);
 
             // Does this entity already have this component?
-            if (hasComponent(toComponent->id, fromComponentIndex))
+            if (hasComponent(component->id, componentIndex))
             {
-                auto fromComponentAddress = (fromChunkData + m_chunkLayout.componentOffsets[fromComponentIndex] + (fromChunkElementIndex * toComponent->size));
-                toComponent->move(fromComponentAddress, toComponentAddress);
+                auto fromComponentAddress = (fromChunkData + m_chunkLayout.componentOffsets[componentIndex] + (fromChunkElementIndex * component->size));
+                component->move(fromComponentAddress, componentAddress);
             }
             // Otherwise instantiate a new component
             else
             {
-                toComponent->build(toComponentAddress);
+                component->build(componentAddress);
+            }
+        }
+
+        // Destroy any components not making it into the new archetype (make sure the destructors are called)
+        for (auto i = 0; i < m_chunkLayout.componentTypeCount; ++i)
+        {
+            component = m_chunkLayout.componentOrder[i];
+            componentAddress = (fromChunkData + m_chunkLayout.componentOffsets[i] + (fromChunkElementIndex * component->size));
+
+            if (!to->hasComponent(component->id, componentIndex))
+            {
+                component->destroy(componentAddress);
             }
         }
         
         to->m_entityCount++;
 
-        // Remove the entity from this archetype
+        // Remove the entity from this archetype (this call m_entityCount--)
         remove(record);
 
         // Update it's record to point to it's new archetype

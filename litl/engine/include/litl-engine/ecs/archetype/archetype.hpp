@@ -37,8 +37,24 @@ namespace LITL::Engine::ECS
         uint32_t getNextIndex() noexcept;
         bool hasComponent(ComponentTypeId component, size_t& index);
 
+        /// <summary>
+        /// Adds a new entity to this archetype. Used for when the entity is first being created for it's version.
+        /// This will construct all of the components.
+        /// </summary>
+        /// <param name="record"></param>
         void add(EntityRecord const& record) noexcept;
+
+        /// <summary>
+        /// Removes an entity from this archetype.
+        /// </summary>
+        /// <param name="record"></param>
         void remove(EntityRecord const& record) noexcept;
+
+        /// <summary>
+        /// Transfers the entity out of this archetype into the specified archetype.
+        /// </summary>
+        /// <param name="record"></param>
+        /// <param name="to"></param>
         void move(EntityRecord const& record, Archetype* to) noexcept;
 
         const uint32_t m_registryIndex;
