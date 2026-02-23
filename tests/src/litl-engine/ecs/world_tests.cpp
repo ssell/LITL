@@ -78,3 +78,49 @@ TEST_CASE("Entity Add/Remove Component", "[engine::ecs::world]")
     REQUIRE(fooBarArchetype->entityCount() == 0);
     REQUIRE(world.isAlive(entity) == false);
 }
+
+TEST_CASE("Entity Add / Remove Components", "[engine::ecs::world]")
+{
+    LITL::Engine::ECS::Archetype* fooBarArchetype = LITL::Engine::ECS::ArchetypeRegistry::get<Foo, Bar>();
+
+    LITL::Engine::ECS::World world;
+    LITL::Engine::ECS::Entity entity = world.createImmediate();
+
+    world.addComponentsImmediate<Foo, Bar>(entity);
+
+    REQUIRE(fooBarArchetype->entityCount() == 1);
+    REQUIRE(world.componentCount(entity) == 2);
+
+    world.addComponentsImmediate<Bar, Bar, Foo, Foo>(entity);
+
+    REQUIRE(fooBarArchetype->entityCount() == 1);
+    REQUIRE(world.componentCount(entity) == 2);
+
+    world.removeComponentsImmediate<Foo, Bar>(entity);
+
+    REQUIRE(fooBarArchetype->entityCount() == 0);
+    REQUIRE(world.componentCount(entity) == 0);
+
+    world.destroyImmediate(entity);
+
+    REQUIRE(fooBarArchetype->entityCount() == 0);
+    REQUIRE(world.isAlive(entity) == false);
+}
+
+TEST_CASE("Destroy Entity with Components", "[engine::ecs::world]")
+{
+    LITL::Engine::ECS::Archetype* fooBarArchetype = LITL::Engine::ECS::ArchetypeRegistry::get<Foo, Bar>();
+
+    LITL::Engine::ECS::World world;
+    LITL::Engine::ECS::Entity entity = world.createImmediate();
+
+    world.addComponentsImmediate<Foo, Bar>(entity);
+
+    REQUIRE(fooBarArchetype->entityCount() == 1);
+    REQUIRE(world.componentCount(entity) == 2);
+
+    world.destroyImmediate(entity);
+
+    REQUIRE(fooBarArchetype->entityCount() == 0);
+    REQUIRE(world.isAlive(entity) == false);
+}
