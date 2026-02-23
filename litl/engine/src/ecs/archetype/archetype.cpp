@@ -45,6 +45,11 @@ namespace LITL::Engine::ECS
         return static_cast<uint32_t>(m_components.size());
     }
 
+    uint32_t Archetype::entityCount() const noexcept
+    {
+        return m_entityCount;
+    }
+
     uint32_t Archetype::getNextIndex() noexcept
     {
         // First entity in this archetype. Allocate the first chunk
@@ -169,6 +174,8 @@ namespace LITL::Engine::ECS
                 component->build(componentAddress);
             }
         }
+
+        to->m_chunks[toChunkIndex].incrementEntityCount();
 
         // Destroy any components not making it into the new archetype (make sure the destructors are called)
         for (auto i = 0; i < m_chunkLayout.componentTypeCount; ++i)

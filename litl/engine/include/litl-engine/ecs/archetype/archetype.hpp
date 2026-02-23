@@ -29,6 +29,7 @@ namespace LITL::Engine::ECS
         ChunkLayout const* layout() const noexcept;
         std::vector<ComponentTypeId> const& componentTypes() const noexcept;
         uint32_t componentCount() const noexcept;
+        uint32_t entityCount() const noexcept;
 
     protected:
 
