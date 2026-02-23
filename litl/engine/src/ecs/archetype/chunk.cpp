@@ -36,12 +36,21 @@ namespace LITL::Engine::ECS
         return m_data;
     }
 
+
+    void Chunk::incrementEntityCount() noexcept
+    {
+        getHeader()->count++;
+    }
+
+    void Chunk::decrementEntityCount() noexcept
+    {
+        getHeader()->count--;
+    }
+
     void Chunk::add(ChunkLayout const& layout, uint32_t addAtIndex) noexcept
     {
-        auto header = getHeader();
         auto to = data();
 
-        // ? construct_at or memcpy here ?
         std::construct_at(to + layout.entityArrayOffset + (sizeof(Entity) * addAtIndex));
 
         for (auto i = 0; i < layout.componentTypeCount; ++i)
@@ -50,15 +59,13 @@ namespace LITL::Engine::ECS
             component->build(to + layout.componentOffsets[i] + (component->size * addAtIndex));
         }
 
-        header->count++;
+        incrementEntityCount();
     }
 
     std::optional<Entity> Chunk::removeAndSwap(ChunkLayout const& layout, uint32_t const removeAtIndex, Chunk* swapFromChunk, uint32_t const swapFromChunkIndex) noexcept
     {
-        auto header = getHeader();
-
         memset(m_data + layout.entityArrayOffset + (sizeof(Entity) * removeAtIndex), 0, sizeof(Entity));
-        header->count--;
+        decrementEntityCount();
 
         // Move the entity in from the other chunk
         if (swapFromChunk != nullptr)
@@ -90,7 +97,7 @@ namespace LITL::Engine::ECS
                         to + layout.componentOffsets[i] + (component->size * removeAtIndex));
                 }
 
-                header->count++;
+                incrementEntityCount();
                 
                 // Finally remove the swapped entity from the other chunk
                 return swapFromChunk->removeAndSwap(layout, swapFromChunkIndex, nullptr, 0);
