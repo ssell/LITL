@@ -46,7 +46,7 @@ namespace LITL::Engine::ECS
     uint32_t Archetype::getNextIndex() noexcept
     {
         if (((m_entityCount == 0) && (m_chunks.size() == 0)) ||         // First entity in this archetype. Allocate the first chunk
-            (m_entityCount % m_chunkLayout.chunkElementCapacity == 0))  // The last chunk is currently full.
+            (m_entityCount % m_chunkLayout.entityCapacity == 0))  // The last chunk is currently full.
         {
             // to do this is broken booooiii
           //  m_chunks.push_back(Chunk(m_chunks.size(), &m_chunkLayout));
@@ -72,8 +72,8 @@ namespace LITL::Engine::ECS
     void Archetype::add(EntityRecord const& record) noexcept
     {
        const auto archetypeIndex = getNextIndex();
-       const auto chunkIndex = archetypeIndex / m_chunkLayout.chunkElementCapacity;
-       const auto chunkElementIndex = archetypeIndex % m_chunkLayout.chunkElementCapacity;
+       const auto chunkIndex = archetypeIndex / m_chunkLayout.entityCapacity;
+       const auto chunkElementIndex = archetypeIndex % m_chunkLayout.entityCapacity;
 
        m_chunks[chunkIndex].add(m_chunkLayout, chunkElementIndex);
 
@@ -89,8 +89,8 @@ namespace LITL::Engine::ECS
 
         // Get the chunk and element index for where we are removing
         const auto removeFromArchetypeIndex = record.archetypeIndex;
-        const auto removeFromChunkIndex = record.archetypeIndex / m_chunkLayout.chunkElementCapacity;
-        const auto removeFromChunkElementIndex = record.archetypeIndex % m_chunkLayout.chunkElementCapacity;
+        const auto removeFromChunkIndex = record.archetypeIndex / m_chunkLayout.entityCapacity;
+        const auto removeFromChunkElementIndex = record.archetypeIndex % m_chunkLayout.entityCapacity;
 
         // Get the chunk and element index for the entity we swapping into our newly opened spot.
         const auto swapWithChunkIndex = m_chunks.size() - 1;
@@ -120,13 +120,13 @@ namespace LITL::Engine::ECS
 
         // Get the chunk and element index for where we are removing
         const auto fromArchetypeIndex = record.archetypeIndex;
-        const auto fromChunkIndex = fromArchetypeIndex / m_chunkLayout.chunkElementCapacity;
-        const auto fromChunkElementIndex = fromArchetypeIndex % m_chunkLayout.chunkElementCapacity;
+        const auto fromChunkIndex = fromArchetypeIndex / m_chunkLayout.entityCapacity;
+        const auto fromChunkElementIndex = fromArchetypeIndex % m_chunkLayout.entityCapacity;
 
         // Get the chunk and element index for where we are adding to
         const auto toArchetypeIndex = to->getNextIndex();
-        const auto toChunkIndex = toArchetypeIndex / to->m_chunkLayout.chunkElementCapacity;
-        const auto toChunkElementIndex = toArchetypeIndex % m_chunkLayout.chunkElementCapacity;
+        const auto toChunkIndex = toArchetypeIndex / to->m_chunkLayout.entityCapacity;
+        const auto toChunkElementIndex = toArchetypeIndex % m_chunkLayout.entityCapacity;
 
         auto fromChunkData = m_chunks[fromChunkIndex].data();
         auto toChunkData = to->m_chunks[toChunkIndex].data();
