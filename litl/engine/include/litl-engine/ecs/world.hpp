@@ -99,11 +99,70 @@ namespace LITL::Engine::ECS
         template<typename... ComponentTypes>
         void addComponentsImmediate(Entity entity) const noexcept
         {
+            static_assert((std::is_trivially_copyable_v<ComponentTypes> && ...));
+            static_assert((std::is_standard_layout_v<ComponentTypes> && ...));
+
             std::vector<ComponentTypeId> componentTypeIds;
             componentTypeIds.reserve(sizeof...(ComponentTypes));
             (foldComponentTypesIntoVector<ComponentTypes>(componentTypeIds), ...);
 
             addComponentsImmediate(entity, componentTypeIds);
+        }
+
+        /// <summary>
+        /// Immediately removes the specified component from the Entity.
+        /// 
+        /// It is recommended to use an ECS Command Buffer instead. The use of this, 
+        /// or other *Immediate methods, should be limited to setting up simple demos, tests, etc.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="component"></param>
+        void removeComponentImmediate(Entity entity, ComponentTypeId component) const noexcept;
+
+        /// <summary>
+        /// Immediately removes the specified component from the Entity.
+        /// 
+        /// It is recommended to use an ECS Command Buffer instead. The use of this, 
+        /// or other *Immediate methods, should be limited to setting up simple demos, tests, etc.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="entity"></param>
+        template<typename T>
+        void removeComponentImmediate(Entity entity) const noexcept
+        {
+            static_assert(std::is_trivially_copyable_v<T> && std::is_standard_layout_v<T>);
+            removeComponentImmediate(entity, ComponentDescriptor::get<T>()->id);
+        }
+
+        /// <summary>
+        /// Immediately removed the specified components from the Entity.
+        /// 
+        /// It is recommended to use an ECS Command Buffer instead. The use of this, 
+        /// or other *Immediate methods, should be limited to setting up simple demos, tests, etc.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="components"></param>
+        void removeComponentsImmediate(Entity entity, std::vector<ComponentTypeId>& components) const noexcept;
+
+        /// <summary>
+        /// Immediately removed the specified components from the Entity.
+        /// 
+        /// It is recommended to use an ECS Command Buffer instead. The use of this, 
+        /// or other *Immediate methods, should be limited to setting up simple demos, tests, etc.
+        /// </summary>
+        /// <typeparam name="...ComponentTypes"></typeparam>
+        /// <param name="entity"></param>
+        template<typename... ComponentTypes>
+        void removeComponentsImmediate(Entity entity) const noexcept
+        {
+            static_assert((std::is_trivially_copyable_v<ComponentTypes> && ...));
+            static_assert((std::is_standard_layout_v<ComponentTypes> && ...));
+
+            std::vector<ComponentTypeId> componentTypeIds;
+            componentTypeIds.reserve(sizeof...(ComponentTypes));
+            (foldComponentTypesIntoVector<ComponentTypes>(componentTypeIds), ...);
+
+            removeComponentsImmediate(entity, componentTypeIds);
         }
 
     protected:

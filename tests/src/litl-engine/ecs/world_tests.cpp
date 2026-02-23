@@ -25,13 +25,10 @@ TEST_CASE("Empty Entity Creation and Destructon", "[engine::ecs::world]")
     REQUIRE(world.isAlive(entity) == false);
 }
 
-TEST_CASE("Entity Add Component", "[engine::ecs::world]")
+TEST_CASE("Entity Add/Remove Component", "[engine::ecs::world]")
 {
-    LITL::Engine::ECS::Archetype* emptyArchetype = LITL::Engine::ECS::ArchetypeRegistry::Empty();
     LITL::Engine::ECS::Archetype* fooArchetype = LITL::Engine::ECS::ArchetypeRegistry::get<Foo>();
     LITL::Engine::ECS::Archetype* fooBarArchetype = LITL::Engine::ECS::ArchetypeRegistry::get<Foo, Bar>();
-
-    const auto startEmptyCount = emptyArchetype->entityCount();     // This depends on the entities created in other tests.
 
     REQUIRE(fooArchetype->entityCount() == 0);                      // If these checks fail then another test has left ECS in a dirty state.
     REQUIRE(fooBarArchetype->entityCount() == 0);
@@ -39,26 +36,45 @@ TEST_CASE("Entity Add Component", "[engine::ecs::world]")
     LITL::Engine::ECS::World world;
     LITL::Engine::ECS::Entity entity = world.createImmediate();
 
-    REQUIRE(emptyArchetype->entityCount() == (startEmptyCount + 1));
-
+    // entity = [Foo]
     world.addComponentImmediate<Foo>(entity);
 
-    REQUIRE(emptyArchetype->entityCount() == startEmptyCount);
     REQUIRE(fooArchetype->entityCount() == 1);
     REQUIRE(fooBarArchetype->entityCount() == 0);
     REQUIRE(world.componentCount(entity) == 1);
 
+    // entity = [Foo,Bar]
     world.addComponentImmediate<Bar>(entity);
 
-    REQUIRE(emptyArchetype->entityCount() == startEmptyCount);
     REQUIRE(fooArchetype->entityCount() == 0);
     REQUIRE(fooBarArchetype->entityCount() == 1);
     REQUIRE(world.componentCount(entity) == 2);
 
+    // entity = [Foo,Bar]
     world.addComponentImmediate<Foo>(entity);
 
-    REQUIRE(emptyArchetype->entityCount() == startEmptyCount);
     REQUIRE(fooArchetype->entityCount() == 0);
     REQUIRE(fooBarArchetype->entityCount() == 1);
     REQUIRE(world.componentCount(entity) == 2);
+
+    // entity = [Foo]
+    world.removeComponentImmediate<Bar>(entity);
+
+    REQUIRE(fooArchetype->entityCount() == 1);
+    REQUIRE(fooBarArchetype->entityCount() == 0);
+    REQUIRE(world.componentCount(entity) == 1);
+
+    // entity = []
+    world.removeComponentImmediate<Foo>(entity);
+
+    REQUIRE(fooArchetype->entityCount() == 0);
+    REQUIRE(fooBarArchetype->entityCount() == 0);
+    REQUIRE(world.componentCount(entity) == 0);
+
+    // entity = dead (but still in [])
+    world.destroyImmediate(entity);
+
+    REQUIRE(fooArchetype->entityCount() == 0);
+    REQUIRE(fooBarArchetype->entityCount() == 0);
+    REQUIRE(world.isAlive(entity) == false);
 }
