@@ -157,12 +157,6 @@ namespace PushPopClassTest
     {
     public:
 
-        Foo()
-            : a(0), b(0), destroyRecord(nullptr)
-        {
-
-        }
-
         Foo(uint32_t ia, uint32_t ib, uint32_t* id) 
             : a(ia), b(ib), destroyRecord(id)  
         { 

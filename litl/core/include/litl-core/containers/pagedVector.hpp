@@ -45,6 +45,15 @@ namespace LITL::Core
         PagedVector(size_t pageSize) 
             : m_pageSize(pageSize), m_size(0) {}
 
+        ~PagedVector()
+        {
+            while (!empty())
+            {
+                // Ensure everything gets destroyed before the page buffer is deallocated.
+                pop_back();
+            }
+        }
+
         size_t size() const noexcept
         {
             return m_size;
@@ -80,7 +89,7 @@ namespace LITL::Core
         {
             if (full())
             {
-                m_pages.emplace_back(m_pageSize);
+                m_pages.emplace_back(std::make_unique<PagedVectorPage>(m_pageSize));
             }
 
             return *std::construct_at(getElementPtr(m_size++), std::forward<Args>(args)...);
@@ -90,8 +99,7 @@ namespace LITL::Core
         {
             if (!empty())
             {
-                const size_t index = --m_size;
-                T* element = getElementPtr(index);
+                T* element = getElementPtr(--m_size);
                 std::destroy_at(element);
             }
         }
@@ -162,7 +170,7 @@ namespace LITL::Core
 
         T* getElementPtr(size_t elementIndex) noexcept
         {
-            return &m_pages[elementIndex / m_pageSize].dataPtr[elementIndex % m_pageSize];
+            return &m_pages[elementIndex / m_pageSize].get()->data()[elementIndex % m_pageSize];
         }
 
         /// <summary>
@@ -170,14 +178,36 @@ namespace LITL::Core
         /// </summary>
         struct PagedVectorPage
         {
-            PagedVectorPage(size_t const pageSize) : dataPtr(std::make_unique<T[]>(pageSize)) {}
-            std::unique_ptr<T[]> dataPtr;
+            PagedVectorPage(size_t const pageSize) : 
+                m_size(pageSize), 
+                m_pData(std::allocator_traits<std::allocator<T>>::allocate(m_allocator, pageSize))
+            {
+
+            }
+
+            ~PagedVectorPage()
+            {
+                std::allocator_traits<std::allocator<T>>::deallocate(m_allocator, m_pData, m_size);
+            }
+
+            T* data() const noexcept
+            {
+                return m_pData;
+            }
+            
+        private:
+
+            const size_t m_size;
+            std::allocator<T> m_allocator;
+            T* m_pData;
         };
         
         /// <summary>
         /// When this vector resizes, the internal page pointer remains consistent.
+        /// If we stored the page directly in the vector, then when m_pages is resized
+        /// our individual page buffer would be recreated. 
         /// </summary>
-        std::vector<PagedVectorPage> m_pages;
+        std::vector<std::unique_ptr<PagedVectorPage>> m_pages;
 
         /// <summary>
         /// The number of elements per page.

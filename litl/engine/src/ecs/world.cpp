@@ -32,11 +32,7 @@ namespace LITL::Engine::ECS
 
     void World::destroyImmediate(Entity entity) const noexcept
     {
-        if (!EntityRegistry::isAlive(entity))
-        {
-            return;
-        }
-
+        // Registry checks if it is alive before destroying
         EntityRegistry::destroy(entity);
     }
 

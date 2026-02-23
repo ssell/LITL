@@ -57,18 +57,10 @@ namespace LITL::Engine::ECS
     {
         auto header = getHeader();
 
-        // First remove the entity and its components from this chunk
         memset(m_data + layout.entityArrayOffset + (sizeof(Entity) * removeAtIndex), 0, sizeof(Entity));
-
-        for (auto i = 0; i < layout.componentTypeCount; ++i)
-        {
-            const auto component = layout.componentOrder[i];
-            component->destroy((m_data + layout.componentOffsets[i] + (component->size * removeAtIndex)));
-        }
-
         header->count--;
 
-        // Next move the entity in from the other chunk
+        // Move the entity in from the other chunk
         if (swapFromChunk != nullptr)
         {
             if ((swapFromChunk == this) && (swapFromChunkIndex == removeAtIndex))
