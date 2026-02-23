@@ -1,19 +1,21 @@
 #include <algorithm>
 #include <optional>
+#include <string_view>
 
 #include "litl-core/math/math.hpp"
 #include "litl-engine/ecs/archetype/archetype.hpp"
-#include "litl-engine/ecs/archetype/archetypeRegistry.hpp"
 #include "litl-engine/ecs/entityRegistry.hpp"
 
 namespace LITL::Engine::ECS
 {
-    Archetype::Archetype(uint32_t registryIndex, uint64_t componentHash) : 
+    Archetype::Archetype(std::string_view name, uint32_t registryIndex, uint64_t componentHash) : 
         m_registryIndex(registryIndex),
         m_componentHash(componentHash),
         m_entityCount(0),
         m_chunks(16)                        // 16kb chunks * 16 = 256kb pages
     {
+        setDebugName(name);
+
         m_chunkLayout.archetype = this;
         m_components.reserve(MAX_COMPONENTS);
     }
@@ -139,7 +141,7 @@ namespace LITL::Engine::ECS
         auto toChunkData = to->m_chunks[toChunkIndex].data();
 
         // Move entity
-        auto fromChunkEntityAddr = (fromChunkData + m_chunkLayout.entityArrayOffset + (toChunkElementIndex * sizeof(Entity)));
+        auto fromChunkEntityAddr = (fromChunkData + m_chunkLayout.entityArrayOffset + (fromChunkElementIndex * sizeof(Entity)));
         auto toChunkEntityAddr = (toChunkData + to->m_chunkLayout.entityArrayOffset + (toChunkElementIndex * sizeof(Entity)));
         new (toChunkEntityAddr) Entity(std::move(*reinterpret_cast<Entity*>(fromChunkEntityAddr)));
         

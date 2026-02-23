@@ -2,8 +2,10 @@
 #define LITL_ENGINE_ECS_ARCHETYPE_H__
 
 #include <span>
+#include <string_view>
 #include <vector>
 
+#include "litl-core/debug.hpp"
 #include "litl-core/containers/pagedVector.hpp"
 #include "litl-engine/ecs/component.hpp"
 #include "litl-engine/ecs/entityRecord.hpp"
@@ -18,7 +20,7 @@ namespace LITL::Engine::ECS
     /// <summary>
     /// An Archetype is an ordered component set. All entities fit into exactly one Archetype.
     /// </summary>
-    class Archetype
+    class Archetype : public DebugInfo
     {
     public:
 
@@ -32,7 +34,7 @@ namespace LITL::Engine::ECS
 
     private:
 
-        Archetype(uint32_t registryIndex, uint64_t componentHash);
+        Archetype(std::string_view name, uint32_t registryIndex, uint64_t componentHash);
 
         uint32_t getNextIndex() noexcept;
         bool hasComponent(ComponentTypeId component, size_t& index);

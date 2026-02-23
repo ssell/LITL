@@ -4,6 +4,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <sstream>
 #include <vector>
 
 #include "litl-core/hash.hpp"
@@ -36,12 +37,39 @@ namespace LITL::Engine::ECS
         return EmptyArchetype;
     }
 
+    std::string buildArchetypeDebugName(uint64_t const archetypeHash, std::vector<ComponentTypeId> const& componentTypeIds)
+    {
+        std::stringstream sstream;
+        sstream << "[" << archetypeHash << "][";
+
+        for (auto i = 0; i < componentTypeIds.size(); ++i)
+        {
+            auto component = ComponentDescriptor::get(componentTypeIds[i]);
+            sstream << component->debugName;
+
+            if (i < componentTypeIds.size() - 1)
+            {
+                sstream << ",";
+            }
+        }
+
+        sstream << "]";
+        return sstream.str();
+    }
+
     Archetype* ArchetypeRegistry::buildArchetype(uint64_t const archetypeHash, std::vector<ComponentTypeId> const& componentTypeIds) noexcept
     {
         auto& registry = instance();
 
+        std::string name = "";
+
+        if constexpr (IS_DEBUG)
+        {
+            name = buildArchetypeDebugName(archetypeHash, componentTypeIds);
+        }
+
         const auto newArchetypeIndex = static_cast<uint32_t>(registry.archetypes.size());
-        const auto archetype = new Archetype(newArchetypeIndex, archetypeHash);
+        const auto archetype = new Archetype(name, newArchetypeIndex, archetypeHash);
 
         populateChunkLayout(&archetype->m_chunkLayout, componentTypeIds);
 
