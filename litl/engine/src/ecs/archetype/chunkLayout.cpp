@@ -4,7 +4,7 @@
 namespace LITL::Engine::ECS
 {
     ChunkLayout::ChunkLayout()
-        : archetype(nullptr), chunkElementCapacity(0), componentTypeCount(0)
+        : archetype(nullptr), entityCapacity(0), componentTypeCount(0)
     {
         componentOrder.fill(nullptr);
         componentOffsets.fill(0);
@@ -30,7 +30,7 @@ namespace LITL::Engine::ECS
         uint32_t remaining = CHUNK_SIZE_BYTES - chunkHeaderSize - chunkEntityArraySize;
 
         // First estimate of how many entities can fit. This is close, but may not be exact due to alignment.
-        chunkElementCapacity = (componentBytesPerEntity == 0 ? MAX_ENTITIES_PER_CHUNK : remaining / componentBytesPerEntity);
+        entityCapacity = (componentBytesPerEntity == 0 ? MAX_ENTITIES_PER_CHUNK : remaining / componentBytesPerEntity);
 
         // Get memory position of entity array
         uint32_t offset = chunkHeaderSize;
@@ -53,7 +53,7 @@ namespace LITL::Engine::ECS
                 componentOffsets[i] = offset;
 
                 // Move to the end of this column
-                offset += componentOrder[i]->size * chunkElementCapacity;
+                offset += componentOrder[i]->size * entityCapacity;
             }
 
             if (offset <= CHUNK_SIZE_BYTES)
@@ -63,7 +63,7 @@ namespace LITL::Engine::ECS
             }
 
             // Remove one capacity to make room for alignment adjustments
-            chunkElementCapacity--;
+            entityCapacity--;
         }
     }
 

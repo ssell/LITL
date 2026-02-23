@@ -27,8 +27,8 @@ TEST_CASE("Chunk Layout", "[engine::ecs::chunk]")
     REQUIRE(layoutFooBar.componentOrder[0] == layoutBarFoo.componentOrder[0]);
     REQUIRE(layoutFooBar.componentOrder[1] == layoutBarFoo.componentOrder[1]);
 
-    REQUIRE(layoutFooBar.chunkElementCapacity > 0);
-    REQUIRE(layoutFooBar.chunkElementCapacity == layoutBarFoo.chunkElementCapacity);
+    REQUIRE(layoutFooBar.entityCapacity > 0);
+    REQUIRE(layoutFooBar.entityCapacity == layoutBarFoo.entityCapacity);
 
     // ... todo add more concrete tests (memory address locations, etc.) after the chunk header has stabilized ...
 }
@@ -38,7 +38,7 @@ TEST_CASE("Header Creation", "[engine::ecs::chunk]")
     const uint32_t capacity = 100;
 
     LITL::Engine::ECS::ChunkLayout layout;
-    layout.chunkElementCapacity = capacity;
+    layout.entityCapacity = capacity;
 
     LITL::Engine::ECS::Chunk chunk0(0, &layout);
     LITL::Engine::ECS::Chunk chunk1(1, &layout);

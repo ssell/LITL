@@ -11,7 +11,7 @@ namespace LITL::Engine::ECS
         auto header = getHeader();
         header->archetype = layout->archetype;
         header->count = 0;
-        header->capacity = layout->chunkElementCapacity;
+        header->capacity = layout->entityCapacity;
         header->chunkIndex = index;
         header->version = 0;
     }

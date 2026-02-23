@@ -33,7 +33,7 @@ namespace LITL::Engine::ECS
         /// <summary>
         /// The number of entities and each component that can be stored within a Chunk.
         /// </summary>
-        uint32_t chunkElementCapacity;
+        uint32_t entityCapacity;
 
         /// <summary>
         /// The number of different component types stored in the chunk.
