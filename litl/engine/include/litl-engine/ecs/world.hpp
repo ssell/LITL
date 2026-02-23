@@ -74,7 +74,7 @@ namespace LITL::Engine::ECS
         template<typename T>
         void addComponentImmediate(Entity entity) const noexcept
         {
-            static_assert(std::is_trivially_copyable_v<T> && std::is_standard_layout_v<T>);
+            static_assert(std::is_standard_layout_v<T>);
             addComponentImmediate(entity, ComponentDescriptor::get<T>()->id);
         }
 
@@ -99,7 +99,6 @@ namespace LITL::Engine::ECS
         template<typename... ComponentTypes>
         void addComponentsImmediate(Entity entity) const noexcept
         {
-            static_assert((std::is_trivially_copyable_v<ComponentTypes> && ...));
             static_assert((std::is_standard_layout_v<ComponentTypes> && ...));
 
             std::vector<ComponentTypeId> componentTypeIds;
@@ -130,7 +129,7 @@ namespace LITL::Engine::ECS
         template<typename T>
         void removeComponentImmediate(Entity entity) const noexcept
         {
-            static_assert(std::is_trivially_copyable_v<T> && std::is_standard_layout_v<T>);
+            static_assert(std::is_standard_layout_v<T>);
             removeComponentImmediate(entity, ComponentDescriptor::get<T>()->id);
         }
 
@@ -155,7 +154,6 @@ namespace LITL::Engine::ECS
         template<typename... ComponentTypes>
         void removeComponentsImmediate(Entity entity) const noexcept
         {
-            static_assert((std::is_trivially_copyable_v<ComponentTypes> && ...));
             static_assert((std::is_standard_layout_v<ComponentTypes> && ...));
 
             std::vector<ComponentTypeId> componentTypeIds;

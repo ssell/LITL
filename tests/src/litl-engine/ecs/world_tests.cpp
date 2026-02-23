@@ -124,3 +124,52 @@ TEST_CASE("Destroy Entity with Components", "[engine::ecs::world]")
     REQUIRE(fooBarArchetype->entityCount() == 0);
     REQUIRE(world.isAlive(entity) == false);
 }
+
+namespace ComponentCtorDtorCallTest
+{
+    static uint32_t CtorDtorTestCount = 0;
+
+    struct CtorDtorTestComponent
+    {
+        CtorDtorTestComponent()
+        {
+            CtorDtorTestCount++;
+        }
+
+        ~CtorDtorTestComponent()
+        {
+            CtorDtorTestCount--;
+        }
+
+        uint32_t value;
+    };
+}
+
+TEST_CASE("Component Ctor Dtor Call", "[engine::ecs::world]")
+{
+    LITL::Engine::ECS::World world;
+    LITL::Engine::ECS::Entity entity0 = world.createImmediate();
+    LITL::Engine::ECS::Entity entity1 = world.createImmediate();
+
+    REQUIRE(ComponentCtorDtorCallTest::CtorDtorTestCount == 0);
+
+    world.addComponentImmediate<ComponentCtorDtorCallTest::CtorDtorTestComponent>(entity0);
+
+    REQUIRE(ComponentCtorDtorCallTest::CtorDtorTestCount == 1);
+
+    world.addComponentImmediate<ComponentCtorDtorCallTest::CtorDtorTestComponent>(entity1);
+
+    REQUIRE(ComponentCtorDtorCallTest::CtorDtorTestCount == 2);
+
+    world.destroyImmediate(entity1);
+
+    REQUIRE(ComponentCtorDtorCallTest::CtorDtorTestCount == 1);
+
+    world.removeComponentImmediate<ComponentCtorDtorCallTest::CtorDtorTestComponent>(entity0);
+
+    REQUIRE(ComponentCtorDtorCallTest::CtorDtorTestCount == 0);
+
+    world.destroyImmediate(entity1);
+
+    REQUIRE(ComponentCtorDtorCallTest::CtorDtorTestCount == 0);
+}

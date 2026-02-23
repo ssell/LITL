@@ -57,7 +57,7 @@ namespace LITL::Engine::ECS
         template<typename T>
         static ComponentDescriptor const* get() noexcept
         {
-            static_assert(std::is_trivially_copyable_v<T> && std::is_standard_layout_v<T>);
+            static_assert(std::is_standard_layout_v<T>);
 
             // Use a static descriptor that is different for each specialization of this template.
             // This ensures a stable pointer to the descriptor that exists for the lifetime of the application.
