@@ -52,10 +52,15 @@ namespace LITL::Engine::ECS
 
     uint32_t Archetype::getNextIndex() noexcept
     {
-        // First entity in this archetype. Allocate the first chunk
-        if ((m_entityCount == 0) && (m_chunks.size() == 0))
+        // First entity in this archetype (archetype may be new or used to have entities that have since left)
+        if (m_entityCount == 0)
         {
-            m_chunks.emplace_back(m_chunks.size(), &m_chunkLayout);
+            // First EVER in this archetype. Allocate the first chunk.
+            if (m_chunks.size() == 0)
+            {
+                m_chunks.emplace_back(m_chunks.size(), &m_chunkLayout);
+            }
+
             return 0;
         }
 
