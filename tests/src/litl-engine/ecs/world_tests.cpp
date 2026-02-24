@@ -175,12 +175,19 @@ TEST_CASE("Modify Component", "[engine::ecs::world]")
 
     world.addComponentImmediate<Foo>(entity);
 
-   // auto fooOpt = world.getComponent<Foo>(entity);
-   //
-   // REQUIRE(fooOpt != std::nullopt);
-   //
-   //
-   //
-   //
-   // world.destroyImmediate(entity);
+    // Get
+    auto fooOpt = world.getComponent<Foo>(entity);
+    REQUIRE(fooOpt != std::nullopt);
+    REQUIRE(fooOpt->a != updatedValue);
+    
+    // Set
+    fooOpt->a = updatedValue;
+    world.setComponent<Foo>(entity, fooOpt.value());
+
+    // Get again
+    fooOpt = world.getComponent<Foo>(entity);
+    REQUIRE(fooOpt != std::nullopt);
+    REQUIRE(fooOpt->a == updatedValue);
+
+    world.destroyImmediate(entity);
 }
