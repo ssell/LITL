@@ -66,25 +66,22 @@ namespace LITL::Engine::ECS
 
     uint32_t Archetype::getNextIndex() noexcept
     {
-        // First entity in this archetype (archetype may be new or used to have entities that have since left)
         if (m_entityCount == 0)
         {
-            // First EVER in this archetype. Allocate the first chunk.
+            // First entity in this archetype (archetype may be new or used to have entities that have since left)
             if (m_chunks.size() == 0)
             {
+                // First EVER in this archetype. Allocate the first chunk.
                 m_chunks.emplace_back(m_chunks.size(), &m_chunkLayout);
             }
-
-            return 0;
         }
-
-        // The last chunk is currently full.
-        if (m_entityCount % m_chunkLayout.entityCapacity == 0)
+        else if (m_entityCount % m_chunkLayout.entityCapacity == 0)
         {
+            // The last chunk is currently full.
             m_chunks.emplace_back(m_chunks.size(), &m_chunkLayout);
         }
 
-        return m_entityCount + 1;
+        return m_entityCount++;
     }
 
     bool Archetype::hasComponent(ComponentTypeId componentTypeId) const noexcept
@@ -113,9 +110,8 @@ namespace LITL::Engine::ECS
        const auto chunkIndex = archetypeIndex / m_chunkLayout.entityCapacity;
        const auto chunkElementIndex = archetypeIndex % m_chunkLayout.entityCapacity;
 
-       m_chunks[chunkIndex].add(m_chunkLayout, chunkElementIndex);
+       m_chunks[chunkIndex].add(m_chunkLayout, chunkElementIndex, record.entity);
 
-       m_entityCount++;
        EntityRegistry::updateRecordArchetype(record.entity, this, archetypeIndex);
     }
 
@@ -126,14 +122,16 @@ namespace LITL::Engine::ECS
             return;
         }
 
+        m_entityCount = Math::maximum(m_entityCount - 1, 0u);
+
         // Get the chunk and element index for where we are removing
         const auto removeFromArchetypeIndex = record.archetypeIndex;
         const auto removeFromChunkIndex = record.archetypeIndex / m_chunkLayout.entityCapacity;
         const auto removeFromChunkElementIndex = record.archetypeIndex % m_chunkLayout.entityCapacity;
 
         // Get the chunk and element index for the entity we swapping into our newly opened spot.
-        const auto swapWithChunkIndex = m_chunks.size() - 1;
-        const auto swapWithChunkElementIndex = m_chunks[swapWithChunkIndex].getHeader()->count - 1;
+        const auto swapWithChunkIndex = m_entityCount / m_chunkLayout.entityCapacity;
+        const auto swapWithChunkElementIndex = m_entityCount % m_chunkLayout.entityCapacity;
 
         auto* removeFromChunk = &m_chunks[removeFromChunkIndex];
         auto* swapWithChunk = &m_chunks[swapWithChunkIndex];
@@ -147,7 +145,6 @@ namespace LITL::Engine::ECS
         }
 
         EntityRegistry::updateRecordArchetype(record.entity, nullptr, 0);
-        m_entityCount = Math::maximum(m_entityCount - 1, 0u);
     }
 
     void Archetype::move(EntityRecord const& record, Archetype* to) noexcept
@@ -213,10 +210,8 @@ namespace LITL::Engine::ECS
                 component->destroy(componentAddress);
             }
         }
-        
-        to->m_entityCount++;
 
-        // Remove the entity from this archetype (this call m_entityCount--)
+        // Remove the entity from this archetype (this calls m_entityCount--)
         remove(record);
 
         // Update it's record to point to it's new archetype

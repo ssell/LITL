@@ -217,7 +217,7 @@ namespace LITL::Engine::ECS
         /// <param name="entity"></param>
         /// <param name="component"></param>
         template<ValidComponentType ComponentType>
-        void setComponent(Entity entity, ComponentType& component) noexcept
+        void setComponent(Entity entity, ComponentType const& component) noexcept
         {
             if (!isAlive(entity))
             {
