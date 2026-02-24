@@ -1,17 +1,9 @@
 #include <catch2/catch_test_macros.hpp>
+
+#include "litl-engine/ecs/ecsCommon.hpp"
 #include "litl-engine/ecs/world.hpp"
 #include "litl-engine/ecs/archetype/archetype.hpp"
 #include "litl-engine/ecs/archetype/archetypeRegistry.hpp"
-
-struct Foo
-{
-    uint32_t value = 0;
-};
-
-struct Bar
-{
-    uint32_t value = 0;
-};
 
 TEST_CASE("Empty Entity Creation and Destructon", "[engine::ecs::world]")
 {

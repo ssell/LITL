@@ -2,6 +2,7 @@
 #define LITL_ENGINE_ECS_SYSTEM_SCHEDULE_H__
 
 #include <memory>
+#include <vector>
 
 #include "litl-engine/ecs/system/systemBase.hpp"
 #include "litl-engine/ecs/system/systemNode.hpp"
@@ -24,11 +25,17 @@ namespace LITL::Engine::ECS
     {
     public:
 
+        SystemSchedule() = default;
+        SystemSchedule(SystemSchedule const&) = delete;
+        SystemSchedule& operator=(SystemSchedule const&) = delete;
+
+        void addSystem(SystemBase* system) noexcept;
+
     protected:
 
     private:
 
-
+        std::vector<SystemNode> m_nodes;
     };
 }
 

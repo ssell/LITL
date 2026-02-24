@@ -27,6 +27,17 @@ namespace LITL::Engine::ECS
         /// <returns></returns>
         static Archetype* Empty() noexcept;
 
+        template<typename... ComponentTypes>
+        static std::vector<ComponentTypeId> getComponentMask() noexcept
+        {
+            std::vector<ComponentTypeId> componentTypeIds;
+            componentTypeIds.reserve(sizeof...(ComponentTypes));
+            (foldComponentTypesIntoVector<ComponentTypes>(componentTypeIds), ...);
+            refineComponentMask(componentTypeIds);
+
+            return componentTypeIds;
+        }
+
         /// <summary>
         /// Retrieves (or creates) the archetype matching the specified component set.
         /// </summary>
@@ -73,6 +84,7 @@ namespace LITL::Engine::ECS
 
     private:
 
+        static void refineComponentMask(std::vector<ComponentTypeId>& componentTypeIds) noexcept;
         static Archetype* buildArchetype(uint64_t archetypeHash, std::vector<ComponentTypeId> const& componentTypeIds) noexcept;
     };
 }

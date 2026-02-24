@@ -11,9 +11,13 @@ namespace LITL::Engine::ECS
     {
     public:
 
+
+
     protected:
 
-    private:        
+    private:
+
+        std::vector<Archetype*> m_archetypes;
     };
 }
 

@@ -1,19 +1,9 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "litl-core/hash.hpp"
+#include "litl-engine/ecs/ecsCommon.hpp"
 #include "litl-engine/ecs/component.hpp"
 #include "litl-engine/ecs/componentRegistry.hpp"
-
-struct Foo
-{
-    uint32_t a;
-};
-
-struct Bar
-{
-    float a;
-    uint32_t b;
-};
 
 TEST_CASE("Component Descriptor", "[engine::ecs::component]")
 {

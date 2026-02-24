@@ -6,6 +6,7 @@
 
 #include "litl-engine/ecs/entity.hpp"
 #include "litl-engine/ecs/component.hpp"
+#include "litl-engine/ecs/system/system.hpp"
 
 namespace LITL::Engine::ECS
 {
@@ -161,6 +162,12 @@ namespace LITL::Engine::ECS
             (foldComponentTypesIntoVector<ComponentTypes>(componentTypeIds), ...);
 
             removeComponentsImmediate(entity, componentTypeIds);
+        }
+
+        template<ValidSystem T>
+        void addSystem() noexcept
+        {
+
         }
 
     protected:

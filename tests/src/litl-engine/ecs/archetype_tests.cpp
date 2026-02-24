@@ -1,17 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
+#include "litl-engine/ecs/ecsCommon.hpp"
 #include "litl-engine/ecs/archetype/archetype.hpp"
 #include "litl-engine/ecs/archetype/archetypeRegistry.hpp"
 
-struct Foo
-{
-    uint32_t a;
-};
-
-struct Bar
-{
-    float a;
-    uint32_t b;
-};
 
 TEST_CASE("ArchetypeRegistry::get (Static)", "[engine::ecs::archetype]")
 {

@@ -1,9 +1,9 @@
-#ifndef LITL_ENGINE_ECS_COMPONENT_TRANSFORM_H__
-#define LITL_ENGINE_ECS_COMPONENT_TRANSFORM_H__
+#ifndef LITL_ENGINE_ECS_COMPONENTS_TRANSFORM_H__
+#define LITL_ENGINE_ECS_COMPONENTS_TRANSFORM_H__
 
 #include <glm/glm.hpp>
 
-namespace LITL::Engine::ECS::Component
+namespace LITL::Engine::ECS
 {
     struct Transform
     {
