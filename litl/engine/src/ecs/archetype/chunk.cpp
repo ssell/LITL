@@ -26,9 +26,19 @@ namespace LITL::Engine::ECS
         return reinterpret_cast<ChunkHeader*>(m_data + 0);
     }
 
+    ChunkHeader const* Chunk::getHeader() const noexcept
+    {
+        return reinterpret_cast<ChunkHeader const*>(m_data + 0);
+    }
+
     ChunkEntities* Chunk::getEntities() noexcept
     {
         return reinterpret_cast<ChunkEntities*>(m_data + sizeof(ChunkHeader));
+    }
+
+    uint32_t Chunk::size() const noexcept
+    {
+        return getHeader()->count;
     }
 
     std::byte* Chunk::data() noexcept

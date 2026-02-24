@@ -5,12 +5,15 @@
 #include "litl-engine/ecs/world.hpp"
 #include "litl-engine/ecs/component.hpp"
 #include "litl-engine/ecs/system/system.hpp"
-#include "litl-engine/ecs/system/systemBase.hpp"
-#include "litl-engine/ecs/system/systemSchedule.hpp"
 
 struct TestSystem
 {
     using SystemComponents = LITL::Engine::ECS::SystemComponentList<Foo, Bar>;
+
+    void update(Foo& foo, Bar& bar)
+    {
+        std::cout << "foo.a = " << foo.a++ << std::endl;
+    }
 };
 
 template<typename ComponentType>
@@ -37,12 +40,12 @@ struct SystemComponentExtractor
     }
 };
 
-TEST_CASE("System Test", "[engine::ecs::system]")
+TEST_CASE("System Extractor Test", "[engine::ecs::system]")
 {
     // Option A: Extractor struct
     SystemComponentExtractor extractor;
 
-    LITL::Engine::ECS::ExpandComponentList<TestSystem::SystemComponents>::apply(extractor);
+    LITL::Engine::ECS::ExpandSystemComponentList<TestSystem::SystemComponents>::apply(extractor);
 
     for (auto componentType : extractor.componentTypes)
     {
@@ -52,7 +55,7 @@ TEST_CASE("System Test", "[engine::ecs::system]")
     // Option B: Generic Lambda
     std::vector<LITL::Engine::ECS::ComponentDescriptor const*> descriptors;
 
-    LITL::Engine::ECS::ExpandComponentList<TestSystem::SystemComponents>::apply(
+    LITL::Engine::ECS::ExpandSystemComponentList<TestSystem::SystemComponents>::apply(
         [&descriptors]<typename... ComponentTypes>()
         {
             extractComponentTypes<ComponentTypes...>(descriptors);
@@ -63,4 +66,32 @@ TEST_CASE("System Test", "[engine::ecs::system]")
     {
         std::cout << componentType->debugName << std::endl;
     }
+}
+
+TEST_CASE("System Runner Test", "[engine::ecs::system]")
+{
+    /*
+    LITL::Engine::ECS::World world;
+
+    auto entity0 = world.createImmediate();
+    world.addComponentsImmediate<Foo, Bar>(entity0);
+
+    auto entity1 = world.createImmediate();
+    Foo foo{ 100 };
+    world.addComponentsImmediate<Foo, Bar>(entity1);
+    world.setComponent<Foo>(entity0, foo);
+
+    auto entityRecord = world.getEntityRecord(entity0);
+
+    TestSystem system;
+
+    for (auto i = 0; i < 10; ++i)
+    {
+        LITL::Engine::ECS::ExpandSystemComponentList<TestSystem::SystemComponents>::apply(
+            LITL::Engine::ECS::SystemRunner<TestSystem>{ system, * entityRecord.archetype, entityRecord.archetype->getChunk(entityRecord) });
+    }
+
+    world.destroyImmediate(entity0);
+    world.destroyImmediate(entity1);
+    */
 }

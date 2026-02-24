@@ -30,11 +30,6 @@ namespace LITL::Engine::ECS
         return m_componentHash;
     }
 
-    ChunkLayout const* Archetype::layout() const noexcept
-    {
-        return &m_chunkLayout;
-    }
-
     std::vector<ComponentTypeId> const& Archetype::componentTypes() const noexcept
     {
         return m_components;
@@ -48,6 +43,11 @@ namespace LITL::Engine::ECS
     uint32_t Archetype::entityCount() const noexcept
     {
         return m_entityCount;
+    }
+
+    ChunkLayout const& Archetype::chunkLayout() const noexcept
+    {
+        return m_chunkLayout;
     }
 
     Chunk& Archetype::getChunk(EntityRecord const record) noexcept

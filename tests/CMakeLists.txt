@@ -20,7 +20,7 @@ add_executable(litl-tests
 	"src/litl-core/refptr_tests.cpp" 
 	"src/litl-core/renderer/shaderReflection_tests.cpp" 
 	"src/litl-core/containers/pagedVector_tests.cpp" 
-	"src/litl-core/math/general_tests.cpp" 
+	"src/litl-core/math/general_math_tests.cpp" 
 	"src/litl-engine/ecs/component_tests.cpp" 
 	"src/litl-engine/ecs/chunk_tests.cpp" 
 	"src/litl-engine/ecs/archetype_tests.cpp" 

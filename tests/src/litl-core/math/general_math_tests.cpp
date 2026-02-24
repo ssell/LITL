@@ -22,6 +22,15 @@ TEST_CASE("max", "[math::general]")
     REQUIRE(LITL::Math::maximum(-50, -60) == -50);
 }
 
+TEST_CASE("floatEquals", "[math::general]")
+{
+    REQUIRE(LITL::Math::floatEquals(0.0f, 0.0f) == true);
+    REQUIRE(LITL::Math::floatEquals(0.0f, 1.0f) == false);
+    REQUIRE(LITL::Math::floatEquals(-51234.54f, -51234.54f) == true);
+    REQUIRE(LITL::Math::floatEquals(-51234.54f, -51234.53f) == false);
+    REQUIRE(LITL::Math::floatEquals(-51234.54f, -51234.0f, 1.0f) == true);
+}
+
 TEST_CASE("alignMemoryOffsetUp", "[math::general]")
 {
     REQUIRE(LITL::Math::alignMemoryOffsetUp(13, 8) == 16);

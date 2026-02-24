@@ -191,3 +191,75 @@ TEST_CASE("Modify Component", "[engine::ecs::world]")
 
     world.destroyImmediate(entity);
 }
+
+TEST_CASE("Modify Multiple Components", "[engine::ecs::world]")
+{
+    LITL::Engine::ECS::World world;
+    LITL::Engine::ECS::Entity entity = world.createImmediate();
+
+    world.addComponentsImmediate<Foo, Bar>(entity);
+
+    Foo foo{ 50 };
+    Bar bar{ 100.0f, 150 };
+
+    world.setComponent<Foo>(entity, foo);
+    world.setComponent<Bar>(entity, bar);
+
+    std::optional<Foo> fooVal = world.getComponent<Foo>(entity);
+    std::optional<Bar> barVal = world.getComponent<Bar>(entity);
+
+    REQUIRE(fooVal != std::nullopt);
+    REQUIRE(barVal != std::nullopt);
+
+    REQUIRE(fooVal->a == foo.a);
+    REQUIRE(LITL::Math::floatEquals(barVal->a, bar.a) == true);
+    REQUIRE(barVal->b == bar.b);
+
+    world.destroyImmediate(entity);
+}
+
+TEST_CASE("Modify Multiple Entity Components", "[engine::ecs::world]")
+{
+    LITL::Engine::ECS::World world;
+
+    constexpr auto entityCount = 10;
+
+    std::vector<LITL::Engine::ECS::Entity> entities;
+    entities.reserve(entityCount);
+
+    // Create entities
+    for (auto i = 0; i < entityCount; ++i)
+    {
+        entities.push_back(world.createImmediate());
+        world.addComponentsImmediate<Foo, Bar>(entities[i]);
+    }
+
+    Foo foo{};
+    Bar bar{};
+
+    // Update entities
+    for (auto entity : entities)
+    {
+        world.setComponent<Foo>(entity, foo);
+        world.setComponent<Bar>(entity, bar);
+
+        foo.a++;
+        bar.b++;
+    }
+
+    // Check updates went through
+    for (auto i = 0; i < entityCount; ++i)
+    {
+        auto entity = entities[i];
+        auto entityFoo = world.getComponent<Foo>(entity);
+        auto entityBar = world.getComponent<Bar>(entity);
+
+        REQUIRE(entityFoo->a == i);
+        REQUIRE(entityBar->b == i);
+    }
+
+    for (auto entity : entities)
+    {
+        world.destroyImmediate(entity);
+    }
+}
