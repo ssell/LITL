@@ -31,9 +31,9 @@ namespace LITL::Engine::ECS
         return reinterpret_cast<ChunkHeader const*>(m_data + 0);
     }
 
-    ChunkEntities* Chunk::getEntities() noexcept
+    Entity* Chunk::getEntities(ChunkLayout const& layout) noexcept
     {
-        return reinterpret_cast<ChunkEntities*>(m_data + sizeof(ChunkHeader));
+        return std::bit_cast<Entity*>(m_data + layout.entityArrayOffset);
     }
 
     uint32_t Chunk::size() const noexcept
@@ -57,12 +57,12 @@ namespace LITL::Engine::ECS
         getHeader()->count--;
     }
 
-    void Chunk::add(ChunkLayout const& layout, uint32_t addAtIndex) noexcept
+    void Chunk::add(ChunkLayout const& layout, uint32_t addAtIndex, Entity entity) noexcept
     {
         auto to = data();
 
-        std::construct_at(to + layout.entityArrayOffset + (sizeof(Entity) * addAtIndex));
-
+        //getEntities(layout)->entities[addAtIndex] = entity;
+        getEntities(layout)[addAtIndex] = entity;
         for (auto i = 0; i < layout.componentTypeCount; ++i)
         {
             const auto component = layout.componentOrder[i];
@@ -74,7 +74,8 @@ namespace LITL::Engine::ECS
 
     std::optional<Entity> Chunk::removeAndSwap(ChunkLayout const& layout, uint32_t const removeAtIndex, Chunk* swapFromChunk, uint32_t const swapFromChunkIndex) noexcept
     {
-        memset(m_data + layout.entityArrayOffset + (sizeof(Entity) * removeAtIndex), 0, sizeof(Entity));
+        auto entityGoingByeBye = getEntities(layout)[removeAtIndex];
+        //memset(m_data + layout.entityArrayOffset + (sizeof(Entity) * removeAtIndex), 0, sizeof(Entity));
         decrementEntityCount();
 
         // Move the entity in from the other chunk
@@ -87,17 +88,13 @@ namespace LITL::Engine::ECS
             }
             else
             {
-                // Swap in the Entity and it's components
                 auto from = swapFromChunk->data();
                 auto to = data();
 
-                // Entity
-                memcpy(
-                    to + layout.entityArrayOffset + (sizeof(Entity) * removeAtIndex),
-                    from + layout.entityArrayOffset + (sizeof(Entity) * swapFromChunkIndex),
-                    sizeof(Entity));
+                // Entity swap
+                getEntities(layout)[removeAtIndex] = swapFromChunk->getEntities(layout)[swapFromChunkIndex];
 
-                // Components
+                // Components swap
                 for (auto i = 0; i < layout.componentTypeCount; ++i)
                 {
                     const auto component = layout.componentOrder[i];
@@ -110,7 +107,10 @@ namespace LITL::Engine::ECS
                 incrementEntityCount();
                 
                 // Finally remove the swapped entity from the other chunk
-                return swapFromChunk->removeAndSwap(layout, swapFromChunkIndex, nullptr, 0);
+                swapFromChunk->removeAndSwap(layout, swapFromChunkIndex, nullptr, 0);
+
+                // Return the entity that was swapped into the removed index
+                return getEntities(layout)[removeAtIndex];
             }
         }
         else

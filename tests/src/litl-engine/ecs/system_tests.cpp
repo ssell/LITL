@@ -70,16 +70,14 @@ TEST_CASE("System Extractor Test", "[engine::ecs::system]")
 
 TEST_CASE("System Runner Test", "[engine::ecs::system]")
 {
-    /*
     LITL::Engine::ECS::World world;
 
     auto entity0 = world.createImmediate();
-    world.addComponentsImmediate<Foo, Bar>(entity0);
-
     auto entity1 = world.createImmediate();
-    Foo foo{ 100 };
+
+    world.addComponentsImmediate<Foo, Bar>(entity0);
     world.addComponentsImmediate<Foo, Bar>(entity1);
-    world.setComponent<Foo>(entity0, foo);
+    world.setComponent<Foo>(entity0, Foo{ 100 });
 
     auto entityRecord = world.getEntityRecord(entity0);
 
@@ -93,5 +91,4 @@ TEST_CASE("System Runner Test", "[engine::ecs::system]")
 
     world.destroyImmediate(entity0);
     world.destroyImmediate(entity1);
-    */
 }

@@ -44,7 +44,7 @@ namespace LITL::Engine::ECS
 
         ChunkHeader* getHeader() noexcept;
         ChunkHeader const* getHeader() const noexcept;
-        ChunkEntities* getEntities() noexcept;
+        Entity* getEntities(ChunkLayout const& layout) noexcept;
         uint32_t size() const noexcept;
 
         std::byte* data() noexcept;
@@ -52,7 +52,7 @@ namespace LITL::Engine::ECS
         void incrementEntityCount() noexcept;
         void decrementEntityCount() noexcept;
 
-        void add(ChunkLayout const& layout, uint32_t addAtIndex) noexcept;
+        void add(ChunkLayout const& layout, uint32_t addAtIndex, Entity entity) noexcept;
         std::optional<Entity> removeAndSwap(ChunkLayout const& layout, uint32_t removeAtIndex, Chunk* swapFromChunk, uint32_t swapFromChunkIndex) noexcept;
 
         template<ValidComponentType ComponentType>
@@ -64,7 +64,10 @@ namespace LITL::Engine::ECS
         template<ValidComponentType ComponentType>
         std::span<ComponentType> getComponentArray(ChunkLayout const& layout) noexcept
         {
-            return { getRawComponentArray<ComponentType>(layout), getHeader()->count};
+            auto header = getHeader();
+            auto entityCount = header->count;
+
+            return { getRawComponentArray<ComponentType>(layout), entityCount };
         }
 
         std::byte const* getComponentArray(ChunkLayout const& layout, ComponentTypeId componentTypeId) const;
