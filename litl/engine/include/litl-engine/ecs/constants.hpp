@@ -1,12 +1,17 @@
 #ifndef LITL_ENGINE_ECS_CONSTANTS_H__
 #define LITL_ENGINE_ECS_CONSTANTS_H__
 
+#include <concepts>
 #include <cstdint>
+#include <type_traits>
 
 namespace LITL::Engine::ECS
 {
     using ComponentTypeId = uint32_t;
     using StableComponentTypeId = uint64_t;
+
+    template<typename T>
+    concept ValidComponentType = std::is_standard_layout_v<T>;
 
     constexpr ComponentTypeId NULL_COMPONENT = 0;
     constexpr uint32_t MAX_COMPONENTS = 64;

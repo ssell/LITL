@@ -33,6 +33,11 @@ namespace LITL::Engine::ECS
         return entityRecord.entity;
     }
 
+    EntityRecord World::getEntityRecord(Entity entity) const noexcept
+    {
+        return EntityRegistry::getRecord(entity);
+    }
+
     void World::destroyImmediate(Entity entity) const noexcept
     {
         // Registry checks if it is alive before destroying

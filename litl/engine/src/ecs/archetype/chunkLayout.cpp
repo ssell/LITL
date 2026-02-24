@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <stdexcept>
 
 #include "litl-core/math/math.hpp"
 #include "litl-engine/ecs/archetype/chunkLayout.hpp"
@@ -67,6 +68,22 @@ namespace LITL::Engine::ECS
             // Remove one capacity to make room for alignment adjustments
             entityCapacity--;
         }
+    }
+
+    void ChunkLayout::getComponentIndex(ComponentTypeId componentTypeId, uint32_t& index) const
+    {
+        index = 0;
+
+        for (auto i = 0; i < MAX_COMPONENTS; ++i)
+        {
+            if (componentOrder[i]->id == componentTypeId)
+            {
+                index = i;
+                return;
+            }
+        }
+
+        throw std::runtime_error("Requested component index from Chunk that does not contain requested component type.");
     }
 
     void populateChunkLayout(ChunkLayout* layout, std::span<ComponentTypeId const> orderedComponentTypes)

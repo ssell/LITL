@@ -31,6 +31,25 @@ namespace LITL::Engine::ECS
         uint32_t componentCount() const noexcept;
         uint32_t entityCount() const noexcept;
 
+        Chunk& getChunk(EntityRecord record) noexcept;
+        Chunk& getChunk(uint32_t const index) noexcept;
+
+        template<ValidComponentType ComponentType>
+        ComponentType& getComponent(EntityRecord record) noexcept
+        {
+            auto& chunk = getChunk(record);
+            return chunk.getComponentArray<ComponentType>(m_chunkLayout);
+        }
+
+        template<ValidComponentType ComponentType>
+        bool hasComponent()
+        {
+            return hasComponent(ComponentDescriptor::get<ComponentType>()->id);
+        }
+
+        bool hasComponent(ComponentTypeId componentTypeId) const noexcept;
+        bool hasComponent(ComponentTypeId componentTypeId, size_t& index) const noexcept;
+
     protected:
 
     private:
@@ -38,7 +57,6 @@ namespace LITL::Engine::ECS
         Archetype(std::string_view name, uint32_t registryIndex, uint64_t componentHash);
 
         uint32_t getNextIndex() noexcept;
-        bool hasComponent(ComponentTypeId component, size_t& index);
 
         /// <summary>
         /// Adds a new entity to this archetype. Used for when the entity is first being created for it's version.

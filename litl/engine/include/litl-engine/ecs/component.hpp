@@ -54,11 +54,9 @@ namespace LITL::Engine::ECS
         const ComponentMoveFunc move;
         const ComponentDestroyFunc destroy;
 
-        template<typename T>
+        template<ValidComponentType T>
         static ComponentDescriptor const* get() noexcept
         {
-            static_assert(std::is_standard_layout_v<T>);
-
             // Use a static descriptor that is different for each specialization of this template.
             // This ensures a stable pointer to the descriptor that exists for the lifetime of the application.
             static ComponentDescriptor descriptor(
@@ -78,7 +76,7 @@ namespace LITL::Engine::ECS
 
         static ComponentDescriptor const* get(ComponentTypeId componentTypeId) noexcept;
 
-        template<typename T>
+        template<ValidComponentType T>
         static StableComponentTypeId getStableId() noexcept
         {
             return getStableId(typeid(T).name());
@@ -92,19 +90,19 @@ namespace LITL::Engine::ECS
         static void track(ComponentDescriptor const* descriptor);
     };
 
-    template<typename T>
+    template<ValidComponentType ComponentType>
     ComponentTypeId getComponentTypeId() noexcept
     {
-        return ComponentDescriptor::get<T>()->id;
+        return ComponentDescriptor::get<ComponentType>()->id;
     }
 
-    template<typename T>
+    template<ValidComponentType ComponentType>
     StableComponentTypeId getStableComponentTypeId() noexcept
     {
-        return ComponentDescriptor::get<T>()->stableId;
+        return ComponentDescriptor::get<ComponentType>()->stableId;
     }
 
-    template<typename ComponentType>
+    template<ValidComponentType ComponentType>
     void foldComponentTypesIntoVector(std::vector<ComponentTypeId>& componentTypeIds) noexcept
     {
         componentTypeIds.emplace_back(ComponentDescriptor::get<ComponentType>()->id);

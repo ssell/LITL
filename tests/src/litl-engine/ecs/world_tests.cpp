@@ -165,3 +165,22 @@ TEST_CASE("Component Ctor Dtor Call", "[engine::ecs::world]")
 
     REQUIRE(ComponentCtorDtorCallTest::CtorDtorTestCount == 0);
 }
+
+TEST_CASE("Modify Component", "[engine::ecs::world]")
+{
+    LITL::Engine::ECS::World world;
+    LITL::Engine::ECS::Entity entity = world.createImmediate();
+
+    const uint32_t updatedValue = 55;
+
+    world.addComponentImmediate<Foo>(entity);
+
+   // auto fooOpt = world.getComponent<Foo>(entity);
+   //
+   // REQUIRE(fooOpt != std::nullopt);
+   //
+   //
+   //
+   //
+   // world.destroyImmediate(entity);
+}
