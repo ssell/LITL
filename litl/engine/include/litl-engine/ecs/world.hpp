@@ -177,8 +177,14 @@ namespace LITL::Engine::ECS
         /// <summary>
         /// Returns the specified component on the Entity if it exists.
         /// 
-        /// Note that it is generally unusual to retrieve a component in this manner as 
+        /// Note: that it is generally unusual to retrieve a component in this manner as 
         /// components should typically be processed iteratively in a system.
+        /// 
+        /// Note Note: Modifying the returned component does NOT modify the component
+        /// stored within the archetype chunk (aka it does nothing). To update the 
+        /// component use the setComponent method. This is intentional as a retrieval
+        /// via this method may be done at an unsafe time and so any modifications
+        /// should also be intentionally (and thoughtfully) done.
         /// </summary>
         /// <typeparam name="ComponentType"></typeparam>
         /// <param name="entity"></param>
@@ -204,7 +210,7 @@ namespace LITL::Engine::ECS
         /// <summary>
         /// Sets the value of the specified component for the Entity if it exists.
         /// 
-        /// Note that it is generally unusual to set a component value in this manner as
+        /// Note: that it is generally unusual to set a component value in this manner as
         /// components should typically be processed iteratively in a system.
         /// </summary>
         /// <typeparam name="ComponentType"></typeparam>
@@ -213,7 +219,19 @@ namespace LITL::Engine::ECS
         template<ValidComponentType ComponentType>
         void setComponent(Entity entity, ComponentType& component) noexcept
         {
-            // ...
+            if (!isAlive(entity))
+            {
+                return;
+            }
+
+            const auto record = getEntityRecord(entity);
+
+            if (!record.archetype->hasComponent<ComponentType>())
+            {
+                return;
+            }
+
+            record.archetype->setComponent<ComponentType>(record, component);
         }
 
         template<ValidSystem T>

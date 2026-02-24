@@ -38,7 +38,7 @@ namespace LITL::Engine::ECS
         ComponentType& getComponent(EntityRecord record) noexcept
         {
             auto& chunk = getChunk(record);
-            return chunk.getComponentArray<ComponentType>(m_chunkLayout);
+            return chunk.getComponentArray<ComponentType>(m_chunkLayout)[record.archetypeIndex % m_chunkLayout.entityCapacity];
         }
 
         template<ValidComponentType ComponentType>
@@ -49,6 +49,13 @@ namespace LITL::Engine::ECS
 
         bool hasComponent(ComponentTypeId componentTypeId) const noexcept;
         bool hasComponent(ComponentTypeId componentTypeId, size_t& index) const noexcept;
+
+        template<ValidComponentType ComponentType>
+        void setComponent(EntityRecord record, ComponentType& component) noexcept
+        {
+            auto& chunk = getChunk(record);
+            chunk.getComponentArray<ComponentType>(m_chunkLayout)[record.archetypeIndex % m_chunkLayout.entityCapacity] = component;
+        }
 
     protected:
 
