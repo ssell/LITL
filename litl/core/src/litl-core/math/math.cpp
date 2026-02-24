@@ -1,7 +1,14 @@
+#include <cmath>
 #include "litl-core/math/math.hpp"
 
 namespace LITL::Math
 {
+    bool floatEquals(float a, float b, float epsilon) noexcept
+    {
+        return std::abs(a - b) < epsilon;
+    }
+
+
     size_t alignMemoryOffsetUp(size_t offset, size_t alignment) noexcept
     {
         /**

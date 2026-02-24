@@ -47,6 +47,15 @@ namespace LITL::Math
     }
 
     /// <summary>
+    /// Returns true if the difference between a and b is less than the provided epsilon.
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <param name="epsilon"></param>
+    /// <returns></returns>
+    bool floatEquals(float a, float b, float epsilon = 0.000001f) noexcept;
+
+    /// <summary>
     /// Returns the smallest value >= offset that is aligned to alignment.
     /// Mathematically it is equivalent to: ceil(offset / alignment) * alignment
     /// Note: alignment MUST be a power of 2.

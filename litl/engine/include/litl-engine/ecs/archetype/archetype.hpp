@@ -26,11 +26,11 @@ namespace LITL::Engine::ECS
 
         uint32_t registryIndex() const noexcept;
         uint64_t componentHash() const noexcept;
-        ChunkLayout const* layout() const noexcept;
         std::vector<ComponentTypeId> const& componentTypes() const noexcept;
         uint32_t componentCount() const noexcept;
         uint32_t entityCount() const noexcept;
 
+        ChunkLayout const& chunkLayout() const noexcept;
         Chunk& getChunk(EntityRecord record) noexcept;
         Chunk& getChunk(uint32_t const index) noexcept;
 
