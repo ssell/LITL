@@ -108,4 +108,11 @@ namespace LITL::Engine::ECS
             return std::nullopt;
         }
     }
+
+    std::byte const* Chunk::getComponentArray(ChunkLayout const& layout, ComponentTypeId componentTypeId) const
+    {
+        uint32_t componentIndex = 0;
+        layout.getComponentIndex(componentTypeId, componentIndex);
+        return &(m_data[layout.componentOffsets[componentIndex]]);
+    }
 }

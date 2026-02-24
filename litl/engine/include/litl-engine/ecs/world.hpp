@@ -2,10 +2,13 @@
 #define LITL_ENGINE_ECS_WORLD_H__
 
 #include <cstdint>
+#include <optional>
 #include <type_traits>
 
 #include "litl-engine/ecs/entity.hpp"
+#include "litl-engine/ecs/entityRecord.hpp"
 #include "litl-engine/ecs/component.hpp"
+#include "litl-engine/ecs/archetype/archetype.hpp"
 #include "litl-engine/ecs/system/system.hpp"
 
 namespace LITL::Engine::ECS
@@ -31,6 +34,13 @@ namespace LITL::Engine::ECS
         /// </summary>
         /// <returns></returns>
         Entity createImmediate() const noexcept;
+
+        /// <summary>
+        /// Returns the record associated with the specified entity.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        EntityRecord getEntityRecord(Entity entity) const noexcept;
 
         /// <summary>
         /// Immediately destroys the Entity.
@@ -72,11 +82,11 @@ namespace LITL::Engine::ECS
         /// or other *Immediate methods, should be limited to setting up simple demos, tests, etc.
         /// </summary>
         /// <returns></returns>
-        template<typename T>
+        template<ValidComponentType ComponentType>
         void addComponentImmediate(Entity entity) const noexcept
         {
-            static_assert(std::is_standard_layout_v<T>);
-            addComponentImmediate(entity, ComponentDescriptor::get<T>()->id);
+            static_assert(std::is_standard_layout_v<ComponentType>);
+            addComponentImmediate(entity, ComponentDescriptor::get<ComponentType>()->id);
         }
 
         /// <summary>
@@ -97,7 +107,7 @@ namespace LITL::Engine::ECS
         /// </summary>
         /// <typeparam name="...ComponentTypes"></typeparam>
         /// <param name="entity"></param>
-        template<typename... ComponentTypes>
+        template<ValidComponentType... ComponentTypes>
         void addComponentsImmediate(Entity entity) const noexcept
         {
             static_assert((std::is_standard_layout_v<ComponentTypes> && ...));
@@ -127,11 +137,11 @@ namespace LITL::Engine::ECS
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="entity"></param>
-        template<typename T>
+        template<ValidComponentType ComponentType>
         void removeComponentImmediate(Entity entity) const noexcept
         {
-            static_assert(std::is_standard_layout_v<T>);
-            removeComponentImmediate(entity, ComponentDescriptor::get<T>()->id);
+            static_assert(std::is_standard_layout_v<ComponentType>);
+            removeComponentImmediate(entity, ComponentDescriptor::get<ComponentType>()->id);
         }
 
         /// <summary>
@@ -152,7 +162,7 @@ namespace LITL::Engine::ECS
         /// </summary>
         /// <typeparam name="...ComponentTypes"></typeparam>
         /// <param name="entity"></param>
-        template<typename... ComponentTypes>
+        template<ValidComponentType... ComponentTypes>
         void removeComponentsImmediate(Entity entity) const noexcept
         {
             static_assert((std::is_standard_layout_v<ComponentTypes> && ...));
@@ -162,6 +172,48 @@ namespace LITL::Engine::ECS
             (foldComponentTypesIntoVector<ComponentTypes>(componentTypeIds), ...);
 
             removeComponentsImmediate(entity, componentTypeIds);
+        }
+
+        /// <summary>
+        /// Returns the specified component on the Entity if it exists.
+        /// 
+        /// Note that it is generally unusual to retrieve a component in this manner as 
+        /// components should typically be processed iteratively in a system.
+        /// </summary>
+        /// <typeparam name="ComponentType"></typeparam>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        template<ValidComponentType ComponentType>
+        std::optional<ComponentType> getComponent(Entity entity) const noexcept
+        {
+            if (!isAlive(entity))
+            {
+                return std::nullopt;
+            }
+
+            const auto record = getEntityRecord(entity);
+            
+            if (!record.archetype->hasComponent<ComponentType>())
+            {
+                return std::nullopt;
+            }
+
+            return record.archetype->getComponent<ComponentType>(record);
+        }
+
+        /// <summary>
+        /// Sets the value of the specified component for the Entity if it exists.
+        /// 
+        /// Note that it is generally unusual to set a component value in this manner as
+        /// components should typically be processed iteratively in a system.
+        /// </summary>
+        /// <typeparam name="ComponentType"></typeparam>
+        /// <param name="entity"></param>
+        /// <param name="component"></param>
+        template<ValidComponentType ComponentType>
+        void setComponent(Entity entity, ComponentType& component) noexcept
+        {
+            // ...
         }
 
         template<ValidSystem T>

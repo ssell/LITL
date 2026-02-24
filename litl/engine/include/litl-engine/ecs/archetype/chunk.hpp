@@ -1,8 +1,10 @@
 #ifndef LITL_ENGINE_ECS_ARCHETYPE_CHUNK_H__
 #define LITL_ENGINE_ECS_ARCHETYPE_CHUNK_H__
 
+#include <bit>
 #include <cstdint>
 #include <optional>
+#include <span>
 
 #include "litl-engine/ecs/constants.hpp"
 #include "litl-engine/ecs/archetype/chunkLayout.hpp"
@@ -49,6 +51,15 @@ namespace LITL::Engine::ECS
 
         void add(ChunkLayout const& layout, uint32_t addAtIndex) noexcept;
         std::optional<Entity> removeAndSwap(ChunkLayout const& layout, uint32_t removeAtIndex, Chunk* swapFromChunk, uint32_t swapFromChunkIndex) noexcept;
+
+        template<typename ComponentType>
+        std::span<ComponentType> getComponentArray(ChunkLayout const& layout) noexcept
+        {
+            auto tptr = std::bit_cast<ComponentType*>(getComponentArray(layout, ComponentDescriptor::get<ComponentType>()->id));
+            return { tptr, getHeader()->count };
+        }
+
+        std::byte const* getComponentArray(ChunkLayout const& layout, ComponentTypeId componentTypeId) const;
 
     protected:
 

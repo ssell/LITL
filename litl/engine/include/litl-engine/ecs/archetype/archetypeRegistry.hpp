@@ -27,7 +27,7 @@ namespace LITL::Engine::ECS
         /// <returns></returns>
         static Archetype* Empty() noexcept;
 
-        template<typename... ComponentTypes>
+        template<ValidComponentType... ComponentTypes>
         static std::vector<ComponentTypeId> getComponentMask() noexcept
         {
             std::vector<ComponentTypeId> componentTypeIds;
@@ -43,7 +43,7 @@ namespace LITL::Engine::ECS
         /// </summary>
         /// <typeparam name="...ComponentTypes"></typeparam>
         /// <returns></returns>
-        template<typename... ComponentTypes>
+        template<ValidComponentType... ComponentTypes>
         static Archetype* get() noexcept
         {
             std::vector<ComponentTypeId> componentTypeIds;

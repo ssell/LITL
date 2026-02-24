@@ -50,6 +50,20 @@ namespace LITL::Engine::ECS
         return m_entityCount;
     }
 
+    Chunk& Archetype::getChunk(EntityRecord const record) noexcept
+    {
+        assert(record.archetype == this);
+        assert(record.archetypeIndex < m_entityCount);
+
+        return getChunk(record.archetypeIndex / m_chunkLayout.entityCapacity);
+    }
+
+    Chunk& Archetype::getChunk(uint32_t const index) noexcept
+    {
+        assert(index < m_chunks.size());
+        return m_chunks[index];
+    }
+
     uint32_t Archetype::getNextIndex() noexcept
     {
         // First entity in this archetype (archetype may be new or used to have entities that have since left)
@@ -73,11 +87,17 @@ namespace LITL::Engine::ECS
         return m_entityCount + 1;
     }
 
-    bool Archetype::hasComponent(ComponentTypeId component, size_t& index)
+    bool Archetype::hasComponent(ComponentTypeId componentTypeId) const noexcept
+    {
+        size_t unused = 0;
+        return hasComponent(componentTypeId, unused);
+    }
+
+    bool Archetype::hasComponent(ComponentTypeId componentTypeId, size_t& index) const noexcept
     {
         for (auto i = 0; i < m_chunkLayout.componentTypeCount; ++i)
         {
-            if (m_chunkLayout.componentOrder[i]->id == component)
+            if (m_chunkLayout.componentOrder[i]->id == componentTypeId)
             {
                 index = i;
                 return true;

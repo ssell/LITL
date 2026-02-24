@@ -70,3 +70,22 @@ TEST_CASE("Empty Archetype", "[engine::ecs::archetype]")
     REQUIRE(emptyArchetype != nullptr);
     REQUIRE(emptyArchetype->componentCount() == 0);
 }
+
+TEST_CASE("Archetype Has Component", "[engine::ecs::archetype]")
+{
+    auto* archetypeFoo = LITL::Engine::ECS::ArchetypeRegistry::get<Foo>();
+    auto* archetypeFooBar = LITL::Engine::ECS::ArchetypeRegistry::get<Foo, Bar>();
+
+    const auto fooId = LITL::Engine::ECS::ComponentDescriptor::get<Foo>()->id;
+    const auto barId = LITL::Engine::ECS::ComponentDescriptor::get<Bar>()->id;
+
+    REQUIRE(archetypeFoo->hasComponent<Foo>() == true);
+    REQUIRE(archetypeFoo->hasComponent<Bar>() == false);
+    REQUIRE(archetypeFoo->hasComponent(fooId) == true);
+    REQUIRE(archetypeFoo->hasComponent(barId) == false);
+
+    REQUIRE(archetypeFooBar->hasComponent<Foo>() == true);
+    REQUIRE(archetypeFooBar->hasComponent<Bar>() == true);
+    REQUIRE(archetypeFooBar->hasComponent(fooId) == true);
+    REQUIRE(archetypeFooBar->hasComponent(barId) == true);
+}

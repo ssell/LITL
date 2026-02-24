@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <utility>
 #include <vector>
@@ -24,6 +25,14 @@ namespace LITL::Engine::ECS
         ChunkLayout();
 
         void calculate() noexcept;
+
+        /// <summary>
+        /// Retrieves the index (into componentOrder and componentOffsets) for the specified component type.
+        /// Can throw if the specified component type is not present in this layout.
+        /// </summary>
+        /// <param name="componentTypeId"></param>
+        /// <param name="index"></param>
+        void getComponentIndex(ComponentTypeId componentTypeId, uint32_t& index) const;
 
         /// <summary>
         /// Pointer back to the owning Archetype.

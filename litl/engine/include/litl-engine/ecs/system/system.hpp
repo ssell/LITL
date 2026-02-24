@@ -31,6 +31,10 @@ namespace LITL::Engine::ECS
     template<typename ComponentList>
     struct ExpandComponentList;
 
+    /// <summary>
+    /// Applies an operation to each component type in the system component list.
+    /// </summary>
+    /// <typeparam name="...Components"></typeparam>
     template<typename... Components>
     struct ExpandComponentList<SystemComponentList<Components...>>
     {
