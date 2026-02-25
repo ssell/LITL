@@ -8,7 +8,13 @@
 
 namespace LITL::Engine::ECS
 {
+    struct World::Impl
+    {
+
+    };
+
     World::World()
+        : m_pImpl(std::make_unique<World::Impl>())
     {
 
     }

@@ -10,45 +10,111 @@
 
 namespace LITL::Engine::ECS
 {
-    template<typename System>
-    concept ValidSystem = requires { typename System::SystemComponents; };
+    class World;
+
 
     /// <summary>
-    /// Used to define the components that a System operates on.
+    /// Used for member function (update function specifically) parameter decomposition.
     /// </summary>
-    /// <typeparam name="...SystemComponents"></typeparam>
-    template<typename... SystemComponents>
-    struct SystemComponentList 
+    /// <typeparam name=""></typeparam>
+    template<typename>
+    struct SystemMemberFunctionTraits;
+
+    /// <summary>
+    /// Non-const overload.
+    /// </summary>
+    /// <typeparam name="C"></typeparam>
+    /// <typeparam name="R"></typeparam>
+    /// <typeparam name="...Args"></typeparam>
+    template<typename C, typename R, typename... Args>
+    struct SystemMemberFunctionTraits<R(C::*)(Args...)>
     {
-    
+        using class_type = C;
+        using return_type = R;
+        using args_tuple = std::tuple<Args...>;
     };
 
     /// <summary>
-    /// Traits adapter used to extract the components.
+    /// Const overload.
     /// </summary>
-    /// <typeparam name="System"></typeparam>
-    template<ValidSystem System>
-    struct SystemTraits
+    /// <typeparam name="C"></typeparam>
+    /// <typeparam name="R"></typeparam>
+    /// <typeparam name="...Args"></typeparam>
+    template<typename C, typename R, typename... Args>
+    struct SystemMemberFunctionTraits<R(C::*)(Args...) const>
     {
-        using SystemComponents = typename System::SystemComponents;
+        using class_type = C;
+        using return_type = R;
+        using args_tuple = std::tuple<Args...>;
     };
-
-    template<typename ComponentList>
-    struct ExpandSystemComponentList;
 
     /// <summary>
-    /// Applies an operation to each component type in the system component list.
+    /// The system update methods must begin with "World&,float" and so those are not needed for
+    /// custom system parameter decomposition. This removes the always-present mandator parameters.
+    /// 
+    /// For example: 
+    /// 
+    ///     update(World& world, float dt, Foo& foo, Bar const& bar)
+    /// 
+    /// The following types are extracted:
+    /// 
+    ///     (Foo&, Bar const&)
     /// </summary>
-    /// <typeparam name="...Components"></typeparam>
-    template<typename... Components>
-    struct ExpandSystemComponentList<SystemComponentList<Components...>>
+    /// <typeparam name="Tuple"></typeparam>
+    /// <typeparam name="...I"></typeparam>
+    /// <param name=""></param>
+    /// <returns></returns>
+    template<typename Tuple, std::size_t... I>
+    auto SystemTupleTailImpl(std::index_sequence<I...>) -> std::tuple<std::tuple_element_t<I + 2, Tuple>...>;
+
+    /// <summary>
+    /// Works with SystemTupleTailImpl.
+    /// </summary>
+    /// <typeparam name="Tuple"></typeparam>
+    template<typename Tuple>
+    using SystemTupleTail = decltype(SystemTupleTailImpl<Tuple>(std::make_index_sequence<std::tuple_size_v<Tuple> - 2>{}));
+
+    /// <summary>
+    /// Requirements for a valid System class/struct.
+    /// 
+    /// All that is needed is there is an "update" method that takes in a World& and float parameter.
+    /// Additional parameters can be added and are used for archetype matching and the values are 
+    /// provided during system run/iteration.
+    /// </summary>
+    template<typename T>
+    concept ValidSystem =
+        requires
     {
-        template<typename Fn>
-        static void apply(Fn&& fn)
-        {
-            fn.template operator()<Components...>();
-        }
-    };
+        &T::update;
+    }
+    && [] {
+        using traits = SystemMemberFunctionTraits<decltype(&T::update)>;
+        using args = typename traits::args_tuple;
+
+        static_assert(std::tuple_size_v<args> >= 2, "System 'update' must take atleast: World&, float");
+
+        using A0 = std::tuple_element_t<0, args>;
+        using A1 = std::tuple_element_t<1, args>;
+
+        return
+            std::same_as<typename traits::return_type, void>&&
+            std::same_as<A0, World&>&&
+            std::same_as<A1, float>;
+        }();
+
+    /// <summary>
+    /// Retrieves the tuple of types required by the system (excluding the mandatory World&,float).
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    template<ValidSystem T>
+    using SystemComponents = SystemTupleTail<typename SystemMemberFunctionTraits<decltype(&T::update)>::args_tuple>;
+
+    /// <summary>
+    /// Removes const ref from a type. For example: Foo& -> Foo, Bar const& -> Bar.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    template<typename T>
+    using RemoveConstantValRef = std::remove_cv_t<std::remove_reference_t<T>>;
 
     /// <summary>
     /// Responsible for running a system over a single archetype chunk.
@@ -60,65 +126,56 @@ namespace LITL::Engine::ECS
     {
     public:
 
-        SystemRunner(System& system, Archetype& archetype, Chunk& chunk)
-            : m_refSystem(system), m_refArchetype(archetype), m_refChunk(chunk)
+        SystemRunner(World& world, System& system, Archetype& archetype, Chunk& chunk)
+            : m_refWorld(world), m_refSystem(system), m_refArchetype(archetype), m_refChunk(chunk)
         {
 
         }
 
-        /// <summary>
-        /// () operator which is used by the ExpandSystemComponentList::apply utility.
-        /// </summary>
-        /// <typeparam name="...ComponentType"></typeparam>
-        template<ValidComponentType... ComponentType>
-        void operator()()
+        void run()
         {
-            execute<ComponentType...>();
+            // Get the system components in tuple form. For example: std::tuple<Foo&, Bar&>
+            using SystemComponentTuple = SystemComponents<System>;
+            iterate<SystemComponentTuple>();
         }
 
     protected:
 
     private:
 
-        System& m_refSystem;
-        Archetype& m_refArchetype;
-        Chunk& m_refChunk;
-
-        /// <summary>
-        /// Executes the system for the single Chunk.
-        /// </summary>
-        /// <typeparam name="...ComponentType"></typeparam>
-        template<ValidComponentType... ComponentType>
-        void execute()
+        template<typename SystemComponentTuple>
+        void iterate()
         {
-            // Retrieve the raw arrays for our component types
-            auto componentArrays = std::tuple<ComponentType*...>
+            auto& layout = m_refArchetype.chunkLayout();
+
+            // Retrieve the data ptr for each component in the tuple type.
+            // For example: SystemComponentTuple -> std::tuple<Foo&, Bar&> ->
+            //    componentArrays[0] = Foo*
+            //    componentArrays[1] = Bar*
+            auto componentArrays = [&]<typename... ComponentTypes>(std::tuple<ComponentTypes...>*)
             {
-                m_refChunk.getRawComponentArray<ComponentType>(m_refArchetype.chunkLayout()) ...
-            };
+                // Note we remove the reference when getting the array. Example: "Foo const&" -> "Foo"
+                return std::tuple{ m_refChunk.getRawComponentArray<RemoveConstantValRef<ComponentTypes>>(layout)... };
+            }((SystemComponentTuple*)nullptr);
 
             const uint32_t entityCount = m_refChunk.size();
 
             // Call System::update for each entity in the chunk.
             for (uint32_t i = 0; i < entityCount; ++i)
             {
-                update(componentArrays, i, std::index_sequence_for<ComponentType...>{});
+                // Use apply to expand the tuple into parameters.
+                // Example: (Foo, Bar) -> lambda(Foo*, Bar*)
+                std::apply([&](auto&... componentArray)
+                    {
+                        m_refSystem.update(m_refWorld, 0.0f, componentArray[i]...);
+                    }, componentArrays);
             }
         }
 
-        /// <summary>
-        /// Invokes the System::update method passing in the requested components.
-        /// </summary>
-        /// <typeparam name="ComponentTuple"></typeparam>
-        /// <typeparam name="...Indices"></typeparam>
-        /// <param name="componentArrays"></param>
-        /// <param name="index"></param>
-        /// <param name=""></param>
-        template<typename ComponentTuple, size_t... Indices>
-        void update(ComponentTuple& componentArrays, uint32_t const index, std::index_sequence<Indices...>)
-        {
-            m_refSystem.update(std::get<Indices>(componentArrays)[index] ...);
-        }
+        World& m_refWorld;
+        System& m_refSystem;
+        Archetype& m_refArchetype;
+        Chunk& m_refChunk;
     };
 }
 
