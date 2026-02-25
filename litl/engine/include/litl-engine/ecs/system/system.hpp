@@ -126,17 +126,17 @@ namespace LITL::Engine::ECS
     {
     public:
 
-        SystemRunner(World& world, System& system, Chunk& chunk, ChunkLayout const& layout)
-            : m_refWorld(world), m_refSystem(system), m_refChunk(chunk), m_refChunkLayout(layout)
+        SystemRunner(System& system)
+            : m_refSystem(system)
         {
 
         }
 
-        void run()
+        void run(World& world, float dt, Chunk& chunk, ChunkLayout const& layout)
         {
             // Get the system components in tuple form. For example: std::tuple<Foo&, Bar&>
             using SystemComponentTuple = SystemComponents<System>;
-            iterate<SystemComponentTuple>();
+            iterate<SystemComponentTuple>(world, dt, chunk, layout);
         }
 
     protected:
@@ -144,7 +144,7 @@ namespace LITL::Engine::ECS
     private:
 
         template<typename SystemComponentTuple>
-        void iterate()
+        void iterate(World& world, float dt, Chunk& chunk, ChunkLayout const& layout)
         {
             // Retrieve the data ptr for each component in the tuple type.
             // For example: SystemComponentTuple -> std::tuple<Foo&, Bar&> ->
@@ -153,10 +153,10 @@ namespace LITL::Engine::ECS
             auto componentArrays = [&]<typename... ComponentTypes>(std::tuple<ComponentTypes...>*)
             {
                 // Note we remove the reference when getting the array. Example: "Foo const&" -> "Foo"
-                return std::tuple{ m_refChunk.getRawComponentArray<RemoveConstantValRef<ComponentTypes>>(m_refChunkLayout)... };
+                return std::tuple{ chunk.getRawComponentArray<RemoveConstantValRef<ComponentTypes>>(layout)... };
             }((SystemComponentTuple*)nullptr);
 
-            const uint32_t entityCount = m_refChunk.size();
+            const uint32_t entityCount = chunk.size();
 
             // Call System::update for each entity in the chunk.
             for (uint32_t i = 0; i < entityCount; ++i)
@@ -165,15 +165,12 @@ namespace LITL::Engine::ECS
                 // Example: (Foo, Bar) -> lambda(Foo*, Bar*)
                 std::apply([&](auto&... componentArray)
                     {
-                        m_refSystem.update(m_refWorld, 0.0f, componentArray[i]...);
+                        m_refSystem.update(world, dt, componentArray[i]...);
                     }, componentArrays);
             }
         }
 
-        World& m_refWorld;
         System& m_refSystem;
-        Chunk& m_refChunk;
-        ChunkLayout const& m_refChunkLayout;
     };
 }
 

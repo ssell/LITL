@@ -119,13 +119,13 @@ namespace LITL::Engine::ECS
         }
     }
 
-    Archetype* ArchetypeRegistry::getByIndex(uint32_t const index) noexcept
+    Archetype* ArchetypeRegistry::getById(ArchetypeId const id) noexcept
     {
-        assert(index < instance().archetypes.size());
+        assert(id < instance().archetypes.size());
 
-        if (index < instance().archetypes.size())
+        if (id < instance().archetypes.size())
         {
-            return instance().archetypes[index].get();
+            return instance().archetypes[id].get();
         }
 
         return nullptr;

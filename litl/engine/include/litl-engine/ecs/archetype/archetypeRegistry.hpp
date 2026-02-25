@@ -58,7 +58,7 @@ namespace LITL::Engine::ECS
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        static Archetype* getByIndex(uint32_t index) noexcept;
+        static Archetype* getById(ArchetypeId id) noexcept;
 
         /// <summary>
         /// Retrieves the archetype by the component hash.

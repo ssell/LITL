@@ -14,7 +14,7 @@ TEST_CASE("ArchetypeRegistry::get (Static)", "[engine::ecs::archetype]")
     REQUIRE(archetypeFoo == archetypeFooFoo);
     REQUIRE(archetypeFoo != archetypeFooBar);
     REQUIRE(archetypeFooBar == archetypeBarFoo);
-    REQUIRE(archetypeFoo->registryIndex() != archetypeFooBar->registryIndex());
+    REQUIRE(archetypeFoo->id() != archetypeFooBar->id());
     REQUIRE(archetypeFoo->componentHash() != archetypeFooBar->componentHash());
 
     auto archetypeFun = LITL::Engine::ECS::ArchetypeRegistry::get<Bar, Bar, Foo, Foo, Foo, Bar, Foo, Foo, Bar, Foo>();
@@ -45,13 +45,13 @@ TEST_CASE("ArchetypeRegistry::get (Dynamic)", "[engine::ecs::archetype]")
     REQUIRE(archetypeFooBarD == archetypeBarFooD);
 }
 
-TEST_CASE("ArchetypeRegistry::getByIndex", "[engine::ecs::archetype]")
+TEST_CASE("ArchetypeRegistry::getById", "[engine::ecs::archetype]")
 {
     auto archetypeFoo = LITL::Engine::ECS::ArchetypeRegistry::get<Foo>();
     auto archetypeFooBar = LITL::Engine::ECS::ArchetypeRegistry::get<Foo, Bar>();
 
-    REQUIRE(LITL::Engine::ECS::ArchetypeRegistry::getByIndex(archetypeFoo->registryIndex()) == archetypeFoo);
-    REQUIRE(LITL::Engine::ECS::ArchetypeRegistry::getByIndex(archetypeFooBar->registryIndex()) == archetypeFooBar);
+    REQUIRE(LITL::Engine::ECS::ArchetypeRegistry::getById(archetypeFoo->id()) == archetypeFoo);
+    REQUIRE(LITL::Engine::ECS::ArchetypeRegistry::getById(archetypeFooBar->id()) == archetypeFooBar);
 }
 
 TEST_CASE("ArchetypeRegistry::getByComponentHash", "[engine::ecs::archetype]")
