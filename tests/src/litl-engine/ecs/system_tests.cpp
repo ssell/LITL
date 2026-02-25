@@ -19,6 +19,8 @@ TEST_CASE("System Runner Test", "[engine::ecs::system]")
     LITL::Engine::ECS::World world;
     TestSystem system;
 
+    world.addSystem<TestSystem>(LITL::Engine::ECS::SystemGroup::Update);
+
     auto entity0 = world.createImmediate();
     auto entity1 = world.createImmediate();
 
@@ -30,8 +32,8 @@ TEST_CASE("System Runner Test", "[engine::ecs::system]")
     LITL::Engine::ECS::SystemRunner<TestSystem> runner(
         world, 
         system, 
-        *entityRecord.archetype, 
-        entityRecord.archetype->getChunk(entityRecord) 
+        entityRecord.archetype->getChunk(entityRecord),
+        entityRecord.archetype->chunkLayout()
     );
 
     for (auto i = 0; i < 10; ++i)

@@ -4,7 +4,6 @@
 #include <memory>
 #include <vector>
 
-#include "litl-engine/ecs/system/systemBase.hpp"
 #include "litl-engine/ecs/system/systemNode.hpp"
 
 namespace LITL::Engine::ECS
@@ -25,11 +24,10 @@ namespace LITL::Engine::ECS
     {
     public:
 
-        SystemSchedule() = default;
-        SystemSchedule(SystemSchedule const&) = delete;
-        SystemSchedule& operator=(SystemSchedule const&) = delete;
+        SystemSchedule();
+        ~SystemSchedule();
 
-        void addSystem(SystemBase* system) noexcept;
+        void addSystem(SystemTypeId systemId) noexcept;
 
     protected:
 

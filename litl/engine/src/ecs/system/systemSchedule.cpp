@@ -1,11 +1,20 @@
 #include "litl-engine/ecs/system/systemSchedule.hpp"
-#include "litl-engine/ecs/system/systemBase.hpp"
+#include "litl-engine/ecs/system/systemWrapper.hpp"
 
 namespace LITL::Engine::ECS
 {
-    void SystemSchedule::addSystem(SystemBase* system) noexcept
+    SystemSchedule::SystemSchedule()
     {
-        // todo order the systems based on dependencies
-        m_nodes.emplace_back(system);
+
+    }
+
+    SystemSchedule::~SystemSchedule()
+    {
+
+    }
+
+    void SystemSchedule::addSystem(SystemTypeId systemId) noexcept
+    {
+        // .. todo ..
     }
 }
