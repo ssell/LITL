@@ -65,9 +65,19 @@ TEST_CASE("System Wrapper", "[engine::ecs::system]")
     LITL::Engine::ECS::System system;
     system.attach<TestSystem>();
 
+    /**
+     * What is still needed:
+     * 
+     *   - Match systems to archetypes
+     *   - System needs to iterate its archetypes and chunks calling run
+     *   - Calculate fixed dt and run fixed update multiple times per frame if needed
+     *   - Advanced system scheduling
+     *   - Fine to get started on main thread only to show it works, but quickly need to multithread
+     */
+
     for (auto i = 0; i < 10; ++i)
     {
-        system.run(world, 0.0f, entityRecord.archetype->getChunk(entityRecord), entityRecord.archetype->chunkLayout());
+        system.run(world, 0.0f);
     }
 
     REQUIRE(world.getComponent<Foo>(entity0)->a == 10);

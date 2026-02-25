@@ -9,17 +9,13 @@
 
 namespace LITL::Engine::ECS
 {
-    class SystemBase;
-
-    using SystemNodeId = uint32_t;
-
     /// <summary>
     /// A single scheduled system.
     /// </summary>
     struct SystemNode
     {
-        SystemNode(SystemBase* pSystem)
-            : system(pSystem)
+        SystemNode(uint32_t systemIndex)
+            : index(systemIndex)
         {
             componentAccess.reserve(8);
             incoming.reserve(8);
@@ -29,7 +25,7 @@ namespace LITL::Engine::ECS
         /// <summary>
         /// The system instance referenced by this node.
         /// </summary>
-        SystemBase* system;
+        uint32_t index;
 
         /// <summary>
         /// The access levels required by the system for the components it operates on.
@@ -39,12 +35,12 @@ namespace LITL::Engine::ECS
         /// <summary>
         /// The system nodes (represented by their index in the group) that this system is dependent on.
         /// </summary>
-        std::vector<SystemNodeId> incoming;
+        std::vector<uint32_t> incoming;
 
         /// <summary>
         /// The system nodes (represented by their index in the group) that are dependent on this system.
         /// </summary>
-        std::vector<SystemNodeId> outgoing;
+        std::vector<uint32_t> outgoing;
 
         /// <summary>
         /// The number of incoming systems that still need to finish before this system can be executed.

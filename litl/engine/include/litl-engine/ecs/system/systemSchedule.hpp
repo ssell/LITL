@@ -8,6 +8,9 @@
 
 namespace LITL::Engine::ECS
 {
+    class System;
+    class World;
+
     /// <summary>
     /// Group of systems, ordered by a graph, that are executed together.
     /// 
@@ -27,7 +30,8 @@ namespace LITL::Engine::ECS
         SystemSchedule();
         ~SystemSchedule();
 
-        void addSystem(SystemTypeId systemId) noexcept;
+        void add(SystemTypeId systemType);
+        bool run(World& world, float dt, std::vector<System*> const& systems);
 
     protected:
 
