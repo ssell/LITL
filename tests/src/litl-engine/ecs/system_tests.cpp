@@ -1,16 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
-#include <iostream>
-
 #include "litl-engine/ecs/ecsCommon.hpp"
 #include "litl-engine/ecs/world.hpp"
-#include "litl-engine/ecs/component.hpp"
-#include "litl-engine/ecs/system/system.hpp"
 
 struct TestSystem
 {
-    using SystemComponents = LITL::Engine::ECS::SystemComponentList<Foo, Bar>;
-
-    void update(Foo& foo, Bar& bar)
+    void update(LITL::Engine::ECS::World& world, float dt, Foo& foo, Bar& bar)
     {
         foo.a++;
         bar.b++;
@@ -18,7 +12,7 @@ struct TestSystem
 };
 
 /// <summary>
-/// Tests the internal SystemRunner by manually running the TestSystem.
+/// Tests the internal ExpandSystemComponentList and SystemRunner by manually running the TestSystem.
 /// </summary>
 TEST_CASE("System Runner Test", "[engine::ecs::system]")
 {
@@ -33,10 +27,16 @@ TEST_CASE("System Runner Test", "[engine::ecs::system]")
 
     auto entityRecord = world.getEntityRecord(entity0);
 
+    LITL::Engine::ECS::SystemRunner<TestSystem> runner(
+        world, 
+        system, 
+        *entityRecord.archetype, 
+        entityRecord.archetype->getChunk(entityRecord) 
+    );
+
     for (auto i = 0; i < 10; ++i)
     {
-        LITL::Engine::ECS::ExpandSystemComponentList<TestSystem::SystemComponents>::apply(
-            LITL::Engine::ECS::SystemRunner<TestSystem>{ system, * entityRecord.archetype, entityRecord.archetype->getChunk(entityRecord) });
+        runner.run();
     }
 
     REQUIRE(world.getComponent<Foo>(entity0)->a == 10);
@@ -50,27 +50,3 @@ TEST_CASE("System Runner Test", "[engine::ecs::system]")
     world.destroyImmediate(entity0);
     world.destroyImmediate(entity1);
 }
-
-template<typename ComponentType>
-void extractComponentType(std::vector<LITL::Engine::ECS::ComponentDescriptor const*>& componentTypes)
-{
-    componentTypes.push_back(LITL::Engine::ECS::ComponentDescriptor::get<ComponentType>());
-}
-
-template<typename... ComponentTypes>
-void extractComponentTypes(std::vector<LITL::Engine::ECS::ComponentDescriptor const*>& componentTypes)
-{
-    componentTypes.reserve(sizeof... (ComponentTypes));
-    (extractComponentType<ComponentTypes>(componentTypes), ...);
-}
-
-struct SystemComponentExtractor
-{
-    std::vector<LITL::Engine::ECS::ComponentDescriptor const*> componentTypes;
-
-    template<typename... ComponentTypes>
-    void operator()()
-    {
-        extractComponentTypes<ComponentTypes...>(componentTypes);
-    }
-};

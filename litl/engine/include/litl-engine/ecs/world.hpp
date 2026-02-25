@@ -2,6 +2,7 @@
 #define LITL_ENGINE_ECS_WORLD_H__
 
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <type_traits>
 
@@ -269,6 +270,8 @@ namespace LITL::Engine::ECS
 
     private:
 
+        struct Impl;
+        std::unique_ptr<Impl> m_pImpl;
     };
 }
 
