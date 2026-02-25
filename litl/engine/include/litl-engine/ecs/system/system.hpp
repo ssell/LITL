@@ -1,176 +1,50 @@
 #ifndef LITL_ENGINE_ECS_SYSTEM_H__
 #define LITL_ENGINE_ECS_SYSTEM_H__
 
-#include <concepts>
-#include <tuple>
+#include <optional>
 
 #include "litl-engine/ecs/constants.hpp"
-#include "litl-engine/ecs/archetype/chunk.hpp"
-#include "litl-engine/ecs/system/system.hpp"
+#include "litl-engine/ecs/system/systemRunner.hpp"
+#include "litl-engine/ecs/system/systemWrapper.hpp"
 
 namespace LITL::Engine::ECS
 {
-    class World;
-    struct ChunkLayout;
-
     /// <summary>
-    /// Used for member function (update function specifically) parameter decomposition.
+    /// The result of many levels of wrapping and type erasure.
+    /// Stores the user system, system runner, archetype references, etc.
     /// </summary>
-    /// <typeparam name=""></typeparam>
-    template<typename>
-    struct SystemMemberFunctionTraits;
-
-    /// <summary>
-    /// Non-const overload.
-    /// </summary>
-    /// <typeparam name="C"></typeparam>
-    /// <typeparam name="R"></typeparam>
-    /// <typeparam name="...Args"></typeparam>
-    template<typename C, typename R, typename... Args>
-    struct SystemMemberFunctionTraits<R(C::*)(Args...)>
-    {
-        using class_type = C;
-        using return_type = R;
-        using args_tuple = std::tuple<Args...>;
-    };
-
-    /// <summary>
-    /// Const overload.
-    /// </summary>
-    /// <typeparam name="C"></typeparam>
-    /// <typeparam name="R"></typeparam>
-    /// <typeparam name="...Args"></typeparam>
-    template<typename C, typename R, typename... Args>
-    struct SystemMemberFunctionTraits<R(C::*)(Args...) const>
-    {
-        using class_type = C;
-        using return_type = R;
-        using args_tuple = std::tuple<Args...>;
-    };
-
-    /// <summary>
-    /// The system update methods must begin with "World&,float" and so those are not needed for
-    /// custom system parameter decomposition. This removes the always-present mandator parameters.
-    /// 
-    /// For example: 
-    /// 
-    ///     update(World& world, float dt, Foo& foo, Bar const& bar)
-    /// 
-    /// The following types are extracted:
-    /// 
-    ///     (Foo&, Bar const&)
-    /// </summary>
-    /// <typeparam name="Tuple"></typeparam>
-    /// <typeparam name="...I"></typeparam>
-    /// <param name=""></param>
-    /// <returns></returns>
-    template<typename Tuple, std::size_t... I>
-    auto SystemTupleTailImpl(std::index_sequence<I...>) -> std::tuple<std::tuple_element_t<I + 2, Tuple>...>;
-
-    /// <summary>
-    /// Works with SystemTupleTailImpl.
-    /// </summary>
-    /// <typeparam name="Tuple"></typeparam>
-    template<typename Tuple>
-    using SystemTupleTail = decltype(SystemTupleTailImpl<Tuple>(std::make_index_sequence<std::tuple_size_v<Tuple> - 2>{}));
-
-    /// <summary>
-    /// Requirements for a valid System class/struct.
-    /// 
-    /// All that is needed is there is an "update" method that takes in a World& and float parameter.
-    /// Additional parameters can be added and are used for archetype matching and the values are 
-    /// provided during system run/iteration.
-    /// </summary>
-    template<typename T>
-    concept ValidSystem =
-        requires
-    {
-        &T::update;
-    }
-    && [] {
-        using traits = SystemMemberFunctionTraits<decltype(&T::update)>;
-        using args = typename traits::args_tuple;
-
-        static_assert(std::tuple_size_v<args> >= 2, "System::update must take atleast: World&, float");
-
-        using A0 = std::tuple_element_t<0, args>;
-        using A1 = std::tuple_element_t<1, args>;
-
-        return
-            std::same_as<typename traits::return_type, void>&&
-            std::same_as<A0, World&>&&
-            std::same_as<A1, float>;
-        }();
-
-    /// <summary>
-    /// Retrieves the tuple of types required by the system (excluding the mandatory World&,float).
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    template<ValidSystem T>
-    using SystemComponents = SystemTupleTail<typename SystemMemberFunctionTraits<decltype(&T::update)>::args_tuple>;
-
-    /// <summary>
-    /// Removes const ref from a type. For example: Foo& -> Foo, Bar const& -> Bar.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    template<typename T>
-    using RemoveConstantValRef = std::remove_cv_t<std::remove_reference_t<T>>;
-
-    /// <summary>
-    /// Responsible for running a system over a single archetype chunk.
-    /// The chunk is expected to have all of the components required by the system.
-    /// </summary>
-    /// <typeparam name="System"></typeparam>
-    template<ValidSystem System>
-    class SystemRunner
+    class System
     {
     public:
 
-        SystemRunner(System& system)
-            : m_refSystem(system)
+        /// <summary>
+        /// Post-instantiation user system type attachment to this System instance.
+        /// The user system type is used to compose the SystemRunner, but it is not required to create this System object.
+        /// </summary>
+        /// <typeparam name="System"></typeparam>
+        template<ValidSystem System>
+        void attach()
         {
-
+            m_runFunc = CreateSystemWrapperRunnerTask(SystemWrapper<System>());
         }
 
-        void run(World& world, float dt, Chunk& chunk, ChunkLayout const& layout)
-        {
-            // Get the system components in tuple form. For example: std::tuple<Foo&, Bar&>
-            using SystemComponentTuple = SystemComponents<System>;
-            iterate<SystemComponentTuple>(world, dt, chunk, layout);
-        }
+        /// <summary>
+        /// Runs the underyling user system over the provided chunk.
+        /// The actual execution is performed by a SystemRunner.
+        /// </summary>
+        /// <param name="world"></param>
+        /// <param name="dt"></param>
+        /// <param name="chunk"></param>
+        /// <param name="layout"></param>
+        void run(World& world, float dt, Chunk& chunk, ChunkLayout const& layout);
 
     protected:
 
     private:
 
-        template<typename SystemComponentTuple>
-        void iterate(World& world, float dt, Chunk& chunk, ChunkLayout const& layout)
-        {
-            // Retrieve the data ptr for each component in the tuple type.
-            // For example: SystemComponentTuple -> std::tuple<Foo&, Bar&> ->
-            //    componentArrays[0] = Foo*
-            //    componentArrays[1] = Bar*
-            auto componentArrays = [&]<typename... ComponentTypes>(std::tuple<ComponentTypes...>*)
-            {
-                // Note we remove the reference when getting the array. Example: "Foo const&" -> "Foo"
-                return std::tuple{ chunk.getRawComponentArray<RemoveConstantValRef<ComponentTypes>>(layout)... };
-            }((SystemComponentTuple*)nullptr);
+        std::function<LITL::Engine::ECS::SystemRunFunc> m_runFunc = nullptr;
 
-            const uint32_t entityCount = chunk.size();
-
-            // Call System::update for each entity in the chunk.
-            for (uint32_t i = 0; i < entityCount; ++i)
-            {
-                // Use apply to expand the tuple into parameters.
-                // Example: (Foo, Bar) -> lambda(Foo*, Bar*)
-                std::apply([&](auto&... componentArray)
-                    {
-                        m_refSystem.update(world, dt, componentArray[i]...);
-                    }, componentArrays);
-            }
-        }
-
-        System& m_refSystem;
+        // ... archetypes ...
     };
 }
 

@@ -1,8 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
+#include <functional>
+#include <vector>
+
 #include "litl-engine/ecs/ecsCommon.hpp"
 #include "litl-engine/ecs/world.hpp"
-#include "litl-engine/ecs/system/systemRegistry.hpp"
-#include "litl-engine/ecs/system/systemWrapper.hpp"
+#include "litl-engine/ecs/system/system.hpp"
 
 struct TestSystem
 {
@@ -31,7 +33,7 @@ TEST_CASE("System Runner", "[engine::ecs::system]")
 
     auto entityRecord = world.getEntityRecord(entity0);
 
-    LITL::Engine::ECS::SystemRunner<TestSystem> runner(system);
+    LITL::Engine::ECS::SystemRunner<TestSystem> runner(&system);
 
     for (auto i = 0; i < 10; ++i)
     {
@@ -60,13 +62,14 @@ TEST_CASE("System Wrapper", "[engine::ecs::system]")
     world.addComponentsImmediate(entity0, Foo{ 0 }, Bar{ 0.0f, 0 });
     world.addComponentsImmediate(entity1, Foo{ 100 }, Bar{ 1.0f, 500 });
 
-    auto& systemRecord = LITL::Engine::ECS::SystemRegistry::get<TestSystem>();
-    
-    LITL::Engine::ECS::SystemWrapper wrapper(systemRecord.id);
+    auto entityRecord = world.getEntityRecord(entity0);
+
+    LITL::Engine::ECS::System system;
+    system.attach<TestSystem>();
 
     for (auto i = 0; i < 10; ++i)
     {
-        wrapper.run(world, 0.0f);
+        system.run(world, 0.0f, entityRecord.archetype->getChunk(entityRecord), entityRecord.archetype->chunkLayout());
     }
 
     REQUIRE(world.getComponent<Foo>(entity0)->a == 10);
