@@ -182,8 +182,8 @@ namespace LITL::Engine::ECS
     // System Operations
     // -------------------------------------------------------------------------------------
 
-    void World::addSystem(SystemTypeId systemId, SystemGroup group) const noexcept
+    SystemScheduler& World::getSystemScheduler() noexcept
     {
-        m_pImpl->systemScheduler.addSystem(systemId, group);
+        return m_pImpl->systemScheduler;
     }
 }

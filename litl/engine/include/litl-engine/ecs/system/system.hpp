@@ -17,6 +17,8 @@ namespace LITL::Engine::ECS
     {
     public:
 
+        System();
+
         /// <summary>
         /// Post-instantiation user system type attachment to this System instance.
         /// The user system type is used to compose the SystemRunner, but it is not required to create this System object.
@@ -36,7 +38,9 @@ namespace LITL::Engine::ECS
         /// <param name="dt"></param>
         /// <param name="chunk"></param>
         /// <param name="layout"></param>
-        void run(World& world, float dt, Chunk& chunk, ChunkLayout const& layout);
+        void run(World& world, float dt);
+
+        const SystemTypeId id;
 
     protected:
 

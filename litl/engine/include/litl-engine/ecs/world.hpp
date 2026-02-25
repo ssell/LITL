@@ -10,8 +10,7 @@
 #include "litl-engine/ecs/entityRecord.hpp"
 #include "litl-engine/ecs/component.hpp"
 #include "litl-engine/ecs/archetype/archetype.hpp"
-#include "litl-engine/ecs/system/systemRunner.hpp"
-#include "litl-engine/ecs/system/systemGroup.hpp"
+#include "litl-engine/ecs/system/systemScheduler.hpp"
 
 namespace LITL::Engine::ECS
 {
@@ -261,17 +260,17 @@ namespace LITL::Engine::ECS
             record.archetype->setComponent<ComponentType>(record, component);
         }
 
-        template<ValidSystem T>
+        template<ValidSystem Sys>
         void addSystem(SystemGroup group) noexcept
         {
-            // get systemtypeid then use other addSystem
+            getSystemScheduler().addSystem<Sys>(group);
         }
 
     protected:
 
     private:
 
-        void addSystem(SystemTypeId systemId, SystemGroup group) const noexcept;
+        SystemScheduler& getSystemScheduler() noexcept;
 
         struct Impl;
         std::unique_ptr<Impl> m_pImpl;
