@@ -1,7 +1,10 @@
 #ifndef LITL_ENGINE_ECS_SYSTEM_WRAPPER_H__
 #define LITL_ENGINE_ECS_SYSTEM_WRAPPER_H__
 
+#include <memory>
+
 #include "litl-engine/ecs/constants.hpp"
+#include "litl-engine/ecs/system/system.hpp"
 
 namespace LITL::Engine::ECS
 {
@@ -17,19 +20,17 @@ namespace LITL::Engine::ECS
     {
     public:
 
-        SystemWrapper(SystemTypeId type);
-        SystemWrapper(SystemWrapper const&) = delete;
-        SystemWrapper& operator=(SystemWrapper const&) = delete;
+        SystemWrapper(SystemTypeId systemTypeId);
+        ~SystemWrapper();
 
-        SystemTypeId type() const noexcept;
-        
         void run(World& world, float dt) const noexcept;
 
     protected:
 
     private:
 
-        const SystemTypeId m_type;
+        struct Impl;
+        std::unique_ptr<Impl> m_pImpl;
     };
 }
 

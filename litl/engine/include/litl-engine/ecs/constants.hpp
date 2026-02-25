@@ -10,6 +10,7 @@ namespace LITL::Engine::ECS
     using ComponentTypeId = uint32_t;
     using StableComponentTypeId = uint64_t;
     using SystemTypeId = uint32_t;
+    using ArchetypeId = uint32_t;
 
     template<typename T>
     concept ValidComponentType = std::is_standard_layout_v<T>;

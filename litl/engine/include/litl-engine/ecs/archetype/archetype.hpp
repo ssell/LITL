@@ -24,7 +24,7 @@ namespace LITL::Engine::ECS
     {
     public:
 
-        uint32_t registryIndex() const noexcept;
+        ArchetypeId id() const noexcept;
         uint64_t componentHash() const noexcept;
         std::vector<ComponentTypeId> const& componentTypes() const noexcept;
         uint32_t componentCount() const noexcept;
@@ -61,7 +61,7 @@ namespace LITL::Engine::ECS
 
     private:
 
-        Archetype(std::string_view name, uint32_t registryIndex, uint64_t componentHash);
+        Archetype(std::string_view name, uint32_t id, uint64_t componentHash);
 
         uint32_t getNextIndex() noexcept;
 
@@ -85,7 +85,7 @@ namespace LITL::Engine::ECS
         /// <param name="to"></param>
         void move(EntityRecord const& record, Archetype* to) noexcept;
 
-        const uint32_t m_registryIndex;
+        const ArchetypeId m_registryId;
         const uint64_t m_componentHash;
         uint32_t m_entityCount;
 

@@ -8,8 +8,8 @@
 
 namespace LITL::Engine::ECS
 {
-    Archetype::Archetype(std::string_view name, uint32_t registryIndex, uint64_t componentHash) : 
-        m_registryIndex(registryIndex),
+    Archetype::Archetype(std::string_view name, ArchetypeId registryId, uint64_t componentHash) :
+        m_registryId(registryId),
         m_componentHash(componentHash),
         m_entityCount(0),
         m_chunks(16)                        // 16kb chunks * 16 = 256kb pages
@@ -20,9 +20,9 @@ namespace LITL::Engine::ECS
         m_components.reserve(MAX_COMPONENTS);
     }
 
-    uint32_t Archetype::registryIndex() const noexcept
+    ArchetypeId Archetype::id() const noexcept
     {
-        return m_registryIndex;
+        return m_registryId;
     }
 
     uint64_t Archetype::componentHash() const noexcept
