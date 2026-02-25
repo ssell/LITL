@@ -5,7 +5,6 @@
 
 #include "litl-engine/ecs/constants.hpp"
 #include "litl-engine/ecs/system/systemRunner.hpp"
-#include "litl-engine/ecs/system/systemRegistry.hpp"
 
 namespace LITL::Engine::ECS
 {
