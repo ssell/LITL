@@ -56,6 +56,20 @@ namespace LITL::Math
     bool floatEquals(float a, float b, float epsilon = 0.000001f) noexcept;
 
     /// <summary>
+    /// Returns true if the value is == 0.0
+    /// </summary>
+    /// <param name="x"></param>
+    /// <returns></returns>
+    bool isZero(float x, float epsilon = 0.000001f) noexcept;
+
+    /// <summary>
+    /// Returns true if the value is == 1.0
+    /// </summary>
+    /// <param name="x"></param>
+    /// <returns></returns>
+    bool isOne(float x, float epsilon = 0.000001f) noexcept;
+
+    /// <summary>
     /// Returns the smallest value >= offset that is aligned to alignment.
     /// Mathematically it is equivalent to: ceil(offset / alignment) * alignment
     /// Note: alignment MUST be a power of 2.

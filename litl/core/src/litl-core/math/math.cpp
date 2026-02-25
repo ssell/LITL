@@ -3,13 +3,22 @@
 
 namespace LITL::Math
 {
-    bool floatEquals(float a, float b, float epsilon) noexcept
+    bool floatEquals(float const a, float const b, float const epsilon) noexcept
     {
         return std::abs(a - b) < epsilon;
     }
 
+    bool isZero(float const x, float const epsilon) noexcept
+    {
+        return floatEquals(x, 0.0f, epsilon);
+    }
 
-    size_t alignMemoryOffsetUp(size_t offset, size_t alignment) noexcept
+    bool isOne(float const x, float const epsilon) noexcept
+    {
+        return floatEquals(x, 1.0f, epsilon);
+    }
+
+    size_t alignMemoryOffsetUp(size_t const offset, size_t const alignment) noexcept
     {
         /**
          * Example: offset = 13, alignment = 8. returns 16

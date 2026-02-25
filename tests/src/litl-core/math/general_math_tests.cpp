@@ -31,6 +31,26 @@ TEST_CASE("floatEquals", "[math::general]")
     REQUIRE(LITL::Math::floatEquals(-51234.54f, -51234.0f, 1.0f) == true);
 }
 
+TEST_CASE("isZero", "[math::general]")
+{
+    REQUIRE(LITL::Math::isZero(0.0f) == true);
+    REQUIRE(LITL::Math::isZero(-1.0f) == false);
+    REQUIRE(LITL::Math::isZero(1.0f) == false);
+    REQUIRE(LITL::Math::isZero(0.00001f) == false);
+    REQUIRE(LITL::Math::isZero(0.0000001f) == true);
+    REQUIRE(LITL::Math::isZero(0.5f, 1.0f) == true);
+}
+
+TEST_CASE("isOne", "[math::general]")
+{
+    REQUIRE(LITL::Math::isOne(1.0f) == true);
+    REQUIRE(LITL::Math::isOne(-1.0f) == false);
+    REQUIRE(LITL::Math::isOne(1.1f) == false);
+    REQUIRE(LITL::Math::isOne(1.0001f) == false);
+    REQUIRE(LITL::Math::isOne(1.0000001f) == true);
+    REQUIRE(LITL::Math::isOne(1.5f, 1.0f) == true);
+}
+
 TEST_CASE("alignMemoryOffsetUp", "[math::general]")
 {
     REQUIRE(LITL::Math::alignMemoryOffsetUp(13, 8) == 16);
