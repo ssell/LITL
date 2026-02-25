@@ -131,6 +131,32 @@ TEST_CASE("Entity Add / Remove Components", "[engine::ecs::world]")
     REQUIRE(world.isAlive(entity) == false);
 }
 
+TEST_CASE("Entity Add Components With Value", "[engine::ecs::world]")
+{
+    LITL::Engine::ECS::World world;
+    LITL::Engine::ECS::Entity entity0 = world.createImmediate();
+    LITL::Engine::ECS::Entity entity1 = world.createImmediate();
+
+    world.addComponentImmediate(entity0, Foo{ 1337 });
+    world.addComponentsImmediate(entity1, Foo{ 1338 }, Bar{ 10.0f, 100 });
+
+    auto entity0Foo = world.getComponent<Foo>(entity0);
+    auto entity1Foo = world.getComponent<Foo>(entity1);
+    auto entity1Bar = world.getComponent<Bar>(entity1);
+
+    REQUIRE(entity0Foo != std::nullopt);
+    REQUIRE(entity1Foo != std::nullopt);
+    REQUIRE(entity1Foo != std::nullopt);
+
+    REQUIRE(entity0Foo->a == 1337);
+    REQUIRE(entity1Foo->a == 1338);
+    REQUIRE(entity1Bar->b == 100);
+    REQUIRE(LITL::Math::floatEquals(entity1Bar->a, 10.0f));
+
+    world.destroyImmediate(entity1);
+    world.destroyImmediate(entity0);
+}
+
 TEST_CASE("Destroy Entity with Components", "[engine::ecs::world]")
 {
     LITL::Engine::ECS::Archetype* fooBarArchetype = LITL::Engine::ECS::ArchetypeRegistry::get<Foo, Bar>();

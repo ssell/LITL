@@ -85,9 +85,23 @@ namespace LITL::Engine::ECS
         template<ValidComponentType ComponentType>
         void addComponentImmediate(Entity entity) const noexcept
         {
-            static_assert(std::is_standard_layout_v<ComponentType>);
             addComponentImmediate(entity, ComponentDescriptor::get<ComponentType>()->id);
         }
+
+        /// <summary>
+        /// Immediately adds the specified component to the Entity.
+        /// 
+        /// It is recommended to use an ECS Command Buffer instead. The use of this, 
+        /// or other *Immediate methods, should be limited to setting up simple demos, tests, etc.
+        /// </summary>
+        /// <returns></returns>
+        template<ValidComponentType ComponentType>
+        void addComponentImmediate(Entity entity, ComponentType const& component)
+        {
+            addComponentImmediate<ComponentType>(entity);
+            setComponent(entity, component);
+        }
+
 
         /// <summary>
         /// Immediately adds the specified components to the Entity.
@@ -110,13 +124,27 @@ namespace LITL::Engine::ECS
         template<ValidComponentType... ComponentTypes>
         void addComponentsImmediate(Entity entity) const noexcept
         {
-            static_assert((std::is_standard_layout_v<ComponentTypes> && ...));
-
             std::vector<ComponentTypeId> componentTypeIds;
             componentTypeIds.reserve(sizeof...(ComponentTypes));
             (foldComponentTypesIntoVector<ComponentTypes>(componentTypeIds), ...);
 
             addComponentsImmediate(entity, componentTypeIds);
+        }
+
+        /// <summary>
+        /// Immediately adds the specified components to the Entity with the provided values.
+        /// 
+        /// It is recommended to use an ECS Command Buffer instead. The use of this, 
+        /// or other *Immediate methods, should be limited to setting up simple demos, tests, etc.
+        /// </summary>
+        /// <typeparam name="...ComponentTypes"></typeparam>
+        /// <param name="entity"></param>
+        /// <param name="...Args"></param>
+        template<ValidComponentType... ComponentTypes>
+        void addComponentsImmediate(Entity entity, ComponentTypes&& ... Args)
+        {
+            (addComponentImmediate<ComponentTypes>(entity), ...);
+            (setComponent(entity, Args), ...);
         }
 
         /// <summary>
@@ -140,7 +168,6 @@ namespace LITL::Engine::ECS
         template<ValidComponentType ComponentType>
         void removeComponentImmediate(Entity entity) const noexcept
         {
-            static_assert(std::is_standard_layout_v<ComponentType>);
             removeComponentImmediate(entity, ComponentDescriptor::get<ComponentType>()->id);
         }
 
@@ -165,8 +192,6 @@ namespace LITL::Engine::ECS
         template<ValidComponentType... ComponentTypes>
         void removeComponentsImmediate(Entity entity) const noexcept
         {
-            static_assert((std::is_standard_layout_v<ComponentTypes> && ...));
-
             std::vector<ComponentTypeId> componentTypeIds;
             componentTypeIds.reserve(sizeof...(ComponentTypes));
             (foldComponentTypesIntoVector<ComponentTypes>(componentTypeIds), ...);
