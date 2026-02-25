@@ -43,10 +43,11 @@ namespace LITL::Engine::ECS
         
         return id;
     }
-
+    /*
     SystemRecord const& SystemRegistry::get(SystemTypeId systemTypeId)
     {
         auto& registry = instance();
         return *registry.systemRecords[systemTypeId];
     }
+    */
 }

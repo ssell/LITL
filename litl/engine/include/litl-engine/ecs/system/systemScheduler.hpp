@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <memory>
 
-#include "litl-engine/ecs/system/system.hpp"
+#include "litl-engine/ecs/system/systemRunner.hpp"
 #include "litl-engine/ecs/system/systemGroup.hpp"
 
 namespace LITL::Engine::ECS

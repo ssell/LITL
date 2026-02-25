@@ -35,7 +35,7 @@ target_link_libraries(litl-tests
 
 target_compile_features(litl-tests
 	PUBLIC
-		cxx_std_20
+		cxx_std_23
 )
 
 target_include_directories(litl-tests

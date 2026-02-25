@@ -33,5 +33,5 @@ target_link_libraries(litl-renderer-vulkan
 
 target_compile_features(litl-renderer-vulkan
 	PUBLIC
-		cxx_std_20
+		cxx_std_23
 )

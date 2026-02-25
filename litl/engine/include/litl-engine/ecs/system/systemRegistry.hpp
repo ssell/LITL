@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "litl-core/debug.hpp"
-#include "litl-engine/ecs/system/system.hpp"
+#include "litl-engine/ecs/system/systemRunner.hpp"
 
 namespace LITL::Engine::ECS
 {
@@ -22,6 +22,11 @@ namespace LITL::Engine::ECS
             setDebugName(typeid(System).name());
         }
 
+        void run(World& world, float dt, Chunk& chunk, ChunkLayout const& layout)
+        {
+
+        }
+
         const SystemTypeId id;
 
     private:
@@ -29,7 +34,10 @@ namespace LITL::Engine::ECS
         static SystemTypeId nextId() noexcept;
         static SystemTypeId track(SystemRecord const* record) noexcept;
 
-        struct Internal { };
+        struct Internal 
+        { 
+            
+        };
 
         /// <summary>
         /// In order to pass the SystemRecord around generically (so we
@@ -43,7 +51,8 @@ namespace LITL::Engine::ECS
         template<ValidSystem System>
         struct Impl : Internal
         {
-            Impl(System sys) : system(std::move(sys)), runner(system)
+            Impl(System sys) 
+                : system(std::move(sys)), runner(system)
             {
 
             }
@@ -55,9 +64,57 @@ namespace LITL::Engine::ECS
         std::unique_ptr<Internal> m_pInternal;
     };
 
+
+
+    template<ValidSystem System>
+    class SystemRecord2
+    {
+    public:
+
+        SystemRecord2(SystemTypeId id)
+            : id(id), system({}), runner({ system })
+        {
+
+        }
+
+        void run(World& world, float dt, Chunk& chunk, ChunkLayout const& layout)
+        {
+            runner.run(world, dt, chunk, layout);
+        }
+
+        const SystemTypeId id;
+
+    private:
+
+        System system;
+        SystemRunner<System> runner;
+    };
+
+
+
     class SystemRegistry
     {
     public:
+
+        static SystemTypeId nextId()
+        {
+            static SystemTypeId id = 0;
+            return id++;
+        }
+
+        template<ValidSystem System>
+        static SystemRecord2<System>& get2()
+        {
+            static SystemRecord2<System> record({ nextId() });
+            return record;
+        }
+
+        static void run(SystemTypeId, World& world, float dt, Chunk& chunk, ChunkLayout const& layout)
+        {
+
+        }
+
+        /*
 
         template<ValidSystem System>
         static SystemRecord const& get()
@@ -67,10 +124,12 @@ namespace LITL::Engine::ECS
         }
 
         static SystemRecord const& get(SystemTypeId systemTypeId);
-
+        */
     protected:
 
     private:
+
+
 
     };
 }

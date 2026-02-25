@@ -10,7 +10,7 @@
 #include "litl-engine/ecs/entityRecord.hpp"
 #include "litl-engine/ecs/component.hpp"
 #include "litl-engine/ecs/archetype/archetype.hpp"
-#include "litl-engine/ecs/system/system.hpp"
+#include "litl-engine/ecs/system/systemRunner.hpp"
 #include "litl-engine/ecs/system/systemGroup.hpp"
 
 namespace LITL::Engine::ECS
