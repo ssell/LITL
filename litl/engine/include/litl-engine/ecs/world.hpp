@@ -11,6 +11,7 @@
 #include "litl-engine/ecs/component.hpp"
 #include "litl-engine/ecs/archetype/archetype.hpp"
 #include "litl-engine/ecs/system/system.hpp"
+#include "litl-engine/ecs/system/systemGroup.hpp"
 
 namespace LITL::Engine::ECS
 {
@@ -261,14 +262,16 @@ namespace LITL::Engine::ECS
         }
 
         template<ValidSystem T>
-        void addSystem() noexcept
+        void addSystem(SystemGroup group) noexcept
         {
-
+            // get systemtypeid then use other addSystem
         }
 
     protected:
 
     private:
+
+        void addSystem(SystemTypeId systemId, SystemGroup group) const noexcept;
 
         struct Impl;
         std::unique_ptr<Impl> m_pImpl;

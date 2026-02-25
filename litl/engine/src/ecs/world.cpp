@@ -1,22 +1,24 @@
 #include <algorithm>
+#include <array>
 #include <vector>
 
 #include "litl-engine/ecs/world.hpp"
 #include "litl-engine/ecs/constants.hpp"
 #include "litl-engine/ecs/entityRegistry.hpp"
 #include "litl-engine/ecs/archetype/archetypeRegistry.hpp"
+#include "litl-engine/ecs/system/systemScheduler.hpp"
 
 namespace LITL::Engine::ECS
 {
     struct World::Impl
     {
-
+        SystemScheduler systemScheduler;
     };
 
     World::World()
         : m_pImpl(std::make_unique<World::Impl>())
     {
-
+        
     }
 
     World::~World()
@@ -174,5 +176,14 @@ namespace LITL::Engine::ECS
 
         // Move
         ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
+    }
+
+    // -------------------------------------------------------------------------------------
+    // System Operations
+    // -------------------------------------------------------------------------------------
+
+    void World::addSystem(SystemTypeId systemId, SystemGroup group) const noexcept
+    {
+        m_pImpl->systemScheduler.addSystem(systemId, group);
     }
 }

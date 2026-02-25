@@ -11,7 +11,7 @@
 namespace LITL::Engine::ECS
 {
     class World;
-
+    struct ChunkLayout;
 
     /// <summary>
     /// Used for member function (update function specifically) parameter decomposition.
@@ -91,7 +91,7 @@ namespace LITL::Engine::ECS
         using traits = SystemMemberFunctionTraits<decltype(&T::update)>;
         using args = typename traits::args_tuple;
 
-        static_assert(std::tuple_size_v<args> >= 2, "System 'update' must take atleast: World&, float");
+        static_assert(std::tuple_size_v<args> >= 2, "System::update must take atleast: World&, float");
 
         using A0 = std::tuple_element_t<0, args>;
         using A1 = std::tuple_element_t<1, args>;
@@ -126,8 +126,8 @@ namespace LITL::Engine::ECS
     {
     public:
 
-        SystemRunner(World& world, System& system, Archetype& archetype, Chunk& chunk)
-            : m_refWorld(world), m_refSystem(system), m_refArchetype(archetype), m_refChunk(chunk)
+        SystemRunner(World& world, System& system, Chunk& chunk, ChunkLayout const& layout)
+            : m_refWorld(world), m_refSystem(system), m_refChunk(chunk), m_refChunkLayout(layout)
         {
 
         }
@@ -146,8 +146,6 @@ namespace LITL::Engine::ECS
         template<typename SystemComponentTuple>
         void iterate()
         {
-            auto& layout = m_refArchetype.chunkLayout();
-
             // Retrieve the data ptr for each component in the tuple type.
             // For example: SystemComponentTuple -> std::tuple<Foo&, Bar&> ->
             //    componentArrays[0] = Foo*
@@ -155,7 +153,7 @@ namespace LITL::Engine::ECS
             auto componentArrays = [&]<typename... ComponentTypes>(std::tuple<ComponentTypes...>*)
             {
                 // Note we remove the reference when getting the array. Example: "Foo const&" -> "Foo"
-                return std::tuple{ m_refChunk.getRawComponentArray<RemoveConstantValRef<ComponentTypes>>(layout)... };
+                return std::tuple{ m_refChunk.getRawComponentArray<RemoveConstantValRef<ComponentTypes>>(m_refChunkLayout)... };
             }((SystemComponentTuple*)nullptr);
 
             const uint32_t entityCount = m_refChunk.size();
@@ -174,8 +172,8 @@ namespace LITL::Engine::ECS
 
         World& m_refWorld;
         System& m_refSystem;
-        Archetype& m_refArchetype;
         Chunk& m_refChunk;
+        ChunkLayout const& m_refChunkLayout;
     };
 }
 
