@@ -356,7 +356,7 @@ TEST_CASE("Run System", "[ecs::system]")
 
     for (auto i = 0; i < 10; ++i)
     {
-        world.extractSystemManager().run(LITL::ECS::SystemGroup::Update, world, 0.0f);
+        world.extractSystemManager().run(world, 0.0f, LITL::ECS::SystemGroup::Update);
     }
 
     REQUIRE(world.getComponent<Foo>(entity0)->a == 10);

@@ -101,7 +101,7 @@ namespace LITL::ECS
         updateSystemArchetypes();
     }
 
-    void SystemManager::run(SystemGroup group, World& world, float dt) noexcept
+    void SystemManager::run(World& world, float dt, SystemGroup group)
     {
         while (m_pImpl->schedules[static_cast<uint32_t>(group)].run(world, dt, m_pImpl->systems))
         {

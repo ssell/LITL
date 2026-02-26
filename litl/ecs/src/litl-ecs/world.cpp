@@ -12,6 +12,7 @@ namespace LITL::ECS
     struct World::Impl
     {
         SystemManager systemManager;
+        float accumulatedTime = 0.0f;
     };
 
     World::World()
@@ -184,5 +185,28 @@ namespace LITL::ECS
     SystemManager& World::getSystemManager() noexcept
     {
         return m_pImpl->systemManager;
+    }
+
+    void World::run(float const dt, float const fixedStep) noexcept
+    {
+        m_pImpl->accumulatedTime += dt;
+        m_pImpl->systemManager.prepareFrame();
+
+        m_pImpl->systemManager.run(*this, dt, SystemGroup::Startup);
+        m_pImpl->systemManager.run(*this, dt, SystemGroup::Input);
+
+        // Run fixed update 0 or more times. On fast frames it may not run every frame. On slow frames it may run multiple times.
+        while (m_pImpl->accumulatedTime >= fixedStep)
+        {
+            m_pImpl->systemManager.run(*this, fixedStep, SystemGroup::FixedUpdate);
+            m_pImpl->accumulatedTime -= fixedStep;
+        }
+
+        m_pImpl->systemManager.run(*this, dt, SystemGroup::Update);
+        m_pImpl->systemManager.run(*this, dt, SystemGroup::LateUpdate);
+        m_pImpl->systemManager.run(*this, dt, SystemGroup::PreRender);
+        m_pImpl->systemManager.run(*this, dt, SystemGroup::Render);
+        m_pImpl->systemManager.run(*this, dt, SystemGroup::PostRender);
+        m_pImpl->systemManager.run(*this, dt, SystemGroup::Final);
     }
 }

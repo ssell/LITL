@@ -15,7 +15,7 @@ namespace LITL::ECS
     /// </summary>
     struct SystemNode
     {
-        SystemNode(SystemTypeId systemIndex)
+        explicit SystemNode(SystemTypeId systemIndex)
             : systemId(systemIndex)
         {
             componentAccess.reserve(8);
