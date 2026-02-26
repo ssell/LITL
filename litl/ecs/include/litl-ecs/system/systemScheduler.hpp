@@ -18,11 +18,11 @@ namespace LITL::ECS
         SystemScheduler& operator=(SystemScheduler const&) = delete;
         ~SystemScheduler();
 
-        template<ValidSystem Sys>
+        template<ValidSystem S>
         void addSystem(SystemGroup group) const noexcept
         {
-            auto* system = getSystem<Sys>();
-            system->attach<Sys>();
+            auto* system = getSystem<S>();
+            system->attach<S>();
             addSystem(system, group);
         }
 
@@ -32,7 +32,7 @@ namespace LITL::ECS
 
     private:
 
-        template<ValidSystem Sys>
+        template<ValidSystem S>
         static System* getSystem()
         {
             static System system;

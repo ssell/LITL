@@ -25,13 +25,13 @@ namespace LITL::ECS
     /// <summary>
     /// Wraps around an user System and SystemRunner combination.
     /// </summary>
-    template<ValidSystem System>
+    template<ValidSystem S>
     class SystemWrapper
     {
     public:
 
         SystemWrapper()
-            : m_pSystem(std::make_shared<System>()), m_pRunner(std::make_shared<SystemRunner<System>>(m_pSystem.get()))
+            : m_pSystem(std::make_shared<S>()), m_pRunner(std::make_shared<SystemRunner<S>>(m_pSystem.get()))
         {
 
         }
@@ -46,8 +46,8 @@ namespace LITL::ECS
     private:
 
         // Use shared here as the task creator uses copies
-        std::shared_ptr<System> m_pSystem;
-        std::shared_ptr<SystemRunner<System>> m_pRunner;
+        std::shared_ptr<S> m_pSystem;
+        std::shared_ptr<SystemRunner<S>> m_pRunner;
     };
 
 
