@@ -10,7 +10,7 @@
 
 #include "litl-core/math/math.hpp"
 #include "litl-ecs/constants.hpp"
-#include "litl-ecs/component.hpp"
+#include "litl-ecs/component/component.hpp"
 #include "litl-ecs/archetype/chunkHeader.hpp"
 
 namespace LITL::ECS

@@ -1,7 +1,7 @@
 #include <string_view>
 #include "litl-core/hash.hpp"
-#include "litl-ecs/component.hpp"
-#include "litl-ecs/componentRegistry.hpp"
+#include "litl-ecs/component/component.hpp"
+#include "litl-ecs/component/componentRegistry.hpp"
 
 namespace LITL::ECS
 {

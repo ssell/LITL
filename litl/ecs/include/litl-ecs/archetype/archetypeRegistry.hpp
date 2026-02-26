@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "litl-ecs/constants.hpp"
-#include "litl-ecs/component.hpp"
+#include "litl-ecs/component/component.hpp"
 #include "litl-ecs/entityRecord.hpp"
 #include "litl-ecs/archetype/archetype.hpp"
 

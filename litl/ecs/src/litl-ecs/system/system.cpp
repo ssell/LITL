@@ -1,7 +1,16 @@
+#include <vector>
+
 #include "litl-ecs/system/system.hpp"
+#include "litl-ecs/archetype/archetype.hpp"
 
 namespace LITL::ECS
 {
+    struct System::Impl
+    {
+        const SystemTypeId id;
+        // ... archetypes ...
+    };
+
     namespace
     {
         static SystemTypeId nextSystemId()
@@ -12,9 +21,19 @@ namespace LITL::ECS
     }
 
     System::System()
-        : id(nextSystemId())
+        : m_pImpl(std::make_unique<System::Impl>(nextSystemId()))
     {
 
+    }
+    
+    System::~System()
+    {
+
+    }
+
+    SystemTypeId System::id() const noexcept
+    {
+        return m_pImpl->id;
     }
 
     void System::run(World& world, float dt)

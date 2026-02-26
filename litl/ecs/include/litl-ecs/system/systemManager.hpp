@@ -1,5 +1,5 @@
-#ifndef LITL_ENGINE_SYSTEM_SCHEDULER_H__
-#define LITL_ENGINE_SYSTEM_SCHEDULER_H__
+#ifndef LITL_ENGINE_SYSTEM_MANAGER_H__
+#define LITL_ENGINE_SYSTEM_MANAGER_H__
 
 #include <cstdint>
 #include <memory>
@@ -9,20 +9,20 @@
 
 namespace LITL::ECS
 {
-    class SystemScheduler
+    class SystemManager
     {
     public:
 
-        SystemScheduler();
-        SystemScheduler(SystemScheduler const&) = delete;
-        SystemScheduler& operator=(SystemScheduler const&) = delete;
-        ~SystemScheduler();
+        SystemManager();
+        SystemManager(SystemManager const&) = delete;
+        SystemManager& operator=(SystemManager const&) = delete;
+        ~SystemManager();
 
         template<ValidSystem S>
         void addSystem(SystemGroup group) const noexcept
         {
             auto* system = getSystem<S>();
-            system->attach<S>();
+            system->template attach<S>();
             addSystem(system, group);
         }
 

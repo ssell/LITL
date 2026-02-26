@@ -1,6 +1,7 @@
 #ifndef LITL_ENGINE_ECS_SYSTEM_H__
 #define LITL_ENGINE_ECS_SYSTEM_H__
 
+#include <memory>
 #include <optional>
 
 #include "litl-ecs/constants.hpp"
@@ -18,6 +19,9 @@ namespace LITL::ECS
     public:
 
         System();
+        ~System();
+
+        SystemTypeId id() const noexcept;
 
         /// <summary>
         /// Post-instantiation user system type attachment to this System instance.
@@ -40,15 +44,13 @@ namespace LITL::ECS
         /// <param name="layout"></param>
         void run(World& world, float dt);
 
-        const SystemTypeId id;
-
     protected:
 
     private:
 
+        struct Impl;
+        std::unique_ptr<Impl> m_pImpl;
         std::function<LITL::ECS::SystemRunFunc> m_runFunc = nullptr;
-
-        // ... archetypes ...
     };
 }
 
