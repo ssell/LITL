@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "litl-ecs/constants.hpp"
 #include "litl-ecs/system/systemComponentAccess.hpp"
 
 namespace LITL::ECS
@@ -14,8 +15,8 @@ namespace LITL::ECS
     /// </summary>
     struct SystemNode
     {
-        SystemNode(uint32_t systemIndex)
-            : index(systemIndex)
+        SystemNode(SystemTypeId systemIndex)
+            : systemId(systemIndex)
         {
             componentAccess.reserve(8);
             incoming.reserve(8);
@@ -25,7 +26,7 @@ namespace LITL::ECS
         /// <summary>
         /// The system instance referenced by this node.
         /// </summary>
-        uint32_t index;
+        SystemTypeId systemId;
 
         /// <summary>
         /// The access levels required by the system for the components it operates on.

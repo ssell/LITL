@@ -13,9 +13,11 @@ namespace LITL::ECS
 
     }
 
-    void SystemSchedule::add(SystemTypeId systemtype)
+    void SystemSchedule::add(SystemTypeId systemTypeId)
     {
         // ... todo generate the acyclic graph of nodes ...
+        m_nodes.emplace_back(systemTypeId);
+
     }
 
     bool SystemSchedule::run(World& world, float dt, std::vector<System*> const& systems)
@@ -23,7 +25,7 @@ namespace LITL::ECS
         for (auto node : m_nodes)
         {
             // ... todo run the actual acyclic graph of nodes ...
-            systems[node.index]->run(world, dt);
+            systems[static_cast<uint32_t>(node.systemId)]->run(world, dt);
         }
 
         return false;
