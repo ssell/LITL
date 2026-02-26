@@ -25,7 +25,7 @@ namespace LITL::ECS
     {
     public:
 
-        SystemRunner(S* system)
+        explicit SystemRunner(S* system)
             : m_pSystem(system)
         {
 

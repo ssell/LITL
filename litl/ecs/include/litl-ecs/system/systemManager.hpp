@@ -27,7 +27,7 @@ namespace LITL::ECS
         }
 
         void prepareFrame() const noexcept;
-        void run(SystemGroup group, World& world, float dt);
+        void run(World& world, float dt, SystemGroup group);
 
     protected:
 

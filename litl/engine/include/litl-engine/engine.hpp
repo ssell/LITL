@@ -1,7 +1,7 @@
 #ifndef LITL_ENGINE_H__
 #define LITL_ENGINE_H__
 
-#include "litl-core/impl.hpp"
+#include <memory>
 #include "litl-renderer/rendererDescriptor.hpp"
 
 namespace LITL::Engine
@@ -10,7 +10,7 @@ namespace LITL::Engine
     {
     public:
 
-        Engine(Renderer::RendererDescriptor const& rendererDescriptor);
+        explicit Engine(Renderer::RendererDescriptor const& rendererDescriptor);
         ~Engine();
 
         Engine(Engine&&) = delete;
@@ -30,7 +30,7 @@ namespace LITL::Engine
         void render();
 
         struct Impl;
-        Core::ImplPtr<Impl, 64> m_impl;
+        std::unique_ptr<Impl> m_pImpl;
     };
 }
 

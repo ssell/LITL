@@ -260,11 +260,23 @@ namespace LITL::ECS
             record.archetype->setComponent<ComponentType>(record, component);
         }
 
+        /// <summary>
+        /// Adds the specified system to the World.
+        /// </summary>
+        /// <typeparam name="S"></typeparam>
+        /// <param name="group"></param>
         template<ValidSystem S>
         void addSystem(SystemGroup group) noexcept
         {
             getSystemManager().addSystem<S>(group);
         }
+
+        /// <summary>
+        /// Runs all systems.
+        /// </summary>
+        /// <param name="dt">Time between start of last frame and start of this frame.</param>
+        /// <param name="fixedStep">The fixed frame time for the FixedUpdate group.</para>
+        void run(float dt, float fixedStep);
 
     protected:
 
