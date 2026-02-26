@@ -347,7 +347,6 @@ TEST_CASE("Run System", "[ecs::system]")
     /**
      * What is still needed:
      *
-     *   - Calculate fixed dt and run fixed update multiple times per frame if needed
      *   - Advanced system scheduling
      *   - Fine to get started on main thread only to show it works, but quickly need to multithread
      */

@@ -1,17 +1,5 @@
 #include "litl-engine/engine.hpp"
 
-class TriangleObj : public LITL::Engine::SceneObject
-{
-public:
-
-    void onSetup() override {}
-    void onUpdate() override {}
-    void onRender(LITL::Renderer::CommandBuffer* pCommandBuffer) override {}
-
-protected:
-
-private:
-};
 
 int main()
 {
@@ -21,8 +9,6 @@ int main()
     {
         return 1;
     }
-
-    engine.addSceneObject<TriangleObj>();
 
     while (engine.shouldRun())
     {
