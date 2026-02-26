@@ -30,7 +30,7 @@ namespace LITL::ECS
         SystemSchedule();
         ~SystemSchedule();
 
-        void add(SystemTypeId systemType);
+        void add(SystemTypeId systemTypeId);
         bool run(World& world, float dt, std::vector<System*> const& systems);
 
     protected:

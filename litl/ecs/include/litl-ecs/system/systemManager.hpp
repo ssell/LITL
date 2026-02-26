@@ -26,7 +26,8 @@ namespace LITL::ECS
             addSystem(system, group);
         }
 
-        void run(World& world);
+        void prepareFrame() const noexcept;
+        void run(SystemGroup group, World& world, float dt);
 
     protected:
 
@@ -41,7 +42,6 @@ namespace LITL::ECS
 
         void addSystem(System* system, SystemGroup group) const noexcept;
         void updateSystemArchetypes() const noexcept;
-        void runSchedule(SystemGroup group, World& world, float dt);
 
         struct Impl;
         std::unique_ptr<Impl> m_pImpl;

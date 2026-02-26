@@ -334,7 +334,6 @@ TEST_CASE("Modify Multiple Entity Components", "[ecs::world]")
 }
 
 
-
 TEST_CASE("Run System", "[ecs::system]")
 {
     TestWorld world;
@@ -348,18 +347,17 @@ TEST_CASE("Run System", "[ecs::system]")
     /**
      * What is still needed:
      *
-     *   - Match systems to archetypes
-     *   - System needs to iterate its archetypes and chunks calling run
      *   - Calculate fixed dt and run fixed update multiple times per frame if needed
      *   - Advanced system scheduling
      *   - Fine to get started on main thread only to show it works, but quickly need to multithread
      */
 
     world.addSystem<TestSystem>(LITL::ECS::SystemGroup::Update);
+    world.extractSystemManager().prepareFrame();
 
     for (auto i = 0; i < 10; ++i)
     {
-        world.extractSystemManager().run(world);
+        world.extractSystemManager().run(LITL::ECS::SystemGroup::Update, world, 0.0f);
     }
 
     REQUIRE(world.getComponent<Foo>(entity0)->a == 10);

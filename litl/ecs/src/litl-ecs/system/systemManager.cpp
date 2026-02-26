@@ -58,6 +58,7 @@ namespace LITL::ECS
             {
                 m_pImpl->systems.push_back(system);
                 m_pImpl->newSystems.push_back(system);
+                m_pImpl->schedules[static_cast<uint32_t>(group)].add(systemId);
             }
         }
     }
@@ -95,41 +96,12 @@ namespace LITL::ECS
         }
     }
 
-    /// <summary>
-    /// Runs all system groups for the frame.
-    /// </summary>
-    /// <param name="world"></param>
-    void SystemManager::run(World& world)
+    void SystemManager::prepareFrame() const noexcept
     {
         updateSystemArchetypes();
-
-        // todo calculate and pass dts
-        float dt = 0.0f;
-        float fixedDt = 0.0f;
-
-        runSchedule(SystemGroup::Startup, world, dt);
-        runSchedule(SystemGroup::Input, world, dt);
-
-        // todo run multiple times potentially per frame
-        runSchedule(SystemGroup::FixedUpdate, world, fixedDt);
-
-        runSchedule(SystemGroup::Update, world, dt);
-        runSchedule(SystemGroup::LateUpdate, world, dt);
-
-        runSchedule(SystemGroup::PreRender, world, dt);
-        runSchedule(SystemGroup::Render, world, dt);
-        runSchedule(SystemGroup::PostRender, world, dt);
-
-        runSchedule(SystemGroup::Final, world, dt);
     }
 
-    /// <summary>
-    /// Runs an individual system schedule which is composed of multiple systems.
-    /// </summary>
-    /// <param name="group"></param>
-    /// <param name="world"></param>
-    /// <param name="dt"></param>
-    void SystemManager::runSchedule(SystemGroup group, World& world, float dt)
+    void SystemManager::run(SystemGroup group, World& world, float dt) noexcept
     {
         while (m_pImpl->schedules[static_cast<uint32_t>(group)].run(world, dt, m_pImpl->systems))
         {
