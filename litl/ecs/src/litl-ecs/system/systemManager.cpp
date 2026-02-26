@@ -2,6 +2,7 @@
 #include <mutex>
 #include <vector>
 
+#include "litl-ecs/archetype/archetypeRegistry.hpp"
 #include "litl-ecs/system/systemManager.hpp"
 #include "litl-ecs/system/systemSchedule.hpp"
 #include "litl-ecs/system/system.hpp"
@@ -47,9 +48,32 @@ namespace LITL::ECS
         m_pImpl->systems[systemId] = system;
     }
 
+    /// <summary>
+    /// At the start of each frame we want to alert all systems of any new Archetypes that have been created since the last frame.
+    /// </summary>
+    void SystemManager::updateSystemArchetypes() const noexcept
+    {
+        auto newArchetypes = ArchetypeRegistry::fetchNewArchetypes();
 
+        if (newArchetypes.empty())
+        {
+            return;
+        }
+
+        for (auto system : m_pImpl->systems)
+        {
+            system->updateArchetypes(newArchetypes);
+        }
+    }
+
+    /// <summary>
+    /// Runs all system groups for the frame.
+    /// </summary>
+    /// <param name="world"></param>
     void SystemManager::run(World& world)
     {
+        updateSystemArchetypes();
+
         // todo calculate and pass dts
         float dt = 0.0f;
         float fixedDt = 0.0f;
@@ -70,11 +94,18 @@ namespace LITL::ECS
         runSchedule(SystemGroup::Final, world, dt);
     }
 
+    /// <summary>
+    /// Runs an individual system schedule which is composed of multiple systems.
+    /// </summary>
+    /// <param name="group"></param>
+    /// <param name="world"></param>
+    /// <param name="dt"></param>
     void SystemManager::runSchedule(SystemGroup group, World& world, float dt)
     {
         while (m_pImpl->schedules[static_cast<uint32_t>(group)].run(world, dt, m_pImpl->systems))
         {
             // ... while the schedule has systems to run ...
+            // ... schedules are (or will be) acyclic graphs so certain systems are dependent on others to finish before they can run ...
             // ... todo insert escape mechanism ...
         }
     }
