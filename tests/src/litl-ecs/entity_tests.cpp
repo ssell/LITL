@@ -4,7 +4,7 @@
 
 #include "litl-ecs/entityRegistry.hpp"
 
-TEST_CASE("Entity Creation", "[engine::ecs::entityRegistry]")
+TEST_CASE("Entity Creation", "[ecs::entityRegistry]")
 {
     LITL::ECS::EntityRegistry::clear();
     const auto entityRecord = LITL::ECS::EntityRegistry::create();
@@ -12,7 +12,7 @@ TEST_CASE("Entity Creation", "[engine::ecs::entityRegistry]")
     REQUIRE(entityRecord.entity.version > 0);
 }
 
-TEST_CASE("Entity Destruction", "[engine::ecs::entityRegistry]")
+TEST_CASE("Entity Destruction", "[ecs::entityRegistry]")
 {
     LITL::ECS::EntityRegistry::clear();
     const auto entityRecord = LITL::ECS::EntityRegistry::create();
@@ -27,7 +27,7 @@ TEST_CASE("Entity Destruction", "[engine::ecs::entityRegistry]")
     REQUIRE(oldVersion < LITL::ECS::EntityRegistry::getRecord(entityRecord.entity).entity.version);
 }
 
-TEST_CASE("Entity Reuse", "[engine::ecs::entityRegistry]")
+TEST_CASE("Entity Reuse", "[ecs::entityRegistry]")
 {
     LITL::ECS::EntityRegistry::clear();
 
@@ -59,7 +59,7 @@ TEST_CASE("Entity Reuse", "[engine::ecs::entityRegistry]")
     REQUIRE(entityRecord5.entity.version > entityRecord0.entity.version);
 }
 
-TEST_CASE("Entity Bulk Create", "[engine::ecs::entityRegistry]")
+TEST_CASE("Entity Bulk Create", "[ecs::entityRegistry]")
 {
     LITL::ECS::EntityRegistry::clear();
 
@@ -77,7 +77,7 @@ TEST_CASE("Entity Bulk Create", "[engine::ecs::entityRegistry]")
     }
 }
 
-TEST_CASE("Entity Bulk Destroy", "[engine::ecs::entityRegistry]")
+TEST_CASE("Entity Bulk Destroy", "[ecs::entityRegistry]")
 {
     LITL::ECS::EntityRegistry::clear();
 
@@ -90,7 +90,7 @@ TEST_CASE("Entity Bulk Destroy", "[engine::ecs::entityRegistry]")
     }
 }
 
-TEST_CASE("Entity Bulk Reuse", "[engine::ecs::entityRegistry]")
+TEST_CASE("Entity Bulk Reuse", "[ecs::entityRegistry]")
 {
     LITL::ECS::EntityRegistry::clear();
 
@@ -109,7 +109,7 @@ TEST_CASE("Entity Bulk Reuse", "[engine::ecs::entityRegistry]")
     }
 }
 
-TEST_CASE("Entity Bulk Destroy Initializer List", "[engine::ecs::entityRegistry]")
+TEST_CASE("Entity Bulk Destroy Initializer List", "[ecs::entityRegistry]")
 {
     LITL::ECS::EntityRegistry::clear();
     const auto entityRecords = LITL::ECS::EntityRegistry::createMany(4);

@@ -3,7 +3,7 @@
 #include "litl-ecs/common.hpp"
 #include "litl-ecs/archetype/chunk.hpp"
 
-TEST_CASE("Chunk Layout", "[engine::ecs::chunk]")
+TEST_CASE("Chunk Layout", "[ecs::chunk]")
 {
     LITL::ECS::ChunkLayout layoutFooBar;
     LITL::ECS::populateChunkLayout<Foo, Bar>(&layoutFooBar);
@@ -24,7 +24,7 @@ TEST_CASE("Chunk Layout", "[engine::ecs::chunk]")
     // ... todo add more concrete tests (memory address locations, etc.) after the chunk header has stabilized ...
 }
 
-TEST_CASE("Header Creation", "[engine::ecs::chunk]")
+TEST_CASE("Header Creation", "[ecs::chunk]")
 {
     const uint32_t capacity = 100;
 

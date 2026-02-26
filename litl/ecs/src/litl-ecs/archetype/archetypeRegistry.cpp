@@ -18,6 +18,7 @@ namespace LITL::ECS
         std::mutex archetypeMutex;
         std::vector<std::unique_ptr<Archetype>> archetypes;
         Core::FlatHashMap<uint64_t, uint32_t> archetypeMap;           // key = archetype component hash, value = archetypes index.
+        std::vector<ArchetypeId> newArchetypes;
     };
 
     namespace
@@ -84,6 +85,7 @@ namespace LITL::ECS
         }
 
         registry.archetypes.push_back(std::unique_ptr<Archetype>(archetype));
+        registry.newArchetypes.push_back(newArchetypeIndex);
         registry.archetypeMap.insert(archetypeHash, newArchetypeIndex);
 
         return registry.archetypes[newArchetypeIndex].get();
@@ -150,5 +152,15 @@ namespace LITL::ECS
         assert(to != nullptr);
 
         from->move(record, to);
+    }
+
+    std::vector<ArchetypeId> ArchetypeRegistry::fetchNewArchetypes() noexcept
+    {
+        std::lock_guard<std::mutex> lock(instance().archetypeMutex);
+
+        std::vector<ArchetypeId> newArchetypes(instance().newArchetypes);
+        instance().newArchetypes.clear();
+
+        return newArchetypes;
     }
 }

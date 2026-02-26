@@ -5,7 +5,7 @@
 #include "litl-ecs/component/component.hpp"
 #include "litl-ecs/component/componentRegistry.hpp"
 
-TEST_CASE("Component Descriptor", "[engine::ecs::component]")
+TEST_CASE("Component Descriptor", "[ecs::component]")
 {
     auto fooDescriptor0 = LITL::ECS::ComponentDescriptor::get<Foo>();
     auto fooDescriptor1 = LITL::ECS::ComponentDescriptor::get<Foo>();
@@ -21,7 +21,7 @@ TEST_CASE("Component Descriptor", "[engine::ecs::component]")
     REQUIRE(barDescriptor0->id == barDescriptor1->id);
 }
 
-TEST_CASE("ComponentTypeId", "[engine::ecs::component]")
+TEST_CASE("ComponentTypeId", "[ecs::component]")
 {
     auto fooDescriptor = LITL::ECS::ComponentDescriptor::get<Foo>();
     auto barDescriptor = LITL::ECS::ComponentDescriptor::get<Bar>();
@@ -31,7 +31,7 @@ TEST_CASE("ComponentTypeId", "[engine::ecs::component]")
     REQUIRE(LITL::ECS::getComponentTypeId<Foo>() != LITL::ECS::getComponentTypeId<Bar>());
 }
 
-TEST_CASE("StableComponentTypeId", "[engine::ecs::component]")
+TEST_CASE("StableComponentTypeId", "[ecs::component]")
 {
     auto fooDescriptor = LITL::ECS::ComponentDescriptor::get<Foo>();
     auto barDescriptor = LITL::ECS::ComponentDescriptor::get<Bar>();
@@ -48,7 +48,7 @@ TEST_CASE("StableComponentTypeId", "[engine::ecs::component]")
     REQUIRE(LITL::ECS::getStableComponentTypeId<Foo>() != LITL::ECS::getStableComponentTypeId<Bar>());
 }
 
-TEST_CASE("ComponentRegistry Tracking", "[engine::ecs::component]")
+TEST_CASE("ComponentRegistry Tracking", "[ecs::component]")
 {
     auto fooDescriptor = LITL::ECS::ComponentDescriptor::get<Foo>();
     auto barDescriptor = LITL::ECS::ComponentDescriptor::get<Bar>();
