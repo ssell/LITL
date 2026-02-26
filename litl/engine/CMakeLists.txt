@@ -16,5 +16,5 @@ endif()
 
 target_compile_features(litl-engine
 	PUBLIC
-		cxx_std_23
+		cxx_std_20
 )
