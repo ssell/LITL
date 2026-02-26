@@ -2,8 +2,9 @@
 #include <mutex>
 #include <vector>
 
+#include "litl-ecs/system/systemManager.hpp"
 #include "litl-ecs/system/systemSchedule.hpp"
-#include "litl-ecs/system/systemScheduler.hpp"
+#include "litl-ecs/system/system.hpp"
 
 namespace LITL::ECS
 {
@@ -12,40 +13,42 @@ namespace LITL::ECS
         
     }
 
-    struct SystemScheduler::Impl
+    struct SystemManager::Impl
     {
         std::mutex systemsMutex;
         std::array<SystemSchedule, SystemGroupCount> schedules;
         std::vector<System*> systems;
     };
 
-    SystemScheduler::SystemScheduler()
-        : m_pImpl(std::make_unique<SystemScheduler::Impl>())
+    SystemManager::SystemManager()
+        : m_pImpl(std::make_unique<SystemManager::Impl>())
     {
         m_pImpl->schedules.fill({});
     }
 
-    SystemScheduler::~SystemScheduler()
+    SystemManager::~SystemManager()
     {
 
     }
 
-    void SystemScheduler::addSystem(System* system, SystemGroup group) const noexcept
+    void SystemManager::addSystem(System* system, SystemGroup group) const noexcept
     {
+        const auto systemId = system->id();
+
         {
             std::lock_guard<std::mutex> lock(m_pImpl->systemsMutex);
 
-            if (m_pImpl->systems.size() < system->id)
+            if (m_pImpl->systems.size() < systemId)
             {
-                m_pImpl->systems.resize(system->id * 2, nullptr);
+                m_pImpl->systems.resize(systemId * 2, nullptr);
             }
         }
 
-        m_pImpl->systems[system->id] = system;
+        m_pImpl->systems[systemId] = system;
     }
 
 
-    void SystemScheduler::run(World& world)
+    void SystemManager::run(World& world)
     {
         // todo calculate and pass dts
         float dt = 0.0f;
@@ -67,7 +70,7 @@ namespace LITL::ECS
         runSchedule(SystemGroup::Final, world, dt);
     }
 
-    void SystemScheduler::runSchedule(SystemGroup group, World& world, float dt)
+    void SystemManager::runSchedule(SystemGroup group, World& world, float dt)
     {
         while (m_pImpl->schedules[static_cast<uint32_t>(group)].run(world, dt, m_pImpl->systems))
         {

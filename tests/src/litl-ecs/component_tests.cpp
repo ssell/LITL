@@ -2,8 +2,8 @@
 
 #include "litl-core/hash.hpp"
 #include "litl-ecs/common.hpp"
-#include "litl-ecs/component.hpp"
-#include "litl-ecs/componentRegistry.hpp"
+#include "litl-ecs/component/component.hpp"
+#include "litl-ecs/component/componentRegistry.hpp"
 
 TEST_CASE("Component Descriptor", "[engine::ecs::component]")
 {

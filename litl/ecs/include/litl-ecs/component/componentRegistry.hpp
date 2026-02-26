@@ -2,7 +2,7 @@
 #define LITL_ENGINE_ECS_COMPONENT_REGISTRY_H__
 
 #include "litl-ecs/constants.hpp"
-#include "litl-ecs/component.hpp"
+#include "litl-ecs/component/component.hpp"
 
 namespace LITL::ECS
 {

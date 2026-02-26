@@ -7,7 +7,7 @@
 
 #include "litl-core/debug.hpp"
 #include "litl-core/containers/pagedVector.hpp"
-#include "litl-ecs/component.hpp"
+#include "litl-ecs/component/component.hpp"
 #include "litl-ecs/entityRecord.hpp"
 #include "litl-ecs/archetype/chunkLayout.hpp"
 #include "litl-ecs/archetype/chunk.hpp"

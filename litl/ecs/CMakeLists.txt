@@ -8,7 +8,7 @@ add_library(litl-ecs STATIC
 	"src/litl-ecs/componentRegistry.cpp" 
 	"src/litl-ecs/entityRegistry.cpp" 
 	"src/litl-ecs/system/systemSchedule.cpp" 
-	"src/litl-ecs/system/systemScheduler.cpp"
+	"src/litl-ecs/system/systemManager.cpp"
 	"src/litl-ecs/system/system.cpp"
 )
 

@@ -5,8 +5,8 @@
 
 #include "litl-core/containers/flatHashMap.hpp"
 #include "litl-ecs/constants.hpp"
-#include "litl-ecs/componentRegistry.hpp"
-#include "litl-ecs/component.hpp"
+#include "litl-ecs/component/componentRegistry.hpp"
+#include "litl-ecs/component/component.hpp"
 
 namespace LITL::ECS
 {

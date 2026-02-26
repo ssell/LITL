@@ -8,9 +8,9 @@
 
 #include "litl-ecs/entity.hpp"
 #include "litl-ecs/entityRecord.hpp"
-#include "litl-ecs/component.hpp"
+#include "litl-ecs/component/component.hpp"
 #include "litl-ecs/archetype/archetype.hpp"
-#include "litl-ecs/system/systemScheduler.hpp"
+#include "litl-ecs/system/systemManager.hpp"
 
 namespace LITL::ECS
 {
@@ -263,14 +263,14 @@ namespace LITL::ECS
         template<ValidSystem S>
         void addSystem(SystemGroup group) noexcept
         {
-            getSystemScheduler().addSystem<S>(group);
+            getSystemManager().addSystem<S>(group);
         }
 
     protected:
 
     private:
 
-        SystemScheduler& getSystemScheduler() noexcept;
+        SystemManager& getSystemManager() noexcept;
 
         struct Impl;
         std::unique_ptr<Impl> m_pImpl;

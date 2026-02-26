@@ -5,13 +5,13 @@
 #include "litl-ecs/constants.hpp"
 #include "litl-ecs/entityRegistry.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
-#include "litl-ecs/system/systemScheduler.hpp"
+#include "litl-ecs/system/systemManager.hpp"
 
 namespace LITL::ECS
 {
     struct World::Impl
     {
-        SystemScheduler systemScheduler;
+        SystemManager systemManager;
     };
 
     World::World()
@@ -181,8 +181,8 @@ namespace LITL::ECS
     // System Operations
     // -------------------------------------------------------------------------------------
 
-    SystemScheduler& World::getSystemScheduler() noexcept
+    SystemManager& World::getSystemManager() noexcept
     {
-        return m_pImpl->systemScheduler;
+        return m_pImpl->systemManager;
     }
 }
