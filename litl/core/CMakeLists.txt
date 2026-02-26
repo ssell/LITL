@@ -12,7 +12,7 @@ target_include_directories(litl-core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include
 		"${CMAKE_SOURCE_DIR}/deps/SPIRV-Reflect"
 )
 
-target_compile_features(litl-core PUBLIC cxx_std_23)
+target_compile_features(litl-core PUBLIC cxx_std_20)
 
 # ------------------------------------------------------------------------------------------
 # glm
