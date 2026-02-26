@@ -64,6 +64,19 @@ namespace LITL::ECS
         return m_chunks[index];
     }
 
+    uint32_t Archetype::chunkCount() const noexcept
+    {
+        // Return the number of populated chunks, not just m_chunks.size() which may contain empty chunks.
+        if (m_entityCount == 0)
+        {
+            return 0;
+        }
+        else
+        {
+            return (m_entityCount / m_chunkLayout.entityCapacity) + 1;
+        }
+    }
+
     uint32_t Archetype::getNextIndex() noexcept
     {
         if (m_entityCount == 0)

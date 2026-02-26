@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <optional>
+#include <vector>
 
 #include "litl-ecs/constants.hpp"
 #include "litl-ecs/system/systemRunner.hpp"
@@ -33,6 +34,12 @@ namespace LITL::ECS
         {
             m_runFunc = CreateSystemWrapperRunnerTask(SystemWrapper<S>());
         }
+
+        /// <summary>
+        /// Alerts the system of new archetypes so that it can bind to any relevant.
+        /// </summary>
+        /// <param name="newArchetypes"></param>
+        void updateArchetypes(std::vector<ArchetypeId> const& newArchetypes) const noexcept;
 
         /// <summary>
         /// Runs the underyling user system over the provided chunk.

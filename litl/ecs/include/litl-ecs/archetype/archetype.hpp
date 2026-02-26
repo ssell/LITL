@@ -33,6 +33,7 @@ namespace LITL::ECS
         ChunkLayout const& chunkLayout() const noexcept;
         Chunk& getChunk(EntityRecord record) noexcept;
         Chunk& getChunk(uint32_t const index) noexcept;
+        uint32_t chunkCount() const noexcept;
 
         template<ValidComponentType ComponentType>
         ComponentType& getComponent(EntityRecord record) noexcept

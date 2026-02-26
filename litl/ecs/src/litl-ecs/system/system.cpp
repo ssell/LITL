@@ -8,7 +8,7 @@ namespace LITL::ECS
     struct System::Impl
     {
         const SystemTypeId id;
-        // ... archetypes ...
+        std::vector<Archetype*> archetypes;
     };
 
     namespace
@@ -36,10 +36,26 @@ namespace LITL::ECS
         return m_pImpl->id;
     }
 
+    void System::updateArchetypes(std::vector<ArchetypeId> const& newArchetypes) const noexcept
+    {
+        // ... todo ... go through each new chunk and any that match our inner system requirements are added to m_pImpl->archetypes ...
+    }
+
     void System::run(World& world, float dt)
     {
-        // todo get chunk and layout
         assert(m_runFunc != nullptr);
-        //m_runFunc(world, dt, chunk, layout);
+
+        // ... todo multithread this ... each chunk should be its own job/task ...
+
+        for (auto archetype : m_pImpl->archetypes)
+        {
+            auto chunkCount = archetype->chunkCount();
+            auto const& layout = archetype->chunkLayout();
+
+            for (auto ci = 0; ci < chunkCount; ++ci)
+            {
+                m_runFunc(world, dt, archetype->getChunk(ci), layout);
+            }
+        }
     }
 }

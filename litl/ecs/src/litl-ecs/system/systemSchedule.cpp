@@ -15,16 +15,17 @@ namespace LITL::ECS
 
     void SystemSchedule::add(SystemTypeId systemtype)
     {
-
+        // ... todo generate the acyclic graph of nodes ...
     }
 
     bool SystemSchedule::run(World& world, float dt, std::vector<System*> const& systems)
     {
         for (auto node : m_nodes)
         {
-            // ... todo check dependencies ...
+            // ... todo run the actual acyclic graph of nodes ...
             systems[node.index]->run(world, dt);
         }
+
         return false;
     }
 }
