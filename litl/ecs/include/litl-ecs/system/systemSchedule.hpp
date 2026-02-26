@@ -4,11 +4,11 @@
 #include <memory>
 #include <vector>
 
+#include "litl-ecs/system/system.hpp"
 #include "litl-ecs/system/systemNode.hpp"
 
 namespace LITL::ECS
 {
-    class System;
     class World;
 
     /// <summary>

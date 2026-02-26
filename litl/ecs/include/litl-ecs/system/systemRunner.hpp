@@ -105,8 +105,8 @@ namespace LITL::ECS
     /// Retrieves the tuple of types required by the system (excluding the mandatory World&,float).
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    template<ValidSystem T>
-    using SystemComponents = SystemTupleTail<typename SystemMemberFunctionTraits<decltype(&T::update)>::args_tuple>;
+    template<ValidSystem S>
+    using SystemComponents = SystemTupleTail<typename SystemMemberFunctionTraits<decltype(&S::update)>::args_tuple>;
 
     /// <summary>
     /// Removes const ref from a type. For example: Foo& -> Foo, Bar const& -> Bar.
@@ -125,12 +125,12 @@ namespace LITL::ECS
     /// The chunk is expected to have all of the components required by the system.
     /// </summary>
     /// <typeparam name="System"></typeparam>
-    template<ValidSystem System>
+    template<ValidSystem S>
     class SystemRunner
     {
     public:
 
-        SystemRunner(System* system)
+        SystemRunner(S* system)
             : m_pSystem(system)
         {
 
@@ -140,7 +140,7 @@ namespace LITL::ECS
         void run(World& world, float dt, Chunk& chunk, ChunkLayout const& layout)
         {
             // Get the system components in tuple form. For example: std::tuple<Foo&, Bar&>
-            using SystemComponentTuple = SystemComponents<System>;
+            using SystemComponentTuple = SystemComponents<S>;
             iterate<SystemComponentTuple>(world, dt, chunk, layout);
         }
 
@@ -175,7 +175,7 @@ namespace LITL::ECS
             }
         }
 
-        System* m_pSystem;
+        S* m_pSystem;
     };
 }
 

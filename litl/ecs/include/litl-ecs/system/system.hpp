@@ -24,10 +24,10 @@ namespace LITL::ECS
         /// The user system type is used to compose the SystemRunner, but it is not required to create this System object.
         /// </summary>
         /// <typeparam name="System"></typeparam>
-        template<ValidSystem System>
+        template<ValidSystem S>
         void attach()
         {
-            m_runFunc = CreateSystemWrapperRunnerTask(SystemWrapper<System>());
+            m_runFunc = CreateSystemWrapperRunnerTask(SystemWrapper<S>());
         }
 
         /// <summary>

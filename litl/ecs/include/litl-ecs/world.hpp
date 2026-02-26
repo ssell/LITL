@@ -260,10 +260,10 @@ namespace LITL::ECS
             record.archetype->setComponent<ComponentType>(record, component);
         }
 
-        template<ValidSystem Sys>
+        template<ValidSystem S>
         void addSystem(SystemGroup group) noexcept
         {
-            getSystemScheduler().addSystem<Sys>(group);
+            getSystemScheduler().addSystem<S>(group);
         }
 
     protected:
