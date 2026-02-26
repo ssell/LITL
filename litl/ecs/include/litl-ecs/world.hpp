@@ -18,7 +18,7 @@ namespace LITL::ECS
     /// Single point of entry for general ECS operations.
     /// Users should make use of World instead of the individual registries and other constructs if possible.
     /// </summary>
-    class World final
+    class World
     {
     public:
 
@@ -268,9 +268,9 @@ namespace LITL::ECS
 
     protected:
 
-    private:
-
         SystemManager& getSystemManager() noexcept;
+
+    private:
 
         struct Impl;
         std::unique_ptr<Impl> m_pImpl;

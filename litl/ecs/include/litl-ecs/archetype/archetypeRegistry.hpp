@@ -83,7 +83,13 @@ namespace LITL::ECS
         static void move(EntityRecord const& record, Archetype* from, Archetype* to) noexcept;
 
         /// <summary>
-        /// Fetches all new archetypes since the last fetch.
+        /// Returns the number of Archetypes tracked by the registry.
+        /// </summary>
+        /// <returns></returns>
+        static size_t archetypeCount() noexcept;
+
+        /// <summary>
+        /// Fetches all new Archetypes since the last fetch.
         /// </summary>
         /// <param name="clear"></param>
         /// <returns></returns>

@@ -1,7 +1,9 @@
 #include <array>
 #include <mutex>
+#include <numeric>
 #include <vector>
 
+#include "litl-core/logging/logging.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
 #include "litl-ecs/system/systemManager.hpp"
 #include "litl-ecs/system/systemSchedule.hpp"
@@ -19,6 +21,7 @@ namespace LITL::ECS
         std::mutex systemsMutex;
         std::array<SystemSchedule, SystemGroupCount> schedules;
         std::vector<System*> systems;
+        std::vector<System*> newSystems;
     };
 
     SystemManager::SystemManager()
@@ -39,13 +42,24 @@ namespace LITL::ECS
         {
             std::lock_guard<std::mutex> lock(m_pImpl->systemsMutex);
 
-            if (m_pImpl->systems.size() < systemId)
+            bool systemKnown = false;
+
+            for (auto system : m_pImpl->systems)
             {
-                m_pImpl->systems.resize(systemId * 2, nullptr);
+                if (system->id() == systemId)
+                {
+                    logWarning("Requested to add identical system (id = ", systemId, ") multiple times.");
+                    systemKnown = true;
+                    break;
+                }
+            }
+
+            if (!systemKnown)
+            {
+                m_pImpl->systems.push_back(system);
+                m_pImpl->newSystems.push_back(system);
             }
         }
-
-        m_pImpl->systems[systemId] = system;
     }
 
     /// <summary>
@@ -53,16 +67,31 @@ namespace LITL::ECS
     /// </summary>
     void SystemManager::updateSystemArchetypes() const noexcept
     {
-        auto newArchetypes = ArchetypeRegistry::fetchNewArchetypes();
+        const auto newArchetypes = ArchetypeRegistry::fetchNewArchetypes();
 
-        if (newArchetypes.empty())
+        if (!m_pImpl->newSystems.empty())
         {
-            return;
+            // Register existing Archetypes with new Systems
+            const auto oldArchetypeCount = ArchetypeRegistry::archetypeCount() - newArchetypes.size();
+            auto oldArchetypes = std::vector<ArchetypeId>(oldArchetypeCount);
+
+            std::iota(oldArchetypes.begin(), oldArchetypes.end(), 0);
+
+            for (auto system : m_pImpl->newSystems)
+            {
+                system->updateArchetypes(oldArchetypes);
+            }
+
+            m_pImpl->newSystems.clear();
         }
 
-        for (auto system : m_pImpl->systems)
+        // Register new Archetypes with all Systems
+        if (!newArchetypes.empty())
         {
-            system->updateArchetypes(newArchetypes);
+            for (auto system : m_pImpl->systems)
+            {
+                system->updateArchetypes(newArchetypes);
+            }
         }
     }
 

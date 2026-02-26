@@ -154,6 +154,11 @@ namespace LITL::ECS
         from->move(record, to);
     }
 
+    size_t ArchetypeRegistry::archetypeCount() noexcept
+    {
+        return instance().archetypes.size();
+    }
+
     std::vector<ArchetypeId> ArchetypeRegistry::fetchNewArchetypes() noexcept
     {
         std::lock_guard<std::mutex> lock(instance().archetypeMutex);
