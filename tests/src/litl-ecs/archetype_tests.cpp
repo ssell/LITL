@@ -1,10 +1,12 @@
+#include <algorithm>
 #include <catch2/catch_test_macros.hpp>
+
 #include "litl-ecs/common.hpp"
 #include "litl-ecs/archetype/archetype.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
 
 
-TEST_CASE("ArchetypeRegistry::get (Static)", "[engine::ecs::archetype]")
+TEST_CASE("ArchetypeRegistry::get (Static)", "[ecs::archetype]")
 {
     auto archetypeFoo    = LITL::ECS::ArchetypeRegistry::get<Foo>();
     auto archetypeFooFoo = LITL::ECS::ArchetypeRegistry::get<Foo, Foo>();   // duplicate component should resolve to <Foo>
@@ -25,7 +27,7 @@ TEST_CASE("ArchetypeRegistry::get (Static)", "[engine::ecs::archetype]")
     REQUIRE(archetypeFooBar->componentCount() == 2);
 }
 
-TEST_CASE("ArchetypeRegistry::get (Dynamic)", "[engine::ecs::archetype]")
+TEST_CASE("ArchetypeRegistry::get (Dynamic)", "[ecs::archetype]")
 {
     auto fooComponent = LITL::ECS::ComponentDescriptor::get<Foo>();
     auto barComponent = LITL::ECS::ComponentDescriptor::get<Bar>();
@@ -45,7 +47,7 @@ TEST_CASE("ArchetypeRegistry::get (Dynamic)", "[engine::ecs::archetype]")
     REQUIRE(archetypeFooBarD == archetypeBarFooD);
 }
 
-TEST_CASE("ArchetypeRegistry::getById", "[engine::ecs::archetype]")
+TEST_CASE("ArchetypeRegistry::getById", "[ecs::archetype]")
 {
     auto archetypeFoo = LITL::ECS::ArchetypeRegistry::get<Foo>();
     auto archetypeFooBar = LITL::ECS::ArchetypeRegistry::get<Foo, Bar>();
@@ -54,7 +56,7 @@ TEST_CASE("ArchetypeRegistry::getById", "[engine::ecs::archetype]")
     REQUIRE(LITL::ECS::ArchetypeRegistry::getById(archetypeFooBar->id()) == archetypeFooBar);
 }
 
-TEST_CASE("ArchetypeRegistry::getByComponentHash", "[engine::ecs::archetype]")
+TEST_CASE("ArchetypeRegistry::getByComponentHash", "[ecs::archetype]")
 {
     auto archetypeFoo = LITL::ECS::ArchetypeRegistry::get<Foo>();
     auto archetypeFooBar = LITL::ECS::ArchetypeRegistry::get<Foo, Bar>();
@@ -63,7 +65,7 @@ TEST_CASE("ArchetypeRegistry::getByComponentHash", "[engine::ecs::archetype]")
     REQUIRE(LITL::ECS::ArchetypeRegistry::getByComponentHash(archetypeFooBar->componentHash()) == archetypeFooBar);
 }
 
-TEST_CASE("Empty Archetype", "[engine::ecs::archetype]")
+TEST_CASE("Empty Archetype", "[ecs::archetype]")
 {
     auto emptyArchetype = LITL::ECS::ArchetypeRegistry::getByComponents({});
 
@@ -71,7 +73,7 @@ TEST_CASE("Empty Archetype", "[engine::ecs::archetype]")
     REQUIRE(emptyArchetype->componentCount() == 0);
 }
 
-TEST_CASE("Archetype Has Component", "[engine::ecs::archetype]")
+TEST_CASE("Archetype Has Component", "[ecs::archetype]")
 {
     auto* archetypeFoo = LITL::ECS::ArchetypeRegistry::get<Foo>();
     auto* archetypeFooBar = LITL::ECS::ArchetypeRegistry::get<Foo, Bar>();
@@ -88,4 +90,30 @@ TEST_CASE("Archetype Has Component", "[engine::ecs::archetype]")
     REQUIRE(archetypeFooBar->hasComponent<Bar>() == true);
     REQUIRE(archetypeFooBar->hasComponent(fooId) == true);
     REQUIRE(archetypeFooBar->hasComponent(barId) == true);
+}
+
+namespace NewArchetypesTest
+{
+    struct Apple {};
+    struct Orange {};
+}
+
+TEST_CASE("Report New Archetypes", "[ecs::archetype]")
+{
+    LITL::ECS::ArchetypeRegistry::fetchNewArchetypes();     // clear out awaiting new archetypes
+
+    auto appleArchetype = LITL::ECS::ArchetypeRegistry::get<NewArchetypesTest::Apple>();
+    auto orangeArchetype = LITL::ECS::ArchetypeRegistry::get<NewArchetypesTest::Orange>();
+    auto appleOrangeArchetype = LITL::ECS::ArchetypeRegistry::get<NewArchetypesTest::Apple, NewArchetypesTest::Orange>();
+    auto orangeAppleArchetype = LITL::ECS::ArchetypeRegistry::get<NewArchetypesTest::Orange, NewArchetypesTest::Apple>();
+
+    REQUIRE(appleOrangeArchetype == orangeAppleArchetype);
+
+    auto newArchetypes = LITL::ECS::ArchetypeRegistry::fetchNewArchetypes();
+
+    REQUIRE(newArchetypes.size() == 3);
+
+    REQUIRE(std::find(newArchetypes.begin(), newArchetypes.end(), appleArchetype->id()) != newArchetypes.end());
+    REQUIRE(std::find(newArchetypes.begin(), newArchetypes.end(), orangeArchetype->id()) != newArchetypes.end());
+    REQUIRE(std::find(newArchetypes.begin(), newArchetypes.end(), appleOrangeArchetype->id()) != newArchetypes.end());
 }

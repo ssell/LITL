@@ -16,7 +16,7 @@ struct TestSystem
 /// <summary>
 /// Tests the internal ExpandSystemComponentList and SystemRunner by manually running the TestSystem.
 /// </summary>
-TEST_CASE("System Runner", "[engine::ecs::system]")
+TEST_CASE("System Runner", "[ecs::system]")
 {
     LITL::ECS::World world;
     TestSystem system;
@@ -50,7 +50,7 @@ TEST_CASE("System Runner", "[engine::ecs::system]")
     world.destroyImmediate(entity1);
 }
 
-TEST_CASE("System Wrapper", "[engine::ecs::system]")
+TEST_CASE("System Wrapper", "[ecs::system]")
 {
     LITL::ECS::World world;
 

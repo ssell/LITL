@@ -5,7 +5,7 @@
 #include "litl-ecs/archetype/archetype.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
 
-TEST_CASE("Empty Entity Creation and Destructon", "[engine::ecs::world]")
+TEST_CASE("Empty Entity Creation and Destructon", "[ecs::world]")
 {
     LITL::ECS::World world;
     LITL::ECS::Entity entity = world.createImmediate();
@@ -17,7 +17,7 @@ TEST_CASE("Empty Entity Creation and Destructon", "[engine::ecs::world]")
     REQUIRE(world.isAlive(entity) == false);
 }
 
-TEST_CASE("Add Many Entities", "[engine::ecs::world]")
+TEST_CASE("Add Many Entities", "[ecs::world]")
 {
     constexpr auto entityCount = 2048; // fill up multiple chunks worth
 
@@ -48,7 +48,7 @@ TEST_CASE("Add Many Entities", "[engine::ecs::world]")
     REQUIRE(LITL::ECS::ArchetypeRegistry::Empty()->entityCount() == (initialEmptyCount + entityCount));
 }
 
-TEST_CASE("Entity Add/Remove Component", "[engine::ecs::world]")
+TEST_CASE("Entity Add/Remove Component", "[ecs::world]")
 {
     LITL::ECS::World world;
     LITL::ECS::Archetype* fooArchetype = LITL::ECS::ArchetypeRegistry::get<Foo>();
@@ -101,7 +101,7 @@ TEST_CASE("Entity Add/Remove Component", "[engine::ecs::world]")
     REQUIRE(world.isAlive(entity) == false);
 }
 
-TEST_CASE("Entity Add / Remove Components", "[engine::ecs::world]")
+TEST_CASE("Entity Add / Remove Components", "[ecs::world]")
 {
     LITL::ECS::Archetype* fooBarArchetype = LITL::ECS::ArchetypeRegistry::get<Foo, Bar>();
 
@@ -131,7 +131,7 @@ TEST_CASE("Entity Add / Remove Components", "[engine::ecs::world]")
     REQUIRE(world.isAlive(entity) == false);
 }
 
-TEST_CASE("Entity Add Components With Value", "[engine::ecs::world]")
+TEST_CASE("Entity Add Components With Value", "[ecs::world]")
 {
     LITL::ECS::World world;
     LITL::ECS::Entity entity0 = world.createImmediate();
@@ -157,7 +157,7 @@ TEST_CASE("Entity Add Components With Value", "[engine::ecs::world]")
     world.destroyImmediate(entity0);
 }
 
-TEST_CASE("Destroy Entity with Components", "[engine::ecs::world]")
+TEST_CASE("Destroy Entity with Components", "[ecs::world]")
 {
     LITL::ECS::Archetype* fooBarArchetype = LITL::ECS::ArchetypeRegistry::get<Foo, Bar>();
 
@@ -196,7 +196,7 @@ namespace ComponentCtorDtorCallTest
     };
 }
 
-TEST_CASE("Component Ctor Dtor Call", "[engine::ecs::world]")
+TEST_CASE("Component Ctor Dtor Call", "[ecs::world]")
 {
     LITL::ECS::World world;
     LITL::ECS::Entity entity0 = world.createImmediate();
@@ -225,7 +225,7 @@ TEST_CASE("Component Ctor Dtor Call", "[engine::ecs::world]")
     REQUIRE(ComponentCtorDtorCallTest::CtorDtorTestCount == 0);
 }
 
-TEST_CASE("Modify Component", "[engine::ecs::world]")
+TEST_CASE("Modify Component", "[ecs::world]")
 {
     LITL::ECS::World world;
     LITL::ECS::Entity entity = world.createImmediate();
@@ -251,7 +251,7 @@ TEST_CASE("Modify Component", "[engine::ecs::world]")
     world.destroyImmediate(entity);
 }
 
-TEST_CASE("Modify Multiple Components", "[engine::ecs::world]")
+TEST_CASE("Modify Multiple Components", "[ecs::world]")
 {
     LITL::ECS::World world;
     LITL::ECS::Entity entity = world.createImmediate();
@@ -277,7 +277,7 @@ TEST_CASE("Modify Multiple Components", "[engine::ecs::world]")
     world.destroyImmediate(entity);
 }
 
-TEST_CASE("Modify Multiple Entity Components", "[engine::ecs::world]")
+TEST_CASE("Modify Multiple Entity Components", "[ecs::world]")
 {
     LITL::ECS::World world;
 

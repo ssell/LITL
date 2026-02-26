@@ -82,6 +82,13 @@ namespace LITL::ECS
         /// <param name="to"></param>
         static void move(EntityRecord const& record, Archetype* from, Archetype* to) noexcept;
 
+        /// <summary>
+        /// Fetches all new archetypes since the last fetch.
+        /// </summary>
+        /// <param name="clear"></param>
+        /// <returns></returns>
+        static std::vector<ArchetypeId> fetchNewArchetypes() noexcept;
+
     private:
 
         static void refineComponentMask(std::vector<ComponentTypeId>& componentTypeIds) noexcept;
