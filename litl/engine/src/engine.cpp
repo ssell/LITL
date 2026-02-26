@@ -4,7 +4,7 @@
 #include "litl-engine/engine.hpp"
 #include "litl-engine/windowFactory.hpp"
 #include "litl-engine/rendererFactory.hpp"
-#include "litl-engine/scene/sceneTree.hpp"
+#include "litl-ecs/world.hpp"
 
 namespace LITL::Engine
 {
@@ -17,10 +17,9 @@ namespace LITL::Engine
         std::unique_ptr<LITL::Core::Window> pWindow;
         std::unique_ptr<LITL::Renderer::Renderer> pRenderer;
         Core::RefPtr<LITL::Renderer::CommandBuffer> pFrameCommandBuffer;
+        std::unique_ptr<LITL::ECS::World> pWorld;
 
         Renderer::RendererDescriptor rendererDescriptor;
-
-        SceneTree sceneTree;
     };
 
     // -------------------------------------------------------------------------------------
@@ -32,7 +31,9 @@ namespace LITL::Engine
         LITL::Core::Logger::initialize("litl-engine", true, true);
         logInfo("LITL Engine Startup");
 
+        m_impl->pWorld = std::make_unique<ECS::World>();
         m_impl->rendererDescriptor = rendererDescriptor;
+
     }
 
     Engine::~Engine()
@@ -75,6 +76,7 @@ namespace LITL::Engine
         m_impl->pFrameCommandBuffer = m_impl->pRenderer->getResourceAllocator()->createCommandBuffer();
 
         logInfo("... Window and Renderer creation successful.");
+
         return true;
     }
 
@@ -88,11 +90,6 @@ namespace LITL::Engine
         return !m_impl->pWindow->shouldClose();
     }
 
-    void Engine::track(Core::RefPtr<SceneObject> pSceneObject)
-    {
-        m_impl->sceneTree.track(pSceneObject);
-    }
-
     void Engine::run()
     {
         update();
@@ -101,14 +98,13 @@ namespace LITL::Engine
 
     void Engine::update()
     {
-        m_impl->sceneTree.onUpdate();
+
     }
 
     void Engine::render()
     {
         if (m_impl->pRenderer->beginRender())
         {
-            m_impl->sceneTree.onRender(m_impl->pFrameCommandBuffer.get());
             m_impl->pRenderer->submitCommands(m_impl->pFrameCommandBuffer.get(), 0);
             m_impl->pRenderer->endRender();
         }

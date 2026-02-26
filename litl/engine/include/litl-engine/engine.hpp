@@ -3,7 +3,6 @@
 
 #include "litl-core/impl.hpp"
 #include "litl-renderer/rendererDescriptor.hpp"
-#include "litl-engine/scene/sceneObject.hpp"
 
 namespace LITL::Engine
 {
@@ -21,20 +20,11 @@ namespace LITL::Engine
 
         bool openWindow(char const* title, uint32_t width, uint32_t height) noexcept;
         bool shouldRun() noexcept;
-
-        template<SceneObjectImpl T>
-        void addSceneObject()
-        {
-            track(Core::RefPtr<SceneObject>(new T));
-        }
-
         void run();
 
     protected:
 
     private:
-
-        void track(Core::RefPtr<SceneObject> pSceneObject);
 
         void update();
         void render();
