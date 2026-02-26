@@ -45,7 +45,7 @@ namespace LITL
     /// </summary>
     class DebugInfo : public DebugInfoStorage<IS_DEBUG>
     {
-    public:
+    protected:
 
         void setDebugName(std::string_view name)
         {

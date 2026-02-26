@@ -5,6 +5,16 @@
 #include "litl-ecs/archetype/archetype.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
 
+class TestWorld : public LITL::ECS::World
+{
+public:
+
+    LITL::ECS::SystemManager& extractSystemManager() noexcept
+    {
+        return getSystemManager();
+    }
+};
+
 TEST_CASE("Empty Entity Creation and Destructon", "[ecs::world]")
 {
     LITL::ECS::World world;
@@ -321,4 +331,45 @@ TEST_CASE("Modify Multiple Entity Components", "[ecs::world]")
     {
         world.destroyImmediate(entity);
     }
+}
+
+
+
+TEST_CASE("Run System", "[ecs::system]")
+{
+    TestWorld world;
+
+    auto entity0 = world.createImmediate();
+    auto entity1 = world.createImmediate();
+
+    world.addComponentsImmediate(entity0, Foo{ 0 }, Bar{ 0.0f, 0 });
+    world.addComponentsImmediate(entity1, Foo{ 100 }, Bar{ 1.0f, 500 });
+
+    /**
+     * What is still needed:
+     *
+     *   - Match systems to archetypes
+     *   - System needs to iterate its archetypes and chunks calling run
+     *   - Calculate fixed dt and run fixed update multiple times per frame if needed
+     *   - Advanced system scheduling
+     *   - Fine to get started on main thread only to show it works, but quickly need to multithread
+     */
+
+    world.addSystem<TestSystem>(LITL::ECS::SystemGroup::Update);
+
+    for (auto i = 0; i < 10; ++i)
+    {
+        world.extractSystemManager().run(world);
+    }
+
+    REQUIRE(world.getComponent<Foo>(entity0)->a == 10);
+    REQUIRE(LITL::Math::isZero(world.getComponent<Bar>(entity0)->a) == true);
+    REQUIRE(world.getComponent<Bar>(entity0)->b == 10);
+
+    REQUIRE(world.getComponent<Foo>(entity1)->a == 110);
+    REQUIRE(LITL::Math::isOne(world.getComponent<Bar>(entity1)->a) == true);
+    REQUIRE(world.getComponent<Bar>(entity1)->b == 510);
+
+    world.destroyImmediate(entity0);
+    world.destroyImmediate(entity1);
 }

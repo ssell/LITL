@@ -2,12 +2,15 @@
 
 #include "litl-ecs/system/system.hpp"
 #include "litl-ecs/archetype/archetype.hpp"
+#include "litl-ecs/archetype/archetypeRegistry.hpp"
 
 namespace LITL::ECS
 {
     struct System::Impl
     {
         const SystemTypeId id;
+
+        std::vector<ComponentTypeId> componentTypes;
         std::vector<Archetype*> archetypes;
     };
 
@@ -36,9 +39,29 @@ namespace LITL::ECS
         return m_pImpl->id;
     }
 
+    void System::registerComponentType(ComponentTypeId const componentType) const noexcept
+    {
+        m_pImpl->componentTypes.push_back(componentType);
+    }
+
+
     void System::updateArchetypes(std::vector<ArchetypeId> const& newArchetypes) const noexcept
     {
-        // ... todo ... go through each new chunk and any that match our inner system requirements are added to m_pImpl->archetypes ...
+        for (auto archetypeId : newArchetypes)
+        {
+            bool validArchetype = true;
+            auto* archetype = ArchetypeRegistry::getById(archetypeId);
+            
+            for (auto i = 0; i < m_pImpl->componentTypes.size() && validArchetype; ++i)
+            {
+                validArchetype = validArchetype && archetype->hasComponent(m_pImpl->componentTypes[i]);
+            }
+
+            if (validArchetype)
+            {
+                m_pImpl->archetypes.push_back(archetype);
+            }
+        }
     }
 
     void System::run(World& world, float dt)
@@ -49,8 +72,8 @@ namespace LITL::ECS
 
         for (auto archetype : m_pImpl->archetypes)
         {
-            auto chunkCount = archetype->chunkCount();
-            auto const& layout = archetype->chunkLayout();
+            const auto chunkCount = archetype->chunkCount();
+            const auto& layout = archetype->chunkLayout();
 
             for (auto ci = 0; ci < chunkCount; ++ci)
             {
