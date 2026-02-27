@@ -180,6 +180,42 @@ namespace LITL::Math
         return x == 1;
     }
 
+    [[nodiscard]] constexpr bool between(float x, float a, float b, bool inclusive = true) noexcept
+    {
+        assert(a < b);
+        return (inclusive ? (x >= a) && (x <= b) : (x > a) && (x < b));
+    }
+
+    [[nodiscard]] constexpr bool between(double x, double a, double b, bool inclusive = true) noexcept
+    {
+        assert(a < b);
+        return (inclusive ? (x >= a) && (x <= b) : (x > a) && (x < b));
+    }
+
+    [[nodiscard]] constexpr bool between(int32_t x, int32_t a, int32_t b, bool inclusive = true) noexcept
+    {
+        assert(a < b);
+        return (inclusive ? (x >= a) && (x <= b) : (x > a) && (x < b));
+    }
+
+    [[nodiscard]] constexpr bool between(uint32_t x, uint32_t a, uint32_t b, bool inclusive = true) noexcept
+    {
+        assert(a < b);
+        return (inclusive ? (x >= a) && (x <= b) : (x > a) && (x < b));
+    }
+
+    [[nodiscard]] constexpr bool between(int64_t x, int64_t a, int64_t b, bool inclusive = true) noexcept
+    {
+        assert(a < b);
+        return (inclusive ? (x >= a) && (x <= b) : (x > a) && (x < b));
+    }
+
+    [[nodiscard]] constexpr bool between(uint64_t x, uint64_t a, uint64_t b, bool inclusive = true) noexcept
+    {
+        assert(a < b);
+        return (inclusive ? (x >= a) && (x <= b) : (x > a) && (x < b));
+    }
+
     [[nodiscard]] constexpr float abs(float x) noexcept
     {
         return std::fabs(x);

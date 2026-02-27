@@ -4,7 +4,7 @@
 #include "litl-engine/engine.hpp"
 #include "litl-engine/windowFactory.hpp"
 #include "litl-engine/rendererFactory.hpp"
-#include "litl-engine/framePacer.hpp"
+#include "litl-engine/frameLimiter.hpp"
 #include "litl-ecs/world.hpp"
 
 namespace LITL::Engine
@@ -20,7 +20,7 @@ namespace LITL::Engine
         Core::RefPtr<LITL::Renderer::CommandBuffer> pFrameCommandBuffer;
 
         LITL::ECS::World world;
-        FramePacer framePacer;
+        FrameLimiter frameLimiter;
 
         Renderer::RendererDescriptor rendererDescriptor;
     };
@@ -95,17 +95,17 @@ namespace LITL::Engine
 
     void Engine::run()
     {
-        m_pImpl->framePacer.frameStart();
+        m_pImpl->frameLimiter.frameStart();
 
         update();
         render();
 
-        m_pImpl->framePacer.frameEnd();
+        m_pImpl->frameLimiter.frameEnd();
     }
 
     void Engine::update()
     {
-        m_pImpl->world.run(m_pImpl->framePacer.frameDelta(), 1.0f / 30.0f);
+        m_pImpl->world.run(m_pImpl->frameLimiter.frameDelta(), 1.0f / 30.0f);
     }
 
     void Engine::render()

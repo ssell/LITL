@@ -9,11 +9,11 @@ namespace LITL::Engine
     /// <summary>
     /// Keeps the frame rate steady at the specified target FPS.
     /// </summary>
-    class FramePacer
+    class FrameLimiter
     {
     public:
 
-        explicit FramePacer();
+        explicit FrameLimiter();
 
         void setTargetFps(float fps) noexcept;
         void frameStart() noexcept;
