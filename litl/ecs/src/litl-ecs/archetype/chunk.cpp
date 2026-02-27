@@ -74,8 +74,6 @@ namespace LITL::ECS
 
     std::optional<Entity> Chunk::removeAndSwap(ChunkLayout const& layout, uint32_t const removeAtIndex, Chunk* swapFromChunk, uint32_t const swapFromChunkIndex) noexcept
     {
-        auto entityGoingByeBye = getEntities(layout)[removeAtIndex];
-        //memset(m_data + layout.entityArrayOffset + (sizeof(Entity) * removeAtIndex), 0, sizeof(Entity));
         decrementEntityCount();
 
         // Move the entity in from the other chunk

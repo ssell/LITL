@@ -424,7 +424,7 @@ namespace LITL::Vulkan::Renderer
 
         if (swapChainSupport.capabilities.maxImageCount > 0)        // == 0 means no limit
         {
-            imageCount = Math::minimum(imageCount, swapChainSupport.capabilities.maxImageCount);
+            imageCount = (Math::min)(imageCount, swapChainSupport.capabilities.maxImageCount);
         }
 
         VkSwapchainCreateInfoKHR createSwapChainInfo{};
