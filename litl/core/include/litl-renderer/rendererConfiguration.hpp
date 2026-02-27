@@ -6,7 +6,7 @@
 
 namespace LITL::Renderer
 {
-    struct RendererDescriptor
+    struct RendererConfiguration
     {
         /// <summary>
         /// The library used by the renderer backend.
@@ -17,6 +17,8 @@ namespace LITL::Renderer
         /// How many frames to have queued at a time. Suggested 2-3.
         /// </summary>
         uint32_t framesInFlight = 2;
+
+        void sanitize() noexcept;
     };
 }
 

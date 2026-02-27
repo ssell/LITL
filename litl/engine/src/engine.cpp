@@ -19,24 +19,24 @@ namespace LITL::Engine
         std::unique_ptr<LITL::Renderer::Renderer> pRenderer;
         Core::RefPtr<LITL::Renderer::CommandBuffer> pFrameCommandBuffer;
 
+        Configuration config;
         LITL::ECS::World world;
         FrameLimiter frameLimiter;
-
-        Renderer::RendererDescriptor rendererDescriptor;
     };
 
     // -------------------------------------------------------------------------------------
     // Engine
     // -------------------------------------------------------------------------------------
 
-    Engine::Engine(Renderer::RendererDescriptor const& rendererDescriptor)
+    Engine::Engine(Configuration const& config)
         : m_pImpl(std::make_unique<Engine::Impl>())
     {
         LITL::Core::Logger::initialize("litl-engine", true, true);
         logInfo("LITL Engine Startup");
 
-        m_pImpl->rendererDescriptor = rendererDescriptor;
-
+        m_pImpl->config = config;
+        m_pImpl->config.sanitize();
+        m_pImpl->frameLimiter.setTargetFps(static_cast<float>(m_pImpl->config.simulationSettings.framesPerSecond));
     }
 
     Engine::~Engine()
@@ -47,8 +47,8 @@ namespace LITL::Engine
 
     bool Engine::openWindow(const char* title, uint32_t width, uint32_t height) noexcept
     {
-        logInfo("Opening window \"", title, "\" (", width, "x", height, ") with ", Renderer::RendererBackendNames[m_pImpl->rendererDescriptor.rendererType], " backend ...");
-        m_pImpl->pWindow = createWindow(m_pImpl->rendererDescriptor.rendererType);
+        logInfo("Opening window \"", title, "\" (", width, "x", height, ") with ", Renderer::RendererBackendNames[m_pImpl->config.rendererSettings.rendererType], " backend ...");
+        m_pImpl->pWindow = createWindow(m_pImpl->config.rendererSettings.rendererType);
 
         if (m_pImpl->pWindow == nullptr)
         {
@@ -62,7 +62,7 @@ namespace LITL::Engine
             return false;
         }
 
-        m_pImpl->pRenderer = createRenderer(m_pImpl->pWindow.get(), m_pImpl->rendererDescriptor);
+        m_pImpl->pRenderer = createRenderer(m_pImpl->pWindow.get(), m_pImpl->config.rendererSettings);
 
         if (m_pImpl->pRenderer == nullptr)
         {
@@ -105,7 +105,7 @@ namespace LITL::Engine
 
     void Engine::update()
     {
-        m_pImpl->world.run(m_pImpl->frameLimiter.frameDelta(), 1.0f / 30.0f);
+        m_pImpl->world.run(m_pImpl->frameLimiter.frameDelta(), 1.0f / static_cast<float>(m_pImpl->config.simulationSettings.ticksPerSecond));
     }
 
     void Engine::render()

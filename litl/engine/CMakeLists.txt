@@ -2,7 +2,7 @@ add_library(litl-engine STATIC
 	"src/engine.cpp"
 	"src/windowFactory.cpp" 
 	"src/rendererFactory.cpp" 
-	"src/cache/pipelineLayoutCache.cpp" "src/frameLimiter.cpp")
+	"src/cache/pipelineLayoutCache.cpp" "src/frameLimiter.cpp" "src/config.cpp")
 
 target_include_directories(litl-engine
 	PUBLIC

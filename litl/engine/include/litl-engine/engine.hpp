@@ -2,7 +2,7 @@
 #define LITL_ENGINE_H__
 
 #include <memory>
-#include "litl-renderer/rendererDescriptor.hpp"
+#include "litl-engine/config.hpp"
 
 namespace LITL::Engine
 {
@@ -10,7 +10,7 @@ namespace LITL::Engine
     {
     public:
 
-        explicit Engine(Renderer::RendererDescriptor const& rendererDescriptor);
+        explicit Engine(Configuration const& config);
         ~Engine();
 
         Engine(Engine&&) = delete;
