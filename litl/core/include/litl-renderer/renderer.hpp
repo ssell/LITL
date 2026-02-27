@@ -5,7 +5,7 @@
 #include <memory>
 
 #include "litl-renderer/handles.hpp"
-#include "litl-renderer/rendererDescriptor.hpp"
+#include "litl-renderer/rendererConfiguration.hpp"
 #include "litl-renderer/resourceAllocator.hpp"
 
 namespace LITL::Renderer

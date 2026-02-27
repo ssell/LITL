@@ -6,7 +6,7 @@
 
 namespace LITL::Vulkan::Renderer
 {
-    std::unique_ptr<LITL::Renderer::Renderer> createVulkanRenderer(Core::Window* pWindow, LITL::Renderer::RendererDescriptor const& rendererDescriptor);
+    std::unique_ptr<LITL::Renderer::Renderer> createVulkanRenderer(Core::Window* pWindow, LITL::Renderer::RendererConfiguration const& rendererDescriptor);
 
     bool build(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
     void destroy(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
