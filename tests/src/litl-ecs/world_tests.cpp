@@ -161,7 +161,7 @@ TEST_CASE("Entity Add Components With Value", "[ecs::world]")
     REQUIRE(entity0Foo->a == 1337);
     REQUIRE(entity1Foo->a == 1338);
     REQUIRE(entity1Bar->b == 100);
-    REQUIRE(LITL::Math::floatEquals(entity1Bar->a, 10.0f));
+    REQUIRE(LITL::Math::fequals(entity1Bar->a, 10.0f));
 
     world.destroyImmediate(entity1);
     world.destroyImmediate(entity0);
@@ -281,7 +281,7 @@ TEST_CASE("Modify Multiple Components", "[ecs::world]")
     REQUIRE(barVal != std::nullopt);
 
     REQUIRE(fooVal->a == foo.a);
-    REQUIRE(LITL::Math::floatEquals(barVal->a, bar.a) == true);
+    REQUIRE(LITL::Math::fequals(barVal->a, bar.a) == true);
     REQUIRE(barVal->b == bar.b);
 
     world.destroyImmediate(entity);

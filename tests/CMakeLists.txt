@@ -26,7 +26,7 @@ add_executable(litl-tests
 	"src/litl-ecs/archetype_tests.cpp" 
 	"src/litl-ecs/entity_tests.cpp" 
 	"src/litl-ecs/world_tests.cpp" 
-	"src/litl-ecs/system_tests.cpp")
+	"src/litl-ecs/system_tests.cpp" "src/litl-engine/frame_tests.cpp")
 
 target_link_libraries(litl-tests
 	PRIVATE

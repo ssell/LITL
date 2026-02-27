@@ -33,7 +33,7 @@ namespace LITL::ECS
         uint32_t remaining = CHUNK_SIZE_BYTES - chunkHeaderSize - chunkEntityArraySize;
 
         // First estimate of how many entities can fit. This is close, but may not be exact due to alignment.
-        entityCapacity = Math::minimum(MAX_ENTITIES_PER_CHUNK, (componentBytesPerEntity == 0 ? MAX_ENTITIES_PER_CHUNK : remaining / componentBytesPerEntity));
+        entityCapacity = Math::min(MAX_ENTITIES_PER_CHUNK, (componentBytesPerEntity == 0 ? MAX_ENTITIES_PER_CHUNK : remaining / componentBytesPerEntity));
 
         // Get memory position of entity array
         uint32_t offset = chunkHeaderSize;

@@ -135,7 +135,7 @@ namespace LITL::ECS
             return;
         }
 
-        m_entityCount = Math::maximum(m_entityCount - 1, 0u);
+        m_entityCount = Math::max(m_entityCount - 1, 0u);
 
         // Get the chunk and element index for where we are removing
         const auto removeFromArchetypeIndex = record.archetypeIndex;
