@@ -129,6 +129,63 @@ TEST_CASE("isOne", "[math::general]")
     REQUIRE(LITL::Math::isOne(std::numeric_limits<uint32_t>::max()) == false);
 }
 
+TEST_CASE("between", "[math::general]")
+{
+    REQUIRE(LITL::Math::between(10.0f, 5.0f, 15.0f, true)   == true);
+    REQUIRE(LITL::Math::between(10.0f, 5.0f, 10.0f, true)   == true);
+    REQUIRE(LITL::Math::between(10.0f, 10.0f, 15.0f, true)  == true);
+    REQUIRE(LITL::Math::between(15.0f, 5.0f, 10.0f, true)   == false);
+    REQUIRE(LITL::Math::between(10.0f, 5.0f, 15.0f, false)  == true);
+    REQUIRE(LITL::Math::between(10.0f, 10.0f, 15.0f, false) == false);
+    REQUIRE(LITL::Math::between(10.0f, 5.0f, 10.0f, false)  == false);
+    REQUIRE(LITL::Math::between(15.0f, 5.0f, 10.0f, false)  == false);
+
+    REQUIRE(LITL::Math::between(10.0, 5.0, 15.0, true)   == true);
+    REQUIRE(LITL::Math::between(10.0, 10.0, 15.0, true)  == true);
+    REQUIRE(LITL::Math::between(10.0, 5.0, 10.0, true)   == true);
+    REQUIRE(LITL::Math::between(15.0, 5.0, 10.0, true)   == false);
+    REQUIRE(LITL::Math::between(10.0, 5.0, 15.0, false)  == true);
+    REQUIRE(LITL::Math::between(10.0, 10.0, 15.0, false) == false);
+    REQUIRE(LITL::Math::between(10.0, 5.0, 10.0, false)  == false);
+    REQUIRE(LITL::Math::between(15.0, 5.0, 10.0, false)  == false);
+
+    REQUIRE(LITL::Math::between(static_cast<int32_t>(10), static_cast<int32_t>(5), static_cast<int32_t>(15), true)   == true);
+    REQUIRE(LITL::Math::between(static_cast<int32_t>(10), static_cast<int32_t>(10), static_cast<int32_t>(15), true)  == true);
+    REQUIRE(LITL::Math::between(static_cast<int32_t>(10), static_cast<int32_t>(5), static_cast<int32_t>(10), true)   == true);
+    REQUIRE(LITL::Math::between(static_cast<int32_t>(15), static_cast<int32_t>(5), static_cast<int32_t>(10), true)   == false);
+    REQUIRE(LITL::Math::between(static_cast<int32_t>(10), static_cast<int32_t>(5), static_cast<int32_t>(15), false)  == true);
+    REQUIRE(LITL::Math::between(static_cast<int32_t>(10), static_cast<int32_t>(10), static_cast<int32_t>(15), false) == false);
+    REQUIRE(LITL::Math::between(static_cast<int32_t>(10), static_cast<int32_t>(5), static_cast<int32_t>(10), false)  == false);
+    REQUIRE(LITL::Math::between(static_cast<int32_t>(15), static_cast<int32_t>(5), static_cast<int32_t>(10), false)  == false);
+
+    REQUIRE(LITL::Math::between(static_cast<uint32_t>(10), static_cast<uint32_t>(5), static_cast<uint32_t>(15), true)   == true);
+    REQUIRE(LITL::Math::between(static_cast<uint32_t>(10), static_cast<uint32_t>(10), static_cast<uint32_t>(15), true)  == true);
+    REQUIRE(LITL::Math::between(static_cast<uint32_t>(10), static_cast<uint32_t>(5), static_cast<uint32_t>(10), true)   == true);
+    REQUIRE(LITL::Math::between(static_cast<uint32_t>(15), static_cast<uint32_t>(5), static_cast<uint32_t>(10), true)   == false);
+    REQUIRE(LITL::Math::between(static_cast<uint32_t>(10), static_cast<uint32_t>(5), static_cast<uint32_t>(15), false)  == true);
+    REQUIRE(LITL::Math::between(static_cast<uint32_t>(10), static_cast<uint32_t>(10), static_cast<uint32_t>(15), false) == false);
+    REQUIRE(LITL::Math::between(static_cast<uint32_t>(10), static_cast<uint32_t>(5), static_cast<uint32_t>(10), false)  == false);
+    REQUIRE(LITL::Math::between(static_cast<uint32_t>(15), static_cast<uint32_t>(5), static_cast<uint32_t>(10), false)  == false);
+
+    REQUIRE(LITL::Math::between(static_cast<int64_t>(10), static_cast<int64_t>(5), static_cast<int64_t>(15), true) == true);
+    REQUIRE(LITL::Math::between(static_cast<int64_t>(10), static_cast<int64_t>(10), static_cast<int64_t>(15), true) == true);
+    REQUIRE(LITL::Math::between(static_cast<int64_t>(10), static_cast<int64_t>(5), static_cast<int64_t>(10), true) == true);
+    REQUIRE(LITL::Math::between(static_cast<int64_t>(15), static_cast<int64_t>(5), static_cast<int64_t>(10), true) == false);
+    REQUIRE(LITL::Math::between(static_cast<int64_t>(10), static_cast<int64_t>(5), static_cast<int64_t>(15), false) == true);
+    REQUIRE(LITL::Math::between(static_cast<int64_t>(10), static_cast<int64_t>(10), static_cast<int64_t>(15), false) == false);
+    REQUIRE(LITL::Math::between(static_cast<int64_t>(10), static_cast<int64_t>(5), static_cast<int64_t>(10), false) == false);
+    REQUIRE(LITL::Math::between(static_cast<int64_t>(15), static_cast<int64_t>(5), static_cast<int64_t>(10), false)  == false);
+
+    REQUIRE(LITL::Math::between(static_cast<uint64_t>(10), static_cast<uint64_t>(5), static_cast<uint64_t>(15), true) == true);
+    REQUIRE(LITL::Math::between(static_cast<uint64_t>(10), static_cast<uint64_t>(10), static_cast<uint64_t>(15), true) == true);
+    REQUIRE(LITL::Math::between(static_cast<uint64_t>(10), static_cast<uint64_t>(5), static_cast<uint64_t>(10), true) == true);
+    REQUIRE(LITL::Math::between(static_cast<uint64_t>(15), static_cast<uint64_t>(5), static_cast<uint64_t>(10), true) == false);
+    REQUIRE(LITL::Math::between(static_cast<uint64_t>(10), static_cast<uint64_t>(5), static_cast<uint64_t>(15), false) == true);
+    REQUIRE(LITL::Math::between(static_cast<uint64_t>(10), static_cast<uint64_t>(10), static_cast<uint64_t>(15), false) == false);
+    REQUIRE(LITL::Math::between(static_cast<uint64_t>(10), static_cast<uint64_t>(5), static_cast<uint64_t>(10), false) == false);
+    REQUIRE(LITL::Math::between(static_cast<uint64_t>(15), static_cast<uint64_t>(5), static_cast<uint64_t>(10), false)  == false);
+}
+
 TEST_CASE("alignMemoryOffsetUp", "[math::general]")
 {
     REQUIRE(LITL::Math::alignMemoryOffsetUp(13, 8) == 16);

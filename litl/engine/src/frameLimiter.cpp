@@ -1,14 +1,14 @@
 #include "litl-core/math/math.hpp"
-#include "litl-engine/framePacer.hpp"
+#include "litl-engine/frameLimiter.hpp"
 
 namespace LITL::Engine
 {
     /// <summary>
     /// The intervals in which we spin while waiting until the next frame should start.
     /// </summary>
-    constexpr auto FrameSpinThresholdNs = std::chrono::nanoseconds(200000);
+    constexpr auto FrameSpinThresholdNs = std::chrono::nanoseconds(100000);     // 100,000 nanoseconds == 100 microseconds == 0.1 milliseconds
 
-    FramePacer::FramePacer()
+    FrameLimiter::FrameLimiter()
     {
         setTargetFps(60.0f);
 
@@ -18,19 +18,19 @@ namespace LITL::Engine
         m_lastFrameStart = m_nextFrameStart;
     }
 
-    void FramePacer::setTargetFps(float fps) noexcept
+    void FrameLimiter::setTargetFps(float fps) noexcept
     {
         fps = Math::clamp(fps, 1.0f, 1000.0f);
         m_targetPeriodNs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<float>(1.0f / fps));
     }
 
-    void FramePacer::frameStart() noexcept
+    void FrameLimiter::frameStart() noexcept
     {
         m_frameStart = std::chrono::steady_clock::now();
         m_deltaTime = std::chrono::duration<float>(m_frameStart - m_lastFrameStart).count();
     }
 
-    void FramePacer::frameEnd() noexcept
+    void FrameLimiter::frameEnd() noexcept
     {
         // Target the next frame start time to prevent drifting
         m_nextFrameStart += m_targetPeriodNs;
@@ -48,7 +48,7 @@ namespace LITL::Engine
 
         auto remainingTimeNs = m_nextFrameStart - now;
 
-        // Course sleep for our fixed intervals until we have less than one whole interval remaining.
+        // Coarse sleep for our fixed intervals until we have less than one whole interval remaining.
         if (remainingTimeNs > FrameSpinThresholdNs)
         {
             auto sleepTimeNs = remainingTimeNs - FrameSpinThresholdNs - m_sleepBiasNs;
@@ -75,7 +75,7 @@ namespace LITL::Engine
         }
     }
 
-    float FramePacer::frameDelta() const noexcept
+    float FrameLimiter::frameDelta() const noexcept
     {
         return m_deltaTime;
     }
