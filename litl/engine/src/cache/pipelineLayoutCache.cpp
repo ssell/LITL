@@ -31,7 +31,7 @@ namespace LITL::Engine
 
         auto cached = m_impl->cache.find(descriptor.hash());
 
-        if (cached != std::nullopt)
+        if (cached.has_value())
         {
             return cached->get().get();
         }

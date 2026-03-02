@@ -151,7 +151,7 @@ namespace LITL::ECS
 
         auto swappedEntity = removeFromChunk->removeAndSwap(m_chunkLayout, removeFromChunkElementIndex, swapWithChunk, swapWithChunkElementIndex);
 
-        if (swappedEntity != std::nullopt)
+        if (swappedEntity.has_value())
         {
             auto swappedEntityRecord = EntityRegistry::getRecord(*swappedEntity);
             EntityRegistry::updateRecordArchetypeIndex(swappedEntityRecord.entity, removeFromArchetypeIndex);
