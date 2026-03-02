@@ -251,7 +251,7 @@ TEST_CASE("Modify Component", "[ecs::world]")
     
     // Set
     fooOpt->a = updatedValue;
-    world.setComponent<Foo>(entity, fooOpt.value());
+    world.setComponent<Foo>(entity, *fooOpt);
 
     // Get again
     fooOpt = world.getComponent<Foo>(entity);

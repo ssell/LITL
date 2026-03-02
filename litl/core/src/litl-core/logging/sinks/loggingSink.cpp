@@ -62,7 +62,7 @@ namespace LITL::Core
 
                 if (messageOpt != std::nullopt)
                 {
-                    processMessage(messageOpt.value());
+                    processMessage(*messageOpt);
                 }
             } while (messageOpt != std::nullopt);
 

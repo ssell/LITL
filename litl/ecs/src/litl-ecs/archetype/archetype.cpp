@@ -153,7 +153,7 @@ namespace LITL::ECS
 
         if (swappedEntity != std::nullopt)
         {
-            auto swappedEntityRecord = EntityRegistry::getRecord(swappedEntity.value());
+            auto swappedEntityRecord = EntityRegistry::getRecord(*swappedEntity);
             EntityRegistry::updateRecordArchetypeIndex(swappedEntityRecord.entity, removeFromArchetypeIndex);
         }
 

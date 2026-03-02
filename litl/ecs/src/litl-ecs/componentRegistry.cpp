@@ -59,6 +59,6 @@ namespace LITL::ECS
     {
         auto& registry = instance();
         auto find = registry.stableIdLookup.find(stableId);
-        return (find == std::nullopt ? nullptr : registry.unstableIdLookup[find.value()]);
+        return (find == std::nullopt ? nullptr : registry.unstableIdLookup[*find]);
     }
 }
