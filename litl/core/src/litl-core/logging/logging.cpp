@@ -63,7 +63,7 @@ namespace LITL::Core
             {
                 auto messageOpt = m_messageQueue.dequeueWait();
 
-                if (messageOpt != std::nullopt)
+                if (messageOpt.has_value())
                 {
                     for (auto& sink : m_sinks)
                     {

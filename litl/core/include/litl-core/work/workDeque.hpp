@@ -1,5 +1,5 @@
-#ifndef LITL_CORE_WORK_QUEUE_H__
-#define LITL_CORE_WORK_QUEUE_H__
+#ifndef LITL_CORE_WORK_DEQUE_H__
+#define LITL_CORE_WORK_DEQUE_H__
 
 #include <atomic>
 #include <cstdint>
@@ -19,12 +19,12 @@ namespace LITL::Core
     /// As the size of the queue is expected to be relatively small, and relatively
     /// consistent between frames, the optional shrinking behavior is excluded.
     /// </summary>
-    class WorkQueue
+    class WorkDeque
     {
     public:
 
-        WorkQueue();
-        ~WorkQueue();
+        WorkDeque();
+        ~WorkDeque();
 
         /// <summary>
         /// (Owner) Adds a job to the bottom.

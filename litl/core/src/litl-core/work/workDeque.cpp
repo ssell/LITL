@@ -1,7 +1,7 @@
 #include <cassert>
 #include <vector>
 
-#include "litl-core/work/workQueue.hpp"
+#include "litl-core/work/workDeque.hpp"
 
 namespace LITL::Core
 {
@@ -16,7 +16,7 @@ namespace LITL::Core
     /// 
     /// The size (not capacity) of the buffer is equal to (bottom index - top index). 
     /// </summary>
-    struct WorkQueue::RingBuffer
+    struct WorkDeque::RingBuffer
     {
         RingBuffer(size_t capacity = 1024)
             : mask(capacity - 1), jobs(capacity)
@@ -61,18 +61,18 @@ namespace LITL::Core
         std::vector<Job*> jobs;
     };
 
-    WorkQueue::WorkQueue()
+    WorkDeque::WorkDeque()
         : m_pBuffer(new RingBuffer())
     {
 
     }
 
-    WorkQueue::~WorkQueue()
+    WorkDeque::~WorkDeque()
     {
 
     }
 
-    void WorkQueue::push(Job* job) noexcept
+    void WorkDeque::push(Job* job) noexcept
     {
         /**
          * Called by owner only.
@@ -101,7 +101,7 @@ namespace LITL::Core
         m_bottom.store(bottomIndex + 1, std::memory_order_relaxed);
     }
 
-    std::optional<Job*> WorkQueue::pop() noexcept
+    std::optional<Job*> WorkDeque::pop() noexcept
     {
         /**
          * Called by owner only.
@@ -154,7 +154,7 @@ namespace LITL::Core
         return job;
     }
 
-    std::optional<Job*> WorkQueue::steal() noexcept
+    std::optional<Job*> WorkDeque::steal() noexcept
     {
         /**
          * Called by thieves.
@@ -190,7 +190,7 @@ namespace LITL::Core
         return job;
     }
 
-    void WorkQueue::clean() noexcept
+    void WorkDeque::clean() noexcept
     {
         for (auto* buffer : m_deadBuffers)
         {

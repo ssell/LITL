@@ -5,11 +5,11 @@ namespace LITL::Renderer
 {
     bool ShaderModule::build()
     {
-        if (m_reflection == std::nullopt)
+        if (!m_reflection.has_value())
         {
             m_reflection = reflectSPIRV(m_descriptor.entryPoint.data(), m_descriptor.bytes);
 
-            if (m_reflection == std::nullopt)
+            if (!m_reflection.has_value())
             {
                 logError("Failed to reflect shader. Expected stage = ", static_cast<uint32_t>(m_descriptor.stage), ", entry point = ", m_descriptor.entryPoint);
                 return false;

@@ -28,7 +28,7 @@ namespace LITL::Core
         /// <summary>
         /// All jobs that are dependent on this job to finish before they can run.
         /// </summary>
-        std::vector<Job*> dependencies;
+        std::vector<Job*> dependents;
 
         /// <summary>
         /// The current version of this job. Allows for job re-use without having to free/reallocate job structs.

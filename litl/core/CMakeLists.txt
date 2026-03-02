@@ -4,7 +4,17 @@
 
 add_library(litl-core 
 	STATIC
-		"src/litl-core/logging/logging.cpp" "src/litl-core/logging/sinks/consoleSink.cpp" "src/litl-core/logging/sinks/loggingSink.cpp" "src/litl-core/logging/sinks/fileSink.cpp" "src/litl-core/hash.cpp" "src/litl-core/containers/flatHashMap.cpp" "src/litl-renderer/pipeline/shaderReflection.cpp" "src/litl-renderer/pipeline/shaderModule.cpp"  "src/litl-renderer/rendererConfiguration.cpp" "src/litl-core/work/workQueue.cpp")
+		"src/litl-core/logging/logging.cpp" 
+		"src/litl-core/logging/sinks/consoleSink.cpp" 
+		"src/litl-core/logging/sinks/loggingSink.cpp" 
+		"src/litl-core/logging/sinks/fileSink.cpp" 
+		"src/litl-core/hash.cpp" 
+		"src/litl-core/containers/flatHashMap.cpp" 
+		"src/litl-renderer/pipeline/shaderReflection.cpp" 
+		"src/litl-renderer/pipeline/shaderModule.cpp"
+		"src/litl-renderer/rendererConfiguration.cpp" 
+		"src/litl-core/work/workDeque.cpp" 
+		"src/litl-core/work/workScheduler.cpp")
 		
 target_include_directories(litl-core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
 	PRIVATE

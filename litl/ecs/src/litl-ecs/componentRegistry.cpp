@@ -42,7 +42,7 @@ namespace LITL::ECS
                 registry.unstableIdLookup[descriptor->id] = descriptor;
             }
 
-            if (registry.stableIdLookup.find(descriptor->stableId) == std::nullopt)
+            if (!registry.stableIdLookup.find(descriptor->stableId).has_value())
             {
                 registry.stableIdLookup.insert(descriptor->stableId, descriptor->id);
             }
@@ -59,6 +59,6 @@ namespace LITL::ECS
     {
         auto& registry = instance();
         auto find = registry.stableIdLookup.find(stableId);
-        return (find == std::nullopt ? nullptr : registry.unstableIdLookup[*find]);
+        return (!find.has_value() ? nullptr : registry.unstableIdLookup[*find]);
     }
 }

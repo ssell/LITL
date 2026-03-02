@@ -110,7 +110,7 @@ namespace LITL::ECS
 
             const auto archetypeIndex = registry.archetypeMap.find(archetypeHash);
 
-            if (archetypeIndex != std::nullopt)
+            if (archetypeIndex.has_value())
             {
                 return registry.archetypes[*archetypeIndex].get();
             }
@@ -137,7 +137,7 @@ namespace LITL::ECS
     {
         auto find = instance().archetypeMap.find(componentHash);
 
-        if (find != std::nullopt)
+        if (find.has_value())
         {
             return instance().archetypes[*find].get();
         }

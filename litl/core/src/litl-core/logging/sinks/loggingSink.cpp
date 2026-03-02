@@ -60,11 +60,11 @@ namespace LITL::Core
             {
                 messageOpt = m_pImpl->queue.dequeue();
 
-                if (messageOpt != std::nullopt)
+                if (messageOpt.has_value())
                 {
                     processMessage(*messageOpt);
                 }
-            } while (messageOpt != std::nullopt);
+            } while (messageOpt.has_value());
 
             std::unique_lock<std::mutex> lock(m_pImpl->mutex);
             m_pImpl->pendingMessages = false;
