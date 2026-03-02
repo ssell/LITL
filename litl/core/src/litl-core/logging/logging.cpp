@@ -67,7 +67,7 @@ namespace LITL::Core
                 {
                     for (auto& sink : m_sinks)
                     {
-                        sink->enqueue(messageOpt.value());
+                        sink->enqueue(*messageOpt);
                     }
                 }
             }

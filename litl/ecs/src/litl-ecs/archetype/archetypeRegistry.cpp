@@ -112,7 +112,7 @@ namespace LITL::ECS
 
             if (archetypeIndex != std::nullopt)
             {
-                return registry.archetypes[archetypeIndex.value()].get();
+                return registry.archetypes[*archetypeIndex].get();
             }
             else
             {
@@ -139,7 +139,7 @@ namespace LITL::ECS
 
         if (find != std::nullopt)
         {
-            return instance().archetypes[find.value()].get();
+            return instance().archetypes[*find].get();
         }
 
         return nullptr;

@@ -15,9 +15,9 @@ namespace LITL::Renderer
                 return false;
             }
 
-            if (m_reflection.value().stage != m_descriptor.stage)
+            if ((*m_reflection).stage != m_descriptor.stage)
             {
-                logError("Reflected shader does not match descriptor specified stage. Descriptor = ", static_cast<uint32_t>(m_descriptor.stage), ", Reflected = ", static_cast<uint32_t>(m_reflection.value().stage));
+                logError("Reflected shader does not match descriptor specified stage. Descriptor = ", static_cast<uint32_t>(m_descriptor.stage), ", Reflected = ", static_cast<uint32_t>((*m_reflection).stage));
                 return false;
             }
         }
