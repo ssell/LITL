@@ -164,8 +164,18 @@ namespace LITL::Core
             return false;
         }
 
-        dependency->dependents.push_back(dependent);
+        auto dependentIndex = dependency->dependentsCount.fetch_add(1, std::memory_order_relaxed);
+
+        if (dependentIndex >= dependency->dependents.size())
+        {
+            // The dependency is already maxed out in dependents.
+            return false;
+        }
+
+        dependency->dependents[dependentIndex] = dependent;
         dependent->dependencyCount.fetch_add(1, std::memory_order_relaxed);
+
+        return true;
     }
 
     void JobPool::reset() const noexcept

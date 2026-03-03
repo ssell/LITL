@@ -49,8 +49,8 @@ namespace LITL::Core
         template<typename T>
         Job* create(Job::JobFunc func, T& jobLocalData, void* externalData = nullptr) noexcept
         {
-            static_assert(sizeof(T) <= sizeof(Job::localData));
-            static_assert(alignof(T) <= alignof(decltype(Job::localData)));
+            static_assert(sizeof(T) <= sizeof(Job::JobLocalBufferSize));
+            static_assert(alignof(T) <= alignof(decltype(Job::JobLocalBufferSize)));
 
             Job* job = create(func, externalData);
             new (job->localData) T(jobLocalData);
@@ -66,7 +66,7 @@ namespace LITL::Core
         /// <param name="func"></param>
         /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
         /// <returns></returns>
-        template<typename F> requires (sizeof(F) <= 64) && std::is_trivially_destructible_v<F>
+        template<typename F> requires (sizeof(F) <= Job::JobLocalBufferSize) && std::is_trivially_destructible_v<F>
         Job* create(F&& func, void* externalData = nullptr)
         {
             Job* job = create(nullptr);
@@ -114,7 +114,7 @@ namespace LITL::Core
         /// <typeparam name="F"></typeparam>
         /// <param name="func"></param>
         /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
-        template<typename F> requires (sizeof(F) <= 64) && std::is_trivially_destructible_v<F>
+        template<typename F> requires (sizeof(F) <= Job::JobLocalBufferSize) && std::is_trivially_destructible_v<F>
         void createAndSubmit(F&& func, void* externalData = nullptr)
         {
             submit(create(func, externalData));
@@ -138,7 +138,7 @@ namespace LITL::Core
         /// </summary>
         /// <param name="dependent">The job that is dependent on another.</param>
         /// <param name="dependency"></param>
-        /// <returns>Can return false if either Job is null or their versions do not match.</returns>
+        /// <returns>Can return false if: either Job is null, their versions do not match, or the dependency already has the max number of dependents.</returns>
         bool addDependency(Job* dependent, Job* dependency) const noexcept;
 
     protected:
