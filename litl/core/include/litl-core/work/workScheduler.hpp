@@ -15,6 +15,8 @@ namespace LITL::Core
     public:
 
         explicit WorkScheduler(uint32_t threadCount = 0);
+        WorkScheduler(WorkScheduler const&) = delete;
+        WorkScheduler& operator=(WorkScheduler const&) = delete;
         ~WorkScheduler();
 
         void submit(Job* job) noexcept;
@@ -26,7 +28,6 @@ namespace LITL::Core
         void workerInternalLoop(uint32_t threadIndex);
 
         struct Worker;
-
         static thread_local uint32_t t_workerIndex;
 
         std::atomic<bool> m_running{ true };
