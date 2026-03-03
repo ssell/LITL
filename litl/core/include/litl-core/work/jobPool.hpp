@@ -33,7 +33,7 @@ namespace LITL::Core
         /// </summary>
         /// <param name="dependent">The job that is dependent on another.</param>
         /// <param name="dependency"></param>
-        /// <returns>Can return false if either Job is null or their versions do not match.</returns>
+        /// <returns>Can return false if: either Job is null, their versions do not match, or the dependency already has the max number of dependents.</returns>
         bool addDependency(Job* dependent, Job* dependency) const noexcept;
 
         /// <summary>
