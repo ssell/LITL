@@ -6,10 +6,10 @@
 
 namespace LITL::Core
 {
+    using JobFunc = void(*)(void* userdata, uint32_t threadIndex);
+
     struct Job
     {
-        using JobFunc = void(*)(void* userdata, uint32_t threadIndex);
-
         /// <summary>
         /// Pointer to the function being executed by this job.
         /// </summary>
