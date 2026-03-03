@@ -4,12 +4,13 @@
 #include <thread>
 
 #include "litl-core/alignment.hpp"
+#include "litl-core/math/math.hpp"
 #include "litl-core/work/workDeque.hpp"
 #include "litl-core/work/workScheduler.hpp"
 
 namespace LITL::Core
 {
-    thread_local uint32_t WorkScheduler::t_workerIndex = std::numeric_limits<uint32_t>::max();
+    thread_local uint32_t WorkScheduler::t_threadIndex = std::numeric_limits<uint32_t>::max();
 
     struct alignas(CacheLineSize) WorkScheduler::Worker
     {
@@ -33,10 +34,7 @@ namespace LITL::Core
 
     WorkScheduler::WorkScheduler(uint32_t threadCount)
     {
-        if (threadCount == 0)
-        {
-            threadCount = std::thread::hardware_concurrency() - 1;
-        }
+        threadCount = Math::clamp((threadCount > 0 ? threadCount : std::thread::hardware_concurrency() - 1), 1ul, 32ul);
 
         m_workers.resize(threadCount);
 
@@ -77,7 +75,7 @@ namespace LITL::Core
     void WorkScheduler::submit(Job* job) noexcept
     {
         // Push to the worker associated with this thread. If this is from an external thread then push to worker 0.
-        const uint32_t workerIndex = (t_workerIndex < m_workers.size() ? t_workerIndex : 0);
+        const uint32_t workerIndex = (t_threadIndex < m_workers.size() ? t_threadIndex : 0);
         m_workers[workerIndex]->deque.push(job);
 
         // Check all workers for an idle one.
@@ -94,9 +92,9 @@ namespace LITL::Core
 
     void WorkScheduler::workerInternalLoop(uint32_t threadIndex)
     {
-        t_workerIndex = threadIndex;
-        auto& self = *(m_workers[t_workerIndex]);
-        std::minstd_rand prng(t_workerIndex);           // Low quality RNG, but fast.
+        t_threadIndex = threadIndex;
+        auto& self = *(m_workers[t_threadIndex]);
+        std::minstd_rand prng(t_threadIndex);           // Low quality RNG, but fast.
 
         // While the scheduler is running ...
         while (m_running.load(std::memory_order_relaxed))
@@ -109,7 +107,7 @@ namespace LITL::Core
                 // Try to steal a job from another thread.
                 const uint32_t victimIndex = prng() % m_workers.size();
 
-                if (victimIndex != t_workerIndex)
+                if (victimIndex != t_threadIndex)
                 {
                     job = m_workers[victimIndex]->deque.steal();
                 }
@@ -118,7 +116,7 @@ namespace LITL::Core
             if (job.has_value())
             {
                 // Run the job
-                (*job)->func((*job)->userData, t_workerIndex);
+                (*job)->func((*job)->userData, t_threadIndex);
 
                 // Signal to any dependents that this job is completed
                 for (auto* dependent : (*job)->dependents)

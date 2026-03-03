@@ -28,10 +28,9 @@ namespace LITL::Core
         void workerInternalLoop(uint32_t threadIndex);
 
         struct Worker;
-        static thread_local uint32_t t_workerIndex;
-
         std::atomic<bool> m_running{ true };
         std::vector<std::unique_ptr<Worker>> m_workers;
+        static thread_local uint32_t t_threadIndex;
     };
 }
 

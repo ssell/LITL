@@ -1,11 +1,15 @@
 #include <atomic>
+#include <thread>
 #include <vector>
 
 #include "litl-core/alignment.hpp"
+#include "litl-core/math/math.hpp"
 #include "litl-core/work/jobPool.hpp"
 
 namespace LITL::Core
 {
+    thread_local uint32_t JobPool::t_threadIndex = std::numeric_limits<uint32_t>::max();
+
     /// <summary>
     /// Each job pool (both thread-specific and general pool blocks) have an internal buffer of 32KB.
     /// </summary>
@@ -70,10 +74,21 @@ namespace LITL::Core
             if ((offset + sizeof(Job)) <= JobPoolBufferSize)
             {
                 // Room in the current block, so allocate from there.
+                job = new (block->buffer + offset) Job{ .version = version };
             }
             else
             {
                 // Block is out of room. Move to next block.
+                auto nextBlockIndex = m_currentBlock.fetch_add(1, std::memory_order_relaxed) + 1;
+
+                if (nextBlockIndex >= m_blocks.size())
+                {
+                    m_blocks.push_back(std::make_unique<Block>());
+                }
+
+                block = m_blocks[nextBlockIndex].get();
+                block->currOffset.store(sizeof(Job), std::memory_order_relaxed);
+                job = new (block->buffer + 0) Job{ .version = version };
             }
 
             return job;
@@ -104,12 +119,16 @@ namespace LITL::Core
 
     struct JobPool::Impl
     {
-
+        uint32_t version{ 0 };
+        GlobalJobPool globalPool;
+        std::vector<std::unique_ptr<PerThreadJobPool>> localPools;
     };
 
-    JobPool::JobPool(uint32_t capacity)
+    JobPool::JobPool(uint32_t threadCount)
+        : m_pImpl(std::make_unique<Impl>())
     {
-
+        threadCount = Math::clamp((threadCount > 0 ? threadCount : std::thread::hardware_concurrency() - 1), 1ul, 32ul);
+        m_pImpl->localPools.resize(threadCount);
     }
 
     JobPool::~JobPool()
@@ -130,5 +149,17 @@ namespace LITL::Core
     void JobPool::addDependency(Job* job, Job* dependsOn) noexcept
     {
 
+    }
+
+    void JobPool::reset() noexcept
+    {
+        m_pImpl->globalPool.reset();
+
+        for (auto& localPool : m_pImpl->localPools)
+        {
+            localPool->reset();
+        }
+
+        m_pImpl->version++;
     }
 }
