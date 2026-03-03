@@ -72,7 +72,17 @@ namespace LITL::Core
         }
     }
 
-    void WorkScheduler::submit(Job* job) noexcept
+    Job* WorkScheduler::create(Job::JobFunc func, void* externalData) noexcept
+    {
+        return m_pool.createJob(t_threadIndex, func, externalData);
+    }
+
+    void WorkScheduler::createAndSubmit(Job::JobFunc func, void* externalData) noexcept
+    {
+        submit(create(func, externalData));
+    }
+
+    void WorkScheduler::submit(Job* job) const noexcept
     {
         // Push to the worker associated with this thread. If this is from an external thread then push to worker 0.
         const uint32_t workerIndex = (t_threadIndex < m_workers.size() ? t_threadIndex : 0);
@@ -88,6 +98,11 @@ namespace LITL::Core
                 break;
             }
         }
+    }
+
+    bool WorkScheduler::addDependency(Job* dependent, Job* dependency) const noexcept
+    {
+        return m_pool.addDependency(dependent, dependency);
     }
 
     void WorkScheduler::workerInternalLoop(uint32_t threadIndex)
@@ -116,13 +131,13 @@ namespace LITL::Core
             if (job.has_value())
             {
                 // Run the job
-                (*job)->func((*job)->userData, t_threadIndex);
+                (*job)->func((*job), t_threadIndex);
 
                 // Signal to any dependents that this job is completed
                 for (auto* dependent : (*job)->dependents)
                 {
                     // Decrease the dependent's dependency count and if this was the last dependency, submit it to the scheduler.
-                    if (dependent->dependentOnCount.fetch_sub(1, std::memory_order_acq_rel) == 1)
+                    if (dependent->dependencyCount.fetch_sub(1, std::memory_order_acq_rel) == 1)
                     {
                         submit(dependent);
                     }
