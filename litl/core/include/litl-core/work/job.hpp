@@ -6,10 +6,10 @@
 
 namespace LITL::Core
 {
-    using JobFunc = void(*)(void* userdata, uint32_t threadIndex);
-
     struct Job
     {
+        using JobFunc = void(*)(Job* job, uint32_t threadIndex);
+
         /// <summary>
         /// Pointer to the function being executed by this job.
         /// </summary>
@@ -17,24 +17,37 @@ namespace LITL::Core
 
         /// <summary>
         /// Pointer to the user-supplied data be provided to the job at execution.
+        /// The caller/creator of the job must ensure that the provided pointer is valid for the lifetime of the Job.
         /// </summary>
-        void* userData = nullptr;
+        void* data;
 
         /// <summary>
-        /// Number of jobs that this job is still waiting on to finish before it can run.
+        /// Small buffer of user data stored as part of the Job.
+        /// This data is valid for the lifetime of the job.
         /// </summary>
-        std::atomic<uint32_t> dependentOnCount{ 0 };
+        std::byte localData[64];
 
         /// <summary>
-        /// All jobs that are dependent on this job to finish before they can run.
+        /// Number of incomplete jobs that this job is still waiting on to finish before it can run.
         /// </summary>
-        std::vector<Job*> dependents;
+        std::atomic<uint32_t> dependencyCount{ 0 };
 
         /// <summary>
         /// The current version of this job. Allows for job re-use without having to free/reallocate job structs.
         /// The version is incremented each frame and any "out-of-date" versioned jobs are considered stale.
         /// </summary>
         uint32_t version = 0;
+
+        /// <summary>
+        /// All jobs that are dependent on this job to finish before they can run.
+        /// </summary>
+        std::vector<Job*> dependents;
+
+        template<typename T>
+        T& getLocalData()
+        {
+            return reinterpret_cast<T*>(localData);
+        }
     };
 }
 

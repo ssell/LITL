@@ -1,3 +1,4 @@
+#include <cassert>
 #include <atomic>
 #include <thread>
 #include <vector>
@@ -8,8 +9,6 @@
 
 namespace LITL::Core
 {
-    thread_local uint32_t JobPool::t_threadIndex = std::numeric_limits<uint32_t>::max();
-
     /// <summary>
     /// Each job pool (both thread-specific and general pool blocks) have an internal buffer of 32KB.
     /// </summary>
@@ -133,25 +132,43 @@ namespace LITL::Core
 
     JobPool::~JobPool()
     {
-
+        reset();
     }
 
-    Job* JobPool::createJob(JobFunc func, void* userData) noexcept
+    Job* JobPool::createJob(uint32_t threadIndex, Job::JobFunc func, void* externalData) const noexcept
     {
-        return nullptr;
+        Job* job = nullptr;
+
+        if (threadIndex < m_pImpl->localPools.size())
+        {
+            job = m_pImpl->localPools[threadIndex]->allocate(m_pImpl->version);
+        }
+
+        if (job == nullptr)
+        {
+            job = m_pImpl->globalPool.allocate(m_pImpl->version);
+        }
+
+        assert(job != nullptr);
+
+        job->func = func;
+        job->data = externalData;
+
+        return job;
     }
 
-    Job* JobPool::allocate() noexcept
+    bool JobPool::addDependency(Job* dependent, Job* dependency) const noexcept
     {
-        return nullptr;
+        if ((dependent == nullptr) || (dependency == nullptr) || (dependent->version != dependency->version))
+        {
+            return false;
+        }
+
+        dependency->dependents.push_back(dependent);
+        dependent->dependencyCount.fetch_add(1, std::memory_order_relaxed);
     }
 
-    void JobPool::addDependency(Job* job, Job* dependsOn) noexcept
-    {
-
-    }
-
-    void JobPool::reset() noexcept
+    void JobPool::reset() const noexcept
     {
         m_pImpl->globalPool.reset();
 
@@ -161,5 +178,10 @@ namespace LITL::Core
         }
 
         m_pImpl->version++;
+    }
+
+    uint32_t JobPool::version() const noexcept
+    {
+        return m_pImpl->version;
     }
 }
