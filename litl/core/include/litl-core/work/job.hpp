@@ -5,20 +5,32 @@
 #include <atomic>
 #include <cstdint>
 
+#include "litl-core/alignment.hpp"
+
 namespace LITL::Core
 {
-    // Note: currently spans 3 cache lines. can reduce to two by: reducing buffer to 48 (from 64) and max dependent count to 6 (from 12)
-    // time will tell if (a) we need as a big a buffer and/or (b) need as many dependents. can in the future add a BigJob or similar.
+    // Note: currently spans 3 cache lines (2 on m-series chips) 
+    // can reduce to two (or 1 on m-series) by: reducing buffer to 48 (from 64) and max dependent count to 6 (from 12)
+    // time will tell if (a) we need as big of a buffer and/or (b) need as many dependents. can in the future add a BigJob or similar.
 
-    struct alignas(8) Job
+    struct alignas(CacheLineSize) Job
     {
         using JobFunc = void(*)(Job* job, uint32_t threadIndex);
         static constexpr uint32_t JobLocalBufferSize = 64;          // As big as we can get while keeping to two-cache lines on most systems.
+        static constexpr uint8_t JobMaxDependentsCount = 8;
+
+        // --- start cache line 0
 
         /// <summary>
         /// Pointer to the function being executed by this job.
         /// </summary>
         JobFunc func = nullptr;
+
+        /// <summary>
+        /// The current version of this job. Allows for job re-use without having to free/reallocate job structs.
+        /// The version is incremented each frame and any "out-of-date" versioned jobs are considered stale.
+        /// </summary>
+        uint32_t version = 0;
 
         /// <summary>
         /// Pointer to the user-supplied data be provided to the job at execution.
@@ -27,31 +39,33 @@ namespace LITL::Core
         void* data;
 
         /// <summary>
-        /// Small buffer of user data stored as part of the Job.
-        /// This data is valid for the lifetime of the job.
-        /// </summary>
-        std::byte localData[JobLocalBufferSize];
-
-        /// <summary>
-        /// All jobs that are dependent on this job to finish before they can run.
-        /// </summary>
-        std::array<Job*, 12> dependents{ nullptr };
-
-        /// <summary>
         /// The number of dependents.
         /// </summary>
-        std::atomic<uint8_t> dependentsCount{ 0 };
+        std::atomic<uint32_t> dependentsCount{ 0 };
 
         /// <summary>
         /// Number of incomplete jobs that this job is still waiting on to finish before it can run.
         /// </summary>
         std::atomic<uint32_t> dependencyCount{ 0 };
 
+        // --- end cache line 0
+        // --- start cache line 1
+
         /// <summary>
-        /// The current version of this job. Allows for job re-use without having to free/reallocate job structs.
-        /// The version is incremented each frame and any "out-of-date" versioned jobs are considered stale.
+        /// Small buffer of user data stored as part of the Job.
+        /// This data is valid for the lifetime of the job.
         /// </summary>
-        uint32_t version = 0;
+        std::byte localData[JobLocalBufferSize];
+
+        // --- end cache line 1
+        // --- start cache line 2
+
+        /// <summary>
+        /// All jobs that are dependent on this job to finish before they can run.
+        /// </summary>
+        alignas(CacheLineSize) std::array<Job*, JobMaxDependentsCount> dependents{ nullptr };
+
+        // --- end cache line 2
 
         template<typename T>
         T& getLocalData()
