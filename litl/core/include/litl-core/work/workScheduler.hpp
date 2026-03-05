@@ -19,7 +19,7 @@ namespace LITL::Core
     {
     public:
 
-        explicit WorkScheduler(uint32_t threadCount = 0);
+        WorkScheduler();
         WorkScheduler(WorkScheduler const&) = delete;
         WorkScheduler& operator=(WorkScheduler const&) = delete;
         ~WorkScheduler();
@@ -95,7 +95,7 @@ namespace LITL::Core
         /// </summary>
         /// <param name="func"></param>
         /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
-        void createAndSubmit(Job::JobFunc func, void* externalData = nullptr) noexcept;
+        void createAndSubmit(Job::JobFunc func, void* externalData = nullptr, JobPriority priority = JobPriority::Normal) noexcept;
 
         /// <summary>
         /// Allocates a Job with the provided Job-local data (which will be copied) and optional external data.
@@ -106,9 +106,9 @@ namespace LITL::Core
         /// <param name="jobLocalData"></param>
         /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
         template<typename T>
-        void createAndSubmit(Job::JobFunc func, T& jobLocalData, void* externalData = nullptr) noexcept
+        void createAndSubmit(Job::JobFunc func, T& jobLocalData, void* externalData = nullptr, JobPriority priority = JobPriority::Normal) noexcept
         {
-            submit(createAndSubmit(func, jobLocalData, externalData));
+            submit(createAndSubmit(func, jobLocalData, externalData), priority);
         }
 
         /// <summary>
@@ -119,9 +119,9 @@ namespace LITL::Core
         /// <param name="func"></param>
         /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
         template<typename F> requires (sizeof(F) <= Job::JobLocalBufferSize) && std::is_trivially_destructible_v<F>
-        void createAndSubmit(F&& func, void* externalData = nullptr)
+        void createAndSubmit(F&& func, void* externalData = nullptr, JobPriority priority = JobPriority::Normal)
         {
-            submit(create(func, externalData));
+            submit(create(func, externalData), priority);
         }
 
         /// <summary>
@@ -129,7 +129,7 @@ namespace LITL::Core
         /// There is no guarantee of when the job is run.
         /// </summary>
         /// <param name="job"></param>
-        void submit(Job* job) const noexcept;
+        void submit(Job* job, JobPriority priority = JobPriority::Normal) const noexcept;
 
         /// <summary>
         /// Marks that the specified Job is dependent on another.
@@ -164,8 +164,8 @@ namespace LITL::Core
         friend class WorkFence;
 
         void workerInternalLoop(uint32_t threadIndex) const;
-        std::optional<Job*> stealWork(std::minstd_rand& prng) const noexcept;
-        std::optional<Job*> acquireJob() const noexcept;
+        std::optional<Job*> stealWork(std::minstd_rand& prng, JobPriority priority) const noexcept;
+        std::optional<Job*> acquireJob(JobPriority priority) const noexcept;
         void run(Job* job) const noexcept;
 
         struct Impl;

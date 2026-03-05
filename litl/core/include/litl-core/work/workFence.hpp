@@ -3,7 +3,7 @@
 
 #include <span>
 
-#include "litl-core/impl.hpp"
+#include "litl-core/work/jobPriority.hpp"
 
 namespace LITL::Core
 {
@@ -12,6 +12,11 @@ namespace LITL::Core
 
     /// <summary>
     /// A synchronization fence for a batch of jobs.
+    /// 
+    /// It is recommended, though not enforced, that all jobs within a fence
+    /// have the same JobPriority level. This is because the fence wait does
+    /// productive work (and not just stalls) and picks up work matching
+    /// the priority level of the first job added to the fence.
     /// </summary>
     class WorkFence
     {
@@ -47,6 +52,7 @@ namespace LITL::Core
 
     private:
 
+        JobPriority m_priority;
         std::atomic<int32_t> m_remaining;
         std::binary_semaphore m_readySignal{ 0 };
     };
