@@ -1,13 +1,11 @@
 #include <chrono>
-#include <random>
 #include <semaphore>
 #include <thread>
 #include <tuple>
 
 #include "litl-core/alignment.hpp"
-#include "litl-core/thread.hpp"
 #include "litl-core/logging/logging.hpp"
-#include "litl-core/math/math.hpp"
+#include "litl-core/math/random.hpp"
 #include "litl-core/work/workDeque.hpp"
 #include "litl-core/work/workFence.hpp"
 #include "litl-core/work/workScheduler.hpp"
@@ -44,17 +42,6 @@ namespace LITL::Core
         /// Signals when the scheduler is done processing all queued jobs.
         /// </summary>
         std::binary_semaphore busySignal{ 0 };
-
-        /// <summary>
-        /// Default PRNG for non-Worker processed jobs.
-        /// </summary>
-        std::minstd_rand prng;
-
-        Impl()
-            : prng(std::chrono::system_clock::now().time_since_epoch().count())
-        {
-
-        }
     };
 
     struct alignas(CacheLineSize) WorkScheduler::Worker
@@ -191,14 +178,11 @@ namespace LITL::Core
     {
         t_threadIndex = threadIndex;
         auto& self = *(m_pImpl->workers[t_threadIndex]);
-        std::minstd_rand prng(t_threadIndex);           // Low quality RNG, but fast.
 
         // While the scheduler is running ...
         while (m_pImpl->running.load(std::memory_order_relaxed))
         {
             std::optional<Job*> job = std::nullopt;
-
-
 
             // Iterate through the priority levels: High -> Normal -> Low
             // Try get a local High priority job, then try to steal a High priority job.
@@ -216,7 +200,7 @@ namespace LITL::Core
 
                 if (!job.has_value())
                 {
-                    job = stealWork(prng, static_cast<JobPriority>(i));
+                    job = stealWork(static_cast<JobPriority>(i));
                 }
             }
 
@@ -232,10 +216,10 @@ namespace LITL::Core
         }
     }
 
-    std::optional<Job*> WorkScheduler::stealWork(std::minstd_rand& prng, JobPriority priority) const noexcept
+    std::optional<Job*> WorkScheduler::stealWork(JobPriority priority) const noexcept
     {
         // Try to steal a job from another thread.
-        const uint32_t victimIndex = prng() % m_pImpl->workers.size();
+        const uint32_t victimIndex = Math::FastRng::shared().next() % m_pImpl->workers.size();
 
         if (victimIndex != t_threadIndex)
         {
@@ -247,7 +231,7 @@ namespace LITL::Core
 
     std::optional<Job*> WorkScheduler::acquireJob(JobPriority priority) const noexcept
     {
-        return stealWork(m_pImpl->prng, priority);
+        return stealWork(priority);
     }
 
     void WorkScheduler::run(Job* job) const noexcept

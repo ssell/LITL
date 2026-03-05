@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <random>
 #include <vector>
 
 #include "litl-core/work/job.hpp"
@@ -164,7 +163,7 @@ namespace LITL::Core
         friend class WorkFence;
 
         void workerInternalLoop(uint32_t threadIndex) const;
-        std::optional<Job*> stealWork(std::minstd_rand& prng, JobPriority priority) const noexcept;
+        std::optional<Job*> stealWork(JobPriority priority) const noexcept;
         std::optional<Job*> acquireJob(JobPriority priority) const noexcept;
         void run(Job* job) const noexcept;
 
