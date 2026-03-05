@@ -4,6 +4,8 @@
 #include <atomic>
 #include <cstdint>
 #include <memory>
+#include <optional>
+#include <random>
 #include <vector>
 
 #include "litl-core/work/job.hpp"
@@ -11,6 +13,8 @@
 
 namespace LITL::Core
 {
+    class WorkFence;
+
     class WorkScheduler
     {
     public:
@@ -157,7 +161,12 @@ namespace LITL::Core
 
     private:
 
-        void workerInternalLoop(uint32_t threadIndex);
+        friend class WorkFence;
+
+        void workerInternalLoop(uint32_t threadIndex) const;
+        std::optional<Job*> stealWork(std::minstd_rand& prng) const noexcept;
+        std::optional<Job*> acquireJob() const noexcept;
+        void run(Job* job) const noexcept;
 
         struct Impl;
         struct Worker;

@@ -9,6 +9,8 @@
 
 namespace LITL::Core
 {
+    class WorkFence;
+
     // Note: currently spans 3 cache lines (2 on m-series chips) 
     // can reduce to two (or 1 on m-series) by: reducing buffer to 48 (from 64) and max dependent count to 6 (from 12)
     // time will tell if (a) we need as big of a buffer and/or (b) need as many dependents. can in the future add a BigJob or similar.
@@ -31,6 +33,11 @@ namespace LITL::Core
         /// The version is incremented each frame and any "out-of-date" versioned jobs are considered stale.
         /// </summary>
         uint32_t version = 0;
+        
+        /// <summary>
+        /// Optional fence that is tracking the progress of this Job.
+        /// </summary>
+        WorkFence* fence = nullptr;
 
         /// <summary>
         /// Pointer to the user-supplied data be provided to the job at execution.

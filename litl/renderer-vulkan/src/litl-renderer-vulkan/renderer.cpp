@@ -703,7 +703,7 @@ namespace LITL::Vulkan::Renderer
 
         uint32_t swapChainImageIndex = 0;
 
-        if (!acquireSwapChainIndex(handle, 1000000, handle->context.frameIndex, &swapChainImageIndex))  // 1000000 ns = 1 ms
+        if (!acquireSwapChainIndex(handle, Math::Constants::millisecond_to_nanoseconds, handle->context.frameIndex, &swapChainImageIndex))
         {
             // Swapchain not ready.
             return false;
