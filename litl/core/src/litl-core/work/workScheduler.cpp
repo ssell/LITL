@@ -2,11 +2,13 @@
 #include <random>
 #include <semaphore>
 #include <thread>
+#include <tuple>
 
 #include "litl-core/alignment.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/math/math.hpp"
 #include "litl-core/work/workDeque.hpp"
+#include "litl-core/work/workFence.hpp"
 #include "litl-core/work/workScheduler.hpp"
 
 namespace LITL::Core
@@ -40,6 +42,17 @@ namespace LITL::Core
         /// Signals when the scheduler is done processing all queued jobs.
         /// </summary>
         std::binary_semaphore busySignal{ 0 };
+
+        /// <summary>
+        /// Default PRNG for non-Worker processed jobs.
+        /// </summary>
+        std::minstd_rand prng;
+
+        Impl()
+            : prng(std::chrono::system_clock::now().time_since_epoch().count())
+        {
+
+        }
     };
 
     struct alignas(CacheLineSize) WorkScheduler::Worker
@@ -103,6 +116,16 @@ namespace LITL::Core
         }
     }
 
+    uint32_t WorkScheduler::jobCount() const noexcept
+    {
+        return m_pImpl->jobCount.load();
+    }
+
+    uint32_t WorkScheduler::workerCount() const noexcept
+    {
+        return m_pImpl->workers.size();
+    }
+
     Job* WorkScheduler::create(Job::JobFunc func, void* externalData) noexcept
     {
         return m_pImpl->jobPool.createJob(t_threadIndex, func, externalData);
@@ -143,7 +166,7 @@ namespace LITL::Core
         return m_pImpl->jobPool.addDependency(dependent, dependency);
     }
 
-    void WorkScheduler::workerInternalLoop(uint32_t threadIndex)
+    void WorkScheduler::workerInternalLoop(uint32_t threadIndex) const
     {
         t_threadIndex = threadIndex;
         auto& self = *(m_pImpl->workers[t_threadIndex]);
@@ -156,70 +179,76 @@ namespace LITL::Core
 
             if (!job.has_value())
             {
-                // The deque for this worker's thread is empty.
-                // Try to steal a job from another thread.
-                const uint32_t victimIndex = prng() % m_pImpl->workers.size();
-
-                if (victimIndex != t_threadIndex)
-                {
-                    job = m_pImpl->workers[victimIndex]->deque.steal();
-                }
+                job = stealWork(prng);
             }
 
             if (job.has_value())
             {
-                // Run the job
-                try
-                {
-                    (*job)->func((*job), t_threadIndex);
-
-                    // Signal to any dependents that this job is completed
-                    for (auto* dependent : (*job)->dependents)
-                    {
-                        // Decrease the dependent's dependency count and if this was the last dependency, submit it to the scheduler.
-                        if (dependent->dependencyCount.fetch_sub(1, std::memory_order_acq_rel) == 1)
-                        {
-                            submit(dependent);
-                        }
-                    }
-                }
-                catch (std::exception e)
-                {
-                    LITL_LOG_ERROR_CAPTURE("Caught unhandled exception running Job. Exception: ", e.what());
-                }
-                catch (...)
-                {
-                    LITL_LOG_ERROR_CAPTURE("Caught unhandled non-standard exception running Job.");
-                }
-
-                if (m_pImpl->jobCount.fetch_sub(1, std::memory_order_acq_rel) == 1)
-                {
-                    // Scheduler is now out of jobs.
-                    m_pImpl->busySignal.release();
-                }
-
-                // Worker will immediately return to the top of the loop and try to pull another job to execute.
+                run((*job));
             }
             else
             {
                 // No jobs to be done. Wait and try again. The worker is now idle.
-                auto _ = self.wake.try_acquire_for(std::chrono::microseconds(100));
+                std::ignore = self.wake.try_acquire_for(std::chrono::microseconds(100));
             }
         }
     }
 
-    uint32_t WorkScheduler::jobCount() const noexcept
+    std::optional<Job*> WorkScheduler::stealWork(std::minstd_rand& prng) const noexcept
     {
-        return m_pImpl->jobCount.load();
+        // The deque for this worker's thread is empty.
+        // Try to steal a job from another thread.
+        const uint32_t victimIndex = prng() % m_pImpl->workers.size();
+
+        if (victimIndex != t_threadIndex)
+        {
+            return m_pImpl->workers[victimIndex]->deque.steal();
+        }
+
+        return std::nullopt;
     }
 
-    uint32_t WorkScheduler::workerCount() const noexcept
+    std::optional<Job*> WorkScheduler::acquireJob() const noexcept
     {
-        return m_pImpl->workers.size();
+        return stealWork(m_pImpl->prng);
     }
 
-    void WorkScheduler::join() const noexcept
+    void WorkScheduler::run(Job* job) const noexcept
     {
+        // Run the job
+        try
+        {
+            job->func(job, t_threadIndex);
+        }
+        catch (std::exception e)
+        {
+            LITL_LOG_ERROR_CAPTURE("Caught unhandled exception running Job. Exception: ", e.what());
+        }
+        catch (...)
+        {
+            LITL_LOG_ERROR_CAPTURE("Caught unhandled non-standard exception running Job.");
+        }
 
+        // Signal to any dependents that this job is completed
+        for (auto* dependent : job->dependents)
+        {
+            // Decrease the dependent's dependency count and if this was the last dependency, submit it to the scheduler.
+            if (dependent->dependencyCount.fetch_sub(1, std::memory_order_acq_rel) == 1)
+            {
+                submit(dependent);
+            }
+        }
+
+        // Let the fence (if there is one) know that this job is complete.
+        if (job->fence != nullptr)
+        {
+            job->fence->release(job);
+        }
+
+        if (m_pImpl->jobCount.fetch_sub(1, std::memory_order_acq_rel) == 1)
+        {
+            // Scheduler is now out of jobs.
+            m_pImpl->busySignal.release();
+        }
     }
 }

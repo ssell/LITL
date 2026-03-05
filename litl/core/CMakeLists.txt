@@ -14,7 +14,7 @@ add_library(litl-core
 		"src/litl-renderer/pipeline/shaderModule.cpp"
 		"src/litl-renderer/rendererConfiguration.cpp" 
 		"src/litl-core/work/workDeque.cpp" 
-		"src/litl-core/work/workScheduler.cpp" "src/litl-core/work/jobPool.cpp")
+		"src/litl-core/work/workScheduler.cpp" "src/litl-core/work/jobPool.cpp" "src/litl-core/work/workFence.cpp")
 		
 target_include_directories(litl-core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
 	PRIVATE

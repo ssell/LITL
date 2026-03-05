@@ -5,35 +5,10 @@
 #include <assert.h>
 #include <cmath>
 
+#include "litl-core/math/traits.hpp"
+
 namespace LITL::Math
 {
-    template<typename T>
-    struct MathTraits;
-
-    template<>
-    struct MathTraits<float>
-    {
-        static constexpr float epsilon = 0.000001f;
-        static constexpr float relative_epsilon = 0.0001f;
-        static constexpr float pi = 3.1415926f;
-        static constexpr float one_over_pi = 0.31830989f;
-        static constexpr float deg_to_rad = 0.0174533f;
-        static constexpr float rad_to_deg = 57.2958f;
-        static constexpr float phi = 1.6180339887f;
-    };
-
-    template<>
-    struct MathTraits<double>
-    {
-        static constexpr float epsilon = 0.0000001;
-        static constexpr float relative_epsilon = 0.0001;
-        static constexpr float pi = 3.14159265359;
-        static constexpr float one_over_pi = 0.31830989;
-        static constexpr float deg_to_rad = 0.0174533;
-        static constexpr float rad_to_deg = 57.2958;
-        static constexpr float phi = 1.6180339887;
-    };
-
     [[nodiscard]] constexpr float clamp(float value, float min, float max) noexcept
     {
         assert(min <= max);
@@ -98,7 +73,7 @@ namespace LITL::Math
         return (std::max)(a, b);
     }
 
-    [[nodiscard]] constexpr bool fequals(float a, float b, float relEpsilon = MathTraits<float>::relative_epsilon, float epsilon = MathTraits<float>::epsilon) noexcept
+    [[nodiscard]] constexpr bool fequals(float a, float b, float relEpsilon = Traits<float>::relative_epsilon, float epsilon = Traits<float>::epsilon) noexcept
     {
         // Note we use both an epsilon and relative epsilon value.
         // Absolute epsilon by itself can fail for large numbers where the gap between representable floats is greater than epsilon itself.
@@ -113,7 +88,7 @@ namespace LITL::Math
         return diff <= relEpsilon * (max)(abs(a), abs(b));
     }
 
-    [[nodiscard]] constexpr bool fequals(double a, double b, double relEpsilon = MathTraits<double>::relative_epsilon, double epsilon = MathTraits<double>::epsilon) noexcept
+    [[nodiscard]] constexpr bool fequals(double a, double b, double relEpsilon = Traits<double>::relative_epsilon, double epsilon = Traits<double>::epsilon) noexcept
     {
         // Note we use both an epsilon and relative epsilon value.
         // Absolute epsilon by itself can fail for large numbers where the gap between representable floats is greater than epsilon itself.
@@ -128,14 +103,14 @@ namespace LITL::Math
         return diff <= relEpsilon * (max)(abs(a), abs(b));
     }
 
-    [[nodiscard]] constexpr bool isZero(float x, float epsilon = MathTraits<float>::epsilon) noexcept
+    [[nodiscard]] constexpr bool isZero(float x, float epsilon = Traits<float>::epsilon) noexcept
     {
         if (std::isnan(x)) { return false; }
         if (!std::isfinite(x)) { return false; }
         return ((x < epsilon) && (x > -epsilon));
     }
 
-    [[nodiscard]] constexpr bool isZero(double x, double epsilon = MathTraits<double>::epsilon) noexcept
+    [[nodiscard]] constexpr bool isZero(double x, double epsilon = Traits<double>::epsilon) noexcept
     {
         if (std::isnan(x)) { return false; }
         if (!std::isfinite(x)) { return false; }
@@ -154,14 +129,14 @@ namespace LITL::Math
         return x == 0;
     }
 
-    [[nodiscard]] constexpr bool isOne(float x, float relEpsilon = MathTraits<float>::relative_epsilon, float epsilon = MathTraits<float>::epsilon) noexcept
+    [[nodiscard]] constexpr bool isOne(float x, float relEpsilon = Traits<float>::relative_epsilon, float epsilon = Traits<float>::epsilon) noexcept
     {
         if (std::isnan(x)) { return false; }
         if (!std::isfinite(x)) { return false; }
         return (std::abs(x - 1.0f) < epsilon);
     }
 
-    [[nodiscard]] constexpr bool isOne(double x, double relEpsilon = MathTraits<double>::relative_epsilon, double epsilon = MathTraits<double>::epsilon) noexcept
+    [[nodiscard]] constexpr bool isOne(double x, double relEpsilon = Traits<double>::relative_epsilon, double epsilon = Traits<double>::epsilon) noexcept
     {
         if (std::isnan(x)) { return false; }
         if (!std::isfinite(x)) { return false; }
@@ -248,22 +223,22 @@ namespace LITL::Math
 
     [[nodiscard]] constexpr float degreesToRadians(float deg) noexcept
     {
-        return (deg * MathTraits<float>::deg_to_rad);
+        return (deg * Traits<float>::deg_to_rad);
     }
 
     [[nodiscard]] constexpr double degreesToRadians(double deg) noexcept
     {
-        return (deg * MathTraits<double>::deg_to_rad);
+        return (deg * Traits<double>::deg_to_rad);
     }
 
     [[nodiscard]] constexpr float radiansToDegrees(float rad) noexcept
     {
-        return (rad * MathTraits<float>::rad_to_deg);
+        return (rad * Traits<float>::rad_to_deg);
     }
 
     [[nodiscard]] constexpr double radiansToDegrees(double const rad) noexcept
     {
-        return (rad * MathTraits<double>::rad_to_deg);
+        return (rad * Traits<double>::rad_to_deg);
     }
 
     [[nodiscard]] constexpr size_t alignMemoryOffsetUp(size_t offset, size_t alignment) noexcept
