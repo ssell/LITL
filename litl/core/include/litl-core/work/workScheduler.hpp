@@ -141,17 +141,29 @@ namespace LITL::Core
         /// <returns>Can return false if: either Job is null, their versions do not match, or the dependency already has the max number of dependents.</returns>
         bool addDependency(Job* dependent, Job* dependency) const noexcept;
 
+        /// <summary>
+        /// Returns the number of idle or active jobs.
+        /// </summary>
+        /// <returns></returns>
+        uint32_t jobCount() const noexcept;
+
+        /// <summary>
+        /// Returns the number of workers.
+        /// </summary>
+        /// <returns></returns>
+        uint32_t workerCount() const noexcept;
+
     protected:
 
     private:
 
         void workerInternalLoop(uint32_t threadIndex);
 
+        struct Impl;
         struct Worker;
 
-        JobPool m_pool;
-        std::atomic<bool> m_running{ true };
-        std::vector<std::unique_ptr<Worker>> m_workers;
+        std::unique_ptr<Impl> m_pImpl;
+
         static thread_local uint32_t t_threadIndex;
     };
 }
