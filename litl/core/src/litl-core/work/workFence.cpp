@@ -32,7 +32,12 @@ namespace LITL::Core
         }
 
         job->fence = this;
-        m_remaining.fetch_add(1, std::memory_order_acq_rel);
+        
+        if (m_remaining.fetch_add(1, std::memory_order_acq_rel) == 0)
+        {
+            // Set the fence priority to match that of the first job added.
+            m_priority = job->priority;
+        }
     }
 
     void WorkFence::release(Job* job) noexcept
@@ -64,8 +69,10 @@ namespace LITL::Core
             }
 
             // Perform a productive wait and try to process a job on this thread that is waiting.
-
-            auto job = scheduler->acquireJob();
+            // We pull only jobs that are the same priority level as the fence (and ideally as the jobs being fenced).
+            // This is to prevent the fence from grabbing and blocking on a slower low priority background job
+            // when all of it's fenced jobs are higher priority fast jobs.
+            auto job = scheduler->acquireJob(m_priority);
 
             if (job.has_value())
             {

@@ -6,10 +6,12 @@
 #include <cstdint>
 
 #include "litl-core/alignment.hpp"
+#include "litl-core/work/jobPriority.hpp"
 
 namespace LITL::Core
 {
     class WorkFence;
+
 
     // Note: currently spans 3 cache lines (2 on m-series chips) 
     // can reduce to two (or 1 on m-series) by: reducing buffer to 48 (from 64) and max dependent count to 6 (from 12)
@@ -33,6 +35,11 @@ namespace LITL::Core
         /// The version is incremented each frame and any "out-of-date" versioned jobs are considered stale.
         /// </summary>
         uint32_t version = 0;
+
+        /// <summary>
+        /// The priority level of this job.
+        /// </summary>
+        JobPriority priority = JobPriority::Normal;
         
         /// <summary>
         /// Optional fence that is tracking the progress of this Job.
