@@ -1,6 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
 #include <array>
-#include <string_view>
 #include <vector>
 
 #include "litl-core/hash.hpp"
