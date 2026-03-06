@@ -14,6 +14,7 @@ namespace LITL::Math
     struct FastRng::Impl
     {
         std::minstd_rand rng;
+        uint32_t seed;
     };
 
     FastRng::FastRng()
@@ -48,12 +49,18 @@ namespace LITL::Math
 
     void FastRng::seed() noexcept
     {
-        m_impl->rng.seed(std::chrono::system_clock::now().time_since_epoch().count());
+        seed(static_cast<uint32_t>(std::chrono::system_clock::now().time_since_epoch().count()));
     }
 
     void FastRng::seed(uint_fast32_t seed) noexcept
     {
+        m_impl->seed = seed;
         m_impl->rng.seed(seed);
+    }
+
+    uint32_t FastRng::getSeed() const noexcept
+    {
+        return m_impl->seed;
     }
 
     uint_fast32_t FastRng::min() const noexcept
