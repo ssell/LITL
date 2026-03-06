@@ -14,6 +14,7 @@ namespace LITL::Math
     struct GoodRng::Impl
     {
         std::mt19937 rng;
+        uint32_t seed;
     };
 
     GoodRng::GoodRng()
@@ -48,12 +49,18 @@ namespace LITL::Math
 
     void GoodRng::seed() noexcept
     {
-        m_impl->rng.seed(std::chrono::system_clock::now().time_since_epoch().count());
+        seed(static_cast<uint32_t>(std::chrono::system_clock::now().time_since_epoch().count()));
     }
 
     void GoodRng::seed(uint_fast32_t seed) noexcept
     {
+        m_impl->seed = seed;
         m_impl->rng.seed(seed);
+    }
+
+    uint32_t GoodRng::getSeed() const noexcept
+    {
+        return m_impl->seed;
     }
 
     uint_fast32_t GoodRng::min() const noexcept
