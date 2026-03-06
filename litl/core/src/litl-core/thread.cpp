@@ -3,28 +3,28 @@
 
 namespace LITL::Core
 {
-    static ThreadInfo& threadInfo() noexcept
+    ThreadInfo& ThreadInfo::get() noexcept
     {
         static thread_local ThreadInfo threadInfo{
             .id = std::this_thread::get_id(),
-            .isMainThread = false
+            .mainthread = false
         };
 
         return threadInfo;
     }
 
-    static void setMainThread() noexcept
+    void ThreadInfo::setMainThread() noexcept
     {
         static std::atomic<bool> IsMainThreadClaimed{ false };
 
         if (IsMainThreadClaimed.exchange(true) == false)
         {
-            threadInfo().isMainThread = true;
+            ThreadInfo::get().mainthread = true;
         }
     }
 
-    static bool isMainThread() noexcept
+    bool ThreadInfo::isMainThread() noexcept
     {
-        return threadInfo().isMainThread;
+        return ThreadInfo::get().mainthread;
     }
 }
