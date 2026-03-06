@@ -1,6 +1,6 @@
-#include <cassert>
 #include <vector>
 
+#include "litl-core/math/math.hpp"
 #include "litl-core/work/workDeque.hpp"
 
 namespace LITL::Core
@@ -18,7 +18,7 @@ namespace LITL::Core
     /// </summary>
     struct WorkDeque::RingBuffer
     {
-        RingBuffer(size_t capacity = 1024)
+        explicit RingBuffer(size_t capacity = DefaultCapacity)
             : mask(capacity - 1), jobs(capacity)
         {
 
@@ -80,7 +80,10 @@ namespace LITL::Core
          * If the buffer is full, it is resized prior to storage.
          */
 
-        assert(job != nullptr);
+        if (job == nullptr)
+        {
+            return;
+        }
 
         // Fetch indices and underlying ring buffer
         auto bottomIndex = m_bottom.load(std::memory_order_relaxed);
@@ -113,7 +116,7 @@ namespace LITL::Core
          * We CAS to take it, but if that fails then the thief got to it first and it is gone.
          */
 
-        std::optional<Job*> job = nullptr;
+        std::optional<Job*> job = std::nullopt;
 
         // Fetch the bottom index and decrement it, fetch the ring buffer, fetch the top index.
         auto bottomIndex = m_bottom.load(std::memory_order_relaxed) - 1;
@@ -198,5 +201,16 @@ namespace LITL::Core
         }
 
         m_deadBuffers.clear();
+    }
+
+    uint32_t WorkDeque::size() const noexcept
+    {
+        return Math::max(0, (m_bottom.load() - m_top.load()));
+    }
+
+    uint32_t WorkDeque::capacity() const noexcept
+    {
+        auto* buffer = m_pBuffer.load();
+        return buffer->capacity();
     }
 }

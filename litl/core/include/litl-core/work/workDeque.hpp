@@ -23,6 +23,8 @@ namespace LITL::Core
     {
     public:
 
+        static constexpr size_t DefaultCapacity = 1024;
+
         WorkDeque();
         ~WorkDeque();
 
@@ -48,6 +50,18 @@ namespace LITL::Core
         /// Cleans (deletes) all outgrown buffers.
         /// </summary>
         void clean() noexcept;
+
+        /// <summary>
+        /// Returns number of jobs currently in the deque.
+        /// </summary>
+        /// <returns></returns>
+        uint32_t size() const noexcept;
+
+        /// <summary>
+        /// Returns how many jobs could be stored in the deque.
+        /// </summary>
+        /// <returns></returns>
+        uint32_t capacity() const noexcept;
 
     protected:
 
