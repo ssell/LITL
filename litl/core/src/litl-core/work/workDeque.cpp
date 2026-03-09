@@ -24,7 +24,7 @@ namespace LITL::Core
 
         }
 
-        Job*& operator[](size_t index)
+        JobHandle& operator[](size_t index)
         {
             return jobs[index & mask];
         }
@@ -58,7 +58,7 @@ namespace LITL::Core
         /// as the same indices (and their ranges) are valid between buffer sizes.
         /// </summary>
         const size_t mask;
-        std::vector<Job*> jobs;
+        std::vector<JobHandle> jobs;
     };
 
     WorkDeque::WorkDeque()
@@ -72,7 +72,7 @@ namespace LITL::Core
 
     }
 
-    void WorkDeque::push(Job* job) noexcept
+    void WorkDeque::push(JobHandle job) noexcept
     {
         /**
          * Called by owner only.
@@ -80,7 +80,7 @@ namespace LITL::Core
          * If the buffer is full, it is resized prior to storage.
          */
 
-        if (job == nullptr)
+        if (job.job == nullptr)
         {
             return;
         }
@@ -104,7 +104,7 @@ namespace LITL::Core
         m_bottom.store(bottomIndex + 1, std::memory_order_relaxed);
     }
 
-    std::optional<Job*> WorkDeque::pop() noexcept
+    std::optional<JobHandle> WorkDeque::pop() noexcept
     {
         /**
          * Called by owner only.
@@ -116,7 +116,7 @@ namespace LITL::Core
          * We CAS to take it, but if that fails then the thief got to it first and it is gone.
          */
 
-        std::optional<Job*> job = std::nullopt;
+        std::optional<JobHandle> handle = std::nullopt;
 
         // Fetch the bottom index and decrement it, fetch the ring buffer, fetch the top index.
         auto bottomIndex = m_bottom.load(std::memory_order_relaxed) - 1;
@@ -131,7 +131,7 @@ namespace LITL::Core
         // If there is at least one item in the buffer
         if (topIndex <= bottomIndex)
         {
-            job = (*ringBuffer)[bottomIndex];
+            handle = (*ringBuffer)[bottomIndex];
 
             // If there is exactly one item in the buffer
             if (topIndex == bottomIndex)
@@ -139,7 +139,7 @@ namespace LITL::Core
                 // Attempt to take it. If this fails then a thief stole it first.
                 if (!m_top.compare_exchange_strong(topIndex, topIndex + 1, std::memory_order_seq_cst, std::memory_order_relaxed))
                 {
-                    job = std::nullopt;
+                    handle = std::nullopt;
                 }
 
                 // Restore the bottom index
@@ -154,10 +154,10 @@ namespace LITL::Core
             m_bottom.store(bottomIndex + 1, std::memory_order_relaxed);
         }
 
-        return job;
+        return handle;
     }
 
-    std::optional<Job*> WorkDeque::steal() noexcept
+    std::optional<JobHandle> WorkDeque::steal() noexcept
     {
         /**
          * Called by thieves.
@@ -167,7 +167,7 @@ namespace LITL::Core
          * If the CAS fails then another thief - or the owner - got to it first.
          */
 
-        std::optional<Job*> job = std::nullopt;
+        std::optional<JobHandle> handle = std::nullopt;
 
         // Fetch the top and bottom indices
         auto topIndex = m_top.load(std::memory_order_acquire);
@@ -181,16 +181,16 @@ namespace LITL::Core
         if (topIndex < bottomIndex)
         {
             auto* ringBuffer = m_pBuffer.load(std::memory_order_consume);
-            job = (*ringBuffer)[topIndex];
+            handle = (*ringBuffer)[topIndex];
 
             // Attempt to take the item
             if (!m_top.compare_exchange_strong(topIndex, topIndex + 1, std::memory_order_seq_cst, std::memory_order_relaxed))
             {
-                job = std::nullopt;
+                handle = std::nullopt;
             }
         }
 
-        return job;
+        return handle;
     }
 
     void WorkDeque::clean() noexcept

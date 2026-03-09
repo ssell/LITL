@@ -3,11 +3,11 @@
 
 #include <span>
 
+#include "litl-core/work/job.hpp"
 #include "litl-core/work/jobPriority.hpp"
 
 namespace LITL::Core
 {
-    struct Job;
     class WorkScheduler;
 
     /// <summary>
@@ -23,21 +23,21 @@ namespace LITL::Core
     public:
 
         WorkFence();
-        explicit WorkFence(std::span<Job*> jobs);
+        explicit WorkFence(std::span<JobHandle> jobHandles);
 
         /// <summary>
         /// Adds a job to be tracked by the fence.
         /// The fence will block while waiting until this job (and any others added) is complete.
         /// </summary>
         /// <param name="job"></param>
-        void add(Job* job) noexcept;
+        void add(JobHandle handle) noexcept;
 
         /// <summary>
         /// Lets the fence know that the specified job is done.
         /// If this was the last job, any wait will be released.
         /// </summary>
         /// <param name="job"></param>
-        void release(Job* job) noexcept;
+        void release(JobHandle handle) noexcept;
 
         /// <summary>
         /// Blocks until all tracked jobs are complete.

@@ -27,6 +27,12 @@ namespace LITL::Core
     {
     public:
 
+        /// <summary>
+        /// Allocates the raw Job instance in the per-thread pool.
+        /// The owning JobPool wraps it into a JobHandle.
+        /// </summary>
+        /// <param name="version"></param>
+        /// <returns></returns>
         [[nodiscard]] Job* allocate(uint32_t version) noexcept
         {
             if ((m_currOffset + sizeof(Job)) > JobPoolBufferSize)
@@ -36,6 +42,7 @@ namespace LITL::Core
 
             // The buffer is already allocated, just instantiate a new job inside it.
             auto* job = new (m_buffer + m_currOffset) Job { .version = version };
+
             m_currOffset += sizeof(Job);
 
             return job;
@@ -63,11 +70,18 @@ namespace LITL::Core
     {
     public:
 
+        /// <summary>
+        /// Allocates the raw Job instance in the global pool.
+        /// The owning JobPool wraps it into a JobHandle.
+        /// </summary>
+        /// <param name="version"></param>
+        /// <returns></returns>
         [[nodiscard]] Job* allocate(uint32_t version) noexcept
         {
             Job* job = nullptr;
 
-            auto* block = m_blocks[m_currentBlock.load(std::memory_order_relaxed)].get();
+            auto blockIndex = m_currentBlock.load(std::memory_order_relaxed);
+            auto* block = m_blocks[blockIndex].get();
             auto offset = block->currOffset.fetch_add(sizeof(Job), std::memory_order_relaxed);
 
             if ((offset + sizeof(Job)) <= JobPoolBufferSize)
@@ -78,15 +92,16 @@ namespace LITL::Core
             else
             {
                 // Block is out of room. Move to next block.
-                auto nextBlockIndex = m_currentBlock.fetch_add(1, std::memory_order_relaxed) + 1;
+                blockIndex = m_currentBlock.fetch_add(1, std::memory_order_relaxed) + 1;
 
-                if (nextBlockIndex >= m_blocks.size())
+                if (blockIndex >= m_blocks.size())
                 {
                     m_blocks.push_back(std::make_unique<Block>());
                 }
 
-                block = m_blocks[nextBlockIndex].get();
+                block = m_blocks[blockIndex].get();
                 block->currOffset.store(sizeof(Job), std::memory_order_relaxed);
+
                 job = new (block->buffer + 0) Job{ .version = version };
             }
 
@@ -137,10 +152,10 @@ namespace LITL::Core
 
     JobPool::~JobPool()
     {
-        reset();
+        sync();
     }
 
-    Job* JobPool::createJob(uint32_t threadIndex, Job::JobFunc func, void* externalData) const noexcept
+    JobHandle JobPool::createJob(uint32_t threadIndex, Job::JobFunc func, void* externalData) const noexcept
     {
         Job* job = nullptr;
 
@@ -159,31 +174,31 @@ namespace LITL::Core
         job->func = func;
         job->data = externalData;
 
-        return job;
+        return { job, job->version };
     }
 
-    bool JobPool::addDependency(Job* dependent, Job* dependency) const noexcept
+    bool JobPool::addDependency(JobHandle dependent, JobHandle dependency) const noexcept
     {
-        if ((dependent == nullptr) || (dependency == nullptr) || (dependent->version != dependency->version))
+        if ((dependent.job == nullptr) || (dependency.job == nullptr) || (dependent.job->version != dependency.job->version))
         {
             return false;
         }
 
-        auto dependentIndex = dependency->dependentsCount.fetch_add(1, std::memory_order_relaxed);
+        auto dependentIndex = dependency.job->dependentsCount.fetch_add(1, std::memory_order_relaxed);
 
-        if (dependentIndex >= dependency->dependents.size())
+        if (dependentIndex >= dependency.job->dependents.size())
         {
             // The dependency is already maxed out in dependents.
             return false;
         }
 
-        dependency->dependents[dependentIndex] = dependent;
-        dependent->dependencyCount.fetch_add(1, std::memory_order_relaxed);
+        dependency.job->dependents[dependentIndex] = dependent;
+        dependent.job->dependencyCount.fetch_add(1, std::memory_order_relaxed);
 
         return true;
     }
 
-    void JobPool::reset() const noexcept
+    void JobPool::sync() const noexcept
     {
         m_pImpl->globalPool.reset();
 

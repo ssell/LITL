@@ -132,7 +132,12 @@ namespace LITL::Core
         return m_pImpl->workers.size();
     }
 
-    Job* WorkScheduler::create(Job::JobFunc func, void* externalData) noexcept
+    bool WorkScheduler::valid(JobHandle handle) const noexcept
+    {
+        return handle.valid(m_pImpl->jobPool.version());
+    }
+
+    JobHandle WorkScheduler::create(Job::JobFunc func, void* externalData) noexcept
     {
         return m_pImpl->jobPool.createJob(t_threadIndex, func, externalData);
     }
@@ -142,9 +147,9 @@ namespace LITL::Core
         submit(create(func, externalData), priority);
     }
 
-    void WorkScheduler::submit(Job* job, JobPriority priority) const noexcept
+    void WorkScheduler::submit(JobHandle handle, JobPriority priority) const noexcept
     {
-        job->priority = (static_cast<uint32_t>(priority) < static_cast<uint32_t>(JobPriority::__JobPriorityCount)) ? priority : JobPriority::Normal;
+        handle.job->priority = (static_cast<uint32_t>(priority) < static_cast<uint32_t>(JobPriority::__JobPriorityCount)) ? priority : JobPriority::Normal;
 
         // Push to the worker associated with this thread. If this is from an external thread then push to worker 0.
         const uint32_t workerIndex = (t_threadIndex < m_pImpl->workers.size() ? t_threadIndex : 0);
@@ -155,7 +160,7 @@ namespace LITL::Core
             m_pImpl->busySignal.acquire();
         }
 
-        m_pImpl->workers[workerIndex]->deque[static_cast<uint32_t>(job->priority)].push(job);
+        m_pImpl->workers[workerIndex]->deque[static_cast<uint32_t>(handle.job->priority)].push(handle);
 
         // Check all workers for an idle one.
         for (auto& worker : m_pImpl->workers)
@@ -169,7 +174,7 @@ namespace LITL::Core
         }
     }
 
-    bool WorkScheduler::addDependency(Job* dependent, Job* dependency) const noexcept
+    bool WorkScheduler::addDependency(JobHandle dependent, JobHandle dependency) const noexcept
     {
         return m_pImpl->jobPool.addDependency(dependent, dependency);
     }
@@ -182,13 +187,13 @@ namespace LITL::Core
         // While the scheduler is running ...
         while (m_pImpl->running.load(std::memory_order_relaxed))
         {
-            std::optional<Job*> job = std::nullopt;
+            std::optional<JobHandle> handle = std::nullopt;
 
             // Iterate through the priority levels: High -> Normal -> Low
             // Try get a local High priority job, then try to steal a High priority job.
             // Then try to get a local Normal priority job, then try to steal a Normal priority job.
             // Finally try to get a local Low priority job, then try to steal a Low priority job.
-            for (auto i = 0ul; i < static_cast<uint32_t>(JobPriority::__JobPriorityCount) && !job.has_value(); ++i)
+            for (auto i = 0ul; i < static_cast<uint32_t>(JobPriority::__JobPriorityCount) && !handle.has_value(); ++i)
             {
                 if (self.dedicatedPriority.has_value() && (self.dedicatedPriority.value() != static_cast<JobPriority>(i)))
                 {
@@ -196,17 +201,17 @@ namespace LITL::Core
                     continue;
                 }
 
-                job = self.deque[i].pop();
+                handle = self.deque[i].pop();
 
-                if (!job.has_value())
+                if (!handle.has_value())
                 {
-                    job = stealWork(static_cast<JobPriority>(i));
+                    handle = stealWork(static_cast<JobPriority>(i));
                 }
             }
 
-            if (job.has_value())
+            if (handle.has_value())
             {
-                run((*job));
+                run((*handle));
             }
             else
             {
@@ -216,7 +221,7 @@ namespace LITL::Core
         }
     }
 
-    std::optional<Job*> WorkScheduler::stealWork(JobPriority priority) const noexcept
+    std::optional<JobHandle> WorkScheduler::stealWork(JobPriority priority) const noexcept
     {
         // Try to steal a job from another thread.
         const uint32_t victimIndex = Math::FastRng::shared().next() % m_pImpl->workers.size();
@@ -229,17 +234,22 @@ namespace LITL::Core
         return std::nullopt;
     }
 
-    std::optional<Job*> WorkScheduler::acquireJob(JobPriority priority) const noexcept
+    std::optional<JobHandle> WorkScheduler::acquireJob(JobPriority priority) const noexcept
     {
         return stealWork(priority);
     }
 
-    void WorkScheduler::run(Job* job) const noexcept
+    void WorkScheduler::run(JobHandle handle) const noexcept
     {
-        // Run the job
         try
         {
-            job->func(job, t_threadIndex);
+            // Note we only check validty for executing the job function.
+            // Validity does not matter for any of the following steps (dependencies and fences).
+            // We _want_ to clear away dependencies and fences for invalid jobs to avoid deadlocks, etc.
+            if (valid(handle))
+            {
+                handle.job->func(handle.job, t_threadIndex);
+            }
         }
         catch (std::exception e)
         {
@@ -251,19 +261,19 @@ namespace LITL::Core
         }
 
         // Signal to any dependents that this job is completed
-        for (auto* dependent : job->dependents)
+        for (auto& dependent : handle.job->dependents)
         {
             // Decrease the dependent's dependency count and if this was the last dependency, submit it to the scheduler.
-            if (dependent->dependencyCount.fetch_sub(1, std::memory_order_acq_rel) == 1)
+            if (dependent.job->dependencyCount.fetch_sub(1, std::memory_order_acq_rel) == 1)
             {
                 submit(dependent);
             }
         }
 
         // Let the fence (if there is one) know that this job is complete.
-        if (job->fence != nullptr)
+        if (handle.job->fence != nullptr)
         {
-            job->fence->release(job);
+            handle.job->fence->release(handle);
         }
 
         if (m_pImpl->jobCount.fetch_sub(1, std::memory_order_acq_rel) == 1)

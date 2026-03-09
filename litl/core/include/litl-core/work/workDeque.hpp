@@ -32,19 +32,19 @@ namespace LITL::Core
         /// (Owner) Adds a job to the bottom.
         /// </summary>
         /// <param name="job"></param>
-        void push(Job* job) noexcept;
+        void push(JobHandle job) noexcept;
 
         /// <summary>
         /// (Owner) Removes a job from the bottom.
         /// </summary>
         /// <returns>Returns null if no jobs are available.</returns>
-        std::optional<Job*> pop() noexcept;
+        std::optional<JobHandle> pop() noexcept;
 
         /// <summary>
         /// (Thief) Removes a job from the top.
         /// </summary>
         /// <returns>Returns null if no jobs are available.</returns>
-        std::optional<Job*> steal() noexcept;
+        std::optional<JobHandle> steal() noexcept;
 
         /// <summary>
         /// Cleans (deletes) all outgrown buffers.

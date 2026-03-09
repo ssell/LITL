@@ -9,6 +9,13 @@ namespace LITL::Core
 {
     struct Job;
 
+    /// <summary>
+    /// A frame-scoped Job pool.
+    /// 
+    /// All Jobs within this pool are expected to be completed by the time sync is called.
+    /// Any outdated JobHandles (whose version does not match the current JobPool version) that 
+    /// run, may be doing so on invalid data and the result is undefined.
+    /// </summary>
     class JobPool
     {
     public:
@@ -25,7 +32,9 @@ namespace LITL::Core
         /// <param name="func"></param>
         /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
         /// <returns></returns>
-        [[nodiscard]] Job* createJob(uint32_t threadIndex, Job::JobFunc func, void* externalData = nullptr) const noexcept;
+        [[nodiscard]] JobHandle createJob(uint32_t threadIndex, Job::JobFunc func, void* externalData = nullptr) const noexcept;
+
+        void release(JobHandle job) const noexcept;
 
         /// <summary>
         /// Marks one job as dependent of another.
@@ -34,20 +43,20 @@ namespace LITL::Core
         /// <param name="dependent">The job that is dependent on another.</param>
         /// <param name="dependency"></param>
         /// <returns>Can return false if: either Job is null, their versions do not match, or the dependency already has the max number of dependents.</returns>
-        bool addDependency(Job* dependent, Job* dependency) const noexcept;
+        bool addDependency(JobHandle dependent, JobHandle dependency) const noexcept;
 
         /// <summary>
-        /// Reset the global pool and all of the thread-local pools.
+        /// Reset all of the underlying pools (thread-specific and global) and increments the internal version.
         /// Typically called at the end of each frame.
         /// </summary>
-        void reset() const noexcept;
+        void sync() const noexcept;
 
         /// <summary>
         /// Returns the current version of the pool.
         /// The version is incremented on each reset.
         /// </summary>
         /// <returns></returns>
-        uint32_t version() const noexcept;
+        [[nodiscard]] uint32_t version() const noexcept;
 
     protected:
 
