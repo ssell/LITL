@@ -34,7 +34,7 @@ namespace LITL::Core
         /// <param name="func"></param>
         /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
         /// <returns></returns>
-        Job* create(Job::JobFunc func, void* externalData = nullptr) noexcept;
+        JobHandle create(Job::JobFunc func, void* externalData = nullptr) noexcept;
         
         /// <summary>
         /// Allocates a Job with the provided Job-local data (which will be copied) and optional external data.
@@ -50,15 +50,15 @@ namespace LITL::Core
         /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
         /// <returns></returns>
         template<typename T>
-        Job* create(Job::JobFunc func, T& jobLocalData, void* externalData = nullptr) noexcept
+        JobHandle create(Job::JobFunc func, T& jobLocalData, void* externalData = nullptr) noexcept
         {
             static_assert(sizeof(T) <= sizeof(Job::JobLocalBufferSize));
             static_assert(alignof(T) <= alignof(decltype(Job::JobLocalBufferSize)));
 
-            Job* job = create(func, externalData);
-            new (job->localData) T(jobLocalData);
+            JobHandle handle = create(func, externalData);
+            new (handle.job->localData) T(jobLocalData);
 
-            return job;
+            return handle;
         }
 
         /// <summary>
@@ -70,22 +70,22 @@ namespace LITL::Core
         /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
         /// <returns></returns>
         template<typename F> requires (sizeof(F) <= Job::JobLocalBufferSize) && std::is_trivially_destructible_v<F>
-        Job* create(F&& func, void* externalData = nullptr)
+        JobHandle create(F&& func, void* externalData = nullptr)
         {
-            Job* job = create(nullptr);
+            JobHandle handle = create(nullptr);
 
             // Store the lambda in the job local buffer
-            new (job->localData) std::decay_t<F>(std::forward<F>(func));
+            new (handle.job->localData) std::decay_t<F>(std::forward<F>(func));
 
             // Set the job function as invoking the lambda.
-            job->data = externalData;
-            job->func = [](Job* job, uint32_t threadIndex)
-                {
-                    auto& callable = *static_cast<std::decay_t<F>*>(job->localData);
-                    callable(job, threadIndex);
-                };
+            handle.job->data = externalData;
+            handle.job->func = [](Job* job, uint32_t threadIndex)
+            {
+                auto& callable = *static_cast<std::decay_t<F>*>(job->localData);
+                callable(job, threadIndex);
+            };
 
-            return job;
+            return handle;
         }
 
         /// <summary>
@@ -128,7 +128,7 @@ namespace LITL::Core
         /// There is no guarantee of when the job is run.
         /// </summary>
         /// <param name="job"></param>
-        void submit(Job* job, JobPriority priority = JobPriority::Normal) const noexcept;
+        void submit(JobHandle handle, JobPriority priority = JobPriority::Normal) const noexcept;
 
         /// <summary>
         /// Marks that the specified Job is dependent on another.
@@ -142,7 +142,7 @@ namespace LITL::Core
         /// <param name="dependent">The job that is dependent on another.</param>
         /// <param name="dependency"></param>
         /// <returns>Can return false if: either Job is null, their versions do not match, or the dependency already has the max number of dependents.</returns>
-        bool addDependency(Job* dependent, Job* dependency) const noexcept;
+        bool addDependency(JobHandle dependent, JobHandle dependency) const noexcept;
 
         /// <summary>
         /// Returns the number of idle or active jobs.
@@ -156,6 +156,13 @@ namespace LITL::Core
         /// <returns></returns>
         uint32_t workerCount() const noexcept;
 
+        /// <summary>
+        /// Returns if the handle is still valid.
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <returns></returns>
+        bool valid(JobHandle handle) const noexcept;
+
     protected:
 
     private:
@@ -163,9 +170,9 @@ namespace LITL::Core
         friend class WorkFence;
 
         void workerInternalLoop(uint32_t threadIndex) const;
-        std::optional<Job*> stealWork(JobPriority priority) const noexcept;
-        std::optional<Job*> acquireJob(JobPriority priority) const noexcept;
-        void run(Job* job) const noexcept;
+        std::optional<JobHandle> stealWork(JobPriority priority) const noexcept;
+        std::optional<JobHandle> acquireJob(JobPriority priority) const noexcept;
+        void run(JobHandle handle) const noexcept;
 
         struct Impl;
         struct Worker;

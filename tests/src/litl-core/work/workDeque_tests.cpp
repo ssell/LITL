@@ -1,27 +1,46 @@
 #include <catch2/catch_test_macros.hpp>
 #include "litl-core/work/workDeque.hpp"
 
+struct JobHandleWrapper
+{
+    JobHandleWrapper()
+    {
+        handle.job = new LITL::Core::Job();
+    }
+
+    ~JobHandleWrapper()
+    {
+        if (handle.job != nullptr)
+        {
+            delete handle.job;
+            handle.job = nullptr;
+        }
+    }
+
+    LITL::Core::JobHandle handle;
+};
+
 TEST_CASE("Push", "[core::work::workDeque]")
 {
     LITL::Core::WorkDeque deque;
 
     REQUIRE(deque.size() == 0);
 
-    deque.push(nullptr);
+    deque.push({});
 
     REQUIRE(deque.size() == 0);
 
-    LITL::Core::Job job0;
-    LITL::Core::Job job1;
-    LITL::Core::Job job2;
+    JobHandleWrapper handle0;
+    JobHandleWrapper handle1;
+    JobHandleWrapper handle2;
 
-    deque.push(&job0);
+    deque.push(handle0.handle);
     REQUIRE(deque.size() == 1);
 
-    deque.push(&job1);
+    deque.push(handle1.handle);
     REQUIRE(deque.size() == 2);
 
-    deque.push(&job2);
+    deque.push(handle2.handle);
     REQUIRE(deque.size() == 3);
 }
 
@@ -32,13 +51,13 @@ TEST_CASE("Pop", "[core::work::workDeque]")
 
     LITL::Core::WorkDeque deque;
 
-    LITL::Core::Job job0;
-    LITL::Core::Job job1;
-    LITL::Core::Job job2;
+    JobHandleWrapper handle0;
+    JobHandleWrapper handle1;
+    JobHandleWrapper handle2;
 
-    deque.push(&job0);
-    deque.push(&job1);
-    deque.push(&job2);
+    deque.push(handle0.handle);
+    deque.push(handle1.handle);
+    deque.push(handle2.handle);
 
     REQUIRE(deque.size() == 3);
 
@@ -46,19 +65,19 @@ TEST_CASE("Pop", "[core::work::workDeque]")
 
     REQUIRE(deque.size() == 2);
     REQUIRE(fetched.has_value());
-    REQUIRE((*fetched) == (&job2));
+    REQUIRE((*fetched).job == handle2.handle.job);
 
     fetched = deque.pop();
 
     REQUIRE(deque.size() == 1);
     REQUIRE(fetched.has_value());
-    REQUIRE((*fetched) == (&job1));
+    REQUIRE((*fetched).job == handle1.handle.job);
 
     fetched = deque.pop();
 
     REQUIRE(deque.size() == 0);
     REQUIRE(fetched.has_value());
-    REQUIRE((*fetched) == (&job0));
+    REQUIRE((*fetched).job == handle0.handle.job);
 
     fetched = deque.pop();
 
@@ -78,13 +97,13 @@ TEST_CASE("Steal", "[core::work::workDeque]")
 
     LITL::Core::WorkDeque deque;
 
-    LITL::Core::Job job0;
-    LITL::Core::Job job1;
-    LITL::Core::Job job2;
+    JobHandleWrapper handle0;
+    JobHandleWrapper handle1;
+    JobHandleWrapper handle2;
 
-    deque.push(&job0);
-    deque.push(&job1);
-    deque.push(&job2);
+    deque.push(handle0.handle);
+    deque.push(handle1.handle);
+    deque.push(handle2.handle);
 
     REQUIRE(deque.size() == 3);
 
@@ -92,19 +111,19 @@ TEST_CASE("Steal", "[core::work::workDeque]")
 
     REQUIRE(deque.size() == 2);
     REQUIRE(fetched.has_value());
-    REQUIRE((*fetched) == (&job0));
+    REQUIRE((*fetched).job == handle0.handle.job);
 
     fetched = deque.steal();
 
     REQUIRE(deque.size() == 1);
     REQUIRE(fetched.has_value());
-    REQUIRE((*fetched) == (&job1));
+    REQUIRE((*fetched).job == handle1.handle.job);
 
     fetched = deque.steal();
 
     REQUIRE(deque.size() == 0);
     REQUIRE(fetched.has_value());
-    REQUIRE((*fetched) == (&job2));
+    REQUIRE((*fetched).job == handle2.handle.job);
 
     fetched = deque.steal();
 
@@ -125,30 +144,30 @@ TEST_CASE("Big Deque", "[core::work::workDeque]")
 
     REQUIRE(deque.capacity() == LITL::Core::WorkDeque::DefaultCapacity);
 
-    LITL::Core::Job job;
+    JobHandleWrapper handle;
 
     for (auto i = 0; i < deque.capacity(); ++i)
     {
-        deque.push(&job);
+        deque.push(handle.handle);
     }
 
     REQUIRE(deque.size() == LITL::Core::WorkDeque::DefaultCapacity);
     REQUIRE(deque.capacity() == LITL::Core::WorkDeque::DefaultCapacity);
 
-    deque.push(&job);
+    deque.push(handle.handle);
 
     REQUIRE(deque.size() == LITL::Core::WorkDeque::DefaultCapacity + 1);
     REQUIRE(deque.capacity() == LITL::Core::WorkDeque::DefaultCapacity * 2);
 
     for (auto i = deque.size(); i < deque.capacity(); ++i)
     {
-        deque.push(&job);
+        deque.push(handle.handle);
     }
 
     REQUIRE(deque.size() == LITL::Core::WorkDeque::DefaultCapacity * 2);
     REQUIRE(deque.capacity() == LITL::Core::WorkDeque::DefaultCapacity * 2);
 
-    deque.push(&job);
+    deque.push(handle.handle);
 
     REQUIRE(deque.size() == LITL::Core::WorkDeque::DefaultCapacity * 2 + 1);
     REQUIRE(deque.capacity() == LITL::Core::WorkDeque::DefaultCapacity * 4);

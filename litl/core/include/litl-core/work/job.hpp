@@ -11,6 +11,33 @@
 namespace LITL::Core
 {
     class WorkFence;
+    struct Job;
+
+    /// <summary>
+    /// Handle to a job instance. 
+    /// 
+    /// This should be used instead of a raw Job pointer as the JobPool recycles jobs when they are released. 
+    /// A raw Job pointer may be pointing to an invalidated/out-of-date job instance and the user may not even know it.
+    /// </summary>
+    struct JobHandle
+    {
+        /// <summary>
+        /// The job instance pointed to by this handle.
+        /// </summary>
+        Job* job = nullptr;
+
+        /// <summary>
+        /// The version of the pointed job that this handle is valid for.
+        /// If the handle version does not equal to the job version, or the owning scheduler version, then the handle is out of date.
+        /// </summary>
+        uint32_t version = 0;
+
+        /// <summary>
+        /// Is the job pointed to by this handle still valid? If not, it should not be run.
+        /// </summary>
+        /// <returns></returns>
+        bool valid(uint32_t schedulerVersion) const noexcept;
+    };
 
 
     // Note: currently spans 3 cache lines (2 on m-series chips) 
@@ -77,7 +104,7 @@ namespace LITL::Core
         /// <summary>
         /// All jobs that are dependent on this job to finish before they can run.
         /// </summary>
-        alignas(CacheLineSize) std::array<Job*, JobMaxDependentsCount> dependents{ nullptr };
+        alignas(CacheLineSize) std::array<JobHandle, JobMaxDependentsCount> dependents{ };
 
         // --- end cache line 2
 

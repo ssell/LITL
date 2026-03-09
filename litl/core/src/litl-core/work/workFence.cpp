@@ -15,34 +15,34 @@ namespace LITL::Core
 
     }
 
-    WorkFence::WorkFence(std::span<Job*> jobs)
+    WorkFence::WorkFence(std::span<JobHandle> jobHandles)
         : m_remaining(0)
     {
-        for (auto* job : jobs)
+        for (auto& handle : jobHandles)
         {
-            add(job);
+            add(handle);
         }
     }
 
-    void WorkFence::add(Job* job) noexcept
+    void WorkFence::add(JobHandle handle) noexcept
     {
-        if ((job == nullptr) || (job->fence != nullptr))
+        if ((handle.job == nullptr) || (handle.job->fence != nullptr))
         {
             return;
         }
 
-        job->fence = this;
+        handle.job->fence = this;
         
         if (m_remaining.fetch_add(1, std::memory_order_acq_rel) == 0)
         {
             // Set the fence priority to match that of the first job added.
-            m_priority = job->priority;
+            m_priority = handle.job->priority;
         }
     }
 
-    void WorkFence::release(Job* job) noexcept
+    void WorkFence::release(JobHandle handle) noexcept
     {
-        if ((job == nullptr) || (job->fence != this))
+        if ((handle.job == nullptr) || (handle.job->fence != this))
         {
             return;
         }
@@ -72,11 +72,11 @@ namespace LITL::Core
             // We pull only jobs that are the same priority level as the fence (and ideally as the jobs being fenced).
             // This is to prevent the fence from grabbing and blocking on a slower low priority background job
             // when all of it's fenced jobs are higher priority fast jobs.
-            auto job = scheduler->acquireJob(m_priority);
+            auto handle = scheduler->acquireJob(m_priority);
 
-            if (job.has_value())
+            if (handle.has_value())
             {
-                scheduler->run((*job));
+                scheduler->run((*handle));
             }
             else
             {

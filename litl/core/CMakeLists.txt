@@ -19,7 +19,7 @@ add_library(litl-core
 		"src/litl-core/work/workFence.cpp" 
 		"src/litl-core/thread.cpp"  
 		"src/litl-core/math/random/fastRng.cpp" 
-		"src/litl-core/math/random/goodRng.cpp")
+		"src/litl-core/math/random/goodRng.cpp" "src/litl-core/work/job.cpp")
 		
 target_include_directories(litl-core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
 	PRIVATE
