@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include "litl-core/work/workDeque.hpp"
 
-TEST_CASE("Push", "[core::work]")
+TEST_CASE("Push", "[core::work::workDeque]")
 {
     LITL::Core::WorkDeque deque;
 
@@ -25,7 +25,7 @@ TEST_CASE("Push", "[core::work]")
     REQUIRE(deque.size() == 3);
 }
 
-TEST_CASE("Pop", "[core::work]")
+TEST_CASE("Pop", "[core::work::workDeque]")
 {
     // Push -> Pop should be LIFO
     // Push adds to "bottom index" and Pop removes from "bottom index"
@@ -71,7 +71,7 @@ TEST_CASE("Pop", "[core::work]")
     REQUIRE(!fetched.has_value());
 }
 
-TEST_CASE("Steal", "[core::work]")
+TEST_CASE("Steal", "[core::work::workDeque]")
 {
     // Push -> Steal should be FIFO
     // Push adds to "bottom index" and Pop removes from "top index"
@@ -117,7 +117,7 @@ TEST_CASE("Steal", "[core::work]")
     REQUIRE(!fetched.has_value());
 }
 
-TEST_CASE("Big Deque", "[core::work]")
+TEST_CASE("Big Deque", "[core::work::workDeque]")
 {
     // Add enough jobs to require multiple resizings.
 

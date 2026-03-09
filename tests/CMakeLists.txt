@@ -28,7 +28,7 @@ add_executable(litl-tests
 	"src/litl-ecs/world_tests.cpp" 
 	"src/litl-ecs/system_tests.cpp" 
 	"src/litl-engine/frame_tests.cpp" 
-	"src/litl-core/math/random_tests.cpp" "src/litl-core/threadinfo_tests.cpp" "src/litl-core/work/workDeque_tests.cpp")
+	"src/litl-core/math/random_tests.cpp" "src/litl-core/threadinfo_tests.cpp" "src/litl-core/work/workDeque_tests.cpp" "src/litl-core/work/jobPool_tests.cpp")
 
 target_link_libraries(litl-tests
 	PRIVATE
