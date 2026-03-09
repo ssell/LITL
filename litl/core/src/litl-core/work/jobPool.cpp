@@ -127,7 +127,12 @@ namespace LITL::Core
         : m_pImpl(std::make_unique<Impl>())
     {
         threadCount = Math::clamp((threadCount > 0 ? threadCount : std::thread::hardware_concurrency() - 1), 1ul, 32ul);
-        m_pImpl->localPools.resize(threadCount);
+        m_pImpl->localPools.reserve(threadCount);
+
+        for (auto i = 0; i < threadCount; ++i)
+        {
+            m_pImpl->localPools.push_back(std::make_unique<PerThreadJobPool>());
+        }
     }
 
     JobPool::~JobPool()
