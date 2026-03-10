@@ -47,7 +47,7 @@ namespace LITL::Core
         /// <summary>
         /// Signals when the scheduler is done processing all queued jobs.
         /// </summary>
-        std::binary_semaphore busySignal{ 0 };
+        std::binary_semaphore busySignal{ 1 };
     };
 
     struct alignas(CacheLineSize) WorkScheduler::Worker
@@ -89,9 +89,15 @@ namespace LITL::Core
 
         m_pImpl->workers.resize(threadCount);
 
+        // First create all workers
         for (uint32_t i = 0; i < threadCount; ++i)
         {
             m_pImpl->workers[i] = std::make_unique<Worker>();
+        }
+
+        // Then launch their threads. If you do not wait to launch then you can crash as they try to steal from non-existent workers.
+        for (uint32_t i = 0; i < threadCount; ++i)
+        {
             m_pImpl->workers[i]->thread = std::thread([this, i] { workerInternalLoop(i); });
         }
 
@@ -303,7 +309,7 @@ namespace LITL::Core
         for (auto& dependent : handle.job->dependents)
         {
             // Decrease the dependent's dependency count and if this was the last dependency, submit it to the scheduler.
-            if (dependent.job->dependencyCount.fetch_sub(1, std::memory_order_acq_rel) == 1)
+            if ((dependent.job != nullptr) && (dependent.job->dependencyCount.fetch_sub(1, std::memory_order_acq_rel) == 1))
             {
                 submit(dependent);
             }
