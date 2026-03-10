@@ -293,7 +293,7 @@ namespace LITL::Core
             // We _want_ to clear away dependencies and fences for invalid jobs to avoid deadlocks, etc.
             if (valid(handle))
             {
-                handle.job->func(handle.job, t_threadIndex);
+                handle.job->func(handle.job);
             }
         }
         catch (std::exception e)

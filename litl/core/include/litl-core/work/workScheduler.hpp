@@ -56,8 +56,7 @@ namespace LITL::Core
         template<typename T>
         JobHandle create(Job::JobFunc func, T& jobLocalData, void* externalData = nullptr) noexcept
         {
-            static_assert(sizeof(T) <= sizeof(Job::JobLocalBufferSize));
-            static_assert(alignof(T) <= alignof(decltype(Job::JobLocalBufferSize)));
+            static_assert(sizeof(T) <= sizeof(Job::localData));
 
             JobHandle handle = create(func, externalData);
             new (handle.job->localData) T(jobLocalData);
@@ -73,7 +72,7 @@ namespace LITL::Core
         /// <param name="func"></param>
         /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
         /// <returns></returns>
-        template<typename F> requires (sizeof(F) <= Job::JobLocalBufferSize) && std::is_trivially_destructible_v<F>
+        template<typename F> requires (sizeof(F) <= sizeof(Job::localData)) && std::is_trivially_destructible_v<F>
         JobHandle create(F&& func, void* externalData = nullptr)
         {
             JobHandle handle = create(nullptr);
@@ -111,7 +110,7 @@ namespace LITL::Core
         template<typename T>
         void createAndSubmit(Job::JobFunc func, T& jobLocalData, void* externalData = nullptr, JobPriority priority = JobPriority::Normal) noexcept
         {
-            submit(createAndSubmit(func, jobLocalData, externalData), priority);
+            submit(create(func, jobLocalData, externalData), priority);
         }
 
         /// <summary>
@@ -121,7 +120,7 @@ namespace LITL::Core
         /// <typeparam name="F"></typeparam>
         /// <param name="func"></param>
         /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
-        template<typename F> requires (sizeof(F) <= Job::JobLocalBufferSize) && std::is_trivially_destructible_v<F>
+        template<typename F> requires (sizeof(F) <= sizeof(Job::localData)) && std::is_trivially_destructible_v<F>
         void createAndSubmit(F&& func, void* externalData = nullptr, JobPriority priority = JobPriority::Normal)
         {
             submit(create(func, externalData), priority);
