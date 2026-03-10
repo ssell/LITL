@@ -5,6 +5,7 @@
 
 #include "litl-core/alignment.hpp"
 #include "litl-core/logging/logging.hpp"
+#include "litl-core/math/math.hpp"
 #include "litl-core/math/random.hpp"
 #include "litl-core/work/workDeque.hpp"
 #include "litl-core/work/workFence.hpp"
@@ -34,6 +35,11 @@ namespace LITL::Core
         std::atomic<bool> running{ true };
 
         /// <summary>
+        /// Is the scheduler currently waiting for all jobs to finish?
+        /// </summary>
+        std::atomic<bool> waiting{ false };
+
+        /// <summary>
         /// No idea what this is.
         /// </summary>
         std::vector<std::unique_ptr<Worker>> workers;
@@ -50,7 +56,7 @@ namespace LITL::Core
         /// Collection of Jobs that are waiting to be executed.
         /// Each thread (via it's thread-specific Worker) has one deque for each JobPriority level.
         /// </summary>
-        std::array<WorkDeque, static_cast<uint32_t>(JobPriority::__JobPriorityCount)> deque;
+        std::array<WorkDeque, static_cast<uint32_t>(JobPriority::__JobPriorityCount)> deques;
 
         /// <summary>
         /// The scheduler creates one additional dedicated Worker for each priority level.
@@ -117,7 +123,7 @@ namespace LITL::Core
         {
             for (auto i = 0ul; i < static_cast<uint32_t>(JobPriority::__JobPriorityCount); ++i)
             {
-                worker->deque[i].clean();
+                worker->deques[i].clean();
             }
         }
     }
@@ -149,6 +155,22 @@ namespace LITL::Core
 
     void WorkScheduler::submit(JobHandle handle, JobPriority priority) const noexcept
     {
+        if (!m_pImpl->running.load(std::memory_order_relaxed))
+        {
+            // Scheduler is shutting down
+            return;
+        }
+
+        if (m_pImpl->waiting.load(std::memory_order_relaxed))
+        {
+            // Scheduler is at a hard sync point. If a job is submitted at a scheduler sync point, then something is likely wrong.
+            // Accept new jobs but emit a warning as we typically do not want to add new jobs while syncing.
+            // That can lead either to a deadlock (where the scheduler can never exit syncing) if work is continually
+            // added, or timing can be off and work may be submitted inbetween the last worker finishing it's final job
+            // and the job pool being reset. This would immediately invalidate the newly submitted job.
+            logWarning("Job submitted during WorkScheduler hard sync point. This should generally not happen.");
+        }
+
         handle.job->priority = (static_cast<uint32_t>(priority) < static_cast<uint32_t>(JobPriority::__JobPriorityCount)) ? priority : JobPriority::Normal;
 
         // Push to the worker associated with this thread. If this is from an external thread then push to worker 0.
@@ -160,7 +182,7 @@ namespace LITL::Core
             m_pImpl->busySignal.acquire();
         }
 
-        m_pImpl->workers[workerIndex]->deque[static_cast<uint32_t>(handle.job->priority)].push(handle);
+        m_pImpl->workers[workerIndex]->deques[static_cast<uint32_t>(handle.job->priority)].push(handle);
 
         // Check all workers for an idle one.
         for (auto& worker : m_pImpl->workers)
@@ -201,7 +223,7 @@ namespace LITL::Core
                     continue;
                 }
 
-                handle = self.deque[i].pop();
+                handle = self.deques[i].pop();
 
                 if (!handle.has_value())
                 {
@@ -228,10 +250,27 @@ namespace LITL::Core
 
         if (victimIndex != t_threadIndex)
         {
-            return m_pImpl->workers[victimIndex]->deque[static_cast<uint32_t>(priority)].steal();
+            return m_pImpl->workers[victimIndex]->deques[static_cast<uint32_t>(priority)].steal();
         }
 
         return std::nullopt;
+    }
+
+    std::optional<JobHandle> WorkScheduler::stealAnyWork() const noexcept
+    {
+        std::optional<JobHandle> handle = std::nullopt;
+
+        for (auto i = 0ul; i < static_cast<uint32_t>(JobPriority::__JobPriorityCount); ++i)
+        {
+            handle = stealWork(static_cast<JobPriority>(i));
+
+            if (handle.has_value())
+            {
+                break;
+            }
+        }
+
+        return handle;
     }
 
     std::optional<JobHandle> WorkScheduler::acquireJob(JobPriority priority) const noexcept
@@ -281,5 +320,38 @@ namespace LITL::Core
             // Scheduler is now out of jobs.
             m_pImpl->busySignal.release();
         }
+    }
+
+    void WorkScheduler::wait(uint32_t timeoutMs) const noexcept
+    {
+        const auto start = std::chrono::steady_clock::now();
+        const auto timeoutNs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(timeoutMs * Math::Constants::microsecond_to_nanoseconds));
+
+        m_pImpl->waiting = true;
+
+        // While there are pending jobs, be productive and try to do some work (same thing essentially as our WorkFence) 
+        while (m_pImpl->jobCount > 0)
+        {
+            auto handle = stealAnyWork();
+
+            if (handle.has_value())
+            {
+                run((*handle));
+            }
+            else
+            {
+                std::ignore = m_pImpl->busySignal.try_acquire_for(std::chrono::microseconds(50));
+            }
+
+            if ((std::chrono::steady_clock::now() - start) >= timeoutNs)
+            {
+                break;
+            }
+        }
+
+        // Reset the pools and increment the version
+        m_pImpl->jobPool.sync();
+
+        m_pImpl->waiting = false;
     }
 }
