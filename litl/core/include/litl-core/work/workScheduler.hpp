@@ -14,6 +14,10 @@ namespace LITL::Core
 {
     class WorkFence;
 
+    /// <summary>
+    /// All jobs submitted to this scheduler are expected to start and finish in the same frame.
+    /// The wait method should be called at the end of each frame to ensure all jobs are done
+    /// </summary>
     class WorkScheduler
     {
     public:
@@ -163,6 +167,12 @@ namespace LITL::Core
         /// <returns></returns>
         bool valid(JobHandle handle) const noexcept;
 
+        /// <summary>
+        /// A blocking sync point on the scheduler.
+        /// Waits for all jobs to be completed and then resets the underlying job pool.
+        /// </summary>
+        void wait(uint32_t timeoutMs = 1000) const noexcept;
+
     protected:
 
     private:
@@ -171,6 +181,7 @@ namespace LITL::Core
 
         void workerInternalLoop(uint32_t threadIndex) const;
         std::optional<JobHandle> stealWork(JobPriority priority) const noexcept;
+        std::optional<JobHandle> stealAnyWork() const noexcept;
         std::optional<JobHandle> acquireJob(JobPriority priority) const noexcept;
         void run(JobHandle handle) const noexcept;
 
