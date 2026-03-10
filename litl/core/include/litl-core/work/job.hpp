@@ -46,7 +46,7 @@ namespace LITL::Core
 
     struct alignas(CacheLineSize) Job
     {
-        using JobFunc = void(*)(Job* job, uint32_t threadIndex);
+        using JobFunc = void(*)(Job* job);
         static constexpr uint32_t JobLocalBufferSize = 64;          // As big as we can get while keeping to two-cache lines on most systems.
         static constexpr uint8_t JobMaxDependentsCount = 8;
 
@@ -111,7 +111,7 @@ namespace LITL::Core
         template<typename T>
         T& getLocalData()
         {
-            return reinterpret_cast<T*>(localData);
+            return reinterpret_cast<T&>(localData);
         }
     };
 }

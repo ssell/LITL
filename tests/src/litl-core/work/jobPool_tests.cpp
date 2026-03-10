@@ -3,7 +3,7 @@
 
 namespace
 {
-    void jobTest(LITL::Core::Job* job, uint32_t threadIndex)
+    void jobTest(LITL::Core::Job* job)
     {
         auto* jobsRun = static_cast<uint32_t*>(job->data);
         (*jobsRun)++;
@@ -19,7 +19,7 @@ TEST_CASE("Single Job", "[core::work::jobPool]")
 
     REQUIRE(handle.version == jobPool.version());
 
-    handle.job->func(handle.job, 0);
+    handle.job->func(handle.job);
 
     REQUIRE(jobsRun == 1);
 }
@@ -38,8 +38,8 @@ TEST_CASE("Pool Reset", "[core::work::jobPool]")
     REQUIRE(handle1.version == jobPool.version());
     REQUIRE(handle1.valid(jobPool.version()) == true);
 
-    handle0.job->func(handle0.job, 0);
-    handle1.job->func(handle1.job, 0);
+    handle0.job->func(handle0.job);
+    handle1.job->func(handle1.job);
 
     REQUIRE(jobsRun == 2);
 
@@ -60,7 +60,7 @@ TEST_CASE("Pool Reset", "[core::work::jobPool]")
     REQUIRE(handle2.version != handle1.version);
     REQUIRE(handle2.job == handle0.job);
 
-    handle2.job->func(handle2.job, 0);
+    handle2.job->func(handle2.job);
 
     REQUIRE(jobsRun == 3);
 }
@@ -87,7 +87,7 @@ TEST_CASE("Many Jobs", "[core::work::jobPool]")
 
     for (auto i = 0; i < jobsCount; ++i)
     {
-        handles[i].job->func(handles[i].job, 0);
+        handles[i].job->func(handles[i].job);
     }
 
     auto endRun0 = std::chrono::steady_clock::now();
@@ -109,7 +109,7 @@ TEST_CASE("Many Jobs", "[core::work::jobPool]")
 
     for (auto i = 0; i < jobsCount; ++i)
     {
-        handles[i].job->func(handles[i].job, 0);
+        handles[i].job->func(handles[i].job);
     }
 
     auto endRun1 = std::chrono::steady_clock::now();
