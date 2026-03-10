@@ -5,6 +5,7 @@
 
 #include "litl-core/alignment.hpp"
 #include "litl-core/math/math.hpp"
+#include "litl-core/work/job.hpp"
 #include "litl-core/work/jobPool.hpp"
 
 namespace LITL::Core
@@ -12,7 +13,7 @@ namespace LITL::Core
     /// <summary>
     /// Each job pool (both thread-specific and general pool blocks) have an internal buffer of 32KB.
     /// </summary>
-    static constexpr uint32_t JobPoolBufferSize = 32 * 1024;
+    static constexpr uint32_t JobPoolBufferSize = sizeof(Job) * 1024;
 
     /// <summary>
     /// A thread-specific Job pool.
@@ -69,6 +70,11 @@ namespace LITL::Core
     class GlobalJobPool
     {
     public:
+
+        GlobalJobPool()
+        {
+            m_blocks.push_back(std::make_unique<Block>());
+        }
 
         /// <summary>
         /// Allocates the raw Job instance in the global pool.
