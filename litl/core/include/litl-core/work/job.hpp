@@ -28,7 +28,7 @@ namespace LITL::Core
 
         /// <summary>
         /// The version of the pointed job that this handle is valid for.
-        /// If the handle version does not equal to the job version, or the owning scheduler version, then the handle is out of date.
+        /// If the handle version is not equal to the job version, or the owning scheduler version, then the handle is out of date.
         /// </summary>
         uint32_t version = 0;
 
