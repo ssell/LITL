@@ -213,6 +213,8 @@ TEST_CASE("Fence", "[core::work::workScheduler]")
         fence.add(handles[i]);
     }
 
+    REQUIRE(handles[0].job->fence == &fence);
+
     for (auto i = 0; i < jobCount; ++i)
     {
         scheduler.submit(handles[i]);

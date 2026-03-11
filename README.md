@@ -2,32 +2,19 @@
 
 Brushing the C++ dust off with a new little engine.
 
-This is a learning engine and very (very) early in development. It is public merely to show that it exists, but not for it to see any use.
+This is a learning engine and very (very) early in development. It is public merely to show that it exists, but not for it to see any use (yet).
 
 ## Requirements
 
 * [Vulkan SDK](https://vulkan.lunarg.com/) with Slang
 * [clang-cl](https://github.com/llvm/llvm-project/releases/tag/llvmorg-21.1.8) (select _Add LLVM to PATH_)
 
-## Engine Compilation
+## Features
 
-Build from within Visual Studio 2022, or via command line.
+As the engine is new and still under active development this may be small, but is actively growing.
 
-From the command line:
+* Logging: thread-safe with support for multiple sinks (console, file, custom)
+* ECS: chunk-based Archetypal ECS implementation, compile-time system dependencies for seamless component injection, etc.
+* Jobs: work stealing with per-thread and global job pools, priority lanes, dependencies, local and shared data, fences, etc.
 
-```
-    mkdir out/build/x64-Debug
-    cmake -S . -B out/build/x64-Debug -G "Visual Studio 17 2022"
-    cd out/build/x64-Debug
-    cmake --build . --config Debug
-```
-
-## Shader Compilation
-
-Run the `compile-all.ps1` script to compile all shaders under `assets/shaders` into the `assets/shaders/spirv` directory.
-
-    ./compile-all
-
-Individual shaders can be compiled via Slang command line such as:
-
-    ./slangc.exe hello-world.slang -target spirv -o hello-world.spv
+More in-depth documentation is (or will) be found in the appropriate subfolders.
