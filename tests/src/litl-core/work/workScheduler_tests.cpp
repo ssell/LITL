@@ -8,6 +8,11 @@ namespace
 {
     struct JobData
     {
+        uint32_t runs;
+    };
+
+    struct SharedJobData
+    {
         uint32_t* ptr;
     };
 
@@ -43,7 +48,7 @@ namespace
     /// <param name="job"></param>
     void jobLocalDataTest(LITL::Core::Job* job)
     {
-        auto& jobData = job->getLocalData<JobData>();
+        auto& jobData = job->getLocalData<SharedJobData>();
         (*jobData.ptr)++;
     }
 }
@@ -65,12 +70,23 @@ TEST_CASE("CreateAndSubmit LocalData", "[core::work::workScheduler]")
     LITL::Core::WorkScheduler scheduler;
 
     uint32_t jobsRun = 0;
-    JobData data{ &jobsRun };
+    SharedJobData data{ &jobsRun };
 
     scheduler.createAndSubmit(jobLocalDataTest, data, nullptr);
     scheduler.wait();
 
     REQUIRE(jobsRun == 1);
+}
+
+TEST_CASE("CreateAndSubmit Lambda", "[core::work::workScheduler]")
+{
+    LITL::Core::WorkScheduler scheduler;
+    JobData data{ 0 };
+
+    scheduler.createAndSubmit([&data]() { data.runs++; }, nullptr);
+    scheduler.wait();
+
+    REQUIRE(data.runs == 1);
 }
 
 TEST_CASE("Job Dependency Chain", "[core::work::workScheduler]")

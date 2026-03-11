@@ -9,6 +9,9 @@ namespace LITL::Core
 {
     struct Job;
 
+    static constexpr uint32_t JobPoolCount = 1024;
+    static constexpr uint32_t JobPoolBufferSize = sizeof(Job) * JobPoolCount;
+
     /// <summary>
     /// A frame-scoped Job pool.
     /// 

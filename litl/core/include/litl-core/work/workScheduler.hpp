@@ -73,20 +73,21 @@ namespace LITL::Core
         /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
         /// <returns></returns>
         template<typename F> requires (sizeof(F) <= sizeof(Job::localData)) && std::is_trivially_destructible_v<F>
-        JobHandle create(F&& func, void* externalData = nullptr)
+        JobHandle create(F&& func, void* externalData)
         {
             JobHandle handle = create(nullptr);
 
             // Store the lambda in the job local buffer
-            new (handle.job->localData) std::decay_t<F>(std::forward<F>(func));
+            new (handle.job->localData) std::remove_cvref_t<F>(std::forward<F>(func));
 
             // Set the job function as invoking the lambda.
             handle.job->data = externalData;
-            handle.job->func = [](Job* job, uint32_t threadIndex)
-            {
-                auto& callable = *static_cast<std::decay_t<F>*>(job->localData);
-                callable(job, threadIndex);
-            };
+            handle.job->func = [](Job* job)
+                {
+                    void* localData = static_cast<void*>(job->localData);
+                    auto& callable = *static_cast<std::remove_cvref_t<F>*>(localData);
+                    callable();
+                };
 
             return handle;
         }
@@ -121,7 +122,7 @@ namespace LITL::Core
         /// <param name="func"></param>
         /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
         template<typename F> requires (sizeof(F) <= sizeof(Job::localData)) && std::is_trivially_destructible_v<F>
-        void createAndSubmit(F&& func, void* externalData = nullptr, JobPriority priority = JobPriority::Normal)
+        void createAndSubmit(F&& func, void* externalData, JobPriority priority = JobPriority::Normal)
         {
             submit(create(func, externalData), priority);
         }

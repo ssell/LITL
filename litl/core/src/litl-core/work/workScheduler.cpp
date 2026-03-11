@@ -85,7 +85,7 @@ namespace LITL::Core
         // Work Scheduler needs to be created on the main thread so that this properly captures.
         t_threadIndex = MainThreadIndex;
 
-        uint32_t threadCount = std::thread::hardware_concurrency();  // - 1 (to prevent main thread being a dedicated worker, but then) + 1 (to have a dedicated worker for High priority jobs)
+        uint32_t threadCount = Math::max(2u, std::thread::hardware_concurrency());  // - 1 (to prevent main thread being a dedicated worker, but then) + 1 (to have a dedicated worker for High priority jobs)
 
         m_pImpl->workers.resize(threadCount);
 
