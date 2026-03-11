@@ -19,7 +19,7 @@ A job can be implemented via a function pointer or a lambda. They can be run wit
 
 **Function Pointer w/ Local Data Copy**
 
-```
+```cpp
 struct JobData
 {
     uint32_t value;
@@ -40,7 +40,7 @@ void runJob(WorkScheduler& scheduler)
 
 **Function Pointer w/ Shared Data**
 
-```
+```cpp
 void jobFoo(Job* job)
 {
     auto* data = static_cast<JobData*>(job->data);
@@ -55,7 +55,7 @@ void runJob(WorkScheduler& scheduler, JobData& data)
 
 **Lambda Function**
 
-```
+```cpp
 void runJob(WorkScheduler& scheduler, JobData& data)
 {
     scheduler.createAndSubmit([&data]()
