@@ -3,6 +3,7 @@
 
 #include <span>
 
+#include "litl-core/impl.hpp"
 #include "litl-core/work/job.hpp"
 #include "litl-core/work/jobPriority.hpp"
 
@@ -24,6 +25,7 @@ namespace LITL::Core
 
         WorkFence();
         explicit WorkFence(std::span<JobHandle> jobHandles);
+        ~WorkFence();
 
         /// <summary>
         /// Adds a job to be tracked by the fence.
@@ -52,9 +54,8 @@ namespace LITL::Core
 
     private:
 
-        JobPriority m_priority;
-        std::atomic<int32_t> m_remaining;
-        std::binary_semaphore m_readySignal{ 0 };
+        struct Impl;
+        ImplPtr<Impl, 16> m_impl;
     };
 }
 

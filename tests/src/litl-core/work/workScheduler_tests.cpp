@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "litl-core/math/math.hpp"
+#include "litl-core/work/workFence.hpp"
 #include "litl-core/work/workScheduler.hpp"
 
 namespace
@@ -173,13 +174,14 @@ TEST_CASE("Schedule Many Jobs Priority", "[core::work::workScheduler]")
     uint32_t jobCount = LITL::Math::pow(LITL::Core::JobPriorityCount, 8);
 
     LITL::Core::WorkScheduler scheduler;
-    LITL::Core::JobHandle handles[jobCount];
+    std::vector<LITL::Core::JobHandle> handles;
+    handles.reserve(jobCount);
 
     std::array<std::atomic<uint32_t>, LITL::Core::JobPriorityCount> priorities;
 
     for (auto i = 0; i < jobCount; ++i)
     {
-        handles[i] = scheduler.create(jobSharedAtomicPriorityDataTest, &priorities);
+        handles.push_back(scheduler.create(jobSharedAtomicPriorityDataTest, &priorities));
     }
 
     for (auto i = 0; i < jobCount; ++i)
@@ -192,6 +194,31 @@ TEST_CASE("Schedule Many Jobs Priority", "[core::work::workScheduler]")
     for (auto i = 0; i < LITL::Core::JobPriorityCount; ++i)
     {
         // Each priority level should have been run the same number of times
-        priorities[i] == jobCount / LITL::Core::JobPriorityCount;
+        priorities[i] = jobCount / LITL::Core::JobPriorityCount;
     }
+}
+
+TEST_CASE("Fence", "[core::work::workScheduler]")
+{
+    LITL::Core::WorkScheduler scheduler;
+    LITL::Core::WorkFence fence;
+
+    constexpr uint32_t jobCount = 1024;
+    std::array<LITL::Core::JobHandle, jobCount> handles;
+    uint32_t jobsRun = 0;
+
+    for (auto i = 0; i < jobCount; ++i)
+    {
+        handles[i] = scheduler.create(jobSharedDataTest, &jobsRun);
+        fence.add(handles[i]);
+    }
+
+    for (auto i = 0; i < jobCount; ++i)
+    {
+        scheduler.submit(handles[i]);
+    }
+
+    fence.wait(&scheduler);
+
+    REQUIRE(jobsRun == jobCount);
 }
