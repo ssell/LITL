@@ -229,6 +229,7 @@ namespace LITL::Core
                     continue;
                 }
 
+                // !!! vvv test failing here ... returning a handle to a nullptr job vvv !!!
                 handle = self.deques[i].pop();
 
                 if (!handle.has_value())
@@ -308,8 +309,13 @@ namespace LITL::Core
         // Signal to any dependents that this job is completed
         for (auto& dependent : handle.job->dependents)
         {
+            if (dependent.job == nullptr)
+            {
+                break;
+            }
+
             // Decrease the dependent's dependency count and if this was the last dependency, submit it to the scheduler.
-            if ((dependent.job != nullptr) && (dependent.job->dependencyCount.fetch_sub(1, std::memory_order_acq_rel) == 1))
+            if (dependent.job->dependencyCount.fetch_sub(1, std::memory_order_acq_rel) == 1)
             {
                 submit(dependent);
             }

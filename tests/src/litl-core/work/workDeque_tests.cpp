@@ -1,24 +1,27 @@
 #include <catch2/catch_test_macros.hpp>
 #include "litl-core/work/workDeque.hpp"
 
-struct JobHandleWrapper
+namespace
 {
-    JobHandleWrapper()
+    struct JobHandleWrapper
     {
-        handle.job = new LITL::Core::Job();
-    }
-
-    ~JobHandleWrapper()
-    {
-        if (handle.job != nullptr)
+        JobHandleWrapper()
         {
-            delete handle.job;
-            handle.job = nullptr;
+            handle.job = new LITL::Core::Job();
         }
-    }
 
-    LITL::Core::JobHandle handle;
-};
+        ~JobHandleWrapper()
+        {
+            if (handle.job != nullptr)
+            {
+                delete handle.job;
+                handle.job = nullptr;
+            }
+        }
+
+        LITL::Core::JobHandle handle;
+    };
+}
 
 TEST_CASE("Push", "[core::work::workDeque]")
 {
@@ -171,4 +174,19 @@ TEST_CASE("Big Deque", "[core::work::workDeque]")
 
     REQUIRE(deque.size() == LITL::Core::WorkDeque::DefaultCapacity * 2 + 1);
     REQUIRE(deque.capacity() == LITL::Core::WorkDeque::DefaultCapacity * 4);
+
+    bool anyNull = false;
+    
+    while (deque.size() > 0 && !anyNull)
+    {
+        auto handle = deque.pop();
+
+        if (handle.value().job == nullptr)
+        {
+            anyNull = true;
+        }
+    }
+    
+    // If this fails, then job pointers were lost during an internal buffer resize.
+    REQUIRE(anyNull == false);
 }
