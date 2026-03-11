@@ -1,4 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
+
+#include "litl-core/math/math.hpp"
 #include "litl-core/work/workScheduler.hpp"
 
 namespace
@@ -26,6 +28,12 @@ namespace
     {
         auto* jobsRun = static_cast<std::atomic<uint32_t>*>(job->data);
         jobsRun->fetch_add(1);
+    }
+
+    void jobSharedAtomicPriorityDataTest(LITL::Core::Job* job)
+    {
+        auto* jobsRunByPriority = static_cast<std::array<std::atomic<uint32_t>, LITL::Core::JobPriorityCount>*>(job->data);
+        std::ignore = jobsRunByPriority->at(static_cast<uint32_t>(job->priority)).fetch_add(1);
     }
 
     /// <summary>
@@ -157,4 +165,33 @@ TEST_CASE("Schedule Many Jobs", "[core::work::workScheduler]")
     scheduler.wait();
 
     REQUIRE(jobsRun == jobCount);
+}
+
+TEST_CASE("Schedule Many Jobs Priority", "[core::work::workScheduler]")
+{
+    // A sizeable total job count that is evenly divisible by the number of priority levels
+    uint32_t jobCount = LITL::Math::pow(LITL::Core::JobPriorityCount, 8);
+
+    LITL::Core::WorkScheduler scheduler;
+    LITL::Core::JobHandle handles[jobCount];
+
+    std::array<std::atomic<uint32_t>, LITL::Core::JobPriorityCount> priorities;
+
+    for (auto i = 0; i < jobCount; ++i)
+    {
+        handles[i] = scheduler.create(jobSharedAtomicPriorityDataTest, &priorities);
+    }
+
+    for (auto i = 0; i < jobCount; ++i)
+    {
+        scheduler.submit(handles[i], static_cast<LITL::Core::JobPriority>(i % LITL::Core::JobPriorityCount));
+    }
+
+    scheduler.wait();
+
+    for (auto i = 0; i < LITL::Core::JobPriorityCount; ++i)
+    {
+        // Each priority level should have been run the same number of times
+        priorities[i] == jobCount / LITL::Core::JobPriorityCount;
+    }
 }

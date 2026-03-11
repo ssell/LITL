@@ -186,6 +186,87 @@ TEST_CASE("between", "[math::general]")
     REQUIRE(LITL::Math::between(static_cast<uint64_t>(15), static_cast<uint64_t>(5), static_cast<uint64_t>(10), false)  == false);
 }
 
+TEST_CASE("pow", "[math::general]")
+{
+    // powf(float, float)
+    REQUIRE(LITL::Math::fequals(LITL::Math::powf(0.0f, 0.0f), 1.0f));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powf(1.0f, 0.0f), 1.0f));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powf(5.0f, 0.0f), 1.0f));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powf(5.0f, 2.0f), 25.0f));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powf(-5.0f, 2.0f), 25.0f));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powf(25.0f, 0.5f), 5.0f));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powf(25.0f, -1.0f), 0.04f));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powf(2.0f, 8.0f), 256.0f));
+
+    // powf(float, int)
+    REQUIRE(LITL::Math::fequals(LITL::Math::powf(0.0f, 0), 1.0f));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powf(1.0f, 0), 1.0f));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powf(5.0f, 0), 1.0f));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powf(5.0f, 2), 25.0f));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powf(-5.0f, 2), 25.0f));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powf(25.0f, -1), 0.04f));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powf(2.0f, 8), 256.0f));
+
+    // powf(float, uint)
+    REQUIRE(LITL::Math::fequals(LITL::Math::powf(0.0f, 0u), 1.0f));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powf(1.0f, 0u), 1.0f));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powf(5.0f, 0u), 1.0f));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powf(5.0f, 2u), 25.0f));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powf(-5.0f, 2u), 25.0f));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powf(2.0f, 8u), 256.0f));
+
+    // powd(double, double)
+    REQUIRE(LITL::Math::fequals(LITL::Math::powd(0.0, 0.0), 1.0));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powd(1.0, 0.0), 1.0));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powd(5.0, 0.0), 1.0));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powd(5.0, 2.0), 25.0));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powd(-5.0, 2.0), 25.0));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powd(25.0, 0.5), 5.0));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powd(25.0, -1.0), 0.04));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powd(2.0, 8.0), 256.0));
+
+    // powd(double, int)
+    REQUIRE(LITL::Math::fequals(LITL::Math::powd(0.0, 0), 1.0));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powd(1.0, 0), 1.0));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powd(5.0, 0), 1.0));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powd(5.0, 2), 25.0));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powd(-5.0, 2), 25.0));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powd(25.0, -1), 0.04));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powd(2.0, 8), 256.0));
+
+    // powd(double, uint)
+    REQUIRE(LITL::Math::fequals(LITL::Math::powd(0.0, 0u), 1.0));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powd(1.0, 0u), 1.0));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powd(5.0, 0u), 1.0));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powd(5.0, 2u), 25.0));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powd(-5.0, 2u), 25.0));
+    REQUIRE(LITL::Math::fequals(LITL::Math::powd(2.0, 8u), 256.0));
+
+    // pow(uint, uint)
+    REQUIRE(LITL::Math::pow(0u, 0u) == 1u);
+    REQUIRE(LITL::Math::pow(1u, 0u) == 1u);
+    REQUIRE(LITL::Math::pow(5u, 0u) == 1u);
+    REQUIRE(LITL::Math::pow(5u, 2u) == 25u);
+    REQUIRE(LITL::Math::pow(2u, 8u) == 256u);
+
+    // pow(int, int)
+    REQUIRE(LITL::Math::pow(0, 0) == 1);
+    REQUIRE(LITL::Math::pow(1, 0) == 1);
+    REQUIRE(LITL::Math::pow(5, 0) == 1);
+    REQUIRE(LITL::Math::pow(5, 2) == 25);
+    REQUIRE(LITL::Math::pow(-5, 2) == 25);
+    REQUIRE(LITL::Math::pow(25, -1) == 0);
+    REQUIRE(LITL::Math::pow(2, 8) == 256);
+
+    // pow(int, uint)
+    REQUIRE(LITL::Math::pow(0, 0u) == 1);
+    REQUIRE(LITL::Math::pow(1, 0u) == 1);
+    REQUIRE(LITL::Math::pow(5, 0u) == 1);
+    REQUIRE(LITL::Math::pow(5, 2u) == 25);
+    REQUIRE(LITL::Math::pow(-5, 2u) == 25);
+    REQUIRE(LITL::Math::pow(2, 8u) == 256);
+}
+
 TEST_CASE("alignMemoryOffsetUp", "[math::general]")
 {
     REQUIRE(LITL::Math::alignMemoryOffsetUp(13, 8) == 16);

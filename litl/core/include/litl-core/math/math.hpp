@@ -211,6 +211,18 @@ namespace LITL::Math
         return x;
     }
 
+    // std::pow(f) is not constexpr, so ours is not either
+    [[nodiscard]] float powf(float base, float exponent) noexcept;
+    [[nodiscard]] float powf(float base, int32_t exponent) noexcept;
+    [[nodiscard]] float powf(float base, uint32_t exponent) noexcept;
+    [[nodiscard]] double powd(double base, double exponent) noexcept;
+    [[nodiscard]] double powd(double base, int32_t exponent) noexcept;
+    [[nodiscard]] double powd(double base, uint32_t exponent) noexcept;
+    [[nodiscard]] uint32_t pow(uint32_t base, uint32_t exponent) noexcept;
+    [[nodiscard]] uint32_t pow(uint32_t base, int32_t exponent) noexcept;
+    [[nodiscard]] int32_t pow(int32_t base, int32_t exponent) noexcept;
+    [[nodiscard]] int32_t pow(int32_t base, uint32_t exponent) noexcept;
+
     [[nodiscard]] constexpr float lerp(float a, float b, float t) noexcept
     {
         return std::lerp(a, b, t);

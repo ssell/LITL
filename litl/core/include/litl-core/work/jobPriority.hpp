@@ -30,6 +30,8 @@ namespace LITL::Core
 
         __JobPriorityCount
     };
+
+    static constexpr uint32_t JobPriorityCount = static_cast<uint32_t>(LITL::Core::JobPriority::__JobPriorityCount);
 }
 
 #endif
