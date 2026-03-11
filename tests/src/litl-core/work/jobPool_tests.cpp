@@ -68,7 +68,7 @@ TEST_CASE("Pool Reset", "[core::work::jobPool]")
 TEST_CASE("Many Jobs", "[core::work::jobPool]")
 {
     // Allocate enough jobs to (a) exceed the number in the thread-local pools (1024 atm) and fill multiple pages of the global pool (1024 per global page atm)
-    constexpr uint32_t jobsCount = 8192;
+    constexpr uint32_t jobsCount = LITL::Core::JobPoolCount * 8;
 
     LITL::Core::JobPool jobPool{ 1 };
     std::vector<LITL::Core::JobHandle> handles;

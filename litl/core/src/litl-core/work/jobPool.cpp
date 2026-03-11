@@ -11,11 +11,6 @@
 namespace LITL::Core
 {
     /// <summary>
-    /// Each job pool (both thread-specific and general pool blocks) have an internal buffer of 32KB.
-    /// </summary>
-    static constexpr uint32_t JobPoolBufferSize = sizeof(Job) * 1024;
-
-    /// <summary>
     /// A thread-specific Job pool.
     /// 
     /// By default we allocate Jobs from here. If the thread-specific pool is full
