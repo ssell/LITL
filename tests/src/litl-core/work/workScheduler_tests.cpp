@@ -19,6 +19,16 @@ namespace
     }
 
     /// <summary>
+    /// Job using a shared atomic counter.
+    /// </summary>
+    /// <param name="job"></param>
+    void jobSharedAtomicDataTest(LITL::Core::Job * job)
+    {
+        auto* jobsRun = static_cast<std::atomic<uint32_t>*>(job->data);
+        jobsRun->fetch_add(1);
+    }
+
+    /// <summary>
     /// Job using job->localData, which is a copy of data provided when the job was created.
     /// </summary>
     /// <param name="job"></param>
@@ -75,7 +85,7 @@ TEST_CASE("Job Dependency Chain", "[core::work::workScheduler]")
     REQUIRE(jobsRun == 3);
 }
 
-TEST_CASE("Job Dependnecy Limit", "[core:;work::workScheduler]")
+TEST_CASE("Job Dependency Limit", "[core::work::workScheduler]")
 {
     LITL::Core::WorkScheduler scheduler;
 
@@ -102,5 +112,49 @@ TEST_CASE("Job Dependnecy Limit", "[core:;work::workScheduler]")
     scheduler.submit(handles[0]);
     scheduler.wait();
 
+    // the original job and its max number of dependents
     REQUIRE(jobsRun == (LITL::Core::Job::JobMaxDependentsCount + 1));
+}
+
+TEST_CASE("Job Handle Validity", "[core::work::workScheduler]")
+{
+    LITL::Core::WorkScheduler scheduler;
+    uint32_t jobsRun = 0;
+
+    auto handle0 = scheduler.create(jobSharedDataTest, &jobsRun);
+
+    REQUIRE(scheduler.valid(handle0) == true);
+
+    scheduler.submit(handle0);
+    
+    while (scheduler.jobCount() > 0) {};
+
+    REQUIRE(scheduler.valid(handle0) == true);
+
+    scheduler.wait();
+
+    REQUIRE(scheduler.valid(handle0) == false);
+}
+
+TEST_CASE("Schedule Many Jobs", "[core::work::workScheduler]")
+{
+    constexpr uint32_t jobCount = 8192;
+
+    LITL::Core::WorkScheduler scheduler;
+    LITL::Core::JobHandle handles[jobCount];
+    std::atomic<uint32_t> jobsRun{ 0 };
+
+    for (auto i = 0; i < jobCount; ++i)
+    {
+        handles[i] = scheduler.create(jobSharedAtomicDataTest, &jobsRun);
+    }
+
+    for (auto i = 0; i < jobCount; ++i)
+    {
+        scheduler.submit(handles[i]);
+    }
+
+    scheduler.wait();
+
+    REQUIRE(jobsRun == jobCount);
 }

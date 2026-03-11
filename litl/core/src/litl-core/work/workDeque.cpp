@@ -41,7 +41,7 @@ namespace LITL::Core
             // delete at this point is unsafe. Instead a custom garbage collector is used.
             auto* newBuffer = new RingBuffer(capacity() * 2);
 
-            for (size_t i = bottom; i < top; ++i)
+            for (size_t i = top; i < bottom; ++i)
             {
                 (*newBuffer)[i] = (*this)[i];
             }
