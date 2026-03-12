@@ -5,8 +5,8 @@
 
 #include "litl-core/alignment.hpp"
 #include "litl-core/math/math.hpp"
-#include "litl-core/work/job.hpp"
-#include "litl-core/work/jobPool.hpp"
+#include "litl-core/job/job.hpp"
+#include "litl-core/job/jobPool.hpp"
 
 namespace LITL::Core
 {

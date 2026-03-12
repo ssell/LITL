@@ -15,6 +15,6 @@ As the engine is new and still under active development this may be small, but i
 
 * Logging: thread-safe with support for multiple sinks (console, file, custom)
 * ECS: chunk-based Archetypal ECS implementation, compile-time system dependencies for seamless component injection, etc.
-* Jobs: work stealing with per-thread and global job pools, priority lanes, dependencies, local and shared data, fences, etc. [(read more)](https://github.com/ssell/LITL/tree/main/litl/core/include/litl-core/work)
+* Jobs: work stealing with per-thread and global job pools, priority lanes, dependencies, local and shared data, fences, etc. [(read more)](https://github.com/ssell/LITL/tree/main/litl/core/include/litl-core/job)
 
 More in-depth documentation is (or will) be found in the appropriate subfolders.

@@ -13,13 +13,15 @@ add_library(litl-core
 		"src/litl-renderer/pipeline/shaderReflection.cpp" 
 		"src/litl-renderer/pipeline/shaderModule.cpp"
 		"src/litl-renderer/rendererConfiguration.cpp" 
-		"src/litl-core/work/workDeque.cpp" 
-		"src/litl-core/work/workScheduler.cpp" 
-		"src/litl-core/work/jobPool.cpp" 
-		"src/litl-core/work/workFence.cpp" 
+		"src/litl-core/job/jobDeque.cpp" 
+		"src/litl-core/job/jobScheduler.cpp" 
+		"src/litl-core/job/jobPool.cpp" 
+		"src/litl-core/job/jobFence.cpp" 
+		"src/litl-core/job/job.cpp" 
 		"src/litl-core/thread.cpp"  
 		"src/litl-core/math/random/fastRng.cpp" 
-		"src/litl-core/math/random/goodRng.cpp" "src/litl-core/work/job.cpp" "src/litl-core/math/math.cpp")
+		"src/litl-core/math/random/goodRng.cpp" 
+		"src/litl-core/math/math.cpp")
 		
 target_include_directories(litl-core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
 	PRIVATE

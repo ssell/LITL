@@ -1,22 +1,21 @@
 #include <chrono>
 #include <semaphore>
 #include <thread>
-#include <tuple>
 
 #include "litl-core/alignment.hpp"
-#include "litl-core/logging/logging.hpp"
 #include "litl-core/math/math.hpp"
 #include "litl-core/math/random.hpp"
-#include "litl-core/work/workDeque.hpp"
-#include "litl-core/work/workFence.hpp"
-#include "litl-core/work/workScheduler.hpp"
+#include "litl-core/logging/logging.hpp"
+#include "litl-core/job/jobDeque.hpp"
+#include "litl-core/job/jobFence.hpp"
+#include "litl-core/job/jobScheduler.hpp"
 
 namespace LITL::Core
 {
     static constexpr uint32_t MainThreadIndex = 0;
-    thread_local uint32_t WorkScheduler::t_threadIndex = std::numeric_limits<uint32_t>::max();
+    thread_local uint32_t JobScheduler::t_threadIndex = std::numeric_limits<uint32_t>::max();
 
-    struct WorkScheduler::Impl
+    struct JobScheduler::Impl
     {
         /// <summary>
         /// The global and thread-specific job pools.
@@ -50,13 +49,13 @@ namespace LITL::Core
         std::binary_semaphore busySignal{ 1 };
     };
 
-    struct alignas(CacheLineSize) WorkScheduler::Worker
+    struct alignas(CacheLineSize) JobScheduler::Worker
     {
         /// <summary>
         /// Collection of Jobs that are waiting to be executed.
         /// Each thread (via it's thread-specific Worker) has one deque for each JobPriority level.
         /// </summary>
-        std::array<WorkDeque, static_cast<uint32_t>(JobPriority::__JobPriorityCount)> deques;
+        std::array<JobDeque, static_cast<uint32_t>(JobPriority::__JobPriorityCount)> deques;
 
         /// <summary>
         /// The scheduler creates one additional dedicated Worker for each priority level.
@@ -79,8 +78,8 @@ namespace LITL::Core
         std::binary_semaphore wake{ 0 };
     };
 
-    WorkScheduler::WorkScheduler()
-        : m_pImpl(std::make_unique<WorkScheduler::Impl>())
+    JobScheduler::JobScheduler()
+        : m_pImpl(std::make_unique<JobScheduler::Impl>())
     {
         // Work Scheduler needs to be created on the main thread so that this properly captures.
         t_threadIndex = MainThreadIndex;
@@ -104,7 +103,7 @@ namespace LITL::Core
         m_pImpl->workers.back()->dedicatedPriority = JobPriority::High;
     }
 
-    WorkScheduler::~WorkScheduler()
+    JobScheduler::~JobScheduler()
     {
         // Mark the scheduler as no longer running. The inner worker loop checks this on each iteration.
         m_pImpl->running.store(false, std::memory_order_release);
@@ -134,32 +133,32 @@ namespace LITL::Core
         }
     }
 
-    uint32_t WorkScheduler::jobCount() const noexcept
+    uint32_t JobScheduler::jobCount() const noexcept
     {
         return m_pImpl->jobCount.load();
     }
 
-    uint32_t WorkScheduler::workerCount() const noexcept
+    uint32_t JobScheduler::workerCount() const noexcept
     {
         return m_pImpl->workers.size();
     }
 
-    bool WorkScheduler::valid(JobHandle handle) const noexcept
+    bool JobScheduler::valid(JobHandle handle) const noexcept
     {
         return handle.valid(m_pImpl->jobPool.version());
     }
 
-    JobHandle WorkScheduler::create(Job::JobFunc func, void* externalData) noexcept
+    JobHandle JobScheduler::create(Job::JobFunc func, void* externalData) noexcept
     {
         return m_pImpl->jobPool.createJob(t_threadIndex, func, externalData);
     }
 
-    void WorkScheduler::createAndSubmit(Job::JobFunc func, void* externalData, JobPriority priority) noexcept
+    void JobScheduler::createAndSubmit(Job::JobFunc func, void* externalData, JobPriority priority) noexcept
     {
         submit(create(func, externalData), priority);
     }
 
-    void WorkScheduler::submit(JobHandle handle, JobPriority priority) const noexcept
+    void JobScheduler::submit(JobHandle handle, JobPriority priority) const noexcept
     {
         if (!m_pImpl->running.load(std::memory_order_relaxed))
         {
@@ -174,7 +173,7 @@ namespace LITL::Core
             // That can lead either to a deadlock (where the scheduler can never exit syncing) if work is continually
             // added, or timing can be off and work may be submitted inbetween the last worker finishing it's final job
             // and the job pool being reset. This would immediately invalidate the newly submitted job.
-            logWarning("Job submitted during WorkScheduler hard sync point. This should generally not happen.");
+            logWarning("Job submitted during JobScheduler hard sync point. This should generally not happen.");
         }
 
         handle.job->priority = (static_cast<uint32_t>(priority) < static_cast<uint32_t>(JobPriority::__JobPriorityCount)) ? priority : JobPriority::Normal;
@@ -202,12 +201,12 @@ namespace LITL::Core
         }
     }
 
-    bool WorkScheduler::addDependency(JobHandle dependent, JobHandle dependency) const noexcept
+    bool JobScheduler::addDependency(JobHandle dependent, JobHandle dependency) const noexcept
     {
         return m_pImpl->jobPool.addDependency(dependent, dependency);
     }
 
-    void WorkScheduler::workerInternalLoop(uint32_t threadIndex) const
+    void JobScheduler::workerInternalLoop(uint32_t threadIndex) const
     {
         t_threadIndex = threadIndex;
         auto& self = *(m_pImpl->workers[t_threadIndex]);
@@ -250,7 +249,7 @@ namespace LITL::Core
         }
     }
 
-    std::optional<JobHandle> WorkScheduler::stealWork(JobPriority priority) const noexcept
+    std::optional<JobHandle> JobScheduler::stealWork(JobPriority priority) const noexcept
     {
         // Try to steal a job from another thread.
         const uint32_t victimIndex = Math::FastRng::shared().next() % m_pImpl->workers.size();
@@ -263,7 +262,7 @@ namespace LITL::Core
         return std::nullopt;
     }
 
-    std::optional<JobHandle> WorkScheduler::stealAnyWork() const noexcept
+    std::optional<JobHandle> JobScheduler::stealAnyWork() const noexcept
     {
         std::optional<JobHandle> handle = std::nullopt;
 
@@ -280,12 +279,12 @@ namespace LITL::Core
         return handle;
     }
 
-    std::optional<JobHandle> WorkScheduler::acquireJob(JobPriority priority) const noexcept
+    std::optional<JobHandle> JobScheduler::acquireJob(JobPriority priority) const noexcept
     {
         return stealWork(priority);
     }
 
-    void WorkScheduler::run(JobHandle handle) const noexcept
+    void JobScheduler::run(JobHandle handle) const noexcept
     {
         try
         {
@@ -334,14 +333,14 @@ namespace LITL::Core
         }
     }
 
-    void WorkScheduler::wait(uint32_t timeoutMs) const noexcept
+    void JobScheduler::wait(uint32_t timeoutMs) const noexcept
     {
         const auto start = std::chrono::steady_clock::now();
         const auto timeoutNs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(timeoutMs * Math::Constants::microsecond_to_nanoseconds));
 
         m_pImpl->waiting = true;
 
-        // While there are pending jobs, be productive and try to do some work (same thing essentially as our WorkFence) 
+        // While there are pending jobs, be productive and try to do some work (same thing essentially as our JobFence) 
         while (m_pImpl->jobCount > 0)
         {
             auto handle = stealAnyWork();

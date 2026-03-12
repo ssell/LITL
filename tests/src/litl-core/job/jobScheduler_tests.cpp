@@ -1,8 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "litl-core/math/math.hpp"
-#include "litl-core/work/workFence.hpp"
-#include "litl-core/work/workScheduler.hpp"
+#include "litl-core/job/jobFence.hpp"
+#include "litl-core/job/jobScheduler.hpp"
 
 namespace
 {
@@ -53,9 +53,9 @@ namespace
     }
 }
 
-TEST_CASE("CreateAndSubmit SharedData", "[core::work::workScheduler]")
+TEST_CASE("CreateAndSubmit SharedData", "[core::job::jobScheduler]")
 {
-    LITL::Core::WorkScheduler scheduler;
+    LITL::Core::JobScheduler scheduler;
 
     uint32_t jobsRun = 0;
 
@@ -65,9 +65,9 @@ TEST_CASE("CreateAndSubmit SharedData", "[core::work::workScheduler]")
     REQUIRE(jobsRun == 1);
 }
 
-TEST_CASE("CreateAndSubmit LocalData", "[core::work::workScheduler]")
+TEST_CASE("CreateAndSubmit LocalData", "[core::job::jobScheduler]")
 {
-    LITL::Core::WorkScheduler scheduler;
+    LITL::Core::JobScheduler scheduler;
 
     uint32_t jobsRun = 0;
     SharedJobData data{ &jobsRun };
@@ -78,9 +78,9 @@ TEST_CASE("CreateAndSubmit LocalData", "[core::work::workScheduler]")
     REQUIRE(jobsRun == 1);
 }
 
-TEST_CASE("CreateAndSubmit Lambda", "[core::work::workScheduler]")
+TEST_CASE("CreateAndSubmit Lambda", "[core::job::jobScheduler]")
 {
-    LITL::Core::WorkScheduler scheduler;
+    LITL::Core::JobScheduler scheduler;
     JobData data{ 0 };
 
     scheduler.createAndSubmit([&data]() { data.runs++; }, nullptr);
@@ -89,9 +89,9 @@ TEST_CASE("CreateAndSubmit Lambda", "[core::work::workScheduler]")
     REQUIRE(data.runs == 1);
 }
 
-TEST_CASE("Job Dependency Chain", "[core::work::workScheduler]")
+TEST_CASE("Job Dependency Chain", "[core::job::jobScheduler]")
 {
-    LITL::Core::WorkScheduler scheduler;
+    LITL::Core::JobScheduler scheduler;
 
     uint32_t jobsRun = 0;
 
@@ -110,9 +110,9 @@ TEST_CASE("Job Dependency Chain", "[core::work::workScheduler]")
     REQUIRE(jobsRun == 3);
 }
 
-TEST_CASE("Job Dependency Limit", "[core::work::workScheduler]")
+TEST_CASE("Job Dependency Limit", "[core::job::jobScheduler]")
 {
-    LITL::Core::WorkScheduler scheduler;
+    LITL::Core::JobScheduler scheduler;
 
     std::vector<LITL::Core::JobHandle> handles;
     uint32_t jobsRun = 0;
@@ -141,9 +141,9 @@ TEST_CASE("Job Dependency Limit", "[core::work::workScheduler]")
     REQUIRE(jobsRun == (LITL::Core::Job::JobMaxDependentsCount + 1));
 }
 
-TEST_CASE("Job Handle Validity", "[core::work::workScheduler]")
+TEST_CASE("Job Handle Validity", "[core::job::jobScheduler]")
 {
-    LITL::Core::WorkScheduler scheduler;
+    LITL::Core::JobScheduler scheduler;
     uint32_t jobsRun = 0;
 
     auto handle0 = scheduler.create(jobSharedDataTest, &jobsRun);
@@ -161,11 +161,11 @@ TEST_CASE("Job Handle Validity", "[core::work::workScheduler]")
     REQUIRE(scheduler.valid(handle0) == false);
 }
 
-TEST_CASE("Schedule Many Jobs", "[core::work::workScheduler]")
+TEST_CASE("Schedule Many Jobs", "[core::job::jobScheduler]")
 {
     constexpr uint32_t jobCount = 8192;
 
-    LITL::Core::WorkScheduler scheduler;
+    LITL::Core::JobScheduler scheduler;
     LITL::Core::JobHandle handles[jobCount];
     std::atomic<uint32_t> jobsRun{ 0 };
 
@@ -184,12 +184,12 @@ TEST_CASE("Schedule Many Jobs", "[core::work::workScheduler]")
     REQUIRE(jobsRun == jobCount);
 }
 
-TEST_CASE("Schedule Many Jobs Priority", "[core::work::workScheduler]")
+TEST_CASE("Schedule Many Jobs Priority", "[core::job::jobScheduler]")
 {
     // A sizeable total job count that is evenly divisible by the number of priority levels
     uint32_t jobCount = LITL::Math::pow(LITL::Core::JobPriorityCount, 8);
 
-    LITL::Core::WorkScheduler scheduler;
+    LITL::Core::JobScheduler scheduler;
     std::vector<LITL::Core::JobHandle> handles;
     handles.reserve(jobCount);
 
@@ -214,10 +214,10 @@ TEST_CASE("Schedule Many Jobs Priority", "[core::work::workScheduler]")
     }
 }
 
-TEST_CASE("Fence", "[core::work::workScheduler]")
+TEST_CASE("Fence", "[core::job::jobScheduler]")
 {
-    LITL::Core::WorkScheduler scheduler;
-    LITL::Core::WorkFence fence;
+    LITL::Core::JobScheduler scheduler;
+    LITL::Core::JobFence fence;
 
     constexpr uint32_t jobCount = 1024;
     std::array<LITL::Core::JobHandle, jobCount> handles;

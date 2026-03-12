@@ -6,11 +6,11 @@
 #include <cstdint>
 
 #include "litl-core/alignment.hpp"
-#include "litl-core/work/jobPriority.hpp"
+#include "litl-core/job/jobPriority.hpp"
 
 namespace LITL::Core
 {
-    class WorkFence;
+    class JobFence;
     struct Job;
 
     /// <summary>
@@ -71,7 +71,7 @@ namespace LITL::Core
         /// <summary>
         /// Optional fence that is tracking the progress of this Job.
         /// </summary>
-        WorkFence* fence = nullptr;
+        JobFence* fence = nullptr;
 
         /// <summary>
         /// Pointer to the user-supplied data be provided to the job at execution.

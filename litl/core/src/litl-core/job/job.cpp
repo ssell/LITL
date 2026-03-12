@@ -1,4 +1,4 @@
-#include "litl-core/work/job.hpp"
+#include "litl-core/job/job.hpp"
 
 namespace LITL::Core
 {
