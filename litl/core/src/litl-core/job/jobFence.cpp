@@ -57,10 +57,7 @@ namespace LITL::Core
             return;
         }
 
-        auto before = m_impl->remaining.fetch_sub(1, std::memory_order_acq_rel);
-        auto after = m_impl->remaining.load();
-
-        if (before == 1)
+        if (m_impl->remaining.fetch_sub(1, std::memory_order_acq_rel) == 1)
         {
             m_impl->readySignal.release();
         }
@@ -70,12 +67,10 @@ namespace LITL::Core
     {
         const auto timeoutNs = static_cast<long long>(timeoutMs * Math::Constants::millisecond_to_nanoseconds);
         const auto start = std::chrono::steady_clock::now();
+        auto timedOut = false;
 
-        bool timedOut = false;
 
-        const auto remaining = m_impl->remaining.load();
-
-        while (remaining > 0)
+        while (m_impl->remaining.load(std::memory_order_acquire) > 0)
         {
             if ((timeoutMs > 0) && ((std::chrono::steady_clock::now() - start).count() > timeoutNs))
             {
