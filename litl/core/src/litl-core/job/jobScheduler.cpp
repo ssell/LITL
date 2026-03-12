@@ -228,7 +228,6 @@ namespace LITL::Core
                     continue;
                 }
 
-                // !!! vvv test failing here ... returning a handle to a nullptr job vvv !!!
                 handle = self.deques[i].pop();
 
                 if (!handle.has_value())

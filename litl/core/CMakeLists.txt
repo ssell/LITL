@@ -21,7 +21,7 @@ add_library(litl-core
 		"src/litl-core/thread.cpp"  
 		"src/litl-core/math/random/fastRng.cpp" 
 		"src/litl-core/math/random/goodRng.cpp" 
-		"src/litl-core/math/math.cpp")
+		"src/litl-core/math/math.cpp" "src/litl-core/services/serviceCollection.cpp" "src/litl-core/services/serviceProvider.cpp")
 		
 target_include_directories(litl-core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
 	PRIVATE
