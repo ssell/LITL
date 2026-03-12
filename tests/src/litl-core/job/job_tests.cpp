@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
-#include "litl-core/work/job.hpp"
+#include "litl-core/job/job.hpp"
 
-TEST_CASE("JobHandle Copy", "[core::work::job]")
+TEST_CASE("JobHandle Copy", "[core::job::job]")
 {
     LITL::Core::Job job;
     LITL::Core::JobHandle handle0;

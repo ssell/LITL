@@ -4,12 +4,12 @@
 #include <span>
 
 #include "litl-core/impl.hpp"
-#include "litl-core/work/job.hpp"
-#include "litl-core/work/jobPriority.hpp"
+#include "litl-core/job/job.hpp"
+#include "litl-core/job/jobPriority.hpp"
 
 namespace LITL::Core
 {
-    class WorkScheduler;
+    class JobScheduler;
 
     /// <summary>
     /// A synchronization fence for a batch of jobs.
@@ -19,13 +19,13 @@ namespace LITL::Core
     /// productive work (and not just stalls) and picks up work matching
     /// the priority level of the first job added to the fence.
     /// </summary>
-    class WorkFence
+    class JobFence
     {
     public:
 
-        WorkFence();
-        explicit WorkFence(std::span<JobHandle> jobHandles);
-        ~WorkFence();
+        JobFence();
+        explicit JobFence(std::span<JobHandle> jobHandles);
+        ~JobFence();
 
         /// <summary>
         /// Adds a job to be tracked by the fence.
@@ -48,7 +48,7 @@ namespace LITL::Core
         /// <param name="scheduler"></param>
         /// <param name="timeoutMs"></param>
         /// <returns>True if done waiting without timing out. False if timed out.</returns>
-        bool wait(WorkScheduler* scheduler, uint32_t timeoutMs = 0) noexcept;
+        bool wait(JobScheduler* scheduler, uint32_t timeoutMs = 0) noexcept;
 
     protected:
 

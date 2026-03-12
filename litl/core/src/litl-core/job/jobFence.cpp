@@ -4,24 +4,24 @@
 #include <tuple>
 
 #include "litl-core/math/traits.hpp"
-#include "litl-core/work/workFence.hpp"
-#include "litl-core/work/workScheduler.hpp"
+#include "litl-core/job/jobFence.hpp"
+#include "litl-core/job/jobScheduler.hpp"
 
 namespace LITL::Core
 {
-    struct WorkFence::Impl
+    struct JobFence::Impl
     {
         JobPriority priority;
         std::atomic<int32_t> remaining{ 0 };
         std::binary_semaphore readySignal{ 0 };
     };
 
-    WorkFence::WorkFence()
+    JobFence::JobFence()
     {
 
     }
 
-    WorkFence::WorkFence(std::span<JobHandle> jobHandles)
+    JobFence::JobFence(std::span<JobHandle> jobHandles)
     {
         for (auto& handle : jobHandles)
         {
@@ -29,12 +29,12 @@ namespace LITL::Core
         }
     }
 
-    WorkFence::~WorkFence()
+    JobFence::~JobFence()
     {
         
     }
 
-    void WorkFence::add(JobHandle handle) noexcept
+    void JobFence::add(JobHandle handle) noexcept
     {
         if ((handle.job == nullptr) || (handle.job->fence != nullptr))
         {
@@ -50,27 +50,32 @@ namespace LITL::Core
         }
     }
 
-    void WorkFence::release(JobHandle handle) noexcept
+    void JobFence::release(JobHandle handle) noexcept
     {
         if ((handle.job == nullptr) || (handle.job->fence != this))
         {
             return;
         }
 
-        if (m_impl->remaining.fetch_sub(1, std::memory_order_acq_rel) == 1)
+        auto before = m_impl->remaining.fetch_sub(1, std::memory_order_acq_rel);
+        auto after = m_impl->remaining.load();
+
+        if (before == 1)
         {
             m_impl->readySignal.release();
         }
     }
 
-    bool WorkFence::wait(WorkScheduler* scheduler, uint32_t timeoutMs) noexcept
+    bool JobFence::wait(JobScheduler* scheduler, uint32_t timeoutMs) noexcept
     {
         const auto timeoutNs = static_cast<long long>(timeoutMs * Math::Constants::millisecond_to_nanoseconds);
         const auto start = std::chrono::steady_clock::now();
 
         bool timedOut = false;
 
-        while (m_impl->remaining.load(std::memory_order_acquire) > 0)
+        const auto remaining = m_impl->remaining.load();
+
+        while (remaining > 0)
         {
             if ((timeoutMs > 0) && ((std::chrono::steady_clock::now() - start).count() > timeoutNs))
             {

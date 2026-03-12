@@ -1,13 +1,13 @@
-# Work System
+# Job System
 
 Comprised of the following:
 
 * `Job`
 * `JobHandle`
 * `Worker`
-* `WorkScheduler`
-* `WorkDeque`
-* `WorkFence`
+* `JobScheduler`
+* `JobDeque`
+* `JobFence`
 
 A job is a highly parallelized arbitrary unit of work.
 
@@ -29,7 +29,7 @@ void jobFoo(Job* job)
     // ...
 }
 
-void runJob(WorkScheduler& scheduler, JobData& data)
+void runJob(JobScheduler& scheduler, JobData& data)
 {
     scheduler.createAndSubmit(jobFoo, data);
 }
@@ -49,7 +49,7 @@ void jobFoo(Job* job)
     // ...
 }
 
-void runJob(WorkScheduler& scheduler)
+void runJob(JobScheduler& scheduler)
 {
     JobData data{5};
     scheduler.createAndSubmit(jobFoo, data, nullptr);
@@ -59,7 +59,7 @@ void runJob(WorkScheduler& scheduler)
 **Lambda Function**
 
 ```cpp
-void runJob(WorkScheduler& scheduler, JobData& data)
+void runJob(JobScheduler& scheduler, JobData& data)
 {
     scheduler.createAndSubmit([&data]()
     {
@@ -115,12 +115,12 @@ Job synchronization is accomplished via dependencies (Job B is dependent on Job 
 
 When a fence or the scheduler is waiting, it performs work on the waiting thread. This helps increase job throughput while also avoiding deadlocks.
 
-* `WorkFence::wait` - blocks until the individual jobs added to the fence are complete.
-* `WorkScheduler::wait` - blocks until _all_ jobs are complete.
+* `JobFence::wait` - blocks until the individual jobs added to the fence are complete.
+* `JobScheduler::wait` - blocks until _all_ jobs are complete.
 
 ## Deque
 
-The underlying `WorkDeque` is an implementation of the Chase-Lev work-stealing deque:
+The underlying `JobDeque` is an implementation of the Chase-Lev work-stealing deque:
 
 https://www.dre.vanderbilt.edu/~schmidt/PDF/work-stealing-dequeue.pdf
 
@@ -134,5 +134,5 @@ The thread-local buffers can hold 1024 jobs each. Once a local buffer is full, a
 
 Local pools are more efficient than the global pool as allocation simply increments the buffer offset. The global pool also increments a buffer offset, but one that is stored in an atomic, and if necessary it must allocate another memory page. While fast, it is still slower than a local pool.
 
-When the work scheduler syncs (`WorkScheduler::wait`), it resets all job pools. This is done efficiently by simply resetting the current offets into each buffer. Because no data is actually cleared during a reset, it is imperative that a `JobHandle` is used as opposed to a raw `Job` pointer. A raw pointer can point to out-of-date memory, whereas a handle is trivially validated via `WorkScheduler::valid`.
+When the work scheduler syncs (`JobScheduler::wait`), it resets all job pools. This is done efficiently by simply resetting the current offets into each buffer. Because no data is actually cleared during a reset, it is imperative that a `JobHandle` is used as opposed to a raw `Job` pointer. A raw pointer can point to out-of-date memory, whereas a handle is trivially validated via `JobScheduler::valid`.
 

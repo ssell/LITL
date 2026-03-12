@@ -6,7 +6,7 @@
 namespace LITL::Core
 {
     /// <summary>
-    /// Prioritizes a job within the WorkScheduler.
+    /// Prioritizes a job within the JobScheduler.
     /// 
     /// Higher priority jobs will be picked up by a Worker before lower priority jobs.
     /// </summary>

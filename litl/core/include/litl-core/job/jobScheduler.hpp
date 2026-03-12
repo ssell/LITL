@@ -7,25 +7,25 @@
 #include <optional>
 #include <vector>
 
-#include "litl-core/work/job.hpp"
-#include "litl-core/work/jobPool.hpp"
+#include "litl-core/job/job.hpp"
+#include "litl-core/job/jobPool.hpp"
 
 namespace LITL::Core
 {
-    class WorkFence;
+    class JobFence;
 
     /// <summary>
     /// All jobs submitted to this scheduler are expected to start and finish in the same frame.
     /// The wait method should be called at the end of each frame to ensure all jobs are done
     /// </summary>
-    class WorkScheduler
+    class JobScheduler
     {
     public:
 
-        WorkScheduler();
-        WorkScheduler(WorkScheduler const&) = delete;
-        WorkScheduler& operator=(WorkScheduler const&) = delete;
-        ~WorkScheduler();
+        JobScheduler();
+        JobScheduler(JobScheduler const&) = delete;
+        JobScheduler& operator=(JobScheduler const&) = delete;
+        ~JobScheduler();
 
         /// <summary>
         /// Allocates a Job with the provided optional external data.
@@ -177,7 +177,7 @@ namespace LITL::Core
 
     private:
 
-        friend class WorkFence;
+        friend class JobFence;
 
         void workerInternalLoop(uint32_t threadIndex) const;
         std::optional<JobHandle> stealWork(JobPriority priority) const noexcept;

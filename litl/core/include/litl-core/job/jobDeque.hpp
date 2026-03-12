@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "litl-core/alignment.hpp"
-#include "litl-core/work/job.hpp"
+#include "litl-core/job/job.hpp"
 
 namespace LITL::Core
 {
@@ -19,14 +19,14 @@ namespace LITL::Core
     /// As the size of the queue is expected to be relatively small, and relatively
     /// consistent between frames, the optional shrinking behavior is excluded.
     /// </summary>
-    class WorkDeque
+    class JobDeque
     {
     public:
 
         static constexpr size_t DefaultCapacity = 1024;
 
-        WorkDeque();
-        ~WorkDeque();
+        JobDeque();
+        ~JobDeque();
 
         /// <summary>
         /// (Owner) Adds a job to the bottom.

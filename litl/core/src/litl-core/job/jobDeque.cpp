@@ -1,7 +1,7 @@
 #include <vector>
 
 #include "litl-core/math/math.hpp"
-#include "litl-core/work/workDeque.hpp"
+#include "litl-core/job/jobDeque.hpp"
 
 namespace LITL::Core
 {
@@ -16,7 +16,7 @@ namespace LITL::Core
     /// 
     /// The size (not capacity) of the buffer is equal to (bottom index - top index). 
     /// </summary>
-    struct WorkDeque::RingBuffer
+    struct JobDeque::RingBuffer
     {
         explicit RingBuffer(size_t capacity = DefaultCapacity)
             : mask(capacity - 1), jobs(capacity)
@@ -61,18 +61,18 @@ namespace LITL::Core
         std::vector<JobHandle> jobs;
     };
 
-    WorkDeque::WorkDeque()
+    JobDeque::JobDeque()
         : m_pBuffer(new RingBuffer())
     {
 
     }
 
-    WorkDeque::~WorkDeque()
+    JobDeque::~JobDeque()
     {
 
     }
 
-    void WorkDeque::push(JobHandle job) noexcept
+    void JobDeque::push(JobHandle job) noexcept
     {
         /**
          * Called by owner only.
@@ -104,7 +104,7 @@ namespace LITL::Core
         m_bottom.store(bottomIndex + 1, std::memory_order_relaxed);
     }
 
-    std::optional<JobHandle> WorkDeque::pop() noexcept
+    std::optional<JobHandle> JobDeque::pop() noexcept
     {
         /**
          * Called by owner only.
@@ -157,7 +157,7 @@ namespace LITL::Core
         return handle;
     }
 
-    std::optional<JobHandle> WorkDeque::steal() noexcept
+    std::optional<JobHandle> JobDeque::steal() noexcept
     {
         /**
          * Called by thieves.
@@ -193,7 +193,7 @@ namespace LITL::Core
         return handle;
     }
 
-    void WorkDeque::clean() noexcept
+    void JobDeque::clean() noexcept
     {
         for (auto* buffer : m_deadBuffers)
         {
@@ -203,12 +203,12 @@ namespace LITL::Core
         m_deadBuffers.clear();
     }
 
-    uint32_t WorkDeque::size() const noexcept
+    uint32_t JobDeque::size() const noexcept
     {
         return Math::max(0, (m_bottom.load() - m_top.load()));
     }
 
-    uint32_t WorkDeque::capacity() const noexcept
+    uint32_t JobDeque::capacity() const noexcept
     {
         auto* buffer = m_pBuffer.load();
         return buffer->capacity();
