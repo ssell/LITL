@@ -5,7 +5,6 @@
 #include "litl-engine/windowFactory.hpp"
 #include "litl-engine/rendererFactory.hpp"
 #include "litl-engine/frameLimiter.hpp"
-#include "litl-ecs/world.hpp"
 
 namespace LITL::Engine
 {
@@ -20,8 +19,10 @@ namespace LITL::Engine
         Core::RefPtr<LITL::Renderer::CommandBuffer> pFrameCommandBuffer;
 
         Configuration config;
-        LITL::ECS::World world;
         FrameLimiter frameLimiter;
+
+        Core::JobScheduler jobScheduler;
+        ECS::World ecsWorld;
     };
 
     // -------------------------------------------------------------------------------------
@@ -100,12 +101,15 @@ namespace LITL::Engine
         update();
         render();
 
+        m_pImpl->jobScheduler.wait();
         m_pImpl->frameLimiter.frameEnd();
     }
 
     void Engine::update()
     {
-        m_pImpl->world.run(m_pImpl->frameLimiter.frameDelta(), 1.0f / static_cast<float>(m_pImpl->config.simulationSettings.ticksPerSecond));
+        m_pImpl->ecsWorld.run(
+            m_pImpl->frameLimiter.frameDelta(), 
+            1.0f / static_cast<float>(m_pImpl->config.simulationSettings.ticksPerSecond));
     }
 
     void Engine::render()

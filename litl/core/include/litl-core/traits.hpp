@@ -6,6 +6,12 @@
 namespace LITL
 {
     /// <summary>
+    /// Enforces the Inherits inherits from Base.
+    /// </summary>
+    template<typename Base, typename Inherits>
+    concept InheritsFrom = std::is_base_of_v<Base, Inherits>;
+
+    /// <summary>
     /// Implemented in it's const and non-const overloads, packages up the
     /// components of a method signature: class type, return type, and arguments (in a tuple).
     /// </summary>

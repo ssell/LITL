@@ -2,7 +2,10 @@
 #define LITL_ENGINE_H__
 
 #include <memory>
+
 #include "litl-engine/config.hpp"
+#include "litl-core/job/jobScheduler.hpp"
+#include "litl-ecs/world.hpp"
 
 namespace LITL::Engine
 {

@@ -33,7 +33,7 @@ add_executable(litl-tests
 	"src/litl-core/job/jobDeque_tests.cpp" 
 	"src/litl-core/job/jobPool_tests.cpp" 
 	"src/litl-core/job/jobScheduler_tests.cpp" 
-	"src/litl-core/job/job_tests.cpp")
+	"src/litl-core/job/job_tests.cpp" "src/litl-core/services/serviceCollection_tests.cpp")
 
 target_link_libraries(litl-tests
 	PRIVATE
