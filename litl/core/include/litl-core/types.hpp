@@ -27,7 +27,7 @@ namespace LITL
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
     template<typename T>
-    TypeId typeId()
+    TypeId type_id()
     {
         static const TypeId id = []()
             {
@@ -57,12 +57,13 @@ namespace LITL
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
     template<typename T>
-    constexpr std::string_view typeName() noexcept
+    constexpr std::string_view type_name() noexcept
     {
         return TypeName<T>::value;
     }
 }
 
-#define REGISTER_TYPE_NAME(T) template<> struct TypeName<T> { static constexpr std::string_view value = #T; };                                                \
+// Typically needs to be called outside of any enclosing namespace.
+#define REGISTER_TYPE_NAME(T) template<> struct LITL::TypeName<T> { static constexpr std::string_view value = #T; };                                                \
 
 #endif

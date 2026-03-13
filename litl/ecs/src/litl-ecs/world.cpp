@@ -187,7 +187,7 @@ namespace LITL::ECS
         return m_pImpl->systemManager;
     }
 
-    void World::run(float const dt, float const fixedStep) noexcept
+    void World::run(float const dt, float const fixedStep)
     {
         m_pImpl->accumulatedTime += dt;
         m_pImpl->systemManager.prepareFrame();

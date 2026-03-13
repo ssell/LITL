@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "litl-core/debug.hpp"
+#include "litl-core/types.hpp"
 #include "litl-ecs/constants.hpp"
 
 namespace LITL::ECS
@@ -59,7 +60,7 @@ namespace LITL::ECS
             // Use a static descriptor that is different for each specialization of this template.
             // This ensures a stable pointer to the descriptor that exists for the lifetime of the application.
             static ComponentDescriptor descriptor(
-                typeid(T).name(),
+                type_name<T>(),
                 nextId(),
                 getStableId<T>(),
                 sizeof(T),
@@ -78,7 +79,7 @@ namespace LITL::ECS
         template<ValidComponentType T>
         static StableComponentTypeId getStableId() noexcept
         {
-            return getStableId(typeid(T).name());
+            return getStableId(type_name<T>());
         }
 
         static StableComponentTypeId getStableId(std::string_view componentName) noexcept;
