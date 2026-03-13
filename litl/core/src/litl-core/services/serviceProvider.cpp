@@ -4,13 +4,14 @@
 #include <vector>
 
 #include "litl-core/services/serviceProvider.hpp"
+#include "litl-core/services/serviceScope.hpp"
 
 namespace LITL::Core
 {
     struct ServiceProvider::Impl
     {
         std::vector<ServiceDescriptor> descriptors;
-        std::unordered_map<TypeId, std::any> singletons;
+        std::unordered_map<TypeId, std::any> singletonServices;
         std::mutex singletonMutex;
     };
 
@@ -23,6 +24,8 @@ namespace LITL::Core
         {
             m_impl->descriptors.push_back((*iter));
         }
+
+        m_impl->singletonServices.reserve(m_impl->descriptors.size());
     }
 
     ServiceProvider::~ServiceProvider()
@@ -30,7 +33,17 @@ namespace LITL::Core
 
     }
 
-    std::any ServiceProvider::resolve(TypeId type)
+    std::shared_ptr<ServiceScope> ServiceProvider::createScope() const noexcept
+    {
+        return std::make_shared<ServiceScope>(const_cast<ServiceProvider*>(this));
+    }
+
+    uint32_t ServiceProvider::size() const noexcept
+    {
+        return m_impl->descriptors.size();
+    }
+
+    std::any ServiceProvider::resolve(TypeId type) noexcept
     {
         auto descriptor = find(type);
 
@@ -45,7 +58,7 @@ namespace LITL::Core
             return resolveSingleton(*descriptor);
 
         case ServiceLifetime::Scoped:
-            return descriptor->factory(createResolver());
+            return {};  // must be created by a ServiceScope
 
         case ServiceLifetime::Transient:
             return descriptor->factory(createResolver());
@@ -67,14 +80,14 @@ namespace LITL::Core
         return nullptr;
     }
 
-    std::any ServiceProvider::resolveSingleton(ServiceDescriptor const& descriptor)
+    std::any ServiceProvider::resolveSingleton(ServiceDescriptor const& descriptor) noexcept
     {
         // Check if the singleton already exists
         {
             std::lock_guard<std::mutex> lock(m_impl->singletonMutex);
-            auto findSingleton = m_impl->singletons.find(descriptor.type);
+            auto findSingleton = m_impl->singletonServices.find(descriptor.type);
 
-            if (findSingleton != m_impl->singletons.end())
+            if (findSingleton != m_impl->singletonServices.end())
             {
                 return findSingleton->second;
             }
@@ -87,20 +100,20 @@ namespace LITL::Core
         // If not, add it and return out.
         {
             std::lock_guard<std::mutex> lock(m_impl->singletonMutex);
-            auto findSingleton = m_impl->singletons.find(descriptor.type);
+            auto findSingleton = m_impl->singletonServices.find(descriptor.type);
 
-            if (findSingleton != m_impl->singletons.end())
+            if (findSingleton != m_impl->singletonServices.end())
             {
                 return findSingleton->second;
             }
 
-            m_impl->singletons[descriptor.type] = singletonInstance;
+            m_impl->singletonServices[descriptor.type] = singletonInstance;
 
             return singletonInstance;
         }
     }
 
-    ServiceFactoryResolver ServiceProvider::createResolver()
+    ServiceFactoryResolver ServiceProvider::createResolver() noexcept
     {
         // Utility wrapper around the lambda below.
         return [this](TypeId key) -> std::any { return this->resolve(key); };

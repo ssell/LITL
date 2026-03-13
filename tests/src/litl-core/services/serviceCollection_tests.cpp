@@ -33,27 +33,22 @@ namespace
         uint32_t get() const noexcept override { return value * 3; }
     };
 
-    class IFooService
+    class FooService
     {
     public:
 
-        IFooService(IValueService* testService) : service(testService) {}
-        ~IFooService() = default;
-        IValueService* service;
-    };
+        FooService(uint32_t value) : m_value(value) {}
+        uint32_t get() const noexcept { return m_value; }
 
-    class FooService : public IFooService
-    {
-    public:
+    private:
 
-        FooService(IValueService* testService) : IFooService(testService) {}
-        ~FooService() = default;
+        uint32_t m_value;
     };
 }
 
 namespace LITL::Core::Tests
 {
-    TEST_CASE("Add", "[core::serviceCollection]")
+    TEST_CASE("Add", "[core::services]")
     {
         ServiceCollection services;
         REQUIRE(services.size() == 0);
@@ -66,7 +61,7 @@ namespace LITL::Core::Tests
         REQUIRE(services.size() == 1);
     }
 
-    TEST_CASE("Add Singleton", "[core::serviceCollection]")
+    TEST_CASE("Add Singleton", "[core::services]")
     {
         ServiceCollection services;
         REQUIRE(services.size() == 0);
@@ -75,16 +70,23 @@ namespace LITL::Core::Tests
 
         REQUIRE(services.size() == 1);
 
-        services.addSingleton<IFooService, FooService>([](auto resolver)
+        services.addSingleton<FooService>([](auto resolver)
             {
-                auto testService = resolveService<IValueService>(resolver);
-                return std::make_shared<FooService>(testService.get());
+                return std::make_shared<FooService>(55);
             });
 
         REQUIRE(services.size() == 2);
     }
 
-    TEST_CASE("Get Singleton", "[core::serviceCollection]")
+    TEST_CASE("Get Missing", "[core::services]")
+    {
+        ServiceCollection services;
+        auto provider = services.build();
+
+        REQUIRE(provider->get<FooService>() == nullptr);
+    }
+
+    TEST_CASE("Get Singleton", "[core::services]")
     {
         ServiceCollection services;
         services.addSingleton<IValueService, DoublingService>();
@@ -96,7 +98,7 @@ namespace LITL::Core::Tests
         REQUIRE(doubler->get() == 2);
     }
 
-    TEST_CASE("Set Singleton Multiple Times", "[core::serviceCollection]")
+    TEST_CASE("Set Singleton Multiple Times", "[core::services]")
     {
         ServiceCollection services;
         services.addSingleton<IValueService, DoublingService>();
@@ -108,5 +110,20 @@ namespace LITL::Core::Tests
         tripler->set(1);
 
         REQUIRE(tripler->get() == 3);
+    }
+
+    TEST_CASE("Multiple Singletons", "[core::services]")
+    {
+        ServiceCollection services;
+        services.addSingleton<IValueService, DoublingService>();
+        services.addSingleton<FooService>([](auto resolver) { return std::make_shared<FooService>(55); });
+        auto provider = services.build();
+
+        auto fooService = provider->get<FooService>();
+        auto valueService = provider->get<IValueService>();
+        valueService->set(10);
+
+        REQUIRE(valueService->get() == 20);
+        REQUIRE(fooService->get() == 55);
     }
 }
