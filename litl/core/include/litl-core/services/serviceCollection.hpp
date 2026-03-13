@@ -44,6 +44,10 @@ namespace LITL::Core
             return *this;
         }
 
+        // ---------------------------------------------------------------------------------
+        // Singletons
+        // ---------------------------------------------------------------------------------
+
         /// <summary>
         /// Adds a singleton service.
         /// User provided factory function for when the singleton has a non-trivial construction.
@@ -66,6 +70,133 @@ namespace LITL::Core
         {
             return addSingleton<ServiceType, ServiceImpl>([](auto resolver) { return std::make_shared<ServiceImpl>(); });
         }
+
+        /// <summary>
+        /// Adds a singleton service.
+        /// User provided factory function for when the singleton has a non-trivial construction.
+        /// </summary>
+        /// <typeparam name="ServiceType"></typeparam>
+        /// <returns></returns>
+        template<typename ServiceType>
+        ServiceCollection& addSingleton(ServiceFactory<ServiceType> factory)
+        {
+            return add<ServiceType, ServiceType>(ServiceLifetime::Singleton, std::move(factory));
+        }
+
+        /// <summary>
+        /// Adds a singleton service that has no dependencies.
+        /// </summary>
+        /// <typeparam name="ServiceType"></typeparam>
+        /// <returns></returns>
+        template<typename ServiceType>
+        ServiceCollection& addSingleton()
+        {
+            return addSingleton<ServiceType>([](auto resolver) { return std::make_shared<ServiceType>(); });
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Scoped
+        // ---------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Adds a scoped instance. These must be created by a ServiceScope (in turn created by a ServiceProvider).
+        /// User provided factory function for when the singleton has a non-trivial construction.
+        /// </summary>
+        /// <typeparam name="ServiceType"></typeparam>
+        /// <returns></returns>
+        template<typename ServiceType, typename ServiceImpl> requires InheritsFrom<ServiceType, ServiceImpl>
+        ServiceCollection& addScoped(ServiceFactory<ServiceType> factory)
+        {
+            return add<ServiceType, ServiceImpl>(ServiceLifetime::Scoped, std::move(factory));
+        }
+
+        /// <summary>
+        /// Adds a scoped instance. These must be created by a ServiceScope (in turn created by a ServiceProvider).
+        /// </summary>
+        /// <typeparam name="ServiceType"></typeparam>
+        /// <returns></returns>
+        template<typename ServiceType, typename ServiceImpl> requires InheritsFrom<ServiceType, ServiceImpl>
+        ServiceCollection& addScoped()
+        {
+            return addScoped<ServiceType, ServiceImpl>([](auto resolver) { return std::make_shared<ServiceImpl>(); });
+        }
+
+        /// <summary>
+        /// Adds a scoped instance. These must be created by a ServiceScope (in turn created by a ServiceProvider).
+        /// User provided factory function for when the singleton has a non-trivial construction.
+        /// </summary>
+        /// <typeparam name="ServiceType"></typeparam>
+        /// <returns></returns>
+        template<typename ServiceType>
+        ServiceCollection& addScoped(ServiceFactory<ServiceType> factory)
+        {
+            return add<ServiceType, ServiceType>(ServiceLifetime::Singleton, std::move(factory));
+        }
+
+        /// <summary>
+        /// Adds a scoped instance. These must be created by a ServiceScope (in turn created by a ServiceProvider).
+        /// </summary>
+        /// <typeparam name="ServiceType"></typeparam>
+        /// <returns></returns>
+        template<typename ServiceType>
+        ServiceCollection& addScoped()
+        {
+            return addScoped<ServiceType>([](auto resolver) { return std::make_shared<ServiceType>(); });
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Transient
+        // ---------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Adds a transient service. These are created anew each time.
+        /// User provided factory function for when the singleton has a non-trivial construction.
+        /// </summary>
+        /// <typeparam name="ServiceType"></typeparam>
+        /// <returns></returns>
+        template<typename ServiceType, typename ServiceImpl> requires InheritsFrom<ServiceType, ServiceImpl>
+        ServiceCollection& addTransient(ServiceFactory<ServiceType> factory)
+        {
+            return add<ServiceType, ServiceImpl>(ServiceLifetime::Transient, std::move(factory));
+        }
+
+        /// <summary>
+        /// Adds a transient service. These are created anew each time.
+        /// </summary>
+        /// <typeparam name="ServiceType"></typeparam>
+        /// <returns></returns>
+        template<typename ServiceType, typename ServiceImpl> requires InheritsFrom<ServiceType, ServiceImpl>
+        ServiceCollection& addTransient()
+        {
+            return addScoped<ServiceType, ServiceImpl>([](auto resolver) { return std::make_shared<ServiceImpl>(); });
+        }
+
+        /// <summary>
+        /// Adds a transient service. These are created anew each time.
+        /// User provided factory function for when the singleton has a non-trivial construction.
+        /// </summary>
+        /// <typeparam name="ServiceType"></typeparam>
+        /// <returns></returns>
+        template<typename ServiceType>
+        ServiceCollection& addTransient(ServiceFactory<ServiceType> factory)
+        {
+            return add<ServiceType, ServiceType>(ServiceLifetime::Singleton, std::move(factory));
+        }
+
+        /// <summary>
+        /// Adds a transient service. These are created anew each time.
+        /// </summary>
+        /// <typeparam name="ServiceType"></typeparam>
+        /// <returns></returns>
+        template<typename ServiceType>
+        ServiceCollection& addTransient()
+        {
+            return addScoped<ServiceType>([](auto resolver) { return std::make_shared<ServiceType>(); });
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Other
+        // ---------------------------------------------------------------------------------
 
         /// <summary>
         /// 
