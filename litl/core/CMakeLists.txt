@@ -30,6 +30,10 @@ target_include_directories(litl-core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 target_compile_features(litl-core PUBLIC cxx_std_20)
+target_compile_options(litl-core PRIVATE 
+	$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-fno-rtti>
+    $<$<CXX_COMPILER_ID:MSVC>:/GR->
+)
 
 # ------------------------------------------------------------------------------------------
 # glm
