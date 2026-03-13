@@ -2,10 +2,11 @@
 #define LITL_CORE_SERVICES_DESCRIPTOR_H__
 
 #include <any>
+#include <cstdint>
 #include <memory>
 #include <functional>
-#include <typeindex>
 
+#include "litl-core/types.hpp"
 #include "litl-core/services/serviceLifetime.hpp"
 
 namespace LITL::Core
@@ -16,7 +17,7 @@ namespace LITL::Core
     /// The inner callable takes a type, and returns an instance of that type.
     /// Effectively a type-indexed lookup function.
     /// </summary>
-    using ServiceFactoryResolver = std::function<std::any(std::type_index)>;
+    using ServiceFactoryResolver = std::function<std::any(TypeId)>;
 
     /// <summary>
     /// Outer callable for the nested factory resolver.
@@ -32,7 +33,7 @@ namespace LITL::Core
     /// </summary>
     struct ServiceDescriptor
     {
-        std::type_index type;
+        TypeId type;
         ServiceLifetime lifetime;
         ServiceFactoryFunc factory;
     };
@@ -45,7 +46,7 @@ namespace LITL::Core
     /// <returns></returns>
     template <typename ServiceType>
     std::shared_ptr<ServiceType> resolveService(ServiceFactoryResolver resolver) {
-        auto result = resolver(std::type_index(typeid(ServiceType)));
+        auto result = resolver(type_id<ServiceType>());
         return std::any_cast<std::shared_ptr<ServiceType>>(result);
     }
 }

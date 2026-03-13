@@ -5,6 +5,7 @@
 #include <typeindex>
 #include <vector>
 
+#include "litl-core/types.hpp"
 #include "litl-core/traits.hpp"
 #include "litl-core/services/serviceDescriptor.hpp"
 
@@ -32,7 +33,7 @@ namespace LITL::Core
         ServiceCollection& add(ServiceLifetime lifetime, ServiceFactory<ServiceType> factory)
         {
             m_descriptors.push_back(ServiceDescriptor{
-                .type = std::type_index(typeid(ServiceType)),
+                .type = type_id<ServiceType>(),
                 .lifetime = lifetime,
                 .factory = [factory = std::move(factory)](ServiceFactoryResolver resolver) -> std::any
                     {

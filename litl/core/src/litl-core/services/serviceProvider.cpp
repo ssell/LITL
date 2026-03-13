@@ -1,5 +1,4 @@
 #include <any>
-#include <memory>
 #include <mutex>
 #include <unordered_map>
 #include <vector>
@@ -11,7 +10,7 @@ namespace LITL::Core
     struct ServiceProvider::Impl
     {
         std::vector<ServiceDescriptor> descriptors;
-        std::unordered_map<std::type_index, std::any> singletons;
+        std::unordered_map<TypeId, std::any> singletons;
         std::mutex singletonMutex;
     };
 
@@ -31,7 +30,7 @@ namespace LITL::Core
 
     }
 
-    std::any ServiceProvider::resolve(std::type_index type)
+    std::any ServiceProvider::resolve(TypeId type)
     {
         auto descriptor = find(type);
 
@@ -55,7 +54,7 @@ namespace LITL::Core
         return {};
     }
 
-    ServiceDescriptor const* ServiceProvider::find(std::type_index type) const noexcept
+    ServiceDescriptor const* ServiceProvider::find(TypeId type) const noexcept
     {
         for (auto& descriptor : m_impl->descriptors)
         {
@@ -104,6 +103,6 @@ namespace LITL::Core
     ServiceFactoryResolver ServiceProvider::createResolver()
     {
         // Utility wrapper around the lambda below.
-        return [this](std::type_index key) -> std::any { return this->resolve(key); };
+        return [this](TypeId key) -> std::any { return this->resolve(key); };
     }
 }

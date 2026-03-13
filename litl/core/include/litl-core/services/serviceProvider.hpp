@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "litl-core/impl.hpp"
+#include "litl-core/types.hpp"
 #include "litl-core/services/serviceDescriptor.hpp"
 
 namespace LITL::Core
@@ -20,7 +21,7 @@ namespace LITL::Core
         template<typename ServiceType>
         std::shared_ptr<ServiceType> get()
         {
-            auto service = resolve(std::type_index(typeid(ServiceType)));
+            auto service = resolve(type_id<ServiceType>());
 
             if (!service.has_value())
             {
@@ -34,11 +35,11 @@ namespace LITL::Core
 
     private:
 
-        std::any resolve(std::type_index type);
+        std::any resolve(TypeId type);
         std::any resolveSingleton(ServiceDescriptor const& descriptor);
         ServiceFactoryResolver createResolver();
 
-        ServiceDescriptor const* find(std::type_index type) const noexcept;
+        ServiceDescriptor const* find(TypeId type) const noexcept;
 
         struct Impl;
         ImplPtr<Impl, 256> m_impl;
