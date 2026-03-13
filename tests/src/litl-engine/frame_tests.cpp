@@ -22,7 +22,6 @@ namespace LITL::Engine::Tests
         auto endTime = std::chrono::steady_clock::now();
         auto elapsed = static_cast<uint64_t>((endTime - startTime).count());
 
-
         // 60 frames should have taken AT LEAST 1 seconds due to the frame limiter.
         // It is difficult/unreliable to measure at a finer level due to OS variability in granularity for sleep_for (which runs the coarse sleep section)
         REQUIRE(elapsed > Math::Constants::second_to_nanoseconds);

@@ -21,20 +21,17 @@ namespace LITL
     /// </summary>
     using TypeId = uint32_t;
 
+    TypeId next_type_id__() noexcept;
+
     /// <summary>
     /// Retrieve the TypeId for the type.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
     template<typename T>
-    TypeId type_id()
+    TypeId type_id() noexcept
     {
-        static const TypeId id = []()
-            {
-                static std::atomic<TypeId> next{ 0 };
-                return next.fetch_add(1, std::memory_order_relaxed);
-            }();
-
+        static const TypeId id = next_type_id__();
         return id;
     }
 
