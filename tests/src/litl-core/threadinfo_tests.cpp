@@ -4,21 +4,24 @@
 
 #include "litl-core/thread.hpp"
 
-TEST_CASE("Main Thread", "[core::threadinfo]")
+namespace LITL::Core::Tests
 {
-    REQUIRE(LITL::Core::ThreadInfo::isMainThread() == false);
-    LITL::Core::ThreadInfo::setMainThread();
-    REQUIRE(LITL::Core::ThreadInfo::isMainThread() == true);
+    TEST_CASE("Main Thread", "[core::threadinfo]")
+    {
+        REQUIRE(ThreadInfo::isMainThread() == false);
+        ThreadInfo::setMainThread();
+        REQUIRE(ThreadInfo::isMainThread() == true);
 
-    std::optional<bool> isOtherThreadMainThread = std::nullopt;
+        std::optional<bool> isOtherThreadMainThread = std::nullopt;
 
-    std::thread otherThread([&isOtherThreadMainThread]()
-        {
-            isOtherThreadMainThread = LITL::Core::ThreadInfo::isMainThread();
-        });
+        std::thread otherThread([&isOtherThreadMainThread]()
+            {
+                isOtherThreadMainThread = ThreadInfo::isMainThread();
+            });
 
-    otherThread.join();
+        otherThread.join();
 
-    REQUIRE(isOtherThreadMainThread.has_value() == true);
-    REQUIRE(isOtherThreadMainThread.value() == false);
+        REQUIRE(isOtherThreadMainThread.has_value() == true);
+        REQUIRE(isOtherThreadMainThread.value() == false);
+    }
 }
