@@ -48,7 +48,7 @@ namespace LITL::Core
         /// <param name="scheduler"></param>
         /// <param name="timeoutMs"></param>
         /// <returns>True if done waiting without timing out. False if timed out.</returns>
-        bool wait(JobScheduler* scheduler, uint32_t timeoutMs = 0) noexcept;
+        bool wait(JobScheduler* scheduler, uint32_t timeoutMs = 1000) noexcept;
 
     protected:
 

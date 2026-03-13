@@ -171,7 +171,8 @@ namespace LITL::Core
         /// A blocking sync point on the scheduler.
         /// Waits for all jobs to be completed and then resets the underlying job pool.
         /// </summary>
-        void wait(uint32_t timeoutMs = 1000) const noexcept;
+        /// <returns>True if done waiting without timing out. False if timed out.</returns>
+        bool wait(uint32_t timeoutMs = 1000) const noexcept;
 
     protected:
 
