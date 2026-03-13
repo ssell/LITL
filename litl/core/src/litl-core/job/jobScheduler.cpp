@@ -332,10 +332,11 @@ namespace LITL::Core
         }
     }
 
-    void JobScheduler::wait(uint32_t timeoutMs) const noexcept
+    bool JobScheduler::wait(uint32_t timeoutMs) const noexcept
     {
         const auto start = std::chrono::steady_clock::now();
-        const auto timeoutNs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(timeoutMs * Math::Constants::microsecond_to_nanoseconds));
+        const auto timeoutNs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(timeoutMs));
+        bool timedOut = false;
 
         m_pImpl->waiting = true;
 
@@ -353,15 +354,17 @@ namespace LITL::Core
                 std::ignore = m_pImpl->busySignal.try_acquire_for(std::chrono::microseconds(50));
             }
 
-            if ((std::chrono::steady_clock::now() - start) >= timeoutNs)
+            if ((timeoutMs > 0) && ((std::chrono::steady_clock::now() - start) >= timeoutNs))
             {
+                timedOut = true;
                 break;
             }
         }
 
         // Reset the pools and increment the version
         m_pImpl->jobPool.sync();
-
         m_pImpl->waiting = false;
+
+        return !timedOut;
     }
 }

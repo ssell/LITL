@@ -65,19 +65,13 @@ namespace LITL::Core
 
     bool JobFence::wait(JobScheduler* scheduler, uint32_t timeoutMs) noexcept
     {
-        const auto timeoutNs = static_cast<long long>(timeoutMs * Math::Constants::millisecond_to_nanoseconds);
+        const auto timeoutNs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(timeoutMs));
         const auto start = std::chrono::steady_clock::now();
         auto timedOut = false;
 
 
         while (m_impl->remaining.load(std::memory_order_acquire) > 0)
         {
-            if ((timeoutMs > 0) && ((std::chrono::steady_clock::now() - start).count() > timeoutNs))
-            {
-                timedOut = true;
-                break;
-            }
-
             // Perform a productive wait and try to process a job on this thread that is waiting.
             // We pull only jobs that are the same priority level as the fence (and ideally as the jobs being fenced).
             // This is to prevent the fence from grabbing and blocking on a slower low priority background job
@@ -93,8 +87,14 @@ namespace LITL::Core
                 // No job to run (well, our steal failed). Wait and try again.
                 std::ignore = m_impl->readySignal.try_acquire_for(std::chrono::microseconds(50));
             }
+
+            if ((timeoutMs > 0) && ((std::chrono::steady_clock::now() - start) > timeoutNs))
+            {
+                timedOut = true;
+                break;
+            }
         }
 
-        return timedOut;
+        return !timedOut;
     }
 }

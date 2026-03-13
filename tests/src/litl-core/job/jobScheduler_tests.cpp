@@ -60,8 +60,8 @@ TEST_CASE("CreateAndSubmit SharedData", "[core::job::jobScheduler]")
     uint32_t jobsRun = 0;
 
     scheduler.createAndSubmit(jobSharedDataTest, &jobsRun);
-    scheduler.wait();
 
+    REQUIRE(scheduler.wait() == true);
     REQUIRE(jobsRun == 1);
 }
 
@@ -73,8 +73,7 @@ TEST_CASE("CreateAndSubmit LocalData", "[core::job::jobScheduler]")
     SharedJobData data{ &jobsRun };
 
     scheduler.createAndSubmit(jobLocalDataTest, data, nullptr);
-    scheduler.wait();
-
+    REQUIRE(scheduler.wait() == true);
     REQUIRE(jobsRun == 1);
 }
 
@@ -84,8 +83,8 @@ TEST_CASE("CreateAndSubmit Lambda", "[core::job::jobScheduler]")
     JobData data{ 0 };
 
     scheduler.createAndSubmit([&data]() { data.runs++; }, nullptr);
-    scheduler.wait();
 
+    REQUIRE(scheduler.wait() == true);
     REQUIRE(data.runs == 1);
 }
 
@@ -103,11 +102,9 @@ TEST_CASE("Job Dependency Chain", "[core::job::jobScheduler]")
     scheduler.addDependency(handle2, handle1);
 
     scheduler.submit(handle0);
-    scheduler.wait();
 
-    // handle0 runs which triggers handle1 which triggers handle2
-
-    REQUIRE(jobsRun == 3);
+    REQUIRE(scheduler.wait() == true);
+    REQUIRE(jobsRun == 3);      // handle0 runs which triggers handle1 which triggers handle2
 }
 
 TEST_CASE("Job Dependency Limit", "[core::job::jobScheduler]")
@@ -135,10 +132,9 @@ TEST_CASE("Job Dependency Limit", "[core::job::jobScheduler]")
     }
 
     scheduler.submit(handles[0]);
-    scheduler.wait();
 
-    // the original job and its max number of dependents
-    REQUIRE(jobsRun == (LITL::Core::Job::JobMaxDependentsCount + 1));
+    REQUIRE(scheduler.wait() == true);
+    REQUIRE(jobsRun == (LITL::Core::Job::JobMaxDependentsCount + 1));       // the original job and its max number of dependents
 }
 
 TEST_CASE("Job Handle Validity", "[core::job::jobScheduler]")
@@ -155,9 +151,7 @@ TEST_CASE("Job Handle Validity", "[core::job::jobScheduler]")
     while (scheduler.jobCount() > 0) {};
 
     REQUIRE(scheduler.valid(handle0) == true);
-
-    scheduler.wait();
-
+    REQUIRE(scheduler.wait() == true);
     REQUIRE(scheduler.valid(handle0) == false);
 }
 
@@ -179,8 +173,7 @@ TEST_CASE("Schedule Many Jobs", "[core::job::jobScheduler]")
         scheduler.submit(handles[i]);
     }
 
-    scheduler.wait();
-
+    REQUIRE(scheduler.wait() == true);
     REQUIRE(jobsRun == jobCount);
 }
 
@@ -205,7 +198,7 @@ TEST_CASE("Schedule Many Jobs Priority", "[core::job::jobScheduler]")
         scheduler.submit(handles[i], static_cast<LITL::Core::JobPriority>(i % LITL::Core::JobPriorityCount));
     }
 
-    scheduler.wait();
+    REQUIRE(scheduler.wait() == true);
 
     for (auto i = 0; i < LITL::Core::JobPriorityCount; ++i)
     {
@@ -236,7 +229,6 @@ TEST_CASE("Fence", "[core::job::jobScheduler]")
         scheduler.submit(handles[i]);
     }
 
-    fence.wait(&scheduler);
-
+    REQUIRE(scheduler.wait() == true);
     REQUIRE(jobsRun == jobCount);
 }
