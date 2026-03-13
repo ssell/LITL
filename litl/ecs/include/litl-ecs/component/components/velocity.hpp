@@ -2,6 +2,7 @@
 #define LITL_ENGINE_ECS_COMPONENTS_VELOCITY_H__
 
 #include <glm/glm.hpp>
+#include "litl-core/types.hpp"
 
 namespace LITL::ECS
 {
@@ -11,5 +12,7 @@ namespace LITL::ECS
         float speed;
     };
 }
+
+REGISTER_TYPE_NAME(LITL::ECS::Velocity)
 
 #endif
