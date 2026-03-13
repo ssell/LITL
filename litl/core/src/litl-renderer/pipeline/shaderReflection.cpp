@@ -536,5 +536,7 @@ namespace LITL::Renderer
         {
             return ShaderScalarType::Float;
         }
+
+        return ShaderScalarType::Unknown;
     }
 }
