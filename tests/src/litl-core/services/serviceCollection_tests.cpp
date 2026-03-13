@@ -3,6 +3,7 @@
 
 #include "litl-core/services/serviceCollection.hpp"
 #include "litl-core/services/serviceProvider.hpp"
+#include "litl-core/services/serviceScope.hpp"
 
 namespace
 {
@@ -53,7 +54,7 @@ namespace LITL::Core::Tests
         ServiceCollection services;
         REQUIRE(services.size() == 0);
 
-        services.add<IValueService, DoublingService>(ServiceLifetime::Singleton, [](auto resolver)
+        services.add<IValueService, DoublingService>(ServiceLifetime::Singleton, [](auto)
             {
                 return std::make_shared<DoublingService>();
             });
@@ -70,7 +71,7 @@ namespace LITL::Core::Tests
 
         REQUIRE(services.size() == 1);
 
-        services.addSingleton<FooService>([](auto resolver)
+        services.addSingleton<FooService>([](auto)
             {
                 return std::make_shared<FooService>(55);
             });
@@ -116,7 +117,7 @@ namespace LITL::Core::Tests
     {
         ServiceCollection services;
         services.addSingleton<IValueService, DoublingService>();
-        services.addSingleton<FooService>([](auto resolver) { return std::make_shared<FooService>(55); });
+        services.addSingleton<FooService>([](auto) { return std::make_shared<FooService>(55); });
         auto provider = services.build();
 
         auto fooService = provider->get<FooService>();
@@ -125,5 +126,68 @@ namespace LITL::Core::Tests
 
         REQUIRE(valueService->get() == 20);
         REQUIRE(fooService->get() == 55);
+    }
+
+    TEST_CASE("Scoped Service", "[core::services]")
+    {
+        ServiceCollection services;
+        services.addScoped<IValueService, DoublingService>();
+        auto provider = services.build();
+        auto scope = provider->createScope();
+
+        auto nonScopedService = provider->get<IValueService>();
+        REQUIRE(nonScopedService == nullptr);
+
+        auto scopedService = scope->get<IValueService>();
+        REQUIRE(scopedService != nullptr);
+
+        scopedService->set(5);
+        REQUIRE(scopedService->get() == 10);
+
+        auto scopedService2 = scope->get<IValueService>();
+        REQUIRE(scopedService.get() == scopedService2.get());
+        REQUIRE(scopedService2->get() == 10);
+    }
+
+    TEST_CASE("Scoped Singleton Service", "[core::services]")
+    {
+        ServiceCollection services;
+        services.addSingleton<FooService>([](auto) { return std::make_shared<FooService>(55); });
+        auto provider = services.build();
+        auto scope = provider->createScope();
+
+        auto providerSingleton = provider->get<FooService>();
+        auto scopeSingleton = provider->get<FooService>();
+
+        REQUIRE((providerSingleton.get()) == (scopeSingleton.get()));
+    }
+
+    TEST_CASE("Transient Service", "[core::services]")
+    {
+        ServiceCollection services;
+        services.addTransient<IValueService, DoublingService>();
+        auto provider = services.build();
+        auto scope = provider->createScope();
+
+        auto transient0 = provider->get<IValueService>();
+        auto transient1 = provider->get<IValueService>();
+        auto transient2 = scope->get<IValueService>();
+        auto transient3 = scope->get<IValueService>();
+
+        REQUIRE(transient0.get() != transient1.get());
+        REQUIRE(transient0.get() != transient2.get());
+        REQUIRE(transient0.get() != transient3.get());
+        REQUIRE(transient1.get() != transient2.get());
+        REQUIRE(transient2.get() != transient3.get());
+
+        transient0->set(5);
+        transient1->set(10);
+        transient2->set(15);
+        transient3->set(20);
+
+        REQUIRE(transient0->get() == 10);
+        REQUIRE(transient1->get() == 20);
+        REQUIRE(transient2->get() == 30);
+        REQUIRE(transient3->get() == 40);
     }
 }

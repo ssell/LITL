@@ -130,7 +130,7 @@ namespace LITL::Core
         template<typename ServiceType>
         ServiceCollection& addScoped(ServiceFactory<ServiceType> factory)
         {
-            return add<ServiceType, ServiceType>(ServiceLifetime::Singleton, std::move(factory));
+            return add<ServiceType, ServiceType>(ServiceLifetime::Scoped, std::move(factory));
         }
 
         /// <summary>
@@ -168,7 +168,7 @@ namespace LITL::Core
         template<typename ServiceType, typename ServiceImpl> requires InheritsFrom<ServiceType, ServiceImpl>
         ServiceCollection& addTransient()
         {
-            return addScoped<ServiceType, ServiceImpl>([](auto resolver) { return std::make_shared<ServiceImpl>(); });
+            return addTransient<ServiceType, ServiceImpl>([](auto resolver) { return std::make_shared<ServiceImpl>(); });
         }
 
         /// <summary>
@@ -180,7 +180,7 @@ namespace LITL::Core
         template<typename ServiceType>
         ServiceCollection& addTransient(ServiceFactory<ServiceType> factory)
         {
-            return add<ServiceType, ServiceType>(ServiceLifetime::Singleton, std::move(factory));
+            return add<ServiceType, ServiceType>(ServiceLifetime::Transient, std::move(factory));
         }
 
         /// <summary>
@@ -191,7 +191,7 @@ namespace LITL::Core
         template<typename ServiceType>
         ServiceCollection& addTransient()
         {
-            return addScoped<ServiceType>([](auto resolver) { return std::make_shared<ServiceType>(); });
+            return addTransient<ServiceType>([](auto resolver) { return std::make_shared<ServiceType>(); });
         }
 
         // ---------------------------------------------------------------------------------
@@ -199,7 +199,7 @@ namespace LITL::Core
         // ---------------------------------------------------------------------------------
 
         /// <summary>
-        /// 
+        /// Constructs a ServiceProvider.
         /// </summary>
         /// <returns></returns>
         std::shared_ptr<ServiceProvider> build() const;
