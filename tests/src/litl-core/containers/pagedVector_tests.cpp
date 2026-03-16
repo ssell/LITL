@@ -1,11 +1,11 @@
-#include <catch2/catch_test_macros.hpp>
+#include "tests.hpp"
 #include <cstdint>
 
 #include "litl-core/containers/pagedVector.hpp"
 
 namespace LITL::Core::Tests
 {
-    TEST_CASE("Push-Pop", "[core::containers::pagedVector]")
+    LITL_TEST_CASE("Push-Pop", "[core::containers::pagedVector]")
     {
         PagedVector<uint32_t> vector(32);
 
@@ -54,9 +54,9 @@ namespace LITL::Core::Tests
         REQUIRE(vector.capacity() == 64);
         REQUIRE(vector.empty() == true);
         REQUIRE(vector.full() == false);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Random Access", "[core::containers::pagedVector]")
+    LITL_TEST_CASE("Random Access", "[core::containers::pagedVector]")
     {
         PagedVector<uint32_t> vector(32);
 
@@ -72,9 +72,9 @@ namespace LITL::Core::Tests
         vector[27] = 127;
 
         REQUIRE(vector[27] == 127);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Fixed Access", "[core::containers::pagedVector]")
+    LITL_TEST_CASE("Fixed Access", "[core::containers::pagedVector]")
     {
         PagedVector<uint32_t> vector(32);
 
@@ -100,9 +100,9 @@ namespace LITL::Core::Tests
 
         REQUIRE(vector.front() == 1);
         REQUIRE(vector.front() == vector.back());
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Iterator", "[core::containers::pagedVector]")
+    LITL_TEST_CASE("Iterator", "[core::containers::pagedVector]")
     {
         PagedVector<uint32_t> vector(32);
 
@@ -129,9 +129,9 @@ namespace LITL::Core::Tests
         {
             REQUIRE(*iter == i++);
         }
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Stable Memory", "[core::containers::pagedVector]")
+    LITL_TEST_CASE("Stable Memory", "[core::containers::pagedVector]")
     {
         // As comparison, use a standard vector and see how the memory address of element 0 changes.
         // std::vector<uint32_t> vector;
@@ -151,7 +151,7 @@ namespace LITL::Core::Tests
 
         REQUIRE(*ptr0 == 1337);
         REQUIRE(ptr0 == ptr1);
-    }
+    } END_LITL_TEST_CASE
 
     namespace PushPopClassTest
     {
@@ -179,7 +179,7 @@ namespace LITL::Core::Tests
         };
     }
 
-    TEST_CASE("Push-Pop Class", "[core::containers::pagedVector]")
+    LITL_TEST_CASE("Push-Pop Class", "[core::containers::pagedVector]")
     {
         PagedVector<PushPopClassTest::Foo> vector;
         uint32_t destroyCount = 0;
@@ -211,5 +211,5 @@ namespace LITL::Core::Tests
 
         // 2 in the container + 1 local to the scope that was pushed in.
         REQUIRE(destroyCount == 3);
-    }
+    } END_LITL_TEST_CASE
 }

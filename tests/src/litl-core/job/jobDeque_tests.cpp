@@ -1,4 +1,4 @@
-#include <catch2/catch_test_macros.hpp>
+#include "tests.hpp"
 #include "litl-core/job/jobDeque.hpp"
 
 namespace LITL::Core::Tests
@@ -25,7 +25,7 @@ namespace LITL::Core::Tests
         };
     }
 
-    TEST_CASE("Push", "[core::job::jobDeque]")
+    LITL_TEST_CASE("Push", "[core::job::jobDeque]")
     {
         JobDeque deque;
 
@@ -47,9 +47,9 @@ namespace LITL::Core::Tests
 
         deque.push(handle2.handle);
         REQUIRE(deque.size() == 3);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Pop", "[core::job::jobDeque]")
+    LITL_TEST_CASE("Pop", "[core::job::jobDeque]")
     {
         // Push -> Pop should be LIFO
         // Push adds to "bottom index" and Pop removes from "bottom index"
@@ -93,9 +93,9 @@ namespace LITL::Core::Tests
 
         REQUIRE(deque.size() == 0);
         REQUIRE(!fetched.has_value());
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Steal", "[core::job::jobDeque]")
+    LITL_TEST_CASE("Steal", "[core::job::jobDeque]")
     {
         // Push -> Steal should be FIFO
         // Push adds to "bottom index" and Pop removes from "top index"
@@ -139,9 +139,9 @@ namespace LITL::Core::Tests
 
         REQUIRE(deque.size() == 0);
         REQUIRE(!fetched.has_value());
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Big Deque", "[core::job::jobDeque]")
+    LITL_TEST_CASE("Big Deque", "[core::job::jobDeque]")
     {
         // Add enough jobs to require multiple resizings.
 
@@ -191,5 +191,5 @@ namespace LITL::Core::Tests
 
         // If this fails, then job pointers were lost during an internal buffer resize.
         REQUIRE(anyNull == false);
-    }
+    } END_LITL_TEST_CASE
 }

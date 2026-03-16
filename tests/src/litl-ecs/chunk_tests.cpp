@@ -1,11 +1,10 @@
-#include <catch2/catch_test_macros.hpp>
-
+#include "tests.hpp"
 #include "litl-ecs/common.hpp"
 #include "litl-ecs/archetype/chunk.hpp"
 
 namespace LITL::ECS::Tests
 {
-    TEST_CASE("Chunk Layout", "[ecs::chunk]")
+    LITL_TEST_CASE("Chunk Layout", "[ecs::chunk]")
     {
         ChunkLayout layoutFooBar;
         populateChunkLayout<Foo, Bar>(&layoutFooBar);
@@ -24,9 +23,9 @@ namespace LITL::ECS::Tests
         REQUIRE(layoutFooBar.entityCapacity == layoutBarFoo.entityCapacity);
 
         // ... todo add more concrete tests (memory address locations, etc.) after the chunk header has stabilized ...
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Header Creation", "[ecs::chunk]")
+    LITL_TEST_CASE("Header Creation", "[ecs::chunk]")
     {
         const uint32_t capacity = 100;
 
@@ -47,5 +46,5 @@ namespace LITL::ECS::Tests
         REQUIRE(chunk1Header->capacity == capacity);
         REQUIRE(chunk1Header->chunkIndex == 1);
         REQUIRE(chunk1Header->version == 0);
-    }
+    } END_LITL_TEST_CASE
 }

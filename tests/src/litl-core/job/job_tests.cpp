@@ -1,9 +1,9 @@
-#include <catch2/catch_test_macros.hpp>
+#include "tests.hpp"
 #include "litl-core/job/job.hpp"
 
 namespace LITL::Core::Tests
 {
-    TEST_CASE("JobHandle Copy", "[core::job::job]")
+    LITL_TEST_CASE("JobHandle Copy", "[core::job::job]")
     {
         Job job;
         JobHandle handle0;
@@ -19,5 +19,5 @@ namespace LITL::Core::Tests
 
         REQUIRE(handle1.job == handle0.job);
         REQUIRE(handle1.job == &job);
-    }
+    } END_LITL_TEST_CASE
 }

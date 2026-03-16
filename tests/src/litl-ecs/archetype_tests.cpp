@@ -1,13 +1,13 @@
 #include <algorithm>
-#include <catch2/catch_test_macros.hpp>
 
+#include "tests.hpp"
 #include "litl-ecs/common.hpp"
 #include "litl-ecs/archetype/archetype.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
 
 namespace LITL::ECS::Tests
 {
-    TEST_CASE("ArchetypeRegistry::get (Static)", "[ecs::archetype]")
+    LITL_TEST_CASE("ArchetypeRegistry::get (Static)", "[ecs::archetype]")
     {
         auto archetypeFoo = ArchetypeRegistry::get<Foo>();
         auto archetypeFooFoo = ArchetypeRegistry::get<Foo, Foo>();   // duplicate component should resolve to <Foo>
@@ -26,9 +26,9 @@ namespace LITL::ECS::Tests
 
         REQUIRE(archetypeFoo->componentCount() == 1);
         REQUIRE(archetypeFooBar->componentCount() == 2);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("ArchetypeRegistry::get (Dynamic)", "[ecs::archetype]")
+    LITL_TEST_CASE("ArchetypeRegistry::get (Dynamic)", "[ecs::archetype]")
     {
         auto fooComponent = ComponentDescriptor::get<Foo>();
         auto barComponent = ComponentDescriptor::get<Bar>();
@@ -46,35 +46,35 @@ namespace LITL::ECS::Tests
 
         REQUIRE(archetypeFooBarS == archetypeFooBarD);
         REQUIRE(archetypeFooBarD == archetypeBarFooD);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("ArchetypeRegistry::getById", "[ecs::archetype]")
+    LITL_TEST_CASE("ArchetypeRegistry::getById", "[ecs::archetype]")
     {
         auto archetypeFoo = ArchetypeRegistry::get<Foo>();
         auto archetypeFooBar = ArchetypeRegistry::get<Foo, Bar>();
 
         REQUIRE(ArchetypeRegistry::getById(archetypeFoo->id()) == archetypeFoo);
         REQUIRE(ArchetypeRegistry::getById(archetypeFooBar->id()) == archetypeFooBar);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("ArchetypeRegistry::getByComponentHash", "[ecs::archetype]")
+    LITL_TEST_CASE("ArchetypeRegistry::getByComponentHash", "[ecs::archetype]")
     {
         auto archetypeFoo = ArchetypeRegistry::get<Foo>();
         auto archetypeFooBar = ArchetypeRegistry::get<Foo, Bar>();
 
         REQUIRE(ArchetypeRegistry::getByComponentHash(archetypeFoo->componentHash()) == archetypeFoo);
         REQUIRE(ArchetypeRegistry::getByComponentHash(archetypeFooBar->componentHash()) == archetypeFooBar);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Empty Archetype", "[ecs::archetype]")
+    LITL_TEST_CASE("Empty Archetype", "[ecs::archetype]")
     {
         auto emptyArchetype = ArchetypeRegistry::getByComponents({});
 
         REQUIRE(emptyArchetype != nullptr);
         REQUIRE(emptyArchetype->componentCount() == 0);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Archetype Has Component", "[ecs::archetype]")
+    LITL_TEST_CASE("Archetype Has Component", "[ecs::archetype]")
     {
         auto* archetypeFoo = ArchetypeRegistry::get<Foo>();
         auto* archetypeFooBar = ArchetypeRegistry::get<Foo, Bar>();
@@ -91,7 +91,7 @@ namespace LITL::ECS::Tests
         REQUIRE(archetypeFooBar->hasComponent<Bar>() == true);
         REQUIRE(archetypeFooBar->hasComponent(fooId) == true);
         REQUIRE(archetypeFooBar->hasComponent(barId) == true);
-    }
+    } END_LITL_TEST_CASE
 
     namespace NewArchetypesTest
     {
@@ -99,7 +99,7 @@ namespace LITL::ECS::Tests
         struct Orange {};
     }
 
-    TEST_CASE("Report New Archetypes", "[ecs::archetype]")
+    LITL_TEST_CASE("Report New Archetypes", "[ecs::archetype]")
     {
         ArchetypeRegistry::fetchNewArchetypes();     // clear out awaiting new archetypes
 
@@ -117,7 +117,7 @@ namespace LITL::ECS::Tests
         REQUIRE(std::find(newArchetypes.begin(), newArchetypes.end(), appleArchetype->id()) != newArchetypes.end());
         REQUIRE(std::find(newArchetypes.begin(), newArchetypes.end(), orangeArchetype->id()) != newArchetypes.end());
         REQUIRE(std::find(newArchetypes.begin(), newArchetypes.end(), appleOrangeArchetype->id()) != newArchetypes.end());
-    }
+    } END_LITL_TEST_CASE
 }
 
 REGISTER_TYPE_NAME(LITL::ECS::Tests::NewArchetypesTest::Apple);

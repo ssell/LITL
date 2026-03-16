@@ -1,6 +1,5 @@
 #include <atomic>
-#include <catch2/catch_test_macros.hpp>
-
+#include "tests.hpp"
 #include "litl-core/math/math.hpp"
 #include "litl-core/job/jobFence.hpp"
 #include "litl-core/job/jobScheduler.hpp"
@@ -46,7 +45,7 @@ namespace LITL::Core::Tests
         }
     }
 
-    TEST_CASE("CreateAndSubmit SharedData", "[core::job::jobScheduler]")
+    LITL_TEST_CASE("CreateAndSubmit SharedData", "[core::job::jobScheduler]")
     {
         JobScheduler scheduler;
         std::atomic<uint32_t> jobsRun{ 0 };
@@ -55,9 +54,9 @@ namespace LITL::Core::Tests
 
         REQUIRE(scheduler.wait() == true);
         REQUIRE(jobsRun == 1);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("CreateAndSubmit LocalData", "[core::job::jobScheduler]")
+    LITL_TEST_CASE("CreateAndSubmit LocalData", "[core::job::jobScheduler]")
     {
         JobScheduler scheduler;
         std::atomic<uint32_t> jobsRun{ 0 };
@@ -66,9 +65,9 @@ namespace LITL::Core::Tests
         scheduler.createAndSubmit(jobLocalDataTest, JobPriority::Normal, data, nullptr);
         REQUIRE(scheduler.wait() == true);
         REQUIRE(jobsRun == 1);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("CreateAndSubmit Lambda", "[core::job::jobScheduler]")
+    LITL_TEST_CASE("CreateAndSubmit Lambda", "[core::job::jobScheduler]")
     {
         JobScheduler scheduler;
         JobData data{ 0 };
@@ -77,9 +76,9 @@ namespace LITL::Core::Tests
 
         REQUIRE(scheduler.wait() == true);
         REQUIRE(data.runs == 1);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Job Dependency Chain", "[core::job::jobScheduler]")
+    LITL_TEST_CASE("Job Dependency Chain", "[core::job::jobScheduler]")
     {
         JobScheduler scheduler;
         std::atomic<uint32_t> jobsRun{ 0 };
@@ -95,9 +94,9 @@ namespace LITL::Core::Tests
 
         REQUIRE(scheduler.wait() == true);
         REQUIRE(jobsRun == 3);      // handle0 runs which triggers handle1 which triggers handle2
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Job Dependency Limit", "[core::job::jobScheduler]")
+    LITL_TEST_CASE("Job Dependency Limit", "[core::job::jobScheduler]")
     {
         JobScheduler scheduler;
 
@@ -125,9 +124,9 @@ namespace LITL::Core::Tests
 
         REQUIRE(scheduler.wait() == true);
         REQUIRE(jobsRun == (Job::JobMaxDependentsCount + 1));       // the original job and its max number of dependents
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Job Handle Validity", "[core::job::jobScheduler]")
+    LITL_TEST_CASE("Job Handle Validity", "[core::job::jobScheduler]")
     {
         JobScheduler scheduler;
         std::atomic<uint32_t> jobsRun{ 0 };
@@ -143,9 +142,9 @@ namespace LITL::Core::Tests
         REQUIRE(scheduler.valid(handle0) == true);
         REQUIRE(scheduler.wait() == true);
         REQUIRE(scheduler.valid(handle0) == false);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Schedule Many Jobs", "[core::job::jobScheduler]")
+    LITL_TEST_CASE("Schedule Many Jobs", "[core::job::jobScheduler]")
     {
         constexpr uint32_t jobCount = 8192;
 
@@ -165,9 +164,9 @@ namespace LITL::Core::Tests
 
         REQUIRE(scheduler.wait() == true);
         REQUIRE(jobsRun == jobCount);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Schedule Many Jobs Priority", "[core::job::jobScheduler]")
+    LITL_TEST_CASE("Schedule Many Jobs Priority", "[core::job::jobScheduler]")
     {
         // A sizeable total job count that is evenly divisible by the number of priority levels
         uint32_t jobCount = LITL::Math::pow(JobPriorityCount, 8);
@@ -195,9 +194,9 @@ namespace LITL::Core::Tests
             // Each priority level should have been run the same number of times
             priorities[i] = jobCount / JobPriorityCount;
         }
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Fence", "[core::job::jobScheduler]")
+    LITL_TEST_CASE("Fence", "[core::job::jobScheduler]")
     {
         JobScheduler scheduler;
         JobFence fence;
@@ -223,9 +222,9 @@ namespace LITL::Core::Tests
         REQUIRE(fence.wait(scheduler) == true);
         REQUIRE(jobsRun == jobCount);
         REQUIRE(scheduler.wait() == true);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Wait Multi-Fence Loop", "[core::job::jobScheduler]")
+    LITL_TEST_CASE("Wait Multi-Fence Loop", "[core::job::jobScheduler]")
     {
         JobScheduler scheduler;
 
@@ -254,9 +253,9 @@ namespace LITL::Core::Tests
             REQUIRE(scheduler.wait() == true);
             REQUIRE(jobsRun == jobCount);
         }
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Create Submit All Variants", "[core::job::jobScheduler]")
+    LITL_TEST_CASE("Create Submit All Variants", "[core::job::jobScheduler]")
     {
         JobScheduler scheduler;
         JobFence fence;
@@ -311,5 +310,5 @@ namespace LITL::Core::Tests
 
         REQUIRE(fence.wait(scheduler) == true);
         REQUIRE(scheduler.wait() == true);
-    }
+    } END_LITL_TEST_CASE
 }

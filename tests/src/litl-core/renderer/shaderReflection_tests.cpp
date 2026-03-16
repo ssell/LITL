@@ -1,12 +1,12 @@
-#include <catch2/catch_test_macros.hpp>
 #include <fstream>
 #include <vector>
 
+#include "tests.hpp"
 #include "litl-renderer/pipeline/shaderReflection.hpp"
 
 namespace LITL::Core::Tests
 {
-    TEST_CASE("Basic Reflection", "[renderer::shaderReflection]")
+    LITL_TEST_CASE("Basic Reflection", "[renderer::shaderReflection]")
     {
         std::ifstream file("data/test.spv", std::ios::ate | std::ios::binary);
 
@@ -28,5 +28,5 @@ namespace LITL::Core::Tests
         REQUIRE(reflectedVertex != std::nullopt);
         REQUIRE(reflectedFragment != std::nullopt);
         REQUIRE(reflectedGeometry == std::nullopt);
-    }
+    } END_LITL_TEST_CASE
 }

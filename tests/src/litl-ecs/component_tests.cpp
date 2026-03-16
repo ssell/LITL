@@ -1,5 +1,4 @@
-#include <catch2/catch_test_macros.hpp>
-
+#include "tests.hpp"
 #include "litl-core/hash.hpp"
 #include "litl-ecs/common.hpp"
 #include "litl-ecs/component/component.hpp"
@@ -7,7 +6,7 @@
 
 namespace LITL::ECS::Tests
 {
-    TEST_CASE("Component Descriptor", "[ecs::component]")
+    LITL_TEST_CASE("Component Descriptor", "[ecs::component]")
     {
         auto fooDescriptor0 = ComponentDescriptor::get<Foo>();
         auto fooDescriptor1 = ComponentDescriptor::get<Foo>();
@@ -21,9 +20,9 @@ namespace LITL::ECS::Tests
         REQUIRE(fooDescriptor0->id == fooDescriptor1->id);
         REQUIRE(fooDescriptor0->id != barDescriptor0->id);
         REQUIRE(barDescriptor0->id == barDescriptor1->id);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("ComponentTypeId", "[ecs::component]")
+        LITL_TEST_CASE("ComponentTypeId", "[ecs::component]")
     {
         auto fooDescriptor = ComponentDescriptor::get<Foo>();
         auto barDescriptor = ComponentDescriptor::get<Bar>();
@@ -31,9 +30,9 @@ namespace LITL::ECS::Tests
         REQUIRE(getComponentTypeId<Foo>() == fooDescriptor->id);
         REQUIRE(getComponentTypeId<Bar>() == barDescriptor->id);
         REQUIRE(getComponentTypeId<Foo>() != getComponentTypeId<Bar>());
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("StableComponentTypeId", "[ecs::component]")
+        LITL_TEST_CASE("StableComponentTypeId", "[ecs::component]")
     {
         auto fooDescriptor = ComponentDescriptor::get<Foo>();
         auto barDescriptor = ComponentDescriptor::get<Bar>();
@@ -48,9 +47,9 @@ namespace LITL::ECS::Tests
         REQUIRE(getStableComponentTypeId<Bar>() == barDescriptor->stableId);
 
         REQUIRE(getStableComponentTypeId<Foo>() != getStableComponentTypeId<Bar>());
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("ComponentRegistry Tracking", "[ecs::component]")
+        LITL_TEST_CASE("ComponentRegistry Tracking", "[ecs::component]")
     {
         auto fooDescriptor = ComponentDescriptor::get<Foo>();
         auto barDescriptor = ComponentDescriptor::get<Bar>();
@@ -60,5 +59,5 @@ namespace LITL::ECS::Tests
 
         REQUIRE(ComponentRegistry::find(barDescriptor->id) == barDescriptor);
         REQUIRE(ComponentRegistry::findByStableId(barDescriptor->stableId) == barDescriptor);
-    }
+    } END_LITL_TEST_CASE
 }

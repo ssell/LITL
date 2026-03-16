@@ -1,11 +1,11 @@
-#include <catch2/catch_test_macros.hpp>
+#include "tests.hpp"
 #include <cstdint>
 
 #include "litl-core/containers/concurrentSingleQueue.hpp"
 
 namespace LITL::Core::Tests
 {
-    TEST_CASE("Push-Pop Single-Threaded", "[core::containers::concurrentSingleQueue]")
+    LITL_TEST_CASE("Push-Pop Single-Threaded", "[core::containers::concurrentSingleQueue]")
     {
         ConcurrentSingleQueue<uint32_t> queue{ 5 };
 
@@ -29,9 +29,9 @@ namespace LITL::Core::Tests
         REQUIRE(queue.dequeue() == std::nullopt);
         REQUIRE(queue.size() == 0);
         REQUIRE(queue.empty() == true);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Push-Peek Single-Threaded", "[core::containers::concurrentSingleQueue]")
+    LITL_TEST_CASE("Push-Peek Single-Threaded", "[core::containers::concurrentSingleQueue]")
     {
         ConcurrentSingleQueue<uint32_t> queue{ 5 };
 
@@ -46,9 +46,9 @@ namespace LITL::Core::Tests
         REQUIRE(queue.dequeue() == 55);
         REQUIRE(queue.peek() == std::nullopt);
         REQUIRE(queue.size() == 0);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Push-Clear Single-Threaded", "[core::containers::concurrentSingleQueue]")
+    LITL_TEST_CASE("Push-Clear Single-Threaded", "[core::containers::concurrentSingleQueue]")
     {
         ConcurrentSingleQueue<uint32_t> queue{ 50 };
 
@@ -64,5 +64,5 @@ namespace LITL::Core::Tests
 
         REQUIRE(queue.size() == 0);
         REQUIRE(queue.peek() == std::nullopt);
-    }
+    } END_LITL_TEST_CASE
 }
