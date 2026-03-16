@@ -165,9 +165,7 @@ namespace LITL::Core
 
     void JobScheduler::submit(JobHandle handle, JobFence& fence) const noexcept
     {
-        handle.job->fence = &fence;
         fence.add(handle);
-
         return submit(handle, fence.priority());
     }
 
