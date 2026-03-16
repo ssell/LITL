@@ -1,4 +1,4 @@
-#include <catch2/catch_test_macros.hpp>
+#include "tests.hpp"
 #include "litl-core/types.hpp"
 
 namespace LITL::Core::Tests
@@ -19,7 +19,7 @@ REGISTER_TYPE_NAME(LITL::Core::Tests::Bar)
 
 namespace LITL::Core::Tests
 {
-    TEST_CASE("Type IDs", "[core::types]")
+    LITL_TEST_CASE("Type IDs", "[core::types]")
     {
         const auto fooId = type_id<Foo>();
         const auto barId = type_id<Bar>();
@@ -27,9 +27,9 @@ namespace LITL::Core::Tests
         REQUIRE(type_id<Foo>() == fooId);
         REQUIRE(type_id<Bar>() == barId);
         REQUIRE(fooId != barId);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Type Names", "[core::types]")
+    LITL_TEST_CASE("Type Names", "[core::types]")
     {
         const auto expectedFooName = "LITL::Core::Tests::Foo";
         const auto expectedBarName = "LITL::Core::Tests::Bar";
@@ -42,5 +42,5 @@ namespace LITL::Core::Tests
 
         REQUIRE(type_name<Bar>() == expectedBarName);
         REQUIRE(type_name<Bar>() == barName);
-    }
+    } END_LITL_TEST_CASE
 }

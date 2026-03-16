@@ -1,4 +1,4 @@
-#include <catch2/catch_test_macros.hpp>
+#include "tests.hpp"
 #include "litl-ecs/common.hpp"
 
 namespace LITL::ECS::Tests
@@ -6,7 +6,7 @@ namespace LITL::ECS::Tests
     /// <summary>
     /// Tests the internal ExpandSystemComponentList and SystemRunner by manually running the TestSystem.
     /// </summary>
-    TEST_CASE("System Runner", "[ecs::system]")
+    LITL_TEST_CASE("System Runner", "[ecs::system]")
     {
         LITL::ECS::World world;
         TestSystem system;
@@ -38,5 +38,5 @@ namespace LITL::ECS::Tests
 
         world.destroyImmediate(entity0);
         world.destroyImmediate(entity1);
-    }
+    } END_LITL_TEST_CASE
 }

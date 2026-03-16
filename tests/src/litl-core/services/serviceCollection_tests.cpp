@@ -1,6 +1,6 @@
 #include <any>
-#include <catch2/catch_test_macros.hpp>
 
+#include "tests.hpp"
 #include "litl-core/services/serviceCollection.hpp"
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-core/services/serviceScope.hpp"
@@ -49,7 +49,7 @@ namespace
 
 namespace LITL::Core::Tests
 {
-    TEST_CASE("Add", "[core::services]")
+    LITL_TEST_CASE("Add", "[core::services]")
     {
         ServiceCollection services;
         REQUIRE(services.size() == 0);
@@ -60,9 +60,9 @@ namespace LITL::Core::Tests
             });
 
         REQUIRE(services.size() == 1);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Add Singleton", "[core::services]")
+    LITL_TEST_CASE("Add Singleton", "[core::services]")
     {
         ServiceCollection services;
         REQUIRE(services.size() == 0);
@@ -77,17 +77,17 @@ namespace LITL::Core::Tests
             });
 
         REQUIRE(services.size() == 2);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Get Missing", "[core::services]")
+    LITL_TEST_CASE("Get Missing", "[core::services]")
     {
         ServiceCollection services;
         auto provider = services.build();
 
         REQUIRE(provider->get<FooService>() == nullptr);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Get Singleton", "[core::services]")
+    LITL_TEST_CASE("Get Singleton", "[core::services]")
     {
         ServiceCollection services;
         services.addSingleton<IValueService, DoublingService>();
@@ -97,9 +97,9 @@ namespace LITL::Core::Tests
         doubler->set(1);
 
         REQUIRE(doubler->get() == 2);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Set Singleton Multiple Times", "[core::services]")
+    LITL_TEST_CASE("Set Singleton Multiple Times", "[core::services]")
     {
         ServiceCollection services;
         services.addSingleton<IValueService, DoublingService>();
@@ -111,9 +111,9 @@ namespace LITL::Core::Tests
         tripler->set(1);
 
         REQUIRE(tripler->get() == 3);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Multiple Singletons", "[core::services]")
+    LITL_TEST_CASE("Multiple Singletons", "[core::services]")
     {
         ServiceCollection services;
         services.addSingleton<IValueService, DoublingService>();
@@ -126,9 +126,9 @@ namespace LITL::Core::Tests
 
         REQUIRE(valueService->get() == 20);
         REQUIRE(fooService->get() == 55);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Scoped Service", "[core::services]")
+    LITL_TEST_CASE("Scoped Service", "[core::services]")
     {
         ServiceCollection services;
         services.addScoped<IValueService, DoublingService>();
@@ -147,9 +147,9 @@ namespace LITL::Core::Tests
         auto scopedService2 = scope->get<IValueService>();
         REQUIRE(scopedService.get() == scopedService2.get());
         REQUIRE(scopedService2->get() == 10);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Scoped Singleton Service", "[core::services]")
+    LITL_TEST_CASE("Scoped Singleton Service", "[core::services]")
     {
         ServiceCollection services;
         services.addSingleton<FooService>([](auto) { return std::make_shared<FooService>(55); });
@@ -160,9 +160,9 @@ namespace LITL::Core::Tests
         auto scopeSingleton = provider->get<FooService>();
 
         REQUIRE((providerSingleton.get()) == (scopeSingleton.get()));
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Transient Service", "[core::services]")
+    LITL_TEST_CASE("Transient Service", "[core::services]")
     {
         ServiceCollection services;
         services.addTransient<IValueService, DoublingService>();
@@ -189,5 +189,5 @@ namespace LITL::Core::Tests
         REQUIRE(transient1->get() == 20);
         REQUIRE(transient2->get() == 30);
         REQUIRE(transient3->get() == 40);
-    }
+    } END_LITL_TEST_CASE
 }

@@ -4,7 +4,7 @@
 #include <string>
 #include <thread>
 #include <tuple>
-#include <catch2/catch_test_macros.hpp>
+#include "tests.hpp"
 #include <catch2/generators/catch_generators.hpp>
 
 #include "litl-core/logging/logLevel.hpp"
@@ -61,7 +61,7 @@ namespace LITL::Core::Tests
         TestLoggingSink* pSink;
     };
 
-    TEST_CASE_METHOD(LoggingWrapper, "Basic Log Message", "[core::logging]")
+    LITL_TEST_CASE_METHOD(LoggingWrapper, "Basic Log Message", "[core::logging]")
     {
         const auto parameters = GENERATE(
             std::make_tuple<LogLevel, std::string>(LogLevel::Info, "Hello, World!"),
@@ -73,9 +73,9 @@ namespace LITL::Core::Tests
 
         REQUIRE(pSink->messageBuffer.size() > 0);
         REQUIRE(pSink->messageBuffer.back().find(std::get<std::string>(parameters)) >= 0);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE_METHOD(LoggingWrapper, "Filter Log Message", "[core::logging]")
+    LITL_TEST_CASE_METHOD(LoggingWrapper, "Filter Log Message", "[core::logging]")
     {
         // See: "#define LITL_LOG_LEVEL LITL_LOG_LEVEL_INFO" at top of this file
         const auto parameters = GENERATE(
@@ -96,9 +96,9 @@ namespace LITL::Core::Tests
         {
             REQUIRE(pSink->messageBuffer.size() == 0);
         }
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE_METHOD(LoggingWrapper, "Preserve Order", "[core::logging]")
+    LITL_TEST_CASE_METHOD(LoggingWrapper, "Preserve Order", "[core::logging]")
     {
         const std::array<std::string, 4> parts = {
             "Hello, ",
@@ -120,7 +120,7 @@ namespace LITL::Core::Tests
         {
             REQUIRE(pSink->messageBuffer[i].find(parts[i]) >= 0);
         }
-    }
+    } END_LITL_TEST_CASE
 
     namespace MultithreadedLoggingTest
     {
@@ -133,7 +133,7 @@ namespace LITL::Core::Tests
         }
     }
 
-    TEST_CASE_METHOD(LoggingWrapper, "Multithreaded Logging", "[core::logging]")
+    LITL_TEST_CASE_METHOD(LoggingWrapper, "Multithreaded Logging", "[core::logging]")
     {
         std::jthread thread0(MultithreadedLoggingTest::logThread, 10, "Thread0");
         std::jthread thread1(MultithreadedLoggingTest::logThread, 10, "Thread1");
@@ -148,9 +148,9 @@ namespace LITL::Core::Tests
         }
 
         REQUIRE(pSink->messageBuffer.size() == 30);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE_METHOD(LoggingWrapper, "Parameterized Logging", "[core::logging]")
+    LITL_TEST_CASE_METHOD(LoggingWrapper, "Parameterized Logging", "[core::logging]")
     {
         Logger::info("This message is composed of ", 3, " distinct parameters.");
 
@@ -158,9 +158,9 @@ namespace LITL::Core::Tests
 
         REQUIRE(pSink->messageBuffer.size() == 1);
         REQUIRE(pSink->messageBuffer[0].find("This message is composed of 3 distinct parameters.") >= 0);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE_METHOD(LoggingWrapper, "Convenience Logging", "[core::logging]")
+    LITL_TEST_CASE_METHOD(LoggingWrapper, "Convenience Logging", "[core::logging]")
     {
         LITL::logInfo("Hello, World!");
         LITL::logInfo("Hello, ", "World!");
@@ -170,9 +170,9 @@ namespace LITL::Core::Tests
         REQUIRE(pSink->messageBuffer.size() == 2);
         REQUIRE(pSink->messageBuffer[0].find("Hello, World!") >= 0);
         REQUIRE(pSink->messageBuffer[1].find("Hello, World!") >= 0);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE_METHOD(LoggingWrapper, "File Capture Logging", "[core::logging]")
+    LITL_TEST_CASE_METHOD(LoggingWrapper, "File Capture Logging", "[core::logging]")
     {
         LITL_LOG_CRITICAL_CAPTURE("Something really bad happened!");
 
@@ -181,5 +181,5 @@ namespace LITL::Core::Tests
         REQUIRE(pSink->messageBuffer.size() == 1);
         REQUIRE(pSink->messageBuffer[0].find("Something really bad happened!") >= 0);
         REQUIRE(pSink->messageBuffer[0].find("logging_tests.cpp@") >= 0);
-    }
+    } END_LITL_TEST_CASE
 }

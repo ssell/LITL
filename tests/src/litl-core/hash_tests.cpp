@@ -1,7 +1,7 @@
-#include <catch2/catch_test_macros.hpp>
 #include <array>
 #include <vector>
 
+#include "tests.hpp"
 #include "litl-core/hash.hpp"
 
 namespace
@@ -12,7 +12,7 @@ namespace
 
 namespace LITL::Core::Tests
 {
-    TEST_CASE("Simple Hash 32", "[core::hash]")
+    LITL_TEST_CASE("Simple Hash 32", "[core::hash]")
     {
         const int32_t varIntA = 1337;
         const int32_t varIntB = 8997;
@@ -52,9 +52,9 @@ namespace LITL::Core::Tests
         {
             REQUIRE(hash32(&varUintC, sizeof(uint32_t)) == hashedUintC);
         }
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Simple Hash 64", "[core::hash]")
+    LITL_TEST_CASE("Simple Hash 64", "[core::hash]")
     {
         const int32_t varIntA = 1337;
         const int32_t varIntB = 8997;
@@ -94,7 +94,7 @@ namespace LITL::Core::Tests
         {
             REQUIRE(hash64(&varUintC, sizeof(uint32_t)) == hashedUintC);
         }
-    }
+    } END_LITL_TEST_CASE
 
     namespace HashPodTest
     {
@@ -109,7 +109,7 @@ namespace LITL::Core::Tests
         };
     }
 
-    TEST_CASE("Hash POD", "[core::hash]")
+    LITL_TEST_CASE("Hash POD", "[core::hash]")
     {
         const auto foo = HashPodTest::Foo{
             .a = 123L,
@@ -130,9 +130,9 @@ namespace LITL::Core::Tests
         const auto hashedFooSeedlessConvenient = hashPOD(foo);
 
         REQUIRE(hashedFooSeedless == hashedFooSeedlessConvenient);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Hash Array", "[core::hash]")
+    LITL_TEST_CASE("Hash Array", "[core::hash]")
     {
         uint32_t a[5] = { 1, 2, 3, 4, 5 };
         std::array<uint32_t, 5> b{ 1, 2, 3, 4, 5 };
@@ -156,9 +156,9 @@ namespace LITL::Core::Tests
         REQUIRE(hashedASeedless == hashedBSeedless);
         REQUIRE(hashedBSeedless == hashedCSeedless);
         REQUIRE(hashedASeedless != hashedDSeedless);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Hash Unordered Array", "[core::hash]")
+    LITL_TEST_CASE("Hash Unordered Array", "[core::hash]")
     {
         uint32_t a[5] = { 1, 2, 3, 4, 5 };
         uint32_t b[5] = { 5, 4, 3, 2, 1 };
@@ -167,9 +167,9 @@ namespace LITL::Core::Tests
         const auto hashedB = hashArray<uint32_t>(b, Seed64);
 
         REQUIRE(hashedA != hashedB);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Hash Combine", "[core::hash]")
+    LITL_TEST_CASE("Hash Combine", "[core::hash]")
     {
         const uint32_t a = 55;
         const uint32_t b = 1337;
@@ -217,9 +217,9 @@ namespace LITL::Core::Tests
 
         hashCombine64(hashedComboB64, hashedC64);
         REQUIRE(hashedComboA64 == hashedComboB64);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Hash String", "[core::hash]")
+    LITL_TEST_CASE("Hash String", "[core::hash]")
     {
         std::string str0 = "Hello, World!";
         char const* str1 = "Hello, World!";
@@ -231,5 +231,5 @@ namespace LITL::Core::Tests
 
         REQUIRE(str0Hash == str1Hash);
         REQUIRE(str0Hash != str2Hash);
-    }
+    } END_LITL_TEST_CASE
 }

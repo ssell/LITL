@@ -1,12 +1,12 @@
-#include <catch2/catch_test_macros.hpp>
 #include <optional>
 #include <thread>
 
+#include "tests.hpp"
 #include "litl-core/thread.hpp"
 
 namespace LITL::Core::Tests
 {
-    TEST_CASE("Main Thread", "[core::threadinfo]")
+    LITL_TEST_CASE("Main Thread", "[core::threadinfo]")
     {
         REQUIRE(ThreadInfo::isMainThread() == false);
         ThreadInfo::setMainThread();
@@ -23,5 +23,5 @@ namespace LITL::Core::Tests
 
         REQUIRE(isOtherThreadMainThread.has_value() == true);
         REQUIRE(isOtherThreadMainThread.value() == false);
-    }
+    } END_LITL_TEST_CASE
 }

@@ -1,4 +1,4 @@
-#include <catch2/catch_test_macros.hpp>
+#include "tests.hpp"
 #include "litl-core/refPtr.hpp"
 
 namespace LITL::Core::Tests
@@ -93,7 +93,7 @@ namespace LITL::Core::Tests
         uint32_t* m_pc;
     };
 
-    TEST_CASE("Single Reference", "[core::refptr]")
+    LITL_TEST_CASE("Single Reference", "[core::refptr]")
     {
         bool destroyedFlag = true;
 
@@ -103,9 +103,9 @@ namespace LITL::Core::Tests
         }
 
         REQUIRE(destroyedFlag == true);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Multiple References", "[core::refptr]")
+    LITL_TEST_CASE("Multiple References", "[core::refptr]")
     {
         bool destroyedFlag = false;
 
@@ -129,9 +129,9 @@ namespace LITL::Core::Tests
         }
 
         REQUIRE(destroyedFlag == true);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("make_refptr", "[core::refptr]")
+    LITL_TEST_CASE("make_refptr", "[core::refptr]")
     {
         uint32_t a = 0;
         uint32_t b = 0;
@@ -173,14 +173,14 @@ namespace LITL::Core::Tests
         }
 
         REQUIRE(a == 0); REQUIRE(b == 0); REQUIRE(c == 0);
-    }
+    } END_LITL_TEST_CASE
 
     Foo* createNewFoo(bool* destroyedFlag)
     {
         return new Foo(destroyedFlag);
     }
 
-    TEST_CASE("Indirect Creation", "[core::refptr]")
+    LITL_TEST_CASE("Indirect Creation", "[core::refptr]")
     {
         bool destroyedFlag = false;
 
@@ -190,9 +190,9 @@ namespace LITL::Core::Tests
         }
 
         REQUIRE(destroyedFlag == true);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("nullptr", "[core::refptr]")
+    LITL_TEST_CASE("nullptr", "[core::refptr]")
     {
         {
             auto refPtr = RefPtr<Foo>(nullptr);
@@ -200,5 +200,5 @@ namespace LITL::Core::Tests
 
         // The goal is to not crash when the above refptr goes out of scope. Make sure it doesn't try to delete nullptr.
         REQUIRE(true == true);
-    }
+    } END_LITL_TEST_CASE
 }

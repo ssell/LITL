@@ -1,33 +1,33 @@
 #include <array>
-#include <catch2/catch_test_macros.hpp>
 
+#include "tests.hpp"
 #include "litl-core/math/math.hpp"
 
 namespace LITL::Core::Tests
 {
 
-    TEST_CASE("clamp", "[math::general]")
+    LITL_TEST_CASE("clamp", "[math::general]")
     {
         REQUIRE(LITL::Math::clamp(5, 0, 10) == 5);
         REQUIRE(LITL::Math::clamp(-5, 0, 10) == 0);
         REQUIRE(LITL::Math::clamp(15, 0, 10) == 10);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("min", "[math::general]")
+    LITL_TEST_CASE("min", "[math::general]")
     {
         REQUIRE(LITL::Math::min(5, 0) == 0);
         REQUIRE(LITL::Math::min(5, 10) == 5);
         REQUIRE(LITL::Math::min(-50, -60) == -60);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("max", "[math::general]")
+    LITL_TEST_CASE("max", "[math::general]")
     {
         REQUIRE(LITL::Math::max(5, 0) == 5);
         REQUIRE(LITL::Math::max(5, 10) == 10);
         REQUIRE(LITL::Math::max(-50, -60) == -50);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("fequals", "[math::general]")
+    LITL_TEST_CASE("fequals", "[math::general]")
     {
         REQUIRE(LITL::Math::fequals(0.0f, 0.0f) == true);
         REQUIRE(LITL::Math::fequals(0.0f, 1.0f) == false);
@@ -45,9 +45,9 @@ namespace LITL::Core::Tests
         {
             REQUIRE(LITL::Math::fequals(i, i) == true);
         }
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("isZero", "[math::general]")
+    LITL_TEST_CASE("isZero", "[math::general]")
     {
         REQUIRE(LITL::Math::isZero(0.0f) == true);
         REQUIRE(LITL::Math::isZero(0.0000001f) == true);
@@ -90,9 +90,9 @@ namespace LITL::Core::Tests
         {
             REQUIRE(LITL::Math::isZero(i - i) == true);
         }
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("isOne", "[math::general]")
+    LITL_TEST_CASE("isOne", "[math::general]")
     {
         REQUIRE(LITL::Math::isOne(1.0f) == true);
         REQUIRE(LITL::Math::isOne(1.000001f) == true);
@@ -130,9 +130,9 @@ namespace LITL::Core::Tests
         REQUIRE(LITL::Math::isOne(static_cast<uint32_t>(0)) == false);
         REQUIRE(LITL::Math::isOne(std::numeric_limits<uint32_t>::min()) == false);
         REQUIRE(LITL::Math::isOne(std::numeric_limits<uint32_t>::max()) == false);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("between", "[math::general]")
+    LITL_TEST_CASE("between", "[math::general]")
     {
         REQUIRE(LITL::Math::between(10.0f, 5.0f, 15.0f, true) == true);
         REQUIRE(LITL::Math::between(10.0f, 5.0f, 10.0f, true) == true);
@@ -187,9 +187,9 @@ namespace LITL::Core::Tests
         REQUIRE(LITL::Math::between(static_cast<uint64_t>(10), static_cast<uint64_t>(10), static_cast<uint64_t>(15), false) == false);
         REQUIRE(LITL::Math::between(static_cast<uint64_t>(10), static_cast<uint64_t>(5), static_cast<uint64_t>(10), false) == false);
         REQUIRE(LITL::Math::between(static_cast<uint64_t>(15), static_cast<uint64_t>(5), static_cast<uint64_t>(10), false) == false);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("pow", "[math::general]")
+    LITL_TEST_CASE("pow", "[math::general]")
     {
         // powf(float, float)
         REQUIRE(LITL::Math::fequals(LITL::Math::powf(0.0f, 0.0f), 1.0f));
@@ -268,12 +268,12 @@ namespace LITL::Core::Tests
         REQUIRE(LITL::Math::pow(5, 2u) == 25);
         REQUIRE(LITL::Math::pow(-5, 2u) == 25);
         REQUIRE(LITL::Math::pow(2, 8u) == 256);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("alignMemoryOffsetUp", "[math::general]")
+    LITL_TEST_CASE("alignMemoryOffsetUp", "[math::general]")
     {
         REQUIRE(LITL::Math::alignMemoryOffsetUp(13, 8) == 16);
         REQUIRE(LITL::Math::alignMemoryOffsetUp(16, 8) == 16);
         REQUIRE(LITL::Math::alignMemoryOffsetUp(17, 8) == 24);
-    }
+    } END_LITL_TEST_CASE
 }

@@ -1,11 +1,11 @@
-#include <catch2/catch_test_macros.hpp>
+#include "tests.hpp"
 #include <cstdint>
 
 #include "litl-core/containers/flatHashMap.hpp"
 
 namespace LITL::Core::Tests
 {
-    TEST_CASE("Basic Operation", "[core::containers::flatHashMap]")
+    LITL_TEST_CASE("Basic Operation", "[core::containers::flatHashMap]")
     {
         FlatHashMap<uint32_t, uint32_t> map{};
 
@@ -62,9 +62,9 @@ namespace LITL::Core::Tests
         REQUIRE(map.size() == 1);
         REQUIRE(map.erase(key0) == true);
         REQUIRE(map.size() == 0);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Clear", "[core::containers::flatHashMap]")
+    LITL_TEST_CASE("Clear", "[core::containers::flatHashMap]")
     {
         FlatHashMap<uint32_t, uint32_t> map{};
 
@@ -80,5 +80,5 @@ namespace LITL::Core::Tests
         REQUIRE(map.contains(1) == false);
         REQUIRE(map.contains(2) == false);
         REQUIRE(map.contains(3) == false);
-    }
+    } END_LITL_TEST_CASE
 }

@@ -1,4 +1,4 @@
-#include <catch2/catch_test_macros.hpp>
+#include "tests.hpp"
 #include "litl-core/job/jobPool.hpp"
 
 namespace LITL::Core::Tests
@@ -12,7 +12,7 @@ namespace LITL::Core::Tests
         }
     }
 
-    TEST_CASE("Single Job", "[core::job::jobPool]")
+    LITL_TEST_CASE("Single Job", "[core::job::jobPool]")
     {
         JobPool jobPool{ 1 };
         uint32_t jobsRun = 0;
@@ -24,9 +24,9 @@ namespace LITL::Core::Tests
         handle.job->func(handle.job);
 
         REQUIRE(jobsRun == 1);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Pool Reset", "[core::job::jobPool]")
+    LITL_TEST_CASE("Pool Reset", "[core::job::jobPool]")
     {
         JobPool jobPool{ 1 };
         uint32_t jobsRun = 0;
@@ -65,9 +65,9 @@ namespace LITL::Core::Tests
         handle2.job->func(handle2.job);
 
         REQUIRE(jobsRun == 3);
-    }
+    } END_LITL_TEST_CASE
 
-    TEST_CASE("Many Jobs", "[core::job::jobPool]")
+    LITL_TEST_CASE("Many Jobs", "[core::job::jobPool]")
     {
         // Allocate enough jobs to (a) exceed the number in the thread-local pools (1024 atm) and fill multiple pages of the global pool (1024 per global page atm)
         constexpr uint32_t jobsCount = JobPoolCount * 8;
@@ -119,5 +119,5 @@ namespace LITL::Core::Tests
         auto timeToRun1 = (endRun1 - startRun1);
 
         REQUIRE(jobsRun == jobsCount * 2);
-    }
+    } END_LITL_TEST_CASE
 }
