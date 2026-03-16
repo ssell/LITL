@@ -3,7 +3,6 @@
 #include <semaphore>
 #include <tuple>
 
-#include "litl-core/math/traits.hpp"
 #include "litl-core/job/jobFence.hpp"
 #include "litl-core/job/jobScheduler.hpp"
 
@@ -16,13 +15,15 @@ namespace LITL::Core
         std::binary_semaphore readySignal{ 0 };
     };
 
-    JobFence::JobFence()
+    JobFence::JobFence(JobPriority priority)
     {
-
+        m_impl->priority = priority;
     }
 
-    JobFence::JobFence(std::span<JobHandle> jobHandles)
+    JobFence::JobFence(std::span<JobHandle> jobHandles, JobPriority priority)
     {
+        m_impl->priority = priority;
+
         for (auto& handle : jobHandles)
         {
             add(handle);
@@ -42,12 +43,7 @@ namespace LITL::Core
         }
 
         handle.job->fence = this;
-        
-        if (m_impl->remaining.fetch_add(1, std::memory_order_acq_rel) == 0)
-        {
-            // Set the fence priority to match that of the first job added.
-            m_impl->priority = handle.job->priority;
-        }
+        m_impl->remaining.fetch_add(1, std::memory_order_acq_rel);
     }
 
     void JobFence::release(JobHandle handle) noexcept
@@ -63,7 +59,7 @@ namespace LITL::Core
         }
     }
 
-    bool JobFence::wait(JobScheduler* scheduler, uint32_t timeoutMs) noexcept
+    bool JobFence::wait(JobScheduler const& scheduler, uint32_t timeoutMs) noexcept
     {
         const auto timeoutNs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(timeoutMs));
         const auto start = std::chrono::steady_clock::now();
@@ -76,11 +72,11 @@ namespace LITL::Core
             // We pull only jobs that are the same priority level as the fence (and ideally as the jobs being fenced).
             // This is to prevent the fence from grabbing and blocking on a slower low priority background job
             // when all of it's fenced jobs are higher priority fast jobs.
-            auto handle = scheduler->acquireJob(m_impl->priority);
+            auto handle = scheduler.acquireJob(m_impl->priority);
 
             if (handle.has_value())
             {
-                scheduler->run((*handle));
+                scheduler.run((*handle));
             }
             else
             {
@@ -96,5 +92,10 @@ namespace LITL::Core
         }
 
         return !timedOut;
+    }
+
+    JobPriority JobFence::priority() const noexcept
+    {
+        return m_impl->priority;
     }
 }

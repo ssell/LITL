@@ -153,9 +153,22 @@ namespace LITL::Core
         return m_pImpl->jobPool.createJob(t_threadIndex, func, externalData);
     }
 
-    void JobScheduler::createAndSubmit(Job::JobFunc func, void* externalData, JobPriority priority) noexcept
+    void JobScheduler::createAndSubmit(Job::JobFunc func, JobPriority priority, void* externalData) noexcept
     {
         submit(create(func, externalData), priority);
+    }
+
+    void JobScheduler::createAndSubmit(Job::JobFunc func, JobFence& fence, void* externalData) noexcept
+    {
+        submit(create(func, externalData), fence);
+    }
+
+    void JobScheduler::submit(JobHandle handle, JobFence& fence) const noexcept
+    {
+        handle.job->fence = &fence;
+        fence.add(handle);
+
+        return submit(handle, fence.priority());
     }
 
     void JobScheduler::submit(JobHandle handle, JobPriority priority) const noexcept
@@ -315,7 +328,7 @@ namespace LITL::Core
             // Decrease the dependent's dependency count and if this was the last dependency, submit it to the scheduler.
             if (dependent.job->dependencyCount.fetch_sub(1, std::memory_order_acq_rel) == 1)
             {
-                submit(dependent);
+                submit(dependent, handle.job->priority);
             }
         }
 

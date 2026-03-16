@@ -1,3 +1,4 @@
+#include <atomic>
 #include <catch2/catch_test_macros.hpp>
 
 #include "litl-core/math/math.hpp"
@@ -10,12 +11,12 @@ namespace LITL::Core::Tests
     {
         struct JobData
         {
-            uint32_t runs;
+            std::atomic<uint32_t> runs;
         };
 
         struct SharedJobData
         {
-            uint32_t* ptr;
+            std::atomic<uint32_t>* ptr;
         };
 
         /// <summary>
@@ -23,16 +24,6 @@ namespace LITL::Core::Tests
         /// </summary>
         /// <param name="job"></param>
         void jobSharedDataTest(Job* job)
-        {
-            auto* jobsRun = static_cast<uint32_t*>(job->data);
-            (*jobsRun)++;
-        }
-
-        /// <summary>
-        /// Job using a shared atomic counter.
-        /// </summary>
-        /// <param name="job"></param>
-        void jobSharedAtomicDataTest(Job* job)
         {
             auto* jobsRun = static_cast<std::atomic<uint32_t>*>(job->data);
             jobsRun->fetch_add(1);
@@ -58,10 +49,9 @@ namespace LITL::Core::Tests
     TEST_CASE("CreateAndSubmit SharedData", "[core::job::jobScheduler]")
     {
         JobScheduler scheduler;
+        std::atomic<uint32_t> jobsRun{ 0 };
 
-        uint32_t jobsRun = 0;
-
-        scheduler.createAndSubmit(jobSharedDataTest, &jobsRun);
+        scheduler.createAndSubmit(jobSharedDataTest, JobPriority::Normal, &jobsRun);
 
         REQUIRE(scheduler.wait() == true);
         REQUIRE(jobsRun == 1);
@@ -70,11 +60,10 @@ namespace LITL::Core::Tests
     TEST_CASE("CreateAndSubmit LocalData", "[core::job::jobScheduler]")
     {
         JobScheduler scheduler;
+        std::atomic<uint32_t> jobsRun{ 0 };
+        SharedJobData data{ &jobsRun };   // atomics are not copyable or movable. but a pointer is
 
-        uint32_t jobsRun = 0;
-        SharedJobData data{ &jobsRun };
-
-        scheduler.createAndSubmit(jobLocalDataTest, data, nullptr);
+        scheduler.createAndSubmit(jobLocalDataTest, JobPriority::Normal, data, nullptr);
         REQUIRE(scheduler.wait() == true);
         REQUIRE(jobsRun == 1);
     }
@@ -84,7 +73,7 @@ namespace LITL::Core::Tests
         JobScheduler scheduler;
         JobData data{ 0 };
 
-        scheduler.createAndSubmit([&data]() { data.runs++; }, nullptr);
+        scheduler.createAndSubmit([&data](Job* job) { data.runs++; }, JobPriority::Normal, nullptr);
 
         REQUIRE(scheduler.wait() == true);
         REQUIRE(data.runs == 1);
@@ -93,8 +82,7 @@ namespace LITL::Core::Tests
     TEST_CASE("Job Dependency Chain", "[core::job::jobScheduler]")
     {
         JobScheduler scheduler;
-
-        uint32_t jobsRun = 0;
+        std::atomic<uint32_t> jobsRun{ 0 };
 
         auto handle0 = scheduler.create(jobSharedDataTest, &jobsRun);
         auto handle1 = scheduler.create(jobSharedDataTest, &jobsRun);
@@ -103,7 +91,7 @@ namespace LITL::Core::Tests
         scheduler.addDependency(handle1, handle0);
         scheduler.addDependency(handle2, handle1);
 
-        scheduler.submit(handle0);
+        scheduler.submit(handle0, JobPriority::Normal);
 
         REQUIRE(scheduler.wait() == true);
         REQUIRE(jobsRun == 3);      // handle0 runs which triggers handle1 which triggers handle2
@@ -114,7 +102,7 @@ namespace LITL::Core::Tests
         JobScheduler scheduler;
 
         std::vector<JobHandle> handles;
-        uint32_t jobsRun = 0;
+        std::atomic<uint32_t> jobsRun{ 0 };
 
         handles.push_back(scheduler.create(jobSharedDataTest, &jobsRun));
 
@@ -133,7 +121,7 @@ namespace LITL::Core::Tests
             }
         }
 
-        scheduler.submit(handles[0]);
+        scheduler.submit(handles[0], JobPriority::Normal);
 
         REQUIRE(scheduler.wait() == true);
         REQUIRE(jobsRun == (Job::JobMaxDependentsCount + 1));       // the original job and its max number of dependents
@@ -142,13 +130,13 @@ namespace LITL::Core::Tests
     TEST_CASE("Job Handle Validity", "[core::job::jobScheduler]")
     {
         JobScheduler scheduler;
-        uint32_t jobsRun = 0;
+        std::atomic<uint32_t> jobsRun{ 0 };
 
         auto handle0 = scheduler.create(jobSharedDataTest, &jobsRun);
 
         REQUIRE(scheduler.valid(handle0) == true);
 
-        scheduler.submit(handle0);
+        scheduler.submit(handle0, JobPriority::Normal);
 
         while (scheduler.jobCount() > 0) {};
 
@@ -167,12 +155,12 @@ namespace LITL::Core::Tests
 
         for (auto i = 0; i < jobCount; ++i)
         {
-            handles[i] = scheduler.create(jobSharedAtomicDataTest, &jobsRun);
+            handles[i] = scheduler.create(jobSharedDataTest, &jobsRun);
         }
 
         for (auto i = 0; i < jobCount; ++i)
         {
-            scheduler.submit(handles[i]);
+            scheduler.submit(handles[i], JobPriority::Normal);
         }
 
         REQUIRE(scheduler.wait() == true);
@@ -215,8 +203,9 @@ namespace LITL::Core::Tests
         JobFence fence;
 
         constexpr uint32_t jobCount = 1024;
+
         std::array<JobHandle, jobCount> handles;
-        uint32_t jobsRun = 0;
+        std::atomic<uint32_t> jobsRun = 0;
 
         for (auto i = 0; i < jobCount; ++i)
         {
@@ -228,10 +217,99 @@ namespace LITL::Core::Tests
 
         for (auto i = 0; i < jobCount; ++i)
         {
-            scheduler.submit(handles[i]);
+            scheduler.submit(handles[i], JobPriority::Normal);
         }
 
-        REQUIRE(scheduler.wait() == true);
+        REQUIRE(fence.wait(scheduler) == true);
         REQUIRE(jobsRun == jobCount);
+        REQUIRE(scheduler.wait() == true);
+    }
+
+    TEST_CASE("Wait Multi-Fence Loop", "[core::job::jobScheduler]")
+    {
+        JobScheduler scheduler;
+
+        constexpr uint32_t jobCount = 1024;
+        
+        for (auto i = 0; i < 10; ++i)
+        {
+            std::atomic<uint32_t> jobsRun{ 0 };
+            JobFence fence0{ JobPriority::High };
+            JobFence fence1{ JobPriority::Low };
+
+            for (auto j = 0; j < jobCount; ++j)
+            {
+                if ((j % 2) == 0)
+                {
+                    scheduler.createAndSubmit(jobSharedDataTest, fence0, &jobsRun);
+                }
+                else
+                {
+                    scheduler.createAndSubmit(jobSharedDataTest, fence1, &jobsRun);
+                }
+            }
+
+            REQUIRE(fence0.wait(scheduler) == true);
+            REQUIRE(fence1.wait(scheduler) == true);
+            REQUIRE(scheduler.wait() == true);
+            REQUIRE(jobsRun == jobCount);
+        }
+    }
+
+    TEST_CASE("Create Submit All Variants", "[core::job::jobScheduler]")
+    {
+        JobScheduler scheduler;
+        JobFence fence;
+        std::atomic<uint32_t> jobsRun_shared{ 0 };
+        SharedJobData jobsRun_localCopyShared{ &jobsRun_shared };   // atomics are not copyable or movable. but a pointer is
+
+        // create using: function pointer + optional shared data
+        // create(Job::JobFunc func, void* externalData)
+        auto handle0 = scheduler.create(jobSharedDataTest, &jobsRun_shared);
+        scheduler.submit(handle0, JobPriority::Normal);
+
+        
+        // create using: function pointer + local data copy + optional shared data
+        // create(Job::JobFunc func, T& jobLocalData, void* externalData)
+        auto handle1 = scheduler.create(jobLocalDataTest, jobsRun_localCopyShared, nullptr);
+        scheduler.submit(handle1, JobPriority::Normal);
+
+        // create and submit using: function pointer + priority level + optional shared data
+        // createAndSubmit(Job::JobFunc func, JobPriority priority, void* externalData)
+        scheduler.createAndSubmit(jobSharedDataTest, JobPriority::Normal, &jobsRun_shared);
+
+        // create and submit using: function pointer + fence + optional shared data
+        // createAndSubmit(Job::JobFunc func, JobFence& fence, void* externalData)
+        scheduler.createAndSubmit(jobSharedDataTest, fence, &jobsRun_shared);
+
+        // create and submit using: function pointer + priority + local data copy + optional shared data
+        // createAndSubmit(Job::JobFunc func, JobPriority priority, T& jobLocalData, void* externalData)
+        scheduler.createAndSubmit(jobLocalDataTest, JobPriority::Normal, jobsRun_localCopyShared, nullptr);
+
+        // create and submit using: function pointer + fence + local data copy + optional shared data
+        // createAndSubmit(Job::JobFunc func, JobFence& fence, T& jobLocalData, void* externalData)
+        scheduler.createAndSubmit(jobLocalDataTest, fence, jobsRun_localCopyShared, nullptr);
+
+        // create using: lambda + optional shared data
+        // create(F&& func, void* externalData)
+        auto handle2 = scheduler.create_lambda([](Job* job) {
+                static_cast<std::atomic<uint32_t>*>(job->data)->fetch_add(1); 
+            }, &jobsRun_shared);
+        scheduler.submit(handle2, JobPriority::Normal);
+
+        // create and submit using: lambda + priority + optional shared data
+        // createAndSubmit(F&& func, JobPriority priority, void* externalData)
+        scheduler.createAndSubmit([](Job* job) { 
+                static_cast<std::atomic<uint32_t>*>(job->data)->fetch_add(1); 
+            }, JobPriority::Normal, &jobsRun_shared);
+
+        // create and submit using: lambda + fence + optional shared data
+        // createAndSubmit(F&& func, JobFence& fence, void* externalData)
+        scheduler.createAndSubmit([](Job* job) { 
+                static_cast<std::atomic<uint32_t>*>(job->data)->fetch_add(1); 
+            }, fence, &jobsRun_shared);
+
+        REQUIRE(fence.wait(scheduler) == true);
+        REQUIRE(scheduler.wait() == true);
     }
 }

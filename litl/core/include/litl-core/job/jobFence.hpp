@@ -23,8 +23,8 @@ namespace LITL::Core
     {
     public:
 
-        JobFence();
-        explicit JobFence(std::span<JobHandle> jobHandles);
+        explicit JobFence(JobPriority priority = JobPriority::Normal);
+        explicit JobFence(std::span<JobHandle> jobHandles, JobPriority priority = JobPriority::Normal);
         ~JobFence();
 
         /// <summary>
@@ -48,7 +48,13 @@ namespace LITL::Core
         /// <param name="scheduler"></param>
         /// <param name="timeoutMs"></param>
         /// <returns>True if done waiting without timing out. False if timed out.</returns>
-        bool wait(JobScheduler* scheduler, uint32_t timeoutMs = 1000) noexcept;
+        bool wait(JobScheduler const& scheduler, uint32_t timeoutMs = 1000) noexcept;
+
+        /// <summary>
+        /// Returns the fence priority level.
+        /// </summary>
+        /// <returns></returns>
+        JobPriority priority() const noexcept;
 
     protected:
 
