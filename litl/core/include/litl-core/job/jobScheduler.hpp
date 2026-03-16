@@ -27,6 +27,10 @@ namespace LITL::Core
         JobScheduler& operator=(JobScheduler const&) = delete;
         ~JobScheduler();
 
+        // ---------------------------------------------------------------------------------
+        // Function Pointers (optional local data, optional shared data)
+        // ---------------------------------------------------------------------------------
+
         /// <summary>
         /// Allocates a Job with the provided optional external data.
         /// 
@@ -38,8 +42,8 @@ namespace LITL::Core
         /// <param name="func"></param>
         /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
         /// <returns></returns>
-        JobHandle create(Job::JobFunc func, void* externalData = nullptr) noexcept;
-        
+        JobHandle create(Job::JobFunc func, void* externalData) noexcept;
+
         /// <summary>
         /// Allocates a Job with the provided Job-local data (which will be copied) and optional external data.
         /// 
@@ -53,8 +57,8 @@ namespace LITL::Core
         /// <param name="jobLocalData"></param>
         /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
         /// <returns></returns>
-        template<typename T>
-        JobHandle create(Job::JobFunc func, T& jobLocalData, void* externalData = nullptr) noexcept
+        template<typename T> requires (sizeof(T) <= sizeof(Job::localData)) && std::is_trivially_copyable_v<T>
+        JobHandle create(Job::JobFunc func, T& jobLocalData, void* externalData) noexcept
         {
             static_assert(sizeof(T) <= sizeof(Job::localData));
 
@@ -65,6 +69,56 @@ namespace LITL::Core
         }
 
         /// <summary>
+        /// Allocates a Job with the provided optional external data.
+        /// The new Job is immediately submitted to the internal scheduler to be run.
+        /// </summary>
+        /// <param name="func"></param>
+        /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
+        void createAndSubmit(Job::JobFunc func, JobPriority priority, void* externalData) noexcept;
+
+        /// <summary>
+        /// Allocates a Job with the provided optional external data.
+        /// The new Job is immediately submitted to the internal scheduler to be run.
+        /// When a fence is provided, the job uses the priority level of the fence.
+        /// </summary>
+        /// <param name="func"></param>
+        /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
+        void createAndSubmit(Job::JobFunc func, JobFence& fence, void* externalData) noexcept;
+
+        /// <summary>
+        /// Allocates a Job with the provided Job-local data (which will be copied) and optional external data.
+        /// The new Job is immediately submitted to the internal scheduler to be run.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="func"></param>
+        /// <param name="jobLocalData"></param>
+        /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
+        template<typename T> requires (sizeof(T) <= sizeof(Job::localData)) && std::is_trivially_copyable_v<T>
+        void createAndSubmit(Job::JobFunc func, JobPriority priority, T& jobLocalData, void* externalData) noexcept
+        {
+            submit(create(func, std::forward<T&>(jobLocalData), externalData), priority);
+        }
+
+        /// <summary>
+        /// Allocates a Job with the provided Job-local data (which will be copied) and optional external data.
+        /// The new Job is immediately submitted to the internal scheduler to be run.
+        /// When a fence is provided, the job uses the priority level of the fence.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="func"></param>
+        /// <param name="jobLocalData"></param>
+        /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
+        template<typename T> requires (sizeof(T) <= sizeof(Job::localData)) && std::is_trivially_copyable_v<T>
+        void createAndSubmit(Job::JobFunc func, JobFence& fence, T& jobLocalData, void* externalData) noexcept
+        {
+            submit(create(func, jobLocalData, externalData), fence);
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Lambda Functions (no local data, optional shared data)
+        // ---------------------------------------------------------------------------------
+
+        /// <summary>
         /// Convenience allowing for Job creation via a Lambda.
         /// The lambda is still expected to have the Job::JobFunc signature.
         /// </summary>
@@ -73,9 +127,9 @@ namespace LITL::Core
         /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
         /// <returns></returns>
         template<typename F> requires (sizeof(F) <= sizeof(Job::localData)) && std::is_trivially_destructible_v<F>
-        JobHandle create(F&& func, void* externalData)
+        JobHandle create_lambda(F&& func, void* externalData) noexcept
         {
-            JobHandle handle = create(nullptr);
+            JobHandle handle = create(nullptr, nullptr);
 
             // Store the lambda in the job local buffer
             new (handle.job->localData) std::remove_cvref_t<F>(std::forward<F>(func));
@@ -86,32 +140,10 @@ namespace LITL::Core
                 {
                     void* localData = static_cast<void*>(job->localData);
                     auto& callable = *static_cast<std::remove_cvref_t<F>*>(localData);
-                    callable();
+                    callable(job);
                 };
 
             return handle;
-        }
-
-        /// <summary>
-        /// Allocates a Job with the provided optional external data.
-        /// The new Job is immediately submitted to the internal scheduler to be run.
-        /// </summary>
-        /// <param name="func"></param>
-        /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
-        void createAndSubmit(Job::JobFunc func, void* externalData = nullptr, JobPriority priority = JobPriority::Normal) noexcept;
-
-        /// <summary>
-        /// Allocates a Job with the provided Job-local data (which will be copied) and optional external data.
-        /// The new Job is immediately submitted to the internal scheduler to be run.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="func"></param>
-        /// <param name="jobLocalData"></param>
-        /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
-        template<typename T>
-        void createAndSubmit(Job::JobFunc func, T& jobLocalData, void* externalData = nullptr, JobPriority priority = JobPriority::Normal) noexcept
-        {
-            submit(create(func, jobLocalData, externalData), priority);
         }
 
         /// <summary>
@@ -122,17 +154,41 @@ namespace LITL::Core
         /// <param name="func"></param>
         /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
         template<typename F> requires (sizeof(F) <= sizeof(Job::localData)) && std::is_trivially_destructible_v<F>
-        void createAndSubmit(F&& func, void* externalData, JobPriority priority = JobPriority::Normal)
+        void createAndSubmit(F&& func, JobPriority priority, void* externalData) noexcept
         {
-            submit(create(func, externalData), priority);
+            submit(create_lambda(func, externalData), priority);
         }
+
+        /// <summary>
+        /// Convenience allowing for Job creation via a Lambda.
+        /// The lambda is still expected to have the Job::JobFunc signature.
+        /// </summary>
+        /// <typeparam name="F"></typeparam>
+        /// <param name="func"></param>
+        /// <param name="externalData">Pointer to externally provided data. Caller is responsible for ensuring the pointer is valid for the lifetime of the Job.</param>
+        template<typename F> requires (sizeof(F) <= sizeof(Job::localData)) && std::is_trivially_destructible_v<F>
+        void createAndSubmit(F&& func, JobFence& fence, void* externalData) noexcept
+        {
+            submit(create_lambda(func, externalData), fence);
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Submit
+        // ---------------------------------------------------------------------------------
 
         /// <summary>
         /// Submits a Job to be run.
         /// There is no guarantee of when the job is run.
         /// </summary>
         /// <param name="job"></param>
-        void submit(JobHandle handle, JobPriority priority = JobPriority::Normal) const noexcept;
+        void submit(JobHandle handle, JobPriority priority) const noexcept;
+
+        /// <summary>
+        /// Submits the job and adds it to the specified fence.
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <param name="fence"></param>
+        void submit(JobHandle handle, JobFence& fence) const noexcept;
 
         /// <summary>
         /// Marks that the specified Job is dependent on another.
