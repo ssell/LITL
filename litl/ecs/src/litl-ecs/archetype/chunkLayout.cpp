@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <stdexcept>
 
 #include "litl-core/math/math.hpp"
 #include "litl-ecs/archetype/chunkLayout.hpp"
@@ -82,8 +81,6 @@ namespace LITL::ECS
                 return;
             }
         }
-
-        throw std::runtime_error("Requested component index from Chunk that does not contain requested component type.");
     }
 
     void populateChunkLayout(ChunkLayout* layout, std::span<ComponentTypeId const> orderedComponentTypes)

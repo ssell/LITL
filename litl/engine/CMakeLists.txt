@@ -20,7 +20,8 @@ target_compile_features(litl-engine
 		cxx_std_20
 )
 
-target_compile_options(litl-engine PRIVATE 
-	$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-fno-rtti>
-    $<$<CXX_COMPILER_ID:MSVC>:/GR->
-)
+if (MSVC)
+	target_compile_options(litl-engine PRIVATE /EHs-c- /D_HAS_EXCEPTIONS=0 /GR-)
+else()
+	target_compile_options(litl-engine PRIVATE -fno-exceptions -fno-rtti)
+endif()

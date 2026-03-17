@@ -44,7 +44,9 @@ target_compile_features(litl-renderer-vulkan
 		cxx_std_20
 )
 
-target_compile_options(litl-renderer-vulkan PRIVATE 
-	$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-fno-rtti>
-    $<$<CXX_COMPILER_ID:MSVC>:/GR->
-)
+
+if (MSVC)
+	target_compile_options(litl-renderer-vulkan PRIVATE /EHs-c- /D_HAS_EXCEPTIONS=0 /GR-)
+else()
+	target_compile_options(litl-renderer-vulkan PRIVATE -fno-exceptions -fno-rtti)
+endif()

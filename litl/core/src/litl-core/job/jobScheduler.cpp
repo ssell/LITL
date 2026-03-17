@@ -296,23 +296,12 @@ namespace LITL::Core
 
     void JobScheduler::run(JobHandle handle) const noexcept
     {
-        try
+        // Note we only check validty for executing the job function.
+        // Validity does not matter for any of the following steps (dependencies and fences).
+        // We _want_ to clear away dependencies and fences for invalid jobs to avoid deadlocks, etc.
+        if (valid(handle))
         {
-            // Note we only check validty for executing the job function.
-            // Validity does not matter for any of the following steps (dependencies and fences).
-            // We _want_ to clear away dependencies and fences for invalid jobs to avoid deadlocks, etc.
-            if (valid(handle))
-            {
-                handle.job->func(handle.job);
-            }
-        }
-        catch (std::exception e)
-        {
-            LITL_LOG_ERROR_CAPTURE("Caught unhandled exception running Job. Exception: ", e.what());
-        }
-        catch (...)
-        {
-            LITL_LOG_ERROR_CAPTURE("Caught unhandled non-standard exception running Job.");
+            handle.job->func(handle.job);
         }
 
         // Signal to any dependents that this job is completed

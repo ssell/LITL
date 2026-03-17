@@ -3,7 +3,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <stdexcept>
 #include <vector>
 
 namespace LITL::Core
@@ -106,19 +105,16 @@ namespace LITL::Core
 
         T& operator[](size_t i)
         {
-            if (i >= m_size) throw std::out_of_range("PagedVector");
             return *getElementPtr(i);
         }
 
         T const& operator[](size_t i) const
         {
-            if (i >= m_size) throw std::out_of_range("PagedVector");
             return *getElementPtr(i);
         }
 
         T& at(size_t i)
         {
-            if (i >= m_size) throw std::out_of_range("PagedVector");
             return *getElementPtr(i);
         }
 
