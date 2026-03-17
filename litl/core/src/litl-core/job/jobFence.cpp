@@ -1,8 +1,8 @@
 #include <atomic>
 #include <chrono>
-#include <semaphore>
 #include <tuple>
 
+#include "litl-core/thread.hpp"
 #include "litl-core/job/jobFence.hpp"
 #include "litl-core/job/jobScheduler.hpp"
 
@@ -12,7 +12,6 @@ namespace LITL::Core
     {
         JobPriority priority;
         std::atomic<int32_t> remaining{ 0 };
-        std::binary_semaphore readySignal{ 0 };
     };
 
     JobFence::JobFence(JobPriority priority)
@@ -43,7 +42,7 @@ namespace LITL::Core
         }
 
         handle.job->fence = this;
-        m_impl->remaining.fetch_add(1, std::memory_order_acq_rel);
+        std::ignore = m_impl->remaining.fetch_add(1, std::memory_order_acq_rel);
     }
 
     void JobFence::release(JobHandle handle) noexcept
@@ -53,20 +52,18 @@ namespace LITL::Core
             return;
         }
 
-        if (m_impl->remaining.fetch_sub(1, std::memory_order_acq_rel) == 1)
-        {
-            m_impl->readySignal.release();
-        }
+        std::ignore = m_impl->remaining.fetch_sub(1, std::memory_order_acq_rel);
     }
 
     bool JobFence::wait(JobScheduler const& scheduler, uint32_t timeoutMs) noexcept
     {
+        ThreadSpin spinner;
+
         const auto timeoutNs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(timeoutMs));
         const auto start = std::chrono::steady_clock::now();
         auto timedOut = false;
 
-
-        while (m_impl->remaining.load(std::memory_order_acquire) > 0)
+        while (m_impl->remaining > 0)
         {
             // Perform a productive wait and try to process a job on this thread that is waiting.
             // We pull only jobs that are the same priority level as the fence (and ideally as the jobs being fenced).
@@ -77,11 +74,11 @@ namespace LITL::Core
             if (handle.has_value())
             {
                 scheduler.run((*handle));
+                spinner.reset();
             }
             else
             {
-                // No job to run (well, our steal failed). Wait and try again.
-                std::ignore = m_impl->readySignal.try_acquire_for(std::chrono::microseconds(50));
+                spinner.spin();
             }
 
             if ((timeoutMs > 0) && ((std::chrono::steady_clock::now() - start) > timeoutNs))

@@ -78,9 +78,6 @@ namespace LITL::Core::Tests
     {
         PagedVector<uint32_t> vector(32);
 
-        REQUIRE_THROWS(vector.front());
-        REQUIRE_THROWS(vector.back());
-
         vector.push_back(1);
 
         REQUIRE(vector.front() == vector.back());

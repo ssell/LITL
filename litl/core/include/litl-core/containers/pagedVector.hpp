@@ -1,6 +1,7 @@
 #ifndef LITL_CORE_CONTAINERS_PAGED_VECTOR_H__
 #define LITL_CORE_CONTAINERS_PAGED_VECTOR_H__
 
+#include <cassert>
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -105,11 +106,13 @@ namespace LITL::Core
 
         T& operator[](size_t i)
         {
+            assert(m_size > i);
             return *getElementPtr(i);
         }
 
         T const& operator[](size_t i) const
         {
+            assert(m_size > i);
             return *getElementPtr(i);
         }
 
