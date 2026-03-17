@@ -24,7 +24,8 @@ target_compile_features(litl-ecs
 		cxx_std_20
 )
 
-target_compile_options(litl-ecs PRIVATE 
-	$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-fno-rtti>
-    $<$<CXX_COMPILER_ID:MSVC>:/GR->
-)
+if (MSVC)
+	target_compile_options(litl-ecs PRIVATE /EHs-c- /D_HAS_EXCEPTIONS=0 /GR-)
+else()
+	target_compile_options(litl-ecs PRIVATE -fno-exceptions -fno-rtti)
+endif()
