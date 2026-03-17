@@ -228,9 +228,9 @@ namespace LITL::Core::Tests
     {
         JobScheduler scheduler;
 
-        constexpr uint32_t jobCount = 1024;
+        constexpr uint32_t jobCount = 100;
         
-        for (auto i = 0; i < 10; ++i)
+        for (auto i = 0; i < 100; ++i)
         {
             std::atomic<uint32_t> jobsRun{ 0 };
             JobFence fence0{ JobPriority::High };
