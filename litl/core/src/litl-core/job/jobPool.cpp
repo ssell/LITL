@@ -37,7 +37,9 @@ namespace LITL::Core
             }
 
             // The buffer is already allocated, just instantiate a new job inside it.
-            auto* job = new (m_buffer + m_currOffset) Job { .version = version };
+            //auto* job = new (m_buffer + m_currOffset) Job { .version = version };
+            Job* job = std::construct_at(reinterpret_cast<Job*>(m_buffer + m_currOffset));
+            job->version = version;
 
             m_currOffset += sizeof(Job);
 
@@ -88,7 +90,8 @@ namespace LITL::Core
             if ((offset + sizeof(Job)) <= JobPoolBufferSize)
             {
                 // Room in the current block, so allocate from there.
-                job = new (block->buffer + offset) Job{ .version = version };
+                //job = new (block->buffer + offset) Job{ .version = version };
+                job = std::construct_at(reinterpret_cast<Job*>(block->buffer + offset));
             }
             else
             {
@@ -103,8 +106,11 @@ namespace LITL::Core
                 block = m_blocks[blockIndex].get();
                 block->currOffset.store(sizeof(Job), std::memory_order_relaxed);
 
-                job = new (block->buffer + 0) Job{ .version = version };
+                //job = new (block->buffer + 0) Job{ .version = version };
+                job = std::construct_at(reinterpret_cast<Job*>(block->buffer));
             }
+
+            job->version = version;
 
             return job;
         }
