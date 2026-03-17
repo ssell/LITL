@@ -93,6 +93,8 @@ Worker Run:
     No jobs stolen, then sleep for 50 microseconds or until awoken by scheduler.
 ```
 
+Steals are done to a randomly selected Worker in order to avoid contention on the top (tail) of the deques. While a cold-start may see a disproportionate number of Jobs belonging to a single Worker (due to a main thread kicking things off), the workload quickly spreads out over all Workers as Jobs are stolen. When those Jobs are stolen, any further Jobs that they spawn directly or indirectly (via dependents) will be submitted to the thief Worker. Thus over a short period of time the optimal case for scanning, if contention is ignored, is no longer valid.
+
 If a job was successfully popped or stolen, then:
 
 ```
@@ -117,6 +119,8 @@ When a fence or the scheduler is waiting, it performs work on the waiting thread
 
 * `JobFence::wait` - blocks until the individual jobs added to the fence are complete.
 * `JobScheduler::wait` - blocks until _all_ jobs are complete.
+
+Both the `JobFence` and `JobScheduler` use a progressive backoff via `LITL::Core::ThreadSpin` if/when a steal fails and there are still jobs in progress.
 
 ## Deque
 

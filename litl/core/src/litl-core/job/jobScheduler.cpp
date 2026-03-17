@@ -3,6 +3,7 @@
 #include <thread>
 
 #include "litl-core/alignment.hpp"
+#include "litl-core/thread.hpp"
 #include "litl-core/math/math.hpp"
 #include "litl-core/math/random.hpp"
 #include "litl-core/logging/logging.hpp"
@@ -42,11 +43,6 @@ namespace LITL::Core
         /// No idea what this is.
         /// </summary>
         std::vector<std::unique_ptr<Worker>> workers;
-
-        /// <summary>
-        /// Signals when the scheduler is done processing all queued jobs.
-        /// </summary>
-        std::binary_semaphore busySignal{ 1 };
     };
 
     struct alignas(CacheLineSize) JobScheduler::Worker
@@ -192,12 +188,7 @@ namespace LITL::Core
         // Push to the worker associated with this thread. If this is from an external thread then push to worker 0.
         const uint32_t workerIndex = (t_threadIndex < m_pImpl->workers.size() ? t_threadIndex : 0);
 
-        if (m_pImpl->jobCount.fetch_add(1, std::memory_order_acq_rel) == 0)
-        {
-            // Scheduler was empty. Is no longer.
-            m_pImpl->busySignal.acquire();
-        }
-
+        std::ignore = m_pImpl->jobCount.fetch_add(1, std::memory_order_acq_rel);
         m_pImpl->workers[workerIndex]->deques[static_cast<uint32_t>(handle.job->priority)].push(handle);
 
         // Check all workers for an idle one.
@@ -325,15 +316,13 @@ namespace LITL::Core
             handle.job->fence->release(handle);
         }
 
-        if (m_pImpl->jobCount.fetch_sub(1, std::memory_order_acq_rel) == 1)
-        {
-            // Scheduler is now out of jobs.
-            m_pImpl->busySignal.release();
-        }
+        std::ignore = m_pImpl->jobCount.fetch_sub(1, std::memory_order_acq_rel);
     }
 
     bool JobScheduler::wait(uint32_t timeoutMs) const noexcept
     {
+        ThreadSpin spinner;
+
         const auto start = std::chrono::steady_clock::now();
         const auto timeoutNs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(timeoutMs));
         bool timedOut = false;
@@ -348,10 +337,11 @@ namespace LITL::Core
             if (handle.has_value())
             {
                 run((*handle));
+                spinner.reset();
             }
             else
             {
-                std::ignore = m_pImpl->busySignal.try_acquire_for(std::chrono::microseconds(50));
+                spinner.spin();
             }
 
             if ((timeoutMs > 0) && ((std::chrono::steady_clock::now() - start) >= timeoutNs))
