@@ -7,6 +7,7 @@
 
 #include "litl-core/alignment.hpp"
 #include "litl-core/job/jobPriority.hpp"
+#include "litl-core/job/jobHandle.hpp"
 
 namespace LITL::Core
 {
@@ -40,33 +41,6 @@ namespace LITL::Core
         /// </summary>
         Complete = 4
     };
-
-    /// <summary>
-    /// Handle to a job instance. 
-    /// 
-    /// This should be used instead of a raw Job pointer as the JobPool recycles jobs when they are released. 
-    /// A raw Job pointer may be pointing to an invalidated/out-of-date job instance and the user may not even know it.
-    /// </summary>
-    struct JobHandle
-    {
-        /// <summary>
-        /// The job instance pointed to by this handle.
-        /// </summary>
-        Job* job = nullptr;
-
-        /// <summary>
-        /// The version of the pointed job that this handle is valid for.
-        /// If the handle version is not equal to the job version, or the owning scheduler version, then the handle is out of date.
-        /// </summary>
-        uint32_t version = 0;
-
-        /// <summary>
-        /// Is the job pointed to by this handle still valid? If not, it should not be run.
-        /// </summary>
-        /// <returns></returns>
-        bool valid(uint32_t schedulerVersion) const noexcept;
-    };
-
 
     // Note: currently spans 4 cache lines (2 on m-series chips) 
     // can reduce to two (or 1 on m-series) by: reducing buffer to 48 (from 64) and max dependent count to 6 (from 12)

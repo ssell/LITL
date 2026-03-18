@@ -61,6 +61,13 @@ namespace LITL::Core
         /// <returns></returns>
         [[nodiscard]] uint32_t version() const noexcept;
 
+        /// <summary>
+        /// Returns the job associated with the handle.
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <returns></returns>
+        Job* resolve(JobHandle handle) const noexcept;
+
     protected:
 
     private:

@@ -9,16 +9,8 @@ namespace LITL::Core::Tests
         {
             JobHandleWrapper()
             {
-                handle.job = new Job();
-            }
-
-            ~JobHandleWrapper()
-            {
-                if (handle.job != nullptr)
-                {
-                    delete handle.job;
-                    handle.job = nullptr;
-                }
+                static uint32_t JobIndex = 0;
+                handle = { 0, JobIndex++ };
             }
 
             JobHandle handle;
@@ -70,19 +62,19 @@ namespace LITL::Core::Tests
 
         REQUIRE(deque.size() == 2);
         REQUIRE(fetched.has_value());
-        REQUIRE((*fetched).job == handle2.handle.job);
+        REQUIRE((*fetched) == handle2.handle);
 
         fetched = deque.pop();
 
         REQUIRE(deque.size() == 1);
         REQUIRE(fetched.has_value());
-        REQUIRE((*fetched).job == handle1.handle.job);
+        REQUIRE((*fetched) == handle1.handle);
 
         fetched = deque.pop();
 
         REQUIRE(deque.size() == 0);
         REQUIRE(fetched.has_value());
-        REQUIRE((*fetched).job == handle0.handle.job);
+        REQUIRE((*fetched) == handle0.handle);
 
         fetched = deque.pop();
 
@@ -116,19 +108,19 @@ namespace LITL::Core::Tests
 
         REQUIRE(deque.size() == 2);
         REQUIRE(fetched.has_value());
-        REQUIRE((*fetched).job == handle0.handle.job);
+        REQUIRE((*fetched) == handle0.handle);
 
         fetched = deque.steal();
 
         REQUIRE(deque.size() == 1);
         REQUIRE(fetched.has_value());
-        REQUIRE((*fetched).job == handle1.handle.job);
+        REQUIRE((*fetched) == handle1.handle);
 
         fetched = deque.steal();
 
         REQUIRE(deque.size() == 0);
         REQUIRE(fetched.has_value());
-        REQUIRE((*fetched).job == handle2.handle.job);
+        REQUIRE((*fetched) == handle2.handle);
 
         fetched = deque.steal();
 
@@ -183,7 +175,7 @@ namespace LITL::Core::Tests
         {
             auto handle = deque.pop();
 
-            if (handle.value().job == nullptr)
+            if (handle.value().isNull())
             {
                 anyNull = true;
             }

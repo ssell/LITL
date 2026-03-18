@@ -7,17 +7,20 @@ namespace LITL::Core::Tests
     {
         Job job;
         JobHandle handle0;
-        JobHandle handle1;
+        JobHandle handle1(6, 1337);
 
-        REQUIRE(handle0.job == nullptr);
+        REQUIRE(handle0.isNull() == true);
+        REQUIRE(handle1.isNull() == false);
 
-        handle0.job = &job;
+        REQUIRE(handle0.pool() == 0);
+        REQUIRE(handle0.job() == 0);
 
-        REQUIRE(handle0.job != nullptr);
+        REQUIRE(handle1.pool() == 6);
+        REQUIRE(handle1.job() == 1337);
 
-        handle1 = handle0;
+        handle0 = handle1;
 
-        REQUIRE(handle1.job == handle0.job);
-        REQUIRE(handle1.job == &job);
+        REQUIRE(handle0.pool() == 6);
+        REQUIRE(handle0.job() == 1337);
     } END_LITL_TEST_CASE
 }

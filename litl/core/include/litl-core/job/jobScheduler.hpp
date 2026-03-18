@@ -63,7 +63,9 @@ namespace LITL::Core
             static_assert(sizeof(T) <= sizeof(Job::localData));
 
             JobHandle handle = create(func, externalData);
-            new (handle.job->localData) T(jobLocalData);
+            Job* job = resolve(handle);
+
+            new (job->localData) T(jobLocalData);
 
             return handle;
         }
@@ -130,13 +132,14 @@ namespace LITL::Core
         JobHandle create_lambda(F&& func, void* externalData) noexcept
         {
             JobHandle handle = create(nullptr, nullptr);
+            Job* job = resolve(handle);
 
             // Store the lambda in the job local buffer
-            new (handle.job->localData) std::remove_cvref_t<F>(std::forward<F>(func));
+            new (job->localData) std::remove_cvref_t<F>(std::forward<F>(func));
 
             // Set the job function as invoking the lambda.
-            handle.job->data = externalData;
-            handle.job->func = [](Job* job)
+            job->data = externalData;
+            job->func = [](Job* job)
                 {
                     void* localData = static_cast<void*>(job->localData);
                     auto& callable = *static_cast<std::remove_cvref_t<F>*>(localData);
@@ -217,6 +220,13 @@ namespace LITL::Core
         uint32_t workerCount() const noexcept;
 
         /// <summary>
+        /// Resolves the job referred to by the handle.
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <returns></returns>
+        Job* resolve(JobHandle handle) const noexcept;
+
+        /// <summary>
         /// Returns if the handle is still valid.
         /// </summary>
         /// <param name="handle"></param>
@@ -228,7 +238,7 @@ namespace LITL::Core
         /// Waits for all jobs to be completed and then resets the underlying job pool.
         /// </summary>
         /// <returns>True if done waiting without timing out. False if timed out.</returns>
-        bool wait(uint32_t timeoutMs = 5000) const noexcept;
+        bool wait(uint32_t timeoutMs = 1000) const noexcept;
 
     protected:
 

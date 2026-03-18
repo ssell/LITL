@@ -24,10 +24,17 @@ namespace LITL::Math
         uint_fast32_t operator()() noexcept;
 
         /// <summary>
-        /// Generates the next random value on the range [::min(), ::max()].
+        /// Generates the next random value on the range [0, ::max()].
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] uint_fast32_t next() noexcept;
+
+        /// <summary>
+        /// Generates the next random value on the range [0, max)
+        /// </summary>
+        /// <param name="max"></param>
+        /// <returns></returns>
+        [[nodiscard]] uint_fast32_t next(uint_fast32_t max) noexcept;
 
         /// <summary>
         /// Advances the PRNG the specified number of steps.
