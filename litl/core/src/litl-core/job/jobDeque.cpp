@@ -1,3 +1,4 @@
+#include <cassert>
 #include <vector>
 
 #include "litl-core/math/math.hpp"
@@ -18,30 +19,30 @@ namespace LITL::Core
     /// </summary>
     struct JobDeque::RingBuffer
     {
-        explicit RingBuffer(size_t capacity = DefaultCapacity)
+        explicit RingBuffer(uint32_t capacity = DefaultCapacity)
             : mask(capacity - 1), jobs(capacity)
         {
-
+            assert(Math::isPow2(capacity));
         }
 
-        JobHandle& operator[](size_t index)
+        JobHandle& operator[](uint32_t index)
         {
             return jobs[index & mask];
         }
 
-        size_t capacity() const noexcept
+        uint32_t capacity() const noexcept
         {
             return jobs.size();
         }
 
-        RingBuffer* grow(size_t bottom, size_t top)
+        RingBuffer* grow(uint32_t bottom, uint32_t top)
         {
             // Note we intentionally do not delete here (or in the caller directly).
             // "old" ring buffers may still be in used by other threads so a direct
             // delete at this point is unsafe. Instead a custom garbage collector is used.
             auto* newBuffer = new RingBuffer(capacity() * 2);
 
-            for (size_t i = top; i < bottom; ++i)
+            for (uint32_t i = top; i < bottom; ++i)
             {
                 (*newBuffer)[i] = (*this)[i];
             }
@@ -57,7 +58,7 @@ namespace LITL::Core
         /// This also allows for no changes to the referenced indices when the buffer is grown
         /// as the same indices (and their ranges) are valid between buffer sizes.
         /// </summary>
-        const size_t mask;
+        const uint32_t mask;
         std::vector<JobHandle> jobs;
     };
 
@@ -100,8 +101,7 @@ namespace LITL::Core
 
         // Store the job at the bottom index and then increment it.
         (*ringBuffer)[bottomIndex] = job;
-        std::atomic_thread_fence(std::memory_order_release);
-        m_bottom.store(bottomIndex + 1, std::memory_order_relaxed);
+        m_bottom.store(bottomIndex + 1, std::memory_order_release);
     }
 
     std::optional<JobHandle> JobDeque::pop() noexcept
@@ -180,7 +180,7 @@ namespace LITL::Core
         // If there is more than one item in the buffer
         if (topIndex < bottomIndex)
         {
-            auto* ringBuffer = m_pBuffer.load(std::memory_order_consume);
+            auto* ringBuffer = m_pBuffer.load(std::memory_order_acquire);
             handle = (*ringBuffer)[topIndex];
 
             // Attempt to take the item
@@ -205,7 +205,8 @@ namespace LITL::Core
 
     uint32_t JobDeque::size() const noexcept
     {
-        return Math::max(0, (m_bottom.load() - m_top.load()));
+        // as m_bottom and m_top are loaded separately, the value may be transiently stale or even negative (until the max kicks in)
+        return Math::max(0, (m_bottom.load(std::memory_order_relaxed) - m_top.load(std::memory_order_relaxed)));
     }
 
     uint32_t JobDeque::capacity() const noexcept

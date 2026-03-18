@@ -270,6 +270,27 @@ namespace LITL::Core::Tests
         REQUIRE(LITL::Math::pow(2, 8u) == 256);
     } END_LITL_TEST_CASE
 
+    LITL_TEST_CASE("isPow2", "[math::general]")
+    {
+        REQUIRE(LITL::Math::isPow2(-1) == false);
+        REQUIRE(LITL::Math::isPow2(0) == false);
+        REQUIRE(LITL::Math::isPow2(1) == true);
+        REQUIRE(LITL::Math::isPow2(2) == true);
+        REQUIRE(LITL::Math::isPow2(3) == false);
+        REQUIRE(LITL::Math::isPow2(4) == true);
+        REQUIRE(LITL::Math::isPow2(1024) == true);
+        REQUIRE(LITL::Math::isPow2(1025) == false);
+
+        REQUIRE(LITL::Math::isPow2(0u) == false);
+        REQUIRE(LITL::Math::isPow2(1u) == true);
+        REQUIRE(LITL::Math::isPow2(2u) == true);
+        REQUIRE(LITL::Math::isPow2(3u) == false);
+        REQUIRE(LITL::Math::isPow2(4u) == true);
+        REQUIRE(LITL::Math::isPow2(1024u) == true);
+        REQUIRE(LITL::Math::isPow2(1025u) == false);
+
+    } END_LITL_TEST_CASE
+
     LITL_TEST_CASE("alignMemoryOffsetUp", "[math::general]")
     {
         REQUIRE(LITL::Math::alignMemoryOffsetUp(13, 8) == 16);

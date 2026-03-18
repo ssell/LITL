@@ -47,12 +47,13 @@ namespace LITL::Core
         std::optional<JobHandle> steal() noexcept;
 
         /// <summary>
-        /// Cleans (deletes) all outgrown buffers.
+        /// Cleans (deletes) all outgrown buffers. Should only be called by the JobScheduler.
         /// </summary>
         void clean() noexcept;
 
         /// <summary>
         /// Returns number of jobs currently in the deque.
+        /// For heuristics only. Potentially racy.
         /// </summary>
         /// <returns></returns>
         uint32_t size() const noexcept;

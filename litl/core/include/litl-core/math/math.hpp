@@ -253,6 +253,16 @@ namespace LITL::Math
         return (rad * Traits<double>::rad_to_deg);
     }
 
+    [[nodiscard]] constexpr uint32_t isPow2(int32_t x) noexcept
+    {
+        return (x > 0) && ((x & (x - 1)) == 0);
+    }
+
+    [[nodiscard]] constexpr uint32_t isPow2(uint32_t x) noexcept
+    {
+        return (x > 0) && ((x & (x - 1)) == 0);
+    }
+
     [[nodiscard]] constexpr size_t alignMemoryOffsetUp(size_t offset, size_t alignment) noexcept
     {
         /**
