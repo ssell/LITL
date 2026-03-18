@@ -38,6 +38,13 @@ namespace LITL::Core
 
         /// <summary>
         /// Is the scheduler currently waiting for all jobs to finish?
+        /// 
+        /// Note that waiting is slightly different from syncing.
+        /// While waiting, the thread that called JobScheduler::wait is performing
+        /// useful work until the job count is 0.
+        /// 
+        /// Once the job count is 0, it moves onto syncing which is where
+        /// the waiting thread is waiting for all in-progress Workers to complete.
         /// </summary>
         std::atomic<bool> waiting{ false };
 
@@ -114,6 +121,8 @@ namespace LITL::Core
         }
 
         // Then launch their threads. If you do not wait to launch then you can crash as they try to steal from non-existent workers.
+        // Skip worker[0] which is the main thread. That does not have its own dedicated workerInternalLoop running but instead is
+        // reserved only for JobFence::wait and JobScheduler::wait calls from the main thread.
         for (uint32_t i = 1; i < threadCount; ++i)
         {
             m_pImpl->workers[i]->thread = std::thread([this, i] { workerInternalLoop(i); });
