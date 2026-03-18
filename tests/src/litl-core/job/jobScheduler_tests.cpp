@@ -311,4 +311,25 @@ namespace LITL::Core::Tests
         REQUIRE(fence.wait(scheduler) == true);
         REQUIRE(scheduler.wait() == true);
     } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("Job State", "[core::job::jobScheduler]")
+    {
+        JobScheduler scheduler;
+        std::atomic<uint32_t> jobsRun_shared{ 0 };
+
+        auto handle0 = scheduler.create(jobSharedDataTest, &jobsRun_shared);
+        REQUIRE(handle0.version == 0);
+        REQUIRE(handle0.job->state == JobState::Idle);
+
+        scheduler.submit(handle0, JobPriority::High);
+        // can't reliably test the transition of idle -> scheduled -> running due to timing
+
+        REQUIRE(scheduler.wait() == true);
+        REQUIRE(handle0.job->state == JobState::Complete);
+
+        // ensure it is reset when reused
+        handle0 = scheduler.create(jobSharedDataTest, &jobsRun_shared);
+        REQUIRE(handle0.version == 1);
+        REQUIRE(handle0.job->state == JobState::Idle);
+    } END_LITL_TEST_CASE
 }

@@ -228,7 +228,7 @@ namespace LITL::Core
         /// Waits for all jobs to be completed and then resets the underlying job pool.
         /// </summary>
         /// <returns>True if done waiting without timing out. False if timed out.</returns>
-        bool wait(uint32_t timeoutMs = 1000) const noexcept;
+        bool wait(uint32_t timeoutMs = 5000) const noexcept;
 
     protected:
 
@@ -240,7 +240,7 @@ namespace LITL::Core
         std::optional<JobHandle> stealWork(JobPriority priority) const noexcept;
         std::optional<JobHandle> stealAnyWork() const noexcept;
         std::optional<JobHandle> acquireJob(JobPriority priority) const noexcept;
-        void run(JobHandle handle) const noexcept;
+        void run(JobHandle handle, bool stolen) const noexcept;
 
         struct Impl;
         struct Worker;

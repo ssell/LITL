@@ -13,6 +13,34 @@ namespace LITL::Core
     class JobFence;
     struct Job;
 
+    enum JobState
+    {
+        /// <summary>
+        /// Has not yet been submitted to the JobScheduler.
+        /// </summary>
+        Idle = 0,
+
+        /// <summary>
+        /// Submitted to the JobScheduler but not yet been picked up and run by a Worker.
+        /// </summary>
+        Scheduled = 1,
+
+        /// <summary>
+        /// Being run by its owning Worker.
+        /// </summary>
+        RunningOnOwner = 2,
+
+        /// <summary>
+        /// Being run on a thief Worker.
+        /// </summary>
+        RunningOnThief = 3,
+
+        /// <summary>
+        /// Done being run by a Worker.
+        /// </summary>
+        Complete = 4
+    };
+
     /// <summary>
     /// Handle to a job instance. 
     /// 
@@ -40,7 +68,7 @@ namespace LITL::Core
     };
 
 
-    // Note: currently spans 3 cache lines (2 on m-series chips) 
+    // Note: currently spans 4 cache lines (2 on m-series chips) 
     // can reduce to two (or 1 on m-series) by: reducing buffer to 48 (from 64) and max dependent count to 6 (from 12)
     // time will tell if (a) we need as big of a buffer and/or (b) need as many dependents. can in the future add a BigJob or similar.
 
@@ -89,6 +117,11 @@ namespace LITL::Core
         /// </summary>
         std::atomic<uint32_t> dependencyCount{ 0 };
 
+        /// <summary>
+        /// The state of the job.
+        /// </summary>
+        std::atomic<JobState> state{ JobState::Idle };
+
         // --- end cache line 0
         // --- start cache line 1
 
@@ -96,7 +129,7 @@ namespace LITL::Core
         /// Small buffer of user data stored as part of the Job.
         /// This data is valid for the lifetime of the job.
         /// </summary>
-        std::byte localData[JobLocalBufferSize];
+        alignas(CacheLineSize) std::byte localData[JobLocalBufferSize];
 
         // --- end cache line 1
         // --- start cache line 2
