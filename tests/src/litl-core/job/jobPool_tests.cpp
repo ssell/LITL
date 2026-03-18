@@ -18,10 +18,13 @@ namespace LITL::Core::Tests
         uint32_t jobsRun = 0;
 
         auto handle = jobPool.createJob(0, jobTest, &jobsRun);
+        auto job = jobPool.resolve(handle);
 
-        REQUIRE(handle.version == jobPool.version());
+        REQUIRE(handle.isNull() == false);
+        REQUIRE(job != nullptr);
+        REQUIRE(job->version == jobPool.version());
 
-        handle.job->func(handle.job);
+        job->func(job);
 
         REQUIRE(jobsRun == 1);
     } END_LITL_TEST_CASE
@@ -34,35 +37,32 @@ namespace LITL::Core::Tests
         auto handle0 = jobPool.createJob(0, jobTest, &jobsRun);
         auto handle1 = jobPool.createJob(0, jobTest, &jobsRun);
 
-        REQUIRE(handle0.version == jobPool.version());
-        REQUIRE(handle0.valid(jobPool.version()) == true);
+        auto job0 = jobPool.resolve(handle0);
+        auto job1 = jobPool.resolve(handle1);
 
-        REQUIRE(handle1.version == jobPool.version());
-        REQUIRE(handle1.valid(jobPool.version()) == true);
+        REQUIRE(job0->version == jobPool.version());
+        REQUIRE(job1->version == jobPool.version());
 
-        handle0.job->func(handle0.job);
-        handle1.job->func(handle1.job);
+        job0->func(job0);
+        job1->func(job1);
 
         REQUIRE(jobsRun == 2);
 
         jobPool.sync();        // Clear current jobs, reset job pools, and increment version.
 
-        REQUIRE(handle0.version != jobPool.version());
-        REQUIRE(handle0.valid(jobPool.version()) == false);
-
-        REQUIRE(handle1.version != jobPool.version());
-        REQUIRE(handle1.valid(jobPool.version()) == false);
+        REQUIRE(job0->version != jobPool.version());
+        REQUIRE(job1->version != jobPool.version());
 
         // Create a third job. This job should use the same memory address as the first (now reset) job.
         // Though their addresses are the same, their versions should differ.
         auto handle2 = jobPool.createJob(0, jobTest, &jobsRun);
+        auto job2 = jobPool.resolve(handle2);
 
-        REQUIRE(handle2.version == jobPool.version());
-        REQUIRE(handle2.valid(jobPool.version()) == true);
-        REQUIRE(handle2.version != handle1.version);
-        REQUIRE(handle2.job == handle0.job);
+        REQUIRE(job2->version == jobPool.version());
+        REQUIRE(job2->version != job1->version);
+        REQUIRE(job2 == job0);
 
-        handle2.job->func(handle2.job);
+        job2->func(job2);
 
         REQUIRE(jobsRun == 3);
     } END_LITL_TEST_CASE
@@ -89,7 +89,8 @@ namespace LITL::Core::Tests
 
         for (auto i = 0; i < jobsCount; ++i)
         {
-            handles[i].job->func(handles[i].job);
+            auto job = jobPool.resolve(handles[i]);
+            job->func(job);
         }
 
         auto endRun0 = std::chrono::steady_clock::now();
@@ -111,7 +112,8 @@ namespace LITL::Core::Tests
 
         for (auto i = 0; i < jobsCount; ++i)
         {
-            handles[i].job->func(handles[i].job);
+            auto job = jobPool.resolve(handles[i]);
+            job->func(job);
         }
 
         auto endRun1 = std::chrono::steady_clock::now();

@@ -1,4 +1,6 @@
+#include <barrier>
 #include <chrono>
+#include <memory>
 #include <semaphore>
 #include <thread>
 
@@ -38,6 +40,26 @@ namespace LITL::Core
         /// Is the scheduler currently waiting for all jobs to finish?
         /// </summary>
         std::atomic<bool> waiting{ false };
+
+        /// <summary>
+        /// Used to halt workers when a sync is requested.
+        /// A sync generation is used to support separate sync cycles.
+        /// 
+        /// While in production this should be uncommon (or impossible) it is 
+        /// a situation that arises when performing bulk tests.
+        /// </summary>
+        std::atomic<uint32_t> syncGeneration{ 0 };
+
+        /// <summary>
+        /// The most recently completed sync generation cycle.
+        /// </summary>
+        std::atomic<uint32_t> syncCompleteGeneration{ 0 };
+
+        /// <summary>
+        /// Barrier used to synchronize all workers at a sync point.
+        /// Sized to workerCount + 1 (main thread participates).
+        /// </summary>
+        std::unique_ptr<std::barrier<>> syncBarrier;
 
         /// <summary>
         /// No idea what this is.
@@ -83,6 +105,7 @@ namespace LITL::Core
         uint32_t threadCount = Math::max(2u, std::thread::hardware_concurrency());  // - 1 (to prevent main thread being a dedicated worker, but then) + 1 (to have a dedicated worker for High priority jobs)
 
         m_pImpl->workers.resize(threadCount);
+        m_pImpl->syncBarrier = std::make_unique<std::barrier<>>(threadCount);
 
         // First create all workers
         for (uint32_t i = 0; i < threadCount; ++i)
@@ -91,7 +114,7 @@ namespace LITL::Core
         }
 
         // Then launch their threads. If you do not wait to launch then you can crash as they try to steal from non-existent workers.
-        for (uint32_t i = 0; i < threadCount; ++i)
+        for (uint32_t i = 1; i < threadCount; ++i)
         {
             m_pImpl->workers[i]->thread = std::thread([this, i] { workerInternalLoop(i); });
         }
@@ -107,15 +130,17 @@ namespace LITL::Core
         for (auto& worker : m_pImpl->workers)
         {
             // Wake all idle workers.
+            std::ignore = worker->wake.try_acquire();  // drain if already released
             worker->wake.release();
         }
 
-        for (auto& worker : m_pImpl->workers)
+        // Skip index 0 (main thread)
+        for (auto i = 1; i < m_pImpl->workers.size(); ++i)
         {
             // Join all working workers.
-            if (worker->thread.joinable())
+            if (m_pImpl->workers[i]->thread.joinable())
             {
-                worker->thread.join();
+                m_pImpl->workers[i]->thread.join();
             }
         }
 
@@ -139,9 +164,16 @@ namespace LITL::Core
         return m_pImpl->workers.size();
     }
 
+    Job* JobScheduler::resolve(JobHandle handle) const noexcept
+    {
+        return m_pImpl->jobPool.resolve(handle);
+    }
+
     bool JobScheduler::valid(JobHandle handle) const noexcept
     {
-        return handle.valid(m_pImpl->jobPool.version());
+        auto job = resolve(handle);
+        assert(job != nullptr);
+        return (job->version == m_pImpl->jobPool.version());
     }
 
     JobHandle JobScheduler::create(Job::JobFunc func, void* externalData) noexcept
@@ -183,14 +215,18 @@ namespace LITL::Core
             logWarning("Job submitted during JobScheduler hard sync point. This should generally not happen.");
         }
 
-        handle.job->priority = (static_cast<uint32_t>(priority) < static_cast<uint32_t>(JobPriority::__JobPriorityCount)) ? priority : JobPriority::Normal;
-        handle.job->state = JobState::Scheduled;
+        auto job = resolve(handle);
+
+        assert(job != nullptr);
+
+        job->priority = (static_cast<uint32_t>(priority) < static_cast<uint32_t>(JobPriority::__JobPriorityCount)) ? priority : JobPriority::Normal;
+        job->state = JobState::Scheduled;
 
         // Push to the worker associated with this thread. If this is from an external thread then push to worker 0.
         const uint32_t workerIndex = (t_threadIndex < m_pImpl->workers.size() ? t_threadIndex : 0);
 
         std::ignore = m_pImpl->jobCount.fetch_add(1, std::memory_order_acq_rel);
-        m_pImpl->workers[workerIndex]->deques[static_cast<uint32_t>(handle.job->priority)].push(handle);
+        m_pImpl->workers[workerIndex]->deques[static_cast<uint32_t>(job->priority)].push(handle);
 
         // Check all workers for an idle one.
         for (auto& worker : m_pImpl->workers)
@@ -217,6 +253,24 @@ namespace LITL::Core
         // While the scheduler is running ...
         while (m_pImpl->running.load(std::memory_order_relaxed))
         {
+            auto syncGeneration = m_pImpl->syncGeneration.load(std::memory_order_acquire);
+            auto completedSyncGeneration = m_pImpl->syncCompleteGeneration.load(std::memory_order_acquire);
+
+            // Check if a sync has been requested for the current generation. If so, park at the barrier until the main thread has finished resetting the pool.
+            if (syncGeneration > completedSyncGeneration)
+            {
+                // A sync is in progress that hasn't completed yet. Participate.
+                m_pImpl->syncBarrier->arrive_and_wait();
+
+                // Wait for THIS generation to complete.
+                while ((m_pImpl->syncCompleteGeneration.load(std::memory_order_acquire) < syncGeneration) && m_pImpl->running.load(std::memory_order_relaxed))
+                {
+                    std::this_thread::yield();
+                }
+
+                continue;
+            }
+
             std::optional<JobHandle> handle = std::nullopt;
             bool wasJobStolen = false;
 
@@ -256,7 +310,7 @@ namespace LITL::Core
     std::optional<JobHandle> JobScheduler::stealWork(JobPriority priority) const noexcept
     {
         // Try to steal a job from another thread.
-        const uint32_t victimIndex = Math::FastRng::shared().next() % m_pImpl->workers.size();
+        uint32_t victimIndex = Math::FastRng::shared().next(m_pImpl->workers.size());
 
         if (victimIndex != t_threadIndex)
         {
@@ -285,43 +339,59 @@ namespace LITL::Core
 
     std::optional<JobHandle> JobScheduler::acquireJob(JobPriority priority) const noexcept
     {
+        // First try to pop if on a local worker thread.
+        if (t_threadIndex < m_pImpl->workers.size())
+        {
+            auto jobHandle = (m_pImpl->workers[t_threadIndex])->deques[static_cast<uint32_t>(priority)].pop();
+
+            if (jobHandle.has_value())
+            {
+                return jobHandle;
+            }
+        }
+
+        // Otherwise try to steal.
         return stealWork(priority);
     }
 
     void JobScheduler::run(JobHandle handle, bool stolen) const noexcept
     {
-        assert(handle.job->state == JobState::Scheduled);
+        auto job = resolve(handle);
+
+        assert(job->state == JobState::Scheduled);
 
         // Note we only check validty for executing the job function.
         // Validity does not matter for any of the following steps (dependencies and fences).
         // We _want_ to clear away dependencies and fences for invalid jobs to avoid deadlocks, etc.
         if (valid(handle))
         {
-            handle.job->state = (stolen ? JobState::RunningOnThief : JobState::RunningOnOwner);
-            handle.job->func(handle.job);
+            job->state = (stolen ? JobState::RunningOnThief : JobState::RunningOnOwner);
+            job->func(job);
         }
 
-        handle.job->state = JobState::Complete;
+        job->state = JobState::Complete;
 
         // Signal to any dependents that this job is completed
-        for (auto& dependent : handle.job->dependents)
+        for (auto& dependent : job->dependents)
         {
-            if (dependent.job == nullptr)
+            auto dependentJob = resolve(dependent);
+
+            if (dependentJob == nullptr)
             {
                 break;
             }
 
             // Decrease the dependent's dependency count and if this was the last dependency, submit it to the scheduler.
-            if (dependent.job->dependencyCount.fetch_sub(1, std::memory_order_acq_rel) == 1)
+            if (dependentJob->dependencyCount.fetch_sub(1, std::memory_order_acq_rel) == 1)
             {
-                submit(dependent, handle.job->priority);
+                submit(dependent, job->priority);
             }
         }
 
         // Let the fence (if there is one) know that this job is complete.
-        if (handle.job->fence != nullptr)
+        if (job->fence != nullptr)
         {
-            handle.job->fence->release(handle);
+            job->fence->release(handle);
         }
 
         std::ignore = m_pImpl->jobCount.fetch_sub(1, std::memory_order_acq_rel);
@@ -340,7 +410,12 @@ namespace LITL::Core
         // While there are pending jobs, be productive and try to do some work (same thing essentially as our JobFence) 
         while (m_pImpl->jobCount > 0)
         {
-            auto handle = stealAnyWork();
+            std::optional<JobHandle> handle = std::nullopt;
+
+            for (auto i = 0; i < static_cast<uint32_t>(JobPriority::__JobPriorityCount) && !handle.has_value(); ++i)
+            {
+                handle = acquireJob(static_cast<JobPriority>(i));
+            }
 
             if (handle.has_value())
             {
@@ -359,8 +434,29 @@ namespace LITL::Core
             }
         }
 
-        // Reset the pools and increment the version
-        m_pImpl->jobPool.sync();
+        if (!timedOut)
+        {
+            // Advance the generation to signal a new sync.
+            auto syncGeneration = m_pImpl->syncGeneration.fetch_add(1, std::memory_order_acq_rel) + 1;
+
+            // Wake any workers that are sleeping so they see the syncing flag.
+            for (auto& worker : m_pImpl->workers)
+            {
+                std::ignore = worker->wake.try_acquire();
+                worker->wake.release();
+            }
+
+            // Wait for every worker to reach the barrier.
+            // At this point no worker is inside run() or holding a live handle.
+            m_pImpl->syncBarrier->arrive_and_wait();
+
+            // Safe to reset the pool now.
+            m_pImpl->jobPool.sync();
+
+            // Signal that this generation's sync is complete.
+            m_pImpl->syncCompleteGeneration.store(syncGeneration, std::memory_order_release);
+        }
+
         m_pImpl->waiting = false;
 
         return !timedOut;

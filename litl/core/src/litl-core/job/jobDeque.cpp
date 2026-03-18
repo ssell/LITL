@@ -27,6 +27,22 @@ namespace LITL::Core
 
         JobHandle& operator[](uint32_t index)
         {
+            /**
+             * Note `index & mask` instead of `index % mask`
+             * 
+             * When capacity is a power of two, the resulting mask is a power of two - 1.
+             * This creates a bitmask of all lower bits. for example:
+             * 
+             *     capacity = 1024              ->  0b1000'0000'0000
+             *     mask = capacity - 1 = 1023   ->  0b0111'1111'1111
+             * 
+             * This results in a wrapping just like modulo. However, modulo requires
+             * a division operation which can take upwards of 100 cycles. A single
+             * bitwise AND is one cycle.
+             * 
+             * So the `index & mask` == `index % mask` when mask is a power of two - 1.
+             * But much faster - which matters here in the innermost part of the Job hotpath.
+             */
             return jobs[index & mask];
         }
 
@@ -81,11 +97,6 @@ namespace LITL::Core
          * If the buffer is full, it is resized prior to storage.
          */
 
-        if (job.job == nullptr)
-        {
-            return;
-        }
-
         // Fetch indices and underlying ring buffer
         auto bottomIndex = m_bottom.load(std::memory_order_relaxed);
         auto topIndex = m_top.load(std::memory_order_acquire);
@@ -120,13 +131,13 @@ namespace LITL::Core
 
         // Fetch the bottom index and decrement it, fetch the ring buffer, fetch the top index.
         auto bottomIndex = m_bottom.load(std::memory_order_relaxed) - 1;
-        m_bottom.store(bottomIndex, std::memory_order_relaxed);
+        m_bottom.store(bottomIndex, std::memory_order_seq_cst);
         auto* ringBuffer = m_pBuffer.load(std::memory_order_relaxed);
 
         // v this (along with the one in steal) ensure that the thief's read of top and the owner's decrement of bottom are ordered
         std::atomic_thread_fence(std::memory_order_seq_cst);
 
-        auto topIndex = m_top.load(std::memory_order_relaxed);
+        auto topIndex = m_top.load(std::memory_order_acquire);
 
         // If there is at least one item in the buffer
         if (topIndex <= bottomIndex)
@@ -136,14 +147,14 @@ namespace LITL::Core
             // If there is exactly one item in the buffer
             if (topIndex == bottomIndex)
             {
-                // Attempt to take it. If this fails then a thief stole it first.
+                // Race against a potential ::steal to take it. If this fails then a thief stole it first.
                 if (!m_top.compare_exchange_strong(topIndex, topIndex + 1, std::memory_order_seq_cst, std::memory_order_relaxed))
                 {
                     handle = std::nullopt;
                 }
 
                 // Restore the bottom index
-                m_bottom.store(bottomIndex + 1, std::memory_order_relaxed);
+                m_bottom.store(bottomIndex + 1, std::memory_order_release);
             }
 
             // ... job was sucessfully popped off. leave bottom decremented ...
@@ -183,7 +194,7 @@ namespace LITL::Core
             auto* ringBuffer = m_pBuffer.load(std::memory_order_acquire);
             handle = (*ringBuffer)[topIndex];
 
-            // Attempt to take the item
+            // Race against a ::pop and other ::steals.
             if (!m_top.compare_exchange_strong(topIndex, topIndex + 1, std::memory_order_seq_cst, std::memory_order_relaxed))
             {
                 handle = std::nullopt;

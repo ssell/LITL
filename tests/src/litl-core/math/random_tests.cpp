@@ -71,10 +71,20 @@ namespace LITL::Core::Tests
         REQUIRE(rng0() == rng1());
     } END_LITL_TEST_CASE
 
-    LITL_TEST_CASE("FastRng Min/Max", "[math::random]")
+        LITL_TEST_CASE("FastRng Min/Max", "[math::random]")
     {
         Math::FastRng rng(0);
         REQUIRE(rng.min() < rng.max());
+    } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("FastRng Next Limit", "[math::random]")
+    {
+        Math::FastRng rng(0);
+
+        for (auto i = 0; i < 100; ++i)
+        {
+            REQUIRE(rng.next(10) < 10);
+        }
     } END_LITL_TEST_CASE
 
     LITL_TEST_CASE("GoodRng Seed", "[math::random]")
@@ -145,5 +155,15 @@ namespace LITL::Core::Tests
     {
         Math::GoodRng rng(0);
         REQUIRE(rng.min() < rng.max());
+    } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("GoodRng Next Limit", "[math::random]")
+    {
+        Math::GoodRng rng(0);
+
+        for (auto i = 0; i < 100; ++i)
+        {
+            REQUIRE(rng.next(10) < 10);
+        }
     } END_LITL_TEST_CASE
 }

@@ -42,6 +42,11 @@ namespace LITL::Math
         return m_impl->rng();
     }
 
+    uint_fast32_t GoodRng::next(uint_fast32_t max) noexcept
+    {
+        return next() % max;
+    }
+
     void GoodRng::discard(uint32_t steps) noexcept
     {
         m_impl->rng.discard(steps);

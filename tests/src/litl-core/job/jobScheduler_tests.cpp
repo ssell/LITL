@@ -199,7 +199,7 @@ namespace LITL::Core::Tests
     LITL_TEST_CASE("Fence", "[core::job::jobScheduler]")
     {
         JobScheduler scheduler;
-        JobFence fence;
+        JobFence fence{ &scheduler };
 
         constexpr uint32_t jobCount = 1024;
 
@@ -212,14 +212,14 @@ namespace LITL::Core::Tests
             fence.add(handles[i]);
         }
 
-        REQUIRE(handles[0].job->fence == &fence);
+        REQUIRE(scheduler.resolve(handles[0])->fence == &fence);
 
         for (auto i = 0; i < jobCount; ++i)
         {
             scheduler.submit(handles[i], JobPriority::Normal);
         }
 
-        REQUIRE(fence.wait(scheduler) == true);
+        REQUIRE(fence.wait() == true);
         REQUIRE(jobsRun == jobCount);
         REQUIRE(scheduler.wait() == true);
     } END_LITL_TEST_CASE
@@ -233,8 +233,8 @@ namespace LITL::Core::Tests
         for (auto i = 0; i < 100; ++i)
         {
             std::atomic<uint32_t> jobsRun{ 0 };
-            JobFence fence0{ JobPriority::High };
-            JobFence fence1{ JobPriority::Low };
+            JobFence fence0{ &scheduler, JobPriority::High };
+            JobFence fence1{ &scheduler, JobPriority::Low };
 
             for (auto j = 0; j < jobCount; ++j)
             {
@@ -248,8 +248,8 @@ namespace LITL::Core::Tests
                 }
             }
 
-            REQUIRE(fence0.wait(scheduler) == true);
-            REQUIRE(fence1.wait(scheduler) == true);
+            REQUIRE(fence0.wait() == true);
+            REQUIRE(fence1.wait() == true);
             REQUIRE(scheduler.wait() == true);
             REQUIRE(jobsRun == jobCount);
         }
@@ -258,7 +258,7 @@ namespace LITL::Core::Tests
     LITL_TEST_CASE("Create Submit All Variants", "[core::job::jobScheduler]")
     {
         JobScheduler scheduler;
-        JobFence fence;
+        JobFence fence{ &scheduler };
         std::atomic<uint32_t> jobsRun_shared{ 0 };
         SharedJobData jobsRun_localCopyShared{ &jobsRun_shared };   // atomics are not copyable or movable. but a pointer is
 
@@ -308,7 +308,7 @@ namespace LITL::Core::Tests
                 static_cast<std::atomic<uint32_t>*>(job->data)->fetch_add(1); 
             }, fence, &jobsRun_shared);
 
-        REQUIRE(fence.wait(scheduler) == true);
+        REQUIRE(fence.wait() == true);
         REQUIRE(scheduler.wait() == true);
     } END_LITL_TEST_CASE
 
@@ -318,18 +318,20 @@ namespace LITL::Core::Tests
         std::atomic<uint32_t> jobsRun_shared{ 0 };
 
         auto handle0 = scheduler.create(jobSharedDataTest, &jobsRun_shared);
-        REQUIRE(handle0.version == 0);
-        REQUIRE(handle0.job->state == JobState::Idle);
+        auto job0 = scheduler.resolve(handle0);
+
+        REQUIRE(job0->version == 0);
+        REQUIRE(job0->state == JobState::Idle);
 
         scheduler.submit(handle0, JobPriority::High);
         // can't reliably test the transition of idle -> scheduled -> running due to timing
 
         REQUIRE(scheduler.wait() == true);
-        REQUIRE(handle0.job->state == JobState::Complete);
+        REQUIRE(job0->state == JobState::Complete);
 
         // ensure it is reset when reused
         handle0 = scheduler.create(jobSharedDataTest, &jobsRun_shared);
-        REQUIRE(handle0.version == 1);
-        REQUIRE(handle0.job->state == JobState::Idle);
+        REQUIRE(job0->version == 1);
+        REQUIRE(job0->state == JobState::Idle);
     } END_LITL_TEST_CASE
 }
