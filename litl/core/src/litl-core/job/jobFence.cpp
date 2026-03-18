@@ -73,7 +73,7 @@ namespace LITL::Core
 
             if (handle.has_value())
             {
-                scheduler.run((*handle));
+                scheduler.run((*handle), true);
                 spinner.reset();
             }
             else

@@ -184,6 +184,7 @@ namespace LITL::Core
         }
 
         handle.job->priority = (static_cast<uint32_t>(priority) < static_cast<uint32_t>(JobPriority::__JobPriorityCount)) ? priority : JobPriority::Normal;
+        handle.job->state = JobState::Scheduled;
 
         // Push to the worker associated with this thread. If this is from an external thread then push to worker 0.
         const uint32_t workerIndex = (t_threadIndex < m_pImpl->workers.size() ? t_threadIndex : 0);
@@ -217,6 +218,7 @@ namespace LITL::Core
         while (m_pImpl->running.load(std::memory_order_relaxed))
         {
             std::optional<JobHandle> handle = std::nullopt;
+            bool wasJobStolen = false;
 
             // Iterate through the priority levels: High -> Normal -> Low
             // Try get a local High priority job, then try to steal a High priority job.
@@ -235,12 +237,13 @@ namespace LITL::Core
                 if (!handle.has_value())
                 {
                     handle = stealWork(static_cast<JobPriority>(i));
+                    wasJobStolen = handle.has_value();
                 }
             }
 
             if (handle.has_value())
             {
-                run((*handle));
+                run((*handle), wasJobStolen);
             }
             else
             {
@@ -285,15 +288,20 @@ namespace LITL::Core
         return stealWork(priority);
     }
 
-    void JobScheduler::run(JobHandle handle) const noexcept
+    void JobScheduler::run(JobHandle handle, bool stolen) const noexcept
     {
+        assert(handle.job->state == JobState::Scheduled);
+
         // Note we only check validty for executing the job function.
         // Validity does not matter for any of the following steps (dependencies and fences).
         // We _want_ to clear away dependencies and fences for invalid jobs to avoid deadlocks, etc.
         if (valid(handle))
         {
+            handle.job->state = (stolen ? JobState::RunningOnThief : JobState::RunningOnOwner);
             handle.job->func(handle.job);
         }
+
+        handle.job->state = JobState::Complete;
 
         // Signal to any dependents that this job is completed
         for (auto& dependent : handle.job->dependents)
@@ -336,7 +344,7 @@ namespace LITL::Core
 
             if (handle.has_value())
             {
-                run((*handle));
+                run((*handle), true);
                 spinner.reset();
             }
             else
