@@ -459,8 +459,16 @@ namespace LITL::Core
             // At this point no worker is inside run() or holding a live handle.
             m_pImpl->syncBarrier->arrive_and_wait();
 
-            // Safe to reset the pool now.
+            // All workers are parked at the barrier now. Reset the pool and deques.
             m_pImpl->jobPool.sync();
+            
+            for (auto& worker : m_pImpl->workers)
+            {
+                for (auto& priorityDeque : worker->deques)
+                {
+                    priorityDeque.clean();
+                }
+            }
 
             // Signal that this generation's sync is complete.
             m_pImpl->syncCompleteGeneration.store(syncGeneration, std::memory_order_release);

@@ -228,7 +228,7 @@ namespace LITL::Core::Tests
     {
         JobScheduler scheduler;
 
-        constexpr uint32_t jobCount = 100;
+        constexpr uint32_t jobCount = 8192;
         
         for (auto i = 0; i < 100; ++i)
         {
