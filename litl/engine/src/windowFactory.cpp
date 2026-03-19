@@ -11,7 +11,7 @@ namespace LITL::Engine
         switch (rendererType)
         {
         case Renderer::RendererBackendType::Vulkan:
-            serviceProvider.setSingleton<Core::Window, Vulkan::Window>(new Vulkan::Window());
+            serviceProvider.setSingleton<Core::Window, Core::Window>(Vulkan::createVulkanWindow());
             return true;
 
         case Renderer::RendererBackendType::None:

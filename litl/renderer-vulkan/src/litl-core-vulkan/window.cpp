@@ -10,110 +10,122 @@
 
 namespace LITL::Vulkan
 {
-    // -------------------------------------------------------------------------------------
-    // PIMPL
-    // -------------------------------------------------------------------------------------
-
-    struct Window::Impl
+    struct WindowHandle
     {
-        void* pWindow;
+        LITL::Core::Window* litlWindow = nullptr;
+        GLFWwindow* glfwWindow = nullptr;
         Core::WindowState state;
-        uint32_t width;
-        uint32_t height;
-
-        GLFWwindow* getGLFWwindow() { return static_cast<GLFWwindow*>(pWindow); }
+        uint32_t width = 0;
+        uint32_t height = 0;
     };
 
-    // -------------------------------------------------------------------------------------
-    // Vulkan Window w/ GLFW
-    // -------------------------------------------------------------------------------------
 
-    Window::Window()
+    LITL::Core::Window* createVulkanWindow()
     {
+        auto handle = new WindowHandle{};
+        auto litlWindow = new LITL::Core::Window(
+            &VulkanWindowOperations,
+            LITL_PACK_HANDLE(LITL::Core::WindowHandle, handle)
+        );
 
+        handle->litlWindow = litlWindow;
+
+        return litlWindow;
     }
 
-    Window::~Window()
-    {
-        if (m_impl->pWindow != nullptr)
-        {
-            close();
-            glfwTerminate();
-        }
-    }
-
-    bool Window::open(char const* title, uint32_t width, uint32_t height)
+    bool open(LITL::Core::WindowHandle const& litlHandle, const char* title, uint32_t width, uint32_t height) noexcept
     {
         logInfo("Opening Vulkan Window");
 
-        m_impl->width = width;
-        m_impl->height = height;
+        auto* handle = LITL_UNPACK_HANDLE(WindowHandle, litlHandle);
+
+        handle->width = width;
+        handle->height = height;
 
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-        m_impl->pWindow = glfwCreateWindow(width, height, title, nullptr, nullptr);
+        handle->glfwWindow = glfwCreateWindow(width, height, title, nullptr, nullptr);
 
-        if (!m_impl->pWindow)
+        if (!handle->glfwWindow)
         {
             logCritical("GLFW window creation failed. Shutting down GLFW.");
             glfwTerminate();
             return false;
         }
 
-        glfwSetWindowUserPointer(m_impl->getGLFWwindow(), this);
-        glfwSetFramebufferSizeCallback(m_impl->getGLFWwindow(), [](GLFWwindow* pWindow, int width, int height)
+        glfwSetWindowUserPointer(handle->glfwWindow, handle->litlWindow);
+        glfwSetFramebufferSizeCallback(handle->glfwWindow, [](GLFWwindow* pWindow, int width, int height)
             {
-                auto litlWindow = static_cast<Window*>(glfwGetWindowUserPointer(pWindow));
+                auto litlWindow = static_cast<LITL::Core::Window*>(glfwGetWindowUserPointer(pWindow));
                 litlWindow->onResize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
             });
 
         return true;
     }
 
-    bool Window::close()
+    void close(LITL::Core::WindowHandle const& litlHandle) noexcept
     {
-        if (m_impl->pWindow != nullptr)
-        {
-            logInfo("Closing Vulkan Window");
-            glfwDestroyWindow(m_impl->getGLFWwindow());
-            m_impl->pWindow = nullptr;
-        }
+        logInfo("Closing Vulkan Window");
 
-        return true;
+        auto* handle = LITL_UNPACK_HANDLE(WindowHandle, litlHandle);
+
+        if (handle->litlWindow != nullptr)
+        {
+            glfwDestroyWindow(handle->glfwWindow);
+            handle->litlWindow = nullptr;
+        }
     }
 
-    bool Window::shouldClose()
+    void destroy(LITL::Core::WindowHandle const& litlHandle) noexcept
+    {
+        auto* handle = LITL_UNPACK_HANDLE(WindowHandle, litlHandle);
+
+        if (handle->litlWindow != nullptr)
+        {
+            close(litlHandle);
+            glfwTerminate();
+        }
+    }
+
+    bool shouldClose(LITL::Core::WindowHandle const& litlHandle) noexcept
     {
         // Has the (GLFW) window received a close event?
+        auto* handle = LITL_UNPACK_HANDLE(WindowHandle, litlHandle);
         glfwPollEvents();
-        return glfwWindowShouldClose(m_impl->getGLFWwindow());
+        return glfwWindowShouldClose(handle->glfwWindow);
     }
 
-    void Window::onResize(uint32_t width, uint32_t height)
+    LITL::Core::WindowState getState(LITL::Core::WindowHandle const& litlHandle) noexcept
     {
-        m_impl->state = (width == 0 && height == 0) ? Core::WindowState::Minimized : Core::WindowState::Open;
-        m_impl->width = width;
-        m_impl->height = height;
+        auto* handle = LITL_UNPACK_HANDLE(WindowHandle, litlHandle);
+        return handle->state;
     }
 
-    LITL::Core::WindowState Window::getState() const
+    uint32_t getWidth(LITL::Core::WindowHandle const& litlHandle) noexcept
     {
-        return m_impl->state;
+        auto* handle = LITL_UNPACK_HANDLE(WindowHandle, litlHandle);
+        return handle->width;
     }
 
-    uint32_t Window::getWidth() const
+    uint32_t getHeight(LITL::Core::WindowHandle const& litlHandle) noexcept
     {
-        return m_impl->width;
+        auto* handle = LITL_UNPACK_HANDLE(WindowHandle, litlHandle);
+        return handle->height;
     }
 
-    uint32_t Window::getHeight() const
+    void* getSurfaceWindow(LITL::Core::WindowHandle const& litlHandle) noexcept
     {
-        return m_impl->height;
+        auto* handle = LITL_UNPACK_HANDLE(WindowHandle, litlHandle);
+        return static_cast<void*>(handle->glfwWindow);
     }
 
-    void* Window::getSurfaceWindow() const
+    void onResize(LITL::Core::WindowHandle const& litlHandle, uint32_t width, uint32_t height)
     {
-        return m_impl->pWindow;
+        auto* handle = LITL_UNPACK_HANDLE(WindowHandle, litlHandle);
+
+        handle->state = (width == 0 && height == 0) ? Core::WindowState::Minimized : Core::WindowState::Open;
+        handle->width = width;
+        handle->height = height;
     }
 }
