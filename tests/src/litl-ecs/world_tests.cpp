@@ -1,4 +1,7 @@
 #include "tests.hpp"
+
+#include "litl-core/services/serviceCollection.hpp"
+#include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/common.hpp"
 #include "litl-ecs/world.hpp"
 #include "litl-ecs/archetype/archetype.hpp"
@@ -370,6 +373,26 @@ namespace LITL::ECS::Tests
 
         world.destroyImmediate(entity0);
         world.destroyImmediate(entity1);
+    } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("System Setup", "[ecs::system]")
+    {
+        TestWorld world;
+        Core::ServiceCollection collection{};
+        collection.addSingleton<SystemSetupService>();
+
+        auto services = collection.build();
+        auto setupService = services->get<SystemSetupService>();
+
+        REQUIRE(setupService != nullptr);
+        REQUIRE(setupService->wasSetup == false);
+
+        world.setup((*services));
+        world.addSystem<TestSystem>(SystemGroup::Update);
+        world.setupSystems((*services));
+
+        REQUIRE(setupService->wasSetup == true);
+
     } END_LITL_TEST_CASE
 }
 

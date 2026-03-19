@@ -6,6 +6,7 @@
 #include <optional>
 #include <type_traits>
 
+#include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/entity.hpp"
 #include "litl-ecs/entityRecord.hpp"
 #include "litl-ecs/component/component.hpp"
@@ -26,6 +27,18 @@ namespace LITL::ECS
         World(World const&) = delete;
         World& operator=(World const&) = delete;
         ~World();
+
+        /// <summary>
+        /// Invoked once by the Engine during setup.
+        /// </summary>
+        /// <param name="services"></param>
+        void setup(LITL::Core::ServiceProvider& services) const noexcept;
+
+        /// <summary>
+        /// Invoked once by the Engine prior to the first frame.
+        /// </summary>
+        /// <param name="services"></param>
+        void setupSystems(LITL::Core::ServiceProvider& services) const noexcept;
 
         /// <summary>
         /// Immediately creates a new Entity.

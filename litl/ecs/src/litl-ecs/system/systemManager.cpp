@@ -96,6 +96,14 @@ namespace LITL::ECS
         }
     }
 
+    void SystemManager::setupSystems(Core::ServiceProvider& services) const noexcept
+    {
+        for (auto* system : m_pImpl->systems)
+        {
+            system->setup(services);
+        }
+    }
+
     void SystemManager::prepareFrame() const noexcept
     {
         updateSystemArchetypes();

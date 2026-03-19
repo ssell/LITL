@@ -64,6 +64,12 @@ namespace LITL::ECS
         }
     }
 
+    void System::setup(Core::ServiceProvider& services)
+    {
+        assert(m_setupFunc != nullptr);
+        m_setupFunc(services);
+    }
+
     void System::run(World& world, float dt)
     {
         assert(m_runFunc != nullptr);
