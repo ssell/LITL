@@ -156,9 +156,9 @@ namespace LITL::Core
         // Once all jobs are done, clean up any lingering dead buffers.
         for (auto& worker : m_pImpl->workers)
         {
-            for (auto i = 0ul; i < static_cast<uint32_t>(JobPriority::__JobPriorityCount); ++i)
+            for (auto& priorityDeque : worker->deques)
             {
-                worker->deques[i].clean();
+                priorityDeque.clean();
             }
         }
     }
@@ -262,8 +262,8 @@ namespace LITL::Core
         // While the scheduler is running ...
         while (m_pImpl->running.load(std::memory_order_relaxed))
         {
-            auto syncGeneration = m_pImpl->syncGeneration.load(std::memory_order_acquire);
-            auto completedSyncGeneration = m_pImpl->syncCompleteGeneration.load(std::memory_order_acquire);
+            const auto syncGeneration = m_pImpl->syncGeneration.load(std::memory_order_acquire);
+            const auto completedSyncGeneration = m_pImpl->syncCompleteGeneration.load(std::memory_order_acquire);
 
             // Check if a sync has been requested for the current generation. If so, park at the barrier until the main thread has finished resetting the pool.
             if (syncGeneration > completedSyncGeneration)

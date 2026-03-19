@@ -4,16 +4,20 @@
 #include <memory>
 
 #include "litl-engine/config.hpp"
+#include "litl-core/services/serviceCollection.hpp"
 #include "litl-core/job/jobScheduler.hpp"
 #include "litl-ecs/world.hpp"
 
 namespace LITL::Engine
 {
+    using ConfigureServicesFunc = void(*)(Core::ServiceCollection&);
+    using ConfigureSystemsFunc = void(*)(ECS::World& world);
+
     class Engine final
     {
     public:
 
-        explicit Engine(Configuration const& config);
+        explicit Engine();
         ~Engine();
 
         Engine(Engine&&) = delete;
@@ -21,14 +25,17 @@ namespace LITL::Engine
         Engine& operator=(Engine&&) = delete;
         Engine& operator=(Engine const&) = delete;
 
-        bool openWindow(char const* title, uint32_t width, uint32_t height) noexcept;
-        bool shouldRun() noexcept;
-        void run();
+        void setup(Configuration config, ConfigureServicesFunc servicesFunc, ConfigureSystemsFunc systemsFunc) noexcept;
+        bool start();
 
     protected:
 
     private:
 
+        bool openWindow(char const* title, uint32_t width, uint32_t height) noexcept;
+        bool shouldRun() noexcept;
+
+        void run();
         void update();
         void render();
 
