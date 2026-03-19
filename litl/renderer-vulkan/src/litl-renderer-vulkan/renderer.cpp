@@ -44,14 +44,14 @@ namespace LITL::Vulkan::Renderer
     // Renderer Creation
     // -------------------------------------------------------------------------------------
 
-    std::unique_ptr<LITL::Renderer::Renderer> createVulkanRenderer(Core::Window* pWindow, LITL::Renderer::RendererConfiguration const& rendererDescriptor)
+    LITL::Renderer::Renderer* createVulkanRenderer(Core::Window* pWindow, LITL::Renderer::RendererConfiguration const& rendererDescriptor)
     {
         auto handle = new RendererHandle{};
         handle->context.pWindow = pWindow;
         handle->context.pSurfaceWindow = pWindow->getSurfaceWindow();
         handle->context.framesInFlight = rendererDescriptor.framesInFlight;
 
-        return std::make_unique<LITL::Renderer::Renderer>(
+        return new LITL::Renderer::Renderer(
             &VulkanRendererOperations,
             LITL_PACK_HANDLE(LITL::Renderer::RendererHandle, handle)
         );

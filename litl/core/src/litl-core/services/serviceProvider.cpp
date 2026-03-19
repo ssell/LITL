@@ -80,6 +80,23 @@ namespace LITL::Core
         return nullptr;
     }
 
+    bool ServiceProvider::setSingleton__(TypeId type, std::any service) noexcept
+    {
+        auto* descriptor = find(type);
+
+        if (descriptor == nullptr)
+        {
+            return false;
+        }
+
+        if (descriptor->lifetime != ServiceLifetime::Singleton)
+        {
+            return false;
+        }
+
+        m_impl->singletonServices[type] = service;
+    }
+
     std::any ServiceProvider::resolveSingleton(ServiceDescriptor const& descriptor) noexcept
     {
         // Check if the singleton already exists

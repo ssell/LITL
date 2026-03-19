@@ -6,6 +6,9 @@
 #include "litl-engine/rendererFactory.hpp"
 #include "litl-engine/frameLimiter.hpp"
 
+#include "litl-core/services/serviceCollection.hpp"
+#include "litl-core/services/serviceProvider.hpp"
+
 namespace LITL::Engine
 {
     // -------------------------------------------------------------------------------------
@@ -14,30 +17,35 @@ namespace LITL::Engine
 
     struct Engine::Impl
     {
-        std::unique_ptr<LITL::Core::Window> pWindow;
-        std::unique_ptr<LITL::Renderer::Renderer> pRenderer;
-        Core::RefPtr<LITL::Renderer::CommandBuffer> pFrameCommandBuffer;
+        std::unique_ptr<Core::ServiceCollection> pServiceCollection;
+        std::shared_ptr<Core::ServiceProvider> pServiceProvider;
 
-        Configuration config;
-        FrameLimiter frameLimiter;
-
-        Core::JobScheduler jobScheduler;
-        ECS::World ecsWorld;
+        // The below are also stored in pServiceProvider, but keep them in here to avoid having to frequently refetch.
+        std::shared_ptr<Configuration> pSharedConfig;
+        std::shared_ptr<FrameLimiter> pSharedFrameLimiter;
+        std::shared_ptr<Core::Window> pSharedWindow;
+        std::shared_ptr<Core::JobScheduler> pSharedJobScheduler;
+        std::shared_ptr<ECS::World> pSharedECSWorld;
+        std::shared_ptr<Renderer::Renderer> pSharedRenderer;
     };
 
     // -------------------------------------------------------------------------------------
     // Engine
     // -------------------------------------------------------------------------------------
 
-    Engine::Engine(Configuration const& config)
+    Engine::Engine()
         : m_pImpl(std::make_unique<Engine::Impl>())
     {
         LITL::Core::Logger::initialize("litl-engine", true, true);
         logInfo("LITL Engine Startup");
 
-        m_pImpl->config = config;
-        m_pImpl->config.sanitize();
-        m_pImpl->frameLimiter.setTargetFps(static_cast<float>(m_pImpl->config.simulationSettings.framesPerSecond));
+        m_pImpl->pServiceCollection->addSingleton<Configuration>();
+        m_pImpl->pServiceCollection->addSingleton<FrameLimiter>();
+        m_pImpl->pServiceCollection->addSingleton<Core::JobScheduler>();
+        m_pImpl->pServiceCollection->addSingleton<ECS::World>();
+        m_pImpl->pServiceCollection->addSingleton<Core::Window>();
+        m_pImpl->pServiceCollection->addSingleton<Renderer::Renderer>();
+        //m_pImpl->pServiceCollection->addSingleton<Core::RefPtr<Renderer::CommandBuffer>>();
     }
 
     Engine::~Engine()
@@ -46,38 +54,85 @@ namespace LITL::Engine
         LITL::Core::Logger::shutdown();
     }
 
-    bool Engine::openWindow(const char* title, uint32_t width, uint32_t height) noexcept
+    void Engine::setup(Configuration config, ConfigureServicesFunc servicesFunc, ConfigureSystemsFunc systemsFunc) noexcept
     {
-        logInfo("Opening window \"", title, "\" (", width, "x", height, ") with ", Renderer::RendererBackendNames[m_pImpl->config.rendererSettings.rendererType], " backend ...");
-        m_pImpl->pWindow = createWindow(m_pImpl->config.rendererSettings.rendererType);
-
-        if (m_pImpl->pWindow == nullptr)
+        if (servicesFunc != nullptr)
         {
-            logCritical("Failed to create Window");
+            servicesFunc((*m_pImpl->pServiceCollection));
+        }
+
+        m_pImpl->pServiceProvider = m_pImpl->pServiceCollection->build();
+        m_pImpl->pSharedConfig = m_pImpl->pServiceProvider->get<Configuration>();
+        m_pImpl->pSharedFrameLimiter = m_pImpl->pServiceProvider->get<FrameLimiter>();
+        m_pImpl->pSharedJobScheduler = m_pImpl->pServiceProvider->get<Core::JobScheduler>();
+        m_pImpl->pSharedECSWorld = m_pImpl->pServiceProvider->get<ECS::World>();
+
+        m_pImpl->pSharedConfig->set(config);
+        m_pImpl->pSharedFrameLimiter->setTargetFps(static_cast<float>(m_pImpl->pSharedConfig->engineSettings.framesPerSecond));
+
+        if (systemsFunc != nullptr)
+        {
+            systemsFunc((*m_pImpl->pSharedECSWorld));
+        }
+    }
+
+    bool Engine::start()
+    {
+        if (!openWindow(
+                m_pImpl->pSharedConfig->engineSettings.applicationName,
+                m_pImpl->pSharedConfig->engineSettings.windowWidth,
+                m_pImpl->pSharedConfig->engineSettings.windowHeight))
+        {
             return false;
         }
 
-        if (!m_pImpl->pWindow->open(title, width, height))
+        while (shouldRun())
+        {
+            run();
+        }
+
+        return true;
+    }
+
+    bool Engine::openWindow(const char* title, uint32_t width, uint32_t height) noexcept
+    {
+        logInfo("Opening window \"", title, "\" (", width, "x", height, ") with ", Renderer::RendererBackendNames[m_pImpl->pSharedConfig->rendererSettings.rendererType], " backend ...");
+        
+        auto window = createWindow(m_pImpl->pSharedConfig->rendererSettings.rendererType);
+
+        if (window == nullptr)
+        {
+            logCritical("Failed to create window.");
+            return false;
+        }
+
+        m_pImpl->pServiceProvider->setSingleton<Core::Window>(window);
+        m_pImpl->pSharedWindow = m_pImpl->pServiceProvider->get<Core::Window>();
+
+        if (!window->open(title, width, height))
         {
             logCritical("Failed to open Window");
             return false;
         }
 
-        m_pImpl->pRenderer = createRenderer(m_pImpl->pWindow.get(), m_pImpl->config.rendererSettings);
+        auto renderer = createRenderer(window, m_pImpl->pSharedConfig->rendererSettings);
 
-        if (m_pImpl->pRenderer == nullptr)
+        if (renderer == nullptr)
         {
             logCritical("Failed to create Renderer");
             return false;
         }
 
-        if (!m_pImpl->pRenderer->build())
+        m_pImpl->pServiceProvider->setSingleton<Renderer::Renderer>(renderer);
+        m_pImpl->pSharedRenderer = m_pImpl->pServiceProvider->get<Renderer::Renderer>();
+
+        if (!m_pImpl->pSharedRenderer->build())
         {
             logCritical("Failed to initialize Renderer");
             return false;
         }
 
-        m_pImpl->pFrameCommandBuffer = m_pImpl->pRenderer->getResourceAllocator()->createCommandBuffer();
+        //m_pImpl->pFrameCommandBuffer = m_pImpl->pSharedRenderer->getResourceAllocator()->createCommandBuffer();
 
         logInfo("... Window and Renderer creation successful.");
 
@@ -86,38 +141,33 @@ namespace LITL::Engine
 
     bool Engine::shouldRun() noexcept
     {
-        if (m_pImpl->pWindow == nullptr)
-        {
-            return false;
-        }
-
-        return !m_pImpl->pWindow->shouldClose();
+        return m_pImpl->pSharedWindow->shouldClose();
     }
 
     void Engine::run()
     {
-        m_pImpl->frameLimiter.frameStart();
+        m_pImpl->pSharedFrameLimiter->frameStart();
 
         update();
         render();
 
-        m_pImpl->jobScheduler.wait();
-        m_pImpl->frameLimiter.frameEnd();
+        m_pImpl->pSharedJobScheduler->wait();
+        m_pImpl->pSharedFrameLimiter->frameEnd();
     }
 
     void Engine::update()
     {
-        m_pImpl->ecsWorld.run(
-            m_pImpl->frameLimiter.frameDelta(), 
-            1.0f / static_cast<float>(m_pImpl->config.simulationSettings.ticksPerSecond));
+        m_pImpl->pSharedECSWorld->run(
+            m_pImpl->pSharedFrameLimiter->frameDelta(),
+            1.0f / static_cast<float>(m_pImpl->pSharedConfig->engineSettings.ticksPerSecond));
     }
 
     void Engine::render()
     {
-        if (m_pImpl->pRenderer->beginRender())
+        if (m_pImpl->pSharedRenderer->beginRender())
         {
-            m_pImpl->pRenderer->submitCommands(m_pImpl->pFrameCommandBuffer.get(), 0);
-            m_pImpl->pRenderer->endRender();
+            //m_pImpl->pSharedRenderer->submitCommands(m_pImpl->pFrameCommandBuffer.get(), 0);
+            m_pImpl->pSharedRenderer->endRender();
         }
     }
 }

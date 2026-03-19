@@ -44,6 +44,12 @@ namespace LITL::Core
             return std::any_cast<std::shared_ptr<ServiceType>>(service);
         }
 
+        template<typename ServiceType>
+        bool setSingleton(ServiceType* service) noexcept
+        {
+            return setSingleton__(type_id<ServiceType>(), std::make_shared<ServiceType>(service));
+        }
+
         std::shared_ptr<ServiceScope> createScope() const noexcept;
         uint32_t size() const noexcept;
 
@@ -57,6 +63,7 @@ namespace LITL::Core
         std::any resolveSingleton(ServiceDescriptor const& descriptor) noexcept;
         ServiceFactoryResolver createResolver() noexcept;
         ServiceDescriptor const* find(TypeId type) const noexcept;
+        bool setSingleton__(TypeId type, std::any service) noexcept;
 
         struct Impl;
         ImplPtr<Impl, 256> m_impl;
