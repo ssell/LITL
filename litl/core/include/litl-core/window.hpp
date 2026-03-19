@@ -1,37 +1,111 @@
 #ifndef LITL_CORE_WINDOW_H__
 #define LITL_CORE_WINDOW_H__
 
+#include <cassert>
 #include <cstdint>
+
+#include "litl-core/handles.hpp"
 
 namespace LITL::Core
 {
+    DEFINE_LITL_HANDLE(WindowHandle);
+
     enum WindowState
     {
         Open = 0,
         Minimized = 1
     };
 
-    class Window
+    struct WindowOperations
+    {
+        bool (*open)(WindowHandle const&, const char*, uint32_t, uint32_t);
+        void (*close)(WindowHandle const&);
+        void (*destroy)(WindowHandle const&);
+        bool (*shouldClose)(WindowHandle const&);
+        WindowState (*getState)(WindowHandle const&);
+        uint32_t (*getWidth)(WindowHandle const&);
+        uint32_t (*getHeight)(WindowHandle const&);
+        void* (*getSurfaceWindow)(WindowHandle const&);
+        void (*onResize)(WindowHandle const&, uint32_t, uint32_t);
+    };
+
+    class Window final
     {
     public:
 
-        virtual ~Window() = default;
+        /// <summary>
+        /// Provided only for initial service injection.
+        /// </summary>
+        Window() = default;
 
-        virtual bool open(const char* title, uint32_t width, uint32_t height) = 0;
-        virtual bool close() = 0;
-        virtual bool shouldClose() = 0;
+        explicit Window(WindowOperations const* operations, WindowHandle handle)
+            : m_pBackendOperations(operations), m_backendHandle(handle)
+        {
 
-        virtual WindowState getState() const = 0;
-        virtual uint32_t getWidth() const = 0;
-        virtual uint32_t getHeight() const = 0;
+        }
 
-        virtual void* getSurfaceWindow() const = 0;
+        ~Window()
+        {
+            destroy();
+        }
 
-    protected:
+        bool open(const char* title, uint32_t width, uint32_t height) const
+        {
+            assert(title != nullptr);
+            assert(width > 0);
+            assert(height > 0);
 
-        virtual void onResize(uint32_t width, uint32_t height) = 0;
+            return m_pBackendOperations->open(m_backendHandle, title, width, height);
+        }
+
+        void close() const
+        {
+            m_pBackendOperations->close(m_backendHandle);
+        }
+
+        void destroy()
+        {
+            if ((m_pBackendOperations != nullptr) && (m_backendHandle.handle != nullptr))
+            {
+                m_pBackendOperations->destroy(m_backendHandle);
+                m_backendHandle.handle = nullptr;
+            }
+        }
+
+        [[nodiscard]] bool shouldClose() const
+        {
+            return m_pBackendOperations->shouldClose(m_backendHandle);
+        }
+
+        [[nodiscard]] WindowState getState() const
+        {
+            return m_pBackendOperations->getState(m_backendHandle);
+        }
+
+        [[nodiscard]] uint32_t getWidth() const
+        {
+            return m_pBackendOperations->getWidth(m_backendHandle);
+        }
+
+        [[nodiscard]] uint32_t getHeight() const
+        {
+            return m_pBackendOperations->getHeight(m_backendHandle);
+        }
+
+        [[nodiscard]] void* getSurfaceWindow() const
+        {
+            return m_pBackendOperations->getSurfaceWindow(m_backendHandle);
+        }
+
+        void onResize(uint32_t width, uint32_t height) const
+        {
+            m_pBackendOperations->onResize(m_backendHandle, width, height);
+        }
 
     private:
+
+        WindowOperations const* m_pBackendOperations;
+        WindowHandle m_backendHandle;
     };
 }
 

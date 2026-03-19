@@ -40,11 +40,11 @@ namespace LITL::Engine
         logInfo("LITL Engine Startup");
 
         m_pImpl->pServiceCollection->addSingleton<Configuration>();
-        //m_pImpl->pServiceCollection->addSingleton<FrameLimiter>();
-        //m_pImpl->pServiceCollection->addSingleton<Core::JobScheduler>();
-        //m_pImpl->pServiceCollection->addSingleton<ECS::World>();
-        //m_pImpl->pServiceCollection->addSingleton<Core::Window>();
-        //m_pImpl->pServiceCollection->addSingleton<Renderer::Renderer>();
+        m_pImpl->pServiceCollection->addSingleton<FrameLimiter>();
+        m_pImpl->pServiceCollection->addSingleton<Core::JobScheduler>();
+        m_pImpl->pServiceCollection->addSingleton<ECS::World>();
+        m_pImpl->pServiceCollection->addSingleton<Core::Window>();
+        m_pImpl->pServiceCollection->addSingleton<Renderer::Renderer>();
         //m_pImpl->pServiceCollection->addSingleton<Core::RefPtr<Renderer::CommandBuffer>>();
     }
 

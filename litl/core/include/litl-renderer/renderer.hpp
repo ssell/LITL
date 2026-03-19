@@ -29,6 +29,11 @@ namespace LITL::Renderer
     {
     public:
 
+        /// <summary>
+        /// Provided only for initial service injection.
+        /// </summary>
+        Renderer() = default;
+
         Renderer(RendererOperations const* pOperations, RendererHandle handle)
             : m_pBackendOperations(pOperations), m_backendHandle(handle)
         {
@@ -59,7 +64,7 @@ namespace LITL::Renderer
 
         void destroy()
         {
-            if (m_backendHandle.handle != nullptr)
+            if ((m_pBackendOperations != nullptr) && (m_backendHandle.handle != nullptr))
             {
                 m_pBackendOperations->destroy(m_backendHandle);
                 m_backendHandle.handle = nullptr;
