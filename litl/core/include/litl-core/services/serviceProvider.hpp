@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "litl-core/impl.hpp"
+#include "litl-core/traits.hpp"
 #include "litl-core/types.hpp"
 #include "litl-core/services/serviceDescriptor.hpp"
 
@@ -44,10 +45,10 @@ namespace LITL::Core
             return std::any_cast<std::shared_ptr<ServiceType>>(service);
         }
 
-        template<typename ServiceType>
-        bool setSingleton(ServiceType* service) noexcept
+        template<typename ServiceType, typename ServiceImpl> requires InheritsFrom<ServiceType, ServiceImpl>
+        bool setSingleton(ServiceImpl* service) noexcept
         {
-            return setSingleton__(type_id<ServiceType>(), std::make_shared<ServiceType>(service));
+            return setSingleton__(type_id<ServiceType>(), std::shared_ptr<ServiceImpl>(service));
         }
 
         std::shared_ptr<ServiceScope> createScope() const noexcept;

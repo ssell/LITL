@@ -4,19 +4,20 @@
 
 namespace LITL::Engine
 {
-    LITL::Renderer::Renderer* createRenderer(Core::Window* pWindow, Renderer::RendererConfiguration const& rendererDescriptor)
+    bool injectRenderer(Core::ServiceProvider& serviceProvider, Core::Window* pWindow, Renderer::RendererConfiguration const& rendererDescriptor)
     {
         logInfo("Creating Renderer of type ", Renderer::RendererBackendNames[rendererDescriptor.rendererType]);
 
         switch (rendererDescriptor.rendererType)
         {
         case Renderer::RendererBackendType::Vulkan:
-            return Vulkan::Renderer::createVulkanRenderer(pWindow, rendererDescriptor);
+            serviceProvider.setSingleton<Renderer::Renderer, Renderer::Renderer>(Vulkan::Renderer::createVulkanRenderer(pWindow, rendererDescriptor));
+            return true;
 
         case Renderer::RendererBackendType::None:
         default:
             logError("Requested to create Renderer of unsupported backend of ", Renderer::RendererBackendNames[rendererDescriptor.rendererType]);
-            return nullptr;
+            return false;
         }
     }
 }

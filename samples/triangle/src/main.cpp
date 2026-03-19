@@ -1,6 +1,6 @@
 #include "litl-engine/engine.hpp"
 
-void configureService(LITL::Core::ServiceCollection& services)
+void configureServices(LITL::Core::ServiceCollection& services)
 {
     // ... add custom services ...
 }
@@ -14,9 +14,9 @@ int main()
 {
     LITL::Engine::Engine engine{};
 
-    engine.setup({
-        .engineSettings { .applicationName = "LITL - Triangle Sample"} },
-        configureService,
+    engine.setup(
+        { .engineSettings { .applicationName = "LITL - Triangle Sample" } },
+        configureServices,
         configureSystems);
 
     engine.start();

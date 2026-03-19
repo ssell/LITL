@@ -32,7 +32,9 @@ namespace LITL::Engine
 
     private:
 
-        bool openWindow(char const* title, uint32_t width, uint32_t height) noexcept;
+        bool createWindow() noexcept;
+        bool createRenderer() noexcept;
+
         bool shouldRun() noexcept;
 
         void run();
