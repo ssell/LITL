@@ -5,6 +5,7 @@
 #include <tuple>
 
 #include "litl-core/traits.hpp"
+#include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/archetype/chunk.hpp"
 #include "litl-ecs/component/component.hpp"
 
@@ -48,9 +49,10 @@ namespace LITL::ECS
     /// provided during system run/iteration.
     /// </summary>
     template<typename S>
-    concept ValidSystem = requires
+    concept ValidSystem = requires(S s, Core::ServiceProvider& services)
     {
-        &S::update;                                                             // must have an "update" method
+        { s.setup(services) } -> std::same_as<void>;                            // must have a "setup(ServiceProvider& services)" method
+        &S::update;                                                             // must have an "update" method (more on that below)
     }
     && [] {
         using traits = MethodTraits<decltype(&S::update)>;                      // get the traits of the required "update" method

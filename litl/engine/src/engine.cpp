@@ -1,6 +1,7 @@
 #include "litl-core/refPtr.hpp"
 #include "litl-core/window.hpp"
 #include "litl-core/logging/logging.hpp"
+#include "litl-core/job/jobScheduler.hpp"
 #include "litl-engine/engine.hpp"
 #include "litl-engine/windowFactory.hpp"
 #include "litl-engine/rendererFactory.hpp"
@@ -17,16 +18,17 @@ namespace LITL::Engine
 
     struct Engine::Impl
     {
-        std::unique_ptr<Core::ServiceCollection> pServiceCollection;
-        std::shared_ptr<Core::ServiceProvider> pServiceProvider;
+        Core::ServiceCollection serviceCollection;
+        std::shared_ptr<Core::ServiceProvider> pServiceProvider{ nullptr };
+        BootstrapFunc bootstrap{ nullptr };
 
         // The below are also stored in pServiceProvider, but keep them in here to avoid having to frequently refetch.
-        std::shared_ptr<Configuration> pSharedConfig;
-        std::shared_ptr<FrameLimiter> pSharedFrameLimiter;
-        std::shared_ptr<Core::Window> pSharedWindow;
-        std::shared_ptr<Core::JobScheduler> pSharedJobScheduler;
-        std::shared_ptr<ECS::World> pSharedECSWorld;
-        std::shared_ptr<Renderer::Renderer> pSharedRenderer;
+        std::shared_ptr<Configuration> pSharedConfig{ nullptr };
+        std::shared_ptr<FrameLimiter> pSharedFrameLimiter{ nullptr };
+        std::shared_ptr<Core::Window> pSharedWindow{ nullptr };
+        std::shared_ptr<Core::JobScheduler> pSharedJobScheduler{ nullptr };
+        std::shared_ptr<ECS::World> pSharedECSWorld{ nullptr };
+        std::shared_ptr<Renderer::Renderer> pSharedRenderer{ nullptr };
     };
 
     // -------------------------------------------------------------------------------------
@@ -39,13 +41,13 @@ namespace LITL::Engine
         LITL::Core::Logger::initialize("litl-engine", true, true);
         logInfo("LITL Engine Startup");
 
-        m_pImpl->pServiceCollection->addSingleton<Configuration>();
-        m_pImpl->pServiceCollection->addSingleton<FrameLimiter>();
-        m_pImpl->pServiceCollection->addSingleton<Core::JobScheduler>();
-        m_pImpl->pServiceCollection->addSingleton<ECS::World>();
-        m_pImpl->pServiceCollection->addSingleton<Core::Window>();
-        m_pImpl->pServiceCollection->addSingleton<Renderer::Renderer>();
-        //m_pImpl->pServiceCollection->addSingleton<Core::RefPtr<Renderer::CommandBuffer>>();
+        m_pImpl->serviceCollection.addSingleton<Configuration>();
+        m_pImpl->serviceCollection.addSingleton<FrameLimiter>();
+        m_pImpl->serviceCollection.addSingleton<Core::JobScheduler>();
+        m_pImpl->serviceCollection.addSingleton<ECS::World>();
+        m_pImpl->serviceCollection.addSingleton<Core::Window>();
+        m_pImpl->serviceCollection.addSingleton<Renderer::Renderer>();
+        //m_pImpl->serviceCollection.addSingleton<Core::RefPtr<Renderer::CommandBuffer>>();
     }
 
     Engine::~Engine()
@@ -54,14 +56,14 @@ namespace LITL::Engine
         LITL::Core::Logger::shutdown();
     }
 
-    void Engine::setup(Configuration config, ConfigureServicesFunc servicesFunc, ConfigureSystemsFunc systemsFunc) noexcept
+    void Engine::setup(Configuration config, ConfigureServicesFunc servicesFunc, ConfigureSystemsFunc systemsFunc, BootstrapFunc bootstrapFunc) noexcept
     {
         if (servicesFunc != nullptr)
         {
-            servicesFunc((*m_pImpl->pServiceCollection));
+            servicesFunc(m_pImpl->serviceCollection);
         }
 
-        m_pImpl->pServiceProvider = m_pImpl->pServiceCollection->build();
+        m_pImpl->pServiceProvider = m_pImpl->serviceCollection.build();
         m_pImpl->pSharedConfig = m_pImpl->pServiceProvider->get<Configuration>();
         m_pImpl->pSharedFrameLimiter = m_pImpl->pServiceProvider->get<FrameLimiter>();
         m_pImpl->pSharedJobScheduler = m_pImpl->pServiceProvider->get<Core::JobScheduler>();
@@ -74,14 +76,36 @@ namespace LITL::Engine
         {
             systemsFunc((*m_pImpl->pSharedECSWorld));
         }
+
+        m_pImpl->bootstrap = bootstrapFunc;
     }
 
     bool Engine::start()
     {
+        if (m_pImpl->pServiceProvider == nullptr)
+        {
+            logCritical("Attempted LITL Engine start prior to setup.");
+            return false;
+        }
+
         if (!createWindow() || !createRenderer())
         {
             return false;
         }
+
+        m_pImpl->pSharedECSWorld->setup((*m_pImpl->pServiceProvider));
+
+        if (m_pImpl->bootstrap != nullptr)
+        {
+            logInfo("Bootstrapping ...");
+            m_pImpl->bootstrap((*m_pImpl->pServiceProvider), (*m_pImpl->pSharedECSWorld));
+        }
+
+        logInfo("ECS system setup ...");
+
+        m_pImpl->pSharedECSWorld->setupSystems((*m_pImpl->pServiceProvider));
+
+        logInfo("Running ...");
 
         while (shouldRun())
         {
@@ -114,7 +138,6 @@ namespace LITL::Engine
         }
 
         return true;
-
     }
 
     bool Engine::createRenderer() noexcept
@@ -144,7 +167,7 @@ namespace LITL::Engine
 
     bool Engine::shouldRun() noexcept
     {
-        return m_pImpl->pSharedWindow->shouldClose();
+        return !m_pImpl->pSharedWindow->shouldClose();
     }
 
     void Engine::run()

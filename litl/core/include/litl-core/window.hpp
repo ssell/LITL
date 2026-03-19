@@ -49,7 +49,7 @@ namespace LITL::Core
             destroy();
         }
 
-        bool open(const char* title, uint32_t width, uint32_t height) const
+        bool open(const char* title, uint32_t width, uint32_t height) const noexcept
         {
             assert(title != nullptr);
             assert(width > 0);
@@ -58,12 +58,12 @@ namespace LITL::Core
             return m_pBackendOperations->open(m_backendHandle, title, width, height);
         }
 
-        void close() const
+        void close() const noexcept
         {
             m_pBackendOperations->close(m_backendHandle);
         }
 
-        void destroy()
+        void destroy() noexcept
         {
             if ((m_pBackendOperations != nullptr) && (m_backendHandle.handle != nullptr))
             {
@@ -72,32 +72,32 @@ namespace LITL::Core
             }
         }
 
-        [[nodiscard]] bool shouldClose() const
+        [[nodiscard]] bool shouldClose() const noexcept
         {
             return m_pBackendOperations->shouldClose(m_backendHandle);
         }
 
-        [[nodiscard]] WindowState getState() const
+        [[nodiscard]] WindowState getState() const noexcept
         {
             return m_pBackendOperations->getState(m_backendHandle);
         }
 
-        [[nodiscard]] uint32_t getWidth() const
+        [[nodiscard]] uint32_t getWidth() const noexcept
         {
             return m_pBackendOperations->getWidth(m_backendHandle);
         }
 
-        [[nodiscard]] uint32_t getHeight() const
+        [[nodiscard]] uint32_t getHeight() const noexcept
         {
             return m_pBackendOperations->getHeight(m_backendHandle);
         }
 
-        [[nodiscard]] void* getSurfaceWindow() const
+        [[nodiscard]] void* getSurfaceWindow() const noexcept
         {
             return m_pBackendOperations->getSurfaceWindow(m_backendHandle);
         }
 
-        void onResize(uint32_t width, uint32_t height) const
+        void onResize(uint32_t width, uint32_t height) const noexcept
         {
             m_pBackendOperations->onResize(m_backendHandle, width, height);
         }

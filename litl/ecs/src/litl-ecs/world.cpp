@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <vector>
 
+#include "litl-core/job/jobScheduler.hpp"
+#include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/world.hpp"
 #include "litl-ecs/constants.hpp"
 #include "litl-ecs/entityRegistry.hpp"
@@ -11,8 +13,11 @@ namespace LITL::ECS
 {
     struct World::Impl
     {
+        std::shared_ptr<LITL::Core::JobScheduler> jobScheduler{ nullptr };
         SystemManager systemManager;
-        float accumulatedTime = 0.0f;
+
+        bool requireSystemSetup{ true };
+        float accumulatedTime{ 0.0f };
     };
 
     World::World()
@@ -24,6 +29,29 @@ namespace LITL::ECS
     World::~World()
     {
 
+    }
+
+    void World::setup(LITL::Core::ServiceProvider& services) const noexcept
+    {
+        // this is a public method (so that engine can call it), so make sure it is not run multiple times ...
+        if (m_pImpl->jobScheduler != nullptr)
+        {
+            return;
+        }
+
+        m_pImpl->jobScheduler = services.get<LITL::Core::JobScheduler>();
+    }
+
+    void World::setupSystems(LITL::Core::ServiceProvider& services) const noexcept
+    {
+        // this is a public method (so that engine can call it), so make sure it is not run multiple times ...
+        if (!m_pImpl->requireSystemSetup)
+        {
+            return;
+        }
+
+        m_pImpl->requireSystemSetup = false;
+        m_pImpl->systemManager.setupSystems(services);
     }
 
     // -------------------------------------------------------------------------------------

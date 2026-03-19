@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <memory>
 
+#include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/system/system.hpp"
 #include "litl-ecs/system/systemGroup.hpp"
 
@@ -26,6 +27,7 @@ namespace LITL::ECS
             addSystem(system, group);
         }
 
+        void setupSystems(Core::ServiceProvider& services) const noexcept;
         void prepareFrame() const noexcept;
         void run(World& world, float dt, SystemGroup group);
 

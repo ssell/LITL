@@ -5,9 +5,14 @@ void configureServices(LITL::Core::ServiceCollection& services)
     // ... add custom services ...
 }
 
-void configureSystems(LITL::ECS::World& world)
+void configureSystems(LITL::ECS::World& ecs)
 {
     // ... add custom ECS systems ...
+}
+
+void bootstrap(LITL::Core::ServiceProvider& services, LITL::ECS::World& ecs)
+{
+    // ... provide initial entities, etc. to kickstart the game ...
 }
 
 int main()
@@ -16,8 +21,9 @@ int main()
 
     engine.setup(
         { .engineSettings { .applicationName = "LITL - Triangle Sample" } },
-        configureServices,
-        configureSystems);
+        configureServices,      // optional
+        configureSystems,       // optional
+        bootstrap);             // optional
 
     engine.start();
 

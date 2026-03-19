@@ -15,6 +15,8 @@
 
 namespace LITL::ECS
 {
+    using SystemSetupFunc = void(Core::ServiceProvider&);
+
     /// <summary>
     /// The result of many levels of wrapping and type erasure.
     /// Stores the user system, system runner, archetype references, etc.
@@ -38,6 +40,7 @@ namespace LITL::ECS
         {
             setDebugName(typeid(S).name());
 
+            m_setupFunc = CreateSystemWrapperSetupTask(SystemWrapper<S>());
             m_runFunc = CreateSystemWrapperRunnerTask(SystemWrapper<S>());
 
             // Get the system components in tuple form. For example: std::tuple<Foo&, Bar&>
@@ -50,6 +53,12 @@ namespace LITL::ECS
         /// </summary>
         /// <param name="newArchetypes"></param>
         void updateArchetypes(std::vector<ArchetypeId> const& newArchetypes) const noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="services"></param>
+        void setup(Core::ServiceProvider& services);
 
         /// <summary>
         /// Runs the underyling user system over the provided chunk.
@@ -88,6 +97,7 @@ namespace LITL::ECS
         struct Impl;
         std::unique_ptr<Impl> m_pImpl;
 
+        std::function<LITL::ECS::SystemSetupFunc> m_setupFunc = nullptr;
         std::function<LITL::ECS::SystemRunFunc> m_runFunc = nullptr;
     };
 }

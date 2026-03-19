@@ -2,6 +2,7 @@
 #define LITL_TESTS_ECS_COMMON_H__
 
 #include "litl-core/types.hpp"
+#include "litl-core/services/serviceProvider.hpp"
 #include "litl-core/math/math.hpp"
 #include "litl-ecs/world.hpp"
 
@@ -18,9 +19,24 @@ namespace LITL::ECS::Tests
         uint32_t b;
     };
 
+    struct SystemSetupService
+    {
+        bool wasSetup{ false };
+    };
+
     struct TestSystem
     {
-        void update(LITL::ECS::World& world, float dt, Foo& foo, Bar& bar)
+        void setup(Core::ServiceProvider& services)
+        {
+            auto setupService = services.get<SystemSetupService>();
+
+            if (setupService != nullptr)
+            {
+                setupService->wasSetup = true;
+            }
+        }
+
+        void update(ECS::World& world, float dt, Foo& foo, Bar& bar)
         {
             foo.a++;
             bar.b++;

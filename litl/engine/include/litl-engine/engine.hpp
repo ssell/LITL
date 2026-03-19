@@ -5,13 +5,25 @@
 
 #include "litl-engine/config.hpp"
 #include "litl-core/services/serviceCollection.hpp"
-#include "litl-core/job/jobScheduler.hpp"
+#include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/world.hpp"
 
 namespace LITL::Engine
 {
-    using ConfigureServicesFunc = void(*)(Core::ServiceCollection&);
-    using ConfigureSystemsFunc = void(*)(ECS::World& world);
+    /// <summary>
+    /// Optional function provided to the Engine to allow the user to inject their custom services.
+    /// </summary>
+    using ConfigureServicesFunc = void(*)(Core::ServiceCollection& services);
+
+    /// <summary>
+    /// Optional function provided to the Engine to allow the user to add their custom systems.
+    /// </summary>
+    using ConfigureSystemsFunc = void(*)(ECS::World& ecs);
+
+    /// <summary>
+    /// Optional function provided to the Engine to allow the user to add initial entities, etc. to the ECS world.
+    /// </summary>
+    using BootstrapFunc = void(*)(Core::ServiceProvider& services, ECS::World& ecs);
 
     class Engine final
     {
@@ -25,7 +37,7 @@ namespace LITL::Engine
         Engine& operator=(Engine&&) = delete;
         Engine& operator=(Engine const&) = delete;
 
-        void setup(Configuration config, ConfigureServicesFunc servicesFunc, ConfigureSystemsFunc systemsFunc) noexcept;
+        void setup(Configuration config, ConfigureServicesFunc servicesFunc, ConfigureSystemsFunc systemsFunc, BootstrapFunc bootstrapFunc) noexcept;
         bool start();
 
     protected:

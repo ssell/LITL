@@ -31,6 +31,11 @@ namespace LITL::ECS
 
         }
 
+        void setup(Core::ServiceProvider& services)
+        {
+            m_pSystem->setup(services);
+        }
+
         // Must match SystemRunFunc
         void run(World& world, float dt, Chunk& chunk, ChunkLayout const& layout)
         {
