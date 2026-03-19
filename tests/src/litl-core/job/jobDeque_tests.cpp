@@ -9,7 +9,7 @@ namespace LITL::Core::Tests
         {
             JobHandleWrapper()
             {
-                static uint32_t JobIndex = 0;
+                static uint32_t JobIndex = 1;
                 handle = { 0, JobIndex++ };
             }
 
@@ -25,20 +25,20 @@ namespace LITL::Core::Tests
 
         deque.push({});
 
-        REQUIRE(deque.size() == 0);
+        REQUIRE(deque.size() == 1);
 
         JobHandleWrapper handle0;
         JobHandleWrapper handle1;
         JobHandleWrapper handle2;
 
         deque.push(handle0.handle);
-        REQUIRE(deque.size() == 1);
-
-        deque.push(handle1.handle);
         REQUIRE(deque.size() == 2);
 
-        deque.push(handle2.handle);
+        deque.push(handle1.handle);
         REQUIRE(deque.size() == 3);
+
+        deque.push(handle2.handle);
+        REQUIRE(deque.size() == 4);
     } END_LITL_TEST_CASE
 
     LITL_TEST_CASE("Pop", "[core::job::jobDeque]")
@@ -175,7 +175,7 @@ namespace LITL::Core::Tests
         {
             auto handle = deque.pop();
 
-            if (handle.value().isNull())
+            if (handle.has_value() && (*handle).isNull())
             {
                 anyNull = true;
             }
