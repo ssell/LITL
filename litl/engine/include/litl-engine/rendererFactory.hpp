@@ -2,6 +2,7 @@
 #define LITL_ENGINE_RENDERER_FACTORY_H__
 
 #include "litl-core/window.hpp"
+#include "litl-core/services/serviceProvider.hpp"
 #include "litl-renderer/renderer.hpp"
 
 namespace LITL::Engine
@@ -11,7 +12,7 @@ namespace LITL::Engine
     /// </summary>
     /// <param name="rendererDescriptor"></param>
     /// <returns>May return nullptr if no Renderer implementation found for the specified type.</returns>
-    LITL::Renderer::Renderer* createRenderer(Core::Window* pWindow, Renderer::RendererConfiguration const& rendererDescriptor);
+    bool injectRenderer(Core::ServiceProvider& serviceProvider, Core::Window* pWindow, Renderer::RendererConfiguration const& rendererDescriptor);
 }
 
 #endif

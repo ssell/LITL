@@ -95,6 +95,8 @@ namespace LITL::Core
         }
 
         m_impl->singletonServices[type] = service;
+
+        return true;
     }
 
     std::any ServiceProvider::resolveSingleton(ServiceDescriptor const& descriptor) noexcept

@@ -1,8 +1,9 @@
 #ifndef LITL_ENGINE_WINDOW_FACTORY_H__
 #define LITL_ENGINE_WINDOW_FACTORY_H__
 
-#include "litl-renderer/rendererTypes.hpp"
 #include "litl-core/window.hpp"
+#include "litl-core/services/serviceProvider.hpp"
+#include "litl-renderer/rendererTypes.hpp"
 
 namespace LITL::Engine
 {
@@ -11,7 +12,7 @@ namespace LITL::Engine
     /// </summary>
     /// <param name="rendererType"></param>
     /// <returns>May return nullptr if no Window implementation found for the specified type.</returns>
-    Core::Window* createWindow(Renderer::RendererBackendType rendererType);
+    bool injectWindow(Core::ServiceProvider& serviceProvider, Renderer::RendererBackendType rendererType);
 }
 
 #endif

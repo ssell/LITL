@@ -40,11 +40,11 @@ namespace LITL::Engine
         logInfo("LITL Engine Startup");
 
         m_pImpl->pServiceCollection->addSingleton<Configuration>();
-        m_pImpl->pServiceCollection->addSingleton<FrameLimiter>();
-        m_pImpl->pServiceCollection->addSingleton<Core::JobScheduler>();
-        m_pImpl->pServiceCollection->addSingleton<ECS::World>();
-        m_pImpl->pServiceCollection->addSingleton<Core::Window>();
-        m_pImpl->pServiceCollection->addSingleton<Renderer::Renderer>();
+        //m_pImpl->pServiceCollection->addSingleton<FrameLimiter>();
+        //m_pImpl->pServiceCollection->addSingleton<Core::JobScheduler>();
+        //m_pImpl->pServiceCollection->addSingleton<ECS::World>();
+        //m_pImpl->pServiceCollection->addSingleton<Core::Window>();
+        //m_pImpl->pServiceCollection->addSingleton<Renderer::Renderer>();
         //m_pImpl->pServiceCollection->addSingleton<Core::RefPtr<Renderer::CommandBuffer>>();
     }
 
@@ -78,10 +78,7 @@ namespace LITL::Engine
 
     bool Engine::start()
     {
-        if (!openWindow(
-                m_pImpl->pSharedConfig->engineSettings.applicationName,
-                m_pImpl->pSharedConfig->engineSettings.windowWidth,
-                m_pImpl->pSharedConfig->engineSettings.windowHeight))
+        if (!createWindow() || !createRenderer())
         {
             return false;
         }
@@ -94,36 +91,42 @@ namespace LITL::Engine
         return true;
     }
 
-    bool Engine::openWindow(const char* title, uint32_t width, uint32_t height) noexcept
+    bool Engine::createWindow() noexcept
     {
-        logInfo("Opening window \"", title, "\" (", width, "x", height, ") with ", Renderer::RendererBackendNames[m_pImpl->pSharedConfig->rendererSettings.rendererType], " backend ...");
-        
-        auto window = createWindow(m_pImpl->pSharedConfig->rendererSettings.rendererType);
+        auto title = m_pImpl->pSharedConfig->engineSettings.applicationName;
+        auto width = m_pImpl->pSharedConfig->engineSettings.windowWidth;
+        auto height = m_pImpl->pSharedConfig->engineSettings.windowHeight;
 
-        if (window == nullptr)
+        logInfo("Opening window \"", title, "\" (", width, "x", height, ") ...");
+        
+        if (!injectWindow((*m_pImpl->pServiceProvider), m_pImpl->pSharedConfig->rendererSettings.rendererType))
         {
             logCritical("Failed to create window.");
             return false;
         }
 
-        m_pImpl->pServiceProvider->setSingleton<Core::Window>(window);
         m_pImpl->pSharedWindow = m_pImpl->pServiceProvider->get<Core::Window>();
 
-        if (!window->open(title, width, height))
+        if (!m_pImpl->pSharedWindow->open(title, width, height))
         {
             logCritical("Failed to open Window");
             return false;
         }
 
-        auto renderer = createRenderer(window, m_pImpl->pSharedConfig->rendererSettings);
+        return true;
 
-        if (renderer == nullptr)
+    }
+
+    bool Engine::createRenderer() noexcept
+    {
+        logInfo("Creating renderer with ", Renderer::RendererBackendNames[m_pImpl->pSharedConfig->rendererSettings.rendererType], " backend ...");
+
+        if (!injectRenderer((*m_pImpl->pServiceProvider), m_pImpl->pSharedWindow.get(), m_pImpl->pSharedConfig->rendererSettings))
         {
             logCritical("Failed to create Renderer");
             return false;
         }
 
-        m_pImpl->pServiceProvider->setSingleton<Renderer::Renderer>(renderer);
         m_pImpl->pSharedRenderer = m_pImpl->pServiceProvider->get<Renderer::Renderer>();
 
         if (!m_pImpl->pSharedRenderer->build())
