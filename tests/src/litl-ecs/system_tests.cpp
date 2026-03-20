@@ -48,16 +48,13 @@ namespace LITL::ECS::Tests
         world.destroyImmediate(entity1);
     } END_LITL_TEST_CASE
 
-    void doSomething(ComponentTypeId id)
+    LITL_TEST_CASE("Traits extractComponentIds", "[ecs::system]")
     {
-        auto descriptor = ComponentDescriptor::get(id);
-        int letmesee = 0;
-    }
-
-    LITL_TEST_CASE("Traits", "[ecs::system]")
-    {
-        using SystemComponentTuple = SystemComponents<TraitsTestSystem>;
+        //  SystemComponents<>: retrieves all types on the system ::update method, excluding the mandatory World& and float.
+        //  SystemComponentsTupleOperations<>::extractComponentIds: transforms those types into a std::tuple of ComponentTypeIds
         auto componentTypesTuple = SystemComponentsTupleOperations<SystemComponents<TraitsTestSystem>>::extractComponentIds();
+
+        // Place all of the found ComponentTypeIds into a vector and then verify
         std::vector<ComponentTypeId> foundTypes;
 
         std::apply([&foundTypes](auto&&... componentTypes) {
@@ -66,9 +63,35 @@ namespace LITL::ECS::Tests
 
         // TraitsTestSystem::update(World&, float, Foo const&, Bar&)
         // Expect to see Foo and Bar (World and float are stripped out)
-
         REQUIRE(foundTypes.size() == 2);
         REQUIRE(foundTypes[0] == ComponentDescriptor::get<Foo>()->id);
         REQUIRE(foundTypes[1] == ComponentDescriptor::get<Bar>()->id);
+    } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("Traits extractComponentInfo", "[ecs::system]")
+    {
+        // SystemComponents<>: retrieves all types on the system ::update method, excluding the mandatory World& and float.
+        // SystemComponentsTupleOperations<>::extractComponentInfo: provides the component id and if it is readonly
+        auto componentTypesInfoTuple = SystemComponentsTupleOperations<SystemComponents<TraitsTestSystem>>::extractComponentInfo();
+
+        // Place all of the found SystemComponentInfo into a vector and then verify
+        std::vector<SystemComponentInfo> componentInfos;
+
+        std::apply([&componentInfos](auto&&... componentTypesInfo) {
+            (componentInfos.push_back(componentTypesInfo), ...);
+        }, componentTypesInfoTuple);
+
+        // TraitsTestSystem::update(World&, float, Foo const&, Bar&)
+        // Expect to see Foo and Bar (World and float are stripped out)
+        REQUIRE(componentInfos.size() == 2);
+
+        // Foo const& -> Foo and readonly = true
+        REQUIRE(componentInfos[0].id == ComponentDescriptor::get<Foo>()->id);
+        REQUIRE(componentInfos[0].readonly == true);
+
+        // Bar& -> Bar and readonly = false
+        REQUIRE(componentInfos[1].id == ComponentDescriptor::get<Bar>()->id);
+        REQUIRE(componentInfos[1].readonly == false);
+
     } END_LITL_TEST_CASE
 }

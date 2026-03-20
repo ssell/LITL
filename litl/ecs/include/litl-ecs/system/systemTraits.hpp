@@ -41,6 +41,15 @@ namespace LITL::ECS
     using SystemTupleTail = decltype(SystemTupleTailImpl<Tuple>(std::make_index_sequence<std::tuple_size_v<Tuple> - 2>{})); 
     //                                                                                    ^ reduce size by 2 so we dont go OOB in the Impl
 
+    template<typename Tuple, std::size_t... Indices>
+    consteval bool ValidSystemComponents(std::index_sequence<Indices...>)
+    {
+        return (
+            (std::is_lvalue_reference_v<std::tuple_element_t<Indices + 2, Tuple>> &&    // all optional ::update arguments must be reference types (either & or const&)
+             !std::is_volatile_v<std::tuple_element_t<Indices + 2, Tuple>>) &&          // volatile arguments are not allowed
+            ...);
+    }
+
     /// <summary>
     /// Requirements for a valid System class/struct.
     /// 
@@ -58,16 +67,21 @@ namespace LITL::ECS
         using traits = MethodTraits<decltype(&S::update)>;                      // get the traits of the required "update" method
         using args = typename traits::argsTuple;                                // extract the argument types in the update signature
 
-        static_assert(std::tuple_size_v<args> >= 2, "System::update must take atleast: World&, float");
+        constexpr std::size_t argsCount = std::tuple_size_v<args>;
+        constexpr std::size_t componentsCount = std::tuple_size_v<args> -2;
+
+        static_assert(argsCount >= 2, "System::update must take atleast: World&, float");
+        static_assert((componentsCount == 0) || ValidSystemComponents<args>(std::make_index_sequence<componentsCount>{}), "System::update optional component arguments must be reference or const-reference values only.");
 
         using Arg0 = std::tuple_element_t<0, args>;                             // first argument type
         using Arg1 = std::tuple_element_t<1, args>;                             // second argument type
 
-        return
-            std::same_as<typename traits::returnType, void>&&                   // void return type
-            std::same_as<Arg0, World&>&&                                        // first argument: World&
-            std::same_as<Arg1, float>;                                          // second argument: float
-        }();
+        static_assert(std::same_as<typename traits::returnType, void>, "System::update return type must be void.");
+        static_assert(std::same_as<Arg0, World&>, "System::update first argument must be 'World&'");
+        static_assert(std::same_as<Arg1, float>, "System::update second argument must be 'float'");
+
+        return true; 
+    } ();
 
     /// <summary>
     /// Retrieves the tuple of types required by the System::update method (excluding the mandatory World&,float).
@@ -77,12 +91,16 @@ namespace LITL::ECS
     using SystemComponents = SystemTupleTail<typename MethodTraits<decltype(&S::update)>::argsTuple>;
     //                       ^ remove the first two arguments                            ^ extract the arguments
 
+
     /// <summary>
-    /// Removes const ref from a type. For example: Foo& -> Foo, Bar const& -> Bar.
+    /// Stores the component id (which can be used with ComponentDescriptor to fetch it)
+    /// and if the component is being used by the system in a read-only or read-write manner.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    template<typename T>
-    using RemoveConstantValRef = std::remove_cv_t<std::remove_reference_t<T>>;
+    struct SystemComponentInfo
+    {
+        ComponentTypeId id{ 0 };
+        bool readonly{ true };
+    };
 
     template<typename SystemComponentsTuple>
     struct SystemComponentsTupleOperations;
@@ -90,11 +108,32 @@ namespace LITL::ECS
     template<typename... ComponentTypes>
     struct SystemComponentsTupleOperations<std::tuple<ComponentTypes...>>
     {
+        /// <summary>
+        /// Returns a std::tuple of the plain component types expected by the system ::update method.
+        /// For example `update(World&, float, Foo&, Bar const&)` would return `[Foo, Bar]`
+        /// </summary>
+        /// <returns></returns>
         static auto extractComponentIds()
         {
             return std::tuple
             {
-                ComponentDescriptor::get<RemoveConstantValRef<ComponentTypes>>()->id...
+                ComponentDescriptor::get<std::remove_cvref_t<ComponentTypes>>()->id...
+            };
+        }
+
+        /// <summary>
+        /// Returns a std::tuple of SystemComponentInfo describing the types expected by the system ::update method.
+        /// </summary>
+        /// <returns></returns>
+        static auto extractComponentInfo()
+        {
+            return std::tuple
+            {
+                SystemComponentInfo{ 
+                    ComponentDescriptor::get<std::remove_cvref_t<ComponentTypes>>()->id, 
+                    std::is_const_v<std::remove_reference_t<ComponentTypes>>
+                    // ^ must remove reference first. the referred-to type is never const, so it "hides" it
+                } ...
             };
         }
 
@@ -102,7 +141,7 @@ namespace LITL::ECS
         {
             return std::tuple
             {
-                chunk.getRawComponentArray<RemoveConstantValRef<ComponentTypes>>(layout)...
+                chunk.getRawComponentArray<std::remove_cvref_t<ComponentTypes>>(layout)...
             };
         }
     };
