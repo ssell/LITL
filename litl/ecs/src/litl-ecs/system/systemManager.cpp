@@ -7,7 +7,7 @@
 #include "litl-core/logging/logging.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
 #include "litl-ecs/system/systemManager.hpp"
-#include "litl-ecs/system/systemSchedule.hpp"
+#include "litl-ecs/system/systemGraph.hpp"
 #include "litl-ecs/system/system.hpp"
 
 namespace LITL::ECS
@@ -20,7 +20,7 @@ namespace LITL::ECS
     struct SystemManager::Impl
     {
         std::mutex systemsMutex;
-        std::array<SystemSchedule, SystemGroupCount> schedules;
+        std::array<SystemGraph, SystemGroupCount> schedules;
         std::vector<System*> systems;
         std::vector<System*> newSystems;
     };
@@ -36,7 +36,7 @@ namespace LITL::ECS
 
     }
 
-    void SystemManager::addSystem(System* system, SystemGroup group) const noexcept
+    void SystemManager::addSystem(System* system, SystemGroup group, std::vector<SystemComponentInfo> const& componentInfo) const noexcept
     {
         const auto systemId = system->id();
         bool isSystemAlreadyKnown = false;
@@ -58,7 +58,7 @@ namespace LITL::ECS
 
             m_pImpl->systems.push_back(system);
             m_pImpl->newSystems.push_back(system);
-            m_pImpl->schedules[static_cast<uint32_t>(group)].add(systemId);
+            m_pImpl->schedules[static_cast<uint32_t>(group)].add(systemId, componentInfo);
         }
     }
 

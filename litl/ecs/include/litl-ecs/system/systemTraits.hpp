@@ -3,6 +3,7 @@
 
 #include <concepts>
 #include <tuple>
+#include <vector>
 
 #include "litl-core/traits.hpp"
 #include "litl-core/services/serviceProvider.hpp"
@@ -125,16 +126,23 @@ namespace LITL::ECS
         /// Returns a std::tuple of SystemComponentInfo describing the types expected by the system ::update method.
         /// </summary>
         /// <returns></returns>
-        static auto extractComponentInfo()
+        static std::vector<SystemComponentInfo> extractComponentInfo()
         {
-            return std::tuple
-            {
-                SystemComponentInfo{ 
-                    ComponentDescriptor::get<std::remove_cvref_t<ComponentTypes>>()->id, 
-                    std::is_const_v<std::remove_reference_t<ComponentTypes>>
-                    // ^ must remove reference first. the referred-to type is never const, so it "hides" it
-                } ...
-            };
+            std::vector<SystemComponentInfo> componentInfos;
+
+            std::apply([&componentInfos](auto&&... systemComponentInfos)
+                {
+                    (componentInfos.push_back(systemComponentInfos), ...);
+                }, std::tuple
+                {
+                    SystemComponentInfo{
+                        ComponentDescriptor::get<std::remove_cvref_t<ComponentTypes>>()->id,
+                        std::is_const_v<std::remove_reference_t<ComponentTypes>>
+                        // ^ must remove reference first. the referred-to type is never const, so it "hides" it
+                    } ...
+                });
+
+            return componentInfos;
         }
 
         static auto extractComponentBuffers(Chunk& chunk, ChunkLayout const& layout)
@@ -145,6 +153,17 @@ namespace LITL::ECS
             };
         }
     };
+
+    /// <summary>
+    /// Shorthand utility to get all of the SystemComponentInfo for a valid system.
+    /// </summary>
+    /// <typeparam name="System"></typeparam>
+    /// <returns></returns>
+    template<ValidSystem System>
+    std::vector<SystemComponentInfo> ExtractSystemComponentInfo()
+    {
+        return SystemComponentsTupleOperations<SystemComponents<System>>::extractComponentInfo();
+    }
 }
 
 #endif
