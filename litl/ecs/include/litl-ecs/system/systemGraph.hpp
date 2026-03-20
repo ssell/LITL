@@ -23,18 +23,18 @@ namespace LITL::ECS
     ///     Animaton System must follow the Physics System (explicit)
     ///     Animation System reads Transform while Physics System writes to Transform (implicit)
     /// </summary>
-    class SystemSchedule
+    class SystemGraph
     {
     public:
 
-        SystemSchedule();
-        ~SystemSchedule();
+        SystemGraph();
+        ~SystemGraph();
 
         /// <summary>
         /// Adds a system to the schedule. It is not yet ordered in the DAG.
         /// </summary>
         /// <param name="systemTypeId"></param>
-        void add(SystemTypeId systemTypeId);
+        void add(SystemTypeId systemTypeId, std::vector<SystemComponentInfo> const& componentInfo);
 
         /// <summary>
         /// Builds the DAG according to both explicit and implicit system dependencies.

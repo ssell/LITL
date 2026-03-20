@@ -3,10 +3,12 @@
 
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/system/system.hpp"
 #include "litl-ecs/system/systemGroup.hpp"
+#include "litl-ecs/system/systemTraits.hpp"
 
 namespace LITL::ECS
 {
@@ -33,7 +35,7 @@ namespace LITL::ECS
         {
             auto* system = getSystem<S>();
             system->template attach<S>();
-            addSystem(system, group);
+            addSystem(system, group, ExtractSystemComponentInfo<S>());
         }
 
         /// <summary>
@@ -66,7 +68,7 @@ namespace LITL::ECS
             return &system;
         }
 
-        void addSystem(System* system, SystemGroup group) const noexcept;
+        void addSystem(System* system, SystemGroup group, std::vector<SystemComponentInfo> const& componentInfo) const noexcept;
         void updateSystemArchetypes() const noexcept;
 
         struct Impl;

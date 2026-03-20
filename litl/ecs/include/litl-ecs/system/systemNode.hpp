@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "litl-ecs/constants.hpp"
-#include "litl-ecs/system/systemComponentAccess.hpp"
+#include "litl-ecs/system/systemTraits.hpp"
 
 namespace LITL::ECS
 {
@@ -15,10 +15,9 @@ namespace LITL::ECS
     /// </summary>
     struct SystemNode
     {
-        explicit SystemNode(SystemTypeId systemIndex)
-            : systemId(systemIndex)
+        explicit SystemNode(SystemTypeId systemIndex, std::vector<SystemComponentInfo> const& components)
+            : systemId(systemIndex), componentInfo(components)
         {
-            componentAccess.reserve(8);
             incoming.reserve(8);
             outgoing.reserve(8);
         }
@@ -31,7 +30,7 @@ namespace LITL::ECS
         /// <summary>
         /// The access levels required by the system for the components it operates on.
         /// </summary>
-        std::vector<SystemComponentAccess> componentAccess;
+        std::vector<SystemComponentInfo> componentInfo;
 
         /// <summary>
         /// The system nodes (represented by their index in the group) that this system is dependent on.

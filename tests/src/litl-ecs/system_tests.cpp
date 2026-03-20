@@ -70,16 +70,7 @@ namespace LITL::ECS::Tests
 
     LITL_TEST_CASE("Traits extractComponentInfo", "[ecs::system]")
     {
-        // SystemComponents<>: retrieves all types on the system ::update method, excluding the mandatory World& and float.
-        // SystemComponentsTupleOperations<>::extractComponentInfo: provides the component id and if it is readonly
-        auto componentTypesInfoTuple = SystemComponentsTupleOperations<SystemComponents<TraitsTestSystem>>::extractComponentInfo();
-
-        // Place all of the found SystemComponentInfo into a vector and then verify
-        std::vector<SystemComponentInfo> componentInfos;
-
-        std::apply([&componentInfos](auto&&... componentTypesInfo) {
-            (componentInfos.push_back(componentTypesInfo), ...);
-        }, componentTypesInfoTuple);
+        std::vector<SystemComponentInfo> componentInfos = ExtractSystemComponentInfo<TraitsTestSystem>();
 
         // TraitsTestSystem::update(World&, float, Foo const&, Bar&)
         // Expect to see Foo and Bar (World and float are stripped out)
