@@ -4,17 +4,6 @@
 
 namespace LITL::ECS
 {
-    struct SystemGraph::Impl
-    {
-        /// <summary>
-        /// The "raw" system nodes in the graph.
-        /// 
-        /// They are ordered according to when they were added to the graph.
-        /// These nodes are not sorted, and their indices are fixed.
-        /// </summary>
-        std::vector<SystemNode> systemNodes;
-    };
-
     SystemGraph::SystemGraph()
     {
 
@@ -27,7 +16,7 @@ namespace LITL::ECS
 
     void SystemGraph::add(SystemTypeId systemTypeId, std::vector<SystemComponentInfo> const& componentInfo) noexcept
     {
-        m_impl->systemNodes.emplace_back(systemTypeId, componentInfo);
+        m_systemNodes.emplace_back(systemTypeId, componentInfo);
     }
 
     void SystemGraph::build() noexcept
@@ -55,15 +44,10 @@ namespace LITL::ECS
 
     bool SystemGraph::run(World& world, float dt, std::vector<System*> const& systems)
     {
-        /*
-        for (auto& layer : m_impl->layers)
+        for (auto& node : m_systemNodes)
         {
-            for (auto nodeIndex : layer.nodeIndices)
-            {
-                systems[nodeIndex]->run(world, dt);
-            }
+            systems[node.systemId]->run(world, dt);
         }
-        */
 
         return false;
     }

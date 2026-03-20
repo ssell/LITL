@@ -17,7 +17,7 @@ namespace LITL::Math
 
     bool DirectedAcyclicGraph::addEdge(DagNode from, DagNode to) noexcept
     {
-        if (!containsNode(from) || containsNode(to) || containsEdge(from, to))
+        if (!containsNode(from) || !containsNode(to) || containsEdge(from, to))
         {
             // At least one node is not in the graph OR the edge already exists.
             return false;
