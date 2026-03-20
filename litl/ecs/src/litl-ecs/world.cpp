@@ -51,7 +51,7 @@ namespace LITL::ECS
         }
 
         m_pImpl->requireSystemSetup = false;
-        m_pImpl->systemManager.setupSystems(services);
+        m_pImpl->systemManager.finalize(services);
     }
 
     // -------------------------------------------------------------------------------------

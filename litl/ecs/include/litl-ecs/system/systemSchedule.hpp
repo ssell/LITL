@@ -12,7 +12,7 @@ namespace LITL::ECS
     class World;
 
     /// <summary>
-    /// Group of systems, ordered by a graph, that are executed together.
+    /// Group of systems, ordered by a DAG (directed acyclic graph), that are executed together.
     /// 
     /// A graph is used internally to satisfy two main requirements of a flexible (and functional) system architecture:
     /// (A) explicit ordering and (B) implicit data dependencies. By using a graph, a system can define the preceding
@@ -30,7 +30,24 @@ namespace LITL::ECS
         SystemSchedule();
         ~SystemSchedule();
 
+        /// <summary>
+        /// Adds a system to the schedule. It is not yet ordered in the DAG.
+        /// </summary>
+        /// <param name="systemTypeId"></param>
         void add(SystemTypeId systemTypeId);
+
+        /// <summary>
+        /// Builds the DAG according to both explicit and implicit system dependencies.
+        /// </summary>
+        void build();
+
+        /// <summary>
+        /// Runs all systems in the schedule according to their order in the DAG.
+        /// </summary>
+        /// <param name="world"></param>
+        /// <param name="dt"></param>
+        /// <param name="systems"></param>
+        /// <returns></returns>
         bool run(World& world, float dt, std::vector<System*> const& systems);
 
     protected:

@@ -10,6 +10,9 @@
 
 namespace LITL::ECS
 {
+    /// <summary>
+    /// Owner and manager of all ECS systems.
+    /// </summary>
     class SystemManager
     {
     public:
@@ -19,6 +22,12 @@ namespace LITL::ECS
         SystemManager& operator=(SystemManager const&) = delete;
         ~SystemManager();
 
+        /// <summary>
+        /// Adds the system, denoted by its type, to to the specified group.
+        /// A system can only be added to the manager one time, regardless of group.
+        /// </summary>
+        /// <typeparam name="S"></typeparam>
+        /// <param name="group"></param>
         template<ValidSystem S>
         void addSystem(SystemGroup group) const noexcept
         {
@@ -27,8 +36,23 @@ namespace LITL::ECS
             addSystem(system, group);
         }
 
-        void setupSystems(Core::ServiceProvider& services) const noexcept;
+        /// <summary>
+        /// Bakes all system group schedules and calls the setup method for each system.
+        /// </summary>
+        /// <param name="services"></param>
+        void finalize(Core::ServiceProvider& services) const noexcept;
+
+        /// <summary>
+        /// Prepares for another frame by adjusting for any new archetypes.
+        /// </summary>
         void prepareFrame() const noexcept;
+
+        /// <summary>
+        /// Runs all systems according to their group and schedule within their group.
+        /// </summary>
+        /// <param name="world"></param>
+        /// <param name="dt"></param>
+        /// <param name="group"></param>
         void run(World& world, float dt, SystemGroup group);
 
     protected:
