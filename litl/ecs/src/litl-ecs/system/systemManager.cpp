@@ -1,4 +1,5 @@
 #include <array>
+#include <cassert>
 #include <mutex>
 #include <numeric>
 #include <vector>
@@ -38,28 +39,26 @@ namespace LITL::ECS
     void SystemManager::addSystem(System* system, SystemGroup group) const noexcept
     {
         const auto systemId = system->id();
+        bool isSystemAlreadyKnown = false;
 
         {
             std::lock_guard<std::mutex> lock(m_pImpl->systemsMutex);
 
-            bool systemKnown = false;
-
             for (auto system : m_pImpl->systems)
             {
+                // assert if system is already known
                 if (system->id() == systemId)
                 {
-                    logWarning("Requested to add identical system (id = ", systemId, ") multiple times.");
-                    systemKnown = true;
+                    isSystemAlreadyKnown = true;
                     break;
                 }
             }
 
-            if (!systemKnown)
-            {
-                m_pImpl->systems.push_back(system);
-                m_pImpl->newSystems.push_back(system);
-                m_pImpl->schedules[static_cast<uint32_t>(group)].add(systemId);
-            }
+            assert(!isSystemAlreadyKnown);
+
+            m_pImpl->systems.push_back(system);
+            m_pImpl->newSystems.push_back(system);
+            m_pImpl->schedules[static_cast<uint32_t>(group)].add(systemId);
         }
     }
 
@@ -96,7 +95,7 @@ namespace LITL::ECS
         }
     }
 
-    void SystemManager::setupSystems(Core::ServiceProvider& services) const noexcept
+    void SystemManager::finalize(Core::ServiceProvider& services) const noexcept
     {
         for (auto* system : m_pImpl->systems)
         {

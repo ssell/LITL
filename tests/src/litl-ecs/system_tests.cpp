@@ -1,8 +1,16 @@
 #include "tests.hpp"
+
 #include "litl-ecs/common.hpp"
+#include "litl-ecs/system/systemTraits.hpp"
 
 namespace LITL::ECS::Tests
 {
+    struct TraitsTestSystem
+    {
+        void setup(Core::ServiceProvider& service) {};
+        void update(World& world, float dt, Foo const& read, Bar& write) {}
+    };
+
     /// <summary>
     /// Tests the internal ExpandSystemComponentList and SystemRunner by manually running the TestSystem.
     /// </summary>
@@ -38,5 +46,29 @@ namespace LITL::ECS::Tests
 
         world.destroyImmediate(entity0);
         world.destroyImmediate(entity1);
+    } END_LITL_TEST_CASE
+
+    void doSomething(ComponentTypeId id)
+    {
+        auto descriptor = ComponentDescriptor::get(id);
+        int letmesee = 0;
+    }
+
+    LITL_TEST_CASE("Traits", "[ecs::system]")
+    {
+        using SystemComponentTuple = SystemComponents<TraitsTestSystem>;
+        auto componentTypesTuple = SystemComponentsTupleOperations<SystemComponents<TraitsTestSystem>>::extractComponentIds();
+        std::vector<ComponentTypeId> foundTypes;
+
+        std::apply([&foundTypes](auto&&... componentTypes) {
+            (foundTypes.push_back(componentTypes), ...);
+        }, componentTypesTuple);
+
+        // TraitsTestSystem::update(World&, float, Foo const&, Bar&)
+        // Expect to see Foo and Bar (World and float are stripped out)
+
+        REQUIRE(foundTypes.size() == 2);
+        REQUIRE(foundTypes[0] == ComponentDescriptor::get<Foo>()->id);
+        REQUIRE(foundTypes[1] == ComponentDescriptor::get<Bar>()->id);
     } END_LITL_TEST_CASE
 }

@@ -15,8 +15,11 @@ namespace LITL::ECS
 
     void SystemSchedule::add(SystemTypeId systemTypeId)
     {
-        // ... todo generate the acyclic graph of nodes ...
         m_nodes.emplace_back(systemTypeId);
+    }
+
+    void SystemSchedule::build()
+    {
 
     }
 
