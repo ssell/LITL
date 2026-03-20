@@ -10,6 +10,7 @@ namespace LITL::Math
 {
     using DagNode = uint32_t;
     using DagNodeIndex = uint32_t;
+    using DagLayer = std::vector<DagNode>;
 
     /// <summary>
     /// A simplified model of a directed acyclic graph (DAG).
@@ -87,15 +88,18 @@ namespace LITL::Math
         std::unordered_map<DagNode, DagNodeIndex> m_nodeLookup;
 
         /// <summary>
-        /// The edges/dependencies between nodes. Specifically all nodes feeding into the key node.
-        /// If (A -> B) and (E -> B) then [B] = [A, E].
+        /// The edges/dependencies between nodes. Specifically all nodes that the key node leads to.
+        /// If (A -> B) and (A -> C) then [A] = [B, C]
         /// </summary>
         std::unordered_map<DagNode, std::vector<DagNode>> m_edges;
 
         /// <summary>
         /// The number of incoming edges to each node.
         /// </summary>
-        std::vector<DagNode> m_inDegree;
+        std::unordered_map<DagNode, uint32_t> m_inDegree;
+
+        std::vector<DagNode> m_sortedNodes;
+        std::vector<DagLayer> m_layers;
     };
 }
 
