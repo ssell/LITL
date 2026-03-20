@@ -4,7 +4,6 @@
 #include <memory>
 #include <vector>
 
-#include "litl-core/impl.hpp"
 #include "litl-ecs/system/system.hpp"
 #include "litl-ecs/system/systemNode.hpp"
 
@@ -66,8 +65,13 @@ namespace LITL::ECS
         /// <returns></returns>
         bool doesComponentAccessConflict(SystemNode& a, SystemNode& b) const noexcept;
 
-        struct Impl;
-        Core::ImplPtr<Impl, 64> m_impl;
+        /// <summary>
+        /// The "raw" system nodes in the graph.
+        /// 
+        /// They are ordered according to when they were added to the graph.
+        /// These nodes are not sorted, and their indices are fixed.
+        /// </summary>
+        std::vector<SystemNode> m_systemNodes;
     };
 }
 
