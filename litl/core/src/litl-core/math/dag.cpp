@@ -1,3 +1,5 @@
+#include <queue>
+
 #include "litl-core/math/dag.hpp"
 
 namespace LITL::Math
@@ -11,6 +13,7 @@ namespace LITL::Math
 
         m_nodeLookup[node] = m_nodes.size();
         m_nodes.push_back(node);
+        m_inDegree[node] = 0;
 
         return true;
     }
@@ -23,16 +26,18 @@ namespace LITL::Math
             return false;
         }
 
-        auto findIncomingEdges = m_edges.find(to);
+        auto findIncomingEdges = m_edges.find(from);
 
         if (findIncomingEdges == m_edges.end())
         {
-            m_edges[to] = { from };
+            m_edges[from] = { to };
         }
         else
         {
-            findIncomingEdges->second.push_back(from);
+            findIncomingEdges->second.push_back(to);
         }
+
+        m_inDegree[to]++;
 
         return true;
     }
@@ -69,7 +74,85 @@ namespace LITL::Math
 
     bool DirectedAcyclicGraph::sort() noexcept
     {
-        return false;
+        /**
+         * Performs a topological sort using Kahn's algorithm.
+         * Kahn's is relatively simple and is as follows:
+         * 
+         *     (1) Initialize a frontier set of nodes, containing the 0-degree nodes. These are nodes with no incoming edges and have no dependencies.
+         *     (2) Iterate over each node CURRENTLY in the frontier (the frontier dynamically grows, but we do not want to iterate news ones yet)
+         *         (3) Create a new layer for the current frontier. A layer is all nodes that have no further dependencies at the same time.
+         *         (4) Add the frontier node to the current layer
+         *             (5) For each adjacent/neighbor/dependent node of the current node, decrement it's in-degree count.
+         *                 The count is decremented as we have popped off the current node, and in the graph's current
+         *                 state the adjacent/neighbor/dependent has one less in-degree (number of dependencies).
+         *                 (6) If the in-degree count for the neighbor node is now 0, then it has no further dependencies. Add it to the frontier.
+         *     (7) Once all previous frontier nodes have been traversed, add the current layer to the list of layers.
+         *         The algorithm now returns to (2) to process any new frontier nodes added during the popping off of the previous frontier nodes.
+         * 
+         * If the graph was well-formed, then the results will be:
+         * 
+         *     1. A sorted list of nodes.
+         *     2. One or more layers of nodes that have no edges with each other (interdependencies)
+         * 
+         * Cycles can be detected either
+         * 
+         *     (A) No initial nodes with an in-degree count of 0. So all nodes have at least one dependency.
+         *     (B) The final sorted node count != the original node count.
+         */
+        std::queue<DagNode> frontier;
+        
+        // (1)
+        for (auto kvp : m_inDegree)
+        {
+            if (kvp.second == 0)
+            {
+                frontier.push(kvp.first);
+                m_sortedNodes.push_back(kvp.first);
+            }
+        }
+
+        if (frontier.size() == 0)
+        {
+            // (A) Cycle detected.
+            return false;
+        }
+
+        // (2)
+        while (!frontier.empty())
+        {
+            // (3)
+            DagLayer layer;
+            auto count = frontier.size();
+
+            for (auto i = 0; i < count; ++i)
+            {
+                // (4)
+                auto node = frontier.front(); frontier.pop();
+                layer.push_back(node);
+
+                for (auto neighbor : m_edges[node])
+                {
+                    // (5)
+                    if (--m_inDegree[neighbor] == 0)
+                    {
+                        // (6)
+                        frontier.push(neighbor);
+                        m_sortedNodes.push_back(neighbor);
+                    }
+                }
+            }
+
+            // (7)
+            m_layers.push_back(std::move(layer));
+        }
+
+        if (m_sortedNodes.size() != m_nodes.size())
+        {
+            // (B) Cycle detected.
+            return false;
+        }
+
+        return true;
     }
 
     std::optional<DagNodeIndex> DirectedAcyclicGraph::find(DagNode node) const noexcept
