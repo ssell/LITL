@@ -66,6 +66,23 @@ namespace LITL::Math
         /// </summary>
         [[nodiscard]] bool sort() noexcept;
 
+        /// <summary>
+        /// Retrieves all of the sorted nodes.
+        /// Will be empty if sort was not called first.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] std::vector<DagNode> const& getSorted() const noexcept;
+
+        /// <summary>
+        /// Retrieves all of the sorted node layers.
+        /// Will be empty if sort was not called first.
+        /// 
+        /// If the DAG is for job/task execution, these are job/task nodes
+        /// that have no interdependencies and can be executed simultaneously.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] std::vector<DagLayer> const& getLayers() const noexcept;
+
     protected:
 
     private:
@@ -98,7 +115,18 @@ namespace LITL::Math
         /// </summary>
         std::unordered_map<DagNode, uint32_t> m_inDegree;
 
+        /// <summary>
+        /// The sorted nodes. Huh.
+        /// If sort has not been called then this is empty.
+        /// </summary>
         std::vector<DagNode> m_sortedNodes;
+
+        /// <summary>
+        /// The sorted layers of unconnected nodes.
+        /// If sort has not been called then this is empty.
+        /// If the DAG is for job/task execution, these are job/task nodes
+        /// that have no interdependencies and can be executed simultaneously.
+        /// </summary>
         std::vector<DagLayer> m_layers;
     };
 }

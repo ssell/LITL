@@ -89,4 +89,69 @@ namespace LITL::Math::Tests
         REQUIRE(dag.containsEdge(node1, node0) == false);   // dag is directed. 0 -> 1 != 0 <- 1
 
     } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("sort", "[math::dag]")
+    {
+        DirectedAcyclicGraph dag;
+
+        /**
+         *               0
+         *         ┌─────┴─────┐
+         *         │           │
+         *         │           │
+         *         V           V
+         *         1─────┐     2
+         *         │     │     │
+         *         │     │     │
+         *         │     │     │
+         *         V     │     V
+         *         3     └───> 4
+         *
+         * 0 -> 1
+         * 0 -> 2
+         * 1 -> 3
+         * 1 -> 4
+         * 2 -> 4
+         */
+
+        dag.addNode(4); dag.addNode(3); dag.addNode(2); dag.addNode(1); dag.addNode(0);
+        dag.addEdge(0, 1); dag.addEdge(0, 2);
+        dag.addEdge(1, 3); dag.addEdge(1, 4);
+        dag.addEdge(2, 4);
+
+        // 0 has in-degree of 0
+        // 1 has in-degree of 1
+        // 2 has in-degree of 2
+        // 3 has in-degree of 1
+        // 4 has in-degree of 2
+
+        // expected sort frontier of:
+        //     [0]
+        //     [1, 2]
+        //     [3, 4]
+
+        REQUIRE(dag.sort() == true);
+
+        auto& sorted = dag.getSorted();
+
+        REQUIRE(sorted.size() == 5);
+        REQUIRE(sorted[0] == 0);
+        REQUIRE(sorted[1] == 1);
+        REQUIRE(sorted[2] == 2);
+        REQUIRE(sorted[3] == 3);
+        REQUIRE(sorted[4] == 4);
+
+        auto& layers = dag.getLayers();
+
+        REQUIRE(layers.size() == 3);
+        REQUIRE(layers[0].size() == 1);
+        REQUIRE(layers[0][0] == 0);
+        REQUIRE(layers[1].size() == 2);
+        REQUIRE(layers[1][0] == 1);
+        REQUIRE(layers[1][1] == 2);
+        REQUIRE(layers[2].size() == 2);
+        REQUIRE(layers[2][0] == 3);
+        REQUIRE(layers[2][1] == 4);
+
+    } END_LITL_TEST_CASE
 }
