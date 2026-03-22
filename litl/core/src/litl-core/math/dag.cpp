@@ -26,15 +26,15 @@ namespace LITL::Math
             return false;
         }
 
-        auto findIncomingEdges = m_edges.find(from);
+        auto findOutgoingEdges = m_edges.find(from);
 
-        if (findIncomingEdges == m_edges.end())
+        if (findOutgoingEdges == m_edges.end())
         {
             m_edges[from] = { to };
         }
         else
         {
-            findIncomingEdges->second.push_back(to);
+            findOutgoingEdges->second.push_back(to);
         }
 
         m_inDegree[to]++;
@@ -49,16 +49,16 @@ namespace LITL::Math
 
     bool DirectedAcyclicGraph::containsEdge(DagNode from, DagNode to) const noexcept
     {
-        auto findIncomingEdges = m_edges.find(to);
+        auto findOutgoingEdges = m_edges.find(from);
 
-        if (findIncomingEdges == m_edges.end())
+        if (findOutgoingEdges == m_edges.end())
         {
             return false;
         }
 
-        for (auto incoming : findIncomingEdges->second)
+        for (auto outgoing : findOutgoingEdges->second)
         {
-            if (incoming == from)
+            if (outgoing == to)
             {
                 return true;
             }
@@ -153,6 +153,16 @@ namespace LITL::Math
         }
 
         return true;
+    }
+
+    std::vector<DagNode> const& DirectedAcyclicGraph::getSorted() const noexcept
+    {
+        return m_sortedNodes;
+    }
+
+    std::vector<DagLayer> const& DirectedAcyclicGraph::getLayers() const noexcept
+    {
+        return m_layers;
     }
 
     std::optional<DagNodeIndex> DirectedAcyclicGraph::find(DagNode node) const noexcept
