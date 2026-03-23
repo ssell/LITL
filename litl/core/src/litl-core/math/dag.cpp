@@ -18,6 +18,19 @@ namespace LITL::Math
         return true;
     }
 
+    bool DirectedAcyclicGraph::addNodes(std::initializer_list<DagNode> nodes) noexcept
+    {
+        for (auto node : nodes)
+        {
+            if (!addNode(node))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     bool DirectedAcyclicGraph::addEdge(DagNode from, DagNode to) noexcept
     {
         if (!containsNode(from) || !containsNode(to) || containsEdge(from, to))
@@ -38,6 +51,19 @@ namespace LITL::Math
         }
 
         m_inDegree[to]++;
+
+        return true;
+    }
+
+    bool DirectedAcyclicGraph::addEdges(std::initializer_list<std::pair<DagNode, DagNode>> edges) noexcept
+    {
+        for (auto& edgePair : edges)
+        {
+            if (!addEdge(edgePair.first, edgePair.second))
+            {
+                return false;
+            }
+        }
 
         return true;
     }
