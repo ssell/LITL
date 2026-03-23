@@ -34,10 +34,24 @@ namespace LITL::Math
         bool addNode(DagNode node) noexcept;
 
         /// <summary>
+        /// Adds one or more nodes to the graph.
+        /// </summary>
+        /// <param name="nodes"></param>
+        /// <returns></returns>
+        bool addNodes(std::initializer_list<DagNode> nodes) noexcept;
+
+        /// <summary>
         /// Adds an edge (dependency) to the graph.
         /// Returns false if one or both nodes are not in the graph OR if the edge already exists.
         /// </summary>
         bool addEdge(DagNode from, DagNode to) noexcept;
+
+        /// <summary>
+        /// Adds one or more edges.
+        /// </summary>
+        /// <param name="edges"></param>
+        /// <returns></returns>
+        bool addEdges(std::initializer_list<std::pair<DagNode, DagNode>> edges) noexcept;
 
         /// <summary>
         /// Does the graph contain the specified node?
