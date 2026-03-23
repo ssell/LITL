@@ -52,6 +52,20 @@ namespace LITL::ECS
         return m_nodeGraph.addEdge(dependsOnIndex.value(), dependentIndex.value());
     }
 
+    bool SystemGraph::setPlacementHint(SystemTypeId systemTypeId, SystemNodePlacementHint placement) noexcept
+    {
+        auto systemIndex = findSystemIndex(systemTypeId);
+
+        if (!systemIndex.has_value())
+        {
+            return false;
+        }
+
+        m_systemNodes[systemIndex.value()].placement = placement;
+
+        return true;
+    }
+
     bool SystemGraph::build() noexcept
     {
         // First, add the edges between implicit dependencies. 
@@ -79,7 +93,7 @@ namespace LITL::ECS
 
         // For each system, iterate the components it access (both read and write)
         // and add dependencies (in the form of DAG edges) to other systems based on their usage.
-        for (uint32_t i = 1; i < static_cast<uint32_t>(m_systemNodes.size()); ++i)
+        for (uint32_t i = 0; i < static_cast<uint32_t>(m_systemNodes.size()); ++i)
         {
             auto& systemNode = m_systemNodes[i];
             std::unordered_set<uint32_t> dependencies;
@@ -146,9 +160,9 @@ namespace LITL::ECS
 
     bool SystemGraph::run(World& world, float dt, std::vector<System*> const& systems)
     {
-        for (auto& node : m_systemNodes)
+        for (auto& sortedNode : m_nodeGraph.getSorted())
         {
-            systems[node.systemId]->run(world, dt);
+            systems[m_systemNodes[sortedNode].systemId]->run(world, dt);
         }
 
         return false;
@@ -165,5 +179,10 @@ namespace LITL::ECS
         }
 
         return std::nullopt;
+    }
+
+    Math::DirectedAcyclicGraph const& SystemGraph::getNodeGraph() const noexcept
+    {
+        return m_nodeGraph;
     }
 }

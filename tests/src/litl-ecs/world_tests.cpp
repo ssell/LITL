@@ -341,6 +341,8 @@ namespace LITL::ECS::Tests
     LITL_TEST_CASE("Run System", "[ecs::system]")
     {
         TestWorld world;
+        Core::ServiceCollection collection;
+        auto provider = collection.build();
 
         auto entity0 = world.createImmediate();
         auto entity1 = world.createImmediate();
@@ -356,11 +358,15 @@ namespace LITL::ECS::Tests
          */
 
         world.addSystem<TestSystem>(SystemGroup::Update);
-        world.extractSystemManager().prepareFrame();
+        
+        auto& systemManager = world.extractSystemManager();
+
+        systemManager.finalize(*provider.get());
+        systemManager.prepareFrame();
 
         for (auto i = 0; i < 10; ++i)
         {
-            world.extractSystemManager().run(world, 0.0f, SystemGroup::Update);
+            systemManager.run(world, 0.0f, SystemGroup::Update);
         }
 
         REQUIRE(world.getComponent<Foo>(entity0)->a == 10);

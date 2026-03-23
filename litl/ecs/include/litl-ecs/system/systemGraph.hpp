@@ -46,6 +46,18 @@ namespace LITL::ECS
         bool addDependency(SystemTypeId dependentSystem, SystemTypeId dependsOnSystem) noexcept;
 
         /// <summary>
+        /// Lets the scheduler know if there is a preferred placement that the system should run.
+        /// This does not guarantee a placement (ie it does not enforce the system is absolutely
+        /// first or last) as others systems may have the same hint, and dependencies/dependents
+        /// also influence the final ordering of systems.
+        /// 
+        /// Can return false if the specified system is not in the graph.
+        /// </summary>
+        /// <param name="systemTypeId"></param>
+        /// <param name="placement"></param>
+        bool setPlacementHint(SystemTypeId systemTypeId, SystemNodePlacementHint placement) noexcept;
+
+        /// <summary>
         /// Builds the DAG according to both explicit and implicit system dependencies.
         /// </summary>
         bool build() noexcept;
@@ -58,6 +70,13 @@ namespace LITL::ECS
         /// <param name="systems"></param>
         /// <returns></returns>
         bool run(World& world, float dt, std::vector<System*> const& systems);
+
+        /// <summary>
+        /// Retrieves the DAG.
+        /// Must first call build if it needs to be fully formed and sorted.
+        /// </summary>
+        /// <returns></returns>
+        Math::DirectedAcyclicGraph const& getNodeGraph() const noexcept;
 
     protected:
 
