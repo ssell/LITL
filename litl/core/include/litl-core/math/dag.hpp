@@ -19,12 +19,6 @@ namespace LITL::Math
     {
     public:
 
-        DirectedAcyclicGraph() = default;
-        ~DirectedAcyclicGraph() = default;
-
-        DirectedAcyclicGraph(DirectedAcyclicGraph const&) = delete;
-        DirectedAcyclicGraph& operator=(DirectedAcyclicGraph const&) = delete;
-
         /// <summary>
         /// Adds a node to the graph.
         /// Returns false if the node is already in the graph.
