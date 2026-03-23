@@ -97,6 +97,14 @@ namespace LITL::ECS
 
     void SystemManager::finalize(Core::ServiceProvider& services) const noexcept
     {
+        for (auto& schedule : m_pImpl->schedules)
+        {
+            if (!schedule.build())
+            {
+                // ... todo handle schedule build failure ...
+            }
+        }
+
         for (auto* system : m_pImpl->systems)
         {
             system->setup(services);
