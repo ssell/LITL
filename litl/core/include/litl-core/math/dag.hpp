@@ -90,6 +90,12 @@ namespace LITL::Math
         [[nodiscard]] bool sort() noexcept;
 
         /// <summary>
+        /// Retrieves all of the unsorted nodes.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] std::vector<DagNode> const& getUnsorted() const noexcept;
+
+        /// <summary>
         /// Retrieves all of the sorted nodes.
         /// Will be empty if sort was not called first.
         /// </summary>

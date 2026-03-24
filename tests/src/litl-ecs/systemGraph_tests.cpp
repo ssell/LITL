@@ -194,35 +194,8 @@ namespace LITL::ECS::Tests
 
     LITL_TEST_CASE("Mixed Dependency", "[ecs::systemGraph]")
     {
-        // Mix of explicit and implicit dependencies
+        // Mix of explicit and implicit dependencies along with placement hints. Fun.
         SystemGraph systemGraph;
-
-        // To make it easier to keep track of this example here are some actual system names.
-        // 0 = PhysicsSystem
-        // 1 = MovementSystem
-        // 2 = CameraFollowSystem
-        // 3 = FallDamageSystem
-        // 4 = AnimationStateSystem
-        // 5 = NetworkReceiveSystem
-        // 6 = NetworkSendSystem
-        
-        // Using the following components
-        // 0 = Transform
-        // 1 = Velocity
-
-        // PhysicsSystem (0) reads Transform (0) writes Velocity (1)
-        //     PhysicsSystem set to "First" placement
-        // MovementSystem (1) read/writes Transform (0), reads Velocity (1)
-        //     MovementSystem depends on PhysicsSystem (0)
-        // CameraFollowSystem (2) reads Transform (0)
-        //     CameraFollowSystem depends on MovementSystem (1)
-        // FallDamageSystem (3) reads Transform (0), reads Velocity (1)
-        //     FallDamageSystem depends on PhysicsSystem
-        // AnimationStateSystem (4) reads Transform (0)
-        // NetworkReceiveSystem (6) writes to Transform (0) writes to Velocity (1)
-        //     NetworkReceiveSystem set to "First" placement
-        // NetworkSendSystem (7) reads Transform (0) reads Velocity (1)
-        //     NetworkSendSystem set to "Last" placement
 
         constexpr uint32_t PhysicsSystem = 0;
         constexpr uint32_t MovementSystem = 1;
@@ -235,13 +208,16 @@ namespace LITL::ECS::Tests
         constexpr uint32_t TransformComponent = 0;
         constexpr uint32_t VelocityComponent = 1;
 
-        systemGraph.add(PhysicsSystem, { {TransformComponent, true}, {VelocityComponent, false} });
-        systemGraph.add(MovementSystem, { {TransformComponent, false}, {VelocityComponent, true} });
-        systemGraph.add(CameraFollowSystem, { {TransformComponent, true} });
-        systemGraph.add(FallDamageSystem, { {TransformComponent, true}, {VelocityComponent, true} });
-        systemGraph.add(AnimationStateSystem, { {TransformComponent, true} });
-        systemGraph.add(NetworkReceiveSystem, { {TransformComponent, false}, {VelocityComponent, false} });
-        systemGraph.add(NetworkSendSystem, { {TransformComponent, false}, {VelocityComponent, false} });
+        constexpr bool ReadOnly = true;
+        constexpr bool ReadWrite = false;
+
+        systemGraph.add(PhysicsSystem, { {TransformComponent, ReadOnly}, {VelocityComponent, ReadWrite} });
+        systemGraph.add(MovementSystem, { {TransformComponent, ReadWrite}, {VelocityComponent, ReadOnly} });
+        systemGraph.add(NetworkReceiveSystem, { {TransformComponent, ReadWrite}, {VelocityComponent, ReadWrite} });
+        systemGraph.add(NetworkSendSystem, { {TransformComponent, ReadWrite}, {VelocityComponent, ReadWrite} });
+        systemGraph.add(CameraFollowSystem, { {TransformComponent, ReadOnly} });
+        systemGraph.add(FallDamageSystem, { {TransformComponent, ReadOnly}, {VelocityComponent, ReadOnly} });
+        systemGraph.add(AnimationStateSystem, { {TransformComponent, ReadOnly} });
 
         systemGraph.addDependency(MovementSystem, PhysicsSystem);
         systemGraph.addDependency(CameraFollowSystem, MovementSystem);
@@ -258,5 +234,26 @@ namespace LITL::ECS::Tests
         auto& layers = dag.getLayers();
 
         REQUIRE(sorted.size() == 7);
+        REQUIRE(systemGraph.getNode(sorted[0]).systemId == PhysicsSystem);          // remember: tie-breaker goes to the system added first
+        REQUIRE(systemGraph.getNode(sorted[1]).systemId == NetworkReceiveSystem);
+        REQUIRE(systemGraph.getNode(sorted[2]).systemId == MovementSystem);
+        REQUIRE(systemGraph.getNode(sorted[3]).systemId == CameraFollowSystem);
+        REQUIRE(systemGraph.getNode(sorted[4]).systemId == FallDamageSystem);
+        REQUIRE(systemGraph.getNode(sorted[5]).systemId == AnimationStateSystem);
+        REQUIRE(systemGraph.getNode(sorted[6]).systemId == NetworkSendSystem);
+
+        REQUIRE(layers.size() == 5);
+        REQUIRE(layers[0].size() == 1);
+        REQUIRE(systemGraph.getNode(layers[0][0]).systemId == PhysicsSystem);
+        REQUIRE(layers[1].size() == 1);
+        REQUIRE(systemGraph.getNode(layers[1][0]).systemId == NetworkReceiveSystem);
+        REQUIRE(layers[2].size() == 1);
+        REQUIRE(systemGraph.getNode(layers[2][0]).systemId == MovementSystem);
+        REQUIRE(layers[3].size() == 3);
+        REQUIRE(systemGraph.getNode(layers[3][0]).systemId == CameraFollowSystem);
+        REQUIRE(systemGraph.getNode(layers[3][1]).systemId == FallDamageSystem);
+        REQUIRE(systemGraph.getNode(layers[3][2]).systemId == AnimationStateSystem);
+        REQUIRE(layers[4].size() == 1);
+        REQUIRE(systemGraph.getNode(layers[4][0]).systemId == NetworkSendSystem);
     } END_LITL_TEST_CASE
 }

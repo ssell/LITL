@@ -71,9 +71,21 @@ namespace LITL::ECS
     {
         m_nodeGraph = {};
 
-        for (auto i = 0; i < m_systemNodes.size(); ++i)
+        std::vector<uint32_t> sortedNodes(m_systemNodes.size());
+
+        for (uint32_t i = 0; i < static_cast<uint32_t>(m_systemNodes.size()); ++i)
         {
-            m_nodeGraph.addNode(i);
+            sortedNodes[i] = i;
+        }
+
+        std::stable_sort(sortedNodes.begin(), sortedNodes.end(), [this](uint32_t a, uint32_t b) -> bool
+            {
+                return m_systemNodes[a] < m_systemNodes[b];
+            });
+
+        for (auto sortedNodeIndex : sortedNodes)
+        {
+            m_nodeGraph.addNode(sortedNodeIndex);
         }
 
         addExplicitDependencies();
@@ -150,11 +162,14 @@ namespace LITL::ECS
         // Track the readers and most recent writer for each component type.
         std::unordered_map<ComponentTypeId, ComponentAccessors> componentAccessMap;
 
+        auto& nodeIndices = m_nodeGraph.getUnsorted();
+
         // For each system, iterate the components it access (both read and write)
         // and add dependencies (in the form of DAG edges) to other systems based on their usage.
-        for (uint32_t i = 0; i < static_cast<uint32_t>(m_systemNodes.size()); ++i)
+        for (uint32_t i = 0; i < static_cast<uint32_t>(nodeIndices.size()); ++i)
         {
-            auto& systemNode = m_systemNodes[i];
+            auto nodeIndex = nodeIndices[i];
+            auto& systemNode = m_systemNodes[nodeIndex];
             std::unordered_set<uint32_t> dependencies;
             // ^ set to provide deduplication. may have redundant/duplicate dependencies resulting from systems writing to multiple shared component types.
 
@@ -170,7 +185,7 @@ namespace LITL::ECS
                         dependencies.insert(accessors.lastWriter.value());
                     }
 
-                    accessors.readers.push_back(i);
+                    accessors.readers.push_back(nodeIndex);
                 }
                 else
                 {
@@ -188,13 +203,13 @@ namespace LITL::ECS
                     // Can clear "current" readers as any future writers will implicitly depend on them by having to depend on the current system.
                     // This is the part (along with the dedupe) that produces a minimized DAG.
                     accessors.readers.clear();
-                    accessors.lastWriter = i;
+                    accessors.lastWriter = nodeIndex;
                 }
             }
 
             for (auto dependency : dependencies)
             {
-                m_nodeGraph.addEdge(dependency, i);
+                m_nodeGraph.addEdge(dependency, nodeIndex);
             }
         }
     }
@@ -243,5 +258,11 @@ namespace LITL::ECS
     Math::DirectedAcyclicGraph const& SystemGraph::getNodeGraph() const noexcept
     {
         return m_nodeGraph;
+    }
+
+    SystemNode const& SystemGraph::getNode(uint32_t index) const noexcept
+    {
+        assert(index <= m_systemNodes.size());
+        return m_systemNodes[index];
     }
 }
