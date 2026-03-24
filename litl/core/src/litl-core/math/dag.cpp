@@ -39,17 +39,8 @@ namespace LITL::Math
             return false;
         }
 
-        auto findOutgoingEdges = m_edges.find(from);
-
-        if (findOutgoingEdges == m_edges.end())
-        {
-            m_edges[from] = { to };
-        }
-        else
-        {
-            findOutgoingEdges->second.push_back(to);
-        }
-
+        m_outgoingEdges[from].push_back(to);
+        m_incomingEdges[to].push_back(from);
         m_inDegree[to]++;
 
         return true;
@@ -75,9 +66,9 @@ namespace LITL::Math
 
     bool DirectedAcyclicGraph::containsEdge(DagNode from, DagNode to) const noexcept
     {
-        auto findOutgoingEdges = m_edges.find(from);
+        auto findOutgoingEdges = m_outgoingEdges.find(from);
 
-        if (findOutgoingEdges == m_edges.end())
+        if (findOutgoingEdges == m_outgoingEdges.end())
         {
             return false;
         }
@@ -91,6 +82,16 @@ namespace LITL::Math
         }
 
         return false;
+    }
+
+    bool DirectedAcyclicGraph::hasIncoming(DagNode node) const noexcept
+    {
+        return (m_incomingEdges.find(node) != m_incomingEdges.end());
+    }
+
+    bool DirectedAcyclicGraph::hasOutgoing(DagNode node) const noexcept
+    {
+        return (m_outgoingEdges.find(node) != m_outgoingEdges.end());
     }
 
     size_t DirectedAcyclicGraph::size() const noexcept
@@ -156,7 +157,7 @@ namespace LITL::Math
                 auto node = frontier.front(); frontier.pop();
                 layer.push_back(node);
 
-                for (auto neighbor : m_edges[node])
+                for (auto neighbor : m_outgoingEdges[node])
                 {
                     // (5)
                     if (--m_inDegree[neighbor] == 0)

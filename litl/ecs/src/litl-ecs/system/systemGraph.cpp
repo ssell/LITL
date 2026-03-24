@@ -35,7 +35,6 @@ namespace LITL::ECS
 
     void SystemGraph::add(SystemTypeId systemTypeId, std::vector<SystemComponentInfo> const& componentInfo) noexcept
     {
-        m_nodeGraph.addNode(m_systemNodes.size());
         m_systemNodes.emplace_back(systemTypeId, componentInfo);
     }
 
@@ -49,7 +48,9 @@ namespace LITL::ECS
             return false;
         }
 
-        return m_nodeGraph.addEdge(dependsOnIndex.value(), dependentIndex.value());
+        m_systemNodes[dependsOnIndex.value()].outgoing.insert(dependentIndex.value());
+
+        return true;
     }
 
     bool SystemGraph::setPlacementHint(SystemTypeId systemTypeId, SystemNodePlacementHint placement) noexcept
@@ -68,22 +69,56 @@ namespace LITL::ECS
 
     bool SystemGraph::build() noexcept
     {
-        // First, add the edges between implicit dependencies. 
-        // An implicit dependency is when a system has a conflict with another.
-        // This is due to one system writing to a component that then another
-        // system either needs to read or write to as well.
-        addImplicitDependencies();
+        m_nodeGraph = {};
 
-        // If the DAG sort returns false, then it indicates a cycle was detected.
-        if (!m_nodeGraph.sort())
+        for (auto i = 0; i < m_systemNodes.size(); ++i)
         {
-            // Let the caller (system manager) handle this particular error.
-            return false;
+            m_nodeGraph.addNode(i);
         }
 
-        // ... todo actually use the DAG ...
+        addExplicitDependencies();
+        addImplicitDependencies();
+        applyPlacementHints();
 
-        return true;
+        // If the DAG sort returns false, then it indicates a cycle was detected.
+        return m_nodeGraph.sort();
+    }
+
+    void SystemGraph::applyPlacementHints() noexcept
+    {
+        std::vector<uint32_t> first;
+        std::vector<uint32_t> none;
+        std::vector<uint32_t> last;
+
+        for (uint32_t i = 0; i < static_cast<uint32_t>(m_systemNodes.size()); ++i)
+        {
+            switch (m_systemNodes[i].placement)
+            {
+            case SystemNodePlacementHint::First:
+                first.push_back(i);
+                break;
+
+            case SystemNodePlacementHint::Last:
+                last.push_back(i);
+                break;
+
+            case SystemNodePlacementHint::None:
+            default:
+                none.push_back(i);
+                break;
+            }
+        }
+    }
+
+    void SystemGraph::addExplicitDependencies() noexcept
+    {
+        for (auto i = 0; i < m_systemNodes.size(); ++i)
+        {
+            for (auto& outgoing : m_systemNodes[i].outgoing)
+            {
+                m_nodeGraph.addEdge(i, outgoing);
+            }
+        }
     }
 
     void SystemGraph::addImplicitDependencies() noexcept

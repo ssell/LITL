@@ -63,6 +63,22 @@ namespace LITL::Math
         [[nodiscard]] bool containsEdge(DagNode from, DagNode to) const noexcept;
 
         /// <summary>
+        /// Does the specified node have any incoming edges?
+        /// If no, then it is a root node.
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        [[nodisacrd]] bool hasIncoming(DagNode node) const noexcept;
+
+
+        /// <summary>
+        /// Does the specified node have any outgoing edges? 
+        /// If no, then it is a leaf node.
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        [[nodiscard]] bool hasOutgoing(DagNode node) const noexcept;
+        /// <summary>
         /// Returns the number of nodes in the graph.
         /// </summary>
         /// <returns></returns>
@@ -113,10 +129,16 @@ namespace LITL::Math
         std::unordered_map<DagNode, DagNodeIndex> m_nodeLookup;
 
         /// <summary>
-        /// The edges/dependencies between nodes. Specifically all nodes that the key node leads to.
+        /// All nodes that the key node leads to.
         /// If (A -> B) and (A -> C) then [A] = [B, C]
         /// </summary>
-        std::unordered_map<DagNode, std::vector<DagNode>> m_edges;
+        std::unordered_map<DagNode, std::vector<DagNode>> m_outgoingEdges;
+
+        /// <summary>
+        /// All nodes that lead to the key node.
+        /// If (A -> B) and (C -> B) then [B] = [A, C]
+        /// </summary>
+        std::unordered_map<DagNode, std::vector<DagNode>> m_incomingEdges;
 
         /// <summary>
         /// The number of incoming edges to each node.

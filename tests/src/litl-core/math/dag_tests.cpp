@@ -92,6 +92,17 @@ namespace LITL::Math::Tests
 
         REQUIRE(dag.containsEdge(0, 1) == true);
         REQUIRE(dag.containsEdge(1, 0) == false);   // dag is directed. 0 -> 1 != 0 <- 1
+
+        REQUIRE(dag.hasIncoming(0) == false);
+        REQUIRE(dag.hasOutgoing(0) == true);
+        REQUIRE(dag.hasIncoming(1) == true);
+        REQUIRE(dag.hasOutgoing(1) == true);
+        REQUIRE(dag.hasIncoming(2) == true);
+        REQUIRE(dag.hasOutgoing(2) == true);
+        REQUIRE(dag.hasIncoming(3) == true);
+        REQUIRE(dag.hasOutgoing(3) == false);
+        REQUIRE(dag.hasIncoming(4) == true);
+        REQUIRE(dag.hasOutgoing(4) == false);
     } END_LITL_TEST_CASE
 
     LITL_TEST_CASE("addEdges", "[math::dag]")
