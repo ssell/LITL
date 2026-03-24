@@ -126,6 +126,17 @@ namespace LITL::Math
          *     (A) No initial nodes with an in-degree count of 0. So all nodes have at least one dependency.
          *     (B) The final sorted node count != the original node count.
          */
+
+        m_sortedNodes = {};
+        m_layers = {};
+
+        if (m_nodes.size() == 0)
+        {
+            // That was easy.
+            return true;
+        }
+
+        std::unordered_map<DagNode, uint32_t> inDegrees = m_inDegree;   // use local copy to preserve the original
         std::queue<DagNode> frontier;
         
         // (1)
@@ -160,7 +171,7 @@ namespace LITL::Math
                 for (auto neighbor : m_outgoingEdges[node])
                 {
                     // (5)
-                    if (--m_inDegree[neighbor] == 0)
+                    if (--inDegrees[neighbor] == 0)
                     {
                         // (6)
                         frontier.push(neighbor);
