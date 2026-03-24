@@ -142,8 +142,8 @@ namespace LITL::Core
             job->func = [](Job* job)
                 {
                     void* localData = static_cast<void*>(job->localData);
-                    auto& callable = *static_cast<std::remove_cvref_t<F>*>(localData);
-                    callable(job);
+                    auto* callable = std::launder(static_cast<std::remove_cvref_t<F>*>(localData));
+                    (*callable)(job);
                 };
 
             return handle;

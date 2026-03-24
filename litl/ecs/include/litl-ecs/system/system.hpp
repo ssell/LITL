@@ -7,6 +7,8 @@
 #include <vector>
 
 #include "litl-core/debug.hpp"
+#include "litl-core/job/jobScheduler.hpp"
+#include "litl-core/job/jobFence.hpp"
 #include "litl-ecs/constants.hpp"
 #include "litl-ecs/component/component.hpp"
 #include "litl-ecs/system/systemRunner.hpp"
@@ -15,7 +17,11 @@
 
 namespace LITL::ECS
 {
+    static constexpr size_t SystemWrapperFuncStorageSize = 64;
+
     using SystemSetupFunc = void(Core::ServiceProvider&);
+    using ErasedSystemSetupFunc = void(*)(void*, Core::ServiceProvider&);
+    using ErasedSystemWrapperDestroyFunc = void(*)(void*);
 
     /// <summary>
     /// The result of many levels of wrapping and type erasure.
@@ -40,8 +46,28 @@ namespace LITL::ECS
         {
             setDebugName(typeid(S).name());
 
-            m_setupFunc = CreateSystemWrapperSetupTask(SystemWrapper<S>());
-            m_runFunc = CreateSystemWrapperRunnerTask(SystemWrapper<S>());
+            using LocalWrapper = SystemWrapper<S>;
+            static_assert(sizeof(LocalWrapper) <= SystemWrapperFuncStorageSize, "SystemWrapper too large for inline storage.");
+
+            new (getLocalWrapperStorageAddress()) LocalWrapper{};
+
+            storeLocalWrapperFunctions(
+                std::move([](void* storage, Core::ServiceProvider& services)
+                    {
+                        auto* wrapper = std::launder(reinterpret_cast<LocalWrapper*>(storage));
+                        wrapper->setup(services);
+                    }),
+                std::move([](void* storage, World& world, float dt, Chunk& chunk, ChunkLayout const& layout)
+                    {
+                        auto* wrapper = std::launder(reinterpret_cast<LocalWrapper*>(storage));
+                        wrapper->run(world, dt, chunk, layout);
+                    }),
+                std::move([](void* storage)
+                    {
+                        auto* wrapper = std::launder(reinterpret_cast<LocalWrapper*>(storage));
+                        std::destroy_at(wrapper);
+                    })
+            );
 
             // Get the system components in tuple form. For example: std::tuple<Foo&, Bar&>
             using SystemComponentTuple = SystemComponents<S>;
@@ -70,10 +96,37 @@ namespace LITL::ECS
         /// <param name="layout"></param>
         void run(World& world, float dt);
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="world"></param>
+        /// <param name="dt"></param>
+        /// <param name="scheduler"></param>
+        /// <param name="fence"></param>
+        void run(World& world, float dt, Core::JobScheduler& scheduler, Core::JobFence& fence);
+
     protected:
 
     private:
 
+        /// <summary>
+        /// Returns the internal local buffer used to store the typed SystemWrapper.
+        /// </summary>
+        /// <returns></returns>
+        void* getLocalWrapperStorageAddress();
+
+        /// <summary>
+        /// Store the wrapped typed SystemWrapper setup, run, and destroy functions.
+        /// </summary>
+        /// <param name="setup"></param>
+        /// <param name="run"></param>
+        /// <param name="destroy"></param>
+        void storeLocalWrapperFunctions(ErasedSystemSetupFunc setup, ErasedSystemRunFunc run, ErasedSystemWrapperDestroyFunc destroy);
+
+        /// <summary>
+        /// Adds the component type.
+        /// </summary>
+        /// <param name="componentType"></param>
         void registerComponentType(ComponentTypeId componentType) const noexcept;
 
         /// <summary>
@@ -93,12 +146,8 @@ namespace LITL::ECS
                 }, componentTypesTuple);
         }
 
-
         struct Impl;
         std::unique_ptr<Impl> m_pImpl;
-
-        std::function<LITL::ECS::SystemSetupFunc> m_setupFunc = nullptr;
-        std::function<LITL::ECS::SystemRunFunc> m_runFunc = nullptr;
     };
 }
 

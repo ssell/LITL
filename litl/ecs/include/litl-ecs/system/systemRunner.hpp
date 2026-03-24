@@ -14,6 +14,7 @@ namespace LITL::ECS
     /// The function signature required to run the SystemRunner.
     /// </summary>
     using SystemRunFunc = void(LITL::ECS::World&, float, LITL::ECS::Chunk&, LITL::ECS::ChunkLayout const&);
+    using ErasedSystemRunFunc = void(*)(void*, LITL::ECS::World&, float, LITL::ECS::Chunk&, LITL::ECS::ChunkLayout const&);
 
     /// <summary>
     /// Responsible for running a system over a single archetype chunk.

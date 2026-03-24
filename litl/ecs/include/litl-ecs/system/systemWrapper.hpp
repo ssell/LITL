@@ -12,30 +12,6 @@ namespace LITL::ECS
     class World;
 
     /// <summary>
-    /// Wraps the execution of a SystemWrapper into a typeless lambda.
-    /// This is so we can store the system setup generically.
-    /// </summary>
-    auto CreateSystemWrapperSetupTask = [](auto wrapper)
-        {
-            return [wrapper = std::move(wrapper)](Core::ServiceProvider& services) mutable
-            {
-                wrapper.setup(services);
-            };
-        };
-
-    /// <summary>
-    /// Wraps the execution of a SystemWrapper into a typeless lambda.
-    /// This is so we can store the system execution generically.
-    /// </summary>
-    auto CreateSystemWrapperRunnerTask = [](auto wrapper) 
-        {
-            return [wrapper = std::move(wrapper)](World& world, float dt, Chunk& chunk, ChunkLayout const& layout) mutable
-            {
-                wrapper.run(world, dt, chunk, layout);
-            };
-        };
-    
-    /// <summary>
     /// Wraps around an user System and SystemRunner combination.
     /// </summary>
     template<ValidSystem S>
@@ -44,9 +20,24 @@ namespace LITL::ECS
     public:
 
         SystemWrapper()
-            : m_pSystem(std::make_shared<S>()), m_pRunner(std::make_shared<SystemRunner<S>>(m_pSystem.get()))
         {
+            m_pSystem = new S();
+            m_pRunner = new SystemRunner<S>(m_pSystem);
+        }
 
+        ~SystemWrapper()
+        {
+            if (m_pRunner != nullptr)
+            {
+                delete m_pRunner;
+                m_pRunner = nullptr;
+            }
+
+            if (m_pSystem != nullptr)
+            {
+                delete m_pSystem;
+                m_pSystem = nullptr;
+            }
         }
 
         void setup(Core::ServiceProvider& services)
@@ -64,8 +55,8 @@ namespace LITL::ECS
     private:
 
         // Use shared here as the task creator uses copies
-        std::shared_ptr<S> m_pSystem;
-        std::shared_ptr<SystemRunner<S>> m_pRunner;
+        S* m_pSystem{ nullptr };
+        SystemRunner<S>* m_pRunner{ nullptr };
     };
 }
 
