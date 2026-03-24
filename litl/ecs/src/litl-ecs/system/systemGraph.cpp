@@ -1,4 +1,6 @@
 #include <unordered_set>
+
+#include "litl-core/job/jobFence.hpp"
 #include "litl-ecs/system/systemGraph.hpp"
 #include "litl-ecs/system/system.hpp"
 
@@ -232,14 +234,28 @@ namespace LITL::ECS
         return false;
     }
 
-    bool SystemGraph::run(World& world, float dt, std::vector<System*> const& systems)
+    void SystemGraph::run(World& world, float dt, std::vector<System*> const& systems)
     {
         for (auto& sortedNode : m_nodeGraph.getSorted())
         {
             systems[m_systemNodes[sortedNode].systemId]->run(world, dt);
         }
+    }
 
-        return false;
+    void SystemGraph::run(World& world, float dt, std::vector<System*> const& systems, Core::JobScheduler& scheduler)
+    {
+        for (auto& layer : m_nodeGraph.getLayers())
+        {
+            Core::JobFence layerFence{ &scheduler };
+
+            for (auto layerNodeIndex : layer)
+            {
+                auto& layerNode = m_systemNodes[layerNodeIndex];
+                systems[layerNode.systemId]->run(world, dt, scheduler, layerFence);
+            }
+
+            layerFence.wait();
+        }
     }
 
     std::optional<uint32_t> SystemGraph::findSystemIndex(SystemTypeId systemTypeId) const noexcept

@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "litl-core/math/dag.hpp"
+#include "litl-core/job/jobScheduler.hpp"
 #include "litl-ecs/system/system.hpp"
 #include "litl-ecs/system/systemNode.hpp"
 
@@ -75,12 +76,22 @@ namespace LITL::ECS
 
         /// <summary>
         /// Runs all systems in the schedule according to their order in the DAG.
+        /// This runs them sequentially on the main thread. For testing and soon to be deprecated.
         /// </summary>
         /// <param name="world"></param>
         /// <param name="dt"></param>
         /// <param name="systems"></param>
         /// <returns></returns>
-        bool run(World& world, float dt, std::vector<System*> const& systems);
+        void run(World& world, float dt, std::vector<System*> const& systems);
+
+        /// <summary>
+        /// Parallelized job running.
+        /// </summary>
+        /// <param name="world"></param>
+        /// <param name="dt"></param>
+        /// <param name="systems"></param>
+        /// <param name="scheduler"></param>
+        void run(World& world, float dt, std::vector<System*> const& systems, Core::JobScheduler& scheduler);
 
         /// <summary>
         /// Retrieves the DAG.
