@@ -51,6 +51,17 @@ namespace LITL::ECS
         /// first or last) as others systems may have the same hint, and dependencies/dependents
         /// also influence the final ordering of systems.
         /// 
+        /// In the event of multiple systems with the same hint, then ordering within the hint
+        /// subgroup is based on the order in which the system was added to the system group.
+        /// 
+        /// For example, if systems 3, 7, 11 are all given a placement of "first" then the
+        /// default system order, prior to other dependencies, will be: [3, 7, 11, 0, 1, 2, ...].
+        /// 
+        /// If systems 3, 7, 11 are all given a placement of "last" then the default system
+        /// order, prior to other dependencies, will be: [..., 8, 9, 10, 3, 7, 11].
+        /// 
+        /// Final system order is dependent on both explicit and implicit dependencies.
+        /// 
         /// Can return false if the specified system is not in the graph.
         /// </summary>
         /// <param name="systemTypeId"></param>
@@ -81,6 +92,13 @@ namespace LITL::ECS
     protected:
 
     private:
+
+        void applyPlacementHints() noexcept;
+
+        /// <summary>
+        /// Adds the previously defined explicit dependencies to the internal DAG.
+        /// </summary>
+        void addExplicitDependencies() noexcept;
 
         /// <summary>
         /// Traverses the system nodes and adds implicit dependencies based on component access patterns.

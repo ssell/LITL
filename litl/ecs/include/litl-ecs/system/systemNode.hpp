@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <unordered_set>
 #include <vector>
 
 #include "litl-ecs/constants.hpp"
@@ -10,17 +11,17 @@
 
 namespace LITL::ECS
 {
-    enum SystemNodePlacementHint
+    enum SystemNodePlacementHint : uint32_t
     {
-        /// <summary>
-        /// No preference on order position, aside from its dependencies.
-        /// </summary>
-        None = 0,
-
         /// <summary>
         /// Prefer if the system is run first, or as near to first as possible.
         /// </summary>
-        First = 1,
+        First = 0,
+
+        /// <summary>
+        /// No preference on order position, aside from its dependencies.
+        /// </summary>
+        None = 1,
 
         /// <summary>
         /// Prefer if the system is run last, or as near to last as possible.
@@ -36,9 +37,15 @@ namespace LITL::ECS
         explicit SystemNode(SystemTypeId systemIndex, std::vector<SystemComponentInfo> const& components)
             : systemId(systemIndex), componentInfo(components)
         {
-            incoming.reserve(8);
-            outgoing.reserve(8);
+
         }
+
+        auto operator<=>(SystemNode const& other) const
+        {
+            return static_cast<uint32_t>(placement) <=> static_cast<uint32_t>(other.placement);
+        }
+
+        bool operator==(SystemNode const& other) const = default;
 
         /// <summary>
         /// The system instance referenced by this node.
@@ -56,20 +63,9 @@ namespace LITL::ECS
         std::vector<SystemComponentInfo> componentInfo{};
 
         /// <summary>
-        /// The system nodes (represented by their index in the group) that this system is dependent on.
-        /// </summary>
-        std::vector<uint32_t> incoming{};
-
-        /// <summary>
         /// The system nodes (represented by their index in the group) that are dependent on this system.
         /// </summary>
-        std::vector<uint32_t> outgoing{};
-
-        /// <summary>
-        /// The number of incoming systems that still need to finish before this system can be executed.
-        /// The scheduler does not consider "what system should be run next?" but rather "what systems have zero remaining incoming dependencies?"
-        /// </summary>
-        //std::atomic<uint32_t> remainingIncoming;
+        std::unordered_set<uint32_t> outgoing{};
     };
 }
 

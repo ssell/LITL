@@ -123,11 +123,11 @@ namespace LITL::ECS::Tests
         systemGraph.add(4, {});
 
         REQUIRE(systemGraph.setPlacementHint(2, SystemNodePlacementHint::First) == true);
-        REQUIRE(systemGraph.setPlacementHint(4, SystemNodePlacementHint::First) == true);       // supercede 2
+        REQUIRE(systemGraph.setPlacementHint(4, SystemNodePlacementHint::First) == true);
         REQUIRE(systemGraph.setPlacementHint(9, SystemNodePlacementHint::First) == false);
 
         // Expected sort:
-        // [4, 2, 0, 1, 3]
+        // [2, 4, 0, 1, 3]
 
         REQUIRE(systemGraph.build() == true);
 
@@ -136,14 +136,14 @@ namespace LITL::ECS::Tests
         auto& layers = dag.getLayers();
 
         REQUIRE(sorted.size() == 5);
-        REQUIRE(sorted[0] == 4);
-        REQUIRE(sorted[1] == 2);
+        REQUIRE(sorted[0] == 2);
+        REQUIRE(sorted[1] == 4);
         REQUIRE(sorted[2] == 0);
         REQUIRE(sorted[3] == 1);
         REQUIRE(sorted[4] == 3);
         REQUIRE(layers.size() == 1);
-        REQUIRE(layers[0][0] == 4);
-        REQUIRE(layers[0][1] == 2);
+        REQUIRE(layers[0][0] == 2);
+        REQUIRE(layers[0][1] == 4);
         REQUIRE(layers[0][2] == 0);
         REQUIRE(layers[0][3] == 1);
         REQUIRE(layers[0][4] == 3);
@@ -160,7 +160,7 @@ namespace LITL::ECS::Tests
         systemGraph.add(4, {});
 
         REQUIRE(systemGraph.setPlacementHint(2, SystemNodePlacementHint::Last) == true);
-        REQUIRE(systemGraph.setPlacementHint(4, SystemNodePlacementHint::Last) == true);       // supercede 2
+        REQUIRE(systemGraph.setPlacementHint(4, SystemNodePlacementHint::Last) == true);
         REQUIRE(systemGraph.setPlacementHint(9, SystemNodePlacementHint::Last) == false);
 
         // Expected sort:
@@ -205,15 +205,52 @@ namespace LITL::ECS::Tests
         // 1 = Velocity
 
         // PhysicsSystem (0) reads Transform (0) writes Velocity (1)
+        //     PhysicsSystem set to "First" placement
         // MovementSystem (1) read/writes Transform (0), reads Velocity (1)
         //     MovementSystem depends on PhysicsSystem (0)
         // CameraFollowSystem (2) reads Transform (0)
         //     CameraFollowSystem depends on MovementSystem (1)
         // FallDamageSystem (3) reads Transform (0), reads Velocity (1)
-        //     FallDamageSystem depends on PhysicsSystem (0) and MovementSystem (1)
+        //     FallDamageSystem depends on PhysicsSystem
         // AnimationStateSystem (4) reads Transform (0)
-        // NetworkReceiveSystem (6) writes to Transform (0)
-        // NetworkSendSystem (7) reads Transform (0)
+        // NetworkReceiveSystem (6) writes to Transform (0) writes to Velocity (1)
+        //     NetworkReceiveSystem set to "First" placement
+        // NetworkSendSystem (7) reads Transform (0) reads Velocity (1)
+        //     NetworkSendSystem set to "Last" placement
 
+        constexpr uint32_t PhysicsSystem = 0;
+        constexpr uint32_t MovementSystem = 1;
+        constexpr uint32_t CameraFollowSystem = 2;
+        constexpr uint32_t FallDamageSystem = 3;
+        constexpr uint32_t AnimationStateSystem = 4;
+        constexpr uint32_t NetworkReceiveSystem = 5;
+        constexpr uint32_t NetworkSendSystem = 6;
+
+        constexpr uint32_t TransformComponent = 0;
+        constexpr uint32_t VelocityComponent = 1;
+
+        systemGraph.add(PhysicsSystem, { {TransformComponent, true}, {VelocityComponent, false} });
+        systemGraph.add(MovementSystem, { {TransformComponent, false}, {VelocityComponent, true} });
+        systemGraph.add(CameraFollowSystem, { {TransformComponent, true} });
+        systemGraph.add(FallDamageSystem, { {TransformComponent, true}, {VelocityComponent, true} });
+        systemGraph.add(AnimationStateSystem, { {TransformComponent, true} });
+        systemGraph.add(NetworkReceiveSystem, { {TransformComponent, false}, {VelocityComponent, false} });
+        systemGraph.add(NetworkSendSystem, { {TransformComponent, false}, {VelocityComponent, false} });
+
+        systemGraph.addDependency(MovementSystem, PhysicsSystem);
+        systemGraph.addDependency(CameraFollowSystem, MovementSystem);
+        systemGraph.addDependency(FallDamageSystem, PhysicsSystem);
+
+        systemGraph.setPlacementHint(PhysicsSystem, SystemNodePlacementHint::First);
+        systemGraph.setPlacementHint(NetworkReceiveSystem, SystemNodePlacementHint::First);
+        systemGraph.setPlacementHint(NetworkSendSystem, SystemNodePlacementHint::Last);
+
+        REQUIRE(systemGraph.build() == true);
+
+        auto& dag = systemGraph.getNodeGraph();
+        auto& sorted = dag.getSorted();
+        auto& layers = dag.getLayers();
+
+        REQUIRE(sorted.size() == 7);
     } END_LITL_TEST_CASE
 }
