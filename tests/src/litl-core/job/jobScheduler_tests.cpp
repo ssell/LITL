@@ -334,4 +334,59 @@ namespace LITL::Core::Tests
         REQUIRE(job0->version == 1);
         REQUIRE(job0->state == JobState::Idle);
     } END_LITL_TEST_CASE
+
+    namespace
+    {
+        using SelfContainedJobIndirectFunc = void(uint32_t*, uint32_t);
+
+        void selfContainedJobIndirectRun(uint32_t* dataPtr, uint32_t data)
+        {
+            (*dataPtr) += data;
+        }
+
+        struct SelfContainedJob
+        {
+            uint32_t dataBuffer[128];               // make the job struct large, to ensure we can capture even a large struct reference in the lambda closure.
+            uint32_t data{ 0 };
+            uint32_t* dataPtr{ nullptr };
+
+            void run(Job* job)
+            {
+                (*dataPtr) += data;
+            }
+
+            void runIndirect(Job* job)
+            {
+                auto func = reinterpret_cast<SelfContainedJobIndirectFunc*>(job->data);
+                func(dataPtr, data);
+            }
+        };
+    }
+
+    LITL_TEST_CASE("SelfContainedJob", "[core::job::jobScheduler]")
+    {
+        JobScheduler scheduler;
+        uint32_t sharedData = 0;
+
+        SelfContainedJob job{ {}, 5, &sharedData };
+
+        scheduler.createAndSubmit([&job](Job* j)
+            {
+                job.run(j);
+            }, JobPriority::Normal, nullptr);
+
+        REQUIRE(scheduler.wait() == true);
+        REQUIRE(sharedData == 5);
+
+        job.data = 7;
+
+        scheduler.createAndSubmit([&job](Job* j)
+            {
+                job.runIndirect(j);
+            }, JobPriority::Normal, selfContainedJobIndirectRun);
+
+        REQUIRE(scheduler.wait() == true);
+        REQUIRE(sharedData == 12);
+
+    } END_LITL_TEST_CASE;
 }
