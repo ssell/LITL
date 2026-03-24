@@ -182,6 +182,11 @@ namespace LITL::Math
         return true;
     }
 
+    std::vector<DagNode> const& DirectedAcyclicGraph::getUnsorted() const noexcept
+    {
+        return m_nodes;
+    }
+
     std::vector<DagNode> const& DirectedAcyclicGraph::getSorted() const noexcept
     {
         return m_sortedNodes;

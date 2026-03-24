@@ -89,6 +89,13 @@ namespace LITL::ECS
         /// <returns></returns>
         Math::DirectedAcyclicGraph const& getNodeGraph() const noexcept;
 
+        /// <summary>
+        /// Retreives the node at the specified index.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        SystemNode const& getNode(uint32_t index) const noexcept;
+
     protected:
 
     private:
