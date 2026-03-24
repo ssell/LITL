@@ -522,4 +522,343 @@ namespace LITL::Math::Tests
         REQUIRE(dag.addEdges({ {0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}, {4, 1} }) == true);
         REQUIRE(dag.sort() == false);
     } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("Sort Single Node", "[math::dag]")
+    {
+        DirectedAcyclicGraph dag;
+        REQUIRE(dag.addNode(0) == true);
+        REQUIRE(dag.sort() == true);
+
+        auto& sorted = dag.getSorted();
+        REQUIRE(sorted.size() == 1);
+        REQUIRE(sorted[0] == 0);
+
+        auto& layers = dag.getLayers();
+        REQUIRE(layers.size() == 1);
+        REQUIRE(layers[0].size() == 1);
+        REQUIRE(layers[0][0] == 0);
+    } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("Sort Disconnected Nodes", "[math::dag]")
+    {
+        // Every node is independent and should end up in a single layer.
+        DirectedAcyclicGraph dag;
+        dag.addNodes({ 0, 1, 2, 3 });
+
+        REQUIRE(dag.sort() == true);
+
+        auto& sorted = dag.getSorted();
+        REQUIRE(sorted.size() == 4);
+
+        auto& layers = dag.getLayers();
+        REQUIRE(layers.size() == 1);
+        REQUIRE(layers[0].size() == 4);
+    } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("sort linear chain", "[math::dag]")
+    {
+        // Every layer should have a single node.
+        DirectedAcyclicGraph dag;
+        dag.addNodes({ 0, 1, 2, 3, 4 });
+        dag.addEdges({ {0, 1}, {1, 2}, {2, 3}, {3, 4} });
+
+        REQUIRE(dag.sort() == true);
+
+        auto& sorted = dag.getSorted();
+        REQUIRE(sorted.size() == 5);
+        for (size_t i = 0; i < 5; ++i)
+        {
+            REQUIRE(sorted[i] == static_cast<DagNode>(i));
+        }
+
+        auto& layers = dag.getLayers();
+        REQUIRE(layers.size() == 5);
+        for (auto& layer : layers)
+        {
+            REQUIRE(layer.size() == 1);
+        }
+    } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("Sort Diamond", "[math::dag]")
+    {
+        DirectedAcyclicGraph dag;
+
+        /**
+         *       0
+         *      / \
+         *     V   V
+         *     1   2
+         *      \ /
+         *       V
+         *       3
+         */
+
+        dag.addNodes({ 0, 1, 2, 3 });
+        dag.addEdges({ {0, 1}, {0, 2}, {1, 3}, {2, 3} });
+
+        REQUIRE(dag.sort() == true);
+
+        auto& sorted = dag.getSorted();
+        REQUIRE(sorted.size() == 4);
+        REQUIRE(sorted[0] == 0);
+        // 1 and 2 can be in either order, but both before 3
+        REQUIRE(sorted[3] == 3);
+
+        auto& layers = dag.getLayers();
+        REQUIRE(layers.size() == 3);
+        REQUIRE(layers[0].size() == 1);
+        REQUIRE(layers[1].size() == 2);
+        REQUIRE(layers[2].size() == 1);
+    } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("Sort Multiple Roots", "[math::dag]")
+    {
+        DirectedAcyclicGraph dag;
+
+        /**
+         *     0   1   2
+         *      \  |  /
+         *       V V V
+         *         3
+         */
+
+        dag.addNodes({ 0, 1, 2, 3 });
+        dag.addEdges({ {0, 3}, {1, 3}, {2, 3} });
+
+        REQUIRE(dag.sort() == true);
+
+        auto& sorted = dag.getSorted();
+        REQUIRE(sorted.size() == 4);
+        REQUIRE(sorted[3] == 3);
+
+        auto& layers = dag.getLayers();
+        REQUIRE(layers.size() == 2);
+        REQUIRE(layers[0].size() == 3);
+        REQUIRE(layers[1].size() == 1);
+    } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("Cycles Self Loop", "[math::dag]")
+    {
+        DirectedAcyclicGraph dag;
+        dag.addNode(0);
+        dag.addEdge(0, 0);
+
+        REQUIRE(dag.sort() == false);
+    } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("Cycles Triangle", "[math::dag]")
+    {
+        DirectedAcyclicGraph dag;
+
+        /**
+         *     0 -> 1 -> 2
+         *     ^         |
+         *     └─────────┘
+         */
+
+        dag.addNodes({ 0, 1, 2 });
+        dag.addEdges({ {0, 1}, {1, 2}, {2, 0} });
+
+        REQUIRE(dag.sort() == false);
+    } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("getUnsorted Insertion Order", "[math::dag]")
+    {
+        DirectedAcyclicGraph dag;
+        dag.addNodes({ 5, 3, 8, 1 });
+
+        auto& unsorted = dag.getUnsorted();
+        REQUIRE(unsorted.size() == 4);
+        REQUIRE(unsorted[0] == 5);
+        REQUIRE(unsorted[1] == 3);
+        REQUIRE(unsorted[2] == 8);
+        REQUIRE(unsorted[3] == 1);
+    } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("Sort Empty Graph", "[math::dag]")
+    {
+        DirectedAcyclicGraph dag;
+
+        REQUIRE(dag.sort() == true);
+        REQUIRE(dag.getSorted().empty() == true);
+        REQUIRE(dag.getLayers().empty() == true);
+    } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("Sort Idempotency", "[math::dag]")
+    {
+        DirectedAcyclicGraph dag;
+
+        /**
+         *       0
+         *      / \
+         *     V   V
+         *     1   2
+         *      \ /
+         *       V
+         *       3
+         */
+
+        dag.addNodes({ 0, 1, 2, 3 });
+        dag.addEdges({ {0, 1}, {0, 2}, {1, 3}, {2, 3} });
+
+
+        auto& sorted = dag.getSorted();
+        auto& layers = dag.getLayers();
+
+        for (auto i = 0; i < 5; ++i)
+        {
+            // Calling sort multiple times should have the same result.
+            REQUIRE(dag.sort() == true);
+            REQUIRE(sorted.size() == 4);
+            REQUIRE(sorted[0] == 0);
+            REQUIRE(sorted[1] == 1);
+            REQUIRE(sorted[2] == 2);
+            REQUIRE(sorted[3] == 3);
+            REQUIRE(layers.size() == 3);
+            REQUIRE(layers[0].size() == 1);
+            REQUIRE(layers[0][0] == 0);
+            REQUIRE(layers[1].size() == 2);
+            REQUIRE(layers[1][0] == 1);
+            REQUIRE(layers[1][1] == 2);
+            REQUIRE(layers[2].size() == 1);
+            REQUIRE(layers[2][0] == 3);
+        }
+    } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("Wide Fan", "[math::dag]")
+    {
+        DirectedAcyclicGraph dag;
+
+        // Node 0 = root
+        // Nodes 1..1000 = middle layer
+        // Node 1001 = sink
+
+        constexpr DagNode root = 0;
+        constexpr DagNode sink = 1001;
+        constexpr size_t middleCount = 1000;
+
+        dag.addNode(root);
+        for (DagNode i = 1; i <= static_cast<DagNode>(middleCount); ++i)
+        {
+            dag.addNode(i);
+        }
+        dag.addNode(sink);
+
+        REQUIRE(dag.size() == middleCount + 2);
+
+        bool allValid = true;
+
+        for (DagNode i = 1; i <= static_cast<DagNode>(middleCount); ++i)
+        {
+            allValid = allValid &&
+                dag.addEdge(root, i) && 
+                dag.addEdge(i, sink);
+        }
+
+        REQUIRE(allValid);
+        REQUIRE(dag.sort() == true);
+
+        auto& sorted = dag.getSorted();
+        REQUIRE(sorted.size() == middleCount + 2);
+        REQUIRE(sorted.front() == root);
+        REQUIRE(sorted.back() == sink);
+
+        auto& layers = dag.getLayers();
+        REQUIRE(layers.size() == 3);
+        REQUIRE(layers[0].size() == 1);
+        REQUIRE(layers[1].size() == middleCount);
+        REQUIRE(layers[2].size() == 1);
+    } END_LITL_TEST_CASE
+        
+    LITL_TEST_CASE("Deep Chain", "[math::dag]")
+    {
+        DirectedAcyclicGraph dag;
+
+        constexpr size_t depth = 5000;
+
+        for (DagNode i = 0; i < static_cast<DagNode>(depth); ++i)
+        {
+            dag.addNode(i);
+        }
+
+        bool allValid = true;
+
+        for (DagNode i = 0; i < static_cast<DagNode>(depth - 1); ++i)
+        {
+            allValid = allValid && dag.addEdge(i, i + 1);
+        }
+
+        REQUIRE(allValid);
+        REQUIRE(dag.size() == depth);
+        REQUIRE(dag.sort() == true);
+
+        auto& sorted = dag.getSorted();
+        REQUIRE(sorted.size() == depth);
+
+        for (size_t i = 0; i < depth; ++i)
+        {
+            allValid = allValid && (sorted[i] == static_cast<DagNode>(i));
+        }
+
+        REQUIRE(allValid);
+        auto& layers = dag.getLayers();
+        REQUIRE(layers.size() == depth);
+
+        for (auto& layer : layers)
+        {
+            allValid = allValid && (layer.size() == 1);
+        }
+
+        REQUIRE(allValid);
+    } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("Dense Multilayer", "[math::dag]")
+    {
+        DirectedAcyclicGraph dag;
+
+        // 10 layers of 50 nodes each = 500 nodes
+        // Every node in layer L connects to every node in layer L+1
+
+        constexpr size_t layerCount = 10;
+        constexpr size_t nodesPerLayer = 50;
+        constexpr size_t totalNodes = layerCount * nodesPerLayer;
+
+        for (DagNode i = 0; i < static_cast<DagNode>(totalNodes); ++i)
+        {
+            dag.addNode(i);
+        }
+
+        REQUIRE(dag.size() == totalNodes);
+
+        bool allValid = true;
+
+        for (size_t layer = 0; layer < layerCount - 1; ++layer)
+        {
+            for (size_t src = 0; src < nodesPerLayer; ++src)
+            {
+                for (size_t dst = 0; dst < nodesPerLayer; ++dst)
+                {
+                    auto from = static_cast<DagNode>(layer * nodesPerLayer + src);
+                    auto to = static_cast<DagNode>((layer + 1) * nodesPerLayer + dst);
+                    allValid = allValid && dag.addEdge(from, to);
+                }
+            }
+        }
+
+        REQUIRE(allValid);
+        REQUIRE(dag.sort() == true);
+
+        auto& sorted = dag.getSorted();
+        REQUIRE(sorted.size() == totalNodes);
+
+        auto& layers = dag.getLayers();
+        REQUIRE(layers.size() == layerCount);
+
+        for (auto& layer : layers)
+        {
+            allValid = allValid && (layer.size() == nodesPerLayer);
+        }
+
+        REQUIRE(allValid);
+    } END_LITL_TEST_CASE
 }
