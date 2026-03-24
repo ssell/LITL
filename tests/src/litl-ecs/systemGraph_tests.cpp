@@ -31,19 +31,19 @@ namespace LITL::ECS::Tests
         auto& layers = dag.getLayers();
 
         REQUIRE(sorted.size() == 4);
-        REQUIRE(sorted[0] == 0);
-        REQUIRE(sorted[1] == 1);
-        REQUIRE(sorted[2] == 2);
-        REQUIRE(sorted[3] == 3);
+        REQUIRE(systemGraph.getNode(sorted[0]).systemId == 0);
+        REQUIRE(systemGraph.getNode(sorted[1]).systemId == 1);
+        REQUIRE(systemGraph.getNode(sorted[2]).systemId == 2);
+        REQUIRE(systemGraph.getNode(sorted[3]).systemId == 3);
 
         REQUIRE(layers.size() == 3);
         REQUIRE(layers[0].size() == 2);
-        REQUIRE(layers[0][0] == 0);
-        REQUIRE(layers[0][1] == 1);
+        REQUIRE(systemGraph.getNode(layers[0][0]).systemId == 0);
+        REQUIRE(systemGraph.getNode(layers[0][1]).systemId == 1);
         REQUIRE(layers[1].size() == 1);
-        REQUIRE(layers[1][0] == 2);
+        REQUIRE(systemGraph.getNode(layers[1][0]).systemId == 2);
         REQUIRE(layers[2].size() == 1);
-        REQUIRE(layers[2][0] == 3);
+        REQUIRE(systemGraph.getNode(layers[2][0]).systemId == 3);
     } END_LITL_TEST_CASE
 
     LITL_TEST_CASE("Implicit Dependency", "[ecs::systemGraph]")
@@ -86,29 +86,29 @@ namespace LITL::ECS::Tests
         auto& layers = dag.getLayers();
 
         REQUIRE(sorted.size() == 8);
-        REQUIRE(sorted[0] == 0);
-        REQUIRE(sorted[1] == 2);
-        REQUIRE(sorted[2] == 5);
-        REQUIRE(sorted[3] == 1);
-        REQUIRE(sorted[4] == 3);
-        REQUIRE(sorted[5] == 4);
-        REQUIRE(sorted[6] == 6);
-        REQUIRE(sorted[7] == 7);
+        REQUIRE(systemGraph.getNode(sorted[0]).systemId == 0);
+        REQUIRE(systemGraph.getNode(sorted[1]).systemId == 2);
+        REQUIRE(systemGraph.getNode(sorted[2]).systemId == 5);
+        REQUIRE(systemGraph.getNode(sorted[3]).systemId == 1);
+        REQUIRE(systemGraph.getNode(sorted[4]).systemId == 3);
+        REQUIRE(systemGraph.getNode(sorted[5]).systemId == 4);
+        REQUIRE(systemGraph.getNode(sorted[6]).systemId == 6);
+        REQUIRE(systemGraph.getNode(sorted[7]).systemId == 7);
 
         REQUIRE(layers.size() == 5);
         REQUIRE(layers[0].size() == 3);
-        REQUIRE(layers[0][0] == 0);
-        REQUIRE(layers[0][1] == 2);
-        REQUIRE(layers[0][2] == 5);
+        REQUIRE(systemGraph.getNode(layers[0][0]).systemId == 0);
+        REQUIRE(systemGraph.getNode(layers[0][1]).systemId == 2);
+        REQUIRE(systemGraph.getNode(layers[0][2]).systemId == 5);
         REQUIRE(layers[1].size() == 2);
-        REQUIRE(layers[1][0] == 1);
-        REQUIRE(layers[1][1] == 3);
+        REQUIRE(systemGraph.getNode(layers[1][0]).systemId == 1);
+        REQUIRE(systemGraph.getNode(layers[1][1]).systemId == 3);
         REQUIRE(layers[2].size() == 1);
-        REQUIRE(layers[2][0] == 4);
+        REQUIRE(systemGraph.getNode(layers[2][0]).systemId == 4);
         REQUIRE(layers[3].size() == 1);
-        REQUIRE(layers[3][0] == 6);
+        REQUIRE(systemGraph.getNode(layers[3][0]).systemId == 6);
         REQUIRE(layers[4].size() == 1);
-        REQUIRE(layers[4][0] == 7);
+        REQUIRE(systemGraph.getNode(layers[4][0]).systemId == 7);
 
     } END_LITL_TEST_CASE
 
@@ -137,19 +137,20 @@ namespace LITL::ECS::Tests
         auto& layers = dag.getLayers();
 
         REQUIRE(sorted.size() == 5);
-        REQUIRE(sorted[0] == 2);
-        REQUIRE(sorted[1] == 4);
-        REQUIRE(sorted[2] == 0);
-        REQUIRE(sorted[3] == 1);
-        REQUIRE(sorted[4] == 3);
+        REQUIRE(systemGraph.getNode(sorted[0]).systemId == 2);
+        REQUIRE(systemGraph.getNode(sorted[1]).systemId == 4);
+        REQUIRE(systemGraph.getNode(sorted[2]).systemId == 0);
+        REQUIRE(systemGraph.getNode(sorted[3]).systemId == 1);
+        REQUIRE(systemGraph.getNode(sorted[4]).systemId == 3);
+
         REQUIRE(layers.size() == 2);
         REQUIRE(layers[0].size() == 2);
-        REQUIRE(layers[0][0] == 2);
-        REQUIRE(layers[0][1] == 4);
+        REQUIRE(systemGraph.getNode(layers[0][0]).systemId == 2);
+        REQUIRE(systemGraph.getNode(layers[0][1]).systemId == 4);
         REQUIRE(layers[1].size() == 3);
-        REQUIRE(layers[1][0] == 0);
-        REQUIRE(layers[1][1] == 1);
-        REQUIRE(layers[1][2] == 3);
+        REQUIRE(systemGraph.getNode(layers[1][0]).systemId == 0);
+        REQUIRE(systemGraph.getNode(layers[1][1]).systemId == 1);
+        REQUIRE(systemGraph.getNode(layers[1][2]).systemId == 3);
     } END_LITL_TEST_CASE
 
     LITL_TEST_CASE("Prefer Last", "[ecs::systemGraph]")
@@ -177,19 +178,20 @@ namespace LITL::ECS::Tests
         auto& layers = dag.getLayers();
 
         REQUIRE(sorted.size() == 5);
-        REQUIRE(sorted[0] == 0);
-        REQUIRE(sorted[1] == 1);
-        REQUIRE(sorted[2] == 3);
-        REQUIRE(sorted[3] == 2);
-        REQUIRE(sorted[4] == 4);
+        REQUIRE(systemGraph.getNode(sorted[0]).systemId == 0);
+        REQUIRE(systemGraph.getNode(sorted[1]).systemId == 1);
+        REQUIRE(systemGraph.getNode(sorted[2]).systemId == 3);
+        REQUIRE(systemGraph.getNode(sorted[3]).systemId == 2);
+        REQUIRE(systemGraph.getNode(sorted[4]).systemId == 4);
+
         REQUIRE(layers.size() == 2);
         REQUIRE(layers[0].size() == 3);
-        REQUIRE(layers[0][0] == 0);
-        REQUIRE(layers[0][1] == 1);
-        REQUIRE(layers[0][2] == 3);
+        REQUIRE(systemGraph.getNode(layers[0][0]).systemId == 0);
+        REQUIRE(systemGraph.getNode(layers[0][1]).systemId == 1);
+        REQUIRE(systemGraph.getNode(layers[0][2]).systemId == 3);
         REQUIRE(layers[1].size() == 2);
-        REQUIRE(layers[1][0] == 2);
-        REQUIRE(layers[1][1] == 4);
+        REQUIRE(systemGraph.getNode(layers[1][0]).systemId == 2);
+        REQUIRE(systemGraph.getNode(layers[1][1]).systemId == 4);
     } END_LITL_TEST_CASE
 
     LITL_TEST_CASE("Mixed Dependency", "[ecs::systemGraph]")
