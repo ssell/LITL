@@ -86,26 +86,50 @@ namespace LITL::ECS
 
     void SystemGraph::applyPlacementHints() noexcept
     {
-        std::vector<uint32_t> first;
-        std::vector<uint32_t> none;
-        std::vector<uint32_t> last;
+        std::vector<uint32_t> firstNodes;
+        std::vector<uint32_t> lastNodes;
+        std::vector<uint32_t> rootNodes;
+        std::vector<uint32_t> leafNodes;
 
         for (uint32_t i = 0; i < static_cast<uint32_t>(m_systemNodes.size()); ++i)
         {
-            switch (m_systemNodes[i].placement)
+            if (m_systemNodes[i].placement == SystemNodePlacementHint::First)
             {
-            case SystemNodePlacementHint::First:
-                first.push_back(i);
-                break;
+                firstNodes.push_back(i);
+            }
+            else if (m_systemNodes[i].placement == SystemNodePlacementHint::Last)
+            {
+                lastNodes.push_back(i);
+            }
+            else
+            {
+                if (!m_nodeGraph.hasIncoming(i))
+                {
+                    rootNodes.push_back(i);
+                }
 
-            case SystemNodePlacementHint::Last:
-                last.push_back(i);
-                break;
+                if (!m_nodeGraph.hasOutgoing(i))
+                {
+                    leafNodes.push_back(i);
+                }
+            }
+        }
 
-            case SystemNodePlacementHint::None:
-            default:
-                none.push_back(i);
-                break;
+        // Set all "first" nodes as direct dependencies of all 0-ingress/root nodes
+        for (auto& first : firstNodes)
+        {
+            for (auto& root : rootNodes)
+            {
+                m_nodeGraph.addEdge(first, root);
+            }
+        }
+
+        // Set all "last" nodes as direct dependents on all 0-egress/leaf nodes
+        for (auto& last : lastNodes)
+        {
+            for (auto& leaf : leafNodes)
+            {
+                m_nodeGraph.addEdge(leaf, last);
             }
         }
     }
