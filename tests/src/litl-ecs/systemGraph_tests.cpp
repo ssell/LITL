@@ -127,7 +127,8 @@ namespace LITL::ECS::Tests
         REQUIRE(systemGraph.setPlacementHint(9, SystemNodePlacementHint::First) == false);
 
         // Expected sort:
-        // [2, 4, 0, 1, 3]
+        // [2, 4]               <-- the explicit first systems
+        // [0, 1, 3]            <-- everyone else
 
         REQUIRE(systemGraph.build() == true);
 
@@ -141,12 +142,14 @@ namespace LITL::ECS::Tests
         REQUIRE(sorted[2] == 0);
         REQUIRE(sorted[3] == 1);
         REQUIRE(sorted[4] == 3);
-        REQUIRE(layers.size() == 1);
+        REQUIRE(layers.size() == 2);
+        REQUIRE(layers[0].size() == 2);
         REQUIRE(layers[0][0] == 2);
         REQUIRE(layers[0][1] == 4);
-        REQUIRE(layers[0][2] == 0);
-        REQUIRE(layers[0][3] == 1);
-        REQUIRE(layers[0][4] == 3);
+        REQUIRE(layers[1].size() == 3);
+        REQUIRE(layers[1][0] == 0);
+        REQUIRE(layers[1][1] == 1);
+        REQUIRE(layers[1][2] == 3);
     } END_LITL_TEST_CASE
 
     LITL_TEST_CASE("Prefer Last", "[ecs::systemGraph]")
@@ -164,7 +167,8 @@ namespace LITL::ECS::Tests
         REQUIRE(systemGraph.setPlacementHint(9, SystemNodePlacementHint::Last) == false);
 
         // Expected sort:
-        // [0, 1, 3, 2, 4]
+        // [0, 1, 3]            <-- everyone else
+        // [2, 4]               <-- the explicit last systems
 
         REQUIRE(systemGraph.build() == true);
 
@@ -178,12 +182,14 @@ namespace LITL::ECS::Tests
         REQUIRE(sorted[2] == 3);
         REQUIRE(sorted[3] == 2);
         REQUIRE(sorted[4] == 4);
-        REQUIRE(layers.size() == 1);
+        REQUIRE(layers.size() == 2);
+        REQUIRE(layers[0].size() == 3);
         REQUIRE(layers[0][0] == 0);
         REQUIRE(layers[0][1] == 1);
         REQUIRE(layers[0][2] == 3);
-        REQUIRE(layers[0][3] == 2);
-        REQUIRE(layers[0][4] == 4);
+        REQUIRE(layers[1].size() == 2);
+        REQUIRE(layers[1][0] == 2);
+        REQUIRE(layers[1][1] == 4);
     } END_LITL_TEST_CASE
 
     LITL_TEST_CASE("Mixed Dependency", "[ecs::systemGraph]")

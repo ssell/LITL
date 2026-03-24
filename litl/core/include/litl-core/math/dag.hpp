@@ -68,8 +68,7 @@ namespace LITL::Math
         /// </summary>
         /// <param name="node"></param>
         /// <returns></returns>
-        [[nodisacrd]] bool hasIncoming(DagNode node) const noexcept;
-
+        [[nodiscard]] bool hasIncoming(DagNode node) const noexcept;
 
         /// <summary>
         /// Does the specified node have any outgoing edges? 
