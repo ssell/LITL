@@ -67,7 +67,7 @@ namespace LITL::ECS
         /// </summary>
         /// <param name="systemTypeId"></param>
         /// <param name="placement"></param>
-        bool setPlacementHint(SystemTypeId systemTypeId, SystemNodePlacementHint placement) noexcept;
+        bool setPlacementHint(SystemTypeId systemTypeId, SystemPlacementHint placement) noexcept;
 
         /// <summary>
         /// Builds the DAG according to both explicit and implicit system dependencies.

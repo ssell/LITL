@@ -54,7 +54,7 @@ namespace LITL::ECS
         return true;
     }
 
-    bool SystemCollection::contains(System* system) const noexcept
+    bool SystemCollection::contains(System const* system) const noexcept
     {
         for (auto& tracked : m_pImpl->trackedSystems)
         {
@@ -74,5 +74,15 @@ namespace LITL::ECS
     {
         assert(system != nullptr);
         m_pImpl->trackedSystems.emplace_back(system, group, componentInfo);
+    }
+
+    void SystemCollection::dependsOn(System const* thisSystem, System const* dependsOnThisSystem) const noexcept
+    {
+        
+    }
+
+    void SystemCollection::placement(System const* system, SystemPlacementHint hint) const noexcept
+    {
+
     }
 }

@@ -55,7 +55,7 @@ namespace LITL::ECS
         return true;
     }
 
-    bool SystemGraph::setPlacementHint(SystemTypeId systemTypeId, SystemNodePlacementHint placement) noexcept
+    bool SystemGraph::setPlacementHint(SystemTypeId systemTypeId, SystemPlacementHint placement) noexcept
     {
         auto systemIndex = findSystemIndex(systemTypeId);
 
@@ -107,11 +107,11 @@ namespace LITL::ECS
 
         for (uint32_t i = 0; i < static_cast<uint32_t>(m_systemNodes.size()); ++i)
         {
-            if (m_systemNodes[i].placement == SystemNodePlacementHint::First)
+            if (m_systemNodes[i].placement == SystemPlacementHint::First)
             {
                 firstNodes.push_back(i);
             }
-            else if (m_systemNodes[i].placement == SystemNodePlacementHint::Last)
+            else if (m_systemNodes[i].placement == SystemPlacementHint::Last)
             {
                 lastNodes.push_back(i);
             }

@@ -4,9 +4,8 @@
 #include <memory>
 #include <vector>
 
-#include "litl-ecs/system/system.hpp"
+#include "litl-ecs/system/systemCollectionContext.hpp"
 #include "litl-ecs/system/systemGroup.hpp"
-#include "litl-ecs/system/systemTraits.hpp"
 
 namespace LITL::ECS
 {
@@ -32,22 +31,28 @@ namespace LITL::ECS
         /// <typeparam name="S"></typeparam>
         /// <param name="group"></param>
         template<ValidSystem S>
-        void addSystem(SystemGroup group) const noexcept
+        SystemCollectionContext addSystem(SystemGroup group) const noexcept
         {
-            auto* system = getSystem<S>();
+            auto* system = SystemRegistry::getSystem<S>();
 
             if (!contains(system))
             {
                 system->template attach<S>();
                 trackSystem(system, group, ExtractSystemComponentInfo<S>());
             }
+
+            return { this, system };
         }
+
         template<ValidSystem S>
         void contains() const noexcept
         {
             return contains(getSystem<S>());
         }
 
+        bool contains(System const* system) const noexcept;
+        void dependsOn(System const* thisSystem, System const* dependsOnThisSystem) const noexcept;
+        void placement(System const* system, SystemPlacementHint hint) const noexcept;
 
     protected:
 
@@ -56,15 +61,6 @@ namespace LITL::ECS
         friend class World;
 
         bool build(World const* world);
-
-        template<ValidSystem S>
-        static System* getSystem()
-        {
-            static System system;
-            return &system;
-        }
-
-        bool contains(System* system) const noexcept;
         void trackSystem(System* system, SystemGroup group, std::vector<SystemComponentInfo> const& componentInfo) const noexcept;
 
         struct Impl;
