@@ -242,22 +242,6 @@ namespace LITL::ECS
         }
     }
 
-    void SystemGraph::run(World& world, float dt, std::vector<System*> const& systems, Core::JobScheduler& scheduler)
-    {
-        for (auto& layer : m_nodeGraph.getLayers())
-        {
-            Core::JobFence layerFence{ &scheduler, Core::JobPriority::High };
-
-            for (auto layerNodeIndex : layer)
-            {
-                auto& layerNode = m_systemNodes[layerNodeIndex];
-                systems[layerNode.systemId]->run(world, dt, scheduler, layerFence);
-            }
-
-            layerFence.wait();
-        }
-    }
-
     std::optional<uint32_t> SystemGraph::findSystemIndex(SystemTypeId systemTypeId) const noexcept
     {
         for (auto i = 0; i < m_systemNodes.size(); ++i)

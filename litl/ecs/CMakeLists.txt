@@ -10,7 +10,7 @@ add_library(litl-ecs STATIC
 	"src/litl-ecs/system/systemGraph.cpp" 
 	"src/litl-ecs/system/systemManager.cpp"
 	"src/litl-ecs/system/system.cpp"
- "src/litl-ecs/system/systemCollection.cpp"  "src/litl-ecs/system/systemCollectionContext.cpp")
+ "src/litl-ecs/system/systemCollection.cpp"  "src/litl-ecs/system/systemCollectionContext.cpp" "src/litl-ecs/system/systemInfoGraph.cpp")
 
 target_include_directories(litl-ecs
 	PUBLIC

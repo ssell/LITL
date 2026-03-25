@@ -10,6 +10,8 @@
 #include "litl-ecs/system/system.hpp"
 #include "litl-ecs/system/systemGroup.hpp"
 #include "litl-ecs/system/systemTraits.hpp"
+#include "litl-ecs/system/systemPlacementHint.hpp"
+#include "litl-ecs/system/systemInfoGraph.hpp"
 
 namespace LITL::ECS
 {
@@ -74,6 +76,12 @@ namespace LITL::ECS
         /// <param name="group"></param>
         /// <param name="scheduler"></param>
         void run(World& world, float dt, SystemGroup group, Core::JobScheduler& scheduler);
+
+        /// <summary>
+        /// Builds and returns a SystemInfoGraph which details all systems in the world and where they are "located" (group and layer).
+        /// </summary>
+        /// <returns></returns>
+        SystemInfoGraph buildInfoGraph() const noexcept;
 
     protected:
 

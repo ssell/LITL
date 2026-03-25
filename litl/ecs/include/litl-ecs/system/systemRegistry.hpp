@@ -17,6 +17,11 @@ namespace LITL::ECS
             return &system;
         }
 
+        static System* getSystem(SystemTypeId id)
+        {
+            return nullptr;
+        }
+
     protected:
 
     private:

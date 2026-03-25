@@ -9,6 +9,8 @@ namespace LITL::ECS
     {
         /// <summary>
         /// Prefer if the system is run first, or as near to first as possible.
+        /// A system marked with a hint of first may not have any direct dependencies.
+        /// Doing so will lead to a invalid (and potentially cyclic) system graph.
         /// </summary>
         First = 0,
 
@@ -19,6 +21,8 @@ namespace LITL::ECS
 
         /// <summary>
         /// Prefer if the system is run last, or as near to last as possible.
+        /// A system marked with a hint of first may not have any direct dependents.
+        /// Doing so will lead to a invalid (and potentially cyclic) system graph.
         /// </summary>
         Last = 2
     };
