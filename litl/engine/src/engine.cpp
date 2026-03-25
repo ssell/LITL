@@ -1,14 +1,14 @@
-#include "litl-core/refPtr.hpp"
 #include "litl-core/window.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/job/jobScheduler.hpp"
+#include "litl-core/services/serviceCollection.hpp"
+#include "litl-core/services/serviceProvider.hpp"
+#include "litl-ecs/world.hpp"
 #include "litl-engine/engine.hpp"
 #include "litl-engine/windowFactory.hpp"
 #include "litl-engine/rendererFactory.hpp"
 #include "litl-engine/frameLimiter.hpp"
 
-#include "litl-core/services/serviceCollection.hpp"
-#include "litl-core/services/serviceProvider.hpp"
 
 namespace LITL::Engine
 {
@@ -74,7 +74,7 @@ namespace LITL::Engine
 
         if (systemsFunc != nullptr)
         {
-            systemsFunc((*m_pImpl->pSharedECSWorld));
+            systemsFunc(m_pImpl->pSharedECSWorld->getSystemCollection());
         }
 
         m_pImpl->bootstrap = bootstrapFunc;

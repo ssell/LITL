@@ -26,18 +26,12 @@ namespace LITL::ECS
         ~SystemManager();
 
         /// <summary>
-        /// Adds the system, denoted by its type, to to the specified group.
-        /// A system can only be added to the manager one time, regardless of group.
+        /// 
         /// </summary>
-        /// <typeparam name="S"></typeparam>
+        /// <param name="system"></param>
         /// <param name="group"></param>
-        template<ValidSystem S>
-        void addSystem(SystemGroup group) const noexcept
-        {
-            auto* system = getSystem<S>();
-            system->template attach<S>();
-            addSystem(system, group, ExtractSystemComponentInfo<S>());
-        }
+        /// <param name="componentInfo"></param>
+        void addSystem(System* system, SystemGroup group, std::vector<SystemComponentInfo> const& componentInfo) const noexcept;
 
         /// <summary>
         /// Bakes all system group schedules and calls the setup method for each system.
@@ -71,14 +65,6 @@ namespace LITL::ECS
 
     private:
 
-        template<ValidSystem S>
-        static System* getSystem()
-        {
-            static System system;
-            return &system;
-        }
-
-        void addSystem(System* system, SystemGroup group, std::vector<SystemComponentInfo> const& componentInfo) const noexcept;
         void updateSystemArchetypes() const noexcept;
 
         struct Impl;
