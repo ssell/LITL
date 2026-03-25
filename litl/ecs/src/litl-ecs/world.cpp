@@ -7,6 +7,7 @@
 #include "litl-ecs/constants.hpp"
 #include "litl-ecs/entityRegistry.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
+#include "litl-ecs/system/systemCollection.hpp"
 #include "litl-ecs/system/systemManager.hpp"
 
 namespace LITL::ECS
@@ -14,9 +15,9 @@ namespace LITL::ECS
     struct World::Impl
     {
         std::shared_ptr<LITL::Core::JobScheduler> jobScheduler{ nullptr };
-        SystemManager systemManager;
 
-        bool requireSystemSetup{ true };
+        SystemCollection systemCollection;
+        SystemManager systemManager;
         float accumulatedTime{ 0.0f };
     };
 
@@ -29,6 +30,11 @@ namespace LITL::ECS
     World::~World()
     {
 
+    }
+
+    SystemCollection& World::getSystemCollection() const noexcept
+    {
+        return m_pImpl->systemCollection;
     }
 
     void World::setup(LITL::Core::ServiceProvider& services) const noexcept
@@ -44,14 +50,10 @@ namespace LITL::ECS
 
     void World::setupSystems(LITL::Core::ServiceProvider& services) const noexcept
     {
-        // this is a public method (so that engine can call it), so make sure it is not run multiple times ...
-        if (!m_pImpl->requireSystemSetup)
+        if (m_pImpl->systemCollection.build(this))
         {
-            return;
+            m_pImpl->systemManager.finalize(services);
         }
-
-        m_pImpl->requireSystemSetup = false;
-        m_pImpl->systemManager.finalize(services);
     }
 
     // -------------------------------------------------------------------------------------
@@ -210,7 +212,7 @@ namespace LITL::ECS
     // System Operations
     // -------------------------------------------------------------------------------------
 
-    SystemManager& World::getSystemManager() noexcept
+    SystemManager& World::getSystemManager() const noexcept
     {
         return m_pImpl->systemManager;
     }

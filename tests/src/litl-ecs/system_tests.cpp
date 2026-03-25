@@ -1,6 +1,7 @@
 #include "tests.hpp"
 
 #include "litl-ecs/common.hpp"
+#include "litl-ecs/system/systemCollection.hpp"
 #include "litl-ecs/system/systemTraits.hpp"
 
 namespace LITL::ECS::Tests
@@ -19,7 +20,7 @@ namespace LITL::ECS::Tests
         LITL::ECS::World world;
         TestSystem system;
 
-        world.addSystem<TestSystem>(SystemGroup::Update);
+        world.getSystemCollection().addSystem<TestSystem>(SystemGroup::Update);
 
         auto entity0 = world.createImmediate();
         auto entity1 = world.createImmediate();

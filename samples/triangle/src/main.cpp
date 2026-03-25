@@ -5,7 +5,7 @@ void configureServices(LITL::Core::ServiceCollection& services)
     // ... add custom services ...
 }
 
-void configureSystems(LITL::ECS::World& ecs)
+void configureSystems(LITL::ECS::SystemCollection& systems)
 {
     // ... add custom ECS systems ...
 }

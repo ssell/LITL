@@ -6,7 +6,7 @@
 #include "litl-engine/config.hpp"
 #include "litl-core/services/serviceCollection.hpp"
 #include "litl-core/services/serviceProvider.hpp"
-#include "litl-ecs/world.hpp"
+#include "litl-ecs/system/systemCollection.hpp"
 
 namespace LITL::Engine
 {
@@ -18,7 +18,7 @@ namespace LITL::Engine
     /// <summary>
     /// Optional function provided to the Engine to allow the user to add their custom systems.
     /// </summary>
-    using ConfigureSystemsFunc = void(*)(ECS::World& ecs);
+    using ConfigureSystemsFunc = void(*)(ECS::SystemCollection& systems);
 
     /// <summary>
     /// Optional function provided to the Engine to allow the user to add initial entities, etc. to the ECS world.

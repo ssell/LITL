@@ -6,19 +6,10 @@
 #include "litl-ecs/world.hpp"
 #include "litl-ecs/archetype/archetype.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
+#include "litl-ecs/system/systemCollection.hpp"
 
 namespace LITL::ECS::Tests
 {
-    class TestWorld : public World
-    {
-    public:
-
-        SystemManager& extractSystemManager() noexcept
-        {
-            return getSystemManager();
-        }
-    };
-
     LITL_TEST_CASE("Empty Entity Creation and Destructon", "[ecs::world]")
     {
         World world;
@@ -337,43 +328,6 @@ namespace LITL::ECS::Tests
         }
     } END_LITL_TEST_CASE
 
-
-    LITL_TEST_CASE("SystemManager Run", "[ecs::system]")
-    {
-        TestWorld world;
-        Core::ServiceCollection collection;
-        auto provider = collection.build();
-
-        auto entity0 = world.createImmediate();
-        auto entity1 = world.createImmediate();
-
-        world.addComponentsImmediate(entity0, Foo{ 0 }, Bar{ 0.0f, 0 });
-        world.addComponentsImmediate(entity1, Foo{ 100 }, Bar{ 1.0f, 500 });
-
-        world.addSystem<TestSystem>(SystemGroup::Update);
-        
-        auto& systemManager = world.extractSystemManager();
-
-        systemManager.finalize(*provider.get());
-        systemManager.prepareFrame();
-
-        for (auto i = 0; i < 10; ++i)
-        {
-            systemManager.run(world, 0.0f, SystemGroup::Update);
-        }
-
-        REQUIRE(world.getComponent<Foo>(entity0)->a == 10);
-        REQUIRE(Math::isZero(world.getComponent<Bar>(entity0)->a) == true);
-        REQUIRE(world.getComponent<Bar>(entity0)->b == 10);
-
-        REQUIRE(world.getComponent<Foo>(entity1)->a == 110);
-        REQUIRE(Math::isOne(world.getComponent<Bar>(entity1)->a) == true);
-        REQUIRE(world.getComponent<Bar>(entity1)->b == 510);
-
-        world.destroyImmediate(entity0);
-        world.destroyImmediate(entity1);
-    } END_LITL_TEST_CASE
-
     LITL_TEST_CASE("World Run", "[ecs::world]")
     {
         Core::ServiceCollection collection;
@@ -388,7 +342,7 @@ namespace LITL::ECS::Tests
 
         world.addComponentsImmediate(entity0, Foo{ 0 }, Bar{ 0.0f, 0 });
         world.addComponentsImmediate(entity1, Foo{ 100 }, Bar{ 1.0f, 500 });
-        world.addSystem<TestSystem>(SystemGroup::Update);
+        world.getSystemCollection().addSystem<TestSystem>(SystemGroup::Update);
         world.setupSystems((*serviceProvider));
 
         for (auto i = 0; i < 10; ++i)
@@ -411,7 +365,7 @@ namespace LITL::ECS::Tests
 
     LITL_TEST_CASE("System Setup", "[ecs::system]")
     {
-        TestWorld world;
+        World world;
         Core::ServiceCollection collection{};
         collection.addSingleton<SystemSetupService>();
 
@@ -422,7 +376,7 @@ namespace LITL::ECS::Tests
         REQUIRE(setupService->wasSetup == false);
 
         world.setup((*services));
-        world.addSystem<TestSystem>(SystemGroup::Update);
+        world.getSystemCollection().addSystem<TestSystem>(SystemGroup::Update);
         world.setupSystems((*services));
 
         REQUIRE(setupService->wasSetup == true);

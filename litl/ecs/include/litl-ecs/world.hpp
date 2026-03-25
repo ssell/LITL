@@ -15,6 +15,8 @@
 
 namespace LITL::ECS
 {
+    class SystemCollection;
+
     /// <summary>
     /// Single point of entry for general ECS operations.
     /// Users should make use of World instead of the individual registries and other constructs if possible.
@@ -27,6 +29,8 @@ namespace LITL::ECS
         World(World const&) = delete;
         World& operator=(World const&) = delete;
         ~World();
+
+        SystemCollection& getSystemCollection() const noexcept;
 
         /// <summary>
         /// Invoked once by the Engine during setup.
@@ -274,17 +278,6 @@ namespace LITL::ECS
         }
 
         /// <summary>
-        /// Adds the specified system to the World.
-        /// </summary>
-        /// <typeparam name="S"></typeparam>
-        /// <param name="group"></param>
-        template<ValidSystem S>
-        void addSystem(SystemGroup group) noexcept
-        {
-            getSystemManager().addSystem<S>(group);
-        }
-
-        /// <summary>
         /// Runs all systems.
         /// </summary>
         /// <param name="dt">Time between start of last frame and start of this frame.</param>
@@ -293,9 +286,11 @@ namespace LITL::ECS
 
     protected:
 
-        SystemManager& getSystemManager() noexcept;
-
     private:
+
+        friend class SystemCollection;
+
+        SystemManager& getSystemManager() const noexcept;
 
         struct Impl;
         std::unique_ptr<Impl> m_pImpl;
