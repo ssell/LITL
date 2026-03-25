@@ -4,7 +4,6 @@
 #include <numeric>
 #include <vector>
 
-#include "litl-core/logging/logging.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
 #include "litl-ecs/system/systemManager.hpp"
 #include "litl-ecs/system/systemGraph.hpp"
@@ -33,7 +32,10 @@ namespace LITL::ECS
 
     SystemManager::~SystemManager()
     {
-
+        for (auto* system : m_pImpl->systems)
+        {
+            system->reset();
+        }
     }
 
     void SystemManager::addSystem(System* system, SystemGroup group, std::vector<SystemComponentInfo> const& componentInfo) const noexcept
@@ -119,5 +121,10 @@ namespace LITL::ECS
     void SystemManager::run(World& world, float dt, SystemGroup group)
     {
         m_pImpl->schedules[static_cast<uint32_t>(group)].run(world, dt, m_pImpl->systems);
+    }
+
+    void SystemManager::run(World& world, float dt, SystemGroup group, Core::JobScheduler& scheduler)
+    {
+        m_pImpl->schedules[static_cast<uint32_t>(group)].run(world, dt, m_pImpl->systems, scheduler);
     }
 }

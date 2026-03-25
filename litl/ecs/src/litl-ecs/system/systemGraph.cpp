@@ -246,7 +246,7 @@ namespace LITL::ECS
     {
         for (auto& layer : m_nodeGraph.getLayers())
         {
-            Core::JobFence layerFence{ &scheduler };
+            Core::JobFence layerFence{ &scheduler, Core::JobPriority::High };
 
             for (auto layerNodeIndex : layer)
             {

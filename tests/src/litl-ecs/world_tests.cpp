@@ -338,7 +338,7 @@ namespace LITL::ECS::Tests
     } END_LITL_TEST_CASE
 
 
-    LITL_TEST_CASE("Run System", "[ecs::system]")
+    LITL_TEST_CASE("SystemManager Run", "[ecs::system]")
     {
         TestWorld world;
         Core::ServiceCollection collection;
@@ -349,13 +349,6 @@ namespace LITL::ECS::Tests
 
         world.addComponentsImmediate(entity0, Foo{ 0 }, Bar{ 0.0f, 0 });
         world.addComponentsImmediate(entity1, Foo{ 100 }, Bar{ 1.0f, 500 });
-
-        /**
-         * What is still needed:
-         *
-         *   - Advanced system scheduling
-         *   - Fine to get started on main thread only to show it works, but quickly need to multithread
-         */
 
         world.addSystem<TestSystem>(SystemGroup::Update);
         
@@ -381,6 +374,41 @@ namespace LITL::ECS::Tests
         world.destroyImmediate(entity1);
     } END_LITL_TEST_CASE
 
+    LITL_TEST_CASE("World Run", "[ecs::world]")
+    {
+        Core::ServiceCollection collection;
+        collection.addSingleton<Core::JobScheduler>();
+        auto serviceProvider = collection.build();
+
+        World world;
+        world.setup((*serviceProvider));
+
+        auto entity0 = world.createImmediate();
+        auto entity1 = world.createImmediate();
+
+        world.addComponentsImmediate(entity0, Foo{ 0 }, Bar{ 0.0f, 0 });
+        world.addComponentsImmediate(entity1, Foo{ 100 }, Bar{ 1.0f, 500 });
+        world.addSystem<TestSystem>(SystemGroup::Update);
+        world.setupSystems((*serviceProvider));
+
+        for (auto i = 0; i < 10; ++i)
+        {
+            world.run(0.1f, 0.1f);
+        }
+
+        REQUIRE(world.getComponent<Foo>(entity0)->a == 10);
+        REQUIRE(Math::isZero(world.getComponent<Bar>(entity0)->a) == true);
+        REQUIRE(world.getComponent<Bar>(entity0)->b == 10);
+
+        REQUIRE(world.getComponent<Foo>(entity1)->a == 110);
+        REQUIRE(Math::isOne(world.getComponent<Bar>(entity1)->a) == true);
+        REQUIRE(world.getComponent<Bar>(entity1)->b == 510);
+
+        world.destroyImmediate(entity0);
+        world.destroyImmediate(entity1);
+
+    } END_LITL_TEST_CASE;
+
     LITL_TEST_CASE("System Setup", "[ecs::system]")
     {
         TestWorld world;
@@ -398,7 +426,6 @@ namespace LITL::ECS::Tests
         world.setupSystems((*services));
 
         REQUIRE(setupService->wasSetup == true);
-
     } END_LITL_TEST_CASE
 }
 

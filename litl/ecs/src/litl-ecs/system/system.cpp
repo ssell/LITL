@@ -67,6 +67,11 @@ namespace LITL::ECS
         return m_pImpl->id;
     }
 
+    void System::reset() noexcept
+    {
+        m_pImpl->archetypes.clear();
+    }
+
 
     void* System::getLocalWrapperStorageAddress()
     {
