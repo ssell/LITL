@@ -1,6 +1,13 @@
 #include <absl/container/flat_hash_map.h>
 #include "litl-core/containers/flatHashMap.hpp"
 
+// ... todo ... hmmmmmm ...
+// don't think flat_hash_map is wanted here, but actually node_hash_map.
+// since flat_hash_map invalidates iterators and references on rehash (manually or triggered by growth).
+// this is being used by various registries/caches, but the question is if the underlying addresses are being referenced.
+// need to do a review and see ... 
+// if registries/caches start breaking, then look here!
+
 namespace LITL::Core
 {
     template<typename K, typename V>

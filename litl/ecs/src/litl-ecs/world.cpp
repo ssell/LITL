@@ -239,4 +239,9 @@ namespace LITL::ECS
         m_pImpl->systemManager.run(*this, dt, SystemGroup::PostRender, (*m_pImpl->jobScheduler));
         m_pImpl->systemManager.run(*this, dt, SystemGroup::Final, (*m_pImpl->jobScheduler));
     }
+
+    SystemInfoGraph World::buildInfoGraph() const noexcept
+    {
+        return m_pImpl->systemManager.buildInfoGraph();
+    }
 }

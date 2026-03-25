@@ -5,6 +5,7 @@
 #include <optional>
 #include <vector>
 
+#include "litl-core/containers/flatHashMap.hpp"
 #include "litl-core/math/dag.hpp"
 #include "litl-core/job/jobScheduler.hpp"
 #include "litl-ecs/system/system.hpp"
@@ -91,7 +92,7 @@ namespace LITL::ECS
         /// <param name="dt"></param>
         /// <param name="systems"></param>
         /// <param name="scheduler"></param>
-        void run(World& world, float dt, std::vector<System*> const& systems, Core::JobScheduler& scheduler);
+        void run(World& world, float dt, Core::FlatHashMap<SystemTypeId, uint32_t> const& systems, Core::JobScheduler& scheduler);
 
         /// <summary>
         /// Retrieves the DAG.

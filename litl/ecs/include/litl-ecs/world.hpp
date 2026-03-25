@@ -11,7 +11,9 @@
 #include "litl-ecs/entityRecord.hpp"
 #include "litl-ecs/component/component.hpp"
 #include "litl-ecs/archetype/archetype.hpp"
+#include "litl-ecs/system/systemCollection.hpp"
 #include "litl-ecs/system/systemManager.hpp"
+#include "litl-ecs/system/systemInfoGraph.hpp"
 
 namespace LITL::ECS
 {
@@ -283,6 +285,12 @@ namespace LITL::ECS
         /// <param name="dt">Time between start of last frame and start of this frame.</param>
         /// <param name="fixedStep">The fixed frame time for the FixedUpdate group.</para>
         void run(float dt, float fixedStep);
+
+        /// <summary>
+        /// Builds and returns a SystemInfoGraph which details all systems in the world and where they are "located" (group and layer).
+        /// </summary>
+        /// <returns></returns>
+        SystemInfoGraph buildInfoGraph() const noexcept;
 
     protected:
 

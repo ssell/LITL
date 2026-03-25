@@ -2,8 +2,11 @@
 #include <cassert>
 #include <mutex>
 #include <numeric>
+#include <optional>
 #include <vector>
 
+#include "litl-core/logging/logging.hpp"
+#include "litl-core/containers/flatHashMap.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
 #include "litl-ecs/system/systemManager.hpp"
 #include "litl-ecs/system/systemGraph.hpp"
@@ -21,6 +24,7 @@ namespace LITL::ECS
         std::mutex systemsMutex;
         std::array<SystemGraph, SystemGroupCount> schedules;
         std::vector<System*> systems;
+        Core::FlatHashMap<SystemTypeId, uint32_t> systemMap;        // value = index into systems
         std::vector<System*> newSystems;
     };
 
@@ -60,6 +64,7 @@ namespace LITL::ECS
 
             system->setGroup(group);
 
+            m_pImpl->systemMap.insert(system->id(), static_cast<uint32_t>(m_pImpl->systems.size()));
             m_pImpl->systems.push_back(system);
             m_pImpl->newSystems.push_back(system);
             m_pImpl->schedules[static_cast<uint32_t>(group)].add(systemId, componentInfo);
@@ -80,7 +85,7 @@ namespace LITL::ECS
     void SystemManager::addSystemPlacementHint(System* system, SystemPlacementHint hint) const noexcept
     {
         assert(system != nullptr);
-        m_pImpl->schedules[static_cast<uint32_t>(system->group()))].setPlacementHint(system->id(), hint);
+        m_pImpl->schedules[static_cast<uint32_t>(system->group())].setPlacementHint(system->id(), hint);
     }
 
     /// <summary>
@@ -118,11 +123,12 @@ namespace LITL::ECS
 
     void SystemManager::finalize(Core::ServiceProvider& services) const noexcept
     {
-        for (auto& schedule : m_pImpl->schedules)
+        for (auto i = 0; i < m_pImpl->schedules.size(); ++i)
         {
-            if (!schedule.build())
+            if (!m_pImpl->schedules[i].build())
             {
                 // ... todo handle schedule build failure ...
+                logError("Cycle detected in System Schedule ", i);
             }
         }
 
@@ -144,6 +150,46 @@ namespace LITL::ECS
 
     void SystemManager::run(World& world, float dt, SystemGroup group, Core::JobScheduler& scheduler)
     {
-        m_pImpl->schedules[static_cast<uint32_t>(group)].run(world, dt, m_pImpl->systems, scheduler);
+        auto& schedule = m_pImpl->schedules[static_cast<uint32_t>(group)];
+        auto& graph = schedule.getNodeGraph();
+
+        for (auto& layer : graph.getLayers())
+        {
+            Core::JobFence layerFence{ &scheduler, Core::JobPriority::High };
+
+            for (auto layerNodeIndex : layer)
+            {
+                auto& layerNode = schedule.getNode(layerNodeIndex);                 // get the fixed index into the schedule
+                auto systemIndex = m_pImpl->systemMap.find(layerNode.systemId);     // get the fixed index into our systems vector
+                auto* system = m_pImpl->systems[systemIndex.value()];               // get the system pointer
+
+                system->run(world, dt, scheduler, layerFence);
+            }
+            layerFence.wait();
+        }
+    }
+
+    SystemInfoGraph SystemManager::buildInfoGraph() const noexcept
+    {
+        SystemInfoGraph info;
+
+        for (auto i = 0; i < m_pImpl->schedules.size(); ++i)
+        {
+            auto group = static_cast<SystemGroup>(i);
+            auto& schedule = m_pImpl->schedules[i];
+            auto& dag = schedule.getNodeGraph();
+            auto& layers = dag.getLayers();
+
+            for (auto j = 0; j < layers.size(); ++j)
+            {
+                for (auto& index : layers[j])
+                {
+                    auto node = schedule.getNode(index);
+                    info.add(node.systemId, group, j);
+                }
+            }
+        }
+
+        return info;
     }
 }
