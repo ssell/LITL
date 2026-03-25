@@ -14,6 +14,7 @@
 #include "litl-ecs/system/systemRunner.hpp"
 #include "litl-ecs/system/systemTraits.hpp"
 #include "litl-ecs/system/systemWrapper.hpp"
+#include "litl-ecs/system/systemGroup.hpp"
 
 namespace LITL::ECS
 {
@@ -37,6 +38,8 @@ namespace LITL::ECS
         ~System();
 
         SystemTypeId id() const noexcept;
+
+        SystemGroup group() const noexcept;
 
         /// <summary>
         /// Post-instantiation user system type attachment to this System instance.
@@ -129,6 +132,12 @@ namespace LITL::ECS
         /// have multiple worlds (and thus multiple manager and multiple system instances) then that logic would need to be changed.
         /// </summary>
         void reset() noexcept;
+
+        /// <summary>
+        /// Set the group this system is in.
+        /// </summary>
+        /// <param name="group"></param>
+        void setGroup(SystemGroup group) noexcept;
 
         /// <summary>
         /// Returns the internal local buffer used to store the typed SystemWrapper.

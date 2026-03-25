@@ -122,9 +122,9 @@ namespace LITL::ECS::Tests
         systemGraph.add(3, {});
         systemGraph.add(4, {});
 
-        REQUIRE(systemGraph.setPlacementHint(2, SystemNodePlacementHint::First) == true);
-        REQUIRE(systemGraph.setPlacementHint(4, SystemNodePlacementHint::First) == true);
-        REQUIRE(systemGraph.setPlacementHint(9, SystemNodePlacementHint::First) == false);
+        REQUIRE(systemGraph.setPlacementHint(2, SystemPlacementHint::First) == true);
+        REQUIRE(systemGraph.setPlacementHint(4, SystemPlacementHint::First) == true);
+        REQUIRE(systemGraph.setPlacementHint(9, SystemPlacementHint::First) == false);
 
         // Expected sort:
         // [2, 4]               <-- the explicit first systems
@@ -163,9 +163,9 @@ namespace LITL::ECS::Tests
         systemGraph.add(3, {});
         systemGraph.add(4, {});
 
-        REQUIRE(systemGraph.setPlacementHint(2, SystemNodePlacementHint::Last) == true);
-        REQUIRE(systemGraph.setPlacementHint(4, SystemNodePlacementHint::Last) == true);
-        REQUIRE(systemGraph.setPlacementHint(9, SystemNodePlacementHint::Last) == false);
+        REQUIRE(systemGraph.setPlacementHint(2, SystemPlacementHint::Last) == true);
+        REQUIRE(systemGraph.setPlacementHint(4, SystemPlacementHint::Last) == true);
+        REQUIRE(systemGraph.setPlacementHint(9, SystemPlacementHint::Last) == false);
 
         // Expected sort:
         // [0, 1, 3]            <-- everyone else
@@ -225,9 +225,9 @@ namespace LITL::ECS::Tests
         systemGraph.addDependency(CameraFollowSystem, MovementSystem);
         systemGraph.addDependency(FallDamageSystem, PhysicsSystem);
 
-        systemGraph.setPlacementHint(PhysicsSystem, SystemNodePlacementHint::First);
-        systemGraph.setPlacementHint(NetworkReceiveSystem, SystemNodePlacementHint::First);
-        systemGraph.setPlacementHint(NetworkSendSystem, SystemNodePlacementHint::Last);
+        systemGraph.setPlacementHint(PhysicsSystem, SystemPlacementHint::First);
+        systemGraph.setPlacementHint(NetworkReceiveSystem, SystemPlacementHint::First);
+        systemGraph.setPlacementHint(NetworkSendSystem, SystemPlacementHint::Last);
 
         REQUIRE(systemGraph.build() == true);
 

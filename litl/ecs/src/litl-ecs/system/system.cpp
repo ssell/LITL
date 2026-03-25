@@ -37,6 +37,7 @@ namespace LITL::ECS
     struct System::Impl
     {
         const SystemTypeId id;
+        SystemGroup group{ SystemGroup::Update };
         StoredWrappedFunctions functions;
         std::vector<ComponentTypeId> componentTypes;
         std::vector<Archetype*> archetypes;
@@ -72,6 +73,15 @@ namespace LITL::ECS
         m_pImpl->archetypes.clear();
     }
 
+    void System::setGroup(SystemGroup group) noexcept
+    {
+        m_pImpl->group = group;
+    }
+
+    SystemGroup System::group() const noexcept
+    {
+        return m_pImpl->group;
+    }
 
     void* System::getLocalWrapperStorageAddress()
     {

@@ -34,6 +34,20 @@ namespace LITL::ECS
         void addSystem(System* system, SystemGroup group, std::vector<SystemComponentInfo> const& componentInfo) const noexcept;
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="system"></param>
+        /// <param name="dependsOn"></param>
+        void addSystemDependency(System* system, System* dependsOn) const noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="system"></param>
+        /// <param name="hint"></param>
+        void addSystemPlacementHint(System* system, SystemPlacementHint hint) const noexcept;
+
+        /// <summary>
         /// Bakes all system group schedules and calls the setup method for each system.
         /// </summary>
         /// <param name="services"></param>

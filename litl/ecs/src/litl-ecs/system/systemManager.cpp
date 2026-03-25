@@ -58,10 +58,29 @@ namespace LITL::ECS
 
             assert(!isSystemAlreadyKnown);
 
+            system->setGroup(group);
+
             m_pImpl->systems.push_back(system);
             m_pImpl->newSystems.push_back(system);
             m_pImpl->schedules[static_cast<uint32_t>(group)].add(systemId, componentInfo);
         }
+    }
+
+    void SystemManager::addSystemDependency(System* system, System* dependsOn) const noexcept
+    {
+        assert(system != nullptr);
+        assert(dependsOn != nullptr);
+
+        if (system->group() == dependsOn->group())
+        {
+            m_pImpl->schedules[static_cast<uint32_t>(system->group())].addDependency(system->id(), dependsOn->id());
+        }
+    }
+
+    void SystemManager::addSystemPlacementHint(System* system, SystemPlacementHint hint) const noexcept
+    {
+        assert(system != nullptr);
+        m_pImpl->schedules[static_cast<uint32_t>(system->group()))].setPlacementHint(system->id(), hint);
     }
 
     /// <summary>

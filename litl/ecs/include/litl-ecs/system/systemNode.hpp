@@ -7,28 +7,11 @@
 #include <vector>
 
 #include "litl-ecs/constants.hpp"
+#include "litl-ecs/system/systemPlacementHint.hpp"
 #include "litl-ecs/system/systemTraits.hpp"
 
 namespace LITL::ECS
 {
-    enum SystemNodePlacementHint : uint32_t
-    {
-        /// <summary>
-        /// Prefer if the system is run first, or as near to first as possible.
-        /// </summary>
-        First = 0,
-
-        /// <summary>
-        /// No preference on order position, aside from its dependencies.
-        /// </summary>
-        None = 1,
-
-        /// <summary>
-        /// Prefer if the system is run last, or as near to last as possible.
-        /// </summary>
-        Last = 2
-    };
-
     /// <summary>
     /// A single scheduled system.
     /// </summary>
@@ -55,7 +38,7 @@ namespace LITL::ECS
         /// <summary>
         /// Optional hint as to where this system should be ordered.
         /// </summary>
-        SystemNodePlacementHint placement{ SystemNodePlacementHint::None };
+        SystemPlacementHint placement{ SystemPlacementHint::None };
 
         /// <summary>
         /// The access levels required by the system for the components it operates on.
