@@ -23,6 +23,8 @@ namespace LITL::ECS
     using ErasedSystemSetupFunc = void(*)(void*, Core::ServiceProvider&);
     using ErasedSystemWrapperDestroyFunc = void(*)(void*);
 
+    class SystemManager;
+
     /// <summary>
     /// The result of many levels of wrapping and type erasure.
     /// Stores the user system, system runner, archetype references, etc.
@@ -44,6 +46,11 @@ namespace LITL::ECS
         template<ValidSystem S>
         void attach()
         {
+            if (m_attached)
+            {
+                return;
+            }
+
             setDebugName(typeid(S).name());
 
             using LocalWrapper = SystemWrapper<S>;
@@ -72,6 +79,8 @@ namespace LITL::ECS
             // Get the system components in tuple form. For example: std::tuple<Foo&, Bar&>
             using SystemComponentTuple = SystemComponents<S>;
             registerComponentTypes<SystemComponentTuple>();
+
+            m_attached = true;
         }
 
         /// <summary>
@@ -108,6 +117,18 @@ namespace LITL::ECS
     protected:
 
     private:
+
+        friend class SystemManager;
+
+        /// <summary>
+        /// Resets this system instance. Invoked when a SystemManager is shutting down.
+        /// Typically not needed in a normal application as there should only be a single World, and thus a single SystemManager.
+        /// However in test suites or other special circumstances there may be multiple worlds/managers and so the mapped archetypes
+        /// need to be cleared. The "root issue" is that, by design, there is only a single instance of each System.
+        /// This is accomplished via a static getter (see SystemManager::getSystem). If there is a legitimate, non-test reason to
+        /// have multiple worlds (and thus multiple manager and multiple system instances) then that logic would need to be changed.
+        /// </summary>
+        void reset() noexcept;
 
         /// <summary>
         /// Returns the internal local buffer used to store the typed SystemWrapper.
@@ -148,6 +169,8 @@ namespace LITL::ECS
 
         struct Impl;
         std::unique_ptr<Impl> m_pImpl;
+
+        bool m_attached{ false };
     };
 }
 

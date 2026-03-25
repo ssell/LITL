@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "litl-core/services/serviceProvider.hpp"
+#include "litl-core/job/jobScheduler.hpp"
 #include "litl-ecs/system/system.hpp"
 #include "litl-ecs/system/systemGroup.hpp"
 #include "litl-ecs/system/systemTraits.hpp"
@@ -56,6 +57,15 @@ namespace LITL::ECS
         /// <param name="dt"></param>
         /// <param name="group"></param>
         void run(World& world, float dt, SystemGroup group);
+
+        /// <summary>
+        /// Runs all systems according to their group and schedule within their group.
+        /// </summary>
+        /// <param name="world"></param>
+        /// <param name="dt"></param>
+        /// <param name="group"></param>
+        /// <param name="scheduler"></param>
+        void run(World& world, float dt, SystemGroup group, Core::JobScheduler& scheduler);
 
     protected:
 
