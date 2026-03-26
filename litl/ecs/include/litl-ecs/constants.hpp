@@ -12,14 +12,18 @@ namespace LITL::ECS
     using SystemTypeId = uint32_t;
     using ArchetypeId = uint32_t;
 
-    template<typename T>
-    concept ValidComponentType = std::is_standard_layout_v<T>;
+    struct Constants
+    {
+        static constexpr ComponentTypeId null_component_id  = 0;
+        static constexpr uint32_t max_component_size = 1024;
+        static constexpr uint32_t max_components = 64;
+        static constexpr uint32_t max_component_variants = 4096;
+        static constexpr uint32_t chunk_size = 16384;
+        static constexpr uint32_t max_entities_per_chunk = 512;
+    };
 
-    constexpr ComponentTypeId NULL_COMPONENT = 0;
-    constexpr uint32_t MAX_COMPONENTS = 64;
-    constexpr uint32_t MAX_COMPONENT_VARIANTS = 4096;
-    constexpr uint32_t CHUNK_SIZE_BYTES = 16384;
-    constexpr uint32_t MAX_ENTITIES_PER_CHUNK = 512;
+    template<typename T>
+    concept ValidComponentType = std::is_standard_layout_v<T> && sizeof(T) <= Constants::max_component_size;
 }
 
 #endif

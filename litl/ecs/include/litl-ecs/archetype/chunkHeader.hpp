@@ -50,7 +50,7 @@ namespace LITL::ECS
     /// </summary>
     struct ChunkEntities
     {
-        Entity entities[MAX_ENTITIES_PER_CHUNK];
+        Entity entities[Constants::max_entities_per_chunk];
     };
 }
 

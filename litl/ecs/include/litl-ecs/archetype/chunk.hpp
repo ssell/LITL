@@ -76,7 +76,7 @@ namespace LITL::ECS
 
     private:
 
-        std::byte m_data[CHUNK_SIZE_BYTES];
+        std::byte m_data[Constants::chunk_size];
     };
 }
 

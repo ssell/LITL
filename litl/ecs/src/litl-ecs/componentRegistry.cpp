@@ -13,7 +13,7 @@ namespace LITL::ECS
     struct ComponentRegistryState
     {
         std::mutex mutex;
-        std::array<ComponentDescriptor const*, MAX_COMPONENT_VARIANTS> unstableIdLookup;
+        std::array<ComponentDescriptor const*, Constants::max_component_variants> unstableIdLookup;
         Core::FlatHashMap<StableComponentTypeId, ComponentTypeId> stableIdLookup;
     };
 
@@ -30,7 +30,7 @@ namespace LITL::ECS
 
     void ComponentRegistry::track(ComponentDescriptor const* descriptor) noexcept
     {
-        assert(descriptor->id < MAX_COMPONENT_VARIANTS);
+        assert(descriptor->id < Constants::max_component_variants);
 
         auto& registry = instance();
 
@@ -51,7 +51,7 @@ namespace LITL::ECS
 
     ComponentDescriptor const* ComponentRegistry::find(ComponentTypeId id) noexcept
     {
-        assert(id < MAX_COMPONENT_VARIANTS);
+        assert(id < Constants::max_component_variants);
         return instance().unstableIdLookup[id];
     }
 

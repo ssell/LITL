@@ -29,10 +29,10 @@ namespace LITL::ECS
 
         const uint32_t chunkHeaderSize = static_cast<uint32_t>(sizeof(ChunkHeader));
         const uint32_t chunkEntityArraySize = static_cast<uint32_t>(sizeof(ChunkEntities));
-        uint32_t remaining = CHUNK_SIZE_BYTES - chunkHeaderSize - chunkEntityArraySize;
+        uint32_t remaining = Constants::chunk_size - chunkHeaderSize - chunkEntityArraySize;
 
         // First estimate of how many entities can fit. This is close, but may not be exact due to alignment.
-        entityCapacity = Math::min(MAX_ENTITIES_PER_CHUNK, (componentBytesPerEntity == 0 ? MAX_ENTITIES_PER_CHUNK : remaining / componentBytesPerEntity));
+        entityCapacity = Math::min(Constants::max_entities_per_chunk, (componentBytesPerEntity == 0 ? Constants::max_entities_per_chunk : remaining / componentBytesPerEntity));
 
         // Get memory position of entity array
         uint32_t offset = chunkHeaderSize;
@@ -58,7 +58,7 @@ namespace LITL::ECS
                 offset += componentOrder[i]->size * entityCapacity;
             }
 
-            if (offset <= CHUNK_SIZE_BYTES)
+            if (offset <= Constants::chunk_size)
             {
                 // All component columns fit in the chunk
                 break;
@@ -73,7 +73,7 @@ namespace LITL::ECS
     {
         index = 0;
 
-        for (auto i = 0; i < MAX_COMPONENTS; ++i)
+        for (auto i = 0; i < Constants::max_components; ++i)
         {
             if (componentOrder[i]->id == componentTypeId)
             {

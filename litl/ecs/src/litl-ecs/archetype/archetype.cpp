@@ -17,7 +17,7 @@ namespace LITL::ECS
         setDebugName(name);
 
         m_chunkLayout.archetype = this;
-        m_components.reserve(MAX_COMPONENTS);
+        m_components.reserve(Constants::max_components);
     }
 
     ArchetypeId Archetype::id() const noexcept
