@@ -10,7 +10,7 @@
 
 namespace LITL::ECS
 {
-    enum EntityCommandType : uint32_t
+    enum class EntityCommandType : uint32_t
     {
         None            = 0,
         CreateEntity    = 1,
@@ -46,12 +46,12 @@ namespace LITL::ECS
         ComponentTypeId component;
 
         /// <summary>
-        /// Index of the memory page in which the component data is stored.
+        /// Index of the memory pool in which the component data is stored.
         /// </summary>
-        uint32_t page{ 0 };
+        uint32_t pool{ 0 };
 
         /// <summary>
-        /// Offset into the memory page, pointing to where the component data is stored.
+        /// Offset into the memory pool, pointing to where the component data is stored.
         /// </summary>
         uint32_t offset{ 0 };
     };

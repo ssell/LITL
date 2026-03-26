@@ -20,8 +20,11 @@ namespace LITL::ECS
 
         void push(EntityCommand command, void* data = nullptr) noexcept;
         std::optional<EntityCommand> pop() noexcept;
+        bool loadComponent(EntityCommand command, void* dest) noexcept;
         size_t size() const noexcept;
+        size_t poolCount() const noexcept;
         bool empty() const noexcept;
+        void reset() noexcept;
 
     protected:
 

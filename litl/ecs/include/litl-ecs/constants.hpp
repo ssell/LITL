@@ -20,6 +20,7 @@ namespace LITL::ECS
         static constexpr uint32_t max_component_variants = 4096;
         static constexpr uint32_t chunk_size = 16384;
         static constexpr uint32_t max_entities_per_chunk = 512;
+        static constexpr uint32_t entity_command_pool_size = 1024 * 16;
     };
 
     template<typename T>
