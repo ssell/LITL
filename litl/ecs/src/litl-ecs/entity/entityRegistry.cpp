@@ -2,7 +2,7 @@
 #include <mutex>
 
 #include "litl-core/containers/pagedVector.hpp"
-#include "litl-ecs/entityRegistry.hpp"
+#include "litl-ecs/entity/entityRegistry.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
 
 namespace LITL::ECS

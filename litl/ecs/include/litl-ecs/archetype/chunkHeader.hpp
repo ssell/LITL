@@ -2,7 +2,7 @@
 #define LITL_ENGINE_ECS_ARCHETYPE_CHUNK_HEADER_H__
 
 #include <cstdint>
-#include "litl-ecs/entity.hpp"
+#include "litl-ecs/entity/entity.hpp"
 
 namespace LITL::ECS
 {

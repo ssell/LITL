@@ -7,7 +7,7 @@
 
 #include "litl-ecs/constants.hpp"
 #include "litl-ecs/component/component.hpp"
-#include "litl-ecs/entityRecord.hpp"
+#include "litl-ecs/entity/entityRecord.hpp"
 #include "litl-ecs/archetype/archetype.hpp"
 
 namespace LITL::ECS

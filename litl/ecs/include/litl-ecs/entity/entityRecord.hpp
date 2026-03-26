@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include "litl-ecs/entity.hpp"
+#include "litl-ecs/entity/entity.hpp"
 
 namespace LITL::ECS
 {

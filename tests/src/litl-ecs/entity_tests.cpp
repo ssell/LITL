@@ -2,7 +2,7 @@
 #include <vector>
 
 #include "tests.hpp"
-#include "litl-ecs/entityRegistry.hpp"
+#include "litl-ecs/entity/entityRegistry.hpp"
 
 namespace LITL::ECS::Tests
 {

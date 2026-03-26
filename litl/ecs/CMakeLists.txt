@@ -6,7 +6,7 @@ add_library(litl-ecs STATIC
 	"src/litl-ecs/archetype/chunkLayout.cpp" 
 	"src/litl-ecs/component.cpp" 
 	"src/litl-ecs/componentRegistry.cpp" 
-	"src/litl-ecs/entityRegistry.cpp" 
+	"src/litl-ecs/entity/entityRegistry.cpp" 
 	"src/litl-ecs/system/systemGraph.cpp" 
 	"src/litl-ecs/system/systemManager.cpp"
 	"src/litl-ecs/system/system.cpp"
