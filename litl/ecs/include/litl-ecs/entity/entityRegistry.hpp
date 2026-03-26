@@ -6,8 +6,8 @@
 #include <span>
 #include <vector>
 
-#include "litl-ecs/entity.hpp"
-#include "litl-ecs/entityRecord.hpp"
+#include "litl-ecs/entity/entity.hpp"
+#include "litl-ecs/entity/entityRecord.hpp"
 
 namespace LITL::ECS
 {

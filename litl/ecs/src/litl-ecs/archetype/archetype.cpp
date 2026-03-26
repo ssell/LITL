@@ -4,7 +4,7 @@
 
 #include "litl-core/math/math.hpp"
 #include "litl-ecs/archetype/archetype.hpp"
-#include "litl-ecs/entityRegistry.hpp"
+#include "litl-ecs/entity/entityRegistry.hpp"
 
 namespace LITL::ECS
 {

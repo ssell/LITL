@@ -7,8 +7,8 @@
 #include <type_traits>
 
 #include "litl-core/services/serviceProvider.hpp"
-#include "litl-ecs/entity.hpp"
-#include "litl-ecs/entityRecord.hpp"
+#include "litl-ecs/entity/entity.hpp"
+#include "litl-ecs/entity/entityRecord.hpp"
 #include "litl-ecs/component/component.hpp"
 #include "litl-ecs/archetype/archetype.hpp"
 #include "litl-ecs/system/systemCollection.hpp"

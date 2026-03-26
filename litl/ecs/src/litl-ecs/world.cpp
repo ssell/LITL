@@ -5,7 +5,7 @@
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/world.hpp"
 #include "litl-ecs/constants.hpp"
-#include "litl-ecs/entityRegistry.hpp"
+#include "litl-ecs/entity/entityRegistry.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
 #include "litl-ecs/system/systemCollection.hpp"
 #include "litl-ecs/system/systemManager.hpp"
