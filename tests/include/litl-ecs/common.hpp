@@ -5,6 +5,7 @@
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-core/math/math.hpp"
 #include "litl-ecs/world.hpp"
+#include "litl-ecs/constants.hpp"
 
 namespace LITL::ECS::Tests
 {

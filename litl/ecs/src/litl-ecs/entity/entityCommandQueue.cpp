@@ -4,34 +4,40 @@
 
 #include "litl-ecs/entity/entityCommandQueue.hpp"
 #include "litl-core/alignment.hpp"
+#include "litl-ecs/constants.hpp"
 
 namespace LITL::ECS
 {
-    constexpr uint32_t EntityComponentPoolBufferSize = 1024 * 16;       // 16kb pool
-
     class EntityComponentPool
     {
     public:
 
-        bool insert(ComponentDescriptor const* descriptor, void* source)
+        EntityComponentPool()
+            : m_currOffset(0)
+        {
+
+        }
+
+        bool insert(ComponentDescriptor const* descriptor, void* source, uint32_t& destOffset)
         {
             assert(descriptor != nullptr);
 
-            if (!fits(descriptor->size))
+            if ((m_currOffset + descriptor->size) > Constants::entity_command_pool_size)
             {
                 // pool if full
                 return false;
             }
 
             descriptor->move(source, get(m_currOffset));
+            destOffset = m_currOffset;
             m_currOffset += descriptor->size;
 
             return true;
         }
 
-        bool fits(uint32_t size) const noexcept
+        uint32_t offset() const noexcept
         {
-            return (m_currOffset + size) < EntityComponentPoolBufferSize;
+            return m_currOffset;
         }
 
         void reset() noexcept
@@ -39,15 +45,15 @@ namespace LITL::ECS
             m_currOffset = 0;
         }
 
-        [[nodiscard]] void* get(uint32_t offset)
+        [[nodiscard]] std::byte* get(uint32_t offset)
         {
             return m_buffer + offset;
         }
 
     private:
 
-        alignas(CacheLineSize) std::byte m_buffer[EntityComponentPoolBufferSize];
-        uint32_t m_currOffset;
+        alignas(CacheLineSize) std::byte m_buffer[Constants::entity_command_pool_size];
+        uint32_t m_currOffset{ 0 };
     };
 
     struct EntityCommandQueue::Impl
@@ -56,21 +62,24 @@ namespace LITL::ECS
         std::vector<std::unique_ptr<EntityComponentPool>> m_componentPools;
         uint32_t m_currPool;
 
-        bool reset()
+        void reset()
         {
             for (auto& pool : m_componentPools)
             {
-                pool.reset();
+                pool->reset();
             }
 
             m_currPool = 0;
+
+            // command queue should already be empty, but just incase ...
+            while (!m_queue.empty()) { m_queue.pop(); }
         }
     };
 
     EntityCommandQueue::EntityCommandQueue()
         : m_pImpl(std::make_unique<EntityCommandQueue::Impl>())
     {
-        m_pImpl->m_componentPools.emplace_back();
+        m_pImpl->m_componentPools.push_back(std::make_unique<EntityComponentPool>());
     }
 
     EntityCommandQueue::~EntityCommandQueue()
@@ -90,20 +99,53 @@ namespace LITL::ECS
             auto* descriptor = ComponentDescriptor::get(command.component);
             assert(descriptor != nullptr);
 
-            if (!m_pImpl->m_componentPools[m_pImpl->m_currPool]->insert(descriptor, data))
+            // Can only fail if the pool is out of room.
+            if (!m_pImpl->m_componentPools[m_pImpl->m_currPool]->insert(descriptor, data, command.offset))
             {
-                // Can only fail if the pool is out of room.
-                m_pImpl->m_componentPools.emplace_back();
                 m_pImpl->m_currPool++;
 
-                m_pImpl->m_componentPools[m_pImpl->m_currPool]->insert(descriptor, data);
+                if (m_pImpl->m_currPool >= m_pImpl->m_componentPools.size())
+                {
+                    m_pImpl->m_componentPools.push_back(std::make_unique<EntityComponentPool>());
+                }
+
+                m_pImpl->m_componentPools[m_pImpl->m_currPool]->insert(descriptor, data, command.offset);
             }
+
+            command.pool = m_pImpl->m_currPool;
+
+            m_pImpl->m_queue.push(command);
         }
     }
 
     std::optional<EntityCommand> EntityCommandQueue::pop() noexcept
     {
-        return std::nullopt;
+        if (empty())
+        {
+            return std::nullopt;
+        }
+
+        auto ret = m_pImpl->m_queue.front(); m_pImpl->m_queue.pop();
+        return ret;
+    }
+
+    bool EntityCommandQueue::loadComponent(EntityCommand command, void* dest) noexcept
+    {
+        if (command.type != EntityCommandType::AddComponent)
+        {
+            return false;
+        }
+
+        auto* descriptor = ComponentDescriptor::get(command.component);
+
+        assert(descriptor != nullptr);
+        assert(dest != nullptr);
+        assert(command.pool < m_pImpl->m_componentPools.size());
+        assert(command.offset < Constants::entity_command_pool_size);
+
+        descriptor->move(m_pImpl->m_componentPools[command.pool]->get(command.offset), dest);
+
+        return true;
     }
 
     size_t EntityCommandQueue::size() const noexcept
@@ -111,8 +153,18 @@ namespace LITL::ECS
         return m_pImpl->m_queue.size();
     }
 
+    size_t EntityCommandQueue::poolCount() const noexcept
+    {
+        return m_pImpl->m_componentPools.size();
+    }
+
     bool EntityCommandQueue::empty() const noexcept
     {
         return m_pImpl->m_queue.empty();
+    }
+
+    void EntityCommandQueue::reset() noexcept
+    {
+        m_pImpl->reset();
     }
 }

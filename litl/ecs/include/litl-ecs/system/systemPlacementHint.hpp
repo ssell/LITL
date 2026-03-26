@@ -5,7 +5,7 @@
 
 namespace LITL::ECS
 {
-    enum SystemPlacementHint : uint32_t
+    enum class SystemPlacementHint : uint32_t
     {
         /// <summary>
         /// Prefer if the system is run first, or as near to first as possible.
