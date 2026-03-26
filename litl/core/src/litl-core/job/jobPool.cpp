@@ -61,7 +61,7 @@ namespace LITL::Core
             m_currOffset = 0;
         }
 
-        Job* get(uint32_t index)
+        [[nodiscard]] Job* get(uint32_t index)
         {
             const auto offset = index * sizeof(Job);
             assert(offset < JobPoolBufferSize);
