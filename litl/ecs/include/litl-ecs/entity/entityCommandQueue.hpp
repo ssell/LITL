@@ -8,6 +8,11 @@
 
 namespace LITL::ECS
 {
+    class World;
+
+    /// <summary>
+    /// A double-queue of entity commands: one for entities, one for deferred entities.
+    /// </summary>
     class EntityCommandQueue
     {
     public:
@@ -18,13 +23,63 @@ namespace LITL::ECS
         EntityCommandQueue(EntityCommandQueue const&) = delete;
         EntityCommandQueue& operator=(EntityCommandQueue const&) = delete;
 
+        /// <summary>
+        /// Adds a new commmand for an Entity.
+        /// </summary>
+        /// <param name="command"></param>
+        /// <param name="data"></param>
         void push(EntityCommand command, void* data = nullptr) noexcept;
-        std::optional<EntityCommand> pop() noexcept;
+
+        /// <summary>
+        /// Adds a new command for a DeferredEntity.
+        /// </summary>
+        /// <param name="command"></param>
+        /// <param name="data"></param>
+        void push(DeferredEntityCommand command, void* data = nullptr) noexcept;
+
+        /// <summary>
+        /// Returns the next command. Note this does not remove it, that is only done in a call to reset.
+        /// </summary>
+        /// <returns></returns>
+        std::optional<EntityCommand> next() noexcept;
+
+        /// <summary>
+        /// Transfers the local component data to the specified destination address.
+        /// </summary>
+        /// <param name="command"></param>
+        /// <param name="dest"></param>
+        /// <returns></returns>
         bool loadComponent(EntityCommand command, void* dest) noexcept;
-        size_t size() const noexcept;
+
+        /// <summary>
+        /// Number of entity commands left to see with next.
+        /// </summary>
+        /// <returns></returns>
+        size_t count() const noexcept;
+
+        /// <summary>
+        /// Number of component data pools.
+        /// </summary>
+        /// <returns></returns>
         size_t poolCount() const noexcept;
+
+        /// <summary>
+        /// Is the queue out of commands to see?
+        /// </summary>
+        /// <returns></returns>
         bool empty() const noexcept;
+
+        /// <summary>
+        /// Resets the queue back to a default state.
+        /// Pools remain, but their offsets are reset.
+        /// </summary>
         void reset() noexcept;
+
+        /// <summary>
+        /// Transforms all DeferredEntities into Entities and their associated
+        /// DeferredEntityCommands into EntityCommands and adds them to the internal queue.
+        /// </summary>
+        void materialize(World* world) noexcept;
 
     protected:
 

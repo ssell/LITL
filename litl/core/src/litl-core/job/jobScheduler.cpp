@@ -4,7 +4,7 @@
 #include <semaphore>
 #include <thread>
 
-#include "litl-core/alignment.hpp"
+#include "litl-core/constants.hpp"
 #include "litl-core/thread.hpp"
 #include "litl-core/math/math.hpp"
 #include "litl-core/math/random.hpp"
@@ -74,7 +74,7 @@ namespace LITL::Core
         std::vector<std::unique_ptr<Worker>> workers;
     };
 
-    struct alignas(CacheLineSize) JobScheduler::Worker
+    struct alignas(Constants::cache_line_size) JobScheduler::Worker
     {
         /// <summary>
         /// Collection of Jobs that are waiting to be executed.

@@ -20,6 +20,8 @@ namespace LITL::ECS
         EntityCommands(EntityCommands const&) = delete;
         EntityCommands& operator=(EntityCommands const&) = delete;
 
+        EntityCommandQueue& queue() noexcept;
+
         [[nodiscard]] DeferredEntity createEntity() noexcept;
         void destroyEntity(Entity entity) noexcept;
         void destroyEntity(DeferredEntity entity) noexcept;
@@ -69,6 +71,7 @@ namespace LITL::ECS
     private:
 
         EntityCommandQueue m_commands;
+        uint32_t m_nextId;
     };
 }
 

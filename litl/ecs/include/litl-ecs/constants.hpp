@@ -14,6 +14,7 @@ namespace LITL::ECS
 
     struct Constants
     {
+        static constexpr uint32_t null_entity_id = std::numeric_limits<uint32_t>::max();
         static constexpr ComponentTypeId null_component_id  = 0;
         static constexpr uint32_t max_component_size = 1024;
         static constexpr uint32_t max_components = 64;

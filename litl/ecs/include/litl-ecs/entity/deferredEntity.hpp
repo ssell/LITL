@@ -2,6 +2,7 @@
 #define LITL_ECS_DEFERRED_ENTITY_H__
 
 #include <limits>
+#include "litl-ecs/constants.hpp"
 
 namespace LITL::ECS
 {
@@ -19,12 +20,21 @@ namespace LITL::ECS
     /// </summary>
     struct DeferredEntity
     {
-        constexpr static uint32_t NullIndex = std::numeric_limits<uint32_t>::max();
-        uint32_t index{ NullIndex };
+        bool operator==(DeferredEntity const& other)
+        {
+            return (index == other.index);
+        }
+
+        bool operator!=(DeferredEntity const& other)
+        {
+            return !(*this == other);
+        }
+
+        uint32_t index{ Constants::null_entity_id };
 
         constexpr bool isNull() const noexcept
         {
-            return (index == NullIndex);
+            return (index == Constants::null_entity_id);
         }
     };
 }

@@ -3,9 +3,19 @@
 
 #include "tests.hpp"
 #include "litl-ecs/entity/entityRegistry.hpp"
+#include "litl-ecs/entity/deferredEntity.hpp"
 
 namespace LITL::ECS::Tests
 {
+    LITL_TEST_CASE("Entity NULL", "[ecs::entity]")
+    {
+        Entity entity{};
+        DeferredEntity deferred{};
+        
+        REQUIRE(entity.isNull() == true);
+        REQUIRE(deferred.isNull() == true);
+    } END_LITL_TEST_CASE
+
     LITL_TEST_CASE("Entity Creation", "[ecs::entityRegistry]")
     {
         EntityRegistry::clear();

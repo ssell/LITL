@@ -6,7 +6,7 @@
 #include <optional>
 #include <vector>
 
-#include "litl-core/alignment.hpp"
+#include "litl-core/constants.hpp"
 #include "litl-core/job/job.hpp"
 
 namespace LITL::Core
@@ -80,14 +80,14 @@ namespace LITL::Core
         /// The next available write index.
         /// Incremented on every push/pop operation.
         /// </summary>
-        alignas(CacheLineSize) std::atomic<int64_t> m_bottom;
+        alignas(Constants::cache_line_size) std::atomic<int64_t> m_bottom;
         // ^ Store the bottom/top indices on different cache lines to avoid false sharing.
 
         /// <summary>
         /// The next read index.
         /// Incremented on every steal operation.
         /// </summary>
-        alignas(CacheLineSize) std::atomic<int64_t> m_top;
+        alignas(Constants::cache_line_size) std::atomic<int64_t> m_top;
         // ^ Store the bottom/top indices on different cache lines to avoid false sharing.
 
         /// <summary>
