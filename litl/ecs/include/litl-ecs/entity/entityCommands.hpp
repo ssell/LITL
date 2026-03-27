@@ -20,7 +20,21 @@ namespace LITL::ECS
         EntityCommands(EntityCommands const&) = delete;
         EntityCommands& operator=(EntityCommands const&) = delete;
 
-        EntityCommandQueue& queue() noexcept;
+        /// <summary>
+        /// Returns the total of number of awaiting commands (both EntityCommand and DeferredEntityCommand).
+        /// This does not include the number of "create entity" commands as they effectively vanish upon materialization.
+        /// </summary>
+        /// <returns></returns>
+        size_t actionableCommandCount() const noexcept;
+
+        /// <summary>
+        /// Materializes the DeferredEntityCommands into EntityCommands, inserts them into the provided
+        /// vector at the specified starting offset, and then resets the command buffer state.
+        /// </summary>
+        /// <param name="world"></param>
+        /// <param name="commands"></param>
+        /// <param name="offset"></param>
+        void extractCommands(World* world, std::vector<EntityCommand>& commands, size_t offset) noexcept;
 
         [[nodiscard]] DeferredEntity createEntity() noexcept;
         void destroyEntity(Entity entity) noexcept;
@@ -69,6 +83,9 @@ namespace LITL::ECS
     protected:
 
     private:
+
+        void reset() noexcept;
+        void materialize(World* world) noexcept;
 
         EntityCommandQueue m_commands;
         uint32_t m_nextId;

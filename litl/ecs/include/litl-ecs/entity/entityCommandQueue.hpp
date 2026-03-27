@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <optional>
+#include <vector>
 
 #include "litl-ecs/entity/entityCommand.hpp"
 
@@ -58,6 +59,12 @@ namespace LITL::ECS
         size_t count() const noexcept;
 
         /// <summary>
+        /// Number of non-create commands.
+        /// </summary>
+        /// <returns></returns>
+        size_t actionableCommandCount() const noexcept;
+
+        /// <summary>
         /// Number of component data pools.
         /// </summary>
         /// <returns></returns>
@@ -76,10 +83,10 @@ namespace LITL::ECS
         void reset() noexcept;
 
         /// <summary>
-        /// Transforms all DeferredEntities into Entities and their associated
-        /// DeferredEntityCommands into EntityCommands and adds them to the internal queue.
+        /// 
         /// </summary>
-        void materialize(World* world) noexcept;
+        /// <returns></returns>
+        std::vector<DeferredEntityCommand> const& deferredCommands() const noexcept;
 
     protected:
 

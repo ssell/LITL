@@ -1,6 +1,5 @@
 #include <cassert>
 #include <queue>
-#include <vector>
 
 #include "litl-core/constants.hpp"
 #include "litl-ecs/entity/entityCommandQueue.hpp"
@@ -62,8 +61,11 @@ namespace LITL::ECS
         std::vector<EntityCommand> entityCommands;
         std::vector<DeferredEntityCommand> deferredEntityCommands;
         std::vector<std::unique_ptr<EntityComponentPool>> componentPools;
+
         uint32_t currPool{ 0 };
         uint32_t currCommand{ 0 };
+        uint32_t currDeferredCommand{ 0 };
+        uint32_t createCommandCount{ 0 };
 
         void reset()
         {
@@ -74,6 +76,8 @@ namespace LITL::ECS
 
             currPool = 0;
             currCommand = 0;
+            currDeferredCommand = 0;
+            createCommandCount = 0;
 
             // command queue should already be empty, but just incase ...
             entityCommands.clear();
@@ -115,9 +119,12 @@ namespace LITL::ECS
 
     void EntityCommandQueue::push(EntityCommand command, void* data) noexcept
     {
+        assert(command.type != EntityCommandType::CreateEntity);
+
         if ((command.type == EntityCommandType::AddComponent) && (data != nullptr))
         {
             m_pImpl->insertComponent(ComponentDescriptor::get(command.component), data, command.pool, command.offset);
+            command.queue = this;
         }
 
         m_pImpl->entityCommands.push_back(command);
@@ -125,7 +132,11 @@ namespace LITL::ECS
 
     void EntityCommandQueue::push(DeferredEntityCommand command, void* data) noexcept
     {
-        if ((command.type == EntityCommandType::AddComponent) && (data != nullptr))
+        if (command.type == EntityCommandType::CreateEntity)
+        {
+            m_pImpl->createCommandCount++;
+        }
+        else if ((command.type == EntityCommandType::AddComponent) && (data != nullptr))
         {
             m_pImpl->insertComponent(ComponentDescriptor::get(command.component), data, command.pool, command.offset);
         }
@@ -169,6 +180,11 @@ namespace LITL::ECS
         return m_pImpl->entityCommands.size() - m_pImpl->currCommand;
     }
 
+    size_t EntityCommandQueue::actionableCommandCount() const noexcept
+    {
+        return (m_pImpl->entityCommands.size() + m_pImpl->deferredEntityCommands.size()) - m_pImpl->createCommandCount;
+    }
+
     size_t EntityCommandQueue::poolCount() const noexcept
     {
         return m_pImpl->componentPools.size();
@@ -184,13 +200,8 @@ namespace LITL::ECS
         m_pImpl->reset();
     }
 
-    void EntityCommandQueue::materialize(World* world) noexcept
+    std::vector<DeferredEntityCommand> const& EntityCommandQueue::deferredCommands() const noexcept
     {
-        if (m_pImpl->deferredEntityCommands.empty())
-        {
-            return;
-        }
-
-
+        return m_pImpl->deferredEntityCommands;
     }
 }

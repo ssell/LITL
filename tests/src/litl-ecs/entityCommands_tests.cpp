@@ -23,6 +23,7 @@ namespace LITL::ECS::Tests
 
         REQUIRE(command.has_value());
         REQUIRE(command.value().type == EntityCommandType::DestroyEntity);
+        REQUIRE(command.value().queue == nullptr); // only for addcomponent
         REQUIRE(queue.count() == 0);
         REQUIRE(queue.empty() == true);
 
@@ -33,7 +34,7 @@ namespace LITL::ECS::Tests
         REQUIRE(queue.empty() == true);
     } END_LITL_TEST_CASE
 
-        LITL_TEST_CASE("Queue Component", "[ecs::entityCommands]")
+    LITL_TEST_CASE("Queue Component", "[ecs::entityCommands]")
     {
         EntityCommandQueue queue;
 
@@ -64,9 +65,11 @@ namespace LITL::ECS::Tests
 
         REQUIRE((*fooCommand).type == EntityCommandType::AddComponent);
         REQUIRE((*fooCommand).component == fooDesc->id);
+        REQUIRE((*fooCommand).queue == &queue);
 
         REQUIRE((*barCommand).type == EntityCommandType::AddComponent);
         REQUIRE((*barCommand).component == barDesc->id);
+        REQUIRE((*barCommand).queue == &queue);
 
         Foo fooCopy{};
         Bar barCopy{};
@@ -121,10 +124,9 @@ namespace LITL::ECS::Tests
         }
     } END_LITL_TEST_CASE
 
-        LITL_TEST_CASE("Commands", "[ecs::entityCommands]")
+    LITL_TEST_CASE("Commands", "[ecs::entityCommands]")
     {
         EntityRegistry::clear();
-
         EntityCommands commands;
         const auto entityRecord = EntityRegistry::create();
 
@@ -132,34 +134,52 @@ namespace LITL::ECS::Tests
         commands.addComponent<Foo>(entityRecord.entity);
         commands.removeComponent<Foo>(entityRecord.entity);
 
-        auto& queue = commands.queue();
+        REQUIRE(commands.actionableCommandCount() == 3);
+        EntityRegistry::clear();
+    } END_LITL_TEST_CASE
 
-        REQUIRE(queue.count() == 3);
+    LITL_TEST_CASE("Materialize and Extract", "[ecs::entityCommands]")
+    {
+        EntityRegistry::clear();
+        World world;
+        EntityCommands commands;
 
-        auto fooType = ComponentDescriptor::get<Foo>()->id;
+        auto deferred0 = commands.createEntity();
+        commands.addComponent<Foo>(deferred0);
 
-        auto command0 = queue.next();
-        REQUIRE(command0.has_value());
-        REQUIRE((*command0).type == EntityCommandType::DestroyEntity);
-        REQUIRE((*command0).entity.isNull() == false);
-        REQUIRE((*command0).entity == entityRecord.entity);
+        auto deferred1 = commands.createEntity();
+        commands.addComponent<Bar>(deferred1);
+        
+        commands.removeComponent<Foo>(deferred0);
+        commands.destroyEntity(deferred0);
 
-        auto command1 = queue.next();
-        REQUIRE(command1.has_value());
-        REQUIRE((*command1).type == EntityCommandType::AddComponent);
-        REQUIRE((*command1).entity.isNull() == false);
-        REQUIRE((*command1).entity == entityRecord.entity);
-        REQUIRE((*command1).component == fooType);
+        // Expected actionable commands:
+        //      add component
+        //      add component
+        //      remove component
+        //      destroy
 
-        auto command2 = queue.next();
-        REQUIRE(command2.has_value());
-        REQUIRE((*command2).type == EntityCommandType::RemoveComponent);
-        REQUIRE((*command2).entity.isNull() == false);
-        REQUIRE((*command2).entity == entityRecord.entity);
-        REQUIRE((*command2).component == fooType);
+        REQUIRE(commands.actionableCommandCount() == 4);
 
-        auto command8 = queue.next();
-        REQUIRE(!command8.has_value());
+        std::vector<EntityCommand> materialized;
+        materialized.resize(commands.actionableCommandCount());
+        commands.extractCommands(&world, materialized, 0);
 
+        REQUIRE(materialized[0].entity.isNull() == false);
+        REQUIRE(materialized[0].type == EntityCommandType::AddComponent);
+        REQUIRE(materialized[0].component == ComponentDescriptor::get<Foo>()->id);
+
+        REQUIRE(materialized[1].entity.isNull() == false);
+        REQUIRE(materialized[1].type == EntityCommandType::AddComponent);
+        REQUIRE(materialized[1].component == ComponentDescriptor::get<Bar>()->id);
+
+        REQUIRE(materialized[2].entity.isNull() == false);
+        REQUIRE(materialized[2].type == EntityCommandType::RemoveComponent);
+        REQUIRE(materialized[2].component == ComponentDescriptor::get<Foo>()->id);
+
+        REQUIRE(materialized[3].entity.isNull() == false);
+        REQUIRE(materialized[3].type == EntityCommandType::DestroyEntity);
+
+        EntityRegistry::clear();
     } END_LITL_TEST_CASE
 }
