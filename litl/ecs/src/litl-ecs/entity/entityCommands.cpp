@@ -1,4 +1,5 @@
 #include "litl-ecs/entity/entityCommands.hpp"
+#include "litl-ecs/world.hpp"
 
 namespace LITL::ECS
 {
@@ -13,16 +14,39 @@ namespace LITL::ECS
 
     }
 
-    EntityCommandQueue& EntityCommands::queue() noexcept
+    void EntityCommands::reset() noexcept
     {
-        return m_commands;
+        m_nextId = 0;
+        m_commands.reset();
+    }
+
+    size_t EntityCommands::actionableCommandCount() const noexcept
+    {
+        return m_commands.actionableCommandCount();
+    }
+
+    void EntityCommands::extractCommands(World* world, std::vector<EntityCommand>& commands, size_t offset) noexcept
+    {
+        assert(world != nullptr);
+        assert(commands.size() >= (m_commands.count() + offset));
+
+        materialize(world);
+
+        auto count = m_commands.count();
+
+        for (auto i = offset; i < (offset + count); ++i)
+        {
+            commands[i] = m_commands.next().value();
+        }
+
+        reset();
     }
 
     DeferredEntity EntityCommands::createEntity() noexcept
     {
         DeferredEntity entity = { static_cast<uint32_t>(m_nextId++) };
 
-        m_commands.push({
+        m_commands.push(DeferredEntityCommand {
             .type = EntityCommandType::CreateEntity,
             .deferredEntity = entity
         });
@@ -32,7 +56,7 @@ namespace LITL::ECS
 
     void EntityCommands::destroyEntity(Entity entity) noexcept
     {
-        m_commands.push({
+        m_commands.push(EntityCommand {
             .type = EntityCommandType::DestroyEntity,
             .entity = entity
         });
@@ -40,7 +64,7 @@ namespace LITL::ECS
 
     void EntityCommands::destroyEntity(DeferredEntity entity) noexcept
     {
-        m_commands.push({
+        m_commands.push(DeferredEntityCommand {
             .type = EntityCommandType::DestroyEntity,
             .deferredEntity = entity
         });
@@ -48,7 +72,7 @@ namespace LITL::ECS
 
     void EntityCommands::addComponent(Entity entity, ComponentTypeId component, void* data) noexcept
     {
-        m_commands.push({
+        m_commands.push(EntityCommand {
             .type = EntityCommandType::AddComponent,
             .entity = entity,
             .component = component
@@ -57,7 +81,7 @@ namespace LITL::ECS
 
     void EntityCommands::addComponent(DeferredEntity entity, ComponentTypeId component, void* data) noexcept
     {
-        m_commands.push({
+        m_commands.push(DeferredEntityCommand {
             .type = EntityCommandType::AddComponent,
             .deferredEntity = entity,
             .component = component
@@ -66,7 +90,7 @@ namespace LITL::ECS
 
     void EntityCommands::removeComponent(Entity entity, ComponentTypeId component) noexcept
     {
-        m_commands.push({
+        m_commands.push(EntityCommand {
             .type = EntityCommandType::RemoveComponent,
             .entity = entity,
             .component = component
@@ -75,10 +99,34 @@ namespace LITL::ECS
 
     void EntityCommands::removeComponent(DeferredEntity entity, ComponentTypeId component) noexcept
     {
-        m_commands.push({
+        m_commands.push(DeferredEntityCommand {
             .type = EntityCommandType::RemoveComponent,
             .deferredEntity = entity,
             .component = component
         });
+    }
+
+    void EntityCommands::materialize(World* world) noexcept
+    {
+        std::vector<Entity> materialized;
+        materialized.resize(m_nextId);
+
+        for (auto& deferredCommand : m_commands.deferredCommands())
+        {
+            if (deferredCommand.type == EntityCommandType::CreateEntity)
+            {
+                materialized[deferredCommand.deferredEntity.index] = world->createImmediate();
+            }
+            else
+            {
+                m_commands.push(EntityCommand{
+                    .type = deferredCommand.type,
+                    .entity = materialized[deferredCommand.deferredEntity.index],
+                    .component = deferredCommand.component,
+                    .pool = deferredCommand.pool,
+                    .offset = deferredCommand.offset
+                    });
+            }
+        }
     }
 }

@@ -11,6 +11,8 @@
 
 namespace LITL::ECS
 {
+    class EntityCommandQueue;
+
     enum class EntityCommandType : uint32_t
     {
         None            = 0,
@@ -49,6 +51,11 @@ namespace LITL::ECS
         /// Offset into the memory pool, pointing to where the component data is stored.
         /// </summary>
         uint32_t offset{ 0 };
+
+        /// <summary>
+        /// The queue that stores the local component.
+        /// </summary>
+        EntityCommandQueue const* queue{ nullptr };
     };
 
     /// <summary>
