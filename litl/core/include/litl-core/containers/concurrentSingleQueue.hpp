@@ -6,7 +6,7 @@
 #include <vector>
 #include <optional>
 
-#include "litl-core/alignment.hpp"
+#include "litl-core/constants.hpp"
 
 namespace LITL::Core
 {
@@ -118,8 +118,8 @@ namespace LITL::Core
         }
 
         const uint32_t m_capacity;
-        alignas(CacheLineSize) std::atomic<uint32_t> m_writeAt;        // aka head
-        alignas(CacheLineSize) std::atomic<uint32_t> m_readAt;         // aka tail
+        alignas(Constants::cache_line_size) std::atomic<uint32_t> m_writeAt;        // aka head
+        alignas(Constants::cache_line_size) std::atomic<uint32_t> m_readAt;         // aka tail
         std::vector<T> m_buffer;
         // ^ both always moving "forward", with the tail chasing the head
     };

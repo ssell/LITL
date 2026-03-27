@@ -5,7 +5,7 @@
 #include <atomic>
 #include <cstdint>
 
-#include "litl-core/alignment.hpp"
+#include "litl-core/constants.hpp"
 #include "litl-core/job/jobPriority.hpp"
 #include "litl-core/job/jobHandle.hpp"
 
@@ -46,7 +46,7 @@ namespace LITL::Core
     // can reduce to two (or 1 on m-series) by: reducing buffer to 48 (from 64) and max dependent count to 6 (from 12)
     // time will tell if (a) we need as big of a buffer and/or (b) need as many dependents. can in the future add a BigJob or similar.
 
-    struct alignas(CacheLineSize) Job
+    struct alignas(Constants::cache_line_size) Job
     {
         using JobFunc = void(*)(Job* job);
         static constexpr uint32_t JobLocalBufferSize = 64;          // As big as we can get while keeping to two-cache lines on most systems.
@@ -103,7 +103,7 @@ namespace LITL::Core
         /// Small buffer of user data stored as part of the Job.
         /// This data is valid for the lifetime of the job.
         /// </summary>
-        alignas(CacheLineSize) std::byte localData[JobLocalBufferSize];
+        alignas(Constants::cache_line_size) std::byte localData[JobLocalBufferSize];
 
         // --- end cache line 1
         // --- start cache line 2
@@ -111,7 +111,7 @@ namespace LITL::Core
         /// <summary>
         /// All jobs that are dependent on this job to finish before they can run.
         /// </summary>
-        alignas(CacheLineSize) std::array<JobHandle, JobMaxDependentsCount> dependents{ };
+        alignas(Constants::cache_line_size) std::array<JobHandle, JobMaxDependentsCount> dependents{ };
 
         // --- end cache line 2
 

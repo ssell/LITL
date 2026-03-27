@@ -4,7 +4,7 @@
 #include <utility>
 #include <vector>
 
-#include "litl-core/alignment.hpp"
+#include "litl-core/constants.hpp"
 #include "litl-core/math/math.hpp"
 #include "litl-core/job/job.hpp"
 #include "litl-core/job/jobPool.hpp"
@@ -70,7 +70,7 @@ namespace LITL::Core
 
     private:
 
-        alignas(CacheLineSize) std::byte m_buffer[JobPoolBufferSize];
+        alignas(Constants::cache_line_size) std::byte m_buffer[JobPoolBufferSize];
         uint32_t m_currOffset = 0;
     };
 
@@ -162,7 +162,7 @@ namespace LITL::Core
 
         struct Block
         {
-            alignas(CacheLineSize) std::byte buffer[JobPoolBufferSize];
+            alignas(Constants::cache_line_size) std::byte buffer[JobPoolBufferSize];
             std::atomic<uint32_t> currOffset;
         };
 

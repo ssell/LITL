@@ -2,9 +2,10 @@
 #include <queue>
 #include <vector>
 
+#include "litl-core/constants.hpp"
 #include "litl-ecs/entity/entityCommandQueue.hpp"
-#include "litl-core/alignment.hpp"
 #include "litl-ecs/constants.hpp"
+#include "litl-ecs/world.hpp"
 
 namespace LITL::ECS
 {
@@ -52,34 +53,59 @@ namespace LITL::ECS
 
     private:
 
-        alignas(CacheLineSize) std::byte m_buffer[Constants::entity_command_pool_size];
+        alignas(Core::Constants::cache_line_size) std::byte m_buffer[Constants::entity_command_pool_size];
         uint32_t m_currOffset{ 0 };
     };
 
     struct EntityCommandQueue::Impl
     {
-        std::queue<EntityCommand> m_queue;
-        std::vector<std::unique_ptr<EntityComponentPool>> m_componentPools;
-        uint32_t m_currPool;
+        std::vector<EntityCommand> entityCommands;
+        std::vector<DeferredEntityCommand> deferredEntityCommands;
+        std::vector<std::unique_ptr<EntityComponentPool>> componentPools;
+        uint32_t currPool{ 0 };
+        uint32_t currCommand{ 0 };
 
         void reset()
         {
-            for (auto& pool : m_componentPools)
+            for (auto& pool : componentPools)
             {
                 pool->reset();
             }
 
-            m_currPool = 0;
+            currPool = 0;
+            currCommand = 0;
 
             // command queue should already be empty, but just incase ...
-            while (!m_queue.empty()) { m_queue.pop(); }
+            entityCommands.clear();
+            deferredEntityCommands.clear();
+        }
+
+        void insertComponent(ComponentDescriptor const* descriptor, void* data, uint32_t& poolIndex, uint32_t& poolOffset)
+        {
+            assert(descriptor != nullptr);
+
+            if (!componentPools[currPool]->insert(descriptor, data, poolOffset))
+            {
+                currPool++;
+
+                if (currPool >= componentPools.size())
+                {
+                    componentPools.push_back(std::make_unique<EntityComponentPool>());
+                }
+
+                componentPools[currPool]->insert(descriptor, data, poolOffset);
+            }
+
+            poolIndex = currPool;
         }
     };
 
     EntityCommandQueue::EntityCommandQueue()
         : m_pImpl(std::make_unique<EntityCommandQueue::Impl>())
     {
-        m_pImpl->m_componentPools.push_back(std::make_unique<EntityComponentPool>());
+        m_pImpl->componentPools.push_back(std::make_unique<EntityComponentPool>());
+        m_pImpl->entityCommands.reserve(512);
+        m_pImpl->deferredEntityCommands.reserve(512);
     }
 
     EntityCommandQueue::~EntityCommandQueue()
@@ -89,44 +115,34 @@ namespace LITL::ECS
 
     void EntityCommandQueue::push(EntityCommand command, void* data) noexcept
     {
-        if ((command.type != EntityCommandType::AddComponent) || (data == nullptr))
+        if ((command.type == EntityCommandType::AddComponent) && (data != nullptr))
         {
-            m_pImpl->m_queue.push(command);
+            m_pImpl->insertComponent(ComponentDescriptor::get(command.component), data, command.pool, command.offset);
         }
-        else
-        {
-            // Have component data that needs to be stored.
-            auto* descriptor = ComponentDescriptor::get(command.component);
-            assert(descriptor != nullptr);
 
-            // Can only fail if the pool is out of room.
-            if (!m_pImpl->m_componentPools[m_pImpl->m_currPool]->insert(descriptor, data, command.offset))
-            {
-                m_pImpl->m_currPool++;
-
-                if (m_pImpl->m_currPool >= m_pImpl->m_componentPools.size())
-                {
-                    m_pImpl->m_componentPools.push_back(std::make_unique<EntityComponentPool>());
-                }
-
-                m_pImpl->m_componentPools[m_pImpl->m_currPool]->insert(descriptor, data, command.offset);
-            }
-
-            command.pool = m_pImpl->m_currPool;
-
-            m_pImpl->m_queue.push(command);
-        }
+        m_pImpl->entityCommands.push_back(command);
     }
 
-    std::optional<EntityCommand> EntityCommandQueue::pop() noexcept
+    void EntityCommandQueue::push(DeferredEntityCommand command, void* data) noexcept
+    {
+        if ((command.type == EntityCommandType::AddComponent) && (data != nullptr))
+        {
+            m_pImpl->insertComponent(ComponentDescriptor::get(command.component), data, command.pool, command.offset);
+        }
+
+        m_pImpl->deferredEntityCommands.push_back(command);
+    }
+
+    std::optional<EntityCommand> EntityCommandQueue::next() noexcept
     {
         if (empty())
         {
             return std::nullopt;
         }
 
-        auto ret = m_pImpl->m_queue.front(); m_pImpl->m_queue.pop();
-        return ret;
+        // We dont do a pop here or remove commands. Want to avoid the costly moves associated with that.
+        // Commands are only removed via a reset which removes them all at once.
+        return m_pImpl->entityCommands[m_pImpl->currCommand++];
     }
 
     bool EntityCommandQueue::loadComponent(EntityCommand command, void* dest) noexcept
@@ -140,31 +156,41 @@ namespace LITL::ECS
 
         assert(descriptor != nullptr);
         assert(dest != nullptr);
-        assert(command.pool < m_pImpl->m_componentPools.size());
+        assert(command.pool < m_pImpl->componentPools.size());
         assert(command.offset < Constants::entity_command_pool_size);
 
-        descriptor->move(m_pImpl->m_componentPools[command.pool]->get(command.offset), dest);
+        descriptor->move(m_pImpl->componentPools[command.pool]->get(command.offset), dest);
 
         return true;
     }
 
-    size_t EntityCommandQueue::size() const noexcept
+    size_t EntityCommandQueue::count() const noexcept
     {
-        return m_pImpl->m_queue.size();
+        return m_pImpl->entityCommands.size() - m_pImpl->currCommand;
     }
 
     size_t EntityCommandQueue::poolCount() const noexcept
     {
-        return m_pImpl->m_componentPools.size();
+        return m_pImpl->componentPools.size();
     }
 
     bool EntityCommandQueue::empty() const noexcept
     {
-        return m_pImpl->m_queue.empty();
+        return count() == 0;
     }
 
     void EntityCommandQueue::reset() noexcept
     {
         m_pImpl->reset();
+    }
+
+    void EntityCommandQueue::materialize(World* world) noexcept
+    {
+        if (m_pImpl->deferredEntityCommands.empty())
+        {
+            return;
+        }
+
+
     }
 }

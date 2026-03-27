@@ -3,6 +3,7 @@
 namespace LITL::ECS
 {
     EntityCommands::EntityCommands()
+        : m_nextId(0)
     {
 
     }
@@ -12,9 +13,14 @@ namespace LITL::ECS
 
     }
 
+    EntityCommandQueue& EntityCommands::queue() noexcept
+    {
+        return m_commands;
+    }
+
     DeferredEntity EntityCommands::createEntity() noexcept
     {
-        DeferredEntity entity = { static_cast<uint32_t>(m_commands.size()) };
+        DeferredEntity entity = { static_cast<uint32_t>(m_nextId++) };
 
         m_commands.push({
             .type = EntityCommandType::CreateEntity,

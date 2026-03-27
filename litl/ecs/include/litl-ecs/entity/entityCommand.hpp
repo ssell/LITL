@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <optional>
 
+#include "litl-core/constants.hpp"
 #include "litl-ecs/entity/entity.hpp"
 #include "litl-ecs/entity/deferredEntity.hpp"
 #include "litl-ecs/component/component.hpp"
@@ -20,9 +21,9 @@ namespace LITL::ECS
     };
 
     /// <summary>
-    /// A single deferred entity-related command.
+    /// A command related to an Entity.
     /// </summary>
-    struct EntityCommand
+    struct alignas(Core::Constants::half_cache_line_size) EntityCommand
     {
         /// <summary>
         /// The command to be run.
@@ -32,7 +33,33 @@ namespace LITL::ECS
         /// <summary>
         /// If the enttiy being targetted by the command.
         /// </summary>
-        Entity entity;
+        Entity entity{};
+
+        /// <summary>
+        /// The component being added or removed.
+        /// </summary>
+        ComponentTypeId component;
+
+        /// <summary>
+        /// Index of the memory pool in which the component data is stored.
+        /// </summary>
+        uint32_t pool{ 0 };
+
+        /// <summary>
+        /// Offset into the memory pool, pointing to where the component data is stored.
+        /// </summary>
+        uint32_t offset{ 0 };
+    };
+
+    /// <summary>
+    /// A command related to a DeferredEntity.
+    /// </summary>
+    struct alignas(Core::Constants::half_cache_line_size) DeferredEntityCommand
+    {
+        /// <summary>
+        /// The command to be run.
+        /// </summary>
+        EntityCommandType type{ EntityCommandType::None };
 
         /// <summary>
         /// Optional deferred entity being targetted by the command.

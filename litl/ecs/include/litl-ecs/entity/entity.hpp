@@ -2,6 +2,7 @@
 #define LITL_ENGINE_ECS_ENTITY_H__
 
 #include <cstdint>
+#include "litl-ecs/constants.hpp"
 
 namespace LITL::ECS
 {
@@ -45,16 +46,31 @@ namespace LITL::ECS
     /// </summary>
     struct Entity
     {
+        bool operator==(Entity const& other)
+        {
+            return (index == other.index) && (version == other.version);
+        }
+
+        bool operator!=(Entity const& other)
+        {
+            return !(*this == other);
+        }
+
         /// <summary>
         /// The index of this Entity. Used to map it to its components. 
         /// </summary>
-        uint32_t index;
+        uint32_t index{ Constants::null_entity_id };
 
         /// <summary>
         /// The current version/generation of this Entity. After an Entity is destroyed,
         /// it's index may be reused. When the index is reused the version increases.
         /// </summary>
-        uint32_t version;
+        uint32_t version{ 0 };
+
+        constexpr bool isNull() const noexcept
+        {
+            return index == Constants::null_entity_id;
+        }
     };
 }
 
