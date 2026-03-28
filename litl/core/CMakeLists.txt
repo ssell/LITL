@@ -17,14 +17,16 @@ add_library(litl-core
 		"src/litl-core/job/jobScheduler.cpp" 
 		"src/litl-core/job/jobPool.cpp" 
 		"src/litl-core/job/jobFence.cpp" 
-		 
 		"src/litl-core/thread.cpp"  
 		"src/litl-core/math/random/fastRng.cpp" 
 		"src/litl-core/math/random/goodRng.cpp" 
 		"src/litl-core/math/math.cpp" 
 		"src/litl-core/services/serviceCollection.cpp" 
 		"src/litl-core/services/serviceProvider.cpp" 
-		"src/litl-core/types.cpp" "src/litl-core/services/serviceScope.cpp"  "src/litl-core/job/jobHandle.cpp" "src/litl-core/math/dag.cpp")
+		"src/litl-core/types.cpp" 
+		"src/litl-core/services/serviceScope.cpp"  
+		"src/litl-core/job/jobHandle.cpp" 
+		"src/litl-core/math/dag.cpp")
 		
 target_include_directories(litl-core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
 	PRIVATE
