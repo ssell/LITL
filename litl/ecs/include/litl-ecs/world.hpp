@@ -51,7 +51,8 @@ namespace LITL::ECS
         /// Immediately creates a new Entity.
         /// 
         /// It is recommended to use an ECS Command Buffer instead. The use of this, 
-        /// or other *Immediate methods, should be limited to setting up simple demos, tests, etc.
+        /// or other *Immediate methods, should be limited to internal engine use, 
+        /// setting up simple demos, tests, etc.
         /// </summary>
         /// <returns></returns>
         Entity createImmediate() const noexcept;
@@ -67,7 +68,8 @@ namespace LITL::ECS
         /// Immediately destroys the Entity.
         /// 
         /// It is recommended to use an ECS Command Buffer instead. The use of this, 
-        /// or other *Immediate methods, should be limited to setting up simple demos, tests, etc.
+        /// or other *Immediate methods, should be limited to internal engine use, 
+        /// setting up simple demos, tests, etc.
         /// </summary>
         /// <param name="entity"></param>
         void destroyImmediate(Entity entity) const noexcept;
@@ -90,7 +92,8 @@ namespace LITL::ECS
         /// Immediately adds the specified component to the Entity.
         /// 
         /// It is recommended to use an ECS Command Buffer instead. The use of this, 
-        /// or other *Immediate methods, should be limited to setting up simple demos, tests, etc.
+        /// or other *Immediate methods, should be limited to internal engine use, 
+        /// setting up simple demos, tests, etc.
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="component"></param>
@@ -100,7 +103,8 @@ namespace LITL::ECS
         /// Immediately adds the specified component to the Entity.
         /// 
         /// It is recommended to use an ECS Command Buffer instead. The use of this, 
-        /// or other *Immediate methods, should be limited to setting up simple demos, tests, etc.
+        /// or other *Immediate methods, should be limited to internal engine use, 
+        /// setting up simple demos, tests, etc.
         /// </summary>
         /// <returns></returns>
         template<ValidComponentType ComponentType>
@@ -113,7 +117,8 @@ namespace LITL::ECS
         /// Immediately adds the specified component to the Entity.
         /// 
         /// It is recommended to use an ECS Command Buffer instead. The use of this, 
-        /// or other *Immediate methods, should be limited to setting up simple demos, tests, etc.
+        /// or other *Immediate methods, should be limited to internal engine use, 
+        /// setting up simple demos, tests, etc.
         /// </summary>
         /// <returns></returns>
         template<ValidComponentType ComponentType>
@@ -127,7 +132,8 @@ namespace LITL::ECS
         /// Immediately adds the component and sets the value of it.
         /// 
         /// It is recommended to use an ECS Command Buffer instead. The use of this, 
-        /// or other *Immediate methods, should be limited to setting up simple demos, tests, etc.
+        /// or other *Immediate methods, should be limited to internal engine use, 
+        /// setting up simple demos, tests, etc.
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="componentData"></param>
@@ -138,7 +144,8 @@ namespace LITL::ECS
         /// Immediately adds the specified components to the Entity.
         /// 
         /// It is recommended to use an ECS Command Buffer instead. The use of this, 
-        /// or other *Immediate methods, should be limited to setting up simple demos, tests, etc.
+        /// or other *Immediate methods, should be limited to internal engine use, 
+        /// setting up simple demos, tests, etc.
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="components"></param>
@@ -148,7 +155,8 @@ namespace LITL::ECS
         /// Immediately adds the specified components to the Entity.
         /// 
         /// It is recommended to use an ECS Command Buffer instead. The use of this, 
-        /// or other *Immediate methods, should be limited to setting up simple demos, tests, etc.
+        /// or other *Immediate methods, should be limited to internal engine use, 
+        /// setting up simple demos, tests, etc.
         /// </summary>
         /// <typeparam name="...ComponentTypes"></typeparam>
         /// <param name="entity"></param>
@@ -166,7 +174,8 @@ namespace LITL::ECS
         /// Immediately adds the specified components to the Entity with the provided values.
         /// 
         /// It is recommended to use an ECS Command Buffer instead. The use of this, 
-        /// or other *Immediate methods, should be limited to setting up simple demos, tests, etc.
+        /// or other *Immediate methods, should be limited to internal engine use, 
+        /// setting up simple demos, tests, etc.
         /// </summary>
         /// <typeparam name="...ComponentTypes"></typeparam>
         /// <param name="entity"></param>
@@ -182,7 +191,8 @@ namespace LITL::ECS
         /// Immediately removes the specified component from the Entity.
         /// 
         /// It is recommended to use an ECS Command Buffer instead. The use of this, 
-        /// or other *Immediate methods, should be limited to setting up simple demos, tests, etc.
+        /// or other *Immediate methods, should be limited to internal engine use, 
+        /// setting up simple demos, tests, etc.
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="component"></param>
@@ -192,7 +202,8 @@ namespace LITL::ECS
         /// Immediately removes the specified component from the Entity.
         /// 
         /// It is recommended to use an ECS Command Buffer instead. The use of this, 
-        /// or other *Immediate methods, should be limited to setting up simple demos, tests, etc.
+        /// or other *Immediate methods, should be limited to internal engine use, 
+        /// setting up simple demos, tests, etc.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="entity"></param>
@@ -206,7 +217,8 @@ namespace LITL::ECS
         /// Immediately removed the specified components from the Entity.
         /// 
         /// It is recommended to use an ECS Command Buffer instead. The use of this, 
-        /// or other *Immediate methods, should be limited to setting up simple demos, tests, etc.
+        /// or other *Immediate methods, should be limited to internal engine use, 
+        /// setting up simple demos, tests, etc.
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="components"></param>
@@ -216,7 +228,8 @@ namespace LITL::ECS
         /// Immediately removed the specified components from the Entity.
         /// 
         /// It is recommended to use an ECS Command Buffer instead. The use of this, 
-        /// or other *Immediate methods, should be limited to setting up simple demos, tests, etc.
+        /// or other *Immediate methods, should be limited to internal engine use, 
+        /// setting up simple demos, tests, etc.
         /// </summary>
         /// <typeparam name="...ComponentTypes"></typeparam>
         /// <param name="entity"></param>
@@ -289,6 +302,18 @@ namespace LITL::ECS
 
             record.archetype->setComponent<ComponentType>(record, component);
         }
+
+        /// <summary>
+        /// Adds and removes multiple components from an entity at the same time.
+        /// 
+        /// It is recommended to use an ECS Command Buffer instead. The use of this, 
+        /// or other *Immediate methods, should be limited to internal engine use, 
+        /// setting up simple demos, tests, etc.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="add"></param>
+        /// <param name="remove"></param>
+        void mutateImmediate(Entity entity, std::vector<ComponentData> const& add, std::vector<ComponentTypeId> remove);
 
         /// <summary>
         /// Runs all systems.

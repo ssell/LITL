@@ -124,12 +124,12 @@ namespace LITL::ECS
         // Get the current archetype and the archetype we will be moving the entity into.
         // Remember, adding/removing components is simply moving from one archetype to another.
         auto entityRecord = EntityRegistry::getRecord(entity);
-        auto entityCurrentArchetype = entityRecord.archetype;
+        auto* entityCurrentArchetype = entityRecord.archetype;
 
         std::vector<ComponentTypeId> desiredComponents(entityCurrentArchetype->componentTypes());
         desiredComponents.emplace_back(component);
 
-        auto entityNewArchetype = ArchetypeRegistry::getByComponents(desiredComponents);
+        auto* entityNewArchetype = ArchetypeRegistry::getByComponents(desiredComponents);
 
         // Move
         ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
@@ -145,12 +145,12 @@ namespace LITL::ECS
         // Get the current archetype and the archetype we will be moving the entity into.
         // Remember, adding/removing components is simply moving from one archetype to another.
         auto entityRecord = EntityRegistry::getRecord(entity);
-        auto entityCurrentArchetype = entityRecord.archetype;
+        auto* entityCurrentArchetype = entityRecord.archetype;
 
         std::vector<ComponentTypeId> desiredComponents(entityCurrentArchetype->componentTypes());
         desiredComponents.emplace_back(componentData.type);
 
-        auto entityNewArchetype = ArchetypeRegistry::getByComponents(desiredComponents);
+        auto* entityNewArchetype = ArchetypeRegistry::getByComponents(desiredComponents);
 
         // Move
         ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
@@ -195,12 +195,12 @@ namespace LITL::ECS
         // Get the current archetype and the archetype we will be moving the entity into.
         // Remember, adding/removing components is simply moving from one archetype to another.
         auto entityRecord = EntityRegistry::getRecord(entity);
-        auto entityCurrentArchetype = entityRecord.archetype;
+        auto* entityCurrentArchetype = entityRecord.archetype;
 
         std::vector<ComponentTypeId> desiredComponents(entityCurrentArchetype->componentTypes());
         std::erase(desiredComponents, component);
 
-        auto entityNewArchetype = ArchetypeRegistry::getByComponents(desiredComponents);
+        auto* entityNewArchetype = ArchetypeRegistry::getByComponents(desiredComponents);
 
         // Move
         ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
@@ -216,7 +216,7 @@ namespace LITL::ECS
         // Get the current archetype and the archetype we will be moving the entity into.
         // Remember, adding/removing components is simply moving from one archetype to another.
         auto entityRecord = EntityRegistry::getRecord(entity);
-        auto entityCurrentArchetype = entityRecord.archetype;
+        auto* entityCurrentArchetype = entityRecord.archetype;
 
         std::vector<ComponentTypeId> desiredComponents(entityCurrentArchetype->componentTypes());
         desiredComponents.erase(
@@ -227,10 +227,31 @@ namespace LITL::ECS
             ),
             desiredComponents.end());
 
-        auto entityNewArchetype = ArchetypeRegistry::getByComponents(desiredComponents);
+        auto* entityNewArchetype = ArchetypeRegistry::getByComponents(desiredComponents);
 
         // Move
         ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
+    }
+
+    // -------------------------------------------------------------------------------------
+    // Mutate
+    // -------------------------------------------------------------------------------------
+
+    void World::mutateImmediate(Entity entity, std::vector<ComponentData> const& add, std::vector<ComponentTypeId> remove)
+    {
+        if (!EntityRegistry::isAlive(entity))
+        {
+            return;
+        }
+
+        auto entityRecord = EntityRegistry::getRecord(entity);
+        auto* entityCurrentArchetype = entityRecord.archetype;
+        auto& entityCurrentComponents = entityCurrentArchetype->componentTypes();
+
+        std::vector<ComponentTypeId> finalComponents;
+        finalComponents.reserve(entityCurrentComponents.size() + add.size());
+
+        // ... todo 
     }
 
     // -------------------------------------------------------------------------------------
