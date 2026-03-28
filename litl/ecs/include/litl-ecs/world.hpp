@@ -10,6 +10,7 @@
 #include "litl-ecs/entity/entity.hpp"
 #include "litl-ecs/entity/entityRecord.hpp"
 #include "litl-ecs/component/component.hpp"
+#include "litl-ecs/component/componentData.hpp"
 #include "litl-ecs/archetype/archetype.hpp"
 #include "litl-ecs/system/systemCollection.hpp"
 #include "litl-ecs/system/systemManager.hpp"
@@ -121,6 +122,16 @@ namespace LITL::ECS
             addComponentImmediate<ComponentType>(entity);
             setComponent(entity, component);
         }
+
+        /// <summary>
+        /// Immediately adds the component and sets the value of it.
+        /// 
+        /// It is recommended to use an ECS Command Buffer instead. The use of this, 
+        /// or other *Immediate methods, should be limited to setting up simple demos, tests, etc.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="componentData"></param>
+        void addComponentDataImmediate(Entity entity, ComponentData componentData) const noexcept;
 
 
         /// <summary>

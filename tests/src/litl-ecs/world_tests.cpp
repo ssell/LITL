@@ -141,23 +141,31 @@ namespace LITL::ECS::Tests
         World world;
         Entity entity0 = world.createImmediate();
         Entity entity1 = world.createImmediate();
+        Entity entity2 = world.createImmediate();
+
+        Foo localFoo{ 2000 };
 
         world.addComponentImmediate(entity0, Foo{ 1337 });
         world.addComponentsImmediate(entity1, Foo{ 1338 }, Bar{ 10.0f, 100 });
+        world.addComponentDataImmediate(entity2, ComponentData{ ComponentDescriptor::get<Foo>()->id, &localFoo });
 
         auto entity0Foo = world.getComponent<Foo>(entity0);
         auto entity1Foo = world.getComponent<Foo>(entity1);
         auto entity1Bar = world.getComponent<Bar>(entity1);
+        auto entity2Foo = world.getComponent<Foo>(entity2);
 
         REQUIRE(entity0Foo != std::nullopt);
         REQUIRE(entity1Foo != std::nullopt);
         REQUIRE(entity1Foo != std::nullopt);
+        REQUIRE(entity2Foo != std::nullopt);
 
         REQUIRE(entity0Foo->a == 1337);
         REQUIRE(entity1Foo->a == 1338);
         REQUIRE(entity1Bar->b == 100);
         REQUIRE(Math::fequals(entity1Bar->a, 10.0f));
+        REQUIRE(entity2Foo->a == 2000);
 
+        world.destroyImmediate(entity2);
         world.destroyImmediate(entity1);
         world.destroyImmediate(entity0);
     } END_LITL_TEST_CASE

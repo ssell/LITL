@@ -1,6 +1,7 @@
 #ifndef LITL_ENGINE_ECS_ARCHETYPE_H__
 #define LITL_ENGINE_ECS_ARCHETYPE_H__
 
+#include <cassert>
 #include <span>
 #include <string_view>
 #include <vector>
@@ -57,6 +58,8 @@ namespace LITL::ECS
             auto& chunk = getChunk(record);
             chunk.getComponentArray<ComponentType>(m_chunkLayout)[record.archetypeIndex % m_chunkLayout.entityCapacity] = component;
         }
+
+        void setComponent(EntityRecord record, ComponentDescriptor const* component, void* from);
 
     protected:
 

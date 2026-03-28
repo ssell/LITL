@@ -69,18 +69,18 @@ namespace LITL::ECS
         }
     }
 
-    void ChunkLayout::getComponentIndex(ComponentTypeId componentTypeId, uint32_t& index) const
+    uint32_t ChunkLayout::getComponentIndex(ComponentTypeId componentTypeId) const
     {
-        index = 0;
-
         for (auto i = 0; i < Constants::max_components; ++i)
         {
             if (componentOrder[i]->id == componentTypeId)
             {
-                index = i;
-                return;
+                return i;
             }
         }
+
+        // Failed to find. Realistically, should never get here.
+        return Constants::max_components;
     }
 
     void populateChunkLayout(ChunkLayout* layout, std::span<ComponentTypeId const> orderedComponentTypes)

@@ -135,6 +135,31 @@ namespace LITL::ECS
         ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
     }
 
+    void World::addComponentDataImmediate(Entity entity, ComponentData componentData) const noexcept
+    {
+        if (!EntityRegistry::isAlive(entity))
+        {
+            return;
+        }
+
+        // Get the current archetype and the archetype we will be moving the entity into.
+        // Remember, adding/removing components is simply moving from one archetype to another.
+        auto entityRecord = EntityRegistry::getRecord(entity);
+        auto entityCurrentArchetype = entityRecord.archetype;
+
+        std::vector<ComponentTypeId> desiredComponents(entityCurrentArchetype->componentTypes());
+        desiredComponents.emplace_back(componentData.type);
+
+        auto entityNewArchetype = ArchetypeRegistry::getByComponents(desiredComponents);
+
+        // Move
+        ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
+
+        // Set
+        entityRecord = EntityRegistry::getRecord(entity);   // get the updated record info
+        entityNewArchetype->setComponent(entityRecord, ComponentDescriptor::get(componentData.type), componentData.data);
+    }
+
     void World::addComponentsImmediate(Entity entity, std::vector<ComponentTypeId>& components) const noexcept
     {
         if (!EntityRegistry::isAlive(entity))

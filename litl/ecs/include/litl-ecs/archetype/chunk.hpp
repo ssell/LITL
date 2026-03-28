@@ -71,6 +71,7 @@ namespace LITL::ECS
         }
 
         std::byte const* getComponentArray(ChunkLayout const& layout, ComponentTypeId componentTypeId) const;
+        void setComponentValue(ChunkLayout const& layout, ComponentDescriptor const* component, uint32_t entityChunkIndex, void* from) noexcept;
 
     protected:
 

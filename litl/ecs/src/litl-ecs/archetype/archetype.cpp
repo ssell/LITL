@@ -128,6 +128,18 @@ namespace LITL::ECS
        EntityRegistry::updateRecordArchetype(record.entity, this, archetypeIndex);
     }
 
+    void Archetype::setComponent(EntityRecord record, ComponentDescriptor const* component, void* from)
+    {
+        assert(record.archetype == this);
+        assert(component != nullptr);
+        assert(from != nullptr);
+
+        auto& chunk = getChunk(record);
+        auto entityChunkIndex = record.archetypeIndex % m_chunkLayout.entityCapacity;
+
+        chunk.setComponentValue(m_chunkLayout, component, entityChunkIndex, from);
+    }
+
     void Archetype::remove(EntityRecord const& record) noexcept
     {
         if (record.archetype != this || record.archetypeIndex >= m_entityCount)

@@ -28,11 +28,10 @@ namespace LITL::ECS
 
         /// <summary>
         /// Retrieves the index (into componentOrder and componentOffsets) for the specified component type.
-        /// Can throw if the specified component type is not present in this layout.
+        /// If component is not found, returns Constants::max_components to indicate an invalid index.
         /// </summary>
         /// <param name="componentTypeId"></param>
-        /// <param name="index"></param>
-        void getComponentIndex(ComponentTypeId componentTypeId, uint32_t& index) const;
+        uint32_t getComponentIndex(ComponentTypeId componentTypeId) const;
 
         /// <summary>
         /// Pointer back to the owning Archetype.

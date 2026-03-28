@@ -86,8 +86,8 @@ namespace LITL::ECS
             }
             else
             {
-                auto from = swapFromChunk->data();
-                auto to = data();
+                auto* from = swapFromChunk->data();
+                auto* to = data();
 
                 // Entity swap
                 getEntities(layout)[removeAtIndex] = swapFromChunk->getEntities(layout)[swapFromChunkIndex];
@@ -119,8 +119,18 @@ namespace LITL::ECS
 
     std::byte const* Chunk::getComponentArray(ChunkLayout const& layout, ComponentTypeId componentTypeId) const
     {
-        uint32_t componentIndex = 0;
-        layout.getComponentIndex(componentTypeId, componentIndex);
+        uint32_t componentIndex = layout.getComponentIndex(componentTypeId);
+        assert(componentIndex < Constants::max_components);
+
         return &(m_data[layout.componentOffsets[componentIndex]]);
+    }
+
+    void Chunk::setComponentValue(ChunkLayout const& layout, ComponentDescriptor const* component, uint32_t entityChunkIndex, void* from) noexcept
+    {
+        uint32_t componentIndex = layout.getComponentIndex(component->id);
+        assert(componentIndex < Constants::max_components);
+
+        auto to = data();
+        component->move(from, to + layout.componentOffsets[componentIndex] + (component->size * entityChunkIndex));
     }
 }
