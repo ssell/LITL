@@ -6,18 +6,21 @@
 #include <cassert>
 #include <cstdint>
 #include <span>
+#include <type_traits>
 
 namespace LITL::Core
 {
     /// <summary>
     /// I am what I am.
+    /// 
+    /// A small stack-local sorted and unique array that requires no heap allocation.
     /// </summary>
-    template<size_t Capacity = 64>
+    template<typename T, size_t Capacity = 64> requires std::is_trivially_copyable_v<T>
     class FixedSortedArray
     {
     public:
 
-        FixedSortedArray(std::span<uint32_t const> source)
+        FixedSortedArray(std::span<T const> source)
             : m_size(source.size())
         {
             assert(m_size <= Capacity);
@@ -53,7 +56,7 @@ namespace LITL::Core
 
     private:
 
-        std::array<uint32_t, Capacity> m_array;
+        std::array<T, Capacity> m_array;
         size_t m_size{ 0 };
     };
 }

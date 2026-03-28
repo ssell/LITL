@@ -313,7 +313,7 @@ namespace LITL::ECS
         /// <param name="entity"></param>
         /// <param name="add"></param>
         /// <param name="remove"></param>
-        void mutateImmediate(Entity entity, std::vector<ComponentData> const& add, std::vector<ComponentTypeId> remove);
+        void mutateImmediate(Entity entity, std::span<ComponentData> add, std::span<ComponentTypeId> remove) const noexcept;
 
         /// <summary>
         /// Runs all systems.
