@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "litl-core/containers/fixedSortedArray.hpp"
 #include "litl-core/job/jobScheduler.hpp"
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/world.hpp"
@@ -237,7 +238,7 @@ namespace LITL::ECS
     // Mutate
     // -------------------------------------------------------------------------------------
 
-    void World::mutateImmediate(Entity entity, std::vector<ComponentData> const& add, std::vector<ComponentTypeId> remove)
+    void World::mutateImmediate(Entity entity, std::span<ComponentData> add, std::span<ComponentTypeId> remove) const noexcept
     {
         if (!EntityRegistry::isAlive(entity))
         {
@@ -248,10 +249,9 @@ namespace LITL::ECS
         auto* entityCurrentArchetype = entityRecord.archetype;
         auto& entityCurrentComponents = entityCurrentArchetype->componentTypes();
 
-        std::vector<ComponentTypeId> finalComponents;
-        finalComponents.reserve(entityCurrentComponents.size() + add.size());
+        //
 
-        // ... todo 
+        Core::FixedSortedArray<ComponentTypeId, Constants::max_components> removeSorted(remove);
     }
 
     // -------------------------------------------------------------------------------------
