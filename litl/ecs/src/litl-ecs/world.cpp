@@ -127,12 +127,12 @@ namespace LITL::ECS
         auto entityRecord = EntityRegistry::getRecord(entity);
         auto* entityCurrentArchetype = entityRecord.archetype;
 
-        ArchetypeComponents desiredComponents = entityCurrentArchetype->componentTypes();
+        ArchetypeComponents archetypeComponents = entityCurrentArchetype->componentTypes();
         
-        if (desiredComponents.add(component))
+        if (archetypeComponents.add(component))
         {
             // Move
-            auto* entityNewArchetype = ArchetypeRegistry::getByComponentHash(desiredComponents.hash());
+            auto* entityNewArchetype = ArchetypeRegistry::getByComponents(archetypeComponents);
             ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
         }
     }
@@ -149,12 +149,12 @@ namespace LITL::ECS
         auto entityRecord = EntityRegistry::getRecord(entity);
         auto* entityCurrentArchetype = entityRecord.archetype;
 
-        ArchetypeComponents desiredComponents = entityCurrentArchetype->componentTypes();
+        ArchetypeComponents archetypeComponents = entityCurrentArchetype->componentTypes();
         
-        if (desiredComponents.add(componentData.type))
+        if (archetypeComponents.add(componentData.type))
         {
             // Move
-            auto* entityNewArchetype = ArchetypeRegistry::getByComponentHash(desiredComponents.hash());
+            auto* entityNewArchetype = ArchetypeRegistry::getByComponents(archetypeComponents);
             ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
 
             // Set
@@ -175,16 +175,14 @@ namespace LITL::ECS
         auto entityRecord = EntityRegistry::getRecord(entity);
         auto entityCurrentArchetype = entityRecord.archetype;
 
-        ArchetypeComponents desiredComponents = entityCurrentArchetype->componentTypes();
+        ArchetypeComponents archetypeComponents = entityCurrentArchetype->componentTypes();
         
-        if (desiredComponents.add(components))
+        if (archetypeComponents.add(components))
         {
             // Move
-            auto* entityNewArchetype = ArchetypeRegistry::getByComponentHash(desiredComponents.hash());
+            auto* entityNewArchetype = ArchetypeRegistry::getByComponents(archetypeComponents);
             ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
         }
-
-
     }
 
     // -------------------------------------------------------------------------------------
@@ -203,12 +201,12 @@ namespace LITL::ECS
         auto entityRecord = EntityRegistry::getRecord(entity);
         auto* entityCurrentArchetype = entityRecord.archetype;
 
-        ArchetypeComponents desiredComponents = entityCurrentArchetype->componentTypes();
+        ArchetypeComponents archetypeComponents = entityCurrentArchetype->componentTypes();
 
-        if (desiredComponents.remove(component))
+        if (archetypeComponents.remove(component))
         {
             // Move
-            auto* entityNewArchetype = ArchetypeRegistry::getByComponentHash(desiredComponents.hash());
+            auto* entityNewArchetype = ArchetypeRegistry::getByComponents(archetypeComponents);
             ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
         }
     }
@@ -225,12 +223,12 @@ namespace LITL::ECS
         auto entityRecord = EntityRegistry::getRecord(entity);
         auto* entityCurrentArchetype = entityRecord.archetype;
 
-        ArchetypeComponents desiredComponents = entityCurrentArchetype->componentTypes();
+        ArchetypeComponents archetypeComponents = entityCurrentArchetype->componentTypes();
 
-        if (desiredComponents.remove(components))
+        if (archetypeComponents.remove(components))
         {
             // Move
-            auto* entityNewArchetype = ArchetypeRegistry::getByComponentHash(desiredComponents.hash());
+            auto* entityNewArchetype = ArchetypeRegistry::getByComponents(archetypeComponents);
             ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
         }
     }

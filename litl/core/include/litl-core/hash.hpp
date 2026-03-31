@@ -1,6 +1,7 @@
 #ifndef LITL_CORE_HASH_H__
 #define LITL_CORE_HASH_H__
 
+#include <cassert>
 #include <cstdint>
 #include <span>
 #include <string_view>
@@ -43,6 +44,22 @@ namespace LITL::Core
     {
         static_assert(std::is_trivially_copyable_v<T>);
         return hash64(data.data(), data.size_bytes(), seed);
+    }
+
+    template<typename T>
+    uint64_t hashSubarray(std::span<T const> data, size_t start, size_t length)
+    {
+        static_assert(std::is_trivially_copyable_v<T>);
+        assert((start + length) <= data.size());
+        return hash64(data.data() + start, sizeof(T) * length);
+    }
+
+    template<typename T>
+    uint64_t hashSubarray(std::span<T const> data, size_t start, size_t length, uint64_t seed)
+    {
+        static_assert(std::is_trivially_copyable_v<T>);
+        assert((start + length) <= data.size());
+        return hash64(data.data() + start, sizeof(T) * length, seed);
     }
 
     uint64_t hashString(std::string_view str);

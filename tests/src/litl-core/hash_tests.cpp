@@ -232,4 +232,17 @@ namespace LITL::Core::Tests
         REQUIRE(str0Hash == str1Hash);
         REQUIRE(str0Hash != str2Hash);
     } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("Hash Subarray", "[core::hash]")
+    {
+        std::array<uint32_t, 8> array = { 1, 2, 3, 4, 5, 6, 7, 8 };
+        std::array<uint32_t, 4> subarray = { 3, 4, 5, 6 };
+
+        auto hashedFullArray = hashArray<uint32_t>(array);
+        auto hashedSubarrayExpected = hashArray<uint32_t>(subarray);
+        auto hashedSubarray = hashSubarray<uint32_t>(array, 2, 4);
+
+        REQUIRE(hashedSubarray != hashedFullArray);
+        REQUIRE(hashedSubarray == hashedSubarrayExpected);
+    } END_LITL_TEST_CASE
 }

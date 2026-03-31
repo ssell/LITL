@@ -16,6 +16,7 @@
 namespace LITL::ECS
 {
     class Archetype;
+    class ArchetypeComponents;
 
     /// <summary>
     /// Describes the memory layout of all chunks within a single Archetype specialization.
@@ -95,7 +96,7 @@ namespace LITL::ECS
     /// </summary>
     /// <param name="layout"></param>
     /// <param name="orderedComponentTypes"></param>
-    void populateChunkLayout(ChunkLayout* layout, std::span<ComponentTypeId const> orderedComponentTypes);
+    void populateChunkLayout(ChunkLayout* layout, ArchetypeComponents const& components);
 
     /// <summary>
     /// Fills out the ChunkLayout to fit the provided component types.

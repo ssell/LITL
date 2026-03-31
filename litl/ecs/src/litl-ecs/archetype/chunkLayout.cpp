@@ -2,6 +2,7 @@
 
 #include "litl-core/math/math.hpp"
 #include "litl-ecs/archetype/chunkLayout.hpp"
+#include "litl-ecs/archetype/archetypeComponents.hpp"
 
 namespace LITL::ECS
 {
@@ -83,11 +84,11 @@ namespace LITL::ECS
         return Constants::max_components;
     }
 
-    void populateChunkLayout(ChunkLayout* layout, std::span<ComponentTypeId const> orderedComponentTypes)
+    void populateChunkLayout(ChunkLayout* layout, ArchetypeComponents const& components)
     {
-        for (size_t i = 0; i < orderedComponentTypes.size(); ++i)
+        for (size_t i = 0; i < components.size(); ++i)
         {
-            layout->componentOrder[i] = ComponentDescriptor::get(orderedComponentTypes[i]);
+            layout->componentOrder[i] = ComponentDescriptor::get(components[i]);
         }
 
         layout->calculate();
