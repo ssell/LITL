@@ -127,13 +127,14 @@ namespace LITL::ECS
         auto entityRecord = EntityRegistry::getRecord(entity);
         auto* entityCurrentArchetype = entityRecord.archetype;
 
-        std::vector<ComponentTypeId> desiredComponents(entityCurrentArchetype->componentTypes());
-        desiredComponents.emplace_back(component);
-
-        auto* entityNewArchetype = ArchetypeRegistry::getByComponents(desiredComponents);
-
-        // Move
-        ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
+        ArchetypeComponents desiredComponents = entityCurrentArchetype->componentTypes();
+        
+        if (desiredComponents.add(component))
+        {
+            // Move
+            auto* entityNewArchetype = ArchetypeRegistry::getByComponentHash(desiredComponents.hash());
+            ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
+        }
     }
 
     void World::addComponentDataImmediate(Entity entity, ComponentData componentData) const noexcept
@@ -148,17 +149,18 @@ namespace LITL::ECS
         auto entityRecord = EntityRegistry::getRecord(entity);
         auto* entityCurrentArchetype = entityRecord.archetype;
 
-        std::vector<ComponentTypeId> desiredComponents(entityCurrentArchetype->componentTypes());
-        desiredComponents.emplace_back(componentData.type);
+        ArchetypeComponents desiredComponents = entityCurrentArchetype->componentTypes();
+        
+        if (desiredComponents.add(componentData.type))
+        {
+            // Move
+            auto* entityNewArchetype = ArchetypeRegistry::getByComponentHash(desiredComponents.hash());
+            ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
 
-        auto* entityNewArchetype = ArchetypeRegistry::getByComponents(desiredComponents);
-
-        // Move
-        ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
-
-        // Set
-        entityRecord = EntityRegistry::getRecord(entity);   // get the updated record info
-        entityNewArchetype->setComponent(entityRecord, ComponentDescriptor::get(componentData.type), componentData.data);
+            // Set
+            entityRecord = EntityRegistry::getRecord(entity);   // get the updated record info
+            entityNewArchetype->setComponent(entityRecord, ComponentDescriptor::get(componentData.type), componentData.data);
+        }
     }
 
     void World::addComponentsImmediate(Entity entity, std::vector<ComponentTypeId>& components) const noexcept
@@ -173,13 +175,16 @@ namespace LITL::ECS
         auto entityRecord = EntityRegistry::getRecord(entity);
         auto entityCurrentArchetype = entityRecord.archetype;
 
-        std::vector<ComponentTypeId> desiredComponents(entityCurrentArchetype->componentTypes());
-        desiredComponents.insert(desiredComponents.end(), components.begin(), components.end());
+        ArchetypeComponents desiredComponents = entityCurrentArchetype->componentTypes();
+        
+        if (desiredComponents.add(components))
+        {
+            // Move
+            auto* entityNewArchetype = ArchetypeRegistry::getByComponentHash(desiredComponents.hash());
+            ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
+        }
 
-        auto entityNewArchetype = ArchetypeRegistry::getByComponents(desiredComponents);
 
-        // Move
-        ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
     }
 
     // -------------------------------------------------------------------------------------
@@ -198,13 +203,14 @@ namespace LITL::ECS
         auto entityRecord = EntityRegistry::getRecord(entity);
         auto* entityCurrentArchetype = entityRecord.archetype;
 
-        std::vector<ComponentTypeId> desiredComponents(entityCurrentArchetype->componentTypes());
-        std::erase(desiredComponents, component);
+        ArchetypeComponents desiredComponents = entityCurrentArchetype->componentTypes();
 
-        auto* entityNewArchetype = ArchetypeRegistry::getByComponents(desiredComponents);
-
-        // Move
-        ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
+        if (desiredComponents.remove(component))
+        {
+            // Move
+            auto* entityNewArchetype = ArchetypeRegistry::getByComponentHash(desiredComponents.hash());
+            ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
+        }
     }
 
     void World::removeComponentsImmediate(Entity entity, std::vector<ComponentTypeId>& components) const noexcept
@@ -219,19 +225,14 @@ namespace LITL::ECS
         auto entityRecord = EntityRegistry::getRecord(entity);
         auto* entityCurrentArchetype = entityRecord.archetype;
 
-        std::vector<ComponentTypeId> desiredComponents(entityCurrentArchetype->componentTypes());
-        desiredComponents.erase(
-            std::remove_if(
-                desiredComponents.begin(),
-                desiredComponents.end(),
-                [&](ComponentTypeId componentType) { return std::find(components.begin(), components.end(), componentType) != components.end(); }
-            ),
-            desiredComponents.end());
+        ArchetypeComponents desiredComponents = entityCurrentArchetype->componentTypes();
 
-        auto* entityNewArchetype = ArchetypeRegistry::getByComponents(desiredComponents);
-
-        // Move
-        ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
+        if (desiredComponents.remove(components))
+        {
+            // Move
+            auto* entityNewArchetype = ArchetypeRegistry::getByComponentHash(desiredComponents.hash());
+            ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
+        }
     }
 
     // -------------------------------------------------------------------------------------
@@ -251,6 +252,7 @@ namespace LITL::ECS
 
         //
 
+        Core::FixedSortedArray<ComponentData, Constants::max_components> addSorted(add);
         Core::FixedSortedArray<ComponentTypeId, Constants::max_components> removeSorted(remove);
     }
 

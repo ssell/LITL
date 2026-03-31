@@ -3,6 +3,7 @@
 
 #include <concepts>
 #include <cstdint>
+#include <limits>
 #include <type_traits>
 
 namespace LITL::ECS
@@ -18,7 +19,7 @@ namespace LITL::ECS
         static constexpr ComponentTypeId null_component_id  = 0;
         static constexpr uint32_t max_component_size = 1024;
         static constexpr uint32_t max_components = 64;
-        static constexpr uint32_t max_component_variants = 4096;
+        static constexpr uint32_t max_component_types = 4096;
         static constexpr uint32_t chunk_size = 16384;
         static constexpr uint32_t max_entities_per_chunk = 512;
         static constexpr uint32_t entity_command_pool_size = 1024 * 16;
