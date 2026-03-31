@@ -11,6 +11,16 @@ namespace LITL::ECS
     /// </summary>
     struct ComponentData
     {
+        bool operator==(ComponentData const& other) const
+        {
+            return type == other.type;
+        }
+
+        auto operator<=>(ComponentData const& other) const
+        {
+            return static_cast<uint32_t>(type) <=> static_cast<uint32_t>(other.type);
+        }
+
         ComponentTypeId type{ 0 };
         void* data{ nullptr };
     };
