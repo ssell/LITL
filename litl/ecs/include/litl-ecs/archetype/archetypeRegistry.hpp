@@ -9,9 +9,11 @@
 #include "litl-ecs/component/component.hpp"
 #include "litl-ecs/entity/entityRecord.hpp"
 #include "litl-ecs/archetype/archetype.hpp"
+#include "litl-ecs/archetype/archetypeComponents.hpp"
 
 namespace LITL::ECS
 {
+
     /// <summary>
     /// Responsible for owning and tracking all Archetype specializations.
     /// Each component in an archetype definition is unique and the set is ordered based on component id.
@@ -27,6 +29,7 @@ namespace LITL::ECS
         /// <returns></returns>
         static Archetype* Empty() noexcept;
 
+        /*
         template<ValidComponentType... ComponentTypes>
         static std::vector<ComponentTypeId> getComponentMask() noexcept
         {
@@ -37,6 +40,7 @@ namespace LITL::ECS
 
             return componentTypeIds;
         }
+        */
 
         /// <summary>
         /// Retrieves (or creates) the archetype matching the specified component set.
@@ -46,11 +50,17 @@ namespace LITL::ECS
         template<ValidComponentType... ComponentTypes>
         static Archetype* get() noexcept
         {
+            /*
             std::vector<ComponentTypeId> componentTypeIds;
             componentTypeIds.reserve(sizeof...(ComponentTypes));
             (foldComponentTypesIntoVector<ComponentTypes>(componentTypeIds), ...);
 
             return getByComponents(componentTypeIds);
+            */
+
+            ArchetypeComponents components;
+            (foldComponentTypesIntoArchetype<ComponentTypes>(components), ...);
+            return getByComponents(components);
         }
 
         /// <summary>
@@ -72,7 +82,14 @@ namespace LITL::ECS
         /// </summary>
         /// <param name="components"></param>
         /// <returns></returns>
-        static Archetype* getByComponents(std::vector<ComponentTypeId> componentTypeIds) noexcept;
+        static Archetype* getByComponents(ArchetypeComponents& components) noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="components"></param>
+        /// <returns></returns>
+        static Archetype* getByComponents(std::initializer_list<ComponentTypeId> components) noexcept;
 
         /// <summary>
         /// 
@@ -98,7 +115,7 @@ namespace LITL::ECS
     private:
 
         static void refineComponentMask(std::vector<ComponentTypeId>& componentTypeIds) noexcept;
-        static Archetype* buildArchetype(uint64_t archetypeHash, std::vector<ComponentTypeId> const& componentTypeIds) noexcept;
+        static Archetype* buildArchetype(uint64_t const archetypeHash, ArchetypeComponents const& components) noexcept;
     };
 }
 

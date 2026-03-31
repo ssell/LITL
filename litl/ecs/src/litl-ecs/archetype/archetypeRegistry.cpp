@@ -38,17 +38,17 @@ namespace LITL::ECS
         return EmptyArchetype;
     }
 
-    std::string buildArchetypeDebugName(uint64_t const archetypeHash, std::vector<ComponentTypeId> const& componentTypeIds)
+    std::string buildArchetypeDebugName(uint64_t const archetypeHash, ArchetypeComponents const& components)
     {
         std::stringstream sstream;
         sstream << "[" << archetypeHash << "][";
 
-        for (auto i = 0; i < componentTypeIds.size(); ++i)
+        for (auto i = 0; i < components.size(); ++i)
         {
-            auto component = ComponentDescriptor::get(componentTypeIds[i]);
+            auto component = ComponentDescriptor::get(components[i]);
             sstream << component->debugName;
 
-            if (i < componentTypeIds.size() - 1)
+            if (i < components.size() - 1)
             {
                 sstream << ",";
             }
@@ -58,7 +58,7 @@ namespace LITL::ECS
         return sstream.str();
     }
 
-    Archetype* ArchetypeRegistry::buildArchetype(uint64_t const archetypeHash, std::vector<ComponentTypeId> const& componentTypeIds) noexcept
+    Archetype* ArchetypeRegistry::buildArchetype(uint64_t const archetypeHash, ArchetypeComponents const& components) noexcept
     {
         auto& registry = instance();
 
@@ -66,13 +66,13 @@ namespace LITL::ECS
 
         if constexpr (IS_DEBUG)
         {
-            name = buildArchetypeDebugName(archetypeHash, componentTypeIds);
+            name = buildArchetypeDebugName(archetypeHash, components);
         }
 
         const auto newArchetypeIndex = static_cast<uint32_t>(registry.archetypes.size());
         const auto archetype = new Archetype(name, newArchetypeIndex, archetypeHash);
 
-        populateChunkLayout(&archetype->m_chunkLayout, componentTypeIds);
+        populateChunkLayout(&archetype->m_chunkLayout, components);
         archetype->m_components.populate(&archetype->m_chunkLayout);
 
         registry.archetypes.push_back(std::unique_ptr<Archetype>(archetype));
@@ -89,11 +89,9 @@ namespace LITL::ECS
         componentTypeIds.erase(std::unique(componentTypeIds.begin(), componentTypeIds.end()), componentTypeIds.end());
     }
 
-    Archetype* ArchetypeRegistry::getByComponents(std::vector<ComponentTypeId> componentTypeIds) noexcept
+    Archetype* ArchetypeRegistry::getByComponents(ArchetypeComponents& components) noexcept
     {
-        refineComponentMask(componentTypeIds);
-
-        const auto archetypeHash = (componentTypeIds.empty() ? 0 : Core::hashArray<ComponentTypeId>(componentTypeIds));
+        const auto archetypeHash = components.hash();
         auto& registry = instance();
 
         {
@@ -107,9 +105,21 @@ namespace LITL::ECS
             }
             else
             {
-                return buildArchetype(archetypeHash, componentTypeIds);
+                return buildArchetype(archetypeHash, components);
             }
         }
+    }
+
+    Archetype* ArchetypeRegistry::getByComponents(std::initializer_list<ComponentTypeId> components) noexcept
+    {
+        ArchetypeComponents archetypeComponents{};
+
+        for (auto component : components)
+        {
+            archetypeComponents.add(component);
+        }
+
+        return getByComponents(archetypeComponents);
     }
 
     Archetype* ArchetypeRegistry::getById(ArchetypeId const id) noexcept

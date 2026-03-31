@@ -16,6 +16,10 @@ namespace LITL::ECS
     public:
 
         ArchetypeComponents();
+        ArchetypeComponents(std::span<ComponentTypeId> components);
+
+        ComponentTypeId& operator[](size_t index) noexcept;
+        ComponentTypeId const& operator[](size_t index) const noexcept;
 
         void populate(ChunkLayout const* layout) noexcept;
         bool add(ComponentTypeId component) noexcept;
@@ -31,11 +35,17 @@ namespace LITL::ECS
 
     private:
 
-        std::array<ComponentTypeId, Constants::max_components> m_components;
+        std::array<ComponentTypeId, Constants::max_components> m_components{};
         size_t m_size{ 0 };
         uint64_t m_hash{ 0 };
-        bool m_hashDirty{ true };
+        bool m_hashDirty{ false };
     };
+
+    template<ValidComponentType ComponentType>
+    void foldComponentTypesIntoArchetype(ArchetypeComponents& components)
+    {
+        components.add(ComponentDescriptor::get<ComponentType>()->id);
+    }
 }
 
 #endif

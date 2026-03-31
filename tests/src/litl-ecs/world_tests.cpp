@@ -8,6 +8,7 @@
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
 #include "litl-ecs/system/systemCollection.hpp"
 
+
 namespace LITL::ECS::Tests
 {
     LITL_TEST_CASE("Empty Entity Creation and Destructon", "[ecs::world]")
@@ -21,7 +22,7 @@ namespace LITL::ECS::Tests
 
         REQUIRE(world.isAlive(entity) == false);
     } END_LITL_TEST_CASE
-
+        
     LITL_TEST_CASE("Add Many Entities", "[ecs::world]")
     {
         constexpr auto entityCount = 2048; // fill up multiple chunks worth
@@ -52,7 +53,7 @@ namespace LITL::ECS::Tests
         REQUIRE(fooBarArchetype->entityCount() == initialFooBarCount);
         REQUIRE(ArchetypeRegistry::Empty()->entityCount() == (initialEmptyCount + entityCount));
     } END_LITL_TEST_CASE
-
+        
     LITL_TEST_CASE("Entity Add/Remove Component", "[ecs::world]")
     {
         World world;
@@ -105,7 +106,7 @@ namespace LITL::ECS::Tests
         REQUIRE(fooBarArchetype->entityCount() == initialFooBarCount);
         REQUIRE(world.isAlive(entity) == false);
     } END_LITL_TEST_CASE
-
+        
     LITL_TEST_CASE("Entity Add / Remove Components", "[ecs::world]")
     {
         Archetype* fooBarArchetype = ArchetypeRegistry::get<Foo, Bar>();
