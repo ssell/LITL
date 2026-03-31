@@ -1,7 +1,9 @@
 #include "tests.hpp"
 #include "litl-core/hash.hpp"
+#include "litl-core/containers/fixedSortedArray.hpp"
 #include "litl-ecs/common.hpp"
 #include "litl-ecs/component/component.hpp"
+#include "litl-ecs/component/componentData.hpp"
 #include "litl-ecs/component/componentRegistry.hpp"
 
 namespace LITL::ECS::Tests
@@ -22,7 +24,7 @@ namespace LITL::ECS::Tests
         REQUIRE(barDescriptor0->id == barDescriptor1->id);
     } END_LITL_TEST_CASE
 
-        LITL_TEST_CASE("ComponentTypeId", "[ecs::component]")
+    LITL_TEST_CASE("ComponentTypeId", "[ecs::component]")
     {
         auto fooDescriptor = ComponentDescriptor::get<Foo>();
         auto barDescriptor = ComponentDescriptor::get<Bar>();
@@ -32,7 +34,7 @@ namespace LITL::ECS::Tests
         REQUIRE(getComponentTypeId<Foo>() != getComponentTypeId<Bar>());
     } END_LITL_TEST_CASE
 
-        LITL_TEST_CASE("StableComponentTypeId", "[ecs::component]")
+    LITL_TEST_CASE("StableComponentTypeId", "[ecs::component]")
     {
         auto fooDescriptor = ComponentDescriptor::get<Foo>();
         auto barDescriptor = ComponentDescriptor::get<Bar>();
@@ -49,7 +51,7 @@ namespace LITL::ECS::Tests
         REQUIRE(getStableComponentTypeId<Foo>() != getStableComponentTypeId<Bar>());
     } END_LITL_TEST_CASE
 
-        LITL_TEST_CASE("ComponentRegistry Tracking", "[ecs::component]")
+    LITL_TEST_CASE("ComponentRegistry Tracking", "[ecs::component]")
     {
         auto fooDescriptor = ComponentDescriptor::get<Foo>();
         auto barDescriptor = ComponentDescriptor::get<Bar>();
@@ -59,5 +61,10 @@ namespace LITL::ECS::Tests
 
         REQUIRE(ComponentRegistry::find(barDescriptor->id) == barDescriptor);
         REQUIRE(ComponentRegistry::findByStableId(barDescriptor->stableId) == barDescriptor);
+    } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("ComponentData Sort", "[ecs::componentData]")
+    {
+
     } END_LITL_TEST_CASE
 }

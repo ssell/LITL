@@ -5,6 +5,7 @@
 #include <array>
 #include <cassert>
 #include <cstdint>
+#include <initializer_list>
 #include <span>
 #include <type_traits>
 
@@ -24,12 +25,14 @@ namespace LITL::Core
             : m_size(source.size())
         {
             assert(m_size <= Capacity);
+            copyAndSort(source);
+        }
 
-            std::copy(source.begin(), source.end(), m_array.begin());
-            std::sort(m_array.begin(), m_array.begin() + m_size);
-
-            auto iter = std::unique(m_array.begin(), m_array.begin() + m_size);
-            m_size = static_cast<std::size_t>(iter - m_array.begin());
+        FixedSortedArray(std::initializer_list<T const> source)
+            : m_size(source.size())
+        {
+            assert(m_size <= Capacity);
+            copyAndSort(source);
         }
 
         auto begin() const noexcept
@@ -55,6 +58,15 @@ namespace LITL::Core
     protected:
 
     private:
+
+        void copyAndSort(std::span<T const> source)
+        {
+            std::copy(source.begin(), source.end(), m_array.begin());
+            std::sort(m_array.begin(), m_array.begin() + m_size);
+
+            auto iter = std::unique(m_array.begin(), m_array.begin() + m_size);
+            m_size = static_cast<std::size_t>(iter - m_array.begin());
+        }
 
         std::array<T, Capacity> m_array;
         size_t m_size{ 0 };

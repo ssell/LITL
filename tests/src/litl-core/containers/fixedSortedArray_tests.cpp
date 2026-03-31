@@ -8,6 +8,16 @@ namespace LITL::Core::Tests
         struct SortStruct
         {
             /// <summary>
+            /// Required for FixedSortedArray. Custom equality for the dedupe (unique).
+            /// </summary>
+            /// <param name="other"></param>
+            /// <returns></returns>
+            bool operator==(SortStruct const& other) const
+            {
+                return ((a == other.a) && (b == other.b));
+            }
+
+            /// <summary>
             /// Required for FixedSortedArray. Custom spaceship for std::sort used by FixedSortedArray
             /// </summary>
             /// <param name="a"></param>
@@ -16,16 +26,6 @@ namespace LITL::Core::Tests
             auto operator<=>(SortStruct const& other) const
             {
                 return ((a + b) <=> (other.a + other.b));
-            }
-
-            /// <summary>
-            /// Required for FixedSortedArray. Custom equality for the dedupe (unique).
-            /// </summary>
-            /// <param name="other"></param>
-            /// <returns></returns>
-            bool operator==(SortStruct const& other) const
-            {
-                return ((a == other.a) && (b == other.b));
             }
 
             uint32_t a{ 0 };
@@ -77,5 +77,20 @@ namespace LITL::Core::Tests
 
         REQUIRE(at3.a == 0);
         REQUIRE(at3.b == 1000);
+    } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("Initializer List", "[core::containers::fixedSortedArray]")
+    {
+        FixedSortedArray<uint32_t> array({ 8, 6, 1, 1, 3, 9, 15, 4 });
+
+        REQUIRE(array.size() == 7);
+
+        REQUIRE(*(array.begin() + 0) == 1);
+        REQUIRE(*(array.begin() + 1) == 3);
+        REQUIRE(*(array.begin() + 2) == 4);
+        REQUIRE(*(array.begin() + 3) == 6);
+        REQUIRE(*(array.begin() + 4) == 8);
+        REQUIRE(*(array.begin() + 5) == 9);
+        REQUIRE(*(array.begin() + 6) == 15);
     } END_LITL_TEST_CASE
 }
