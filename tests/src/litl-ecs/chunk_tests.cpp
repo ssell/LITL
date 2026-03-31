@@ -1,5 +1,5 @@
 #include "tests.hpp"
-#include "litl-ecs/common.hpp"
+#include "litl-ecs/tests-common.hpp"
 #include "litl-ecs/archetype/chunk.hpp"
 
 namespace LITL::ECS::Tests

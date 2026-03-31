@@ -1,7 +1,7 @@
 #include <algorithm>
 
 #include "tests.hpp"
-#include "litl-ecs/common.hpp"
+#include "litl-ecs/tests-common.hpp"
 #include "litl-ecs/archetype/archetype.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
 
