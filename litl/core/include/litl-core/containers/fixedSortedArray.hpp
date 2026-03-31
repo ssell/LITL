@@ -12,9 +12,9 @@
 namespace LITL::Core
 {
     /// <summary>
-    /// I am what I am.
-    /// 
     /// A small stack-local sorted and unique array that requires no heap allocation.
+    /// A even more accurate name would be "FixedSortedUniqueArray" but thats rather lengthy ...
+    /// Could be cool and call it something like "FSUArray" or "USFArray" or "SFUArray" or "FUSArray".
     /// </summary>
     template<typename T, size_t Capacity = 64> requires std::is_trivially_copyable_v<T>
     class FixedSortedArray

@@ -17,7 +17,6 @@ namespace LITL::ECS
         setDebugName(name);
 
         m_chunkLayout.archetype = this;
-        m_components.reserve(Constants::max_components);
     }
 
     ArchetypeId Archetype::id() const noexcept
@@ -30,7 +29,7 @@ namespace LITL::ECS
         return m_componentHash;
     }
 
-    std::vector<ComponentTypeId> const& Archetype::componentTypes() const noexcept
+    ArchetypeComponents const& Archetype::componentTypes() const noexcept
     {
         return m_components;
     }

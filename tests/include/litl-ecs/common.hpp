@@ -20,6 +20,11 @@ namespace LITL::ECS::Tests
         uint32_t b;
     };
 
+    struct Baz
+    {
+        bool ok;
+    };
+
     struct SystemSetupService
     {
         bool wasSetup{ false };
@@ -47,5 +52,6 @@ namespace LITL::ECS::Tests
 
 REGISTER_TYPE_NAME(LITL::ECS::Tests::Foo)
 REGISTER_TYPE_NAME(LITL::ECS::Tests::Bar)
+REGISTER_TYPE_NAME(LITL::ECS::Tests::Baz)
 
 #endif

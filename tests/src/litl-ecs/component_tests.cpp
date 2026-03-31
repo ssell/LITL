@@ -65,6 +65,29 @@ namespace LITL::ECS::Tests
 
     LITL_TEST_CASE("ComponentData Sort", "[ecs::componentData]")
     {
+        const auto fooId = ComponentDescriptor::get<Foo>()->id;
+        const auto barId = ComponentDescriptor::get<Bar>()->id;
+        const auto bazId = ComponentDescriptor::get<Baz>()->id;
+
+        // FixedSortedArray is a crucial part of World::mutate
+        Core::FixedSortedArray<ComponentData> components({
+            ComponentData{ bazId, nullptr },
+            ComponentData{ fooId, nullptr },
+            ComponentData{ barId, nullptr },
+            ComponentData{ fooId, nullptr },
+            ComponentData{ barId, nullptr },
+            ComponentData{ barId, nullptr }
+        });
+
+        // Do not know the sorting at compile time as it can be influenced by other tests
+        // since component id is given on a first-come first-serve basis.
+        std::array<ComponentTypeId, 3> expectedResult = { fooId, barId, bazId };
+        std::sort(expectedResult.begin(), expectedResult.end());
+
+        REQUIRE(components.size() == 3);
+        REQUIRE((components.begin() + 0)->type == expectedResult[0]);
+        REQUIRE((components.begin() + 1)->type == expectedResult[1]);
+        REQUIRE((components.begin() + 2)->type == expectedResult[2]);
 
     } END_LITL_TEST_CASE
 }

@@ -1,6 +1,7 @@
 #ifndef LITL_ENGINE_ECS_ARCHETYPE_H__
 #define LITL_ENGINE_ECS_ARCHETYPE_H__
 
+#include <array>
 #include <cassert>
 #include <span>
 #include <string_view>
@@ -8,10 +9,12 @@
 
 #include "litl-core/debug.hpp"
 #include "litl-core/containers/pagedVector.hpp"
+#include "litl-ecs/constants.hpp"
 #include "litl-ecs/component/component.hpp"
 #include "litl-ecs/entity/entityRecord.hpp"
 #include "litl-ecs/archetype/chunkLayout.hpp"
 #include "litl-ecs/archetype/chunk.hpp"
+#include "litl-ecs/archetype/archetypeComponents.hpp"
 
 namespace LITL::ECS
 {
@@ -27,7 +30,7 @@ namespace LITL::ECS
 
         ArchetypeId id() const noexcept;
         uint64_t componentHash() const noexcept;
-        std::vector<ComponentTypeId> const& componentTypes() const noexcept;
+        ArchetypeComponents const& componentTypes() const noexcept;
         uint32_t componentCount() const noexcept;
         uint32_t entityCount() const noexcept;
 
@@ -94,7 +97,7 @@ namespace LITL::ECS
         uint32_t m_entityCount;
 
         ChunkLayout m_chunkLayout;
-        std::vector<ComponentTypeId> m_components;
+        ArchetypeComponents m_components;
         Core::PagedVector<Chunk> m_chunks;
 
         friend class ArchetypeRegistry;

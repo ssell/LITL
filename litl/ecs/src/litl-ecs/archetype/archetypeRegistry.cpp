@@ -73,16 +73,7 @@ namespace LITL::ECS
         const auto archetype = new Archetype(name, newArchetypeIndex, archetypeHash);
 
         populateChunkLayout(&archetype->m_chunkLayout, componentTypeIds);
-
-        for (auto component : archetype->m_chunkLayout.componentOrder)
-        {
-            if (component == nullptr)
-            {
-                break;
-            }
-
-            archetype->m_components.emplace_back(component->id);
-        }
+        archetype->m_components.populate(&archetype->m_chunkLayout);
 
         registry.archetypes.push_back(std::unique_ptr<Archetype>(archetype));
         registry.newArchetypes.push_back(newArchetypeIndex);
