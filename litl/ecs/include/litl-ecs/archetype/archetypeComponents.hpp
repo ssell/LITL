@@ -18,7 +18,6 @@ namespace LITL::ECS
         ArchetypeComponents();
         ArchetypeComponents(std::span<ComponentTypeId> components);
 
-        ComponentTypeId& operator[](size_t index) noexcept;
         ComponentTypeId const& operator[](size_t index) const noexcept;
 
         void populate(ChunkLayout const* layout) noexcept;
@@ -30,6 +29,7 @@ namespace LITL::ECS
         size_t size() const noexcept;
         size_t capacity() const noexcept;
         uint64_t hash() noexcept;
+        bool dirty() const noexcept;
 
     protected:
 

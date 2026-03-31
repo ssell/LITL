@@ -2,7 +2,7 @@
 
 #include "litl-core/services/serviceCollection.hpp"
 #include "litl-core/services/serviceProvider.hpp"
-#include "litl-ecs/common.hpp"
+#include "litl-ecs/tests-common.hpp"
 #include "litl-ecs/world.hpp"
 #include "litl-ecs/archetype/archetype.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"

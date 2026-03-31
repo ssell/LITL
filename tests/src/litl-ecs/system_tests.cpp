@@ -1,6 +1,6 @@
 #include "tests.hpp"
 
-#include "litl-ecs/common.hpp"
+#include "litl-ecs/tests-common.hpp"
 #include "litl-ecs/system/systemCollection.hpp"
 #include "litl-ecs/system/systemTraits.hpp"
 

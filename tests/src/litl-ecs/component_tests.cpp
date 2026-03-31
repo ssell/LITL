@@ -1,7 +1,7 @@
 #include "tests.hpp"
 #include "litl-core/hash.hpp"
 #include "litl-core/containers/fixedSortedArray.hpp"
-#include "litl-ecs/common.hpp"
+#include "litl-ecs/tests-common.hpp"
 #include "litl-ecs/component/component.hpp"
 #include "litl-ecs/component/componentData.hpp"
 #include "litl-ecs/component/componentRegistry.hpp"

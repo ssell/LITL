@@ -26,12 +26,6 @@ namespace LITL::ECS
         m_hashDirty = true;
     }
 
-    ComponentTypeId& ArchetypeComponents::operator[](size_t index) noexcept
-    {
-        assert(index < m_size);
-        return m_components[index];
-    }
-
     ComponentTypeId const& ArchetypeComponents::operator[](size_t index) const noexcept
     {
         assert(index < m_size);
@@ -142,5 +136,10 @@ namespace LITL::ECS
         m_hashDirty = false;
 
         return m_hash;
+    }
+
+    bool ArchetypeComponents::dirty() const noexcept
+    {
+        return m_hashDirty;
     }
 }
