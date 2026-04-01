@@ -77,6 +77,24 @@ namespace LITL::ECS
         return true;
     }
 
+    bool ArchetypeComponents::add(std::span<ComponentData> components) noexcept
+    {
+        if ((m_size + components.size()) > Constants::max_components)
+        {
+            return false;
+        }
+
+        for (auto i = 0; i < components.size(); ++i)
+        {
+            m_components[m_size + i] = components[i];
+        }
+
+        m_size += components.size();
+        m_hashDirty = true;
+
+        return true;
+    }
+
     bool ArchetypeComponents::remove(ComponentTypeId component) noexcept
     {
         bool anyRemoved = false;

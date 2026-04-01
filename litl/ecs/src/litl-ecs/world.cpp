@@ -233,6 +233,19 @@ namespace LITL::ECS
         }
     }
 
+
+    bool World::hasComponent(Entity entity, ComponentTypeId component) const noexcept
+    {
+        if (!isAlive(entity))
+        {
+            return false;
+        }
+
+        const auto record = getEntityRecord(entity);
+
+        return record.archetype->hasComponent(component);
+    }
+
     // -------------------------------------------------------------------------------------
     // Mutate
     // -------------------------------------------------------------------------------------
@@ -246,12 +259,24 @@ namespace LITL::ECS
 
         auto entityRecord = EntityRegistry::getRecord(entity);
         auto* entityCurrentArchetype = entityRecord.archetype;
-        auto& entityCurrentComponents = entityCurrentArchetype->componentTypes();
+        auto archetypeComponents = entityCurrentArchetype->componentTypes();
 
-        //
+        bool anyAdded = archetypeComponents.add(add);
+        bool anyRemoved = archetypeComponents.remove(remove);
 
-        Core::FixedSortedArray<ComponentData, Constants::max_components> addSorted(add);
-        Core::FixedSortedArray<ComponentTypeId, Constants::max_components> removeSorted(remove);
+        if (anyAdded || anyRemoved)
+        {
+            // Move
+            auto* entityNewArchetype = ArchetypeRegistry::getByComponents(archetypeComponents);
+            ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
+            entityRecord = EntityRegistry::getRecord(entity);
+
+            // Set
+            for (auto& component : add)
+            {
+                entityNewArchetype->setComponent(entityRecord, ComponentDescriptor::get(component.type), component.data);
+            }
+        }
     }
 
     // -------------------------------------------------------------------------------------

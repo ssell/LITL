@@ -21,6 +21,8 @@ namespace LITL::ECS
             return static_cast<uint32_t>(type) <=> static_cast<uint32_t>(other.type);
         }
 
+        operator ComponentTypeId() const { return type; }
+
         ComponentTypeId type{ 0 };
         void* data{ nullptr };
     };

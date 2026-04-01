@@ -98,6 +98,25 @@ namespace LITL::ECS::Tests
         REQUIRE(components.size() == 3);
     } END_LITL_TEST_CASE
 
+    LITL_TEST_CASE("Add Many Data", "[ecs::archetypeComponents]")
+    {
+        ArchetypeComponents components;
+
+        std::vector<ComponentData> multiple{
+            { getComponentTypeId<Foo>(), nullptr },
+            { getComponentTypeId<Foo>(), nullptr },
+            { getComponentTypeId<Bar>(), nullptr },
+            { getComponentTypeId<Baz>(), nullptr }
+        };
+
+        REQUIRE(components.add(multiple) == true);
+        REQUIRE(components.size() == 4);
+
+        components.hash();
+
+        REQUIRE(components.size() == 3);
+    } END_LITL_TEST_CASE
+
     LITL_TEST_CASE("Add Too Many", "[ecs::archetypeComponents]")
     {
         ArchetypeComponents components;

@@ -6,6 +6,7 @@
 
 #include "litl-ecs/constants.hpp"
 #include "litl-ecs/component/component.hpp"
+#include "litl-ecs/component/componentData.hpp"
 
 namespace LITL::ECS
 {
@@ -23,6 +24,7 @@ namespace LITL::ECS
         void populate(ChunkLayout const* layout) noexcept;
         bool add(ComponentTypeId component) noexcept;
         bool add(std::span<ComponentTypeId> components) noexcept;
+        bool add(std::span<ComponentData> components) noexcept;
         bool remove(ComponentTypeId component) noexcept;
         bool remove(std::span<ComponentTypeId> components) noexcept;
 

@@ -65,9 +65,9 @@ namespace LITL::ECS::Tests
 
     LITL_TEST_CASE("ComponentData Sort", "[ecs::componentData]")
     {
-        const auto fooId = ComponentDescriptor::get<Foo>()->id;
-        const auto barId = ComponentDescriptor::get<Bar>()->id;
-        const auto bazId = ComponentDescriptor::get<Baz>()->id;
+        const auto fooId = getComponentTypeId<Foo>();
+        const auto barId = getComponentTypeId<Bar>();
+        const auto bazId = getComponentTypeId<Baz>();
 
         // FixedSortedArray is a crucial part of World::mutate
         Core::FixedSortedArray<ComponentData> components({
@@ -88,6 +88,24 @@ namespace LITL::ECS::Tests
         REQUIRE((components.begin() + 0)->type == expectedResult[0]);
         REQUIRE((components.begin() + 1)->type == expectedResult[1]);
         REQUIRE((components.begin() + 2)->type == expectedResult[2]);
+    } END_LITL_TEST_CASE
 
+    LITL_TEST_CASE("ComponentTypeId Conversion", "[ecs::componentData]")
+    {
+        const auto fooId = getComponentTypeId<Foo>();
+        const auto barId = getComponentTypeId<Bar>();
+        const auto bazId = getComponentTypeId<Baz>();
+
+        ComponentData fooData{ fooId, nullptr };
+        ComponentData barData{ barId, nullptr };
+        ComponentData bazData{ bazId, nullptr };
+
+        ComponentTypeId foo = fooData;
+        ComponentTypeId bar = barData;
+        ComponentTypeId baz = bazData;
+
+        REQUIRE(foo == fooId);
+        REQUIRE(bar == barId);
+        REQUIRE(baz == bazId);
     } END_LITL_TEST_CASE
 }
