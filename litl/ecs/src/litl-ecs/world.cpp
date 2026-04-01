@@ -1,4 +1,8 @@
 #include <algorithm>
+#include <atomic>
+#include <cassert>
+#include <mutex>
+#include <thread>
 #include <vector>
 
 #include "litl-core/containers/fixedSortedArray.hpp"
@@ -13,6 +17,15 @@
 
 namespace LITL::ECS
 {
+    inline std::atomic<uint32_t> t_nextThreadIndex{ 0 };
+    thread_local uint32_t World::t_threadIndex = t_nextThreadIndex.fetch_add(1, std::memory_order_relaxed);
+
+    uint32_t nextThreadIndex()
+    {
+        static uint32_t index = 1;
+        return index++;
+    }
+
     struct World::Impl
     {
         std::shared_ptr<LITL::Core::JobScheduler> jobScheduler{ nullptr };
@@ -20,12 +33,24 @@ namespace LITL::ECS
         SystemCollection systemCollection;
         SystemManager systemManager;
         float accumulatedTime{ 0.0f };
+
+        std::mutex commandBufferMutex;
+        std::vector<std::unique_ptr<EntityCommands>> threadLocalCommandBuffers;
     };
 
     World::World()
         : m_pImpl(std::make_unique<World::Impl>())
     {
-        
+        // Seed the world with one command buffer for each core
+        auto defaultBufferCount = Math::max(2u, std::thread::hardware_concurrency());
+        m_pImpl->threadLocalCommandBuffers.reserve(defaultBufferCount);
+
+        for (auto i = 0; i < defaultBufferCount; ++i)
+        {
+            m_pImpl->threadLocalCommandBuffers.push_back(std::make_unique<EntityCommands>());
+        }
+
+        assert(t_threadIndex == 0);     // world must be made on the main thread
     }
 
     World::~World()
@@ -313,6 +338,34 @@ namespace LITL::ECS
         m_pImpl->systemManager.run(*this, dt, SystemGroup::PostRender, (*m_pImpl->jobScheduler));
         m_pImpl->systemManager.run(*this, dt, SystemGroup::Final, (*m_pImpl->jobScheduler));
     }
+
+    // -------------------------------------------------------------------------------------
+    // Command Buffers
+    // -------------------------------------------------------------------------------------
+
+    EntityCommands& World::getCommandBuffer() const noexcept
+    {
+        if (t_threadIndex >= m_pImpl->threadLocalCommandBuffers.size())
+        {
+            auto lock = std::lock_guard<std::mutex>(m_pImpl->commandBufferMutex);
+
+            while (t_threadIndex >= m_pImpl->threadLocalCommandBuffers.size())
+            {
+                m_pImpl->threadLocalCommandBuffers.push_back(std::make_unique<EntityCommands>());
+            }
+        }
+
+        return *(m_pImpl->threadLocalCommandBuffers[t_threadIndex].get());
+    }
+
+    std::vector<std::unique_ptr<EntityCommands>> const& World::getCommandBuffers() const noexcept
+    {
+        return m_pImpl->threadLocalCommandBuffers;
+    }
+
+    // -------------------------------------------------------------------------------------
+    // Misc
+    // -------------------------------------------------------------------------------------
 
     SystemInfoGraph World::buildInfoGraph() const noexcept
     {

@@ -88,6 +88,7 @@ namespace LITL::ECS
     private:
 
         void updateSystemArchetypes() const noexcept;
+        void processCommandBuffers(World& world) const noexcept;
 
         struct Impl;
         std::unique_ptr<Impl> m_pImpl;

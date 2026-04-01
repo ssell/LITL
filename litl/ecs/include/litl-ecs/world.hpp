@@ -9,6 +9,7 @@
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/entity/entity.hpp"
 #include "litl-ecs/entity/entityRecord.hpp"
+#include "litl-ecs/entity/entityCommands.hpp"
 #include "litl-ecs/component/component.hpp"
 #include "litl-ecs/component/componentData.hpp"
 #include "litl-ecs/archetype/archetype.hpp"
@@ -33,7 +34,7 @@ namespace LITL::ECS
         World& operator=(World const&) = delete;
         ~World();
 
-        SystemCollection& getSystemCollection() const noexcept;
+        [[nodiscard]] SystemCollection& getSystemCollection() const noexcept;
 
         /// <summary>
         /// Invoked once by the Engine during setup.
@@ -55,14 +56,14 @@ namespace LITL::ECS
         /// setting up simple demos, tests, etc.
         /// </summary>
         /// <returns></returns>
-        Entity createImmediate() const noexcept;
+        [[nodiscard]] Entity createImmediate() const noexcept;
 
         /// <summary>
         /// Returns the record associated with the specified entity.
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        EntityRecord getEntityRecord(Entity entity) const noexcept;
+        [[nodiscard]] EntityRecord getEntityRecord(Entity entity) const noexcept;
 
         /// <summary>
         /// Immediately destroys the Entity.
@@ -86,7 +87,7 @@ namespace LITL::ECS
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        uint32_t componentCount(Entity entity) const noexcept;
+        [[nodiscard]] uint32_t componentCount(Entity entity) const noexcept;
 
         /// <summary>
         /// Immediately adds the specified component to the Entity.
@@ -259,7 +260,7 @@ namespace LITL::ECS
         /// <param name="entity"></param>
         /// <returns></returns>
         template<ValidComponentType ComponentType>
-        std::optional<ComponentType> getComponent(Entity entity) const noexcept
+        [[nodiscard]] std::optional<ComponentType> getComponent(Entity entity) const noexcept
         {
             if (!isAlive(entity))
             {
@@ -350,21 +351,32 @@ namespace LITL::ECS
         void run(float dt, float fixedStep);
 
         /// <summary>
+        /// Retrieves the entity command buffer for the current thread.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] EntityCommands& getCommandBuffer() const noexcept;
+
+
+        /// <summary>
         /// Builds and returns a SystemInfoGraph which details all systems in the world and where they are "located" (group and layer).
         /// </summary>
         /// <returns></returns>
-        SystemInfoGraph buildInfoGraph() const noexcept;
+        [[nodiscard]] SystemInfoGraph buildInfoGraph() const noexcept;
 
     protected:
 
     private:
 
         friend class SystemCollection;
+        friend class SystemManager;
 
-        SystemManager& getSystemManager() const noexcept;
-
+        [[nodiscard]] SystemManager& getSystemManager() const noexcept;
+        [[nodiscard]] std::vector<std::unique_ptr<EntityCommands>> const& getCommandBuffers() const noexcept;
+        
         struct Impl;
         std::unique_ptr<Impl> m_pImpl;
+
+        static thread_local uint32_t t_threadIndex;
     };
 }
 
