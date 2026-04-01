@@ -29,14 +29,14 @@ namespace LITL::ECS
         /// </summary>
         /// <param name="command"></param>
         /// <param name="data"></param>
-        void push(EntityCommand command, void* data = nullptr) noexcept;
+        void push(EntityCommand command, void* source = nullptr) noexcept;
 
         /// <summary>
         /// Adds a new command for a DeferredEntity.
         /// </summary>
         /// <param name="command"></param>
         /// <param name="data"></param>
-        void push(DeferredEntityCommand command, void* data = nullptr) noexcept;
+        void push(DeferredEntityCommand command, void* source = nullptr) noexcept;
 
         /// <summary>
         /// Returns the next command. Note this does not remove it, that is only done in a call to reset.

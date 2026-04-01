@@ -38,8 +38,6 @@ namespace LITL::ECS
         {
             commands[i] = m_commands.next().value();
         }
-
-        reset();
     }
 
     DeferredEntity EntityCommands::createEntity() noexcept
@@ -123,8 +121,7 @@ namespace LITL::ECS
                     .type = deferredCommand.type,
                     .entity = materialized[deferredCommand.deferredEntity.index],
                     .component = deferredCommand.component,
-                    .pool = deferredCommand.pool,
-                    .offset = deferredCommand.offset
+                    .data = deferredCommand.data
                     });
             }
         }
