@@ -12,15 +12,15 @@
 
 namespace LITL::ECS
 {
-    class World;
+    class EntityCommands;
 
     /// <summary>
-    /// The system update methods must begin with "World&,float" and so those are not needed for
+    /// The system update methods must begin with "EntityCommands&,float" and so those are not needed for
     /// custom system parameter decomposition. This removes the always-present mandator parameters.
     /// 
     /// For example: 
     /// 
-    ///     update(World& world, float dt, Foo& foo, Bar const& bar)
+    ///     update(EntityCommands& commands, float dt, Foo& foo, Bar const& bar)
     /// 
     /// The following types are extracted:
     /// 
@@ -35,7 +35,7 @@ namespace LITL::ECS
     //                                                                                    ^ extract [2, 3, 4, ...], skipping [0, 1]
 
     /// <summary>
-    /// Works with SystemTupleTailImpl to retrieve all but the first two (mandatory World,float) types in the update signature.
+    /// Works with SystemTupleTailImpl to retrieve all but the first two (mandatory EntityCommands,float) types in the update signature.
     /// </summary>
     /// <typeparam name="Tuple"></typeparam>
     template<typename Tuple>
@@ -54,7 +54,7 @@ namespace LITL::ECS
     /// <summary>
     /// Requirements for a valid System class/struct.
     /// 
-    /// All that is needed is there is an "update" method that takes in a World& and float parameter.
+    /// All that is needed is there is an "update" method that takes in a EntityCommands& and float parameter.
     /// Additional parameters can be added and are used for archetype matching and the values are 
     /// provided during system run/iteration.
     /// </summary>
@@ -71,21 +71,21 @@ namespace LITL::ECS
         constexpr std::size_t argsCount = std::tuple_size_v<args>;
         constexpr std::size_t componentsCount = std::tuple_size_v<args> -2;
 
-        static_assert(argsCount >= 2, "System::update must take atleast: World&, float");
+        static_assert(argsCount >= 2, "System::update must take atleast: EntityCommands&, float");
         static_assert((componentsCount == 0) || ValidSystemComponents<args>(std::make_index_sequence<componentsCount>{}), "System::update optional component arguments must be reference or const-reference values only.");
 
         using Arg0 = std::tuple_element_t<0, args>;                             // first argument type
         using Arg1 = std::tuple_element_t<1, args>;                             // second argument type
 
         static_assert(std::same_as<typename traits::returnType, void>, "System::update return type must be void.");
-        static_assert(std::same_as<Arg0, World&>, "System::update first argument must be 'World&'");
+        static_assert(std::same_as<Arg0, EntityCommands&>, "System::update first argument must be 'EntityCommands&'");
         static_assert(std::same_as<Arg1, float>, "System::update second argument must be 'float'");
 
         return true; 
     } ();
 
     /// <summary>
-    /// Retrieves the tuple of types required by the System::update method (excluding the mandatory World&,float).
+    /// Retrieves the tuple of types required by the System::update method (excluding the mandatory EntityCommands&,float).
     /// </summary>
     /// <typeparam name="T"></typeparam>
     template<ValidSystem S>
@@ -111,7 +111,7 @@ namespace LITL::ECS
     {
         /// <summary>
         /// Returns a std::tuple of the plain component types expected by the system ::update method.
-        /// For example `update(World&, float, Foo&, Bar const&)` would return `[Foo, Bar]`
+        /// For example `update(EntityCommands&, float, Foo&, Bar const&)` would return `[Foo, Bar]`
         /// </summary>
         /// <returns></returns>
         static auto extractComponentIds()

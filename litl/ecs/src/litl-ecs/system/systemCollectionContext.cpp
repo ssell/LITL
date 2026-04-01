@@ -1,5 +1,6 @@
 #include "litl-ecs/system/systemCollectionContext.hpp"
 #include "litl-ecs/system/systemCollection.hpp"
+#include "litl-ecs/system/system.hpp"
 
 namespace LITL::ECS
 {

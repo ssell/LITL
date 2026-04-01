@@ -7,6 +7,7 @@
 namespace LITL::ECS
 {
     class SystemCollection;
+    class System;
 
     /// <summary>
     /// Utility to provide a builder-style interface for system dependencies.

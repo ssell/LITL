@@ -42,7 +42,7 @@ namespace LITL::ECS::Tests
             }
         }
 
-        void update(ECS::World& world, float dt, Foo& foo, Bar& bar)
+        void update(ECS::EntityCommands& commands, float dt, Foo& foo, Bar& bar)
         {
             foo.a++;
             bar.b++;

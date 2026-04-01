@@ -9,7 +9,7 @@ namespace LITL::ECS::Tests
     struct TraitsTestSystem
     {
         void setup(Core::ServiceProvider& service) {};
-        void update(World& world, float dt, Foo const& read, Bar& write) {}
+        void update(ECS::EntityCommands& commands, float dt, Foo const& read, Bar& write) {}
     };
 
     /// <summary>
@@ -34,7 +34,7 @@ namespace LITL::ECS::Tests
 
         for (auto i = 0; i < 10; ++i)
         {
-            runner.run(world, 0.0f, entityRecord.archetype->getChunk(entityRecord), entityRecord.archetype->chunkLayout());
+            runner.run(world.getCommandBuffer(), 0.0f, entityRecord.archetype->getChunk(entityRecord), entityRecord.archetype->chunkLayout());
         }
 
         REQUIRE(world.getComponent<Foo>(entity0)->a == 10);

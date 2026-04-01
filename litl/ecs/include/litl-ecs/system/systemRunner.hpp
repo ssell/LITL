@@ -7,14 +7,14 @@
 
 namespace LITL::ECS
 {
-    class World;
+    class EntityCommands;
     struct ChunkLayout;
 
     /// <summary>
     /// The function signature required to run the SystemRunner.
     /// </summary>
-    using SystemRunFunc = void(LITL::ECS::World&, float, LITL::ECS::Chunk&, LITL::ECS::ChunkLayout const&);
-    using ErasedSystemRunFunc = void(*)(void*, LITL::ECS::World&, float, LITL::ECS::Chunk&, LITL::ECS::ChunkLayout const&);
+    using SystemRunFunc = void(LITL::ECS::EntityCommands&, float, LITL::ECS::Chunk&, LITL::ECS::ChunkLayout const&);
+    using ErasedSystemRunFunc = void(*)(void*, LITL::ECS::EntityCommands&, float, LITL::ECS::Chunk&, LITL::ECS::ChunkLayout const&);
 
     /// <summary>
     /// Responsible for running a system over a single archetype chunk.
@@ -38,11 +38,11 @@ namespace LITL::ECS
         }
 
         // Must match SystemRunFunc
-        void run(World& world, float dt, Chunk& chunk, ChunkLayout const& layout)
+        void run(EntityCommands& commands, float dt, Chunk& chunk, ChunkLayout const& layout)
         {
             // Get the system components in tuple form. For example: std::tuple<Foo&, Bar&>
             using SystemComponentTuple = SystemComponents<S>;
-            iterate<SystemComponentTuple>(world, dt, chunk, layout);
+            iterate<SystemComponentTuple>(commands, dt, chunk, layout);
         }
 
     protected:
@@ -50,7 +50,7 @@ namespace LITL::ECS
     private:
 
         template<typename SystemComponentTuple>
-        void iterate(World& world, float dt, Chunk& chunk, ChunkLayout const& layout)
+        void iterate(EntityCommands& commands, float dt, Chunk& chunk, ChunkLayout const& layout)
         {
             // Retrieve the data ptr for each component in the tuple type.
             // For example: SystemComponentTuple -> std::tuple<Foo&, Bar&> ->
@@ -68,7 +68,7 @@ namespace LITL::ECS
                 // Applies the provded lambda to each member of the tuple.
                 std::apply([&](auto&... componentArray)
                     {
-                        m_pSystem->update(world, dt, componentArray[i]...);
+                        m_pSystem->update(commands, dt, componentArray[i]...);
                     }, componentArrays);
             }
         }

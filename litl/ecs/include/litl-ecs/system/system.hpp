@@ -25,6 +25,7 @@ namespace LITL::ECS
     using ErasedSystemWrapperDestroyFunc = void(*)(void*);
 
     class SystemManager;
+    class World;
 
     /// <summary>
     /// The result of many levels of wrapping and type erasure.
@@ -67,10 +68,10 @@ namespace LITL::ECS
                         auto* wrapper = std::launder(reinterpret_cast<LocalWrapper*>(storage));
                         wrapper->setup(services);
                     }),
-                std::move([](void* storage, World& world, float dt, Chunk& chunk, ChunkLayout const& layout)
+                std::move([](void* storage, EntityCommands& commands, float dt, Chunk& chunk, ChunkLayout const& layout)
                     {
                         auto* wrapper = std::launder(reinterpret_cast<LocalWrapper*>(storage));
-                        wrapper->run(world, dt, chunk, layout);
+                        wrapper->run(commands, dt, chunk, layout);
                     }),
                 std::move([](void* storage)
                     {
