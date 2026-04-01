@@ -411,6 +411,22 @@ namespace LITL::ECS::Tests
         REQUIRE(world.hasComponent<Baz>(entity) == false);
     } END_LITL_TEST_CASE
 
+    LITL_TEST_CASE("Entity Mutate None", "[ecs::world]")
+    {
+        World world;
+        auto entity = world.createImmediate();
+
+        Foo foo{ .a = 50 }; 
+        std::vector<ComponentData> add{ { getComponentTypeId<Foo>(), &foo } };
+        std::vector<ComponentTypeId> remove{ getComponentTypeId<Foo>() };
+
+        world.mutateImmediate(entity, add, remove);
+
+        REQUIRE(world.hasComponent<Foo>(entity) == false);
+
+        world.destroyImmediate(entity);
+    } END_LITL_TEST_CASE
+
     LITL_TEST_CASE("World Run", "[ecs::world]")
     {
         Core::ServiceCollection collection;

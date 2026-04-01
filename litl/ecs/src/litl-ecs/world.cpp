@@ -274,7 +274,10 @@ namespace LITL::ECS
             // Set
             for (auto& component : add)
             {
-                entityNewArchetype->setComponent(entityRecord, ComponentDescriptor::get(component.type), component.data);
+                if (archetypeComponents.has(component.type))
+                {
+                    entityNewArchetype->setComponent(entityRecord, ComponentDescriptor::get(component.type), component.data);
+                }
             }
         }
     }

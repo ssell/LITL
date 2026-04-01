@@ -27,6 +27,7 @@ namespace LITL::ECS
         bool add(std::span<ComponentData> components) noexcept;
         bool remove(ComponentTypeId component) noexcept;
         bool remove(std::span<ComponentTypeId> components) noexcept;
+        bool has(ComponentTypeId component) const noexcept;
 
         size_t size() const noexcept;
         size_t capacity() const noexcept;

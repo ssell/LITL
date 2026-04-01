@@ -129,6 +129,19 @@ namespace LITL::ECS
         return anyRemoved;
     }
 
+    bool ArchetypeComponents::has(ComponentTypeId component) const noexcept
+    {
+        for (auto i = 0; i < m_size; ++i)
+        {
+            if (m_components[i] == component)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     size_t ArchetypeComponents::size() const noexcept
     {
         return m_size;

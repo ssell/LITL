@@ -72,7 +72,7 @@ namespace LITL::ECS
 
     uint32_t ChunkLayout::getComponentIndex(ComponentTypeId componentTypeId) const
     {
-        for (auto i = 0; i < Constants::max_components; ++i)
+        for (auto i = 0; i < componentTypeCount; ++i)
         {
             if (componentOrder[i]->id == componentTypeId)
             {
