@@ -3,6 +3,8 @@
 #include "litl-ecs/system/system.hpp"
 #include "litl-ecs/archetype/archetype.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
+#include "litl-ecs/entity/entityCommands.hpp"
+#include "litl-ecs/world.hpp"
 
 namespace LITL::ECS
 {
@@ -129,6 +131,8 @@ namespace LITL::ECS
     {
         assert(m_pImpl->functions.runFunc != nullptr);
 
+        auto& commandBuffer = world.getCommandBuffer();
+
         for (auto archetype : m_pImpl->archetypes)
         {
             const auto chunkCount = archetype->chunkCount();
@@ -136,7 +140,7 @@ namespace LITL::ECS
 
             for (auto ci = 0; ci < chunkCount; ++ci)
             {
-                m_pImpl->functions.runFunc(m_pImpl->functions.storedSystemWrapper, world, dt, archetype->getChunk(ci), layout);
+                m_pImpl->functions.runFunc(m_pImpl->functions.storedSystemWrapper, commandBuffer, dt, archetype->getChunk(ci), layout);
             }
         }
     }
@@ -153,7 +157,8 @@ namespace LITL::ECS
             {
                 scheduler.createAndSubmit([this, &world, dt, archetype, ci](Core::Job* job)
                 {
-                    (*m_pImpl->functions.runFunc)(m_pImpl->functions.storedSystemWrapper, world, dt, archetype->getChunk(ci), archetype->chunkLayout());
+                    auto& commandBuffer = world.getCommandBuffer();
+                    (*m_pImpl->functions.runFunc)(m_pImpl->functions.storedSystemWrapper, commandBuffer, dt, archetype->getChunk(ci), archetype->chunkLayout());
                 }, fence, nullptr);
             }
         }

@@ -9,7 +9,7 @@
 
 namespace LITL::ECS
 {
-    class World;
+    class EntityCommands;
 
     /// <summary>
     /// Wraps around an user System and SystemRunner combination.
@@ -45,9 +45,9 @@ namespace LITL::ECS
             m_pRunner->setup(services);
         }
 
-        void run(World& world, float dt, Chunk& chunk, ChunkLayout const& layout)
+        void run(EntityCommands& commands, float dt, Chunk& chunk, ChunkLayout const& layout)
         {
-            m_pRunner->run(world, dt, chunk, layout);
+            m_pRunner->run(commands, dt, chunk, layout);
         }
 
     protected:
