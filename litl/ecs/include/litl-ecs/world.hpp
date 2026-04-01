@@ -277,6 +277,33 @@ namespace LITL::ECS
         }
 
         /// <summary>
+        /// Does the entity have the specified component type?
+        /// </summary>
+        /// <typeparam name="ComponentType"></typeparam>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        template<ValidComponentType ComponentType>
+        bool hasComponent(Entity entity) const noexcept
+        {
+            if (!isAlive(entity))
+            {
+                return false;
+            }
+
+            const auto record = getEntityRecord(entity);
+
+            return record.archetype->hasComponent<ComponentType>();
+        }
+
+        /// <summary>
+        /// Does the entity have the specified component type?
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="component"></param>
+        /// <returns></returns>
+        bool hasComponent(Entity entity, ComponentTypeId component) const noexcept;
+
+        /// <summary>
         /// Sets the value of the specified component for the Entity if it exists.
         /// 
         /// Note: that it is generally unusual to set a component value in this manner as

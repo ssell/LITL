@@ -11,18 +11,18 @@ namespace LITL::ECS::Tests
 {
     struct Foo
     {
-        uint32_t a;
+        uint32_t a{ 0 };
     };
 
     struct Bar
     {
-        float a;
-        uint32_t b;
+        float a{ 0.0f };
+        uint32_t b{ 0 };
     };
 
     struct Baz
     {
-        bool ok;
+        bool ok{ false };
     };
 
     struct SystemSetupService

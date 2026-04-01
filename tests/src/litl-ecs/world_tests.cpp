@@ -1,3 +1,5 @@
+#include <vector>
+
 #include "tests.hpp"
 
 #include "litl-core/services/serviceCollection.hpp"
@@ -335,6 +337,78 @@ namespace LITL::ECS::Tests
         {
             world.destroyImmediate(entity);
         }
+    } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("Entity Mutate", "[ecs::world]")
+    {
+        World world;
+
+        auto entity = world.createImmediate();
+
+        Foo foo{ .a = 50 };
+        Bar bar0{ .a = 100.0f, .b = 333 };
+        Bar bar1{ .a = 10.0f, .b = 33 };
+        Baz baz{ .ok = true };
+
+        std::vector<ComponentData> add{
+            { getComponentTypeId<Foo>(), &foo },
+            { getComponentTypeId<Bar>(), &bar0 },
+            { getComponentTypeId<Bar>(), &bar1 }
+        };
+
+        std::vector<ComponentTypeId> remove{ getComponentTypeId<Baz>() };
+
+        // Setup Entity with a single Baz component
+        REQUIRE(world.componentCount(entity) == 0);
+
+        world.addComponentDataImmediate(entity, ComponentData{ getComponentTypeId<Baz>(), &baz});
+
+        REQUIRE(world.componentCount(entity) == 1);
+        REQUIRE(world.hasComponent<Foo>(entity) == false);
+        REQUIRE(world.hasComponent<Bar>(entity) == false);
+        REQUIRE(world.hasComponent<Baz>(entity) == true);
+
+        auto getBaz = world.getComponent<Baz>(entity);
+
+        REQUIRE(getBaz.has_value() == true);
+        REQUIRE(getBaz.value().ok == baz.ok);
+
+        // Add Foo and Bar (including a bar duplicate that will get deduped) and remove Baz
+
+        world.mutateImmediate(entity, add, remove);
+
+        REQUIRE(world.componentCount(entity) == 2);                     // Foo and Bar (no Baz)
+        REQUIRE(world.hasComponent<Foo>(entity) == true);
+        REQUIRE(world.hasComponent<Bar>(entity) == true);
+        REQUIRE(world.hasComponent<Baz>(entity) == false);
+
+        getBaz = world.getComponent<Baz>(entity);
+        auto getFoo = world.getComponent<Foo>(entity);
+        auto getBar = world.getComponent<Bar>(entity);
+
+        REQUIRE(getBaz.has_value() == false);
+
+        REQUIRE(getFoo.has_value() == true);
+        REQUIRE(getFoo.value().a == foo.a);
+
+        REQUIRE(getBar.has_value() == true);
+        REQUIRE(Math::fequals(getBar.value().a, bar0.a) == false);
+        REQUIRE(getBar.value().b != bar0.b);
+        REQUIRE(Math::fequals(getBar.value().a, bar1.a) == true);       // bar1 was set second, so should be the one whose value is set last and is kept
+        REQUIRE(getBar.value().b == bar1.b);
+
+        // Make sure mutation on a dead entity does nothing
+        world.destroyImmediate(entity);
+
+        REQUIRE(world.hasComponent<Foo>(entity) == false);
+        REQUIRE(world.hasComponent<Bar>(entity) == false);
+        REQUIRE(world.hasComponent<Baz>(entity) == false);
+
+        world.mutateImmediate(entity, add, remove);
+
+        REQUIRE(world.hasComponent<Foo>(entity) == false);
+        REQUIRE(world.hasComponent<Bar>(entity) == false);
+        REQUIRE(world.hasComponent<Baz>(entity) == false);
     } END_LITL_TEST_CASE
 
     LITL_TEST_CASE("World Run", "[ecs::world]")
