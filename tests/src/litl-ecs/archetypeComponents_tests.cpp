@@ -18,6 +18,7 @@ namespace LITL::ECS::Tests
         REQUIRE(components.size() == 0);
         REQUIRE(components.dirty() == false);
         REQUIRE(components.hash() == 0);
+        REQUIRE(components.has(getComponentTypeId<Foo>()) == false);
 
         const auto fooId = getComponentTypeId<Foo>();
         const auto fooHash = Core::hash64(&fooId, sizeof(uint32_t));
@@ -26,6 +27,7 @@ namespace LITL::ECS::Tests
         REQUIRE(components.capacity() == Constants::max_components);
         REQUIRE(components.size() == 1);
         REQUIRE(components.dirty() == true);
+        REQUIRE(components.has(getComponentTypeId<Foo>()) == true);
 
         REQUIRE(components.hash() == fooHash);
         REQUIRE(components.dirty() == false);
