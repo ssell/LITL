@@ -22,6 +22,7 @@ namespace LITL::ECS
             m_combinedCommands.resize(totalCommandCount);
         }
 
+        // Combine all command buffers
         for (auto& commandBuffer : commandBuffers)
         {
             nextOffset = offset + commandBuffer.actionableCommandCount();
@@ -29,9 +30,9 @@ namespace LITL::ECS
             offset = nextOffset;
         }
 
+        // Sort based on: entity -> command type -> component
         std::sort(m_combinedCommands.begin(), m_combinedCommands.end(), [](EntityCommand a, EntityCommand b) -> bool
             {
-                // Sort by: entity -> command type -> component
                 if (a.entity != b.entity)
                 {
                     return (a.entity.index < b.entity.index);
@@ -49,30 +50,28 @@ namespace LITL::ECS
                 }
             });
 
-        std::vector<ComponentTypeId> addedComponents;
-        addedComponents.reserve(Constants::max_components);
+        std::vector<ComponentData> addedComponents;
+        addedComponents.reserve(Constants::max_components * 2);
 
         std::vector<ComponentTypeId> removedComponents;
-        removedComponents.reserve(Constants::max_components);
+        removedComponents.reserve(Constants::max_components * 2);
 
-        EntityRecord currEntity{};
+        Entity currEntity{};
         bool entityRemoved = false;
         bool archetypeChanged = false;
 
-        // ... todo need to update world with a way to add a component and set the data from an arbitrary address in one go
-        // ... and to do that with multiple components at once ...
-
         for (auto& command : m_combinedCommands)
         {
-            if (currEntity.entity != command.entity)
+            if (currEntity != command.entity)
             {
-                currEntity = EntityRegistry::getRecord(command.entity);
-
+                // Apply the awaiting queued up add/remove component commands
                 if (!entityRemoved && archetypeChanged)
                 {
-
+                    world->mutateImmediate(currEntity, addedComponents, removedComponents);
                 }
 
+                // Reset loop state
+                currEntity = command.entity;
                 entityRemoved = false;
                 archetypeChanged = false;
 
@@ -80,6 +79,7 @@ namespace LITL::ECS
                 removedComponents.clear();
             }
 
+            // If the entity was removed by an earlier command then skip this one.
             if (entityRemoved)
             {
                 continue;
@@ -88,16 +88,24 @@ namespace LITL::ECS
             if (command.type == EntityCommandType::DestroyEntity)
             {
                 entityRemoved = true;
-                world->destroyImmediate(currEntity.entity);
+                world->destroyImmediate(currEntity);
             }
             else if (command.type == EntityCommandType::AddComponent)
             {
                 archetypeChanged = true;
+                addedComponents.emplace_back(command.component, command.data);
             }
             else if (command.type == EntityCommandType::RemoveComponent)
             {
                 archetypeChanged = true;
+                removedComponents.emplace_back(command.component);
             }
+        }
+
+        // Once all commands have been processed, it is now safe to reset the internal queues and memory pools.
+        for (auto& commandBuffer : commandBuffers)
+        {
+            commandBuffer.reset();
         }
     }
 }

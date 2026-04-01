@@ -40,17 +40,12 @@ namespace LITL::ECS
         /// <summary>
         /// The component being added or removed.
         /// </summary>
-        ComponentTypeId component;
+        ComponentTypeId component{ Constants::null_component_id };
 
         /// <summary>
-        /// Index of the memory pool in which the component data is stored.
+        /// The address to the component data being added.
         /// </summary>
-        uint32_t pool{ 0 };
-
-        /// <summary>
-        /// Offset into the memory pool, pointing to where the component data is stored.
-        /// </summary>
-        uint32_t offset{ 0 };
+        void* data{ nullptr };
 
         /// <summary>
         /// The queue that stores the local component.
@@ -80,14 +75,9 @@ namespace LITL::ECS
         ComponentTypeId component;
 
         /// <summary>
-        /// Index of the memory pool in which the component data is stored.
+        /// The address to the component data being added.
         /// </summary>
-        uint32_t pool{ 0 };
-
-        /// <summary>
-        /// Offset into the memory pool, pointing to where the component data is stored.
-        /// </summary>
-        uint32_t offset{ 0 };
+        void* data{ nullptr };
     };
 }
 

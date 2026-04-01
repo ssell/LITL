@@ -21,6 +21,11 @@ namespace LITL::ECS
         EntityCommands& operator=(EntityCommands const&) = delete;
 
         /// <summary>
+        /// 
+        /// </summary>
+        void reset() noexcept;
+
+        /// <summary>
         /// Returns the total of number of awaiting commands (both EntityCommand and DeferredEntityCommand).
         /// This does not include the number of "create entity" commands as they effectively vanish upon materialization.
         /// </summary>
@@ -84,7 +89,6 @@ namespace LITL::ECS
 
     private:
 
-        void reset() noexcept;
         void materialize(World* world) noexcept;
 
         EntityCommandQueue m_commands;

@@ -18,7 +18,7 @@ namespace LITL::ECS
 
         }
 
-        bool insert(ComponentDescriptor const* descriptor, void* source, uint32_t& destOffset)
+        bool insert(ComponentDescriptor const* descriptor, void* source, void** destination)
         {
             assert(descriptor != nullptr);
 
@@ -28,8 +28,8 @@ namespace LITL::ECS
                 return false;
             }
 
-            descriptor->move(source, get(m_currOffset));
-            destOffset = m_currOffset;
+            (*destination) = get(m_currOffset);
+            descriptor->move(source, (*destination));
             m_currOffset += descriptor->size;
 
             return true;
@@ -84,11 +84,11 @@ namespace LITL::ECS
             deferredEntityCommands.clear();
         }
 
-        void insertComponent(ComponentDescriptor const* descriptor, void* data, uint32_t& poolIndex, uint32_t& poolOffset)
+        void insertComponent(ComponentDescriptor const* descriptor, void* source, void** destination)
         {
             assert(descriptor != nullptr);
 
-            if (!componentPools[currPool]->insert(descriptor, data, poolOffset))
+            if (!componentPools[currPool]->insert(descriptor, source, destination))
             {
                 currPool++;
 
@@ -97,10 +97,8 @@ namespace LITL::ECS
                     componentPools.push_back(std::make_unique<EntityComponentPool>());
                 }
 
-                componentPools[currPool]->insert(descriptor, data, poolOffset);
+                componentPools[currPool]->insert(descriptor, source, destination);
             }
-
-            poolIndex = currPool;
         }
     };
 
@@ -117,28 +115,28 @@ namespace LITL::ECS
 
     }
 
-    void EntityCommandQueue::push(EntityCommand command, void* data) noexcept
+    void EntityCommandQueue::push(EntityCommand command, void* source) noexcept
     {
         assert(command.type != EntityCommandType::CreateEntity);
 
-        if ((command.type == EntityCommandType::AddComponent) && (data != nullptr))
+        if ((command.type == EntityCommandType::AddComponent) && (source != nullptr))
         {
-            m_pImpl->insertComponent(ComponentDescriptor::get(command.component), data, command.pool, command.offset);
+            m_pImpl->insertComponent(ComponentDescriptor::get(command.component), source, &command.data);
             command.queue = this;
         }
 
         m_pImpl->entityCommands.push_back(command);
     }
 
-    void EntityCommandQueue::push(DeferredEntityCommand command, void* data) noexcept
+    void EntityCommandQueue::push(DeferredEntityCommand command, void* source) noexcept
     {
         if (command.type == EntityCommandType::CreateEntity)
         {
             m_pImpl->createCommandCount++;
         }
-        else if ((command.type == EntityCommandType::AddComponent) && (data != nullptr))
+        else if ((command.type == EntityCommandType::AddComponent) && (source != nullptr))
         {
-            m_pImpl->insertComponent(ComponentDescriptor::get(command.component), data, command.pool, command.offset);
+            m_pImpl->insertComponent(ComponentDescriptor::get(command.component), source, &command.data);
         }
 
         m_pImpl->deferredEntityCommands.push_back(command);
@@ -167,10 +165,9 @@ namespace LITL::ECS
 
         assert(descriptor != nullptr);
         assert(dest != nullptr);
-        assert(command.pool < m_pImpl->componentPools.size());
-        assert(command.offset < Constants::entity_command_pool_size);
+        assert(command.data != nullptr);
 
-        descriptor->move(m_pImpl->componentPools[command.pool]->get(command.offset), dest);
+        descriptor->move(command.data, dest);
 
         return true;
     }
