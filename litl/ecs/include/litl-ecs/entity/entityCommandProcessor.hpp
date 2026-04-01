@@ -15,12 +15,15 @@ namespace LITL::ECS
     {
     public:
 
-        void process(World* world, std::vector<EntityCommands>& commandBuffers) noexcept;
+        void process(World* world, std::vector<EntityCommands*>& commandBuffers) noexcept;
 
     protected:
 
     private:
 
+        /// <summary>
+        /// Keep a local vector so that eventually we stop having to allocate/resize it.
+        /// </summary>
         std::vector<EntityCommand> m_combinedCommands;
     };
 }

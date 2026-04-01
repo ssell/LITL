@@ -2,19 +2,23 @@
 #include <unordered_set>
 
 #include "litl-ecs/entity/entityCommandProcessor.hpp"
-#include "litl-ecs/entity/entityRegistry.hpp"
 
 namespace LITL::ECS
 {
-    void EntityCommandProcessor::process(World* world, std::vector<EntityCommands>& commandBuffers) noexcept
+    void EntityCommandProcessor::process(World* world, std::vector<EntityCommands*>& commandBuffers) noexcept
     {
+        for (auto* commandBuffer : commandBuffers)
+        {
+            assert(commandBuffer != nullptr);
+        }
+
         size_t totalCommandCount = 0;
         size_t offset = 0;
         size_t nextOffset = 0;
 
-        for (auto& commandBuffer : commandBuffers)
+        for (auto* commandBuffer : commandBuffers)
         {
-            totalCommandCount += commandBuffer.actionableCommandCount();
+            totalCommandCount += commandBuffer->actionableCommandCount();
         }
 
         if (totalCommandCount > m_combinedCommands.size())
@@ -23,10 +27,10 @@ namespace LITL::ECS
         }
 
         // Combine all command buffers
-        for (auto& commandBuffer : commandBuffers)
+        for (auto* commandBuffer : commandBuffers)
         {
-            nextOffset = offset + commandBuffer.actionableCommandCount();
-            commandBuffer.extractCommands(world, m_combinedCommands, offset);
+            nextOffset = offset + commandBuffer->actionableCommandCount();
+            commandBuffer->extractCommands(world, m_combinedCommands, offset);
             offset = nextOffset;
         }
 
@@ -103,9 +107,11 @@ namespace LITL::ECS
         }
 
         // Once all commands have been processed, it is now safe to reset the internal queues and memory pools.
-        for (auto& commandBuffer : commandBuffers)
+        for (auto* commandBuffer : commandBuffers)
         {
-            commandBuffer.reset();
+            commandBuffer->reset();
         }
+
+        m_combinedCommands.clear();
     }
 }
