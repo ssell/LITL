@@ -296,6 +296,20 @@ namespace LITL::ECS
             ArchetypeRegistry::move(entityRecord, entityCurrentArchetype, entityNewArchetype);
             entityRecord = EntityRegistry::getRecord(entity);
 
+            /**
+             * todo (?)
+             * 
+             * The below set logic is a little wasteful if there are duplicate add component commands
+             * or if the newly added component was removed in this same mutate operation.
+             * 
+             * To tighten the logic up, we could store ComponentData inside of ArchetypeComponents instead
+             * of just a ComponentTypeId. Then we could iterate the stored components, and any that have
+             * a non-null data pointer we know still needs to be set.
+             * 
+             * Since we use a local-scope ArchetypeComponents (copied from the archetype itself) we do
+             * not need to do any cleanup within the internal array itself (ie set data pointers null).
+             */
+
             // Set
             for (auto& component : add)
             {
