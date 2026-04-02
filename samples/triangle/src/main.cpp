@@ -1,29 +1,24 @@
 #include "litl-engine/engine.hpp"
+#include "litl-engine/ecs/components/position.hpp"
+#include "litl-ecs/world.hpp"
 
-void configureServices(LITL::Core::ServiceCollection& services)
-{
-    // ... add custom services ...
-}
+using namespace LITL;
 
-void configureSystems(LITL::ECS::SystemCollection& systems)
+void bootstrap(Core::ServiceProvider& services, ECS::EntityCommands& commands)
 {
-    // ... add custom ECS systems ...
-}
-
-void bootstrap(LITL::Core::ServiceProvider& services, LITL::ECS::World& ecs)
-{
-    // ... provide initial entities, etc. to kickstart the game ...
+    auto entity = commands.createEntity();
+    commands.addComponent<Engine::Position>(entity, { 0.0f, 0.0f, 5.0 });
 }
 
 int main()
 {
-    LITL::Engine::Engine engine{};
+    Engine::Engine engine{};
 
     engine.setup(
         { .engineSettings { .applicationName = "LITL - Triangle Sample" } },
-        configureServices,      // optional
-        configureSystems,       // optional
-        bootstrap);             // optional
+        nullptr, 
+        nullptr,
+        bootstrap);
 
     engine.start();
 

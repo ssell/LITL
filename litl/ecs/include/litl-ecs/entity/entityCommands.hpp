@@ -1,6 +1,7 @@
 #ifndef LITL_ECS_ENTITY_COMMANDS_H__
 #define LITL_ECS_ENTITY_COMMANDS_H__
 
+#include <memory>
 #include "litl-ecs/entity/entityCommandQueue.hpp"
 
 namespace LITL::ECS
@@ -44,8 +45,12 @@ namespace LITL::ECS
         [[nodiscard]] DeferredEntity createEntity() noexcept;
         void destroyEntity(Entity entity) noexcept;
         void destroyEntity(DeferredEntity entity) noexcept;
-        void addComponent(Entity entity, ComponentTypeId component, void* data = nullptr) noexcept;
-        void addComponent(DeferredEntity entity, ComponentTypeId component, void* data = nullptr) noexcept;
+        void addComponent(Entity entity, ComponentTypeId component) noexcept;
+        void addComponent(DeferredEntity entity, ComponentTypeId component) noexcept;
+        void addComponent(Entity entity, ComponentTypeId component, void* sharedData) noexcept;
+        void addComponent(DeferredEntity entity, ComponentTypeId component, void* sharedData) noexcept;
+        void addComponent(Entity entity, ComponentTypeId component, void* localData, uint32_t size) noexcept;
+        void addComponent(DeferredEntity entity, ComponentTypeId component, void* localData, uint32_t size) noexcept;
         void removeComponent(Entity entity, ComponentTypeId component) noexcept;
         void removeComponent(DeferredEntity entity, ComponentTypeId component) noexcept;
 
@@ -56,9 +61,9 @@ namespace LITL::ECS
         }
 
         template<ValidComponentType T>
-        void addComponent(Entity entity, T const& component) noexcept
+        void addComponent(Entity entity, T component) noexcept
         {
-            addComponent(entity, ComponentDescriptor::get<T>()->id, component);
+            addComponent(entity, ComponentDescriptor::get<T>()->id, &component, sizeof(T));
         }
 
         template<ValidComponentType T>
@@ -68,9 +73,9 @@ namespace LITL::ECS
         }
 
         template<ValidComponentType T>
-        void addComponent(DeferredEntity entity, T const& component) noexcept
+        void addComponent(DeferredEntity entity, T component) noexcept
         {
-            addComponent(entity, ComponentDescriptor::get<T>()->id, component);
+            addComponent(entity, ComponentDescriptor::get<T>()->id, &component, sizeof(T));
         }
 
         template<ValidComponentType T>
@@ -91,8 +96,8 @@ namespace LITL::ECS
 
         void materialize(World* world) noexcept;
 
-        EntityCommandQueue m_commands;
-        uint32_t m_nextId;
+        struct Impl;
+        std::unique_ptr<Impl> m_pImpl;
     };
 }
 

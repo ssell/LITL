@@ -20,7 +20,7 @@ namespace LITL::Engine
     /// <summary>
     /// Optional function provided to the Engine to allow the user to add initial entities, etc. to the ECS world.
     /// </summary>
-    using BootstrapFunc = void(*)(Core::ServiceProvider& services, ECS::World& ecs);
+    using BootstrapFunc = void(*)(Core::ServiceProvider& services, ECS::EntityCommands& commands);
 
     namespace Internal
     {
@@ -41,7 +41,7 @@ namespace LITL::Engine
         /// </summary>
         /// <param name="services"></param>
         /// <param name="ecs"></param>
-        void defaultBootstrap(Core::ServiceProvider& services, ECS::World& ecs);
+        void defaultBootstrap(Core::ServiceProvider& services, ECS::EntityCommands& commands);
 
         /// <summary>
         /// Adds no default services.
@@ -60,7 +60,7 @@ namespace LITL::Engine
         /// </summary>
         /// <param name="services"></param>
         /// <param name="ecs"></param>
-        void nullBootstrap(Core::ServiceProvider& services, ECS::World& ecs);
+        void nullBootstrap(Core::ServiceProvider& services, ECS::EntityCommands& commands);
     }
 
     /// <summary>
@@ -71,7 +71,7 @@ namespace LITL::Engine
     {
         void (*configureServices)(Core::ServiceCollection&);
         void (*configureSystems)(ECS::SystemCollection&);
-        void (*bootstrap)(Core::ServiceProvider&, ECS::World&);
+        void (*bootstrap)(Core::ServiceProvider&, ECS::EntityCommands&);
     };
 
     /// <summary>

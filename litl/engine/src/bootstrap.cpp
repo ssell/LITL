@@ -24,7 +24,7 @@ namespace LITL::Engine::Internal
         systems.addSystem<RenderSystem>(ECS::SystemGroup::Render);
     }
 
-    void defaultBootstrap(Core::ServiceProvider& services, ECS::World& ecs)
+    void defaultBootstrap(Core::ServiceProvider& services, ECS::EntityCommands& commands)
     {
 
     }
@@ -39,7 +39,7 @@ namespace LITL::Engine::Internal
         // ... intentionally empty ...
     }
 
-    void nullBootstrap(Core::ServiceProvider& services, ECS::World& ecs)
+    void nullBootstrap(Core::ServiceProvider& services, ECS::EntityCommands& commands)
     {
         // ... intentionally empty ...
     }
