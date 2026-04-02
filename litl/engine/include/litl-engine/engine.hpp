@@ -4,32 +4,15 @@
 #include <memory>
 
 #include "litl-engine/config.hpp"
-#include "litl-core/services/serviceCollection.hpp"
-#include "litl-core/services/serviceProvider.hpp"
-#include "litl-ecs/system/systemCollection.hpp"
+#include "litl-engine/bootstrap.hpp"
 
 namespace LITL::Engine
 {
-    /// <summary>
-    /// Optional function provided to the Engine to allow the user to inject their custom services.
-    /// </summary>
-    using ConfigureServicesFunc = void(*)(Core::ServiceCollection& services);
-
-    /// <summary>
-    /// Optional function provided to the Engine to allow the user to add their custom systems.
-    /// </summary>
-    using ConfigureSystemsFunc = void(*)(ECS::SystemCollection& systems);
-
-    /// <summary>
-    /// Optional function provided to the Engine to allow the user to add initial entities, etc. to the ECS world.
-    /// </summary>
-    using BootstrapFunc = void(*)(Core::ServiceProvider& services, ECS::World& ecs);
-
     class Engine final
     {
     public:
 
-        explicit Engine();
+        explicit Engine(EngineSetupFunctions setup = DefaultEngineSetup);
         ~Engine();
 
         Engine(Engine&&) = delete;

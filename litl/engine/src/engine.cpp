@@ -18,6 +18,8 @@ namespace LITL::Engine
 
     struct Engine::Impl
     {
+        EngineSetupFunctions setup;
+
         Core::ServiceCollection serviceCollection;
         std::shared_ptr<Core::ServiceProvider> pServiceProvider{ nullptr };
         BootstrapFunc bootstrap{ nullptr };
@@ -35,19 +37,13 @@ namespace LITL::Engine
     // Engine
     // -------------------------------------------------------------------------------------
 
-    Engine::Engine()
+    Engine::Engine(EngineSetupFunctions setup)
         : m_pImpl(std::make_unique<Engine::Impl>())
     {
         LITL::Core::Logger::initialize("litl-engine", true, true);
         logInfo("LITL Engine Startup");
 
-        m_pImpl->serviceCollection.addSingleton<Configuration>();
-        m_pImpl->serviceCollection.addSingleton<FrameLimiter>();
-        m_pImpl->serviceCollection.addSingleton<Core::JobScheduler>();
-        m_pImpl->serviceCollection.addSingleton<ECS::World>();
-        m_pImpl->serviceCollection.addSingleton<Core::Window>();
-        m_pImpl->serviceCollection.addSingleton<Renderer::Renderer>();
-        //m_pImpl->serviceCollection.addSingleton<Core::RefPtr<Renderer::CommandBuffer>>();
+        m_pImpl->setup = setup;
     }
 
     Engine::~Engine()
@@ -58,6 +54,13 @@ namespace LITL::Engine
 
     void Engine::setup(Configuration config, ConfigureServicesFunc servicesFunc, ConfigureSystemsFunc systemsFunc, BootstrapFunc bootstrapFunc) noexcept
     {
+        // These can be modified by the user (though it is unusual), so make sure they exist first.
+        assert(m_pImpl->setup.configureServices != nullptr);
+        assert(m_pImpl->setup.configureSystems != nullptr);
+        assert(m_pImpl->setup.bootstrap != nullptr);
+
+        m_pImpl->setup.configureServices(m_pImpl->serviceCollection);
+
         if (servicesFunc != nullptr)
         {
             servicesFunc(m_pImpl->serviceCollection);
@@ -71,6 +74,8 @@ namespace LITL::Engine
 
         m_pImpl->pSharedConfig->set(config);
         m_pImpl->pSharedFrameLimiter->setTargetFps(static_cast<float>(m_pImpl->pSharedConfig->engineSettings.framesPerSecond));
+
+        m_pImpl->setup.configureSystems(m_pImpl->pSharedECSWorld->getSystemCollection());
 
         if (systemsFunc != nullptr)
         {
@@ -94,6 +99,8 @@ namespace LITL::Engine
         }
 
         m_pImpl->pSharedECSWorld->setup((*m_pImpl->pServiceProvider));
+
+        m_pImpl->setup.bootstrap((*m_pImpl->pServiceProvider), (*m_pImpl->pSharedECSWorld));
 
         if (m_pImpl->bootstrap != nullptr)
         {
