@@ -37,7 +37,7 @@ add_executable(litl-tests
 	"src/litl-core/services/serviceCollection_tests.cpp" 
 	"src/litl-core/types_tests.cpp"   
 	"src/litl-core/math/dag_tests.cpp" 
-	"src/litl-ecs/systemGraph_tests.cpp" "src/litl-ecs/systemInfoGraph_tests.cpp" "src/litl-ecs/entityCommands_tests.cpp" "src/litl-core/containers/fixedSortedArray_tests.cpp" "src/litl-ecs/archetypeComponents_tests.cpp")
+	"src/litl-ecs/systemGraph_tests.cpp" "src/litl-ecs/systemInfoGraph_tests.cpp" "src/litl-ecs/entityCommands_tests.cpp" "src/litl-core/containers/fixedSortedArray_tests.cpp" "src/litl-ecs/archetypeComponents_tests.cpp" "src/litl-core/math/vec3_tests.cpp" "src/litl-engine/ecs/components/position_tests.cpp")
 
 target_link_libraries(litl-tests
 	PRIVATE
