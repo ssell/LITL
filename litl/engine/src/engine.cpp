@@ -22,7 +22,7 @@ namespace LITL::Engine
 
         Core::ServiceCollection serviceCollection;
         std::shared_ptr<Core::ServiceProvider> pServiceProvider{ nullptr };
-        BootstrapFunc bootstrap{ nullptr };
+        BootstrapFunc userBootstrap{ nullptr };
 
         // The below are also stored in pServiceProvider, but keep them in here to avoid having to frequently refetch.
         std::shared_ptr<Configuration> pSharedConfig{ nullptr };
@@ -82,7 +82,7 @@ namespace LITL::Engine
             systemsFunc(m_pImpl->pSharedECSWorld->getSystemCollection());
         }
 
-        m_pImpl->bootstrap = bootstrapFunc;
+        m_pImpl->userBootstrap = bootstrapFunc;
     }
 
     bool Engine::start()
@@ -100,12 +100,12 @@ namespace LITL::Engine
 
         m_pImpl->pSharedECSWorld->setup((*m_pImpl->pServiceProvider));
 
-        m_pImpl->setup.bootstrap((*m_pImpl->pServiceProvider), (*m_pImpl->pSharedECSWorld));
+        m_pImpl->setup.bootstrap((*m_pImpl->pServiceProvider), (m_pImpl->pSharedECSWorld->getCommandBuffer()));
 
-        if (m_pImpl->bootstrap != nullptr)
+        if (m_pImpl->userBootstrap != nullptr)
         {
             logInfo("Bootstrapping ...");
-            m_pImpl->bootstrap((*m_pImpl->pServiceProvider), (*m_pImpl->pSharedECSWorld));
+            m_pImpl->userBootstrap((*m_pImpl->pServiceProvider), m_pImpl->pSharedECSWorld->getCommandBuffer());
         }
 
         logInfo("ECS system setup ...");

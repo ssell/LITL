@@ -47,12 +47,12 @@ namespace LITL::ECS::Tests
         queue.push(EntityCommand{
             .type = EntityCommandType::AddComponent,
             .component = fooDesc->id,
-            }, &foo);
+        }, &foo);
 
         queue.push(EntityCommand{
             .type = EntityCommandType::AddComponent,
             .component = barDesc->id,
-            }, &bar);
+        }, &bar);
 
         REQUIRE(queue.count() == 2);
 
@@ -86,7 +86,7 @@ namespace LITL::ECS::Tests
 
     } END_LITL_TEST_CASE
 
-        LITL_TEST_CASE("Queue Many Components", "[ecs::entityCommands]")
+    LITL_TEST_CASE("Queue Many Components", "[ecs::entityCommands]")
     {
         // Tests adding a lot of components (enough to make 10 pool) and that they can be loaded.
         constexpr uint32_t commandCount = (Constants::entity_command_pool_size / sizeof(Foo)) * 10;
@@ -179,6 +179,111 @@ namespace LITL::ECS::Tests
 
         REQUIRE(materialized[3].entity.isNull() == false);
         REQUIRE(materialized[3].type == EntityCommandType::DestroyEntity);
+
+        EntityRegistry::clear();
+    } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("Local Component Copy", "[ecs::entityCommands]")
+    {
+        EntityRegistry::clear();
+        World world;
+        EntityCommands commands;
+
+        auto entity = commands.createEntity();
+        commands.addComponent<Foo>(entity, Foo{ 55 });
+
+        REQUIRE(commands.actionableCommandCount() == 1);
+
+        std::vector<EntityCommand> materialized;
+        materialized.resize(commands.actionableCommandCount());
+        commands.extractCommands(&world, materialized, 0);
+
+        REQUIRE(materialized[0].entity.isNull() == false);
+        REQUIRE(materialized[0].data != nullptr);
+
+        Foo entityFoo{};
+
+        REQUIRE(entityFoo.a == 0);
+
+        memcpy(&entityFoo, materialized[0].data, sizeof(Foo));
+
+        REQUIRE(entityFoo.a == 55);
+
+        EntityRegistry::clear();
+    } END_LITL_TEST_CASE;
+
+    LITL_TEST_CASE("Local Component Copy Many", "[ecs::entityCommands]")
+    {
+        // same as the other test, but enough to generate multiple local data blocks within the command buffer
+        constexpr uint32_t ComponentCount = 8192;
+
+        EntityRegistry::clear();
+        World world;
+        EntityCommands commands;
+
+        void* firstFooPtr = nullptr;
+
+        Foo shared{ 13371337 };
+        Foo first{};
+        Foo last{};
+        Foo leet{};
+
+        for (auto i = 0u; i < 10u; ++i)
+        {
+            for (auto j = 0u; j < ComponentCount; ++j)
+            {
+                if (j == 1337)
+                {
+                    // throw a single shared data (instead of local data) test into here
+                    commands.addComponent(commands.createEntity(), getComponentTypeId<Foo>(), &shared);
+                }
+                else
+                {
+                    commands.addComponent<Foo>(commands.createEntity(), Foo{ j });
+                }
+            }
+
+            REQUIRE(commands.actionableCommandCount() == ComponentCount);
+
+            std::vector<EntityCommand> materialized;
+            materialized.resize(commands.actionableCommandCount());
+            commands.extractCommands(&world, materialized, 0);
+
+            REQUIRE(materialized.size() == ComponentCount);
+
+            REQUIRE(materialized[0].entity.isNull() == false);
+            REQUIRE(materialized[0].data != nullptr);
+
+            if (firstFooPtr == nullptr)
+            {
+                firstFooPtr = materialized[0].data;
+            }
+            else
+            {
+                // ensure block reuse
+                REQUIRE(firstFooPtr == materialized[0].data);
+            }
+
+            REQUIRE(first.a == 0);
+            memcpy(&first, materialized[0].data, sizeof(Foo));
+            REQUIRE(first.a == 0);
+            first.a = 0;
+
+            REQUIRE(materialized[ComponentCount - 1].entity.isNull() == false);
+            REQUIRE(materialized[ComponentCount - 1].data != nullptr);
+
+            REQUIRE(last.a == 0);
+            memcpy(&last, materialized[ComponentCount - 1].data, sizeof(Foo));
+            REQUIRE(last.a == ComponentCount - 1);
+            last.a = 0;
+
+            REQUIRE(leet.a == 0);
+            memcpy(&leet, materialized[1337].data, sizeof(Foo));
+            REQUIRE(leet.a == shared.a);
+            leet.a = 0;
+
+            commands.reset();
+        }
 
         EntityRegistry::clear();
     } END_LITL_TEST_CASE
