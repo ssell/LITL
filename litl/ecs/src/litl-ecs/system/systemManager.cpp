@@ -172,8 +172,7 @@ namespace LITL::ECS
 
             layerFence.wait();
 
-            // Sync all command buffers now that all system-related jobs are parked.
-            processCommandBuffers(world);
+            processCommandBuffers(world);                                           // Sync command buffers now that all system-related jobs are done.
         }
     }
 
