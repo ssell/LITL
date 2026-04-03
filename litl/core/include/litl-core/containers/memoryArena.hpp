@@ -6,6 +6,7 @@
 #include <cstring>
 #include <new>
 #include <type_traits>
+#include <utility>
 
 namespace LITL::Core
 {
@@ -14,11 +15,16 @@ namespace LITL::Core
     /// </summary>
     struct MemoryArenaState
     {
-        uint32_t blocksAllocated{ 0 };
-        uint32_t blocksInUse{ 0 };
-        uint32_t bytesAllocated{ 0 };
-        uint32_t bytesInUse{ 0 };
-        uint32_t currBlockOffset{ 0 };
+        size_t blockSize{ 0 };
+        size_t blocksAllocated{ 0 };
+        size_t blocksInUse{ 0 };
+        size_t bytesInUse{ 0 };
+        size_t currBlockOffset{ 0 };
+
+        [[nodiscard]] constexpr size_t bytesAllocated() const noexcept
+        {
+            return blockSize * blocksAllocated;
+        }
     };
 
     /// <summary>
@@ -27,7 +33,7 @@ namespace LITL::Core
     /// </summary>
     /// <typeparam name="BlockSize"></typeparam>
     /// <typeparam name="Alignment"></typeparam>
-    template<uint32_t BlockSize = 1024>
+    template<size_t BlockSize = 1024>
     class MemoryArena
     {
         /// <summary>
@@ -36,114 +42,99 @@ namespace LITL::Core
         /// </summary>
         /// <typeparam name="Size"></typeparam>
         /// <typeparam name="Alignment"></typeparam>
-        template<uint32_t Size>
         struct MemoryBlock
         {
             /// <summary>
-            /// Attempts to copy the data into the block.
-            /// If the block does not have sufficient room to store the data then this returns null.
+            /// Allocates a block of memory in the memory block.
+            /// If the block does not have sufficient room then this returns null.
             /// </summary>
             /// <param name="source"></param>
             /// <param name="size"></param>
             /// <param name="alignment"></param>
             /// <returns></returns>
-            [[nodiscard]] void* copyInto(void const* source, uint32_t& offset, uint32_t size, uint32_t alignment) noexcept
+            [[nodiscard]] void* allocate(size_t& offset, size_t size, size_t alignment) noexcept
             {
-                assert(source != nullptr);
-                assert((size + alignment) <= Size);
+                assert((size + (alignment - 1)) <= BlockSize);
 
-                const uint32_t aligned = (offset + alignment - 1) & ~(alignment - 1);
+                void* dest = &buffer[offset];
+                size_t available = BlockSize - offset;
 
-                if ((aligned + size) > Size)
+                if (!std::align(alignment, size, dest, available))
                 {
-                    // block is full
+                    // insufficient space
                     return nullptr;
                 }
 
-                void* dest = &buffer[aligned];
-                memcpy(dest, source, size);
-                offset = aligned + size;
+                // (BlockSize - available) = aligned offset, + size = move past the new allocation.
+                offset = ((BlockSize - available) + size);
 
                 return dest;
             }
 
-            MemoryBlock<Size>* next{ nullptr };
-            alignas(alignof(std::max_align_t)) std::byte buffer[Size];
+            MemoryBlock* next{ nullptr };
+            alignas(alignof(std::max_align_t)) std::byte buffer[BlockSize];
         };
 
     public:
 
-        static constexpr uint32_t MemoryBlockSize = BlockSize;
-
         MemoryArena() 
-            : m_pRoot(new(std::nothrow) MemoryBlock<BlockSize>()), m_pCurrent{ m_pRoot }
+            : m_pRoot(new(std::nothrow) MemoryBlock()), m_pCurrent{ m_pRoot }
         {
             assert(m_pRoot != nullptr);
 
             m_state.blocksAllocated = 1;
             m_state.blocksInUse = 1;
-            m_state.bytesAllocated = MemoryBlockSize;
             m_state.bytesInUse = 0;
         }
 
         MemoryArena(MemoryArena<BlockSize>&& other)
+            : m_pRoot(other.m_pRoot), m_pCurrent(other.m_pCurrent), m_state(other.m_state)
         {
-            m_pRoot = other.m_pRoot;
-            m_pCurrent = other.m_pCurrent;
-            m_state.currBlockOffset = other.m_state.currBlockOffset;
-            m_state = other.m_state;
-
             other.m_pRoot = nullptr;
             other.m_pCurrent = nullptr;
-            other.m_state.currBlockOffset = 0;
+            other.m_state = {};
         }
 
         MemoryArena<BlockSize>& operator=(MemoryArena<BlockSize>&& other)
         {
-            m_pRoot = other.m_pRoot;
-            m_pCurrent = other.m_pCurrent;
-            m_state.currBlockOffset = other.m_state.currBlockOffset;
-            m_state = other.m_state;
+            if (this != &other)
+            {
+                cleanup();
 
-            other.m_pRoot = nullptr;
-            other.m_pCurrent = nullptr;
-            other.m_state.currBlockOffset = 0;
+                m_pRoot = other.m_pRoot;
+                m_pCurrent = other.m_pCurrent;
+                m_state = other.m_state;
+
+                other.m_pRoot = nullptr;
+                other.m_pCurrent = nullptr;
+                other.m_state = {};
+            }
 
             return (*this);
         }
 
         ~MemoryArena()
         {
-            MemoryBlock<BlockSize>* curr = m_pRoot;
-            MemoryBlock<BlockSize>* next = nullptr;
-
-            while (curr != nullptr)
-            {
-                next = curr->next;
-                delete curr;
-                curr = next;
-            }
+            cleanup();
         }
 
         MemoryArena(MemoryArena const&) = delete;
         MemoryArena& operator=(MemoryArena const&) = delete;
 
         /// <summary>
-        /// Copies the provided data into the the memory arena.
-        /// The source data must fit completely inside of a single block (see MemoryBlockSize).
-        /// May return null if allocation of an additional block is required and fails.
+        /// Allocates a block of memory in the memory arena.
+        /// If the arena does not have sufficient room then this returns null.
         /// </summary>
         /// <param name="source"></param>
         /// <param name="size"></param>
         /// <param name="alignment"></param>
         /// <returns></returns>
-        [[nodiscard]] void* copyInto(void const* source, uint32_t size, uint32_t alignment) noexcept
+        [[nodiscard]] void* allocate(size_t size, size_t alignment) noexcept
         {
             assert((alignment > 0) && ((alignment & (alignment - 1)) == 0));    // alignment must be non-zero, power-of-two
-            assert((size + alignment - 1) <= BlockSize);                        // aligned object must fit entirely within a single block
 
-            uint32_t prevOffset = m_state.currBlockOffset;
-            auto* dest = m_pCurrent->copyInto(source, m_state.currBlockOffset, size, alignment);
+            size_t prevOffset = m_state.currBlockOffset;
+            void* dest = m_pCurrent->allocate(m_state.currBlockOffset, size, alignment);
 
             if (dest != nullptr)
             {
@@ -163,7 +154,7 @@ namespace LITL::Core
                 else
                 {
                     // need to allocate a new block of memory.
-                    m_pCurrent->next = new(std::nothrow) MemoryBlock<BlockSize>();
+                    m_pCurrent->next = new(std::nothrow) MemoryBlock();
                     m_pCurrent = m_pCurrent->next;
 
                     if (m_pCurrent == nullptr)
@@ -177,11 +168,10 @@ namespace LITL::Core
 
                 m_state.currBlockOffset = 0;
 
-                dest = m_pCurrent->copyInto(source, m_state.currBlockOffset, size, alignment);
+                dest = m_pCurrent->allocate(m_state.currBlockOffset, size, alignment);
 
                 m_state.blocksInUse++;
-                m_state.bytesAllocated = (m_state.blocksAllocated * MemoryBlockSize);
-                m_state.bytesInUse = ((m_state.blocksInUse - 1) * MemoryBlockSize) + m_state.currBlockOffset;
+                m_state.bytesInUse = ((m_state.blocksInUse - 1) * BlockSize) + m_state.currBlockOffset;
             }
 
             return dest;
@@ -189,17 +179,64 @@ namespace LITL::Core
 
         /// <summary>
         /// Copies the provided data into the the memory arena.
-        /// The source data must fit completely inside of a single block (see MemoryBlockSize).
+        /// The source data must fit completely inside of a single block (see BlockSize).
+        /// May return null if allocation of an additional block is required and fails.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="size"></param>
+        /// <param name="alignment"></param>
+        /// <returns></returns>
+        [[nodiscard]] void* insert(void const* source, size_t size, size_t alignment) noexcept
+        {
+            assert(source != nullptr);
+
+            auto* dest = allocate(size, alignment);
+
+            if (dest != nullptr)
+            {
+                memcpy(dest, source, size);
+            }
+
+            return dest;
+        }
+
+        /// <summary>
+        /// Copies the provided data into the the memory arena.
+        /// The source data must fit completely inside of a single block.
         /// May return null if allocation of an additional block is required and fails.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="source"></param>
         /// <returns></returns>
         template<typename T> requires std::is_trivially_copyable_v<T>
-        [[nodiscard]] T* copyInto(T const& source) noexcept
+        [[nodiscard]] T* insert(T const& source) noexcept
         {
             static_assert((sizeof(T) + alignof(T) - 1) <= BlockSize, "Aligned T exceeds memory arena block size");
-            return static_cast<T*>(copyInto(&source, sizeof(T), alignof(T)));
+            return static_cast<T*>(insert(&source, sizeof(T), alignof(T)));
+        }
+
+        /// <summary>
+        /// Inserts a new object in place into the memory arena.
+        /// May return null if the arena is full and failed to allocate an additional block
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="...Args"></typeparam>
+        /// <param name="...args"></param>
+        /// <returns></returns>
+        template<typename T, typename... Args> requires std::is_trivially_copyable_v<T>
+        [[nodiscard]] T* emplace(Args&&... args) noexcept
+        {
+            static_assert((sizeof(T) + alignof(T) - 1) <= BlockSize, "Aligned T exceeds memory arena block size");
+            void* dest = allocate(sizeof(T), alignof(T));
+
+            if (dest != nullptr)
+            {
+                return new(dest) T(std::forward<Args>(args)...);
+            }
+            else
+            {
+                return nullptr;
+            }
         }
 
         /// <summary>
@@ -221,38 +258,41 @@ namespace LITL::Core
         /// but will be overwritten on future calls to copyInto.
         /// </summary>
         /// <param name="blockCount"></param>
-        void resetShrink(uint32_t blockCount = 1) noexcept
+        void resetShrink(size_t blockCount = 1) noexcept
         {
             assert(blockCount > 0);
 
-            MemoryBlock<BlockSize>* curr = m_pRoot;
-            uint32_t i = 0;
+            MemoryBlock* prev = nullptr;
+            MemoryBlock* curr = m_pRoot;
+            size_t i = 0;
 
-            for (i = 0; (i < blockCount) && (curr != nullptr); ++i)
+            // walk until either: (A) we reach the end of the chain or (B) we traversed the specified number of blocks.
+            for (; (i < blockCount) && (curr != nullptr); ++i)
             {
+                prev = curr;
                 curr = curr->next;
             }
 
-            if (curr != nullptr)
+            // cut off the end of the node chain
+            if (prev)
             {
-                MemoryBlock<BlockSize>* prev = curr;
-                curr = curr->next;
                 prev->next = nullptr;
-
-                while (curr != nullptr)
-                {
-                    auto* next = curr->next;
-                    delete curr;
-                    curr = next;
-                }
             }
 
+            // reset all cut off blocks (if any)
+            while (curr != nullptr)
+            {
+                auto* next = curr->next;
+                delete curr;
+                curr = next;
+            }
+
+            // update internal state
             m_pCurrent = m_pRoot;
             m_state.currBlockOffset = 0;
-            m_state.blocksInUse = 0;
+            m_state.blocksInUse = 1;
             m_state.bytesInUse = 0;
             m_state.blocksAllocated = i;
-            m_state.bytesAllocated = (MemoryBlockSize * i);
         }
 
         /// <summary>
@@ -266,9 +306,34 @@ namespace LITL::Core
 
     private:
 
-        MemoryBlock<BlockSize>* m_pRoot;
-        MemoryBlock<BlockSize>* m_pCurrent;
-        MemoryArenaState m_state{};
+        /// <summary>
+        /// Performs a full cleanup.
+        /// Used either in destructor or move assignment.
+        /// </summary>
+        void cleanup()
+        {
+            if (m_pRoot == nullptr)
+            {
+                return;
+            }
+
+            MemoryBlock* curr = m_pRoot;
+            MemoryBlock* next = nullptr;
+
+            while (curr != nullptr)
+            {
+                next = curr->next;
+                delete curr;
+                curr = next;
+            }
+
+            m_pRoot = nullptr;
+            m_pCurrent = nullptr;
+        }
+
+        MemoryBlock* m_pRoot;
+        MemoryBlock* m_pCurrent;
+        MemoryArenaState m_state{ BlockSize };
     };
 }
 
