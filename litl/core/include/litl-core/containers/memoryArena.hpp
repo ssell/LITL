@@ -10,6 +10,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "litl-core/containers/ringBuffer.hpp"
+
 namespace LITL::Core
 {
     /// <summary>
@@ -33,9 +35,7 @@ namespace LITL::Core
     /// A generic, block-based memory arena.
     /// All memory is "freed" (but not zeroed-out) on call to reset.
     /// </summary>
-    /// <typeparam name="BlockSize"></typeparam>
-    /// <typeparam name="Alignment"></typeparam>
-    template<size_t BlockSize = 1024> requires (BlockSize > 64)
+    template<size_t BlockSize = 1024, size_t ShrinkLookBack = 32> requires (BlockSize >= 64) && (ShrinkLookBack > 0)
     class MemoryArena
     {
         /// <summary>
@@ -300,6 +300,17 @@ namespace LITL::Core
         }
 
         /// <summary>
+        /// A shrinking reset, that shrinks back to the recent maximum block usage high-water mark.
+        /// This automatic shrink looks back upto the previous ShrinkLookBack resets.
+        /// For a block count to be considered, this reset must be used.
+        /// </summary>
+        void resetShrinkAuto() noexcept
+        {
+            m_prevBlockUsage.add(m_state.blocksInUse);
+            resetShrink(m_prevBlockUsage.max());
+        }
+
+        /// <summary>
         /// Returns information about the current internal state of the arena.
         /// </summary>
         /// <returns></returns>
@@ -338,6 +349,7 @@ namespace LITL::Core
         MemoryBlock* m_pRoot;
         MemoryBlock* m_pCurrent;
         MemoryArenaState m_state{ BlockSize };
+        RingBuffer<size_t, ShrinkLookBack> m_prevBlockUsage;
     };
 }
 
