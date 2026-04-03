@@ -19,15 +19,15 @@ namespace LITL::Core::Tests
         };
     }
 
-    LITL_TEST_CASE("Basic", "[core::containers::memoryArena]")
+    LITL_TEST_CASE("Insert", "[core::containers::memoryArena]")
     {
         MemoryArena<> arena;
 
         TestStructA a{ 55 };
         TestStructB b{ 100, 33 };
 
-        void* aDest = arena.copyInto(&a, sizeof(TestStructA), alignof(TestStructA));
-        void* bDest = arena.copyInto<TestStructB>(b);
+        void* aDest = arena.insert(&a, sizeof(TestStructA), alignof(TestStructA));
+        void* bDest = arena.insert<TestStructB>(b);
 
         TestStructA aExtracted{};
         TestStructB bExtracted{};
@@ -46,9 +46,71 @@ namespace LITL::Core::Tests
         auto const& state = arena.getState();
 
         REQUIRE(state.blocksAllocated == 1);
-        REQUIRE(state.bytesAllocated == arena.MemoryBlockSize);
+        REQUIRE(state.bytesAllocated() == state.blockSize);
         REQUIRE(state.blocksInUse == 1);
         REQUIRE(state.bytesInUse == state.currBlockOffset);
+    } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("Emplace", "[core::containers::memoryArena]")
+    {
+        MemoryArena<> arena;
+
+        auto* a = arena.emplace<TestStructA>(55);
+        auto* b = arena.emplace<TestStructB>(105, 337);
+
+        REQUIRE(a != nullptr);
+        REQUIRE(b != nullptr);
+        REQUIRE(a->a == 55);
+        REQUIRE(b->a == 105);
+        REQUIRE(b->b == 337);
+    } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("Move Constructor", "[core::containers::memoryArena]")
+    {
+        MemoryArena<> arena0;
+
+        auto* a = arena0.emplace<TestStructA>(55);
+        auto* b = arena0.emplace<TestStructB>(105, 337);
+
+        auto state0A = arena0.getState();
+
+        MemoryArena<> arena1(std::move(arena0));
+
+        auto state0B = arena0.getState();
+        auto state1A = arena1.getState();
+
+        REQUIRE(a != nullptr);
+        REQUIRE(b != nullptr);
+        REQUIRE(a->a == 55);
+        REQUIRE(b->a == 105);
+        REQUIRE(b->b == 337);
+
+        REQUIRE(state0A.currBlockOffset == state1A.currBlockOffset);
+        REQUIRE(state0B.currBlockOffset == 0);
+    } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("Move Assignment", "[core::containers::memoryArena]")
+    {
+        MemoryArena<> arena0;
+
+        auto* a = arena0.emplace<TestStructA>(55);
+        auto* b = arena0.emplace<TestStructB>(105, 337);
+
+        auto state0A = arena0.getState();
+
+        MemoryArena<> arena1 = std::move(arena0);
+
+        auto state0B = arena0.getState();
+        auto state1A = arena1.getState();
+
+        REQUIRE(a != nullptr);
+        REQUIRE(b != nullptr);
+        REQUIRE(a->a == 55);
+        REQUIRE(b->a == 105);
+        REQUIRE(b->b == 337);
+
+        REQUIRE(state0A.currBlockOffset == state1A.currBlockOffset);
+        REQUIRE(state0B.currBlockOffset == 0);
     } END_LITL_TEST_CASE
 
     LITL_TEST_CASE("Many", "[core::containers::memoryArena]")
@@ -77,13 +139,13 @@ namespace LITL::Core::Tests
             {
                 // Offsets, etc. reset but memory usage should stay the same.
                 REQUIRE(currState.blocksAllocated == (*statePriorToFirstReset).blocksAllocated);
-                REQUIRE(currState.bytesAllocated == (*statePriorToFirstReset).bytesAllocated);
+                REQUIRE(currState.bytesAllocated() == (*statePriorToFirstReset).bytesAllocated());
             }
 
             for (auto j = 0; j < objectCount; ++j)
             {
                 a.a = j + 1;
-                auto dest = arena.copyInto<TestStructA>(a);
+                auto dest = arena.insert<TestStructA>(a);
 
                 if (j == 0)
                 {
@@ -103,7 +165,7 @@ namespace LITL::Core::Tests
                 currState = arena.getState();
 
                 REQUIRE(currState.blocksAllocated == (*statePriorToFirstReset).blocksAllocated);
-                REQUIRE(currState.bytesAllocated == (*statePriorToFirstReset).bytesAllocated);
+                REQUIRE(currState.bytesAllocated() == (*statePriorToFirstReset).bytesAllocated());
                 REQUIRE(currState.blocksInUse == (*statePriorToFirstReset).blocksInUse);
                 REQUIRE(currState.bytesInUse == (*statePriorToFirstReset).bytesInUse);
                 REQUIRE(currState.currBlockOffset == (*statePriorToFirstReset).currBlockOffset);
@@ -113,7 +175,7 @@ namespace LITL::Core::Tests
                 statePriorToFirstReset = arena.getState();
 
                 REQUIRE(statePriorToFirstReset.value().blocksAllocated == expectedMaxBlockCount);
-                REQUIRE(statePriorToFirstReset.value().bytesAllocated == expectedMaxByteCount);
+                REQUIRE(statePriorToFirstReset.value().bytesAllocated() == expectedMaxByteCount);
             }
 
             arena.reset();
