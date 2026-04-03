@@ -182,4 +182,57 @@ namespace LITL::Core::Tests
         }
 
     } END_LITL_TEST_CASE
+
+    LITL_TEST_CASE("Auto Shrink", "[core::containers::memoryArena]")
+    {
+        MemoryArena<64, 4> arena{};
+
+        constexpr uint32_t fullBlockCount = 64u / sizeof(TestStructA);
+
+        // The goal is to ensure the automatic shrinking is working.
+        // So we will allocate the following number of blocks and reset:
+        //     [1, 1, 4, 1, 1, 1, 1]
+        // After each reset, the expected block allocation should be:
+        //     [1, 4, 4, 4, 4, 1]
+
+        // Block history:
+        // [1], high = 1
+        std::ignore = arena.allocate(sizeof(TestStructA), alignof(TestStructA));
+        arena.resetShrinkAuto();
+        REQUIRE(arena.getState().blocksAllocated == 1);
+
+        // [1, 1], high = 1
+        std::ignore = arena.allocate(sizeof(TestStructA), alignof(TestStructA));
+        arena.resetShrinkAuto();
+        REQUIRE(arena.getState().blocksAllocated == 1);
+
+        // [1, 1, 4], high = 4
+        for (auto i = 0; i < (fullBlockCount * 4); ++i)
+        {
+            std::ignore = arena.allocate(sizeof(TestStructA), alignof(TestStructA));
+        }
+        arena.resetShrinkAuto();
+        REQUIRE(arena.getState().blocksAllocated == 4);
+
+        // [1, 1, 4, 1], high = 4
+        std::ignore = arena.allocate(sizeof(TestStructA), alignof(TestStructA));
+        arena.resetShrinkAuto();
+        REQUIRE(arena.getState().blocksAllocated == 4);
+
+        // [1, 4, 1, 1], high = 4
+        std::ignore = arena.allocate(sizeof(TestStructA), alignof(TestStructA));
+        arena.resetShrinkAuto();
+        REQUIRE(arena.getState().blocksAllocated == 4);
+
+        // [4, 1, 1, 1], high = 4
+        std::ignore = arena.allocate(sizeof(TestStructA), alignof(TestStructA));
+        arena.resetShrinkAuto();
+        REQUIRE(arena.getState().blocksAllocated == 4);
+
+        // [1, 1, 1, 1], high = 1
+        std::ignore = arena.allocate(sizeof(TestStructA), alignof(TestStructA));
+        arena.resetShrinkAuto();
+        REQUIRE(arena.getState().blocksAllocated == 1);
+
+    } END_LITL_TEST_CASE
 }
