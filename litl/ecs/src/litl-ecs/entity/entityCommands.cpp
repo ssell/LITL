@@ -1,83 +1,17 @@
 #include <vector>
 
+#include "litl-core/containers/memoryArena.hpp"
 #include "litl-ecs/entity/entityCommands.hpp"
 #include "litl-ecs/world.hpp"
-#include "litl-core/constants.hpp"
 
 namespace LITL::ECS
 {
     constexpr uint32_t BlockSize = Constants::max_component_size * 16;
 
-    struct LocalComponentDataBlock
-    {
-        void* copyInto(void* source, uint32_t size)
-        {
-            if (currOffset + size > BlockSize)
-            {
-                // not enough room
-                return nullptr;
-            }
-
-            void* dest = &buffer[currOffset];
-
-            memcpy(dest, source, size);
-            currOffset += size;
-
-            return dest;
-        }
-
-        alignas(Core::Constants::cache_line_size) std::byte buffer[BlockSize];
-        uint32_t currOffset{ 0 };
-    };
-
-    struct LocalComponentData
-    {
-        LocalComponentData()
-        {
-            blocks.emplace_back();
-        }
-
-        void* copyInto(void* source, uint32_t size)
-        {
-            assert(source != nullptr);
-            assert(size > 0);
-            assert(size <= Constants::max_component_size);
-
-            void* dest = blocks[currBlock].copyInto(source, size);
-
-            if (dest == nullptr)
-            {
-                if (++currBlock >= blocks.size())
-                {
-                    blocks.emplace_back();
-                }
-
-                dest = blocks[currBlock].copyInto(source, size);
-            }
-
-            assert(dest != nullptr);
-
-            return dest;
-        }
-
-        void reset()
-        {
-            currBlock = 0;
-
-            for (auto& block : blocks)
-            {
-                block.currOffset = 0;
-            }
-        }
-
-        std::vector<LocalComponentDataBlock> blocks{};
-        uint32_t currBlock{ 0 };
-    };
-
     struct EntityCommands::Impl
     {
         EntityCommandQueue commands{ };
-        LocalComponentData localData{};
+        Core::MemoryArena<BlockSize, 128> localData{};
         uint32_t nextId{ 0 };
     };
 
@@ -96,7 +30,7 @@ namespace LITL::ECS
     {
         m_pImpl->nextId = 0;
         m_pImpl->commands.reset();
-        m_pImpl->localData.reset();
+        m_pImpl->localData.resetShrinkAuto();
     }
 
     size_t EntityCommands::actionableCommandCount() const noexcept
@@ -184,22 +118,22 @@ namespace LITL::ECS
     }
 
 
-    void EntityCommands::addComponent(Entity entity, ComponentTypeId component, void* localData, uint32_t size) noexcept
+    void EntityCommands::addComponent(Entity entity, ComponentTypeId component, void* localData, size_t size, size_t alignment) noexcept
     {
         m_pImpl->commands.push(EntityCommand{
             .type = EntityCommandType::AddComponent,
             .entity = entity,
             .component = component
-        }, m_pImpl->localData.copyInto(localData, size));
+        }, m_pImpl->localData.insert(localData, size, alignment));
     }
 
-    void EntityCommands::addComponent(DeferredEntity entity, ComponentTypeId component, void* localData, uint32_t size) noexcept
+    void EntityCommands::addComponent(DeferredEntity entity, ComponentTypeId component, void* localData, size_t size, size_t alignment) noexcept
     {
         m_pImpl->commands.push(DeferredEntityCommand{
             .type = EntityCommandType::AddComponent,
             .deferredEntity = entity,
             .component = component
-        }, m_pImpl->localData.copyInto(localData, size));
+        }, m_pImpl->localData.insert(localData, size, alignment));
     }
 
     void EntityCommands::removeComponent(Entity entity, ComponentTypeId component) noexcept
