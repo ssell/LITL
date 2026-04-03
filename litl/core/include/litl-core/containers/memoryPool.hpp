@@ -4,59 +4,131 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
+#include <new>
 #include <type_traits>
-
-#include "litl-core/constants.hpp"
 
 namespace LITL::Core
 {
     /// <summary>
-    /// A single block of a self-maintaining chain of memory blocks.
-    /// When one block fills up, it creates a new block to insert into.
+    /// A generic, block-based memory pool.
     /// </summary>
-    /// <typeparam name="Size"></typeparam>
+    /// <typeparam name="BlockSize"></typeparam>
     /// <typeparam name="Alignment"></typeparam>
-    template<size_t Size, size_t Alignment>
-    class MemoryBlock
+    template<size_t BlockSize = 1024>
+    class MemoryPool
     {
+        /// <summary>
+        /// A single block of a self-maintaining chain of memory blocks.
+        /// When one block fills up, it creates a new block to insert into.
+        /// </summary>
+        /// <typeparam name="Size"></typeparam>
+        /// <typeparam name="Alignment"></typeparam>
+        template<size_t Size>
+        struct MemoryBlock
+        {
+            [[nodiscard]] void* copyInto(void const* source, size_t size, size_t alignment) noexcept
+            {
+                assert(source != nullptr);
+                assert((size + alignment) <= Size);
+
+                const size_t aligned = (offset + alignment - 1) & ~(alignment - 1);
+
+                if ((aligned + size) > Size)
+                {
+                    // block is full
+                    return nullptr;
+                }
+
+                void* dest = &buffer[aligned];
+                memcpy(dest, source, size);
+                offset = aligned + size;
+
+                return dest;
+            }
+
+            void reset()
+            {
+                // intentionally only reset the offset, and not the buffer contents themselves.
+                offset = 0;
+            }
+
+            MemoryBlock<Size>* next{ nullptr };
+            size_t offset{ 0 };
+            alignas(alignof(std::max_align_t)) std::byte buffer[Size];
+        };
+
+        MemoryBlock<BlockSize>* m_pRoot;
+        MemoryBlock<BlockSize>* m_pCurrent;
+
     public:
 
-        MemoryBlock() = default;
+        static constexpr size_t MemoryBlockSize = BlockSize;
 
-        ~MemoryBlock()
+        MemoryPool() : m_pRoot(new(std::nothrow) MemoryBlock<BlockSize>()), m_pCurrent{ m_pRoot }
         {
-            if (m_pNext != nullptr)
+            assert(m_pRoot != nullptr);
+        }
+
+        MemoryPool(MemoryPool<BlockSize>&& other)
+        {
+            m_pRoot = other.m_pRoot;
+            m_pCurrent = other.m_pCurrent;
+
+            other.m_pRoot = nullptr;
+            other.m_pCurrent = nullptr;
+        }
+
+        MemoryPool<BlockSize>& operator=(MemoryPool<BlockSize>&& other)
+        {
+            m_pRoot = other.m_pRoot;
+            m_pCurrent = other.m_pCurrent;
+
+            other.m_pRoot = nullptr;
+            other.m_pCurrent = nullptr;
+
+            return (*this);
+        }
+
+        ~MemoryPool()
+        {
+            MemoryBlock<BlockSize>* curr = m_pRoot;
+            MemoryBlock<BlockSize>* next = nullptr;
+
+            while (curr != nullptr)
             {
-                delete m_pNext;
-                m_pNext = nullptr;
+                next = curr->next;
+                delete curr;
+                curr = next;
             }
         }
 
-        MemoryBlock(MemoryBlock const&) = delete;
-        MemoryBlock& operator=(MemoryBlock const&) = delete;
+        MemoryPool(MemoryPool const&) = delete;
+        MemoryPool& operator=(MemoryPool const&) = delete;
 
-        void* copyInto(void* source, size_t size, MemoryBlock<Size, Alignment>** owningBlock) noexcept
+        [[nodiscard]] void* copyInto(void const* source, size_t size, size_t alignment) noexcept
         {
-            assert(source != nullptr);
-            assert(size <= Size);
+            assert(size + alignment - 1 <= BlockSize);
+            assert(alignment > 0 && (alignment & (alignment - 1)) == 0);        // alignment must be non-zero, power-of-two
 
-            void* dest = nullptr;
+            auto* dest = m_pCurrent->copyInto(source, size, alignment);
 
-            if ((size + m_offset) <= Size)
+            if (dest == nullptr)
             {
-                dest = get(m_offset);
-                memcpy(dest, source, size);
-                *owningBlock = this;
-                m_offset += size;
-            }
-            else
-            {
-                if (m_pNext == nullptr)
+                auto* next = m_pCurrent->next;
+
+                if (next == nullptr)
                 {
-                    m_pNext = new MemoryBlock<Size, Alignment>();
+                    m_pCurrent->next = new(std::nothrow) MemoryBlock<BlockSize>();
+                    m_pCurrent = m_pCurrent->next;
+
+                    assert(m_pCurrent != nullptr);
+                }
+                else
+                {
+                    m_pCurrent = next;
                 }
 
-                dest = m_pNext->copyInto(source, size, owningBlock);
+                dest = m_pCurrent->copyInto(source, size, alignment);
             }
 
             assert(dest != nullptr);
@@ -64,80 +136,66 @@ namespace LITL::Core
             return dest;
         }
 
-        void* get(size_t offset)
-        {
-            assert(offset < Size);
-            return &m_buffer[offset];
-        }
-
-        void setNext(MemoryBlock<Size, Alignment>* next)
-        {
-            assert(next != nullptr);
-            assert(m_pNext == nullptr);
-            m_pNext = next;
-        }
-
-        void reset()
-        {
-            m_offset = 0;
-
-            if (m_pNext != nullptr)
-            {
-                m_pNext->reset();
-            }
-        }
-
-    protected:
-
-    private:
-
-        MemoryBlock<Size, Alignment>* m_pNext{ nullptr };
-        alignas(Alignment) std::byte m_buffer[Size];
-        size_t m_offset{ 0 };
-    };
-
-    /// <summary>
-    /// A generic, block-based memory pool.
-    /// </summary>
-    /// <typeparam name="BlockSize"></typeparam>
-    /// <typeparam name="Alignment"></typeparam>
-    template<size_t BlockSize = 1024, size_t Alignment = Constants::cache_line_size>
-    class MemoryPool
-    {
-    public:
-
-        MemoryPool() : m_pCurrent{ &m_root }
-        {
-
-        }
-
-        ~MemoryPool() = default;
-
-        MemoryPool(MemoryPool const&) = delete;
-        MemoryPool& operator=(MemoryPool const&) = delete;
-
-        void* copyInto(void* source, size_t size) noexcept
-        {
-            return m_pCurrent->copyInto(source, size, &m_pCurrent);
-        }
-
         template<typename T> requires std::is_trivially_copyable_v<T>
-        void extract(void* source, void* destination) noexcept
+        [[nodiscard]] T* copyInto(T const& source) noexcept
         {
-            memcpy(destination, source, sizeof(T));
+            static_assert(sizeof(T) + alignof(T) - 1 <= BlockSize, "T exceeds memory pool block size");
+            return static_cast<T*>(copyInto(&source, sizeof(T), alignof(T)));
         }
 
+        /// <summary>
+        /// A non-shrinking reset of the pool.
+        /// When the pool is reset, the internal memory is not zeroed-out, 
+        /// but will be overwritten on future calls to copyInto.
+        /// </summary>
         void reset() noexcept
         {
-            m_root.reset();
+            auto* block = m_pRoot;
+
+            while (block != nullptr)
+            {
+                block->reset();
+                block = block->next;
+            }
+
+            m_pCurrent = m_pRoot;
         }
 
-    protected:
+        /// <summary>
+        /// A shrinking reset of the pool to place it at a size of at most the specified number of blocks.
+        /// When the pool is reset, the internal memory is not zeroed-out, 
+        /// but will be overwritten on future calls to copyInto.
+        /// </summary>
+        /// <param name="blockCount"></param>
+        void resetShrink(size_t blockCount = 1) noexcept
+        {
+            assert(blockCount > 0);
 
-    private:
+            MemoryBlock<BlockSize>* curr = m_pRoot;
+            size_t i = 0;
 
-        MemoryBlock<BlockSize, Alignment> m_root{};
-        MemoryBlock<BlockSize, Alignment>* m_pCurrent{ nullptr };
+            for (i = 0; (i < blockCount) && (curr != nullptr); ++i)
+            {
+                curr->reset();
+                curr = curr->next;
+            }
+
+            if (curr != nullptr)
+            {
+                MemoryBlock<BlockSize>* prev = curr;
+                curr = curr->next;
+                prev->next = nullptr;
+
+                while (curr != nullptr)
+                {
+                    auto* next = curr->next;
+                    delete curr;
+                    curr = next;
+                }
+            }
+
+            m_pCurrent = m_pRoot;
+        }
     };
 }
 

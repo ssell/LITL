@@ -23,8 +23,8 @@ namespace LITL::Core::Tests
         TestStructA a{ 55 };
         TestStructB b{ 100, 33 };
 
-        void* aDest = pool.copyInto(&a, sizeof(TestStructA));
-        void* bDest = pool.copyInto(&b, sizeof(TestStructB));
+        void* aDest = pool.copyInto(&a, sizeof(TestStructA), alignof(TestStructA));
+        void* bDest = pool.copyInto<TestStructB>(b);
 
         TestStructA aExtracted{};
         TestStructB bExtracted{};
@@ -33,8 +33,8 @@ namespace LITL::Core::Tests
         REQUIRE(bExtracted.a != b.a);
         REQUIRE(bExtracted.b != b.b);
 
-        pool.extract<TestStructA>(aDest, &aExtracted);
-        pool.extract<TestStructB>(bDest, &bExtracted);
+        memcpy(&aExtracted, aDest, sizeof(TestStructA));
+        memcpy(&bExtracted, bDest, sizeof(TestStructB));
 
         REQUIRE(aExtracted.a == a.a);
         REQUIRE(bExtracted.a == b.a);
