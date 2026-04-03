@@ -33,14 +33,21 @@ namespace LITL::Core
 
     /// <summary>
     /// A generic, block-based memory arena.
-    /// All memory is "freed" (but not zeroed-out) on call to reset.
+    /// The primary goal of this arena implementation is performance. As such the following design choices are intentional:
+    /// 
+    /// (1) When the arena is reset, memory is not zeroed out. The internal offset tracker is simply reset.
+    /// (2) Space at the end of a block is not tracked and may be wasted. Once the arena moves onto the
+    /// next block it never returns to a previous block (until it is reset of course).
+    /// (3) The default reset method does not free blocks. resetShrink and resetShrinkAuto serve this purpose.
+    /// 
+    /// Any pointers to memory within the arena should be considered invalid after a reset and no longer used.
     /// </summary>
     template<size_t BlockSize = 1024, size_t ShrinkLookBack = 32> requires (BlockSize >= 64) && (ShrinkLookBack > 0)
     class MemoryArena
     {
         /// <summary>
-        /// A single block of a self-maintaining chain of memory blocks.
-        /// When one block fills up, it creates a new block to insert into.
+        /// A single block in a chain of memory blocks.
+        /// When one block fills up, the arena should move to the next block.
         /// </summary>
         /// <typeparam name="Size"></typeparam>
         /// <typeparam name="Alignment"></typeparam>

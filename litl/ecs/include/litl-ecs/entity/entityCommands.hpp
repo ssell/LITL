@@ -49,8 +49,8 @@ namespace LITL::ECS
         void addComponent(DeferredEntity entity, ComponentTypeId component) noexcept;
         void addComponent(Entity entity, ComponentTypeId component, void* sharedData) noexcept;
         void addComponent(DeferredEntity entity, ComponentTypeId component, void* sharedData) noexcept;
-        void addComponent(Entity entity, ComponentTypeId component, void* localData, uint32_t size) noexcept;
-        void addComponent(DeferredEntity entity, ComponentTypeId component, void* localData, uint32_t size) noexcept;
+        void addComponent(Entity entity, ComponentTypeId component, void* localData, size_t size, size_t alignment) noexcept;
+        void addComponent(DeferredEntity entity, ComponentTypeId component, void* localData, size_t size, size_t alignment) noexcept;
         void removeComponent(Entity entity, ComponentTypeId component) noexcept;
         void removeComponent(DeferredEntity entity, ComponentTypeId component) noexcept;
 
@@ -63,7 +63,7 @@ namespace LITL::ECS
         template<ValidComponentType T>
         void addComponent(Entity entity, T component) noexcept
         {
-            addComponent(entity, ComponentDescriptor::get<T>()->id, &component, sizeof(T));
+            addComponent(entity, ComponentDescriptor::get<T>()->id, &component, sizeof(T), alignof(T));
         }
 
         template<ValidComponentType T>
@@ -75,7 +75,7 @@ namespace LITL::ECS
         template<ValidComponentType T>
         void addComponent(DeferredEntity entity, T component) noexcept
         {
-            addComponent(entity, ComponentDescriptor::get<T>()->id, &component, sizeof(T));
+            addComponent(entity, ComponentDescriptor::get<T>()->id, &component, sizeof(T), alignof(T));
         }
 
         template<ValidComponentType T>
