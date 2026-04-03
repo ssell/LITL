@@ -44,7 +44,7 @@ add_executable(litl-tests
 	"src/litl-ecs/archetypeComponents_tests.cpp" 
 	"src/litl-core/math/vec3_tests.cpp" 
 	"src/litl-engine/ecs/components/position_tests.cpp" 
-	"src/litl-core/containers/memoryArena_tests.cpp")
+	"src/litl-core/containers/memoryArena_tests.cpp" "src/litl-core/containers/ringBuffer_tests.cpp")
 
 target_link_libraries(litl-tests
 	PRIVATE

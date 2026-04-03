@@ -1,7 +1,9 @@
 #ifndef LITL_CORE_CONTAINERS_MEMORY_ARENA_H__
 #define LITL_CORE_CONTAINERS_MEMORY_ARENA_H__
 
+#include <array>
 #include <cassert>
+#include <concepts>
 #include <cstdint>
 #include <cstring>
 #include <new>
@@ -33,7 +35,7 @@ namespace LITL::Core
     /// </summary>
     /// <typeparam name="BlockSize"></typeparam>
     /// <typeparam name="Alignment"></typeparam>
-    template<size_t BlockSize = 1024>
+    template<size_t BlockSize = 1024> requires (BlockSize > 64)
     class MemoryArena
     {
         /// <summary>
@@ -256,9 +258,11 @@ namespace LITL::Core
         /// A shrinking reset of the arena to place it at a size of at most the specified number of blocks.
         /// When the arena is reset, the internal memory is not zeroed-out, 
         /// but will be overwritten on future calls to copyInto.
+        /// 
+        /// Specified block count must be at least 1.
         /// </summary>
         /// <param name="blockCount"></param>
-        void resetShrink(size_t blockCount = 1) noexcept
+        void resetShrink(size_t blockCount) noexcept
         {
             assert(blockCount > 0);
 
