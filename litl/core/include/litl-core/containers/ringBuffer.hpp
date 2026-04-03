@@ -10,7 +10,7 @@ namespace LITL::Core
 {
     /// <summary>
     /// A fixed-size ring buffer.
-    /// It can contain N unique items. Once full, any subsequent calls to push will overwrite the oldest items.
+    /// It can contain N unique items. Once full, any subsequent calls to push will overwrite the oldest item.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="N"></typeparam>

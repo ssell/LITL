@@ -6,6 +6,10 @@
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/world.hpp"
 
+// Include common, widely used components
+
+#include "litl-engine/ecs/components/position.hpp"
+
 /*
 
 Minimal ECS System definition:

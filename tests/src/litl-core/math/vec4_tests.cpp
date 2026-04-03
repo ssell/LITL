@@ -1,12 +1,12 @@
 #include "tests.hpp"
-#include "litl-core/math/vec3.hpp"
+#include "litl-core/math/vec4.hpp"
 
 namespace LITL::Math::Tests
 {
-    LITL_TEST_CASE("Basic", "[math::vec3]")
+    LITL_TEST_CASE("Basic", "[math::vec4]")
     {
-        Vec3 v{};
-        glm::vec3 glmvec{10.0f, 100.0f, 10.0f};
+        Vec4 v{};
+        glm::vec4 glmvec{ 10.0f, 100.0f, 10.0f, 1000.0f };
 
         REQUIRE(isZero(v.x()));
         REQUIRE(isZero(v.y()));
@@ -15,17 +15,19 @@ namespace LITL::Math::Tests
         v.x() = 10.0f;
         v.y() = 100.0f;
         v.z() = 10.0f;
+        v.w() = 1000.0f;
 
         REQUIRE(fequals(v.x(), 10.0f));
         REQUIRE(fequals(v.y(), 100.0f));
         REQUIRE(fequals(v.z(), 10.0f));
+        REQUIRE(fequals(v.w(), 1000.0f));
 
-        Vec3 normalized = v.normalized();
+        Vec4 normalized = v.normalized();
         glmvec = glm::normalize(glmvec);
 
         REQUIRE(normalized == glmvec);
 
-        Vec3 scaled = normalized * 100.0f;
+        Vec4 scaled = normalized * 100.0f;
         glmvec = glmvec * 100.0f;
 
         REQUIRE(scaled == glmvec);

@@ -250,8 +250,7 @@ namespace LITL::Core
 
         /// <summary>
         /// A non-shrinking reset of the arena.
-        /// When the arena is reset, the internal memory is not zeroed-out, 
-        /// but will be overwritten on future calls to copyInto.
+        /// When the arena is reset, the internal memory is not zeroed-out, but will be overwritten on future calls to copyInto.
         /// </summary>
         void reset() noexcept
         {
@@ -263,8 +262,7 @@ namespace LITL::Core
 
         /// <summary>
         /// A shrinking reset of the arena to place it at a size of at most the specified number of blocks.
-        /// When the arena is reset, the internal memory is not zeroed-out, 
-        /// but will be overwritten on future calls to copyInto.
+        /// When the arena is reset, the internal memory is not zeroed-out, but will be overwritten on future calls to copyInto.
         /// 
         /// Specified block count must be at least 1.
         /// </summary>
@@ -307,7 +305,7 @@ namespace LITL::Core
         }
 
         /// <summary>
-        /// A shrinking reset, that shrinks back to the recent maximum block usage high-water mark.
+        /// A shrinking reset, that shrinks back to the recent maximum block usage highwater mark.
         /// This automatic shrink looks back upto the previous ShrinkLookBack resets.
         /// For a block count to be considered, this reset must be used.
         /// </summary>
