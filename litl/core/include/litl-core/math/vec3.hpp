@@ -31,6 +31,15 @@ namespace LITL
         }
 
         // ---------------------------------------------------------------------------------
+        // Negation
+        // ---------------------------------------------------------------------------------
+
+        [[nodiscard]] constexpr vec3 operator-() const noexcept
+        {
+            return vec3{ -value };
+        }
+
+        // ---------------------------------------------------------------------------------
         // Addition
         // ---------------------------------------------------------------------------------
 
@@ -239,6 +248,11 @@ namespace LITL
             float length = glm::length(value);
             assert(!Math::isZero(length));
             return vec3(value / length);
+        }
+
+        [[nodiscard]] constexpr float dot(vec3 const& other) const noexcept
+        {
+            return glm::dot(value, other.value);
         }
 
         constexpr void zero() noexcept
