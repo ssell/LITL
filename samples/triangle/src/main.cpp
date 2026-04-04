@@ -7,7 +7,7 @@ using namespace LITL;
 void bootstrap(Core::ServiceProvider& services, ECS::EntityCommands& commands)
 {
     auto entity = commands.createEntity();
-    commands.addComponent<Engine::Position>(entity, { 0.0f, 0.0f, 5.0 });
+    commands.addComponent<Engine::Position>(entity, { {0.0f, 0.0f, 5.0} });
 }
 
 int main()

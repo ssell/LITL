@@ -5,11 +5,9 @@
 
 namespace LITL::Engine
 {
-    /// <summary>
-    /// CRTP inheritance of a three-component vector.
-    /// </summary>
-    struct Position : Math::Vec3Wrapper<Position> {
-        using Vec3Wrapper::Vec3Wrapper;
+    struct Position 
+    {
+        vec3 value;
     };
 }
 
