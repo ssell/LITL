@@ -1,99 +1,264 @@
 #ifndef LITL_MATH_VEC3_H__
 #define LITL_MATH_VEC3_H__
 
+#include <cassert>
 #include <glm/glm.hpp>
 
 #include "litl-core/math/math.hpp"
 #include "litl-core/types.hpp"
 
-namespace LITL::Math
+namespace LITL
 {
-    template<typename T>
-    struct Vec3Wrapper
+    struct vec3
     {
-        glm::vec3 value{ 0.0f };
+        constexpr vec3() { }
+        constexpr vec3(vec3 const& other) : value(other.value) { }
+        constexpr explicit vec3(glm::vec3 const& other) : value(other) { }
+        constexpr vec3(float x, float y, float z) : value{ x, y, z } { }
 
-        constexpr Vec3Wrapper() = default;
-        constexpr explicit Vec3Wrapper(glm::vec3 v) : value(v) {}
-        constexpr Vec3Wrapper(float x, float y, float z) : value(x, y, z) {}
+        // ---------------------------------------------------------------------------------
+        // Equality
+        // ---------------------------------------------------------------------------------
 
-        [[nodiscard]] constexpr float& x() { return value.x; }
-        [[nodiscard]] constexpr float& y() { return value.y; }
-        [[nodiscard]] constexpr float& z() { return value.z; }
+        [[nodiscard]] constexpr bool operator==(vec3 const& other) const noexcept
+        {
+            return Math::fequals(value.x, other.value.x) && Math::fequals(value.y, other.value.y) && Math::fequals(value.z, other.value.z);
+        }
 
-        [[nodiscard]] constexpr float length() const
+        [[nodiscard]] constexpr bool operator==(glm::vec3 const& other) const noexcept
+        {
+            return Math::fequals(value.x, other.x) && Math::fequals(value.y, other.y) && Math::fequals(value.z, other.z);
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Addition
+        // ---------------------------------------------------------------------------------
+
+        [[nodiscard]] constexpr vec3 operator+(float scalar) const noexcept
+        {
+            return vec3{ value + scalar };
+        }
+
+        [[nodiscard]] constexpr vec3 operator+(vec3 const& other) const noexcept
+        {
+            return vec3{ value + other.value };
+        }
+
+        [[nodiscard]] constexpr vec3 operator+(glm::vec3 const& other) const noexcept
+        {
+            return vec3{ value + other };
+        }
+
+        constexpr vec3& operator+=(float scalar) noexcept
+        {
+            value += scalar;
+            return *this;
+        }
+
+        constexpr vec3& operator+=(vec3 const& other) noexcept
+        {
+            value += other.value;
+            return *this;
+        }
+
+        constexpr vec3& operator+=(glm::vec3 const& other) noexcept
+        {
+            value += other;
+            return *this;
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Subtraction
+        // ---------------------------------------------------------------------------------
+
+        [[nodiscard]] constexpr vec3 operator-(float scalar) const noexcept
+        {
+            return vec3{ value - scalar };
+        }
+
+        [[nodiscard]] constexpr vec3 operator-(vec3 const& other) const noexcept
+        {
+            return vec3{ value - other.value };
+        }
+
+        [[nodiscard]] constexpr vec3 operator-(glm::vec3 const& other) const noexcept
+        {
+            return vec3{ value - other };
+        }
+
+        constexpr vec3& operator-=(float scalar) noexcept
+        {
+            value -= scalar;
+            return *this;
+        }
+
+        constexpr vec3& operator-=(vec3 const& other) noexcept
+        {
+            value -= other.value;
+            return *this;
+        }
+
+        constexpr vec3& operator-=(glm::vec3 const& other) noexcept
+        {
+            value -= other;
+            return *this;
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Multiplication
+        // ---------------------------------------------------------------------------------
+
+        [[nodiscard]] constexpr vec3 operator*(float scalar) const noexcept
+        {
+            return vec3{ value * scalar };
+        }
+
+        [[nodiscard]] constexpr vec3 operator*(vec3 const& other) const noexcept
+        {
+            return vec3{ value * other.value };
+        }
+
+        [[nodiscard]] constexpr vec3 operator*(glm::vec3 const& other) const noexcept
+        {
+            return vec3{ value * other };
+        }
+
+        constexpr vec3& operator*=(float scalar) noexcept
+        {
+            value *= scalar;
+            return *this;
+        }
+
+        constexpr vec3& operator*=(vec3 const& other) noexcept
+        {
+            value *= other.value;
+            return *this;
+        }
+
+        constexpr vec3& operator*=(glm::vec3 const& other) noexcept
+        {
+            value *= other;
+            return *this;
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Division
+        // ---------------------------------------------------------------------------------
+
+        [[nodiscard]] constexpr vec3 operator/(float scalar) const noexcept
+        {
+            assert(!Math::isZero(scalar));
+            return vec3{ value / scalar };
+        }
+
+        [[nodiscard]] constexpr vec3 operator/(vec3 const& other) const noexcept
+        {
+            assert(!Math::isZero(other.value.x) && !Math::isZero(other.value.y) && !Math::isZero(other.value.z));
+            return vec3{ value / other.value };
+        }
+
+        [[nodiscard]] constexpr vec3 operator/(glm::vec3 const& other) const noexcept
+        {
+            assert(!Math::isZero(other.x) && !Math::isZero(other.y) && !Math::isZero(other.z));
+            return vec3{ value / other };
+        }
+
+        constexpr vec3& operator/=(float scalar) noexcept
+        {
+            assert(!Math::isZero(scalar));
+            value /= scalar;
+            return *this;
+        }
+
+        constexpr vec3& operator/=(vec3 const& other) noexcept
+        {
+            assert(!Math::isZero(other.value.x) && !Math::isZero(other.value.y) && !Math::isZero(other.value.z));
+            value /= other.value;
+            return *this;
+        }
+
+        constexpr vec3& operator/=(glm::vec3 const& other) noexcept
+        {
+            assert(!Math::isZero(other.x) && !Math::isZero(other.y) && !Math::isZero(other.z));
+            value /= other;
+            return *this;
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Accessors
+        // ---------------------------------------------------------------------------------
+
+        [[nodiscard]] constexpr float& x() noexcept
+        {
+            return value.x;
+        }
+
+        [[nodiscard]] constexpr float const& x() const noexcept
+        {
+            return value.x;
+        }
+
+        [[nodiscard]] constexpr float& y() noexcept
+        {
+            return value.y;
+        }
+
+        [[nodiscard]] constexpr float const& y() const noexcept
+        {
+            return value.y;
+        }
+
+        [[nodiscard]] constexpr float& z() noexcept
+        {
+            return value.z;
+        }
+
+        [[nodiscard]] constexpr float const& z() const noexcept
+        {
+            return value.z;
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Utility
+        // ---------------------------------------------------------------------------------
+
+        [[nodiscard]] constexpr float length() const noexcept
         {
             return glm::length(value);
         }
 
-        void normalize() noexcept
+        constexpr void normalize() noexcept
         {
-            value = glm::normalize(value);
+            float length = glm::length(value);
+            assert(!Math::isZero(length));
+            value = value / length;
         }
 
-        [[nodiscard]] constexpr T normalized() const
+        [[nodiscard]] constexpr vec3 normalized() const noexcept
         {
-            return T{ glm::normalize(value) };
+            float length = glm::length(value);
+            assert(!Math::isZero(length));
+            return vec3(value / length);
         }
 
-        [[nodiscard]] constexpr T operator*(float s) const
+        constexpr void zero() noexcept
         {
-            return T{ value * s };
+            value.x = 0.0f;
+            value.y = 0.0f;
+            value.z = 0.0f;
         }
 
-        void operator*=(float s)
+        [[nodiscard]] constexpr bool isZeroed() const noexcept
         {
-            value *= s;
+            return Math::isZero(value.x) && Math::isZero(value.y) && Math::isZero(value.z);
         }
 
-        [[nodiscard]] constexpr T operator/(float s) const
-        {
-            return T{ value / s };
-        }
+    private:
 
-        void operator/=(float s)
-        {
-            value /= s;
-        }
-
-        [[nodiscard]] constexpr bool operator==(Vec3Wrapper const& other) const
-        {
-            return 
-                fequals(value.x, other.value.x) && 
-                fequals(value.y, other.value.y) && 
-                fequals(value.z, other.value.z);
-        }
-
-        [[nodiscard]] constexpr bool operator==(glm::vec3 const& other) const
-        {
-            return 
-                fequals(value.x, other.x) && 
-                fequals(value.y, other.y) && 
-                fequals(value.z, other.z);
-        }
-
-        void zero() noexcept
-        {
-            value[0] = 0.0f;
-            value[1] = 0.0f;
-            value[2] = 0.0f;
-        }
-
-        [[nodiscard]] bool isZero() const noexcept
-        {
-            return
-                Math::isZero(value[0]) &&
-                Math::isZero(value[1]) &&
-                Math::isZero(value[2]);
-        }
-    };
-
-    struct Vec3 : Vec3Wrapper<Vec3>
-    {
-        using Vec3Wrapper::Vec3Wrapper;
+        glm::vec3 value{ 0.0f };
     };
 }
 
-REGISTER_TYPE_NAME(LITL::Math::Vec3)
+REGISTER_TYPE_NAME(LITL::vec3)
 
 #endif

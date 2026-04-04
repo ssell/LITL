@@ -13,6 +13,7 @@
 
 namespace LITL::Math
 {
+    /*
     template<typename T> 
     struct Mat4Wrapper
     {
@@ -176,8 +177,9 @@ namespace LITL::Math
     {
         using Mat4Wrapper::Mat4Wrapper;
     };
+    */
 }
 
-REGISTER_TYPE_NAME(LITL::Math::Mat4);
+//REGISTER_TYPE_NAME(LITL::Math::Mat4);
 
 #endif
