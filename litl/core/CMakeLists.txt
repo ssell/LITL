@@ -9,6 +9,7 @@ add_library(litl-core
 		"src/litl-core/logging/sinks/loggingSink.cpp" 
 		"src/litl-core/logging/sinks/fileSink.cpp" 
 		"src/litl-core/hash.cpp" 
+		"src/litl-core/types.cpp"
 		"src/litl-core/containers/flatHashMap.cpp" 
 		"src/litl-renderer/pipeline/shaderReflection.cpp" 
 		"src/litl-renderer/pipeline/shaderModule.cpp"
@@ -23,10 +24,10 @@ add_library(litl-core
 		"src/litl-core/math/math.cpp" 
 		"src/litl-core/services/serviceCollection.cpp" 
 		"src/litl-core/services/serviceProvider.cpp" 
-		"src/litl-core/types.cpp" 
 		"src/litl-core/services/serviceScope.cpp"  
 		"src/litl-core/job/jobHandle.cpp" 
-		"src/litl-core/math/dag.cpp" )
+		"src/litl-core/math/dag.cpp"
+		"src/litl-core/math/types.cpp")
 		
 target_include_directories(litl-core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
 	PRIVATE

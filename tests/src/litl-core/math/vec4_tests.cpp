@@ -1,5 +1,5 @@
 #include "tests.hpp"
-#include "litl-core/math/vec4.hpp"
+#include "litl-core/math/types.hpp"
 
 namespace LITL::Math::Tests
 {
@@ -328,10 +328,10 @@ namespace LITL::Math::Tests
         REQUIRE(isOne(n.length()));
     } END_LITL_TEST_CASE
 
-    LITL_TEST_CASE("vec4 zero() sets all components to zero", "[math::vec4]")
+    LITL_TEST_CASE("vec4 setZero() sets all components to zero", "[math::vec4]")
     {
         vec4 v(1.0f, 2.0f, 3.0f, 4.0f);
-        v.zero();
+        v.setZero();
         REQUIRE(v == vec4(0.0f, 0.0f, 0.0f, 0.0f));
     } END_LITL_TEST_CASE
 
@@ -397,10 +397,10 @@ namespace LITL::Math::Tests
         REQUIRE((v / 1.0f) == v);
     } END_LITL_TEST_CASE
 
-    LITL_TEST_CASE("vec4 zero() then isZeroed() consistency", "[math::vec4]")
+    LITL_TEST_CASE("vec4 setZero() then isZeroed() consistency", "[math::vec4]")
     {
         vec4 v(99.0f, -42.0f, 0.5f, 7.0f);
-        v.zero();
+        v.setZero();
         REQUIRE(v.isZeroed());
         REQUIRE_FALSE(v.isIdentity());
     } END_LITL_TEST_CASE
