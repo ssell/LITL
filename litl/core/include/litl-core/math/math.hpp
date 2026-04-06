@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <cmath>
+#include <span>
 
 #include "litl-core/math/traits.hpp"
 
@@ -103,6 +104,18 @@ namespace LITL::Math
         return diff <= relEpsilon * (max)(abs(a), abs(b));
     }
 
+    [[nodiscard]] constexpr bool allEquals(std::span<float const> values, float check, float relEpsilon = Traits<float>::relative_epsilon, float epsilon = Traits<float>::epsilon) noexcept
+    {
+        bool all = true;
+
+        for (float v : values)
+        {
+            all = all && fequals(v, check, relEpsilon, epsilon);
+        }
+
+        return all;
+    }
+
     [[nodiscard]] constexpr bool isZero(float x, float epsilon = Traits<float>::epsilon) noexcept
     {
         if (std::isnan(x)) { return false; }
@@ -127,6 +140,24 @@ namespace LITL::Math
     {
         if (!std::isfinite(x)) { return false; }
         return x == 0;
+    }
+
+    [[nodiscard]] constexpr bool anyZero(std::span<float const> values) noexcept
+    {
+        bool any = false;
+
+        for (float v : values)
+        {
+            any = any || isZero(v);
+        }
+
+        return any;
+    }
+
+    [[nodiscard]] constexpr bool anyZero(float const* values, uint32_t count) noexcept
+    {
+        assert(values != nullptr);
+        return anyZero(std::span{ values, count });
     }
 
     [[nodiscard]] constexpr bool isOne(float x, float relEpsilon = Traits<float>::relative_epsilon, float epsilon = Traits<float>::epsilon) noexcept

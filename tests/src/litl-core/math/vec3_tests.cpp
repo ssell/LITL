@@ -1,5 +1,5 @@
 #include "tests.hpp"
-#include "litl-core/math/vec3.hpp"
+#include "litl-core/math/types.hpp"
 
 namespace LITL::Math::Tests
 {
@@ -314,10 +314,10 @@ namespace LITL::Math::Tests
         REQUIRE(isOne(v.normalized().length()));
     } END_LITL_TEST_CASE
 
-    LITL_TEST_CASE("vec3 zero() clears all components", "[math::vec3]")
+    LITL_TEST_CASE("vec3 setZero() clears all components", "[math::vec3]")
     {
         vec3 v(99.0f, -42.0f, 7.0f);
-        v.zero();
+        v.setZero();
         REQUIRE(v.isZeroed());
     } END_LITL_TEST_CASE
 

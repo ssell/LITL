@@ -1,5 +1,5 @@
 #include "tests.hpp"
-#include "litl-core/math/mat4.hpp"
+#include "litl-core/math/types.hpp"
 
 namespace LITL::Math::Tests
 {

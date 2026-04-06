@@ -1,7 +1,7 @@
 #ifndef LITL_ENGINE_ECS_COMPONENTS_POSITION_H__
 #define LITL_ENGINE_ECS_COMPONENTS_POSITION_H__
 
-#include "litl-core/math/vec3.hpp"
+#include "litl-core/math/types.hpp"
 
 namespace LITL::Engine
 {

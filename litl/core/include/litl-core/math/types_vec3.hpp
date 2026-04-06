@@ -3,74 +3,78 @@
 
 #include <cassert>
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "litl-core/math/math.hpp"
 #include "litl-core/types.hpp"
 
 namespace LITL
 {
-    struct vec4
+    struct vec4;
+
+    struct vec3
     {
-        constexpr vec4() {}
-        constexpr vec4(vec4 const& other) : value(other.value) {}
-        constexpr explicit vec4(glm::vec4 const& other) : value(other) {}
-        constexpr vec4(float x, float y, float z, float w) : value{ x, y, z, w } {}
+        constexpr vec3() {}
+        constexpr vec3(vec3 const& other) : value(other.value) {}
+        constexpr explicit vec3(glm::vec3 const& other) : value(other) {}
+        constexpr vec3(float x, float y, float z) : value{ x, y, z } {}
+        explicit vec3(vec4 const& other);
 
         // ---------------------------------------------------------------------------------
         // Equality
         // ---------------------------------------------------------------------------------
 
-        [[nodiscard]] constexpr bool operator==(vec4 const& other) const noexcept
+        [[nodiscard]] constexpr bool operator==(vec3 const& other) const noexcept
         {
-            return Math::fequals(value.x, other.value.x) && Math::fequals(value.y, other.value.y) && Math::fequals(value.z, other.value.z) && Math::fequals(value.w, other.value.w);
+            return Math::fequals(value.x, other.value.x) && Math::fequals(value.y, other.value.y) && Math::fequals(value.z, other.value.z);
         }
 
-        [[nodiscard]] constexpr bool operator==(glm::vec4 const& other) const noexcept
+        [[nodiscard]] constexpr bool operator==(glm::vec3 const& other) const noexcept
         {
-            return Math::fequals(value.x, other.x) && Math::fequals(value.y, other.y) && Math::fequals(value.z, other.z) && Math::fequals(value.w, other.w);
+            return Math::fequals(value.x, other.x) && Math::fequals(value.y, other.y) && Math::fequals(value.z, other.z);
         }
 
         // ---------------------------------------------------------------------------------
         // Negation
         // ---------------------------------------------------------------------------------
 
-        [[nodiscard]] constexpr vec4 operator-() const noexcept
+        [[nodiscard]] constexpr vec3 operator-() const noexcept
         {
-            return vec4{ -value };
+            return vec3{ -value };
         }
 
         // ---------------------------------------------------------------------------------
         // Addition
         // ---------------------------------------------------------------------------------
 
-        [[nodiscard]] constexpr vec4 operator+(float scalar) const noexcept
+        [[nodiscard]] constexpr vec3 operator+(float scalar) const noexcept
         {
-            return vec4{ value + scalar };
+            return vec3{ value + scalar };
         }
 
-        [[nodiscard]] constexpr vec4 operator+(vec4 const& other) const noexcept
+        [[nodiscard]] constexpr vec3 operator+(vec3 const& other) const noexcept
         {
-            return vec4{ value + other.value };
+            return vec3{ value + other.value };
         }
 
-        [[nodiscard]] constexpr vec4 operator+(glm::vec4 const& other) const noexcept
+        [[nodiscard]] constexpr vec3 operator+(glm::vec3 const& other) const noexcept
         {
-            return vec4{ value + other };
+            return vec3{ value + other };
         }
 
-        constexpr vec4& operator+=(float scalar) noexcept
+        constexpr vec3& operator+=(float scalar) noexcept
         {
             value += scalar;
             return *this;
         }
 
-        constexpr vec4& operator+=(vec4 const& other) noexcept
+        constexpr vec3& operator+=(vec3 const& other) noexcept
         {
             value += other.value;
             return *this;
         }
 
-        constexpr vec4& operator+=(glm::vec4 const& other) noexcept
+        constexpr vec3& operator+=(glm::vec3 const& other) noexcept
         {
             value += other;
             return *this;
@@ -80,34 +84,34 @@ namespace LITL
         // Subtraction
         // ---------------------------------------------------------------------------------
 
-        [[nodiscard]] constexpr vec4 operator-(float scalar) const noexcept
+        [[nodiscard]] constexpr vec3 operator-(float scalar) const noexcept
         {
-            return vec4{ value - scalar };
+            return vec3{ value - scalar };
         }
 
-        [[nodiscard]] constexpr vec4 operator-(vec4 const& other) const noexcept
+        [[nodiscard]] constexpr vec3 operator-(vec3 const& other) const noexcept
         {
-            return vec4{ value - other.value };
+            return vec3{ value - other.value };
         }
 
-        [[nodiscard]] constexpr vec4 operator-(glm::vec4 const& other) const noexcept
+        [[nodiscard]] constexpr vec3 operator-(glm::vec3 const& other) const noexcept
         {
-            return vec4{ value - other };
+            return vec3{ value - other };
         }
 
-        constexpr vec4& operator-=(float scalar) noexcept
+        constexpr vec3& operator-=(float scalar) noexcept
         {
             value -= scalar;
             return *this;
         }
 
-        constexpr vec4& operator-=(vec4 const& other) noexcept
+        constexpr vec3& operator-=(vec3 const& other) noexcept
         {
             value -= other.value;
             return *this;
         }
 
-        constexpr vec4& operator-=(glm::vec4 const& other) noexcept
+        constexpr vec3& operator-=(glm::vec3 const& other) noexcept
         {
             value -= other;
             return *this;
@@ -117,34 +121,34 @@ namespace LITL
         // Multiplication
         // ---------------------------------------------------------------------------------
 
-        [[nodiscard]] constexpr vec4 operator*(float scalar) const noexcept
+        [[nodiscard]] constexpr vec3 operator*(float scalar) const noexcept
         {
-            return vec4{ value * scalar };
+            return vec3{ value * scalar };
         }
 
-        [[nodiscard]] constexpr vec4 operator*(vec4 const& other) const noexcept
+        [[nodiscard]] constexpr vec3 operator*(vec3 const& other) const noexcept
         {
-            return vec4{ value * other.value };
+            return vec3{ value * other.value };
         }
 
-        [[nodiscard]] constexpr vec4 operator*(glm::vec4 const& other) const noexcept
+        [[nodiscard]] constexpr vec3 operator*(glm::vec3 const& other) const noexcept
         {
-            return vec4{ value * other };
+            return vec3{ value * other };
         }
 
-        constexpr vec4& operator*=(float scalar) noexcept
+        constexpr vec3& operator*=(float scalar) noexcept
         {
             value *= scalar;
             return *this;
         }
 
-        constexpr vec4& operator*=(vec4 const& other) noexcept
+        constexpr vec3& operator*=(vec3 const& other) noexcept
         {
             value *= other.value;
             return *this;
         }
 
-        constexpr vec4& operator*=(glm::vec4 const& other) noexcept
+        constexpr vec3& operator*=(glm::vec3 const& other) noexcept
         {
             value *= other;
             return *this;
@@ -154,41 +158,41 @@ namespace LITL
         // Division
         // ---------------------------------------------------------------------------------
 
-        [[nodiscard]] constexpr vec4 operator/(float scalar) const noexcept
+        [[nodiscard]] constexpr vec3 operator/(float scalar) const noexcept
         {
             assert(!Math::isZero(scalar));
-            return vec4{ value / scalar };
+            return vec3{ value / scalar };
         }
 
-        [[nodiscard]] constexpr vec4 operator/(vec4 const& other) const noexcept
+        [[nodiscard]] constexpr vec3 operator/(vec3 const& other) const noexcept
         {
-            assert(!Math::isZero(other.value.x) && !Math::isZero(other.value.y) && !Math::isZero(other.value.z) && !Math::isZero(other.value.w));
-            return vec4{ value / other.value };
+            assert(!Math::isZero(other.value.x) && !Math::isZero(other.value.y) && !Math::isZero(other.value.z));
+            return vec3{ value / other.value };
         }
 
-        [[nodiscard]] constexpr vec4 operator/(glm::vec4 const& other) const noexcept
+        [[nodiscard]] constexpr vec3 operator/(glm::vec3 const& other) const noexcept
         {
-            assert(!Math::isZero(other.x) && !Math::isZero(other.y) && !Math::isZero(other.z) && !Math::isZero(other.w));
-            return vec4{ value / other };
+            assert(!Math::isZero(other.x) && !Math::isZero(other.y) && !Math::isZero(other.z));
+            return vec3{ value / other };
         }
 
-        constexpr vec4& operator/=(float scalar) noexcept
+        constexpr vec3& operator/=(float scalar) noexcept
         {
             assert(!Math::isZero(scalar));
             value /= scalar;
             return *this;
         }
 
-        constexpr vec4& operator/=(vec4 const& other) noexcept
+        constexpr vec3& operator/=(vec3 const& other) noexcept
         {
-            assert(!Math::isZero(other.value.x) && !Math::isZero(other.value.y) && !Math::isZero(other.value.z) && !Math::isZero(other.value.w));
+            assert(!Math::isZero(other.value.x) && !Math::isZero(other.value.y) && !Math::isZero(other.value.z));
             value /= other.value;
             return *this;
         }
 
-        constexpr vec4& operator/=(glm::vec4 const& other) noexcept
+        constexpr vec3& operator/=(glm::vec3 const& other) noexcept
         {
-            assert(!Math::isZero(other.x) && !Math::isZero(other.y) && !Math::isZero(other.z) && !Math::isZero(other.w));
+            assert(!Math::isZero(other.x) && !Math::isZero(other.y) && !Math::isZero(other.z));
             value /= other;
             return *this;
         }
@@ -227,16 +231,6 @@ namespace LITL
             return value.z;
         }
 
-        [[nodiscard]] constexpr float& w() noexcept
-        {
-            return value.w;
-        }
-
-        [[nodiscard]] constexpr float const& w() const noexcept
-        {
-            return value.w;
-        }
-
         // ---------------------------------------------------------------------------------
         // Utility
         // ---------------------------------------------------------------------------------
@@ -253,42 +247,60 @@ namespace LITL
             value = value / length;
         }
 
-        [[nodiscard]] constexpr vec4 normalized() const noexcept
+        [[nodiscard]] constexpr vec3 normalized() const noexcept
         {
             float length = glm::length(value);
             assert(!Math::isZero(length));
-            return vec4(value / length);
+            return vec3(value / length);
         }
 
-        [[nodiscard]] constexpr float dot(vec4 const& other) const noexcept
+        [[nodiscard]] constexpr float dot(vec3 const& other) const noexcept
         {
             return glm::dot(value, other.value);
         }
 
-        constexpr void zero() noexcept
+        constexpr void setZero() noexcept
         {
             value.x = 0.0f;
             value.y = 0.0f;
             value.z = 0.0f;
-            value.w = 0.0f;
         }
 
         [[nodiscard]] constexpr bool isZeroed() const noexcept
         {
-            return Math::isZero(value.x) && Math::isZero(value.y) && Math::isZero(value.z) && Math::isZero(value.w);
+            return Math::isZero(value.x) && Math::isZero(value.y) && Math::isZero(value.z);
         }
 
-        [[nodiscard]] constexpr bool isIdentity() const noexcept
+        // ---------------------------------------------------------------------------------
+        // Access
+        // ---------------------------------------------------------------------------------
+
+        glm::vec3& data() noexcept
         {
-            return Math::isZero(value.x) && Math::isZero(value.y) && Math::isZero(value.z) && Math::isOne(value.w);
+            return value;
+        }
+
+        glm::vec3 const& data() const noexcept
+        {
+            return value;
+        }
+
+        float* dataPtr() noexcept
+        {
+            return glm::value_ptr(value);
+        }
+
+        float const* dataPtr() const noexcept
+        {
+            return glm::value_ptr(value);
         }
 
     private:
 
-        glm::vec4 value{ 0.0f, 0.0f, 0.0f, 1.0f };
+        glm::vec3 value{ 0.0f };
     };
 }
 
-REGISTER_TYPE_NAME(LITL::vec4)
+//REGISTER_TYPE_NAME(LITL::vec3)
 
 #endif
