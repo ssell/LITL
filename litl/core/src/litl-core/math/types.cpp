@@ -56,5 +56,10 @@ namespace LITL
         selfPtr[13] = 0.0f;
         selfPtr[14] = 0.0f;
         selfPtr[15] = 1.0f;
+
+        std::span<float const> sm4 = { selfPtr, 16 };
+        std::span<float const> sm3 = { otherPtr, 9 };
+
+        int dotthang = 0;
     }
 }

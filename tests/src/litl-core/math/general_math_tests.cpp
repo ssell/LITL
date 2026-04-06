@@ -63,10 +63,10 @@ namespace LITL::Core::Tests
         REQUIRE(LITL::Math::isZero(std::numeric_limits<float>::signaling_NaN()) == false);
 
         REQUIRE(LITL::Math::isZero(0.0) == true);
-        REQUIRE(LITL::Math::isZero(0.0000001) == true);
+        REQUIRE(LITL::Math::isZero(0.00000001) == true);
         REQUIRE(LITL::Math::isZero(0.000001) == false);
         REQUIRE(LITL::Math::isZero(-0.000001) == false);
-        REQUIRE(LITL::Math::isZero(-0.0000001) == true);
+        REQUIRE(LITL::Math::isZero(-0.00000001) == true);
         REQUIRE(LITL::Math::isZero(-0.0) == true);
         REQUIRE(LITL::Math::isZero(1.0) == false);
         REQUIRE(LITL::Math::isZero(-1.0) == false);
@@ -107,7 +107,7 @@ namespace LITL::Core::Tests
         REQUIRE(LITL::Math::isOne(std::numeric_limits<float>::signaling_NaN()) == false);
 
         REQUIRE(LITL::Math::isOne(1.0) == true);
-        REQUIRE(LITL::Math::isOne(1.0000001) == true);
+        REQUIRE(LITL::Math::isOne(1.00000001) == true);
         REQUIRE(LITL::Math::isOne(1.000001) == false);
         REQUIRE(LITL::Math::isOne(0.9999999) == true);
         REQUIRE(LITL::Math::isOne(0.999999) == false);
