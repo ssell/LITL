@@ -2,6 +2,9 @@
 #define LITL_MATH_VEC4_H__
 
 #include <cassert>
+#include <format>
+#include <string>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -295,6 +298,11 @@ namespace LITL
             return Math::isZero(value.x) && Math::isZero(value.y) && Math::isZero(value.z) && Math::isOne(value.w);
         }
 
+        std::string toString() const noexcept
+        {
+            return std::format("({:.3f},{:.3f},{:.3f},{:.3f})", value.x, value.y, value.z, value.w);
+        }
+
         // ---------------------------------------------------------------------------------
         // Access
         // ---------------------------------------------------------------------------------
@@ -304,22 +312,22 @@ namespace LITL
             return vec3{ x(), y(), z() };
         }
 
-        glm::vec4& data() noexcept
+        [[nodiscard]] constexpr glm::vec4& data() noexcept
         {
             return value;
         }
 
-        glm::vec4 const& data() const noexcept
+        [[nodiscard]] constexpr glm::vec4 const& data() const noexcept
         {
             return value;
         }
 
-        float* dataPtr() noexcept
+        [[nodiscard]] constexpr float* dataPtr() noexcept
         {
             return glm::value_ptr(value);
         }
 
-        float const* dataPtr() const noexcept
+        [[nodiscard]] constexpr float const* dataPtr() const noexcept
         {
             return glm::value_ptr(value);
         }
@@ -330,6 +338,6 @@ namespace LITL
     };
 }
 
-//REGISTER_TYPE_NAME(LITL::vec4)
+REGISTER_TYPE_NAME(LITL::vec4)
 
 #endif

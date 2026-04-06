@@ -1,18 +1,28 @@
 #ifndef LITL_MATH_MAT4_H__
 #define LITL_MATH_MAT4_H__
 
+// for euler angle support
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include <cassert>
+#include <format>
+#include <span>
+#include <string>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/ext/matrix_relational.hpp>
+#include <glm/gtx/euler_angles.hpp>
 
-#include "litl-core/math/math.hpp"
 #include "litl-core/types.hpp"
+#include "litl-core/math/math.hpp"
+#include "litl-core/math/types_vec4.hpp"
+#include "litl-core/math/types_vec3.hpp"
+#include "litl-core/math/types_mat3.hpp"
 
 namespace LITL
 {
-
     /// <summary>
     /// Column-major: [col][row], (mat * vec), etc.
     /// Reverse-order multiplication. For example:
@@ -31,6 +41,15 @@ namespace LITL
         constexpr mat4() {}
         constexpr mat4(mat4 const& other) : value(other.value) {}
         constexpr explicit mat4(glm::mat4 const& other) : value(other) {}
+        explicit mat4(mat3 const& other);
+
+        constexpr explicit mat4(std::span<float const> values)
+        {
+            for (uint32_t i = 0; i < static_cast<uint32_t>(values.size()) && (i < 16); ++i)
+            {
+                set(i, values[i]);
+            }
+        }
 
         // ---------------------------------------------------------------------------------
         // Equality
@@ -74,6 +93,13 @@ namespace LITL
             return mat4{ value + other };
         }
 
+        [[nodiscard]] constexpr mat4 operator+(vec4 const& other) const noexcept
+        {
+            glm::mat4 m = value;
+            m += other.data();
+            return mat4{ m };
+        }
+
         constexpr mat4& operator+=(float scalar) noexcept
         {
             value += scalar;
@@ -109,6 +135,13 @@ namespace LITL
         [[nodiscard]] constexpr mat4 operator-(glm::mat4 const& other) const noexcept
         {
             return mat4{ value - other };
+        }
+
+        [[nodiscard]] constexpr mat4 operator-(vec4 const& other) const noexcept
+        {
+            glm::mat4 m = value;
+            m -= other.data();
+            return mat4{ m };
         }
 
         constexpr mat4& operator-=(float scalar) noexcept
@@ -226,7 +259,7 @@ namespace LITL
 
         constexpr mat4& operator/=(glm::vec4 const& other) noexcept
         {
-            assert(!Math::anyZero(glm::value_ptr(other), 16));
+            assert(!Math::anyZero(glm::value_ptr(other), 4));
             value /= other;
             return *this;
         }
@@ -255,6 +288,11 @@ namespace LITL
             return mat4{ glm::rotate(glm::mat4{1.0f}, angle, axis.data()) };
         }
 
+        [[nodiscard]] static mat4 rotation(float xRad, float yRad, float zRad) noexcept
+        {
+            return mat4{ glm::mat4(glm::mat3(glm::eulerAngleXYZ(xRad, yRad, zRad))) };
+        }
+
         [[nodiscard]] constexpr static mat4 scaling(vec3 const& scale) noexcept
         {
             return mat4{ glm::scale(glm::mat4{1.0f}, scale.data()) };
@@ -273,6 +311,11 @@ namespace LITL
         [[nodiscard]] constexpr static mat4 orthographic(float left, float right, float bottom, float top, float zNear, float zFar) noexcept
         {
             return mat4{ glm::ortho(left, right, bottom, top, zNear, zFar) };
+        }
+
+        [[nodiscard]] constexpr static mat4 fromAxes(vec4 const& right, vec4 const& up, vec4 const& forward, vec4 const& position)
+        {
+            return mat4{ glm::mat4{ right.data(), up.data(), forward.data(), position.data() } };
         }
 
         // ---------------------------------------------------------------------------------
@@ -372,7 +415,7 @@ namespace LITL
 
         [[nodiscard]] constexpr vec3 right() const noexcept
         {
-            return vec3{ value[0][0], value[0][1], value[0][1] }.normalized();
+            return vec3{ value[0][0], value[0][1], value[0][2] }.normalized();
         }
 
         [[nodiscard]] constexpr vec3 up() const noexcept
@@ -385,26 +428,39 @@ namespace LITL
             return vec3{ value[2][0], value[2][1], value[2][2] }.normalized();
         }
 
+        [[nodiscard]] constexpr vec3 scale() const noexcept
+        {
+            return vec3{
+                glm::length(glm::vec3{ value[0] }),
+                glm::length(glm::vec3{ value[1] }),
+                glm::length(glm::vec3{ value[2] })
+            };
+        }
+
+        [[nodiscard]] constexpr mat3 get3x3() const noexcept
+        {
+            return mat3{ glm::mat3(value) };
+        }
+
         // ---------------------------------------------------------------------------------
         // Utility
         // ---------------------------------------------------------------------------------
 
-        constexpr void zero() noexcept
+        constexpr mat4& zero() noexcept
         {
             value = { 0.0f };
+            return *this;
         }
 
         [[nodiscard]] constexpr bool isZeroed() const noexcept
         {
-            return Math::anyZero(std::span{ dataPtr(), 16 });
+            return Math::allEquals(std::span{ dataPtr(), 16 }, 0.0f);
         }
 
-        constexpr void setIdentity() noexcept
+        constexpr mat4& setIdentity() noexcept
         {
-            set(0, 0, 1.0f); set(0, 1, 0.0f); set(0, 2, 0.0f); set(0, 3, 0.0f);
-            set(1, 0, 0.0f); set(1, 1, 1.0f); set(1, 2, 0.0f); set(1, 3, 0.0f);
-            set(2, 0, 0.0f); set(2, 1, 0.0f); set(2, 2, 1.0f); set(2, 3, 0.0f);
-            set(3, 0, 0.0f); set(3, 1, 0.0f); set(3, 2, 0.0f); set(3, 3, 1.0f);
+            value = { 1.0f };
+            return *this;
         }
 
         [[nodiscard]] constexpr bool isIdentity() const noexcept
@@ -416,9 +472,10 @@ namespace LITL
                 Math::isZero(get(3, 0)) && Math::isZero(get(3, 1)) && Math::isZero(get(3, 2)) && Math::isOne(get(3, 3));
         }
 
-        constexpr void transpose() noexcept
+        constexpr mat4& transpose() noexcept
         {
             value = glm::transpose(value);
+            return *this;
         }
 
         [[nodiscard]] constexpr mat4 transposed() const noexcept
@@ -426,14 +483,20 @@ namespace LITL
             return mat4{ glm::transpose(value) };
         }
 
-        constexpr void inverse() noexcept
+        constexpr mat4& inverse() noexcept
         {
             value = glm::inverse(value);
+            return *this;
         }
 
         [[nodiscard]] constexpr mat4 inverted() const noexcept
         {
             return mat4{ glm::inverse(value) };
+        }
+
+        [[nodiscard]] constexpr mat4 inverseTranspose() const noexcept
+        {
+            return mat4{ glm::transpose(glm::inverse(value)) };
         }
 
         [[nodiscard]] constexpr float determinant() const noexcept
@@ -451,36 +514,76 @@ namespace LITL
             return (*this * v);
         }
 
+        [[nodiscard]] constexpr vec3 transformDirection(vec3 const& normal) const noexcept
+        {
+            return vec3(glm::mat3(value) * normal.data());
+        }
+
+        constexpr mat4& translate(vec4 const& v) noexcept
+        {
+            value = glm::translate(value, glm::vec3{ v.x(), v.y(), v.z() });
+            return *this;
+        }
+
+        constexpr mat4& translate(vec3 const& v) noexcept
+        {
+            value = glm::translate(value, v.data());
+            return *this;
+        }
+
+        constexpr mat4& rotate(float angle, vec3 const& axis) noexcept
+        {
+            value = glm::rotate(value, angle, axis.data());
+            return *this;
+        }
+
+        constexpr mat4& scale(vec3 const& scaling) noexcept
+        {
+            value = glm::scale(value, scaling.data());
+            return *this;
+        }
+
+        std::string toString() const noexcept
+        {
+            return std::format("C0: [{:.3f},{:.3f},{:.3f},{:.3f}]\nC1: [{:.3f},{:.3f},{:.3f},{:.3f}]\nC2: [{:.3f},{:.3f},{:.3f},{:.3f}]\nC3: [{:.3f},{:.3f},{:.3f},{:.3f}]",
+                get(0, 0), get(0, 1), get(0, 2), get(0, 3),
+                get(1, 0), get(1, 1), get(1, 2), get(1, 3),
+                get(2, 0), get(2, 1), get(2, 2), get(2, 3),
+                get(3, 0), get(3, 1), get(3, 2), get(3, 3));
+        }
+
         // ---------------------------------------------------------------------------------
         // Access
         // ---------------------------------------------------------------------------------
 
-        glm::mat4& data() noexcept
+        [[nodiscard]] constexpr glm::mat4& data() noexcept
         {
             return value;
         }
 
-        glm::mat4 const& data() const noexcept
+        [[nodiscard]] constexpr glm::mat4 const& data() const noexcept
         {
             return value;
         }
 
-        float* dataPtr() noexcept
+        [[nodiscard]] constexpr float* dataPtr() noexcept
         {
             return glm::value_ptr(value);
         }
 
-        float const* dataPtr() const noexcept
+        [[nodiscard]] constexpr float const* dataPtr() const noexcept
         {
             return glm::value_ptr(value);
         }
 
     private:
 
-        glm::mat4 value{ 1.0f };
+        friend struct mat3;
+
+        glm::mat4 value{ 0.0f };
     };
 }
 
-//REGISTER_TYPE_NAME(LITL::mat4)
+REGISTER_TYPE_NAME(LITL::mat4)
 
 #endif
