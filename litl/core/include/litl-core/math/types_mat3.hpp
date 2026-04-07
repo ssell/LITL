@@ -17,10 +17,12 @@
 
 #include "litl-core/math/math.hpp"
 #include "litl-core/types.hpp"
+#include "litl-core/math/types_vec3.hpp"
 
 namespace LITL
 {
     struct mat4;
+    struct quat;
 
     /// <summary>
     /// Column-major: [col][row], (mat * vec), etc.
@@ -33,6 +35,7 @@ namespace LITL
         constexpr mat3(mat3 const& other) : value(other.value) {}
         constexpr explicit mat3(glm::mat3 const& other) : value(other) {}
         explicit mat3(mat4 const& other);
+        explicit mat3(quat const& quaternion);
 
         constexpr explicit mat3(std::span<float const> values)
         {
@@ -268,7 +271,7 @@ namespace LITL
             return mat3{ glm::mat3(glm::scale(glm::mat4{1.0f}, scale.data())) };
         }
 
-        [[nodiscard]] constexpr static mat3 fromAxes(vec3 const& right, vec3 const& up, vec3 const& forward)
+        [[nodiscard]] constexpr static mat3 fromAxis(vec3 const& right, vec3 const& up, vec3 const& forward)
         {
             return mat3{ glm::mat3{ right.data(), up.data(), forward.data() } };
         }

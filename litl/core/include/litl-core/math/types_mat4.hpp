@@ -23,6 +23,8 @@
 
 namespace LITL
 {
+    struct quat;
+
     /// <summary>
     /// Column-major: [col][row], (mat * vec), etc.
     /// Reverse-order multiplication. For example:
@@ -42,6 +44,7 @@ namespace LITL
         constexpr mat4(mat4 const& other) : value(other.value) {}
         constexpr explicit mat4(glm::mat4 const& other) : value(other) {}
         explicit mat4(mat3 const& other);
+        explicit mat4(quat const& quaternion);
 
         constexpr explicit mat4(std::span<float const> values)
         {
@@ -313,7 +316,7 @@ namespace LITL
             return mat4{ glm::ortho(left, right, bottom, top, zNear, zFar) };
         }
 
-        [[nodiscard]] constexpr static mat4 fromAxes(vec4 const& right, vec4 const& up, vec4 const& forward, vec4 const& position)
+        [[nodiscard]] constexpr static mat4 fromAxis(vec4 const& right, vec4 const& up, vec4 const& forward, vec4 const& position)
         {
             return mat4{ glm::mat4{ right.data(), up.data(), forward.data(), position.data() } };
         }

@@ -243,6 +243,11 @@ namespace LITL
             return glm::length(value);
         }
 
+        [[nodiscard]] constexpr float lengthSquared() const noexcept
+        {
+            return (value.x * value.x) + (value.y * value.y) + (value.z * value.z);
+        }
+
         constexpr void normalize() noexcept
         {
             float length = glm::length(value);
