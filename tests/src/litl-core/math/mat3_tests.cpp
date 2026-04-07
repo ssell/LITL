@@ -139,13 +139,13 @@ namespace LITL::Math::Tests
         REQUIRE(Math::fequals(result.z(), 4.0f));
     } END_LITL_TEST_CASE
 
-    LITL_TEST_CASE("mat3::fromAxes", "[mat3][factory]")
+    LITL_TEST_CASE("mat3::fromAxis", "[mat3][factory]")
     {
         vec3 right{ 1, 0, 0 };
         vec3 up{ 0, 1, 0 };
         vec3 forward{ 0, 0, 1 };
 
-        auto m = mat3::fromAxes(right, up, forward);
+        auto m = mat3::fromAxis(right, up, forward);
         REQUIRE(m.isIdentity());
     } END_LITL_TEST_CASE
 

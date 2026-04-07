@@ -168,9 +168,9 @@ namespace LITL::Math::Tests
         REQUIRE(Math::fequals(std::abs(m.determinant()), 1.0f));
     } END_LITL_TEST_CASE
 
-    LITL_TEST_CASE("mat4::fromAxes", "[math::mat4]")
+    LITL_TEST_CASE("mat4::fromAxis", "[math::mat4]")
     {
-        auto m = mat4::fromAxes(
+        auto m = mat4::fromAxis(
             vec4{ 1, 0, 0, 0 },
             vec4{ 0, 1, 0, 0 },
             vec4{ 0, 0, 1, 0 },
