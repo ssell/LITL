@@ -1,5 +1,5 @@
-#ifndef LITL_CORE_MATH_H__
-#define LITL_CORE_MATH_H__
+#ifndef LITL_CORE_MATH_COMMON_H__
+#define LITL_CORE_MATH_COMMON_H__
 
 #include <algorithm>
 #include <assert.h>
@@ -64,12 +64,12 @@ namespace LITL::Math
         return (std::max)(a, b);
     }
 
-    [[nodiscard]] constexpr uint32_t (max)(int32_t a, int32_t b) noexcept
+    [[nodiscard]] constexpr uint32_t(max)(int32_t a, int32_t b) noexcept
     {
         return (std::max)(a, b);
     }
 
-    [[nodiscard]] constexpr uint32_t (max)(uint32_t a, uint32_t b) noexcept
+    [[nodiscard]] constexpr uint32_t(max)(uint32_t a, uint32_t b) noexcept
     {
         return (std::max)(a, b);
     }

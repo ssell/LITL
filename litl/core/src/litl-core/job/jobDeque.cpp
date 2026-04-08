@@ -1,7 +1,7 @@
 #include <cassert>
 #include <vector>
 
-#include "litl-core/math/math.hpp"
+#include "litl-core/math.hpp"
 #include "litl-core/job/jobDeque.hpp"
 
 namespace LITL::Core

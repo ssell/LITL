@@ -10,7 +10,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-#include "litl-core/math/math.hpp"
+#include "litl-core/math/common.hpp"
 #include "litl-core/types.hpp"
 #include "litl-core/math/types_vec3.hpp"
 

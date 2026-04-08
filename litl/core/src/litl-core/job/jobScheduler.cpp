@@ -6,7 +6,7 @@
 
 #include "litl-core/constants.hpp"
 #include "litl-core/thread.hpp"
-#include "litl-core/math/math.hpp"
+#include "litl-core/math.hpp"
 #include "litl-core/math/random.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/job/jobDeque.hpp"

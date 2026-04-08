@@ -15,7 +15,7 @@
 #include <glm/ext/matrix_relational.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
-#include "litl-core/math/math.hpp"
+#include "litl-core/math/common.hpp"
 #include "litl-core/types.hpp"
 #include "litl-core/math/types_vec3.hpp"
 

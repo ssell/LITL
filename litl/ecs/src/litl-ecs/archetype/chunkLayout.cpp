@@ -1,6 +1,6 @@
 #include <algorithm>
 
-#include "litl-core/math/math.hpp"
+#include "litl-core/math.hpp"
 #include "litl-ecs/archetype/chunkLayout.hpp"
 #include "litl-ecs/archetype/archetypeComponents.hpp"
 

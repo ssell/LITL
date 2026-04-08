@@ -2,7 +2,7 @@
 #include <optional>
 #include <string_view>
 
-#include "litl-core/math/math.hpp"
+#include "litl-core/math.hpp"
 #include "litl-ecs/archetype/archetype.hpp"
 #include "litl-ecs/entity/entityRegistry.hpp"
 

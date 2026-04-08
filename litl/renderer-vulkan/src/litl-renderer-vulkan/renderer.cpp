@@ -8,7 +8,7 @@
 #include <GLFW/glfw3native.h>
 
 #include "litl-core/logging/logging.hpp"
-#include "litl-core/math/math.hpp"
+#include "litl-core/math.hpp"
 #include "litl-renderer/pipeline/graphicsPipeline.hpp"
 #include "litl-renderer-vulkan/queueFamily.hpp"
 #include "litl-renderer-vulkan/rendererContext.hpp"

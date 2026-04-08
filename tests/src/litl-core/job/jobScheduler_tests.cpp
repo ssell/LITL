@@ -1,6 +1,6 @@
 #include <atomic>
 #include "tests.hpp"
-#include "litl-core/math/math.hpp"
+#include "litl-core/math.hpp"
 #include "litl-core/job/jobFence.hpp"
 #include "litl-core/job/jobScheduler.hpp"
 

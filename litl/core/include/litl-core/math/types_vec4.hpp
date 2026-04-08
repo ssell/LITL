@@ -8,7 +8,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "litl-core/math/math.hpp"
+#include "litl-core/math/common.hpp"
 #include "litl-core/types.hpp"
 
 namespace LITL

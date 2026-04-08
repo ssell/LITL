@@ -1,7 +1,7 @@
 #include <array>
 
 #include "tests.hpp"
-#include "litl-core/math/math.hpp"
+#include "litl-core/math.hpp"
 
 namespace LITL::Core::Tests
 {

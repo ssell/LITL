@@ -269,6 +269,24 @@ namespace LITL::Math::Tests
     } END_LITL_TEST_CASE
 
     // -------------------------------------------------------------------------------------
+    // Factory
+    // -------------------------------------------------------------------------------------
+    
+    LITL_TEST_CASE("handiness", "[math::vec3]")
+    {
+        // LITL is left-handed (right == +x, up == +y, forward == +z)
+        vec3 right = vec3::right();
+        vec3 up = vec3::up();
+        vec3 forward = vec3::forward();
+        vec3 calcForward = right.cross(up);
+
+        REQUIRE(right == vec3{1.0f, 0.0f, 0.0f});
+        REQUIRE(up == vec3{ 0.0f, 1.0f, 0.0f });
+        REQUIRE(forward == vec3{ 0.0f, 0.0f, 1.0f });
+        REQUIRE(calcForward == forward);
+    } END_LITL_TEST_CASE
+
+    // -------------------------------------------------------------------------------------
     // Utility
     // -------------------------------------------------------------------------------------
 

@@ -8,7 +8,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "litl-core/math/math.hpp"
+#include "litl-core/math/common.hpp"
 #include "litl-core/types.hpp"
 
 namespace LITL
@@ -235,6 +235,25 @@ namespace LITL
         }
 
         // ---------------------------------------------------------------------------------
+        // Factory
+        // ---------------------------------------------------------------------------------
+
+        [[nodiscard]] static consteval vec3 right() noexcept
+        {
+            return vec3(1.0f, 0.0f, 0.0f);
+        }
+
+        [[nodiscard]] static consteval vec3 up() noexcept
+        {
+            return vec3(0.0f, 1.0f, 0.0f);
+        }
+
+        [[nodiscard]] static consteval vec3 forward() noexcept
+        {
+            return vec3(0.0f, 0.0f, 1.0f);
+        }
+
+        // ---------------------------------------------------------------------------------
         // Utility
         // ---------------------------------------------------------------------------------
 
@@ -265,6 +284,11 @@ namespace LITL
         [[nodiscard]] constexpr float dot(vec3 const& other) const noexcept
         {
             return glm::dot(value, other.value);
+        }
+
+        [[nodiscard]] constexpr vec3 cross(vec3 const& other) const noexcept
+        {
+            return vec3{ glm::cross(value, other.value) };
         }
 
         constexpr void setZero() noexcept

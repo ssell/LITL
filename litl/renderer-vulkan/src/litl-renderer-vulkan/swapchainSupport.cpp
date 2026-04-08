@@ -2,7 +2,7 @@
 #include <limits>
 #include <algorithm>
 
-#include "litl-core/math/math.hpp"
+#include "litl-core/math.hpp"
 #include "litl-renderer-vulkan/swapchainSupport.hpp"
 
 namespace LITL::Vulkan::Renderer
