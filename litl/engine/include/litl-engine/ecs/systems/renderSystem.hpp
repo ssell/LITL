@@ -17,7 +17,7 @@ namespace LITL::Engine
             assert(m_pRenderer != nullptr);
         }
 
-        void update(ECS::EntityCommands& commands, float dt, Position& position)
+        void update(ECS::EntityCommands& commands, float dt, Transform const& transform)
         {
 
         }

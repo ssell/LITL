@@ -46,12 +46,16 @@ namespace LITL::ECS::Tests
 
         queue.push(EntityCommand{
             .type = EntityCommandType::AddComponent,
-            .component = fooDesc->id,
+            .componentInfo = ComponentCommandInfo {
+                .component = fooDesc->id
+            }
         }, &foo);
 
         queue.push(EntityCommand{
             .type = EntityCommandType::AddComponent,
-            .component = barDesc->id,
+            .componentInfo = ComponentCommandInfo {
+                .component = barDesc->id
+            }
         }, &bar);
 
         REQUIRE(queue.count() == 2);
@@ -64,11 +68,11 @@ namespace LITL::ECS::Tests
         REQUIRE(queue.count() == 0);
 
         REQUIRE((*fooCommand).type == EntityCommandType::AddComponent);
-        REQUIRE((*fooCommand).component == fooDesc->id);
+        REQUIRE((*fooCommand).componentInfo.component == fooDesc->id);
         REQUIRE((*fooCommand).queue == &queue);
 
         REQUIRE((*barCommand).type == EntityCommandType::AddComponent);
-        REQUIRE((*barCommand).component == barDesc->id);
+        REQUIRE((*barCommand).componentInfo.component == barDesc->id);
         REQUIRE((*barCommand).queue == &queue);
 
         Foo fooCopy{};
@@ -101,7 +105,12 @@ namespace LITL::ECS::Tests
             for (auto j = 0; j < commandCount; ++j)
             {
                 foo.a = j;
-                queue.push(EntityCommand{ .type = EntityCommandType::AddComponent, .component = fooType }, &foo);
+                queue.push(EntityCommand{ 
+                    .type = EntityCommandType::AddComponent, 
+                    .componentInfo = ComponentCommandInfo {
+                        .component = fooType
+                    }
+                }, &foo);
             }
 
             bool isWrong = false;
@@ -167,15 +176,15 @@ namespace LITL::ECS::Tests
 
         REQUIRE(materialized[0].entity.isNull() == false);
         REQUIRE(materialized[0].type == EntityCommandType::AddComponent);
-        REQUIRE(materialized[0].component == ComponentDescriptor::get<Foo>()->id);
+        REQUIRE(materialized[0].componentInfo.component == ComponentDescriptor::get<Foo>()->id);
 
         REQUIRE(materialized[1].entity.isNull() == false);
         REQUIRE(materialized[1].type == EntityCommandType::AddComponent);
-        REQUIRE(materialized[1].component == ComponentDescriptor::get<Bar>()->id);
+        REQUIRE(materialized[1].componentInfo.component == ComponentDescriptor::get<Bar>()->id);
 
         REQUIRE(materialized[2].entity.isNull() == false);
         REQUIRE(materialized[2].type == EntityCommandType::RemoveComponent);
-        REQUIRE(materialized[2].component == ComponentDescriptor::get<Foo>()->id);
+        REQUIRE(materialized[2].componentInfo.component == ComponentDescriptor::get<Foo>()->id);
 
         REQUIRE(materialized[3].entity.isNull() == false);
         REQUIRE(materialized[3].type == EntityCommandType::DestroyEntity);
@@ -199,13 +208,13 @@ namespace LITL::ECS::Tests
         commands.extractCommands(&world, materialized, 0);
 
         REQUIRE(materialized[0].entity.isNull() == false);
-        REQUIRE(materialized[0].data != nullptr);
+        REQUIRE(materialized[0].componentInfo.data != nullptr);
 
         Foo entityFoo{};
 
         REQUIRE(entityFoo.a == 0);
 
-        memcpy(&entityFoo, materialized[0].data, sizeof(Foo));
+        memcpy(&entityFoo, materialized[0].componentInfo.data, sizeof(Foo));
 
         REQUIRE(entityFoo.a == 55);
 
@@ -252,33 +261,33 @@ namespace LITL::ECS::Tests
             REQUIRE(materialized.size() == ComponentCount);
 
             REQUIRE(materialized[0].entity.isNull() == false);
-            REQUIRE(materialized[0].data != nullptr);
+            REQUIRE(materialized[0].componentInfo.data != nullptr);
 
             if (firstFooPtr == nullptr)
             {
-                firstFooPtr = materialized[0].data;
+                firstFooPtr = materialized[0].componentInfo.data;
             }
             else
             {
                 // ensure block reuse
-                REQUIRE(firstFooPtr == materialized[0].data);
+                REQUIRE(firstFooPtr == materialized[0].componentInfo.data);
             }
 
             REQUIRE(first.a == 0);
-            memcpy(&first, materialized[0].data, sizeof(Foo));
+            memcpy(&first, materialized[0].componentInfo.data, sizeof(Foo));
             REQUIRE(first.a == 0);
             first.a = 0;
 
             REQUIRE(materialized[ComponentCount - 1].entity.isNull() == false);
-            REQUIRE(materialized[ComponentCount - 1].data != nullptr);
+            REQUIRE(materialized[ComponentCount - 1].componentInfo.data != nullptr);
 
             REQUIRE(last.a == 0);
-            memcpy(&last, materialized[ComponentCount - 1].data, sizeof(Foo));
+            memcpy(&last, materialized[ComponentCount - 1].componentInfo.data, sizeof(Foo));
             REQUIRE(last.a == ComponentCount - 1);
             last.a = 0;
 
             REQUIRE(leet.a == 0);
-            memcpy(&leet, materialized[1337].data, sizeof(Foo));
+            memcpy(&leet, materialized[1337].componentInfo.data, sizeof(Foo));
             REQUIRE(leet.a == shared.a);
             leet.a = 0;
 

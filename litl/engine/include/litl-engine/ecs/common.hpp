@@ -8,7 +8,7 @@
 
 // Include common, widely used components
 
-#include "litl-engine/ecs/components/position.hpp"
+#include "litl-engine/ecs/components/transform.hpp"
 
 /*
 

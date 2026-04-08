@@ -19,24 +19,15 @@ namespace LITL::ECS
         CreateEntity    = 1,
         DestroyEntity   = 2,
         AddComponent    = 3,
-        RemoveComponent = 4
+        RemoveComponent = 4,
+        SetParent       = 5
     };
 
     /// <summary>
-    /// A command related to an Entity.
+    /// Data used during an AddComponent or RemoveComponent command.
     /// </summary>
-    struct alignas(Core::Constants::half_cache_line_size) EntityCommand
+    struct ComponentCommandInfo
     {
-        /// <summary>
-        /// The command to be run.
-        /// </summary>
-        EntityCommandType type{ EntityCommandType::None };
-
-        /// <summary>
-        /// If the enttiy being targetted by the command.
-        /// </summary>
-        Entity entity{};
-
         /// <summary>
         /// The component being added or removed.
         /// </summary>
@@ -46,6 +37,42 @@ namespace LITL::ECS
         /// The address to the component data being added.
         /// </summary>
         void* data{ nullptr };
+    };
+
+    /// <summary>
+    /// Data used during a SetParent command.
+    /// The desired parent could be an Entity, DeferredEntity, or null (sever parentage).
+    /// </summary>
+    struct SetParentCommandInfo
+    {
+        Entity parent{};
+        DeferredEntity deferredParent{};
+    };
+
+    /// <summary>
+    /// A command related to an Entity.
+    /// </summary>
+    struct EntityCommand
+    {
+        /// <summary>
+        /// The command to be run.
+        /// </summary>
+        EntityCommandType type{ EntityCommandType::None };
+
+        /// <summary>
+        /// The entity being targetted by the command.
+        /// </summary>
+        Entity entity{};
+
+        /// <summary>
+        /// If an AddComponent or RemoveComponent command, the relevant info.
+        /// </summary>
+        ComponentCommandInfo componentInfo{};
+
+        /// <summary>
+        /// If a SetParent command, the relevant info.
+        /// </summary>
+        SetParentCommandInfo setParentInfo{};
 
         /// <summary>
         /// The queue that stores the local component.
@@ -56,7 +83,7 @@ namespace LITL::ECS
     /// <summary>
     /// A command related to a DeferredEntity.
     /// </summary>
-    struct alignas(Core::Constants::half_cache_line_size) DeferredEntityCommand
+    struct DeferredEntityCommand
     {
         /// <summary>
         /// The command to be run.
@@ -70,14 +97,14 @@ namespace LITL::ECS
         DeferredEntity deferredEntity{};
 
         /// <summary>
-        /// The component being added or removed.
+        /// If an AddComponent or RemoveComponent command, the relevant info.
         /// </summary>
-        ComponentTypeId component;
+        ComponentCommandInfo componentInfo{};
 
         /// <summary>
-        /// The address to the component data being added.
+        /// If a SetParent command, the relevant info.
         /// </summary>
-        void* data{ nullptr };
+        SetParentCommandInfo setParentInfo{};
     };
 }
 

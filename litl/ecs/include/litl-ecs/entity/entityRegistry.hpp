@@ -1,5 +1,5 @@
-#ifndef LITL_ENGINE_ECS_ENTITY_REGISTRY_H__
-#define LITL_ENGINE_ECS_ENTITY_REGISTRY_H__
+#ifndef LITL_ECS_ENTITY_REGISTRY_H__
+#define LITL_ECS_ENTITY_REGISTRY_H__
 
 #include <cstdint>
 #include <initializer_list>
