@@ -114,7 +114,7 @@ namespace LITL::ECS
 
     bool World::isAlive(Entity entity) const noexcept
     {
-        return EntityRegistry::isAlive(entity);
+        return !entity.isNull() && EntityRegistry::isAlive(entity);
     }
 
     uint32_t World::componentCount(Entity entity) const noexcept

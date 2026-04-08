@@ -46,20 +46,11 @@ namespace LITL::ECS
     /// </summary>
     struct Entity
     {
-        bool operator==(Entity const& other)
-        {
-            return (index == other.index) && (version == other.version);
-        }
-
-        bool operator!=(Entity const& other)
-        {
-            return !(*this == other);
-        }
 
         /// <summary>
         /// The index of this Entity. Used to map it to its components. 
         /// </summary>
-        uint32_t index{ Constants::null_entity_id };
+        uint32_t index{ null().index };
 
         /// <summary>
         /// The current version/generation of this Entity. After an Entity is destroyed,
@@ -67,9 +58,27 @@ namespace LITL::ECS
         /// </summary>
         uint32_t version{ 0 };
 
-        constexpr bool isNull() const noexcept
+        constexpr bool operator==(Entity const& other) const noexcept = default;
+        constexpr auto operator<=>(Entity const& other) const noexcept = default;
+
+        /// <summary>
+        /// The null entity. Entity nullness is determined by id only.
+        /// If the id is null, then the Entity is null - regardless of the version.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] static constexpr Entity null() noexcept
         {
-            return index == Constants::null_entity_id;
+            return Entity{ .index = Constants::null_entity_id };
+        }
+
+        /// <summary>
+        /// Checks if the id of the entity is equal to the null id.
+        /// If the id is null, then the Entity is null - regardless of the version.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] constexpr bool isNull() const noexcept
+        {
+            return (index == null().index);
         }
     };
 }
