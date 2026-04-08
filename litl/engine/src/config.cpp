@@ -1,4 +1,4 @@
-#include "litl-core/math/math.hpp"
+#include "litl-core/math.hpp"
 #include "litl-engine/config.hpp"
 
 namespace LITL::Engine

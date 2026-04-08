@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 
-#include "litl-core/math/math.hpp"
+#include "litl-core/math.hpp"
 #include "litl-ecs/constants.hpp"
 #include "litl-ecs/component/component.hpp"
 #include "litl-ecs/archetype/chunkHeader.hpp"

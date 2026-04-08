@@ -3,7 +3,7 @@
 #include "litl-ecs/tests-common.hpp"
 #include "litl-ecs/entity/entityRegistry.hpp"
 #include "litl-ecs/entity/entityCommands.hpp"
-#include "litl-core/math/math.hpp"
+#include "litl-core/math.hpp"
 
 namespace LITL::ECS::Tests
 {
