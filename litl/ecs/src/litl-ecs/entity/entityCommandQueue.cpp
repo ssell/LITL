@@ -121,7 +121,7 @@ namespace LITL::ECS
 
         if ((command.type == EntityCommandType::AddComponent) && (source != nullptr))
         {
-            m_pImpl->insertComponent(ComponentDescriptor::get(command.component), source, &command.data);
+            m_pImpl->insertComponent(ComponentDescriptor::get(command.componentInfo.component), source, &command.componentInfo.data);
             command.queue = this;
         }
 
@@ -136,7 +136,7 @@ namespace LITL::ECS
         }
         else if ((command.type == EntityCommandType::AddComponent) && (source != nullptr))
         {
-            m_pImpl->insertComponent(ComponentDescriptor::get(command.component), source, &command.data);
+            m_pImpl->insertComponent(ComponentDescriptor::get(command.componentInfo.component), source, &command.componentInfo.data);
         }
 
         m_pImpl->deferredEntityCommands.push_back(command);
@@ -161,13 +161,13 @@ namespace LITL::ECS
             return false;
         }
 
-        auto* descriptor = ComponentDescriptor::get(command.component);
+        auto* descriptor = ComponentDescriptor::get(command.componentInfo.component);
 
         assert(descriptor != nullptr);
         assert(dest != nullptr);
-        assert(command.data != nullptr);
+        assert(command.componentInfo.data != nullptr);
 
-        descriptor->move(command.data, dest);
+        descriptor->move(command.componentInfo.data, dest);
 
         return true;
     }

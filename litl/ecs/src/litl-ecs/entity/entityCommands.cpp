@@ -86,7 +86,9 @@ namespace LITL::ECS
         m_pImpl->commands.push(EntityCommand {
             .type = EntityCommandType::AddComponent,
             .entity = entity,
-            .component = component
+            .componentInfo = ComponentCommandInfo {
+                .component = component
+            }
         }, nullptr);
     }
 
@@ -95,7 +97,9 @@ namespace LITL::ECS
         m_pImpl->commands.push(DeferredEntityCommand {
             .type = EntityCommandType::AddComponent,
             .deferredEntity = entity,
-            .component = component
+            .componentInfo = ComponentCommandInfo {
+                .component = component
+            }
         }, nullptr);
     }
 
@@ -104,7 +108,9 @@ namespace LITL::ECS
         m_pImpl->commands.push(EntityCommand{
             .type = EntityCommandType::AddComponent,
             .entity = entity,
-            .component = component
+            .componentInfo = ComponentCommandInfo {
+                .component = component
+            }
         }, sharedData);
     }
 
@@ -113,7 +119,9 @@ namespace LITL::ECS
         m_pImpl->commands.push(DeferredEntityCommand{
             .type = EntityCommandType::AddComponent,
             .deferredEntity = entity,
-            .component = component
+            .componentInfo = ComponentCommandInfo {
+                .component = component
+            }
         }, sharedData);
     }
 
@@ -123,7 +131,9 @@ namespace LITL::ECS
         m_pImpl->commands.push(EntityCommand{
             .type = EntityCommandType::AddComponent,
             .entity = entity,
-            .component = component
+            .componentInfo = ComponentCommandInfo {
+                .component = component
+            }
         }, m_pImpl->localData.insert(localData, size, alignment));
     }
 
@@ -132,7 +142,9 @@ namespace LITL::ECS
         m_pImpl->commands.push(DeferredEntityCommand{
             .type = EntityCommandType::AddComponent,
             .deferredEntity = entity,
-            .component = component
+            .componentInfo = ComponentCommandInfo {
+                .component = component
+            }
         }, m_pImpl->localData.insert(localData, size, alignment));
     }
 
@@ -141,7 +153,9 @@ namespace LITL::ECS
         m_pImpl->commands.push(EntityCommand {
             .type = EntityCommandType::RemoveComponent,
             .entity = entity,
-            .component = component
+            .componentInfo = ComponentCommandInfo {
+                .component = component
+            }
         });
     }
 
@@ -150,7 +164,9 @@ namespace LITL::ECS
         m_pImpl->commands.push(DeferredEntityCommand {
             .type = EntityCommandType::RemoveComponent,
             .deferredEntity = entity,
-            .component = component
+            .componentInfo = ComponentCommandInfo {
+                .component = component
+            }
         });
     }
 
@@ -170,9 +186,8 @@ namespace LITL::ECS
                 m_pImpl->commands.push(EntityCommand{
                     .type = deferredCommand.type,
                     .entity = materialized[deferredCommand.deferredEntity.index],
-                    .component = deferredCommand.component,
-                    .data = deferredCommand.data
-                    });
+                    .componentInfo = deferredCommand.componentInfo
+                });
             }
         }
     }

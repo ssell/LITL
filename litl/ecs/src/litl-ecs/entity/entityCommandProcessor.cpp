@@ -49,7 +49,7 @@ namespace LITL::ECS
                     }
                     else
                     {
-                        return a.component < b.component;
+                        return a.componentInfo.component < b.componentInfo.component;
                     }
                 }
             });
@@ -97,13 +97,15 @@ namespace LITL::ECS
             else if (command.type == EntityCommandType::AddComponent)
             {
                 archetypeChanged = true;
-                addedComponents.emplace_back(command.component, command.data);
+                addedComponents.emplace_back(command.componentInfo.component, command.componentInfo.data);
             }
             else if (command.type == EntityCommandType::RemoveComponent)
             {
                 archetypeChanged = true;
-                removedComponents.emplace_back(command.component);
+                removedComponents.emplace_back(command.componentInfo.component);
             }
+
+            // ... todo process SetParent command ...
         }
 
         // Once all commands have been processed, it is now safe to reset the internal queues and memory pools.

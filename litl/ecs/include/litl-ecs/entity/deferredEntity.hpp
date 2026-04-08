@@ -20,21 +20,18 @@ namespace LITL::ECS
     /// </summary>
     struct DeferredEntity
     {
-        bool operator==(DeferredEntity const& other)
+        uint32_t index{ null().index };
+
+        bool operator==(DeferredEntity const& other) const noexcept = default;
+
+        [[nodiscard]] static constexpr DeferredEntity null() noexcept
         {
-            return (index == other.index);
+            return DeferredEntity{ .index = Constants::null_entity_id };
         }
 
-        bool operator!=(DeferredEntity const& other)
+        [[nodiscard]] constexpr bool isNull() const noexcept
         {
-            return !(*this == other);
-        }
-
-        uint32_t index{ Constants::null_entity_id };
-
-        constexpr bool isNull() const noexcept
-        {
-            return (index == Constants::null_entity_id);
+            return (index == null().index);
         }
     };
 }

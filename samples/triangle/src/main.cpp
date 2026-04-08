@@ -1,13 +1,12 @@
 #include "litl-engine/engine.hpp"
-#include "litl-engine/ecs/components/position.hpp"
-#include "litl-ecs/world.hpp"
+#include "litl-engine/ecs/common.hpp"
 
 using namespace LITL;
 
 void bootstrap(Core::ServiceProvider& services, ECS::EntityCommands& commands)
 {
     auto entity = commands.createEntity();
-    commands.addComponent<Engine::Position>(entity, { {0.0f, 0.0f, 5.0} });
+    commands.addComponent<Engine::Transform>(entity, Engine::Transform{ .position = vec3{0.0f, 0.0f, 5.0} });
 }
 
 int main()
