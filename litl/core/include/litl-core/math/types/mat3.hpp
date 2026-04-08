@@ -17,7 +17,7 @@
 
 #include "litl-core/math/common.hpp"
 #include "litl-core/types.hpp"
-#include "litl-core/math/types_vec3.hpp"
+#include "litl-core/math/types/vec3.hpp"
 
 namespace LITL
 {
