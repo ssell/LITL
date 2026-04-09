@@ -1,6 +1,6 @@
 #include "litl-renderer-vulkan/queueFamily.hpp"
 
-namespace LITL::Vulkan::Renderer
+namespace litl::vulkan
 {
     void QueueFamilyIndices::setGraphicsIndex(uint32_t index) noexcept
     {

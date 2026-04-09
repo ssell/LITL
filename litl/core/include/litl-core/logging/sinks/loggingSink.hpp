@@ -4,7 +4,7 @@
 #include <string_view>
 #include <thread>
 
-namespace LITL::Core
+namespace litl
 {
     class LoggingSink
     {

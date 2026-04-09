@@ -6,7 +6,7 @@
 #include "litl-core/job/jobFence.hpp"
 #include "litl-core/job/jobScheduler.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     struct JobFence::Impl
     {

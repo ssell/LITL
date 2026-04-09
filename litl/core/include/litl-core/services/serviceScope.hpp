@@ -7,7 +7,7 @@
 #include "litl-core/impl.hpp"
 #include "litl-core/types.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     class ServiceProvider;
 

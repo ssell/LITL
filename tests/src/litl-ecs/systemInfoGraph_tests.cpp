@@ -5,9 +5,9 @@
 #include "litl-ecs/world.hpp"
 #include "litl-ecs/system/systemRegistry.hpp"
 
-#define BasicSystem(A) struct A { void setup(Core::ServiceProvider& services) {} void update(ECS::EntityCommands& commands, float dt) {} };
+#define BasicSystem(A) struct A { void setup(ServiceProvider& services) {} void update(EntityCommands& commands, float dt) {} };
 
-namespace LITL::ECS::Tests
+namespace litl::tests
 {
     namespace
     {
@@ -34,8 +34,8 @@ namespace LITL::ECS::Tests
     LITL_TEST_CASE("Simple", "[ecs::systemInfoGraph]")
     {
         World world;
-        Core::ServiceCollection serviceCollection; 
-        Core::ServiceProvider& serviceProvider = (*serviceCollection.build());
+        ServiceCollection serviceCollection; 
+        ServiceProvider& serviceProvider = (*serviceCollection.build());
         SystemCollection& systemCollection = world.getSystemCollection();
 
         systemCollection.addSystem<SIGSystemA>(SystemGroup::Update);
@@ -54,8 +54,8 @@ namespace LITL::ECS::Tests
         LITL_TEST_CASE("Multiple Dependencies", "[ecs::systemInfoGraph]")
     {
         World world;
-        Core::ServiceCollection serviceCollection;
-        Core::ServiceProvider& serviceProvider = (*serviceCollection.build());
+        ServiceCollection serviceCollection;
+        ServiceProvider& serviceProvider = (*serviceCollection.build());
         SystemCollection& systemCollection = world.getSystemCollection();
 
         systemCollection.addSystem<SIGSystemA>(SystemGroup::Update);
@@ -86,8 +86,8 @@ namespace LITL::ECS::Tests
     LITL_TEST_CASE("Multiple Groups", "[ecs::systemInfoGraph]")
     {
         World world;
-        Core::ServiceCollection serviceCollection;
-        Core::ServiceProvider& serviceProvider = (*serviceCollection.build());
+        ServiceCollection serviceCollection;
+        ServiceProvider& serviceProvider = (*serviceCollection.build());
         SystemCollection& systemCollection = world.getSystemCollection();
 
         systemCollection.addSystem<SIGSystemA>(SystemGroup::Update);

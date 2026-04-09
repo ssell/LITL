@@ -8,10 +8,10 @@
 
 /**
  * Reflection is done using the SPIRV-Reflect library to reflect from the raw SPIR-V bytecode.
- * The results of said reflection are then transposed into our common LITL::Renderer::ShaderReflection data structure.
+ * The results of said reflection are then transposed into our common litl::ShaderReflection data structure.
  */
 
-namespace LITL::Renderer
+namespace litl
 {
     ShaderResourceType fromSpvReflectResourceType(SpvReflectDescriptorType descriptorType);
     void reflectIntoInputOutputVariable(ShaderInputOutputVariable* inputOutputVariable, SpvReflectInterfaceVariable* interfaceVariable);

@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-namespace LITL::ECS
+namespace litl
 {
     enum class SystemPlacementHint : uint32_t
     {

@@ -1,7 +1,7 @@
 #include "tests.hpp"
 #include "litl-core/job/job.hpp"
 
-namespace LITL::Core::Tests
+namespace litl::tests
 {
     LITL_TEST_CASE("JobHandle Copy", "[core::job::job]")
     {

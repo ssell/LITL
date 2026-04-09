@@ -21,7 +21,7 @@
 #include "litl-core/math/types/vec3.hpp"
 #include "litl-core/math/types/mat3.hpp"
 
-namespace LITL
+namespace litl
 {
     struct quat;
 
@@ -60,12 +60,12 @@ namespace LITL
 
         [[nodiscard]] constexpr bool operator==(mat4 const& other) const noexcept
         {
-            return glm::all(glm::equal(value, other.value, Math::Traits<float>::epsilon));
+            return glm::all(glm::equal(value, other.value, Traits<float>::epsilon));
         }
 
         [[nodiscard]] constexpr bool operator==(glm::mat4 const& other) const noexcept
         {
-            return glm::all(glm::equal(value, other, Math::Traits<float>::epsilon));
+            return glm::all(glm::equal(value, other, Traits<float>::epsilon));
         }
 
         // ---------------------------------------------------------------------------------
@@ -218,51 +218,51 @@ namespace LITL
 
         [[nodiscard]] vec3 operator/(vec3 const& v) const noexcept
         {
-            assert(!Math::anyZero(v.dataPtr(), 3));
+            assert(!anyZero(v.dataPtr(), 3));
             return vec3{ value / glm::vec4(v.x(), v.y(), v.z(), 1.0f) };
         }
 
         [[nodiscard]] vec4 operator/(vec4 const& v) const noexcept
         {
-            assert(!Math::anyZero(v.dataPtr(), 4));
+            assert(!anyZero(v.dataPtr(), 4));
             return vec4{ value / v.data() };
         }
 
         [[nodiscard]] constexpr mat4 operator/(float scalar) const noexcept
         {
-            assert(!Math::isZero(scalar));
+            assert(!isZero(scalar));
             return mat4{ value / scalar };
         }
 
         [[nodiscard]] constexpr mat4 operator/(mat4 const& other) const noexcept
         {
-            assert(!Math::anyZero(other.dataPtr(), 16));
+            assert(!anyZero(other.dataPtr(), 16));
             return mat4{ value / other.value };
         }
 
         [[nodiscard]] constexpr mat4 operator/(glm::mat4 const& other) const noexcept
         {
-            assert(!Math::anyZero(glm::value_ptr(other), 16));
+            assert(!anyZero(glm::value_ptr(other), 16));
             return mat4{ value / other };
         }
 
         constexpr mat4& operator/=(float scalar) noexcept
         {
-            assert(!Math::isZero(scalar));
+            assert(!isZero(scalar));
             value /= scalar;
             return *this;
         }
 
         constexpr mat4& operator/=(mat4 const& other) noexcept
         {
-            assert(!Math::anyZero(other.dataPtr(), 16));
+            assert(!anyZero(other.dataPtr(), 16));
             value /= other.value;
             return *this;
         }
 
         constexpr mat4& operator/=(glm::vec4 const& other) noexcept
         {
-            assert(!Math::anyZero(glm::value_ptr(other), 4));
+            assert(!anyZero(glm::value_ptr(other), 4));
             value /= other;
             return *this;
         }
@@ -457,7 +457,7 @@ namespace LITL
 
         [[nodiscard]] constexpr bool isZeroed() const noexcept
         {
-            return Math::allEquals(std::span{ dataPtr(), 16 }, 0.0f);
+            return allEquals(std::span{ dataPtr(), 16 }, 0.0f);
         }
 
         constexpr mat4& setIdentity() noexcept
@@ -469,10 +469,10 @@ namespace LITL
         [[nodiscard]] constexpr bool isIdentity() const noexcept
         {
             return
-                Math::isOne(get(0, 0)) && Math::isZero(get(0, 1)) && Math::isZero(get(0, 2)) && Math::isZero(get(0, 3)) &&
-                Math::isZero(get(1, 0)) && Math::isOne(get(1, 1)) && Math::isZero(get(1, 2)) && Math::isZero(get(1, 3)) &&
-                Math::isZero(get(2, 0)) && Math::isZero(get(2, 1)) && Math::isOne(get(2, 2)) && Math::isZero(get(2, 3)) &&
-                Math::isZero(get(3, 0)) && Math::isZero(get(3, 1)) && Math::isZero(get(3, 2)) && Math::isOne(get(3, 3));
+                isOne(get(0, 0)) && isZero(get(0, 1)) && isZero(get(0, 2)) && isZero(get(0, 3)) &&
+                isZero(get(1, 0)) && isOne(get(1, 1)) && isZero(get(1, 2)) && isZero(get(1, 3)) &&
+                isZero(get(2, 0)) && isZero(get(2, 1)) && isOne(get(2, 2)) && isZero(get(2, 3)) &&
+                isZero(get(3, 0)) && isZero(get(3, 1)) && isZero(get(3, 2)) && isOne(get(3, 3));
         }
 
         constexpr mat4& transpose() noexcept
@@ -587,6 +587,6 @@ namespace LITL
     };
 }
 
-REGISTER_TYPE_NAME(LITL::mat4)
+REGISTER_TYPE_NAME(litl::mat4)
 
 #endif

@@ -3,7 +3,7 @@
 
 #include "litl-ecs/entity/entity.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     class EntityCommandProcessor;
 

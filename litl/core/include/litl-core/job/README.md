@@ -120,7 +120,7 @@ When a fence or the scheduler is waiting, it performs work on the waiting thread
 * `JobFence::wait` - blocks until the individual jobs added to the fence are complete.
 * `JobScheduler::wait` - blocks until _all_ jobs are complete.
 
-Both the `JobFence` and `JobScheduler` use a progressive backoff via `LITL::Core::ThreadSpin` if/when a steal fails and there are still jobs in progress.
+Both the `JobFence` and `JobScheduler` use a progressive backoff via `litl::ThreadSpin` if/when a steal fails and there are still jobs in progress.
 
 ## Deque
 

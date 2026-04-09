@@ -4,7 +4,7 @@
 #include "litl-core/job/jobFence.hpp"
 #include "litl-core/job/jobScheduler.hpp"
 
-namespace LITL::Core::Tests
+namespace litl::tests
 {
     namespace
     {
@@ -169,7 +169,7 @@ namespace LITL::Core::Tests
     LITL_TEST_CASE("Schedule Many Jobs Priority", "[core::job::jobScheduler]")
     {
         // A sizeable total job count that is evenly divisible by the number of priority levels
-        uint32_t jobCount = LITL::Math::pow(JobPriorityCount, 8);
+        uint32_t jobCount = litl::pow(JobPriorityCount, 8);
 
         JobScheduler scheduler;
         std::vector<JobHandle> handles;

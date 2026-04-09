@@ -5,26 +5,26 @@
 #include "litl-renderer/pipeline/pipelineLayout.hpp"
 #include "litl-renderer/renderer.hpp"
 
-namespace LITL::Engine
+namespace litl
 {
     class PipelineLayoutCache
     {
     public:
 
-        PipelineLayoutCache(Renderer::Renderer const* pRenderer);
+        PipelineLayoutCache(Renderer const* pRenderer);
         ~PipelineLayoutCache();
 
         PipelineLayoutCache(PipelineLayoutCache const&) = delete;
         PipelineLayoutCache& operator=(PipelineLayoutCache const&) = delete;
 
-        Renderer::PipelineLayout* getPipelineLayout(Renderer::PipelineLayoutDescriptor const& descriptor);
+        PipelineLayout* getPipelineLayout(PipelineLayoutDescriptor const& descriptor);
 
     protected:
 
     private:
 
         struct Impl;
-        Core::ImplPtr<Impl, 96> m_impl;
+        ImplPtr<Impl, 96> m_impl;
     };
 }
 

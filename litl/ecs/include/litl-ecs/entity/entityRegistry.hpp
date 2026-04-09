@@ -9,7 +9,7 @@
 #include "litl-ecs/entity/entity.hpp"
 #include "litl-ecs/entity/entityRecord.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     /// <summary>
     /// Internal static registry of all entities.

@@ -8,7 +8,7 @@
 
 #include "litl-core/constants.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     /// <summary>
     /// Implementation of a Single-Producer, Single-Consumer (SPSC) thread-safe queue.

@@ -2,7 +2,7 @@
 #include "litl-ecs/tests-common.hpp"
 #include "litl-ecs/archetype/chunk.hpp"
 
-namespace LITL::ECS::Tests
+namespace litl::tests
 {
     LITL_TEST_CASE("Chunk Layout", "[ecs::chunk]")
     {

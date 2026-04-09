@@ -1,7 +1,7 @@
 #include <fstream>
 #include "litl-core/logging/sinks/fileSink.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     FileLoggingSink::FileLoggingSink(char const* logName)
         : m_logFileName(logName)

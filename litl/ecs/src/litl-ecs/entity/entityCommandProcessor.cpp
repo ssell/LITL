@@ -3,7 +3,7 @@
 
 #include "litl-ecs/entity/entityCommandProcessor.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     void EntityCommandProcessor::process(World* world, std::vector<EntityCommands*>& commandBuffers) noexcept
     {
@@ -55,10 +55,10 @@ namespace LITL::ECS
             });
 
         std::vector<ComponentData> addedComponents;
-        addedComponents.reserve(Constants::max_components * 2);
+        addedComponents.reserve(ecs::Constants::max_components * 2);
 
         std::vector<ComponentTypeId> removedComponents;
-        removedComponents.reserve(Constants::max_components * 2);
+        removedComponents.reserve(ecs::Constants::max_components * 2);
 
         Entity currEntity{};
         bool entityRemoved = false;
@@ -104,8 +104,12 @@ namespace LITL::ECS
                 archetypeChanged = true;
                 removedComponents.emplace_back(command.componentInfo.component);
             }
-
-            // ... todo process SetParent command ...
+            else if (command.type == EntityCommandType::SetParent)
+            {
+                // ... todo process the SetParent command ...
+                // this is blocked until the basic scene graph architecture is in place.
+                // 
+            }
         }
 
         // Once all commands have been processed, it is now safe to reset the internal queues and memory pools.

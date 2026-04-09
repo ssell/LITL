@@ -4,11 +4,11 @@
 #include "tests.hpp"
 #include "litl-core/math/random.hpp"
 
-namespace LITL::Core::Tests
+namespace litl::tests
 {
     LITL_TEST_CASE("FastRng Seed", "[math::random]")
     {
-        Math::FastRng rng;
+        FastRng rng;
 
         REQUIRE(rng.getSeed() == 0);
 
@@ -38,8 +38,8 @@ namespace LITL::Core::Tests
 
     LITL_TEST_CASE("FastRng Seed Time", "[math::random]")
     {
-        Math::FastRng rng0;
-        Math::FastRng rng1;
+        FastRng rng0;
+        FastRng rng1;
 
         rng0.seed();
 
@@ -57,8 +57,8 @@ namespace LITL::Core::Tests
 
     LITL_TEST_CASE("FastRng Discard", "[math::random]")
     {
-        Math::FastRng rng0;
-        Math::FastRng rng1;
+        FastRng rng0;
+        FastRng rng1;
 
         for (auto i = 0; i < 10; ++i)
         {
@@ -73,13 +73,13 @@ namespace LITL::Core::Tests
 
         LITL_TEST_CASE("FastRng Min/Max", "[math::random]")
     {
-        Math::FastRng rng(0);
+        FastRng rng(0);
         REQUIRE(rng.min() < rng.max());
     } END_LITL_TEST_CASE
 
     LITL_TEST_CASE("FastRng Next Limit", "[math::random]")
     {
-        Math::FastRng rng(0);
+        FastRng rng(0);
 
         for (auto i = 0; i < 100; ++i)
         {
@@ -89,7 +89,7 @@ namespace LITL::Core::Tests
 
     LITL_TEST_CASE("GoodRng Seed", "[math::random]")
     {
-        Math::GoodRng rng;
+        GoodRng rng;
         REQUIRE(rng.getSeed() == 0);
 
         std::array<uint32_t, 10> first10Seed0;
@@ -118,8 +118,8 @@ namespace LITL::Core::Tests
 
     LITL_TEST_CASE("GoodRng Seed Time", "[math::random]")
     {
-        Math::GoodRng rng0;
-        Math::GoodRng rng1;
+        GoodRng rng0;
+        GoodRng rng1;
 
         rng0.seed();
 
@@ -137,8 +137,8 @@ namespace LITL::Core::Tests
 
     LITL_TEST_CASE("GoodRng Discard", "[math::random]")
     {
-        Math::GoodRng rng0;
-        Math::GoodRng rng1;
+        GoodRng rng0;
+        GoodRng rng1;
 
         for (auto i = 0; i < 10; ++i)
         {
@@ -153,13 +153,13 @@ namespace LITL::Core::Tests
 
     LITL_TEST_CASE("GoodRng Min/Max", "[math::random]")
     {
-        Math::GoodRng rng(0);
+        GoodRng rng(0);
         REQUIRE(rng.min() < rng.max());
     } END_LITL_TEST_CASE
 
     LITL_TEST_CASE("GoodRng Next Limit", "[math::random]")
     {
-        Math::GoodRng rng(0);
+        GoodRng rng(0);
 
         for (auto i = 0; i < 100; ++i)
         {

@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <type_traits>
 
-namespace LITL::Core
+namespace litl
 {
     /// <summary>
     /// Default base for classes that want to be used by a RefPtr.

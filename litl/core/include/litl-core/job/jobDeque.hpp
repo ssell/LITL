@@ -9,7 +9,7 @@
 #include "litl-core/constants.hpp"
 #include "litl-core/job/job.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     /// <summary>
     /// Implementation of a Chase-Lev work-stealing deque.

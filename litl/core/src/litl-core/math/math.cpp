@@ -1,6 +1,6 @@
 #include "litl-core/math.hpp"
 
-namespace LITL::Math
+namespace litl
 {
     float powf(float base, float exponent) noexcept
     {

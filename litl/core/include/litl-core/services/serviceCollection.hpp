@@ -9,7 +9,7 @@
 #include "litl-core/traits.hpp"
 #include "litl-core/services/serviceDescriptor.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     class ServiceProvider;
 

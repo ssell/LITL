@@ -11,13 +11,13 @@
 #include "litl-core/containers/flatHashMap.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     struct ArchetypeRegistryState
     {
         std::mutex archetypeMutex;
         std::vector<std::unique_ptr<Archetype>> archetypes;
-        Core::FlatHashMap<uint64_t, uint32_t> archetypeMap;           // key = archetype component hash, value = archetypes index.
+        FlatHashMap<uint64_t, uint32_t> archetypeMap;           // key = archetype component hash, value = archetypes index.
         std::vector<ArchetypeId> newArchetypes;
     };
 

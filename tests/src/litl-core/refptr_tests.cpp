@@ -1,7 +1,7 @@
 #include "tests.hpp"
 #include "litl-core/refPtr.hpp"
 
-namespace LITL::Core::Tests
+namespace litl::tests
 {
     class Foo final : public RefCounted
     {

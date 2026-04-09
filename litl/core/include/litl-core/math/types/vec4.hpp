@@ -11,7 +11,7 @@
 #include "litl-core/math/common.hpp"
 #include "litl-core/types.hpp"
 
-namespace LITL
+namespace litl
 {
     struct vec3;
 
@@ -29,12 +29,12 @@ namespace LITL
 
         [[nodiscard]] constexpr bool operator==(vec4 const& other) const noexcept
         {
-            return Math::fequals(value.x, other.value.x) && Math::fequals(value.y, other.value.y) && Math::fequals(value.z, other.value.z) && Math::fequals(value.w, other.value.w);
+            return fequals(value.x, other.value.x) && fequals(value.y, other.value.y) && fequals(value.z, other.value.z) && fequals(value.w, other.value.w);
         }
 
         [[nodiscard]] constexpr bool operator==(glm::vec4 const& other) const noexcept
         {
-            return Math::fequals(value.x, other.x) && Math::fequals(value.y, other.y) && Math::fequals(value.z, other.z) && Math::fequals(value.w, other.w);
+            return fequals(value.x, other.x) && fequals(value.y, other.y) && fequals(value.z, other.z) && fequals(value.w, other.w);
         }
 
         // ---------------------------------------------------------------------------------
@@ -163,39 +163,39 @@ namespace LITL
 
         [[nodiscard]] constexpr vec4 operator/(float scalar) const noexcept
         {
-            assert(!Math::isZero(scalar));
+            assert(!isZero(scalar));
             return vec4{ value / scalar };
         }
 
         [[nodiscard]] constexpr vec4 operator/(vec4 const& other) const noexcept
         {
-            assert(!Math::isZero(other.value.x) && !Math::isZero(other.value.y) && !Math::isZero(other.value.z) && !Math::isZero(other.value.w));
+            assert(!isZero(other.value.x) && !isZero(other.value.y) && !isZero(other.value.z) && !isZero(other.value.w));
             return vec4{ value / other.value };
         }
 
         [[nodiscard]] constexpr vec4 operator/(glm::vec4 const& other) const noexcept
         {
-            assert(!Math::isZero(other.x) && !Math::isZero(other.y) && !Math::isZero(other.z) && !Math::isZero(other.w));
+            assert(!isZero(other.x) && !isZero(other.y) && !isZero(other.z) && !isZero(other.w));
             return vec4{ value / other };
         }
 
         constexpr vec4& operator/=(float scalar) noexcept
         {
-            assert(!Math::isZero(scalar));
+            assert(!isZero(scalar));
             value /= scalar;
             return *this;
         }
 
         constexpr vec4& operator/=(vec4 const& other) noexcept
         {
-            assert(!Math::isZero(other.value.x) && !Math::isZero(other.value.y) && !Math::isZero(other.value.z) && !Math::isZero(other.value.w));
+            assert(!isZero(other.value.x) && !isZero(other.value.y) && !isZero(other.value.z) && !isZero(other.value.w));
             value /= other.value;
             return *this;
         }
 
         constexpr vec4& operator/=(glm::vec4 const& other) noexcept
         {
-            assert(!Math::isZero(other.x) && !Math::isZero(other.y) && !Math::isZero(other.z) && !Math::isZero(other.w));
+            assert(!isZero(other.x) && !isZero(other.y) && !isZero(other.z) && !isZero(other.w));
             value /= other;
             return *this;
         }
@@ -261,14 +261,14 @@ namespace LITL
         constexpr void normalize() noexcept
         {
             float length = glm::length(value);
-            assert(!Math::isZero(length));
+            assert(!isZero(length));
             value = value / length;
         }
 
         [[nodiscard]] constexpr vec4 normalized() const noexcept
         {
             float length = glm::length(value);
-            assert(!Math::isZero(length));
+            assert(!isZero(length));
             return vec4(value / length);
         }
 
@@ -287,7 +287,7 @@ namespace LITL
 
         [[nodiscard]] constexpr bool isZeroed() const noexcept
         {
-            return Math::isZero(value.x) && Math::isZero(value.y) && Math::isZero(value.z) && Math::isZero(value.w);
+            return isZero(value.x) && isZero(value.y) && isZero(value.z) && isZero(value.w);
         }
 
         const void setIdentity() noexcept
@@ -300,7 +300,7 @@ namespace LITL
 
         [[nodiscard]] constexpr bool isIdentity() const noexcept
         {
-            return Math::isZero(value.x) && Math::isZero(value.y) && Math::isZero(value.z) && Math::isOne(value.w);
+            return isZero(value.x) && isZero(value.y) && isZero(value.z) && isOne(value.w);
         }
 
         std::string toString() const noexcept
@@ -343,6 +343,6 @@ namespace LITL
     };
 }
 
-REGISTER_TYPE_NAME(LITL::vec4)
+REGISTER_TYPE_NAME(litl::vec4)
 
 #endif

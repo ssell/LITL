@@ -13,7 +13,7 @@
 #include "litl-ecs/system/system.hpp"
 #include "litl-ecs/entity/entityCommandProcessor.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     namespace
     {
@@ -25,7 +25,7 @@ namespace LITL::ECS
         std::mutex systemsMutex;
         std::array<SystemGraph, SystemGroupCount> schedules;
         std::vector<System*> systems;
-        Core::FlatHashMap<SystemTypeId, uint32_t> systemMap;        // value = index into systems
+        FlatHashMap<SystemTypeId, uint32_t> systemMap;        // value = index into systems
         std::vector<System*> newSystems;
 
         EntityCommandProcessor commandProcessor;
@@ -125,7 +125,7 @@ namespace LITL::ECS
         }
     }
 
-    void SystemManager::finalize(Core::ServiceProvider& services) const noexcept
+    void SystemManager::finalize(ServiceProvider& services) const noexcept
     {
         for (auto i = 0; i < m_pImpl->schedules.size(); ++i)
         {
@@ -152,14 +152,14 @@ namespace LITL::ECS
         m_pImpl->schedules[static_cast<uint32_t>(group)].run(world, dt, m_pImpl->systems);
     }
 
-    void SystemManager::run(World& world, float dt, SystemGroup group, Core::JobScheduler& scheduler)
+    void SystemManager::run(World& world, float dt, SystemGroup group, JobScheduler& scheduler)
     {
         auto& schedule = m_pImpl->schedules[static_cast<uint32_t>(group)];
         auto& graph = schedule.getNodeGraph();
 
         for (auto& layer : graph.getLayers())
         {
-            Core::JobFence layerFence{ &scheduler, Core::JobPriority::High };
+            JobFence layerFence{ &scheduler, JobPriority::High };
 
             for (auto layerNodeIndex : layer)
             {

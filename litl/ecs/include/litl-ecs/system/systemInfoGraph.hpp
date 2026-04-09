@@ -4,7 +4,7 @@
 #include <vector>
 #include "litl-ecs/system/systemRegistry.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     struct SystemInfoNode
     {

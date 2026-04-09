@@ -8,7 +8,7 @@
 #include "litl-renderer/rendererConfiguration.hpp"
 #include "litl-renderer/resourceAllocator.hpp"
 
-namespace LITL::Renderer
+namespace litl
 {
     /// <summary>
     /// Backend implemented renderer operations.

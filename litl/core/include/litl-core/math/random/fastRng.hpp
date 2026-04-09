@@ -4,7 +4,7 @@
 #include <cstdint>
 #include "litl-core/impl.hpp"
 
-namespace LITL::Math
+namespace litl
 {
     /// <summary>
     /// Wrapper over a smple multiplicative congruential PRNG.
@@ -83,7 +83,7 @@ namespace LITL::Math
     private:
 
         struct Impl;
-        Core::ImplPtr<Impl, 8> m_impl;
+        ImplPtr<Impl, 8> m_impl;
     };
 }
 

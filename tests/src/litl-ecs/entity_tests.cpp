@@ -5,7 +5,7 @@
 #include "litl-ecs/entity/entityRegistry.hpp"
 #include "litl-ecs/entity/deferredEntity.hpp"
 
-namespace LITL::ECS::Tests
+namespace litl::tests
 {
     LITL_TEST_CASE("Entity NULL", "[ecs::entity]")
     {

@@ -10,7 +10,7 @@
 #include "litl-renderer/pipeline/shaderEnums.hpp"
 #include "litl-renderer/pipeline/shaderReflection.hpp"
 
-namespace LITL::Renderer
+namespace litl
 {
     struct ShaderModuleDescriptor
     {
@@ -49,7 +49,7 @@ namespace LITL::Renderer
     /// <summary>
     /// The entry point to a single shader stage.
     /// </summary>
-    class ShaderModule final : public Core::RefCounted
+    class ShaderModule final : public RefCounted
     {
     public:
 

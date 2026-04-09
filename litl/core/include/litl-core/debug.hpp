@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace LITL
+namespace litl
 {
     /// <summary>
     /// Debug flag.

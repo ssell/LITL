@@ -1,7 +1,7 @@
 #include "tests.hpp"
 #include "litl-core/math/dag.hpp"
 
-namespace LITL::Math::Tests
+namespace litl::tests
 {
     LITL_TEST_CASE("addNode", "[math::dag]")
     {

@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <thread>
 
-namespace LITL::Core
+namespace litl
 {
     /// <summary>
     /// Provides basic information about the thread this is called from.

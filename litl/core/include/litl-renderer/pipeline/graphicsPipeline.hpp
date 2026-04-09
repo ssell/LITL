@@ -9,7 +9,7 @@
 #include "litl-renderer/pipeline/pipelineLayout.hpp"
 #include "litl-renderer/pipeline/shaderModule.hpp"
 
-namespace LITL::Renderer
+namespace litl
 {
     struct GraphicsPipelineDescriptor
     {
@@ -34,7 +34,7 @@ namespace LITL::Renderer
         void (*destroy)(GraphicsPipelineHandle const&);
     };
 
-    class GraphicsPipeline final : public Core::RefCounted
+    class GraphicsPipeline final : public RefCounted
     {
     public:
 

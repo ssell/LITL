@@ -11,7 +11,7 @@
 #include "litl-ecs/system/system.hpp"
 #include "litl-ecs/system/systemNode.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     class World;
 
@@ -92,14 +92,14 @@ namespace LITL::ECS
         /// <param name="dt"></param>
         /// <param name="systems"></param>
         /// <param name="scheduler"></param>
-        void run(World& world, float dt, Core::FlatHashMap<SystemTypeId, uint32_t> const& systems, Core::JobScheduler& scheduler);
+        void run(World& world, float dt, FlatHashMap<SystemTypeId, uint32_t> const& systems, JobScheduler& scheduler);
 
         /// <summary>
         /// Retrieves the DAG.
         /// Must first call build if it needs to be fully formed and sorted.
         /// </summary>
         /// <returns></returns>
-        Math::DirectedAcyclicGraph const& getNodeGraph() const noexcept;
+        DirectedAcyclicGraph const& getNodeGraph() const noexcept;
 
         /// <summary>
         /// Retreives the node at the specified index.
@@ -153,7 +153,7 @@ namespace LITL::ECS
         /// <summary>
         /// The DAG which can be sorted to produce executable layers.
         /// </summary>
-        Math::DirectedAcyclicGraph m_nodeGraph;
+        DirectedAcyclicGraph m_nodeGraph;
     };
 }
 

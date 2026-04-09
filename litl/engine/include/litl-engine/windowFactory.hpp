@@ -5,14 +5,14 @@
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-renderer/rendererTypes.hpp"
 
-namespace LITL::Engine
+namespace litl
 {
     /// <summary>
     /// Creates a new Window that supports the specified renderer type.
     /// </summary>
     /// <param name="rendererType"></param>
     /// <returns>May return nullptr if no Window implementation found for the specified type.</returns>
-    bool injectWindow(Core::ServiceProvider& serviceProvider, Renderer::RendererBackendType rendererType);
+    bool injectWindow(ServiceProvider& serviceProvider, RendererBackendType rendererType);
 }
 
 #endif

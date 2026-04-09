@@ -3,7 +3,7 @@
 
 #include "litl-renderer/resourceAllocator.hpp"
 
-namespace LITL::Vulkan::Renderer
+namespace litl::vulkan
 {
     /**
      * The ResourceAllocator backend effectively just takes the instantiated raw pointers from the various
@@ -15,14 +15,14 @@ namespace LITL::Vulkan::Renderer
      * in the Renderer itself in order to keep the Renderer cleaner/more focused.
      */
 
-    LITL::Renderer::ResourceAllocator* createResourceAllocator(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
+    litl::ResourceAllocator* createResourceAllocator(litl::RendererHandle const& litlHandle) noexcept;
 
-    Core::RefPtr<LITL::Renderer::CommandBuffer> createCommandBuffer(LITL::Renderer::RendererHandle const& litlHandle);
-    Core::RefPtr<LITL::Renderer::PipelineLayout> createPipelineLayout(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::PipelineLayoutDescriptor const& descriptor);
-    Core::RefPtr<LITL::Renderer::ShaderModule> createShaderModule(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::ShaderModuleDescriptor const& descriptor);
-    Core::RefPtr<LITL::Renderer::GraphicsPipeline> createGraphicsPipeline(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::GraphicsPipelineDescriptor const& descriptor);
+    RefPtr<litl::CommandBuffer> createCommandBuffer(litl::RendererHandle const& litlHandle);
+    RefPtr<litl::PipelineLayout> createPipelineLayout(litl::RendererHandle const& litlHandle, litl::PipelineLayoutDescriptor const& descriptor);
+    RefPtr<litl::ShaderModule> createShaderModule(litl::RendererHandle const& litlHandle, litl::ShaderModuleDescriptor const& descriptor);
+    RefPtr<litl::GraphicsPipeline> createGraphicsPipeline(litl::RendererHandle const& litlHandle, litl::GraphicsPipelineDescriptor const& descriptor);
 
-    const LITL::Renderer::ResourceAllocatorOperations VulkanResourceAllocatorOperations = {
+    const litl::ResourceAllocatorOperations VulkanResourceAllocatorOperations = {
         &createCommandBuffer,
         &createPipelineLayout,
         &createShaderModule,

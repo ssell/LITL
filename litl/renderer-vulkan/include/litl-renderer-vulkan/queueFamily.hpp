@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-namespace LITL::Vulkan::Renderer
+namespace litl::vulkan
 {
     class QueueFamilyIndices
     {

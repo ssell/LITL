@@ -6,7 +6,7 @@
 #include "litl-engine/config.hpp"
 #include "litl-engine/bootstrap.hpp"
 
-namespace LITL::Engine
+namespace litl
 {
     class Engine final
     {

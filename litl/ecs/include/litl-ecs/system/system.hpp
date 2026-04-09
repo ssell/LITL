@@ -16,12 +16,12 @@
 #include "litl-ecs/system/systemWrapper.hpp"
 #include "litl-ecs/system/systemGroup.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     static constexpr size_t SystemWrapperFuncStorageSize = 64;
 
-    using SystemSetupFunc = void(Core::ServiceProvider&);
-    using ErasedSystemSetupFunc = void(*)(void*, Core::ServiceProvider&);
+    using SystemSetupFunc = void(ServiceProvider&);
+    using ErasedSystemSetupFunc = void(*)(void*, ServiceProvider&);
     using ErasedSystemWrapperDestroyFunc = void(*)(void*);
 
     class SystemManager;
@@ -63,7 +63,7 @@ namespace LITL::ECS
             new (getLocalWrapperStorageAddress()) LocalWrapper{};
 
             storeLocalWrapperFunctions(
-                std::move([](void* storage, Core::ServiceProvider& services)
+                std::move([](void* storage, ServiceProvider& services)
                     {
                         auto* wrapper = std::launder(reinterpret_cast<LocalWrapper*>(storage));
                         wrapper->setup(services);
@@ -97,7 +97,7 @@ namespace LITL::ECS
         /// 
         /// </summary>
         /// <param name="services"></param>
-        void setup(Core::ServiceProvider& services);
+        void setup(ServiceProvider& services);
 
         /// <summary>
         /// Runs the underyling user system over the provided chunk.
@@ -116,7 +116,7 @@ namespace LITL::ECS
         /// <param name="dt"></param>
         /// <param name="scheduler"></param>
         /// <param name="fence"></param>
-        void run(World& world, float dt, Core::JobScheduler& scheduler, Core::JobFence& fence);
+        void run(World& world, float dt, JobScheduler& scheduler, JobFence& fence);
 
     protected:
 

@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-namespace LITL::Core
+namespace litl
 {
     /// <summary>
     /// Handle to a job instance. 

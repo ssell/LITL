@@ -1,6 +1,6 @@
 #include "litl-core/types.hpp"
 
-namespace LITL
+namespace litl
 {
     TypeId next_type_id__() noexcept
     {

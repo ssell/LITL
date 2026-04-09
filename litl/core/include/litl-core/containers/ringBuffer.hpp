@@ -6,7 +6,7 @@
 #include <concepts>
 #include <initializer_list>
 
-namespace LITL::Core
+namespace litl
 {
     /// <summary>
     /// A fixed-size ring buffer.

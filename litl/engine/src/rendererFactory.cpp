@@ -2,21 +2,21 @@
 #include "litl-engine/rendererFactory.hpp"
 #include "litl-renderer-vulkan/renderer.hpp"
 
-namespace LITL::Engine
+namespace litl
 {
-    bool injectRenderer(Core::ServiceProvider& serviceProvider, Core::Window* pWindow, Renderer::RendererConfiguration const& rendererDescriptor)
+    bool injectRenderer(ServiceProvider& serviceProvider, Window* pWindow, RendererConfiguration const& rendererDescriptor)
     {
-        logInfo("Creating Renderer of type ", Renderer::RendererBackendNames[rendererDescriptor.rendererType]);
+        logInfo("Creating Renderer of type ", RendererBackendNames[static_cast<uint32_t>(rendererDescriptor.rendererType)]);
 
         switch (rendererDescriptor.rendererType)
         {
-        case Renderer::RendererBackendType::Vulkan:
-            serviceProvider.setSingleton<Renderer::Renderer, Renderer::Renderer>(Vulkan::Renderer::createVulkanRenderer(pWindow, rendererDescriptor));
+        case RendererBackendType::Vulkan:
+            serviceProvider.setSingleton<Renderer, Renderer>(vulkan::createVulkanRenderer(pWindow, rendererDescriptor));
             return true;
 
-        case Renderer::RendererBackendType::None:
+        case RendererBackendType::None:
         default:
-            logError("Requested to create Renderer of unsupported backend of ", Renderer::RendererBackendNames[rendererDescriptor.rendererType]);
+            logError("Requested to create Renderer of unsupported backend of ", RendererBackendNames[static_cast<uint32_t>(rendererDescriptor.rendererType)]);
             return false;
         }
     }

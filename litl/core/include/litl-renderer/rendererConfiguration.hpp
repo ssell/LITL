@@ -4,14 +4,14 @@
 #include <cstdint>
 #include "litl-renderer/rendererTypes.hpp"
 
-namespace LITL::Renderer
+namespace litl
 {
     struct RendererConfiguration
     {
         /// <summary>
         /// The library used by the renderer backend.
         /// </summary>
-        LITL::Renderer::RendererBackendType rendererType = RendererBackendType::Vulkan;
+        RendererBackendType rendererType = RendererBackendType::Vulkan;
 
         /// <summary>
         /// How many frames to have queued at a time. Suggested 2-3.

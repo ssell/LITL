@@ -6,7 +6,7 @@
 #include "litl-ecs/archetype/archetype.hpp"
 #include "litl-ecs/entity/entityRegistry.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     Archetype::Archetype(std::string_view name, ArchetypeId registryId, uint64_t componentHash) :
         m_registryId(registryId),
@@ -146,7 +146,7 @@ namespace LITL::ECS
             return;
         }
 
-        m_entityCount = Math::max(m_entityCount - 1, 0u);
+        m_entityCount = max(m_entityCount - 1, 0u);
 
         // Get the chunk and element index for where we are removing
         const auto removeFromArchetypeIndex = record.archetypeIndex;

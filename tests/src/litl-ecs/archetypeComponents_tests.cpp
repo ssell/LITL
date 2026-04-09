@@ -8,23 +8,23 @@
 #include "litl-ecs/archetype/chunkLayout.hpp"
 #include "litl-core/hash.hpp"
 
-namespace LITL::ECS::Tests
+namespace litl::tests
 {
     LITL_TEST_CASE("Add", "[ecs::archetypeComponents]")
     {
         ArchetypeComponents components;
 
-        REQUIRE(components.capacity() == Constants::max_components);
+        REQUIRE(components.capacity() == ecs::Constants::max_components);
         REQUIRE(components.size() == 0);
         REQUIRE(components.dirty() == false);
         REQUIRE(components.hash() == 0);
         REQUIRE(components.has(getComponentTypeId<Foo>()) == false);
 
         const auto fooId = getComponentTypeId<Foo>();
-        const auto fooHash = Core::hash64(&fooId, sizeof(uint32_t));
+        const auto fooHash = hash64(&fooId, sizeof(uint32_t));
 
         REQUIRE(components.add(fooId) == true);
-        REQUIRE(components.capacity() == Constants::max_components);
+        REQUIRE(components.capacity() == ecs::Constants::max_components);
         REQUIRE(components.size() == 1);
         REQUIRE(components.dirty() == true);
         REQUIRE(components.has(getComponentTypeId<Foo>()) == true);
@@ -46,7 +46,7 @@ namespace LITL::ECS::Tests
         ArchetypeComponents components;
 
         const auto fooId = getComponentTypeId<Foo>();
-        const auto fooHash = Core::hash64(&fooId, sizeof(uint32_t));
+        const auto fooHash = hash64(&fooId, sizeof(uint32_t));
 
         REQUIRE(components.add(fooId) == true);
         REQUIRE(components.size() == 1);
@@ -55,7 +55,7 @@ namespace LITL::ECS::Tests
 
         REQUIRE(components.remove(fooId) == true);
         REQUIRE(components.size() == 0);
-        REQUIRE(components.capacity() == Constants::max_components);
+        REQUIRE(components.capacity() == ecs::Constants::max_components);
         REQUIRE(components.dirty() == true);
         REQUIRE(components.hash() == 0);
         REQUIRE(components.dirty() == false);
@@ -183,7 +183,7 @@ namespace LITL::ECS::Tests
 
         std::array<ComponentTypeId, 3> array{ getComponentTypeId<Foo>(), getComponentTypeId<Bar>(), getComponentTypeId<Baz>() };
         std::sort(array.begin(), array.end());
-        const auto expectedHash = Core::hashArray<ComponentTypeId>(array);
+        const auto expectedHash = hashArray<ComponentTypeId>(array);
 
         REQUIRE(components.add(array) == true);
         REQUIRE(components.size() == 3);

@@ -13,7 +13,7 @@
 #include "litl-ecs/system/systemPlacementHint.hpp"
 #include "litl-ecs/system/systemInfoGraph.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     /// <summary>
     /// Owner and manager of all ECS systems.
@@ -53,7 +53,7 @@ namespace LITL::ECS
         /// Bakes all system group schedules and calls the setup method for each system.
         /// </summary>
         /// <param name="services"></param>
-        void finalize(Core::ServiceProvider& services) const noexcept;
+        void finalize(ServiceProvider& services) const noexcept;
 
         /// <summary>
         /// Prepares for another frame by adjusting for any new archetypes.
@@ -75,7 +75,7 @@ namespace LITL::ECS
         /// <param name="dt"></param>
         /// <param name="group"></param>
         /// <param name="scheduler"></param>
-        void run(World& world, float dt, SystemGroup group, Core::JobScheduler& scheduler);
+        void run(World& world, float dt, SystemGroup group, JobScheduler& scheduler);
 
         /// <summary>
         /// Builds and returns a SystemInfoGraph which details all systems in the world and where they are "located" (group and layer).

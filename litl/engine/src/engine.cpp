@@ -10,7 +10,7 @@
 #include "litl-engine/frameLimiter.hpp"
 
 
-namespace LITL::Engine
+namespace litl
 {
     // -------------------------------------------------------------------------------------
     // PIMPL
@@ -20,17 +20,17 @@ namespace LITL::Engine
     {
         EngineSetupFunctions setup;
 
-        Core::ServiceCollection serviceCollection;
-        std::shared_ptr<Core::ServiceProvider> pServiceProvider{ nullptr };
+        ServiceCollection serviceCollection;
+        std::shared_ptr<ServiceProvider> pServiceProvider{ nullptr };
         BootstrapFunc userBootstrap{ nullptr };
 
         // The below are also stored in pServiceProvider, but keep them in here to avoid having to frequently refetch.
         std::shared_ptr<Configuration> pSharedConfig{ nullptr };
         std::shared_ptr<FrameLimiter> pSharedFrameLimiter{ nullptr };
-        std::shared_ptr<Core::Window> pSharedWindow{ nullptr };
-        std::shared_ptr<Core::JobScheduler> pSharedJobScheduler{ nullptr };
-        std::shared_ptr<ECS::World> pSharedECSWorld{ nullptr };
-        std::shared_ptr<Renderer::Renderer> pSharedRenderer{ nullptr };
+        std::shared_ptr<Window> pSharedWindow{ nullptr };
+        std::shared_ptr<JobScheduler> pSharedJobScheduler{ nullptr };
+        std::shared_ptr<World> pSharedECSWorld{ nullptr };
+        std::shared_ptr<Renderer> pSharedRenderer{ nullptr };
     };
 
     // -------------------------------------------------------------------------------------
@@ -40,7 +40,7 @@ namespace LITL::Engine
     Engine::Engine(EngineSetupFunctions setup)
         : m_pImpl(std::make_unique<Engine::Impl>())
     {
-        LITL::Core::Logger::initialize("litl-engine", true, true);
+        litl::Logger::initialize("litl-engine", true, true);
         logInfo("LITL Engine Startup");
 
         m_pImpl->setup = setup;
@@ -49,7 +49,7 @@ namespace LITL::Engine
     Engine::~Engine()
     {
         logInfo("LITL Engine Shutdown");
-        LITL::Core::Logger::shutdown();
+        litl::Logger::shutdown();
     }
 
     void Engine::setup(Configuration config, ConfigureServicesFunc servicesFunc, ConfigureSystemsFunc systemsFunc, BootstrapFunc bootstrapFunc) noexcept
@@ -69,8 +69,8 @@ namespace LITL::Engine
         m_pImpl->pServiceProvider = m_pImpl->serviceCollection.build();
         m_pImpl->pSharedConfig = m_pImpl->pServiceProvider->get<Configuration>();
         m_pImpl->pSharedFrameLimiter = m_pImpl->pServiceProvider->get<FrameLimiter>();
-        m_pImpl->pSharedJobScheduler = m_pImpl->pServiceProvider->get<Core::JobScheduler>();
-        m_pImpl->pSharedECSWorld = m_pImpl->pServiceProvider->get<ECS::World>();
+        m_pImpl->pSharedJobScheduler = m_pImpl->pServiceProvider->get<JobScheduler>();
+        m_pImpl->pSharedECSWorld = m_pImpl->pServiceProvider->get<World>();
 
         m_pImpl->pSharedConfig->set(config);
         m_pImpl->pSharedFrameLimiter->setTargetFps(static_cast<float>(m_pImpl->pSharedConfig->engineSettings.framesPerSecond));
@@ -136,7 +136,7 @@ namespace LITL::Engine
             return false;
         }
 
-        m_pImpl->pSharedWindow = m_pImpl->pServiceProvider->get<Core::Window>();
+        m_pImpl->pSharedWindow = m_pImpl->pServiceProvider->get<Window>();
 
         if (!m_pImpl->pSharedWindow->open(title, width, height))
         {
@@ -149,7 +149,7 @@ namespace LITL::Engine
 
     bool Engine::createRenderer() noexcept
     {
-        logInfo("Creating renderer with ", Renderer::RendererBackendNames[m_pImpl->pSharedConfig->rendererSettings.rendererType], " backend ...");
+        logInfo("Creating renderer with ", RendererBackendNames[static_cast<uint32_t>(m_pImpl->pSharedConfig->rendererSettings.rendererType)], " backend ...");
 
         if (!injectRenderer((*m_pImpl->pServiceProvider), m_pImpl->pSharedWindow.get(), m_pImpl->pSharedConfig->rendererSettings))
         {
@@ -157,7 +157,7 @@ namespace LITL::Engine
             return false;
         }
 
-        m_pImpl->pSharedRenderer = m_pImpl->pServiceProvider->get<Renderer::Renderer>();
+        m_pImpl->pSharedRenderer = m_pImpl->pServiceProvider->get<Renderer>();
 
         if (!m_pImpl->pSharedRenderer->build())
         {

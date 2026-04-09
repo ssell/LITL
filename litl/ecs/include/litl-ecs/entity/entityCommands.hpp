@@ -4,7 +4,7 @@
 #include <memory>
 #include "litl-ecs/entity/entityCommandQueue.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     /// <summary>
     /// Deferred commands for structural entity changes during system execution.
@@ -196,6 +196,14 @@ namespace LITL::ECS
         {
             removeComponent(entity, ComponentDescriptor::get<T>()->id);
         }
+
+        void setParent(Entity entity, Entity parent) noexcept;
+        void setParent(Entity entity, DeferredEntity parent) noexcept;
+        void setParent(DeferredEntity entity, Entity parent) noexcept;
+        void setParent(DeferredEntity entity, DeferredEntity parent) noexcept;
+
+        void removeParent(Entity entity) noexcept;
+        void removeParent(DeferredEntity entity) noexcept;
 
     protected:
 

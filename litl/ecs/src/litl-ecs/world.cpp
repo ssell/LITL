@@ -15,7 +15,7 @@
 #include "litl-ecs/system/systemCollection.hpp"
 #include "litl-ecs/system/systemManager.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     inline std::atomic<uint32_t> t_nextThreadIndex{ 0 };
     thread_local uint32_t World::t_threadIndex = t_nextThreadIndex.fetch_add(1, std::memory_order_relaxed);
@@ -28,7 +28,7 @@ namespace LITL::ECS
 
     struct World::Impl
     {
-        std::shared_ptr<LITL::Core::JobScheduler> jobScheduler{ nullptr };
+        std::shared_ptr<litl::JobScheduler> jobScheduler{ nullptr };
 
         SystemCollection systemCollection;
         SystemManager systemManager;
@@ -42,7 +42,7 @@ namespace LITL::ECS
         : m_pImpl(std::make_unique<World::Impl>())
     {
         // Seed the world with one command buffer for each core
-        auto defaultBufferCount = Math::max(2u, std::thread::hardware_concurrency());
+        auto defaultBufferCount = max(2u, std::thread::hardware_concurrency());
         m_pImpl->threadLocalCommandBuffers.reserve(defaultBufferCount);
 
         for (auto i = 0; i < defaultBufferCount; ++i)
@@ -63,7 +63,7 @@ namespace LITL::ECS
         return m_pImpl->systemCollection;
     }
 
-    void World::setup(LITL::Core::ServiceProvider& services) const noexcept
+    void World::setup(litl::ServiceProvider& services) const noexcept
     {
         // this is a public method (so that engine can call it), so make sure it is not run multiple times ...
         if (m_pImpl->jobScheduler != nullptr)
@@ -71,10 +71,10 @@ namespace LITL::ECS
             return;
         }
 
-        m_pImpl->jobScheduler = services.get<LITL::Core::JobScheduler>();
+        m_pImpl->jobScheduler = services.get<litl::JobScheduler>();
     }
 
-    void World::setupSystems(LITL::Core::ServiceProvider& services) const noexcept
+    void World::setupSystems(litl::ServiceProvider& services) const noexcept
     {
         if (m_pImpl->systemCollection.build(this))
         {

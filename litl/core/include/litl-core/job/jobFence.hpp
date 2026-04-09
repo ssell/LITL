@@ -7,7 +7,7 @@
 #include "litl-core/job/job.hpp"
 #include "litl-core/job/jobPriority.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     class JobScheduler;
 

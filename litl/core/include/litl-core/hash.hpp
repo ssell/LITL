@@ -7,7 +7,7 @@
 #include <string_view>
 #include <type_traits>
 
-namespace LITL::Core
+namespace litl
 {
     uint32_t hash32(void const* data, size_t length);
     uint32_t hash32(void const* data, size_t length, uint32_t seed);

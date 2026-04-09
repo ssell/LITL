@@ -3,7 +3,7 @@
 #include"litl-ecs/archetype/archetype.hpp"
 #include "litl-ecs/archetype/chunk.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     Chunk::Chunk(uint32_t const index, ChunkLayout const* layout)
     {
@@ -120,7 +120,7 @@ namespace LITL::ECS
     std::byte const* Chunk::getComponentArray(ChunkLayout const& layout, ComponentTypeId componentTypeId) const
     {
         uint32_t componentIndex = layout.getComponentIndex(componentTypeId);
-        assert(componentIndex < Constants::max_components);
+        assert(componentIndex < ecs::Constants::max_components);
 
         return &(m_data[layout.componentOffsets[componentIndex]]);
     }
@@ -128,7 +128,7 @@ namespace LITL::ECS
     void Chunk::setComponentValue(ChunkLayout const& layout, ComponentDescriptor const* component, uint32_t entityChunkIndex, void* from) noexcept
     {
         uint32_t componentIndex = layout.getComponentIndex(component->id);
-        assert(componentIndex < Constants::max_components);
+        assert(componentIndex < ecs::Constants::max_components);
 
         auto to = data();
         component->move(from, to + layout.componentOffsets[componentIndex] + (component->size * entityChunkIndex));

@@ -4,27 +4,27 @@
 #include "litl-engine/ecs/common.hpp"
 #include "litl-renderer/renderer.hpp"
 
-namespace LITL::Engine
+namespace litl
 {
     /// <summary>
     /// 
     /// </summary>
     struct RenderSystem
     {
-        void setup(Core::ServiceProvider& services)
+        void setup(ServiceProvider& services)
         {
-            m_pRenderer = services.get<Renderer::Renderer>();
+            m_pRenderer = services.get<Renderer>();
             assert(m_pRenderer != nullptr);
         }
 
-        void update(ECS::EntityCommands& commands, float dt, Transform const& transform)
+        void update(EntityCommands& commands, float dt, Transform const& transform)
         {
 
         }
 
     private:
 
-        std::shared_ptr<Renderer::Renderer> m_pRenderer{ nullptr };
+        std::shared_ptr<Renderer> m_pRenderer{ nullptr };
     };
 }
 

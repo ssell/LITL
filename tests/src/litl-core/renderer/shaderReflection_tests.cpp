@@ -4,7 +4,7 @@
 #include "tests.hpp"
 #include "litl-renderer/pipeline/shaderReflection.hpp"
 
-namespace LITL::Core::Tests
+namespace litl::tests
 {
     LITL_TEST_CASE("Basic Reflection", "[renderer::shaderReflection]")
     {
@@ -21,9 +21,9 @@ namespace LITL::Core::Tests
 
         std::span<uint8_t> bytes(fileBuffer);
 
-        auto reflectedVertex = LITL::Renderer::reflectSPIRV("vertexMain", bytes);
-        auto reflectedFragment = LITL::Renderer::reflectSPIRV("fragmentMain", bytes);
-        auto reflectedGeometry = LITL::Renderer::reflectSPIRV("geometryMain", bytes);
+        auto reflectedVertex = litl::reflectSPIRV("vertexMain", bytes);
+        auto reflectedFragment = litl::reflectSPIRV("fragmentMain", bytes);
+        auto reflectedGeometry = litl::reflectSPIRV("geometryMain", bytes);
 
         REQUIRE(reflectedVertex != std::nullopt);
         REQUIRE(reflectedFragment != std::nullopt);

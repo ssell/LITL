@@ -4,12 +4,12 @@
 #include "litl-ecs/system/systemCollection.hpp"
 #include "litl-ecs/system/systemTraits.hpp"
 
-namespace LITL::ECS::Tests
+namespace litl::tests
 {
     struct TraitsTestSystem
     {
-        void setup(Core::ServiceProvider& service) {};
-        void update(ECS::EntityCommands& commands, float dt, Foo const& read, Bar& write) {}
+        void setup(ServiceProvider& service) {};
+        void update(EntityCommands& commands, float dt, Foo const& read, Bar& write) {}
     };
 
     /// <summary>
@@ -17,7 +17,7 @@ namespace LITL::ECS::Tests
     /// </summary>
     LITL_TEST_CASE("System Runner", "[ecs::system]")
     {
-        LITL::ECS::World world;
+        World world;
         TestSystem system;
 
         world.getSystemCollection().addSystem<TestSystem>(SystemGroup::Update);
@@ -38,11 +38,11 @@ namespace LITL::ECS::Tests
         }
 
         REQUIRE(world.getComponent<Foo>(entity0)->a == 10);
-        REQUIRE(LITL::Math::isZero(world.getComponent<Bar>(entity0)->a) == true);
+        REQUIRE(litl::isZero(world.getComponent<Bar>(entity0)->a) == true);
         REQUIRE(world.getComponent<Bar>(entity0)->b == 10);
 
         REQUIRE(world.getComponent<Foo>(entity1)->a == 110);
-        REQUIRE(LITL::Math::isOne(world.getComponent<Bar>(entity1)->a) == true);
+        REQUIRE(litl::isOne(world.getComponent<Bar>(entity1)->a) == true);
         REQUIRE(world.getComponent<Bar>(entity1)->b == 510);
 
         world.destroyImmediate(entity0);

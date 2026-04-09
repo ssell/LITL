@@ -9,7 +9,7 @@
 #define LITL_LOG_LEVEL_TRACE    5
 #define LITL_LOG_LEVEL_NONE     6
 
-namespace LITL::Core
+namespace litl
 {
     enum LogLevel
     {

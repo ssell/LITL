@@ -4,7 +4,7 @@
 #include <cstdint>
 #include "litl-ecs/entity/entity.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     class Archetype;
 
@@ -50,7 +50,7 @@ namespace LITL::ECS
     /// </summary>
     struct ChunkEntities
     {
-        Entity entities[Constants::max_entities_per_chunk];
+        Entity entities[ecs::Constants::max_entities_per_chunk];
     };
 }
 

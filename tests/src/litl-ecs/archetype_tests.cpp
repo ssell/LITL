@@ -5,7 +5,7 @@
 #include "litl-ecs/archetype/archetype.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
 
-namespace LITL::ECS::Tests
+namespace litl::tests
 {
     LITL_TEST_CASE("ArchetypeRegistry::get (Static)", "[ecs::archetype]")
     {
@@ -120,5 +120,5 @@ namespace LITL::ECS::Tests
     } END_LITL_TEST_CASE
 }
 
-REGISTER_TYPE_NAME(LITL::ECS::Tests::NewArchetypesTest::Apple);
-REGISTER_TYPE_NAME(LITL::ECS::Tests::NewArchetypesTest::Orange);
+REGISTER_TYPE_NAME(litl::tests::NewArchetypesTest::Apple);
+REGISTER_TYPE_NAME(litl::tests::NewArchetypesTest::Orange);

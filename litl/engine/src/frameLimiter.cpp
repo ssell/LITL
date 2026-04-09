@@ -1,7 +1,7 @@
 #include "litl-core/math.hpp"
 #include "litl-engine/frameLimiter.hpp"
 
-namespace LITL::Engine
+namespace litl
 {
     /// <summary>
     /// The intervals in which we spin while waiting until the next frame should start.
@@ -20,7 +20,7 @@ namespace LITL::Engine
 
     void FrameLimiter::setTargetFps(float fps) noexcept
     {
-        fps = Math::clamp(fps, 1.0f, 1000.0f);
+        fps = clamp(fps, 1.0f, 1000.0f);
         m_targetPeriodNs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<float>(1.0f / fps));
     }
 

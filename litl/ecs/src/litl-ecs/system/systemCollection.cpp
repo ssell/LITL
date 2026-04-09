@@ -3,7 +3,7 @@
 #include "litl-ecs/system/systemCollection.hpp"
 #include "litl-ecs/world.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     struct TrackedSystem
     {

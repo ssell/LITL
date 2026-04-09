@@ -1,22 +1,22 @@
 #include "litl-core/logging/logging.hpp"
 #include "litl-renderer-vulkan/pipeline/shaderModule.hpp"
 
-namespace LITL::Vulkan::Renderer
+namespace litl::vulkan
 {
-    LITL::Renderer::ShaderModule* createShaderModule(VkDevice vkDevice, LITL::Renderer::ShaderModuleDescriptor const& descriptor)
+    litl::ShaderModule* createShaderModule(VkDevice vkDevice, litl::ShaderModuleDescriptor const& descriptor)
     {
         auto* shaderModuleHandle = new ShaderModuleHandle{
             .vkDevice = vkDevice,
             .vkShaderModule = VK_NULL_HANDLE
         };
 
-        return new LITL::Renderer::ShaderModule(
+        return new litl::ShaderModule(
             &VulkanShaderModuleOperations,
-            LITL_PACK_HANDLE(LITL::Renderer::ShaderModuleHandle, shaderModuleHandle),
+            LITL_PACK_HANDLE(litl::ShaderModuleHandle, shaderModuleHandle),
             descriptor);
     }
 
-    bool build(LITL::Renderer::ShaderModuleDescriptor const& descriptor, LITL::Renderer::ShaderModuleHandle const& litlHandle, LITL::Renderer::ShaderReflection const* pReflection)
+    bool build(litl::ShaderModuleDescriptor const& descriptor, litl::ShaderModuleHandle const& litlHandle, litl::ShaderReflection const* pReflection)
     {
         auto* handle = LITL_UNPACK_HANDLE(ShaderModuleHandle, litlHandle);
 
@@ -51,7 +51,7 @@ namespace LITL::Vulkan::Renderer
         return true;
     }
 
-    void destroy(LITL::Renderer::ShaderModuleHandle const& litlHandle)
+    void destroy(litl::ShaderModuleHandle const& litlHandle)
     {
         auto* handle = LITL_UNPACK_HANDLE(ShaderModuleHandle, litlHandle);
 

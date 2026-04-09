@@ -6,7 +6,7 @@
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-core/services/serviceScope.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     struct ServiceProvider::Impl
     {

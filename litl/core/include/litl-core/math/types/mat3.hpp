@@ -19,7 +19,7 @@
 #include "litl-core/types.hpp"
 #include "litl-core/math/types/vec3.hpp"
 
-namespace LITL
+namespace litl
 {
     struct mat4;
     struct quat;
@@ -51,12 +51,12 @@ namespace LITL
 
         [[nodiscard]] constexpr bool operator==(mat3 const& other) const noexcept
         {
-            return glm::all(glm::equal(value, other.value, Math::Traits<float>::epsilon));
+            return glm::all(glm::equal(value, other.value, Traits<float>::epsilon));
         }
 
         [[nodiscard]] constexpr bool operator==(glm::mat3 const& other) const noexcept
         {
-            return glm::all(glm::equal(value, other, Math::Traits<float>::epsilon));
+            return glm::all(glm::equal(value, other, Traits<float>::epsilon));
         }
 
         // ---------------------------------------------------------------------------------
@@ -204,45 +204,45 @@ namespace LITL
 
         [[nodiscard]] vec3 operator/(vec3 const& v) const noexcept
         {
-            assert(!Math::anyZero(v.dataPtr(), 3));
+            assert(!anyZero(v.dataPtr(), 3));
             return vec3{ value / v.data() };
         }
 
         [[nodiscard]] constexpr mat3 operator/(float scalar) const noexcept
         {
-            assert(!Math::isZero(scalar));
+            assert(!isZero(scalar));
             return mat3{ value / scalar };
         }
 
         [[nodiscard]] constexpr mat3 operator/(mat3 const& other) const noexcept
         {
-            assert(!Math::anyZero(other.dataPtr(), 9));
+            assert(!anyZero(other.dataPtr(), 9));
             return mat3{ value / other.value };
         }
 
         [[nodiscard]] constexpr mat3 operator/(glm::mat3 const& other) const noexcept
         {
-            assert(!Math::anyZero(glm::value_ptr(other), 9));
+            assert(!anyZero(glm::value_ptr(other), 9));
             return mat3{ value / other };
         }
 
         constexpr mat3& operator/=(float scalar) noexcept
         {
-            assert(!Math::isZero(scalar));
+            assert(!isZero(scalar));
             value /= scalar;
             return *this;
         }
 
         constexpr mat3& operator/=(mat3 const& other) noexcept
         {
-            assert(!Math::anyZero(other.dataPtr(), 9));
+            assert(!anyZero(other.dataPtr(), 9));
             value /= other.value;
             return *this;
         }
 
         constexpr mat3& operator/=(glm::vec3 const& other) noexcept
         {
-            assert(!Math::anyZero(glm::value_ptr(other), 3));
+            assert(!anyZero(glm::value_ptr(other), 3));
             value /= other;
             return *this;
         }
@@ -398,7 +398,7 @@ namespace LITL
 
         [[nodiscard]] constexpr bool isZeroed() const noexcept
         {
-            return Math::allEquals(std::span{ dataPtr(), 9 }, 0.0f);
+            return allEquals(std::span{ dataPtr(), 9 }, 0.0f);
         }
 
         constexpr mat3& setIdentity() noexcept
@@ -410,9 +410,9 @@ namespace LITL
         [[nodiscard]] constexpr bool isIdentity() const noexcept
         {
             return
-                Math::isOne(get(0, 0))  && Math::isZero(get(0, 1)) && Math::isZero(get(0, 2)) &&
-                Math::isZero(get(1, 0)) && Math::isOne(get(1, 1))  && Math::isZero(get(1, 2)) &&
-                Math::isZero(get(2, 0)) && Math::isZero(get(2, 1)) && Math::isOne(get(2, 2));
+                isOne(get(0, 0))  && isZero(get(0, 1)) && isZero(get(0, 2)) &&
+                isZero(get(1, 0)) && isOne(get(1, 1))  && isZero(get(1, 2)) &&
+                isZero(get(2, 0)) && isZero(get(2, 1)) && isOne(get(2, 2));
         }
 
         constexpr mat3& transpose() noexcept
@@ -504,7 +504,7 @@ namespace LITL
     };
 }
 
-REGISTER_TYPE_NAME(LITL::mat3)
+REGISTER_TYPE_NAME(litl::mat3)
 
 // ... todo from quat when it is added ...
 

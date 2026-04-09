@@ -3,7 +3,7 @@
 
 #include "litl-core/logging/sinks/loggingSink.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     class FileLoggingSink : public LoggingSink
     {

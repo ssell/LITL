@@ -6,7 +6,7 @@
 
 #include "litl-core/handles.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     DEFINE_LITL_HANDLE(WindowHandle);
 

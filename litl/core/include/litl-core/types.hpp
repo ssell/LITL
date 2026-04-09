@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <string_view>
 
-namespace LITL
+namespace litl
 {
     /**
      * Various type-based utilities as RTTI is disabled for LITL.
@@ -61,6 +61,6 @@ namespace LITL
 }
 
 // Typically needs to be called outside of any enclosing namespace.
-#define REGISTER_TYPE_NAME(T) template<> struct LITL::TypeName<T> { static constexpr std::string_view value = #T; };                                                \
+#define REGISTER_TYPE_NAME(T) template<> struct litl::TypeName<T> { static constexpr std::string_view value = #T; };                                                \
 
 #endif

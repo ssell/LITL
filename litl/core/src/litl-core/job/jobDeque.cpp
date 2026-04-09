@@ -4,7 +4,7 @@
 #include "litl-core/math.hpp"
 #include "litl-core/job/jobDeque.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     /// <summary>
     /// Internal ring buffer used by the work stealing queue.
@@ -22,7 +22,7 @@ namespace LITL::Core
         explicit RingBuffer(uint32_t capacity = DefaultCapacity)
             : mask(capacity - 1), jobs(capacity)
         {
-            assert(Math::isPow2(capacity));
+            assert(isPow2(capacity));
         }
 
         JobHandle& operator[](uint32_t index)
@@ -217,7 +217,7 @@ namespace LITL::Core
     uint32_t JobDeque::size() const noexcept
     {
         // as m_bottom and m_top are loaded separately, the value may be transiently stale or even negative (until the max kicks in)
-        return Math::max(0, (m_bottom.load(std::memory_order_relaxed) - m_top.load(std::memory_order_relaxed)));
+        return max(0, (m_bottom.load(std::memory_order_relaxed) - m_top.load(std::memory_order_relaxed)));
     }
 
     uint32_t JobDeque::capacity() const noexcept

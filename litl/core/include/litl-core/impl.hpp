@@ -4,7 +4,7 @@
 #include <type_traits>
 #include <new>
 
-namespace LITL::Core
+namespace litl
 {
     /// <summary>
     /// Utility wrapper around a "Fast PIMPL" implementation.

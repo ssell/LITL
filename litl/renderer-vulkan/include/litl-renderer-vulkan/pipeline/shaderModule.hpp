@@ -4,7 +4,7 @@
 #include <vulkan/vulkan.h>
 #include "litl-renderer/pipeline/shaderModule.hpp"
 
-namespace LITL::Vulkan::Renderer
+namespace litl::vulkan
 {
     struct ShaderModuleHandle
     {
@@ -13,46 +13,46 @@ namespace LITL::Vulkan::Renderer
         VkPipelineShaderStageCreateInfo vkShaderStageInfo;
     };
 
-    LITL::Renderer::ShaderModule* createShaderModule(VkDevice vkDevice, LITL::Renderer::ShaderModuleDescriptor const& descriptor);
+    litl::ShaderModule* createShaderModule(VkDevice vkDevice, litl::ShaderModuleDescriptor const& descriptor);
 
-    bool build(LITL::Renderer::ShaderModuleDescriptor const& descriptor, LITL::Renderer::ShaderModuleHandle const& litlHandle, LITL::Renderer::ShaderReflection const* pReflection);
-    void destroy(LITL::Renderer::ShaderModuleHandle const& litlHandle);
+    bool build(litl::ShaderModuleDescriptor const& descriptor, litl::ShaderModuleHandle const& litlHandle, litl::ShaderReflection const* pReflection);
+    void destroy(litl::ShaderModuleHandle const& litlHandle);
 
-    constexpr VkShaderStageFlagBits convertToVkShaderStage(LITL::Renderer::ShaderStage stage)
+    constexpr VkShaderStageFlagBits convertToVkShaderStage(litl::ShaderStage stage)
     {
         switch (stage)
         {
-        case LITL::Renderer::ShaderStage::Vertex:
+        case litl::ShaderStage::Vertex:
             return VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
 
-        case LITL::Renderer::ShaderStage::Fragment:
+        case litl::ShaderStage::Fragment:
             return VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
 
-        case LITL::Renderer::ShaderStage::Geometry:
+        case litl::ShaderStage::Geometry:
             return VkShaderStageFlagBits::VK_SHADER_STAGE_GEOMETRY_BIT;
 
-        case LITL::Renderer::ShaderStage::TessellationControl:
+        case litl::ShaderStage::TessellationControl:
             return VkShaderStageFlagBits::VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
 
-        case LITL::Renderer::ShaderStage::TessellationEvaluation:
+        case litl::ShaderStage::TessellationEvaluation:
             return VkShaderStageFlagBits::VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
 
-        case LITL::Renderer::ShaderStage::Compute:
+        case litl::ShaderStage::Compute:
             return VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT;
 
-        case LITL::Renderer::ShaderStage::Mesh:
+        case litl::ShaderStage::Mesh:
             return VkShaderStageFlagBits::VK_SHADER_STAGE_MESH_BIT_EXT;
 
-        case LITL::Renderer::ShaderStage::Task:
+        case litl::ShaderStage::Task:
             return VkShaderStageFlagBits::VK_SHADER_STAGE_TASK_BIT_EXT;
 
-        case LITL::Renderer::ShaderStage::Unknown:
+        case litl::ShaderStage::Unknown:
         default:
             return static_cast<VkShaderStageFlagBits>(0);
         }
     }
 
-    const LITL::Renderer::ShaderModuleOperations VulkanShaderModuleOperations = {
+    const litl::ShaderModuleOperations VulkanShaderModuleOperations = {
         &build,
         &destroy
     };

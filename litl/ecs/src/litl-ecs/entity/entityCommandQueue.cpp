@@ -6,7 +6,7 @@
 #include "litl-ecs/constants.hpp"
 #include "litl-ecs/world.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     class EntityComponentPool
     {
@@ -22,7 +22,7 @@ namespace LITL::ECS
         {
             assert(descriptor != nullptr);
 
-            if ((m_currOffset + descriptor->size) > Constants::entity_command_pool_size)
+            if ((m_currOffset + descriptor->size) > ecs::Constants::entity_command_pool_size)
             {
                 // pool if full
                 return false;
@@ -52,7 +52,7 @@ namespace LITL::ECS
 
     private:
 
-        alignas(Core::Constants::cache_line_size) std::byte m_buffer[Constants::entity_command_pool_size];
+        alignas(Constants::cache_line_size) std::byte m_buffer[ecs::Constants::entity_command_pool_size];
         uint32_t m_currOffset{ 0 };
     };
 

@@ -1,24 +1,24 @@
 #include "litl-core/logging/logging.hpp"
 #include "litl-renderer-vulkan/pipeline/pipelineLayout.hpp"
 
-namespace LITL::Vulkan::Renderer
+namespace litl::vulkan
 {
-    LITL::Renderer::PipelineLayout* createPipelineLayout(VkDevice vkDevice, LITL::Renderer::PipelineLayoutDescriptor const& descriptor)
+    litl::PipelineLayout* createPipelineLayout(VkDevice vkDevice, litl::PipelineLayoutDescriptor const& descriptor)
     {
         auto* pipelineLayoutHandle = new PipelineLayoutHandle {
             .vkDevice = vkDevice,
             .vkPipelineLayout = VK_NULL_HANDLE
         };
 
-        return new LITL::Renderer::PipelineLayout(
+        return new litl::PipelineLayout(
             &VulkanPipelineLayoutOperations,
-            LITL_PACK_HANDLE(LITL::Renderer::PipelineLayoutHandle, pipelineLayoutHandle),
+            LITL_PACK_HANDLE(litl::PipelineLayoutHandle, pipelineLayoutHandle),
             descriptor);
     }
 
     bool build(
-        LITL::Renderer::PipelineLayoutDescriptor const& descriptor, 
-        LITL::Renderer::PipelineLayoutHandle const& litlHandle)
+        litl::PipelineLayoutDescriptor const& descriptor, 
+        litl::PipelineLayoutHandle const& litlHandle)
     {
         auto* handle = LITL_UNPACK_HANDLE(PipelineLayoutHandle, litlHandle);
 
@@ -46,7 +46,7 @@ namespace LITL::Vulkan::Renderer
         return true;
     }
 
-    void destroy(LITL::Renderer::PipelineLayoutHandle const& litlHandle)
+    void destroy(litl::PipelineLayoutHandle const& litlHandle)
     {
         auto* handle = LITL_UNPACK_HANDLE(PipelineLayoutHandle, litlHandle);
 

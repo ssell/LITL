@@ -1,6 +1,6 @@
 #include "litl-core/math/types.hpp"
 
-namespace LITL
+namespace litl
 {
     // -------------------------------------------------------------------------------------
     // vec3

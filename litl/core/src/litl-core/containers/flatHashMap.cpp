@@ -8,7 +8,7 @@
 // need to do a review and see ... 
 // if registries/caches start breaking, then look here!
 
-namespace LITL::Core
+namespace litl
 {
     template<typename K, typename V>
     struct FlatHashMap<K, V>::Impl

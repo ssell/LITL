@@ -3,7 +3,7 @@
 #include "tests.hpp"
 #include "litl-core/containers/memoryArena.hpp"
 
-namespace LITL::Core::Tests
+namespace litl::tests
 {
     namespace
     {

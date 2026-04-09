@@ -5,7 +5,7 @@
 
 #include "litl-ecs/system/systemTraits.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     class EntityCommands;
     struct ChunkLayout;
@@ -13,8 +13,8 @@ namespace LITL::ECS
     /// <summary>
     /// The function signature required to run the SystemRunner.
     /// </summary>
-    using SystemRunFunc = void(LITL::ECS::EntityCommands&, float, LITL::ECS::Chunk&, LITL::ECS::ChunkLayout const&);
-    using ErasedSystemRunFunc = void(*)(void*, LITL::ECS::EntityCommands&, float, LITL::ECS::Chunk&, LITL::ECS::ChunkLayout const&);
+    using SystemRunFunc = void(EntityCommands&, float, Chunk&, ChunkLayout const&);
+    using ErasedSystemRunFunc = void(*)(void*, EntityCommands&, float, Chunk&, ChunkLayout const&);
 
     /// <summary>
     /// Responsible for running a system over a single archetype chunk.
@@ -32,7 +32,7 @@ namespace LITL::ECS
 
         }
 
-        void setup(Core::ServiceProvider& services)
+        void setup(ServiceProvider& services)
         {
             m_pSystem->setup(services);
         }

@@ -17,7 +17,7 @@
 #include "litl-ecs/system/systemManager.hpp"
 #include "litl-ecs/system/systemInfoGraph.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     class SystemCollection;
 
@@ -40,13 +40,13 @@ namespace LITL::ECS
         /// Invoked once by the Engine during setup.
         /// </summary>
         /// <param name="services"></param>
-        void setup(LITL::Core::ServiceProvider& services) const noexcept;
+        void setup(litl::ServiceProvider& services) const noexcept;
 
         /// <summary>
         /// Invoked once by the Engine prior to the first frame.
         /// </summary>
         /// <param name="services"></param>
-        void setupSystems(LITL::Core::ServiceProvider& services) const noexcept;
+        void setupSystems(litl::ServiceProvider& services) const noexcept;
 
         /// <summary>
         /// Immediately creates a new Entity.

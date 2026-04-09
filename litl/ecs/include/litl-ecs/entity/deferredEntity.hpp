@@ -4,7 +4,7 @@
 #include <limits>
 #include "litl-ecs/constants.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     /// <summary>
     /// Represents an entity that does not yet exists.
@@ -26,7 +26,7 @@ namespace LITL::ECS
 
         [[nodiscard]] static constexpr DeferredEntity null() noexcept
         {
-            return DeferredEntity{ .index = Constants::null_entity_id };
+            return DeferredEntity{ .index = ecs::Constants::null_entity_id };
         }
 
         [[nodiscard]] constexpr bool isNull() const noexcept

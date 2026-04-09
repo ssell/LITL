@@ -11,7 +11,7 @@
 #include "litl-ecs/archetype/archetype.hpp"
 #include "litl-ecs/archetype/archetypeComponents.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
 
     /// <summary>

@@ -8,7 +8,7 @@
 #include "litl-renderer/pipeline/pipelineLayout.hpp"
 #include "litl-renderer/pipeline/shaderModule.hpp"
 
-namespace LITL::Renderer
+namespace litl
 {
     /// <summary>
     /// Backend implemented resource allocation.
@@ -16,10 +16,10 @@ namespace LITL::Renderer
     /// </summary>
     struct ResourceAllocatorOperations
     {
-        Core::RefPtr<CommandBuffer> (*createCommandBuffer)(RendererHandle const&);
-        Core::RefPtr<PipelineLayout> (*createPipelineLayout)(RendererHandle const&, PipelineLayoutDescriptor const&);
-        Core::RefPtr<ShaderModule> (*createShaderModule)(RendererHandle const&, ShaderModuleDescriptor const&);
-        Core::RefPtr<GraphicsPipeline>(*createGraphicsPipeline)(RendererHandle const&, GraphicsPipelineDescriptor const&);
+        RefPtr<CommandBuffer> (*createCommandBuffer)(RendererHandle const&);
+        RefPtr<PipelineLayout> (*createPipelineLayout)(RendererHandle const&, PipelineLayoutDescriptor const&);
+        RefPtr<ShaderModule> (*createShaderModule)(RendererHandle const&, ShaderModuleDescriptor const&);
+        RefPtr<GraphicsPipeline>(*createGraphicsPipeline)(RendererHandle const&, GraphicsPipelineDescriptor const&);
     };
 
     class ResourceAllocator final
@@ -36,22 +36,22 @@ namespace LITL::Renderer
         ResourceAllocator& operator=(ResourceAllocator const&) = delete;
 
 
-        Core::RefPtr<CommandBuffer> createCommandBuffer() const noexcept
+        RefPtr<CommandBuffer> createCommandBuffer() const noexcept
         {
             return m_pBackendOperations->createCommandBuffer(m_backendRendererHandle);
         }
 
-        Core::RefPtr<PipelineLayout> createPipelineLayout(PipelineLayoutDescriptor const& descriptor) const noexcept
+        RefPtr<PipelineLayout> createPipelineLayout(PipelineLayoutDescriptor const& descriptor) const noexcept
         {
             return m_pBackendOperations->createPipelineLayout(m_backendRendererHandle, descriptor);
         }
 
-        Core::RefPtr<ShaderModule> createShaderModule(ShaderModuleDescriptor const& descriptor) const noexcept
+        RefPtr<ShaderModule> createShaderModule(ShaderModuleDescriptor const& descriptor) const noexcept
         {
             return m_pBackendOperations->createShaderModule(m_backendRendererHandle, descriptor);
         }
 
-        Core::RefPtr<GraphicsPipeline> createGraphicsPipeline(GraphicsPipelineDescriptor const& descriptor) const noexcept
+        RefPtr<GraphicsPipeline> createGraphicsPipeline(GraphicsPipelineDescriptor const& descriptor) const noexcept
         {
             return m_pBackendOperations->createGraphicsPipeline(m_backendRendererHandle, descriptor);
         }

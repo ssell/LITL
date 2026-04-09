@@ -18,7 +18,7 @@
 #include "litl-renderer-vulkan/commands/commandBuffer.hpp"
 #include "litl-renderer-vulkan/pipeline/pipelineLayout.hpp"
 
-namespace LITL::Vulkan::Renderer
+namespace litl::vulkan
 {
     // -------------------------------------------------------------------------------------
     // Required Features
@@ -44,16 +44,16 @@ namespace LITL::Vulkan::Renderer
     // Renderer Creation
     // -------------------------------------------------------------------------------------
 
-    LITL::Renderer::Renderer* createVulkanRenderer(Core::Window* pWindow, LITL::Renderer::RendererConfiguration const& rendererDescriptor)
+    litl::Renderer* createVulkanRenderer(Window* pWindow, RendererConfiguration const& rendererDescriptor)
     {
         auto handle = new RendererHandle{};
         handle->context.pWindow = pWindow;
         handle->context.pSurfaceWindow = pWindow->getSurfaceWindow();
         handle->context.framesInFlight = rendererDescriptor.framesInFlight;
 
-        return new LITL::Renderer::Renderer(
+        return new litl::Renderer(
             &VulkanRendererOperations,
-            LITL_PACK_HANDLE(LITL::Renderer::RendererHandle, handle)
+            LITL_PACK_HANDLE(litl::RendererHandle, handle)
         );
     }
 
@@ -69,7 +69,7 @@ namespace LITL::Vulkan::Renderer
     bool createCommandPool(RendererHandle* handle);
     bool createSyncObjects(RendererHandle* handle);
 
-    bool build(LITL::Renderer::RendererHandle const& litlHandle) noexcept
+    bool build(litl::RendererHandle const& litlHandle) noexcept
     {
         auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
 
@@ -424,7 +424,7 @@ namespace LITL::Vulkan::Renderer
 
         if (swapChainSupport.capabilities.maxImageCount > 0)        // == 0 means no limit
         {
-            imageCount = (Math::min)(imageCount, swapChainSupport.capabilities.maxImageCount);
+            imageCount = (min)(imageCount, swapChainSupport.capabilities.maxImageCount);
         }
 
         VkSwapchainCreateInfoKHR createSwapChainInfo{};
@@ -591,7 +591,7 @@ namespace LITL::Vulkan::Renderer
     void cleanupSwapchain(RendererHandle* handle);
     void recreateSwapchain(RendererHandle* handle);
 
-    void destroy(LITL::Renderer::RendererHandle const& litlHandle) noexcept
+    void destroy(litl::RendererHandle const& litlHandle) noexcept
     {
         auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
         cleanup(handle);
@@ -686,12 +686,12 @@ namespace LITL::Vulkan::Renderer
 
     bool isRenderReady(RendererHandle* handle);
     bool acquireSwapChainIndex(RendererHandle* handle, uint32_t timeoutNs, uint32_t frameIndex, uint32_t* imageIndex);
-    void recordCommandBuffers(RendererHandle* handle, LITL::Renderer::CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers, uint32_t swapChainImageIndex);
-    void renderCommandBuffer(RendererHandle* handle, LITL::Renderer::CommandBuffer* pCommandBuffer, uint32_t imageIndex);
+    void recordCommandBuffers(RendererHandle* handle, litl::CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers, uint32_t swapChainImageIndex);
+    void renderCommandBuffer(RendererHandle* handle, litl::CommandBuffer* pCommandBuffer, uint32_t imageIndex);
     void transitionImageLayout(VkCommandBuffer vkCommandBuffer, VkImage vkImage, uint32_t oldLayout, uint32_t newLayout, uint32_t srcAccessMask, uint32_t dstAccessMask, uint32_t srcStageMask, uint32_t dstStageMask);
 
 
-    bool beginRender(LITL::Renderer::RendererHandle const& litlHandle)
+    bool beginRender(litl::RendererHandle const& litlHandle)
     {
         auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
 
@@ -703,7 +703,7 @@ namespace LITL::Vulkan::Renderer
 
         uint32_t swapChainImageIndex = 0;
 
-        if (!acquireSwapChainIndex(handle, Math::Constants::millisecond_to_nanoseconds, handle->context.frameIndex, &swapChainImageIndex))
+        if (!acquireSwapChainIndex(handle, Constants::millisecond_to_nanoseconds, handle->context.frameIndex, &swapChainImageIndex))
         {
             // Swapchain not ready.
             return false;
@@ -716,7 +716,7 @@ namespace LITL::Vulkan::Renderer
         return true;
     }
 
-    void submitCommands(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::CommandBuffer* pCommandBuffers, uint32_t const numCommandBuffers)
+    void submitCommands(litl::RendererHandle const& litlHandle, litl::CommandBuffer* pCommandBuffers, uint32_t const numCommandBuffers)
     {
         auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
 
@@ -744,7 +744,7 @@ namespace LITL::Vulkan::Renderer
         }
     }
 
-    void endRender(LITL::Renderer::RendererHandle const& litlHandle)
+    void endRender(litl::RendererHandle const& litlHandle)
     {
         auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
 
@@ -829,7 +829,7 @@ namespace LITL::Vulkan::Renderer
     /// <param name="pCommandBuffers"></param>
     /// <param name="numCommandBuffers"></param>
     /// <param name="swapChainImageIndex"></param>
-    void recordCommandBuffers(RendererHandle* handle, LITL::Renderer::CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers, uint32_t swapChainImageIndex)
+    void recordCommandBuffers(RendererHandle* handle, litl::CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers, uint32_t swapChainImageIndex)
     {
         for (uint32_t i = 0; i < numCommandBuffers; ++i)
         {
@@ -844,7 +844,7 @@ namespace LITL::Vulkan::Renderer
     /// </summary>
     /// <param name="pCommandBuffer"></param>
     /// <param name="imageIndex"></param>
-    void renderCommandBuffer(RendererHandle* handle, LITL::Renderer::CommandBuffer* pCommandBuffer, uint32_t imageIndex)
+    void renderCommandBuffer(RendererHandle* handle, litl::CommandBuffer* pCommandBuffer, uint32_t imageIndex)
     {
         pCommandBuffer->begin(handle->context.frame);
         auto vkCommandBuffer = extractCurrentVkCommandBuffer(pCommandBuffer);
@@ -955,7 +955,7 @@ namespace LITL::Vulkan::Renderer
     // Object Creation
     // -------------------------------------------------------------------------------------
 
-    LITL::Renderer::ResourceAllocator* buildResourceAllocator(LITL::Renderer::RendererHandle const& litlHandle) noexcept
+    litl::ResourceAllocator* buildResourceAllocator(litl::RendererHandle const& litlHandle) noexcept
     {
         return createResourceAllocator(litlHandle);
     }
@@ -964,12 +964,12 @@ namespace LITL::Vulkan::Renderer
     // Utility
     // -------------------------------------------------------------------------------------
 
-    uint32_t getFrame(LITL::Renderer::RendererHandle const& litlHandle) noexcept
+    uint32_t getFrame(litl::RendererHandle const& litlHandle) noexcept
     {
         return LITL_UNPACK_HANDLE(RendererHandle, litlHandle)->context.frame;
     }
 
-    uint32_t getFrameIndex(LITL::Renderer::RendererHandle const& litlHandle) noexcept
+    uint32_t getFrameIndex(litl::RendererHandle const& litlHandle) noexcept
     {
         return LITL_UNPACK_HANDLE(RendererHandle, litlHandle)->context.frameIndex;
     }

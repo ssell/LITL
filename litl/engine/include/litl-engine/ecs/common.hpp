@@ -16,8 +16,8 @@ Minimal ECS System definition:
  
 struct System 
 {
-    void setup(Core::ServiceProvider& services) {}
-    void update(ECS::EntityCommands& commands, float dt) {}
+    void setup(ServiceProvider& services) {}
+    void update(EntityCommands& commands, float dt) {}
 };
 
  */

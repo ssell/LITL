@@ -4,7 +4,7 @@
 #include <vulkan/vulkan.h>
 #include "litl-renderer/pipeline/pipelineLayout.hpp"
 
-namespace LITL::Vulkan::Renderer
+namespace litl::vulkan
 {
     struct PipelineLayoutHandle
     {
@@ -18,12 +18,12 @@ namespace LITL::Vulkan::Renderer
     /// <param name="vkDevice"></param>
     /// <param name="descriptor"></param>
     /// <returns></returns>
-    LITL::Renderer::PipelineLayout* createPipelineLayout(VkDevice vkDevice, LITL::Renderer::PipelineLayoutDescriptor const& descriptor);
+    litl::PipelineLayout* createPipelineLayout(VkDevice vkDevice, litl::PipelineLayoutDescriptor const& descriptor);
 
-    bool build(LITL::Renderer::PipelineLayoutDescriptor const& descriptor, LITL::Renderer::PipelineLayoutHandle const& litlHandle);
-    void destroy(LITL::Renderer::PipelineLayoutHandle const& litlHandle);
+    bool build(litl::PipelineLayoutDescriptor const& descriptor, litl::PipelineLayoutHandle const& litlHandle);
+    void destroy(litl::PipelineLayoutHandle const& litlHandle);
 
-    const LITL::Renderer::PipelineLayoutOperations VulkanPipelineLayoutOperations = {
+    const litl::PipelineLayoutOperations VulkanPipelineLayoutOperations = {
         &build,
         &destroy
     };

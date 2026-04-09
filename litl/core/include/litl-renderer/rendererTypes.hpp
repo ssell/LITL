@@ -3,9 +3,9 @@
 
 #include <string>
 
-namespace LITL::Renderer
+namespace litl
 {
-    enum RendererBackendType
+    enum class RendererBackendType : uint32_t
     {
         None = 0,
         Vulkan = 1
@@ -16,7 +16,7 @@ namespace LITL::Renderer
         "Vulkan"
     };
 
-    enum PipelineBindType
+    enum class PipelineBindType : uint32_t
     {
         Graphics = 0,
         Compute = 1

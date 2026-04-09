@@ -3,7 +3,7 @@
 
 #include "litl-core/containers/flatHashMap.hpp"
 
-namespace LITL::Core::Tests
+namespace litl::tests
 {
     LITL_TEST_CASE("Basic Operation", "[core::containers::flatHashMap]")
     {

@@ -11,7 +11,7 @@
 #include "litl-ecs/system/systemCollection.hpp"
 
 
-namespace LITL::ECS::Tests
+namespace litl::tests
 {
     LITL_TEST_CASE("Empty Entity Creation and Destructon", "[ecs::world]")
     {
@@ -165,7 +165,7 @@ namespace LITL::ECS::Tests
         REQUIRE(entity0Foo->a == 1337);
         REQUIRE(entity1Foo->a == 1338);
         REQUIRE(entity1Bar->b == 100);
-        REQUIRE(Math::fequals(entity1Bar->a, 10.0f));
+        REQUIRE(fequals(entity1Bar->a, 10.0f));
         REQUIRE(entity2Foo->a == 2000);
 
         world.destroyImmediate(entity2);
@@ -287,7 +287,7 @@ namespace LITL::ECS::Tests
         REQUIRE(barVal != std::nullopt);
 
         REQUIRE(fooVal->a == foo.a);
-        REQUIRE(Math::fequals(barVal->a, bar.a) == true);
+        REQUIRE(fequals(barVal->a, bar.a) == true);
         REQUIRE(barVal->b == bar.b);
 
         world.destroyImmediate(entity);
@@ -392,9 +392,9 @@ namespace LITL::ECS::Tests
         REQUIRE(getFoo.value().a == foo.a);
 
         REQUIRE(getBar.has_value() == true);
-        REQUIRE(Math::fequals(getBar.value().a, bar0.a) == false);
+        REQUIRE(fequals(getBar.value().a, bar0.a) == false);
         REQUIRE(getBar.value().b != bar0.b);
-        REQUIRE(Math::fequals(getBar.value().a, bar1.a) == true);       // bar1 was set second, so should be the one whose value is set last and is kept
+        REQUIRE(fequals(getBar.value().a, bar1.a) == true);       // bar1 was set second, so should be the one whose value is set last and is kept
         REQUIRE(getBar.value().b == bar1.b);
 
         // Make sure mutation on a dead entity does nothing
@@ -429,8 +429,8 @@ namespace LITL::ECS::Tests
 
     LITL_TEST_CASE("World Run", "[ecs::world]")
     {
-        Core::ServiceCollection collection;
-        collection.addSingleton<Core::JobScheduler>();
+        ServiceCollection collection;
+        collection.addSingleton<JobScheduler>();
         auto serviceProvider = collection.build();
 
         World world;
@@ -450,11 +450,11 @@ namespace LITL::ECS::Tests
         }
 
         REQUIRE(world.getComponent<Foo>(entity0)->a == 10);
-        REQUIRE(Math::isZero(world.getComponent<Bar>(entity0)->a) == true);
+        REQUIRE(isZero(world.getComponent<Bar>(entity0)->a) == true);
         REQUIRE(world.getComponent<Bar>(entity0)->b == 10);
 
         REQUIRE(world.getComponent<Foo>(entity1)->a == 110);
-        REQUIRE(Math::isOne(world.getComponent<Bar>(entity1)->a) == true);
+        REQUIRE(isOne(world.getComponent<Bar>(entity1)->a) == true);
         REQUIRE(world.getComponent<Bar>(entity1)->b == 510);
 
         world.destroyImmediate(entity0);
@@ -465,7 +465,7 @@ namespace LITL::ECS::Tests
     LITL_TEST_CASE("System Setup", "[ecs::system]")
     {
         World world;
-        Core::ServiceCollection collection{};
+        ServiceCollection collection{};
         collection.addSingleton<SystemSetupService>();
 
         auto services = collection.build();
@@ -482,4 +482,4 @@ namespace LITL::ECS::Tests
     } END_LITL_TEST_CASE
 }
 
-REGISTER_TYPE_NAME(LITL::ECS::Tests::ComponentCtorDtorCallTest::CtorDtorTestComponent)
+REGISTER_TYPE_NAME(litl::tests::ComponentCtorDtorCallTest::CtorDtorTestComponent)

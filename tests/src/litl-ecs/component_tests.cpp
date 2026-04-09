@@ -6,7 +6,7 @@
 #include "litl-ecs/component/componentData.hpp"
 #include "litl-ecs/component/componentRegistry.hpp"
 
-namespace LITL::ECS::Tests
+namespace litl::tests
 {
     LITL_TEST_CASE("Component Descriptor", "[ecs::component]")
     {
@@ -39,8 +39,8 @@ namespace LITL::ECS::Tests
         auto fooDescriptor = ComponentDescriptor::get<Foo>();
         auto barDescriptor = ComponentDescriptor::get<Bar>();
 
-        const auto expectedFooStableId = LITL::Core::hashString("LITL::ECS::Tests::Foo");
-        const auto expectedBarStableId = LITL::Core::hashString("LITL::ECS::Tests::Bar");
+        const auto expectedFooStableId = litl::hashString("litl::tests::Foo");
+        const auto expectedBarStableId = litl::hashString("litl::tests::Bar");
 
         REQUIRE(fooDescriptor->stableId == expectedFooStableId);
         REQUIRE(getStableComponentTypeId<Foo>() == fooDescriptor->stableId);
@@ -70,7 +70,7 @@ namespace LITL::ECS::Tests
         const auto bazId = getComponentTypeId<Baz>();
 
         // FixedSortedArray is a crucial part of World::mutate
-        Core::FixedSortedArray<ComponentData> components({
+        FixedSortedArray<ComponentData> components({
             ComponentData{ bazId, nullptr },
             ComponentData{ fooId, nullptr },
             ComponentData{ barId, nullptr },

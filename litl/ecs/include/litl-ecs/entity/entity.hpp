@@ -4,7 +4,7 @@
 #include <cstdint>
 #include "litl-ecs/constants.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     /// <summary>
     /// Represents the "Entity" in the Entity Component System architecture.
@@ -68,7 +68,7 @@ namespace LITL::ECS
         /// <returns></returns>
         [[nodiscard]] static constexpr Entity null() noexcept
         {
-            return Entity{ .index = Constants::null_entity_id };
+            return Entity{ .index = ecs::Constants::null_entity_id };
         }
 
         /// <summary>

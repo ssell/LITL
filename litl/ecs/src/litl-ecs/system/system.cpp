@@ -6,7 +6,7 @@
 #include "litl-ecs/entity/entityCommands.hpp"
 #include "litl-ecs/world.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     /// <summary>
     /// This part is fun.
@@ -121,7 +121,7 @@ namespace LITL::ECS
         }
     }
 
-    void System::setup(Core::ServiceProvider& services)
+    void System::setup(ServiceProvider& services)
     {
         assert(m_pImpl->functions.setupFunc != nullptr);
         m_pImpl->functions.setupFunc(m_pImpl->functions.storedSystemWrapper, services);
@@ -145,7 +145,7 @@ namespace LITL::ECS
         }
     }
 
-    void System::run(World& world, float dt, Core::JobScheduler& scheduler, Core::JobFence& fence)
+    void System::run(World& world, float dt, JobScheduler& scheduler, JobFence& fence)
     {
         assert(m_pImpl->functions.runFunc != nullptr);
 
@@ -155,7 +155,7 @@ namespace LITL::ECS
 
             for (auto ci = 0; ci < chunkCount; ++ci)
             {
-                scheduler.createAndSubmit([this, &world, dt, archetype, ci](Core::Job* job)
+                scheduler.createAndSubmit([this, &world, dt, archetype, ci](Job* job)
                 {
                     auto& commandBuffer = world.getCommandBuffer();
                     (*m_pImpl->functions.runFunc)(m_pImpl->functions.storedSystemWrapper, commandBuffer, dt, archetype->getChunk(ci), archetype->chunkLayout());

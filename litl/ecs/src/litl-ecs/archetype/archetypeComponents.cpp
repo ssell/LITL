@@ -6,7 +6,7 @@
 #include "litl-ecs/archetype/archetypeComponents.hpp"
 #include "litl-ecs/archetype/chunkLayout.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     ArchetypeComponents::ArchetypeComponents()
     {
@@ -15,7 +15,7 @@ namespace LITL::ECS
 
     ArchetypeComponents::ArchetypeComponents(std::span<ComponentTypeId> components)
     {
-        assert(components.size() <= Constants::max_components);
+        assert(components.size() <= ecs::Constants::max_components);
 
         for (auto i = 0; i < components.size(); ++i)
         {
@@ -34,7 +34,7 @@ namespace LITL::ECS
 
     void ArchetypeComponents::populate(ChunkLayout const* layout) noexcept
     {
-        assert(layout->componentTypeCount < Constants::max_components);
+        assert(layout->componentTypeCount < ecs::Constants::max_components);
 
         for (auto i = 0; i < layout->componentTypeCount; ++i)
         {
@@ -48,7 +48,7 @@ namespace LITL::ECS
 
     bool ArchetypeComponents::add(ComponentTypeId component) noexcept
     {
-        if (m_size == Constants::max_components)
+        if (m_size == ecs::Constants::max_components)
         {
             return false;
         }
@@ -61,7 +61,7 @@ namespace LITL::ECS
 
     bool ArchetypeComponents::add(std::span<ComponentTypeId> components) noexcept
     {
-        if ((m_size + components.size()) > Constants::max_components)
+        if ((m_size + components.size()) > ecs::Constants::max_components)
         {
             return false;
         }
@@ -79,7 +79,7 @@ namespace LITL::ECS
 
     bool ArchetypeComponents::add(std::span<ComponentData> components) noexcept
     {
-        if ((m_size + components.size()) > Constants::max_components)
+        if ((m_size + components.size()) > ecs::Constants::max_components)
         {
             return false;
         }
@@ -149,7 +149,7 @@ namespace LITL::ECS
 
     size_t ArchetypeComponents::capacity() const noexcept
     {
-        return Constants::max_components;
+        return ecs::Constants::max_components;
     }
 
     uint64_t ArchetypeComponents::hash() noexcept
@@ -163,7 +163,7 @@ namespace LITL::ECS
         auto iter = std::unique(m_components.begin(), m_components.begin() + m_size);
         m_size = static_cast<std::size_t>(iter - m_components.begin());
 
-        m_hash = (m_size == 0 ? 0 : Core::hashSubarray<ComponentTypeId>(m_components, 0, m_size));
+        m_hash = (m_size == 0 ? 0 : hashSubarray<ComponentTypeId>(m_components, 0, m_size));
         m_hashDirty = false;
 
         return m_hash;

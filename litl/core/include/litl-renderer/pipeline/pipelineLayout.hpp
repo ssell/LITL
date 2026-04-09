@@ -6,7 +6,7 @@
 #include "litl-core/refPtr.hpp"
 #include "litl-renderer/handles.hpp"
 
-namespace LITL::Renderer
+namespace litl
 {
     /// <summary>
     /// Configuration for the pipeline layout.
@@ -42,7 +42,7 @@ namespace LITL::Renderer
         void (*destroy)(PipelineLayoutHandle const&);
     };
 
-    class PipelineLayout final : public Core::RefCounted
+    class PipelineLayout final : public RefCounted
     {
     public:
 
