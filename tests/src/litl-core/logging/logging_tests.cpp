@@ -13,7 +13,7 @@
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/logging/sinks/loggingSink.hpp"
 
-namespace LITL::Core::Tests
+namespace litl::tests
 {
     /// <summary>
 /// Supply our own test sink to capture the logged messages.
@@ -162,8 +162,8 @@ namespace LITL::Core::Tests
 
     LITL_TEST_CASE_METHOD(LoggingWrapper, "Convenience Logging", "[core::logging]")
     {
-        LITL::logInfo("Hello, World!");
-        LITL::logInfo("Hello, ", "World!");
+        litl::logInfo("Hello, World!");
+        litl::logInfo("Hello, ", "World!");
 
         wait();
 

@@ -4,7 +4,7 @@
 #include "litl-ecs/system/systemRegistry.hpp"
 #include "litl-ecs/system/systemPlacementHint.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     class SystemCollection;
     class System;

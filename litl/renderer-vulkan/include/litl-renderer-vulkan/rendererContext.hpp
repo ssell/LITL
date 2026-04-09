@@ -7,7 +7,7 @@
 
 #include "litl-core/window.hpp"
 
-namespace LITL::Vulkan::Renderer
+namespace litl::vulkan
 {
     /// <summary>
     /// The context of a Vulkan Renderer.
@@ -17,7 +17,7 @@ namespace LITL::Vulkan::Renderer
     /// </summary>
     struct RendererContext
     {
-        Core::Window* pWindow;
+        Window* pWindow;
 
         /// <summary>
         /// Frame count.

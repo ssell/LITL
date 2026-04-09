@@ -8,13 +8,13 @@
 #include "litl-ecs/component/componentRegistry.hpp"
 #include "litl-ecs/component/component.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     struct ComponentRegistryState
     {
         std::mutex mutex;
-        std::array<ComponentDescriptor const*, Constants::max_component_types> unstableIdLookup;
-        Core::FlatHashMap<StableComponentTypeId, ComponentTypeId> stableIdLookup;
+        std::array<ComponentDescriptor const*, ecs::Constants::max_component_types> unstableIdLookup;
+        FlatHashMap<StableComponentTypeId, ComponentTypeId> stableIdLookup;
     };
 
     namespace
@@ -30,7 +30,7 @@ namespace LITL::ECS
 
     void ComponentRegistry::track(ComponentDescriptor const* descriptor) noexcept
     {
-        assert(descriptor->id < Constants::max_component_types);
+        assert(descriptor->id < ecs::Constants::max_component_types);
 
         auto& registry = instance();
 
@@ -51,7 +51,7 @@ namespace LITL::ECS
 
     ComponentDescriptor const* ComponentRegistry::find(ComponentTypeId id) noexcept
     {
-        assert(id < Constants::max_component_types);
+        assert(id < ecs::Constants::max_component_types);
         return instance().unstableIdLookup[id];
     }
 

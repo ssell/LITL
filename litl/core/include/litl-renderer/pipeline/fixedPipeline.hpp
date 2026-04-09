@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-namespace LITL::Renderer
+namespace litl
 {
     enum class CullMode : uint32_t
     {

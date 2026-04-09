@@ -6,7 +6,7 @@
 #include <memory>
 #include <vector>
 
-namespace LITL::Core
+namespace litl
 {
     template<typename T>
     class PagedVectorIterator;

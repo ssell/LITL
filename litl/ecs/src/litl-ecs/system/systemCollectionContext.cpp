@@ -2,7 +2,7 @@
 #include "litl-ecs/system/systemCollection.hpp"
 #include "litl-ecs/system/system.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     SystemCollectionContext::SystemCollectionContext(SystemCollection const* collection, System const* system)
         : m_pCollection(collection), m_pSystem(system)

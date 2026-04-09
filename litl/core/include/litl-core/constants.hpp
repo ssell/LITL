@@ -3,10 +3,25 @@
 
 #include <cstdint>
 
-namespace LITL::Core
+namespace litl
 {
     struct Constants
     {
+        // ---------------------------------------------------------------------------------
+        // Numeric
+        // ---------------------------------------------------------------------------------
+
+        static constexpr uint32_t second_to_milliseconds = 1000;
+        static constexpr uint32_t second_to_microseconds = 1000000;
+        static constexpr uint32_t second_to_nanoseconds = 1000000000;
+        static constexpr uint32_t millisecond_to_nanoseconds = 1000000;
+        static constexpr uint32_t millisecond_to_microseconds = 1000;
+        static constexpr uint32_t microsecond_to_nanoseconds = 1000;
+
+        // ---------------------------------------------------------------------------------
+        // General
+        // ---------------------------------------------------------------------------------
+
         /// <summary>
         /// Use when aligning members to individual cache lines.
         /// On modern x86/x64/ARM processors this is typically 64 bytes.
@@ -16,6 +31,9 @@ namespace LITL::Core
         /// </summary>
         static constexpr uint8_t cache_line_size = 64;
 
+        /// <summary>
+        /// Half of cache_line_size.
+        /// </summary>
         static constexpr uint8_t half_cache_line_size = 32;
     };
 }

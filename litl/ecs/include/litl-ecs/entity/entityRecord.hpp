@@ -5,7 +5,7 @@
 
 #include "litl-ecs/entity/entity.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     class Archetype;
     class EntityRegistry;

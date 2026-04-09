@@ -9,7 +9,7 @@
 #include "litl-core/types.hpp"
 #include "litl-core/services/serviceLifetime.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     /// <summary>
     /// Inner callable for the nested factory resolver.

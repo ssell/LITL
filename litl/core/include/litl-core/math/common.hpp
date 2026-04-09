@@ -8,7 +8,7 @@
 
 #include "litl-core/math/traits.hpp"
 
-namespace LITL::Math
+namespace litl
 {
     [[nodiscard]] constexpr float clamp(float value, float min, float max) noexcept
     {

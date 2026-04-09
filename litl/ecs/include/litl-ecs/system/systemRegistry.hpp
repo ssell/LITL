@@ -4,7 +4,7 @@
 #include "litl-ecs/system/system.hpp"
 #include "litl-ecs/system/systemTraits.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     class SystemRegistry
     {

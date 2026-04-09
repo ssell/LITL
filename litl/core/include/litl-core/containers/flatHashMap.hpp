@@ -6,7 +6,7 @@
 #include <memory>
 #include <optional>
 
-namespace LITL::Core
+namespace litl
 {
     /// <summary>
     /// Hash Map that is faster than std::unordered_map (and much faster than std::map).

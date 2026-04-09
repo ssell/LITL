@@ -5,7 +5,7 @@
 #include "litl-ecs/entity/entity.hpp"
 #include "litl-ecs/entity/parentEntity.hpp"
 
-namespace LITL::Engine
+namespace litl
 {
     /// <summary>
     /// The local transform of an entity.
@@ -33,10 +33,10 @@ namespace LITL::Engine
         /// The hierarchal parent of this entity in the scene.
         /// If null, then the entity has no parent and the world itself is the parent.
         /// </summary>
-        ECS::ParentEntity parent{};
+        ParentEntity parent{};
     };
 }
 
-REGISTER_TYPE_NAME(LITL::Engine::Transform);
+REGISTER_TYPE_NAME(litl::Transform);
 
 #endif

@@ -4,7 +4,7 @@
 #include "litl-core/math.hpp"
 #include "litl-ecs/entity/entity.hpp"
 
-namespace LITL::Engine
+namespace litl
 {
     /// <summary>
     /// A non-uniform scale applied to an entity. By default, the Transform component only stores an uniform scale.
@@ -18,6 +18,6 @@ namespace LITL::Engine
     };
 }
 
-REGISTER_TYPE_NAME(LITL::Engine::NonUniformScale);
+REGISTER_TYPE_NAME(litl::NonUniformScale);
 
 #endif

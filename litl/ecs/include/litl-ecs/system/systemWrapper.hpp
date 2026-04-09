@@ -7,7 +7,7 @@
 #include "litl-ecs/constants.hpp"
 #include "litl-ecs/system/systemRunner.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     class EntityCommands;
 
@@ -40,7 +40,7 @@ namespace LITL::ECS
             }
         }
 
-        void setup(Core::ServiceProvider& services)
+        void setup(ServiceProvider& services)
         {
             m_pRunner->setup(services);
         }

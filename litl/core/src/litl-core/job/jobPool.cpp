@@ -9,7 +9,7 @@
 #include "litl-core/job/job.hpp"
 #include "litl-core/job/jobPool.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     namespace
     {
@@ -180,7 +180,7 @@ namespace LITL::Core
     JobPool::JobPool(uint32_t threadCount)
         : m_pImpl(std::make_unique<Impl>())
     {
-        threadCount = Math::clamp((threadCount > 0 ? threadCount : std::thread::hardware_concurrency() - 1), 1ul, 32ul);
+        threadCount = clamp((threadCount > 0 ? threadCount : std::thread::hardware_concurrency() - 1), 1ul, 32ul);
         m_pImpl->localPools.reserve(threadCount);
 
         for (auto i = 0; i < threadCount; ++i)

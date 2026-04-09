@@ -4,23 +4,23 @@
 #include "litl-core/window.hpp"
 #include "litl-renderer/renderer.hpp"
 
-namespace LITL::Vulkan::Renderer
+namespace litl::vulkan
 {
-    LITL::Renderer::Renderer* createVulkanRenderer(Core::Window* pWindow, LITL::Renderer::RendererConfiguration const& rendererDescriptor);
+    litl::Renderer* createVulkanRenderer(Window* pWindow, RendererConfiguration const& rendererDescriptor);
 
-    bool build(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
-    void destroy(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
-    uint32_t getFrame(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
-    uint32_t getFrameIndex(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
+    bool build(litl::RendererHandle const& litlHandle) noexcept;
+    void destroy(litl::RendererHandle const& litlHandle) noexcept;
+    uint32_t getFrame(litl::RendererHandle const& litlHandle) noexcept;
+    uint32_t getFrameIndex(litl::RendererHandle const& litlHandle) noexcept;
 
-    bool beginRender(LITL::Renderer::RendererHandle const& litlHandle);
-    void submitCommands(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers);
-    void endRender(LITL::Renderer::RendererHandle const& litlHandle);
+    bool beginRender(litl::RendererHandle const& litlHandle);
+    void submitCommands(litl::RendererHandle const& litlHandle, litl::CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers);
+    void endRender(litl::RendererHandle const& litlHandle);
 
-    //void render(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::CommandBuffer* pBuffers, uint32_t numCommandBuffers);
-    LITL::Renderer::ResourceAllocator* buildResourceAllocator(LITL::Renderer::RendererHandle const& litlHandle) noexcept;
+    //void render(litl::RendererHandle const& litlHandle, litl::CommandBuffer* pBuffers, uint32_t numCommandBuffers);
+    litl::ResourceAllocator* buildResourceAllocator(litl::RendererHandle const& litlHandle) noexcept;
 
-    const LITL::Renderer::RendererOperations VulkanRendererOperations = {
+    const litl::RendererOperations VulkanRendererOperations = {
         &build,
         &destroy,
         &getFrame,

@@ -13,7 +13,7 @@
 #include "litl-core/job/jobFence.hpp"
 #include "litl-core/job/jobScheduler.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     static constexpr uint32_t MainThreadIndex = 0;
     thread_local uint32_t JobScheduler::t_threadIndex = std::numeric_limits<uint32_t>::max();
@@ -109,7 +109,7 @@ namespace LITL::Core
         // Work Scheduler needs to be created on the main thread so that this properly captures.
         t_threadIndex = MainThreadIndex;
 
-        uint32_t threadCount = Math::max(2u, std::thread::hardware_concurrency());  // - 1 (to prevent main thread being a dedicated worker, but then) + 1 (to have a dedicated worker for High priority jobs)
+        uint32_t threadCount = max(2u, std::thread::hardware_concurrency());  // - 1 (to prevent main thread being a dedicated worker, but then) + 1 (to have a dedicated worker for High priority jobs)
 
         m_pImpl->workers.resize(threadCount);
         m_pImpl->syncBarrier = std::make_unique<std::barrier<>>(threadCount);
@@ -319,7 +319,7 @@ namespace LITL::Core
     std::optional<JobHandle> JobScheduler::stealWork(JobPriority priority) const noexcept
     {
         // Try to steal a job from another thread.
-        uint32_t victimIndex = Math::FastRng::shared().next(m_pImpl->workers.size());
+        uint32_t victimIndex = FastRng::shared().next(m_pImpl->workers.size());
 
         if (victimIndex != t_threadIndex)
         {

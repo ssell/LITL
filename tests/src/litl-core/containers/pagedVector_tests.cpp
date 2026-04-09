@@ -3,7 +3,7 @@
 
 #include "litl-core/containers/pagedVector.hpp"
 
-namespace LITL::Core::Tests
+namespace litl::tests
 {
     LITL_TEST_CASE("Push-Pop", "[core::containers::pagedVector]")
     {

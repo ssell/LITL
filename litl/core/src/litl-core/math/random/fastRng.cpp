@@ -3,7 +3,7 @@
 
 #include "litl-core/math/random/fastRng.hpp"
 
-namespace LITL::Math
+namespace litl
 {
     FastRng& FastRng::shared() noexcept
     {

@@ -1,12 +1,12 @@
 #include "litl-core/math.hpp"
 #include "litl-engine/config.hpp"
 
-namespace LITL::Engine
+namespace litl
 {
     void Configuration::sanitize() noexcept
     {
-        engineSettings.framesPerSecond = Math::clamp(engineSettings.framesPerSecond, 1ul, 1000ul);
-        engineSettings.ticksPerSecond = Math::clamp(engineSettings.ticksPerSecond, 1ul, 1000ul);
+        engineSettings.framesPerSecond = clamp(engineSettings.framesPerSecond, 1ul, 1000ul);
+        engineSettings.ticksPerSecond = clamp(engineSettings.ticksPerSecond, 1ul, 1000ul);
 
         rendererSettings.sanitize();
     }

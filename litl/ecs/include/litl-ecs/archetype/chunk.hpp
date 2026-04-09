@@ -10,7 +10,7 @@
 #include "litl-ecs/archetype/chunkLayout.hpp"
 #include "litl-ecs/archetype/chunkHeader.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     /// <summary>
     /// An array of all the data for a single component type stored within a Chunk.
@@ -77,7 +77,7 @@ namespace LITL::ECS
 
     private:
 
-        std::byte m_data[Constants::chunk_size];
+        std::byte m_data[ecs::Constants::chunk_size];
     };
 }
 

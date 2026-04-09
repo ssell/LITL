@@ -4,7 +4,7 @@
 #include <vulkan/vulkan.h>
 #include "litl-renderer/pipeline/graphicsPipeline.hpp"
 
-namespace LITL::Vulkan::Renderer
+namespace litl::vulkan
 {
     struct GraphicsPipelineHandle
     {
@@ -13,12 +13,12 @@ namespace LITL::Vulkan::Renderer
         VkPipeline vkPipeline;
     };
 
-    LITL::Renderer::GraphicsPipeline* createGraphicsPipeline(VkDevice vkDevice, VkFormat vkSwapChainImageFormat, LITL::Renderer::GraphicsPipelineDescriptor const& descriptor);
+    litl::GraphicsPipeline* createGraphicsPipeline(VkDevice vkDevice, VkFormat vkSwapChainImageFormat, litl::GraphicsPipelineDescriptor const& descriptor);
 
-    bool build(LITL::Renderer::GraphicsPipelineDescriptor const& descriptor, LITL::Renderer::GraphicsPipelineHandle const& litlHandle);
-    void destroy(LITL::Renderer::GraphicsPipelineHandle const& litlHandle);
+    bool build(litl::GraphicsPipelineDescriptor const& descriptor, litl::GraphicsPipelineHandle const& litlHandle);
+    void destroy(litl::GraphicsPipelineHandle const& litlHandle);
 
-    const LITL::Renderer::GraphicsPipelineOperations VulkanGraphicsPipelineOperations = {
+    const litl::GraphicsPipelineOperations VulkanGraphicsPipelineOperations = {
         &build,
         &destroy
     };

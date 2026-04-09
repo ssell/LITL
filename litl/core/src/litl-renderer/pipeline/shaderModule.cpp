@@ -1,7 +1,7 @@
 #include "litl-renderer/pipeline/shaderModule.hpp"
 #include "litl-core/logging/logging.hpp"
 
-namespace LITL::Renderer
+namespace litl
 {
     bool ShaderModule::build()
     {

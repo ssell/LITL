@@ -16,7 +16,7 @@
 #include "litl-ecs/archetype/chunk.hpp"
 #include "litl-ecs/archetype/archetypeComponents.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     class ArchetypeRegistry;
     class World;
@@ -98,7 +98,7 @@ namespace LITL::ECS
 
         ChunkLayout m_chunkLayout;
         ArchetypeComponents m_components;
-        Core::PagedVector<Chunk> m_chunks;
+        PagedVector<Chunk> m_chunks;
 
         friend class ArchetypeRegistry;
         friend class World;

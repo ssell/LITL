@@ -11,7 +11,7 @@
 #include "litl-core/types.hpp"
 #include "litl-ecs/constants.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     using ComponentBuildFunc   = void (*)(void* destination);
     using ComponentMoveFunc    = void (*)(void* from, void* to);

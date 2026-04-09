@@ -1,7 +1,7 @@
 #ifndef LITL_CORE_SERVICES_LIFETIME_H__
 #define LITL_CORE_SERVICES_LIFETIME_H__
 
-namespace LITL::Core
+namespace litl
 {
     enum class ServiceLifetime
     {

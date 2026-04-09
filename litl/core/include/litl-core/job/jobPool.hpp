@@ -5,7 +5,7 @@
 
 #include "litl-core/job/job.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     struct Job;
 

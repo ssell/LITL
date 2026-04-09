@@ -10,7 +10,7 @@
 #include "litl-ecs/system/systemPlacementHint.hpp"
 #include "litl-ecs/system/systemTraits.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     /// <summary>
     /// A single scheduled system.

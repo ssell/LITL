@@ -5,7 +5,7 @@
 #include "litl-renderer/pipeline/pipelineLayout.hpp"
 #include "litl-renderer/pipeline/shaderModule.hpp"
 
-namespace LITL::Renderer
+namespace litl
 {
     struct ComputePipelineDescriptor
     {

@@ -12,7 +12,7 @@
 
 #include "litl-core/containers/ringBuffer.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     /// <summary>
     /// Current state of the MemoryArena.

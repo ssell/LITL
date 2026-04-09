@@ -14,7 +14,7 @@
 #include "litl-core/types.hpp"
 #include "litl-core/math/types/vec3.hpp"
 
-namespace LITL
+namespace litl
 {
     struct mat3;
     struct mat4;
@@ -34,12 +34,12 @@ namespace LITL
 
         [[nodiscard]] constexpr bool operator==(quat const& other) const noexcept
         {
-            return Math::fequals(value.x, other.value.x) && Math::fequals(value.y, other.value.y) && Math::fequals(value.z, other.value.z) && Math::fequals(value.w, other.value.w);
+            return fequals(value.x, other.value.x) && fequals(value.y, other.value.y) && fequals(value.z, other.value.z) && fequals(value.w, other.value.w);
         }
 
         [[nodiscard]] constexpr bool operator==(glm::quat const& other) const noexcept
         {
-            return Math::fequals(value.x, other.x) && Math::fequals(value.y, other.y) && Math::fequals(value.z, other.z) && Math::fequals(value.w, other.w);
+            return fequals(value.x, other.x) && fequals(value.y, other.y) && fequals(value.z, other.z) && fequals(value.w, other.w);
         }
 
         // ---------------------------------------------------------------------------------
@@ -181,7 +181,7 @@ namespace LITL
 
         [[nodiscard]] constexpr bool isIdentity() const noexcept
         {
-            return Math::isOne(value.w) && Math::isZero(value.x) && Math::isZero(value.y) && Math::isZero(value.z);
+            return isOne(value.w) && isZero(value.x) && isZero(value.y) && isZero(value.z);
         }
 
         [[nodiscard]] constexpr quat getInverse() const noexcept
@@ -328,6 +328,6 @@ namespace LITL
     };
 }
 
-REGISTER_TYPE_NAME(LITL::quat)
+REGISTER_TYPE_NAME(litl::quat)
 
 #endif

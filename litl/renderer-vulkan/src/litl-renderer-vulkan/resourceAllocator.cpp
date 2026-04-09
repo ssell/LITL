@@ -5,48 +5,48 @@
 #include "litl-renderer-vulkan/pipeline/pipelineLayout.hpp"
 #include "litl-renderer-vulkan/pipeline/shaderModule.hpp"
 
-namespace LITL::Vulkan::Renderer
+namespace litl::vulkan
 {
-    LITL::Renderer::ResourceAllocator* createResourceAllocator(LITL::Renderer::RendererHandle const& litlHandle) noexcept
+    litl::ResourceAllocator* createResourceAllocator(litl::RendererHandle const& litlHandle) noexcept
     {
-        return new LITL::Renderer::ResourceAllocator(&VulkanResourceAllocatorOperations, litlHandle);
+        return new litl::ResourceAllocator(&VulkanResourceAllocatorOperations, litlHandle);
     }
 
-    Core::RefPtr<LITL::Renderer::CommandBuffer> createCommandBuffer(LITL::Renderer::RendererHandle const& litlHandle)
+    RefPtr<litl::CommandBuffer> createCommandBuffer(litl::RendererHandle const& litlHandle)
     {
         auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
 
-        return Core::RefPtr<LITL::Renderer::CommandBuffer>(createCommandBuffer(
+        return RefPtr<litl::CommandBuffer>(createCommandBuffer(
             handle->context.vkDevice,
             handle->context.vkCommandPool,
             handle->context.frame,
             handle->context.framesInFlight));
     }
 
-    Core::RefPtr<LITL::Renderer::PipelineLayout> createPipelineLayout(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::PipelineLayoutDescriptor const& descriptor)
+    RefPtr<litl::PipelineLayout> createPipelineLayout(litl::RendererHandle const& litlHandle, litl::PipelineLayoutDescriptor const& descriptor)
     {
         auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
 
-        return Core::RefPtr<LITL::Renderer::PipelineLayout>(createPipelineLayout(
+        return RefPtr<litl::PipelineLayout>(createPipelineLayout(
             handle->context.vkDevice,
             descriptor));
     }
 
-    Core::RefPtr<LITL::Renderer::ShaderModule> createShaderModule(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::ShaderModuleDescriptor const& descriptor)
+    RefPtr<litl::ShaderModule> createShaderModule(litl::RendererHandle const& litlHandle, litl::ShaderModuleDescriptor const& descriptor)
     {
         auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
 
-        return Core::RefPtr<LITL::Renderer::ShaderModule>(createShaderModule(
+        return RefPtr<litl::ShaderModule>(createShaderModule(
             handle->context.vkDevice,
             descriptor
         ));
     }
 
-    Core::RefPtr<LITL::Renderer::GraphicsPipeline> createGraphicsPipeline(LITL::Renderer::RendererHandle const& litlHandle, LITL::Renderer::GraphicsPipelineDescriptor const& descriptor)
+    RefPtr<litl::GraphicsPipeline> createGraphicsPipeline(litl::RendererHandle const& litlHandle, litl::GraphicsPipelineDescriptor const& descriptor)
     {
         auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
 
-        return Core::RefPtr<LITL::Renderer::GraphicsPipeline>(createGraphicsPipeline(
+        return RefPtr<litl::GraphicsPipeline>(createGraphicsPipeline(
             handle->context.vkDevice,
             handle->context.vkSwapChainImageFormat,
             descriptor

@@ -3,7 +3,7 @@
 
 #include "litl-ecs/constants.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     /// <summary>
     /// Combination of a component type along with the memory address of where the source data is located.

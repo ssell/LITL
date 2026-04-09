@@ -47,7 +47,7 @@ namespace
     };
 }
 
-namespace LITL::Core::Tests
+namespace litl::tests
 {
     LITL_TEST_CASE("Add", "[core::services]")
     {

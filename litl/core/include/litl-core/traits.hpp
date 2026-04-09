@@ -3,7 +3,7 @@
 
 #include <concepts>
 
-namespace LITL
+namespace litl
 {
     /// <summary>
     /// Enforces the Inherits inherits from Base.

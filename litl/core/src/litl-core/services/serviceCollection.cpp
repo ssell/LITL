@@ -3,7 +3,7 @@
 #include "litl-core/services/serviceCollection.hpp"
 #include "litl-core/services/serviceProvider.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     std::shared_ptr<ServiceProvider> ServiceCollection::build() const
     {

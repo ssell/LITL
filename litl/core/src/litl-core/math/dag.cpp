@@ -2,7 +2,7 @@
 
 #include "litl-core/math/dag.hpp"
 
-namespace LITL::Math
+namespace litl
 {
     bool DirectedAcyclicGraph::addNode(DagNode node) noexcept
     {

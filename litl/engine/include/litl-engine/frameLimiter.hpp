@@ -4,7 +4,7 @@
 #include <chrono>
 #include <thread>
 
-namespace LITL::Engine
+namespace litl
 {
     /// <summary>
     /// Keeps the frame rate steady at the specified target FPS.

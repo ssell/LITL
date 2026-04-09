@@ -8,7 +8,7 @@
 #include "litl-core/logging/sinks/consoleSink.hpp"
 #include "litl-core/logging/sinks/fileSink.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     class LogProcessor
     {

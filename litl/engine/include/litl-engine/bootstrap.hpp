@@ -5,22 +5,22 @@
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/system/systemCollection.hpp"
 
-namespace LITL::Engine
+namespace litl
 {
     /// <summary>
     /// Optional function provided to the Engine to allow the user to inject their custom services.
     /// </summary>
-    using ConfigureServicesFunc = void(*)(Core::ServiceCollection& services);
+    using ConfigureServicesFunc = void(*)(ServiceCollection& services);
 
     /// <summary>
     /// Optional function provided to the Engine to allow the user to add their custom systems.
     /// </summary>
-    using ConfigureSystemsFunc = void(*)(ECS::SystemCollection& systems);
+    using ConfigureSystemsFunc = void(*)(SystemCollection& systems);
 
     /// <summary>
     /// Optional function provided to the Engine to allow the user to add initial entities, etc. to the ECS world.
     /// </summary>
-    using BootstrapFunc = void(*)(Core::ServiceProvider& services, ECS::EntityCommands& commands);
+    using BootstrapFunc = void(*)(ServiceProvider& services, EntityCommands& commands);
 
     namespace Internal
     {
@@ -28,39 +28,39 @@ namespace LITL::Engine
         /// Adds all of the default services.
         /// </summary>
         /// <param name="services"></param>
-        void defaultConfigureServices(Core::ServiceCollection& services);
+        void defaultConfigureServices(ServiceCollection& services);
 
         /// <summary>
         /// Adds all of the default systems.
         /// </summary>
         /// <param name="systems"></param>
-        void defaultConfigureSystems(ECS::SystemCollection& systems);
+        void defaultConfigureSystems(SystemCollection& systems);
 
         /// <summary>
         /// Adds all of the default objects.
         /// </summary>
         /// <param name="services"></param>
         /// <param name="ecs"></param>
-        void defaultBootstrap(Core::ServiceProvider& services, ECS::EntityCommands& commands);
+        void defaultBootstrap(ServiceProvider& services, EntityCommands& commands);
 
         /// <summary>
         /// Adds no default services.
         /// </summary>
         /// <param name="services"></param>
-        void nullConfigureServices(Core::ServiceCollection& services);
+        void nullConfigureServices(ServiceCollection& services);
 
         /// <summary>
         /// Adds no default systems.
         /// </summary>
         /// <param name="systems"></param>
-        void nullConfigureSystems(ECS::SystemCollection& systems);
+        void nullConfigureSystems(SystemCollection& systems);
 
         /// <summary>
         /// Adds no default objects.
         /// </summary>
         /// <param name="services"></param>
         /// <param name="ecs"></param>
-        void nullBootstrap(Core::ServiceProvider& services, ECS::EntityCommands& commands);
+        void nullBootstrap(ServiceProvider& services, EntityCommands& commands);
     }
 
     /// <summary>
@@ -69,9 +69,9 @@ namespace LITL::Engine
     /// </summary>
     struct EngineSetupFunctions
     {
-        void (*configureServices)(Core::ServiceCollection&);
-        void (*configureSystems)(ECS::SystemCollection&);
-        void (*bootstrap)(Core::ServiceProvider&, ECS::EntityCommands&);
+        void (*configureServices)(ServiceCollection&);
+        void (*configureSystems)(SystemCollection&);
+        void (*bootstrap)(ServiceProvider&, EntityCommands&);
     };
 
     /// <summary>

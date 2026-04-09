@@ -1,7 +1,7 @@
 #include <iostream>
 #include "litl-core/logging/sinks/consoleSink.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     void ConsoleLoggingSink::processMessage(std::string const& message)
     {

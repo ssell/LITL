@@ -5,11 +5,12 @@
 #include <optional>
 
 #include "litl-core/constants.hpp"
+#include "litl-ecs/constants.hpp"
 #include "litl-ecs/entity/entity.hpp"
 #include "litl-ecs/entity/deferredEntity.hpp"
 #include "litl-ecs/component/component.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     class EntityCommandQueue;
 
@@ -31,7 +32,7 @@ namespace LITL::ECS
         /// <summary>
         /// The component being added or removed.
         /// </summary>
-        ComponentTypeId component{ Constants::null_component_id };
+        ComponentTypeId component{ ecs::Constants::null_component_id };
 
         /// <summary>
         /// The address to the component data being added.

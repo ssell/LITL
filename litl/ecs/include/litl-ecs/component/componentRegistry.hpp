@@ -4,7 +4,7 @@
 #include "litl-ecs/constants.hpp"
 #include "litl-ecs/component/component.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     /// <summary>
     /// Used for maintaining mappings of stable id <-> descriptor and runtime (not templated) component resolution.

@@ -3,7 +3,7 @@
 
 #include "litl-core/containers/concurrentQueue.hpp"
 
-namespace LITL::Core::Tests
+namespace litl::tests
 {
     LITL_TEST_CASE("Push-Pop Single-Threaded", "[core::containers::concurrentQueue]")
     {

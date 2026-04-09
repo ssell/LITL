@@ -9,7 +9,7 @@
 #include <span>
 #include <type_traits>
 
-namespace LITL::Core
+namespace litl
 {
     /// <summary>
     /// A small stack-local sorted and unique array that requires no heap allocation.

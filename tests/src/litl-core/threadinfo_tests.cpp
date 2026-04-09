@@ -4,7 +4,7 @@
 #include "tests.hpp"
 #include "litl-core/thread.hpp"
 
-namespace LITL::Core::Tests
+namespace litl::tests
 {
     LITL_TEST_CASE("Main Thread", "[core::threadinfo]")
     {

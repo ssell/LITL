@@ -4,7 +4,7 @@
 #include <cstdint>
 #include "litl-renderer/rendererConfiguration.hpp"
 
-namespace LITL::Engine
+namespace litl
 {
     class Engine;
 
@@ -41,7 +41,7 @@ namespace LITL::Engine
     struct Configuration
     {
         EngineConfiguration engineSettings;
-        LITL::Renderer::RendererConfiguration rendererSettings;
+        RendererConfiguration rendererSettings;
 
     private:
 

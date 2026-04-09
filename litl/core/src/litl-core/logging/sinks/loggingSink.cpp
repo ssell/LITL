@@ -7,7 +7,7 @@
 #include "litl-core/logging/sinks/loggingSink.hpp"
 #include "litl-core/containers/concurrentSingleQueue.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     struct LoggingSink::Impl
     {

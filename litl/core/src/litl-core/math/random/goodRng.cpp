@@ -3,7 +3,7 @@
 
 #include "litl-core/math/random/goodRng.hpp"
 
-namespace LITL::Math
+namespace litl
 {
     GoodRng& GoodRng::shared() noexcept
     {

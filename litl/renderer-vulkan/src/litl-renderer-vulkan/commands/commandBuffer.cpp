@@ -5,9 +5,9 @@
 #include "litl-renderer-vulkan/rendererContext.hpp"
 #include "litl-renderer-vulkan/commands/commandBuffer.hpp"
 
-namespace LITL::Vulkan::Renderer
+namespace litl::vulkan
 {
-    LITL::Renderer::CommandBuffer* createCommandBuffer(VkDevice vkDevice, VkCommandPool vkCommandPool, uint32_t currFrame, uint32_t framesInFlight)
+    litl::CommandBuffer* createCommandBuffer(VkDevice vkDevice, VkCommandPool vkCommandPool, uint32_t currFrame, uint32_t framesInFlight)
     {
         auto* handle = new CommandBufferHandle{ 
             vkDevice, 
@@ -18,7 +18,7 @@ namespace LITL::Vulkan::Renderer
 
         std::fill(handle->vkCommandBuffers.begin(), handle->vkCommandBuffers.end(), VK_NULL_HANDLE);
 
-        return new LITL::Renderer::CommandBuffer(&VulkanCommandBufferOperations, LITL_PACK_HANDLE(LITL::Renderer::CommandBufferHandle, handle));
+        return new litl::CommandBuffer(&VulkanCommandBufferOperations, LITL_PACK_HANDLE(litl::CommandBufferHandle, handle));
     }
 
     VkCommandBuffer getCurrentCommandBuffer(CommandBufferHandle const* handle)
@@ -26,7 +26,7 @@ namespace LITL::Vulkan::Renderer
         return handle->vkCommandBuffers[handle->currFrame % handle->vkCommandBuffers.size()];
     }
 
-    VkCommandBuffer extractCurrentVkCommandBuffer(LITL::Renderer::CommandBuffer const* commandBuffer)
+    VkCommandBuffer extractCurrentVkCommandBuffer(litl::CommandBuffer const* commandBuffer)
     {
         auto* handle = LITL_UNPACK_HANDLE_PTR(CommandBufferHandle, commandBuffer->getHandle());
         return getCurrentCommandBuffer(handle);
@@ -36,7 +36,7 @@ namespace LITL::Vulkan::Renderer
     // Lifecycle
     // -------------------------------------------------------------------------------------
 
-    bool build(LITL::Renderer::CommandBufferHandle const& litlCmdBufferHandle)
+    bool build(litl::CommandBufferHandle const& litlCmdBufferHandle)
     {
         auto* handle = LITL_UNPACK_HANDLE(CommandBufferHandle, litlCmdBufferHandle);
 
@@ -64,7 +64,7 @@ namespace LITL::Vulkan::Renderer
         return true;
     }
 
-    void destroy(LITL::Renderer::CommandBufferHandle const& litlCmdBufferHandle)
+    void destroy(litl::CommandBufferHandle const& litlCmdBufferHandle)
     {
         auto* handle = LITL_UNPACK_HANDLE(CommandBufferHandle, litlCmdBufferHandle);
 
@@ -77,7 +77,7 @@ namespace LITL::Vulkan::Renderer
         delete handle;
     }
 
-    bool begin(LITL::Renderer::CommandBufferHandle const& litlCmdBufferHandle, uint32_t frame)
+    bool begin(litl::CommandBufferHandle const& litlCmdBufferHandle, uint32_t frame)
     {
         auto* handle = LITL_UNPACK_HANDLE(CommandBufferHandle, litlCmdBufferHandle);
 
@@ -99,7 +99,7 @@ namespace LITL::Vulkan::Renderer
         return true;
     }
 
-    bool end(LITL::Renderer::CommandBufferHandle const& litlCmdBufferHandle)
+    bool end(litl::CommandBufferHandle const& litlCmdBufferHandle)
     {
         auto* handle = LITL_UNPACK_HANDLE(CommandBufferHandle, litlCmdBufferHandle);
 
@@ -117,7 +117,7 @@ namespace LITL::Vulkan::Renderer
     // Graphic Pipeline
     // -------------------------------------------------------------------------------------
 
-    void cmdBeginRenderPass(LITL::Renderer::CommandBufferHandle const& litlCmdBufferHandle, LITL::Renderer::RendererHandle const* pLitlRendererHandle, uint32_t swapChainIndex)
+    void cmdBeginRenderPass(litl::CommandBufferHandle const& litlCmdBufferHandle, litl::RendererHandle const* pLitlRendererHandle, uint32_t swapChainIndex)
     {
         auto* handle = LITL_UNPACK_HANDLE(CommandBufferHandle, litlCmdBufferHandle);
         auto* rendererHandle = LITL_UNPACK_HANDLE_PTR(RendererHandle, pLitlRendererHandle);
@@ -145,13 +145,13 @@ namespace LITL::Vulkan::Renderer
         vkCmdBeginRendering(getCurrentCommandBuffer(handle), &renderInfo);
     }
 
-    void cmdEndRenderPass(LITL::Renderer::CommandBufferHandle const& litlCmdBufferHandle)
+    void cmdEndRenderPass(litl::CommandBufferHandle const& litlCmdBufferHandle)
     {
         auto* handle = LITL_UNPACK_HANDLE(CommandBufferHandle, litlCmdBufferHandle);
         vkCmdEndRendering(getCurrentCommandBuffer(handle));
     }
 
-    void cmdBindGraphicsPipeline(LITL::Renderer::CommandBufferHandle const& litlCbHandle, LITL::Renderer::GraphicsPipelineHandle const& litlGraphicsHandle)
+    void cmdBindGraphicsPipeline(litl::CommandBufferHandle const& litlCbHandle, litl::GraphicsPipelineHandle const& litlGraphicsHandle)
     {
 
     }

@@ -7,7 +7,7 @@
 
 #include "litl-renderer/commands/commandBuffer.hpp"
 
-namespace LITL::Vulkan::Renderer
+namespace litl::vulkan
 {
     struct CommandBufferHandle
     {
@@ -25,20 +25,20 @@ namespace LITL::Vulkan::Renderer
     /// <param name="currFrame"></param>
     /// <param name="framesInFlight"></param>
     /// <returns></returns>
-    LITL::Renderer::CommandBuffer* createCommandBuffer(VkDevice vkDevice, VkCommandPool vkCommandPool, uint32_t currFrame, uint32_t framesInFlight);
+    litl::CommandBuffer* createCommandBuffer(VkDevice vkDevice, VkCommandPool vkCommandPool, uint32_t currFrame, uint32_t framesInFlight);
 
-    VkCommandBuffer extractCurrentVkCommandBuffer(LITL::Renderer::CommandBuffer const* commandBuffer);
+    VkCommandBuffer extractCurrentVkCommandBuffer(litl::CommandBuffer const* commandBuffer);
 
-    bool build(LITL::Renderer::CommandBufferHandle const& litlCmdBufferHandle);
-    void destroy(LITL::Renderer::CommandBufferHandle const& litlCmdBufferHandle);
-    bool begin(LITL::Renderer::CommandBufferHandle const& litlCmdBufferHandle, uint32_t frame);
-    bool end(LITL::Renderer::CommandBufferHandle const& litlCmdBufferHandle);
+    bool build(litl::CommandBufferHandle const& litlCmdBufferHandle);
+    void destroy(litl::CommandBufferHandle const& litlCmdBufferHandle);
+    bool begin(litl::CommandBufferHandle const& litlCmdBufferHandle, uint32_t frame);
+    bool end(litl::CommandBufferHandle const& litlCmdBufferHandle);
 
-    void cmdBeginRenderPass(LITL::Renderer::CommandBufferHandle const& litlCmdBufferHandle, LITL::Renderer::RendererHandle const* pLitlRendererHandle, uint32_t swapChainIndex);
-    void cmdEndRenderPass(LITL::Renderer::CommandBufferHandle const& litlCmdBufferHandle);
-    void cmdBindGraphicsPipeline(LITL::Renderer::CommandBufferHandle const& litlCbHandle, LITL::Renderer::GraphicsPipelineHandle const& litlGraphicsHandle);
+    void cmdBeginRenderPass(litl::CommandBufferHandle const& litlCmdBufferHandle, litl::RendererHandle const* pLitlRendererHandle, uint32_t swapChainIndex);
+    void cmdEndRenderPass(litl::CommandBufferHandle const& litlCmdBufferHandle);
+    void cmdBindGraphicsPipeline(litl::CommandBufferHandle const& litlCbHandle, litl::GraphicsPipelineHandle const& litlGraphicsHandle);
 
-    const LITL::Renderer::CommandBufferOperations VulkanCommandBufferOperations = {
+    const litl::CommandBufferOperations VulkanCommandBufferOperations = {
         &build,
         &destroy,
         &begin,

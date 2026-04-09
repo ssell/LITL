@@ -7,7 +7,7 @@
 #include "litl-ecs/system/systemCollectionContext.hpp"
 #include "litl-ecs/system/systemGroup.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     class World;
 

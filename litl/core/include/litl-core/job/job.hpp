@@ -9,7 +9,7 @@
 #include "litl-core/job/jobPriority.hpp"
 #include "litl-core/job/jobHandle.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     class JobFence;
     struct Job;

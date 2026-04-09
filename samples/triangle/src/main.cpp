@@ -1,17 +1,17 @@
 #include "litl-engine/engine.hpp"
 #include "litl-engine/ecs/common.hpp"
 
-using namespace LITL;
+using namespace litl;
 
-void bootstrap(Core::ServiceProvider& services, ECS::EntityCommands& commands)
+void bootstrap(ServiceProvider& services, EntityCommands& commands)
 {
     auto entity = commands.createEntity();
-    commands.addComponent<Engine::Transform>(entity, Engine::Transform{ .position = vec3{0.0f, 0.0f, 5.0} });
+    commands.addComponent<Transform>(entity, Transform{ .position = vec3{0.0f, 0.0f, 5.0} });
 }
 
 int main()
 {
-    Engine::Engine engine{};
+    Engine engine{};
 
     engine.setup(
         { .engineSettings { .applicationName = "LITL - Triangle Sample" } },

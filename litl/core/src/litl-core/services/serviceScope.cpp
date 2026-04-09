@@ -3,7 +3,7 @@
 #include "litl-core/services/serviceScope.hpp"
 #include "litl-core/services/serviceProvider.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     struct ServiceScope::Impl
     {

@@ -6,40 +6,40 @@
 #include "litl-ecs/world.hpp"
 #include "litl-engine/ecs/systems/renderSystem.hpp"
 
-namespace LITL::Engine::Internal
+namespace litl::Internal
 {
-    void defaultConfigureServices(Core::ServiceCollection& services)
+    void defaultConfigureServices(ServiceCollection& services)
     {
         services.addSingleton<Configuration>();
         services.addSingleton<FrameLimiter>();
-        services.addSingleton<Core::JobScheduler>();
-        services.addSingleton<ECS::World>();
-        services.addSingleton<Core::Window>();
-        services.addSingleton<Renderer::Renderer>();
-        //m_pImpl->serviceCollection.addSingleton<Core::RefPtr<Renderer::CommandBuffer>>();
+        services.addSingleton<JobScheduler>();
+        services.addSingleton<World>();
+        services.addSingleton<Window>();
+        services.addSingleton<Renderer>();
+        //m_pImpl->serviceCollection.addSingleton<RefPtr<CommandBuffer>>();
     }
 
-    void defaultConfigureSystems(ECS::SystemCollection& systems)
+    void defaultConfigureSystems(SystemCollection& systems)
     {
-        systems.addSystem<RenderSystem>(ECS::SystemGroup::Render);
+        systems.addSystem<RenderSystem>(SystemGroup::Render);
     }
 
-    void defaultBootstrap(Core::ServiceProvider& services, ECS::EntityCommands& commands)
+    void defaultBootstrap(ServiceProvider& services, EntityCommands& commands)
     {
 
     }
 
-    void nullConfigureServices(Core::ServiceCollection& services)
-    {
-        // ... intentionally empty ...
-    }
-
-    void nullConfigureSystems(ECS::SystemCollection& systems)
+    void nullConfigureServices(ServiceCollection& services)
     {
         // ... intentionally empty ...
     }
 
-    void nullBootstrap(Core::ServiceProvider& services, ECS::EntityCommands& commands)
+    void nullConfigureSystems(SystemCollection& systems)
+    {
+        // ... intentionally empty ...
+    }
+
+    void nullBootstrap(ServiceProvider& services, EntityCommands& commands)
     {
         // ... intentionally empty ...
     }

@@ -2,7 +2,7 @@
 #include "litl-core/math/types.hpp"
 #include "litl-core/math/traits.hpp"
 
-namespace LITL::Math::Tests
+namespace litl::tests
 {
     // -------------------------------------------------------------------------------------
     // Construction

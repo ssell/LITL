@@ -10,7 +10,7 @@ namespace
     const uint64_t Seed64 = 641337;
 }
 
-namespace LITL::Core::Tests
+namespace litl::tests
 {
     LITL_TEST_CASE("Simple Hash 32", "[core::hash]")
     {

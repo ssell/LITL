@@ -1,7 +1,7 @@
 #include "tests.hpp"
 #include "litl-ecs/system/systemGraph.hpp"
 
-namespace LITL::ECS::Tests
+namespace litl::tests
 {
     LITL_TEST_CASE("Explicit Dependency", "[ecs::systemGraph]")
     {

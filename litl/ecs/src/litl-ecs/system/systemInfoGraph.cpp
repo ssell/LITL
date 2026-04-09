@@ -1,6 +1,6 @@
 #include "litl-ecs/system/systemInfoGraph.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     SystemInfoGraph::SystemInfoGraph()
     {

@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace LITL::Math
+namespace litl
 {
     using DagNode = uint32_t;
     using DagNodeIndex = uint32_t;

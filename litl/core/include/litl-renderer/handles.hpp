@@ -3,7 +3,7 @@
 
 #include "litl-core/handles.hpp"
 
-namespace LITL::Renderer
+namespace litl
 {
     DEFINE_LITL_HANDLE(RendererHandle);
     DEFINE_LITL_HANDLE(PipelineLayoutHandle);

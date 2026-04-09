@@ -1,10 +1,10 @@
 #include "litl-core/math.hpp"
 #include "litl-renderer/rendererConfiguration.hpp"
 
-namespace LITL::Renderer
+namespace litl
 {
     void RendererConfiguration::sanitize() noexcept
     {
-        framesInFlight = Math::clamp(framesInFlight, 1ul, 8ul);
+        framesInFlight = clamp(framesInFlight, 1ul, 8ul);
     }
 }

@@ -6,7 +6,7 @@
 #include "litl-ecs/entity/entityCommands.hpp"
 #include "litl-ecs/world.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     /// <summary>
     /// Combines one or more EntityCommand buffers, unifies the commands, and then runs them.

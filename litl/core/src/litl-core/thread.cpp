@@ -3,7 +3,7 @@
 
 #include "litl-core/thread.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     // -------------------------------------------------------------------------------------
     // ThreadInfo

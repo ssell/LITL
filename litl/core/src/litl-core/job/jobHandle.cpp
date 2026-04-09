@@ -1,7 +1,7 @@
 #include <cassert>
 #include "litl-core/job/jobHandle.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     namespace
     {

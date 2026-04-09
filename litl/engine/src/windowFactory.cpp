@@ -2,21 +2,21 @@
 #include "litl-core-vulkan/window.hpp"
 #include "litl-engine/windowFactory.hpp"
 
-namespace LITL::Engine
+namespace litl
 {
-    bool injectWindow(Core::ServiceProvider& serviceProvider, Renderer::RendererBackendType rendererType)
+    bool injectWindow(ServiceProvider& serviceProvider, RendererBackendType rendererType)
     {
-        logInfo("Injecting Window of type ", Renderer::RendererBackendNames[rendererType]);
+        logInfo("Injecting Window of type ", RendererBackendNames[static_cast<uint32_t>(rendererType)]);
 
         switch (rendererType)
         {
-        case Renderer::RendererBackendType::Vulkan:
-            serviceProvider.setSingleton<Core::Window, Core::Window>(Vulkan::createVulkanWindow());
+        case RendererBackendType::Vulkan:
+            serviceProvider.setSingleton<Window, Window>(vulkan::createVulkanWindow());
             return true;
 
-        case Renderer::RendererBackendType::None:
+        case RendererBackendType::None:
         default:
-            logError("Requested to create unsupported Window with backend of ", Renderer::RendererBackendNames[rendererType]);
+            logError("Requested to create unsupported Window with backend of ", RendererBackendNames[static_cast<uint32_t>(rendererType)]);
             return false;
         }
     }

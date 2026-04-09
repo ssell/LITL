@@ -1,7 +1,7 @@
 #include "tests.hpp"
 #include "litl-core/math.hpp"
 
-namespace LITL::Math::Tests
+namespace litl::tests
 {
     LITL_TEST_CASE("mat4 -> quat -> mat3 roundtrip", "[math::types]")
     {

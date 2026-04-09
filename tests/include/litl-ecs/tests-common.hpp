@@ -7,7 +7,7 @@
 #include "litl-ecs/world.hpp"
 #include "litl-ecs/constants.hpp"
 
-namespace LITL::ECS::Tests
+namespace litl::tests
 {
     struct Foo
     {
@@ -32,7 +32,7 @@ namespace LITL::ECS::Tests
 
     struct TestSystem
     {
-        void setup(Core::ServiceProvider& services)
+        void setup(ServiceProvider& services)
         {
             auto setupService = services.get<SystemSetupService>();
 
@@ -42,7 +42,7 @@ namespace LITL::ECS::Tests
             }
         }
 
-        void update(ECS::EntityCommands& commands, float dt, Foo& foo, Bar& bar)
+        void update(EntityCommands& commands, float dt, Foo& foo, Bar& bar)
         {
             foo.a++;
             bar.b++;
@@ -50,8 +50,8 @@ namespace LITL::ECS::Tests
     };
 }
 
-REGISTER_TYPE_NAME(LITL::ECS::Tests::Foo)
-REGISTER_TYPE_NAME(LITL::ECS::Tests::Bar)
-REGISTER_TYPE_NAME(LITL::ECS::Tests::Baz)
+REGISTER_TYPE_NAME(litl::tests::Foo)
+REGISTER_TYPE_NAME(litl::tests::Bar)
+REGISTER_TYPE_NAME(litl::tests::Baz)
 
 #endif

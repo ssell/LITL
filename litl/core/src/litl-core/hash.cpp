@@ -7,7 +7,7 @@
 
 #include "litl-core/hash.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     // (2^32 / φ) (golden ratio) and (2^64 / φ) respectively where φ = golden ratio (~1.6180339887)
     constexpr uint32_t goldenRatioHash32 = 0x9e3779b9UL;

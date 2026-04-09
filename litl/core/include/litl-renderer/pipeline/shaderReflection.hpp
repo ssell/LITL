@@ -9,7 +9,7 @@
 
 #include "litl-renderer/pipeline/shaderEnums.hpp"
 
-namespace LITL::Renderer
+namespace litl
 {
     /// <summary>
     /// Describes a single resource bound to one or more shader stages.

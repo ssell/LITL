@@ -3,9 +3,9 @@
 #include "litl-renderer-vulkan/pipeline/pipelineLayout.hpp"
 #include "litl-renderer-vulkan/pipeline/shaderModule.hpp"
 
-namespace LITL::Vulkan::Renderer
+namespace litl::vulkan
 {
-    LITL::Renderer::GraphicsPipeline* createGraphicsPipeline(VkDevice vkDevice, VkFormat vkSwapChainImageFormat, LITL::Renderer::GraphicsPipelineDescriptor const& descriptor)
+    litl::GraphicsPipeline* createGraphicsPipeline(VkDevice vkDevice, VkFormat vkSwapChainImageFormat, litl::GraphicsPipelineDescriptor const& descriptor)
     {
         auto* graphicsPipelineHandle = new GraphicsPipelineHandle{
             .vkDevice = vkDevice,
@@ -13,14 +13,14 @@ namespace LITL::Vulkan::Renderer
             .vkPipeline = VK_NULL_HANDLE
         };
 
-        return new LITL::Renderer::GraphicsPipeline(
+        return new litl::GraphicsPipeline(
             &VulkanGraphicsPipelineOperations,
-            LITL_PACK_HANDLE(LITL::Renderer::GraphicsPipelineHandle, graphicsPipelineHandle),
+            LITL_PACK_HANDLE(litl::GraphicsPipelineHandle, graphicsPipelineHandle),
             descriptor
         );
     }
 
-    bool build(LITL::Renderer::GraphicsPipelineDescriptor const& descriptor, LITL::Renderer::GraphicsPipelineHandle const& litlHandle)
+    bool build(litl::GraphicsPipelineDescriptor const& descriptor, litl::GraphicsPipelineHandle const& litlHandle)
     {
         auto* handle = LITL_UNPACK_HANDLE(GraphicsPipelineHandle, litlHandle);
 
@@ -167,7 +167,7 @@ namespace LITL::Vulkan::Renderer
         return true;
     }
 
-    void destroy(LITL::Renderer::GraphicsPipelineHandle const& litlHandle)
+    void destroy(litl::GraphicsPipelineHandle const& litlHandle)
     {
         auto* handle = LITL_UNPACK_HANDLE(GraphicsPipelineHandle, litlHandle);
 

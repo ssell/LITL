@@ -7,7 +7,7 @@
 
 #include "litl-ecs/entity/entityCommand.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     class World;
 

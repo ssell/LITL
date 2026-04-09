@@ -8,7 +8,7 @@
 
 #include "litl-core/impl.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     /// <summary>
     /// Implementation of a Multiple-Producer, Multiple-Consumer (MPMC) thread-safe queue.

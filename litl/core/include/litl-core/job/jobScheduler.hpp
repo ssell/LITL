@@ -10,7 +10,7 @@
 #include "litl-core/job/job.hpp"
 #include "litl-core/job/jobPool.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     class JobFence;
 

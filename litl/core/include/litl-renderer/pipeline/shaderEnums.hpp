@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-namespace LITL::Renderer
+namespace litl
 {
     /// <summary>
     /// Stage of the compiled shader program.

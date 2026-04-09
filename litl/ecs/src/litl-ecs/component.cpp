@@ -3,7 +3,7 @@
 #include "litl-ecs/component/component.hpp"
 #include "litl-ecs/component/componentRegistry.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     ComponentTypeId ComponentDescriptor::nextId() noexcept
     {
@@ -19,7 +19,7 @@ namespace LITL::ECS
 
     StableComponentTypeId ComponentDescriptor::getStableId(std::string_view componentName) noexcept
     {
-        return Core::hashString(componentName);
+        return hashString(componentName);
     }
 
     ComponentDescriptor const* ComponentDescriptor::get(ComponentTypeId componentTypeId) noexcept

@@ -4,7 +4,7 @@
 #include "litl-ecs/archetype/chunkLayout.hpp"
 #include "litl-ecs/archetype/archetypeComponents.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     ChunkLayout::ChunkLayout()
         : archetype(nullptr), entityCapacity(0), componentTypeCount(0)
@@ -30,14 +30,14 @@ namespace LITL::ECS
 
         const uint32_t chunkHeaderSize = static_cast<uint32_t>(sizeof(ChunkHeader));
         const uint32_t chunkEntityArraySize = static_cast<uint32_t>(sizeof(ChunkEntities));
-        uint32_t remaining = Constants::chunk_size - chunkHeaderSize - chunkEntityArraySize;
+        uint32_t remaining = ecs::Constants::chunk_size - chunkHeaderSize - chunkEntityArraySize;
 
         // First estimate of how many entities can fit. This is close, but may not be exact due to alignment.
-        entityCapacity = Math::min(Constants::max_entities_per_chunk, (componentBytesPerEntity == 0 ? Constants::max_entities_per_chunk : remaining / componentBytesPerEntity));
+        entityCapacity = min(ecs::Constants::max_entities_per_chunk, (componentBytesPerEntity == 0 ? ecs::Constants::max_entities_per_chunk : remaining / componentBytesPerEntity));
 
         // Get memory position of entity array
         uint32_t offset = chunkHeaderSize;
-        offset = Math::alignMemoryOffsetUp(offset, alignof(Entity));
+        offset = alignMemoryOffsetUp(offset, alignof(Entity));
         entityArrayOffset = static_cast<uint32_t>(offset);
         offset += chunkEntityArraySize;
 
@@ -52,14 +52,14 @@ namespace LITL::ECS
             for (size_t i = 0; i < componentOrder.size() && componentOrder[i] != nullptr; ++i)
             {
                 // Get memory address for start of this component column
-                offset = Math::alignMemoryOffsetUp(offset, componentOrder[i]->alignment);
+                offset = alignMemoryOffsetUp(offset, componentOrder[i]->alignment);
                 componentOffsets[i] = offset;
 
                 // Move to the end of this column
                 offset += componentOrder[i]->size * entityCapacity;
             }
 
-            if (offset <= Constants::chunk_size)
+            if (offset <= ecs::Constants::chunk_size)
             {
                 // All component columns fit in the chunk
                 break;
@@ -81,7 +81,7 @@ namespace LITL::ECS
         }
 
         // Failed to find. Realistically, should never get here.
-        return Constants::max_components;
+        return ecs::Constants::max_components;
     }
 
     void populateChunkLayout(ChunkLayout* layout, ArchetypeComponents const& components)

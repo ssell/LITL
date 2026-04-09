@@ -3,7 +3,7 @@
 
 using LITLHandle = void*;
 
-namespace LITL
+namespace litl
 {
 #define DEFINE_LITL_HANDLE(Name) struct Name { LITLHandle handle; }
 #define LITL_PACK_HANDLE(HandleType, HandleObj) HandleType { HandleObj }

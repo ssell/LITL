@@ -6,7 +6,7 @@
 #include "litl-core/refPtr.hpp"
 #include "litl-renderer/handles.hpp"
 
-namespace LITL::Renderer
+namespace litl
 {
     struct CommandBufferOperations
     {
@@ -43,7 +43,7 @@ namespace LITL::Renderer
         void (*cmdDispatch)(CommandBufferHandle const&, uint32_t, uint32_t, uint32_t);                          // todo
     };
 
-    class CommandBuffer final : public Core::RefCounted
+    class CommandBuffer final : public RefCounted
     {
     public:
 
@@ -90,7 +90,7 @@ namespace LITL::Renderer
             return &m_backendHandle;
         }
 
-        void cmdBeginRenderPass(LITL::Renderer::RendererHandle const* pRendererHandle, uint32_t swapChainIndex) const
+        void cmdBeginRenderPass(RendererHandle const* pRendererHandle, uint32_t swapChainIndex) const
         {
             m_pBackendOperations->cmdBeginRenderPass(m_backendHandle, pRendererHandle, swapChainIndex);
         }

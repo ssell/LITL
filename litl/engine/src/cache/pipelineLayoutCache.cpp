@@ -6,16 +6,16 @@
 #include "litl-core/refPtr.hpp"
 #include "litl-renderer/pipeline/pipelineLayout.hpp"
 
-namespace LITL::Engine
+namespace litl
 {
     struct PipelineLayoutCache::Impl
     {
-        Renderer::Renderer const* pRenderer;
-        Core::FlatHashMap<uint64_t, Core::RefPtr<Renderer::PipelineLayout>> cache;
+        Renderer const* pRenderer;
+        FlatHashMap<uint64_t, RefPtr<PipelineLayout>> cache;
         std::mutex cacheMutex;
     };
 
-    PipelineLayoutCache::PipelineLayoutCache(LITL::Renderer::Renderer const* pRenderer)
+    PipelineLayoutCache::PipelineLayoutCache(Renderer const* pRenderer)
     {
         m_impl->pRenderer = pRenderer;
     }
@@ -25,7 +25,7 @@ namespace LITL::Engine
 
     }
 
-    Renderer::PipelineLayout* PipelineLayoutCache::getPipelineLayout(Renderer::PipelineLayoutDescriptor const& descriptor)
+    PipelineLayout* PipelineLayoutCache::getPipelineLayout(PipelineLayoutDescriptor const& descriptor)
     {
         std::lock_guard<std::mutex> lock(m_impl->cacheMutex);
 

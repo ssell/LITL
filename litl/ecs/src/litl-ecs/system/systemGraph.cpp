@@ -4,7 +4,7 @@
 #include "litl-ecs/system/systemGraph.hpp"
 #include "litl-ecs/system/system.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     /// <summary>
     /// For each component referenced by a system in the graph,
@@ -255,7 +255,7 @@ namespace LITL::ECS
         return std::nullopt;
     }
 
-    Math::DirectedAcyclicGraph const& SystemGraph::getNodeGraph() const noexcept
+    DirectedAcyclicGraph const& SystemGraph::getNodeGraph() const noexcept
     {
         return m_nodeGraph;
     }

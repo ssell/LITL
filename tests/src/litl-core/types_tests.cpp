@@ -1,7 +1,7 @@
 #include "tests.hpp"
 #include "litl-core/types.hpp"
 
-namespace LITL::Core::Tests
+namespace litl::tests
 {
     struct Foo
     {
@@ -14,10 +14,10 @@ namespace LITL::Core::Tests
     };
 }
 
-REGISTER_TYPE_NAME(LITL::Core::Tests::Foo)
-REGISTER_TYPE_NAME(LITL::Core::Tests::Bar)
+REGISTER_TYPE_NAME(litl::tests::Foo)
+REGISTER_TYPE_NAME(litl::tests::Bar)
 
-namespace LITL::Core::Tests
+namespace litl::tests
 {
     LITL_TEST_CASE("Type IDs", "[core::types]")
     {
@@ -31,8 +31,8 @@ namespace LITL::Core::Tests
 
     LITL_TEST_CASE("Type Names", "[core::types]")
     {
-        const auto expectedFooName = "LITL::Core::Tests::Foo";
-        const auto expectedBarName = "LITL::Core::Tests::Bar";
+        const auto expectedFooName = "litl::tests::Foo";
+        const auto expectedBarName = "litl::tests::Bar";
 
         const auto fooName = type_name<Foo>();
         const auto barName = type_name<Bar>();

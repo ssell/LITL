@@ -10,7 +10,7 @@
 #include "litl-ecs/archetype/chunk.hpp"
 #include "litl-ecs/component/component.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     class EntityCommands;
 
@@ -59,7 +59,7 @@ namespace LITL::ECS
     /// provided during system run/iteration.
     /// </summary>
     template<typename S>
-    concept ValidSystem = requires(S s, Core::ServiceProvider& services)
+    concept ValidSystem = requires(S s, ServiceProvider& services)
     {
         { s.setup(services) } -> std::same_as<void>;                            // must have a "setup(ServiceProvider& services)" method
         &S::update;                                                             // must have an "update" method (more on that below)

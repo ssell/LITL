@@ -1,7 +1,7 @@
 #include "tests.hpp"
 #include "litl-core/job/jobPool.hpp"
 
-namespace LITL::Core::Tests
+namespace litl::tests
 {
     namespace
     {

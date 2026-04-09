@@ -5,7 +5,7 @@
 #include "litl-ecs/entity/entityCommands.hpp"
 #include "litl-core/math.hpp"
 
-namespace LITL::ECS::Tests
+namespace litl::tests
 {
     LITL_TEST_CASE("Queue Single", "[ecs::entityCommands]")
     {
@@ -85,7 +85,7 @@ namespace LITL::ECS::Tests
         queue.loadComponent((*barCommand), &barCopy);
 
         REQUIRE(fooCopy.a == foo.a);
-        REQUIRE(Math::fequals(barCopy.a, bar.a));
+        REQUIRE(fequals(barCopy.a, bar.a));
         REQUIRE(barCopy.b == bar.b);
 
     } END_LITL_TEST_CASE
@@ -93,7 +93,7 @@ namespace LITL::ECS::Tests
     LITL_TEST_CASE("Queue Many Components", "[ecs::entityCommands]")
     {
         // Tests adding a lot of components (enough to make 10 pool) and that they can be loaded.
-        constexpr uint32_t commandCount = (Constants::entity_command_pool_size / sizeof(Foo)) * 10;
+        constexpr uint32_t commandCount = (ecs::Constants::entity_command_pool_size / sizeof(Foo)) * 10;
 
         EntityCommandQueue queue;
         Foo foo{ 0 };

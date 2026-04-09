@@ -8,7 +8,7 @@
 #include "litl-ecs/component/component.hpp"
 #include "litl-ecs/component/componentData.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     struct ChunkLayout;
 
@@ -38,7 +38,7 @@ namespace LITL::ECS
 
     private:
 
-        std::array<ComponentTypeId, Constants::max_components> m_components{};
+        std::array<ComponentTypeId, ecs::Constants::max_components> m_components{};
         size_t m_size{ 0 };
         uint64_t m_hash{ 0 };
         bool m_hashDirty{ false };

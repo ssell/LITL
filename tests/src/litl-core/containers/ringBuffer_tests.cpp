@@ -1,7 +1,7 @@
 #include "tests.hpp"
 #include "litl-core/containers/ringBuffer.hpp"
 
-namespace LITL::Core::Tests
+namespace litl::tests
 {
     LITL_TEST_CASE("Basic", "[core::containers::ringBuffer]")
     {

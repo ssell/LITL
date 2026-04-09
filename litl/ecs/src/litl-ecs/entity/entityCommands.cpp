@@ -4,14 +4,14 @@
 #include "litl-ecs/entity/entityCommands.hpp"
 #include "litl-ecs/world.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
-    constexpr uint32_t BlockSize = Constants::max_component_size * 16;
+    constexpr uint32_t BlockSize = ecs::Constants::max_component_size * 16;
 
     struct EntityCommands::Impl
     {
         EntityCommandQueue commands{ };
-        Core::MemoryArena<BlockSize, 128> localData{};
+        MemoryArena<BlockSize, 128> localData{};
         uint32_t nextId{ 0 };
     };
 
@@ -170,6 +170,60 @@ namespace LITL::ECS
         });
     }
 
+    void EntityCommands::setParent(Entity entity, Entity parent) noexcept
+    {
+        m_pImpl->commands.push(EntityCommand{
+            .type = EntityCommandType::SetParent,
+            .entity = entity,
+            .setParentInfo = SetParentCommandInfo {
+                .parent = parent
+            }
+        });
+    }
+
+    void EntityCommands::setParent(Entity entity, DeferredEntity parent) noexcept
+    {
+        m_pImpl->commands.push(EntityCommand{
+            .type = EntityCommandType::SetParent,
+            .entity = entity,
+            .setParentInfo = SetParentCommandInfo {
+                .deferredParent = parent
+            }
+        });
+    }
+
+    void EntityCommands::setParent(DeferredEntity entity, Entity parent) noexcept
+    {
+        m_pImpl->commands.push(DeferredEntityCommand{
+            .type = EntityCommandType::SetParent,
+            .deferredEntity = entity,
+            .setParentInfo = SetParentCommandInfo {
+                .parent = parent
+            }
+        });
+    }
+
+    void EntityCommands::setParent(DeferredEntity entity, DeferredEntity parent) noexcept
+    {
+        m_pImpl->commands.push(DeferredEntityCommand{
+            .type = EntityCommandType::SetParent,
+            .deferredEntity = entity,
+            .setParentInfo = SetParentCommandInfo {
+                .deferredParent = parent
+            }
+        });
+    }
+
+    void EntityCommands::removeParent(Entity entity) noexcept
+    {
+        setParent(entity, Entity::null());
+    }
+
+    void EntityCommands::removeParent(DeferredEntity entity) noexcept
+    {
+        setParent(entity, Entity::null());
+    }
+
     void EntityCommands::materialize(World* world) noexcept
     {
         std::vector<Entity> materialized;
@@ -186,7 +240,8 @@ namespace LITL::ECS
                 m_pImpl->commands.push(EntityCommand{
                     .type = deferredCommand.type,
                     .entity = materialized[deferredCommand.deferredEntity.index],
-                    .componentInfo = deferredCommand.componentInfo
+                    .componentInfo = deferredCommand.componentInfo,
+                    .setParentInfo = deferredCommand.setParentInfo
                 });
             }
         }

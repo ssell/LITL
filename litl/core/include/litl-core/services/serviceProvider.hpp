@@ -10,7 +10,7 @@
 #include "litl-core/types.hpp"
 #include "litl-core/services/serviceDescriptor.hpp"
 
-namespace LITL::Core
+namespace litl
 {
     class ServiceScope;
 

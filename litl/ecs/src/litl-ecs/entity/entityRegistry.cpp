@@ -5,14 +5,14 @@
 #include "litl-ecs/entity/entityRegistry.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
 
-namespace LITL::ECS
+namespace litl
 {
     struct EntityRegistryState
     {
         /// <summary>
         /// Growing buffer of all entities.
         /// </summary>
-        Core::PagedVector<EntityRecord> entityRecords;
+        PagedVector<EntityRecord> entityRecords;
 
         /// <summary>
         /// Entities that have been "deleted" and their index has been freed up.
