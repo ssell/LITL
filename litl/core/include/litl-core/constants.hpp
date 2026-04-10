@@ -1,7 +1,10 @@
 #ifndef LITL_CORE_CONSTANTS_H__
 #define LITL_CORE_CONSTANTS_H__
 
+#include <concepts>
 #include <cstdint>
+#include <limits>
+#include <type_traits>
 
 namespace litl
 {
@@ -35,6 +38,11 @@ namespace litl
         /// Half of cache_line_size.
         /// </summary>
         static constexpr uint8_t half_cache_line_size = 32;
+
+        /// <summary>
+        /// Used as a null index value for various items.
+        /// </summary>
+        static constexpr uint32_t invalid_index32 = std::numeric_limits<uint32_t>::max();
     };
 }
 

@@ -6,6 +6,8 @@
 
 namespace litl
 {
+    using EntityId = uint32_t;
+
     /// <summary>
     /// Represents the "Entity" in the Entity Component System architecture.
     /// 
@@ -50,7 +52,7 @@ namespace litl
         /// <summary>
         /// The index of this Entity. Used to map it to its components. 
         /// </summary>
-        uint32_t index{ null().index };
+        EntityId index{ null().index };
 
         /// <summary>
         /// The current version/generation of this Entity. After an Entity is destroyed,
