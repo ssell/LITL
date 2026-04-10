@@ -7,7 +7,7 @@ namespace litl::tests
 {
     LITL_TEST_CASE("Push-Pop", "[core::containers::pagedVector]")
     {
-        PagedVector<uint32_t> vector(32);
+        PagedVector<uint32_t, 32> vector;
 
         REQUIRE(vector.size() == 0);
         REQUIRE(vector.capacity() == 0);
@@ -58,7 +58,7 @@ namespace litl::tests
 
     LITL_TEST_CASE("Random Access", "[core::containers::pagedVector]")
     {
-        PagedVector<uint32_t> vector(32);
+        PagedVector<uint32_t, 32> vector;
 
         for (auto i = 0; i < 32; ++i)
         {
@@ -76,7 +76,7 @@ namespace litl::tests
 
     LITL_TEST_CASE("Fixed Access", "[core::containers::pagedVector]")
     {
-        PagedVector<uint32_t> vector(32);
+        PagedVector<uint32_t, 32> vector;
 
         vector.push_back(1);
 
@@ -101,7 +101,7 @@ namespace litl::tests
 
     LITL_TEST_CASE("Iterator", "[core::containers::pagedVector]")
     {
-        PagedVector<uint32_t> vector(32);
+        PagedVector<uint32_t, 32> vector;
 
         const auto count = 13;
 
@@ -134,7 +134,7 @@ namespace litl::tests
         // std::vector<uint32_t> vector;
         // vector.reserve(4);
 
-        PagedVector<uint32_t> vector(4);
+        PagedVector<uint32_t, 32> vector;
 
         vector.push_back(1337);
         uint32_t* ptr0 = &vector.at(0);

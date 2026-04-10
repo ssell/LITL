@@ -98,7 +98,7 @@ namespace litl
 
         ChunkLayout m_chunkLayout;
         ArchetypeComponents m_components;
-        PagedVector<Chunk> m_chunks;
+        PagedVector<Chunk, ecs::Constants::chunks_per_page> m_chunks{};  // 16kb chunks * 16 = 256kb pages
 
         friend class ArchetypeRegistry;
         friend class World;

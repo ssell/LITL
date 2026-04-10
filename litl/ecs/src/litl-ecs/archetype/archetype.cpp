@@ -11,8 +11,7 @@ namespace litl
     Archetype::Archetype(std::string_view name, ArchetypeId registryId, uint64_t componentHash) :
         m_registryId(registryId),
         m_componentHash(componentHash),
-        m_entityCount(0),
-        m_chunks(16)                        // 16kb chunks * 16 = 256kb pages
+        m_entityCount(0)                     
     {
         setDebugName(name);
 
