@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstdint>
 #include <memory>
+#include <type_traits>
 #include <vector>
 
 namespace litl
@@ -32,81 +33,119 @@ namespace litl
     template<typename T, size_t PageSize = 256>
     class PagedVector
     {
+        static_assert(PageSize > 0, "PageSize must be greater than zero");
+
     public:
 
+        // ---------------------------------------------------------------------------------
+        // Iterator
+        // ---------------------------------------------------------------------------------
+
+        template<bool IsConst>
         class PagedVectorIterator
         {
         public:
 
             using iterator_category = std::random_access_iterator_tag;
             using value_type = T;
-            using reference = T&;
-
-            PagedVectorIterator(PagedVector<T, PageSize>* vector, size_t i)
-                : m_vector(vector), m_index(i) {}
-
-            reference operator*() const
-            {
-                return (*m_vector)[m_index];
-            }
-
-            PagedVectorIterator& operator++()
-            {
-                ++m_index;
-                return *this;
-            }
-
-            PagedVectorIterator& operator--()
-            {
-                if (m_index > 0) { --m_index; }
-                return *this;
-            }
-
-            friend bool operator==(PagedVectorIterator const& a, PagedVectorIterator const& b)
-            {
-                return a.m_index == b.m_index;
-            }
-
-            friend bool operator!=(PagedVectorIterator const& a, PagedVectorIterator const& b)
-            {
-                return a.m_index != b.m_index;
-            }
-
-        protected:
+            using difference_type = std::ptrdiff_t;
+            using pointer = std::conditional_t<IsConst, const T*, T*>;
+            using reference = std::conditional_t<IsConst, const T&, T&>;
 
         private:
 
-            PagedVector<T, PageSize>* m_vector;
-            size_t m_index;
+            using vector_ptr = std::conditional_t<IsConst, const PagedVector*, PagedVector*>;
+            vector_ptr m_vector;
+            size_t     m_index;
+
+        public:
+
+            PagedVectorIterator() : m_vector(nullptr), m_index(0) {}
+            PagedVectorIterator(vector_ptr vector, size_t i) : m_vector(vector), m_index(i) {}
+            PagedVectorIterator(PagedVectorIterator<false> const& other) : m_vector(other.m_vector), m_index(other.m_index) {}
+            PagedVectorIterator(PagedVectorIterator<true> const& other) requires IsConst : m_vector(other.m_vector), m_index(other.m_index) {}
+
+            reference operator*()  const { return (*m_vector)[m_index]; }
+            pointer   operator->() const { return &(*m_vector)[m_index]; }
+
+            PagedVectorIterator& operator++() { ++m_index; return *this; }
+            PagedVectorIterator  operator++(int) { auto tmp = *this; ++m_index; return tmp; }
+            PagedVectorIterator& operator--() { --m_index; return *this; }
+            PagedVectorIterator  operator--(int) { auto tmp = *this; --m_index; return tmp; }
+
+            PagedVectorIterator& operator+=(difference_type n) { m_index += n; return *this; }
+            PagedVectorIterator& operator-=(difference_type n) { m_index -= n; return *this; }
+
+            PagedVectorIterator operator+(difference_type n) const { return { m_vector, m_index + n }; }
+            PagedVectorIterator operator-(difference_type n) const { return { m_vector, m_index - n }; }
+
+            friend PagedVectorIterator operator+(difference_type n, PagedVectorIterator const& it) { return it + n; }
+
+            difference_type operator-(PagedVectorIterator const& other) const
+            {
+                return static_cast<difference_type>(m_index) - static_cast<difference_type>(other.m_index);
+            }
+
+            reference operator[](difference_type n) const { return *(*this + n); }
+
+            auto operator<=>(PagedVectorIterator const& other) const = default;
+
+            friend class PagedVectorIterator<!IsConst>;
         };
+
+        using iterator = PagedVectorIterator<false>;
+        using const_iterator = PagedVectorIterator<true>;
+
+        // ---------------------------------------------------------------------------------
+        // PagedVector Implementation
+        // ---------------------------------------------------------------------------------
 
         PagedVector() : m_size(0) {}
 
         ~PagedVector()
         {
-            while (!empty())
-            {
-                // Ensure everything gets destroyed before the page buffer is deallocated.
-                pop_back();
-            }
+            clear();
         }
 
-        size_t size() const noexcept
+        PagedVector(PagedVector&& other)
+            : m_pages(std::move(other.m_pages)), m_size(other.m_size)
+        {
+            other.m_size = 0;
+        }
+
+        PagedVector& operator=(PagedVector&& other)
+        {
+            if (this != &other)
+            {
+                clear();
+                m_pages = std::move(other.m_pages);
+                m_size = other.m_size;
+                other.m_size = 0;
+            }
+
+            return *this;
+        }
+
+        // Not copyable, but can be moved
+        PagedVector(PagedVector const&) = delete;
+        PagedVector& operator=(PagedVector const&) = delete; 
+
+        [[nodiscard]] size_t size() const noexcept
         {
             return m_size;
         }
 
-        size_t capacity() const noexcept
+        [[nodiscard]] size_t capacity() const noexcept
         {
             return m_pages.size() * PageSize;
         }
 
-        bool empty() const noexcept
+        [[nodiscard]] bool empty() const noexcept
         {
             return m_size == 0;
         }
 
-        bool full() const noexcept
+        [[nodiscard]] bool full() const noexcept
         {
             return m_size == (m_pages.size() * PageSize);
         }
@@ -129,7 +168,12 @@ namespace litl
                 m_pages.emplace_back(std::make_unique<PagedVectorPage>());
             }
 
-            return *std::construct_at(getElementPtr(m_size++), std::forward<Args>(args)...);
+            // Make sure to create and then increment m_size
+            T* ptr = getElementPtr(m_size);
+            std::construct_at(ptr, std::forward<Args>(args)...);
+            m_size++;
+
+            return *ptr;
         }
 
         void pop_back()
@@ -141,98 +185,95 @@ namespace litl
             }
         }
 
-        T& operator[](size_t i)
+        [[nodiscard]] T& operator[](size_t i)
         {
             assert(m_size > i);
             return *getElementPtr(i);
         }
 
-        T const& operator[](size_t i) const
+        [[nodiscard]] T const& operator[](size_t i) const
         {
             assert(m_size > i);
             return *getElementPtr(i);
         }
 
-        T& at(size_t i)
+        [[nodiscard]] T& at(size_t i)
         {
-            return *getElementPtr(i);
+            return (*this)[i];
         }
 
-        T const& at(size_t i) const
+        [[nodiscard]] T const& at(size_t i) const
         {
-            return *getElementPtr(i);
+            return (*this)[i];
         }
 
-        PagedVectorIterator begin()
+        void reserve(size_t count)
         {
-            return PagedVectorIterator(this, static_cast<size_t>(0));
-        }
-
-        PagedVectorIterator end()
-        {
-            // One past the end of the container
-            return PagedVectorIterator(this, m_size);
-        }
-
-        T& front()
-        {
-            return at(0);
-        }
-
-        T const& front() const
-        {
-            return at(0);
-        }
-
-        T& back()
-        {
-            return at((m_size > 0) ? m_size - 1 : 0);
-        }
-
-        T const& back() const
-        {
-            return at((m_size > 0) ? m_size - 1 : 0);
+            // Keep adding pages until we can store AT LEAST the specified the number of elements.
+            while (capacity() < count)
+            {
+                m_pages.emplace_back(std::make_unique<PagedVectorPage>());
+            }
         }
 
         void clear()
         {
+            if constexpr (!std::is_trivially_destructible_v<T>)
+            {
+                // if not trivial, then we have to pop each so the destructor gets called
+                while (!empty()) 
+                { 
+                    pop_back(); 
+                }
+            }
+
             m_pages.clear();
             m_size = 0;
         }
+
+        [[nodiscard]] iterator begin()              { return { this, 0 }; }
+        [[nodiscard]] iterator end()                { return { this, m_size }; }
+        [[nodiscard]] const_iterator begin() const  { return { this, 0 }; }
+        [[nodiscard]] const_iterator end() const    { return { this, m_size }; }
+        [[nodiscard]] const_iterator cbegin() const { return begin(); }
+        [[nodiscard]] const_iterator cend() const   { return end(); }
+        [[nodiscard]] T& front()                    { assert(!empty()); return at(0); }
+        [[nodiscard]] T const& front() const        { assert(!empty()); return at(0); }
+        [[nodiscard]] T& back()                     { assert(!empty()); return at(m_size - 1); }
+        [[nodiscard]] T const& back() const         { assert(!empty()); return at(m_size - 1); }
 
     protected:
 
     private:
 
-        T* getElementPtr(size_t elementIndex) noexcept
+        [[nodiscard]] T* getElementPtr(size_t elementIndex) noexcept
         {
-            return &m_pages[elementIndex / PageSize].get()->data()[elementIndex % PageSize];
+            return &m_pages[elementIndex / PageSize]->data()[elementIndex % PageSize];
         }
+
+        [[nodiscard]] T const* getElementPtr(size_t elementIndex) const noexcept
+        {
+            return &m_pages[elementIndex / PageSize]->data()[elementIndex % PageSize];
+        }
+
+        // ---------------------------------------------------------------------------------
+        // PagedVectorPage
+        // ---------------------------------------------------------------------------------
 
         /// <summary>
         /// A stable pointer to the paged buffer.
         /// </summary>
         struct PagedVectorPage
         {
-            PagedVectorPage() 
-                : m_pData(std::allocator_traits<std::allocator<T>>::allocate(m_allocator, PageSize))
-            {
+            PagedVectorPage() : m_pData(std::allocator<T>{}.allocate(PageSize)) { }
+            ~PagedVectorPage() { std::allocator<T>{}.deallocate(m_pData, PageSize); }
+            PagedVectorPage(PagedVectorPage const&) = delete;
+            PagedVectorPage& operator=(PagedVectorPage const&) = delete;
 
-            }
-
-            ~PagedVectorPage()
-            {
-                std::allocator_traits<std::allocator<T>>::deallocate(m_allocator, m_pData, PageSize);
-            }
-
-            T* data() const noexcept
-            {
-                return m_pData;
-            }
+            [[nodiscard]] T* data() const noexcept { return m_pData; }
             
         private:
 
-            std::allocator<T> m_allocator;
             T* m_pData;
         };
         
@@ -247,6 +288,9 @@ namespace litl
         /// Total number of elements.
         /// </summary>
         size_t m_size;
+
+        static_assert(std::random_access_iterator<iterator>);
+        static_assert(std::random_access_iterator<const_iterator>);
     };
 }
 
