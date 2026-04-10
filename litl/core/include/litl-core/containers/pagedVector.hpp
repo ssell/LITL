@@ -8,9 +8,6 @@
 
 namespace litl
 {
-    template<typename T>
-    class PagedVectorIterator;
-
     /// <summary>
     /// Vector/dynamic array implementation using stable pages.
     /// 
@@ -32,18 +29,58 @@ namespace litl
     /// 
     /// Note: as one of the primary uses for this are stable memory addresses, there is (currently) no delete/remove operator available aside from pop_back.
     /// </summary>
-    template<typename T>
+    template<typename T, size_t PageSize = 256>
     class PagedVector
     {
     public:
 
-        using iterator = PagedVectorIterator<T>;
+        class PagedVectorIterator
+        {
+        public:
 
-        PagedVector() 
-            : m_pageSize(256), m_size(0) {}
+            using iterator_category = std::random_access_iterator_tag;
+            using value_type = T;
+            using reference = T&;
 
-        PagedVector(size_t pageSize) 
-            : m_pageSize(pageSize), m_size(0) {}
+            PagedVectorIterator(PagedVector<T, PageSize>* vector, size_t i)
+                : m_vector(vector), m_index(i) {}
+
+            reference operator*() const
+            {
+                return (*m_vector)[m_index];
+            }
+
+            PagedVectorIterator& operator++()
+            {
+                ++m_index;
+                return *this;
+            }
+
+            PagedVectorIterator& operator--()
+            {
+                if (m_index > 0) { --m_index; }
+                return *this;
+            }
+
+            friend bool operator==(PagedVectorIterator const& a, PagedVectorIterator const& b)
+            {
+                return a.m_index == b.m_index;
+            }
+
+            friend bool operator!=(PagedVectorIterator const& a, PagedVectorIterator const& b)
+            {
+                return a.m_index != b.m_index;
+            }
+
+        protected:
+
+        private:
+
+            PagedVector<T, PageSize>* m_vector;
+            size_t m_index;
+        };
+
+        PagedVector() : m_size(0) {}
 
         ~PagedVector()
         {
@@ -61,7 +98,7 @@ namespace litl
 
         size_t capacity() const noexcept
         {
-            return m_pages.size() * m_pageSize;
+            return m_pages.size() * PageSize;
         }
 
         bool empty() const noexcept
@@ -71,7 +108,7 @@ namespace litl
 
         bool full() const noexcept
         {
-            return m_size == (m_pages.size() * m_pageSize);
+            return m_size == (m_pages.size() * PageSize);
         }
 
         void push_back(T const& value)
@@ -89,7 +126,7 @@ namespace litl
         {
             if (full())
             {
-                m_pages.emplace_back(std::make_unique<PagedVectorPage>(m_pageSize));
+                m_pages.emplace_back(std::make_unique<PagedVectorPage>());
             }
 
             return *std::construct_at(getElementPtr(m_size++), std::forward<Args>(args)...);
@@ -126,15 +163,15 @@ namespace litl
             return *getElementPtr(i);
         }
 
-        iterator begin()
+        PagedVectorIterator begin()
         {
-            return iterator(this, static_cast<size_t>(0));
+            return PagedVectorIterator(this, static_cast<size_t>(0));
         }
 
-        iterator end()
+        PagedVectorIterator end()
         {
             // One past the end of the container
-            return iterator(this, m_size);
+            return PagedVectorIterator(this, m_size);
         }
 
         T& front()
@@ -169,7 +206,7 @@ namespace litl
 
         T* getElementPtr(size_t elementIndex) noexcept
         {
-            return &m_pages[elementIndex / m_pageSize].get()->data()[elementIndex % m_pageSize];
+            return &m_pages[elementIndex / PageSize].get()->data()[elementIndex % PageSize];
         }
 
         /// <summary>
@@ -177,16 +214,15 @@ namespace litl
         /// </summary>
         struct PagedVectorPage
         {
-            PagedVectorPage(size_t const pageSize) : 
-                m_size(pageSize), 
-                m_pData(std::allocator_traits<std::allocator<T>>::allocate(m_allocator, pageSize))
+            PagedVectorPage() 
+                : m_pData(std::allocator_traits<std::allocator<T>>::allocate(m_allocator, PageSize))
             {
 
             }
 
             ~PagedVectorPage()
             {
-                std::allocator_traits<std::allocator<T>>::deallocate(m_allocator, m_pData, m_size);
+                std::allocator_traits<std::allocator<T>>::deallocate(m_allocator, m_pData, PageSize);
             }
 
             T* data() const noexcept
@@ -196,7 +232,6 @@ namespace litl
             
         private:
 
-            const size_t m_size;
             std::allocator<T> m_allocator;
             T* m_pData;
         };
@@ -209,62 +244,9 @@ namespace litl
         std::vector<std::unique_ptr<PagedVectorPage>> m_pages;
 
         /// <summary>
-        /// The number of elements per page.
-        /// </summary>
-        const size_t m_pageSize;
-
-        /// <summary>
         /// Total number of elements.
         /// </summary>
         size_t m_size;
-    };
-
-    template<typename T>
-    class PagedVectorIterator
-    {
-    public:
-
-        using iterator_category = std::random_access_iterator_tag;
-        using value_type = T;
-        using reference = T&;
-
-        PagedVectorIterator(PagedVector<T>* vector, size_t i)
-            : m_vector(vector), m_index(i) {
-        }
-
-        reference operator*() const
-        {
-            return (*m_vector)[m_index];
-        }
-
-        PagedVectorIterator& operator++()
-        {
-            ++m_index;
-            return *this;
-        }
-
-        PagedVectorIterator& operator--()
-        {
-            if (m_index > 0) { --m_index; }
-            return *this;
-        }
-
-        friend bool operator==(PagedVectorIterator const& a, PagedVectorIterator const& b)
-        {
-            return a.m_index == b.m_index;
-        }
-
-        friend bool operator!=(PagedVectorIterator const& a, PagedVectorIterator const& b)
-        {
-            return a.m_index != b.m_index;
-        }
-
-    protected:
-
-    private:
-
-        PagedVector<T>* m_vector;
-        size_t m_index;
     };
 }
 

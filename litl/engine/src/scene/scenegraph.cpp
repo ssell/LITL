@@ -2,6 +2,22 @@
 
 namespace litl
 {
+    /// <summary>
+    /// Entity iteration and ordering.
+    /// </summary>
+    struct SceneGraphTree
+    {
+
+    };
+
+    /// <summary>
+    /// Entity random access.
+    /// </summary>
+    struct SceneGraphArray
+    {
+
+    };
+
     struct SceneGraph::Impl
     {
 

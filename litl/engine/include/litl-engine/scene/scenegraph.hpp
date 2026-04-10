@@ -9,7 +9,11 @@
 namespace litl
 {
     /// <summary>
-    /// Responsible for maintaining an iterable mapping of entity parent/child relationships.
+    /// The scene graph has three main responsibilities:
+    /// 
+    ///   1. Providing an iterable structure for entity hierarchy (parent -> child)
+    ///   2. Providing random access to determine entity direct relatives (entity -> parent, entity -> children)
+    ///   3. Maintaining the entity index into the World Matrix buffer.
     /// </summary>
     class SceneGraph
     {

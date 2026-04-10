@@ -79,6 +79,11 @@ namespace litl
             /// The size, in bytes, of a single deferred entity command pool.
             /// </summary>
             static constexpr uint32_t entity_command_pool_size = 1024 * 16;
+
+            /// <summary>
+            /// The number of chunks per archetype page. 16kb chunk * 16 = 256kb pages.
+            /// </summary>
+            static constexpr uint32_t chunks_per_page = 16;
         };
     }
 
