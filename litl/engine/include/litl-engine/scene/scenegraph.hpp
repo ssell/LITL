@@ -8,6 +8,14 @@
 
 namespace litl
 {
+    struct SceneGraphAccessKey
+    {
+    private:
+
+        SceneGraphAccessKey() = default;
+        // friend class ...
+    };
+
     /// <summary>
     /// The scene graph has three main responsibilities:
     /// 
@@ -21,6 +29,82 @@ namespace litl
 
         SceneGraph();
         ~SceneGraph();
+
+        // ---------------------------------------------------------------------------------
+        // Structural / Topological Changes
+        // ---------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Adds the entity to the scene tree.
+        /// If the entity is already in the scene tree then this does nothing.
+        /// 
+        /// Note: this is a structural/topological change and can only be called by the appropriate internal systems.
+        /// </summary>
+        /// <param name="entity"></param>
+        void track(Entity entity, SceneGraphAccessKey);
+
+        /// <summary>
+        /// Sets the parent entity for the specified entity.
+        /// If the parent is set to null, then the parent is removed.
+        /// Must call ScenGraph::restructure after for the changes to fully take effect.
+        /// 
+        /// Note: this is a structural/topological change and can only be called by the appropriate internal systems.
+        /// </summary>
+        /// <param name="child"></param>
+        /// <param name="parent"></param>
+        void setParent(Entity child, Entity parent, SceneGraphAccessKey);
+
+        /// <summary>
+        /// Removes all children from the specified entity.
+        /// Must call ScenGraph::restructure after for the changes to fully take effect.
+        /// 
+        /// Note: this is a structural/topological change and can only be called by the appropriate internal systems.
+        /// </summary>
+        /// <param name="parent"></param>
+        void removeAllChildren(Entity parent, SceneGraphAccessKey);
+
+        /// <summary>
+        /// Updates the scene tree when the specified entity is destroyed.
+        /// Must call ScenGraph::restructure after for the changes to fully take effect.
+        /// 
+        /// Note: this is a structural/topological change and can only be called by the appropriate internal systems.
+        /// </summary>
+        /// <param name="entity"></param>
+        void onEntityDestroyed(Entity entity, SceneGraphAccessKey);
+
+        /// <summary>
+        /// Resorts the tree following one or more changes.
+        /// Does nothing if no changes have been made.
+        /// 
+        /// Note: this is a structural/topological change and can only be called by the appropriate internal systems.
+        /// </summary>
+        void restructure(SceneGraphAccessKey);
+
+        // ---------------------------------------------------------------------------------
+        // Data Accessors
+        // ---------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Retrieves the Entity which is the parent of the specified Entity.
+        /// If there is no parent (Entity is a root node), then Entity::null() is returned.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        [[nodiscard]] Entity getParent(Entity entity) const noexcept;
+
+        /// <summary>
+        /// Retrieves all child Entities of the specified Entity.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        [[nodiscard]] std::vector<Entity> getChildren(Entity entity) const noexcept;
+
+        /// <summary>
+        /// Retrieves the index into the GPU buffers that store data associated with the specified entity.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        [[nodiscard]] uint32_t getGpuBufferIndex(Entity entity) const noexcept;
 
     protected:
 
