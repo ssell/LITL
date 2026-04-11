@@ -1,10 +1,10 @@
 #ifndef LITL_ENGINE_SCENE_GRAPH_H__
 #define LITL_ENGINE_SCENE_GRAPH_H__
 
-#include <memory>
-
+#include "litl-core/impl.hpp"
 #include "litl-core/math.hpp"
 #include "litl-ecs/entity/entity.hpp"
+#include "litl-engine/ecs/components/transform.hpp"
 
 namespace litl
 {
@@ -41,7 +41,8 @@ namespace litl
         /// Note: this is a structural/topological change and can only be called by the appropriate internal systems.
         /// </summary>
         /// <param name="entity"></param>
-        void track(Entity entity, SceneGraphAccessKey);
+        /// <param name="transform"></param>
+        void track(Entity entity, Transform const& transform, SceneGraphAccessKey);
 
         /// <summary>
         /// Sets the parent entity for the specified entity.
@@ -111,7 +112,7 @@ namespace litl
     private:
 
         struct Impl;
-        std::unique_ptr<Impl> m_pImpl;
+        ImplPtr<Impl, 280> m_impl;
     };
 }
 

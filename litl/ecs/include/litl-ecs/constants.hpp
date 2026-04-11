@@ -3,8 +3,9 @@
 
 #include <concepts>
 #include <cstdint>
-#include <limits>
 #include <type_traits>
+
+#include "litl-core/constants.hpp"
 
 namespace litl
 {
@@ -40,7 +41,9 @@ namespace litl
             /// Represents an uninitialized Entity.
             /// This does not signify that an Entity is destroyed. Only the World can determine that.
             /// </summary>
-            static constexpr uint32_t null_entity_id = std::numeric_limits<uint32_t>::max();
+            static constexpr uint32_t null_entity_id = litl::Constants::uint32_null_index;
+
+            static_assert((null_entity_id == litl::Constants::uint32_null_index), "What are you doing touching this? Please don't.");
 
             /// <summary>
             /// Represents an unset component unstable id.
