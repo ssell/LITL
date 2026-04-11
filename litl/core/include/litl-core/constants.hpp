@@ -42,7 +42,7 @@ namespace litl
         /// <summary>
         /// Used as a null index value for various items.
         /// </summary>
-        static constexpr uint32_t invalid_index32 = std::numeric_limits<uint32_t>::max();
+        static constexpr uint32_t uint32_null_index = 4294967295u;
     };
 }
 

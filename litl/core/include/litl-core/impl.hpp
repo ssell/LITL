@@ -30,32 +30,32 @@ namespace litl
             get()->~T();
         }
 
-        T* get()
+        [[nodiscard]] T* get()
         {
             return std::launder(reinterpret_cast<T*>(&m_storage));
         }
 
-        T const* get() const
+        [[nodiscard]] T const* get() const
         {
             return std::launder(reinterpret_cast<T const*>(&m_storage));
         }
 
-        T* operator->()
+        [[nodiscard]] T* operator->()
         {
             return get();
         }
 
-        T const* operator->() const
+        [[nodiscard]] T const* operator->() const
         {
             return get();
         }
 
-        T& operator*()
+        [[nodiscard]] T& operator*()
         {
             return *get();
         }
 
-        T const& operator*() const
+        [[nodiscard]] T const& operator*() const
         {
             return *get();
         }
