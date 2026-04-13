@@ -1,3 +1,6 @@
+#include <stack>
+#include <unordered_map>
+
 #include "litl-engine/scene/scenegraph.hpp"
 #include "litl-core/containers/pagedVector.hpp"
 #include "litl-ecs/entity/entity.hpp"
@@ -75,7 +78,9 @@ namespace litl
         // Other
         // ---------------------------------------------------------------------------------
 
-        bool isDirty{ false };
+        uint32_t activeCount{ 0 };
+
+        bool isDirty{ true };
         
         /// <summary>
         /// Grows all arrays so they can hold at least the specified number of items.
@@ -118,7 +123,11 @@ namespace litl
 
         [[nodiscard]] bool isValid(Entity entity) const noexcept
         {
-            return !entity.isNull() && (size() > entity.index) && (nodeToEntity[entity.index] == entity) && (nodeOccupied[entity.index] == true);
+            return 
+                !entity.isNull() && 
+                (size() > entity.index) && 
+                (nodeToEntity[entity.index] == entity) && 
+                (nodeOccupied[entity.index] == true);
         }
 
         [[nodiscard]] Entity getParent(Entity entity) const noexcept
@@ -134,6 +143,97 @@ namespace litl
             }
 
             return Entity::null();
+        }
+
+        void updateEntity(uint32_t index, Entity entity, Entity parent, uint32_t depth, uint32_t gpuIndex)
+        {
+            ensureFit(entity.index);
+            ensureFit(parent.index);
+
+            nodeToEntity[entity.index] = entity;
+            nodeParent[entity.index] = parent.index;
+            nodeDepth[entity.index] = depth;
+            nodeGpuIndex[entity.index] = gpuIndex;
+            nodeOccupied[entity.index] = !entity.isNull();
+            isDirty = true;
+
+            // we do not touch the tree structure here. that is done in restructure after all pending per-entity updates have been processed.
+        }
+
+        void onTrackEntity(Entity entity, Transform const& transform)
+        {
+            assert(nodeOccupied[entity.index] == false);
+
+            updateEntity(entity.index, entity, transform.parent.get(), 0, Constants::uint32_null_index);
+            activeCount++;
+        }
+
+        void onSetParent(Entity child, Entity parent)
+        {
+            assert(!child.isNull());
+
+            updateEntity(child.index, child, parent, 0, nodeGpuIndex[child.index]);
+        }
+
+        void onDestroyEntity(Entity entity)
+        {
+            assert(nodeOccupied[entity.index] == true);
+            updateEntity(entity.index, Entity::null(), Entity::null(), 0, Constants::uint32_null_index);
+            activeCount--;
+        }
+
+        void rebuildTree()
+        {
+            if (!isDirty)
+            {
+                return;
+            }
+
+            isDirty = false;
+
+            // Rebuild the tree edges
+            treeEdgeParent.clear();
+            treeEdgeChild.clear();
+
+            std::stack<uint32_t> frontier;
+            std::unordered_map<uint32_t, std::vector<uint32_t>> childNodes;
+
+            for (uint32_t i = 0u; i < size(); ++i)
+            {
+                if (nodeOccupied[i])
+                {
+                    uint32_t parentIndex = nodeParent[i];
+
+                    if (parentIndex == Constants::uint32_null_index)
+                    {
+                        // root node
+                        frontier.push(i);
+                    }
+                    else
+                    {
+                        // child node
+                        treeEdgeParent.push_back(parentIndex);
+                        treeEdgeChild.push_back(i);
+                        childNodes[parentIndex].push_back(i);
+                    }
+                }
+            }
+
+            // Re-sort the tree using DFS preorder
+            sortedNodes.clear();
+
+            while (!frontier.empty())
+            {
+                uint32_t nodeIndex = frontier.top(); frontier.pop();
+                sortedNodes.push_back(nodeIndex);
+
+                for (auto childIndex : childNodes[nodeIndex])
+                {
+                    frontier.push(childIndex);
+                }
+            }
+
+            assert(sortedNodes.size() == activeCount);
         }
 
     private:
@@ -165,51 +265,22 @@ namespace litl
 
     void SceneGraph::track(Entity entity, Transform const& transform, SceneGraphAccessKey)
     {
-        m_impl->ensureFit(entity.index);
-        m_impl->ensureFit(transform.parent.get().index);
-
-        // If this asserts, then either (a) multiple calls to track or (b) bad cleanup of previous occupant.
-        assert(m_impl->nodeOccupied[entity.index] == false);
-
-        EntityId parentId = transform.parent.get().index;
-
-        m_impl->isDirty = true;
-        m_impl->nodeToEntity[entity.index] = entity;
-        m_impl->nodeParent[entity.index] = parentId;
-
-        // parent itself may not yet be tracked so the remaining entries (depth, edges, etc.) are deferred until the call to restructure is made.
+        m_impl->onTrackEntity(entity, transform);
     }
 
     void SceneGraph::setParent(Entity child, Entity parent, SceneGraphAccessKey)
     {
-        assert(!child.isNull());
-
-        m_impl->ensureFit(child.index);
-        m_impl->ensureFit(parent.index);
-
-        // If this asserts then the old occupant has not been cleared yet or the new entity has not yet been tracked.
-        assert(m_impl->nodeToEntity[child.index] == child);
-        assert(m_impl->nodeOccupied[child.index] == true);
-
-        m_impl->isDirty = true;
-        m_impl->nodeParent[child.index] = parent.index;
-
-        // parent itself may not yet be tracked so the remaining entries (depth, edges, etc.) are deferred until the call to restructure is made.
-    }
-    
-    void SceneGraph::removeAllChildren(Entity entity, SceneGraphAccessKey)
-    {
-        // ... todo ...
+        m_impl->onSetParent(child, parent);
     }
 
-    void SceneGraph::onEntityDestroyed(Entity entity, SceneGraphAccessKey)
+    void SceneGraph::untrackEntity(Entity entity, SceneGraphAccessKey)
     {
-        // ... todo ...
+        m_impl->onDestroyEntity(entity);
     }
 
-    void SceneGraph::restructure(SceneGraphAccessKey)
+    void SceneGraph::update(SceneGraphAccessKey)
     {
-        // ... todo ...
+        m_impl->rebuildTree();
     }
 
     Entity SceneGraph::getParent(Entity entity) const noexcept
