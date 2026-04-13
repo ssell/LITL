@@ -16,12 +16,38 @@ namespace litl
         // friend class ...
     };
 
+    enum class SceneGraphUntrackBehavior : uint32_t
+    {
+        /// <summary>
+        /// When an entity is untracked, all children of it are also untracked.
+        /// </summary>
+        Cascade = 0,
+
+        /// <summary>
+        /// When an entity is untracked, all immediate children are orphaned with
+        /// their parent being set to null (the world) and they become root nodes.
+        /// </summary>
+        Orphan = 1
+    };
+
     /// <summary>
     /// The scene graph has three main responsibilities:
     /// 
     ///   1. Providing an iterable structure for entity hierarchy (parent -> child)
     ///   2. Providing random access to determine entity direct relatives (entity -> parent, entity -> children)
     ///   3. Maintaining the entity index into the World Matrix buffer.
+    /// 
+    /// Structural changes (track, untrack, set parent, update) can only be done via those
+    /// classes authorized to do so via the SceneGraphAccessKey. Structural changes should
+    /// be buffered and performed at sync points. Changes should be done in the order of:
+    /// 
+    ///   1. Untrack
+    ///   2. Track
+    ///   3. Set Parent
+    /// 
+    /// As is done with other systems, such as entity structural changes, scene graph changes
+    /// should be deduped and also cancel out opposing changes. For example, a call to untrack
+    /// an entity should cancel out any call to track it, set its parent, or set it as a parent.
     /// </summary>
     class SceneGraph
     {
@@ -62,7 +88,8 @@ namespace litl
         /// Note: this is a structural/topological change and can only be called by the appropriate internal systems.
         /// </summary>
         /// <param name="entity"></param>
-        void untrackEntity(Entity entity, SceneGraphAccessKey);
+        /// <param name="behavior"></param
+        void untrackEntity(Entity entity, SceneGraphUntrackBehavior behavior, SceneGraphAccessKey);
 
         /// <summary>
         /// Re-sorts the tree following one or more changes.
@@ -103,7 +130,7 @@ namespace litl
     private:
 
         struct Impl;
-        ImplPtr<Impl, 280> m_impl;
+        ImplPtr<Impl, 296> m_impl;
     };
 }
 
