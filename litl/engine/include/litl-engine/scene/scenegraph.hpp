@@ -10,7 +10,7 @@ namespace litl
 {
     struct SceneGraphAccessKey
     {
-    private:
+    protected:
 
         SceneGraphAccessKey() = default;
         // friend class ...
@@ -124,6 +124,23 @@ namespace litl
         /// <param name="entity"></param>
         /// <returns></returns>
         [[nodiscard]] uint32_t getGpuBufferIndex(Entity entity) const noexcept;
+
+        // ---------------------------------------------------------------------------------
+        // Misc
+        // ---------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Returns the number of active entities tracked by the scene graph.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] uint32_t size() const noexcept;
+
+        /// <summary>
+        /// Returns if the entity is present in the scene graph (not null, has a transform, etc.).
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        [[nodiscard]] bool isPresent(Entity entity) const noexcept;
 
     protected:
 

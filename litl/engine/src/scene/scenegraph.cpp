@@ -8,6 +8,10 @@
 
 namespace litl
 {
+    // -------------------------------------------------------------------------------------
+    // SceneGraph::Impl
+    // -------------------------------------------------------------------------------------
+
     struct SceneGraph::Impl
     {
         enum class NodeState : uint8_t 
@@ -118,7 +122,7 @@ namespace litl
             return static_cast<uint32_t>(nodeToEntity.size());
         }
 
-        [[nodiscard]] bool isValid(Entity entity) const noexcept
+        [[nodiscard]] bool isPresent(Entity entity) const noexcept
         {
             return 
                 !entity.isNull() && 
@@ -129,7 +133,7 @@ namespace litl
 
         [[nodiscard]] Entity getParent(Entity entity) const noexcept
         {
-            if (isValid(entity))
+            if (isPresent(entity))
             {
                 uint32_t parentNodeIndex = nodeParent[entity.index];
 
@@ -151,7 +155,7 @@ namespace litl
 
             if (!parent.isNull())
             {
-                assert(isValid(parent) == true);
+                assert(isPresent(parent) == true);
                 childNodes[parent.index].push_back(entity.index);
             }
 
@@ -261,6 +265,26 @@ namespace litl
             assert(sortedNodes.size() == activeCount);
         }
 
+        std::vector<Entity> getChildren(Entity entity) const noexcept
+        {
+            std::vector<Entity> children;
+
+            if (isPresent(entity))
+            {
+                auto find = childNodes.find(entity.index);
+
+                if (find != childNodes.end())
+                {
+                    for (auto childIndex : find->second)
+                    {
+                        children.push_back(nodeToEntity[childIndex]);
+                    }
+                }
+            }
+
+            return children;
+        }
+
     private:
 
         template<typename T>
@@ -335,6 +359,10 @@ namespace litl
         }
     };
 
+    // -------------------------------------------------------------------------------------
+    // SceneGraph
+    // -------------------------------------------------------------------------------------
+
     SceneGraph::SceneGraph()
     {
         m_impl->ensureFit(1024);
@@ -368,5 +396,30 @@ namespace litl
     Entity SceneGraph::getParent(Entity entity) const noexcept
     {
         return m_impl->getParent(entity);
+    }
+
+    std::vector<Entity> SceneGraph::getChildren(Entity entity) const noexcept
+    {
+        return m_impl->getChildren(entity);
+    }
+
+    uint32_t SceneGraph::getGpuBufferIndex(Entity entity) const noexcept
+    {
+        if (m_impl->isPresent(entity))
+        {
+            return m_impl->nodeGpuIndex[entity.index];
+        }
+
+        return Constants::uint32_null_index;
+    }
+
+    uint32_t SceneGraph::size() const noexcept
+    {
+        return m_impl->activeCount;
+    }
+
+    bool SceneGraph::isPresent(Entity entity) const noexcept
+    {
+        return m_impl->isPresent(entity);
     }
 }
