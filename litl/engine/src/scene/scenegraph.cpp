@@ -2,6 +2,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "litl-core/assert.hpp"
 #include "litl-engine/scene/scenegraph.hpp"
 #include "litl-core/containers/pagedVector.hpp"
 #include "litl-ecs/entity/entity.hpp"
@@ -149,7 +150,7 @@ namespace litl
         void onTrackEntity(Entity entity, Transform const& transform)
         {
             ensureFit(entity.index);
-            assert(nodeOccupied[entity.index] == NodeState::Vacant);
+            LITL_ASSERT_MSG(nodeOccupied[entity.index] == NodeState::Vacant, "Attempting to track entity index that is already tracked.", );
 
             Entity parent = transform.parent.get();
 
@@ -168,8 +169,9 @@ namespace litl
         {
             ensureFit(child.index);
             ensureFit(parent.index);
-            assert(!child.isNull());
-            assert(parent.isNull() || (nodeOccupied[parent.index] == NodeState::Present));
+
+            LITL_ASSERT_MSG(!child.isNull(), "Attempting to set parent of null child.", );
+            LITL_ASSERT_MSG(parent.isNull() || (nodeOccupied[parent.index] == NodeState::Present), "Attempting to set parent to non-null entity that is not tracked.", );
 
             // remove from parents children
             uint32_t prevParent = nodeParent[child.index];
@@ -193,7 +195,7 @@ namespace litl
         void onUntrackEntity(Entity entity, SceneGraphUntrackBehavior behavior)
         {
             ensureFit(entity.index);
-            assert(nodeOccupied[entity.index] == NodeState::Present);
+            LITL_ASSERT_MSG(nodeOccupied[entity.index] == NodeState::Present, "Attempting to untrack entity that is not tracked.", );
 
             // Handle child nodes
             if (childNodes.contains(entity.index))
@@ -262,7 +264,7 @@ namespace litl
                 }
             }
 
-            assert(sortedNodes.size() == activeCount);
+            LITL_ASSERT_MSG(sortedNodes.size() == activeCount, "Sorted tree size does not equal expected node count.", );
         }
 
         std::vector<Entity> getChildren(Entity entity) const noexcept
