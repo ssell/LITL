@@ -1,5 +1,6 @@
 #include <stack>
 #include <unordered_map>
+#include <vector>
 
 #include "litl-engine/scene/scenegraph.hpp"
 #include "litl-core/containers/pagedVector.hpp"
@@ -9,6 +10,12 @@ namespace litl
 {
     struct SceneGraph::Impl
     {
+        enum class NodeState : uint8_t 
+        { 
+            Vacant = 0, 
+            Present = 1 
+        };
+
         /**
          * The vectors below represent a flattened version of the following structure:
          * 
@@ -36,8 +43,14 @@ namespace litl
 
         /// <summary>
         /// The scene node index of the parent of the scene node. If no parent, then will be equal to Constants::null_index32.
+        /// This represents "child -> parent"
         /// </summary>
         std::vector<uint32_t> nodeParent;
+
+        /// <summary>
+        /// This represents "parent -> children"
+        /// </summary>
+        std::unordered_map<uint32_t, std::vector<uint32_t>> childNodes;
 
         /// <summary>
         /// The depth of the node in the scene tree. If 0, then the node is a root node with no direct parent.
@@ -52,22 +65,11 @@ namespace litl
         /// <summary>
         /// If true, then the node correlates to an entity that is both alive and has a transform component.
         /// </summary>
-        std::vector<bool> nodeOccupied;
+        std::vector<NodeState> nodeOccupied;
 
         // ---------------------------------------------------------------------------------
         // Flattened Scene Tree
         // ---------------------------------------------------------------------------------
-
-        /// <summary>
-        /// The key is the edge index. The value is the scene node index of the parent scene node of the edge connecting Parent -> Child.
-        /// This differs from nodeParent as that takes the node index (and not the edge index) as the accessor.
-        /// </summary>
-        std::vector<uint32_t> treeEdgeParent;
-
-        /// <summary>
-        /// The key is the edge index. The value is the scene node index of the child scene node of the edge connecting Parent -> Child.
-        /// </summary>
-        std::vector<uint32_t> treeEdgeChild;
 
         /// <summary>
         /// Topologically sorted and flattened scene tree.
@@ -108,12 +110,7 @@ namespace litl
             grow(count, nodeParent, Constants::uint32_null_index);
             grow(count, nodeDepth, 0u);
             grow(count, nodeGpuIndex, Constants::uint32_null_index);
-            grow(count, nodeOccupied, false);
-
-            // For edge arrays the worst-case size is N-1 (all nodes nested under a single parent), but grow to N for simplicity.
-            grow(count, treeEdgeParent, Constants::uint32_null_index);
-            grow(count, treeEdgeChild, Constants::uint32_null_index);
-            grow(count, sortedNodes, Constants::uint32_null_index);
+            grow(count, nodeOccupied, NodeState::Vacant);
         }
 
         [[nodiscard]] uint32_t size() const noexcept
@@ -127,7 +124,7 @@ namespace litl
                 !entity.isNull() && 
                 (size() > entity.index) && 
                 (nodeToEntity[entity.index] == entity) && 
-                (nodeOccupied[entity.index] == true);
+                (nodeOccupied[entity.index] == NodeState::Present);
         }
 
         [[nodiscard]] Entity getParent(Entity entity) const noexcept
@@ -145,41 +142,81 @@ namespace litl
             return Entity::null();
         }
 
-        void updateEntity(uint32_t index, Entity entity, Entity parent, uint32_t depth, uint32_t gpuIndex)
-        {
-            ensureFit(entity.index);
-            ensureFit(parent.index);
-
-            nodeToEntity[entity.index] = entity;
-            nodeParent[entity.index] = parent.index;
-            nodeDepth[entity.index] = depth;
-            nodeGpuIndex[entity.index] = gpuIndex;
-            nodeOccupied[entity.index] = !entity.isNull();
-            isDirty = true;
-
-            // we do not touch the tree structure here. that is done in restructure after all pending per-entity updates have been processed.
-        }
-
         void onTrackEntity(Entity entity, Transform const& transform)
         {
-            assert(nodeOccupied[entity.index] == false);
+            ensureFit(entity.index);
+            assert(nodeOccupied[entity.index] == NodeState::Vacant);
 
-            updateEntity(entity.index, entity, transform.parent.get(), 0, Constants::uint32_null_index);
+            Entity parent = transform.parent.get();
+
+            if (!parent.isNull())
+            {
+                assert(isValid(parent) == true);
+                childNodes[parent.index].push_back(entity.index);
+            }
+
+            updateEntity(entity.index, entity, parent, 0, Constants::uint32_null_index);
             activeCount++;
+            isDirty = true;
         }
 
         void onSetParent(Entity child, Entity parent)
         {
+            ensureFit(child.index);
+            ensureFit(parent.index);
             assert(!child.isNull());
+            assert(parent.isNull() || (nodeOccupied[parent.index] == NodeState::Present));
+
+            // remove from parents children
+            uint32_t prevParent = nodeParent[child.index];
+
+            if (prevParent != Constants::uint32_null_index)
+            {
+                auto& siblings = childNodes[prevParent];
+                std::erase(siblings, child.index);
+            }
+
+            // add to new parent
+            if (!parent.isNull())
+            {
+                childNodes[parent.index].push_back(child.index);
+            }
 
             updateEntity(child.index, child, parent, 0, nodeGpuIndex[child.index]);
+            isDirty = true;
         }
 
-        void onDestroyEntity(Entity entity)
+        void onUntrackEntity(Entity entity, SceneGraphUntrackBehavior behavior)
         {
-            assert(nodeOccupied[entity.index] == true);
+            ensureFit(entity.index);
+            assert(nodeOccupied[entity.index] == NodeState::Present);
+
+            // Handle child nodes
+            if (childNodes.contains(entity.index))
+            {
+                if (behavior == SceneGraphUntrackBehavior::Cascade)
+                {
+                    untrackChildrenOf(entity);
+                }
+                else // behavior == SceneGraphUntrackBehavior::Orphan
+                {
+                    orphanChildrenOf(entity);
+                }
+            }
+
+            // Remove from parent
+            uint32_t parentIndex = nodeParent[entity.index];
+
+            if (parentIndex != Constants::uint32_null_index)
+            {
+                auto& siblings = childNodes[parentIndex];
+                std::erase(siblings, entity.index);
+            }
+
+
             updateEntity(entity.index, Entity::null(), Entity::null(), 0, Constants::uint32_null_index);
             activeCount--;
+            isDirty = true;
         }
 
         void rebuildTree()
@@ -191,45 +228,33 @@ namespace litl
 
             isDirty = false;
 
-            // Rebuild the tree edges
-            treeEdgeParent.clear();
-            treeEdgeChild.clear();
-
-            std::stack<uint32_t> frontier;
-            std::unordered_map<uint32_t, std::vector<uint32_t>> childNodes;
-
-            for (uint32_t i = 0u; i < size(); ++i)
-            {
-                if (nodeOccupied[i])
-                {
-                    uint32_t parentIndex = nodeParent[i];
-
-                    if (parentIndex == Constants::uint32_null_index)
-                    {
-                        // root node
-                        frontier.push(i);
-                    }
-                    else
-                    {
-                        // child node
-                        treeEdgeParent.push_back(parentIndex);
-                        treeEdgeChild.push_back(i);
-                        childNodes[parentIndex].push_back(i);
-                    }
-                }
-            }
-
             // Re-sort the tree using DFS preorder
             sortedNodes.clear();
+            std::stack<uint32_t> frontier;
+
+            for (uint32_t i = 0; i < size(); ++i)
+            {
+                if ((nodeOccupied[i] == NodeState::Present) && (nodeParent[i] == Constants::uint32_null_index))
+                {
+                    nodeDepth[i] = 0;
+                    frontier.push(i);
+                }
+            }
 
             while (!frontier.empty())
             {
                 uint32_t nodeIndex = frontier.top(); frontier.pop();
                 sortedNodes.push_back(nodeIndex);
 
-                for (auto childIndex : childNodes[nodeIndex])
+                auto iter = childNodes.find(nodeIndex);
+
+                if (iter != childNodes.end())
                 {
-                    frontier.push(childIndex);
+                    for (auto childIndex : iter->second)
+                    {
+                        nodeDepth[childIndex] = nodeDepth[nodeIndex] + 1;
+                        frontier.push(childIndex);
+                    }
                 }
             }
 
@@ -243,13 +268,70 @@ namespace litl
         {
             if (v.size() < count)
             {
-                v.reserve(count);
-                
-                while (v.size() < count)
+                v.resize(count, defaultValue);
+            }
+        }
+
+        void updateEntity(uint32_t index, Entity entity, Entity parent, uint32_t depth, uint32_t gpuIndex)
+        {
+            nodeToEntity[index] = entity;
+            nodeParent[index] = parent.index;
+            nodeDepth[index] = depth;
+            nodeGpuIndex[index] = gpuIndex;
+            nodeOccupied[index] = (entity.isNull() ? NodeState::Vacant : NodeState::Present);
+        }
+
+        void untrackChildrenOf(Entity entity)
+        {
+            std::vector<uint32_t> descendents;
+            std::stack<uint32_t> frontier;
+
+            auto find = childNodes.find(entity.index);
+
+            if (find == childNodes.end())
+            {
+                return;
+            }
+
+            for (auto childIndex : find->second)
+            {
+                frontier.push(childIndex);
+            }
+
+            while (!frontier.empty())
+            {
+                uint32_t nodeIndex = frontier.top(); frontier.pop();
+                descendents.push_back(nodeIndex);
+
+                find = childNodes.find(nodeIndex);
+
+                if (find != childNodes.end())
                 {
-                    v.push_back(defaultValue);
+                    for (auto grandchildIndex : find->second)
+                    {
+                        frontier.push(grandchildIndex);
+                    }
                 }
             }
+
+            for (auto nodeIndex : descendents)
+            {
+                childNodes.erase(nodeIndex);
+                updateEntity(nodeIndex, Entity::null(), Entity::null(), 0, Constants::uint32_null_index);
+                activeCount--;
+            }
+
+            childNodes.erase(entity.index);
+        }
+
+        void orphanChildrenOf(Entity entity)
+        {
+            for (auto childIndex : childNodes[entity.index])
+            {
+                nodeParent[childIndex] = Constants::uint32_null_index;
+            }
+
+            childNodes.erase(entity.index);
         }
     };
 
@@ -273,9 +355,9 @@ namespace litl
         m_impl->onSetParent(child, parent);
     }
 
-    void SceneGraph::untrackEntity(Entity entity, SceneGraphAccessKey)
+    void SceneGraph::untrackEntity(Entity entity, SceneGraphUntrackBehavior behavior, SceneGraphAccessKey)
     {
-        m_impl->onDestroyEntity(entity);
+        m_impl->onUntrackEntity(entity, behavior);
     }
 
     void SceneGraph::update(SceneGraphAccessKey)
