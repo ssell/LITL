@@ -35,8 +35,8 @@ namespace litl
         // ---------------------------------------------------------------------------------
 
         /// <summary>
-        /// Adds the entity to the scene tree.
-        /// If the entity is already in the scene tree then this does nothing.
+        /// Tracks the entity in the scene graph.
+        /// Must call update after for the changes to fully take effect.
         /// 
         /// Note: this is a structural/topological change and can only be called by the appropriate internal systems.
         /// </summary>
@@ -47,7 +47,7 @@ namespace litl
         /// <summary>
         /// Sets the parent entity for the specified entity.
         /// If the parent is set to null, then the parent is removed.
-        /// Must call ScenGraph::restructure after for the changes to fully take effect.
+        /// Must call update after for the changes to fully take effect.
         /// 
         /// Note: this is a structural/topological change and can only be called by the appropriate internal systems.
         /// </summary>
@@ -56,30 +56,21 @@ namespace litl
         void setParent(Entity child, Entity parent, SceneGraphAccessKey);
 
         /// <summary>
-        /// Removes all children from the specified entity.
-        /// Must call ScenGraph::restructure after for the changes to fully take effect.
-        /// 
-        /// Note: this is a structural/topological change and can only be called by the appropriate internal systems.
-        /// </summary>
-        /// <param name="parent"></param>
-        void removeAllChildren(Entity parent, SceneGraphAccessKey);
-
-        /// <summary>
-        /// Updates the scene tree when the specified entity is destroyed.
-        /// Must call ScenGraph::restructure after for the changes to fully take effect.
+        /// Updates the scene tree when the specified entity is to be untracked.
+        /// Must call update after for the changes to fully take effect.
         /// 
         /// Note: this is a structural/topological change and can only be called by the appropriate internal systems.
         /// </summary>
         /// <param name="entity"></param>
-        void onEntityDestroyed(Entity entity, SceneGraphAccessKey);
+        void untrackEntity(Entity entity, SceneGraphAccessKey);
 
         /// <summary>
-        /// Resorts the tree following one or more changes.
+        /// Re-sorts the tree following one or more changes.
         /// Does nothing if no changes have been made.
         /// 
         /// Note: this is a structural/topological change and can only be called by the appropriate internal systems.
         /// </summary>
-        void restructure(SceneGraphAccessKey);
+        void update(SceneGraphAccessKey);
 
         // ---------------------------------------------------------------------------------
         // Data Accessors
