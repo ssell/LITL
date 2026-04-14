@@ -32,7 +32,7 @@ namespace litl::tests
         REQUIRE(!command.has_value());
         REQUIRE(queue.count() == 0);
         REQUIRE(queue.empty() == true);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Queue Component", "[ecs::entityCommands]")
     {
@@ -88,7 +88,7 @@ namespace litl::tests
         REQUIRE(fequals(barCopy.a, bar.a));
         REQUIRE(barCopy.b == bar.b);
 
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Queue Many Components", "[ecs::entityCommands]")
     {
@@ -131,7 +131,7 @@ namespace litl::tests
             // Pools should remain after reset, just their offsets reset to 0.
             REQUIRE(queue.poolCount() == 10);
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Commands", "[ecs::entityCommands]")
     {
@@ -145,7 +145,7 @@ namespace litl::tests
 
         REQUIRE(commands.actionableCommandCount() == 3);
         EntityRegistry::clear();
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Materialize and Extract", "[ecs::entityCommands]")
     {
@@ -190,7 +190,7 @@ namespace litl::tests
         REQUIRE(materialized[3].type == EntityCommandType::DestroyEntity);
 
         EntityRegistry::clear();
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Local Component Copy", "[ecs::entityCommands]")
     {
@@ -219,7 +219,7 @@ namespace litl::tests
         REQUIRE(entityFoo.a == 55);
 
         EntityRegistry::clear();
-    } END_LITL_TEST_CASE;
+    } LITL_END_TEST_CASE;
 
     LITL_TEST_CASE("Local Component Copy Many", "[ecs::entityCommands]")
     {
@@ -295,5 +295,5 @@ namespace litl::tests
         }
 
         EntityRegistry::clear();
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

@@ -14,7 +14,7 @@ namespace litl::tests
         
         REQUIRE(entity.isNull() == true);
         REQUIRE(deferred.isNull() == true);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Entity Creation", "[ecs::entityRegistry]")
     {
@@ -22,7 +22,7 @@ namespace litl::tests
         const auto entityRecord = EntityRegistry::create();
 
         REQUIRE(entityRecord.entity.version > 0);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Entity Destruction", "[ecs::entityRegistry]")
     {
@@ -37,7 +37,7 @@ namespace litl::tests
 
         REQUIRE(EntityRegistry::isAlive(entityRecord.entity) == false);
         REQUIRE(oldVersion < EntityRegistry::getRecord(entityRecord.entity).entity.version);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Entity Reuse", "[ecs::entityRegistry]")
     {
@@ -69,7 +69,7 @@ namespace litl::tests
 
         REQUIRE(entityRecord5.entity.index == entityRecord0.entity.index);
         REQUIRE(entityRecord5.entity.version > entityRecord0.entity.version);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Entity Bulk Create", "[ecs::entityRegistry]")
     {
@@ -87,7 +87,7 @@ namespace litl::tests
             REQUIRE(indexInUseMap[entityRecord.entity.index] == false);
             indexInUseMap[entityRecord.entity.index] = true;
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Entity Bulk Destroy", "[ecs::entityRegistry]")
     {
@@ -100,7 +100,7 @@ namespace litl::tests
         {
             REQUIRE(EntityRegistry::isAlive(entityRecord.entity) == false);
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Entity Bulk Reuse", "[ecs::entityRegistry]")
     {
@@ -119,7 +119,7 @@ namespace litl::tests
             REQUIRE(newEntityRecord.entity.version > oldEntityRecord.entity.version);
             REQUIRE(EntityRegistry::isAlive(oldEntityRecord.entity) == false);
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Entity Bulk Destroy Initializer List", "[ecs::entityRegistry]")
     {
@@ -131,5 +131,5 @@ namespace litl::tests
         REQUIRE(EntityRegistry::isAlive(entityRecords[1].entity) == true);
         REQUIRE(EntityRegistry::isAlive(entityRecords[2].entity) == false);
         REQUIRE(EntityRegistry::isAlive(entityRecords[3].entity) == false);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

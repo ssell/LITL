@@ -49,7 +49,7 @@ namespace litl::tests
         REQUIRE(state.bytesAllocated() == state.blockSize);
         REQUIRE(state.blocksInUse == 1);
         REQUIRE(state.bytesInUse == state.currBlockOffset);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Emplace", "[core::containers::memoryArena]")
     {
@@ -63,7 +63,7 @@ namespace litl::tests
         REQUIRE(a->a == 55);
         REQUIRE(b->a == 105);
         REQUIRE(b->b == 337);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Move Constructor", "[core::containers::memoryArena]")
     {
@@ -87,7 +87,7 @@ namespace litl::tests
 
         REQUIRE(state0A.currBlockOffset == state1A.currBlockOffset);
         REQUIRE(state0B.currBlockOffset == 0);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Move Assignment", "[core::containers::memoryArena]")
     {
@@ -111,7 +111,7 @@ namespace litl::tests
 
         REQUIRE(state0A.currBlockOffset == state1A.currBlockOffset);
         REQUIRE(state0B.currBlockOffset == 0);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Many", "[core::containers::memoryArena]")
     {
@@ -181,7 +181,7 @@ namespace litl::tests
             arena.reset();
         }
 
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Auto Shrink", "[core::containers::memoryArena]")
     {
@@ -234,5 +234,5 @@ namespace litl::tests
         arena.resetShrinkAuto();
         REQUIRE(arena.getState().blocksAllocated == 1);
 
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

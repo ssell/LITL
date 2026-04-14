@@ -22,7 +22,7 @@ namespace litl::tests
         REQUIRE(fooDescriptor0->id == fooDescriptor1->id);
         REQUIRE(fooDescriptor0->id != barDescriptor0->id);
         REQUIRE(barDescriptor0->id == barDescriptor1->id);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("ComponentTypeId", "[ecs::component]")
     {
@@ -32,7 +32,7 @@ namespace litl::tests
         REQUIRE(getComponentTypeId<Foo>() == fooDescriptor->id);
         REQUIRE(getComponentTypeId<Bar>() == barDescriptor->id);
         REQUIRE(getComponentTypeId<Foo>() != getComponentTypeId<Bar>());
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("StableComponentTypeId", "[ecs::component]")
     {
@@ -49,7 +49,7 @@ namespace litl::tests
         REQUIRE(getStableComponentTypeId<Bar>() == barDescriptor->stableId);
 
         REQUIRE(getStableComponentTypeId<Foo>() != getStableComponentTypeId<Bar>());
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("ComponentRegistry Tracking", "[ecs::component]")
     {
@@ -61,7 +61,7 @@ namespace litl::tests
 
         REQUIRE(ComponentRegistry::find(barDescriptor->id) == barDescriptor);
         REQUIRE(ComponentRegistry::findByStableId(barDescriptor->stableId) == barDescriptor);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("ComponentData Sort", "[ecs::componentData]")
     {
@@ -88,7 +88,7 @@ namespace litl::tests
         REQUIRE((components.begin() + 0)->type == expectedResult[0]);
         REQUIRE((components.begin() + 1)->type == expectedResult[1]);
         REQUIRE((components.begin() + 2)->type == expectedResult[2]);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("ComponentTypeId Conversion", "[ecs::componentData]")
     {
@@ -107,5 +107,5 @@ namespace litl::tests
         REQUIRE(foo == fooId);
         REQUIRE(bar == barId);
         REQUIRE(baz == bazId);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

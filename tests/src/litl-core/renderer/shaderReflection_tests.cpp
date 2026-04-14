@@ -28,5 +28,5 @@ namespace litl::tests
         REQUIRE(reflectedVertex != std::nullopt);
         REQUIRE(reflectedFragment != std::nullopt);
         REQUIRE(reflectedGeometry == std::nullopt);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

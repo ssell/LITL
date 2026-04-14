@@ -13,7 +13,7 @@
         std::cout << test_group__ << " " << test_name__ << " ...";                                                                  \
         auto test_start_time__ = std::chrono::steady_clock::now();
 
-#define END_LITL_TEST_CASE auto test_end_time__ = std::chrono::steady_clock::now();                                                 \
+#define LITL_END_TEST_CASE auto test_end_time__ = std::chrono::steady_clock::now();                                                 \
         auto test_elapsed_ms__ = std::chrono::duration<double, std::milli>(test_end_time__ - test_start_time__);                    \
         std::cout << std::fixed << std::setprecision(3) << " done! (" << test_elapsed_ms__.count() << "ms)\n";                      \
         }
@@ -31,9 +31,9 @@ namespace litl::tests
     struct TestAssertCallback
     {
         TestAssertCallback(AssertHandler userAssertHandler)
-            : wasAbortEnabled(internal::Assert::getAbortEnabled()), defaultWarningHandler(internal::Assert::getWarningAssertHandler()), defaultFatalHandler(internal::Assert::getFatalAssertHandler()), userHandler(userAssertHandler)
+            : defaultHandler(internal::Assert::getAssertHandler()), defaultFatalHandler(internal::Assert::getFatalAssertHandler()), userHandler(userAssertHandler)
         {
-            internal::Assert::getWarningAssertHandler() = [this](char const* expression, char const* message, char const* file, uint32_t line)
+            internal::Assert::getAssertHandler() = [this](char const* expression, char const* message, char const* file, uint32_t line)
                 {
                     userHandler(expression, message, file, line);
                 };
@@ -42,14 +42,12 @@ namespace litl::tests
                 {
                     userHandler(expression, message, file, line);
                 };
-
-            internal::Assert::setAbortEnabled(false);
         }
 
         TestAssertCallback(EmptyAssertHandler userAssertHandler)
-            : wasAbortEnabled(internal::Assert::getAbortEnabled()), defaultWarningHandler(internal::Assert::getWarningAssertHandler()), defaultFatalHandler(internal::Assert::getFatalAssertHandler()), userEmptyHandler(userAssertHandler)
+            : defaultHandler(internal::Assert::getAssertHandler()), defaultFatalHandler(internal::Assert::getFatalAssertHandler()), userEmptyHandler(userAssertHandler)
         {
-            internal::Assert::getWarningAssertHandler() = [this](char const* expression, char const* message, char const* file, uint32_t line)
+            internal::Assert::getAssertHandler() = [this](char const* expression, char const* message, char const* file, uint32_t line)
                 {
                     userEmptyHandler();
                 };
@@ -59,21 +57,17 @@ namespace litl::tests
                     userEmptyHandler();
                 };
 
-            internal::Assert::setAbortEnabled(false);
         }
 
         ~TestAssertCallback()
         {
-            internal::Assert::setAbortEnabled(wasAbortEnabled);
-            internal::Assert::getWarningAssertHandler() = defaultWarningHandler;
+            internal::Assert::getAssertHandler() = defaultHandler;
             internal::Assert::getFatalAssertHandler() = defaultFatalHandler;
         }
 
     private:
 
-        bool wasAbortEnabled;
-
-        AssertHandler defaultWarningHandler;
+        AssertHandler defaultHandler;
         AssertHandler defaultFatalHandler;
 
         AssertHandler userHandler;

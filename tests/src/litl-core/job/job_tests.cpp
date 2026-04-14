@@ -22,5 +22,5 @@ namespace litl::tests
 
         REQUIRE(handle0.pool() == 6);
         REQUIRE(handle0.job() == 1337);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

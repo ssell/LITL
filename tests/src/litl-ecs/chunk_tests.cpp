@@ -23,7 +23,7 @@ namespace litl::tests
         REQUIRE(layoutFooBar.entityCapacity == layoutBarFoo.entityCapacity);
 
         // ... todo add more concrete tests (memory address locations, etc.) after the chunk header has stabilized ...
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Header Creation", "[ecs::chunk]")
     {
@@ -46,5 +46,5 @@ namespace litl::tests
         REQUIRE(chunk1Header->capacity == capacity);
         REQUIRE(chunk1Header->chunkIndex == 1);
         REQUIRE(chunk1Header->version == 0);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

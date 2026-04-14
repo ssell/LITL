@@ -11,21 +11,21 @@ namespace litl::tests
         REQUIRE(litl::clamp(5, 0, 10) == 5);
         REQUIRE(litl::clamp(-5, 0, 10) == 0);
         REQUIRE(litl::clamp(15, 0, 10) == 10);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("min", "[math::general]")
     {
         REQUIRE(litl::min(5, 0) == 0);
         REQUIRE(litl::min(5, 10) == 5);
         REQUIRE(litl::min(-50, -60) == -60);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("max", "[math::general]")
     {
         REQUIRE(litl::max(5, 0) == 5);
         REQUIRE(litl::max(5, 10) == 10);
         REQUIRE(litl::max(-50, -60) == -50);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("fequals", "[math::general]")
     {
@@ -45,7 +45,7 @@ namespace litl::tests
         {
             REQUIRE(litl::fequals(i, i) == true);
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("isZero", "[math::general]")
     {
@@ -90,7 +90,7 @@ namespace litl::tests
         {
             REQUIRE(litl::isZero(i - i) == true);
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("isOne", "[math::general]")
     {
@@ -130,7 +130,7 @@ namespace litl::tests
         REQUIRE(litl::isOne(static_cast<uint32_t>(0)) == false);
         REQUIRE(litl::isOne(std::numeric_limits<uint32_t>::min()) == false);
         REQUIRE(litl::isOne(std::numeric_limits<uint32_t>::max()) == false);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("between", "[math::general]")
     {
@@ -187,7 +187,7 @@ namespace litl::tests
         REQUIRE(litl::between(static_cast<uint64_t>(10), static_cast<uint64_t>(10), static_cast<uint64_t>(15), false) == false);
         REQUIRE(litl::between(static_cast<uint64_t>(10), static_cast<uint64_t>(5), static_cast<uint64_t>(10), false) == false);
         REQUIRE(litl::between(static_cast<uint64_t>(15), static_cast<uint64_t>(5), static_cast<uint64_t>(10), false) == false);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("pow", "[math::general]")
     {
@@ -268,7 +268,7 @@ namespace litl::tests
         REQUIRE(litl::pow(5, 2u) == 25);
         REQUIRE(litl::pow(-5, 2u) == 25);
         REQUIRE(litl::pow(2, 8u) == 256);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("isPow2", "[math::general]")
     {
@@ -289,12 +289,12 @@ namespace litl::tests
         REQUIRE(litl::isPow2(1024u) == true);
         REQUIRE(litl::isPow2(1025u) == false);
 
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("alignMemoryOffsetUp", "[math::general]")
     {
         REQUIRE(litl::alignMemoryOffsetUp(13, 8) == 16);
         REQUIRE(litl::alignMemoryOffsetUp(16, 8) == 16);
         REQUIRE(litl::alignMemoryOffsetUp(17, 8) == 24);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

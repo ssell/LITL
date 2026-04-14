@@ -73,7 +73,7 @@ namespace litl::tests
 
         REQUIRE(pSink->messageBuffer.size() > 0);
         REQUIRE(pSink->messageBuffer.back().find(std::get<std::string>(parameters)) >= 0);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE_METHOD(LoggingWrapper, "Filter Log Message", "[core::logging]")
     {
@@ -96,7 +96,7 @@ namespace litl::tests
         {
             REQUIRE(pSink->messageBuffer.size() == 0);
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE_METHOD(LoggingWrapper, "Preserve Order", "[core::logging]")
     {
@@ -120,7 +120,7 @@ namespace litl::tests
         {
             REQUIRE(pSink->messageBuffer[i].find(parts[i]) >= 0);
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     namespace MultithreadedLoggingTest
     {
@@ -148,7 +148,7 @@ namespace litl::tests
         }
 
         REQUIRE(pSink->messageBuffer.size() == 30);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE_METHOD(LoggingWrapper, "Parameterized Logging", "[core::logging]")
     {
@@ -158,7 +158,7 @@ namespace litl::tests
 
         REQUIRE(pSink->messageBuffer.size() == 1);
         REQUIRE(pSink->messageBuffer[0].find("This message is composed of 3 distinct parameters.") >= 0);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE_METHOD(LoggingWrapper, "Convenience Logging", "[core::logging]")
     {
@@ -170,7 +170,7 @@ namespace litl::tests
         REQUIRE(pSink->messageBuffer.size() == 2);
         REQUIRE(pSink->messageBuffer[0].find("Hello, World!") >= 0);
         REQUIRE(pSink->messageBuffer[1].find("Hello, World!") >= 0);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE_METHOD(LoggingWrapper, "File Capture Logging", "[core::logging]")
     {
@@ -181,5 +181,5 @@ namespace litl::tests
         REQUIRE(pSink->messageBuffer.size() == 1);
         REQUIRE(pSink->messageBuffer[0].find("Something really bad happened!") >= 0);
         REQUIRE(pSink->messageBuffer[0].find("logging_tests.cpp@") >= 0);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

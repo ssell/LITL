@@ -27,7 +27,7 @@ namespace litl::tests
         REQUIRE(type_id<Foo>() == fooId);
         REQUIRE(type_id<Bar>() == barId);
         REQUIRE(fooId != barId);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Type Names", "[core::types]")
     {
@@ -42,5 +42,5 @@ namespace litl::tests
 
         REQUIRE(type_name<Bar>() == expectedBarName);
         REQUIRE(type_name<Bar>() == barName);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

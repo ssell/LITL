@@ -134,14 +134,13 @@ namespace litl
 
         [[nodiscard]] Entity getParent(Entity entity) const noexcept
         {
-            if (isPresent(entity))
-            {
-                uint32_t parentNodeIndex = nodeParent[entity.index];
+            LITL_ASSERT_MSG(isPresent(entity), "Attempting to retrieve parent of untracked entity.", Entity::null());
 
-                if (parentNodeIndex != Constants::uint32_null_index)
-                {
-                    return nodeToEntity[parentNodeIndex];
-                }
+            uint32_t parentNodeIndex = nodeParent[entity.index];
+
+            if (parentNodeIndex != Constants::uint32_null_index)
+            {
+                return nodeToEntity[parentNodeIndex];
             }
 
             return Entity::null();
@@ -156,7 +155,8 @@ namespace litl
 
             if (!parent.isNull())
             {
-                assert(isPresent(parent) == true);
+                LITL_ASSERT_MSG(entity != parent, "Attempting to set child as parent of itself.", );
+                LITL_ASSERT_MSG(isPresent(parent) == true, "Attempting to set invalid parent of child.", );
                 childNodes[parent.index].push_back(entity.index);
             }
 
@@ -171,7 +171,8 @@ namespace litl
             ensureFit(parent.index);
 
             LITL_ASSERT_MSG(!child.isNull(), "Attempting to set parent of null child.", );
-            LITL_ASSERT_MSG(parent.isNull() || (nodeOccupied[parent.index] == NodeState::Present), "Attempting to set parent to non-null entity that is not tracked.", );
+            LITL_ASSERT_MSG(child != parent, "Attempting to set child as parent of itself.", );
+            LITL_ASSERT_MSG(parent.isNull() || isPresent(parent), "Attempting to set invalid parent of child.", );
 
             // remove from parents children
             uint32_t prevParent = nodeParent[child.index];

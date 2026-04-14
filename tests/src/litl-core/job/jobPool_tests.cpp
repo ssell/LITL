@@ -27,7 +27,7 @@ namespace litl::tests
         job->func(job);
 
         REQUIRE(jobsRun == 1);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Pool Reset", "[core::job::jobPool]")
     {
@@ -65,7 +65,7 @@ namespace litl::tests
         job2->func(job2);
 
         REQUIRE(jobsRun == 3);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Many Jobs", "[core::job::jobPool]")
     {
@@ -121,5 +121,5 @@ namespace litl::tests
         auto timeToRun1 = (endRun1 - startRun1);
 
         REQUIRE(jobsRun == jobsCount * 2);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

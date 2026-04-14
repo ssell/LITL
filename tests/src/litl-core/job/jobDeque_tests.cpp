@@ -39,7 +39,7 @@ namespace litl::tests
 
         deque.push(handle2.handle);
         REQUIRE(deque.size() == 4);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Pop", "[core::job::jobDeque]")
     {
@@ -85,7 +85,7 @@ namespace litl::tests
 
         REQUIRE(deque.size() == 0);
         REQUIRE(!fetched.has_value());
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Steal", "[core::job::jobDeque]")
     {
@@ -131,7 +131,7 @@ namespace litl::tests
 
         REQUIRE(deque.size() == 0);
         REQUIRE(!fetched.has_value());
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Big Deque", "[core::job::jobDeque]")
     {
@@ -183,5 +183,5 @@ namespace litl::tests
 
         // If this fails, then job pointers were lost during an internal buffer resize.
         REQUIRE(anyNull == false);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

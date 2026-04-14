@@ -39,7 +39,7 @@ namespace litl::tests
         REQUIRE(components.dirty() == false);
         REQUIRE(components.size() == 1);                // check for dedupe
 
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Remove", "[ecs::archetypeComponents]")
     {
@@ -61,7 +61,7 @@ namespace litl::tests
         REQUIRE(components.dirty() == false);
 
         REQUIRE(components.remove(fooId) == false);     // nothing to remove
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Span", "[ecs::archetypeComponents]")
     {
@@ -79,7 +79,7 @@ namespace litl::tests
         components.hash();
 
         REQUIRE(components.size() == 3);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Add Many", "[ecs::archetypeComponents]")
     {
@@ -98,7 +98,7 @@ namespace litl::tests
         components.hash();
 
         REQUIRE(components.size() == 3);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Add Many Data", "[ecs::archetypeComponents]")
     {
@@ -117,7 +117,7 @@ namespace litl::tests
         components.hash();
 
         REQUIRE(components.size() == 3);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Add Too Many", "[ecs::archetypeComponents]")
     {
@@ -131,7 +131,7 @@ namespace litl::tests
 
         REQUIRE(components.add(tooMany) == false);
         REQUIRE(components.size() == 0);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Remove Many", "[ecs::archetypeComponents]")
     {
@@ -157,7 +157,7 @@ namespace litl::tests
         components.hash();
 
         REQUIRE(components.size() == 1);        // no change
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Populate", "[ecs::archetypeComponents]")
     {
@@ -175,7 +175,7 @@ namespace litl::tests
 
         REQUIRE(components.size() == 3);
         REQUIRE(components.dirty() == false);   // populate, unlike the other add methods, also performs a hash
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Hash", "[ecs::archetypeComponents]")
     {
@@ -188,7 +188,7 @@ namespace litl::tests
         REQUIRE(components.add(array) == true);
         REQUIRE(components.size() == 3);
         REQUIRE(components.hash() == expectedHash);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Component Ordering", "[ecs::archetypeComponents]")
     {
@@ -213,7 +213,7 @@ namespace litl::tests
         REQUIRE(components[0] == sorted[0]);
         REQUIRE(components[1] == sorted[1]);
         REQUIRE(components[2] == sorted[2]);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Copy", "[ecs::archetypeComponents]")
     {
@@ -255,7 +255,7 @@ namespace litl::tests
 
         REQUIRE(a[0] == b[0]);
         REQUIRE(a[1] == b[1]);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Hash Idempotency", "[ecs::archetypeCommands]")
     {
@@ -275,5 +275,5 @@ namespace litl::tests
             REQUIRE(a.size() == 3);
             REQUIRE(a.dirty() == false);
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

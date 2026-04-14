@@ -34,7 +34,7 @@ namespace litl::tests
         {
             REQUIRE(first10Seed0[i] == rng.next());
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("FastRng Seed Time", "[math::random]")
     {
@@ -53,7 +53,7 @@ namespace litl::tests
         {
             REQUIRE(rng0.next() != rng1.next());
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("FastRng Discard", "[math::random]")
     {
@@ -69,13 +69,13 @@ namespace litl::tests
 
         REQUIRE(rng0.next() == rng1.next());
         REQUIRE(rng0() == rng1());
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
         LITL_TEST_CASE("FastRng Min/Max", "[math::random]")
     {
         FastRng rng(0);
         REQUIRE(rng.min() < rng.max());
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("FastRng Next Limit", "[math::random]")
     {
@@ -85,7 +85,7 @@ namespace litl::tests
         {
             REQUIRE(rng.next(10) < 10);
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("GoodRng Seed", "[math::random]")
     {
@@ -114,7 +114,7 @@ namespace litl::tests
         {
             REQUIRE(first10Seed0[i] == rng.next());
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("GoodRng Seed Time", "[math::random]")
     {
@@ -133,7 +133,7 @@ namespace litl::tests
         {
             REQUIRE(rng0.next() != rng1.next());
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("GoodRng Discard", "[math::random]")
     {
@@ -149,13 +149,13 @@ namespace litl::tests
 
         REQUIRE(rng0.next() == rng1.next());
         REQUIRE(rng0() == rng1());
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("GoodRng Min/Max", "[math::random]")
     {
         GoodRng rng(0);
         REQUIRE(rng.min() < rng.max());
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("GoodRng Next Limit", "[math::random]")
     {
@@ -165,5 +165,5 @@ namespace litl::tests
         {
             REQUIRE(rng.next(10) < 10);
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

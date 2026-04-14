@@ -54,7 +54,7 @@ namespace litl::tests
         REQUIRE(vector.capacity() == 64);
         REQUIRE(vector.empty() == true);
         REQUIRE(vector.full() == false);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Random Access", "[core::containers::pagedVector]")
     {
@@ -72,7 +72,7 @@ namespace litl::tests
         vector[27] = 127;
 
         REQUIRE(vector[27] == 127);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Fixed Access", "[core::containers::pagedVector]")
     {
@@ -97,7 +97,7 @@ namespace litl::tests
 
         REQUIRE(vector.front() == 1);
         REQUIRE(vector.front() == vector.back());
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Iterator", "[core::containers::pagedVector]")
     {
@@ -126,7 +126,7 @@ namespace litl::tests
         {
             REQUIRE(*iter == i++);
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Stable Memory", "[core::containers::pagedVector]")
     {
@@ -148,7 +148,7 @@ namespace litl::tests
 
         REQUIRE(*ptr0 == 1337);
         REQUIRE(ptr0 == ptr1);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     namespace PushPopClassTest
     {
@@ -208,7 +208,7 @@ namespace litl::tests
 
         // 2 in the container + 1 local to the scope that was pushed in.
         REQUIRE(destroyCount == 3);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Clear", "[core::containers::pagedVector]")
     {
@@ -242,7 +242,7 @@ namespace litl::tests
 
         // Destructor cleans up the one remaining element
         REQUIRE(destroyCount == 11);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Clear Trivial", "[core::containers::pagedVector]")
     {
@@ -267,7 +267,7 @@ namespace litl::tests
 
         REQUIRE(vector.size() == 1);
         REQUIRE(vector[0] == 7);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Reserve", "[core::containers::pagedVector]")
     {
@@ -294,7 +294,7 @@ namespace litl::tests
         vector.reserve(10);
 
         REQUIRE(vector.capacity() == 64);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Move Semantics", "[core::containers::pagedVector]")
     {
@@ -328,7 +328,7 @@ namespace litl::tests
         REQUIRE(&assigned[0] == stablePtr);
 
         REQUIRE(moved.empty() == true);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Const Access", "[core::containers::pagedVector]")
     {
@@ -358,7 +358,7 @@ namespace litl::tests
         }
 
         REQUIRE(i == 10);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Iterator Arithmetic", "[core::containers::pagedVector]")
     {
@@ -398,7 +398,7 @@ namespace litl::tests
 
         // n + iterator (commutative)
         REQUIRE(*(3 + vector.begin()) == 3);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Cross Page Access", "[core::containers::pagedVector]")
     {
@@ -427,7 +427,7 @@ namespace litl::tests
             REQUIRE(x == i * 100);
             ++i;
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Pop Back On Empty", "[core::containers::pagedVector]")
     {
@@ -438,7 +438,7 @@ namespace litl::tests
 
         REQUIRE(vector.size() == 0);
         REQUIRE(vector.empty() == true);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Destructor Calls On Scope Exit", "[core::containers::pagedVector]")
     {
@@ -455,5 +455,5 @@ namespace litl::tests
         }
 
         REQUIRE(destroyCount == 5);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

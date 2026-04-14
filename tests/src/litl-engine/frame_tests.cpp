@@ -25,7 +25,7 @@ namespace litl::tests
         // It is difficult/unreliable to measure at a finer level due to OS variability in granularity for sleep_for (which runs the coarse sleep section)
         REQUIRE(elapsed >= Constants::second_to_nanoseconds);
         REQUIRE(elapsed < (Constants::second_to_nanoseconds * 2));
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Frame Limiter 30 FPS", "[engine::frame]")
     {
@@ -48,5 +48,5 @@ namespace litl::tests
         // 60 frames should have taken AT LEAST 2 seconds due to the frame limiter.
         REQUIRE(elapsed >= (Constants::second_to_nanoseconds * 2));
         REQUIRE(elapsed < (Constants::second_to_nanoseconds * 3));        // careful here. getting close to the limit of uint32_t ...
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

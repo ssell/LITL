@@ -36,7 +36,7 @@ namespace litl::tests
         REQUIRE(dag.containsNode(node1) == true);
         REQUIRE(dag.containsNode(node2) == true);
         REQUIRE(dag.addNode(node2) == false);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("addNodes", "[math::dag]")
     {
@@ -47,7 +47,7 @@ namespace litl::tests
         REQUIRE(dag.size() == 3);
         REQUIRE(dag.addNode(0) == false);
         REQUIRE(dag.size() == 3);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("addEdge", "[math::dag]")
     {
@@ -103,7 +103,7 @@ namespace litl::tests
         REQUIRE(dag.hasOutgoing(3) == false);
         REQUIRE(dag.hasIncoming(4) == true);
         REQUIRE(dag.hasOutgoing(4) == false);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("addEdges", "[math::dag]")
     {
@@ -139,7 +139,7 @@ namespace litl::tests
 
         REQUIRE(dag.containsEdge(0, 1) == true);
         REQUIRE(dag.containsEdge(1, 0) == false);   // dag is directed. 0 -> 1 != 0 <- 1
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("sort 1", "[math::dag]")
     {
@@ -202,7 +202,7 @@ namespace litl::tests
         REQUIRE(layers[2][0] == 3);
         REQUIRE(layers[2][1] == 4);
 
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("sort 2", "[math::dag]")
     {
@@ -267,7 +267,7 @@ namespace litl::tests
         REQUIRE(layers[3][0] == 2);
         REQUIRE(layers[4].size() == 1);
         REQUIRE(layers[4][0] == 3);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("sort 3", "[math::dag]")
     {
@@ -359,7 +359,7 @@ namespace litl::tests
         REQUIRE(layers[2][2] == 8);
         REQUIRE(layers[3].size() == 1);
         REQUIRE(layers[3][0] == 9);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("sort 4", "[math::dag]")
     {
@@ -439,7 +439,7 @@ namespace litl::tests
         REQUIRE(layers[2][0] == 8);
         REQUIRE(layers[3].size() == 1);
         REQUIRE(layers[3][0] == 9);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("cycles 1", "[math::dag]")
     {
@@ -457,7 +457,7 @@ namespace litl::tests
         REQUIRE(dag.addNodes({ 0, 1 }) == true);
         REQUIRE(dag.addEdges({ {0, 1}, {1, 0} }) == true);
         REQUIRE(dag.sort() == false);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("cycles 2", "[math::dag]")
     {
@@ -487,7 +487,7 @@ namespace litl::tests
         REQUIRE(dag.addNodes({ 4, 3, 2, 1, 0 }) == true);
         REQUIRE(dag.addEdges({ { 0, 1 }, { 0, 2 }, { 1, 3 }, { 1, 4 }, { 2, 4 }, {4, 2} }) == true);
         REQUIRE(dag.sort() == false);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("cycles 3", "[math::dag]")
     {
@@ -521,7 +521,7 @@ namespace litl::tests
         REQUIRE(dag.addNodes({ 0, 1, 2, 3, 4, 5 }) == true);
         REQUIRE(dag.addEdges({ {0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}, {4, 1} }) == true);
         REQUIRE(dag.sort() == false);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Sort Single Node", "[math::dag]")
     {
@@ -537,7 +537,7 @@ namespace litl::tests
         REQUIRE(layers.size() == 1);
         REQUIRE(layers[0].size() == 1);
         REQUIRE(layers[0][0] == 0);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Sort Disconnected Nodes", "[math::dag]")
     {
@@ -553,7 +553,7 @@ namespace litl::tests
         auto& layers = dag.getLayers();
         REQUIRE(layers.size() == 1);
         REQUIRE(layers[0].size() == 4);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("sort linear chain", "[math::dag]")
     {
@@ -577,7 +577,7 @@ namespace litl::tests
         {
             REQUIRE(layer.size() == 1);
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Sort Diamond", "[math::dag]")
     {
@@ -609,7 +609,7 @@ namespace litl::tests
         REQUIRE(layers[0].size() == 1);
         REQUIRE(layers[1].size() == 2);
         REQUIRE(layers[2].size() == 1);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Sort Multiple Roots", "[math::dag]")
     {
@@ -635,7 +635,7 @@ namespace litl::tests
         REQUIRE(layers.size() == 2);
         REQUIRE(layers[0].size() == 3);
         REQUIRE(layers[1].size() == 1);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Cycles Self Loop", "[math::dag]")
     {
@@ -644,7 +644,7 @@ namespace litl::tests
         dag.addEdge(0, 0);
 
         REQUIRE(dag.sort() == false);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Cycles Triangle", "[math::dag]")
     {
@@ -660,7 +660,7 @@ namespace litl::tests
         dag.addEdges({ {0, 1}, {1, 2}, {2, 0} });
 
         REQUIRE(dag.sort() == false);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("getUnsorted Insertion Order", "[math::dag]")
     {
@@ -673,7 +673,7 @@ namespace litl::tests
         REQUIRE(unsorted[1] == 3);
         REQUIRE(unsorted[2] == 8);
         REQUIRE(unsorted[3] == 1);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Sort Empty Graph", "[math::dag]")
     {
@@ -682,7 +682,7 @@ namespace litl::tests
         REQUIRE(dag.sort() == true);
         REQUIRE(dag.getSorted().empty() == true);
         REQUIRE(dag.getLayers().empty() == true);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Sort Idempotency", "[math::dag]")
     {
@@ -723,7 +723,7 @@ namespace litl::tests
             REQUIRE(layers[2].size() == 1);
             REQUIRE(layers[2][0] == 3);
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Wide Fan", "[math::dag]")
     {
@@ -768,7 +768,7 @@ namespace litl::tests
         REQUIRE(layers[0].size() == 1);
         REQUIRE(layers[1].size() == middleCount);
         REQUIRE(layers[2].size() == 1);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
         
     LITL_TEST_CASE("Deep Chain", "[math::dag]")
     {
@@ -810,7 +810,7 @@ namespace litl::tests
         }
 
         REQUIRE(allValid);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Dense Multilayer", "[math::dag]")
     {
@@ -860,5 +860,5 @@ namespace litl::tests
         }
 
         REQUIRE(allValid);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

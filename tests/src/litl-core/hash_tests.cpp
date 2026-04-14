@@ -52,7 +52,7 @@ namespace litl::tests
         {
             REQUIRE(hash32(&varUintC, sizeof(uint32_t)) == hashedUintC);
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Simple Hash 64", "[core::hash]")
     {
@@ -94,7 +94,7 @@ namespace litl::tests
         {
             REQUIRE(hash64(&varUintC, sizeof(uint32_t)) == hashedUintC);
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     namespace HashPodTest
     {
@@ -130,7 +130,7 @@ namespace litl::tests
         const auto hashedFooSeedlessConvenient = hashPOD(foo);
 
         REQUIRE(hashedFooSeedless == hashedFooSeedlessConvenient);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Hash Array", "[core::hash]")
     {
@@ -156,7 +156,7 @@ namespace litl::tests
         REQUIRE(hashedASeedless == hashedBSeedless);
         REQUIRE(hashedBSeedless == hashedCSeedless);
         REQUIRE(hashedASeedless != hashedDSeedless);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Hash Unordered Array", "[core::hash]")
     {
@@ -167,7 +167,7 @@ namespace litl::tests
         const auto hashedB = hashArray<uint32_t>(b, Seed64);
 
         REQUIRE(hashedA != hashedB);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Hash Combine", "[core::hash]")
     {
@@ -217,7 +217,7 @@ namespace litl::tests
 
         hashCombine64(hashedComboB64, hashedC64);
         REQUIRE(hashedComboA64 == hashedComboB64);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Hash String", "[core::hash]")
     {
@@ -231,7 +231,7 @@ namespace litl::tests
 
         REQUIRE(str0Hash == str1Hash);
         REQUIRE(str0Hash != str2Hash);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Hash Subarray", "[core::hash]")
     {
@@ -244,5 +244,5 @@ namespace litl::tests
 
         REQUIRE(hashedSubarray != hashedFullArray);
         REQUIRE(hashedSubarray == hashedSubarrayExpected);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

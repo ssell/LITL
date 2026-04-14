@@ -26,7 +26,7 @@ namespace litl::tests
 
         REQUIRE(archetypeFoo->componentCount() == 1);
         REQUIRE(archetypeFooBar->componentCount() == 2);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("ArchetypeRegistry::get (Dynamic)", "[ecs::archetype]")
     {
@@ -46,7 +46,7 @@ namespace litl::tests
 
         REQUIRE(archetypeFooBarS == archetypeFooBarD);
         REQUIRE(archetypeFooBarD == archetypeBarFooD);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("ArchetypeRegistry::getById", "[ecs::archetype]")
     {
@@ -55,7 +55,7 @@ namespace litl::tests
 
         REQUIRE(ArchetypeRegistry::getById(archetypeFoo->id()) == archetypeFoo);
         REQUIRE(ArchetypeRegistry::getById(archetypeFooBar->id()) == archetypeFooBar);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("ArchetypeRegistry::getByComponentHash", "[ecs::archetype]")
     {
@@ -64,7 +64,7 @@ namespace litl::tests
 
         REQUIRE(ArchetypeRegistry::getByComponentHash(archetypeFoo->componentHash()) == archetypeFoo);
         REQUIRE(ArchetypeRegistry::getByComponentHash(archetypeFooBar->componentHash()) == archetypeFooBar);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Empty Archetype", "[ecs::archetype]")
     {
@@ -72,7 +72,7 @@ namespace litl::tests
 
         REQUIRE(emptyArchetype != nullptr);
         REQUIRE(emptyArchetype->componentCount() == 0);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Archetype Has Component", "[ecs::archetype]")
     {
@@ -91,7 +91,7 @@ namespace litl::tests
         REQUIRE(archetypeFooBar->hasComponent<Bar>() == true);
         REQUIRE(archetypeFooBar->hasComponent(fooId) == true);
         REQUIRE(archetypeFooBar->hasComponent(barId) == true);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     namespace NewArchetypesTest
     {
@@ -117,7 +117,7 @@ namespace litl::tests
         REQUIRE(std::find(newArchetypes.begin(), newArchetypes.end(), appleArchetype->id()) != newArchetypes.end());
         REQUIRE(std::find(newArchetypes.begin(), newArchetypes.end(), orangeArchetype->id()) != newArchetypes.end());
         REQUIRE(std::find(newArchetypes.begin(), newArchetypes.end(), appleOrangeArchetype->id()) != newArchetypes.end());
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }
 
 REGISTER_TYPE_NAME(litl::tests::NewArchetypesTest::Apple);
