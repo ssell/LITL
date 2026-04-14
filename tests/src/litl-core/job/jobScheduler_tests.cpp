@@ -54,7 +54,7 @@ namespace litl::tests
 
         REQUIRE(scheduler.wait() == true);
         REQUIRE(jobsRun == 1);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("CreateAndSubmit LocalData", "[core::job::jobScheduler]")
     {
@@ -65,7 +65,7 @@ namespace litl::tests
         scheduler.createAndSubmit(jobLocalDataTest, JobPriority::Normal, data, nullptr);
         REQUIRE(scheduler.wait() == true);
         REQUIRE(jobsRun == 1);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("CreateAndSubmit Lambda", "[core::job::jobScheduler]")
     {
@@ -76,7 +76,7 @@ namespace litl::tests
 
         REQUIRE(scheduler.wait() == true);
         REQUIRE(data.runs == 1);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Job Dependency Chain", "[core::job::jobScheduler]")
     {
@@ -94,7 +94,7 @@ namespace litl::tests
 
         REQUIRE(scheduler.wait() == true);
         REQUIRE(jobsRun == 3);      // handle0 runs which triggers handle1 which triggers handle2
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Job Dependency Limit", "[core::job::jobScheduler]")
     {
@@ -124,7 +124,7 @@ namespace litl::tests
 
         REQUIRE(scheduler.wait() == true);
         REQUIRE(jobsRun == (Job::JobMaxDependentsCount + 1));       // the original job and its max number of dependents
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Job Handle Validity", "[core::job::jobScheduler]")
     {
@@ -142,7 +142,7 @@ namespace litl::tests
         REQUIRE(scheduler.valid(handle0) == true);
         REQUIRE(scheduler.wait() == true);
         REQUIRE(scheduler.valid(handle0) == false);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Schedule Many Jobs", "[core::job::jobScheduler]")
     {
@@ -164,7 +164,7 @@ namespace litl::tests
 
         REQUIRE(scheduler.wait() == true);
         REQUIRE(jobsRun == jobCount);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Schedule Many Jobs Priority", "[core::job::jobScheduler]")
     {
@@ -194,7 +194,7 @@ namespace litl::tests
             // Each priority level should have been run the same number of times
             priorities[i] = jobCount / JobPriorityCount;
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Fence", "[core::job::jobScheduler]")
     {
@@ -222,7 +222,7 @@ namespace litl::tests
         REQUIRE(fence.wait() == true);
         REQUIRE(jobsRun == jobCount);
         REQUIRE(scheduler.wait() == true);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Wait Multi-Fence Loop", "[core::job::jobScheduler]")
     {
@@ -253,7 +253,7 @@ namespace litl::tests
             REQUIRE(scheduler.wait() == true);
             REQUIRE(jobsRun == jobCount);
         }
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Create Submit All Variants", "[core::job::jobScheduler]")
     {
@@ -310,7 +310,7 @@ namespace litl::tests
 
         REQUIRE(fence.wait() == true);
         REQUIRE(scheduler.wait() == true);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Job State", "[core::job::jobScheduler]")
     {
@@ -333,7 +333,7 @@ namespace litl::tests
         handle0 = scheduler.create(jobSharedDataTest, &jobsRun_shared);
         REQUIRE(job0->version == 1);
         REQUIRE(job0->state == JobState::Idle);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     namespace
     {
@@ -388,5 +388,5 @@ namespace litl::tests
         REQUIRE(scheduler.wait() == true);
         REQUIRE(sharedData == 12);
 
-    } END_LITL_TEST_CASE;
+    } LITL_END_TEST_CASE;
 }

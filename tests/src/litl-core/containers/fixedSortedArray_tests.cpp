@@ -49,7 +49,7 @@ namespace litl::tests
         REQUIRE(*(array.begin() + 5) == 88);
         REQUIRE(*(array.begin() + 6) == 987);
         REQUIRE(*(array.begin() + 7) == 1337);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
         
     LITL_TEST_CASE("Custom", "[core::containers::fixedSortedArray]")
     {
@@ -77,7 +77,7 @@ namespace litl::tests
 
         REQUIRE(at3.a == 0);
         REQUIRE(at3.b == 1000);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Initializer List", "[core::containers::fixedSortedArray]")
     {
@@ -92,5 +92,5 @@ namespace litl::tests
         REQUIRE(*(array.begin() + 4) == 8);
         REQUIRE(*(array.begin() + 5) == 9);
         REQUIRE(*(array.begin() + 6) == 15);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

@@ -28,7 +28,7 @@ namespace litl::tests
         REQUIRE(caughtFile.find("assert_tests.cpp") > 0);
         REQUIRE(caughtLine > 0);
 
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("assert warning LITL_ASSERT_MSG", "[core::assert]")
     {
@@ -54,7 +54,7 @@ namespace litl::tests
         REQUIRE(caughtMessage == "true does not equal false!");
         REQUIRE(caughtFile.find("assert_tests.cpp") > 0);
         REQUIRE(caughtLine > 0);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("assert LITL_FATAL_ASSERT", "[core::assert]")
     {
@@ -80,7 +80,7 @@ namespace litl::tests
         REQUIRE(caughtMessage == "");
         REQUIRE(caughtFile.find("assert_tests.cpp") > 0);
         REQUIRE(caughtLine > 0);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("assert LITL_FATAL_ASSERT_MSG", "[core::assert]")
     {
@@ -106,12 +106,12 @@ namespace litl::tests
         REQUIRE(caughtMessage == "true does not equal false!");
         REQUIRE(caughtFile.find("assert_tests.cpp") > 0);
         REQUIRE(caughtLine > 0);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("helper macro", "[core::assert]")
     {
         LITL_START_ASSERT_CAPTURE
             LITL_ASSERT((true == false), );
         LITL_END_ASSERT_CAPTURE
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

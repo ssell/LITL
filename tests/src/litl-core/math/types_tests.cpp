@@ -12,5 +12,5 @@ namespace litl::tests
         mat3 expected = mat4LookAt.get3x3();
 
         REQUIRE(mat3LookAt == expected);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

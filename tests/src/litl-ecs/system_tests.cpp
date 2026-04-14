@@ -47,7 +47,7 @@ namespace litl::tests
 
         world.destroyImmediate(entity0);
         world.destroyImmediate(entity1);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Traits extractComponentIds", "[ecs::system]")
     {
@@ -67,7 +67,7 @@ namespace litl::tests
         REQUIRE(foundTypes.size() == 2);
         REQUIRE(foundTypes[0] == ComponentDescriptor::get<Foo>()->id);
         REQUIRE(foundTypes[1] == ComponentDescriptor::get<Bar>()->id);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Traits extractComponentInfo", "[ecs::system]")
     {
@@ -85,5 +85,5 @@ namespace litl::tests
         REQUIRE(componentInfos[1].id == ComponentDescriptor::get<Bar>()->id);
         REQUIRE(componentInfos[1].readonly == false);
 
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

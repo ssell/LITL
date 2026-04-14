@@ -51,7 +51,7 @@ namespace litl::tests
         REQUIRE(buffer[6] == 2);
         REQUIRE(buffer[7] == 1);
 
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("List", "[core::containers::ringBuffer]")
     {
@@ -64,7 +64,7 @@ namespace litl::tests
 
         REQUIRE(buffer[0] == 3);
         REQUIRE(buffer[7] == 10);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Iterator", "[core::containers::ringBuffer]")
     {
@@ -77,7 +77,7 @@ namespace litl::tests
             REQUIRE(value == expected++);
         }
 
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Sum", "[core::containers::ringBuffer]")
     {
@@ -87,7 +87,7 @@ namespace litl::tests
         uint32_t sum = buffer.sum();
 
         REQUIRE(sum == expected);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Min", "[core::containers::ringBuffer]")
     {
@@ -97,7 +97,7 @@ namespace litl::tests
         uint32_t min = buffer.min();
 
         REQUIRE(min == expected);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Max", "[core::containers::ringBuffer]")
     {
@@ -107,5 +107,5 @@ namespace litl::tests
         uint32_t max = buffer.max();
 
         REQUIRE(max == expected);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

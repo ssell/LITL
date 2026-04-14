@@ -29,7 +29,7 @@ namespace litl::tests
         REQUIRE(queue.dequeue() == std::nullopt);
         REQUIRE(queue.size() == 0);
         REQUIRE(queue.empty() == true);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Push-Peek Single-Threaded", "[core::containers::concurrentSingleQueue]")
     {
@@ -46,7 +46,7 @@ namespace litl::tests
         REQUIRE(queue.dequeue() == 55);
         REQUIRE(queue.peek() == std::nullopt);
         REQUIRE(queue.size() == 0);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Push-Clear Single-Threaded", "[core::containers::concurrentSingleQueue]")
     {
@@ -64,5 +64,5 @@ namespace litl::tests
 
         REQUIRE(queue.size() == 0);
         REQUIRE(queue.peek() == std::nullopt);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

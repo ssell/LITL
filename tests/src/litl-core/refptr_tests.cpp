@@ -103,7 +103,7 @@ namespace litl::tests
         }
 
         REQUIRE(destroyedFlag == true);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Multiple References", "[core::refptr]")
     {
@@ -129,7 +129,7 @@ namespace litl::tests
         }
 
         REQUIRE(destroyedFlag == true);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("make_refptr", "[core::refptr]")
     {
@@ -173,7 +173,7 @@ namespace litl::tests
         }
 
         REQUIRE(a == 0); REQUIRE(b == 0); REQUIRE(c == 0);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     Foo* createNewFoo(bool* destroyedFlag)
     {
@@ -190,7 +190,7 @@ namespace litl::tests
         }
 
         REQUIRE(destroyedFlag == true);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("nullptr", "[core::refptr]")
     {
@@ -200,5 +200,5 @@ namespace litl::tests
 
         // The goal is to not crash when the above refptr goes out of scope. Make sure it doesn't try to delete nullptr.
         REQUIRE(true == true);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

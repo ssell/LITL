@@ -62,7 +62,7 @@ namespace litl::tests
         REQUIRE(map.size() == 1);
         REQUIRE(map.erase(key0) == true);
         REQUIRE(map.size() == 0);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Clear", "[core::containers::flatHashMap]")
     {
@@ -80,5 +80,5 @@ namespace litl::tests
         REQUIRE(map.contains(1) == false);
         REQUIRE(map.contains(2) == false);
         REQUIRE(map.contains(3) == false);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

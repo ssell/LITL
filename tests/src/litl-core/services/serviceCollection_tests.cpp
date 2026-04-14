@@ -60,7 +60,7 @@ namespace litl::tests
             });
 
         REQUIRE(services.size() == 1);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Add Singleton", "[core::services]")
     {
@@ -77,7 +77,7 @@ namespace litl::tests
             });
 
         REQUIRE(services.size() == 2);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Get Missing", "[core::services]")
     {
@@ -85,7 +85,7 @@ namespace litl::tests
         auto provider = services.build();
 
         REQUIRE(provider->get<FooService>() == nullptr);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Get Singleton", "[core::services]")
     {
@@ -97,7 +97,7 @@ namespace litl::tests
         doubler->set(1);
 
         REQUIRE(doubler->get() == 2);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Set Singleton Multiple Times", "[core::services]")
     {
@@ -111,7 +111,7 @@ namespace litl::tests
         tripler->set(1);
 
         REQUIRE(tripler->get() == 3);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Multiple Singletons", "[core::services]")
     {
@@ -126,7 +126,7 @@ namespace litl::tests
 
         REQUIRE(valueService->get() == 20);
         REQUIRE(fooService->get() == 55);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Scoped Service", "[core::services]")
     {
@@ -147,7 +147,7 @@ namespace litl::tests
         auto scopedService2 = scope->get<IValueService>();
         REQUIRE(scopedService.get() == scopedService2.get());
         REQUIRE(scopedService2->get() == 10);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Scoped Singleton Service", "[core::services]")
     {
@@ -160,7 +160,7 @@ namespace litl::tests
         auto scopeSingleton = provider->get<FooService>();
 
         REQUIRE((providerSingleton.get()) == (scopeSingleton.get()));
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Transient Service", "[core::services]")
     {
@@ -189,5 +189,5 @@ namespace litl::tests
         REQUIRE(transient1->get() == 20);
         REQUIRE(transient2->get() == 30);
         REQUIRE(transient3->get() == 40);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

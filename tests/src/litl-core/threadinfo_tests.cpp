@@ -23,5 +23,5 @@ namespace litl::tests
 
         REQUIRE(isOtherThreadMainThread.has_value() == true);
         REQUIRE(isOtherThreadMainThread.value() == false);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

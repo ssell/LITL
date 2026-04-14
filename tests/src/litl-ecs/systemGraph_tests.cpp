@@ -44,7 +44,7 @@ namespace litl::tests
         REQUIRE(systemGraph.getNode(layers[1][0]).systemId == 2);
         REQUIRE(layers[2].size() == 1);
         REQUIRE(systemGraph.getNode(layers[2][0]).systemId == 3);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Implicit Dependency", "[ecs::systemGraph]")
     {
@@ -110,7 +110,7 @@ namespace litl::tests
         REQUIRE(layers[4].size() == 1);
         REQUIRE(systemGraph.getNode(layers[4][0]).systemId == 7);
 
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Prefer First", "[ecs::systemGraph]")
     {
@@ -151,7 +151,7 @@ namespace litl::tests
         REQUIRE(systemGraph.getNode(layers[1][0]).systemId == 0);
         REQUIRE(systemGraph.getNode(layers[1][1]).systemId == 1);
         REQUIRE(systemGraph.getNode(layers[1][2]).systemId == 3);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Prefer Last", "[ecs::systemGraph]")
     {
@@ -192,7 +192,7 @@ namespace litl::tests
         REQUIRE(layers[1].size() == 2);
         REQUIRE(systemGraph.getNode(layers[1][0]).systemId == 2);
         REQUIRE(systemGraph.getNode(layers[1][1]).systemId == 4);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Mixed Dependency", "[ecs::systemGraph]")
     {
@@ -257,5 +257,5 @@ namespace litl::tests
         REQUIRE(systemGraph.getNode(layers[3][2]).systemId == AnimationStateSystem);
         REQUIRE(layers[4].size() == 1);
         REQUIRE(systemGraph.getNode(layers[4][0]).systemId == NetworkSendSystem);
-    } END_LITL_TEST_CASE
+    } LITL_END_TEST_CASE
 }

@@ -14,7 +14,7 @@ namespace litl
     /// </summary>
     struct ParentEntityWriteKey
     {
-    private:
+    protected:
 
         ParentEntityWriteKey() = default;
         friend class EntityCommandProcessor;
