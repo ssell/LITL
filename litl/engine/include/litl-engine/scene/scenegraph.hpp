@@ -4,7 +4,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "litl-core/impl.hpp"
 #include "litl-core/math.hpp"
 #include "litl-ecs/entity/entity.hpp"
 #include "litl-engine/ecs/components/transform.hpp"
