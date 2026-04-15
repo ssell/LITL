@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <format>
+#include <limits>
 #include <string>
 
 #include <glm/glm.hpp>
@@ -19,6 +20,7 @@ namespace litl
     {
         constexpr vec3() {}
         constexpr vec3(vec3 const& other) : value(other.value) {}
+        constexpr explicit vec3(float xyz) : value{ xyz, xyz, xyz } {}
         constexpr explicit vec3(glm::vec3 const& other) : value(other) {}
         constexpr vec3(float x, float y, float z) : value{ x, y, z } {}
         explicit vec3(vec4 const& other);
@@ -253,6 +255,16 @@ namespace litl
             return vec3(0.0f, 0.0f, 1.0f);
         }
 
+        [[nodiscard]] static constexpr vec3 min() noexcept
+        {
+            return vec3{ std::numeric_limits<float>::min() };
+        }
+
+        [[nodiscard]] static constexpr vec3 max() noexcept
+        {
+            return vec3{ std::numeric_limits<float>::max() };
+        }
+
         // ---------------------------------------------------------------------------------
         // Utility
         // ---------------------------------------------------------------------------------
@@ -265,6 +277,17 @@ namespace litl
         [[nodiscard]] constexpr float lengthSquared() const noexcept
         {
             return (value.x * value.x) + (value.y * value.y) + (value.z * value.z);
+        }
+
+        [[nodiscard]] constexpr float distanceTo(vec3 other) const noexcept
+        {
+            return glm::distance(value, other.value);
+        }
+
+        [[nodiscard]] constexpr float distanceSqTo(vec3 other) const noexcept
+        {
+            glm::vec3 diff = value - other.value;
+            return glm::dot(diff, diff);
         }
 
         constexpr void normalize() noexcept
@@ -336,6 +359,28 @@ namespace litl
 
         glm::vec3 value{ 0.0f };
     };
+
+    /// <summary>
+    /// Returns a vector where each component value is the minimum value of the same component in the two provided vectors.
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns></returns>
+    [[nodiscard]] constexpr vec3 min(vec3 a, vec3 b) noexcept
+    {
+        return vec3{ min(a.x(), b.x()), min(a.y(), b.y()), min(a.z(), b.z()) };
+    }
+
+    /// <summary>
+    /// Returns a vector where each component value is the maximum value of the same component in the two provided vectors.
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns></returns>
+    [[nodiscard]] constexpr vec3 max(vec3 a, vec3 b) noexcept
+    {
+        return vec3{ max(a.x(), b.x()), max(a.y(), b.y()), max(a.z(), b.z()) };
+    }
 }
 
 REGISTER_TYPE_NAME(litl::vec3)

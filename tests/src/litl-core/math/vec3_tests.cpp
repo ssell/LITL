@@ -374,4 +374,106 @@ namespace litl::tests
         (v += vec3(1.0f, 1.0f, 1.0f)) *= 3.0f;
         REQUIRE(v == vec3(6.0f, 6.0f, 6.0f));
     } LITL_END_TEST_CASE
+        
+    // -------------------------------------------------------------------------------------
+    // Min and Max
+    // -------------------------------------------------------------------------------------
+
+    LITL_TEST_CASE("vec3 min", "[math::vec3]")
+    {
+        vec3 a{ 5.0f, 10.0f, 15.0f };
+        vec3 b{ -5.0f, 100.0f, 0.0f };
+        vec3 expected{ -5.0f, 10.0f, 0.0f };
+
+        REQUIRE(min(a, b) == expected);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("vec3 max", "[math::vec3]")
+    {
+        vec3 a{ 5.0f, 10.0f, 15.0f };
+        vec3 b{ -5.0f, 100.0f, 0.0f };
+        vec3 expected{ 5.0f, 100.0f, 15.0f };
+
+        REQUIRE(max(a, b) == expected);
+    } LITL_END_TEST_CASE
+        
+    // -------------------------------------------------------------------------------------
+    // distanceTo
+    // -------------------------------------------------------------------------------------
+
+    LITL_TEST_CASE("distanceTo", "[math::vec3]")
+    {
+        vec3 a{ 0.0f, 0.0f, 0.0f };
+        vec3 b{ 10.0f, 0.0f, 0.0f };
+        vec3 c{ 100.0f, 100.0f, 100.0f };
+        vec3 d{ -100.0f, -10.0f, 10.0f };
+
+        constexpr float expectedAtoB = 10.0f;
+        constexpr float expectedAtoC = 173.205080757f;
+        constexpr float expectedAtoD = 100.995049384f;
+        constexpr float expectedBtoC = 167.630546142f;
+        constexpr float expectedBtoD = 110.905365064f;
+        constexpr float expectedCtoD = 245.356882928f;
+
+        REQUIRE(isZero(a.distanceTo(a)));
+        REQUIRE(isZero(b.distanceTo(b)));
+        REQUIRE(isZero(c.distanceTo(c)));
+        REQUIRE(isZero(d.distanceTo(d)));
+
+        REQUIRE(fequals(a.distanceTo(b), expectedAtoB));
+        REQUIRE(fequals(b.distanceTo(a), expectedAtoB));
+
+        REQUIRE(fequals(a.distanceTo(c), expectedAtoC));
+        REQUIRE(fequals(c.distanceTo(a), expectedAtoC));
+
+        REQUIRE(fequals(a.distanceTo(d), expectedAtoD));
+        REQUIRE(fequals(d.distanceTo(a), expectedAtoD));
+
+        REQUIRE(fequals(b.distanceTo(c), expectedBtoC));
+        REQUIRE(fequals(c.distanceTo(b), expectedBtoC));
+
+        REQUIRE(fequals(b.distanceTo(d), expectedBtoD));
+        REQUIRE(fequals(d.distanceTo(b), expectedBtoD));
+
+        REQUIRE(fequals(c.distanceTo(d), expectedCtoD));
+        REQUIRE(fequals(d.distanceTo(c), expectedCtoD));
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("distanceSqTo", "[math::vec3]")
+    {
+        vec3 a{ 0.0f, 0.0f, 0.0f };
+        vec3 b{ 10.0f, 0.0f, 0.0f };
+        vec3 c{ 100.0f, 100.0f, 100.0f };
+        vec3 d{ -100.0f, -10.0f, 10.0f };
+
+        constexpr float expectedAtoB = 100.0f;
+        constexpr float expectedAtoC = 30000.0f;
+        constexpr float expectedAtoD = 10200.0f;
+        constexpr float expectedBtoC = 28100.0f;
+        constexpr float expectedBtoD = 12300.0f;
+        constexpr float expectedCtoD = 60200.0f;
+
+        REQUIRE(isZero(a.distanceSqTo(a)));
+        REQUIRE(isZero(b.distanceSqTo(b)));
+        REQUIRE(isZero(c.distanceSqTo(c)));
+        REQUIRE(isZero(d.distanceSqTo(d)));
+
+        REQUIRE(fequals(a.distanceSqTo(b), expectedAtoB));
+        REQUIRE(fequals(b.distanceSqTo(a), expectedAtoB));
+
+        REQUIRE(fequals(a.distanceSqTo(c), expectedAtoC));
+        REQUIRE(fequals(c.distanceSqTo(a), expectedAtoC));
+
+        REQUIRE(fequals(a.distanceSqTo(d), expectedAtoD));
+        REQUIRE(fequals(d.distanceSqTo(a), expectedAtoD));
+
+        REQUIRE(fequals(b.distanceSqTo(c), expectedBtoC));
+        REQUIRE(fequals(c.distanceSqTo(b), expectedBtoC));
+
+        REQUIRE(fequals(b.distanceSqTo(d), expectedBtoD));
+        REQUIRE(fequals(d.distanceSqTo(b), expectedBtoD));
+
+        REQUIRE(fequals(c.distanceSqTo(d), expectedCtoD));
+        REQUIRE(fequals(d.distanceSqTo(c), expectedCtoD));
+    } LITL_END_TEST_CASE
 }

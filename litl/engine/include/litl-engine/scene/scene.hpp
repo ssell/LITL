@@ -3,6 +3,7 @@
 
 #include "litl-core/impl.hpp"
 #include "litl-engine/scene/sceneAccessKey.hpp"
+#include "litl-engine/scene/partition/scenePartition.hpp"
 
 namespace litl
 {
