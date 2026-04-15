@@ -19,6 +19,7 @@ namespace litl
     {
         constexpr vec4() {}
         constexpr vec4(vec4 const& other) : value(other.value) {}
+        constexpr explicit vec4(float xyzw) : value{ xyzw, xyzw, xyzw, xyzw } {}
         constexpr explicit vec4(glm::vec4 const& other) : value(other) {}
         constexpr vec4(float x, float y, float z, float w) : value{ x, y, z, w } {}
         explicit vec4(vec3 const& other);
