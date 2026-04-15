@@ -5,47 +5,41 @@ namespace litl::tests
 {
     namespace
     {
-        struct TestSceneGraphAccessKey : SceneGraphAccessKey
-        {
-            TestSceneGraphAccessKey() {}
-        };
-
         struct TestParentEntityWriteKey : ParentEntityWriteKey
         {
             TestParentEntityWriteKey() {}
         };
 
-        static TestSceneGraphAccessKey SceneGraphKey{};
         static TestParentEntityWriteKey ParentWriteKey{};
     }
 
-    LITL_TEST_CASE("track and untrack", "[core::scenegraph]")
+    LITL_TEST_CASE("add and remove", "[core::scenegraph]")
     {
         SceneGraph scene;
 
         Entity entity{ .index = 0, .version = 0 };
         Transform transform{};
 
-        REQUIRE(scene.size() == 0);
+        REQUIRE(scene.count() == 0);
         REQUIRE(scene.isPresent(entity) == false);
         
-        scene.track(entity, transform, SceneGraphKey);
+        scene.add(entity, transform);
 
-        REQUIRE(scene.size() == 1);
+        REQUIRE(scene.count() == 1);
         REQUIRE(scene.isPresent(entity) == true);
 
         // adding a second time should throw an assert
         LITL_START_ASSERT_CAPTURE
-            scene.track(entity, transform, SceneGraphKey);
+            scene.add(entity, transform);
         LITL_END_ASSERT_CAPTURE
 
-        scene.untrackEntity(entity, SceneGraphUntrackBehavior::Cascade, SceneGraphKey);
+        scene.remove(entity);
 
-        REQUIRE(scene.size() == 0);
+        REQUIRE(scene.count() == 0);
         REQUIRE(scene.isPresent(entity) == false);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("track with parent", "[core::scenegraph]")
+    LITL_TEST_CASE("add with parent", "[core::scenegraph]")
     {
         SceneGraph scene;
 
@@ -57,24 +51,24 @@ namespace litl::tests
 
         childTransform.parent.set(parent, ParentWriteKey);
 
-        // fail to track child with untracked parent
+        // fail to add child with removed parent
         LITL_START_ASSERT_CAPTURE
-            scene.track(child, childTransform, SceneGraphKey);
+            scene.add(child, childTransform);
         LITL_END_ASSERT_CAPTURE
 
         childTransform.parent.set(child, ParentWriteKey);
 
-        // fail to track child with self parentage
+        // fail to add child with self parentage
         LITL_START_ASSERT_CAPTURE
-            scene.track(child, childTransform, SceneGraphKey);
+            scene.add(child, childTransform);
         LITL_END_ASSERT_CAPTURE
 
         childTransform.parent.set(parent, ParentWriteKey);
 
-        scene.track(parent, parentTransform, SceneGraphKey);
-        scene.track(child, childTransform, SceneGraphKey);
+        scene.add(parent, parentTransform);
+        scene.add(child, childTransform);
 
-        REQUIRE(scene.size() == 2);
+        REQUIRE(scene.count() == 2);
         REQUIRE(scene.isPresent(child) == true);
         REQUIRE(scene.isPresent(parent) == true);
         REQUIRE(scene.getParent(child) == parent);
@@ -87,21 +81,21 @@ namespace litl::tests
         Entity child{ .index = 0, .version = 0 };
         Entity parent{ .index = 1, .version = 0 };
 
-        scene.track(child, Transform{}, SceneGraphKey);
-        scene.track(parent, Transform{}, SceneGraphKey);
+        scene.add(child, Transform{});
+        scene.add(parent, Transform{});
 
-        REQUIRE(scene.size() == 2);
+        REQUIRE(scene.count() == 2);
         REQUIRE(scene.isPresent(child) == true);
         REQUIRE(scene.isPresent(parent) == true);
         REQUIRE(scene.getParent(child).isNull());
 
         LITL_START_ASSERT_CAPTURE
-            scene.setParent(child, child, SceneGraphKey);
+            scene.setParent(child, child);
         LITL_END_ASSERT_CAPTURE
 
-        scene.setParent(child, parent, SceneGraphKey);
+        scene.setParent(child, parent);
 
-        REQUIRE(scene.size() == 2);
+        REQUIRE(scene.count() == 2);
         REQUIRE(scene.isPresent(child) == true);
         REQUIRE(scene.isPresent(parent) == true);
         REQUIRE(scene.getParent(child) == parent);
@@ -111,35 +105,35 @@ namespace litl::tests
         REQUIRE(children.size() == 1);
         REQUIRE(children[0] == child);
 
-        scene.setParent(child, Entity::null(), SceneGraphKey);
+        scene.setParent(child, Entity::null());
         children = scene.getChildren(parent);
 
-        REQUIRE(scene.size() == 2);
+        REQUIRE(scene.count() == 2);
         REQUIRE(scene.isPresent(child));
         REQUIRE(scene.isPresent(parent));
         REQUIRE(scene.getParent(child).isNull());
         REQUIRE(children.size() == 0);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("untrack", "[core::scenegraph]")
+    LITL_TEST_CASE("remove", "[core::scenegraph]")
     {
         SceneGraph scene;
 
         Entity child{ .index = 0, .version = 0 };
         Entity parent{ .index = 1, .version = 0 };
 
-        scene.track(child, Transform{}, SceneGraphKey);
-        scene.track(parent, Transform{}, SceneGraphKey);
-        scene.setParent(child, parent, SceneGraphKey);
+        scene.add(child, Transform{});
+        scene.add(parent, Transform{});
+        scene.setParent(child, parent);
 
-        REQUIRE(scene.size() == 2);
+        REQUIRE(scene.count() == 2);
         REQUIRE(scene.isPresent(child) == true);
         REQUIRE(scene.isPresent(parent) == true);
         REQUIRE(scene.getParent(child) == parent);
 
-        scene.untrackEntity(child, SceneGraphUntrackBehavior::Cascade, SceneGraphKey);
+        scene.remove(child);
 
-        REQUIRE(scene.size() == 1);
+        REQUIRE(scene.count() == 1);
         REQUIRE(scene.isPresent(parent) == true);
         REQUIRE(scene.isPresent(child) == false);
 
@@ -147,37 +141,19 @@ namespace litl::tests
             REQUIRE(scene.getParent(child) == Entity::null());
         LITL_END_ASSERT_CAPTURE
 
-        // cascade
-        scene.track(child, Transform{}, SceneGraphKey);
-        scene.setParent(child, parent, SceneGraphKey);
+        scene.add(child, Transform{});
+        scene.setParent(child, parent);
 
-        REQUIRE(scene.size() == 2);
+        REQUIRE(scene.count() == 2);
         REQUIRE(scene.isPresent(child) == true);
         REQUIRE(scene.isPresent(parent) == true);
         REQUIRE(scene.getParent(child) == parent);
 
-        scene.untrackEntity(parent, SceneGraphUntrackBehavior::Cascade, SceneGraphKey);
+        scene.remove(parent);
         
-        REQUIRE(scene.size() == 0);
+        REQUIRE(scene.count() == 0);
         REQUIRE(scene.isPresent(child) == false);
         REQUIRE(scene.isPresent(parent) == false);
-
-        // orphan
-        scene.track(parent, Transform{}, SceneGraphKey);
-        scene.track(child, Transform{}, SceneGraphKey);
-        scene.setParent(child, parent, SceneGraphKey);
-
-        REQUIRE(scene.size() == 2);
-        REQUIRE(scene.isPresent(child) == true);
-        REQUIRE(scene.isPresent(parent) == true);
-        REQUIRE(scene.getParent(child) == parent);
-
-        scene.untrackEntity(parent, SceneGraphUntrackBehavior::Orphan, SceneGraphKey);
-
-        REQUIRE(scene.size() == 1);
-        REQUIRE(scene.isPresent(child) == true);
-        REQUIRE(scene.isPresent(parent) == false);
-        REQUIRE(scene.getParent(child) == Entity::null());
 
     } LITL_END_TEST_CASE
 
@@ -189,17 +165,17 @@ namespace litl::tests
         Entity b{ .index = 1, .version = 0 };  // child of a
         Entity c{ .index = 2, .version = 0 };  // child of b (grandchild of a)
 
-        scene.track(a, Transform{}, SceneGraphKey);
-        scene.track(b, Transform{}, SceneGraphKey);
-        scene.track(c, Transform{}, SceneGraphKey);
+        scene.add(a, Transform{});
+        scene.add(b, Transform{});
+        scene.add(c, Transform{});
 
-        scene.setParent(b, a, SceneGraphKey);
-        scene.setParent(c, b, SceneGraphKey);
+        scene.setParent(b, a);
+        scene.setParent(c, b);
 
-        scene.update(SceneGraphKey);
+        scene.update();
 
         // Tree should have all 3 nodes
-        REQUIRE(scene.size() == 3);
+        REQUIRE(scene.count() == 3);
 
         // Verify parent-before-child invariant through getParent
         // After update, depths and sorted order should be consistent
@@ -216,21 +192,21 @@ namespace litl::tests
         Entity root2{ .index = 1, .version = 0 };
         Entity child{ .index = 2, .version = 0 };
 
-        scene.track(root1, Transform{}, SceneGraphKey);
-        scene.track(root2, Transform{}, SceneGraphKey);
-        scene.track(child, Transform{}, SceneGraphKey);
+        scene.add(root1, Transform{});
+        scene.add(root2, Transform{});
+        scene.add(child, Transform{});
 
-        scene.setParent(child, root1, SceneGraphKey);
-        scene.update(SceneGraphKey);
+        scene.setParent(child, root1);
+        scene.update();
 
         REQUIRE(scene.getParent(child) == root1);
         REQUIRE(scene.getChildren(root1).size() == 1);
 
         // Reparent to root2
-        scene.setParent(child, root2, SceneGraphKey);
-        scene.update(SceneGraphKey);
+        scene.setParent(child, root2);
+        scene.update();
 
-        REQUIRE(scene.size() == 3);
+        REQUIRE(scene.count() == 3);
         REQUIRE(scene.getParent(child) == root2);
         REQUIRE(scene.getChildren(root1).size() == 0);
         REQUIRE(scene.getChildren(root2).size() == 1);
@@ -244,13 +220,13 @@ namespace litl::tests
         Entity r2{ .index = 1, .version = 0 };
         Entity r3{ .index = 2, .version = 0 };
 
-        scene.track(r1, Transform{}, SceneGraphKey);
-        scene.track(r2, Transform{}, SceneGraphKey);
-        scene.track(r3, Transform{}, SceneGraphKey);
+        scene.add(r1, Transform{});
+        scene.add(r2, Transform{});
+        scene.add(r3, Transform{});
 
-        scene.update(SceneGraphKey);
+        scene.update();
 
-        REQUIRE(scene.size() == 3);
+        REQUIRE(scene.count() == 3);
         REQUIRE(scene.getParent(r1).isNull());
         REQUIRE(scene.getParent(r2).isNull());
         REQUIRE(scene.getParent(r3).isNull());
@@ -264,7 +240,7 @@ namespace litl::tests
         SceneGraph scene;
 
         Entity parent{ .index = 0, .version = 0 };
-        scene.track(parent, Transform{}, SceneGraphKey);
+        scene.add(parent, Transform{});
 
         constexpr uint32_t childCount = 50;
         std::vector<Entity> children;
@@ -273,13 +249,13 @@ namespace litl::tests
         {
             Entity child{ .index = i, .version = 0 };
             children.push_back(child);
-            scene.track(child, Transform{}, SceneGraphKey);
-            scene.setParent(child, parent, SceneGraphKey);
+            scene.add(child, Transform{});
+            scene.setParent(child, parent);
         }
 
-        scene.update(SceneGraphKey);
+        scene.update();
 
-        REQUIRE(scene.size() == childCount + 1);
+        REQUIRE(scene.count() == childCount + 1);
         REQUIRE(scene.getChildren(parent).size() == childCount);
 
         for (auto const& child : children)
@@ -299,17 +275,17 @@ namespace litl::tests
         {
             Entity entity{ .index = i, .version = 0 };
             chain.push_back(entity);
-            scene.track(entity, Transform{}, SceneGraphKey);
+            scene.add(entity, Transform{});
 
             if (i > 0)
             {
-                scene.setParent(entity, chain[i - 1], SceneGraphKey);
+                scene.setParent(entity, chain[i - 1]);
             }
         }
 
-        scene.update(SceneGraphKey);
+        scene.update();
 
-        REQUIRE(scene.size() == depth);
+        REQUIRE(scene.count() == depth);
         REQUIRE(scene.getParent(chain[0]).isNull());
 
         for (uint32_t i = 1; i < depth; ++i)
@@ -332,58 +308,27 @@ namespace litl::tests
         Entity leaf2{ .index = 3, .version = 0 };
         Entity unrelated{ .index = 4, .version = 0 };
 
-        scene.track(root, Transform{}, SceneGraphKey);
-        scene.track(mid, Transform{}, SceneGraphKey);
-        scene.track(leaf1, Transform{}, SceneGraphKey);
-        scene.track(leaf2, Transform{}, SceneGraphKey);
-        scene.track(unrelated, Transform{}, SceneGraphKey);
+        scene.add(root, Transform{});
+        scene.add(mid, Transform{});
+        scene.add(leaf1, Transform{});
+        scene.add(leaf2, Transform{});
+        scene.add(unrelated, Transform{});
 
-        scene.setParent(mid, root, SceneGraphKey);
-        scene.setParent(leaf1, mid, SceneGraphKey);
-        scene.setParent(leaf2, mid, SceneGraphKey);
+        scene.setParent(mid, root);
+        scene.setParent(leaf1, mid);
+        scene.setParent(leaf2, mid);
 
-        scene.untrackEntity(root, SceneGraphUntrackBehavior::Cascade, SceneGraphKey);
+        scene.remove(root);
 
-        REQUIRE(scene.size() == 1);
+        REQUIRE(scene.count() == 1);
         REQUIRE(scene.isPresent(root) == false);
         REQUIRE(scene.isPresent(mid) == false);
         REQUIRE(scene.isPresent(leaf1) == false);
         REQUIRE(scene.isPresent(leaf2) == false);
         REQUIRE(scene.isPresent(unrelated) == true);
 
-        scene.update(SceneGraphKey);
-        REQUIRE(scene.size() == 1);
-    } LITL_END_TEST_CASE
-
-    LITL_TEST_CASE("orphan promotes children to roots", "[core::scenegraph]")
-    {
-        SceneGraph scene;
-
-        Entity root{ .index = 0, .version = 0 };
-        Entity childA{ .index = 1, .version = 0 };
-        Entity childB{ .index = 2, .version = 0 };
-        Entity grandchild{ .index = 3, .version = 0 };
-
-        scene.track(root, Transform{}, SceneGraphKey);
-        scene.track(childA, Transform{}, SceneGraphKey);
-        scene.track(childB, Transform{}, SceneGraphKey);
-        scene.track(grandchild, Transform{}, SceneGraphKey);
-
-        scene.setParent(childA, root, SceneGraphKey);
-        scene.setParent(childB, root, SceneGraphKey);
-        scene.setParent(grandchild, childA, SceneGraphKey);
-
-        // Orphan root's children — childA and childB become roots
-        // but grandchild stays under childA
-        scene.untrackEntity(root, SceneGraphUntrackBehavior::Orphan, SceneGraphKey);
-
-        REQUIRE(scene.size() == 3);
-        REQUIRE(scene.getParent(childA).isNull());
-        REQUIRE(scene.getParent(childB).isNull());
-        REQUIRE(scene.getParent(grandchild) == childA);
-
-        scene.update(SceneGraphKey);
-        REQUIRE(scene.size() == 3);
+        scene.update();
+        REQUIRE(scene.count() == 1);
     } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("entity version mismatch is not present", "[core::scenegraph]")
@@ -393,27 +338,27 @@ namespace litl::tests
         Entity v0{ .index = 0, .version = 0 };
         Entity v1{ .index = 0, .version = 1 };
 
-        scene.track(v0, Transform{}, SceneGraphKey);
+        scene.add(v0, Transform{});
 
         REQUIRE(scene.isPresent(v0) == true);
         REQUIRE(scene.isPresent(v1) == false);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("entity slot reuse after untrack", "[core::scenegraph]")
+    LITL_TEST_CASE("entity slot reuse after remove", "[core::scenegraph]")
     {
         SceneGraph scene;
 
         Entity v0{ .index = 0, .version = 0 };
-        scene.track(v0, Transform{}, SceneGraphKey);
-        scene.untrackEntity(v0, SceneGraphUntrackBehavior::Cascade, SceneGraphKey);
+        scene.add(v0, Transform{});
+        scene.remove(v0);
 
         REQUIRE(scene.isPresent(v0) == false);
 
         // Same index, new generation
         Entity v1{ .index = 0, .version = 1 };
-        scene.track(v1, Transform{}, SceneGraphKey);
+        scene.add(v1, Transform{});
 
-        REQUIRE(scene.size() == 1);
+        REQUIRE(scene.count() == 1);
         REQUIRE(scene.isPresent(v1) == true);
         REQUIRE(scene.isPresent(v0) == false);
     } LITL_END_TEST_CASE
@@ -423,15 +368,15 @@ namespace litl::tests
         SceneGraph scene;
 
         Entity entity{ .index = 0, .version = 0 };
-        scene.track(entity, Transform{}, SceneGraphKey);
-        scene.update(SceneGraphKey);
+        scene.add(entity, Transform{});
+        scene.update();
 
-        REQUIRE(scene.size() == 1);
+        REQUIRE(scene.count() == 1);
 
         // Second update with no changes
-        scene.update(SceneGraphKey);
+        scene.update();
 
-        REQUIRE(scene.size() == 1);
+        REQUIRE(scene.count() == 1);
         REQUIRE(scene.isPresent(entity) == true);
     } LITL_END_TEST_CASE
 
@@ -440,7 +385,7 @@ namespace litl::tests
         SceneGraph scene;
 
         Entity leaf{ .index = 0, .version = 0 };
-        scene.track(leaf, Transform{}, SceneGraphKey);
+        scene.add(leaf, Transform{});
 
         std::vector<Entity> children = scene.getChildren(leaf);
         REQUIRE(children.empty());
