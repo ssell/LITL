@@ -3,6 +3,7 @@
 
 #include "litl-core/math/bounds/aabb.hpp"
 #include "litl-core/math/bounds/sphere.hpp"
+#include "litl-core/math/bounds/frustum.hpp"
 
 namespace litl::bounds
 {

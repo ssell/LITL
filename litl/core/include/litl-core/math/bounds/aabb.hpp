@@ -22,6 +22,11 @@ namespace litl::bounds
             return (max - min);
         }
 
+        [[nodiscard]] constexpr vec3 halfExtents() const noexcept
+        {
+            return (max - min) * 0.5f;
+        }
+
         [[nodiscard]] constexpr vec3 center() const noexcept
         {
             return (min + ((max - min) * 0.5f));
