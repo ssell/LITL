@@ -11,13 +11,16 @@ namespace litl::tests
 
     LITL_TEST_CASE("aabb from min max", "[math::bounds]")
     {
-        constexpr auto expectedMin = vec3{ -5.0f, 0.0f, -5.0f };
+        constexpr auto expectedMin = vec3{ -5.0f, -5.0f, -5.0f };
         constexpr auto expectedMax = vec3{ 5.0f, 5.0f, 5.0f };
 
         auto aabb = bounds::AABB::fromMinMax(expectedMin, expectedMax);
 
         REQUIRE(aabb.min == expectedMin);
         REQUIRE(aabb.max == expectedMax);
+        REQUIRE(aabb.center() == vec3{ 0.0f, 0.0f, 0.0f });
+        REQUIRE(aabb.extents() == vec3{ 10.0f, 10.0f, 10.0f });
+        REQUIRE(aabb.halfExtents() == vec3{ 5.0f, 5.0f, 5.0f });
     } LITL_END_TEST_CASE
         
 
@@ -30,6 +33,9 @@ namespace litl::tests
 
         REQUIRE(aabb.min == expectedMin);
         REQUIRE(aabb.max == expectedMax);
+        REQUIRE(aabb.center() == vec3{ 5.0f, 5.0f, 5.0f });
+        REQUIRE(aabb.extents() == vec3{ 10.0f, 10.0f, 10.0f });
+        REQUIRE(aabb.halfExtents() == vec3{ 5.0f, 5.0f, 5.0f });
     } LITL_END_TEST_CASE
         
 
@@ -50,6 +56,18 @@ namespace litl::tests
 
         REQUIRE(aabb.min == expectedMin);
         REQUIRE(aabb.max == expectedMax);
+
+        std::array<vec3, 1> point{
+            vec3{0.0f, 10.0f, 0.0f}
+        };
+
+        aabb = bounds::AABB::fromPoints(point);
+
+        REQUIRE(aabb.min == point[0]);
+        REQUIRE(aabb.max == point[0]);
+        REQUIRE(aabb.center() == point[0]);
+        REQUIRE(aabb.extents() == vec3{ 0.0f, 0.0f, 0.0f });
+        REQUIRE(aabb.halfExtents() == vec3{ 0.0f, 0.0f, 0.0f });
     } LITL_END_TEST_CASE
         
 
@@ -58,9 +76,9 @@ namespace litl::tests
         auto aabb = bounds::AABB::fromCenterHalfExtents(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 5.0f, 5.0f, 5.0f });
 
         REQUIRE(bounds::contains(aabb, vec3{ 0.0f, 0.0f, 0.0f })    == true);
-        REQUIRE(bounds::contains(aabb, vec3{ 10.0f, 0.0f, 0.0f })   == false);
-        REQUIRE(bounds::contains(aabb, vec3{ 0.0f, 10.0f, 0.0f })   == false);
-        REQUIRE(bounds::contains(aabb, vec3{ 0.0f, 0.0f, 10.0f })   == false);
+        REQUIRE(bounds::contains(aabb, vec3{ 5.01f, 0.0f, 0.0f })   == false);
+        REQUIRE(bounds::contains(aabb, vec3{ 0.0f, 5.01f, 0.0f })   == false);
+        REQUIRE(bounds::contains(aabb, vec3{ 0.0f, 0.0f, 5.01f })   == false);
         REQUIRE(bounds::contains(aabb, vec3{ 5.0f, 0.0f, 0.0f })    == true);
         REQUIRE(bounds::contains(aabb, vec3{ 0.0f, 5.0f, 0.0f })    == true);
         REQUIRE(bounds::contains(aabb, vec3{ 0.0f, 0.0f, 5.0f })    == true);
@@ -68,9 +86,9 @@ namespace litl::tests
         REQUIRE(bounds::contains(aabb, vec3{ 0.0f, 5.0f, 5.0f })    == true);
         REQUIRE(bounds::contains(aabb, vec3{ 5.0f, 0.0f, 5.0f })    == true);
         REQUIRE(bounds::contains(aabb, vec3{ 5.0f, 5.0f, 5.0f })    == true);
-        REQUIRE(bounds::contains(aabb, vec3{ -10.0f, 0.0f, 0.0f })  == false);
-        REQUIRE(bounds::contains(aabb, vec3{ 0.0f, -10.0f, 0.0f })  == false);
-        REQUIRE(bounds::contains(aabb, vec3{ 0.0f, 0.0f, -10.0f })  == false);
+        REQUIRE(bounds::contains(aabb, vec3{ -5.01f, 0.0f, 0.0f })  == false);
+        REQUIRE(bounds::contains(aabb, vec3{ 0.0f, -5.01f, 0.0f })  == false);
+        REQUIRE(bounds::contains(aabb, vec3{ 0.0f, 0.0f, -5.01f })  == false);
         REQUIRE(bounds::contains(aabb, vec3{ -5.0f, 0.0f, 0.0f })   == true);
         REQUIRE(bounds::contains(aabb, vec3{ 0.0f, -5.0f, 0.0f })   == true);
         REQUIRE(bounds::contains(aabb, vec3{ 0.0f, 0.0f, -5.0f })   == true);
@@ -110,6 +128,15 @@ namespace litl::tests
 
         REQUIRE(sphere.center == expectedCenter);
         REQUIRE(fequals(sphere.radius, expectedRadius));
+
+        std::array<vec3, 1> point{
+            vec3{0.0f, 10.0f, 0.0f}
+        };
+
+        sphere = bounds::Sphere::fromPoints(point);
+
+        REQUIRE(sphere.center == point[0]);
+        REQUIRE(isZero(sphere.radius));
     } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("sphere contains point", "[math::bounds]")
