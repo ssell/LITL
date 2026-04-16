@@ -28,6 +28,7 @@ namespace litl::bounds
         constexpr Plane() {}
         constexpr Plane(float nx, float ny, float nz, float d) : value{ nx, ny, nz, d } {};
         constexpr Plane(vec3 normal, float d) : value{ normal.x(), normal.y(), normal.z(), d } {};
+        constexpr explicit Plane(vec4 plane) : value{ plane } {};
 
         vec4 value{ 0.0f, 1.0f, 0.0f, 0.0f };
 
@@ -46,6 +47,22 @@ namespace litl::bounds
         [[nodiscard]] constexpr vec3 normal() const noexcept
         {
             return vec3{ value.x(), value.y(), value.z() };
+        }
+
+        /// <summary>
+        /// Not all planes need to be normalized. <br/>
+        /// 
+        /// You need normalization if you care about true Euclidean signed distance 
+        /// such as for LOD selection based on distance-from-plane, for conservative shadow fitting, 
+        /// for any query where "how far from the plane" is the answer. <br/>
+        /// 
+        /// You can skip normalization if you only care about sign (inside/outside tests), since 
+        /// multiplying the plane by a positive scalar doesn't change which side a point is on.
+        /// </summary>
+        void normalize() noexcept
+        {
+            const float lengthInv = 1.0f / sqrtf((value.x() * value.x()) + (value.y() * value.y()) + (value.z() * value.z()));
+            value *= lengthInv;
         }
 
         [[nodiscard]] constexpr float d() const noexcept
