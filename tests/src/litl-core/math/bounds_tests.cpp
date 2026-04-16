@@ -156,4 +156,62 @@ namespace litl::tests
         REQUIRE(bounds::contains(sphere, vec3{ 0.0f, 5.0f, -5.1f }) == false);
         REQUIRE(bounds::contains(sphere, vec3{ 0.0f, 5.0f, 5.1f }) == false);
     } LITL_END_TEST_CASE
+        
+    // -------------------------------------------------------------------------------------
+    // Plane
+    // -------------------------------------------------------------------------------------
+        
+    LITL_TEST_CASE("plane from point normal", "[math::bounds]")
+    {
+        auto planeY = bounds::Plane::fromPointNormal(vec3{ 0.0f, 10.0f, 0.0f }, vec3::up());
+        auto planeYNeg = bounds::Plane::fromPointNormal(vec3{ 0.0f, -10.0f, 0.0f }, -vec3::up());
+
+        REQUIRE(planeY.normal() == vec3::up());
+        REQUIRE(fequals(planeY.d(), 10.0f));
+
+        REQUIRE(planeYNeg.normal() == -vec3::up());
+        REQUIRE(fequals(planeY.d(), 10.0f));
+    } LITL_END_TEST_CASE
+        
+    LITL_TEST_CASE("plane from triangle", "[math::bounds]")
+    {
+        auto planeX = bounds::Plane::fromTriangle(vec3{ 10.0f, 0.0f, 100.0f }, vec3{ 10.0f, 0.0f, 10.0f }, vec3{ 10.0f, 10.0f, 10.0f });
+        auto planeXNeg = bounds::Plane::fromTriangle(vec3{ 10.0f, 0.0f, 10.0f }, vec3{ 10.0f, 0.0f, 100.0f }, vec3{ 10.0f, 10.0f, 100.0f });
+
+        REQUIRE(planeX.normal() == vec3::right());
+        REQUIRE(fequals(planeX.d(), 10.0f));
+
+        REQUIRE(planeXNeg.normal() == -vec3::right());
+        REQUIRE(fequals(planeXNeg.d(), -10.0f));
+    } LITL_END_TEST_CASE
+        
+    LITL_TEST_CASE("plane signed distance", "[math::bounds]")
+    {
+        auto plane = bounds::Plane::fromPointNormal(vec3{ 0.0f, 0.0f, 0.0f }, vec3::up());
+
+        REQUIRE(fequals(plane.signedDistance(vec3{ 0.0f, 0.0f, 0.0f }), 0.0f));
+        REQUIRE(fequals(plane.signedDistance(vec3{ 0.0f, 1.0f, 0.0f }), 1.0f));
+        REQUIRE(fequals(plane.signedDistance(vec3{ 0.0f, 10.0f, 0.0f }), 10.0f));
+        REQUIRE(fequals(plane.signedDistance(vec3{ 0.0f, -1.0f, 0.0f }), -1.0f));
+        REQUIRE(fequals(plane.signedDistance(vec3{ 0.0f, -10.0f, 0.0f }), -10.0f));
+
+        REQUIRE(fequals(plane.signedDistance(vec3{ 100.0f, 0.0f, -100.0f }), 0.0f));
+        REQUIRE(fequals(plane.signedDistance(vec3{ 100.0f, 1.0f, -100.0f }), 1.0f));
+        REQUIRE(fequals(plane.signedDistance(vec3{ 100.0f, 10.0f, -100.0f }), 10.0f));
+        REQUIRE(fequals(plane.signedDistance(vec3{ 100.0f, -1.0f, -100.0f }), -1.0f));
+        REQUIRE(fequals(plane.signedDistance(vec3{ 100.0f, -10.0f, -100.0f }), -10.0f));
+    } LITL_END_TEST_CASE
+        
+    LITL_TEST_CASE("plane contains point", "[math::bounds]")
+    {
+        auto plane = bounds::Plane::fromPointNormal(vec3{ 0.0f, 0.0f, 0.0f }, vec3::up());
+
+        REQUIRE(bounds::contains(plane, vec3{ 0.0f, 0.0f, 0.0f }) == true);
+        REQUIRE(bounds::contains(plane, vec3{ 0.0f, 0.01f, 0.0f }) == false);
+        REQUIRE(bounds::contains(plane, vec3{ 0.0f, -0.01f, 0.0f }) == true);
+
+        REQUIRE(bounds::contains(plane, vec3{ 100.0f, 0.0f, -100.0f }) == true);
+        REQUIRE(bounds::contains(plane, vec3{ 100.0f, 0.01f, -100.0f }) == false);
+        REQUIRE(bounds::contains(plane, vec3{ 100.0f, -0.01f, -100.0f }) == true);
+    } LITL_END_TEST_CASE
 }

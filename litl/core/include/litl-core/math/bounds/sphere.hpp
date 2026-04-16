@@ -10,12 +10,12 @@ namespace litl::bounds
         vec3 center{ 0.0f, 0.0f, 0.0f };
         float radius{ 1.0f };
 
-        static constexpr Sphere fromCenterRadius(vec3 center, float radius) noexcept
+        [[nodiscard]] static constexpr Sphere fromCenterRadius(vec3 center, float radius) noexcept
         {
             return Sphere{ .center = center, .radius = radius };
         }
 
-        static constexpr Sphere fromPoints(std::span<vec3 const> points) noexcept
+        [[nodiscard]] static constexpr Sphere fromPoints(std::span<vec3 const> points) noexcept
         {
             if (points.size() == 0)
             {

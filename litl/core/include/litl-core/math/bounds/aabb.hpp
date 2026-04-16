@@ -32,17 +32,17 @@ namespace litl::bounds
             return (min + ((max - min) * 0.5f));
         }
 
-        static constexpr AABB fromMinMax(vec3 min, vec3 max) noexcept
+        [[nodiscard]] static constexpr AABB fromMinMax(vec3 min, vec3 max) noexcept
         {
             return AABB{ .min = min, .max = max };
         }
 
-        static constexpr AABB fromCenterHalfExtents(vec3 center, vec3 halfExtents) noexcept
+        [[nodiscard]] static constexpr AABB fromCenterHalfExtents(vec3 center, vec3 halfExtents) noexcept
         {
             return AABB{ .min = (center - halfExtents), .max = (center + halfExtents) };
         }
 
-        static constexpr AABB fromPoints(std::span<vec3 const> points) noexcept
+        [[nodiscard]] static constexpr AABB fromPoints(std::span<vec3 const> points) noexcept
         {
             if (points.size() == 0)
             {

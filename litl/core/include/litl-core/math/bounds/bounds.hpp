@@ -3,10 +3,15 @@
 
 #include "litl-core/math/bounds/aabb.hpp"
 #include "litl-core/math/bounds/sphere.hpp"
+#include "litl-core/math/bounds/plane.hpp"
 #include "litl-core/math/bounds/frustum.hpp"
 
 namespace litl::bounds
 {
+    // -------------------------------------------------------------------------------------
+    // Contains
+    // -------------------------------------------------------------------------------------
+
     /// <summary>
     /// An inclusive contains check between an axis-aligned bounding box and a point.
     /// Returns true if the point is on or within the bounds.
@@ -32,6 +37,17 @@ namespace litl::bounds
     [[nodiscard]] constexpr bool contains(Sphere bounds, vec3 point) noexcept
     {
         return (bounds.center.distanceSqTo(point) <= (bounds.radius * bounds.radius));
+    }
+
+    /// <summary>
+    /// An inclusive contains check to see if a point lies on, or within, a plane.
+    /// </summary>
+    /// <param name="plane"></param>
+    /// <param name="point"></param>
+    /// <returns></returns>
+    [[nodiscard]] constexpr bool contains(Plane plane, vec3 point) noexcept
+    {
+        return plane.signedDistance(point) <= Traits<float>::relative_epsilon;
     }
 }
 
