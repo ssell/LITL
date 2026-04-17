@@ -214,4 +214,28 @@ namespace litl::tests
         REQUIRE(bounds::contains(plane, vec3{ 100.0f, 0.01f, -100.0f }) == false);
         REQUIRE(bounds::contains(plane, vec3{ 100.0f, -0.01f, -100.0f }) == true);
     } LITL_END_TEST_CASE
+        
+    // -------------------------------------------------------------------------------------
+    // Frustum
+    // -------------------------------------------------------------------------------------
+
+    LITL_TEST_CASE("frustum from orthographic", "[math::bounds]")
+    {
+        constexpr float frustumHalfExtents = 50.0f;
+        constexpr vec3 cameraPos = vec3{ 0.0f, 0.0f, 0.0f };
+        constexpr vec3 targetPos = vec3{ 0.0f, 0.0f, 25.0f };
+        constexpr vec3 cameraUp = vec3::up(); // (0, 1, 0)
+
+        mat4 view = mat4::lookAt(cameraPos, targetPos, cameraUp);
+        mat4 proj = mat4::orthographic(-frustumHalfExtents, frustumHalfExtents, -frustumHalfExtents, frustumHalfExtents, 0.1f, frustumHalfExtents * 2.0f);
+        mat4 viewProj = proj * view;
+
+        bounds::Frustum frustum = bounds::Frustum::fromViewProjection(viewProj, false, true);
+
+        REQUIRE(bounds::contains(frustum, targetPos) == true);
+        REQUIRE(bounds::contains(frustum, cameraPos) == false);
+
+        REQUIRE(bounds::contains(frustum, targetPos + (cameraUp * (frustumHalfExtents * 0.5f))) == true);
+        REQUIRE(bounds::contains(frustum, targetPos + (cameraUp * (frustumHalfExtents * 0.5f) + 0.01f)) == false);
+    } LITL_END_TEST_CASE
 }
