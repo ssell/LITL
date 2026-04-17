@@ -74,7 +74,7 @@ namespace litl::bounds
 
         for (uint32_t i = 0u; i < frustum.sideCount(); ++i)
         {
-            rejectionMask |= static_cast<uint32_t>(!contains(frustum.getSide(i), point)) << i;
+            rejectionMask |= static_cast<uint32_t>(!contains(frustum.getSide(static_cast<Frustum::Side>(i)), point)) << i;
         }
 
         // In the future, this rejection mask is used by Cohen-Sutherland and Sutherland-Hodgman clipping

@@ -9,7 +9,7 @@
 #include <span>
 #include <string>
 
-#include <glm/glm.hpp>
+#include "litl-core/math/glm.hpp"
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/ext/matrix_relational.hpp>

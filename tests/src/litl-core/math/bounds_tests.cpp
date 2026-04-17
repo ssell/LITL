@@ -230,7 +230,7 @@ namespace litl::tests
         mat4 proj = mat4::orthographic(-frustumHalfExtents, frustumHalfExtents, -frustumHalfExtents, frustumHalfExtents, 0.1f, frustumHalfExtents * 2.0f);
         mat4 viewProj = proj * view;
 
-        bounds::Frustum frustum = bounds::Frustum::fromViewProjection(viewProj, false, true);
+        bounds::Frustum frustum = bounds::Frustum::fromViewProjection(viewProj, {});
 
         REQUIRE(bounds::contains(frustum, targetPos) == true);
         REQUIRE(bounds::contains(frustum, cameraPos) == false);

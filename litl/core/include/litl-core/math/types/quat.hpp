@@ -5,7 +5,7 @@
 #include <format>
 #include <string>
 
-#include <glm/glm.hpp>
+#include "litl-core/math/glm.hpp"
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
