@@ -50,6 +50,10 @@ namespace litl::bounds
         vec3 farUL{};
     };
 
+    /// <summary>
+    /// Composed of six individual planes, a frustum is commonly used for efficient bounds and culling tests.
+    /// A point is considered to be within a frustum if its signed distance to all six planes is positive (plane normals point inward).
+    /// </summary>
     class Frustum
     {
     public:
@@ -77,6 +81,11 @@ namespace litl::bounds
         [[nodiscard]] uint32_t sideCount() const noexcept
         {
             return m_sideCount;
+        }
+
+        [[nodiscard]] bool isInfiniteZ() const noexcept
+        {
+            return (m_sideCount == 5);
         }
 
         /// <summary>
@@ -178,12 +187,12 @@ namespace litl::bounds
         {
             Frustum frustum{};
 
-            frustum.m_planes[Left]   = Plane::fromTriangle(corners.nearLL, corners.nearUL, corners.farUL);
-            frustum.m_planes[Right]  = Plane::fromTriangle(corners.nearLR, corners.farLR, corners.farUR);
-            frustum.m_planes[Bottom] = Plane::fromTriangle(corners.nearLL, corners.farLL, corners.farLR);
-            frustum.m_planes[Top]    = Plane::fromTriangle(corners.nearUL, corners.nearUR, corners.farUR);
-            frustum.m_planes[Near]   = Plane::fromTriangle(corners.nearLL, corners.nearLR, corners.nearUR);
-            frustum.m_planes[Far]    = Plane::fromTriangle(corners.farLL, corners.farUL, corners.farUR);
+            frustum.m_planes[Left]   = Plane::fromTriangleCCW(corners.nearLL, corners.nearUL, corners.farUL);
+            frustum.m_planes[Right]  = Plane::fromTriangleCCW(corners.nearLR, corners.farLR, corners.farUR);
+            frustum.m_planes[Bottom] = Plane::fromTriangleCCW(corners.nearLL, corners.farLL, corners.farLR);
+            frustum.m_planes[Top]    = Plane::fromTriangleCCW(corners.nearUL, corners.nearUR, corners.farUR);
+            frustum.m_planes[Near]   = Plane::fromTriangleCCW(corners.nearLL, corners.nearLR, corners.nearUR);
+            frustum.m_planes[Far]    = Plane::fromTriangleCCW(corners.farLL, corners.farUL, corners.farUR);
             frustum.m_sideCount = 6;
 
             if (options.normalize) 
@@ -218,6 +227,43 @@ namespace litl::bounds
                 .farUR = corners[6],
                 .farUL = corners[7]
             }, options);
+        }
+
+        /// <summary>
+        /// Extracts the 8 corners from the frustum.
+        /// If the frustum was created as an infinite far plane frustum only the near plane corners will be populated.
+        /// </summary>
+        /// <param name="frustum"></param>
+        /// <returns></returns>
+        [[nodiscard]] static FrustumCorners extractCorners(Frustum const& frustum) noexcept
+        {
+            FrustumCorners corners{};
+
+            auto nearLLIntersection = intersects(frustum.m_planes[Near], frustum.m_planes[Bottom], frustum.m_planes[Left]);
+            auto nearLRIntersection = intersects(frustum.m_planes[Near], frustum.m_planes[Bottom], frustum.m_planes[Right]);
+            auto nearURIntersection = intersects(frustum.m_planes[Near], frustum.m_planes[Top], frustum.m_planes[Right]);
+            auto nearULIntersection = intersects(frustum.m_planes[Near], frustum.m_planes[Top], frustum.m_planes[Left]);
+
+            corners.nearLL = nearLLIntersection.intersects ? nearLLIntersection.point : vec3{};
+            corners.nearLR = nearLRIntersection.intersects ? nearLRIntersection.point : vec3{};
+            corners.nearUR = nearURIntersection.intersects ? nearURIntersection.point : vec3{};
+            corners.nearUL = nearULIntersection.intersects ? nearULIntersection.point : vec3{};
+
+            if (!frustum.isInfiniteZ())
+            {
+                auto farLLIntersection = intersects(frustum.m_planes[Far], frustum.m_planes[Bottom], frustum.m_planes[Left]);
+                auto farLRIntersection = intersects(frustum.m_planes[Far], frustum.m_planes[Bottom], frustum.m_planes[Right]);
+                auto farURIntersection = intersects(frustum.m_planes[Far], frustum.m_planes[Top], frustum.m_planes[Right]);
+                auto farULIntersection = intersects(frustum.m_planes[Far], frustum.m_planes[Top], frustum.m_planes[Left]);
+
+                corners.farLL = farLLIntersection.intersects ? farLLIntersection.point : vec3{};
+                corners.farLR = farLRIntersection.intersects ? farLRIntersection.point : vec3{};
+                corners.farUR = farURIntersection.intersects ? farURIntersection.point : vec3{};
+                corners.farUL = farULIntersection.intersects ? farULIntersection.point : vec3{};
+            }
+            // otherwise this is an infinite z-plane, so there is no far plane.
+
+            return corners;
         }
 
     private:

@@ -37,7 +37,8 @@ namespace litl::vulkan
     /// Extensions required by our renderer.
     /// </summary>
     static const std::vector<const char*> RequiredDeviceExtensions = {
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+        VK_KHR_MAINTENANCE1_EXTENSION_NAME          // to allow negative viewport heights
     };
 
     // -------------------------------------------------------------------------------------
@@ -866,10 +867,14 @@ namespace litl::vulkan
             .x = 0.0f,
             .y = 0.0f,
             .width = static_cast<float>(handle->context.vkSwapChainExtent.width),
-            .height = static_cast<float>(handle->context.vkSwapChainExtent.height),
+            .height = -static_cast<float>(handle->context.vkSwapChainExtent.height),
             .minDepth = 0.0f,
             .maxDepth = 1.0f
         };
+
+        // ^ note the negative viewport height.
+        // Vulkan's clip-space has the y-axis pointing down - the opposite of OpenGL and our GLM-based math library.
+        // So we flip it here so it doesn't need to be flipped anywhere else (projection matrix or shaders).
 
         const auto scissor = VkRect2D{
             .offset = {

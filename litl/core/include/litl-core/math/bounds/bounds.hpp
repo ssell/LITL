@@ -1,6 +1,7 @@
 #ifndef LITL_MATH_BOUNDS_H__
 #define LITL_MATH_BOUNDS_H__
 
+#include "litl-core/math/bounds/intersectionResult.hpp"
 #include "litl-core/math/bounds/aabb.hpp"
 #include "litl-core/math/bounds/sphere.hpp"
 #include "litl-core/math/bounds/plane.hpp"
@@ -41,17 +42,19 @@ namespace litl::bounds
 
     /// <summary>
     /// An inclusive contains check to see if a point lies on, or within, a plane.
+    /// A point is considered inside a plane if its signed distance is >= 0.
     /// </summary>
     /// <param name="plane"></param>
     /// <param name="point"></param>
     /// <returns></returns>
     [[nodiscard]] constexpr bool contains(Plane plane, vec3 point) noexcept
     {
-        return plane.signedDistance(point) <= Traits<float>::relative_epsilon;
+        return plane.signedDistance(point) >= 0.0f;
     }
 
     /// <summary>
-    /// 
+    /// AN inclusive contains check between a frustum and a single point.
+    /// A point is contained within a frustum if it is also contained within all of its planes.
     /// </summary>
     /// <param name="frustum"></param>
     /// <param name="point"></param>

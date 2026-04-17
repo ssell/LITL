@@ -240,16 +240,28 @@ namespace litl
         // Factory
         // ---------------------------------------------------------------------------------
 
+        /// <summary>
+        /// (1, 0, 0)
+        /// </summary>
+        /// <returns></returns>
         [[nodiscard]] static constexpr vec3 right() noexcept
         {
             return vec3(1.0f, 0.0f, 0.0f);
         }
 
+        /// <summary>
+        /// (0, 1, 0)
+        /// </summary>
+        /// <returns></returns>
         [[nodiscard]] static constexpr vec3 up() noexcept
         {
             return vec3(0.0f, 1.0f, 0.0f);
         }
 
+        /// <summary>
+        /// (0, 0, 1)
+        /// </summary>
+        /// <returns></returns>
         [[nodiscard]] static constexpr vec3 forward() noexcept
         {
             return vec3(0.0f, 0.0f, 1.0f);
@@ -429,6 +441,28 @@ namespace litl
     [[nodiscard]] constexpr vec3 max(vec3 a, vec3 b) noexcept
     {
         return vec3{ max(a.x(), b.x()), max(a.y(), b.y()), max(a.z(), b.z()) };
+    }
+
+    /// <summary>
+    /// See vec3::dot
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns></returns>
+    [[nodiscard]] constexpr float dot(vec3 a, vec3 b) noexcept
+    {
+        return a.dot(b);
+    }
+
+    /// <summary>
+    /// See vec3::cross
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns></returns>
+    [[nodiscard]] constexpr vec3 cross(vec3 a, vec3 b) noexcept
+    {
+        return a.cross(b);
     }
 }
 
