@@ -29,10 +29,41 @@ namespace litl::bounds
         constexpr Plane() {}
         constexpr Plane(float nx, float ny, float nz, float d) : value{ nx, ny, nz, d } {};
         constexpr Plane(vec3 normal, float d) : value{ normal.x(), normal.y(), normal.z(), d } {};
+
+        /// <summary>
+        /// Assumes Hessian: (nx, ny, nz, d where d = dot(n, point))
+        /// </summary>
+        /// <param name="plane"></param>
         constexpr explicit Plane(vec4 plane) : value{ plane } {};
 
         vec4 value{ 0.0f, 1.0f, 0.0f, 0.0f };
 
+        /// <summary>
+        /// Flips the plane so it "faces" the opposite direction.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] constexpr Plane flipped() const noexcept
+        {
+            return Plane{ -value };
+        }
+
+        /// <summary>
+        /// Plane constructor vec4 variant expects hessian form.
+        /// Frustum extraction wants to use Gribb-Hartmann form.
+        /// </summary>
+        /// <param name="coeffs"></param>
+        /// <returns></returns>
+        [[nodiscard]] static constexpr Plane fromGribbHartmann(vec4 coeffs) noexcept
+        {
+            return Plane{ coeffs.x(), coeffs.y(), coeffs.z(), -coeffs.w() };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="point"></param>
+        /// <param name="normal"></param>
+        /// <returns></returns>
         [[nodiscard]] static constexpr Plane fromPointNormal(vec3 point, vec3 normal) noexcept
         {
             return Plane{ normal, dot(normal, point) };
@@ -64,7 +95,7 @@ namespace litl::bounds
         /// <returns></returns>
         [[nodiscard]] static constexpr Plane fromTriangleCW(vec3 a, vec3 b, vec3 c) noexcept
         {
-            return fromTriangleCCW(a, c, b);
+            return fromTriangleCCW(a, b, c).flipped();
         }
 
         [[nodiscard]] constexpr vec3 normal() const noexcept

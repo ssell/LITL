@@ -364,7 +364,7 @@ namespace litl
         {
             assert(col < 4);
             assert(row < 4);
-            glm::value_ptr(value)[(col * 4) + row] = v;
+            value[col][row] = v;
         }
 
         constexpr void set(uint32_t index, float v) noexcept
@@ -377,7 +377,7 @@ namespace litl
         {
             assert(col < 4);
             assert(row < 4);
-            return glm::value_ptr(value)[(col * 4) + row];
+            return value[col][row];
         }
 
         [[nodiscard]] constexpr float get(uint32_t index) const noexcept
@@ -425,13 +425,13 @@ namespace litl
         [[nodiscard]] constexpr vec4 col(uint32_t col) const noexcept
         {
             assert(col < 4);
-            return vec4{ get(col, 0), get(col, 1), get(col, 2), get(col, 3) };
+            return vec4{ value[col][0], value[col][1], value[col][2], value[col][3] };
         }
 
         [[nodiscard]] constexpr vec4 row(uint32_t row) const noexcept
         {
             assert(row < 4);
-            return vec4{ get(0, row), get(1, row), get(2, row), get(3, row) };
+            return vec4{ value[0][row], value[1][row], value[2][row], value[3][row] };
         }
 
         [[nodiscard]] constexpr vec4 translation() const noexcept

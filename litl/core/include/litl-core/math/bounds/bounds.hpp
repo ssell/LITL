@@ -53,25 +53,25 @@ namespace litl::bounds
     }
 
     /// <summary>
-    /// AN inclusive contains check between a frustum and a single point.
-    /// A point is contained within a frustum if it is also contained within all of its planes.
+    /// Calculates the rejection bitmask (outcode) for the given point and frustum.
+    /// Each set bit corresponds to a plane that the point is outside of.
     /// </summary>
     /// <param name="frustum"></param>
     /// <param name="point"></param>
     /// <returns></returns>
-    [[nodiscard]] constexpr bool contains(Frustum const& frustum, vec3 point) noexcept
+    [[nodiscard]] constexpr uint32_t containsMask(Frustum const& frustum, vec3 point) noexcept
     {
         uint32_t rejectionMask = 0;
 
         /**
          * Iterate all sides, setting their corresponding bit mask value to 1 if they were rejected.
-         * 
+         *
          * Example,
-         * 
+         *
          *     0b0000'0000 = no rejections (pass)
          *     0b0011'1111 (or 0b0001'1111 if infinite far) = all rejected
          *     0b0000'0011 = left and right rejected
-         * 
+         *
          * See Frustum::Sides
          */
 
@@ -80,11 +80,19 @@ namespace litl::bounds
             rejectionMask |= static_cast<uint32_t>(!contains(frustum.getSide(static_cast<Frustum::Side>(i)), point)) << i;
         }
 
-        // In the future, this rejection mask is used by Cohen-Sutherland and Sutherland-Hodgman clipping
-        // and can be used in hierarchical culling (if all points of a child share a rejection bit, then
-        // the entire child is outside the plane).
+        return rejectionMask;
+    }
 
-        return (rejectionMask == 0);
+    /// <summary>
+    /// An inclusive contains check between a frustum and a single point.
+    /// A point is contained within a frustum if it is also contained within all of its planes.
+    /// </summary>
+    /// <param name="frustum"></param>
+    /// <param name="point"></param>
+    /// <returns></returns>
+    [[nodiscard]] constexpr bool contains(Frustum const& frustum, vec3 point) noexcept
+    {
+        return containsMask(frustum, point) == 0;
     }
 }
 
