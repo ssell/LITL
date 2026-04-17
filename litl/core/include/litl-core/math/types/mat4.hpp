@@ -1,15 +1,12 @@
 #ifndef LITL_MATH_MAT4_H__
 #define LITL_MATH_MAT4_H__
 
-// for euler angle support
-#define GLM_ENABLE_EXPERIMENTAL
-
 #include <cassert>
 #include <format>
 #include <span>
 #include <string>
 
-#include <glm/glm.hpp>
+#include "litl-core/math/glm.hpp"
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/ext/matrix_relational.hpp>
@@ -303,17 +300,43 @@ namespace litl
 
         [[nodiscard]] constexpr static mat4 lookAt(vec3 const& cameraPos, vec3 const& targetPos, vec3 const& up) noexcept
         {
-            return mat4{ glm::lookAt(cameraPos.data(), targetPos.data(), up.data()) };
+            return mat4{ glm::lookAtLH(cameraPos.data(), targetPos.data(), up.data()) };
         }
 
+        /// <summary>
+        /// Constructs a perspective projection matrix with the following properties:<br/>
+        /// 
+        ///     * Left-handed: (+x = right, +y = up, +z = forward<br/>
+        ///     * Clip-space Z on the range [0, 1] = [far, near]<br/>
+        /// </summary>
+        /// <param name="fovY"></param>
+        /// <param name="aspect"></param>
+        /// <param name="zNear"></param>
+        /// <param name="zFar"></param>
+        /// <returns></returns>
         [[nodiscard]] constexpr static mat4 perspective(float fovY, float aspect, float zNear, float zFar) noexcept
         {
-            return mat4{ glm::perspective(fovY, aspect, zNear, zFar) };
+            // Note below we are intentionally flipping the near and flar clip. such that far = 0 and near = w. In floating point numbers, a greater
+            // amount of precision is given to those numbers closer to zero. By flipping far and near we gain precision at the far clip and reduce artifacts.
+            return mat4{ glm::perspectiveLH(fovY, aspect, zFar, zNear) };
         }
 
+        /// <summary>
+        /// Constructs an orthographic projection matrix with the following properties:<br/>
+        /// 
+        ///     * Left-handed: (+x = right, +y = up, +z = forward<br/>
+        ///     * Clip-space Z on the range [0, 1] = [far, near]<br/>
+        /// </summary>
+        /// <param name="fovY"></param>
+        /// <param name="aspect"></param>
+        /// <param name="zNear"></param>
+        /// <param name="zFar"></param>
+        /// <returns></returns>
         [[nodiscard]] constexpr static mat4 orthographic(float left, float right, float bottom, float top, float zNear, float zFar) noexcept
         {
-            return mat4{ glm::ortho(left, right, bottom, top, zNear, zFar) };
+            // Note below we are intentionally flipping the near and flar clip. such that far = 0 and near = w. In floating point numbers, a greater
+            // amount of precision is given to those numbers closer to zero. By flipping far and near we gain precision at the far clip and reduce artifacts.
+            return mat4{ glm::orthoLH(left, right, bottom, top, zFar, zNear) };
         }
 
         [[nodiscard]] constexpr static mat4 fromAxis(vec4 const& right, vec4 const& up, vec4 const& forward, vec4 const& position)

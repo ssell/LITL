@@ -179,6 +179,31 @@ namespace litl::tests
         REQUIRE(m.isIdentity());
     } LITL_END_TEST_CASE
 
+    LITL_TEST_CASE("mat4 perspective reverse z", "[math::mat4]")
+    {
+        constexpr float near = 0.1f;
+        constexpr float far = 1000.0f;
+
+        const auto proj = mat4::perspective(degreesToRadians(60.0f), 1.0f, near, far);
+
+        // The perspective matrix should be flipped. A point on the near plane should resolve
+        // to positionNDC.z = 1 and a point on the far plane should resolve to positionNDC.z = 0.
+
+        const vec4 nearPoint = proj * vec4(0.0f, 0.0f, near, 1.0f);
+        const vec3 nearNDC = nearPoint.xyz() / nearPoint.w();
+        REQUIRE(isOne(nearNDC.z()));
+
+        const vec4 farPoint = proj * vec4(0.0f, 0.0f, far, 1.0f);
+        const vec3 farNDC = farPoint.xyz() / farPoint.w();
+        REQUIRE(isZero(farNDC.z()));
+
+        // If nearNDZ.z == 0, then the near/far flip was messed up.
+        // If near/far are not on the range [0, 1] (and instead [-1, 1]) then the
+        // the code references <glm/glm.hpp> directly instead of "litl-core/math/glm.hpp"
+        // (or our glm.hpp file is missing GLM_FORCE_DEPTH_ZERO_TO_ONE)
+
+    } LITL_END_TEST_CASE
+
     // -------------------------------------------------------------------------------------
         // Equality
     // -------------------------------------------------------------------------------------
