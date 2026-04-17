@@ -89,13 +89,10 @@ namespace litl::bounds
         }
 
         /// <summary>
-        /// Gribb-Hartmann extraction of a frustum from the view-projection matrix.<br/>
-        /// 
-        /// Note that the resulting frustum has it's near and far flipped such that a depth of 0 = far clip.
+        /// Gribb-Hartmann extraction of a frustum from the view-projection matrix.
         /// </summary>
         /// <param name="viewProj"></param>
-        /// <param name="useInfiniteFar"></param>
-        /// <param name="normalize"></param>
+        /// <param name="options"></param>
         /// <returns></returns>
         [[nodiscard]] static Frustum fromViewProjection(mat4 const& viewProj, FrustumExtractionOptions options) noexcept
         {
@@ -123,8 +120,6 @@ namespace litl::bounds
              * So the point is inside the left plane when
              * 
              *     (m.row[0] + m.row[3]) · pointWS ≥ 0
-             * 
-             * 
              */
 
             const vec4 row0 = viewProj.row(0);
@@ -134,10 +129,10 @@ namespace litl::bounds
 
             Frustum frustum{};
 
-            frustum.m_planes[Left]   = Plane{ row3 + row0 };    // w' + x' ≥ 0
-            frustum.m_planes[Right]  = Plane{ row3 - row0 };    // w' - x' ≥ 0
-            frustum.m_planes[Bottom] = Plane{ row3 + row1 };    // w' + y' ≥ 0
-            frustum.m_planes[Top]    = Plane{ row3 - row1 };    // w' - y' ≥ 0
+            frustum.m_planes[Left]   = Plane::fromGribbHartmann(row3 + row0);    // w' + x' ≥ 0
+            frustum.m_planes[Right]  = Plane::fromGribbHartmann(row3 - row0);    // w' - x' ≥ 0
+            frustum.m_planes[Bottom] = Plane::fromGribbHartmann(row3 + row1);    // w' + y' ≥ 0
+            frustum.m_planes[Top]    = Plane::fromGribbHartmann(row3 - row1);    // w' - y' ≥ 0
 
             if (options.reverseZ)
             {
@@ -145,14 +140,14 @@ namespace litl::bounds
                 // By flipping we gain better precision and less artifacts on the far plane.
                 // without flipping, we use up the majority of precision on near objects which
                 // are far less important in terms of culling.
-                frustum.m_planes[Near] = Plane{ row3 - row2 };
-                frustum.m_planes[Far] = Plane{ row2 };              // z' ≥ 0 (vulkan and d3d use [0, +w] for z, opengl uses [-w, +w])
+                frustum.m_planes[Near] = Plane::fromGribbHartmann(row3 - row2);
+                frustum.m_planes[Far] = Plane::fromGribbHartmann(row2);              // z' ≥ 0 (vulkan and d3d use [0, +w] for z, opengl uses [-w, +w])
             }
             else
             {
                 // Standard: near = 0, far = w (OpenGL)
-                frustum.m_planes[Near] = Plane{ row2 };
-                frustum.m_planes[Far] = Plane{ row3 - row2 };
+                frustum.m_planes[Near] = Plane::fromGribbHartmann(row2);
+                frustum.m_planes[Far] = Plane::fromGribbHartmann(row3 - row2);
             }
 
             // A common optimization for main cameras are to use an infinite
