@@ -2,6 +2,7 @@
 #define LITL_MATH_BOUNDS_FRUSTUM_H__
 
 #include <array>
+#include <utility>
 
 #include "litl-core/math/types/mat4.hpp"
 #include "litl-core/math/bounds/plane.hpp"
@@ -86,6 +87,12 @@ namespace litl::bounds
         [[nodiscard]] bool isInfiniteZ() const noexcept
         {
             return (m_sideCount == 5);
+        }
+
+        [[nodiscard]] vec3 edgeDirection(Side a, Side b) const noexcept
+        {
+            vec3 dir = normalize(cross(m_planes[a].normal(), m_planes[b].normal()));
+            return (dot(dir, m_planes[Near].normal()) < 0.0f ? -dir : dir);
         }
 
         /// <summary>
@@ -259,6 +266,27 @@ namespace litl::bounds
             // otherwise this is an infinite z-plane, so there is no far plane.
 
             return corners;
+        }
+
+        [[nodiscard]] static std::pair<vec3, vec3> extractMinMaxPoints(Frustum const& frustum, float infiniteFrustumLength = 100000.0f) noexcept
+        {
+            FrustumCorners corners = extractCorners(frustum);
+
+            vec3 minPoint = min(corners.nearLL, min(corners.nearLR, min(corners.nearUR, corners.nearUL)));
+            vec3 maxPoint = max(corners.nearLL, max(corners.nearLR, max(corners.nearUR, corners.nearUL)));
+
+            if (frustum.isInfiniteZ())
+            {
+                corners.farLL = corners.nearLL + (frustum.edgeDirection(Left, Bottom) * infiniteFrustumLength);
+                corners.farLR = corners.nearLR + (frustum.edgeDirection(Right, Bottom) * infiniteFrustumLength);
+                corners.farUR = corners.nearUR + (frustum.edgeDirection(Right, Top) * infiniteFrustumLength);
+                corners.farUL = corners.nearUL + (frustum.edgeDirection(Left, Top) * infiniteFrustumLength);
+            }
+
+            minPoint = min(minPoint, min(corners.farLL, min(corners.farLR, min(corners.farUR, corners.farUL))));
+            maxPoint = max(maxPoint, max(corners.farLL, max(corners.farLR, max(corners.farUR, corners.farUL))));
+
+            return { minPoint, maxPoint };
         }
 
     private:

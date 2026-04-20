@@ -10,6 +10,11 @@ namespace litl
     struct UniformGridOptions
     {
         /// <summary>
+        /// The grid origin point.
+        /// </summary>
+        vec3 origin{ 0.0f, 0.0f, 0.0f };
+
+        /// <summary>
         /// The dimensions of each cell, in world units.
         /// Must be a positive power of two value greater than 1.
         /// </summary>
@@ -60,12 +65,12 @@ namespace litl
         UniformGridPartition(UniformGridPartition const&) = delete;
         UniformGridPartition& operator=(UniformGridPartition const&) = delete;
 
-        void add(EntityId id, bounds::AABB aabb) noexcept;
-        void remove(EntityId id) noexcept;
-        void update(EntityId id, bounds::AABB aabb) noexcept;
-        void query(bounds::AABB aabb, std::vector<EntityId>& entities) const noexcept;
-        void query(bounds::Sphere sphere, std::vector<EntityId>& entities) const noexcept;
-        void query(bounds::Frustum const& frustum, std::vector<EntityId>& entities) const noexcept;
+        void add(Entity entity, bounds::AABB aabb) noexcept;
+        void remove(Entity entity, bounds::AABB bounds) noexcept;
+        void update(Entity entity, bounds::AABB prev, bounds::AABB curr) noexcept;
+        void query(bounds::AABB aabb, std::vector<Entity>& entities) const noexcept;
+        void query(bounds::Sphere sphere, std::vector<Entity>& entities) const noexcept;
+        void query(bounds::Frustum const& frustum, std::vector<Entity>& entities) const noexcept;
 
         /// <summary>
         /// Returns the size along each dimensions for an individual cell.
@@ -89,7 +94,6 @@ namespace litl
 
     private:
 
-        UniformGridOptions m_options;
         struct Impl; ImplPtr<Impl, 64> m_impl;
     };
 

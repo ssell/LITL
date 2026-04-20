@@ -367,6 +367,15 @@ namespace litl::tests
         REQUIRE(bounds::isOutside(plane, aabbStraddle) == false);
         REQUIRE(bounds::isOutside(plane, aabbOutside) == true);
     } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("plane nearest point", "[math::bounds]")
+    {
+        auto plane = bounds::Plane::fromPointNormal(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 0.0f, 1.0f, 0.0f });
+
+        REQUIRE(plane.nearestPoint(vec3{ 0.0f, 0.0f, 0.0f }) == vec3{ 0.0f, 0.0f, 0.0f });
+        REQUIRE(plane.nearestPoint(vec3{ 100.0f, 100.0f, 100.0f }) == vec3{ 100.0f, 0.0f, 100.0f });
+        REQUIRE(plane.nearestPoint(vec3{ -100.0f, -100.0f, -100.0f }) == vec3{ -100.0f, 0.0f, -100.0f });
+    } LITL_END_TEST_CASE
         
     // -------------------------------------------------------------------------------------
     // Frustum
@@ -741,4 +750,19 @@ namespace litl::tests
         REQUIRE(classification.outsideMask == 0b000000);
         REQUIRE(classification.straddleMask == 0b000000);
     } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("edgeDirection", "[math::bounds]")
+    {
+        auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
+
+        REQUIRE(frustum.edgeDirection(bounds::Frustum::Left, bounds::Frustum::Bottom) == vec3::forward());
+        REQUIRE(frustum.edgeDirection(bounds::Frustum::Left, bounds::Frustum::Top) == vec3::forward());
+        REQUIRE(frustum.edgeDirection(bounds::Frustum::Right, bounds::Frustum::Bottom) == vec3::forward());
+        REQUIRE(frustum.edgeDirection(bounds::Frustum::Right, bounds::Frustum::Top) == vec3::forward());
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("extractMinMaxPoints", "[math::bounds]")
+    {
+        // ... todo ...
+    }
 }

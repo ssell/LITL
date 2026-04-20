@@ -13,11 +13,11 @@ namespace litl
     /// Defines the compile-time interface/contract that any scene partition implementation must abide by.
     /// </summary>
     template<typename T>
-    concept ScenePartition = requires(T partition, EntityId id , bounds::AABB aabb, bounds::Sphere sphere, bounds::Frustum const& frustum, std::vector<EntityId>& entities)
+    concept ScenePartition = requires(T partition, Entity entity, bounds::AABB aabb, bounds::Sphere sphere, bounds::Frustum const& frustum, std::vector<Entity>& entities)
     {
-        { partition.add(id, aabb) } -> std::same_as<void>;
-        { partition.remove(id) } -> std::same_as<void>;
-        { partition.update(id, aabb) } -> std::same_as<void>;
+        { partition.add(entity, aabb) } -> std::same_as<void>;
+        { partition.remove(entity, aabb) } -> std::same_as<void>;
+        { partition.update(entity, aabb, aabb) } -> std::same_as<void>;
         { partition.query(aabb, entities) } -> std::same_as<void>;
         { partition.query(sphere, entities) } -> std::same_as<void>;
         { partition.query(frustum, entities) } -> std::same_as<void>;
@@ -30,12 +30,12 @@ namespace litl
         {
         public:
 
-            void add(EntityId id, bounds::AABB bounds);
-            void remove(EntityId id);
-            void update(EntityId id, bounds::AABB bounds);
-            void query(bounds::AABB bounds, std::vector<EntityId>& entities);
-            void query(bounds::Sphere bounds, std::vector<EntityId>& entities);
-            void query(bounds::Frustum const& frustum, std::vector<EntityId>& entities);
+            void add(Entity entity, bounds::AABB bounds);
+            void remove(Entity entity, bounds::AABB bounds);
+            void update(Entity entity, bounds::AABB bounds, bounds::AABB bounds);
+            void query(bounds::AABB bounds, std::vector<Entity>& entities);
+            void query(bounds::Sphere bounds, std::vector<Entity>& entities);
+            void query(bounds::Frustum const& frustum, std::vector<Entity>& entities);
 
         protected:
 

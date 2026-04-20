@@ -476,4 +476,17 @@ namespace litl::tests
         REQUIRE(fequals(c.distanceSqTo(d), expectedCtoD));
         REQUIRE(fequals(d.distanceSqTo(c), expectedCtoD));
     } LITL_END_TEST_CASE
+
+    // -------------------------------------------------------------------------------------
+    // Misc
+    // -------------------------------------------------------------------------------------
+
+    LITL_TEST_CASE("midpoint", "[math::vec3]")
+    {
+        vec3 a{ 0.0f, 0.0f, 0.0f };
+        vec3 b{ 10.0f, 10.0f, 10.0f };
+
+        REQUIRE(midpoint(a, b) == vec3{ 5.0f, 5.0f, 5.0f });
+        REQUIRE(midpoint(b, a) == vec3{ 5.0f, 5.0f, 5.0f });
+    } LITL_END_TEST_CASE
 }
