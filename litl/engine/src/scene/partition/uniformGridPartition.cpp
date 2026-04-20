@@ -11,7 +11,9 @@ namespace litl
     UniformGridPartition::UniformGridPartition(UniformGridOptions options)
         : m_options(options)
     {
-
+        LITL_FATAL_ASSERT_MSG(
+            options.isValid(), 
+            "UniformGridPartition must have both .cellSize and .cellCount that are power-of-twos and greater than one.");
     }
 
     UniformGridPartition::~UniformGridPartition()
@@ -47,5 +49,20 @@ namespace litl
     void UniformGridPartition::query(bounds::Frustum const& frustum, std::vector<EntityId>& entities) const noexcept
     {
 
+    }
+
+    uint32_t UniformGridPartition::getCellSize() const noexcept
+    {
+        return m_options.cellSize;
+    }
+
+    uint32_t UniformGridPartition::getCellCount() const noexcept
+    {
+        return m_options.cellCount;
+    }
+
+    uint32_t UniformGridPartition::getWorldSize() const noexcept
+    {
+        return (m_options.cellSize * m_options.cellCount);
     }
 }
