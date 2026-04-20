@@ -46,6 +46,7 @@ namespace litl::bounds
 
         /// <summary>
         /// Given a normal, returns the p-vertex (positive vertex) which is the corner point that lies furthest along it.
+        /// Note that a normal component of 0 defaults to the max component value. This is opposite of the n-vertex which defaults to the min component value.
         /// </summary>
         /// <param name="normal"></param>
         /// <returns></returns>
@@ -60,12 +61,17 @@ namespace litl::bounds
 
         /// <summary>
         /// Given a normal, returns the n-vertex (negative vertex) which is the corner point that lies furthest along the negative of the normal.
+        /// Note that a normal component of 0 defaults to the min component value. This is opposite of the p-vertex which defaults to the max component value.
         /// </summary>
         /// <param name="normal"></param>
         /// <returns></returns>
         [[nodiscard]] constexpr vec3 nVertex(vec3 normal) const noexcept
         {
-            return pVertex(-normal);
+            return vec3{
+                normal.x() >= 0.0f ? min.x() : max.x(),
+                normal.y() >= 0.0f ? min.y() : max.y(),
+                normal.z() >= 0.0f ? min.z() : max.z()
+            };
         }
 
         [[nodiscard]] static constexpr AABB fromMinMax(vec3 min, vec3 max) noexcept

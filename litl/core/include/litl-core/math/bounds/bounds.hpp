@@ -102,6 +102,13 @@ namespace litl::bounds
     /// <returns></returns>
     [[nodiscard]] constexpr bool contains(Plane plane, AABB aabb) noexcept
     {
+        // If the negative vertex (the one that lies farthest along the negative normal) is within the plane then the entire AABB is within the plane.
+        if (plane.signedDistance(aabb.nVertex(plane.normal())) >= 0.0f)
+        {
+            return true;
+        }
+
+        // Otherwise, part or all of the AABB lies outside the plane.
         return false;
     }
 
@@ -113,7 +120,22 @@ namespace litl::bounds
     /// <returns></returns>
     [[nodiscard]] constexpr bool intersects(Plane plane, AABB aabb) noexcept
     {
-        return false;
+        const vec3 normal = plane.normal();
+
+        // If the negative vertex (the one that lies farthest along the negative normal) is within the plane then the entire AABB is within the plane.
+        if (plane.signedDistance(aabb.nVertex(normal)) >= 0.0f)
+        {
+            return false;
+        }
+
+        // If the positive vertex (the one that lies farthest along the normal) is outside the plane then the entire AABB is outside the plane.
+        if (plane.signedDistance(aabb.pVertex(normal)) < 0.0f)
+        {
+            return false;
+        }
+
+        // The AABB straddles the plane.
+        return true;
     }
 
     /// <summary>
@@ -124,6 +146,13 @@ namespace litl::bounds
     /// <returns></returns>
     [[nodiscard]] constexpr bool isOutside(Plane plane, AABB aabb) noexcept
     {
+        // If the positive vertex (the one that lies farthest along the normal) is outside the plane then the entire AABB is outside the plane.
+        if (plane.signedDistance(aabb.pVertex(plane.normal())) < 0.0f)
+        {
+            return true;
+        }
+
+        // Otherwise, part or all of the AABB lies inside the plane.
         return false;
     }
 
@@ -218,6 +247,24 @@ namespace litl::bounds
     }
 
     // -------------------------------------------------------------------------------------
+    // Frustum x AABB
+
+    [[nodiscard]] constexpr bool contains(Frustum const& frustum, AABB aabb) noexcept
+    {
+        for (uint32_t i = 0u; i < frustum.sideCount(); ++i)
+        {
+            const auto& plane = frustum.getSide(static_cast<Frustum::Side>(i));
+            
+            if (!contains(plane, aabb))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // -------------------------------------------------------------------------------------
     // Frustum Intersection Classification
 
     struct FrustumClassification
@@ -287,23 +334,65 @@ namespace litl::bounds
 
             if ((activeMask & maskBit) == 0u)
             {
-                // the plane fully contains the parent, and thus this child (straddleBit | outsideBit = 0)
+                // the plane fully contains the parent, and thus contains this child as well (straddleBit | outsideBit = 0)
                 continue;
             }
 
             const float dist = frustum.getSide(static_cast<Frustum::Side>(i)).signedDistance(sphere.center);
 
+            // If the sphere is fully outside, then well it is outside and mark the mask as such.
             if (dist < -sphere.radius)
             {
-                // once the sphere is fully outside a single plane then it is classified as outside.
                 result.outsideMask |= maskBit;
                 return result;
             }
             
+            // If the sphere is partially inside, then it straddles.
             if (dist <= sphere.radius)
             {
                 result.straddleMask |= maskBit;
             }
+
+            // Otherwise the sphere is fully inside - so do nothing/set no bits.
+        }
+
+        return result;
+    }
+
+    [[nodiscard]] constexpr FrustumClassification classify(Frustum const& frustum, AABB aabb, uint32_t activeMask = 0b111111) noexcept
+    {
+        FrustumClassification result{};
+
+        for (uint32_t i = 0u; i < frustum.sideCount(); ++i)
+        {
+            const uint32_t maskBit = 1u << i;
+
+            if ((activeMask & maskBit) == 0u)
+            {
+                // the plane fully contains the parent, and thus contains this child as well (straddleBit | outsideBit = 0)
+                continue;
+            }
+
+            const auto& plane = frustum.getSide(static_cast<Frustum::Side>(i));
+            const vec3 normal = plane.normal();
+            const vec3 pVert = aabb.pVertex(normal);
+
+            // If the p-vertex is outside the plane, then the entire AABB is outside.
+            if (plane.signedDistance(pVert) < 0.0f)
+            {
+                result.outsideMask |= maskBit;
+                return result;
+            }
+
+            const vec3 nVert = aabb.nVertex(normal);
+
+            // If the n-vertex is outside the plane (and the above p-vert we know is inside), then the AABB straddles
+            if (plane.signedDistance(nVert) < 0.0f)
+            {
+                result.straddleMask |= maskBit;
+            }
+
+            // Otherwise, the aabb is fully within the plane - so do nothing/set no bits.
         }
 
         return result;
