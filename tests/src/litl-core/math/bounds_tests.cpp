@@ -98,6 +98,40 @@ namespace litl::tests
         REQUIRE(bounds::contains(aabb, vec3{ -5.0f, 0.0f, -5.0f })  == true);
         REQUIRE(bounds::contains(aabb, vec3{ -5.0f, -5.0f, -5.0f }) == true);
     } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("aabb p-vertex", "[math::bounds]")
+    {
+        const bounds::AABB aabb{ .min{ -1.0f, -1.0f, -1.0f}, .max{ 1.0f, 1.0f, 1.0f} };
+
+        REQUIRE(aabb.pVertex(vec3{ 1.0f, 0.0f, 0.0f }) == vec3{ 1.0f, 1.0f, 1.0f });
+        REQUIRE(aabb.pVertex(vec3{ -1.0f, 0.0f, 0.0f }) == vec3{ -1.0f, 1.0f, 1.0f });
+        REQUIRE(aabb.pVertex(vec3{ 0.0f, 1.0f, 0.0f }) == vec3{ 1.0f, 1.0f, 1.0f });
+        REQUIRE(aabb.pVertex(vec3{ 0.0f, -1.0f, 0.0f }) == vec3{ 1.0f, -1.0f, 1.0f });
+        REQUIRE(aabb.pVertex(vec3{ 0.0f, 0.0f, 1.0f }) == vec3{ 1.0f, 1.0f, 1.0f });
+        REQUIRE(aabb.pVertex(vec3{ 0.0f, 0.0f, -1.0f }) == vec3{ 1.0f, 1.0f, -1.0f });
+        REQUIRE(aabb.pVertex(vec3{ -1.0f, -1.0f, 0.0f }) == vec3{ -1.0f, -1.0f, 1.0f });
+        REQUIRE(aabb.pVertex(vec3{ 0.0f, -1.0f, -1.0f }) == vec3{ 1.0f, -1.0f, -1.0f });
+        REQUIRE(aabb.pVertex(vec3{ -1.0f, 0.0f, -1.0f }) == vec3{ -1.0f, 1.0f, -1.0f });
+        REQUIRE(aabb.pVertex(vec3{ -1.0f, -1.0f, -1.0f }) == vec3{ -1.0f, -1.0f, -1.0f });
+        REQUIRE(aabb.pVertex(vec3{ 1.0f, 1.0f, 1.0f }) == vec3{ 1.0f, 1.0f, 1.0f });
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("aabb n-vertex", "[math::bounds]")
+    {
+        const bounds::AABB aabb{ .min{ -1.0f, -1.0f, -1.0f}, .max{ 1.0f, 1.0f, 1.0f} };
+
+        REQUIRE(aabb.nVertex(vec3{ 1.0f, 0.0f, 0.0f }) == vec3{ -1.0f, 1.0f, 1.0f });
+        REQUIRE(aabb.nVertex(vec3{ -1.0f, 0.0f, 0.0f }) == vec3{ 1.0f, 1.0f, 1.0f });
+        REQUIRE(aabb.nVertex(vec3{ 0.0f, 1.0f, 0.0f }) == vec3{ 1.0f, -1.0f, 1.0f });
+        REQUIRE(aabb.nVertex(vec3{ 0.0f, -1.0f, 0.0f }) == vec3{ 1.0f, 1.0f, 1.0f });
+        REQUIRE(aabb.nVertex(vec3{ 0.0f, 0.0f, 1.0f }) == vec3{ 1.0f, 1.0f, -1.0f });
+        REQUIRE(aabb.nVertex(vec3{ 0.0f, 0.0f, -1.0f }) == vec3{ 1.0f, 1.0f, 1.0f });
+        REQUIRE(aabb.nVertex(vec3{ -1.0f, -1.0f, 0.0f }) == vec3{ 1.0f, 1.0f, 1.0f });
+        REQUIRE(aabb.nVertex(vec3{ 0.0f, -1.0f, -1.0f }) == vec3{ 1.0f, 1.0f, 1.0f });
+        REQUIRE(aabb.nVertex(vec3{ -1.0f, 0.0f, -1.0f }) == vec3{ 1.0f, 1.0f, 1.0f });
+        REQUIRE(aabb.nVertex(vec3{ -1.0f, -1.0f, -1.0f }) == vec3{ 1.0f, 1.0f, 1.0f });
+        REQUIRE(aabb.nVertex(vec3{ 1.0f, 1.0f, 1.0f }) == vec3{ -1.0f, -1.0f, -1.0f });
+    } LITL_END_TEST_CASE
         
     // -------------------------------------------------------------------------------------
     // Sphere

@@ -59,7 +59,7 @@ namespace litl::bounds
     // Plane x Sphere
 
     /// <summary>
-    /// An inclusive contains check to see if a sphere completely within the plane.
+    /// An inclusive contains check to see if a sphere is completely within the plane.
     /// </summary>
     /// <param name="plane"></param>
     /// <param name="sphere"></param>
@@ -89,6 +89,42 @@ namespace litl::bounds
     [[nodiscard]] constexpr bool isOutside(Plane plane, Sphere sphere) noexcept
     {
         return plane.signedDistance(sphere.center) < -sphere.radius;
+    }
+
+    // -------------------------------------------------------------------------------------
+    // Plane x AABB
+
+    /// <summary>
+    /// An inclusive contains check to see if an AABB is completely within the plane.
+    /// </summary>
+    /// <param name="plane"></param>
+    /// <param name="aabb"></param>
+    /// <returns></returns>
+    [[nodiscard]] constexpr bool contains(Plane plane, AABB aabb) noexcept
+    {
+        return false;
+    }
+
+    /// <summary>
+    /// Calculates it the AABB straddles the plane - neither fully within or outside.
+    /// </summary>
+    /// <param name="plane"></param>
+    /// <param name="aabb"></param>
+    /// <returns></returns>
+    [[nodiscard]] constexpr bool intersects(Plane plane, AABB aabb) noexcept
+    {
+        return false;
+    }
+
+    /// <summary>
+    /// Calculates it the AABB lies completely outside the plane.
+    /// </summary>
+    /// <param name="plane"></param>
+    /// <param name="aabb"></param>
+    /// <returns></returns>
+    [[nodiscard]] constexpr bool isOutside(Plane plane, AABB aabb) noexcept
+    {
+        return false;
     }
 
     // -------------------------------------------------------------------------------------
