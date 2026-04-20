@@ -120,15 +120,15 @@ namespace litl::tests
     {
         const bounds::AABB aabb{ .min{ -1.0f, -1.0f, -1.0f}, .max{ 1.0f, 1.0f, 1.0f} };
 
-        REQUIRE(aabb.nVertex(vec3{ 1.0f, 0.0f, 0.0f }) == vec3{ -1.0f, 1.0f, 1.0f });
-        REQUIRE(aabb.nVertex(vec3{ -1.0f, 0.0f, 0.0f }) == vec3{ 1.0f, 1.0f, 1.0f });
-        REQUIRE(aabb.nVertex(vec3{ 0.0f, 1.0f, 0.0f }) == vec3{ 1.0f, -1.0f, 1.0f });
-        REQUIRE(aabb.nVertex(vec3{ 0.0f, -1.0f, 0.0f }) == vec3{ 1.0f, 1.0f, 1.0f });
-        REQUIRE(aabb.nVertex(vec3{ 0.0f, 0.0f, 1.0f }) == vec3{ 1.0f, 1.0f, -1.0f });
-        REQUIRE(aabb.nVertex(vec3{ 0.0f, 0.0f, -1.0f }) == vec3{ 1.0f, 1.0f, 1.0f });
-        REQUIRE(aabb.nVertex(vec3{ -1.0f, -1.0f, 0.0f }) == vec3{ 1.0f, 1.0f, 1.0f });
-        REQUIRE(aabb.nVertex(vec3{ 0.0f, -1.0f, -1.0f }) == vec3{ 1.0f, 1.0f, 1.0f });
-        REQUIRE(aabb.nVertex(vec3{ -1.0f, 0.0f, -1.0f }) == vec3{ 1.0f, 1.0f, 1.0f });
+        REQUIRE(aabb.nVertex(vec3{ 1.0f, 0.0f, 0.0f }) == vec3{ -1.0f, -1.0f, -1.0f });
+        REQUIRE(aabb.nVertex(vec3{ -1.0f, 0.0f, 0.0f }) == vec3{ 1.0f, -1.0f, -1.0f });
+        REQUIRE(aabb.nVertex(vec3{ 0.0f, 1.0f, 0.0f }) == vec3{ -1.0f, -1.0f, -1.0f });
+        REQUIRE(aabb.nVertex(vec3{ 0.0f, -1.0f, 0.0f }) == vec3{ -1.0f, 1.0f, -1.0f });
+        REQUIRE(aabb.nVertex(vec3{ 0.0f, 0.0f, 1.0f }) == vec3{ -1.0f, -1.0f, -1.0f });
+        REQUIRE(aabb.nVertex(vec3{ 0.0f, 0.0f, -1.0f }) == vec3{ -1.0f, -1.0f, 1.0f });
+        REQUIRE(aabb.nVertex(vec3{ -1.0f, -1.0f, 0.0f }) == vec3{ 1.0f, 1.0f, -1.0f });
+        REQUIRE(aabb.nVertex(vec3{ 0.0f, -1.0f, -1.0f }) == vec3{ -1.0f, 1.0f, 1.0f });
+        REQUIRE(aabb.nVertex(vec3{ -1.0f, 0.0f, -1.0f }) == vec3{ 1.0f, -1.0f, 1.0f });
         REQUIRE(aabb.nVertex(vec3{ -1.0f, -1.0f, -1.0f }) == vec3{ 1.0f, 1.0f, 1.0f });
         REQUIRE(aabb.nVertex(vec3{ 1.0f, 1.0f, 1.0f }) == vec3{ -1.0f, -1.0f, -1.0f });
     } LITL_END_TEST_CASE
@@ -329,6 +329,43 @@ namespace litl::tests
         REQUIRE(bounds::isOutside(plane, sphereInside) == false);
         REQUIRE(bounds::isOutside(plane, sphereStraddle) == false);
         REQUIRE(bounds::isOutside(plane, sphereOutside) == true);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("plane contains aabb", "[math::bounds]")
+    {
+        auto plane = bounds::Plane::fromPointNormal(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 0.0f, 1.0f, 0.0f });
+        auto aabbInside = bounds::AABB::fromMinMax(vec3{ 1.0f, 1.0f, 1.0f }, vec3{ 2.0f, 2.0f, 2.0f });
+        auto aabbStraddle = bounds::AABB::fromMinMax(vec3{ -1.0f, -1.0f, -1.0f }, vec3{ 1.0f, 1.0f, 1.0f });
+        auto aabbOutside = bounds::AABB::fromMinMax(vec3{ -2.0f, -2.0f, -2.0f }, vec3{ -1.0f, -1.0f, -1.0f });
+
+        REQUIRE(bounds::contains(plane, aabbInside) == true);
+        REQUIRE(bounds::contains(plane, aabbStraddle) == false);
+        REQUIRE(bounds::contains(plane, aabbOutside) == false);
+    } LITL_END_TEST_CASE
+        
+
+    LITL_TEST_CASE("plane intersects aabb", "[math::bounds]")
+    {
+        auto plane = bounds::Plane::fromPointNormal(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 0.0f, 1.0f, 0.0f });
+        auto aabbInside = bounds::AABB::fromMinMax(vec3{ 1.0f, 1.0f, 1.0f }, vec3{ 2.0f, 2.0f, 2.0f });
+        auto aabbStraddle = bounds::AABB::fromMinMax(vec3{ -1.0f, -1.0f, -1.0f }, vec3{ 1.0f, 1.0f, 1.0f });
+        auto aabbOutside = bounds::AABB::fromMinMax(vec3{ -2.0f, -2.0f, -2.0f }, vec3{ -1.0f, -1.0f, -1.0f });
+
+        REQUIRE(bounds::intersects(plane, aabbInside) == false);
+        REQUIRE(bounds::intersects(plane, aabbStraddle) == true);
+        REQUIRE(bounds::intersects(plane, aabbOutside) == false);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("aabb outside plane", "[math::bounds]")
+    {
+        auto plane = bounds::Plane::fromPointNormal(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 0.0f, 1.0f, 0.0f });
+        auto aabbInside = bounds::AABB::fromMinMax(vec3{ 1.0f, 1.0f, 1.0f }, vec3{ 2.0f, 2.0f, 2.0f });
+        auto aabbStraddle = bounds::AABB::fromMinMax(vec3{ -1.0f, -1.0f, -1.0f }, vec3{ 1.0f, 1.0f, 1.0f });
+        auto aabbOutside = bounds::AABB::fromMinMax(vec3{ -2.0f, -2.0f, -2.0f }, vec3{ -1.0f, -1.0f, -1.0f });
+
+        REQUIRE(bounds::isOutside(plane, aabbInside) == false);
+        REQUIRE(bounds::isOutside(plane, aabbStraddle) == false);
+        REQUIRE(bounds::isOutside(plane, aabbOutside) == true);
     } LITL_END_TEST_CASE
         
     // -------------------------------------------------------------------------------------
@@ -589,12 +626,16 @@ namespace litl::tests
     {
         auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
         auto sphereInside = bounds::Sphere::fromCenterRadius(vec3{ 0.0f, 0.0f, 0.0f }, 0.5f);
-        auto sphereStraddle = bounds::Sphere::fromCenterRadius(vec3{ 0.0f, 1.0f, 0.0f }, 0.5f);     // straddle top plane
-        auto sphereOutside = bounds::Sphere::fromCenterRadius(vec3{ 0.0f, 2.0f, 0.0f }, 0.5f);      // outside top plane
+        auto sphereStraddle = bounds::Sphere::fromCenterRadius(vec3{ 0.0f, 1.0f, 0.0f }, 0.5f);         // straddle top plane
+        auto sphereOutside = bounds::Sphere::fromCenterRadius(vec3{ 0.0f, 2.0f, 0.0f }, 0.5f);          // outside top plane
+        auto sphereOutsideAll = bounds::Sphere::fromCenterRadius(vec3{ -100.0f, 0.0f, 0.0f }, 10.0f);   // completely outside the frustum
+        auto sphereCover = bounds::Sphere::fromCenterRadius(vec3{ -100.0f, 0.0f, 0.0f }, 1000.0f);      // cover frustum (straddle all)
 
         auto sphereInsideClassification = bounds::classify(frustum, sphereInside);
         auto sphereStraddleClassification = bounds::classify(frustum, sphereStraddle);
         auto sphereOutsideClassification = bounds::classify(frustum, sphereOutside);
+        auto sphereOutsideAllClassification = bounds::classify(frustum, sphereOutsideAll);
+        auto sphereCoverClassification = bounds::classify(frustum, sphereCover);
 
         REQUIRE(sphereInsideClassification.type() == bounds::FrustumClassification::Inside);
         REQUIRE(sphereInsideClassification.outsideMask == 0b000000);
@@ -607,6 +648,14 @@ namespace litl::tests
         REQUIRE(sphereOutsideClassification.type() == bounds::FrustumClassification::Outside);
         REQUIRE(sphereOutsideClassification.outsideMask == 0b001000);
         REQUIRE(sphereOutsideClassification.straddleMask == 0b000000);
+
+        REQUIRE(sphereOutsideAllClassification.type() == bounds::FrustumClassification::Outside);
+        REQUIRE(sphereOutsideAllClassification.outsideMask == 0b000001);    // Classification early exits when it detects the sphere is fully outside at least one plane.
+        REQUIRE(sphereOutsideAllClassification.straddleMask == 0b000000);
+
+        REQUIRE(sphereCoverClassification.type() == bounds::FrustumClassification::Intersects);
+        REQUIRE(sphereCoverClassification.outsideMask == 0b000000);
+        REQUIRE(sphereCoverClassification.straddleMask == 0b111111);
     } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("frustum classify sphere active mask", "[math::bounds]")
@@ -621,6 +670,72 @@ namespace litl::tests
         // as the passed in active mask is signaling it (or well, its parent) as inside.
         // this is naturally an invalid mask for a well-formed parent/child.
         auto classification = bounds::classify(frustum, sphereOutside, allInsideBitMask);
+
+        REQUIRE(classification.type() == bounds::FrustumClassification::Inside);
+        REQUIRE(classification.outsideMask == 0b000000);
+        REQUIRE(classification.straddleMask == 0b000000);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("frustum contains aabb", "[math::bounds]")
+    {
+        auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
+        auto aabbInside = bounds::AABB::fromMinMax(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 0.5f, 0.5f, 0.5f });
+        auto aabbStraddle = bounds::AABB::fromMinMax(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 0.5f, 1.5f, 0.5f });           // straddle top plane
+        auto aabbOutside = bounds::AABB::fromMinMax(vec3{ 0.5f, 1.5f, 0.5f }, vec3{ 0.5f, 2.0f, 0.5f });            // outside top plane
+
+        REQUIRE(contains(frustum, aabbInside) == true);
+        REQUIRE(contains(frustum, aabbStraddle) == false);
+        REQUIRE(contains(frustum, aabbOutside) == false);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("frustum classify aabb", "[math::bounds]")
+    {
+        auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
+        auto aabbInside = bounds::AABB::fromMinMax(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 0.5f, 0.5f, 0.5f });
+        auto aabbStraddle = bounds::AABB::fromMinMax(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 0.5f, 1.5f, 0.5f });                   // straddle top plane
+        auto aabbOutside = bounds::AABB::fromMinMax(vec3{ 0.5f, 1.5f, 0.5f }, vec3{ 0.5f, 2.0f, 0.5f });                    // outside top plane
+        auto aabbOutsideAll = bounds::AABB::fromMinMax(vec3{ -100.0f, -100.0f, -100.0f }, vec3{ -90.0f, -90.0f, -90.0f });  // completely outside the frustum
+        auto aabbCover = bounds::AABB::fromMinMax(vec3{ -10.0f, -10.0f, -10.0f }, vec3{ 10.0f, 10.0f, 10.0f });             // cover frustum (straddle all)
+
+        auto aabbInsideClassification = bounds::classify(frustum, aabbInside);
+        auto aabbStraddleClassification = bounds::classify(frustum, aabbStraddle);
+        auto aabbOutsideClassification = bounds::classify(frustum, aabbOutside);
+        auto aabbOutsideAllClassification = bounds::classify(frustum, aabbOutsideAll);
+        auto aabbCoverClassification = bounds::classify(frustum, aabbCover);
+
+        REQUIRE(aabbInsideClassification.type() == bounds::FrustumClassification::Inside);
+        REQUIRE(aabbInsideClassification.outsideMask == 0b000000);
+        REQUIRE(aabbInsideClassification.straddleMask == 0b000000);
+
+        REQUIRE(aabbStraddleClassification.type() == bounds::FrustumClassification::Intersects);
+        REQUIRE(aabbStraddleClassification.outsideMask == 0b000000);
+        REQUIRE(aabbStraddleClassification.straddleMask == 0b001000);   // Frustum::Side::Top == 3 (fourth, 0-indexed)
+
+        REQUIRE(aabbOutsideClassification.type() == bounds::FrustumClassification::Outside);
+        REQUIRE(aabbOutsideClassification.outsideMask == 0b001000);
+        REQUIRE(aabbOutsideClassification.straddleMask == 0b000000);
+
+        REQUIRE(aabbOutsideAllClassification.type() == bounds::FrustumClassification::Outside);
+        REQUIRE(aabbOutsideAllClassification.outsideMask == 0b000001);    // Classification early exits when it detects the AABB is fully outside at least one plane.
+        REQUIRE(aabbOutsideAllClassification.straddleMask == 0b000000);
+
+        REQUIRE(aabbCoverClassification.type() == bounds::FrustumClassification::Intersects);
+        REQUIRE(aabbCoverClassification.outsideMask == 0b000000);
+        REQUIRE(aabbCoverClassification.straddleMask == 0b111111);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("frustum classify aabb active mask", "[math::bounds]")
+    {
+        auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
+        auto aabbOutside = bounds::AABB::fromMinMax(vec3{ 0.5f, 1.5f, 0.5f }, vec3{ 0.5f, 2.0f, 0.5f });            // outside top plane
+
+        // bit set to 0 = inside, bit set to 1 = straddle OR outside
+        const auto allInsideBitMask = 0b000000;
+
+        // although this sphere is fully outside of the frustum, it should be classified as inside 
+        // as the passed in active mask is signaling it (or well, its parent) as inside.
+        // this is naturally an invalid mask for a well-formed parent/child.
+        auto classification = bounds::classify(frustum, aabbOutside, allInsideBitMask);
 
         REQUIRE(classification.type() == bounds::FrustumClassification::Inside);
         REQUIRE(classification.outsideMask == 0b000000);
