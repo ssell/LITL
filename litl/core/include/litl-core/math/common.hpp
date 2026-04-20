@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <bit>
 #include <cmath>
 #include <span>
 
@@ -292,6 +293,17 @@ namespace litl
     [[nodiscard]] constexpr uint32_t isPow2(uint32_t x) noexcept
     {
         return (x > 0) && ((x & (x - 1)) == 0);
+    }
+
+    /// <summary>
+    /// Calculates the smallest integral power of two that is not smaller than x.
+    /// </summary>
+    /// <param name="x"></param>
+    /// <returns></returns>
+    [[nodiscard]] constexpr uint32_t roundUpToPow2(uint32_t x) noexcept
+    {
+        // ezpz
+        return std::bit_ceil(x);
     }
 
     [[nodiscard]] constexpr size_t alignMemoryOffsetUp(size_t offset, size_t alignment) noexcept
