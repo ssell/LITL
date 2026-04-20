@@ -464,6 +464,16 @@ namespace litl
     {
         return a.cross(b);
     }
+
+    [[nodiscard]] constexpr vec3 midpoint(vec3 a, vec3 b) noexcept
+    {
+        return (a + (b - a) * 0.5f);
+    }
+
+    [[nodiscard]] constexpr vec3 normalize(vec3 a) noexcept
+    {
+        return a.normalized();
+    }
 }
 
 REGISTER_TYPE_NAME(litl::vec3)

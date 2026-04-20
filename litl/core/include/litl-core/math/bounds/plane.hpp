@@ -131,6 +131,16 @@ namespace litl::bounds
             // from the origin. from there simply subtract the distance the point lies from the origin 
             return (normal().dot(point) - d());
         }
+
+        /// <summary>
+        /// Returns the nearest point on the plane to the specified point.
+        /// </summary>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        [[nodiscard]] constexpr vec3 nearestPoint(vec3 point) const noexcept
+        {
+            return (point - (normal() * signedDistance(point)));
+        }
     };
 
     // -------------------------------------------------------------------------------------
