@@ -1,6 +1,7 @@
 #ifndef LITL_MATH_BOUNDS_SPHERE_H__
 #define LITL_MATH_BOUNDS_SPHERE_H__
 
+#include "litl-core/assert.hpp"
 #include "litl-core/math/types/vec3.hpp"
 
 namespace litl::bounds
@@ -12,6 +13,7 @@ namespace litl::bounds
 
         [[nodiscard]] static constexpr Sphere fromCenterRadius(vec3 center, float radius) noexcept
         {
+            LITL_ASSERT_MSG(radius > 0.0f, "Sphere radius must be > 0", Sphere{});
             return Sphere{ .center = center, .radius = radius };
         }
 

@@ -135,37 +135,98 @@ namespace litl::tests
 
     LITL_TEST_CASE("aabb contains aabb", "[math::bounds]")
     {
-        // ... todo ...
+        const bounds::AABB aabb{ .min{ -1.0f, -1.0f, -1.0f}, .max{ 1.0f, 1.0f, 1.0f} };
+        const bounds::AABB inside{ .min{ -0.1f, -0.1f, -0.1f}, .max{ 0.1f, 0.1f, 0.1f } };
+        const bounds::AABB outside{ .min{ 10.0f, 10.0f, 10.0f }, .max{ 20.0f, 20.0f, 20.0f } };
+        const bounds::AABB straddles{ .min{-0.5f, 0.0f, -0.5f }, .max{ 0.5f, 10.0f, 0.5f } };
+
+        REQUIRE(bounds::contains(aabb, inside) == true);
+        REQUIRE(bounds::contains(aabb, outside) == false);
+        REQUIRE(bounds::contains(aabb, straddles) == false);
     } LITL_END_TEST_CASE
         
     LITL_TEST_CASE("aabb intersects aabb", "[math::bounds]")
     {
-        // ... todo ...
+        const bounds::AABB aabb{ .min{ -1.0f, -1.0f, -1.0f}, .max{ 1.0f, 1.0f, 1.0f} };
+        const bounds::AABB inside{ .min{ -0.1f, -0.1f, -0.1f}, .max{ 0.1f, 0.1f, 0.1f } };
+        const bounds::AABB outside{ .min{ 10.0f, 10.0f, 10.0f }, .max{ 20.0f, 20.0f, 20.0f } };
+        const bounds::AABB straddles{ .min{-0.5f, 0.0f, -0.5f }, .max{ 0.5f, 10.0f, 0.5f } };
+
+        REQUIRE(bounds::intersects(aabb, inside) == true);
+        REQUIRE(bounds::intersects(aabb, outside) == false);
+        REQUIRE(bounds::intersects(aabb, straddles) == true);
     } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("aabb classifies aabb", "[math::bounds]")
     {
-        // ... todo ...
+        const bounds::AABB aabb{ .min{ -1.0f, -1.0f, -1.0f}, .max{ 1.0f, 1.0f, 1.0f} };
+        const bounds::AABB inside{ .min{ -0.1f, -0.1f, -0.1f}, .max{ 0.1f, 0.1f, 0.1f } };
+        const bounds::AABB outside{ .min{ 10.0f, 10.0f, 10.0f }, .max{ 20.0f, 20.0f, 20.0f } };
+        const bounds::AABB straddles{ .min{-0.5f, 0.0f, -0.5f }, .max{ 0.5f, 10.0f, 0.5f } };
+
+        const bounds::IntersectionType classifyInside = classify(aabb, inside);
+        const bounds::IntersectionType classifyOutside = classify(aabb, outside);
+        const bounds::IntersectionType classifyStraddles = classify(aabb, straddles);
+
+        REQUIRE(classifyInside == bounds::IntersectionType::Inside);
+        REQUIRE(classifyOutside == bounds::IntersectionType::Outside);
+        REQUIRE(classifyStraddles == bounds::IntersectionType::Intersects);
     } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("aabb contains sphere", "[math::bounds]")
     {
-        // ... todo ...
+        const bounds::AABB aabb{ .min{ -1.0f, -1.0f, -1.0f}, .max{ 1.0f, 1.0f, 1.0f} };
+        const bounds::Sphere inside{ .center{ 0.0f, 0.0f, 0.0f }, .radius{ 0.1f } };
+        const bounds::Sphere outside{ .center{ 10.0f, 10.0f, 10.0f }, .radius{ 0.1f } };
+        const bounds::Sphere straddles{ .center{ 0.0f, 0.0f, 0.0f }, .radius{ 10.0f } };
+
+        REQUIRE(bounds::contains(aabb, inside) == true);
+        REQUIRE(bounds::contains(aabb, outside) == false);
+        REQUIRE(bounds::contains(aabb, straddles) == false);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("aabb intersects aabb", "[math::bounds]")
+    LITL_TEST_CASE("aabb intersects sphere", "[math::bounds]")
     {
-        // ... todo ...
+        const bounds::AABB aabb{ .min{ -1.0f, -1.0f, -1.0f}, .max{ 1.0f, 1.0f, 1.0f} };
+        const bounds::Sphere inside{ .center{ 0.0f, 0.0f, 0.0f }, .radius{ 0.1f } };
+        const bounds::Sphere outside{ .center{ 10.0f, 10.0f, 10.0f }, .radius{ 0.1f } };
+        const bounds::Sphere straddles{ .center{ 0.0f, 0.0f, 0.0f }, .radius{ 10.0f } };
+
+        REQUIRE(bounds::intersects(aabb, inside) == true);
+        REQUIRE(bounds::intersects(aabb, outside) == false);
+        REQUIRE(bounds::intersects(aabb, straddles) == true);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("aabb classifies aabb", "[math::bounds]")
+    LITL_TEST_CASE("aabb classifies sphere", "[math::bounds]")
     {
-        // ... todo ...
+        const bounds::AABB aabb{ .min{ -1.0f, -1.0f, -1.0f}, .max{ 1.0f, 1.0f, 1.0f} };
+        const bounds::Sphere inside{ .center{ 0.0f, 0.0f, 0.0f }, .radius{ 0.1f } };
+        const bounds::Sphere outside{ .center{ 10.0f, 10.0f, 10.0f }, .radius{ 0.1f } };
+        const bounds::Sphere straddles{ .center{ 0.0f, 0.0f, 0.0f }, .radius{ 10.0f } };
+
+        const bounds::IntersectionType classifyInside = classify(aabb, inside);
+        const bounds::IntersectionType classifyOutside = classify(aabb, outside);
+        const bounds::IntersectionType classifyStraddles = classify(aabb, straddles);
+
+        REQUIRE(classifyInside == bounds::IntersectionType::Inside);
+        REQUIRE(classifyOutside == bounds::IntersectionType::Outside);
+        REQUIRE(classifyStraddles == bounds::IntersectionType::Intersects);
     } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("sphere classifies aabb", "[math::bounds]")
     {
-        // ... todo ...
+        const bounds::Sphere sphere{ .center{ 0.0f, 0.0f, 0.0f }, .radius{ 10.0f } };
+        const bounds::AABB inside{ .min{ 1.0f, 1.0f, 1.0f }, .max{ 2.0f, 2.0f, 2.0f } };
+        const bounds::AABB outside{ .min{ 100.0f, 100.0f, 100.0f }, .max{ 200.0f, 200.0f, 200.0f } };
+        const bounds::AABB straddles{ .min{ 1.0f, 1.0f, 1.0f }, .max{ 100.0f, 100.0f, 100.0f } };
+
+        const bounds::IntersectionType classifyInside = classify(sphere, inside);
+        const bounds::IntersectionType classifyOutside = classify(sphere, outside);
+        const bounds::IntersectionType classifyStraddles = classify(sphere, straddles);
+
+        REQUIRE(classifyInside == bounds::IntersectionType::Inside);
+        REQUIRE(classifyOutside == bounds::IntersectionType::Outside);
+        REQUIRE(classifyStraddles == bounds::IntersectionType::Intersects);
     } LITL_END_TEST_CASE
         
     // -------------------------------------------------------------------------------------
