@@ -15,6 +15,16 @@ namespace litl
         vec3 origin{ 0.0f, 0.0f, 0.0f };
 
         /// <summary>
+        /// The min y-value of the individual grid cell AABBs.
+        /// </summary>
+        float yMin{ -100000.0f };
+
+        /// <summary>
+        /// The max y-value of the individual grid cell AABBs.
+        /// </summary>
+        float yMax{ 100000.0f };
+
+        /// <summary>
         /// The dimensions of each cell, in world units.
         /// Must be a positive power of two value greater than 1.
         /// </summary>

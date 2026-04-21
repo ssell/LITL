@@ -9,20 +9,52 @@
 
 namespace litl::bounds
 {
-    /// <summary>
-    /// An inclusive contains check between an axis-aligned bounding box and a point.
-    /// Returns true if the point is on or within the bounds.
-    /// </summary>
-    /// <param name="bounds"></param>
-    /// <param name="point"></param>
-    /// <returns></returns>
-    [[nodiscard]] constexpr bool contains(AABB bounds, vec3 point) noexcept
+    enum class IntersectionType
     {
-        return
-            (point.x() >= bounds.min.x()) && (point.x() <= bounds.max.x()) &&
-            (point.y() >= bounds.min.y()) && (point.y() <= bounds.max.y()) &&
-            (point.z() >= bounds.min.z()) && (point.z() <= bounds.max.z());
-    }
+        /// <summary>
+        /// The second object is fully within the first.
+        /// </summary>
+        Inside = 0,
+
+        /// <summary>
+        /// The objects intersect each other (neither fully inside or outside).
+        /// </summary>
+        Intersects,
+
+        /// <summary>
+        /// The second object is fully outside the first.
+        /// </summary>
+        Outside
+    };
+
+    struct FrustumClassification
+    {
+        /// <summary>
+        /// Each bit correlates to a frustum plane that the object is fully outside of.
+        /// </summary>
+        uint32_t outsideMask{ 0 };
+
+        /// <summary>
+        /// Each bit correlates to a frustum plane that the object straddles/intersects.
+        /// </summary>
+        uint32_t straddleMask{ 0 };
+
+        [[nodiscard]] constexpr IntersectionType type() const noexcept
+        {
+            if (outsideMask != 0)
+            {
+                return IntersectionType::Outside;
+            }
+            else if (straddleMask != 0)
+            {
+                return IntersectionType::Intersects;
+            }
+            else
+            {
+                return IntersectionType::Inside;
+            }
+        }
+    };
 
     /// <summary>
     /// An inclusive contains check between an axis-aligned bounding box and a point.
@@ -157,6 +189,140 @@ namespace litl::bounds
     }
 
     // -------------------------------------------------------------------------------------
+    // AABB
+    // -------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// An inclusive contains check between an axis-aligned bounding box and a point.
+    /// Returns true if the point is on or within the bounds.
+    /// </summary>
+    /// <param name="bounds"></param>
+    /// <param name="point"></param>
+    /// <returns></returns>
+    [[nodiscard]] constexpr bool contains(AABB bounds, vec3 point) noexcept
+    {
+        return
+            (point.x() >= bounds.min.x()) && (point.x() <= bounds.max.x()) &&
+            (point.y() >= bounds.min.y()) && (point.y() <= bounds.max.y()) &&
+            (point.z() >= bounds.min.z()) && (point.z() <= bounds.max.z());
+    }
+
+    /// <summary>
+    /// Calculates if the two AABBs are intersecting (fully inside or outside return false).
+    /// </summary>
+    /// <param name="aabb"></param>
+    /// <param name="other"></param>
+    /// <returns></returns>
+    [[nodiscard]] constexpr bool intersects(AABB aabb, AABB other) noexcept
+    {
+        return contains(aabb, other.min) || contains(aabb, other.max);
+    }
+
+    /// <summary>
+    /// Classifies if the second AABB is inside, outside, or intersects the first.
+    /// </summary>
+    /// <param name="aabb"></param>
+    /// <param name="other"></param>
+    /// <returns></returns>
+    [[nodiscard]] constexpr IntersectionType classify(AABB aabb, AABB other) noexcept
+    {
+        const bool minInside = contains(aabb, other.min);
+        const bool maxInside = contains(aabb, other.max);
+
+        if (minInside && maxInside)
+        {
+            return IntersectionType::Inside;
+        }
+        else if (!minInside && !maxInside)
+        {
+            return IntersectionType::Outside;
+        }
+        else
+        {
+            return IntersectionType::Intersects;
+        }
+    }
+
+    /// <summary>
+    /// Is the sphere fully contained within the AABB?
+    /// </summary>
+    /// <param name="aabb"></param>
+    /// <param name="sphere"></param>
+    /// <returns></returns>
+    [[nodiscard]] constexpr bool contains(AABB aabb, Sphere sphere) noexcept
+    {
+        return 
+            (sphere.center.x() - sphere.radius) >= aabb.min.x() &&
+            (sphere.center.x() + sphere.radius) <= aabb.max.x() &&
+            (sphere.center.y() - sphere.radius) >= aabb.min.y() &&
+            (sphere.center.y() + sphere.radius) <= aabb.max.y() &&
+            (sphere.center.z() - sphere.radius) >= aabb.min.z() &&
+            (sphere.center.z() + sphere.radius) <= aabb.max.z();
+    }
+
+    /// <summary>
+    /// Returns true if the sphere is within or partially intersects the AABB. Otherwise, returns false.
+    /// </summary>
+    /// <param name="aabb"></param>
+    /// <param name="sphere"></param>
+    /// <returns></returns>
+    [[nodiscard]] constexpr bool intersects(AABB aabb, Sphere sphere) noexcept
+    {
+        const float distSq = aabb.distanceSqTo(sphere.center);      // 0 if the sphere center is within the AABB
+        const float radSq = sphere.radius * sphere.radius;
+
+        return distSq <= radSq;
+    }
+
+    /// <summary>
+    /// Classifies if the Sphere is inside, outside, or intersects the AABB.
+    /// </summary>
+    /// <param name="aabb"></param>
+    /// <param name="other"></param>
+    /// <returns></returns>
+    [[nodiscard]] constexpr IntersectionType classify(AABB aabb, Sphere sphere) noexcept
+    {
+        if (contains(aabb, sphere))
+        {
+            return IntersectionType::Inside;
+        }
+
+        return intersects(aabb, sphere) ? IntersectionType::Intersects : IntersectionType::Outside;
+    }
+
+    /// <summary>
+    /// Returns if the aabb is fully within, outside, or intersects the sphere.
+    /// </summary>
+    /// <param name="sphere"></param>
+    /// <param name="aabb"></param>
+    /// <returns></returns>
+    [[nodiscard]] constexpr IntersectionType classify(Sphere sphere, AABB aabb) noexcept
+    {
+        const float radiusSq = sphere.radius * sphere.radius;
+        const float closestDistSq = aabb.distanceSqTo(sphere.center);
+
+        // If the closest point is outside the sphere, then the entire AABB is outside.
+        if (closestDistSq > radiusSq)
+        {
+            return IntersectionType::Outside;
+        }
+
+        // Find the farthest point on the AABB from the sphere center;
+        const vec3 d1 = abs(sphere.center - aabb.min);
+        const vec3 d2 = abs(sphere.center - aabb.max);
+        const vec3 farthest = max(d1, d2);
+        const float farthestDistSq = dot(farthest, farthest);
+
+        // If the farthest corner is inside the sphere, then the entire ABB is inside.
+        if (farthestDistSq <= radiusSq)
+        {
+            return IntersectionType::Inside;
+        }
+
+        return IntersectionType::Outside;
+    }
+
+    // -------------------------------------------------------------------------------------
     // Frustum
     // -------------------------------------------------------------------------------------
 
@@ -246,74 +412,6 @@ namespace litl::bounds
         return allIntersects;
     }
 
-    // -------------------------------------------------------------------------------------
-    // Frustum x AABB
-
-    [[nodiscard]] constexpr bool contains(Frustum const& frustum, AABB aabb) noexcept
-    {
-        for (uint32_t i = 0u; i < frustum.sideCount(); ++i)
-        {
-            const auto& plane = frustum.getSide(static_cast<Frustum::Side>(i));
-            
-            if (!contains(plane, aabb))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    // -------------------------------------------------------------------------------------
-    // Frustum Intersection Classification
-
-    struct FrustumClassification
-    {
-        enum Type
-        {
-            /// <summary>
-            /// The object is fully contained within all frustum planes.
-            /// </summary>
-            Inside = 0,
-
-            /// <summary>
-            /// The object is not fully outside any plane, but intersects at least one frustum plane.
-            /// </summary>
-            Intersects,
-
-            /// <summary>
-            /// The object is fully outside at least one frustum plane.
-            /// </summary>
-            Outside
-        };
-
-        /// <summary>
-        /// Each bit correlates to a frustum plane that the object is fully outside of.
-        /// </summary>
-        uint32_t outsideMask{ 0 };
-
-        /// <summary>
-        /// Each bit correlates to a frustum plane that the object straddles/intersects.
-        /// </summary>
-        uint32_t straddleMask{ 0 };
-
-        [[nodiscard]] constexpr Type type() const noexcept
-        {
-            if (outsideMask != 0)
-            {
-                return Outside;
-            }
-            else if (straddleMask != 0)
-            {
-                return Intersects;
-            }
-            else
-            {
-                return Inside;
-            }
-        }
-    };
-
     /// <summary>
     /// Classifies how the sphere intersects (or doesn't) with the frustum.<br/>
     /// 
@@ -357,6 +455,24 @@ namespace litl::bounds
         }
 
         return result;
+    }
+
+    // -------------------------------------------------------------------------------------
+    // Frustum x AABB
+
+    [[nodiscard]] constexpr bool contains(Frustum const& frustum, AABB aabb) noexcept
+    {
+        for (uint32_t i = 0u; i < frustum.sideCount(); ++i)
+        {
+            const auto& plane = frustum.getSide(static_cast<Frustum::Side>(i));
+
+            if (!contains(plane, aabb))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     [[nodiscard]] constexpr FrustumClassification classify(Frustum const& frustum, AABB aabb, uint32_t activeMask = 0b111111) noexcept
