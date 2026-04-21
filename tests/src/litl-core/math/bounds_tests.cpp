@@ -763,6 +763,22 @@ namespace litl::tests
 
     LITL_TEST_CASE("extractMinMaxPoints", "[math::bounds]")
     {
-        // ... todo ...
-    }
+        auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
+        auto minMax = bounds::Frustum::extractMinMaxPoints(frustum);
+
+        REQUIRE(minMax.first == vec3{ -1.0f, -1.0f, -1.0f });
+        REQUIRE(minMax.second == vec3{ 1.0f, 1.0f, 1.0f });
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("extractMinMaxPoints infinite z", "[math::bounds]")
+    {
+        const auto view = mat4::lookAt(vec3{ 0, 0, 0 }, vec3{ 0, 0, 5 }, vec3{ 0, 1, 0 });
+        const auto proj = mat4::orthographic(-1.0f, 1.0f, -1.0f, 1.0f, 0.01f, 1.0f);
+        const auto vp = proj * view;
+        const auto frustum = bounds::Frustum::fromViewProjection(vp, { .useInfiniteFar = true });
+        auto minMax = bounds::Frustum::extractMinMaxPoints(frustum, 1000.0f);
+
+        REQUIRE(fequals(minMax.first.z(), 0.01f));
+        REQUIRE(fequals(minMax.second.z(), 1000.0f));
+    } LITL_END_TEST_CASE
 }
