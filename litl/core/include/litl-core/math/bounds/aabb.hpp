@@ -74,6 +74,39 @@ namespace litl::bounds
             };
         }
 
+        /// <summary>
+        /// Returns the closest point on/in the AABB to the provided point.
+        /// If the point is inside the AABB then the point itself is returned.
+        /// If the point is outside the AABB then the nearest point on the AABB surface is returned.
+        /// </summary>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        [[nodiscard]] constexpr vec3 closestPoint(vec3 point) const noexcept
+        {
+            return clamp(point, min, max);
+        }
+
+        /// <summary>
+        /// Returns the distance to the point. If the value is negative, the point is within the AABB.
+        /// If the value is 0, then the point is on the AABB. If the value is positive, the point is outside the AABB.
+        /// </summary>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        [[nodiscard]] constexpr float distanceTo(vec3 point) const noexcept
+        {
+            return distance(closestPoint(point), point);
+        }
+
+        /// <summary>
+        /// Returns the squared distance to the point.
+        /// </summary>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        [[nodiscard]] constexpr float distanceSqTo(vec3 point) const noexcept
+        {
+            return distanceSq(closestPoint(point), point);
+        }
+
         [[nodiscard]] static constexpr AABB fromMinMax(vec3 min, vec3 max) noexcept
         {
             return AABB{ .min = min, .max = max };

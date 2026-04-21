@@ -1,10 +1,17 @@
 #include "litl-core/assert.hpp"
+#include "litl-core/math/bounds.hpp"
 #include "litl-engine/scene/partition/uniformGridPartition.hpp"
 
 namespace litl
 {
     struct GridCell
     {
+        GridCell(float x, float z, float size, float yMin, float yMax)
+            : cellBounds(bounds::AABB::fromMinMax(vec3{x, yMin, z}, vec3{x + size, yMax, z + size}))
+        {
+
+        }
+
         void add(Entity entity, bounds::AABB bounds) noexcept
         {
 
@@ -17,18 +24,76 @@ namespace litl
 
         void query(bounds::AABB aabb, std::vector<Entity>& entities) const noexcept
         {
+            const auto intersection = bounds::classify(aabb, cellBounds);
 
+            switch (intersection)
+            {
+            // The cell is completely inside the AABB, so add all
+            case bounds::IntersectionType::Inside:
+                // ... todo ..
+                break;
+
+            // The cell intersects the AABB, so add some
+            case bounds::IntersectionType::Intersects:
+                // ... todo ..
+                break;
+
+            // The cell is completely outside the AABB, so add none
+            case bounds::IntersectionType::Outside:
+            default:
+                break;
+            }
         }
 
         void query(bounds::Sphere sphere, std::vector<Entity>& entities) const noexcept
         {
+            const auto intersection = bounds::classify(sphere, cellBounds);
 
+            switch (intersection)
+            {
+                // The cell is completely inside the Sphere, so add all
+            case bounds::IntersectionType::Inside:
+                // ... todo ..
+                break;
+
+                // The cell intersects the Sphere, so add some
+            case bounds::IntersectionType::Intersects:
+                // ... todo ..
+                break;
+
+                // The cell is completely outside the Sphere, so add none
+            case bounds::IntersectionType::Outside:
+            default:
+                break;
+            }
         }
 
         void query(bounds::Frustum const& frustum, std::vector<Entity>& entities) const noexcept
         {
+            const auto classification = bounds::classify(frustum, cellBounds);
 
+            switch (classification.type())
+            {
+                // The cell is completely inside the Frustum, so add all
+            case bounds::IntersectionType::Inside:
+                // ... todo ..
+                break;
+
+                // The cell intersects the Frustum, so add some
+            case bounds::IntersectionType::Intersects:
+                // ... todo ..
+                break;
+
+                // The cell is completely outside the Frustum, so add none
+            case bounds::IntersectionType::Outside:
+            default:
+                break;
+            }
         }
+
+    private:
+
+        bounds::AABB cellBounds;
     };
 
     struct UniformGridPartition::Impl
@@ -61,7 +126,6 @@ namespace litl
 
         [[nodiscard]] uint32_t getIndex(vec3 point) const noexcept
         {
-            const auto gridLocal = point - options.origin;
             const auto gridLocalX = getGridLocalX(point.x());
             const auto gridLocalZ = getGridLocalZ(point.z());
             return (gridLocalX + (gridLocalZ * options.cellCount));
@@ -75,7 +139,20 @@ namespace litl
             "UniformGridPartition must have both .cellSize and .cellCount that are power-of-twos and greater than one.");
 
         m_impl->options = options;
-        m_impl->cells.resize(options.cellCount * options.cellCount);
+        m_impl->cells.reserve(options.cellCount * options.cellCount);
+
+        for (auto z = 0u; z < options.cellCount; ++z)
+        {
+            for (auto x = 0u; x < options.cellCount; ++x)
+            {
+                m_impl->cells.emplace_back(
+                    static_cast<float>(x * options.cellSize), 
+                    static_cast<float>(z * options.cellSize), 
+                    static_cast<float>(options.cellSize), 
+                    options.yMin, 
+                    options.yMax);
+            }
+        }
     }
 
     UniformGridPartition::~UniformGridPartition()

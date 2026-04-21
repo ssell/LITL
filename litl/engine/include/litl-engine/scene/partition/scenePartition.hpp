@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "litl-ecs/entity/entity.hpp"
-#include "litl-core/math/bounds/bounds.hpp"
+#include "litl-core/math/bounds.hpp"
 
 namespace litl
 {

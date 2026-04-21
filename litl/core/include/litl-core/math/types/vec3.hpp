@@ -474,6 +474,36 @@ namespace litl
     {
         return a.normalized();
     }
+
+    [[nodiscard]] constexpr vec3 clamp(vec3 v, vec3 min, vec3 max) noexcept
+    {
+        return vec3{ glm::clamp(v.data(), min.data(), max.data()) };
+    }
+
+    [[nodiscard]] constexpr float distance(vec3 a, vec3 b) noexcept
+    {
+        return a.distanceTo(b);
+    }
+
+    [[nodiscard]] constexpr float distanceSq(vec3 a, vec3 b) noexcept
+    {
+        return a.distanceSqTo(b);
+    }
+
+    [[nodiscard]] constexpr vec3 abs(vec3 v) noexcept
+    {
+        return vec3{ glm::abs(v.data()) };
+    }
+
+    [[nodiscard]] constexpr vec3 min(vec3 a, vec3 b) noexcept
+    {
+        return vec3{ glm::min(a.data(), b.data()) };
+    }
+
+    [[nodiscard]] constexpr vec3 max(vec3 a, vec3 b) noexcept
+    {
+        return vec3{ glm::max(a.data(), b.data()) };
+    }
 }
 
 REGISTER_TYPE_NAME(litl::vec3)
