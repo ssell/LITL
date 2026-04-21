@@ -208,7 +208,18 @@ namespace litl::bounds
     }
 
     /// <summary>
-    /// Calculates if the two AABBs are intersecting (fully inside or outside return false).
+    /// Calculates if the first AABB fully contains the second.
+    /// </summary>
+    /// <param name="aabb"></param>
+    /// <param name="other"></param>
+    /// <returns></returns>
+    [[nodiscard]] constexpr bool contains(AABB aabb, AABB other) noexcept
+    {
+        return contains(aabb, other.min) && contains(aabb, other.max);
+    }
+
+    /// <summary>
+    /// Calculates if the two AABBs are intersecting (one or both min/max points within).
     /// </summary>
     /// <param name="aabb"></param>
     /// <param name="other"></param>
@@ -319,7 +330,7 @@ namespace litl::bounds
             return IntersectionType::Inside;
         }
 
-        return IntersectionType::Outside;
+        return IntersectionType::Intersects;
     }
 
     // -------------------------------------------------------------------------------------

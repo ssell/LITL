@@ -429,7 +429,7 @@ namespace litl
     /// <returns></returns>
     [[nodiscard]] constexpr vec3 min(vec3 a, vec3 b) noexcept
     {
-        return vec3{ min(a.x(), b.x()), min(a.y(), b.y()), min(a.z(), b.z()) };
+        return vec3{ glm::min(a.data(), b.data()) };
     }
 
     /// <summary>
@@ -440,7 +440,7 @@ namespace litl
     /// <returns></returns>
     [[nodiscard]] constexpr vec3 max(vec3 a, vec3 b) noexcept
     {
-        return vec3{ max(a.x(), b.x()), max(a.y(), b.y()), max(a.z(), b.z()) };
+        return vec3{ glm::max(a.data(), b.data()) };
     }
 
     /// <summary>
@@ -493,16 +493,6 @@ namespace litl
     [[nodiscard]] constexpr vec3 abs(vec3 v) noexcept
     {
         return vec3{ glm::abs(v.data()) };
-    }
-
-    [[nodiscard]] constexpr vec3 min(vec3 a, vec3 b) noexcept
-    {
-        return vec3{ glm::min(a.data(), b.data()) };
-    }
-
-    [[nodiscard]] constexpr vec3 max(vec3 a, vec3 b) noexcept
-    {
-        return vec3{ glm::max(a.data(), b.data()) };
     }
 }
 
