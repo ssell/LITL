@@ -287,6 +287,18 @@ namespace litl::tests
         REQUIRE(bounds::contains(sphere, vec3{ 0.0f, 5.0f, -5.1f }) == false);
         REQUIRE(bounds::contains(sphere, vec3{ 0.0f, 5.0f, 5.1f }) == false);
     } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("sphere intersects aabb", "[math::bounds]")
+    {
+        bounds::Sphere sphere{ vec3{ 0.0f, 0.0f, 0.0f }, 1.0f };
+        bounds::AABB inside{ vec3{ -0.1f, -0.1f, -0.1f}, vec3{ 0.1f, 0.1f, 0.1f } };
+        bounds::AABB straddles{ vec3{ -0.1f, 0.0f, -0.1f }, vec3{ 0.1f, 10.0f, 0.1f } };
+        bounds::AABB outside{ vec3{ 10.0f, 10.0f, 10.0f }, vec3{ 11.0f, 11.0f, 11.0f } };
+
+        REQUIRE(bounds::intersects(sphere, inside) == true);
+        REQUIRE(bounds::intersects(sphere, straddles) == true);
+        REQUIRE(bounds::intersects(sphere, outside) == true);
+    } LITL_END_TEST_CASE
         
     // -------------------------------------------------------------------------------------
     // Plane

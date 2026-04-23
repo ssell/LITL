@@ -4,8 +4,16 @@
 
 namespace litl
 {
+    struct CellEntry
+    {
+        Entity entity;
+        bounds::AABB aabb;
+    };
+
     struct GridCell
     {
+        std::vector<CellEntry> entries;
+
         GridCell(float x, float z, float size, float yMin, float yMax)
             : cellBounds(bounds::AABB::fromMinMax(vec3{x, yMin, z}, vec3{x + size, yMax, z + size}))
         {
@@ -14,12 +22,22 @@ namespace litl
 
         void add(Entity entity, bounds::AABB bounds) noexcept
         {
-
+            entries.emplace_back(entity, bounds);
         }
 
         void remove(Entity entity) noexcept
         {
+            auto find = std::find_if(entries.begin(), entries.end(), [entity](CellEntry const& entry)
+                {
+                    return entity == entry.entity;
+                });
 
+            if (find != entries.end())
+            {
+                // swap in the last entry into this one's spot, and then remove (the now duplicated) last entry
+                *find = entries.back();
+                entries.pop_back();
+            }
         }
 
         void query(bounds::AABB aabb, std::vector<Entity>& entities) const noexcept
@@ -30,12 +48,18 @@ namespace litl
             {
             // The cell is completely inside the AABB, so add all
             case bounds::IntersectionType::Inside:
-                // ... todo ..
+                addAllTo(entities);
                 break;
 
             // The cell intersects the AABB, so add some
             case bounds::IntersectionType::Intersects:
-                // ... todo ..
+                for (CellEntry const& entry : entries)
+                {
+                    if (bounds::intersects(aabb, entry.aabb))       // intersects returns true for both true intersection (straddle) and containment
+                    {
+                        entities.push_back(entry.entity);
+                    }
+                }
                 break;
 
             // The cell is completely outside the AABB, so add none
@@ -53,12 +77,18 @@ namespace litl
             {
                 // The cell is completely inside the Sphere, so add all
             case bounds::IntersectionType::Inside:
-                // ... todo ..
+                addAllTo(entities);
                 break;
 
                 // The cell intersects the Sphere, so add some
             case bounds::IntersectionType::Intersects:
-                // ... todo ..
+                for (CellEntry const& entry : entries)
+                {
+                    if (bounds::intersects(sphere, entry.aabb))       // intersects returns true for both true intersection (straddle) and containment
+                    {
+                        entities.push_back(entry.entity);
+                    }
+                }
                 break;
 
                 // The cell is completely outside the Sphere, so add none
@@ -76,12 +106,18 @@ namespace litl
             {
                 // The cell is completely inside the Frustum, so add all
             case bounds::IntersectionType::Inside:
-                // ... todo ..
+                addAllTo(entities);
                 break;
 
                 // The cell intersects the Frustum, so add some
             case bounds::IntersectionType::Intersects:
-                // ... todo ..
+                for (CellEntry const& entry : entries)
+                {
+                    if (bounds::intersects(frustum, entry.aabb))       // intersects returns true for both true intersection (straddle) and containment
+                    {
+                        entities.push_back(entry.entity);
+                    }
+                }
                 break;
 
                 // The cell is completely outside the Frustum, so add none
@@ -92,6 +128,14 @@ namespace litl
         }
 
     private:
+
+        void addAllTo(std::vector<Entity>& entities) const noexcept
+        {
+            for (CellEntry const& entry : entries)
+            {
+                entities.push_back(entry.entity);
+            }
+        }
 
         bounds::AABB cellBounds;
     };
