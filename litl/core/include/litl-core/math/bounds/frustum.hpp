@@ -49,6 +49,16 @@ namespace litl::bounds
         vec3 farLR{};
         vec3 farUR{};
         vec3 farUL{};
+
+        [[nodiscard]] constexpr vec3 calculateMinPoint() const noexcept
+        {
+            return min(nearLL, min(nearLR, min(nearUR, min(nearUL, min(farLL, min(farLR, min(farUR, farUL)))))));
+        }
+
+        [[nodiscard]] constexpr vec3 calculateMaxPoint() const noexcept
+        {
+            return max(nearLL, max(nearLR, max(nearUR, max(nearUL, max(farLL, max(farLR, max(farUR, farUL)))))));
+        }
     };
 
     /// <summary>

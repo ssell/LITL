@@ -176,9 +176,9 @@ namespace litl::tests
     LITL_TEST_CASE("aabb contains sphere", "[math::bounds]")
     {
         const bounds::AABB aabb{ .min{ -1.0f, -1.0f, -1.0f}, .max{ 1.0f, 1.0f, 1.0f} };
-        const bounds::Sphere inside{ .center{ 0.0f, 0.0f, 0.0f }, .radius{ 0.1f } };
-        const bounds::Sphere outside{ .center{ 10.0f, 10.0f, 10.0f }, .radius{ 0.1f } };
-        const bounds::Sphere straddles{ .center{ 0.0f, 0.0f, 0.0f }, .radius{ 10.0f } };
+        const bounds::Sphere inside{ .center{ 0.0f, 0.0f, 0.0f }, .radius = 0.1f };
+        const bounds::Sphere outside{ .center{ 10.0f, 10.0f, 10.0f }, .radius = 0.1f };
+        const bounds::Sphere straddles{ .center{ 0.0f, 0.0f, 0.0f }, .radius = 10.0f };
 
         REQUIRE(bounds::contains(aabb, inside) == true);
         REQUIRE(bounds::contains(aabb, outside) == false);
@@ -188,9 +188,9 @@ namespace litl::tests
     LITL_TEST_CASE("aabb intersects sphere", "[math::bounds]")
     {
         const bounds::AABB aabb{ .min{ -1.0f, -1.0f, -1.0f}, .max{ 1.0f, 1.0f, 1.0f} };
-        const bounds::Sphere inside{ .center{ 0.0f, 0.0f, 0.0f }, .radius{ 0.1f } };
-        const bounds::Sphere outside{ .center{ 10.0f, 10.0f, 10.0f }, .radius{ 0.1f } };
-        const bounds::Sphere straddles{ .center{ 0.0f, 0.0f, 0.0f }, .radius{ 10.0f } };
+        const bounds::Sphere inside{ .center{ 0.0f, 0.0f, 0.0f }, .radius = 0.1f };
+        const bounds::Sphere outside{ .center{ 10.0f, 10.0f, 10.0f }, .radius = 0.1f };
+        const bounds::Sphere straddles{ .center{ 0.0f, 0.0f, 0.0f }, .radius = 10.0f };
 
         REQUIRE(bounds::intersects(aabb, inside) == true);
         REQUIRE(bounds::intersects(aabb, outside) == false);
@@ -200,9 +200,9 @@ namespace litl::tests
     LITL_TEST_CASE("aabb classifies sphere", "[math::bounds]")
     {
         const bounds::AABB aabb{ .min{ -1.0f, -1.0f, -1.0f}, .max{ 1.0f, 1.0f, 1.0f} };
-        const bounds::Sphere inside{ .center{ 0.0f, 0.0f, 0.0f }, .radius{ 0.1f } };
-        const bounds::Sphere outside{ .center{ 10.0f, 10.0f, 10.0f }, .radius{ 0.1f } };
-        const bounds::Sphere straddles{ .center{ 0.0f, 0.0f, 0.0f }, .radius{ 10.0f } };
+        const bounds::Sphere inside{ .center{ 0.0f, 0.0f, 0.0f }, .radius = 0.1f };
+        const bounds::Sphere outside{ .center{ 10.0f, 10.0f, 10.0f }, .radius = 0.1f };
+        const bounds::Sphere straddles{ .center{ 0.0f, 0.0f, 0.0f }, .radius = 10.0f };
 
         const bounds::IntersectionType classifyInside = classify(aabb, inside);
         const bounds::IntersectionType classifyOutside = classify(aabb, outside);
@@ -215,7 +215,7 @@ namespace litl::tests
 
     LITL_TEST_CASE("sphere classifies aabb", "[math::bounds]")
     {
-        const bounds::Sphere sphere{ .center{ 0.0f, 0.0f, 0.0f }, .radius{ 10.0f } };
+        const bounds::Sphere sphere{ .center{ 0.0f, 0.0f, 0.0f }, .radius = 10.0f };
         const bounds::AABB inside{ .min{ 1.0f, 1.0f, 1.0f }, .max{ 2.0f, 2.0f, 2.0f } };
         const bounds::AABB outside{ .min{ 100.0f, 100.0f, 100.0f }, .max{ 200.0f, 200.0f, 200.0f } };
         const bounds::AABB straddles{ .min{ 1.0f, 1.0f, 1.0f }, .max{ 100.0f, 100.0f, 100.0f } };
@@ -775,7 +775,7 @@ namespace litl::tests
         REQUIRE(sphereCoverClassification.straddleMask == 0b111111);
     } LITL_END_TEST_CASE
 
-        LITL_TEST_CASE("frustum classify sphere active mask", "[math::bounds]")
+    LITL_TEST_CASE("frustum classify sphere active mask", "[math::bounds]")
     {
         auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
         auto sphereOutside = bounds::Sphere::fromCenterRadius(vec3{ 0.0f, 2.0f, 0.0f }, 0.5f);      // outside top plane
@@ -793,7 +793,7 @@ namespace litl::tests
         REQUIRE(classification.straddleMask == 0b000000);
     } LITL_END_TEST_CASE
 
-        LITL_TEST_CASE("frustum contains aabb", "[math::bounds]")
+    LITL_TEST_CASE("frustum contains aabb", "[math::bounds]")
     {
         auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
         auto aabbInside = bounds::AABB::fromMinMax(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 0.5f, 0.5f, 0.5f });
@@ -805,7 +805,7 @@ namespace litl::tests
         REQUIRE(contains(frustum, aabbOutside) == false);
     } LITL_END_TEST_CASE
 
-        LITL_TEST_CASE("frustum classify aabb", "[math::bounds]")
+    LITL_TEST_CASE("frustum classify aabb", "[math::bounds]")
     {
         auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
         auto aabbInside = bounds::AABB::fromMinMax(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 0.5f, 0.5f, 0.5f });
@@ -841,7 +841,7 @@ namespace litl::tests
         REQUIRE(aabbCoverClassification.straddleMask == 0b111111);
     } LITL_END_TEST_CASE
 
-        LITL_TEST_CASE("frustum classify aabb active mask", "[math::bounds]")
+    LITL_TEST_CASE("frustum classify aabb active mask", "[math::bounds]")
     {
         auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
         auto aabbOutside = bounds::AABB::fromMinMax(vec3{ 0.5f, 1.5f, 0.5f }, vec3{ 0.5f, 2.0f, 0.5f });            // outside top plane
@@ -890,7 +890,7 @@ namespace litl::tests
         REQUIRE(fequals(minMax.second.z(), 1000.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("frustum intersects aabbb", "[math::bounds]")
+    LITL_TEST_CASE("frustum intersects aabb", "[math::bounds]")
     {
         const auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
         const auto inside = bounds::AABB::fromMinMax(vec3{ -0.1f, -0.1f, -0.1f }, vec3{ 0.1f, 0.1f, 0.1f });
@@ -900,5 +900,27 @@ namespace litl::tests
         REQUIRE(bounds::intersects(frustum, inside) == true);
         REQUIRE(bounds::intersects(frustum, straddles) == true);
         REQUIRE(bounds::intersects(frustum, outside) == false);
+    } LITL_END_TEST_CASE
+        
+    // -------------------------------------------------------------------------------------
+    // Compute
+    // -------------------------------------------------------------------------------------
+
+    LITL_TEST_CASE("compute sphere from aabb", "[math::bounds]")
+    {
+        const auto aabb = bounds::AABB::fromMinMax(vec3{ -1.0f, 0.0f, -1.0f }, vec3{ 1.0f, 2.0f, 1.0f });
+        const auto sphere = bounds::computeSphere(aabb);
+
+        REQUIRE(sphere.center == vec3{ 0.0f, 1.0f, 0.0f });
+        REQUIRE(fequals(sphere.radius, Traits<float>::sqrt_three));
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("compute aabb from frustum", "[math::bounds]")
+    {
+        const auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
+        const auto aabb = bounds::computeAABB(frustum);
+
+        REQUIRE(aabb.min == vec3{ -1.0f, -1.0f, -1.0f });
+        REQUIRE(aabb.max == vec3{ 1.0f, 1.0f, 1.0f });
     } LITL_END_TEST_CASE
 }
