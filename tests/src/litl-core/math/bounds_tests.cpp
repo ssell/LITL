@@ -297,7 +297,7 @@ namespace litl::tests
 
         REQUIRE(bounds::intersects(sphere, inside) == true);
         REQUIRE(bounds::intersects(sphere, straddles) == true);
-        REQUIRE(bounds::intersects(sphere, outside) == true);
+        REQUIRE(bounds::intersects(sphere, outside) == false);
     } LITL_END_TEST_CASE
         
     // -------------------------------------------------------------------------------------
@@ -888,5 +888,17 @@ namespace litl::tests
 
         REQUIRE(fequals(minMax.first.z(), 0.01f));
         REQUIRE(fequals(minMax.second.z(), 1000.0f));
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("frustum intersects aabbb", "[math::bounds]")
+    {
+        const auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
+        const auto inside = bounds::AABB::fromMinMax(vec3{ -0.1f, -0.1f, -0.1f }, vec3{ 0.1f, 0.1f, 0.1f });
+        const auto straddles = bounds::AABB::fromMinMax(vec3{ -0.1f, -0.1f, -0.1f }, vec3{ 0.1f, 10.0f, 0.1f });
+        const auto outside = bounds::AABB::fromMinMax(vec3{ 10.0f, 10.0f, 10.0f }, vec3{ 11.0f, 11.0f, 11.0f });
+
+        REQUIRE(bounds::intersects(frustum, inside) == true);
+        REQUIRE(bounds::intersects(frustum, straddles) == true);
+        REQUIRE(bounds::intersects(frustum, outside) == false);
     } LITL_END_TEST_CASE
 }

@@ -535,6 +535,11 @@ namespace litl::bounds
 
         return result;
     }
+
+    [[nodiscard]] constexpr bool intersects(Frustum const& frustum, AABB aabb) noexcept
+    {
+        return classify(frustum, aabb).type() != IntersectionType::Outside;
+    }
 }
 
 #endif
