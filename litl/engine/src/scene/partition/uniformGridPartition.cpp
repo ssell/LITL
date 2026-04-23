@@ -30,8 +30,8 @@ namespace litl
         /// Queries for all entities in the cell that intersect the specified AABB.
         /// </summary>
         /// <param name="aabb"></param>
-        /// <param name="entities"></param>
-        void query(bounds::AABB aabb, std::vector<Entity>& entities) const noexcept
+        /// <param name="outEntities"></param>
+        void query(bounds::AABB aabb, std::vector<Entity>& outEntities) const noexcept
         {
             const auto intersection = bounds::classify(aabb, cellBounds);
 
@@ -39,7 +39,7 @@ namespace litl
             {
                 // The cell is completely inside the AABB, so add all
             case bounds::IntersectionType::Inside:
-                addAllTo(entities);
+                addAllTo(outEntities);
                 break;
 
                 // The cell intersects the AABB, so add some
@@ -48,7 +48,7 @@ namespace litl
                 {
                     if (bounds::intersects(aabb, entityBounds[i]))      // intersects returns true for both true intersection (straddle) and containment
                     {
-                        entities.push_back(entities[i]);
+                        outEntities.push_back(entities[i]);
                     }
                 }
                 break;
@@ -64,8 +64,8 @@ namespace litl
         /// Queries for all entities in the cell that intersect the specified Sphere.
         /// </summary>
         /// <param name="sphere"></param>
-        /// <param name="entities"></param>
-        void query(bounds::Sphere sphere, std::vector<Entity>& entities) const noexcept
+        /// <param name="outEntities"></param>
+        void query(bounds::Sphere sphere, std::vector<Entity>& outEntities) const noexcept
         {
             const auto intersection = bounds::classify(sphere, cellBounds);
 
@@ -73,7 +73,7 @@ namespace litl
             {
                 // The cell is completely inside the Sphere, so add all
             case bounds::IntersectionType::Inside:
-                addAllTo(entities);
+                addAllTo(outEntities);
                 break;
 
                 // The cell intersects the Sphere, so add some
@@ -82,7 +82,7 @@ namespace litl
                 {
                     if (bounds::intersects(sphere, entityBounds[i]))        // intersects returns true for both true intersection (straddle) and containment
                     {
-                        entities.push_back(entities[i]);
+                        outEntities.push_back(entities[i]);
                     }
                 }
                 break;
@@ -98,8 +98,8 @@ namespace litl
         /// Queries for all entities in the cell that intersect the specified Frustum.
         /// </summary>
         /// <param name="frustum"></param>
-        /// <param name="entities"></param>
-        void query(bounds::Frustum const& frustum, std::vector<Entity>& entities) const noexcept
+        /// <param name="outEntities"></param>
+        void query(bounds::Frustum const& frustum, std::vector<Entity>& outEntities) const noexcept
         {
             const auto classification = bounds::classify(frustum, cellBounds);
 
@@ -107,7 +107,7 @@ namespace litl
             {
                 // The cell is completely inside the Frustum, so add all
             case bounds::IntersectionType::Inside:
-                addAllTo(entities);
+                addAllTo(outEntities);
                 break;
 
                 // The cell intersects the Frustum, so add some
@@ -116,7 +116,7 @@ namespace litl
                 {
                     if (bounds::intersects(frustum, entityBounds[i]))       // intersects returns true for both true intersection (straddle) and containment
                     {
-                        entities.push_back(entities[i]);
+                        outEntities.push_back(entities[i]);
                     }
                 }
                 break;
@@ -143,12 +143,9 @@ namespace litl
         /// Adds all entities in the cell to the vector.
         /// </summary>
         /// <param name="entities"></param>
-        void addAllTo(std::vector<Entity>& entities) const noexcept
+        void addAllTo(std::vector<Entity>& outEntities) const noexcept
         {
-            for (Entity const& entity : entities)
-            {
-                entities.push_back(entity);
-            }
+            outEntities.insert(outEntities.end(), entities.begin(), entities.end());
         }
 
         /// <summary>
@@ -181,23 +178,33 @@ namespace litl
         std::unordered_map<EntityId, uint32_t> entityToCellSlot;
 
         /// <summary>
-        /// Returns the grid-local x-position (as an integer) for the given world-x.
+        /// Returns the index of the cell along the x-axis that the specified world position-x fits into.
         /// </summary>
         /// <param name="worldX"></param>
         /// <returns></returns>
-        [[nodiscard]] uint32_t getGridLocalX(float worldX) const noexcept
+        [[nodiscard]] uint32_t getCellIndexX(float worldX) const noexcept
         {
-            return clamp(static_cast<uint32_t>(worldX), 0u, options.cellCount - 1u);
+            const auto gridSize = static_cast<float>(options.cellCount * options.cellSize);
+            const auto localX = worldX - options.origin.x();
+            const auto localClampedX = clamp(localX, 0.0f, gridSize);
+            const auto cellIndex = static_cast<uint32_t>(localClampedX / static_cast<float>(options.cellSize));
+
+            return min(cellIndex, options.cellCount - 1);
         }
 
         /// <summary>
-        /// Returns the grid-local z-position (as an integer) for the given world-z.
+        /// Returns the index of the cell along the z-axis that the specified world position-z fits into.
         /// </summary>
         /// <param name="worldZ"></param>
         /// <returns></returns>
-        [[nodiscard]] uint32_t getGridLocalZ(float worldZ) const noexcept
+        [[nodiscard]] uint32_t getCellIndexZ(float worldZ) const noexcept
         {
-            return clamp(static_cast<uint32_t>(worldZ), 0u, options.cellCount - 1u);
+            const auto gridSize = static_cast<float>(options.cellCount * options.cellSize);
+            const auto localZ = worldZ - options.origin.z();
+            const auto localClampedZ = clamp(localZ, 0.0f, gridSize);
+            const auto cellIndex = static_cast<uint32_t>(localClampedZ / static_cast<float>(options.cellSize));
+
+            return min(cellIndex, options.cellCount - 1);
         }
 
         /// <summary>
@@ -218,8 +225,8 @@ namespace litl
         /// <returns></returns>
         [[nodiscard]] uint32_t getIndex(vec3 point) const noexcept
         {
-            const auto gridLocalX = getGridLocalX(point.x());
-            const auto gridLocalZ = getGridLocalZ(point.z());
+            const auto gridLocalX = getCellIndexX(point.x());
+            const auto gridLocalZ = getCellIndexZ(point.z());
             return (gridLocalX + (gridLocalZ * options.cellCount));
         }
 
@@ -230,7 +237,7 @@ namespace litl
         /// <param name="bounds"></param>
         void add(Entity entity, bounds::AABB bounds)
         {
-            LITL_ASSERT_MSG(entityToCell.find(entity.index) != entityToCell.end(), "Attempting to add Entity to UniformGridPartition whose index is already tracked.", );
+            LITL_ASSERT_MSG(entityToCell.find(entity.index) == entityToCell.end(), "Attempting to add Entity to UniformGridPartition whose index is already tracked.", );
 
             const uint32_t cellIndex = getIndex(bounds.center());
             addEntityTo(entity, bounds, cellIndex);
@@ -250,17 +257,17 @@ namespace litl
             }
 
             const auto cellIndex = findEntity->second;
-            const auto cellSlot = entityToCellSlot.find(cellIndex)->second;
+            const auto cellSlot = entityToCellSlot.find(entity.index)->second;
 
             auto& cell = cells[cellIndex];
 
-            if (cell.entities[cellSlot].index > entity.index)
+            if (cell.entities[cellSlot].version > entity.version)
             {
                 // The entity tracked is newer than the one being requested to remove.
                 return;
             }
 
-            removeEntityFrom(cellIndex, cellSlot);
+            removeEntityFrom(entity, cellIndex, cellSlot);
         }
 
         /// <summary>
@@ -290,7 +297,7 @@ namespace litl
             else
             {
                 // The entity has moved cells. Remove from its current cell and add to the new one.
-                removeEntityFrom(prevEntityIndex, prevEntitySlot);
+                removeEntityFrom(entity, prevEntityIndex, prevEntitySlot);
                 addEntityTo(entity, bounds, currEntityIndex);
             }
         }
@@ -302,11 +309,11 @@ namespace litl
         /// <param name="entities"></param>
         void query(bounds::AABB aabb, std::vector<Entity>& entities) const noexcept
         {
-            const uint32_t startX = getGridLocalX(aabb.min.x());
-            const uint32_t endX = getGridLocalX(aabb.max.x());
+            const uint32_t startX = getCellIndexX(aabb.min.x());
+            const uint32_t endX = getCellIndexX(aabb.max.x());
 
-            const uint32_t startZ = getGridLocalZ(aabb.min.z());
-            const uint32_t endZ = getGridLocalZ(aabb.max.z());
+            const uint32_t startZ = getCellIndexZ(aabb.min.z());
+            const uint32_t endZ = getCellIndexZ(aabb.max.z());
 
             for (uint32_t z = startZ; z <= endZ; ++z)
             {
@@ -324,11 +331,11 @@ namespace litl
         /// <param name="entities"></param>
         void query(bounds::Sphere sphere, std::vector<Entity>& entities) const noexcept
         {
-            const uint32_t startX = getGridLocalX(sphere.center.x() - sphere.radius);
-            const uint32_t endX = getGridLocalX(sphere.center.x() + sphere.radius);
+            const uint32_t startX = getCellIndexX(sphere.center.x() - sphere.radius);
+            const uint32_t endX = getCellIndexX(sphere.center.x() + sphere.radius);
 
-            const uint32_t startZ = getGridLocalZ(sphere.center.z() - sphere.radius);
-            const uint32_t endZ = getGridLocalZ(sphere.center.z() + sphere.radius);
+            const uint32_t startZ = getCellIndexZ(sphere.center.z() - sphere.radius);
+            const uint32_t endZ = getCellIndexZ(sphere.center.z() + sphere.radius);
 
             for (uint32_t z = startZ; z <= endZ; ++z)
             {
@@ -346,9 +353,21 @@ namespace litl
         /// <param name="entities"></param>
         void query(bounds::Frustum const& frustum, std::vector<Entity>& entities) const noexcept
         {
-            for (auto& cell : cells)
+            const bounds::AABB frustumAABB = bounds::computeAABB(frustum);
+
+            // same logic as in query(aabb, entities)
+            const uint32_t startX = getCellIndexX(frustumAABB.min.x());
+            const uint32_t endX = getCellIndexX(frustumAABB.max.x());
+
+            const uint32_t startZ = getCellIndexZ(frustumAABB.min.z());
+            const uint32_t endZ = getCellIndexZ(frustumAABB.max.z());
+
+            for (uint32_t z = startZ; z <= endZ; ++z)
             {
-                cell.query(frustum, entities);
+                for (uint32_t x = startX; x <= endX; ++x)
+                {
+                    cells[x + (z * options.cellCount)].query(frustum, entities);
+                }
             }
         }
 
@@ -376,19 +395,26 @@ namespace litl
         /// </summary>
         /// <param name="cellIndex"></param>
         /// <param name="cellSlot"></param>
-        void removeEntityFrom(uint32_t cellIndex, uint32_t cellSlot) noexcept
+        void removeEntityFrom(Entity entity, uint32_t cellIndex, uint32_t cellSlot) noexcept
         {
             auto& cell = cells[cellIndex];
-            const auto swappedEntity = cell.entities.back();
-            const auto swappedAABB = cell.entityBounds.back();
+            const auto lastSlot = cell.count() - 1;
 
-            cell.entities[cellSlot] = swappedEntity;
-            cell.entityBounds[cellSlot] = swappedAABB;
-            entityToCell[swappedEntity.index] = cellIndex;
-            entityToCellSlot[swappedEntity.index] = cellSlot;
+            if (cellSlot != lastSlot)
+            {
+                const auto swappedEntity = cell.entities.back();
+                const auto swappedAABB = cell.entityBounds.back();
+
+                cell.entities[cellSlot] = swappedEntity;
+                cell.entityBounds[cellSlot] = swappedAABB;
+                entityToCell[swappedEntity.index] = cellIndex;
+                entityToCellSlot[swappedEntity.index] = cellSlot;
+            }
 
             cell.entities.pop_back();
             cell.entityBounds.pop_back();
+            entityToCell.erase(entity.index);
+            entityToCellSlot.erase(entity.index);
         }
     };
 
@@ -406,10 +432,10 @@ namespace litl
             for (auto x = 0u; x < options.cellCount; ++x)
             {
                 m_impl->cells.emplace_back(
-                    static_cast<float>(x * options.cellSize), 
-                    static_cast<float>(z * options.cellSize), 
-                    static_cast<float>(options.cellSize), 
-                    options.yMin, 
+                    options.origin.x() + static_cast<float>(x * options.cellSize),
+                    options.origin.z() + static_cast<float>(z * options.cellSize),
+                    static_cast<float>(options.cellSize),
+                    options.yMin,
                     options.yMax);
             }
         }

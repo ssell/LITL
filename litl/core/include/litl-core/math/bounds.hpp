@@ -540,6 +540,32 @@ namespace litl::bounds
     {
         return classify(frustum, aabb).type() != IntersectionType::Outside;
     }
+
+    // -------------------------------------------------------------------------------------
+    // Compute
+    // -------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// Returns a Spherw which encloses the provided AABB.
+    /// </summary>
+    /// <param name="aabb"></param>
+    /// <returns></returns>
+    [[nodiscard]] constexpr Sphere computeSphere(AABB const& aabb) noexcept
+    {
+        return Sphere::fromCenterRadius(aabb.center(), aabb.halfExtents().length());
+    }
+
+    /// <summary>
+    /// Returns an AABB which encloses the provided Frustum.
+    /// </summary>
+    /// <param name="frustum"></param>
+    /// <returns></returns>
+    [[nodiscard]] constexpr AABB computeAABB(Frustum const& frustum) noexcept
+    {
+        auto corners = Frustum::extractCorners(frustum);
+        return AABB::fromMinMax(corners.calculateMinPoint(), corners.calculateMaxPoint());
+        
+    }
 }
 
 #endif

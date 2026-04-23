@@ -24,6 +24,8 @@ namespace litl
         static constexpr float deg_to_rad = 0.0174533f;
         static constexpr float rad_to_deg = 57.2958f;
         static constexpr float phi = 1.6180339887f;
+        static constexpr float sqrt_two = 1.41421356237f;
+        static constexpr float sqrt_three = 1.73205080757f;
     };
 
     template<>
@@ -37,6 +39,8 @@ namespace litl
         static constexpr double deg_to_rad = 0.0174533;
         static constexpr double rad_to_deg = 57.2958;
         static constexpr double phi = 1.6180339887;
+        static constexpr double sqrt_two = 1.41421356237;
+        static constexpr double sqrt_three = 1.73205080757;
     };
 }
 
