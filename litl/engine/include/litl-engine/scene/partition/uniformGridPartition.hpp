@@ -70,14 +70,12 @@ namespace litl
     public:
 
         UniformGridPartition(UniformGridOptions options);
-        ~UniformGridPartition();
-
         UniformGridPartition(UniformGridPartition const&) = delete;
         UniformGridPartition& operator=(UniformGridPartition const&) = delete;
 
         void add(Entity entity, bounds::AABB aabb) noexcept;
-        void remove(Entity entity, bounds::AABB bounds) noexcept;
-        void update(Entity entity, bounds::AABB prev, bounds::AABB curr) noexcept;
+        void remove(Entity entity) noexcept;
+        void update(Entity entity, bounds::AABB bounds) noexcept;
         void query(bounds::AABB aabb, std::vector<Entity>& entities) const noexcept;
         void query(bounds::Sphere sphere, std::vector<Entity>& entities) const noexcept;
         void query(bounds::Frustum const& frustum, std::vector<Entity>& entities) const noexcept;
@@ -104,7 +102,7 @@ namespace litl
 
     private:
 
-        struct Impl; ImplPtr<Impl, 64> m_impl;
+        struct Impl; ImplPtr<Impl, 256> m_impl;
     };
 
     static_assert(ScenePartition<UniformGridPartition>);
