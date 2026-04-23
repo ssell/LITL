@@ -4,15 +4,11 @@
 
 namespace litl
 {
-    struct CellEntry
-    {
-        Entity entity;
-        bounds::AABB aabb;
-    };
-
     struct GridCell
     {
-        std::vector<CellEntry> entries;
+        std::unordered_map<EntityId, uint32_t> entityIndices;
+        std::vector<Entity> entityEntries;
+        std::vector<bounds::AABB> entityBounds;
 
         GridCell(float x, float z, float size, float yMin, float yMax)
             : cellBounds(bounds::AABB::fromMinMax(vec3{x, yMin, z}, vec3{x + size, yMax, z + size}))
@@ -22,21 +18,62 @@ namespace litl
 
         void add(Entity entity, bounds::AABB bounds) noexcept
         {
-            entries.emplace_back(entity, bounds);
+            auto find = entityIndices.find(entity.index);
+            uint32_t index = 0;
+
+            if (find != entityIndices.end())
+            {
+                // entity already exists in the graph
+                index = find->second;
+                Entity prevEntity = entityEntries[index];
+
+                if (entity.index <= prevEntity.index)
+                {
+                    // Same exact entity or an older version of it. Do nothing.
+                    return;
+                }
+                else
+                {
+                    // Newer version of the entity. Do nothing and overwrite it below.
+                }
+            }
+            else
+            {
+                index = entityEntries.size();
+            }
+
+            entityIndices[entity.index] = index;
+            
+            if (entityEntries.size() > index)
+            {
+                entityEntries[index] = entity;
+                entityBounds[index] = bounds;
+            }
+            else
+            {
+                entityEntries.push_back(entity);
+                entityBounds.push_back(bounds);
+            }
         }
 
         void remove(Entity entity) noexcept
         {
-            auto find = std::find_if(entries.begin(), entries.end(), [entity](CellEntry const& entry)
-                {
-                    return entity == entry.entity;
-                });
+            auto find = entityIndices.find(entity.index);
 
-            if (find != entries.end())
+            if (find != entityIndices.end())
             {
-                // swap in the last entry into this one's spot, and then remove (the now duplicated) last entry
-                *find = entries.back();
-                entries.pop_back();
+                // Swap with the entity at the end and then pop the back
+                const uint32_t index = find->second;
+                const uint32_t lastIndex = entityEntries.size() - 1;
+                const Entity lastEntity = entityEntries[lastIndex];
+
+                entityIndices[lastEntity.index] = index;
+                entityEntries[index] = entityEntries[lastIndex];
+                entityBounds[index] = entityBounds[lastIndex];
+
+                entityIndices.erase(find);
+                entityEntries.pop_back();
+                entityBounds.pop_back();
             }
         }
 
@@ -53,11 +90,11 @@ namespace litl
 
             // The cell intersects the AABB, so add some
             case bounds::IntersectionType::Intersects:
-                for (CellEntry const& entry : entries)
+                for (uint32_t i = 0u; i < count(); ++i)
                 {
-                    if (bounds::intersects(aabb, entry.aabb))       // intersects returns true for both true intersection (straddle) and containment
+                    if (bounds::intersects(aabb, entityBounds[i]))      // intersects returns true for both true intersection (straddle) and containment
                     {
-                        entities.push_back(entry.entity);
+                        entities.push_back(entityEntries[i]);
                     }
                 }
                 break;
@@ -82,11 +119,11 @@ namespace litl
 
                 // The cell intersects the Sphere, so add some
             case bounds::IntersectionType::Intersects:
-                for (CellEntry const& entry : entries)
+                for (uint32_t i = 0u; i < count(); ++i)
                 {
-                    if (bounds::intersects(sphere, entry.aabb))       // intersects returns true for both true intersection (straddle) and containment
+                    if (bounds::intersects(sphere, entityBounds[i]))        // intersects returns true for both true intersection (straddle) and containment
                     {
-                        entities.push_back(entry.entity);
+                        entities.push_back(entityEntries[i]);
                     }
                 }
                 break;
@@ -111,11 +148,11 @@ namespace litl
 
                 // The cell intersects the Frustum, so add some
             case bounds::IntersectionType::Intersects:
-                for (CellEntry const& entry : entries)
+                for (uint32_t i = 0u; i < count(); ++i)
                 {
-                    if (bounds::intersects(frustum, entry.aabb))       // intersects returns true for both true intersection (straddle) and containment
+                    if (bounds::intersects(frustum, entityBounds[i]))       // intersects returns true for both true intersection (straddle) and containment
                     {
-                        entities.push_back(entry.entity);
+                        entities.push_back(entityEntries[i]);
                     }
                 }
                 break;
@@ -127,13 +164,18 @@ namespace litl
             }
         }
 
+        [[nodiscard]] uint32_t count() const noexcept
+        {
+            return static_cast<uint32_t>(entityEntries.size());
+        }
+
     private:
 
         void addAllTo(std::vector<Entity>& entities) const noexcept
         {
-            for (CellEntry const& entry : entries)
+            for (Entity entity : entityEntries)
             {
-                entities.push_back(entry.entity);
+                entities.push_back(entity);
             }
         }
 
