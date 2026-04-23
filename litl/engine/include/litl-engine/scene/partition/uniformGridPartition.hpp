@@ -73,11 +73,46 @@ namespace litl
         UniformGridPartition(UniformGridPartition const&) = delete;
         UniformGridPartition& operator=(UniformGridPartition const&) = delete;
 
+        /// <summary>
+        /// Adds the entity to the grid.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="aabb"></param>
         void add(Entity entity, bounds::AABB aabb) noexcept;
+
+        /// <summary>
+        /// Removes the entity from the grid.
+        /// </summary>
+        /// <param name="entity"></param>
         void remove(Entity entity) noexcept;
+
+        /// <summary>
+        /// Updates the bounds of the entity in the grid.
+        /// As a result of this, the entity may be moved to a different cell if it has moved sufficiently enough.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="bounds"></param>
         void update(Entity entity, bounds::AABB bounds) noexcept;
+
+        /// <summary>
+        /// Queries for all entities in the grid that intersect the specified AABB.
+        /// </summary>
+        /// <param name="aabb"></param>
+        /// <param name="entities"></param>
         void query(bounds::AABB aabb, std::vector<Entity>& entities) const noexcept;
+
+        /// <summary>
+        /// Queries for all entities in the grid that intersect the specified Sphere.
+        /// </summary>
+        /// <param name="sphere"></param>
+        /// <param name="entities"></param>
         void query(bounds::Sphere sphere, std::vector<Entity>& entities) const noexcept;
+
+        /// <summary>
+        /// Queries for all entities in the grid that intersect the specified Frustum.
+        /// </summary>
+        /// <param name="frustum"></param>
+        /// <param name="entities"></param>
         void query(bounds::Frustum const& frustum, std::vector<Entity>& entities) const noexcept;
 
         /// <summary>
