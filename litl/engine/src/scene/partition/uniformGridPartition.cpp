@@ -4,9 +4,20 @@
 
 namespace litl
 {
+    /// <summary>
+    /// Represents a single cell within the grid.
+    /// Each cell contains a list of entities and their AABB bounds.
+    /// </summary>
     struct GridCell
     {
+        /// <summary>
+        /// All entities in the cell.
+        /// </summary>
         std::vector<Entity> entities;
+
+        /// <summary>
+        /// The bounds for each entity in the cell.
+        /// </summary>
         std::vector<bounds::AABB> entityBounds;
 
         GridCell(float x, float z, float size, float yMin, float yMax)
@@ -15,6 +26,11 @@ namespace litl
 
         }
 
+        /// <summary>
+        /// Queries for all entities in the cell that intersect the specified AABB.
+        /// </summary>
+        /// <param name="aabb"></param>
+        /// <param name="entities"></param>
         void query(bounds::AABB aabb, std::vector<Entity>& entities) const noexcept
         {
             const auto intersection = bounds::classify(aabb, cellBounds);
@@ -44,6 +60,11 @@ namespace litl
             }
         }
 
+        /// <summary>
+        /// Queries for all entities in the cell that intersect the specified Sphere.
+        /// </summary>
+        /// <param name="sphere"></param>
+        /// <param name="entities"></param>
         void query(bounds::Sphere sphere, std::vector<Entity>& entities) const noexcept
         {
             const auto intersection = bounds::classify(sphere, cellBounds);
@@ -73,6 +94,11 @@ namespace litl
             }
         }
 
+        /// <summary>
+        /// Queries for all entities in the cell that intersect the specified Frustum.
+        /// </summary>
+        /// <param name="frustum"></param>
+        /// <param name="entities"></param>
         void query(bounds::Frustum const& frustum, std::vector<Entity>& entities) const noexcept
         {
             const auto classification = bounds::classify(frustum, cellBounds);
@@ -102,6 +128,10 @@ namespace litl
             }
         }
 
+        /// <summary>
+        /// Returns the number of entities within the cell.
+        /// </summary>
+        /// <returns></returns>
         [[nodiscard]] uint32_t count() const noexcept
         {
             return static_cast<uint32_t>(entities.size());
@@ -109,6 +139,10 @@ namespace litl
 
     private:
 
+        /// <summary>
+        /// Adds all entities in the cell to the vector.
+        /// </summary>
+        /// <param name="entities"></param>
         void addAllTo(std::vector<Entity>& entities) const noexcept
         {
             for (Entity const& entity : entities)
@@ -117,7 +151,10 @@ namespace litl
             }
         }
 
-        bounds::AABB cellBounds;
+        /// <summary>
+        /// The AABB bounds of the cell.
+        /// </summary>
+        const bounds::AABB cellBounds;
     };
 
     struct UniformGridPartition::Impl
@@ -143,21 +180,42 @@ namespace litl
         /// </summary>
         std::unordered_map<EntityId, uint32_t> entityToCellSlot;
 
+        /// <summary>
+        /// Returns the grid-local x-position (as an integer) for the given world-x.
+        /// </summary>
+        /// <param name="worldX"></param>
+        /// <returns></returns>
         [[nodiscard]] uint32_t getGridLocalX(float worldX) const noexcept
         {
             return clamp(static_cast<uint32_t>(worldX), 0u, options.cellCount - 1u);
         }
 
+        /// <summary>
+        /// Returns the grid-local z-position (as an integer) for the given world-z.
+        /// </summary>
+        /// <param name="worldZ"></param>
+        /// <returns></returns>
         [[nodiscard]] uint32_t getGridLocalZ(float worldZ) const noexcept
         {
             return clamp(static_cast<uint32_t>(worldZ), 0u, options.cellCount - 1u);
         }
 
+        /// <summary>
+        /// Returns the linear cell index for the given 2D cell index.
+        /// </summary>
+        /// <param name="cellX"></param>
+        /// <param name="cellZ"></param>
+        /// <returns></returns>
         [[nodiscard]] uint32_t getIndex(uint32_t cellX, uint32_t cellZ) const noexcept
         {
             return clamp(cellX, 0u, options.cellCount - 1u) + (clamp(cellZ, 0u, options.cellCount - 1u) * options.cellCount);
         }
 
+        /// <summary>
+        /// Returns the index of the cell that contains (or clamps) the specified point.
+        /// </summary>
+        /// <param name="point"></param>
+        /// <returns></returns>
         [[nodiscard]] uint32_t getIndex(vec3 point) const noexcept
         {
             const auto gridLocalX = getGridLocalX(point.x());
@@ -165,6 +223,11 @@ namespace litl
             return (gridLocalX + (gridLocalZ * options.cellCount));
         }
 
+        /// <summary>
+        /// Adds the entity to the grid.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="bounds"></param>
         void add(Entity entity, bounds::AABB bounds)
         {
             LITL_ASSERT_MSG(entityToCell.find(entity.index) != entityToCell.end(), "Attempting to add Entity to UniformGridPartition whose index is already tracked.", );
@@ -173,6 +236,10 @@ namespace litl
             addEntityTo(entity, bounds, cellIndex);
         }
 
+        /// <summary>
+        /// Removes the entity from the grid.
+        /// </summary>
+        /// <param name="entity"></param>
         void remove(Entity entity)
         {
             const auto findEntity = entityToCell.find(entity.index);
@@ -196,6 +263,12 @@ namespace litl
             removeEntityFrom(cellIndex, cellSlot);
         }
 
+        /// <summary>
+        /// Updates the bounds of the entity in the grid.
+        /// As a result of this, the entity may be moved to a different cell if it has moved sufficiently enough.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="bounds"></param>
         void update(Entity entity, bounds::AABB bounds)
         {
             const auto findEntity = entityToCell.find(entity.index);
@@ -222,6 +295,11 @@ namespace litl
             }
         }
 
+        /// <summary>
+        /// Queries for all entities in the grid that intersect the specified AABB.
+        /// </summary>
+        /// <param name="aabb"></param>
+        /// <param name="entities"></param>
         void query(bounds::AABB aabb, std::vector<Entity>& entities) const noexcept
         {
             const uint32_t startX = getGridLocalX(aabb.min.x());
@@ -239,6 +317,11 @@ namespace litl
             }
         }
 
+        /// <summary>
+        /// Queries for all entities in the grid that intersect the specified Sphere.
+        /// </summary>
+        /// <param name="sphere"></param>
+        /// <param name="entities"></param>
         void query(bounds::Sphere sphere, std::vector<Entity>& entities) const noexcept
         {
             const uint32_t startX = getGridLocalX(sphere.center.x() - sphere.radius);
@@ -256,6 +339,11 @@ namespace litl
             }
         }
 
+        /// <summary>
+        /// Queries for all entities in the grid that intersect the specified Frustum.
+        /// </summary>
+        /// <param name="frustum"></param>
+        /// <param name="entities"></param>
         void query(bounds::Frustum const& frustum, std::vector<Entity>& entities) const noexcept
         {
             for (auto& cell : cells)
@@ -266,6 +354,12 @@ namespace litl
 
     private:
 
+        /// <summary>
+        /// Adds the entity to the specified cell.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="bounds"></param>
+        /// <param name="cellIndex"></param>
         void addEntityTo(Entity entity, bounds::AABB bounds, uint32_t cellIndex) noexcept
         {
             entityToCell[entity.index] = cellIndex;
@@ -274,6 +368,14 @@ namespace litl
             cells[cellIndex].entityBounds.push_back(bounds);
         }
 
+        /// <summary>
+        /// Removes the entity from the specified cell.
+        /// 
+        /// This removal is performed via swap-and-pop and so the last entity in the cell
+        /// is swapped into the slot occupied by the entity being removed.
+        /// </summary>
+        /// <param name="cellIndex"></param>
+        /// <param name="cellSlot"></param>
         void removeEntityFrom(uint32_t cellIndex, uint32_t cellSlot) noexcept
         {
             auto& cell = cells[cellIndex];
