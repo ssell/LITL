@@ -230,6 +230,17 @@ namespace litl::bounds
     }
 
     /// <summary>
+    /// Returns true if the sphere fully contains or partially intersects the AABB.
+    /// </summary>
+    /// <param name="sphere"></param>
+    /// <param name="aabb"></param>
+    /// <returns></returns>
+    [[nodiscard]] constexpr bool intersects(Sphere sphere, AABB aabb) noexcept
+    {
+        return aabb.distanceSqTo(sphere.center) <= (sphere.radius * sphere.radius);
+    }
+
+    /// <summary>
     /// Classifies if the second AABB is inside, outside, or intersects the first.
     /// </summary>
     /// <param name="aabb"></param>
