@@ -224,9 +224,13 @@ namespace litl::bounds
     /// <param name="aabb"></param>
     /// <param name="other"></param>
     /// <returns></returns>
-    [[nodiscard]] constexpr bool intersects(AABB aabb, AABB other) noexcept
+    [[nodiscard]] constexpr bool intersects(AABB a, AABB b) noexcept
     {
-        return contains(aabb, other.min) || contains(aabb, other.max);
+        return
+            (a.min.x() <= b.max.x() && a.max.x() >= b.min.x()) &&
+            (a.min.y() <= b.max.y() && a.max.y() >= b.min.y()) &&
+            (a.min.z() <= b.max.z() && a.max.z() >= b.min.z());
+
     }
 
     /// <summary>
@@ -255,13 +259,16 @@ namespace litl::bounds
         {
             return IntersectionType::Inside;
         }
-        else if (!minInside && !maxInside)
-        {
-            return IntersectionType::Outside;
-        }
         else
         {
-            return IntersectionType::Intersects;
+            if (intersects(aabb, other))
+            {
+                return IntersectionType::Intersects;
+            }
+            else
+            {
+                return IntersectionType::Outside;
+            }
         }
     }
 

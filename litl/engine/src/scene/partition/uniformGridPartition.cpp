@@ -569,6 +569,11 @@ namespace litl
         return m_impl->cells[m_impl->getIndex(cellX, cellZ)].count();
     }
 
+    uint32_t UniformGridPartition::getOversizedCellPopulation() const noexcept
+    {
+        return m_impl->getOversizedCell().count();
+    }
+
     uint32_t UniformGridPartition::getGridPopulation() const noexcept
     {
         return static_cast<uint32_t>(m_impl->entityToCell.size());
@@ -595,7 +600,7 @@ namespace litl
             .entity = m_impl->cells[cellIndex].entities[cellSlot],
             .bounds = m_impl->cells[cellIndex].entityBounds[cellSlot],
             .cellIndex = cellIndex,
-            .isLarge = m_impl->isOversized(m_impl->cells[cellIndex].entityBounds[cellSlot])
+            .isOversized = m_impl->isOversized(m_impl->cells[cellIndex].entityBounds[cellSlot])
         };
     }
 }
