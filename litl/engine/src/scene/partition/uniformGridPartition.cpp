@@ -162,6 +162,11 @@ namespace litl
         UniformGridOptions options;
 
         /// <summary>
+        /// The squared radius/half-extents threshold at which an entity is considered oversized.
+        /// </summary>
+        float oversizedEntityThreshold{ 1.0f };
+
+        /// <summary>
         /// All grid cells stored in row order.
         /// For example: [x0y0, x1y0, x2y0, x3y0, x0y1, x1y1, x2y1, x3y1, ...]
         /// </summary>
@@ -223,11 +228,29 @@ namespace litl
         /// </summary>
         /// <param name="point"></param>
         /// <returns></returns>
-        [[nodiscard]] uint32_t getIndex(vec3 point) const noexcept
+        [[nodiscard]] uint32_t getIndexForPoint(vec3 point) const noexcept
         {
             const auto gridLocalX = getCellIndexX(point.x());
             const auto gridLocalZ = getCellIndexZ(point.z());
             return (gridLocalX + (gridLocalZ * options.cellCount));
+        }
+
+        /// <summary>
+        /// Returns the index of the cell that the bounds would go into.
+        /// If the bounds is considered oversized, then the oversized cell index is returned.
+        /// </summary>
+        /// <param name="bounds"></param>
+        /// <returns></returns>
+        [[nodiscard]] uint32_t getIndexForBounds(bounds::AABB bounds) const noexcept
+        {
+            if (isOversized(bounds))
+            {
+                return getOversizedCellIndex();
+            }
+            else
+            {
+                return getIndexForPoint(bounds.center());
+            }
         }
 
         /// <summary>
@@ -238,9 +261,7 @@ namespace litl
         void add(Entity entity, bounds::AABB bounds)
         {
             LITL_ASSERT_MSG(entityToCell.find(entity.index) == entityToCell.end(), "Attempting to add Entity to UniformGridPartition whose index is already tracked.", );
-
-            const uint32_t cellIndex = getIndex(bounds.center());
-            addEntityTo(entity, bounds, cellIndex);
+            addEntityTo(entity, bounds, getIndexForBounds(bounds));
         }
 
         /// <summary>
@@ -287,7 +308,7 @@ namespace litl
 
             const auto prevEntityIndex = findEntity->second;
             const auto prevEntitySlot = entityToCellSlot.find(entity.index)->second;
-            const auto currEntityIndex = getIndex(bounds.center());
+            const auto currEntityIndex = getIndexForBounds(bounds);
 
             if (currEntityIndex == prevEntityIndex)
             {
@@ -322,6 +343,8 @@ namespace litl
                     cells[x + (z * options.cellCount)].query(aabb, entities);
                 }
             }
+
+            getOversizedCell().query(aabb, entities);
         }
 
         /// <summary>
@@ -344,6 +367,8 @@ namespace litl
                     cells[x + (z * options.cellCount)].query(sphere, entities);
                 }
             }
+
+            getOversizedCell().query(sphere, entities);
         }
 
         /// <summary>
@@ -369,6 +394,42 @@ namespace litl
                     cells[x + (z * options.cellCount)].query(frustum, entities);
                 }
             }
+
+            getOversizedCell().query(frustum, entities);
+        }
+
+        /// <summary>
+        /// Determine if the entity is considered oversized based on it's size across the XZ plane.
+        /// </summary>
+        /// <param name="bounds"></param>
+        /// <returns></returns>
+        bool isOversized(bounds::AABB bounds) const noexcept
+        {
+            const float xHalfExtents = (bounds.max.x() - bounds.min.x()) * 0.5f;
+            const float xHalfExtentsSq = xHalfExtents * xHalfExtents;
+
+            const float zHalfExtents = (bounds.max.z() - bounds.min.z()) * 0.5f;
+            const float zHalfExtentsSq = zHalfExtents * zHalfExtents;
+
+            return (xHalfExtentsSq >= oversizedEntityThreshold) || (zHalfExtentsSq >= oversizedEntityThreshold);
+        }
+
+        /// <summary>
+        /// Returns the index of the extra "overflow" cell that contains oversized entities.
+        /// </summary>
+        /// <returns></returns>
+        uint32_t getOversizedCellIndex() const noexcept
+        {
+            return cells.size() - 1;
+        }
+
+        /// <summary>
+        /// Returns the extra "overflow" cell that contains oversized entities.
+        /// </summary>
+        /// <returns></returns>
+        GridCell const& getOversizedCell() const noexcept
+        {
+            return cells.back();
         }
 
     private:
@@ -439,6 +500,17 @@ namespace litl
                     options.yMax);
             }
         }
+
+        // add one extra cell at the back to contain oversized entities
+        m_impl->cells.emplace_back(
+            options.origin.x(),
+            options.origin.z(),
+            static_cast<float>(options.cellCount * options.cellSize),
+            options.yMin,
+            options.yMax
+        );
+
+        m_impl->oversizedEntityThreshold = static_cast<float>(options.cellSize * options.cellSize) * 0.5f;
     }
 
     void UniformGridPartition::add(Entity entity, bounds::AABB bounds) noexcept
@@ -484,5 +556,41 @@ namespace litl
     uint32_t UniformGridPartition::getWorldSize() const noexcept
     {
         return (m_impl->options.cellSize * m_impl->options.cellCount);
+    }
+
+    uint32_t UniformGridPartition::getCellPopulation(uint32_t cellX, uint32_t cellZ) const noexcept
+    {
+        LITL_ASSERT_MSG((cellX < m_impl->options.cellCount) && (cellZ < m_impl->options.cellCount), "Requested cell for UniformGridPartition is out-of-bounds", 0);
+        return m_impl->cells[m_impl->getIndex(cellX, cellZ)].count();
+    }
+
+    uint32_t UniformGridPartition::getGridPopulation() const noexcept
+    {
+        return static_cast<uint32_t>(m_impl->entityToCell.size());
+    }
+
+    std::pair<uint32_t, uint32_t> UniformGridPartition::getCellIndex(vec3 worldPos) const noexcept
+    {
+        return { m_impl->getCellIndexX(worldPos.x()), m_impl->getCellIndexZ(worldPos.z()) };
+    }
+
+    std::optional<UniformGridEntityInfo> UniformGridPartition::getEntityInfo(EntityId entityId) const noexcept
+    {
+        const auto findCell = m_impl->entityToCell.find(entityId);
+
+        if (findCell == m_impl->entityToCell.end())
+        {
+            return std::nullopt;
+        }
+
+        const auto cellIndex = findCell->second;
+        const auto cellSlot = m_impl->entityToCellSlot.find(entityId)->second;
+
+        return UniformGridEntityInfo{
+            .entity = m_impl->cells[cellIndex].entities[cellSlot],
+            .bounds = m_impl->cells[cellIndex].entityBounds[cellSlot],
+            .cellIndex = cellIndex,
+            .isLarge = m_impl->isOversized(m_impl->cells[cellIndex].entityBounds[cellSlot])
+        };
     }
 }

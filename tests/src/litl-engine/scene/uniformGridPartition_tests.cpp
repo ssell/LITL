@@ -14,7 +14,7 @@ namespace litl::tests
         REQUIRE(validOptions.isValid() == true);
     } LITL_END_TEST_CASE
     
-        LITL_TEST_CASE("UniformGridOptions fromWorldSize", "[engine::scene::uniformScenePartition]")
+    LITL_TEST_CASE("UniformGridOptions fromWorldSize", "[engine::scene::uniformScenePartition]")
     {
         // world size expected to size up to 1024 and cell size up to 2 which results in a cell count of (1024/2) = 512
         UniformGridOptions options0 = UniformGridOptions::fromWorldSize(1000u, 1u);
