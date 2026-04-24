@@ -1,6 +1,7 @@
 #ifndef LITL_ENGINE_SCENE_PARTITION_H__
 #define LITL_ENGINE_SCENE_PARTITION_H__
 
+#include <cstdint>
 #include <concepts>
 #include <vector>
 
@@ -42,6 +43,11 @@ namespace litl
         private:
         };    
     */
+
+    enum class ScenePartitionType : uint32_t
+    {
+        UniformGrid = 0u
+    };
 }
 
 #endif

@@ -3,7 +3,7 @@
 
 #include "litl-core/impl.hpp"
 #include "litl-engine/scene/sceneAccessKey.hpp"
-#include "litl-engine/scene/partition/scenePartition.hpp"
+#include "litl-engine/scene/sceneConfig.hpp"
 
 namespace litl
 {
@@ -11,11 +11,10 @@ namespace litl
     {
     public:
 
-        Scene();
+        Scene(SceneConfig const& config);
         ~Scene();
 
         Scene(Scene const&) = delete;
-        Scene(Scene&&) = delete;
         Scene& operator=(Scene const&) = delete;
 
     protected:
@@ -23,7 +22,7 @@ namespace litl
     private:
 
         struct Impl;
-        ImplPtr<Impl, 512> m_impl;
+        ImplPtr<Impl, 768> m_impl;
     };
 }
 

@@ -479,10 +479,25 @@ namespace litl
         }
     };
 
-    UniformGridPartition::UniformGridPartition(UniformGridOptions options)
+    UniformGridPartition::UniformGridPartition()
+    {
+
+    }
+
+    UniformGridPartition::UniformGridPartition(UniformGridOptions const& options)
+    {
+        configure(options);
+    }
+
+    UniformGridPartition::~UniformGridPartition()
+    {
+
+    }
+
+    void UniformGridPartition::configure(UniformGridOptions const& options) noexcept
     {
         LITL_FATAL_ASSERT_MSG(
-            options.isValid(), 
+            options.isValid(),
             "UniformGridPartition must have both .cellSize and .cellCount that are power-of-twos and greater than one.");
 
         m_impl->options = options;
@@ -511,11 +526,6 @@ namespace litl
         );
 
         m_impl->oversizedEntityThreshold = static_cast<float>(options.cellSize * options.cellSize) * 0.5f;
-    }
-
-    UniformGridPartition::~UniformGridPartition()
-    {
-
     }
 
     void UniformGridPartition::add(Entity entity, bounds::AABB bounds) noexcept
