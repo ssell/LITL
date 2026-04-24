@@ -513,6 +513,11 @@ namespace litl
         m_impl->oversizedEntityThreshold = static_cast<float>(options.cellSize * options.cellSize) * 0.5f;
     }
 
+    UniformGridPartition::~UniformGridPartition()
+    {
+
+    }
+
     void UniformGridPartition::add(Entity entity, bounds::AABB bounds) noexcept
     {
         m_impl->add(entity, bounds);

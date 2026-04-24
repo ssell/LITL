@@ -87,6 +87,8 @@ namespace litl
         UniformGridPartition(UniformGridPartition const&) = delete;
         UniformGridPartition& operator=(UniformGridPartition const&) = delete;
 
+        ~UniformGridPartition();
+
         /// <summary>
         /// Adds the entity to the grid.
         /// </summary>

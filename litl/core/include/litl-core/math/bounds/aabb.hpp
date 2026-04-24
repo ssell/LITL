@@ -17,6 +17,11 @@ namespace litl::bounds
         vec3 min{ 0.0f, 0.0f, 0.0f };
         vec3 max{ 0.0f, 0.0f, 0.0f };
 
+        [[nodiscard]] bool operator==(AABB const& other) const noexcept
+        {
+            return (min == other.min) && (max == other.max);
+        }
+
         /// <summary>
         /// Returns the distance between the min/max points.
         /// </summary>
@@ -115,6 +120,11 @@ namespace litl::bounds
         [[nodiscard]] static constexpr AABB fromCenterHalfExtents(vec3 center, vec3 halfExtents) noexcept
         {
             return AABB{ .min = (center - halfExtents), .max = (center + halfExtents) };
+        }
+
+        [[nodiscard]] static constexpr AABB fromPointRadius(vec3 center, float radius) noexcept
+        {
+            return fromCenterHalfExtents(center, vec3{ radius, radius, radius });
         }
 
         [[nodiscard]] static constexpr AABB fromPoints(std::span<vec3 const> points) noexcept
