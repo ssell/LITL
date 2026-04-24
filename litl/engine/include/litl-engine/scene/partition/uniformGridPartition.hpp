@@ -1,6 +1,9 @@
 #ifndef LITL_ENGINE_SCENE_UNIFORM_PARTITION_H__
 #define LITL_ENGINE_SCENE_UNIFORM_PARTITION_H__
 
+#include <optional>
+#include <utility>
+
 #include "litl-core/impl.hpp"
 #include "litl-core/math/common.hpp"
 #include "litl-engine/scene/partition/scenePartition.hpp"
@@ -63,6 +66,17 @@ namespace litl
         {
             return isPow2(cellSize) && isPow2(cellCount) && (cellSize > 1) && (cellCount > 1);
         }
+    };
+
+    /// <summary>
+    /// Information about an entity within the grid.
+    /// </summary>
+    struct UniformGridEntityInfo
+    {
+        Entity entity;
+        bounds::AABB bounds;
+        uint32_t cellIndex{ 0 };
+        bool isLarge{ false };
     };
 
     class UniformGridPartition
@@ -132,6 +146,34 @@ namespace litl
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] uint32_t getWorldSize() const noexcept;
+
+        /// <summary>
+        /// Returns the number of entities in the specified cell.
+        /// </summary>
+        /// <param name="cellX"></param>
+        /// <param name="cellZ"></param>
+        /// <returns></returns>
+        [[nodiscard]] uint32_t getCellPopulation(uint32_t cellX, uint32_t cellZ) const noexcept;
+
+        /// <summary>
+        /// Returns the number of entities in the grid.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] uint32_t getGridPopulation() const noexcept;
+
+        /// <summary>
+        /// Returns the cell which maps to the given world position.
+        /// </summary>
+        /// <param name="worldPos"></param>
+        /// <returns></returns>
+        [[nodiscard]] std::pair<uint32_t, uint32_t> getCellIndex(vec3 worldPos) const noexcept;
+
+        /// <summary>
+        /// Returns information about an entity in the grid, if it is in the grid.
+        /// </summary>
+        /// <param name="entityId"></param>
+        /// <returns></returns>
+        [[nodiscard]] std::optional<UniformGridEntityInfo> getEntityInfo(EntityId entityId) const noexcept;
 
     protected:
 
