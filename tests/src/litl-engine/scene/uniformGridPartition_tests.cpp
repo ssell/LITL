@@ -372,4 +372,226 @@ namespace litl::tests
             }
         }
     } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("remove maintains correct entity tracking after swap", "[engine::scene::uniformGridPartition]")
+    {
+        UniformGridPartition grid{ testOptions };
+
+        // Add three entities to the same cell
+        Entity e0{ .index = 0, .version = 0 };
+        Entity e1{ .index = 1, .version = 0 };
+        Entity e2{ .index = 2, .version = 0 };
+
+        bounds::AABB bounds = bounds::AABB::fromPointRadius(vec3{ 4.0f, 0.0f, 4.0f }, 0.5f);
+
+        grid.add(e0, bounds);
+        grid.add(e1, bounds);
+        grid.add(e2, bounds);
+
+        REQUIRE(grid.getCellPopulation(0, 0) == 3);
+
+        // Remove the first entity — last entity should swap into its slot
+        grid.remove(e0);
+
+        REQUIRE(grid.getCellPopulation(0, 0) == 2);
+        REQUIRE(grid.getEntityInfo(e0.index) == std::nullopt);
+        REQUIRE(grid.getEntityInfo(e1.index).has_value());
+        REQUIRE(grid.getEntityInfo(e2.index).has_value());
+
+        // Remove another — verify the remaining entity is still correctly tracked
+        grid.remove(e1);
+
+        REQUIRE(grid.getCellPopulation(0, 0) == 1);
+        REQUIRE(grid.getEntityInfo(e2.index).has_value());
+
+        // Remove last entity from cell
+        grid.remove(e2);
+
+        REQUIRE(grid.getCellPopulation(0, 0) == 0);
+        REQUIRE(grid.getGridPopulation() == 0);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("query includes oversized entities", "[engine::scene::uniformGridPartition]")
+    {
+        UniformGridPartition grid{ testOptions };
+
+        Entity normal{ .index = 0, .version = 0 };
+        Entity oversized{ .index = 1, .version = 0 };
+
+        bounds::AABB normalBounds = bounds::AABB::fromPointRadius(vec3{ 4.0f, 0.0f, 4.0f }, 1.0f);
+        bounds::AABB oversizedBounds = bounds::AABB::fromPointRadius(vec3{ 4.0f, 0.0f, 4.0f }, 100.0f);
+
+        grid.add(normal, normalBounds);
+        grid.add(oversized, oversizedBounds);
+
+        REQUIRE(grid.getOversizedCellPopulation() == 1);
+
+        // AABB query should find both
+        std::vector<Entity> found;
+        bounds::AABB queryBounds = bounds::AABB::fromMinMax(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 8.0f, 8.0f, 8.0f });
+        grid.query(queryBounds, found);
+
+        REQUIRE(found.size() == 2);
+
+        // Sphere query should find both
+        found.clear();
+        bounds::Sphere querySphere = bounds::Sphere::fromCenterRadius(vec3{ 4.0f, 0.0f, 4.0f }, 5.0f);
+        grid.query(querySphere, found);
+
+        REQUIRE(found.size() == 2);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("query spanning multiple cells", "[engine::scene::uniformGridPartition]")
+    {
+        UniformGridPartition grid{ testOptions };
+
+        // Place entities in different cells
+        Entity e0{ .index = 0, .version = 0 };
+        Entity e1{ .index = 1, .version = 0 };
+        Entity e2{ .index = 2, .version = 0 };
+        Entity e3{ .index = 3, .version = 0 };
+
+        grid.add(e0, bounds::AABB::fromPointRadius(vec3{ 4.0f, 0.0f, 4.0f }, 0.5f));   // cell (0,0)
+        grid.add(e1, bounds::AABB::fromPointRadius(vec3{ 12.0f, 0.0f, 4.0f }, 0.5f));  // cell (1,0)
+        grid.add(e2, bounds::AABB::fromPointRadius(vec3{ 4.0f, 0.0f, 12.0f }, 0.5f));  // cell (0,1)
+        grid.add(e3, bounds::AABB::fromPointRadius(vec3{ 36.0f, 0.0f, 36.0f }, 0.5f)); // cell (4,4)
+
+        // Query that covers cells (0,0) and (1,0) and (0,1) and (1,1)
+        std::vector<Entity> found;
+        bounds::AABB queryBounds = bounds::AABB::fromMinMax(vec3{ 0.0f, -1.0f, 0.0f }, vec3{ 16.0f, 1.0f, 16.0f });
+        grid.query(queryBounds, found);
+
+        // Should find e0, e1, e2 but not e3
+        REQUIRE(found.size() == 3);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("remove ignores stale entity version", "[engine::scene::uniformGridPartition]")
+    {
+        UniformGridPartition grid{ testOptions };
+
+        Entity v1{ .index = 0, .version = 1 };
+        bounds::AABB bounds = bounds::AABB::fromPointRadius(vec3{ 4.0f, 0.0f, 4.0f }, 1.0f);
+
+        grid.add(v1, bounds);
+        REQUIRE(grid.getGridPopulation() == 1);
+
+        // Try to remove with an older version
+        Entity v0{ .index = 0, .version = 0 };
+        grid.remove(v0);
+
+        // Should still be present — stale remove was ignored
+        REQUIRE(grid.getGridPopulation() == 1);
+        REQUIRE(grid.getEntityInfo(v1.index).has_value());
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("remove nonexistent entity is no-op", "[engine::scene::uniformGridPartition]")
+    {
+        UniformGridPartition grid{ testOptions };
+
+        Entity entity{ .index = 42, .version = 0 };
+        grid.remove(entity);
+
+        REQUIRE(grid.getGridPopulation() == 0);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("update nonexistent entity is no-op", "[engine::scene::uniformGridPartition]")
+    {
+        UniformGridPartition grid{ testOptions };
+
+        Entity entity{ .index = 42, .version = 0 };
+        bounds::AABB bounds = bounds::AABB::fromPointRadius(vec3{ 4.0f, 0.0f, 4.0f }, 1.0f);
+
+        grid.update(entity, bounds);
+
+        REQUIRE(grid.getGridPopulation() == 0);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("update bounds within same cell updates stored bounds", "[engine::scene::uniformGridPartition]")
+    {
+        UniformGridPartition grid{ testOptions };
+
+        Entity entity{ .index = 0, .version = 0 };
+        bounds::AABB original = bounds::AABB::fromPointRadius(vec3{ 4.0f, 0.0f, 4.0f }, 1.0f);
+        bounds::AABB updated = bounds::AABB::fromPointRadius(vec3{ 5.0f, 0.0f, 5.0f }, 1.5f);
+
+        grid.add(entity, original);
+        grid.update(entity, updated);
+
+        auto info = grid.getEntityInfo(entity.index);
+        REQUIRE(info.has_value());
+        REQUIRE(info->bounds == updated);
+        REQUIRE(info->cellIndex == 0); // still in same cell
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("many entities in single cell", "[engine::scene::uniformGridPartition]")
+    {
+        UniformGridPartition grid{ testOptions };
+
+        constexpr uint32_t count = 100;
+
+        for (uint32_t i = 0; i < count; ++i)
+        {
+            Entity entity{ .index = i, .version = 0 };
+            bounds::AABB bounds = bounds::AABB::fromPointRadius(vec3{ 4.0f, 0.0f, 4.0f }, 0.1f);
+            grid.add(entity, bounds);
+        }
+
+        REQUIRE(grid.getGridPopulation() == count);
+        REQUIRE(grid.getCellPopulation(0, 0) == count);
+
+        // Query should return all
+        std::vector<Entity> found;
+        bounds::AABB queryBounds = bounds::AABB::fromMinMax(vec3{ 0.0f, -1.0f, 0.0f }, vec3{ 8.0f, 1.0f, 8.0f });
+        grid.query(queryBounds, found);
+
+        REQUIRE(found.size() == count);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("grid with non-zero origin", "[engine::scene::uniformGridPartition]")
+    {
+        UniformGridOptions offsetOptions = testOptions;
+        offsetOptions.origin = vec3{ 100.0f, 0.0f, 200.0f };
+
+        UniformGridPartition grid{ offsetOptions };
+
+        Entity entity{ .index = 0, .version = 0 };
+        bounds::AABB bounds = bounds::AABB::fromPointRadius(vec3{ 104.0f, 0.0f, 204.0f }, 0.5f);
+
+        grid.add(entity, bounds);
+
+        auto cellIndex = grid.getCellIndex(vec3{ 104.0f, 0.0f, 204.0f });
+        REQUIRE(cellIndex.first == 0);
+        REQUIRE(cellIndex.second == 0);
+
+        REQUIRE(grid.getCellPopulation(0, 0) == 1);
+
+        // Query in world space should find it
+        std::vector<Entity> found;
+        bounds::AABB queryBounds = bounds::AABB::fromMinMax(
+            vec3{ 100.0f, -1.0f, 200.0f },
+            vec3{ 108.0f, 1.0f, 208.0f });
+        grid.query(queryBounds, found);
+
+        REQUIRE(found.size() == 1);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("getEntityInfo returns nullopt for unknown entity", "[engine::scene::uniformGridPartition]")
+    {
+        UniformGridPartition grid{ testOptions };
+
+        REQUIRE(grid.getEntityInfo(999) == std::nullopt);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("query on empty grid returns nothing", "[engine::scene::uniformGridPartition]")
+    {
+        UniformGridPartition grid{ testOptions };
+
+        std::vector<Entity> found;
+
+        grid.query(bounds::AABB::fromMinMax(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 64.0f, 64.0f, 64.0f }), found);
+        REQUIRE(found.empty());
+
+        grid.query(bounds::Sphere::fromCenterRadius(vec3{ 32.0f, 0.0f, 32.0f }, 100.0f), found);
+        REQUIRE(found.empty());
+    } LITL_END_TEST_CASE
 }
