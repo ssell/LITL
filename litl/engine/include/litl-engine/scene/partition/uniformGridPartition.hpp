@@ -76,7 +76,7 @@ namespace litl
         Entity entity;
         bounds::AABB bounds;
         uint32_t cellIndex{ 0 };
-        bool isLarge{ false };
+        bool isOversized{ false };
     };
 
     class UniformGridPartition
@@ -156,6 +156,12 @@ namespace litl
         /// <param name="cellZ"></param>
         /// <returns></returns>
         [[nodiscard]] uint32_t getCellPopulation(uint32_t cellX, uint32_t cellZ) const noexcept;
+
+        /// <summary>
+        /// Returns the number of entities classified as oversized.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] uint32_t getOversizedCellPopulation() const noexcept;
 
         /// <summary>
         /// Returns the number of entities in the grid.
