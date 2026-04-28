@@ -37,11 +37,11 @@ namespace litl
     /// </summary>
     struct mat4
     {
-        constexpr mat4() {}
-        constexpr mat4(mat4 const& other) : value(other.value) {}
-        constexpr explicit mat4(glm::mat4 const& other) : value(other) {}
-        explicit mat4(mat3 const& other);
-        explicit mat4(quat const& quaternion);
+        constexpr mat4() noexcept {}
+        constexpr mat4(mat4 const& other) noexcept : value(other.value) {}
+        constexpr explicit mat4(glm::mat4 const& other) noexcept : value(other) {}
+        explicit mat4(mat3 const& other) noexcept;
+        explicit mat4(quat const& quaternion) noexcept;
 
         constexpr explicit mat4(std::span<float const> values)
         {
@@ -608,6 +608,11 @@ namespace litl
 
         glm::mat4 value{ 0.0f };
     };
+
+    static_assert(std::is_nothrow_copy_constructible_v<mat4>);
+    static_assert(std::is_nothrow_move_constructible_v<mat4>);
+    static_assert(std::is_nothrow_copy_assignable_v<mat4>);
+    static_assert(std::is_nothrow_move_assignable_v<mat4>);
 }
 
 REGISTER_TYPE_NAME(litl::mat4)

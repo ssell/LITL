@@ -6,7 +6,7 @@ namespace litl
     // vec3
     // -------------------------------------------------------------------------------------
 
-    vec3::vec3(vec4 const& other)
+    vec3::vec3(vec4 const& other) noexcept
         : value{ other.x(), other.y(), other.z() }
     {
 
@@ -16,7 +16,7 @@ namespace litl
     // vec4
     // -------------------------------------------------------------------------------------
 
-    vec4::vec4(vec3 const& other)
+    vec4::vec4(vec3 const& other) noexcept
         : value{ other.x(), other.y(), other.z(), 0.0f }
     {
 
@@ -26,7 +26,7 @@ namespace litl
     // mat3
     // -------------------------------------------------------------------------------------
 
-    mat3::mat3(mat4 const& other)
+    mat3::mat3(mat4 const& other) noexcept
     {
         float* selfPtr = dataPtr();
         float const* otherPtr = other.dataPtr();
@@ -44,7 +44,7 @@ namespace litl
         selfPtr[8] = otherPtr[10];
     }
 
-    mat3::mat3(quat const& quaternion)
+    mat3::mat3(quat const& quaternion) noexcept
         : value(glm::mat3_cast(quaternion.data()))
     {
 
@@ -54,7 +54,7 @@ namespace litl
     // mat4
     // -------------------------------------------------------------------------------------
 
-    mat4::mat4(mat3 const& other)
+    mat4::mat4(mat3 const& other) noexcept
     {
         float* selfPtr = dataPtr();
         float const* otherPtr = other.dataPtr();
@@ -83,7 +83,7 @@ namespace litl
         std::span<float const> sm3 = { otherPtr, 9 };
     }
 
-    mat4::mat4(quat const& quaternion)
+    mat4::mat4(quat const& quaternion) noexcept
         : value(glm::mat4_cast(quaternion.data()))
     {
 
@@ -93,13 +93,13 @@ namespace litl
     // quat
     // -------------------------------------------------------------------------------------
 
-    quat::quat(mat3 const& matrix)
+    quat::quat(mat3 const& matrix) noexcept
         : value(matrix.data())
     {
 
     }
 
-    quat::quat(mat4 const& matrix)
+    quat::quat(mat4 const& matrix) noexcept
         : value(matrix.data())
     {
 

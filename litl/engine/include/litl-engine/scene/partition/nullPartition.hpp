@@ -5,6 +5,9 @@
 
 namespace litl
 {
+    /// <summary>
+    /// A partition that does nothing.
+    /// </summary>
     class NullPartition
     {
     public:
@@ -12,12 +15,12 @@ namespace litl
         NullPartition() {}
         ~NullPartition() {}
 
-        void add(Entity entity, bounds::AABB bounds) {}
-        void remove(Entity entity) {}
-        void update(Entity entity, bounds::AABB bounds) {}
-        void query(bounds::AABB bounds, std::vector<Entity>& entities) {}
-        void query(bounds::Sphere bounds, std::vector<Entity>& entities) {}
-        void query(bounds::Frustum const& frustum, std::vector<Entity>& entities) {}
+        void add(Entity entity, bounds::AABB bounds) noexcept {}
+        void remove(Entity entity) noexcept {}
+        void update(Entity entity, bounds::AABB bounds) noexcept {}
+        void query(bounds::AABB bounds, std::vector<Entity>& entities) const noexcept {}
+        void query(bounds::Sphere bounds, std::vector<Entity>& entities) const noexcept {}
+        void query(bounds::Frustum const& frustum, std::vector<Entity>& entities) const noexcept {}
 
     protected:
 

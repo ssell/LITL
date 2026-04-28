@@ -51,7 +51,7 @@ namespace litl
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="transform"></param>
-        void add(Entity entity, Transform const& transform);
+        void add(Entity entity, Transform const& transform) noexcept;
 
         /// <summary>
         /// Updates the scene tree when the specified entity is to be untracked.
@@ -60,7 +60,7 @@ namespace litl
         /// Note: this is a structural/topological change and can only be called by the appropriate internal systems.
         /// </summary>
         /// <param name="entity"></param>
-        void remove(Entity entity);
+        void remove(Entity entity) noexcept;
 
         /// <summary>
         /// Sets the parent entity for the specified entity.
@@ -71,7 +71,7 @@ namespace litl
         /// </summary>
         /// <param name="child"></param>
         /// <param name="parent"></param>
-        void setParent(Entity child, Entity parent);
+        void setParent(Entity child, Entity parent) noexcept;
 
         /// <summary>
         /// Re-sorts the tree following one or more changes.
@@ -79,7 +79,7 @@ namespace litl
         /// 
         /// Note: this is a structural/topological change and can only be called by the appropriate internal systems.
         /// </summary>
-        void update();
+        void update() noexcept;
 
         // ---------------------------------------------------------------------------------
         // Data Accessors

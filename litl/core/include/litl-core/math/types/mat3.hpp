@@ -31,11 +31,11 @@ namespace litl
     struct mat3
     {
 
-        constexpr mat3() {}
-        constexpr mat3(mat3 const& other) : value(other.value) {}
-        constexpr explicit mat3(glm::mat3 const& other) : value(other) {}
-        explicit mat3(mat4 const& other);
-        explicit mat3(quat const& quaternion);
+        constexpr mat3() noexcept {}
+        constexpr mat3(mat3 const& other) noexcept : value(other.value) {}
+        constexpr explicit mat3(glm::mat3 const& other) noexcept : value(other) {}
+        explicit mat3(mat4 const& other) noexcept;
+        explicit mat3(quat const& quaternion) noexcept;
 
         constexpr explicit mat3(std::span<float const> values)
         {
@@ -502,6 +502,11 @@ namespace litl
 
         glm::mat3 value{ 0.0f };
     };
+
+    static_assert(std::is_nothrow_copy_constructible_v<mat3>);
+    static_assert(std::is_nothrow_move_constructible_v<mat3>);
+    static_assert(std::is_nothrow_copy_assignable_v<mat3>);
+    static_assert(std::is_nothrow_move_assignable_v<mat3>);
 }
 
 REGISTER_TYPE_NAME(litl::mat3)

@@ -258,7 +258,7 @@ namespace litl
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="bounds"></param>
-        void add(Entity entity, bounds::AABB bounds)
+        void add(Entity entity, bounds::AABB bounds) noexcept
         {
             LITL_ASSERT_MSG(entityToCell.find(entity.index) == entityToCell.end(), "Attempting to add Entity to UniformGridPartition whose index is already tracked.", );
             addEntityTo(entity, bounds, getIndexForBounds(bounds));
@@ -268,7 +268,7 @@ namespace litl
         /// Removes the entity from the grid.
         /// </summary>
         /// <param name="entity"></param>
-        void remove(Entity entity)
+        void remove(Entity entity) noexcept
         {
             const auto findEntity = entityToCell.find(entity.index);
 
@@ -297,7 +297,7 @@ namespace litl
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="bounds"></param>
-        void update(Entity entity, bounds::AABB bounds)
+        void update(Entity entity, bounds::AABB bounds) noexcept
         {
             const auto findEntity = entityToCell.find(entity.index);
 
