@@ -8,7 +8,7 @@
 #include "litl-engine/windowFactory.hpp"
 #include "litl-engine/rendererFactory.hpp"
 #include "litl-engine/frameLimiter.hpp"
-
+#include "litl-engine/scene/sceneManager.hpp"
 
 namespace litl
 {
@@ -31,6 +31,7 @@ namespace litl
         std::shared_ptr<JobScheduler> pSharedJobScheduler{ nullptr };
         std::shared_ptr<World> pSharedECSWorld{ nullptr };
         std::shared_ptr<Renderer> pSharedRenderer{ nullptr };
+        std::shared_ptr<SceneManager> pSharedSceneManager{ nullptr };
     };
 
     // -------------------------------------------------------------------------------------
@@ -71,6 +72,8 @@ namespace litl
         m_pImpl->pSharedFrameLimiter = m_pImpl->pServiceProvider->get<FrameLimiter>();
         m_pImpl->pSharedJobScheduler = m_pImpl->pServiceProvider->get<JobScheduler>();
         m_pImpl->pSharedECSWorld = m_pImpl->pServiceProvider->get<World>();
+        m_pImpl->pSharedSceneManager = m_pImpl->pServiceProvider->get<SceneManager>();
+        m_pImpl->pSharedSceneManager->setup((*m_pImpl->pServiceProvider));
 
         m_pImpl->pSharedConfig->set(config);
         m_pImpl->pSharedFrameLimiter->setTargetFps(static_cast<float>(m_pImpl->pSharedConfig->engineSettings.framesPerSecond));

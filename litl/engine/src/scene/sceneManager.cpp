@@ -4,12 +4,14 @@
 
 #include "litl-core/assert.hpp"
 #include "litl-engine/scene/sceneManager.hpp"
+#include "litl-engine/scene/sceneView.hpp"
 
 namespace litl
 {
     struct SceneManager::Impl
     {
-        std::vector<std::unique_ptr<Scene>> scenes;
+        std::vector<std::shared_ptr<Scene>> scenes;
+        std::shared_ptr<SceneView> view;
         uint32_t activeIndex{ 0 };
     };
 
@@ -23,9 +25,14 @@ namespace litl
 
     }
 
+    void SceneManager::setup(ServiceProvider& services) noexcept
+    {
+        m_impl->view = services.get<SceneView>();
+    }
+
     void SceneManager::createScene(SceneConfig const& config) noexcept
     {
-        m_impl->scenes.push_back(std::make_unique<Scene>(config));
+        m_impl->scenes.push_back(std::make_shared<Scene>(config));
     }
 
     uint32_t SceneManager::getSceneCount() const noexcept
@@ -48,6 +55,7 @@ namespace litl
         LITL_ASSERT_MSG(index < getSceneCount(), "Invalid scene index specified for active scene.", );
 
         m_impl->activeIndex = index;
+        m_impl->view->setViewedScene(m_impl->scenes[m_impl->activeIndex]);
 
         // ... todo whatever is actually needed to swap to a different scene ...
     }

@@ -17,9 +17,7 @@ namespace litl
     ///   2. Providing random access to determine entity direct relatives (entity -> parent, entity -> children)
     ///   3. Maintaining the entity index into the World Matrix buffer.
     /// 
-    /// Structural changes (track, untrack, set parent, update) can only be done via those
-    /// classes authorized to do so via the SceneGraphAccessKey. Structural changes should
-    /// be buffered and performed at sync points. Changes should be done in the order of:
+    /// Changes should be done in the order of:
     /// 
     ///   1. Untrack
     ///   2. Track
