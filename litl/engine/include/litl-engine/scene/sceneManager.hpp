@@ -4,9 +4,12 @@
 #include "litl-core/impl.hpp"
 #include "litl-engine/scene/scene.hpp"
 #include "litl-engine/scene/sceneConfig.hpp"
+#include "litl-core/services/serviceProvider.hpp"
 
 namespace litl
 {
+    class Engine;
+
     /// <summary>
     /// Provides a public interface to the game scene(s).
     /// </summary>
@@ -29,8 +32,12 @@ namespace litl
 
     private:
 
+        friend class Engine;
+
+        void setup(ServiceProvider& services) noexcept;
+
         struct Impl;
-        ImplPtr<Impl, 128> m_impl;
+        ImplPtr<Impl, 64> m_impl;
     };
 }
 

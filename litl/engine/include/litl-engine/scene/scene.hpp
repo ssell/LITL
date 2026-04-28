@@ -4,7 +4,6 @@
 #include "litl-core/impl.hpp"
 #include "litl-core/math/bounds.hpp"
 
-#include "litl-engine/scene/sceneAccessKey.hpp"
 #include "litl-engine/scene/sceneConfig.hpp"
 #include "litl-engine/ecs/components/transform.hpp"
 

@@ -40,13 +40,13 @@ namespace litl
         /// Invoked once by the Engine during setup.
         /// </summary>
         /// <param name="services"></param>
-        void setup(litl::ServiceProvider& services) const noexcept;
+        void setup(ServiceProvider& services) const noexcept;
 
         /// <summary>
         /// Invoked once by the Engine prior to the first frame.
         /// </summary>
         /// <param name="services"></param>
-        void setupSystems(litl::ServiceProvider& services) const noexcept;
+        void setupSystems(ServiceProvider& services) const noexcept;
 
         /// <summary>
         /// Immediately creates a new Entity.
