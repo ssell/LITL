@@ -18,12 +18,12 @@ namespace litl
 
     struct vec3
     {
-        constexpr vec3() {}
-        constexpr vec3(vec3 const& other) : value{ other.value } {}
-        constexpr explicit vec3(float xyz) : value{ xyz, xyz, xyz } {}
-        constexpr explicit vec3(glm::vec3 const& other) : value{other} {}
-        constexpr vec3(float x, float y, float z) : value{ x, y, z } {}
-        explicit vec3(vec4 const& other);
+        constexpr vec3() noexcept {}
+        constexpr vec3(vec3 const& other) noexcept : value{ other.value } {}
+        constexpr explicit vec3(float xyz) noexcept : value{ xyz, xyz, xyz } {}
+        constexpr explicit vec3(glm::vec3 const& other) noexcept : value{other} {}
+        constexpr vec3(float x, float y, float z) noexcept : value{ x, y, z } {}
+        explicit vec3(vec4 const& other) noexcept;
 
         // ---------------------------------------------------------------------------------
         // Equality
@@ -494,6 +494,11 @@ namespace litl
     {
         return vec3{ glm::abs(v.data()) };
     }
+
+    static_assert(std::is_nothrow_copy_constructible_v<vec3>);
+    static_assert(std::is_nothrow_move_constructible_v<vec3>);
+    static_assert(std::is_nothrow_copy_assignable_v<vec3>);
+    static_assert(std::is_nothrow_move_assignable_v<vec3>);
 }
 
 REGISTER_TYPE_NAME(litl::vec3)

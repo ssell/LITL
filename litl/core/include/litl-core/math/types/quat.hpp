@@ -21,12 +21,12 @@ namespace litl
 
     struct quat
     {
-        constexpr quat() {}
-        constexpr quat(quat const& other) : value(other.value) {}
-        constexpr explicit quat(glm::quat const& other) : value(other) {}
-        constexpr quat(float w, float x, float y, float z) : value(w, x, y, z) {}
-        explicit quat(mat3 const& matrix);
-        explicit quat(mat4 const& matrix);
+        constexpr quat() noexcept {}
+        constexpr quat(quat const& other) noexcept : value(other.value) {}
+        constexpr explicit quat(glm::quat const& other) noexcept : value(other) {}
+        constexpr quat(float w, float x, float y, float z) noexcept : value(w, x, y, z) {}
+        explicit quat(mat3 const& matrix) noexcept;
+        explicit quat(mat4 const& matrix) noexcept;
 
         // ---------------------------------------------------------------------------------
         // Equality
@@ -326,6 +326,11 @@ namespace litl
 
         glm::quat value{ 1.0f, 0.0f, 0.0f, 0.0f };
     };
+
+    static_assert(std::is_nothrow_copy_constructible_v<quat>);
+    static_assert(std::is_nothrow_move_constructible_v<quat>);
+    static_assert(std::is_nothrow_copy_assignable_v<quat>);
+    static_assert(std::is_nothrow_move_assignable_v<quat>);
 }
 
 REGISTER_TYPE_NAME(litl::quat)

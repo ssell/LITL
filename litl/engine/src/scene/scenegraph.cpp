@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "litl-core/assert.hpp"
-#include "litl-engine/scene/scenegraph.hpp"
+#include "litl-engine/scene/sceneGraph.hpp"
 #include "litl-ecs/entity/entity.hpp"
 
 namespace litl
@@ -20,7 +20,7 @@ namespace litl
         }
     }
 
-    void SceneGraph::add(Entity entity, Transform const& transform)
+    void SceneGraph::add(Entity entity, Transform const& transform) noexcept
     {
         ensureFit(entity.index);
         LITL_ASSERT_MSG(m_nodeOccupied[entity.index] == NodeState::Vacant, "Attempting to track entity index that is already tracked.", );
@@ -39,7 +39,7 @@ namespace litl
         m_isDirty = true;
     }
 
-    void SceneGraph::remove(Entity entity)
+    void SceneGraph::remove(Entity entity) noexcept
     {
         ensureFit(entity.index);
         LITL_ASSERT_MSG(m_nodeOccupied[entity.index] == NodeState::Present, "Attempting to untrack entity that is not tracked.", );
@@ -64,7 +64,7 @@ namespace litl
         m_isDirty = true;
     }
 
-    void SceneGraph::setParent(Entity child, Entity parent)
+    void SceneGraph::setParent(Entity child, Entity parent) noexcept
     {
         ensureFit(child.index);
         ensureFit(parent.index);
@@ -92,7 +92,7 @@ namespace litl
         m_isDirty = true;
     }
 
-    void SceneGraph::update()
+    void SceneGraph::update() noexcept
     {
         if (!m_isDirty)
         {
