@@ -15,7 +15,7 @@
 
 namespace litl
 {
-    struct ECSFrameCallbacks;
+    struct FrameCallbacks;
 
     /// <summary>
     /// Owner and manager of all ECS systems.
@@ -29,7 +29,7 @@ namespace litl
         SystemManager& operator=(SystemManager const&) = delete;
         ~SystemManager();
 
-        void setup(std::shared_ptr<ECSFrameCallbacks> callbacks) noexcept;
+        void setup(std::shared_ptr<FrameCallbacks> callbacks) noexcept;
 
         /// <summary>
         /// 

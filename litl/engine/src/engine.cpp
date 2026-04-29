@@ -10,6 +10,7 @@
 #include "litl-engine/rendererFactory.hpp"
 #include "litl-engine/frameLimiter.hpp"
 #include "litl-engine/scene/sceneManager.hpp"
+#include "litl-engine/engineCallbacks.hpp"
 
 namespace litl
 {
@@ -24,6 +25,7 @@ namespace litl
         ServiceCollection serviceCollection;
         std::shared_ptr<ServiceProvider> pServiceProvider{ nullptr };
         BootstrapFunc userBootstrap{ nullptr };
+        EngineCallbacks callbacks;
 
         // The below are also stored in pServiceProvider, but keep them in here to avoid having to frequently refetch.
         std::shared_ptr<Configuration> pSharedConfig{ nullptr };
@@ -33,6 +35,18 @@ namespace litl
         std::shared_ptr<World> pSharedECSWorld{ nullptr };
         std::shared_ptr<Renderer> pSharedRenderer{ nullptr };
         std::shared_ptr<SceneManager> pSharedSceneManager{ nullptr };
+        
+        void configureCallbacks(ConfigureCallbacksFunc userCallbacksFunc)
+        {
+            std::shared_ptr<FrameCallbacks> userCallbacks = std::make_shared<FrameCallbacks>();
+
+            if (userCallbacksFunc != nullptr)
+            {
+                userCallbacksFunc(userCallbacks);
+            }
+
+            callbacks.setup(pServiceProvider, userCallbacks);
+        }
     };
 
     // -------------------------------------------------------------------------------------
@@ -54,7 +68,12 @@ namespace litl
         litl::Logger::shutdown();
     }
 
-    void Engine::setup(Configuration config, ConfigureServicesFunc servicesFunc, ConfigureSystemsFunc systemsFunc, BootstrapFunc bootstrapFunc) noexcept
+    void Engine::setup(
+        Configuration config, 
+        ConfigureServicesFunc servicesFunc, 
+        ConfigureSystemsFunc systemsFunc, 
+        BootstrapFunc bootstrapFunc, 
+        ConfigureCallbacksFunc callbacksFunc) noexcept
     {
         // These can be modified by the user (though it is unusual), so make sure they exist first.
         assert(m_pImpl->setup.configureServices != nullptr);
@@ -87,6 +106,7 @@ namespace litl
         }
 
         m_pImpl->userBootstrap = bootstrapFunc;
+        m_pImpl->configureCallbacks(callbacksFunc);
     }
 
     bool Engine::start()
@@ -102,7 +122,7 @@ namespace litl
             return false;
         }
 
-        m_pImpl->pSharedECSWorld->setup((*m_pImpl->pServiceProvider), {});   // todo callbacks
+        m_pImpl->pSharedECSWorld->setup((*m_pImpl->pServiceProvider), m_pImpl->callbacks.getFrameCallbacks());
 
         m_pImpl->setup.bootstrap((*m_pImpl->pServiceProvider), (m_pImpl->pSharedECSWorld->getCommandBuffer()));
 

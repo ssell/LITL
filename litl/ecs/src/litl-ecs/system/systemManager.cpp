@@ -23,7 +23,7 @@ namespace litl
 
     struct SystemManager::Impl
     {
-        std::shared_ptr<ECSFrameCallbacks> callbacks;
+        std::shared_ptr<FrameCallbacks> callbacks;
         std::mutex systemsMutex;
         std::array<SystemGraph, SystemGroupCount> schedules;
         std::vector<System*> systems;
@@ -49,7 +49,7 @@ namespace litl
         }
     }
 
-    void SystemManager::setup(std::shared_ptr<ECSFrameCallbacks> callbacks) noexcept
+    void SystemManager::setup(std::shared_ptr<FrameCallbacks> callbacks) noexcept
     {
         m_pImpl->callbacks = callbacks;
     }
@@ -162,10 +162,7 @@ namespace litl
 
     void SystemManager::run(World& world, float dt, SystemGroup group, JobScheduler& scheduler)
     {
-        if (m_pImpl->callbacks->preGroupCallbacks[static_cast<uint32_t>(group)] != nullptr)
-        {
-            m_pImpl->callbacks->preGroupCallbacks[static_cast<uint32_t>(group)](group);
-        }
+        m_pImpl->callbacks->invokePreGroup(group);
 
         auto& schedule = m_pImpl->schedules[static_cast<uint32_t>(group)];
         auto& graph = schedule.getNodeGraph();
@@ -186,12 +183,9 @@ namespace litl
             layerFence.wait();
 
             processCommandBuffers(world, group);                                    // Sync command buffers now that all system-related jobs are done.
-
-            if (m_pImpl->callbacks->postGroupCallbacks[static_cast<uint32_t>(group)] != nullptr)
-            {
-                m_pImpl->callbacks->postGroupCallbacks[static_cast<uint32_t>(group)](group);
-            }
         }
+
+        m_pImpl->callbacks->invokePostGroup(group);
     }
 
     void SystemManager::processCommandBuffers(World& world, SystemGroup group) const noexcept
@@ -210,12 +204,7 @@ namespace litl
         }
 
         m_pImpl->commandProcessor.process(&world, m_pImpl->commandBuffers, m_pImpl->outgoingSceneCommands);
-
-        if (m_pImpl->callbacks->syncPointCallback != nullptr)
-        {
-            m_pImpl->callbacks->syncPointCallback(group, m_pImpl->outgoingSceneCommands);
-        }
-
+        m_pImpl->callbacks->invokeSyncPoint(group, m_pImpl->outgoingSceneCommands);
         m_pImpl->outgoingSceneCommands.clear();
     }
 

@@ -1,8 +1,11 @@
 #ifndef LITL_ENGINE_BOOTSTRAP_H__
 #define LITL_ENGINE_BOOTSTRAP_H__
 
+#include <memory>
+
 #include "litl-core/services/serviceCollection.hpp"
 #include "litl-core/services/serviceProvider.hpp"
+#include "litl-ecs/frameCallbacks.hpp"
 #include "litl-ecs/system/systemCollection.hpp"
 
 namespace litl
@@ -21,6 +24,11 @@ namespace litl
     /// Optional function provided to the Engine to allow the user to add initial entities, etc. to the ECS world.
     /// </summary>
     using BootstrapFunc = void(*)(ServiceProvider& services, EntityCommands& commands);
+
+    /// <summary>
+    /// Optional function provided to the Engine to allow the user to add custom callbacks.
+    /// </summary>
+    using ConfigureCallbacksFunc = void(*)(std::shared_ptr<FrameCallbacks> callbacks);
 
     namespace Internal
     {
