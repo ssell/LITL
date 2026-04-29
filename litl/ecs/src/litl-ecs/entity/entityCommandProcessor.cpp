@@ -5,9 +5,9 @@
 
 namespace litl
 {
-    void EntityCommandProcessor::process(World* world, std::vector<EntityCommands*>& commandBuffers) noexcept
+    void EntityCommandProcessor::process(World* world, std::vector<EntityCommands*>& incomingCommands, std::vector<EntitySceneCommand>& outgoingCommands) noexcept
     {
-        for (auto* commandBuffer : commandBuffers)
+        for (auto* commandBuffer : incomingCommands)
         {
             assert(commandBuffer != nullptr);
         }
@@ -16,7 +16,7 @@ namespace litl
         size_t offset = 0;
         size_t nextOffset = 0;
 
-        for (auto* commandBuffer : commandBuffers)
+        for (auto* commandBuffer : incomingCommands)
         {
             totalCommandCount += commandBuffer->actionableCommandCount();
         }
@@ -27,7 +27,7 @@ namespace litl
         }
 
         // Combine all command buffers
-        for (auto* commandBuffer : commandBuffers)
+        for (auto* commandBuffer : incomingCommands)
         {
             nextOffset = offset + commandBuffer->actionableCommandCount();
             commandBuffer->extractCommands(world, m_combinedCommands, offset);
@@ -93,6 +93,7 @@ namespace litl
             {
                 entityRemoved = true;
                 world->destroyImmediate(currEntity);
+                outgoingCommands.emplace_back(EntitySceneCommandType::DestroyEntity, currEntity);
             }
             else if (command.type == EntityCommandType::AddComponent)
             {
@@ -106,14 +107,13 @@ namespace litl
             }
             else if (command.type == EntityCommandType::SetParent)
             {
-                // ... todo process the SetParent command ...
-                // this is blocked until the basic scene graph architecture is in place.
-                // 
+                // todo handled deferred entity parent
+                outgoingCommands.emplace_back(EntitySceneCommandType::SetParent, currEntity, command.setParentInfo.parent);
             }
         }
 
         // Once all commands have been processed, it is now safe to reset the internal queues and memory pools.
-        for (auto* commandBuffer : commandBuffers)
+        for (auto* commandBuffer : incomingCommands)
         {
             commandBuffer->reset();
         }

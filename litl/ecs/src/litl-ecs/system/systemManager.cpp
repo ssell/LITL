@@ -191,7 +191,12 @@ namespace litl
             }
         }
 
-        m_pImpl->commandProcessor.process(&world, m_pImpl->commandBuffers);
+        // todo left off here
+        // need to store outgoingCommands somewhere so its not constantly being allocated
+        // also need some sort of callback so that the outgoing commands can be processed by the engine scene system
+        std::vector<EntitySceneCommand> outgoingCommands;
+
+        m_pImpl->commandProcessor.process(&world, m_pImpl->commandBuffers, outgoingCommands);
     }
 
     SystemInfoGraph SystemManager::buildInfoGraph() const noexcept

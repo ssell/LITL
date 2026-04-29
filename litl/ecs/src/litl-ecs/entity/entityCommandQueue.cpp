@@ -100,6 +100,19 @@ namespace litl
                 componentPools[currPool]->insert(descriptor, source, destination);
             }
         }
+
+        void applyMaterialized(std::vector<Entity> const& materialized) noexcept
+        {
+            // Once all deferred entities have been materialized, we can go and update their references to the actual entity.
+            for (auto& command : entityCommands)
+            {
+                if ((command.type == EntityCommandType::SetParent) && !command.setParentInfo.deferredParent.isNull())
+                {
+                    command.setParentInfo.parent = materialized[command.setParentInfo.deferredParent.index];
+                    command.setParentInfo.deferredParent.index = ecs::Constants::null_entity_id;
+                }
+            }
+        }
     };
 
     EntityCommandQueue::EntityCommandQueue()
@@ -200,5 +213,10 @@ namespace litl
     std::vector<DeferredEntityCommand> const& EntityCommandQueue::deferredCommands() const noexcept
     {
         return m_pImpl->deferredEntityCommands;
+    }
+
+    void EntityCommandQueue::applyMaterialized(std::vector<Entity> const& materialized) noexcept
+    {
+        m_pImpl->applyMaterialized(materialized);
     }
 }
