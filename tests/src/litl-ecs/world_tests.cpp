@@ -5,6 +5,7 @@
 #include "litl-core/services/serviceCollection.hpp"
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/tests-common.hpp"
+#include "litl-ecs/frameCallbacks.hpp"
 #include "litl-ecs/world.hpp"
 #include "litl-ecs/archetype/archetype.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
@@ -434,7 +435,7 @@ namespace litl::tests
         auto serviceProvider = collection.build();
 
         World world;
-        world.setup((*serviceProvider));
+        world.setup((*serviceProvider), {});
 
         auto entity0 = world.createImmediate();
         auto entity1 = world.createImmediate();
@@ -474,7 +475,7 @@ namespace litl::tests
         REQUIRE(setupService != nullptr);
         REQUIRE(setupService->wasSetup == false);
 
-        world.setup((*services));
+        world.setup((*services), {});
         world.getSystemCollection().addSystem<TestSystem>(SystemGroup::Update);
         world.setupSystems((*services));
 

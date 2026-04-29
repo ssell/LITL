@@ -52,7 +52,9 @@ namespace litl
         /// <summary>
         /// The last group of systems to run each frame.
         /// </summary>
-        Final = 8
+        Final = 8,
+
+        Count = 9
     };
 
     constexpr uint32_t SystemGroupCount = 9;

@@ -20,6 +20,7 @@
 namespace litl
 {
     class SystemCollection;
+    struct ECSFrameCallbacks;
 
     /// <summary>
     /// Single point of entry for general ECS operations.
@@ -40,7 +41,7 @@ namespace litl
         /// Invoked once by the Engine during setup.
         /// </summary>
         /// <param name="services"></param>
-        void setup(ServiceProvider& services) const noexcept;
+        void setup(ServiceProvider& services, ECSFrameCallbacks callbacks) const noexcept;
 
         /// <summary>
         /// Invoked once by the Engine prior to the first frame.

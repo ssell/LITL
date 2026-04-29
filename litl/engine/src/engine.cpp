@@ -3,6 +3,7 @@
 #include "litl-core/job/jobScheduler.hpp"
 #include "litl-core/services/serviceCollection.hpp"
 #include "litl-core/services/serviceProvider.hpp"
+#include "litl-ecs/frameCallbacks.hpp"
 #include "litl-ecs/world.hpp"
 #include "litl-engine/engine.hpp"
 #include "litl-engine/windowFactory.hpp"
@@ -101,7 +102,7 @@ namespace litl
             return false;
         }
 
-        m_pImpl->pSharedECSWorld->setup((*m_pImpl->pServiceProvider));
+        m_pImpl->pSharedECSWorld->setup((*m_pImpl->pServiceProvider), {});   // todo callbacks
 
         m_pImpl->setup.bootstrap((*m_pImpl->pServiceProvider), (m_pImpl->pSharedECSWorld->getCommandBuffer()));
 

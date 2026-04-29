@@ -1,6 +1,8 @@
 #ifndef LITL_ECS_ENTITY_SCENE_COMMAND_H__
 #define LITL_ECS_ENTITY_SCENE_COMMAND_H__
 
+#include "litl-ecs/entity/entity.hpp"
+
 namespace litl
 {
     enum class EntitySceneCommandType : uint32_t
