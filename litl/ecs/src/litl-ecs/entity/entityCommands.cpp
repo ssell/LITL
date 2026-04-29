@@ -13,6 +13,40 @@ namespace litl
         EntityCommandQueue commands{ };
         MemoryArena<BlockSize, 128> localData{};
         uint32_t nextId{ 0 };
+
+        // temporary vectors used during materialization but stored in the Impl to avoid having to reallocate constantly.
+        std::vector<Entity> materialized;
+
+        /// <summary>
+        /// Implementation of material here (instead of the "parent") to avoid constantly hitting the m_pImpl point.
+        /// </summary>
+        /// <param name="world"></param>
+        void materialize(World* world) noexcept
+        {
+            materialized.resize(nextId);
+
+            // Process the deferred commands into non-deferred commands
+            for (auto& deferredCommand : commands.deferredCommands())
+            {
+                if (deferredCommand.type == EntityCommandType::CreateEntity)
+                {
+                    materialized[deferredCommand.deferredEntity.index] = world->createImmediate();
+                }
+                else
+                {
+                    commands.push(EntityCommand{
+                        .type = deferredCommand.type,
+                        .entity = materialized[deferredCommand.deferredEntity.index],
+                        .componentInfo = deferredCommand.componentInfo,
+                        .setParentInfo = deferredCommand.setParentInfo
+                        });
+                }
+            }
+
+            // Convert any remaining deferred entity references to entity references once all deferred entities have been materialized.
+            commands.applyMaterialized(materialized);
+            materialized.clear();
+        }
     };
 
     EntityCommands::EntityCommands()
@@ -226,24 +260,6 @@ namespace litl
 
     void EntityCommands::materialize(World* world) noexcept
     {
-        std::vector<Entity> materialized;
-        materialized.resize(m_pImpl->nextId);
-
-        for (auto& deferredCommand : m_pImpl->commands.deferredCommands())
-        {
-            if (deferredCommand.type == EntityCommandType::CreateEntity)
-            {
-                materialized[deferredCommand.deferredEntity.index] = world->createImmediate();
-            }
-            else
-            {
-                m_pImpl->commands.push(EntityCommand{
-                    .type = deferredCommand.type,
-                    .entity = materialized[deferredCommand.deferredEntity.index],
-                    .componentInfo = deferredCommand.componentInfo,
-                    .setParentInfo = deferredCommand.setParentInfo
-                });
-            }
-        }
+        m_pImpl->materialize(world);
     }
 }

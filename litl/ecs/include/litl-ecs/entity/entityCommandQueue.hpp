@@ -88,6 +88,11 @@ namespace litl
         /// <returns></returns>
         std::vector<DeferredEntityCommand> const& deferredCommands() const noexcept;
 
+        /// <summary>
+        /// Assigned all deferred entity references to their materialized entities.
+        /// </summary>
+        void applyMaterialized(std::vector<Entity> const& materialized) noexcept;
+
     protected:
 
     private:

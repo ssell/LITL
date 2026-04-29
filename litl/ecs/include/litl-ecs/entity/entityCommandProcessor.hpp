@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "litl-ecs/entity/entityCommands.hpp"
+#include "litl-ecs/entity/entitySceneCommand.hpp"
 #include "litl-ecs/world.hpp"
 
 namespace litl
@@ -15,7 +16,15 @@ namespace litl
     {
     public:
 
-        void process(World* world, std::vector<EntityCommands*>& commandBuffers) noexcept;
+        /// <summary>
+        /// Processes an incoming list of EntityCommands (each of which may contain zero or more EntityCommand requests)
+        /// and outputs a list of EntitySceneCommands that represent structural scene changes. The scene changes are not
+        /// relevant to the ECS itself, but may be relevant to any scene implementation that is integrating with the ECS.
+        /// </summary>
+        /// <param name="world"></param>
+        /// <param name="incomingCommands"></param>
+        /// <param name="outgoingCommands"></param>
+        void process(World* world, std::vector<EntityCommands*>& incomingCommands, std::vector<EntitySceneCommand>& outgoingCommands) noexcept;
 
     protected:
 
