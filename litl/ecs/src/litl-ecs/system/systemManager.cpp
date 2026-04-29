@@ -12,6 +12,7 @@
 #include "litl-ecs/system/systemGraph.hpp"
 #include "litl-ecs/system/system.hpp"
 #include "litl-ecs/entity/entityCommandProcessor.hpp"
+#include "litl-ecs/frameCallbacks.hpp"
 
 namespace litl
 {
@@ -22,11 +23,13 @@ namespace litl
 
     struct SystemManager::Impl
     {
+        std::shared_ptr<ECSFrameCallbacks> callbacks;
         std::mutex systemsMutex;
         std::array<SystemGraph, SystemGroupCount> schedules;
         std::vector<System*> systems;
         FlatHashMap<SystemTypeId, uint32_t> systemMap;        // value = index into systems
         std::vector<System*> newSystems;
+        std::vector<EntitySceneCommand> outgoingSceneCommands;
 
         EntityCommandProcessor commandProcessor;
         std::vector<EntityCommands*> commandBuffers;
@@ -44,6 +47,11 @@ namespace litl
         {
             system->reset();
         }
+    }
+
+    void SystemManager::setup(std::shared_ptr<ECSFrameCallbacks> callbacks) noexcept
+    {
+        m_pImpl->callbacks = callbacks;
     }
 
     void SystemManager::addSystem(System* system, SystemGroup group, std::vector<SystemComponentInfo> const& componentInfo) const noexcept
@@ -154,6 +162,11 @@ namespace litl
 
     void SystemManager::run(World& world, float dt, SystemGroup group, JobScheduler& scheduler)
     {
+        if (m_pImpl->callbacks->preGroupCallbacks[static_cast<uint32_t>(group)] != nullptr)
+        {
+            m_pImpl->callbacks->preGroupCallbacks[static_cast<uint32_t>(group)](group);
+        }
+
         auto& schedule = m_pImpl->schedules[static_cast<uint32_t>(group)];
         auto& graph = schedule.getNodeGraph();
 
@@ -172,11 +185,16 @@ namespace litl
 
             layerFence.wait();
 
-            processCommandBuffers(world);                                           // Sync command buffers now that all system-related jobs are done.
+            processCommandBuffers(world, group);                                    // Sync command buffers now that all system-related jobs are done.
+
+            if (m_pImpl->callbacks->postGroupCallbacks[static_cast<uint32_t>(group)] != nullptr)
+            {
+                m_pImpl->callbacks->postGroupCallbacks[static_cast<uint32_t>(group)](group);
+            }
         }
     }
 
-    void SystemManager::processCommandBuffers(World& world) const noexcept
+    void SystemManager::processCommandBuffers(World& world, SystemGroup group) const noexcept
     {
         auto& allCommandBuffers = world.getCommandBuffers();
 
@@ -191,12 +209,14 @@ namespace litl
             }
         }
 
-        // todo left off here
-        // need to store outgoingCommands somewhere so its not constantly being allocated
-        // also need some sort of callback so that the outgoing commands can be processed by the engine scene system
-        std::vector<EntitySceneCommand> outgoingCommands;
+        m_pImpl->commandProcessor.process(&world, m_pImpl->commandBuffers, m_pImpl->outgoingSceneCommands);
 
-        m_pImpl->commandProcessor.process(&world, m_pImpl->commandBuffers, outgoingCommands);
+        if (m_pImpl->callbacks->syncPointCallback != nullptr)
+        {
+            m_pImpl->callbacks->syncPointCallback(group, m_pImpl->outgoingSceneCommands);
+        }
+
+        m_pImpl->outgoingSceneCommands.clear();
     }
 
     SystemInfoGraph SystemManager::buildInfoGraph() const noexcept

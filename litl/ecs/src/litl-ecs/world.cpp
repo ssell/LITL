@@ -14,6 +14,7 @@
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
 #include "litl-ecs/system/systemCollection.hpp"
 #include "litl-ecs/system/systemManager.hpp"
+#include "litl-ecs/frameCallbacks.hpp"
 
 namespace litl
 {
@@ -28,14 +29,49 @@ namespace litl
 
     struct World::Impl
     {
-        std::shared_ptr<litl::JobScheduler> jobScheduler{ nullptr };
+        std::shared_ptr<JobScheduler> jobScheduler{ nullptr };
 
         SystemCollection systemCollection;
         SystemManager systemManager;
+        std::shared_ptr<ECSFrameCallbacks> callbacks;
+
         float accumulatedTime{ 0.0f };
 
         std::mutex commandBufferMutex;
         std::vector<std::unique_ptr<EntityCommands>> threadLocalCommandBuffers;
+
+        void run(World& world, float const dt, float const fixedStep)
+        {
+            if (callbacks->frameStartCallback != nullptr)
+            {
+                callbacks->frameStartCallback();
+            }
+
+            accumulatedTime += dt;
+            systemManager.prepareFrame();
+
+            systemManager.run(world, dt, SystemGroup::Startup, (*jobScheduler));
+            systemManager.run(world, dt, SystemGroup::Input, (*jobScheduler));
+
+            // Run fixed update 0 or more times. On fast frames it may not run every frame. On slow frames it may run multiple times.
+            while (accumulatedTime >= fixedStep)
+            {
+                systemManager.run(world, fixedStep, SystemGroup::FixedUpdate, (*jobScheduler));
+                accumulatedTime -= fixedStep;
+            }
+
+            systemManager.run(world, dt, SystemGroup::Update, (*jobScheduler));
+            systemManager.run(world, dt, SystemGroup::LateUpdate, (*jobScheduler));
+            systemManager.run(world, dt, SystemGroup::PreRender, (*jobScheduler));
+            systemManager.run(world, dt, SystemGroup::Render, (*jobScheduler));
+            systemManager.run(world, dt, SystemGroup::PostRender, (*jobScheduler));
+            systemManager.run(world, dt, SystemGroup::Final, (*jobScheduler));
+
+            if (callbacks->frameEndCallback != nullptr)
+            {
+                callbacks->frameEndCallback();
+            }
+        }
     };
 
     World::World()
@@ -63,7 +99,7 @@ namespace litl
         return m_pImpl->systemCollection;
     }
 
-    void World::setup(litl::ServiceProvider& services) const noexcept
+    void World::setup(ServiceProvider& services, ECSFrameCallbacks callbacks) const noexcept
     {
         // this is a public method (so that engine can call it), so make sure it is not run multiple times ...
         if (m_pImpl->jobScheduler != nullptr)
@@ -71,10 +107,12 @@ namespace litl
             return;
         }
 
-        m_pImpl->jobScheduler = services.get<litl::JobScheduler>();
+        m_pImpl->jobScheduler = services.get<JobScheduler>();
+        m_pImpl->callbacks = std::make_shared<ECSFrameCallbacks>(callbacks);
+        m_pImpl->systemManager.setup(m_pImpl->callbacks);
     }
 
-    void World::setupSystems(litl::ServiceProvider& services) const noexcept
+    void World::setupSystems(ServiceProvider& services) const noexcept
     {
         if (m_pImpl->systemCollection.build(this))
         {
@@ -332,25 +370,7 @@ namespace litl
 
     void World::run(float const dt, float const fixedStep)
     {
-        m_pImpl->accumulatedTime += dt;
-        m_pImpl->systemManager.prepareFrame();
-
-        m_pImpl->systemManager.run(*this, dt, SystemGroup::Startup, (*m_pImpl->jobScheduler));
-        m_pImpl->systemManager.run(*this, dt, SystemGroup::Input, (*m_pImpl->jobScheduler));
-
-        // Run fixed update 0 or more times. On fast frames it may not run every frame. On slow frames it may run multiple times.
-        while (m_pImpl->accumulatedTime >= fixedStep)
-        {
-            m_pImpl->systemManager.run(*this, fixedStep, SystemGroup::FixedUpdate, (*m_pImpl->jobScheduler));
-            m_pImpl->accumulatedTime -= fixedStep;
-        }
-
-        m_pImpl->systemManager.run(*this, dt, SystemGroup::Update, (*m_pImpl->jobScheduler));
-        m_pImpl->systemManager.run(*this, dt, SystemGroup::LateUpdate, (*m_pImpl->jobScheduler));
-        m_pImpl->systemManager.run(*this, dt, SystemGroup::PreRender, (*m_pImpl->jobScheduler));
-        m_pImpl->systemManager.run(*this, dt, SystemGroup::Render, (*m_pImpl->jobScheduler));
-        m_pImpl->systemManager.run(*this, dt, SystemGroup::PostRender, (*m_pImpl->jobScheduler));
-        m_pImpl->systemManager.run(*this, dt, SystemGroup::Final, (*m_pImpl->jobScheduler));
+        m_pImpl->run((*this), dt, fixedStep);
     }
 
     // -------------------------------------------------------------------------------------

@@ -15,6 +15,8 @@
 
 namespace litl
 {
+    struct ECSFrameCallbacks;
+
     /// <summary>
     /// Owner and manager of all ECS systems.
     /// </summary>
@@ -26,6 +28,8 @@ namespace litl
         SystemManager(SystemManager const&) = delete;
         SystemManager& operator=(SystemManager const&) = delete;
         ~SystemManager();
+
+        void setup(std::shared_ptr<ECSFrameCallbacks> callbacks) noexcept;
 
         /// <summary>
         /// 
@@ -88,7 +92,7 @@ namespace litl
     private:
 
         void updateSystemArchetypes() const noexcept;
-        void processCommandBuffers(World& world) const noexcept;
+        void processCommandBuffers(World& world, SystemGroup group) const noexcept;
 
         struct Impl;
         std::unique_ptr<Impl> m_pImpl;
