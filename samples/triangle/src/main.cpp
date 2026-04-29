@@ -17,7 +17,8 @@ int main()
         { .engineSettings { .applicationName = "LITL - Triangle Sample" } },
         nullptr, 
         nullptr,
-        bootstrap);
+        bootstrap,
+        nullptr);
 
     engine.start();
 

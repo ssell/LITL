@@ -33,7 +33,8 @@ namespace litl
 
         SystemCollection systemCollection;
         SystemManager systemManager;
-        std::shared_ptr<ECSFrameCallbacks> callbacks;
+
+        std::shared_ptr<FrameCallbacks> callbacks;
 
         float accumulatedTime{ 0.0f };
 
@@ -42,10 +43,7 @@ namespace litl
 
         void run(World& world, float const dt, float const fixedStep)
         {
-            if (callbacks->frameStartCallback != nullptr)
-            {
-                callbacks->frameStartCallback();
-            }
+            callbacks->invokeFrameStart();
 
             accumulatedTime += dt;
             systemManager.prepareFrame();
@@ -67,10 +65,7 @@ namespace litl
             systemManager.run(world, dt, SystemGroup::PostRender, (*jobScheduler));
             systemManager.run(world, dt, SystemGroup::Final, (*jobScheduler));
 
-            if (callbacks->frameEndCallback != nullptr)
-            {
-                callbacks->frameEndCallback();
-            }
+            callbacks->invokeFrameEnd();
         }
     };
 
@@ -99,7 +94,7 @@ namespace litl
         return m_pImpl->systemCollection;
     }
 
-    void World::setup(ServiceProvider& services, ECSFrameCallbacks callbacks) const noexcept
+    void World::setup(ServiceProvider& services, std::shared_ptr<FrameCallbacks> callbacks) const noexcept
     {
         // this is a public method (so that engine can call it), so make sure it is not run multiple times ...
         if (m_pImpl->jobScheduler != nullptr)
@@ -108,7 +103,7 @@ namespace litl
         }
 
         m_pImpl->jobScheduler = services.get<JobScheduler>();
-        m_pImpl->callbacks = std::make_shared<ECSFrameCallbacks>(callbacks);
+        m_pImpl->callbacks = callbacks;
         m_pImpl->systemManager.setup(m_pImpl->callbacks);
     }
 

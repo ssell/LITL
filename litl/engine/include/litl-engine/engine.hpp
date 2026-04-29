@@ -20,7 +20,7 @@ namespace litl
         Engine& operator=(Engine&&) = delete;
         Engine& operator=(Engine const&) = delete;
 
-        void setup(Configuration config, ConfigureServicesFunc servicesFunc, ConfigureSystemsFunc systemsFunc, BootstrapFunc bootstrapFunc) noexcept;
+        void setup(Configuration config, ConfigureServicesFunc servicesFunc, ConfigureSystemsFunc systemsFunc, BootstrapFunc bootstrapFunc, ConfigureCallbacksFunc callbacksFunc) noexcept;
         bool start();
 
     protected:
