@@ -8,8 +8,8 @@ namespace litl
     enum class EntitySceneCommandType : uint32_t
     {
         None = 0,
-        CreateEntity = 1,
-        DestroyEntity = 2,
+        DestroyEntity = 1,
+        CreateEntity = 2,
         SetParent = 3
     };
 
