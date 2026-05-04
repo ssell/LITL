@@ -103,7 +103,7 @@ namespace litl
 
     void Scene::add(Entity entity, Transform const& transform, bounds::AABB bounds) noexcept
     {
-        m_impl->graph.add(entity, transform);
+        m_impl->add(entity, transform, bounds);
     }
 
     void Scene::remove(Entity entity) noexcept

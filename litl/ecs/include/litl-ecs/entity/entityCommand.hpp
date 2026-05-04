@@ -24,6 +24,12 @@ namespace litl
         SetParent       = 5
     };
 
+    // Ordering is important as it is used in command buffer sorting
+    static_assert(EntityCommandType::CreateEntity < EntityCommandType::DestroyEntity);
+    static_assert(EntityCommandType::DestroyEntity < EntityCommandType::AddComponent);
+    static_assert(EntityCommandType::AddComponent < EntityCommandType::RemoveComponent);
+    static_assert(EntityCommandType::RemoveComponent < EntityCommandType::SetParent);
+
     /// <summary>
     /// Data used during an AddComponent or RemoveComponent command.
     /// </summary>

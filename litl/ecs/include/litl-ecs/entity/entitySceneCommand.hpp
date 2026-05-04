@@ -13,6 +13,9 @@ namespace litl
         SetParent = 3
     };
 
+    // Ordering is important as it is used in command buffer sorting
+    static_assert(EntitySceneCommandType::DestroyEntity < EntitySceneCommandType::CreateEntity);
+
     /// <summary>
     /// An entity command that modifies the scene structure.
     /// </summary>
