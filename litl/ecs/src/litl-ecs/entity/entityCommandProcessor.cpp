@@ -89,11 +89,13 @@ namespace litl
                 continue;
             }
 
+            // ... todo handle ::TrackEntity output ...
+
             if (command.type == EntityCommandType::DestroyEntity)
             {
                 entityRemoved = true;
                 world->destroyImmediate(currEntity);
-                outgoingCommands.emplace_back(EntitySceneCommandType::DestroyEntity, currEntity);
+                outgoingCommands.emplace_back(EntitySceneCommandType::UntrackEntity, currEntity);
             }
             else if (command.type == EntityCommandType::AddComponent)
             {

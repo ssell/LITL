@@ -5,7 +5,7 @@
 
 namespace litl
 {
-    class EntityCommandProcessor;
+    class SceneCommandProcessor;
 
     /// <summary>
     /// The passkey that allows a class to set the parent of an entity.
@@ -17,7 +17,7 @@ namespace litl
     protected:
 
         ParentEntityWriteKey() = default;
-        friend class EntityCommandProcessor;
+        friend class SceneCommandProcessor;
     };
 
     /// <summary>
@@ -30,6 +30,11 @@ namespace litl
     /// </summary>
     struct ParentEntity
     {
+        ParentEntity()
+        {
+
+        }
+
         [[nodiscard]] constexpr Entity get() const noexcept
         {
             return value;
@@ -40,12 +45,23 @@ namespace litl
             value = parent;
         }
 
+        [[nodiscard]] static ParentEntity create(Entity parent, ParentEntityWriteKey) noexcept
+        {
+            return ParentEntity{ parent };
+        }
+
         [[nodiscard]] constexpr bool has() const noexcept
         {
             return !value.isNull();
         }
 
     private:
+
+        ParentEntity(Entity parent)
+            : value(parent)
+        {
+
+        }
 
         Entity value{ Entity::null() };
     };
