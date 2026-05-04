@@ -25,7 +25,7 @@ namespace litl
 
         void sortCommands(std::span<EntitySceneCommand const> sceneCommands) noexcept;
 
-        std::vector<EntitySceneCommand> m_sortedCommands;
+        std::vector<EntitySceneCommand> m_allCommands;
     };
 }
 
