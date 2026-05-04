@@ -7,7 +7,7 @@
 
 #include "litl-core/inlineFunc.hpp"
 #include "litl-ecs/system/systemGroup.hpp"
-#include "litl-ecs/entity/entitySceneCommand.hpp"
+#include "litl-ecs/entity/entityCommand.hpp"
 
 namespace litl
 {
@@ -20,7 +20,7 @@ namespace litl
 
         inline_function<void()> onFrameStart;
         inline_function<void()> onFrameEnd;
-        inline_function<void(SystemGroup, std::span<EntitySceneCommand const>)> onSyncPoint;
+        inline_function<void(SystemGroup, std::span<EntityCommand const>)> onSyncPoint;
 
         std::array<inline_function<void(SystemGroup)>, GroupCount> onPreGroup;
         std::array<inline_function<void(SystemGroup)>, GroupCount> onPostGroup;
@@ -51,11 +51,11 @@ namespace litl
             }
         }
 
-        void invokeSyncPoint(SystemGroup group, std::span<EntitySceneCommand const> sceneCommands)
+        void invokeSyncPoint(SystemGroup group, std::span<EntityCommand const> entityCommands)
         {
             if (onSyncPoint)
             {
-                onSyncPoint(group, sceneCommands);
+                onSyncPoint(group, entityCommands);
             }
         }
 
@@ -70,6 +70,5 @@ namespace litl
         }
     };
 }
-
 
 #endif

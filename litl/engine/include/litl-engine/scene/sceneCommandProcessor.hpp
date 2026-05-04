@@ -6,7 +6,8 @@
 #include <vector>
 
 #include "litl-engine/scene/scene.hpp"
-#include "litl-ecs/entity/entitySceneCommand.hpp"
+#include "litl-engine/scene/sceneCommand.hpp"
+#include "litl-ecs/entity/entityCommand.hpp"
 #include "litl-ecs/world.hpp"
 
 namespace litl
@@ -18,19 +19,20 @@ namespace litl
     {
     public:
 
-        void process(Scene& scene, World& world, std::span<EntitySceneCommand const> sceneCommands) noexcept;
+        void process(Scene& scene, World& world, std::span<EntityCommand const> entityCommands) noexcept;
 
     protected:
 
     private:
 
-        void sortCommands(std::span<EntitySceneCommand const> sceneCommands) noexcept;
+        void compileSceneCommands(std::span<EntityCommand const> entityCommands) noexcept;
+        void sortCommands() noexcept;
 
         /// <summary>
         /// The sorted scene commands.
         /// Kept as a member (instead of just a local in the process method) to potentially avoid reallocations.
         /// </summary>
-        std::vector<EntitySceneCommand> m_allCommands;
+        std::vector<SceneCommand> m_allCommands;
     };
 }
 

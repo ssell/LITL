@@ -5,7 +5,7 @@
 
 namespace litl
 {
-    void EntityCommandProcessor::process(World* world, std::vector<EntityCommands*>& incomingCommands, std::vector<EntitySceneCommand>& outgoingCommands) noexcept
+    void EntityCommandProcessor::process(World* world, std::vector<EntityCommands*>& incomingCommands, std::vector<EntityCommand>& outgoingCommands) noexcept
     {
         for (auto* commandBuffer : incomingCommands)
         {
@@ -89,29 +89,26 @@ namespace litl
                 continue;
             }
 
-            // ... todo handle ::TrackEntity output ...
-
-            if (command.type == EntityCommandType::DestroyEntity)
+            switch (command.type)
             {
+            case EntityCommandType::DestroyEntity:
                 entityRemoved = true;
                 world->destroyImmediate(currEntity);
-                outgoingCommands.emplace_back(EntitySceneCommandType::UntrackEntity, currEntity);
-            }
-            else if (command.type == EntityCommandType::AddComponent)
-            {
+                break;
+
+            case EntityCommandType::AddComponent:
                 archetypeChanged = true;
                 addedComponents.emplace_back(command.componentInfo.component, command.componentInfo.data);
-            }
-            else if (command.type == EntityCommandType::RemoveComponent)
-            {
+                break;
+
+            case EntityCommandType::RemoveComponent:
                 archetypeChanged = true;
                 removedComponents.emplace_back(command.componentInfo.component);
+                break;
             }
-            else if (command.type == EntityCommandType::SetParent)
-            {
-                // todo handled deferred entity parent
-                outgoingCommands.emplace_back(EntitySceneCommandType::SetParent, currEntity, command.setParentInfo.parent);
-            }
+
+            // Record the command. If there was a previous destroy command then none of the following commands for that entity are recorded.
+            outgoingCommands.push_back(command);
         }
 
         // Once all commands have been processed, it is now safe to reset the internal queues and memory pools.

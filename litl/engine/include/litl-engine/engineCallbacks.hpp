@@ -6,7 +6,6 @@
 
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/frameCallbacks.hpp"
-#include "litl-ecs/entity/entitySceneCommand.hpp"
 #include "litl-ecs/system/systemGroup.hpp"
 #include "litl-engine/scene/sceneManager.hpp"
 
