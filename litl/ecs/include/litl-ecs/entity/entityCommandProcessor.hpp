@@ -1,10 +1,10 @@
 #ifndef LITL_ECS_ENTITY_COMMAND_PROCESSOR_H__
 #define LITL_ECS_ENTITY_COMMAND_PROCESSOR_H__
 
+#include <span>
 #include <vector>
 
 #include "litl-ecs/entity/entityCommands.hpp"
-#include "litl-ecs/entity/entitySceneCommand.hpp"
 #include "litl-ecs/world.hpp"
 
 namespace litl
@@ -24,7 +24,7 @@ namespace litl
         /// <param name="world"></param>
         /// <param name="incomingCommands"></param>
         /// <param name="outgoingCommands"></param>
-        void process(World* world, std::vector<EntityCommands*>& incomingCommands, std::vector<EntitySceneCommand>& outgoingCommands) noexcept;
+        void process(World* world, std::vector<EntityCommands*>& incomingCommands, std::vector<EntityCommand>& outgoingCommands) noexcept;
 
     protected:
 

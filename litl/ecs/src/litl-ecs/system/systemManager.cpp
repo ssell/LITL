@@ -29,7 +29,7 @@ namespace litl
         std::vector<System*> systems;
         FlatHashMap<SystemTypeId, uint32_t> systemMap;        // value = index into systems
         std::vector<System*> newSystems;
-        std::vector<EntitySceneCommand> outgoingSceneCommands;
+        std::vector<EntityCommand> outgoingSceneCommands;
 
         EntityCommandProcessor commandProcessor;
         std::vector<EntityCommands*> commandBuffers;
