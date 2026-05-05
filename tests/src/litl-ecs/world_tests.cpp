@@ -445,10 +445,14 @@ namespace litl::tests
         world.getSystemCollection().addSystem<TestSystem>(SystemGroup::Update);
         world.setupSystems((*serviceProvider));
 
+        auto initialVersion = World::getVersion();
+
         for (auto i = 0; i < 10; ++i)
         {
             world.run(0.1f, 0.1f);
         }
+
+        REQUIRE(World::getVersion() == (initialVersion + 10));
 
         REQUIRE(world.getComponent<Foo>(entity0)->a == 10);
         REQUIRE(isZero(world.getComponent<Bar>(entity0)->a) == true);

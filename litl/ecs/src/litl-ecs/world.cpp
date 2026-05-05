@@ -27,6 +27,25 @@ namespace litl
         return index++;
     }
 
+    namespace
+    {
+        [[nodiscard]] uint32_t& globalWorldVersion()
+        {
+            static uint32_t version = 0;
+            return version;
+        }
+
+        void incrementGlobalWorldVersion()
+        {
+            globalWorldVersion() += 1;
+        }
+    }
+
+    uint32_t World::getVersion() noexcept
+    {
+        return globalWorldVersion();
+    }
+
     struct World::Impl
     {
         std::shared_ptr<JobScheduler> jobScheduler{ nullptr };
@@ -66,6 +85,8 @@ namespace litl
             systemManager.run(world, dt, SystemGroup::Final, (*jobScheduler));
 
             callbacks->invokeFrameEnd();
+
+            incrementGlobalWorldVersion();
         }
     };
 

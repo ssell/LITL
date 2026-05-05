@@ -25,7 +25,7 @@ namespace litl
         ensureFit(entity.index);
         LITL_ASSERT_MSG(m_nodeOccupied[entity.index] == NodeState::Vacant, "Attempting to track entity index that is already tracked.", );
 
-        Entity parent = transform.parent.get();
+        Entity parent = transform.getParent().get();
 
         if (!parent.isNull())
         {

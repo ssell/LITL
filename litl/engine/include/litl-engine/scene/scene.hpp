@@ -29,19 +29,31 @@ namespace litl
 
         /// <summary>
         /// Adds the entity to the scene.
+        /// 
+        /// As no bounds is provided, it will be tracked in the scene partition
+        /// using an unit cube AABB.
+        /// 
+        /// Must call sync for all changes to take effect.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="transform"></param>
+        void track(Entity entity, Transform const& transform) noexcept;
+
+        /// <summary>
+        /// Adds the entity to the scene.
         /// Must call sync for all changes to take effect.
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="transform"></param>
         /// <param name="bounds"></param>
-        void add(Entity entity, Transform const& transform, bounds::AABB bounds) noexcept;
+        void track(Entity entity, Transform const& transform, bounds::AABB bounds) noexcept;
 
         /// <summary>
         /// Removes the entity from the scene.
         /// Must call sync for all changes to take effect.
         /// </summary>
         /// <param name="entity"></param>
-        void remove(Entity entity) noexcept;
+        void untrack(Entity entity) noexcept;
 
         /// <summary>
         /// Updates the local bounds of the entity in the scene.

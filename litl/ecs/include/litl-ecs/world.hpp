@@ -366,6 +366,12 @@ namespace litl
         /// <returns></returns>
         [[nodiscard]] SystemInfoGraph buildInfoGraph() const noexcept;
 
+        /// <summary>
+        /// Returns the current version of the World which is incremented each frame.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] static uint32_t getVersion() noexcept;
+
     protected:
 
     private:
