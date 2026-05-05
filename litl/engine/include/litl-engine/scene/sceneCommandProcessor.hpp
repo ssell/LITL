@@ -19,20 +19,23 @@ namespace litl
     {
     public:
 
-        void process(Scene& scene, World& world, std::span<EntityCommand const> entityCommands) noexcept;
+        void process(Scene& scene, World& world, std::span<EntityChange const> entityChanges) noexcept;
 
     protected:
 
     private:
 
-        void compileSceneCommands(std::span<EntityCommand const> entityCommands) noexcept;
-        void sortCommands() noexcept;
+        void sortCommands(std::span<EntityChange const> entityChanges) noexcept;
+
+        void onDestroyEntity(Scene& scene, World& world, EntityChange const& change) const noexcept;
+        void onChangeArchetype(Scene& scene, World& world, EntityChange const& change) const noexcept;
+        void onSetParent(Scene& scene, World& world, EntityChange const& change) const noexcept;
 
         /// <summary>
-        /// The sorted scene commands.
+        /// The sorted Entity changes.
         /// Kept as a member (instead of just a local in the process method) to potentially avoid reallocations.
         /// </summary>
-        std::vector<SceneCommand> m_allCommands;
+        std::vector<EntityChange> m_sortedChanges;
     };
 }
 

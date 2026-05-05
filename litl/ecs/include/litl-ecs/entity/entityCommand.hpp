@@ -117,11 +117,16 @@ namespace litl
     enum class EntityChangeType : uint32_t
     {
         None = 0,
-        CreateEntity = 1,
-        DestroyEntity = 2,
+        DestroyEntity = 1,
+        CreateEntity = 2,
         ChangeArchetype = 3,
         SetParent = 4
     };
+
+    // Ordering is important as it is used in sorting
+    static_assert(EntityChangeType::DestroyEntity < EntityChangeType::CreateEntity);
+    static_assert(EntityChangeType::CreateEntity < EntityChangeType::ChangeArchetype);
+    static_assert(EntityChangeType::ChangeArchetype < EntityChangeType::SetParent);
 
     /// <summary>
     /// Represents the changes resulting from a single EntityCommand.
