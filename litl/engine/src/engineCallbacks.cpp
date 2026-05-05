@@ -21,11 +21,11 @@ namespace litl
                 m_pUserFrameCallbacks->invokeFrameEnd();
             };
 
-        m_pFrameCallbacks->onSyncPoint = [this](SystemGroup group, std::span<EntityCommand const> sceneCommands)
+        m_pFrameCallbacks->onSyncPoint = [this](SystemGroup group, std::span<EntityChange const> entityChanges)
             {
                 // ... todo process scene commands ...
 
-                m_pUserFrameCallbacks->invokeSyncPoint(group, sceneCommands);
+                m_pUserFrameCallbacks->invokeSyncPoint(group, entityChanges);
             };
 
         // ---------------------------------------------------------------------------------

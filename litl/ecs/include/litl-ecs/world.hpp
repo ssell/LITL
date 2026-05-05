@@ -338,11 +338,13 @@ namespace litl
         /// It is recommended to use an ECS Command Buffer instead. The use of this, 
         /// or other *Immediate methods, should be limited to internal engine use, 
         /// setting up simple demos, tests, etc.
+        /// 
+        /// Returns the archetype that the entity was moved into.
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="add"></param>
         /// <param name="remove"></param>
-        void mutateImmediate(Entity entity, std::span<ComponentData> add, std::span<ComponentTypeId> remove) const noexcept;
+        ArchetypeId mutateImmediate(Entity entity, std::span<ComponentData> add, std::span<ComponentTypeId> remove) const noexcept;
 
         /// <summary>
         /// Runs all systems.

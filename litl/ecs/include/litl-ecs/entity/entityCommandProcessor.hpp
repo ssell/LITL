@@ -18,13 +18,13 @@ namespace litl
 
         /// <summary>
         /// Processes an incoming list of EntityCommands (each of which may contain zero or more EntityCommand requests)
-        /// and outputs a list of EntitySceneCommands that represent structural scene changes. The scene changes are not
-        /// relevant to the ECS itself, but may be relevant to any scene implementation that is integrating with the ECS.
+        /// and outputs a list of EntityChanges which represent the changes made to each entity. The number of resulting
+        /// changes can be less than the number of incoming commands, as some commands (such as Destroy) can cancel out other commands.
         /// </summary>
         /// <param name="world"></param>
         /// <param name="incomingCommands"></param>
         /// <param name="outgoingCommands"></param>
-        void process(World* world, std::vector<EntityCommands*>& incomingCommands, std::vector<EntityCommand>& outgoingCommands) noexcept;
+        void process(World* world, std::vector<EntityCommands*>& incomingCommands, std::vector<EntityChange>& entityChanges) noexcept;
 
     protected:
 

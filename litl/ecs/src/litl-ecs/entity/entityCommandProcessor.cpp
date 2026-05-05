@@ -2,10 +2,12 @@
 #include <unordered_set>
 
 #include "litl-ecs/entity/entityCommandProcessor.hpp"
+#include "litl-ecs/archetype/archetypeRegistry.hpp"
+
 
 namespace litl
 {
-    void EntityCommandProcessor::process(World* world, std::vector<EntityCommands*>& incomingCommands, std::vector<EntityCommand>& outgoingCommands) noexcept
+    void EntityCommandProcessor::process(World* world, std::vector<EntityCommands*>& incomingCommands, std::vector<EntityChange>& entityChanges) noexcept
     {
         for (auto* commandBuffer : incomingCommands)
         {
@@ -61,6 +63,8 @@ namespace litl
         removedComponents.reserve(ecs::Constants::max_components * 2);
 
         Entity currEntity{};
+        ArchetypeId prevArchetype = ecs::Constants::null_archetype_id;
+        ArchetypeId currArchetype = ecs::Constants::null_archetype_id;
         bool entityRemoved = false;
         bool archetypeChanged = false;
 
@@ -71,14 +75,16 @@ namespace litl
                 // Apply the awaiting queued up add/remove component commands
                 if (!entityRemoved && archetypeChanged)
                 {
-                    world->mutateImmediate(currEntity, addedComponents, removedComponents);
+                    currArchetype = world->mutateImmediate(currEntity, addedComponents, removedComponents);
+                    entityChanges.emplace_back(EntityChangeType::ChangeArchetype, currEntity, prevArchetype, currArchetype);
                 }
 
                 // Reset loop state
                 currEntity = command.entity;
+                prevArchetype = world->getEntityRecord(currEntity).archetype->id();
+                currArchetype = prevArchetype;
                 entityRemoved = false;
                 archetypeChanged = false;
-
                 addedComponents.clear();
                 removedComponents.clear();
             }
@@ -91,24 +97,39 @@ namespace litl
 
             switch (command.type)
             {
+
+            case EntityCommandType::CreateEntity:
+                // Just output that the entity was created
+                entityChanges.emplace_back(EntityChangeType::CreateEntity, currEntity, prevArchetype, currArchetype);
+                break;
+
             case EntityCommandType::DestroyEntity:
                 entityRemoved = true;
                 world->destroyImmediate(currEntity);
+                entityChanges.emplace_back(EntityChangeType::DestroyEntity, currEntity, prevArchetype, ecs::Constants::empty_archetype_id);
                 break;
 
             case EntityCommandType::AddComponent:
                 archetypeChanged = true;
                 addedComponents.emplace_back(command.componentInfo.component, command.componentInfo.data);
+                // entityChanges updated in mutate once all component commands have been compiled
                 break;
 
             case EntityCommandType::RemoveComponent:
                 archetypeChanged = true;
                 removedComponents.emplace_back(command.componentInfo.component);
+                // entityChanges updated in mutate once all component commands have been compiled
+                break;
+
+            case EntityCommandType::SetParent:
+                // This command processor does nothing else for SetParent other than emit that a SetParent was requested.
+                // Also for SetParent the archetypes dont matter at the time of processing this command, so just provide whatever is currently set.
+                entityChanges.emplace_back(EntityChangeType::SetParent, currEntity, prevArchetype, currArchetype, command.setParentInfo.parent);
+                break;
+
+            default:
                 break;
             }
-
-            // Record the command. If there was a previous destroy command then none of the following commands for that entity are recorded.
-            outgoingCommands.push_back(command);
         }
 
         // Once all commands have been processed, it is now safe to reset the internal queues and memory pools.

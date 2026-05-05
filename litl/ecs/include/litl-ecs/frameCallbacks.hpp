@@ -20,7 +20,7 @@ namespace litl
 
         inline_function<void()> onFrameStart;
         inline_function<void()> onFrameEnd;
-        inline_function<void(SystemGroup, std::span<EntityCommand const>)> onSyncPoint;
+        inline_function<void(SystemGroup, std::span<EntityChange const>)> onSyncPoint;
 
         std::array<inline_function<void(SystemGroup)>, GroupCount> onPreGroup;
         std::array<inline_function<void(SystemGroup)>, GroupCount> onPostGroup;
@@ -51,11 +51,11 @@ namespace litl
             }
         }
 
-        void invokeSyncPoint(SystemGroup group, std::span<EntityCommand const> entityCommands)
+        void invokeSyncPoint(SystemGroup group, std::span<EntityChange const> entityChanges)
         {
             if (onSyncPoint)
             {
-                onSyncPoint(group, entityCommands);
+                onSyncPoint(group, entityChanges);
             }
         }
 
