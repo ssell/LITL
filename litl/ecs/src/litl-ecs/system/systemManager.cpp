@@ -29,7 +29,7 @@ namespace litl
         std::vector<System*> systems;
         FlatHashMap<SystemTypeId, uint32_t> systemMap;        // value = index into systems
         std::vector<System*> newSystems;
-        std::vector<EntityCommand> outgoingSceneCommands;
+        std::vector<EntityChange> entityChanges;
 
         EntityCommandProcessor commandProcessor;
         std::vector<EntityCommands*> commandBuffers;
@@ -203,9 +203,9 @@ namespace litl
             }
         }
 
-        m_pImpl->commandProcessor.process(&world, m_pImpl->commandBuffers, m_pImpl->outgoingSceneCommands);
-        m_pImpl->callbacks->invokeSyncPoint(group, m_pImpl->outgoingSceneCommands);
-        m_pImpl->outgoingSceneCommands.clear();
+        m_pImpl->commandProcessor.process(&world, m_pImpl->commandBuffers, m_pImpl->entityChanges);
+        m_pImpl->callbacks->invokeSyncPoint(group, m_pImpl->entityChanges);
+        m_pImpl->entityChanges.clear();
     }
 
     SystemInfoGraph SystemManager::buildInfoGraph() const noexcept

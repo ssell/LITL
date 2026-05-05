@@ -51,6 +51,16 @@ namespace litl
             static constexpr ComponentTypeId null_component_id = 0;
 
             /// <summary>
+            /// Represents an unset archetype id.
+            /// </summary>
+            static constexpr ArchetypeId null_archetype_id = litl::Constants::uint32_null_index;
+
+            /// <summary>
+            /// The id of the archetype that has no components.
+            /// </summary>
+            static constexpr ArchetypeId empty_archetype_id = 0;
+
+            /// <summary>
             /// Maximum size, in bytes, of a single component.
             /// This is an upper extreme, and components generally should be as small as possible
             /// to allow for more efficient entity packing within archetype chunks.

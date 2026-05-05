@@ -30,7 +30,15 @@ namespace litl
             {
                 if (deferredCommand.type == EntityCommandType::CreateEntity)
                 {
-                    materialized[deferredCommand.deferredEntity.index] = world->createImmediate();
+                    auto materializedEntity = world->createImmediate();
+                    materialized[deferredCommand.deferredEntity.index] = materializedEntity;
+
+                    // Though nothing else is done within the ECS library with this command,
+                    // it is still useful information to be output by the EntityCommandProcessor.
+                    commands.push(EntityCommand{
+                        .type = EntityCommandType::CreateEntity,
+                        .entity = materializedEntity
+                    });
                 }
                 else
                 {
@@ -39,7 +47,7 @@ namespace litl
                         .entity = materialized[deferredCommand.deferredEntity.index],
                         .componentInfo = deferredCommand.componentInfo,
                         .setParentInfo = deferredCommand.setParentInfo
-                        });
+                    });
                 }
             }
 

@@ -308,11 +308,11 @@ namespace litl
     // Mutate
     // -------------------------------------------------------------------------------------
 
-    void World::mutateImmediate(Entity entity, std::span<ComponentData> add, std::span<ComponentTypeId> remove) const noexcept
+    ArchetypeId World::mutateImmediate(Entity entity, std::span<ComponentData> add, std::span<ComponentTypeId> remove) const noexcept
     {
         if (!EntityRegistry::isAlive(entity))
         {
-            return;
+            return ecs::Constants::empty_archetype_id;
         }
 
         auto entityRecord = EntityRegistry::getRecord(entity);
@@ -351,6 +351,12 @@ namespace litl
                     entityNewArchetype->setComponent(entityRecord, ComponentDescriptor::get(component.type), component.data);
                 }
             }
+
+            return entityNewArchetype->id();
+        }
+        else
+        {
+            return entityCurrentArchetype->id();
         }
     }
 

@@ -113,6 +113,27 @@ namespace litl
         /// </summary>
         SetParentCommandInfo setParentInfo{};
     };
+
+    enum class EntityChangeType : uint32_t
+    {
+        None = 0,
+        CreateEntity = 1,
+        DestroyEntity = 2,
+        ChangeArchetype = 3,
+        SetParent = 4
+    };
+
+    /// <summary>
+    /// Represents the changes resulting from a single EntityCommand.
+    /// </summary>
+    struct EntityChange
+    {
+        EntityChangeType type{ EntityChangeType::None };
+        Entity entity{ Entity::null() };
+        ArchetypeId prevArchetype{ ecs::Constants::null_archetype_id };
+        ArchetypeId currArchetype{ ecs::Constants::null_archetype_id };
+        Entity parent{ Entity::null() };
+    };
 }
 
 #endif

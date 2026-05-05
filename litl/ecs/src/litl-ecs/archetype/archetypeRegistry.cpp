@@ -34,7 +34,7 @@ namespace litl
 
     Archetype* ArchetypeRegistry::Empty() noexcept
     {
-        static Archetype* EmptyArchetype = buildArchetype(0, {});
+        static Archetype* EmptyArchetype = buildArchetype(ecs::Constants::empty_archetype_id, {});
         return EmptyArchetype;
     }
 
