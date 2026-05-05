@@ -163,31 +163,39 @@ namespace litl::tests
         commands.destroyEntity(deferred0);
 
         // Expected actionable commands:
+        //      create entity
         //      add component
+        //      create tntity
         //      add component
         //      remove component
         //      destroy
 
-        REQUIRE(commands.actionableCommandCount() == 4);
+        REQUIRE(commands.actionableCommandCount() == 6);
 
         std::vector<EntityCommand> materialized;
         materialized.resize(commands.actionableCommandCount());
         commands.extractCommands(&world, materialized, 0);
 
         REQUIRE(materialized[0].entity.isNull() == false);
-        REQUIRE(materialized[0].type == EntityCommandType::AddComponent);
-        REQUIRE(materialized[0].componentInfo.component == ComponentDescriptor::get<Foo>()->id);
+        REQUIRE(materialized[0].type == EntityCommandType::CreateEntity);
 
         REQUIRE(materialized[1].entity.isNull() == false);
         REQUIRE(materialized[1].type == EntityCommandType::AddComponent);
-        REQUIRE(materialized[1].componentInfo.component == ComponentDescriptor::get<Bar>()->id);
+        REQUIRE(materialized[1].componentInfo.component == ComponentDescriptor::get<Foo>()->id);
 
         REQUIRE(materialized[2].entity.isNull() == false);
-        REQUIRE(materialized[2].type == EntityCommandType::RemoveComponent);
-        REQUIRE(materialized[2].componentInfo.component == ComponentDescriptor::get<Foo>()->id);
+        REQUIRE(materialized[2].type == EntityCommandType::CreateEntity);
 
         REQUIRE(materialized[3].entity.isNull() == false);
-        REQUIRE(materialized[3].type == EntityCommandType::DestroyEntity);
+        REQUIRE(materialized[3].type == EntityCommandType::AddComponent);
+        REQUIRE(materialized[3].componentInfo.component == ComponentDescriptor::get<Bar>()->id);
+
+        REQUIRE(materialized[4].entity.isNull() == false);
+        REQUIRE(materialized[4].type == EntityCommandType::RemoveComponent);
+        REQUIRE(materialized[4].componentInfo.component == ComponentDescriptor::get<Foo>()->id);
+
+        REQUIRE(materialized[5].entity.isNull() == false);
+        REQUIRE(materialized[5].type == EntityCommandType::DestroyEntity);
 
         EntityRegistry::clear();
     } LITL_END_TEST_CASE
@@ -201,20 +209,25 @@ namespace litl::tests
         auto entity = commands.createEntity();
         commands.addComponent<Foo>(entity, Foo{ 55 });
 
-        REQUIRE(commands.actionableCommandCount() == 1);
+        REQUIRE(commands.actionableCommandCount() == 2);        // create entity + add component
 
         std::vector<EntityCommand> materialized;
         materialized.resize(commands.actionableCommandCount());
         commands.extractCommands(&world, materialized, 0);
 
+        REQUIRE(materialized[0].type == EntityCommandType::CreateEntity);
         REQUIRE(materialized[0].entity.isNull() == false);
-        REQUIRE(materialized[0].componentInfo.data != nullptr);
+        REQUIRE(materialized[0].componentInfo.data == nullptr);
+
+        REQUIRE(materialized[1].type == EntityCommandType::AddComponent);
+        REQUIRE(materialized[1].entity.isNull() == false);
+        REQUIRE(materialized[1].componentInfo.data != nullptr);
 
         Foo entityFoo{};
 
         REQUIRE(entityFoo.a == 0);
 
-        memcpy(&entityFoo, materialized[0].componentInfo.data, sizeof(Foo));
+        memcpy(&entityFoo, materialized[1].componentInfo.data, sizeof(Foo));
 
         REQUIRE(entityFoo.a == 55);
 
@@ -224,8 +237,8 @@ namespace litl::tests
     LITL_TEST_CASE("Local Component Copy Many", "[ecs::entityCommands]")
     {
         // same as the other test, but enough to generate multiple local data blocks within the command buffer
-        constexpr uint32_t ComponentCount = 8192;
-
+        constexpr uint32_t ComponentCount = 8192u;
+        constexpr uint32_t ExpectedCommandCount = ComponentCount * 2u; // each create component command is preceeded by a create entity command
         EntityRegistry::clear();
         World world;
         EntityCommands commands;
@@ -252,42 +265,47 @@ namespace litl::tests
                 }
             }
 
-            REQUIRE(commands.actionableCommandCount() == ComponentCount);
+            REQUIRE(commands.actionableCommandCount() == ExpectedCommandCount);
 
             std::vector<EntityCommand> materialized;
             materialized.resize(commands.actionableCommandCount());
             commands.extractCommands(&world, materialized, 0);
 
-            REQUIRE(materialized.size() == ComponentCount);
+            REQUIRE(materialized.size() == ExpectedCommandCount);
 
+            REQUIRE(materialized[0].type == EntityCommandType::CreateEntity);
             REQUIRE(materialized[0].entity.isNull() == false);
-            REQUIRE(materialized[0].componentInfo.data != nullptr);
+            REQUIRE(materialized[0].componentInfo.data == nullptr);
+
+            REQUIRE(materialized[1].type == EntityCommandType::AddComponent);
+            REQUIRE(materialized[1].entity.isNull() == false);
+            REQUIRE(materialized[1].componentInfo.data != nullptr);
 
             if (firstFooPtr == nullptr)
             {
-                firstFooPtr = materialized[0].componentInfo.data;
+                firstFooPtr = materialized[1].componentInfo.data;
             }
             else
             {
                 // ensure block reuse
-                REQUIRE(firstFooPtr == materialized[0].componentInfo.data);
+                REQUIRE(firstFooPtr == materialized[1].componentInfo.data);
             }
 
             REQUIRE(first.a == 0);
-            memcpy(&first, materialized[0].componentInfo.data, sizeof(Foo));
+            memcpy(&first, materialized[1].componentInfo.data, sizeof(Foo));
             REQUIRE(first.a == 0);
             first.a = 0;
 
-            REQUIRE(materialized[ComponentCount - 1].entity.isNull() == false);
-            REQUIRE(materialized[ComponentCount - 1].componentInfo.data != nullptr);
+            REQUIRE(materialized[ExpectedCommandCount - 1].entity.isNull() == false);
+            REQUIRE(materialized[ExpectedCommandCount - 1].componentInfo.data != nullptr);
 
             REQUIRE(last.a == 0);
-            memcpy(&last, materialized[ComponentCount - 1].componentInfo.data, sizeof(Foo));
+            memcpy(&last, materialized[ExpectedCommandCount - 1].componentInfo.data, sizeof(Foo));
             REQUIRE(last.a == ComponentCount - 1);
             last.a = 0;
 
             REQUIRE(leet.a == 0);
-            memcpy(&leet, materialized[1337].componentInfo.data, sizeof(Foo));
+            memcpy(&leet, materialized[(1337 * 2) + 1].componentInfo.data, sizeof(Foo));
             REQUIRE(leet.a == shared.a);
             leet.a = 0;
 

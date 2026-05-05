@@ -435,7 +435,7 @@ namespace litl::tests
         auto serviceProvider = collection.build();
 
         World world;
-        world.setup((*serviceProvider), {});
+        world.setup((*serviceProvider), std::make_shared<FrameCallbacks>());
 
         auto entity0 = world.createImmediate();
         auto entity1 = world.createImmediate();
