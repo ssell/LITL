@@ -65,7 +65,6 @@ namespace litl
         uint32_t currPool{ 0 };
         uint32_t currCommand{ 0 };
         uint32_t currDeferredCommand{ 0 };
-        uint32_t createCommandCount{ 0 };
 
         void reset()
         {
@@ -77,7 +76,6 @@ namespace litl
             currPool = 0;
             currCommand = 0;
             currDeferredCommand = 0;
-            createCommandCount = 0;
 
             // command queue should already be empty, but just incase ...
             entityCommands.clear();
@@ -130,8 +128,6 @@ namespace litl
 
     void EntityCommandQueue::push(EntityCommand command, void* source) noexcept
     {
-        assert(command.type != EntityCommandType::CreateEntity);
-
         if ((command.type == EntityCommandType::AddComponent) && (source != nullptr))
         {
             m_pImpl->insertComponent(ComponentDescriptor::get(command.componentInfo.component), source, &command.componentInfo.data);
@@ -143,11 +139,7 @@ namespace litl
 
     void EntityCommandQueue::push(DeferredEntityCommand command, void* source) noexcept
     {
-        if (command.type == EntityCommandType::CreateEntity)
-        {
-            m_pImpl->createCommandCount++;
-        }
-        else if ((command.type == EntityCommandType::AddComponent) && (source != nullptr))
+        if ((command.type == EntityCommandType::AddComponent) && (source != nullptr))
         {
             m_pImpl->insertComponent(ComponentDescriptor::get(command.componentInfo.component), source, &command.componentInfo.data);
         }
@@ -192,7 +184,7 @@ namespace litl
 
     size_t EntityCommandQueue::actionableCommandCount() const noexcept
     {
-        return (m_pImpl->entityCommands.size() + m_pImpl->deferredEntityCommands.size()) - m_pImpl->createCommandCount;
+        return (m_pImpl->entityCommands.size() + m_pImpl->deferredEntityCommands.size());
     }
 
     size_t EntityCommandQueue::poolCount() const noexcept

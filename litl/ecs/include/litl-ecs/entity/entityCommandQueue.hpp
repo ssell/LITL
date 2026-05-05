@@ -59,7 +59,7 @@ namespace litl
         size_t count() const noexcept;
 
         /// <summary>
-        /// Number of non-create commands.
+        /// 
         /// </summary>
         /// <returns></returns>
         size_t actionableCommandCount() const noexcept;
