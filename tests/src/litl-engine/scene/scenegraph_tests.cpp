@@ -49,21 +49,21 @@ namespace litl::tests
         Transform childTransform{};
         Transform parentTransform{};
 
-        childTransform.parent.set(parent, ParentWriteKey);
+        childTransform.getParent().set(parent, ParentWriteKey);
 
         // fail to add child with removed parent
         LITL_START_ASSERT_CAPTURE
             sceneGraph.add(child, childTransform);
         LITL_END_ASSERT_CAPTURE
 
-        childTransform.parent.set(child, ParentWriteKey);
+        childTransform.getParent().set(child, ParentWriteKey);
 
         // fail to add child with self parentage
         LITL_START_ASSERT_CAPTURE
             sceneGraph.add(child, childTransform);
         LITL_END_ASSERT_CAPTURE
 
-        childTransform.parent.set(parent, ParentWriteKey);
+        childTransform.getParent().set(parent, ParentWriteKey);
 
         sceneGraph.add(parent, parentTransform);
         sceneGraph.add(child, childTransform);

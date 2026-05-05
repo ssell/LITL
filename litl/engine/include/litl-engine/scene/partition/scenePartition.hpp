@@ -12,6 +12,8 @@ namespace litl
 {
     /// <summary>
     /// Defines the compile-time interface/contract that any scene partition implementation must abide by.
+    /// 
+    /// All positions, bounds, and queries are expected to be in world-space.
     /// </summary>
     template<typename T>
     concept ScenePartition = requires(

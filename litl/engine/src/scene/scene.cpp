@@ -20,13 +20,13 @@ namespace litl
         SceneGraph graph;
         ScenePartitionVariant partition;
 
-        void add(Entity entity, Transform const& transform, bounds::AABB bounds) noexcept
+        void track(Entity entity, Transform const& transform, bounds::AABB bounds) noexcept
         {
             graph.add(entity, transform);
             std::visit([&](auto& partition) { partition.add(entity, bounds); }, partition);
         }
 
-        void remove(Entity entity) noexcept
+        void untrack(Entity entity) noexcept
         {
             graph.remove(entity);
             std::visit([&](auto& partition) { partition.remove(entity); }, partition);
@@ -101,14 +101,19 @@ namespace litl
 
     }
 
-    void Scene::add(Entity entity, Transform const& transform, bounds::AABB bounds) noexcept
+    void Scene::track(Entity entity, Transform const& transform) noexcept
     {
-        m_impl->add(entity, transform, bounds);
+        m_impl->track(entity, transform, bounds::AABB::fromCenterHalfExtents(transform.getPosition(), vec3{0.5f, 0.5f, 0.5f}));
     }
 
-    void Scene::remove(Entity entity) noexcept
+    void Scene::track(Entity entity, Transform const& transform, bounds::AABB bounds) noexcept
     {
-        m_impl->remove(entity);
+        m_impl->track(entity, transform, bounds);
+    }
+
+    void Scene::untrack(Entity entity) noexcept
+    {
+        m_impl->untrack(entity);
     }
 
     void Scene::update(Entity entity, bounds::AABB bounds) noexcept
