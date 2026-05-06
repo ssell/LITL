@@ -5,6 +5,9 @@
 #include "litl-core/assert.hpp"
 #include "litl-engine/scene/sceneManager.hpp"
 #include "litl-engine/scene/sceneView.hpp"
+#include "litl-engine/scene/sceneCommandProcessor.hpp"
+#include "litl-ecs/world.hpp"
+#include "litl-ecs/entity/entityCommand.hpp"
 
 namespace litl
 {
@@ -12,7 +15,18 @@ namespace litl
     {
         std::vector<std::shared_ptr<Scene>> scenes;
         std::shared_ptr<SceneView> view;
+        SceneCommandProcessor commandProcessor;
         uint32_t activeIndex{ 0 };
+
+        void processEntityChanges(World& world, std::span<EntityChange const> entityChanges) noexcept
+        {
+            if (scenes.empty())
+            {
+                return;
+            }
+
+            commandProcessor.process(*scenes[activeIndex], world, entityChanges);
+        }
     };
 
     SceneManager::SceneManager()
@@ -58,5 +72,10 @@ namespace litl
         m_impl->view->setViewedScene(m_impl->scenes[m_impl->activeIndex]);
 
         // ... todo whatever is actually needed to swap to a different scene ...
+    }
+
+    void SceneManager::processEntityChanges(World& world, std::span<EntityChange const> entityChanges) noexcept
+    {
+        m_impl->processEntityChanges(world, entityChanges);
     }
 }

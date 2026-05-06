@@ -4,8 +4,12 @@ namespace litl
 {
     void EngineCallbacks::setup(std::shared_ptr<ServiceProvider> serviceProvider, std::shared_ptr<FrameCallbacks> userCallbacks) noexcept
     {
+        m_pWorld = serviceProvider->get<World>();
         m_pSceneManager = serviceProvider->get<SceneManager>();
         m_pUserFrameCallbacks = (userCallbacks != nullptr) ? userCallbacks : std::make_shared<FrameCallbacks>();
+
+        LITL_FATAL_ASSERT_MSG(m_pWorld != nullptr, "Failed to inject litl::World into EngineCallbacks");
+        LITL_FATAL_ASSERT_MSG(m_pSceneManager != nullptr, "Failed to inject litl::SceneManager into EngineCallbacks");
 
         m_pFrameCallbacks->onFrameStart = [this]()
             {
@@ -23,8 +27,7 @@ namespace litl
 
         m_pFrameCallbacks->onSyncPoint = [this](SystemGroup group, std::span<EntityChange const> entityChanges)
             {
-                // ... todo process scene commands ...
-
+                m_pSceneManager->processEntityChanges(*m_pWorld, entityChanges);
                 m_pUserFrameCallbacks->invokeSyncPoint(group, entityChanges);
             };
 

@@ -7,7 +7,6 @@
 
 namespace litl
 {
-
     void SceneCommandProcessor::process(Scene& scene, World& world, std::span<EntityChange const> entityChanges) noexcept
     {
         if (entityChanges.size() == 0)

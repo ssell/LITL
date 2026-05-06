@@ -22,6 +22,7 @@ namespace litl
 
     private:
 
+        std::shared_ptr<World> m_pWorld{ nullptr };
         std::shared_ptr<SceneManager> m_pSceneManager{ nullptr };
         std::shared_ptr<FrameCallbacks> m_pFrameCallbacks{ std::make_shared<FrameCallbacks>() };
         std::shared_ptr<FrameCallbacks> m_pUserFrameCallbacks{ nullptr };
