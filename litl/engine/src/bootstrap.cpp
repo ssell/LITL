@@ -6,7 +6,6 @@
 #include "litl-core/window.hpp"
 #include "litl-renderer/renderer.hpp"
 #include "litl-ecs/world.hpp"
-#include "litl-engine/ecs/systems/renderSystem.hpp"
 
 namespace litl::Internal
 {
@@ -25,7 +24,7 @@ namespace litl::Internal
 
     void defaultConfigureSystems(SystemCollection& systems)
     {
-        systems.addSystem<RenderSystem>(SystemGroup::Render);
+
     }
 
     void defaultBootstrap(ServiceProvider& services, EntityCommands& commands)

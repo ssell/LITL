@@ -40,24 +40,19 @@ namespace litl
         PreRender = 5,
 
         /// <summary>
-        /// Systems run once-per frame to interact with the rendering subsystem.
-        /// </summary>
-        Render = 6,
-
-        /// <summary>
         /// Systems run once-per frame following rendering.
         /// </summary>
-        PostRender = 7,
+        PostRender = 6,
 
         /// <summary>
         /// The last group of systems to run each frame.
         /// </summary>
-        Final = 8,
+        Final = 7,
 
-        Count = 9
+        Count = 8
     };
 
-    constexpr uint32_t SystemGroupCount = 9;
+    constexpr uint32_t SystemGroupCount = 8;
 }
 
 #endif

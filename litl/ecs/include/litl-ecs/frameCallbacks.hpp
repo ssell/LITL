@@ -20,16 +20,24 @@ namespace litl
 
         inline_function<void()> onFrameStart{ nullptr };
         inline_function<void()> onFrameEnd{ nullptr };
+        inline_function<void()> onRender{ nullptr };
         inline_function<void(SystemGroup, std::span<EntityChange const>)> onSyncPoint{ nullptr };
 
         std::array<inline_function<void(SystemGroup)>, GroupCount> onPreGroup{ nullptr };
-        std::array<inline_function<void(SystemGroup)>, GroupCount> onPostGroup{ nullptr };
 
         void invokeFrameStart() const noexcept
         {
             if (onFrameStart)
             {
                 onFrameStart();
+            }
+        }
+
+        void invokeRender() const noexcept
+        {
+            if (onRender)
+            {
+                onRender();
             }
         }
 
@@ -56,16 +64,6 @@ namespace litl
             if (onSyncPoint)
             {
                 onSyncPoint(group, entityChanges);
-            }
-        }
-
-        void invokePostGroup(SystemGroup group) const noexcept
-        {
-            auto& callback = onPostGroup[static_cast<uint32_t>(group)];
-
-            if (callback)
-            {
-                callback(group);
             }
         }
     };

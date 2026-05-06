@@ -19,7 +19,7 @@ namespace litl
         // The logic below is dependent on the EntityCommandProcessor performing deduplication and remove non-SetParent commands
         // when an entity is also being destroyed at the same time. This allows the logic below to avoid having to perform checks itself.
 
-        for (auto& change : entityChanges)
+        for (auto& change : m_sortedChanges)
         {
             switch (change.type)
             {

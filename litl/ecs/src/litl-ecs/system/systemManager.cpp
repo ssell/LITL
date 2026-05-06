@@ -184,8 +184,6 @@ namespace litl
 
             processCommandBuffers(world, group);                                    // Sync command buffers now that all system-related jobs are done.
         }
-
-        m_pImpl->callbacks->invokePostGroup(group);
     }
 
     void SystemManager::processCommandBuffers(World& world, SystemGroup group) const noexcept
