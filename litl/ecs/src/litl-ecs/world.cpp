@@ -80,7 +80,9 @@ namespace litl
             systemManager.run(world, dt, SystemGroup::Update, (*jobScheduler));
             systemManager.run(world, dt, SystemGroup::LateUpdate, (*jobScheduler));
             systemManager.run(world, dt, SystemGroup::PreRender, (*jobScheduler));
-            systemManager.run(world, dt, SystemGroup::Render, (*jobScheduler));
+
+            callbacks->invokeRender();
+
             systemManager.run(world, dt, SystemGroup::PostRender, (*jobScheduler));
             systemManager.run(world, dt, SystemGroup::Final, (*jobScheduler));
 

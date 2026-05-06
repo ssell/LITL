@@ -12,7 +12,7 @@ namespace litl
 {
     class Engine;
     class World;
-    class EntityChange;
+    struct EntityChange;
 
     /// <summary>
     /// Provides a public interface to the game scene(s).

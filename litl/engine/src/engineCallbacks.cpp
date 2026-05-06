@@ -18,6 +18,17 @@ namespace litl
                 m_pUserFrameCallbacks->invokeFrameStart();
             };
 
+        m_pFrameCallbacks->onRender = [this]()
+            {
+                // ... todo ...
+                // frustum cull via scene partition
+                // build draw list form visible entities (transform index (gpu index) + mesh + material)
+                // submit draw list to renderer
+                // renderer binds transform SSBO and issues draw calls
+
+                m_pUserFrameCallbacks->invokeRender();
+            };
+
         m_pFrameCallbacks->onFrameEnd = [this]()
             {
                 // ... todo anything else? ...
@@ -42,13 +53,6 @@ namespace litl
                 m_pUserFrameCallbacks->invokePreGroup(group);
             };
 
-        m_pFrameCallbacks->onPostGroup[static_cast<uint32_t>(SystemGroup::Startup)] = [this](SystemGroup group)
-            {
-                // ... todo anything else? ...
-
-                m_pUserFrameCallbacks->invokePostGroup(group);
-            };
-
         // ---------------------------------------------------------------------------------
         // Input Group
         // ---------------------------------------------------------------------------------
@@ -58,13 +62,6 @@ namespace litl
                 // ... todo anything else? ...
 
                 m_pUserFrameCallbacks->invokePreGroup(group);
-            };
-
-        m_pFrameCallbacks->onPostGroup[static_cast<uint32_t>(SystemGroup::Input)] = [this](SystemGroup group)
-            {
-                // ... todo anything else? ...
-
-                m_pUserFrameCallbacks->invokePostGroup(group);
             };
 
         // ---------------------------------------------------------------------------------
@@ -78,13 +75,6 @@ namespace litl
                 m_pUserFrameCallbacks->invokePreGroup(group);
             };
 
-        m_pFrameCallbacks->onPostGroup[static_cast<uint32_t>(SystemGroup::FixedUpdate)] = [this](SystemGroup group)
-            {
-                // ... todo anything else? ...
-
-                m_pUserFrameCallbacks->invokePostGroup(group);
-            };
-
         // ---------------------------------------------------------------------------------
         // Update Group
         // ---------------------------------------------------------------------------------
@@ -94,13 +84,6 @@ namespace litl
                 // ... todo anything else? ...
 
                 m_pUserFrameCallbacks->invokePreGroup(group);
-            };
-
-        m_pFrameCallbacks->onPostGroup[static_cast<uint32_t>(SystemGroup::Update)] = [this](SystemGroup group)
-            {
-                // ... todo anything else? ...
-
-                m_pUserFrameCallbacks->invokePostGroup(group);
             };
 
         // ---------------------------------------------------------------------------------
@@ -114,47 +97,19 @@ namespace litl
                 m_pUserFrameCallbacks->invokePreGroup(group);
             };
 
-        m_pFrameCallbacks->onPostGroup[static_cast<uint32_t>(SystemGroup::LateUpdate)] = [this](SystemGroup group)
-            {
-                // ... todo anything else? ...
-
-                m_pUserFrameCallbacks->invokePostGroup(group);
-            };
-
         // ---------------------------------------------------------------------------------
         // Pre-Render Group
         // ---------------------------------------------------------------------------------
 
         m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::PreRender)] = [this](SystemGroup group)
             {
-                // ... todo anything else? ...
+                // ... todo ...
+                // rebuild scene graph topological order
+                // propagate world transforms -> write to mapped SSBO
+                // update world bounds
+                // update scene partition with new world positions / bounds
 
                 m_pUserFrameCallbacks->invokePreGroup(group);
-            };
-
-        m_pFrameCallbacks->onPostGroup[static_cast<uint32_t>(SystemGroup::PreRender)] = [this](SystemGroup group)
-            {
-                // ... todo anything else? ...
-
-                m_pUserFrameCallbacks->invokePostGroup(group);
-            };
-
-        // ---------------------------------------------------------------------------------
-        // Render Group
-        // ---------------------------------------------------------------------------------
-
-        m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::Render)] = [this](SystemGroup group)
-            {
-                // ... todo anything else? ...
-
-                m_pUserFrameCallbacks->invokePreGroup(group);
-            };
-
-        m_pFrameCallbacks->onPostGroup[static_cast<uint32_t>(SystemGroup::Render)] = [this](SystemGroup group)
-            {
-                // ... todo anything else? ...
-
-                m_pUserFrameCallbacks->invokePostGroup(group);
             };
 
         // ---------------------------------------------------------------------------------
@@ -168,13 +123,6 @@ namespace litl
                 m_pUserFrameCallbacks->invokePreGroup(group);
             };
 
-        m_pFrameCallbacks->onPostGroup[static_cast<uint32_t>(SystemGroup::PostRender)] = [this](SystemGroup group)
-            {
-                // ... todo anything else? ...
-
-                m_pUserFrameCallbacks->invokePostGroup(group);
-            };
-
         // ---------------------------------------------------------------------------------
         // Final Group
         // ---------------------------------------------------------------------------------
@@ -184,13 +132,6 @@ namespace litl
                 // ... todo anything else? ...
 
                 m_pUserFrameCallbacks->invokePreGroup(group);
-            };
-
-        m_pFrameCallbacks->onPostGroup[static_cast<uint32_t>(SystemGroup::Final)] = [this](SystemGroup group)
-            {
-                // ... todo anything else? ...
-
-                m_pUserFrameCallbacks->invokePostGroup(group);
             };
     }
 

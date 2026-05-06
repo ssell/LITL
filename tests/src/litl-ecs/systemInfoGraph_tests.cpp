@@ -91,7 +91,7 @@ namespace litl::tests
         SystemCollection& systemCollection = world.getSystemCollection();
 
         systemCollection.addSystem<SIGSystemA>(SystemGroup::Update);
-        systemCollection.addSystem<SIGSystemB>(SystemGroup::Render).placement(SystemPlacementHint::Last);
+        systemCollection.addSystem<SIGSystemB>(SystemGroup::PostRender).placement(SystemPlacementHint::Last);
         systemCollection.addSystem<SIGSystemC>(SystemGroup::FixedUpdate);
         systemCollection.addSystem<SIGSystemD>(SystemGroup::Startup).placement(SystemPlacementHint::First);
         systemCollection.addSystem<SIGSystemE>(SystemGroup::PreRender).dependsOn<SIGSystemA>();;
@@ -108,6 +108,6 @@ namespace litl::tests
         REQUIRE(nodeEquals(nodes[1], SystemRegistry::getSystem<SIGSystemC>()->id(), SystemGroup::FixedUpdate, 0));
         REQUIRE(nodeEquals(nodes[2], SystemRegistry::getSystem<SIGSystemA>()->id(), SystemGroup::Update, 0));
         REQUIRE(nodeEquals(nodes[3], SystemRegistry::getSystem<SIGSystemE>()->id(), SystemGroup::PreRender, 0));
-        REQUIRE(nodeEquals(nodes[4], SystemRegistry::getSystem<SIGSystemB>()->id(), SystemGroup::Render, 0));
+        REQUIRE(nodeEquals(nodes[4], SystemRegistry::getSystem<SIGSystemB>()->id(), SystemGroup::PostRender, 0));
     } LITL_END_TEST_CASE
 }
