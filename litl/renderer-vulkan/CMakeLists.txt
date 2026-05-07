@@ -23,7 +23,7 @@ add_library(litl-renderer-vulkan STATIC
 	"src/litl-renderer-vulkan/pipeline/pipelineLayout.cpp" 
 	"src/litl-renderer-vulkan/pipeline/graphicsPipeline.cpp" 
 	"src/litl-renderer-vulkan/resourceAllocator.cpp" 
-	"src/litl-renderer-vulkan/pipeline/shaderModule.cpp")
+	"src/litl-renderer-vulkan/pipeline/shaderModule.cpp" "src/litl-renderer-vulkan/gpuBuffer.cpp")
 
 target_include_directories(litl-renderer-vulkan
 	PUBLIC
