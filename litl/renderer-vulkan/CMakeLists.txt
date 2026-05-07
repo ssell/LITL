@@ -35,6 +35,7 @@ target_include_directories(litl-renderer-vulkan
 target_link_libraries(litl-renderer-vulkan
 	PRIVATE
 		litl-core
+		litl-renderer
 		glfw
 		${Vulkan_LIBRARIES}
 )

@@ -2,14 +2,30 @@ add_library(litl-engine STATIC
 	"src/engine.cpp"
 	"src/windowFactory.cpp" 
 	"src/rendererFactory.cpp" 
-	"src/cache/pipelineLayoutCache.cpp" "src/frameLimiter.cpp" "src/config.cpp" "src/bootstrap.cpp" "src/scene/scenegraph.cpp"  "src/scene/partition/uniformGridPartition.cpp" "src/scene/sceneManager.cpp" "src/scene/scene.cpp"  "src/scene/sceneView.cpp" "src/engineCallbacks.cpp" "src/scene/sceneCommandProcessor.cpp")
+	"src/cache/pipelineLayoutCache.cpp" 
+	"src/frameLimiter.cpp" 
+	"src/config.cpp" 
+	"src/bootstrap.cpp" 
+	"src/scene/scenegraph.cpp" 
+	"src/scene/partition/uniformGridPartition.cpp" 
+	"src/scene/sceneManager.cpp" 
+	"src/scene/scene.cpp"  
+	"src/scene/sceneView.cpp" 
+	"src/engineCallbacks.cpp" 
+	"src/scene/sceneCommandProcessor.cpp"
+)
 
 target_include_directories(litl-engine
 	PUBLIC
 		"${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 
-target_link_libraries(litl-engine PUBLIC litl-core litl-ecs)
+target_link_libraries(litl-engine 
+	PUBLIC 
+		litl-core 
+		litl-ecs
+		litl-renderer
+)
 
 if (LITL_ENABLE_VULKAN)
 	target_link_libraries(litl-engine PRIVATE litl-renderer-vulkan)

@@ -31,6 +31,7 @@ set(LITL_ASSETS_DIR "${CMAKE_SOURCE_DIR}/assets")
 
 add_subdirectory(litl/core)
 add_subdirectory(litl/ecs)
+add_subdirectory(litl/renderer)
 add_subdirectory(litl/engine)
 add_subdirectory(samples)
 

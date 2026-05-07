@@ -11,9 +11,6 @@ add_library(litl-core
 		"src/litl-core/hash.cpp" 
 		"src/litl-core/types.cpp"
 		"src/litl-core/containers/flatHashMap.cpp" 
-		"src/litl-renderer/pipeline/shaderReflection.cpp" 
-		"src/litl-renderer/pipeline/shaderModule.cpp"
-		"src/litl-renderer/rendererConfiguration.cpp" 
 		"src/litl-core/job/jobDeque.cpp" 
 		"src/litl-core/job/jobScheduler.cpp" 
 		"src/litl-core/job/jobPool.cpp" 
@@ -29,10 +26,11 @@ add_library(litl-core
 		"src/litl-core/math/dag.cpp"
 		"src/litl-core/math/types.cpp")
 		
-target_include_directories(litl-core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
+target_include_directories(litl-core 
+	PUBLIC 
+		"${CMAKE_CURRENT_SOURCE_DIR}/include"
 	PRIVATE
 		"${CMAKE_SOURCE_DIR}/deps/xxHash"
-		"${CMAKE_SOURCE_DIR}/deps/SPIRV-Reflect"
 )
 
 target_compile_features(litl-core PUBLIC cxx_std_20)

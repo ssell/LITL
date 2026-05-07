@@ -43,6 +43,8 @@ namespace litl
                 break;
             }
         }
+
+        scene.sync();
     }
 
     void SceneCommandProcessor::sortCommands(std::span<EntityChange const> entityChanges) noexcept
