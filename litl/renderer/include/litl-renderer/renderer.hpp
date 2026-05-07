@@ -48,7 +48,7 @@ namespace litl
             destroy();
         }
 
-        bool build()
+        [[nodiscard]] bool build()
         {
             const auto buildResult = m_pBackendOperations->build(m_backendHandle);
 
@@ -62,7 +62,7 @@ namespace litl
             return true;
         }
 
-        void destroy()
+        void destroy() noexcept
         {
             if ((m_pBackendOperations != nullptr) && (m_backendHandle.handle != nullptr))
             {
@@ -71,37 +71,37 @@ namespace litl
             }
         }
 
-        uint32_t getFrame() const noexcept
+        [[nodiscard]] uint32_t getFrame() const noexcept
         {
             return m_pBackendOperations->getFrame(m_backendHandle);
         }
 
-        uint32_t getFrameIndex() const noexcept
+        [[nodiscard]] uint32_t getFrameIndex() const noexcept
         {
             return m_pBackendOperations->getFrameIndex(m_backendHandle);
         }
 
-        bool beginRender()
+        bool beginRender() const noexcept
         {
             return m_pBackendOperations->beginRender(m_backendHandle);
         }
 
-        void submitCommands(CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers)
+        void submitCommands(CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers) const noexcept
         {
             m_pBackendOperations->submitCommands(m_backendHandle, pCommandBuffers, numCommandBuffers);
         }
 
-        void endRender()
+        void endRender() const noexcept
         {
             m_pBackendOperations->endRender(m_backendHandle);
         }
 
-        RendererHandle const* getHandle() const
+        [[nodiscard]] RendererHandle const* getHandle() const noexcept
         {
             return &m_backendHandle;
         }
 
-        inline ResourceAllocator const* getResourceAllocator() const
+        inline ResourceAllocator const* getResourceAllocator() const noexcept
         {
             return m_pResourceAllocator.get();
         }

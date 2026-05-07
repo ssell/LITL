@@ -11,6 +11,7 @@ namespace litl
     DEFINE_LITL_HANDLE(ComputePipelineHandle);
     DEFINE_LITL_HANDLE(CommandBufferHandle);
     DEFINE_LITL_HANDLE(ShaderModuleHandle);
+    DEFINE_LITL_HANDLE(GpuBufferHandle);
 }
 
 #endif
