@@ -365,9 +365,15 @@ namespace litl::vulkan
             .shaderDrawParameters = true
         };
 
+        auto physicalDeviceBufferDeviceAddressFeatures = VkPhysicalDeviceBufferDeviceAddressFeatures{
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES,
+            .pNext = &vulkan11Features,
+            .bufferDeviceAddress = VK_TRUE
+        };
+
         auto physicalDeviceFeatures = VkPhysicalDeviceFeatures2{
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
-            .pNext = &vulkan11Features,
+            .pNext = &physicalDeviceBufferDeviceAddressFeatures,
             .features = VkPhysicalDeviceFeatures {
                 .geometryShader = true
             }
