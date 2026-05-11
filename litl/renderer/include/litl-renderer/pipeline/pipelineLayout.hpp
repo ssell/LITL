@@ -5,34 +5,10 @@
 
 #include "litl-core/refPtr.hpp"
 #include "litl-renderer/handles.hpp"
+#include "litl-renderer/pipeline/pipelineLayoutDescriptor.hpp"
 
 namespace litl
 {
-    /// <summary>
-    /// Configuration for the pipeline layout.
-    /// </summary>
-    struct PipelineLayoutDescriptor
-    {
-        inline uint64_t hash() const
-        {
-            return m_hash;
-        }
-
-        static PipelineLayoutDescriptor create()
-        {
-            PipelineLayoutDescriptor descriptor{};
-            descriptor.m_hash = 0;
-            return descriptor;
-        }
-
-    private:
-
-        PipelineLayoutDescriptor() {}
-
-        uint64_t m_hash;
-    };
-
-
     /// <summary>
     /// Backend implemented pipeline layout operations.
     /// </summary>

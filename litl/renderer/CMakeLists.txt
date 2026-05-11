@@ -2,7 +2,7 @@ add_library(litl-renderer STATIC
 	"src/litl-renderer/rendererConfiguration.cpp"
     "src/litl-renderer/pipeline/shaderModule.cpp"
     "src/litl-renderer/pipeline/shaderReflection.cpp"
-)
+ "src/litl-renderer/pipeline/pipelineLayoutDescriptor.cpp")
 
 target_include_directories(litl-renderer 
 	PUBLIC 
