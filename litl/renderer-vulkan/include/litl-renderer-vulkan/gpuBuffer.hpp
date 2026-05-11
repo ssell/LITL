@@ -6,14 +6,43 @@
 
 namespace litl::vulkan
 {
+    /// <summary>
+    /// Handle to a VkBuffer using Buffer Device Address (BDA).
+    /// </summary>
     struct GpuBufferHandle
     {
+        /// <summary>
+        /// The logical device used to create the buffer.
+        /// </summary>
         VkDevice vkDevice;
-        VkDeviceMemory vkDeviceMemory;
+
+        /// <summary>
+        /// The physical device used to create the buffer.
+        /// </summary>
+        VkPhysicalDevice vkPhysicalDevice;
+
+        /// <summary>
+        /// The size of the buffer.
+        /// </summary>
+        VkDeviceSize vkDeviceSize;
+
+        /// <summary>
+        /// The buffer.
+        /// </summary>
         VkBuffer vkBuffer;
+
+        /// <summary>
+        /// The buffer allocated memory.
+        /// </summary>
+        VkDeviceMemory vkDeviceMemory;
+
+        /// <summary>
+        /// The stable address of the memory buffer.
+        /// </summary>
+        VkDeviceAddress vkDeviceAddress;
     };
 
-    litl::GpuBuffer* createVulkanGpuBuffer(VkDevice vkDevice, VkDeviceMemory vkDeviceMemory);
+    litl::GpuBuffer* createVulkanGpuBuffer(VkDevice vkDevice, VkPhysicalDevice vkPhysicalDevice, VkDeviceSize vkDeviceSize);
 
     bool build(litl::GpuBufferHandle const& litlHandle) noexcept;
     void destroy(litl::GpuBufferHandle const& litlHandle) noexcept;
