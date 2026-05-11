@@ -41,6 +41,8 @@ namespace litl
 
             if (reflectedEntryPoint != nullptr)
             {
+                reflected.entryPoint = reflectedEntryPoint->name;
+
                 if (reflectShaderStage(&reflected, reflectedEntryPoint) &&
                     reflectResourceBindings(&reflected, &module, reflectedEntryPoint) &&
                     reflectPushConstants(&reflected, &module, reflectedEntryPoint) &&
@@ -81,40 +83,41 @@ namespace litl
 
     bool reflectShaderStage(ShaderReflection* litlReflection, SpvReflectEntryPoint const* entryPoint)
     {
-        if (entryPoint->shader_stage & SPV_REFLECT_SHADER_STAGE_VERTEX_BIT)
+        switch (entryPoint->shader_stage)
         {
+        case SPV_REFLECT_SHADER_STAGE_VERTEX_BIT:
             litlReflection->stage = ShaderStage::Vertex;
-        }
-        else if (entryPoint->shader_stage & SPV_REFLECT_SHADER_STAGE_FRAGMENT_BIT)
-        {
+            break;
+
+        case SPV_REFLECT_SHADER_STAGE_FRAGMENT_BIT:
             litlReflection->stage = ShaderStage::Fragment;
-        }
-        else if (entryPoint->shader_stage & SPV_REFLECT_SHADER_STAGE_GEOMETRY_BIT)
-        {
+            break;
+
+        case SPV_REFLECT_SHADER_STAGE_GEOMETRY_BIT:
             litlReflection->stage = ShaderStage::Geometry;
-        }
-        else if (entryPoint->shader_stage & SPV_REFLECT_SHADER_STAGE_TESSELLATION_CONTROL_BIT)
-        {
+            break;
+
+        case SPV_REFLECT_SHADER_STAGE_TESSELLATION_CONTROL_BIT:
             litlReflection->stage = ShaderStage::TessellationControl;
-        }
-        else if (entryPoint->shader_stage & SPV_REFLECT_SHADER_STAGE_TESSELLATION_EVALUATION_BIT)
-        {
+            break;
+
+        case SPV_REFLECT_SHADER_STAGE_TESSELLATION_EVALUATION_BIT:
             litlReflection->stage = ShaderStage::TessellationEvaluation;
-        }
-        else if (entryPoint->shader_stage & SPV_REFLECT_SHADER_STAGE_COMPUTE_BIT)
-        {
+            break;
+
+        case SPV_REFLECT_SHADER_STAGE_COMPUTE_BIT:
             litlReflection->stage = ShaderStage::Compute;
-        }
-        else if (entryPoint->shader_stage & SPV_REFLECT_SHADER_STAGE_MESH_BIT_NV)
-        {
+            break;
+
+        case SPV_REFLECT_SHADER_STAGE_MESH_BIT_NV:
             litlReflection->stage = ShaderStage::Mesh;
-        }
-        else if (entryPoint->shader_stage & SPV_REFLECT_SHADER_STAGE_TASK_BIT_NV)
-        {
+            break;
+
+        case SPV_REFLECT_SHADER_STAGE_TASK_BIT_NV:
             litlReflection->stage = ShaderStage::Task;
-        }
-        else
-        {
+            break;
+
+        default:
             litlReflection->stage = ShaderStage::Unknown;
             logError("SPIRV reflection of unsupported shader stage ", entryPoint->shader_stage);
             return false;
@@ -344,6 +347,7 @@ namespace litl
         case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
             return ShaderResourceType::UniformBuffer;
 
+        case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER:
         case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
             return ShaderResourceType::StorageBuffer;
 

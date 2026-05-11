@@ -38,7 +38,7 @@ namespace litl
         uint32_t binding;
 
         /// <summary>
-        /// If the resource is not an array, size is 1.
+        /// 0 = runtime bindless array, 1 = not array, >=2 = array of declared size
         /// </summary>
         uint32_t arraySize;
 
@@ -105,6 +105,8 @@ namespace litl
 
     struct ShaderReflection
     {
+        std::string entryPoint;
+
         ShaderStage stage;
 
         std::vector<ResourceBinding> resources;
