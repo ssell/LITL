@@ -174,6 +174,7 @@ namespace litl::vulkan
         if (handle->vkPipeline != VK_NULL_HANDLE)
         {
             vkDestroyPipeline(handle->vkDevice, handle->vkPipeline, nullptr);
+            handle->vkPipeline = VK_NULL_HANDLE;
         }
 
         delete handle;

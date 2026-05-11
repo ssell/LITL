@@ -46,15 +46,13 @@ namespace litl::vulkan
 
     bool build(litl::GpuBufferHandle const& litlHandle) noexcept;
     void destroy(litl::GpuBufferHandle const& litlHandle) noexcept;
-    void* map(litl::GpuBufferHandle const& litlHandle) noexcept;
-    void unmap(litl::GpuBufferHandle const& litlHandle) noexcept;
+    void write(litl::GpuBufferHandle const& litlHandle, void* data, uint32_t offset, uint32_t size) noexcept;
     uint32_t size(litl::GpuBufferHandle const& litlHandle) noexcept;
 
     const litl::GpuBufferOperations VulkanGpuBufferOperations = {
         &build,
         &destroy,
-        &map,
-        &unmap,
+        &write,
         &size
     };
 }

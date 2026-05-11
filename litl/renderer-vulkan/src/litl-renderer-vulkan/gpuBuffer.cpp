@@ -116,21 +116,44 @@ namespace litl::vulkan
 
     void destroy(litl::GpuBufferHandle const& litlHandle) noexcept
     {
+        auto* handle = LITL_UNPACK_HANDLE(GpuBufferHandle, litlHandle);
 
+        if (handle->vkDeviceMemory != VK_NULL_HANDLE)
+        {
+            vkFreeMemory(handle->vkDevice, handle->vkDeviceMemory, nullptr);
+            handle->vkDeviceMemory = VK_NULL_HANDLE;
+        }
+
+        if (handle->vkBuffer != VK_NULL_HANDLE)
+        {
+            vkDestroyBuffer(handle->vkDevice, handle->vkBuffer, nullptr);
+            handle->vkBuffer = nullptr;
+        }
+
+        delete handle;
     }
-    
-    void* map(litl::GpuBufferHandle const& litlHandle) noexcept
-    {
-        return nullptr;
-    }
 
-    void unmap(litl::GpuBufferHandle const& litlHandle) noexcept
+    void write(litl::GpuBufferHandle const& litlHandle, void* data, uint32_t offset, uint32_t size) noexcept
     {
+        auto* handle = LITL_UNPACK_HANDLE(GpuBufferHandle, litlHandle);
+        void* mapped = nullptr;
 
+        VkResult result = vkMapMemory(handle->vkDevice, handle->vkDeviceMemory, offset, size, 0 /* flags */, &mapped);
+
+        if (result != VK_SUCCESS)
+        {
+            logError("Failed to map memory to Vulkan GPU Buffer with result ", result);
+            return;
+        }
+
+        std::memcpy(mapped, data, size);
+
+        vkUnmapMemory(handle->vkDevice, handle->vkDeviceMemory);
     }
 
     uint32_t size(litl::GpuBufferHandle const& litlHandle) noexcept
     {
-        return 0;
+        auto* handle = LITL_UNPACK_HANDLE(GpuBufferHandle, litlHandle);
+        return handle->vkDeviceSize;
     }
 }
