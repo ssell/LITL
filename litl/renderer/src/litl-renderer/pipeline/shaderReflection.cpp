@@ -43,6 +43,7 @@ namespace litl
             {
                 if (reflectShaderStage(&reflected, reflectedEntryPoint) &&
                     reflectResourceBindings(&reflected, &module, reflectedEntryPoint) &&
+                    reflectPushConstants(&reflected, &module, reflectedEntryPoint) &&
                     reflectVertexInputs(&reflected, &module, reflectedEntryPoint) &&
                     reflectFragmentOutputs(&reflected, &module, reflectedEntryPoint) &&
                     reflectSpecializationConstants(&reflected, &module) &&
@@ -133,9 +134,9 @@ namespace litl
             return false;
         }
 
-        // Note we malloc intentionally. SPIRV-Reflect is a C library and uses malloc/free internally. The call to spvReflectDestroyShaderModule calls free on our dynamic resources.
-        SpvReflectDescriptorBinding** resourceBindings = (SpvReflectDescriptorBinding**)malloc(resourceBindingsCount * sizeof(SpvReflectDescriptorBinding*));
-        result = spvReflectEnumerateEntryPointDescriptorBindings(reflectedModule, entryPoint->name, &resourceBindingsCount, resourceBindings);
+        // we piggy-back off of vector here to ensure the memory storing the pointers is freed at the end of scope (failure or success)
+        std::vector<SpvReflectDescriptorBinding*> resourceBindings(resourceBindingsCount);
+        result = spvReflectEnumerateEntryPointDescriptorBindings(reflectedModule, entryPoint->name, &resourceBindingsCount, resourceBindings.data());
 
         if (result != SPV_REFLECT_RESULT_SUCCESS)
         {
@@ -173,8 +174,8 @@ namespace litl
             return false;
         }
 
-        SpvReflectBlockVariable** pushConstantBlocks = (SpvReflectBlockVariable**)malloc(pushConstantBlocksCount * sizeof(SpvReflectBlockVariable*));
-        result = spvReflectEnumerateEntryPointPushConstantBlocks(reflectedModule, entryPoint->name, &pushConstantBlocksCount, pushConstantBlocks);
+        std::vector<SpvReflectBlockVariable*> pushConstantBlocks(pushConstantBlocksCount);
+        result = spvReflectEnumerateEntryPointPushConstantBlocks(reflectedModule, entryPoint->name, &pushConstantBlocksCount, pushConstantBlocks.data());
 
         if (result != SPV_REFLECT_RESULT_SUCCESS)
         {
@@ -213,8 +214,8 @@ namespace litl
             return false;
         }
 
-        SpvReflectInterfaceVariable** inputVariables = (SpvReflectInterfaceVariable**)malloc(vertexInputsCount * sizeof(SpvReflectInterfaceVariable*));
-        result = spvReflectEnumerateEntryPointInputVariables(reflectedModule, entryPoint->name, &vertexInputsCount, inputVariables);
+        std::vector<SpvReflectInterfaceVariable*> inputVariables(vertexInputsCount);
+        result = spvReflectEnumerateEntryPointInputVariables(reflectedModule, entryPoint->name, &vertexInputsCount, inputVariables.data());
 
         if (result != SPV_REFLECT_RESULT_SUCCESS)
         {
@@ -255,8 +256,8 @@ namespace litl
             return false;
         }
 
-        SpvReflectInterfaceVariable** outputVariables = (SpvReflectInterfaceVariable**)malloc(fragmentOutputsCount * sizeof(SpvReflectInterfaceVariable*));
-        result = spvReflectEnumerateEntryPointOutputVariables(reflectedModule, entryPoint->name, &fragmentOutputsCount, outputVariables);
+        std::vector<SpvReflectInterfaceVariable*> outputVariables(fragmentOutputsCount);
+        result = spvReflectEnumerateEntryPointOutputVariables(reflectedModule, entryPoint->name, &fragmentOutputsCount, outputVariables.data());
 
         if (result != SPV_REFLECT_RESULT_SUCCESS)
         {
@@ -292,8 +293,8 @@ namespace litl
             return false;
         }
 
-        SpvReflectSpecializationConstant** constants = (SpvReflectSpecializationConstant**)malloc(constantsCount * sizeof(SpvReflectSpecializationConstant*));
-        result = spvReflectEnumerateSpecializationConstants(reflectedModule, &constantsCount, constants);
+        std::vector<SpvReflectSpecializationConstant*> constants(constantsCount);
+        result = spvReflectEnumerateSpecializationConstants(reflectedModule, &constantsCount, constants.data());
 
         if (result != SPV_REFLECT_RESULT_SUCCESS)
         {

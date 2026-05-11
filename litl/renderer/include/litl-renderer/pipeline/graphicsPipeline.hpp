@@ -5,7 +5,7 @@
 
 #include "litl-renderer/handles.hpp"
 #include "litl-renderer/commands/commandBuffer.hpp"
-#include "litl-renderer/pipeline/fixedPipeline.hpp"
+#include "litl-renderer/pipeline/pipeline.hpp"
 #include "litl-renderer/pipeline/pipelineLayout.hpp"
 #include "litl-renderer/pipeline/shaderModule.hpp"
 
@@ -15,9 +15,14 @@ namespace litl
     {
         PipelineLayout* pPipelineLayout;
 
-        RasterState rasterState;
-        DepthStencilState depthStencilState;
-        BlendState blendState;
+        std::span<VertexBinding const> vertexBindings;
+        std::span<VertexAttribute const> vertexAttributes;
+
+        PrimitiveTopology topology = PrimitiveTopology::TriangleList;
+        RasterState rasterState{};
+        DepthState depthState{};
+        StencilState stencilState{};
+        std::span<BlendState const> blendStates;
 
         ShaderModule* pVertexShader;
         ShaderModule* pFragmentShader;

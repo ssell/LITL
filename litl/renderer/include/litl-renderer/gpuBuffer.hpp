@@ -11,8 +11,7 @@ namespace litl
     {
         bool (*build)(GpuBufferHandle const&) noexcept;
         void (*destroy)(GpuBufferHandle const&) noexcept;
-        void* (*map)(GpuBufferHandle const&) noexcept;
-        void (*unmap)(GpuBufferHandle const&) noexcept;
+        void (*write)(GpuBufferHandle const&, void*, uint32_t, uint32_t) noexcept;
         uint32_t (*size)(GpuBufferHandle const&) noexcept;
     };
 
@@ -51,16 +50,21 @@ namespace litl
             }
         }
 
-        [[nodiscard]] void* map() const noexcept
+        /// <summary>
+        /// Writes the data, with size in bytes, into the buffer at the specified offset.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="offset"></param>
+        /// <param name="size"></param>
+        void write(void* data, uint32_t offset, uint32_t size) noexcept
         {
-            return m_pBackendOperations->map(m_backendHandle);
+            m_pBackendOperations->write(m_backendHandle, data, offset, size);
         }
 
-        void unmap() const noexcept
-        {
-            m_pBackendOperations->unmap(m_backendHandle);
-        }
-
+        /// <summary>
+        /// Returns the size of the buffer in bytes.
+        /// </summary>
+        /// <returns></returns>
         [[nodiscard]] uint32_t size() const noexcept
         {
             return m_pBackendOperations->size(m_backendHandle);
