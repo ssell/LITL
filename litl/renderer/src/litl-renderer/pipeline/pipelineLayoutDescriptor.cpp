@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <ranges>
+#include <span>
 
 #include "litl-core/constants.hpp"
 #include "litl-renderer/pipeline/pipelineLayoutDescriptor.hpp"
@@ -27,15 +28,15 @@ namespace litl
     /// <param name="stage"></param>
     /// <param name="resource"></param>
     /// <returns></returns>
-    MergeShaderReflectionResult addOrMergeResource(PipelineLayoutDescriptor& descriptor, ShaderStage stage, ResourceBinding const& resource) noexcept
+    MergeShaderReflectionResult addOrMergeResource(std::vector<MergedResourceBinding>& resources, ShaderStage stage, ResourceBinding const& resource) noexcept
     {
         size_t index = Constants::uint32_null_index;
 
         // Find existing resource
-        for (size_t i = 0; i < descriptor.resources.size(); ++i)
+        for (size_t i = 0; i < resources.size(); ++i)
         {
-            if ((descriptor.resources[i].set == resource.set) &&
-                (descriptor.resources[i].binding == resource.binding))
+            if ((resources[i].set == resource.set) &&
+                (resources[i].binding == resource.binding))
             {
                 index = i;
                 break;
@@ -45,7 +46,7 @@ namespace litl
         if (index == Constants::uint32_null_index)
         {
             // New resource
-            descriptor.resources.push_back(MergedResourceBinding{
+            resources.push_back(MergedResourceBinding{
                 .type = resource.type,
                 .set = resource.set,
                 .binding = resource.binding,
@@ -56,7 +57,7 @@ namespace litl
         else
         {
             // Already exists, try to merge.
-            auto& existingResource = descriptor.resources[index];
+            auto& existingResource = resources[index];
 
             if (existingResource.type != resource.type)
             {
@@ -83,15 +84,15 @@ namespace litl
     /// <param name="stage"></param>
     /// <param name="pushConstant"></param>
     /// <returns></returns>
-    MergeShaderReflectionResult addOrMergePushConstant(PipelineLayoutDescriptor& descriptor, ShaderStage stage, PushConstantRange const& pushConstant) noexcept
+    MergeShaderReflectionResult addOrMergePushConstant(std::vector<MergedPushConstantRange>& pushConstants, ShaderStage stage, PushConstantRange const& pushConstant) noexcept
     {
         size_t index = Constants::uint32_null_index;
 
         // Find existing push constant
-        for (size_t i = 0; i < descriptor.resources.size(); ++i)
+        for (size_t i = 0; i < pushConstants.size(); ++i)
         {
-            if ((descriptor.pushConstants[i].offset == pushConstant.offset) &&
-                (descriptor.pushConstants[i].sizeBytes == pushConstant.sizeBytes))
+            if ((pushConstants[i].offset == pushConstant.offset) &&
+                (pushConstants[i].sizeBytes == pushConstant.sizeBytes))
             {
                 index = i;
                 break;
@@ -101,7 +102,7 @@ namespace litl
         if (index == Constants::uint32_null_index)
         {
             // Check if the range is already occupied
-            bool overlap = std::ranges::any_of(descriptor.pushConstants,
+            bool overlap = std::ranges::any_of(pushConstants,
                 [&](MergedPushConstantRange const& mpc)
                 {
                     uint32_t aStart = pushConstant.offset;
@@ -120,7 +121,7 @@ namespace litl
             }
 
             // New push constant
-            descriptor.pushConstants.push_back(MergedPushConstantRange{
+            pushConstants.push_back(MergedPushConstantRange{
                 .offset = pushConstant.offset,
                 .sizeBytes = pushConstant.sizeBytes,
                 .stages = stage
@@ -129,10 +130,52 @@ namespace litl
         else
         {
             // Already exists
-            descriptor.pushConstants[index].stages = descriptor.pushConstants[index].stages | stage;
+            pushConstants[index].stages = pushConstants[index].stages | stage;
         }
 
         return MergeShaderReflectionResult::Success;
+    }
+
+    /// <summary>
+    /// Populates the PipelineLayoutDescriptor with the MergedPushConstantRanges and MergedResourceBindings.
+    /// The former is simply passed in while the latter requires one more step of transformations.
+    /// 
+    /// Entering this function we have a flat list of resource bindings that describe a resource by its type,
+    /// array size, shader stage, and which set it is in. We transform the flat list into a hierarchical structure
+    /// to match the structure expected by Vulkan.
+    /// </summary>
+    /// <param name="descriptor"></param>
+    /// <param name="mergedResources"></param>
+    /// <param name="pushConstants"></param>
+    void partitionAndBuildPipelineLayoutDescriptor(PipelineLayoutDescriptor& descriptor, std::span<MergedResourceBinding const> mergedResources, std::span<MergedPushConstantRange> pushConstants) noexcept
+    {
+        descriptor.setLayouts.clear();      // just to be safe ...
+        descriptor.pushConstants.clear();
+
+        // No further transformations needed for push constants
+        descriptor.pushConstants.assign(pushConstants.begin(), pushConstants.end());
+
+        // Partition our flat list of resource bindings into structured sets of bindings to mimic the Vulkan structure
+        uint32_t maxSet = 0u;
+
+        for (auto const& mergedResource : mergedResources)
+        {
+            maxSet = std::max(maxSet, mergedResource.set);
+        }
+
+        descriptor.setLayouts.resize(mergedResources.empty() ? 0 : maxSet + 1);
+
+        for (auto const& mergedResource : mergedResources)
+        {
+            descriptor.setLayouts[mergedResource.set].bindings.push_back(
+                DescriptorSetLayoutBindingDesc {
+                    .binding = mergedResource.binding,
+                    .type = mergedResource.type,
+                    .arraySize = mergedResource.arraySize,
+                    .stages = mergedResource.stages
+                }
+            );
+        }
     }
 
     MergeShaderReflectionResult mergeShaderReflections(std::span<ShaderReflection const> reflectedShaderStages, PipelineLayoutDescriptor& descriptor) noexcept
@@ -143,6 +186,9 @@ namespace litl
         ShaderStage seenStages = ShaderStage::Unknown;
 
         // For each reflected shader stage (vertex, fragment, etc.) ...
+        std::vector<MergedResourceBinding> resources;
+        std::vector<MergedPushConstantRange> pushConstants;
+
         for (auto const& reflectedShaderStage : reflectedShaderStages)
         {
             if ((static_cast<uint32_t>(seenStages) & static_cast<uint32_t>(reflectedShaderStage.stage)) != 0)
@@ -155,7 +201,7 @@ namespace litl
             // Merge the reflected resources
             for (auto const& resource : reflectedShaderStage.resources)
             {
-                result = addOrMergeResource(descriptor, reflectedShaderStage.stage, resource);
+                result = addOrMergeResource(resources, reflectedShaderStage.stage, resource);
 
                 if (result != MergeShaderReflectionResult::Success)
                 {
@@ -166,7 +212,7 @@ namespace litl
             // Merge the reflected push constants
             for (auto const& pushConstant : reflectedShaderStage.pushConstants)
             {
-                result = addOrMergePushConstant(descriptor, reflectedShaderStage.stage, pushConstant);
+                result = addOrMergePushConstant(pushConstants, reflectedShaderStage.stage, pushConstant);
 
                 if (result != MergeShaderReflectionResult::Success)
                 {
@@ -175,6 +221,7 @@ namespace litl
             }
         }
 
+        partitionAndBuildPipelineLayoutDescriptor(descriptor, resources, pushConstants);
 
         return result;
     }
