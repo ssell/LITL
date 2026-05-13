@@ -46,7 +46,7 @@ namespace litl::vulkan
         case litl::ShaderStage::Task:
             return VkShaderStageFlagBits::VK_SHADER_STAGE_TASK_BIT_EXT;
 
-        case litl::ShaderStage::Unknown:
+        case litl::ShaderStage::None:
         default:
             return static_cast<VkShaderStageFlagBits>(0);
         }

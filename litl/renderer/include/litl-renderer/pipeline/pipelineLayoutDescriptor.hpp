@@ -2,6 +2,8 @@
 #define LITL_RENDERER_PIPELINE_LAYOUT_DESCRIPTOR_H__
 
 #include <vector>
+
+#include "litl-core/hash.hpp"
 #include "litl-renderer/pipeline/shaderReflectionMerge.hpp"
 
 namespace litl
@@ -65,6 +67,8 @@ namespace litl
         /// Bitmask of one or more ShaderStage that reference this binding.
         /// </summary>
         ShaderStage stages;
+
+        bool operator==(DescriptorSetLayoutBindingDesc const&) const = default;
     };
 
     /// <summary>
@@ -72,7 +76,15 @@ namespace litl
     /// </summary>
     struct DescriptorSetLayoutDesc
     {
+        /// <summary>
+        /// Sorted by DescriptorSetLayoutBindingDesc::binding (ascending)
+        /// </summary>
         std::vector<DescriptorSetLayoutBindingDesc> bindings;
+
+        bool operator==(DescriptorSetLayoutDesc const& other) const
+        {
+            return bindings == other.bindings;
+        }
     };
 
     /// <summary>
@@ -112,20 +124,6 @@ namespace litl
         /// Stages sharing a range have their visibility flags OR'd together; partial overlaps across stages are rejected at merge time.
         /// </summary>
         std::vector<MergedPushConstantRange> pushConstants;
-
-        [[nodiscard]] uint64_t hash() const noexcept
-        {
-            if (m_hash == 0)
-            {
-                // do the hashing ...
-            }
-
-            return m_hash;
-        }
-
-    private:
-
-        uint64_t m_hash = 0;
     };
 
     /// <summary>
@@ -135,6 +133,33 @@ namespace litl
     /// <param name="descriptor"></param>
     /// <returns></returns>
     MergeShaderReflectionResult mergeShaderReflections(std::span<ShaderReflection const> reflectedShaderStages, PipelineLayoutDescriptor& descriptor) noexcept;
+}
+
+// Provide custom hashing to use with std::unordered_map
+namespace std
+{
+    template<>
+    struct hash<litl::DescriptorSetLayoutBindingDesc>
+    {
+        std::size_t operator()(litl::DescriptorSetLayoutBindingDesc const& binding) const noexcept
+        {
+            return litl::hashPOD(binding);
+        }
+    };
+
+    template<>
+    struct hash<litl::DescriptorSetLayoutDesc>
+    {
+        std::size_t operator()(litl::DescriptorSetLayoutDesc const& layout) const noexcept
+        {
+            std::size_t h = 0;
+
+            litl::hashCombine64(h, layout.bindings.size());
+            for (auto const& binding : layout.bindings) { litl::hashCombine64(h, std::hash<litl::DescriptorSetLayoutBindingDesc>{}(binding)); }
+
+            return h;
+        }
+    };
 }
 
 #endif

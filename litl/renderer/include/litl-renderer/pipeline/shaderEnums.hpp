@@ -11,7 +11,7 @@ namespace litl
     /// </summary>
     enum class ShaderStage : uint32_t
     {
-        Unknown                = 0b00000000,
+        None                   = 0b00000000,
         Vertex                 = 0b00000001,
         Fragment               = 0b00000010,
         Geometry               = 0b00000100,
@@ -30,6 +30,11 @@ namespace litl
     constexpr ShaderStage operator&(ShaderStage a, ShaderStage b) noexcept
     {
         return static_cast<ShaderStage>(static_cast<uint32_t>(a) & static_cast<uint32_t>(b));
+    }
+
+    constexpr bool any(ShaderStage s) noexcept
+    {
+        return static_cast<uint32_t>(s) != 0;
     }
 
     /// <summary>
