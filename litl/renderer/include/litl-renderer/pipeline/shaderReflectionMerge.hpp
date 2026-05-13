@@ -50,6 +50,8 @@ namespace litl
         /// Bitmask of one or more ShaderStage that reference this constant.
         /// </summary>
         ShaderStage stages;
+
+        bool operator==(MergedPushConstantRange const&) const = default;
     };
 
     enum class MergeShaderReflectionResult : uint8_t

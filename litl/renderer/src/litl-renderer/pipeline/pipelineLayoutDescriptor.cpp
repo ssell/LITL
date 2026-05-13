@@ -2,6 +2,7 @@
 #include <ranges>
 #include <span>
 
+#include "litl-core/hash.hpp"
 #include "litl-core/constants.hpp"
 #include "litl-renderer/pipeline/pipelineLayoutDescriptor.hpp"
 
@@ -137,23 +138,15 @@ namespace litl
     }
 
     /// <summary>
-    /// Populates the PipelineLayoutDescriptor with the MergedPushConstantRanges and MergedResourceBindings.
-    /// The former is simply passed in while the latter requires one more step of transformations.
-    /// 
     /// Entering this function we have a flat list of resource bindings that describe a resource by its type,
     /// array size, shader stage, and which set it is in. We transform the flat list into a hierarchical structure
     /// to match the structure expected by Vulkan.
     /// </summary>
     /// <param name="descriptor"></param>
     /// <param name="mergedResources"></param>
-    /// <param name="pushConstants"></param>
-    void partitionAndBuildPipelineLayoutDescriptor(PipelineLayoutDescriptor& descriptor, std::span<MergedResourceBinding const> mergedResources, std::span<MergedPushConstantRange> pushConstants) noexcept
+    void sortAndAssignMergedResources(PipelineLayoutDescriptor& descriptor, std::span<MergedResourceBinding const> mergedResources) noexcept
     {
-        descriptor.setLayouts.clear();      // just to be safe ...
-        descriptor.pushConstants.clear();
-
-        // No further transformations needed for push constants
-        descriptor.pushConstants.assign(pushConstants.begin(), pushConstants.end());
+        descriptor.setLayouts.clear();
 
         // Partition our flat list of resource bindings into structured sets of bindings to mimic the Vulkan structure
         uint32_t maxSet = 0u;
@@ -176,6 +169,37 @@ namespace litl
                 }
             );
         }
+
+        // Sort by the DescriptorSetLayoutDesc bindings as the Shader Reflection does not necessarily visit them in order. This is done for consistent hashing.
+        for (auto& setLayout : descriptor.setLayouts)
+        {
+            if (setLayout.bindings.size() > 0)
+            {
+                std::sort(setLayout.bindings.begin(), setLayout.bindings.end(), [](DescriptorSetLayoutBindingDesc const& a, DescriptorSetLayoutBindingDesc const& b) -> bool
+                {
+                    return a.binding < b.binding;
+                });
+            }
+        }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="descriptor"></param>
+    /// <param name="pushConstants"></param>
+    void sortAndAssignPushConstants(PipelineLayoutDescriptor& descriptor, std::span<MergedPushConstantRange> pushConstants)
+    {
+        descriptor.pushConstants.clear();
+        descriptor.pushConstants.assign(pushConstants.begin(), pushConstants.end());
+
+        if (descriptor.pushConstants.size() > 0)
+        {
+            std::sort(descriptor.pushConstants.begin(), descriptor.pushConstants.end(), [](MergedPushConstantRange const& a, MergedPushConstantRange const& b) -> bool
+            {
+                return a.offset < b.offset;
+            });
+        }
     }
 
     MergeShaderReflectionResult mergeShaderReflections(std::span<ShaderReflection const> reflectedShaderStages, PipelineLayoutDescriptor& descriptor) noexcept
@@ -183,7 +207,7 @@ namespace litl
         auto result = MergeShaderReflectionResult::Success;
 
         // Keep track of already seen stages to catch duplicates.
-        ShaderStage seenStages = ShaderStage::Unknown;
+        ShaderStage seenStages = ShaderStage::None;
 
         // For each reflected shader stage (vertex, fragment, etc.) ...
         std::vector<MergedResourceBinding> resources;
@@ -221,7 +245,8 @@ namespace litl
             }
         }
 
-        partitionAndBuildPipelineLayoutDescriptor(descriptor, resources, pushConstants);
+        sortAndAssignMergedResources(descriptor, resources);
+        sortAndAssignPushConstants(descriptor, pushConstants);
 
         return result;
     }

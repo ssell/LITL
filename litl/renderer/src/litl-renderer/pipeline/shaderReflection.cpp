@@ -118,7 +118,7 @@ namespace litl
             break;
 
         default:
-            litlReflection->stage = ShaderStage::Unknown;
+            litlReflection->stage = ShaderStage::None;
             logError("SPIRV reflection of unsupported shader stage ", entryPoint->shader_stage);
             return false;
         }
