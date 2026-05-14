@@ -20,7 +20,7 @@ add_library(litl-renderer-vulkan STATIC
 	"src/litl-renderer-vulkan/queueFamily.cpp" 
 	"src/litl-renderer-vulkan/swapchainSupport.cpp" 
 	"src/litl-renderer-vulkan/commands/commandBuffer.cpp" 
-	"src/litl-renderer-vulkan/pipeline/pipelineLayout.cpp" 
+	 
 	"src/litl-renderer-vulkan/pipeline/graphicsPipeline.cpp" 
 	"src/litl-renderer-vulkan/resourceAllocator.cpp" 
 	"src/litl-renderer-vulkan/pipeline/shaderModule.cpp" "src/litl-renderer-vulkan/gpuBuffer.cpp" "src/litl-renderer-vulkan/cache/pipelineLayoutCache.cpp" "src/litl-renderer-vulkan/conversions.cpp")

@@ -2,7 +2,6 @@
 #include "litl-renderer-vulkan/rendererContext.hpp"
 #include "litl-renderer-vulkan/commands/commandBuffer.hpp"
 #include "litl-renderer-vulkan/pipeline/graphicsPipeline.hpp"
-#include "litl-renderer-vulkan/pipeline/pipelineLayout.hpp"
 #include "litl-renderer-vulkan/pipeline/shaderModule.hpp"
 
 namespace litl::vulkan
@@ -21,15 +20,6 @@ namespace litl::vulkan
             handle->context.vkCommandPool,
             handle->context.frame,
             handle->context.framesInFlight));
-    }
-
-    RefPtr<litl::PipelineLayout> createPipelineLayout(litl::RendererHandle const& litlHandle, litl::PipelineLayoutDescriptor const& descriptor)
-    {
-        auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
-
-        return RefPtr<litl::PipelineLayout>(createPipelineLayout(
-            handle->context.vkDevice,
-            descriptor));
     }
 
     RefPtr<litl::ShaderModule> createShaderModule(litl::RendererHandle const& litlHandle, litl::ShaderModuleDescriptor const& descriptor)

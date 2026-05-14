@@ -5,7 +5,6 @@
 #include "litl-renderer/handles.hpp"
 #include "litl-renderer/commands/commandBuffer.hpp"
 #include "litl-renderer/pipeline/graphicsPipeline.hpp"
-#include "litl-renderer/pipeline/pipelineLayout.hpp"
 #include "litl-renderer/pipeline/shaderModule.hpp"
 
 namespace litl
@@ -17,7 +16,6 @@ namespace litl
     struct ResourceAllocatorOperations
     {
         RefPtr<CommandBuffer> (*createCommandBuffer)(RendererHandle const&);
-        RefPtr<PipelineLayout> (*createPipelineLayout)(RendererHandle const&, PipelineLayoutDescriptor const&);
         RefPtr<ShaderModule> (*createShaderModule)(RendererHandle const&, ShaderModuleDescriptor const&);
         RefPtr<GraphicsPipeline>(*createGraphicsPipeline)(RendererHandle const&, GraphicsPipelineDescriptor const&);
     };
@@ -39,11 +37,6 @@ namespace litl
         RefPtr<CommandBuffer> createCommandBuffer() const noexcept
         {
             return m_pBackendOperations->createCommandBuffer(m_backendRendererHandle);
-        }
-
-        RefPtr<PipelineLayout> createPipelineLayout(PipelineLayoutDescriptor const& descriptor) const noexcept
-        {
-            return m_pBackendOperations->createPipelineLayout(m_backendRendererHandle, descriptor);
         }
 
         RefPtr<ShaderModule> createShaderModule(ShaderModuleDescriptor const& descriptor) const noexcept

@@ -18,13 +18,11 @@ namespace litl::vulkan
     litl::ResourceAllocator* createResourceAllocator(litl::RendererHandle const& litlHandle) noexcept;
 
     RefPtr<litl::CommandBuffer> createCommandBuffer(litl::RendererHandle const& litlHandle);
-    RefPtr<litl::PipelineLayout> createPipelineLayout(litl::RendererHandle const& litlHandle, litl::PipelineLayoutDescriptor const& descriptor);
     RefPtr<litl::ShaderModule> createShaderModule(litl::RendererHandle const& litlHandle, litl::ShaderModuleDescriptor const& descriptor);
     RefPtr<litl::GraphicsPipeline> createGraphicsPipeline(litl::RendererHandle const& litlHandle, litl::GraphicsPipelineDescriptor const& descriptor);
 
     const litl::ResourceAllocatorOperations VulkanResourceAllocatorOperations = {
         &createCommandBuffer,
-        &createPipelineLayout,
         &createShaderModule,
         &createGraphicsPipeline
     };

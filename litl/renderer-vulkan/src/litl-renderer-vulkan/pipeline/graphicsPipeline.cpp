@@ -1,6 +1,5 @@
 #include "litl-core/logging/logging.hpp"
 #include "litl-renderer-vulkan/pipeline/graphicsPipeline.hpp"
-#include "litl-renderer-vulkan/pipeline/pipelineLayout.hpp"
 #include "litl-renderer-vulkan/pipeline/shaderModule.hpp"
 
 namespace litl::vulkan
@@ -134,7 +133,7 @@ namespace litl::vulkan
             .pColorAttachmentFormats = &handle->vkSwapChainImageFormat
         };
 
-        const auto pipelineHandle = LITL_UNPACK_HANDLE_PTR(PipelineLayoutHandle, descriptor.pPipelineLayout->getHandle());
+        const auto pipelineLayoutHandle = VK_NULL_HANDLE; // TODO pipeline layout
 
         const auto pipelineInfo = VkGraphicsPipelineCreateInfo{
             .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
@@ -149,7 +148,7 @@ namespace litl::vulkan
             .pDepthStencilState = nullptr,              // Optional
             .pColorBlendState = &colorBlending,
             .pDynamicState = &dynamicState,
-            .layout = pipelineHandle->vkPipelineLayout,
+            .layout = pipelineLayoutHandle,             // TODO
             .renderPass = nullptr,                      // Not used with dynamic rendering
             .subpass = 0,                               // Not currently used
             .basePipelineHandle = nullptr,              // Optional
