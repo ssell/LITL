@@ -1,5 +1,5 @@
-#ifndef LITL_RENDERER_RENDERER_DESCRIPTOR_H__
-#define LITL_RENDERER_RENDERER_DESCRIPTOR_H__
+#ifndef LITL_RENDERER_CONFIGURATION_H__
+#define LITL_RENDERER_CONFIGURATION_H__
 
 #include <cstdint>
 #include "litl-renderer/rendererTypes.hpp"

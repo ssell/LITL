@@ -2,7 +2,7 @@
 #define LITL_RENDERER_SHADER_REFLECTION_MERGE_H__
 
 #include <cstdint>
-#include "litl-renderer/pipeline/shaderReflection.hpp"
+#include "litl-renderer/pipeline/shader/reflection.hpp"
 
 namespace litl
 {
