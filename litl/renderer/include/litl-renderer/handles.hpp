@@ -3,15 +3,23 @@
 
 #include "litl-core/handles.hpp"
 
-// OLD STYLE - to replace
+// Standalone handles
 namespace litl
 {
     DEFINE_LITL_HANDLE(RendererHandle);
+    DEFINE_LITL_HANDLE(ResourceManagerHandle);
     DEFINE_LITL_HANDLE(GraphicsPipelineHandle);
     DEFINE_LITL_HANDLE(ComputePipelineHandle);
     DEFINE_LITL_HANDLE(CommandBufferHandle);
     DEFINE_LITL_HANDLE(ShaderModuleHandle);
     DEFINE_LITL_HANDLE(GpuBufferHandle);
+}
+
+// Pooled handles
+namespace litl
+{
+    struct PipelineTag {};
+    using PipelineHandle = Handle<PipelineTag>;
 }
 
 #endif

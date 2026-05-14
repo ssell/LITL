@@ -100,7 +100,10 @@ namespace litl
 
         [[nodiscard]] bool valid(Handle<Tag> handle) const noexcept
         {
-            return (handle.index < m_slots.size()) && (handle.version == m_slots[handle.index].version);
+            return 
+                (handle.index < m_slots.size()) && 
+                (handle.version == m_slots[handle.index].version) && 
+                (handle.version > 0);
         }
 
     private:
@@ -114,9 +117,6 @@ namespace litl
         std::vector<Slot> m_slots;
         std::vector<uint32_t> m_freeList;
     };
-
-    struct PipelineTag {};
-    using PipelineHandle = Handle<PipelineTag>;
 }
 
 #endif
