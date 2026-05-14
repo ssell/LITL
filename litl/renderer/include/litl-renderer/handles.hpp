@@ -3,6 +3,7 @@
 
 #include "litl-core/handles.hpp"
 
+// OLD STYLE - to replace
 namespace litl
 {
     DEFINE_LITL_HANDLE(RendererHandle);

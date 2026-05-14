@@ -7,7 +7,7 @@ namespace litl::vulkan
 {
     /**
      * The ResourceAllocator backend effectively just takes the instantiated raw pointers from the various
-     * specialized backend files (CommandBuffer.hpp/.cpp, PipelineLayout.hpp/.cpp, etc.) and wraps them in a RefPtr.
+     * specialized backend files (CommandBuffer.hpp/.cpp, etc.) and wraps them in a RefPtr.
      * 
      * In the future it _may_ do more to track allocated resource counts, etc.
      * 
