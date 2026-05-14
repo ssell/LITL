@@ -16,7 +16,6 @@
 #include "litl-renderer-vulkan/resourceAllocator.hpp"
 #include "litl-renderer-vulkan/swapchainSupport.hpp"
 #include "litl-renderer-vulkan/commands/commandBuffer.hpp"
-#include "litl-renderer-vulkan/pipeline/pipelineLayout.hpp"
 
 namespace litl::vulkan
 {

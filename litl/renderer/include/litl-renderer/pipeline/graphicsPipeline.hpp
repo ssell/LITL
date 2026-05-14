@@ -6,15 +6,12 @@
 #include "litl-renderer/handles.hpp"
 #include "litl-renderer/commands/commandBuffer.hpp"
 #include "litl-renderer/pipeline/pipeline.hpp"
-#include "litl-renderer/pipeline/pipelineLayout.hpp"
 #include "litl-renderer/pipeline/shaderModule.hpp"
 
 namespace litl
 {
     struct GraphicsPipelineDescriptor
     {
-        PipelineLayout* pPipelineLayout;
-
         std::span<VertexBinding const> vertexBindings;
         std::span<VertexAttribute const> vertexAttributes;
 

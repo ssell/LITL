@@ -6,7 +6,6 @@
 namespace litl
 {
     DEFINE_LITL_HANDLE(RendererHandle);
-    DEFINE_LITL_HANDLE(PipelineLayoutHandle);
     DEFINE_LITL_HANDLE(GraphicsPipelineHandle);
     DEFINE_LITL_HANDLE(ComputePipelineHandle);
     DEFINE_LITL_HANDLE(CommandBufferHandle);
