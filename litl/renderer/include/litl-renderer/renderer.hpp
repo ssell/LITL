@@ -106,8 +106,6 @@ namespace litl
             return m_pResourceAllocator.get();
         }
 
-    protected:
-        
     private:
 
         RendererOperations const* m_pBackendOperations;
