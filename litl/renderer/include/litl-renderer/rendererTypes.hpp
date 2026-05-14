@@ -1,5 +1,5 @@
-#ifndef LITL_RENDERER_RENDERER_TYPES_H__
-#define LITL_RENDERER_RENDERER_TYPES_H__
+#ifndef LITL_RENDERER_TYPES_H__
+#define LITL_RENDERER_TYPES_H__
 
 #include <string>
 

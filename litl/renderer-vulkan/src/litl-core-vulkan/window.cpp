@@ -19,7 +19,6 @@ namespace litl::vulkan
         uint32_t height = 0;
     };
 
-
     litl::Window* createVulkanWindow()
     {
         auto handle = new WindowHandle{};

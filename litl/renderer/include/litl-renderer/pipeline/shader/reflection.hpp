@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "litl-renderer/pipeline/shaderEnums.hpp"
+#include "litl-renderer/pipeline/shader/enums.hpp"
 
 namespace litl
 {
