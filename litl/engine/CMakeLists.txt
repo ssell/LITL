@@ -27,12 +27,16 @@ target_link_libraries(litl-engine
 )
 
 if (LITL_ENABLE_VULKAN)
-	target_link_libraries(litl-engine PRIVATE litl-renderer-vulkan)
+	target_link_libraries(litl-engine PUBLIC litl-renderer-vulkan)
 endif()
 
 target_compile_features(litl-engine
 	PUBLIC
 		cxx_std_20
+)
+
+target_compile_definitions(litl-engine
+	PUBLIC LITL_RENDERER_VULKAN
 )
 
 if (MSVC)

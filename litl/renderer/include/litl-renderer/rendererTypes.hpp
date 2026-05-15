@@ -8,12 +8,16 @@ namespace litl
     enum class RendererBackendType : uint32_t
     {
         None = 0,
-        Vulkan = 1
+        Vulkan = 1,
+        D3D12 = 2,
+        Metal = 3
     };
 
     static char const* RendererBackendNames[] = {
         "None",
-        "Vulkan"
+        "Vulkan",
+        "D3D12",
+        "Metal"
     };
 
     enum class PipelineBindType : uint32_t

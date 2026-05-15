@@ -3,7 +3,7 @@
 #include "litl-engine/frameLimiter.hpp"
 #include "litl-engine/scene/sceneManager.hpp"
 #include "litl-engine/scene/sceneView.hpp"
-#include "litl-core/window.hpp"
+#include "litl-renderer/window.hpp"
 #include "litl-renderer/renderer.hpp"
 #include "litl-ecs/world.hpp"
 
