@@ -26,8 +26,8 @@ namespace litl
         /// </summary>
         Renderer() = default;
 
-        Renderer(RendererContext* context, RendererOps const* ops)
-            : m_pContext(context), m_pOps(ops)
+        Renderer(RendererOps const* ops, RendererContext* context)
+            : m_pOps(ops), m_pContext(context)
         {
 
         }
@@ -57,8 +57,8 @@ namespace litl
             return (m_pContext != nullptr) && (m_pOps != nullptr);
         }
 
-        RendererContext* m_pContext;
         RendererOps const* m_pOps;
+        RendererContext* m_pContext;
     };
 }
 

@@ -1,16 +1,17 @@
 #ifndef LITL_VULKAN_RENDERER_H__
 #define LITL_VULKAN_RENDERER_H__
 
-#include "litl-renderer/window.hpp"
+#include "litl-renderer/renderer.hpp"
 #include "litl-renderer-vulkan/rendererContext.hpp"
 
 namespace litl::vulkan
 {
-    class VulkanRenderer
-    {
-    public:
+    bool build(RendererContext* context) noexcept;
+    void destroy(RendererContext* context) noexcept;
 
-    private:
+    const litl::RendererOps VulkanRendererOps = {
+        &build,
+        &destroy
     };
 }
 
