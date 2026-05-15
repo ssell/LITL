@@ -15,7 +15,9 @@ set(GLFW_BUILD_DOCS     OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(glfw)
 
 add_library(litl-renderer-vulkan STATIC
-	"src/litl-core-vulkan/window.cpp" "src/litl-renderer-vulkan/renderer.cpp")
+	"src/litl-renderer-vulkan/window.cpp" 
+	"src/litl-renderer-vulkan/renderer.cpp"
+)
 
 target_include_directories(litl-renderer-vulkan
 	PUBLIC
