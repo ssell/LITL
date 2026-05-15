@@ -5,6 +5,19 @@ namespace litl
 {
     litl::Renderer* createVulkanRenderer(Window* pWindow, RendererConfiguration const& rendererDescriptor) noexcept
     {
-        return new litl::Renderer();
+        return new litl::Renderer(&litl::vulkan::VulkanRendererOps, new RendererContext());
+    }
+}
+
+namespace litl::vulkan
+{
+    bool build(RendererContext* context) noexcept
+    {
+
+    }
+
+    void destroy(RendererContext* context) noexcept
+    {
+        delete context;
     }
 }

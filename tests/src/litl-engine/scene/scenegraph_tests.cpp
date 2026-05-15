@@ -1,5 +1,5 @@
 #include "tests.hpp"
-#include "litl-engine/scene/sceneGraph.hpp"
+#include "litl-engine/scene/scenegraph.hpp"
 
 namespace litl::tests
 {
