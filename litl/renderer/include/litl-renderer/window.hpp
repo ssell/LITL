@@ -37,6 +37,8 @@ namespace litl
         /// Provided only for initial service injection.
         /// </summary>
         Window() = default;
+        Window(Window const&) = delete;
+        Window& operator=(Window const&) = delete;
 
         explicit Window(WindowOps const* operations, WindowContext* context)
             : m_pOps(operations), m_pContext(context)

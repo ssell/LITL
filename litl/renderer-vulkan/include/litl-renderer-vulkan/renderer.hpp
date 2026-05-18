@@ -6,10 +6,10 @@
 
 namespace litl::vulkan
 {
-    bool build(RendererContext* context) noexcept;
-    void destroy(RendererContext* context) noexcept;
+    bool build(litl::RendererContext* context) noexcept;
+    void destroy(litl::RendererContext* context) noexcept;
 
-    const litl::RendererOps VulkanRendererOps = {
+    inline constexpr litl::RendererOps VulkanRendererOps = {
         &build,
         &destroy
     };

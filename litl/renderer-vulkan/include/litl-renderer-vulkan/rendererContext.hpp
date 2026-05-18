@@ -158,17 +158,27 @@ namespace litl
             /// </summary>
             std::vector<ImageSyncInfo> imageSync;
         };
-    }
 
-    struct RendererContext
-    {
-        vulkan::WindowInfo window{};
-        vulkan::FrameInfo frame{};
-        vulkan::DeviceInfo device{};
-        vulkan::SwapChainInfo swapChain{};
-        vulkan::RenderSyncInfo renderSync{};
-        vulkan::ResourceManager resources;
-    };
+        struct RendererContext
+        {
+            WindowInfo window{};
+            FrameInfo frame{};
+            DeviceInfo device{};
+            SwapChainInfo swapChain{};
+            RenderSyncInfo renderSync{};
+            ResourceManager resources;
+        };
+
+        static RendererContext* unwrap(litl::RendererContext* opaqueContext) noexcept
+        {
+            return reinterpret_cast<RendererContext*>(opaqueContext);
+        }
+
+        static litl::RendererContext* wrap(RendererContext* concreteContext) noexcept
+        {
+            return reinterpret_cast<litl::RendererContext*>(concreteContext);
+        }
+    }
 }
 
 #endif

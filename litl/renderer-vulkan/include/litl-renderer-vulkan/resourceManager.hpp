@@ -10,13 +10,10 @@
 #include "litl-renderer-vulkan/resources/shaderModule.hpp"
 #include "litl-renderer-vulkan/resources/texture.hpp"
 
-namespace litl
-{
-    struct RendererContext;
-}
-
 namespace litl::vulkan
 {
+    struct RendererContext;
+
     class ResourceManager final
     {
     public:
