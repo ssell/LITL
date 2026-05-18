@@ -2,7 +2,7 @@
 #include <vector>
 
 #include "tests.hpp"
-#include "litl-renderer/pipeline/shader/reflection.hpp"
+#include "litl-renderer/reflection.hpp"
 
 namespace litl::tests
 {

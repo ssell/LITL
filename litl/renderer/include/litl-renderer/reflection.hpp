@@ -1,5 +1,5 @@
-#ifndef LITL_RENDERER_SHADER_REFLECTION_H__
-#define LITL_RENDERER_SHADER_REFLECTION_H__
+#ifndef LITL_RENDERER_REFLECTION_H__
+#define LITL_RENDERER_REFLECTION_H__
 
 #include <cstdint>
 #include <optional>
@@ -7,10 +7,14 @@
 #include <string>
 #include <vector>
 
-#include "litl-renderer/pipeline/shader/enums.hpp"
+#include "litl-renderer/resources/shaderModule.hpp"
 
 namespace litl
 {
+    // -------------------------------------------------------------------------------------
+    // Reflection Structures
+    // -------------------------------------------------------------------------------------
+
     /// <summary>
     /// Describes a single resource bound to one or more shader stages.
     /// In Vulkan these are descriptor bindings.
@@ -103,6 +107,9 @@ namespace litl
         uint32_t localSizeZ;
     };
 
+    /// <summary>
+    /// Collection of reflected data about a shader.
+    /// </summary>
     struct ShaderReflection
     {
         std::string entryPoint;
@@ -118,6 +125,75 @@ namespace litl
         std::optional<ComputeInfo> computeInfo;
     };
 
+    // -------------------------------------------------------------------------------------
+    // Reflection Merge Structures
+    // -------------------------------------------------------------------------------------
+
+    struct MergedResourceBinding
+    {
+        /// <summary>
+        /// Buffer, image, sampler, etc.
+        /// </summary>
+        ShaderResourceType type;
+
+        /// <summary>
+        /// Vulkan set, D3D12 space.
+        /// </summary>
+        uint32_t set;
+
+        /// <summary>
+        /// Vulkan binding, D3D12 register.
+        /// </summary>
+        uint32_t binding;
+
+        /// <summary>
+        /// 0 = runtime bindless array, 1 = not array, >=2 = array of declared size
+        /// </summary>
+        uint32_t arraySize;
+
+        /// <summary>
+        /// Bitmask of one or more ShaderStage that reference this binding.
+        /// </summary>
+        ShaderStage stages;
+    };
+
+    struct MergedPushConstantRange
+    {
+        /// <summary>
+        /// The offset applied to the constant.
+        /// </summary>
+        uint32_t offset;
+
+        /// <summary>
+        /// Size of the constant in bytes.
+        /// </summary>
+        uint32_t sizeBytes;
+
+        /// <summary>
+        /// Bitmask of one or more ShaderStage that reference this constant.
+        /// </summary>
+        ShaderStage stages;
+
+        bool operator==(MergedPushConstantRange const&) const = default;
+    };
+
+    enum class MergeShaderReflectionResult : uint8_t
+    {
+        Success = 0,
+        ErrorTypeMismatch,        // same (set, binding), different ShaderResourceType
+        ErrorArraySizeMismatch,   // same (set, binding), incompatible arraySize
+        ErrorPushConstantOverlap, // push constants overlap incompatibly across stages
+        ErrorDuplicateStage,      // same stage reflected twice
+        ErrorNoVertexStage        // graphics pipeline with no vertex stage
+    };
+
+    // -------------------------------------------------------------------------------------
+    // Reflection Operations
+    // -------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// Given a blob of byte-code and a shader entry point, returns the reflected shader data.
+    /// </summary>
     std::optional<ShaderReflection> reflectSPIRV(const char* entryPoint, std::span<uint8_t const> spirvByteCode);
 }
 
