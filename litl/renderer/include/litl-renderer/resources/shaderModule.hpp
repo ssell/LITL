@@ -1,7 +1,8 @@
-#ifndef LITL_RENDERER_SHADER_ENUMS_H__
-#define LITL_RENDERER_SHADER_ENUMS_H__
+#ifndef LITL_RENDERER_SHADER_MODULE_H__
+#define LITL_RENDERER_SHADER_MODULE_H__
 
 #include <cstdint>
+#include "litl-core/handles.hpp"
 
 namespace litl
 {
@@ -11,15 +12,15 @@ namespace litl
     /// </summary>
     enum class ShaderStage : uint32_t
     {
-        None                   = 0b00000000,
-        Vertex                 = 0b00000001,
-        Fragment               = 0b00000010,
-        Geometry               = 0b00000100,
-        TessellationControl    = 0b00001000,
+        None = 0b00000000,
+        Vertex = 0b00000001,
+        Fragment = 0b00000010,
+        Geometry = 0b00000100,
+        TessellationControl = 0b00001000,
         TessellationEvaluation = 0b00010000,
-        Compute                = 0b00100000,
-        Mesh                   = 0b01000000,
-        Task                   = 0b10000000
+        Compute = 0b00100000,
+        Mesh = 0b01000000,
+        Task = 0b10000000
     };
 
     constexpr ShaderStage operator|(ShaderStage a, ShaderStage b) noexcept
@@ -64,6 +65,17 @@ namespace litl
         Uint = 3,
         Bool = 4
     };
+
+    /// <summary>
+    /// Generic description of a shader module.
+    /// </summary>
+    struct ShaderModuleDescriptor
+    {
+        // ... todo ...
+    };
+
+    struct ShaderModuleTag {};
+    using ShaderModuleHandle = Handle<ShaderModuleTag>;
 }
 
 #endif

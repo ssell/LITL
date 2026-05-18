@@ -13,7 +13,7 @@ namespace litl::vulkan
 {
     bool build(RendererContext* context) noexcept
     {
-
+        return false;
     }
 
     void destroy(RendererContext* context) noexcept

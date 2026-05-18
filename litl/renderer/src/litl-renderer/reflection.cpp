@@ -4,7 +4,7 @@
 #include <spirv_reflect.h>
 
 #include "litl-core/logging/logging.hpp"
-#include "litl-renderer/pipeline/shader/reflection.hpp"
+#include "litl-renderer/reflection.hpp"
 
 /**
  * Reflection is done using the SPIRV-Reflect library to reflect from the raw SPIR-V bytecode.
