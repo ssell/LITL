@@ -18,7 +18,7 @@ namespace litl
             /// <summary>
             /// The abstract window to which we are rendering.
             /// </summary>
-            Window* pWindow;
+            Window* window;
 
             /// <summary>
             /// Has the window been resized.
@@ -156,7 +156,7 @@ namespace litl
             /// <summary>
             /// Indexed by the swapchain image index.
             /// </summary>
-            std::vector<ImageSyncInfo> vkRenderCompleteSemaphores;
+            std::vector<ImageSyncInfo> imageSync;
         };
     }
 

@@ -17,7 +17,7 @@ FetchContent_MakeAvailable(glfw)
 add_library(litl-renderer-vulkan STATIC
 	"src/litl-renderer-vulkan/window.cpp" 
 	"src/litl-renderer-vulkan/renderer.cpp"
- "src/litl-renderer-vulkan/resourceManager.cpp")
+ "src/litl-renderer-vulkan/resourceManager.cpp" "src/litl-renderer-vulkan/swapChainSupport.cpp")
 
 target_include_directories(litl-renderer-vulkan
 	PUBLIC
