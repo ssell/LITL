@@ -575,14 +575,102 @@ namespace litl::vulkan
 
         return true;
     }
+
     // -------------------------------------------------------------------------------------
     // Destruction
     // -------------------------------------------------------------------------------------
 
+    void cleanupRenderSync(RendererContext* context) noexcept;
+    void cleanupSwapchain(RendererContext* context) noexcept;
+    void cleanupDevice(RendererContext* context) noexcept;
+    void recreateSwapchain(RendererContext* context) noexcept;
+
     void destroy(RendererContext* context) noexcept
     {
-        // ... todo ...
+        context->resources.destroy(context);
+
+        cleanupRenderSync(context);
+        cleanupSwapchain(context);
+        cleanupDevice(context);
 
         delete context;
+    }
+
+    void cleanupRenderSync(RendererContext* context) noexcept
+    {
+        for (auto& frameSync : context->renderSync.frameSync)
+        {
+            if (frameSync.presentCompleteSemaphore != VK_NULL_HANDLE)
+            {
+                vkDestroySemaphore(context->device.vkDevice, frameSync.presentCompleteSemaphore, nullptr);
+            }
+
+            if (frameSync.renderFence != VK_NULL_HANDLE)
+            {
+                vkDestroyFence(context->device.vkDevice, frameSync.renderFence, nullptr);
+            }
+        }
+
+        context->renderSync.frameSync.clear();
+
+        for (auto& imageSync : context->renderSync.imageSync)
+        {
+            if (imageSync.renderCompleteSemaphore != VK_NULL_HANDLE)
+            {
+                vkDestroySemaphore(context->device.vkDevice, imageSync.renderCompleteSemaphore, nullptr);
+            }
+        }
+
+        context->renderSync.imageSync.clear();
+    }
+
+    void cleanupSwapchain(RendererContext* context) noexcept
+    {
+        if (!context->swapChain.vkSwapChainImageViews.empty())
+        {
+            // Note: only have to destroy the views since we explicitly made them, and not the underlying images.
+            // Those will be destroyed alongside the swap chain itself since it made them.
+            for (auto imageView : context->swapChain.vkSwapChainImageViews)
+            {
+                vkDestroyImageView(context->device.vkDevice, imageView, nullptr);
+            }
+        }
+
+        if (context->swapChain.vkSwapChain != VK_NULL_HANDLE)
+        {
+            vkDestroySwapchainKHR(context->device.vkDevice, context->swapChain.vkSwapChain, nullptr);
+        }
+    }
+
+    void cleanupDevice(RendererContext* context) noexcept
+    {
+        if (context->device.vkCommandPool != VK_NULL_HANDLE)
+        {
+            vkDestroyCommandPool(context->device.vkDevice, context->device.vkCommandPool, nullptr);
+        }
+
+        if (context->device.vkSurface != VK_NULL_HANDLE)
+        {
+            vkDestroySurfaceKHR(context->device.vkInstance, context->device.vkSurface, nullptr);
+        }
+
+        if (context->device.vkDevice != VK_NULL_HANDLE)
+        {
+            vkDestroyDevice(context->device.vkDevice, nullptr);
+        }
+
+        if (context->device.vkInstance != VK_NULL_HANDLE)
+        {
+            vkDestroyInstance(context->device.vkInstance, nullptr);
+        }
+    }
+
+    void recreateSwapchain(RendererContext* context) noexcept
+    {
+        // Wait for our resources to be unused.
+        vkDeviceWaitIdle(context->device.vkDevice);
+
+        cleanupSwapchain(context);
+        createSwapChain(context);
     }
 }
