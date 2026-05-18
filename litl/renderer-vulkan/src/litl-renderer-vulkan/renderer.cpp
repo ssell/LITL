@@ -26,12 +26,12 @@ namespace litl
     /// <returns></returns>
     litl::Renderer* createVulkanRenderer(Window* pWindow, RendererConfiguration const& rendererDescriptor) noexcept
     {
-        auto* context = new RendererContext();
+        vulkan::RendererContext* vulkanContext = new(std::nothrow) vulkan::RendererContext();
 
-        context->window.window = pWindow;
-        context->frame.framesInFlight = rendererDescriptor.framesInFlight;
+        vulkanContext->window.window = pWindow;
+        vulkanContext->frame.framesInFlight = rendererDescriptor.framesInFlight;
 
-        return new litl::Renderer(&litl::vulkan::VulkanRendererOps, context);
+        return new litl::Renderer(&litl::vulkan::VulkanRendererOps, vulkan::wrap(vulkanContext));
     }
 }
 
@@ -71,18 +71,20 @@ namespace litl::vulkan
     bool createCommandPool(RendererContext* context) noexcept;
     bool createSyncObjects(RendererContext* context) noexcept;
 
-    bool build(RendererContext* context) noexcept
+    bool build(litl::RendererContext* context) noexcept
     {
-        LITL_ASSERT_MSG(context->window.window != nullptr, "Vulkan Renderer requires a non-null Window. Headless rendering not yet supported.", false);
+        auto* vulkanContext = unwrap(context);
+
+        LITL_ASSERT_MSG(vulkanContext->window.window != nullptr, "Vulkan Renderer requires a non-null Window. Headless rendering not yet supported.", false);
 
         return
-            createInstance(context) &&
-            createWindowSurface(context) &&
-            selectPhysicalDevice(context) &&
-            createLogicalDevice(context) &&
-            createSwapChain(context) &&
-            createCommandPool(context) &&
-            createSyncObjects(context);
+            createInstance(vulkanContext) &&
+            createWindowSurface(vulkanContext) &&
+            selectPhysicalDevice(vulkanContext) &&
+            createLogicalDevice(vulkanContext) &&
+            createSwapChain(vulkanContext) &&
+            createCommandPool(vulkanContext) &&
+            createSyncObjects(vulkanContext);
     }
 
     /// <summary>
@@ -585,15 +587,17 @@ namespace litl::vulkan
     void cleanupDevice(RendererContext* context) noexcept;
     void recreateSwapchain(RendererContext* context) noexcept;
 
-    void destroy(RendererContext* context) noexcept
+    void destroy(litl::RendererContext* context) noexcept
     {
-        context->resources.destroy(context);
+        auto* vulkanContext = unwrap(context);
 
-        cleanupRenderSync(context);
-        cleanupSwapchain(context);
-        cleanupDevice(context);
+        vulkanContext->resources.destroy(vulkanContext);
 
-        delete context;
+        cleanupRenderSync(vulkanContext);
+        cleanupSwapchain(vulkanContext);
+        cleanupDevice(vulkanContext);
+
+        delete vulkanContext;
     }
 
     void cleanupRenderSync(RendererContext* context) noexcept

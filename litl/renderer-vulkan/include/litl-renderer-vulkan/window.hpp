@@ -15,7 +15,7 @@ namespace litl::vulkan
     void* getSurfaceWindow(WindowContext* context) noexcept;
     void onResize(WindowContext* context, uint32_t width, uint32_t height);
 
-    const litl::WindowOps VulkanWindowOps = {
+    inline constexpr litl::WindowOps VulkanWindowOps = {
         &open,
         &close,
         &destroy,

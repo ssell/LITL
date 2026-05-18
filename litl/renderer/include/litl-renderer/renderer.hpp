@@ -6,6 +6,9 @@
 
 namespace litl
 {
+    /// <summary>
+    /// Intentionally incomplete. Do not not define anywhere.
+    /// </summary>
     struct RendererContext;
 
     struct RendererOps
@@ -25,6 +28,9 @@ namespace litl
         /// Provided only for initial service injection.
         /// </summary>
         Renderer() = default;
+
+        Renderer(Renderer const&) = delete;
+        Renderer& operator=(Renderer const&) = delete;
 
         Renderer(RendererOps const* ops, RendererContext* context)
             : m_pOps(ops), m_pContext(context)
