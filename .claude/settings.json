@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "defaultMode": "plan",
+    "deny": [
+      "Edit",
+      "Write",
+      "MultiEdit",
+      "NotebookEdit"
+    ],
+    "autoMemoryEnabled": false
+  }
+}
