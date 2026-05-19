@@ -1,7 +1,7 @@
 #ifndef LITL_RENDERER_VULKAN_COMMAND_BUFFER_H__
 #define LITL_RENDERER_VULKAN_COMMAND_BUFFER_H__
 
-#include <vulkan/vulkan.h>
+#include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer/resources/commandBuffer.hpp"
 
 namespace litl::vulkan

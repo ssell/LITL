@@ -1,13 +1,9 @@
 #include <new>
 
-#define GLFW_INCLUDE_VULKAN
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
 
 #include "litl-core/logging/logging.hpp"
+#include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer-vulkan/window.hpp"
-#include "litl-renderer-vulkan/integration.hpp"
 
 namespace litl
 {
