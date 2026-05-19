@@ -1,3 +1,4 @@
+#include <cstring>
 #include <set>
 #include <string>
 #include <vector>
@@ -5,13 +6,12 @@
 #define GLFW_INCLUDE_VULKAN
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
 
 #include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/math.hpp"
 #include "litl-renderer/window.hpp"
-#include "litl-renderer-vulkan/integration.hpp"
+#include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer-vulkan/renderer.hpp"
 #include "litl-renderer-vulkan/queueFamily.hpp"
 #include "litl-renderer-vulkan/swapChainSupport.hpp"
@@ -63,10 +63,12 @@ namespace litl::vulkan
     // Creation
     // -------------------------------------------------------------------------------------
 
+    bool verifyValidationLayers() noexcept;
     bool createInstance(RendererContext* context) noexcept;
     bool createWindowSurface(RendererContext* context) noexcept;
     bool selectPhysicalDevice(RendererContext* context) noexcept;
     bool createLogicalDevice(RendererContext* context) noexcept;
+    bool createMemoryAllocator(RendererContext* context) noexcept;
     bool createSwapChain(RendererContext* context) noexcept;
     bool createCommandPool(RendererContext* context) noexcept;
     bool createSyncObjects(RendererContext* context) noexcept;
@@ -78,10 +80,12 @@ namespace litl::vulkan
         LITL_ASSERT_MSG(vulkanContext->window.window != nullptr, "Vulkan Renderer requires a non-null Window. Headless rendering not yet supported.", false);
 
         return
+            verifyValidationLayers() &&
             createInstance(vulkanContext) &&
             createWindowSurface(vulkanContext) &&
             selectPhysicalDevice(vulkanContext) &&
             createLogicalDevice(vulkanContext) &&
+            createMemoryAllocator(vulkanContext) &&
             createSwapChain(vulkanContext) &&
             createCommandPool(vulkanContext) &&
             createSyncObjects(vulkanContext);
@@ -94,32 +98,30 @@ namespace litl::vulkan
     bool createInstance(RendererContext* context) noexcept
     {
         // See: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/01_Instance.html
-        VkApplicationInfo appInfo{};
-        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = "litl-engine";
-        appInfo.pEngineName = "LITL";
-        appInfo.apiVersion = VK_API_VERSION_1_4;
+        const VkApplicationInfo appInfo{
+            .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+            .pApplicationName = "litl-engine",
+            .pEngineName = "LITL",
+            .apiVersion = VK_API_VERSION_1_4,
+        };
 
         uint32_t glfwExtensionCount = 0;
         const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
-        VkInstanceCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        createInfo.pApplicationInfo = &appInfo;
-        createInfo.enabledExtensionCount = glfwExtensionCount;
-        createInfo.ppEnabledExtensionNames = glfwExtensions;
-        createInfo.enabledLayerCount = 0;
-
+        const VkInstanceCreateInfo createInfo{
+            .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+            .pApplicationInfo = &appInfo,
 #ifdef DEBUG
-        if (!verifyValidationLayers())
-        {
-            return false;
-        }
-
-        createInfo.enabledLayerCount = static_cast<uint32_t>(RequiredValidationLayers.size());
-        createInfo.ppEnabledLayerNames = RequiredValidationLayers.data();
-        // by default these just print to standard out. can use callbacks if needed. see: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/02_Validation_layers.html#_message_callback
+            .enabledLayerCount = static_cast<uint32_t>(RequiredValidationLayers.size());
+            .ppEnabledLayerNames = RequiredValidationLayers.data();
+            // by default these just print to standard out. can use callbacks if needed. see: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/02_Validation_layers.html#_message_callback
+#else
+            .enabledLayerCount = 0,
+            .ppEnabledLayerNames = nullptr,
 #endif
+            .enabledExtensionCount = glfwExtensionCount,
+            .ppEnabledExtensionNames = glfwExtensions,
+        };
 
         VkResult result = vkCreateInstance(&createInfo, nullptr, &context->device.vkInstance);
 
@@ -136,8 +138,9 @@ namespace litl::vulkan
     /// Ensures all required validation layers are present.
     /// </summary>
     /// <returns></returns>
-    bool verifyValidationLayers(RendererContext* context) noexcept
+    bool verifyValidationLayers() noexcept
     {
+#ifdef DEBUG
         // See: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/02_Validation_layers.html
         uint32_t layerCount;
         vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
@@ -163,6 +166,7 @@ namespace litl::vulkan
                 return false;
             }
         }
+#endif
 
         return true;
     }
@@ -340,32 +344,32 @@ namespace litl::vulkan
         }
 
         // query for Vulkan advanced feature set
-        auto vulkanDyanmicStateFeatures = VkPhysicalDeviceExtendedDynamicStateFeaturesEXT{
+        VkPhysicalDeviceExtendedDynamicStateFeaturesEXT vulkanDyanmicStateFeatures {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT,
             .pNext = nullptr,
             .extendedDynamicState = true
         };
 
-        auto vulkan13Features = VkPhysicalDeviceVulkan13Features{
+        VkPhysicalDeviceVulkan13Features vulkan13Features {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
             .pNext = &vulkanDyanmicStateFeatures,
             .synchronization2 = true,
             .dynamicRendering = true
         };
 
-        auto vulkan12Features = VkPhysicalDeviceVulkan12Features{
+        VkPhysicalDeviceVulkan12Features vulkan12Features {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
             .pNext = &vulkan13Features,
             .bufferDeviceAddress = VK_TRUE
         };
 
-        auto vulkan11Features = VkPhysicalDeviceVulkan11Features{
+        VkPhysicalDeviceVulkan11Features vulkan11Features {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES,
             .pNext = &vulkan12Features,
             .shaderDrawParameters = true
         };
 
-        auto physicalDeviceFeatures = VkPhysicalDeviceFeatures2{
+        VkPhysicalDeviceFeatures2 physicalDeviceFeatures {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
             .pNext = &vulkan11Features,
             .features = VkPhysicalDeviceFeatures {
@@ -373,7 +377,7 @@ namespace litl::vulkan
             }
         };
 
-        const auto deviceCreateInfo = VkDeviceCreateInfo{
+        const VkDeviceCreateInfo deviceCreateInfo {
             .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
             .pNext = &physicalDeviceFeatures,
             .queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size()),
@@ -402,6 +406,28 @@ namespace litl::vulkan
         if (context->device.vkPresentQueue == VK_NULL_HANDLE)
         {
             logError("Failed to retrieve Vulkan Present Queue");
+            return false;
+        }
+
+        return true;
+    }
+
+    bool createMemoryAllocator(RendererContext* context) noexcept
+    {
+        const VmaAllocatorCreateInfo createVmaInfo{
+            .flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
+            .physicalDevice = context->device.vkPhysicalDevice,
+            .device = context->device.vkDevice,
+            .instance = context->device.vkInstance,
+            .vulkanApiVersion = VK_API_VERSION_1_4
+            // note: add .pVulkanFunctions if we ever move to use volk/some other dynamic loader
+        };
+
+        const VkResult result = vmaCreateAllocator(&createVmaInfo, &context->device.vmaAllocator);
+
+        if (result != VK_SUCCESS)
+        {
+            logError("Failed to create Vulkan Memory Allocator with result ", result);
             return false;
         }
 
@@ -477,20 +503,21 @@ namespace litl::vulkan
 
         for (uint32_t i = 0; i < imageCount; ++i)
         {
-            VkImageViewCreateInfo createImageViewInfo{};
-            createImageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            createImageViewInfo.image = context->swapChain.vkSwapChainImages[i];
-            createImageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            createImageViewInfo.format = context->swapChain.vkSwapChainImageFormat;
-            createImageViewInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createImageViewInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createImageViewInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createImageViewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createImageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            createImageViewInfo.subresourceRange.baseMipLevel = 0;
-            createImageViewInfo.subresourceRange.levelCount = 1;
-            createImageViewInfo.subresourceRange.baseArrayLayer = 0;
-            createImageViewInfo.subresourceRange.layerCount = 1;
+            const VkImageViewCreateInfo createImageViewInfo{
+                .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+                .image = context->swapChain.vkSwapChainImages[i],
+                .viewType = VK_IMAGE_VIEW_TYPE_2D,
+                .format = context->swapChain.vkSwapChainImageFormat,
+                .components.r = VK_COMPONENT_SWIZZLE_IDENTITY,
+                .components.g = VK_COMPONENT_SWIZZLE_IDENTITY,
+                .components.b = VK_COMPONENT_SWIZZLE_IDENTITY,
+                .components.a = VK_COMPONENT_SWIZZLE_IDENTITY,
+                .subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                .subresourceRange.baseMipLevel = 0,
+                .subresourceRange.levelCount = 1,
+                .subresourceRange.baseArrayLayer = 0,
+                .subresourceRange.layerCount = 1
+            };
 
             result = vkCreateImageView(context->device.vkDevice, &createImageViewInfo, nullptr, &context->swapChain.vkSwapChainImageViews[i]);
 
@@ -508,7 +535,7 @@ namespace litl::vulkan
     {
         // https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/03_Drawing/01_Command_buffers.html
 
-        const auto commandPoolInfo = VkCommandPoolCreateInfo{
+        const VkCommandPoolCreateInfo commandPoolInfo{
             .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
             .flags = VkCommandPoolCreateFlagBits::VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,       // Allow command buffers to be rerecorded individually, without this flag they all have to be reset together
             .queueFamilyIndex = context->device.graphicsQueueIndex
@@ -527,15 +554,15 @@ namespace litl::vulkan
 
     bool createSyncObjects(RendererContext* context) noexcept
     {
-        const auto presentSemaphoreInfo = VkSemaphoreCreateInfo{
+        const VkSemaphoreCreateInfo presentSemaphoreInfo{
             .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
         };
 
-        const auto renderSemaphoreInfo = VkSemaphoreCreateInfo{
+        const VkSemaphoreCreateInfo renderSemaphoreInfo{
             .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
         };
 
-        const auto renderFenceInfo = VkFenceCreateInfo{
+        const VkFenceCreateInfo renderFenceInfo{
             .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
             .flags = VK_FENCE_CREATE_SIGNALED_BIT
         };
@@ -656,6 +683,11 @@ namespace litl::vulkan
         if (context->device.vkSurface != VK_NULL_HANDLE)
         {
             vkDestroySurfaceKHR(context->device.vkInstance, context->device.vkSurface, nullptr);
+        }
+
+        if (context->device.vmaAllocator != VK_NULL_HANDLE)
+        {
+            vmaDestroyAllocator(context->device.vmaAllocator);
         }
 
         if (context->device.vkDevice != VK_NULL_HANDLE)

@@ -3,8 +3,8 @@
 
 #include <cstdint>
 #include <vector>
-#include <vulkan/vulkan.h>
 
+#include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer-vulkan/resourceManager.hpp"
 
 namespace litl
@@ -61,6 +61,11 @@ namespace litl
             /// Logical interface to the physical device.
             /// </summary>
             VkDevice vkDevice = VK_NULL_HANDLE;
+
+            /// <summary>
+            /// Memory allocator used by buffers and textures.
+            /// </summary>
+            VmaAllocator vmaAllocator = VK_NULL_HANDLE;
 
             /// <summary>
             /// The window surface on which to render.
