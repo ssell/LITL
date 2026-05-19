@@ -3,6 +3,7 @@
 
 #include "litl-core/assert.hpp"
 #include "litl-renderer/rendererConfiguration.hpp"
+#include "litl-renderer/resources.hpp"
 
 namespace litl
 {
@@ -13,8 +14,25 @@ namespace litl
 
     struct RendererOps
     {
+        // renderer life-cycle
         bool (*build)(RendererContext*);
         void (*destroy)(RendererContext*);
+
+        // resource life-cycle
+        BufferHandle (*createBuffer)(RendererContext*, BufferDescriptor const&);
+        void (*destroyBuffer)(RendererContext*, BufferHandle);
+        CommandBufferHandle (*createCommandBuffer)(RendererContext*, CommandBufferDescriptor const&);
+        void (*destroyCommandBuffer)(RendererContext*, CommandBufferHandle);
+        ComputePipelineHandle (*createComputePipeline)(RendererContext*, ComputePipelineDescriptor const&);
+        void (*destroyComputePipeline)(RendererContext*, ComputePipelineHandle);
+        GraphicsPipelineHandle (*createGraphicsPipeline)(RendererContext*, GraphicsPipelineDescriptor const&);
+        void (*destroyGraphicsPipeline)(RendererContext*, GraphicsPipelineHandle);
+        SamplerHandle (*createSampler)(RendererContext*, SamplerDescriptor const&);
+        void (*destroySampler)(RendererContext*, SamplerHandle);
+        ShaderModuleHandle (*createShaderModule)(RendererContext*, ShaderModuleDescriptor const&);
+        void (*destroyShaderModule)(RendererContext*, ShaderModuleHandle);
+        TextureHandle (*createTexture)(RendererContext*, TextureDescriptor const&);
+        void (*destroyTexture)(RendererContext*, TextureHandle);
     };
 
     /// <summary>
@@ -38,6 +56,10 @@ namespace litl
 
         }
 
+        // ---------------------------------------------------------------------------------
+        // Renderer Life-Cycle
+        // ---------------------------------------------------------------------------------
+
         bool build()
         {
             LITL_FATAL_ASSERT_MSG(valid(), "Renderer::build called with invalid internal state");
@@ -52,6 +74,84 @@ namespace litl
             m_pContext = nullptr;
             m_pOps = nullptr;
         }
+
+        // ---------------------------------------------------------------------------------
+        // Resource Life-Cycle
+        // ---------------------------------------------------------------------------------
+
+        [[nodiscard]] BufferHandle createBuffer(BufferDescriptor const& descriptor) const noexcept
+        {
+            return m_pOps->createBuffer(m_pContext, descriptor);
+        }
+
+        void destroyBuffer(BufferHandle handle) const noexcept
+        {
+            m_pOps->destroyBuffer(m_pContext, handle);
+        }
+
+        [[nodiscard]] CommandBufferHandle createCommandBuffer(CommandBufferDescriptor const& descriptor) const noexcept
+        {
+            return m_pOps->createCommandBuffer(m_pContext, descriptor);
+        }
+
+        void destroyCommandBuffer(CommandBufferHandle handle) const noexcept
+        {
+            m_pOps->destroyCommandBuffer(m_pContext, handle);
+        }
+
+        [[nodiscard]] ComputePipelineHandle createComputePipeline(ComputePipelineDescriptor const& descriptor) const noexcept
+        {
+            return m_pOps->createComputePipeline(m_pContext, descriptor);
+        }
+
+        void destroyComputePipeline(ComputePipelineHandle handle) const noexcept
+        {
+            m_pOps->destroyComputePipeline(m_pContext, handle);
+        }
+
+        [[nodiscard]] GraphicsPipelineHandle createGraphicsPipeline(GraphicsPipelineDescriptor const& descriptor) const noexcept
+        {
+            return m_pOps->createGraphicsPipeline(m_pContext, descriptor);
+        }
+
+        void destroyGraphicsPipeline(GraphicsPipelineHandle handle) const noexcept
+        {
+            m_pOps->destroyGraphicsPipeline(m_pContext, handle);
+        }
+
+        [[nodiscard]] SamplerHandle createSampler(SamplerDescriptor const& descriptor) const noexcept
+        {
+            return m_pOps->createSampler(m_pContext, descriptor);
+        }
+
+        void destroySampler(SamplerHandle handle) const noexcept
+        {
+            m_pOps->destroySampler(m_pContext, handle);
+        }
+
+        [[nodiscard]] ShaderModuleHandle createShaderModule(ShaderModuleDescriptor const& descriptor) const noexcept
+        {
+            return m_pOps->createShaderModule(m_pContext, descriptor);
+        }
+
+        void destroyShaderModule(ShaderModuleHandle handle) const noexcept
+        {
+            m_pOps->destroyShaderModule(m_pContext, handle);
+        }
+
+        [[nodiscard]] TextureHandle createTexture(TextureDescriptor const& descriptor) const noexcept
+        {
+            return m_pOps->createTexture(m_pContext, descriptor);
+        }
+
+        void destroyTexture(TextureHandle handle) const noexcept
+        {
+            m_pOps->destroyTexture(m_pContext, handle);
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Rendering
+        // ---------------------------------------------------------------------------------
 
         bool beginRender() { return false; };
         void endRender() {}

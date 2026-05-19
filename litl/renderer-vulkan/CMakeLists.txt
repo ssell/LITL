@@ -35,7 +35,7 @@ add_library(litl-renderer-vulkan
 		"src/litl-renderer-vulkan/resourceManager.cpp" 
 		"src/litl-renderer-vulkan/swapChainSupport.cpp"
 		"src/litl-renderer-vulkan/impl/impl.cpp"
-)
+ "src/litl-renderer-vulkan/rendererResourceOps.cpp")
 
 target_include_directories(litl-renderer-vulkan
 	PUBLIC

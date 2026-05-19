@@ -79,16 +79,18 @@ namespace litl
         /// Destroys (invalidates) the provided handle if it is currently valid.
         /// </summary>
         /// <param name="handle"></param>
-        void destroy(Handle<Tag> handle) noexcept
+        bool destroy(Handle<Tag> handle) noexcept
         {
             if (!valid(handle))
             {
-                return;
+                return false;
             }
 
             m_slots[handle.index].version++;    // invalidate the the old handle by bumping the version
             m_slots[handle.index].payload = T{};
             m_freeList.push_back(handle.index);
+
+            return true;
         }
 
         [[nodiscard]] bool valid(Handle<Tag> handle) const noexcept
