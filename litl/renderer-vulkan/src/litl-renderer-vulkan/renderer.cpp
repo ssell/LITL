@@ -3,10 +3,6 @@
 #include <string>
 #include <vector>
 
-#define GLFW_INCLUDE_VULKAN
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include <GLFW/glfw3.h>
-
 #include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/math.hpp"
@@ -41,6 +37,8 @@ namespace litl::vulkan
     // Required Features
     // -------------------------------------------------------------------------------------
 
+    static constexpr auto VulkanVersion = VK_API_VERSION_1_4;
+
     /// <summary>
     /// Validation layers are intermediate layers mainly used for debug purposes.
     /// Vulkan by default does very little error checking. Validation layers are
@@ -64,6 +62,7 @@ namespace litl::vulkan
     // -------------------------------------------------------------------------------------
 
     bool verifyValidationLayers() noexcept;
+    bool initializeVolk() noexcept;
     bool createInstance(RendererContext* context) noexcept;
     bool createWindowSurface(RendererContext* context) noexcept;
     bool selectPhysicalDevice(RendererContext* context) noexcept;
@@ -80,6 +79,7 @@ namespace litl::vulkan
         LITL_ASSERT_MSG(vulkanContext->window.window != nullptr, "Vulkan Renderer requires a non-null Window. Headless rendering not yet supported.", false);
 
         return
+            initializeVolk() &&
             verifyValidationLayers() &&
             createInstance(vulkanContext) &&
             createWindowSurface(vulkanContext) &&
@@ -92,42 +92,27 @@ namespace litl::vulkan
     }
 
     /// <summary>
-    /// Creates the Vulkan instance that we will use.
+    /// Initializes Volk.
+    /// 
+    /// Volk is a meta-loader for Vulkan that bypasses the default loader's trampoline functions.
+    /// 
+    /// When you call something like vkCmdDraw, you're not calling the driver directly. 
+    /// You're calling into the loader, which dispatches through a trampoline that figures out 
+    /// which ICD (Installable Client Driver) and which device the call belongs to, then forwards it. 
+    /// For functions called millions of times per frame, that indirection adds up.
+    /// 
+    /// Volk solves this by loading Vulkan dynamically at runtime and resolving function pointers directly 
+    /// from the driver, skipping the trampoline entirely.
     /// </summary>
     /// <returns></returns>
-    bool createInstance(RendererContext* context) noexcept
+    bool initializeVolk() noexcept
     {
-        // See: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/01_Instance.html
-        const VkApplicationInfo appInfo{
-            .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
-            .pApplicationName = "litl-engine",
-            .pEngineName = "LITL",
-            .apiVersion = VK_API_VERSION_1_4,
-        };
-
-        uint32_t glfwExtensionCount = 0;
-        const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-        const VkInstanceCreateInfo createInfo{
-            .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-            .pApplicationInfo = &appInfo,
-#ifdef DEBUG
-            .enabledLayerCount = static_cast<uint32_t>(RequiredValidationLayers.size());
-            .ppEnabledLayerNames = RequiredValidationLayers.data();
-            // by default these just print to standard out. can use callbacks if needed. see: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/02_Validation_layers.html#_message_callback
-#else
-            .enabledLayerCount = 0,
-            .ppEnabledLayerNames = nullptr,
-#endif
-            .enabledExtensionCount = glfwExtensionCount,
-            .ppEnabledExtensionNames = glfwExtensions,
-        };
-
-        VkResult result = vkCreateInstance(&createInfo, nullptr, &context->device.vkInstance);
+        // must be called before any vulkan call
+        const VkResult result = volkInitialize();
 
         if (result != VK_SUCCESS)
         {
-            logError("Failed to create Vulkan Instance with result ", result);
+            logError("Failed to initialize Volk with result ", result);
             return false;
         }
 
@@ -167,6 +152,52 @@ namespace litl::vulkan
             }
         }
 #endif
+
+        return true;
+    }
+
+    /// <summary>
+    /// Creates the Vulkan instance that we will use.
+    /// </summary>
+    /// <returns></returns>
+    bool createInstance(RendererContext* context) noexcept
+    {
+        // See: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/01_Instance.html
+        const VkApplicationInfo appInfo{
+            .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+            .pApplicationName = "litl-engine",
+            .pEngineName = "LITL",
+            .apiVersion = VulkanVersion,
+        };
+
+        uint32_t glfwExtensionCount = 0;
+        const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+        const VkInstanceCreateInfo createInfo{
+            .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+            .pApplicationInfo = &appInfo,
+#ifdef DEBUG
+            .enabledLayerCount = static_cast<uint32_t>(RequiredValidationLayers.size());
+            .ppEnabledLayerNames = RequiredValidationLayers.data();
+            // by default these just print to standard out. can use callbacks if needed. see: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/02_Validation_layers.html#_message_callback
+#else
+            .enabledLayerCount = 0,
+            .ppEnabledLayerNames = nullptr,
+#endif
+            .enabledExtensionCount = glfwExtensionCount,
+            .ppEnabledExtensionNames = glfwExtensions,
+        };
+
+        VkResult result = vkCreateInstance(&createInfo, nullptr, &context->device.vkInstance);
+
+        if (result != VK_SUCCESS)
+        {
+            logError("Failed to create Vulkan Instance with result ", result);
+            return false;
+        }
+
+        // populate instance-level functions
+        volkLoadInstance(context->device.vkInstance);
 
         return true;
     }
@@ -394,6 +425,9 @@ namespace litl::vulkan
             return false;
         }
 
+        // populate device-level functions
+        volkLoadDevice(context->device.vkDevice);
+
         vkGetDeviceQueue(context->device.vkDevice, queueFamilies.getGraphicsIndex(), 0, &context->device.vkGraphicsQueue);
         vkGetDeviceQueue(context->device.vkDevice, queueFamilies.getPresentIndex(), 0, &context->device.vkPresentQueue);
 
@@ -414,13 +448,18 @@ namespace litl::vulkan
 
     bool createMemoryAllocator(RendererContext* context) noexcept
     {
+        const VmaVulkanFunctions vulkanFunctions{
+            .vkGetInstanceProcAddr = vkGetInstanceProcAddr,
+            .vkGetDeviceProcAddr = vkGetDeviceProcAddr
+        };
+
         const VmaAllocatorCreateInfo createVmaInfo{
             .flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
             .physicalDevice = context->device.vkPhysicalDevice,
             .device = context->device.vkDevice,
+            .pVulkanFunctions = &vulkanFunctions,       // wire together with Volk
             .instance = context->device.vkInstance,
-            .vulkanApiVersion = VK_API_VERSION_1_4
-            // note: add .pVulkanFunctions if we ever move to use volk/some other dynamic loader
+            .vulkanApiVersion = VulkanVersion
         };
 
         const VkResult result = vmaCreateAllocator(&createVmaInfo, &context->device.vmaAllocator);

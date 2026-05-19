@@ -2,7 +2,7 @@
 #define LITL_VULKAN_RENDERER_SWAP_CHAIN_SUPPORT_H__
 
 #include <vector>
-#include <vulkan/vulkan.h>
+#include "litl-renderer-vulkan/common.hpp"
 
 namespace litl::vulkan
 {
