@@ -6,6 +6,7 @@
 #include "litl-core/assert.hpp"
 #include "litl-renderer/rendererConfiguration.hpp"
 #include "litl-renderer/resources.hpp"
+#include "litl-renderer/commands.hpp"
 
 namespace litl
 {
@@ -35,6 +36,12 @@ namespace litl
         void (*destroyShaderModule)(RendererContext*, ShaderModuleHandle);
         TextureHandle (*createTexture)(RendererContext*, TextureDescriptor const&);
         void (*destroyTexture)(RendererContext*, TextureHandle);
+
+        // commands
+        bool (*cmdBegin)(RendererContext*, CommandBufferHandle);
+        bool (*cmdEnd)(RendererContext*, CommandBufferHandle);
+        void (*cmdPipelineBarrier)(RendererContext*, CommandBufferHandle, PipelineBarrierCommand const&);
+        void (*cmdClearImage)(RendererContext*, CommandBufferHandle, ClearImageCommand const&);
 
         // drawing
         bool (*beginRender)(RendererContext*);
@@ -157,7 +164,31 @@ namespace litl
         }
 
         // ---------------------------------------------------------------------------------
-        // Rendering
+        // Commands
+        // ---------------------------------------------------------------------------------
+
+        bool cmdBegin(CommandBufferHandle handle) const noexcept
+        {
+            return m_pOps->cmdBegin(m_pContext, handle);
+        }
+
+        bool cmdEnd(CommandBufferHandle handle) const noexcept
+        {
+            return m_pOps->cmdEnd(m_pContext, handle);
+        }
+
+        void cmdPipelineBarrier(CommandBufferHandle handle, PipelineBarrierCommand const& command) const noexcept
+        {
+            m_pOps->cmdPipelineBarrier(m_pContext, handle, command);
+        }
+
+        void cmdClearImage(CommandBufferHandle handle, ClearImageCommand const& command) const noexcept
+        {
+            m_pOps->cmdClearImage(m_pContext, handle, command);
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Drawing
         // ---------------------------------------------------------------------------------
 
         bool beginRender() const noexcept
