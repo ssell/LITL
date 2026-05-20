@@ -6,11 +6,18 @@
 
 namespace litl::vulkan
 {
+    // -------------------------------------------------------------------------------------
     // renderer.cpp
+    // -------------------------------------------------------------------------------------
+
     bool build(litl::RendererContext* context) noexcept;
     void destroy(litl::RendererContext* context) noexcept;
+    void recreateSwapchain(RendererContext* context) noexcept;
 
+    // -------------------------------------------------------------------------------------
     // rendererResourceOps.cpp
+    // -------------------------------------------------------------------------------------
+
     [[nodiscard]] BufferHandle createBuffer(litl::RendererContext* context, BufferDescriptor const& descriptor) noexcept;
     void destroyBuffer(litl::RendererContext* context, BufferHandle handle) noexcept;
     [[nodiscard]] CommandBufferHandle createCommandBuffer(litl::RendererContext* context, CommandBufferDescriptor const& descriptor) noexcept;
@@ -26,9 +33,20 @@ namespace litl::vulkan
     [[nodiscard]] TextureHandle createTexture(litl::RendererContext* context, TextureDescriptor const& descriptor) noexcept;
     void destroyTexture(litl::RendererContext* context, TextureHandle handle) noexcept;
 
+    // -------------------------------------------------------------------------------------
+    // rendererDrawOps.cpp
+    // -------------------------------------------------------------------------------------
+
+    [[nodiscard]] bool beginRender(litl::RendererContext* context) noexcept;
+    void submitCommands(litl::RendererContext* context, std::span<CommandBufferHandle const> commands) noexcept;
+    void endRender(litl::RendererContext* context) noexcept;
+
     inline constexpr litl::RendererOps VulkanRendererOps = {
+        // renderer life-cycle
         &build,
         &destroy,
+
+        // resource life-cycle
         &createBuffer,
         &destroyBuffer,
         &createCommandBuffer,
@@ -42,8 +60,13 @@ namespace litl::vulkan
         &createShaderModule,
         &destroyShaderModule,
         &createTexture,
-        &destroyTexture
+        &destroyTexture,
+
+        // drawing
+        &beginRender,
+        &submitCommands,
+        &endRender
     };
 }
 
-#endif 
+#endif

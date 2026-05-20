@@ -1,6 +1,8 @@
 #ifndef LITL_RENDERER_H__
 #define LITL_RENDERER_H__
 
+#include <span>
+
 #include "litl-core/assert.hpp"
 #include "litl-renderer/rendererConfiguration.hpp"
 #include "litl-renderer/resources.hpp"
@@ -33,6 +35,11 @@ namespace litl
         void (*destroyShaderModule)(RendererContext*, ShaderModuleHandle);
         TextureHandle (*createTexture)(RendererContext*, TextureDescriptor const&);
         void (*destroyTexture)(RendererContext*, TextureHandle);
+
+        // drawing
+        bool (*beginRender)(RendererContext*);
+        void (*submitCommands)(RendererContext*, std::span<CommandBufferHandle const>);
+        void (*endRender)(RendererContext*);
     };
 
     /// <summary>
@@ -153,8 +160,25 @@ namespace litl
         // Rendering
         // ---------------------------------------------------------------------------------
 
-        bool beginRender() { return false; };
-        void endRender() {}
+        bool beginRender() const noexcept
+        {
+            return m_pOps->beginRender(m_pContext);
+        }
+
+        void submitCommands(CommandBufferHandle commands) const noexcept
+        {
+            submitCommands({&commands, 1});
+        }
+
+        void submitCommands(std::span<CommandBufferHandle const> commands) const noexcept
+        {
+            m_pOps->submitCommands(m_pContext, commands);
+        }
+
+        void endRender() const noexcept
+        {
+            m_pOps->endRender(m_pContext);
+        }
 
     private:
 
