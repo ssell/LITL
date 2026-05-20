@@ -34,6 +34,15 @@ namespace litl::vulkan
     void destroyTexture(litl::RendererContext* context, TextureHandle handle) noexcept;
 
     // -------------------------------------------------------------------------------------
+    // rendererCommandOps.cpp
+    // -------------------------------------------------------------------------------------
+
+    [[nodiscard]] bool cmdBegin(litl::RendererContext* context, CommandBufferHandle handle) noexcept;
+    [[nodiscard]] bool cmdEnd(litl::RendererContext* context, CommandBufferHandle handle) noexcept;
+    void cmdPipelineBarrier(litl::RendererContext* context, CommandBufferHandle handle, PipelineBarrierCommand const& command) noexcept;
+    void cmdClearImage(litl::RendererContext* context, CommandBufferHandle handle, ClearImageCommand const& command) noexcept;
+
+    // -------------------------------------------------------------------------------------
     // rendererDrawOps.cpp
     // -------------------------------------------------------------------------------------
 
@@ -61,6 +70,12 @@ namespace litl::vulkan
         &destroyShaderModule,
         &createTexture,
         &destroyTexture,
+
+        // commands
+        &cmdBegin,
+        &cmdEnd,
+        &cmdPipelineBarrier,
+        &cmdClearImage,
 
         // drawing
         &beginRender,

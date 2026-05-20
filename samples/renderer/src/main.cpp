@@ -1,9 +1,44 @@
-#include "litl-core/logging/logging.hpp"
 #include "litl-renderer/renderer.hpp"
 #include "litl-renderer/window.hpp"
 #include "litl-renderer-vulkan/integration.hpp"
 
 using namespace litl;
+
+bool createWindow(Window** window);
+bool createRenderer(Renderer** renderer, Window* window);
+
+int main()
+{
+    Window* window = nullptr;
+    Renderer* renderer = nullptr;
+
+    if (createWindow(&window) && createRenderer(&renderer, window))
+    {
+        CommandBufferHandle commandBuffer = renderer->createCommandBuffer({});
+
+        while (!window->shouldClose())
+        {
+            if (renderer->beginRender())
+            {
+                renderer->cmdBegin(commandBuffer);
+                renderer->cmdPipelineBarrier(commandBuffer, PipelineBarrierUndefinedToColor);
+                renderer->cmdClearImage(commandBuffer, { .clearColor = colors::Green });
+                renderer->cmdPipelineBarrier(commandBuffer, PipelineBarrierColorToPresent);
+                renderer->cmdEnd(commandBuffer);
+
+                renderer->submitCommands(commandBuffer);
+                renderer->endRender();
+            }
+        }
+
+        renderer->destroyCommandBuffer(commandBuffer);
+    }
+
+    destroyVulkanRenderer(renderer);
+    destroyVulkanWindow(window);
+
+    return 0;
+}
 
 bool createWindow(Window** window)
 {
@@ -32,31 +67,4 @@ bool createRenderer(Renderer** renderer, Window* window)
     }
 
     return (*renderer)->build();
-}
-
-int main()
-{
-    Window* window = nullptr;
-    Renderer* renderer = nullptr;
-
-    if (createWindow(&window) && createRenderer(&renderer, window))
-    {
-        CommandBufferHandle commandBuffer = renderer->createCommandBuffer({});
-
-        while (!window->shouldClose())
-        {
-            if (renderer->beginRender())
-            {
-                renderer->submitCommands(commandBuffer);
-                renderer->endRender();
-            }
-        }
-
-        renderer->destroyCommandBuffer(commandBuffer);
-    }
-
-    destroyVulkanRenderer(renderer);
-    destroyVulkanWindow(window);
-
-    return 0;
 }
