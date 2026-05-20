@@ -31,18 +31,18 @@ namespace litl
             /// <summary>
             /// Number of frames in flight.
             /// </summary>
-            uint32_t framesInFlight = 2;
+            uint32_t framesInFlight = 2u;
 
             /// <summary>
             /// Total number of frames rendered
             /// </summary>
-            uint32_t frameCount = 0;
+            uint32_t frameCount = 0u;
 
             /// <summary>
             /// The index of the current frame in flight.
             /// This is (frameCount % framesInFlight)
             /// </summary>
-            uint32_t frameInFlight = 0;
+            uint32_t frameInFlightIndex = 0u;
         };
 
         struct DeviceInfo
@@ -85,7 +85,7 @@ namespace litl
             /// <summary>
             /// The graphics queue index.
             /// </summary>
-            uint32_t graphicsQueueIndex = 0;
+            uint32_t graphicsQueueIndex = 0u;
 
             /// <summary>
             /// The present command queue.
@@ -95,7 +95,7 @@ namespace litl
             /// <summary>
             /// The present queue index.
             /// </summary>
-            uint32_t presentQueueIndex = 0;
+            uint32_t presentQueueIndex = 0u;
         };
 
         struct SwapChainInfo
@@ -118,7 +118,7 @@ namespace litl
             /// <summary>
             /// The currently secured swapchain image index.
             /// </summary>
-            uint32_t swapChainImageIndex = 0;
+            uint32_t swapChainImageIndex = 0u;
 
             /// <summary>
             /// The images in the swap chain.
