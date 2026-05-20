@@ -10,8 +10,8 @@ namespace litl::vulkan
     // Begin Render
     // -------------------------------------------------------------------------------------
 
-    bool isRenderReady(RendererContext* context, FrameSyncInfo const& frameSync) noexcept;
-    bool acquireSwapChainIndex(RendererContext* context, uint32_t timeoutNs, uint32_t frameIndex, uint32_t* imageIndex) noexcept;
+    bool isRenderReady(RendererContext& context, FrameSyncInfo const& frameSync) noexcept;
+    bool acquireSwapChainIndex(RendererContext& context, uint32_t timeoutNs, uint32_t frameIndex, uint32_t* imageIndex) noexcept;
 
     /// <summary>
     /// Begins rendering if the last frame is complete.
@@ -24,7 +24,7 @@ namespace litl::vulkan
         auto* vulkanContext = unwrap(context);
         auto& frameSync = vulkanContext->renderSync.frameSync[vulkanContext->frame.frameInFlightIndex];
 
-        if (!isRenderReady(vulkanContext, frameSync))
+        if (!isRenderReady(*vulkanContext, frameSync))
         {
             // Fence not ready. Previous frame is still rendering.
             return false;
@@ -32,7 +32,7 @@ namespace litl::vulkan
 
         uint32_t swapChainImageIndex = 0;
 
-        if (!acquireSwapChainIndex(vulkanContext, Constants::millisecond_to_nanoseconds, vulkanContext->frame.frameInFlightIndex, &swapChainImageIndex))
+        if (!acquireSwapChainIndex(*vulkanContext, Constants::millisecond_to_nanoseconds, vulkanContext->frame.frameInFlightIndex, &swapChainImageIndex))
         {
             // Swapchain not ready.
             return false;
@@ -51,9 +51,9 @@ namespace litl::vulkan
     /// <param name="context"></param>
     /// <param name="frameSync"></param>
     /// <returns></returns>
-    bool isRenderReady(RendererContext* context, FrameSyncInfo const& frameSync) noexcept
+    bool isRenderReady(RendererContext& context, FrameSyncInfo const& frameSync) noexcept
     {
-        const VkResult fenceResult = vkGetFenceStatus(context->device.vkDevice, frameSync.renderFence);
+        const VkResult fenceResult = vkGetFenceStatus(context.device.vkDevice, frameSync.renderFence);
 
         if (fenceResult != VK_SUCCESS)
         {
@@ -81,17 +81,17 @@ namespace litl::vulkan
     /// <param name="frameIndex"></param>
     /// <param name="imageIndex"></param>
     /// <returns></returns>
-    bool acquireSwapChainIndex(RendererContext* context, uint32_t timeoutNs, uint32_t frameIndex, uint32_t* imageIndex) noexcept
+    bool acquireSwapChainIndex(RendererContext& context, uint32_t timeoutNs, uint32_t frameIndex, uint32_t* imageIndex) noexcept
     {
         const VkResult acquireResult = vkAcquireNextImageKHR(
-            context->device.vkDevice,
-            context->swapChain.vkSwapChain,
+            context.device.vkDevice,
+            context.swapChain.vkSwapChain,
             timeoutNs,
-            context->renderSync.frameSync[frameIndex].presentCompleteSemaphore,
+            context.renderSync.frameSync[frameIndex].presentCompleteSemaphore,
             VK_NULL_HANDLE,
             imageIndex);
 
-        if ((acquireResult == VK_ERROR_OUT_OF_DATE_KHR) || (acquireResult == VK_SUBOPTIMAL_KHR) || context->window.wasResized)
+        if ((acquireResult == VK_ERROR_OUT_OF_DATE_KHR) || (acquireResult == VK_SUBOPTIMAL_KHR) || context.window.wasResized)
         {
             recreateSwapchain(context);
             return false;

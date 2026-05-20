@@ -22,8 +22,8 @@ namespace litl::vulkan
         ResourceManager(ResourceManager const&) = delete;
         ResourceManager& operator=(ResourceManager const&) = delete;
 
-        void build(RendererContext* context) noexcept;
-        void destroy(RendererContext* context) noexcept;
+        void build(RendererContext& context) noexcept;
+        void destroy() noexcept;
 
         [[nodiscard]] BufferHandle createBuffer(BufferDescriptor const& descriptor) noexcept;
         [[nodiscard]] BufferResource* getBuffer(BufferHandle handle) noexcept;
@@ -54,6 +54,8 @@ namespace litl::vulkan
         void destroyTexture(TextureHandle handle) noexcept;
 
     private:
+
+        RendererContext* m_pContext = nullptr;
 
         HandlePool<BufferResource, BufferTag> m_bufferPool;
         HandlePool<CommandBufferResource, CommandBufferTag> m_commandBufferPool;
