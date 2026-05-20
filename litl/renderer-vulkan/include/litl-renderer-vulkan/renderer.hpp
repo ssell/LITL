@@ -12,7 +12,7 @@ namespace litl::vulkan
 
     bool build(litl::RendererContext* context) noexcept;
     void destroy(litl::RendererContext* context) noexcept;
-    void recreateSwapchain(RendererContext* context) noexcept;
+    void recreateSwapchain(RendererContext& context) noexcept;
 
     // -------------------------------------------------------------------------------------
     // rendererResourceOps.cpp

@@ -63,14 +63,15 @@ namespace litl::vulkan
 
     bool verifyValidationLayers() noexcept;
     bool initializeVolk() noexcept;
-    bool createInstance(RendererContext* context) noexcept;
-    bool createWindowSurface(RendererContext* context) noexcept;
-    bool selectPhysicalDevice(RendererContext* context) noexcept;
-    bool createLogicalDevice(RendererContext* context) noexcept;
-    bool createMemoryAllocator(RendererContext* context) noexcept;
-    bool createSwapChain(RendererContext* context) noexcept;
-    bool createCommandPool(RendererContext* context) noexcept;
-    bool createSyncObjects(RendererContext* context) noexcept;
+    bool createInstance(RendererContext& context) noexcept;
+    bool createWindowSurface(RendererContext& context) noexcept;
+    bool selectPhysicalDevice(RendererContext& context) noexcept;
+    bool createLogicalDevice(RendererContext& context) noexcept;
+    bool createMemoryAllocator(RendererContext& context) noexcept;
+    bool createSwapChain(RendererContext& context) noexcept;
+    bool createCommandPool(RendererContext& context) noexcept;
+    bool createSyncObjects(RendererContext& context) noexcept;
+    bool createResourceManager(RendererContext& context) noexcept;
 
     bool build(litl::RendererContext* context) noexcept
     {
@@ -81,14 +82,14 @@ namespace litl::vulkan
         return
             initializeVolk() &&
             verifyValidationLayers() &&
-            createInstance(vulkanContext) &&
-            createWindowSurface(vulkanContext) &&
-            selectPhysicalDevice(vulkanContext) &&
-            createLogicalDevice(vulkanContext) &&
-            createMemoryAllocator(vulkanContext) &&
-            createSwapChain(vulkanContext) &&
-            createCommandPool(vulkanContext) &&
-            createSyncObjects(vulkanContext);
+            createInstance(*vulkanContext) &&
+            createWindowSurface(*vulkanContext) &&
+            selectPhysicalDevice(*vulkanContext) &&
+            createLogicalDevice(*vulkanContext) &&
+            createMemoryAllocator(*vulkanContext) &&
+            createSwapChain(*vulkanContext) &&
+            createCommandPool(*vulkanContext) &&
+            createSyncObjects(*vulkanContext);
     }
 
     /// <summary>
@@ -160,7 +161,7 @@ namespace litl::vulkan
     /// Creates the Vulkan instance that we will use.
     /// </summary>
     /// <returns></returns>
-    bool createInstance(RendererContext* context) noexcept
+    bool createInstance(RendererContext& context) noexcept
     {
         // See: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/01_Instance.html
         const VkApplicationInfo appInfo{
@@ -188,7 +189,7 @@ namespace litl::vulkan
             .ppEnabledExtensionNames = glfwExtensions,
         };
 
-        VkResult result = vkCreateInstance(&createInfo, nullptr, &context->device.vkInstance);
+        VkResult result = vkCreateInstance(&createInfo, nullptr, &context.device.vkInstance);
 
         if (result != VK_SUCCESS)
         {
@@ -197,7 +198,7 @@ namespace litl::vulkan
         }
 
         // populate instance-level functions
-        volkLoadInstance(context->device.vkInstance);
+        volkLoadInstance(context.device.vkInstance);
 
         return true;
     }
@@ -206,13 +207,13 @@ namespace litl::vulkan
     /// Creates the surface to which we will render.
     /// </summary>
     /// <returns></returns>
-    bool createWindowSurface(RendererContext* context) noexcept
+    bool createWindowSurface(RendererContext& context) noexcept
     {
         VkResult result = glfwCreateWindowSurface(
-            context->device.vkInstance, 
-            static_cast<GLFWwindow*>(context->window.window->getSurfaceWindow()), 
+            context.device.vkInstance, 
+            static_cast<GLFWwindow*>(context.window.window->getSurfaceWindow()),
             nullptr, 
-            &context->device.vkSurface);
+            &context.device.vkSurface);
 
         if (result != VK_SUCCESS)
         {
@@ -317,10 +318,10 @@ namespace litl::vulkan
     /// Selects the best-fit physical device to integrate with.
     /// </summary>
     /// <returns></returns>
-    bool selectPhysicalDevice(RendererContext* context) noexcept
+    bool selectPhysicalDevice(RendererContext& context) noexcept
     {
         uint32_t deviceCount = 0;
-        vkEnumeratePhysicalDevices(context->device.vkInstance, &deviceCount, nullptr);
+        vkEnumeratePhysicalDevices(context.device.vkInstance, &deviceCount, nullptr);
 
         if (deviceCount == 0)
         {
@@ -328,40 +329,40 @@ namespace litl::vulkan
         }
 
         std::vector<VkPhysicalDevice> availableDevices(deviceCount);
-        vkEnumeratePhysicalDevices(context->device.vkInstance, &deviceCount, availableDevices.data());
+        vkEnumeratePhysicalDevices(context.device.vkInstance, &deviceCount, availableDevices.data());
 
         for (auto device : availableDevices)
         {
-            auto queueFamilies = findQueueFamilies(device, context->device.vkSurface);
+            auto queueFamilies = findQueueFamilies(device, context.device.vkSurface);
 
             if (isPhysicalDeviceSuitable(device) && queueFamilies.hasAll())
             {
-                auto swapChainSupport = SwapChainSupport::querySwapChainSupport(device, context->device.vkSurface);
+                auto swapChainSupport = SwapChainSupport::querySwapChainSupport(device, context.device.vkSurface);
 
                 if (swapChainSupport.isSwapChainSufficient())
                 {
-                    context->device.vkPhysicalDevice = device;
+                    context.device.vkPhysicalDevice = device;
                     break;
                 }
             }
         }
 
-        return (context->device.vkPhysicalDevice != VK_NULL_HANDLE);
+        return (context.device.vkPhysicalDevice != VK_NULL_HANDLE);
     }
 
     /// <summary>
     /// Creates the logical device and command queues.
     /// </summary>
     /// <returns></returns>
-    bool createLogicalDevice(RendererContext* context) noexcept
+    bool createLogicalDevice(RendererContext& context) noexcept
     {
-        auto queueFamilies = findQueueFamilies(context->device.vkPhysicalDevice, context->device.vkSurface);
+        auto queueFamilies = findQueueFamilies(context.device.vkPhysicalDevice, context.device.vkSurface);
 
-        context->device.graphicsQueueIndex = queueFamilies.getGraphicsIndex();
-        context->device.presentQueueIndex = queueFamilies.getPresentIndex();
+        context.device.graphicsQueueIndex = queueFamilies.getGraphicsIndex();
+        context.device.presentQueueIndex = queueFamilies.getPresentIndex();
 
         std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-        std::set<uint32_t> uniqueQueueFamilies = { context->device.graphicsQueueIndex, context->device.presentQueueIndex };
+        std::set<uint32_t> uniqueQueueFamilies = { context.device.graphicsQueueIndex, context.device.presentQueueIndex };
         float queuePriorities[1] = { 1.0f };
 
         for (auto queueFamilyIndex : uniqueQueueFamilies)
@@ -417,7 +418,7 @@ namespace litl::vulkan
             .ppEnabledExtensionNames = RequiredDeviceExtensions.data()
         };
 
-        const VkResult result = vkCreateDevice(context->device.vkPhysicalDevice, &deviceCreateInfo, nullptr, &context->device.vkDevice);
+        const VkResult result = vkCreateDevice(context.device.vkPhysicalDevice, &deviceCreateInfo, nullptr, &context.device.vkDevice);
 
         if (result != VK_SUCCESS)
         {
@@ -426,18 +427,18 @@ namespace litl::vulkan
         }
 
         // populate device-level functions
-        volkLoadDevice(context->device.vkDevice);
+        volkLoadDevice(context.device.vkDevice);
 
-        vkGetDeviceQueue(context->device.vkDevice, queueFamilies.getGraphicsIndex(), 0, &context->device.vkGraphicsQueue);
-        vkGetDeviceQueue(context->device.vkDevice, queueFamilies.getPresentIndex(), 0, &context->device.vkPresentQueue);
+        vkGetDeviceQueue(context.device.vkDevice, queueFamilies.getGraphicsIndex(), 0, &context.device.vkGraphicsQueue);
+        vkGetDeviceQueue(context.device.vkDevice, queueFamilies.getPresentIndex(), 0, &context.device.vkPresentQueue);
 
-        if (context->device.vkGraphicsQueue == VK_NULL_HANDLE)
+        if (context.device.vkGraphicsQueue == VK_NULL_HANDLE)
         {
             logError("Failed to retrieved Vulkan Graphics Queue");
             return false;
         }
 
-        if (context->device.vkPresentQueue == VK_NULL_HANDLE)
+        if (context.device.vkPresentQueue == VK_NULL_HANDLE)
         {
             logError("Failed to retrieve Vulkan Present Queue");
             return false;
@@ -446,7 +447,7 @@ namespace litl::vulkan
         return true;
     }
 
-    bool createMemoryAllocator(RendererContext* context) noexcept
+    bool createMemoryAllocator(RendererContext& context) noexcept
     {
         const VmaVulkanFunctions vulkanFunctions{
             .vkGetInstanceProcAddr = vkGetInstanceProcAddr,
@@ -455,14 +456,14 @@ namespace litl::vulkan
 
         const VmaAllocatorCreateInfo createVmaInfo{
             .flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
-            .physicalDevice = context->device.vkPhysicalDevice,
-            .device = context->device.vkDevice,
+            .physicalDevice = context.device.vkPhysicalDevice,
+            .device = context.device.vkDevice,
             .pVulkanFunctions = &vulkanFunctions,       // wire together with Volk
-            .instance = context->device.vkInstance,
+            .instance = context.device.vkInstance,
             .vulkanApiVersion = VulkanVersion
         };
 
-        const VkResult result = vmaCreateAllocator(&createVmaInfo, &context->device.vmaAllocator);
+        const VkResult result = vmaCreateAllocator(&createVmaInfo, &context.device.vmaAllocator);
 
         if (result != VK_SUCCESS)
         {
@@ -473,16 +474,16 @@ namespace litl::vulkan
         return true;
     }
 
-    bool createSwapChain(RendererContext* context) noexcept
+    bool createSwapChain(RendererContext& context) noexcept
     {
-        context->window.wasResized = false;
+        context.window.wasResized = false;
 
         int32_t frameBufferWidth = 0;
         int32_t frameBufferHeight = 0;
 
-        glfwGetFramebufferSize(static_cast<GLFWwindow*>(context->window.window->getSurfaceWindow()), &frameBufferWidth, &frameBufferHeight);
+        glfwGetFramebufferSize(static_cast<GLFWwindow*>(context.window.window->getSurfaceWindow()), &frameBufferWidth, &frameBufferHeight);
 
-        auto swapChainSupport = SwapChainSupport::querySwapChainSupport(context->device.vkPhysicalDevice, context->device.vkSurface);
+        auto swapChainSupport = SwapChainSupport::querySwapChainSupport(context.device.vkPhysicalDevice, context.device.vkSurface);
         auto surfaceFormat = swapChainSupport.chooseSwapSurfaceFormat();
         auto presentMode = swapChainSupport.chooseSwapPresentMode();
         auto imageExtent = swapChainSupport.chooseSwapExtent(frameBufferWidth, frameBufferHeight);
@@ -495,7 +496,7 @@ namespace litl::vulkan
 
         VkSwapchainCreateInfoKHR createSwapChainInfo{};
         createSwapChainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        createSwapChainInfo.surface = context->device.vkSurface;
+        createSwapChainInfo.surface = context.device.vkSurface;
         createSwapChainInfo.minImageCount = imageCount;
         createSwapChainInfo.imageFormat = surfaceFormat.format;
         createSwapChainInfo.imageColorSpace = surfaceFormat.colorSpace;
@@ -508,7 +509,7 @@ namespace litl::vulkan
         createSwapChainInfo.clipped = VK_TRUE;
         createSwapChainInfo.oldSwapchain = VK_NULL_HANDLE;
 
-        auto queueIndices = findQueueFamilies(context->device.vkPhysicalDevice, context->device.vkSurface);
+        auto queueIndices = findQueueFamilies(context.device.vkPhysicalDevice, context.device.vkSurface);
         uint32_t queueFamilyIndices[] = { queueIndices.getGraphicsIndex(), queueIndices.getPresentIndex() };
 
         if (queueIndices.getGraphicsIndex() != queueIndices.getPresentIndex())
@@ -524,7 +525,7 @@ namespace litl::vulkan
             createSwapChainInfo.pQueueFamilyIndices = nullptr;
         }
 
-        VkResult result = vkCreateSwapchainKHR(context->device.vkDevice, &createSwapChainInfo, nullptr, &context->swapChain.vkSwapChain);
+        VkResult result = vkCreateSwapchainKHR(context.device.vkDevice, &createSwapChainInfo, nullptr, &context.swapChain.vkSwapChain);
 
         if (result != VK_SUCCESS)
         {
@@ -532,21 +533,21 @@ namespace litl::vulkan
             return false;
         }
 
-        context->swapChain.vkSwapChainImageFormat = surfaceFormat.format;
-        context->swapChain.vkSwapChainExtent = imageExtent;
+        context.swapChain.vkSwapChainImageFormat = surfaceFormat.format;
+        context.swapChain.vkSwapChainExtent = imageExtent;
 
-        vkGetSwapchainImagesKHR(context->device.vkDevice, context->swapChain.vkSwapChain, &imageCount, nullptr);
-        context->swapChain.vkSwapChainImages.resize(imageCount);
-        context->swapChain.vkSwapChainImageViews.resize(imageCount);
-        vkGetSwapchainImagesKHR(context->device.vkDevice, context->swapChain.vkSwapChain, &imageCount, context->swapChain.vkSwapChainImages.data());
+        vkGetSwapchainImagesKHR(context.device.vkDevice, context.swapChain.vkSwapChain, &imageCount, nullptr);
+        context.swapChain.vkSwapChainImages.resize(imageCount);
+        context.swapChain.vkSwapChainImageViews.resize(imageCount);
+        vkGetSwapchainImagesKHR(context.device.vkDevice, context.swapChain.vkSwapChain, &imageCount, context.swapChain.vkSwapChainImages.data());
 
         for (uint32_t i = 0; i < imageCount; ++i)
         {
             const VkImageViewCreateInfo createImageViewInfo{
                 .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-                .image = context->swapChain.vkSwapChainImages[i],
+                .image = context.swapChain.vkSwapChainImages[i],
                 .viewType = VK_IMAGE_VIEW_TYPE_2D,
-                .format = context->swapChain.vkSwapChainImageFormat,
+                .format = context.swapChain.vkSwapChainImageFormat,
                 .components.r = VK_COMPONENT_SWIZZLE_IDENTITY,
                 .components.g = VK_COMPONENT_SWIZZLE_IDENTITY,
                 .components.b = VK_COMPONENT_SWIZZLE_IDENTITY,
@@ -558,7 +559,7 @@ namespace litl::vulkan
                 .subresourceRange.layerCount = 1
             };
 
-            result = vkCreateImageView(context->device.vkDevice, &createImageViewInfo, nullptr, &context->swapChain.vkSwapChainImageViews[i]);
+            result = vkCreateImageView(context.device.vkDevice, &createImageViewInfo, nullptr, &context.swapChain.vkSwapChainImageViews[i]);
 
             if (result != VK_SUCCESS)
             {
@@ -570,17 +571,17 @@ namespace litl::vulkan
         return true;
     }
 
-    bool createCommandPool(RendererContext* context) noexcept
+    bool createCommandPool(RendererContext& context) noexcept
     {
         // https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/03_Drawing/01_Command_buffers.html
 
         const VkCommandPoolCreateInfo commandPoolInfo{
             .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
             .flags = VkCommandPoolCreateFlagBits::VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,       // Allow command buffers to be rerecorded individually, without this flag they all have to be reset together
-            .queueFamilyIndex = context->device.graphicsQueueIndex
+            .queueFamilyIndex = context.device.graphicsQueueIndex
         };
 
-        const VkResult result = vkCreateCommandPool(context->device.vkDevice, &commandPoolInfo, nullptr, &context->device.vkCommandPool);
+        const VkResult result = vkCreateCommandPool(context.device.vkDevice, &commandPoolInfo, nullptr, &context.device.vkCommandPool);
 
         if (result != VK_SUCCESS)
         {
@@ -591,7 +592,7 @@ namespace litl::vulkan
         return true;
     }
 
-    bool createSyncObjects(RendererContext* context) noexcept
+    bool createSyncObjects(RendererContext& context) noexcept
     {
         const VkSemaphoreCreateInfo presentSemaphoreInfo{
             .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
@@ -607,12 +608,12 @@ namespace litl::vulkan
         };
 
         // Note that frameSync count is tied to FRAMES_IN_FLIGHT (which is currently 2)
-        context->renderSync.frameSync.resize(context->frame.framesInFlight);
+        context.renderSync.frameSync.resize(context.frame.framesInFlight);
 
-        for (size_t i = 0; i < context->frame.framesInFlight; ++i)
+        for (size_t i = 0; i < context.frame.framesInFlight; ++i)
         {
-            const auto presentCompleteSemaphoreResult = vkCreateSemaphore(context->device.vkDevice, &presentSemaphoreInfo, nullptr, &context->renderSync.frameSync[i].presentCompleteSemaphore);
-            const auto renderFenceResult = vkCreateFence(context->device.vkDevice, &renderFenceInfo, nullptr, &context->renderSync.frameSync[i].renderFence);
+            const auto presentCompleteSemaphoreResult = vkCreateSemaphore(context.device.vkDevice, &presentSemaphoreInfo, nullptr, &context.renderSync.frameSync[i].presentCompleteSemaphore);
+            const auto renderFenceResult = vkCreateFence(context.device.vkDevice, &renderFenceInfo, nullptr, &context.renderSync.frameSync[i].renderFence);
 
             if (presentCompleteSemaphoreResult != VK_SUCCESS)
             {
@@ -628,11 +629,11 @@ namespace litl::vulkan
         }
 
         // Note that imageSync count is tied to swapchain image count (which is the device minimum + 1 (so 3 on this machine))
-        context->renderSync.imageSync.resize(context->swapChain.vkSwapChainImages.size());
+        context.renderSync.imageSync.resize(context.swapChain.vkSwapChainImages.size());
 
-        for (size_t i = 0; i < context->swapChain.vkSwapChainImages.size(); ++i)
+        for (size_t i = 0; i < context.swapChain.vkSwapChainImages.size(); ++i)
         {
-            const auto renderCompleteSemaphoreResult = vkCreateSemaphore(context->device.vkDevice, &renderSemaphoreInfo, nullptr, &context->renderSync.imageSync[i].renderCompleteSemaphore);
+            const auto renderCompleteSemaphoreResult = vkCreateSemaphore(context.device.vkDevice, &renderSemaphoreInfo, nullptr, &context.renderSync.imageSync[i].renderCompleteSemaphore);
 
             if (renderCompleteSemaphoreResult != VK_SUCCESS)
             {
@@ -644,106 +645,111 @@ namespace litl::vulkan
         return true;
     }
 
+    bool createResourceManager(RendererContext& context) noexcept
+    {
+
+    }
+
     // -------------------------------------------------------------------------------------
     // Destruction
     // -------------------------------------------------------------------------------------
 
-    void cleanupRenderSync(RendererContext* context) noexcept;
-    void cleanupSwapchain(RendererContext* context) noexcept;
-    void cleanupDevice(RendererContext* context) noexcept;
-    void recreateSwapchain(RendererContext* context) noexcept;
+    void cleanupRenderSync(RendererContext& context) noexcept;
+    void cleanupSwapchain(RendererContext& context) noexcept;
+    void cleanupDevice(RendererContext& context) noexcept;
+    void recreateSwapchain(RendererContext& context) noexcept;
 
     void destroy(litl::RendererContext* context) noexcept
     {
         auto* vulkanContext = unwrap(context);
 
-        vulkanContext->resources.destroy(vulkanContext);
+        vulkanContext->resources.destroy();
 
-        cleanupRenderSync(vulkanContext);
-        cleanupSwapchain(vulkanContext);
-        cleanupDevice(vulkanContext);
+        cleanupRenderSync(*vulkanContext);
+        cleanupSwapchain(*vulkanContext);
+        cleanupDevice(*vulkanContext);
 
         delete vulkanContext;
     }
 
-    void cleanupRenderSync(RendererContext* context) noexcept
+    void cleanupRenderSync(RendererContext& context) noexcept
     {
-        for (auto& frameSync : context->renderSync.frameSync)
+        for (auto& frameSync : context.renderSync.frameSync)
         {
             if (frameSync.presentCompleteSemaphore != VK_NULL_HANDLE)
             {
-                vkDestroySemaphore(context->device.vkDevice, frameSync.presentCompleteSemaphore, nullptr);
+                vkDestroySemaphore(context.device.vkDevice, frameSync.presentCompleteSemaphore, nullptr);
             }
 
             if (frameSync.renderFence != VK_NULL_HANDLE)
             {
-                vkDestroyFence(context->device.vkDevice, frameSync.renderFence, nullptr);
+                vkDestroyFence(context.device.vkDevice, frameSync.renderFence, nullptr);
             }
         }
 
-        context->renderSync.frameSync.clear();
+        context.renderSync.frameSync.clear();
 
-        for (auto& imageSync : context->renderSync.imageSync)
+        for (auto& imageSync : context.renderSync.imageSync)
         {
             if (imageSync.renderCompleteSemaphore != VK_NULL_HANDLE)
             {
-                vkDestroySemaphore(context->device.vkDevice, imageSync.renderCompleteSemaphore, nullptr);
+                vkDestroySemaphore(context.device.vkDevice, imageSync.renderCompleteSemaphore, nullptr);
             }
         }
 
-        context->renderSync.imageSync.clear();
+        context.renderSync.imageSync.clear();
     }
 
-    void cleanupSwapchain(RendererContext* context) noexcept
+    void cleanupSwapchain(RendererContext& context) noexcept
     {
-        if (!context->swapChain.vkSwapChainImageViews.empty())
+        if (!context.swapChain.vkSwapChainImageViews.empty())
         {
             // Note: only have to destroy the views since we explicitly made them, and not the underlying images.
             // Those will be destroyed alongside the swap chain itself since it made them.
-            for (auto imageView : context->swapChain.vkSwapChainImageViews)
+            for (auto imageView : context.swapChain.vkSwapChainImageViews)
             {
-                vkDestroyImageView(context->device.vkDevice, imageView, nullptr);
+                vkDestroyImageView(context.device.vkDevice, imageView, nullptr);
             }
         }
 
-        if (context->swapChain.vkSwapChain != VK_NULL_HANDLE)
+        if (context.swapChain.vkSwapChain != VK_NULL_HANDLE)
         {
-            vkDestroySwapchainKHR(context->device.vkDevice, context->swapChain.vkSwapChain, nullptr);
+            vkDestroySwapchainKHR(context.device.vkDevice, context.swapChain.vkSwapChain, nullptr);
         }
     }
 
-    void cleanupDevice(RendererContext* context) noexcept
+    void cleanupDevice(RendererContext& context) noexcept
     {
-        if (context->device.vkCommandPool != VK_NULL_HANDLE)
+        if (context.device.vkCommandPool != VK_NULL_HANDLE)
         {
-            vkDestroyCommandPool(context->device.vkDevice, context->device.vkCommandPool, nullptr);
+            vkDestroyCommandPool(context.device.vkDevice, context.device.vkCommandPool, nullptr);
         }
 
-        if (context->device.vkSurface != VK_NULL_HANDLE)
+        if (context.device.vkSurface != VK_NULL_HANDLE)
         {
-            vkDestroySurfaceKHR(context->device.vkInstance, context->device.vkSurface, nullptr);
+            vkDestroySurfaceKHR(context.device.vkInstance, context.device.vkSurface, nullptr);
         }
 
-        if (context->device.vmaAllocator != VK_NULL_HANDLE)
+        if (context.device.vmaAllocator != VK_NULL_HANDLE)
         {
-            vmaDestroyAllocator(context->device.vmaAllocator);
+            vmaDestroyAllocator(context.device.vmaAllocator);
         }
 
-        if (context->device.vkDevice != VK_NULL_HANDLE)
+        if (context.device.vkDevice != VK_NULL_HANDLE)
         {
-            vkDestroyDevice(context->device.vkDevice, nullptr);
+            vkDestroyDevice(context.device.vkDevice, nullptr);
         }
 
-        if (context->device.vkInstance != VK_NULL_HANDLE)
+        if (context.device.vkInstance != VK_NULL_HANDLE)
         {
-            vkDestroyInstance(context->device.vkInstance, nullptr);
+            vkDestroyInstance(context.device.vkInstance, nullptr);
         }
     }
 
-    void recreateSwapchain(RendererContext* context) noexcept
+    void recreateSwapchain(RendererContext& context) noexcept
     {
         // Wait for our resources to be unused.
-        vkDeviceWaitIdle(context->device.vkDevice);
+        vkDeviceWaitIdle(context.device.vkDevice);
 
         cleanupSwapchain(context);
         createSwapChain(context);

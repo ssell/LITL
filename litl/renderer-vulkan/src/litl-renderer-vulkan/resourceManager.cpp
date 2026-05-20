@@ -1,13 +1,14 @@
 #include "litl-renderer-vulkan/renderer.hpp"
+#include "litl-core/logging/logging.hpp"
 
 namespace litl::vulkan
 {
-    void ResourceManager::build(RendererContext* context) noexcept
+    void ResourceManager::build(RendererContext& context) noexcept
     {
-        // ... todo ...
+        m_pContext = &context;
     }
 
-    void ResourceManager::destroy(RendererContext* context) noexcept
+    void ResourceManager::destroy() noexcept
     {
         // ... todo ...
     }
@@ -42,8 +43,24 @@ namespace litl::vulkan
 
     CommandBufferHandle ResourceManager::createCommandBuffer(CommandBufferDescriptor const& descriptor) noexcept
     {
-        // ... todo ...
-        return CommandBufferHandle{};
+        CommandBufferResource resource;
+
+        const VkCommandBufferAllocateInfo allocateInfo{
+            .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+            .commandPool = m_pContext->device.vkCommandPool,
+            .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+            .commandBufferCount = 1u
+        };
+
+        const VkResult result = vkAllocateCommandBuffers(m_pContext->device.vkDevice, &allocateInfo, &resource.vkCommandBuffer);
+
+        if (result != VK_SUCCESS)
+        {
+            logError("Failed to create Vulkan Command Buffer with result ", result);
+            return {};
+        }
+
+        return m_commandBufferPool.create(resource);
     }
 
     CommandBufferResource* ResourceManager::getCommandBuffer(CommandBufferHandle handle) noexcept
@@ -53,9 +70,16 @@ namespace litl::vulkan
 
     void ResourceManager::destroyCommandBuffer(CommandBufferHandle handle) noexcept
     {
-        if (m_commandBufferPool.destroy(handle))
+        CommandBufferResource* resource = m_commandBufferPool.get(handle);
+
+        if (resource != nullptr)
         {
-            // ... todo ...
+            if (resource->vkCommandBuffer != VK_NULL_HANDLE)
+            {
+                vkFreeCommandBuffers(m_pContext->device.vkDevice, m_pContext->device.vkCommandPool, 1, &resource->vkCommandBuffer);
+            }
+
+            m_commandBufferPool.destroy(handle);
         }
     }
 
