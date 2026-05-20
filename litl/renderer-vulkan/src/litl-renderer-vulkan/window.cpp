@@ -20,6 +20,14 @@ namespace litl
     {
         return new Window(&vulkan::VulkanWindowOps, new WindowContext());
     }
+
+    void destroyVulkanWindow(Window* window) noexcept
+    {
+        if (window != nullptr)
+        {
+            delete window;
+        }
+    }
 }
 
 namespace litl::vulkan

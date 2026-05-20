@@ -22,12 +22,22 @@ namespace litl
     /// <returns></returns>
     litl::Renderer* createVulkanRenderer(Window* pWindow, RendererConfiguration const& rendererDescriptor) noexcept
     {
+        LITL_FATAL_ASSERT_MSG(pWindow != nullptr, "Attempting to create Vulkan Renderer with a null Window");
+
         vulkan::RendererContext* vulkanContext = new(std::nothrow) vulkan::RendererContext();
 
         vulkanContext->window.window = pWindow;
         vulkanContext->frame.framesInFlight = rendererDescriptor.framesInFlight;
 
         return new litl::Renderer(&litl::vulkan::VulkanRendererOps, vulkan::wrap(vulkanContext));
+    }
+
+    void destroyVulkanRenderer(Renderer* renderer) noexcept
+    {
+        if (renderer != nullptr)
+        {
+            delete renderer;
+        }
     }
 }
 
@@ -89,7 +99,8 @@ namespace litl::vulkan
             createMemoryAllocator(*vulkanContext) &&
             createSwapChain(*vulkanContext) &&
             createCommandPool(*vulkanContext) &&
-            createSyncObjects(*vulkanContext);
+            createSyncObjects(*vulkanContext) &&
+            createResourceManager(*vulkanContext);
     }
 
     /// <summary>
@@ -647,13 +658,15 @@ namespace litl::vulkan
 
     bool createResourceManager(RendererContext& context) noexcept
     {
-
+        context.resources.build(context);
+        return true;
     }
 
     // -------------------------------------------------------------------------------------
     // Destruction
     // -------------------------------------------------------------------------------------
 
+    void cleanupResources(RendererContext& context) noexcept;
     void cleanupRenderSync(RendererContext& context) noexcept;
     void cleanupSwapchain(RendererContext& context) noexcept;
     void cleanupDevice(RendererContext& context) noexcept;
@@ -663,13 +676,17 @@ namespace litl::vulkan
     {
         auto* vulkanContext = unwrap(context);
 
-        vulkanContext->resources.destroy();
-
+        cleanupResources(*vulkanContext);
         cleanupRenderSync(*vulkanContext);
         cleanupSwapchain(*vulkanContext);
         cleanupDevice(*vulkanContext);
 
         delete vulkanContext;
+    }
+
+    void cleanupResources(RendererContext& context) noexcept
+    {
+        context.resources.destroy();
     }
 
     void cleanupRenderSync(RendererContext& context) noexcept
