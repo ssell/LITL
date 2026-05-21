@@ -2,11 +2,18 @@
 #define LITL_RENDERER_COMMANDS_PIPELINE_BARRIER_H__
 
 #include "litl-renderer/enums.hpp"
+#include "litl-renderer/resources/texture.hpp"
 
 namespace litl
 {
     struct PipelineBarrierCommand
     {
+        /// <summary>
+        /// The texture the barrier is for. 
+        /// If not specified (left at default value), then the current swapchain image will be used.
+        /// </summary>
+        TextureHandle texture{};
+
         ImageLayoutType fromLayout = ImageLayoutType::Undefined;
         ImageLayoutType toLayout = ImageLayoutType::Undefined;
         ImageAccessFlagBits sourceAccess = ImageAccessFlagBits::None;

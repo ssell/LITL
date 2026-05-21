@@ -63,8 +63,7 @@ namespace litl::vulkan
     /// Extensions required by our renderer.
     /// </summary>
     static const std::vector<const char*> RequiredDeviceExtensions = {
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-        VK_KHR_MAINTENANCE1_EXTENSION_NAME          // to allow negative viewport heights
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME
     };
 
 
@@ -276,9 +275,12 @@ namespace litl::vulkan
         vkGetPhysicalDeviceProperties(device, &deviceProperties);
         vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
-        return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
+        return
+            ((deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) || (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)) &&
             checkPhysicalDeviceExtensionSupport(device) &&
-            deviceFeatures.geometryShader;
+            deviceFeatures.geometryShader &&
+            deviceFeatures.tessellationShader;
+            // TODO the full feature set will need to be specified by the engine/user/game/whatever
     }
 
     /// <summary>
@@ -391,15 +393,15 @@ namespace litl::vulkan
         }
 
         // query for Vulkan advanced feature set
-        VkPhysicalDeviceExtendedDynamicStateFeaturesEXT vulkanDyanmicStateFeatures {
+        VkPhysicalDeviceExtendedDynamicStateFeaturesEXT vulkanDynamicStateFeatures {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT,
             .pNext = nullptr,
-            .extendedDynamicState = true
+            //.extendedDynamicState = true
         };
 
         VkPhysicalDeviceVulkan13Features vulkan13Features {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
-            .pNext = &vulkanDyanmicStateFeatures,
+            .pNext = &vulkanDynamicStateFeatures,
             .synchronization2 = true,
             .dynamicRendering = true
         };
@@ -413,14 +415,15 @@ namespace litl::vulkan
         VkPhysicalDeviceVulkan11Features vulkan11Features {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES,
             .pNext = &vulkan12Features,
-            .shaderDrawParameters = true
+            //.shaderDrawParameters = true
         };
 
         VkPhysicalDeviceFeatures2 physicalDeviceFeatures {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
             .pNext = &vulkan11Features,
             .features = VkPhysicalDeviceFeatures {
-                .geometryShader = true
+                .geometryShader = true,
+                .tessellationShader = true
             }
         };
 
@@ -796,16 +799,25 @@ namespace litl::vulkan
         }
     }
 
+    void waitForValidFramebufferSize(RendererContext& context) noexcept
+    {
+        while (context.window.window->getWidth() == 0u || context.window.window->getHeight() == 0u)
+        {
+            context.window.window->waitForEvents();
+        }
+    }
+
     void recreateSwapchain(RendererContext& context) noexcept
     {
-        // Wait for our resources to be unused.
-        vkDeviceWaitIdle(context.device.vkDevice);
+        // Wait for a valid recreation state
+        waitForValidFramebufferSize(context);           // wait for frame buffer to have non-zero dimensions (minimized, etc.)
+        vkDeviceWaitIdle(context.device.vkDevice);      // wait for all resources to be free
 
         VkSwapchainKHR oldSwapchain = context.swapChain.vkSwapChain;
 
         cleanupSwapChainImages(context);
-        createSwapChain(context, oldSwapchain);     // pass in the old swapchain to make creating the new one
-        cleanupSwapChain(context, oldSwapchain);    // destroy the old one
+        createSwapChain(context, oldSwapchain);         // pass in the old swapchain to make creating the new one
+        cleanupSwapChain(context, oldSwapchain);        // destroy the old one
 
         // Swapchain image count _can_ change. So must recreate the image sync objects.
         cleanupImageSync(context);

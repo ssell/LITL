@@ -27,6 +27,8 @@ namespace litl
         uint32_t(*getHeight)(WindowContext*);
         void* (*getSurfaceWindow)(WindowContext*);
         void (*onResize)(WindowContext*, uint32_t, uint32_t);
+        void (*pollForEvents)(WindowContext*);
+        void (*waitForEvents)(WindowContext*, float);
     };
 
     class Window final
@@ -102,6 +104,17 @@ namespace litl
         void onResize(uint32_t width, uint32_t height) const noexcept
         {
             m_pOps->onResize(m_pContext, width, height);
+        }
+
+        void pollForEvents() const noexcept
+        {
+            m_pOps->pollForEvents(m_pContext);
+        }
+
+        void waitForEvents(float timeoutSeconds = 0.0f) const noexcept
+        {
+            // note this is blocking
+            m_pOps->waitForEvents(m_pContext, timeoutSeconds);
         }
 
     private:

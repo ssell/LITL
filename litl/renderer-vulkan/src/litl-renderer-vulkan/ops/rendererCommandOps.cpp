@@ -2,7 +2,7 @@
 
 namespace litl::vulkan
 {
-    CommandBufferResource* unwrap(litl::RendererContext* context, CommandBufferHandle handle) noexcept
+    CommandBufferResource* unwrapCommandBuffer(litl::RendererContext* context, CommandBufferHandle handle) noexcept
     {
         auto* vulkanContext = unwrap(context);
 
@@ -22,13 +22,18 @@ namespace litl::vulkan
     CommandBufferHandle cmdBeginFrame(litl::RendererContext* context) noexcept
     {
         auto commandBufferHandle = unwrap(context)->getCurrFrameSyncInfo().commandBuffer;
-        std::ignore = cmdBegin(context, commandBufferHandle);
+        
+        if (!cmdBegin(context, commandBufferHandle))
+        {
+            return {};  // return invalid handle (.isValid() == false)
+        }
+        
         return commandBufferHandle;
     }
 
     bool cmdBegin(litl::RendererContext* context, CommandBufferHandle handle) noexcept
     {
-        auto* commandBuffer = unwrap(context, handle);
+        auto* commandBuffer = unwrapCommandBuffer(context, handle);
 
         if (!isValid(commandBuffer))
         {
@@ -44,7 +49,7 @@ namespace litl::vulkan
 
     bool cmdEnd(litl::RendererContext* context, CommandBufferHandle handle) noexcept
     {
-        auto* commandBuffer = unwrap(context, handle);
+        auto* commandBuffer = unwrapCommandBuffer(context, handle);
 
         if (!isValid(commandBuffer))
         {
@@ -57,7 +62,7 @@ namespace litl::vulkan
     void cmdBeginRender(litl::RendererContext* context, CommandBufferHandle handle, BeginRenderCommand const& command) noexcept
     {
         auto* vulkanContext = unwrap(context);
-        auto* commandBuffer = unwrap(context, handle);
+        auto* commandBuffer = unwrapCommandBuffer(context, handle);
 
         if (!isValid(commandBuffer))
         {
@@ -87,7 +92,7 @@ namespace litl::vulkan
         else
         {
             // Custom color attachment info
-            auto* colorTexture = vulkanContext->resources.getTexture(command.color.colorTexture);
+            TextureResource* colorTexture = vulkanContext->resources.getTexture(command.color.colorTexture);
 
             if (colorTexture != nullptr)
             {
@@ -107,9 +112,9 @@ namespace litl::vulkan
         if (command.depth.has_value())
         {
             VkImageView depthTextureView = VK_NULL_HANDLE;
-            auto* depthTexture = vulkanContext->resources.getTexture((*command.depth).depthTexture);
+            TextureResource* depthTexture = vulkanContext->resources.getTexture((*command.depth).depthTexture);
 
-            if (depthTexture != VK_NULL_HANDLE)
+            if (depthTexture != nullptr)
             {
                 depthTextureView = depthTexture->vkImageView;
             }
@@ -169,7 +174,7 @@ namespace litl::vulkan
 
     void cmdEndRender(litl::RendererContext* context, CommandBufferHandle handle) noexcept
     {
-        auto* commandBuffer = unwrap(context, handle);
+        auto* commandBuffer = unwrapCommandBuffer(context, handle);
 
         if (!isValid(commandBuffer))
         {
@@ -182,11 +187,28 @@ namespace litl::vulkan
     void cmdPipelineBarrier(litl::RendererContext* context, CommandBufferHandle handle, PipelineBarrierCommand const& command) noexcept
     {
         auto* vulkanContext = unwrap(context);
-        auto* commandBuffer = unwrap(context, handle);
+        auto* commandBuffer = unwrapCommandBuffer(context, handle);
 
         if (!isValid(commandBuffer))
         {
             return;
+        }
+
+        VkImage vkImage = VK_NULL_HANDLE;
+
+        if (command.texture.isValid())
+        {
+            auto* texture = vulkanContext->resources.getTexture(command.texture);
+
+            if (texture != nullptr)
+            {
+                vkImage = texture->vkImage;
+            }
+        }
+        else
+        {
+            // Default to the swapchain if no texture is specified.
+            vkImage = vulkanContext->swapChain.vkSwapChainImages[vulkanContext->swapChain.swapChainImageIndex];
         }
 
         const VkImageMemoryBarrier2 barrier{
@@ -199,7 +221,7 @@ namespace litl::vulkan
             .newLayout = static_cast<VkImageLayout>(command.toLayout),
             .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
             .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-            .image = vulkanContext->swapChain.vkSwapChainImages[vulkanContext->swapChain.swapChainImageIndex],
+            .image = vkImage,
             .subresourceRange = VkImageSubresourceRange {
                 .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
                 .baseMipLevel = 0,
@@ -222,7 +244,7 @@ namespace litl::vulkan
     void cmdClearImage(litl::RendererContext* context, CommandBufferHandle handle, ClearImageCommand const& command) noexcept
     {
         auto* vulkanContext = unwrap(context);
-        auto* commandBuffer = unwrap(context, handle);
+        auto* commandBuffer = unwrapCommandBuffer(context, handle);
 
         if (!isValid(commandBuffer))
         {
@@ -262,7 +284,7 @@ namespace litl::vulkan
         vkCmdClearColorImage(
             commandBuffer->vkCommandBuffer, 
             targetImage,
-            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
+            static_cast<VkImageLayout>(command.destLayout),
             &clearColor, 
             1, 
             &range);

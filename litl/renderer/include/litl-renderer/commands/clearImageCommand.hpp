@@ -18,6 +18,11 @@ namespace litl
         /// If left to the default value, then the current swapchain image will be cleared.
         /// </summary>
         TextureHandle image;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        ImageLayoutType destLayout;
     };
 }
 

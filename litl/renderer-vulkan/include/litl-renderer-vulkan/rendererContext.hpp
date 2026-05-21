@@ -54,7 +54,7 @@ namespace litl
             VkSurfaceKHR vkSurface = VK_NULL_HANDLE;
 
             /// <summary>
-            /// Command buffer pooo.
+            /// Command buffer pool.
             /// </summary>
             VkCommandPool vkCommandPool = VK_NULL_HANDLE;
 

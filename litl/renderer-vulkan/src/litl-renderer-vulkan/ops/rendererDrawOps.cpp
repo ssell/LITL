@@ -141,7 +141,7 @@ namespace litl::vulkan
         auto& frameSync = vulkanContext->getCurrFrameSyncInfo();
         auto& imageSync = vulkanContext->getCurrImageSyncInfo();
 
-        const auto waitDestinationStageMask = VkPipelineStageFlags2(VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
+        const auto waitDestinationStageMask = VkPipelineStageFlags2(VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT);
 
         const VkSemaphoreSubmitInfo presentCompleteSemaphoreInfo{
             .sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
@@ -161,7 +161,7 @@ namespace litl::vulkan
             .waitSemaphoreInfoCount = 1,
             .pWaitSemaphoreInfos = &presentCompleteSemaphoreInfo,
             .commandBufferInfoCount = static_cast<uint32_t>(vkCommandBuffers.size()),
-            .pCommandBufferInfos = reinterpret_cast<VkCommandBufferSubmitInfo const*>(vkCommandBuffers.data()),
+            .pCommandBufferInfos = vkCommandBuffers.data(),
             .signalSemaphoreInfoCount = 1,
             .pSignalSemaphoreInfos = &renderCompleteSemaphoreInfo
         };
@@ -197,7 +197,14 @@ namespace litl::vulkan
 
         if (presentResult != VK_SUCCESS)
         {
-            logWarning("Vulkan Renderer: vkQueuePresentKHR failed with result ", presentResult);
+            if ((presentResult == VK_ERROR_OUT_OF_DATE_KHR) || (presentResult == VK_SUBOPTIMAL_KHR))
+            {
+                recreateSwapchain(*vulkanContext);
+            }
+            else
+            {
+                logWarning("Vulkan Renderer: vkQueuePresentKHR failed with result ", presentResult);
+            }
         }
 
         vulkanContext->renderInfo.frameCount++;

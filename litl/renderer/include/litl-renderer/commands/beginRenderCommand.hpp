@@ -13,8 +13,7 @@ namespace litl
     struct ColorAttachmentDescriptor
     {
         /// <summary>
-        /// The color texture. If not specified (left at default value), then
-        /// the current swapchain image will be used.
+        /// The color texture. If not specified (left at default value), then the current swapchain image will be used.
         /// </summary>
         TextureHandle colorTexture{};
 
