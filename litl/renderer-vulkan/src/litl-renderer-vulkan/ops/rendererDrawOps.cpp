@@ -114,9 +114,9 @@ namespace litl::vulkan
         }
 
         auto* vulkanContext = unwrap(context);
-        const auto waitDestinationStageMask = VkPipelineStageFlags(VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
 
-        std::vector<VkCommandBuffer> vkCommandBuffers;
+        // Build up command buffer info
+        std::vector<VkCommandBufferSubmitInfo> vkCommandBuffers;
         vkCommandBuffers.reserve(commands.size());
 
         for (auto& commandBufferHandle : commands)
@@ -125,7 +125,10 @@ namespace litl::vulkan
 
             if ((commandBufferResource != nullptr) && (commandBufferResource->vkCommandBuffer != VK_NULL_HANDLE))
             {
-                vkCommandBuffers.push_back(commandBufferResource->vkCommandBuffer);
+                vkCommandBuffers.push_back(VkCommandBufferSubmitInfo{
+                    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO,
+                    .commandBuffer = commandBufferResource->vkCommandBuffer
+                });
             }
         }
 
@@ -134,24 +137,37 @@ namespace litl::vulkan
             return;
         }
 
+        // Build up sync info
         auto& frameSync = vulkanContext->getCurrFrameSyncInfo();
         auto& imageSync = vulkanContext->getCurrImageSyncInfo();
 
-        const VkSubmitInfo submitInfo{
-            .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-            .waitSemaphoreCount = 1,
-            // Wait for current swapchain image to be done presenting
-            .pWaitSemaphores = &frameSync.presentCompleteSemaphore,
-            // Wait for writing colors to the image until's available
-            .pWaitDstStageMask = &waitDestinationStageMask,            
-            .commandBufferCount = static_cast<uint32_t>(vkCommandBuffers.size()),
-            .pCommandBuffers = vkCommandBuffers.data(),
-            .signalSemaphoreCount = 1,
-            // The semaphore to signal once the command buffer(s) have finished execution.
-            .pSignalSemaphores = &imageSync.renderCompleteSemaphore
+        const auto waitDestinationStageMask = VkPipelineStageFlags2(VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
+
+        const VkSemaphoreSubmitInfo presentCompleteSemaphoreInfo{
+            .sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
+            .semaphore = frameSync.presentCompleteSemaphore,
+            .stageMask = waitDestinationStageMask  // ?
         };
 
-        const VkResult submitResult = vkQueueSubmit(vulkanContext->device.vkGraphicsQueue, 1, &submitInfo, frameSync.renderFence);
+        const VkSemaphoreSubmitInfo renderCompleteSemaphoreInfo{
+            .sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
+            .semaphore = imageSync.renderCompleteSemaphore,
+            .stageMask = waitDestinationStageMask  // ?
+        };
+
+        const VkSubmitInfo2 submitInfo{
+            .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2,
+            .flags = 0,
+            .waitSemaphoreInfoCount = 1,
+            .pWaitSemaphoreInfos = &presentCompleteSemaphoreInfo,
+            .commandBufferInfoCount = static_cast<uint32_t>(vkCommandBuffers.size()),
+            .pCommandBufferInfos = reinterpret_cast<VkCommandBufferSubmitInfo const*>(vkCommandBuffers.data()),
+            .signalSemaphoreInfoCount = 1,
+            .pSignalSemaphoreInfos = &renderCompleteSemaphoreInfo
+        };
+
+        // Submit
+        const VkResult submitResult = vkQueueSubmit2(vulkanContext->device.vkGraphicsQueue, 1, &submitInfo, frameSync.renderFence);
 
         if (submitResult != VK_SUCCESS)
         {
