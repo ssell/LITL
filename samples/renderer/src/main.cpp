@@ -1,11 +1,14 @@
+#include <chrono>
+
 #include "litl-renderer/renderer.hpp"
 #include "litl-renderer/window.hpp"
 #include "litl-renderer-vulkan/integration.hpp"
 
 using namespace litl;
 
-bool createWindow(Window** window);
-bool createRenderer(Renderer** renderer, Window* window);
+bool createWindow(Window** window) noexcept;
+bool createRenderer(Renderer** renderer, Window* window) noexcept;
+color getClearColor(float elapsedSeconds) noexcept;
 
 int main()
 {
@@ -14,15 +17,17 @@ int main()
 
     if (createWindow(&window) && createRenderer(&renderer, window))
     {
-        CommandBufferHandle commandBuffer = renderer->createCommandBuffer({});
+        const auto start = std::chrono::steady_clock::now();
 
         while (!window->shouldClose())
         {
+            const auto elapsedSeconds = std::chrono::duration<float>(std::chrono::steady_clock::now() - start).count();
+
             if (renderer->beginRender())
             {
-                renderer->cmdBegin(commandBuffer);
+                auto commandBuffer = renderer->cmdBeginFrame();
                 renderer->cmdPipelineBarrier(commandBuffer, PipelineBarrierUndefinedToColor);
-                renderer->cmdClearImage(commandBuffer, { .clearColor = colors::Green });
+                renderer->cmdClearImage(commandBuffer, { .clearColor = getClearColor(elapsedSeconds) });
                 renderer->cmdPipelineBarrier(commandBuffer, PipelineBarrierColorToPresent);
                 renderer->cmdEnd(commandBuffer);
 
@@ -30,8 +35,6 @@ int main()
                 renderer->endRender();
             }
         }
-
-        renderer->destroyCommandBuffer(commandBuffer);
     }
 
     destroyVulkanRenderer(renderer);
@@ -40,7 +43,7 @@ int main()
     return 0;
 }
 
-bool createWindow(Window** window)
+bool createWindow(Window** window) noexcept
 {
     *window = createVulkanWindow();
 
@@ -52,7 +55,7 @@ bool createWindow(Window** window)
     return (*window)->open("LITL Renderer Only Sample", 1024u, 768u);
 }
 
-bool createRenderer(Renderer** renderer, Window* window)
+bool createRenderer(Renderer** renderer, Window* window) noexcept
 {
     const RendererConfiguration rendererConfig{
         .rendererType = RendererBackendType::Vulkan,
@@ -67,4 +70,13 @@ bool createRenderer(Renderer** renderer, Window* window)
     }
 
     return (*renderer)->build();
+}
+
+color getClearColor(float elapsedSeconds) noexcept
+{
+    return {
+        (static_cast<float>(std::cos(elapsedSeconds)) + 1.0f) * 0.5f,
+        (static_cast<float>(std::sin(elapsedSeconds)) + 1.0f) * 0.5f,
+        0.5f
+    };
 }

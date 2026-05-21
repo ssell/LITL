@@ -26,25 +26,6 @@ namespace litl
             bool wasResized;
         };
 
-        struct FrameInfo
-        {
-            /// <summary>
-            /// Number of frames in flight.
-            /// </summary>
-            uint32_t framesInFlight = 2u;
-
-            /// <summary>
-            /// Total number of frames rendered
-            /// </summary>
-            uint32_t frameCount = 0u;
-
-            /// <summary>
-            /// The index of the current frame in flight.
-            /// This is (frameCount % framesInFlight)
-            /// </summary>
-            uint32_t frameInFlightIndex = 0u;
-        };
-
         struct DeviceInfo
         {
             /// <summary>
@@ -134,8 +115,9 @@ namespace litl
         /// <summary>
         /// For syncing an entire frame.
         /// </summary>
-        struct FrameSyncInfo
+        struct PerFrameSyncInfo
         {
+            CommandBufferHandle commandBuffer{};
             VkSemaphore presentCompleteSemaphore = VK_NULL_HANDLE;
             VkFence renderFence = VK_NULL_HANDLE;
         };
@@ -143,7 +125,7 @@ namespace litl
         /// <summary>
         /// For syncing an individual image.
         /// </summary>
-        struct ImageSyncInfo
+        struct PerImageSyncInfo
         {
             VkSemaphore renderCompleteSemaphore = VK_NULL_HANDLE;
         };
@@ -151,27 +133,52 @@ namespace litl
         /// <summary>
         /// For syncinc.
         /// </summary>
-        struct RenderSyncInfo
+        struct RenderInfo
         {
+            /// <summary>
+            /// Number of frames in flight.
+            /// </summary>
+            uint32_t framesInFlight = 2u;
+
+            /// <summary>
+            /// Total number of frames rendered
+            /// </summary>
+            uint32_t frameCount = 0u;
+
+            /// <summary>
+            /// The index of the current frame in flight.
+            /// This is (frameCount % framesInFlight)
+            /// </summary>
+            uint32_t frameInFlightIndex = 0u;
+
             /// <summary>
             /// Indexed by FrameInfo::frameInFlight
             /// </summary>
-            std::vector<FrameSyncInfo> frameSync;
+            std::vector<PerFrameSyncInfo> frameSyncInfo;
 
             /// <summary>
             /// Indexed by the swapchain image index.
             /// </summary>
-            std::vector<ImageSyncInfo> imageSync;
+            std::vector<PerImageSyncInfo> imageSyncInfo;
         };
 
         struct RendererContext
         {
             WindowInfo window{};
-            FrameInfo frame{};
             DeviceInfo device{};
             SwapChainInfo swapChain{};
-            RenderSyncInfo renderSync{};
+            RenderInfo renderInfo{};
             ResourceManager resources;
+
+            [[nodiscard]] PerFrameSyncInfo& getCurrFrameSyncInfo() noexcept
+            {
+                return renderInfo.frameSyncInfo[renderInfo.frameInFlightIndex];
+            }
+
+            [[nodiscard]] PerImageSyncInfo& getCurrImageSyncInfo() noexcept
+            {
+                return renderInfo.imageSyncInfo[swapChain.swapChainImageIndex];
+            }
         };
 
         static RendererContext* unwrap(litl::RendererContext* opaqueContext) noexcept
