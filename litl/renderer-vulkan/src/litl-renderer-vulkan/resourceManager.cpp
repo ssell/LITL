@@ -56,7 +56,7 @@ namespace litl::vulkan
 
         if (result != VK_SUCCESS)
         {
-            logError("Failed to create Vulkan Command Buffer with result ", result);
+            logError("Failed to create Vulkan CommandBuffer with result ", result);
             return {};
         }
 
@@ -158,8 +158,28 @@ namespace litl::vulkan
 
     ShaderModuleHandle ResourceManager::createShaderModule(ShaderModuleDescriptor const& descriptor) noexcept
     {
-        // ... todo ...
-        return ShaderModuleHandle{};
+        ShaderModuleResource resource;
+
+        const VkShaderModuleCreateInfo shaderModuleInfo{
+            .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+            .codeSize = descriptor.bytes.size(),
+            .pCode = reinterpret_cast<uint32_t const*>(descriptor.bytes.data())
+        };
+
+        const VkResult result = vkCreateShaderModule(m_pContext->device.vkDevice, &shaderModuleInfo, nullptr, &resource.vkShaderModule);
+
+        if (result != VK_SUCCESS)
+        {
+            logError("Failed to create Vulkan ShaderModule with result ", result);
+            return {};
+        }
+
+        resource.vkCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        resource.vkCreateInfo.stage = convertToVkShaderStage(descriptor.stage);
+        resource.vkCreateInfo.module = resource.vkShaderModule;
+        resource.vkCreateInfo.pName = descriptor.entryPoint.data();
+
+        return m_shaderModulePool.create(resource);
     }
 
     ShaderModuleResource* ResourceManager::getShaderModule(ShaderModuleHandle handle) noexcept
@@ -169,9 +189,16 @@ namespace litl::vulkan
 
     void ResourceManager::destroyShaderModule(ShaderModuleHandle handle) noexcept
     {
-        if (m_shaderModulePool.destroy(handle))
+        ShaderModuleResource* shaderModule = m_shaderModulePool.get(handle);
+
+        if (shaderModule != nullptr)
         {
-            // ... todo ...
+            if (shaderModule->vkShaderModule != VK_NULL_HANDLE)
+            {
+                vkDestroyShaderModule(m_pContext->device.vkDevice, shaderModule->vkShaderModule, nullptr);
+            }
+
+            m_shaderModulePool.destroy(handle);
         }
     }
 

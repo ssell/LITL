@@ -2,6 +2,9 @@
 #define LITL_RENDERER_SHADER_MODULE_H__
 
 #include <cstdint>
+#include <span>
+#include <string>
+
 #include "litl-core/handles.hpp"
 
 namespace litl
@@ -12,15 +15,15 @@ namespace litl
     /// </summary>
     enum class ShaderStage : uint32_t
     {
-        None = 0b00000000,
-        Vertex = 0b00000001,
-        Fragment = 0b00000010,
-        Geometry = 0b00000100,
-        TessellationControl = 0b00001000,
-        TessellationEvaluation = 0b00010000,
-        Compute = 0b00100000,
-        Mesh = 0b01000000,
-        Task = 0b10000000
+        None                   = 0b0000'0000,
+        Vertex                 = 0b0000'0001,
+        Fragment               = 0b0000'0010,
+        Geometry               = 0b0000'0100,
+        TessellationControl    = 0b0000'1000,
+        TessellationEvaluation = 0b0001'0000,
+        Compute                = 0b0010'0000,
+        Mesh                   = 0b0100'0000,
+        Task                   = 0b1000'0000
     };
 
     constexpr ShaderStage operator|(ShaderStage a, ShaderStage b) noexcept
@@ -71,7 +74,30 @@ namespace litl
     /// </summary>
     struct ShaderModuleDescriptor
     {
-        // ... todo ...
+        /// <summary>
+        /// Shader stage (vertex, fragment, etc.)
+        /// </summary>
+        ShaderStage stage;
+
+        /// <summary>
+        /// Shader function name used as the entry point.
+        /// </summary>
+        std::string entryPoint;
+
+        /// <summary>
+        /// Non-owning view of the compiled bytecode (SPIR-V, DXIL, etc.)
+        /// </summary>
+        std::span<uint8_t const> bytes;
+
+        /// <summary>
+        /// Calculated once at load time.
+        /// </summary>
+        uint64_t hashedEntryPoint;
+
+        /// <summary>
+        /// Calculated once at load time.
+        /// </summary>
+        uint64_t hashedBytes;
     };
 
     struct ShaderModuleTag {};
