@@ -8,7 +8,7 @@ namespace litl
     /// <summary>
     /// Debug flag.
     /// </summary>
-    inline constexpr bool IS_DEBUG =
+    inline constexpr bool LITL_DEBUG =
 #ifdef NDEBUG
         false;
 #else 
@@ -43,13 +43,13 @@ namespace litl
     /// Manage debug-only information.
     /// In runtime builds there is zero memory/runtime costs associated with this.
     /// </summary>
-    class DebugInfo : public DebugInfoStorage<IS_DEBUG>
+    class DebugInfo : public DebugInfoStorage<LITL_DEBUG>
     {
     protected:
 
         void setDebugName(std::string_view name)
         {
-            if constexpr (IS_DEBUG)
+            if constexpr (LITL_DEBUG)
             {
                 this->debugName = name;
             }

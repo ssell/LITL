@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "litl-core/debug.hpp"
 #include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/math.hpp"
@@ -79,7 +80,7 @@ namespace litl::vulkan
     bool createLogicalDevice(RendererContext& context) noexcept;
     bool createMemoryAllocator(RendererContext& context) noexcept;
     bool createResourceManager(RendererContext& context) noexcept;
-    bool createSwapChain(RendererContext& context) noexcept;
+    bool createSwapChain(RendererContext& context, VkSwapchainKHR oldSwapchain) noexcept;
     bool createCommandPool(RendererContext& context) noexcept;
     bool createFrameSyncObjects(RendererContext& context) noexcept;
     bool createImageSyncObjects(RendererContext& context) noexcept;
@@ -99,7 +100,7 @@ namespace litl::vulkan
             createLogicalDevice(*vulkanContext) &&
             createMemoryAllocator(*vulkanContext) &&
             createResourceManager(*vulkanContext) &&
-            createSwapChain(*vulkanContext) &&
+            createSwapChain(*vulkanContext, VK_NULL_HANDLE) &&
             createCommandPool(*vulkanContext) &&
             createFrameSyncObjects(*vulkanContext) &&
             createImageSyncObjects(*vulkanContext);
@@ -187,20 +188,21 @@ namespace litl::vulkan
         uint32_t glfwExtensionCount = 0;
         const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
-        const VkInstanceCreateInfo createInfo{
+        VkInstanceCreateInfo createInfo{
             .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
             .pApplicationInfo = &appInfo,
-#ifdef DEBUG
-            .enabledLayerCount = static_cast<uint32_t>(RequiredValidationLayers.size());
-            .ppEnabledLayerNames = RequiredValidationLayers.data();
-            // by default these just print to standard out. can use callbacks if needed. see: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/02_Validation_layers.html#_message_callback
-#else
             .enabledLayerCount = 0,
             .ppEnabledLayerNames = nullptr,
-#endif
             .enabledExtensionCount = glfwExtensionCount,
             .ppEnabledExtensionNames = glfwExtensions,
         };
+
+        if constexpr (LITL_DEBUG)
+        {
+            // by default these just print to standard out. can use callbacks if needed. see: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/02_Validation_layers.html#_message_callback
+            createInfo.enabledLayerCount = static_cast<uint32_t>(RequiredValidationLayers.size());
+            createInfo.ppEnabledLayerNames = RequiredValidationLayers.data();
+        }
 
         VkResult result = vkCreateInstance(&createInfo, nullptr, &context.device.vkInstance);
 
@@ -487,7 +489,7 @@ namespace litl::vulkan
         return true;
     }
 
-    bool createSwapChain(RendererContext& context) noexcept
+    bool createSwapChain(RendererContext& context, VkSwapchainKHR oldSwapchain) noexcept
     {
         context.window.wasResized = false;
 
@@ -520,7 +522,7 @@ namespace litl::vulkan
         createSwapChainInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
         createSwapChainInfo.presentMode = presentMode;
         createSwapChainInfo.clipped = VK_TRUE;
-        createSwapChainInfo.oldSwapchain = VK_NULL_HANDLE;
+        createSwapChainInfo.oldSwapchain = oldSwapchain;
 
         auto queueIndices = findQueueFamilies(context.device.vkPhysicalDevice, context.device.vkSurface);
         uint32_t queueFamilyIndices[] = { queueIndices.getGraphicsIndex(), queueIndices.getPresentIndex() };
@@ -655,6 +657,7 @@ namespace litl::vulkan
         };
 
         // Note that imageSync count is tied to swapchain image count (which is the device minimum + 1 (so 3 on this machine))
+        context.renderInfo.imageSyncInfo.clear();
         context.renderInfo.imageSyncInfo.resize(context.swapChain.vkSwapChainImages.size());
 
         for (size_t i = 0; i < context.swapChain.vkSwapChainImages.size(); ++i)
@@ -682,8 +685,10 @@ namespace litl::vulkan
     // -------------------------------------------------------------------------------------
 
     void cleanupResources(RendererContext& context) noexcept;
-    void cleanupRenderSync(RendererContext& context) noexcept;
-    void cleanupSwapchain(RendererContext& context) noexcept;
+    void cleanupFrameSync(RendererContext& context) noexcept;
+    void cleanupImageSync(RendererContext& context) noexcept;
+    void cleanupSwapChainImages(RendererContext& context) noexcept;
+    void cleanupSwapChain(RendererContext& context, VkSwapchainKHR swapchain) noexcept;
     void cleanupDevice(RendererContext& context) noexcept;
     void recreateSwapchain(RendererContext& context) noexcept;
 
@@ -691,9 +696,13 @@ namespace litl::vulkan
     {
         auto* vulkanContext = unwrap(context);
 
+        vkDeviceWaitIdle(vulkanContext->device.vkDevice);
+
         cleanupResources(*vulkanContext);
-        cleanupRenderSync(*vulkanContext);
-        cleanupSwapchain(*vulkanContext);
+        cleanupFrameSync(*vulkanContext);
+        cleanupImageSync(*vulkanContext);
+        cleanupSwapChainImages(*vulkanContext);
+        cleanupSwapChain(*vulkanContext, vulkanContext->swapChain.vkSwapChain);
         cleanupDevice(*vulkanContext);
 
         delete vulkanContext;
@@ -704,7 +713,7 @@ namespace litl::vulkan
         context.resources.destroy();
     }
 
-    void cleanupRenderSync(RendererContext& context) noexcept
+    void cleanupFrameSync(RendererContext& context) noexcept
     {
         for (auto& frameInfo : context.renderInfo.frameSyncInfo)
         {
@@ -723,7 +732,10 @@ namespace litl::vulkan
         }
 
         context.renderInfo.frameSyncInfo.clear();
+    }
 
+    void cleanupImageSync(RendererContext& context) noexcept
+    {
         for (auto& imageInfo : context.renderInfo.imageSyncInfo)
         {
             if (imageInfo.renderCompleteSemaphore != VK_NULL_HANDLE)
@@ -735,7 +747,7 @@ namespace litl::vulkan
         context.renderInfo.imageSyncInfo.clear();
     }
 
-    void cleanupSwapchain(RendererContext& context) noexcept
+    void cleanupSwapChainImages(RendererContext& context) noexcept
     {
         if (!context.swapChain.vkSwapChainImageViews.empty())
         {
@@ -746,10 +758,13 @@ namespace litl::vulkan
                 vkDestroyImageView(context.device.vkDevice, imageView, nullptr);
             }
         }
+    }
 
-        if (context.swapChain.vkSwapChain != VK_NULL_HANDLE)
+    void cleanupSwapChain(RendererContext& context, VkSwapchainKHR swapchain) noexcept
+    {
+        if (swapchain != VK_NULL_HANDLE)
         {
-            vkDestroySwapchainKHR(context.device.vkDevice, context.swapChain.vkSwapChain, nullptr);
+            vkDestroySwapchainKHR(context.device.vkDevice, swapchain, nullptr);
         }
     }
 
@@ -786,7 +801,14 @@ namespace litl::vulkan
         // Wait for our resources to be unused.
         vkDeviceWaitIdle(context.device.vkDevice);
 
-        cleanupSwapchain(context);
-        createSwapChain(context);
+        VkSwapchainKHR oldSwapchain = context.swapChain.vkSwapChain;
+
+        cleanupSwapChainImages(context);
+        createSwapChain(context, oldSwapchain);     // pass in the old swapchain to make creating the new one
+        cleanupSwapChain(context, oldSwapchain);    // destroy the old one
+
+        // Swapchain image count _can_ change. So must recreate the image sync objects.
+        cleanupImageSync(context);
+        createImageSyncObjects(context);
     }
 }
