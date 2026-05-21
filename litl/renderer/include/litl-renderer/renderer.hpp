@@ -38,6 +38,7 @@ namespace litl
         void (*destroyTexture)(RendererContext*, TextureHandle);
 
         // commands
+        CommandBufferHandle (*cmdBeginFrame)(RendererContext*);
         bool (*cmdBegin)(RendererContext*, CommandBufferHandle);
         bool (*cmdEnd)(RendererContext*, CommandBufferHandle);
         void (*cmdPipelineBarrier)(RendererContext*, CommandBufferHandle, PipelineBarrierCommand const&);
@@ -167,21 +168,53 @@ namespace litl
         // Commands
         // ---------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Retrieves the command buffer for the current frame and instructs it to start recording commands.
+        /// </summary>
+        /// <returns></returns>
+        CommandBufferHandle cmdBeginFrame() const noexcept
+        {
+            return m_pOps->cmdBeginFrame(m_pContext);
+        }
+
+        /// <summary>
+        /// Instructs the provided command buffer to start recording commands.
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <returns></returns>
         bool cmdBegin(CommandBufferHandle handle) const noexcept
         {
             return m_pOps->cmdBegin(m_pContext, handle);
         }
 
+        /// <summary>
+        /// Instructs the provided command buffer to stop recording commands.
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <returns></returns>
         bool cmdEnd(CommandBufferHandle handle) const noexcept
         {
             return m_pOps->cmdEnd(m_pContext, handle);
         }
 
+        /// <summary>
+        /// Issues a command that inserts both an execution dependency and a memory dependency.
+        /// Effectively tells the driver that:
+        /// 
+        ///     "Before you do Y, make sure X has finished and make sure the results of X are visible."
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <param name="command"></param>
         void cmdPipelineBarrier(CommandBufferHandle handle, PipelineBarrierCommand const& command) const noexcept
         {
             m_pOps->cmdPipelineBarrier(m_pContext, handle, command);
         }
 
+        /// <summary>
+        /// Issues a command to clear the specified image/texture.
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <param name="command"></param>
         void cmdClearImage(CommandBufferHandle handle, ClearImageCommand const& command) const noexcept
         {
             m_pOps->cmdClearImage(m_pContext, handle, command);
@@ -191,21 +224,36 @@ namespace litl
         // Drawing
         // ---------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Checks if the previous frame is done rendering and if we can begin rendering the next frame.
+        /// </summary>
+        /// <returns></returns>
         bool beginRender() const noexcept
         {
             return m_pOps->beginRender(m_pContext);
         }
 
+        /// <summary>
+        /// Submits the provided command buffer commands.
+        /// </summary>
+        /// <param name="commands"></param>
         void submitCommands(CommandBufferHandle commands) const noexcept
         {
             submitCommands({&commands, 1});
         }
 
+        /// <summary>
+        /// Submits all commands from the provided command buffers.
+        /// </summary>
+        /// <param name="commands"></param>
         void submitCommands(std::span<CommandBufferHandle const> commands) const noexcept
         {
             m_pOps->submitCommands(m_pContext, commands);
         }
 
+        /// <summary>
+        /// Swaps and presents the rendered image.
+        /// </summary>
         void endRender() const noexcept
         {
             m_pOps->endRender(m_pContext);

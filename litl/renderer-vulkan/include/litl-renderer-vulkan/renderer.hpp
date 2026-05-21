@@ -37,6 +37,7 @@ namespace litl::vulkan
     // rendererCommandOps.cpp
     // -------------------------------------------------------------------------------------
 
+    [[nodiscard]] CommandBufferHandle cmdBeginFrame(litl::RendererContext* context) noexcept;
     [[nodiscard]] bool cmdBegin(litl::RendererContext* context, CommandBufferHandle handle) noexcept;
     [[nodiscard]] bool cmdEnd(litl::RendererContext* context, CommandBufferHandle handle) noexcept;
     void cmdPipelineBarrier(litl::RendererContext* context, CommandBufferHandle handle, PipelineBarrierCommand const& command) noexcept;
@@ -72,6 +73,7 @@ namespace litl::vulkan
         &destroyTexture,
 
         // commands
+        &cmdBeginFrame,
         &cmdBegin,
         &cmdEnd,
         &cmdPipelineBarrier,

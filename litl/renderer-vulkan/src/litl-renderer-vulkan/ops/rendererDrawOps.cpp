@@ -10,8 +10,8 @@ namespace litl::vulkan
     // Begin Render
     // -------------------------------------------------------------------------------------
 
-    bool isRenderReady(RendererContext& context, FrameSyncInfo const& frameSync) noexcept;
-    bool acquireSwapChainIndex(RendererContext& context, uint32_t timeoutNs, uint32_t frameIndex, uint32_t* imageIndex) noexcept;
+    bool isRenderReady(RendererContext& context, PerFrameSyncInfo const& frameSync) noexcept;
+    bool acquireSwapChainIndex(RendererContext& context, PerFrameSyncInfo const& frameSync, uint32_t timeoutNs, uint32_t frameIndex, uint32_t* imageIndex) noexcept;
 
     /// <summary>
     /// Begins rendering if the last frame is complete.
@@ -22,7 +22,7 @@ namespace litl::vulkan
     bool beginRender(litl::RendererContext* context) noexcept
     {
         auto* vulkanContext = unwrap(context);
-        auto& frameSync = vulkanContext->renderSync.frameSync[vulkanContext->frame.frameInFlightIndex];
+        auto& frameSync = vulkanContext->getCurrFrameSyncInfo();
 
         if (!isRenderReady(*vulkanContext, frameSync))
         {
@@ -32,7 +32,7 @@ namespace litl::vulkan
 
         uint32_t swapChainImageIndex = 0;
 
-        if (!acquireSwapChainIndex(*vulkanContext, Constants::millisecond_to_nanoseconds, vulkanContext->frame.frameInFlightIndex, &swapChainImageIndex))
+        if (!acquireSwapChainIndex(*vulkanContext, frameSync, Constants::millisecond_to_nanoseconds, vulkanContext->renderInfo.frameInFlightIndex, &swapChainImageIndex))
         {
             // Swapchain not ready.
             return false;
@@ -51,7 +51,7 @@ namespace litl::vulkan
     /// <param name="context"></param>
     /// <param name="frameSync"></param>
     /// <returns></returns>
-    bool isRenderReady(RendererContext& context, FrameSyncInfo const& frameSync) noexcept
+    bool isRenderReady(RendererContext& context, PerFrameSyncInfo const& frameSync) noexcept
     {
         const VkResult fenceResult = vkGetFenceStatus(context.device.vkDevice, frameSync.renderFence);
 
@@ -81,13 +81,13 @@ namespace litl::vulkan
     /// <param name="frameIndex"></param>
     /// <param name="imageIndex"></param>
     /// <returns></returns>
-    bool acquireSwapChainIndex(RendererContext& context, uint32_t timeoutNs, uint32_t frameIndex, uint32_t* imageIndex) noexcept
+    bool acquireSwapChainIndex(RendererContext& context, PerFrameSyncInfo const& frameSync, uint32_t timeoutNs, uint32_t frameIndex, uint32_t* imageIndex) noexcept
     {
         const VkResult acquireResult = vkAcquireNextImageKHR(
             context.device.vkDevice,
             context.swapChain.vkSwapChain,
             timeoutNs,
-            context.renderSync.frameSync[frameIndex].presentCompleteSemaphore,
+            frameSync.presentCompleteSemaphore,
             VK_NULL_HANDLE,
             imageIndex);
 
@@ -134,8 +134,8 @@ namespace litl::vulkan
             return;
         }
 
-        auto& frameSync = vulkanContext->renderSync.frameSync[vulkanContext->frame.frameInFlightIndex];
-        auto& renderSync = vulkanContext->renderSync.imageSync[vulkanContext->swapChain.swapChainImageIndex];
+        auto& frameSync = vulkanContext->getCurrFrameSyncInfo();
+        auto& imageSync = vulkanContext->getCurrImageSyncInfo();
 
         const VkSubmitInfo submitInfo{
             .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -148,7 +148,7 @@ namespace litl::vulkan
             .pCommandBuffers = vkCommandBuffers.data(),
             .signalSemaphoreCount = 1,
             // The semaphore to signal once the command buffer(s) have finished execution.
-            .pSignalSemaphores = &renderSync.renderCompleteSemaphore
+            .pSignalSemaphores = &imageSync.renderCompleteSemaphore
         };
 
         const VkResult submitResult = vkQueueSubmit(vulkanContext->device.vkGraphicsQueue, 1, &submitInfo, frameSync.renderFence);
@@ -170,7 +170,7 @@ namespace litl::vulkan
         const auto presentInfo = VkPresentInfoKHR{
             .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
             .waitSemaphoreCount = 1,
-            .pWaitSemaphores = &vulkanContext->renderSync.imageSync[vulkanContext->swapChain.swapChainImageIndex].renderCompleteSemaphore,    // Wait for the command buffer to finish executing
+            .pWaitSemaphores = &vulkanContext->getCurrImageSyncInfo().renderCompleteSemaphore,  // Wait for the command buffer to finish executing
             .swapchainCount = 1,
             .pSwapchains = &vulkanContext->swapChain.vkSwapChain,
             .pImageIndices = &vulkanContext->swapChain.swapChainImageIndex,                     // Which image to draw onto
@@ -184,7 +184,7 @@ namespace litl::vulkan
             logWarning("Vulkan Renderer: vkQueuePresentKHR failed with result ", presentResult);
         }
 
-        vulkanContext->frame.frameCount++;
-        vulkanContext->frame.frameInFlightIndex = vulkanContext->frame.frameCount % vulkanContext->frame.framesInFlight;
+        vulkanContext->renderInfo.frameCount++;
+        vulkanContext->renderInfo.frameInFlightIndex = vulkanContext->renderInfo.frameCount % vulkanContext->renderInfo.framesInFlight;
     }
 }

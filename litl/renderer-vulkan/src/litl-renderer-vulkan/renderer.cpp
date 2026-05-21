@@ -27,7 +27,7 @@ namespace litl
         vulkan::RendererContext* vulkanContext = new(std::nothrow) vulkan::RendererContext();
 
         vulkanContext->window.window = pWindow;
-        vulkanContext->frame.framesInFlight = rendererDescriptor.framesInFlight;
+        vulkanContext->renderInfo.framesInFlight = rendererDescriptor.framesInFlight;
 
         return new litl::Renderer(&litl::vulkan::VulkanRendererOps, vulkan::wrap(vulkanContext));
     }
@@ -78,10 +78,11 @@ namespace litl::vulkan
     bool selectPhysicalDevice(RendererContext& context) noexcept;
     bool createLogicalDevice(RendererContext& context) noexcept;
     bool createMemoryAllocator(RendererContext& context) noexcept;
+    bool createResourceManager(RendererContext& context) noexcept;
     bool createSwapChain(RendererContext& context) noexcept;
     bool createCommandPool(RendererContext& context) noexcept;
-    bool createSyncObjects(RendererContext& context) noexcept;
-    bool createResourceManager(RendererContext& context) noexcept;
+    bool createFrameSyncObjects(RendererContext& context) noexcept;
+    bool createImageSyncObjects(RendererContext& context) noexcept;
 
     bool build(litl::RendererContext* context) noexcept
     {
@@ -97,10 +98,11 @@ namespace litl::vulkan
             selectPhysicalDevice(*vulkanContext) &&
             createLogicalDevice(*vulkanContext) &&
             createMemoryAllocator(*vulkanContext) &&
+            createResourceManager(*vulkanContext) &&
             createSwapChain(*vulkanContext) &&
             createCommandPool(*vulkanContext) &&
-            createSyncObjects(*vulkanContext) &&
-            createResourceManager(*vulkanContext);
+            createFrameSyncObjects(*vulkanContext) &&
+            createImageSyncObjects(*vulkanContext);
     }
 
     /// <summary>
@@ -603,13 +605,9 @@ namespace litl::vulkan
         return true;
     }
 
-    bool createSyncObjects(RendererContext& context) noexcept
+    bool createFrameSyncObjects(RendererContext& context) noexcept
     {
         const VkSemaphoreCreateInfo presentSemaphoreInfo{
-            .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
-        };
-
-        const VkSemaphoreCreateInfo renderSemaphoreInfo{
             .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
         };
 
@@ -619,18 +617,26 @@ namespace litl::vulkan
         };
 
         // Note that frameSync count is tied to FRAMES_IN_FLIGHT (which is currently 2)
-        context.renderSync.frameSync.resize(context.frame.framesInFlight);
+        context.renderInfo.frameSyncInfo.resize(context.renderInfo.framesInFlight);
 
-        for (size_t i = 0; i < context.frame.framesInFlight; ++i)
+        for (size_t i = 0; i < context.renderInfo.framesInFlight; ++i)
         {
-            const auto presentCompleteSemaphoreResult = vkCreateSemaphore(context.device.vkDevice, &presentSemaphoreInfo, nullptr, &context.renderSync.frameSync[i].presentCompleteSemaphore);
-            const auto renderFenceResult = vkCreateFence(context.device.vkDevice, &renderFenceInfo, nullptr, &context.renderSync.frameSync[i].renderFence);
+            auto& frameSyncInfo = context.renderInfo.frameSyncInfo[i];
+
+            // Command Buffer
+            frameSyncInfo.commandBuffer = context.resources.createCommandBuffer({});
+
+            // Present Semaphore
+            const auto presentCompleteSemaphoreResult = vkCreateSemaphore(context.device.vkDevice, &presentSemaphoreInfo, nullptr, &frameSyncInfo.presentCompleteSemaphore);
 
             if (presentCompleteSemaphoreResult != VK_SUCCESS)
             {
                 logError("Failed to create Vulkan Present Complete Semaphore with result ", presentCompleteSemaphoreResult);
                 return false;
             }
+
+            // Render Fence
+            const auto renderFenceResult = vkCreateFence(context.device.vkDevice, &renderFenceInfo, nullptr, &frameSyncInfo.renderFence);
 
             if (renderFenceResult != VK_SUCCESS)
             {
@@ -639,12 +645,21 @@ namespace litl::vulkan
             }
         }
 
+        return true;
+    }
+
+    bool createImageSyncObjects(RendererContext& context) noexcept
+    {
+        const VkSemaphoreCreateInfo renderSemaphoreInfo{
+            .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
+        };
+
         // Note that imageSync count is tied to swapchain image count (which is the device minimum + 1 (so 3 on this machine))
-        context.renderSync.imageSync.resize(context.swapChain.vkSwapChainImages.size());
+        context.renderInfo.imageSyncInfo.resize(context.swapChain.vkSwapChainImages.size());
 
         for (size_t i = 0; i < context.swapChain.vkSwapChainImages.size(); ++i)
         {
-            const auto renderCompleteSemaphoreResult = vkCreateSemaphore(context.device.vkDevice, &renderSemaphoreInfo, nullptr, &context.renderSync.imageSync[i].renderCompleteSemaphore);
+            const auto renderCompleteSemaphoreResult = vkCreateSemaphore(context.device.vkDevice, &renderSemaphoreInfo, nullptr, &context.renderInfo.imageSyncInfo[i].renderCompleteSemaphore);
 
             if (renderCompleteSemaphoreResult != VK_SUCCESS)
             {
@@ -691,30 +706,33 @@ namespace litl::vulkan
 
     void cleanupRenderSync(RendererContext& context) noexcept
     {
-        for (auto& frameSync : context.renderSync.frameSync)
+        for (auto& frameInfo : context.renderInfo.frameSyncInfo)
         {
-            if (frameSync.presentCompleteSemaphore != VK_NULL_HANDLE)
+            context.resources.destroyCommandBuffer(frameInfo.commandBuffer);
+            frameInfo.commandBuffer = {};
+
+            if (frameInfo.presentCompleteSemaphore != VK_NULL_HANDLE)
             {
-                vkDestroySemaphore(context.device.vkDevice, frameSync.presentCompleteSemaphore, nullptr);
+                vkDestroySemaphore(context.device.vkDevice, frameInfo.presentCompleteSemaphore, nullptr);
             }
 
-            if (frameSync.renderFence != VK_NULL_HANDLE)
+            if (frameInfo.renderFence != VK_NULL_HANDLE)
             {
-                vkDestroyFence(context.device.vkDevice, frameSync.renderFence, nullptr);
+                vkDestroyFence(context.device.vkDevice, frameInfo.renderFence, nullptr);
             }
         }
 
-        context.renderSync.frameSync.clear();
+        context.renderInfo.frameSyncInfo.clear();
 
-        for (auto& imageSync : context.renderSync.imageSync)
+        for (auto& imageInfo : context.renderInfo.imageSyncInfo)
         {
-            if (imageSync.renderCompleteSemaphore != VK_NULL_HANDLE)
+            if (imageInfo.renderCompleteSemaphore != VK_NULL_HANDLE)
             {
-                vkDestroySemaphore(context.device.vkDevice, imageSync.renderCompleteSemaphore, nullptr);
+                vkDestroySemaphore(context.device.vkDevice, imageInfo.renderCompleteSemaphore, nullptr);
             }
         }
 
-        context.renderSync.imageSync.clear();
+        context.renderInfo.imageSyncInfo.clear();
     }
 
     void cleanupSwapchain(RendererContext& context) noexcept

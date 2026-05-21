@@ -19,6 +19,13 @@ namespace litl::vulkan
         return (resource != nullptr) && (resource->vkCommandBuffer != VK_NULL_HANDLE);
     }
 
+    CommandBufferHandle cmdBeginFrame(litl::RendererContext* context) noexcept
+    {
+        auto commandBufferHandle = unwrap(context)->getCurrFrameSyncInfo().commandBuffer;
+        std::ignore = cmdBegin(context, commandBufferHandle);
+        return commandBufferHandle;
+    }
+
     bool cmdBegin(litl::RendererContext* context, CommandBufferHandle handle) noexcept
     {
         auto* commandBuffer = unwrap(context, handle);
@@ -114,9 +121,22 @@ namespace litl::vulkan
             .layerCount = 1,
         };
 
+        TextureResource* targetTexture = vulkanContext->resources.getTexture(command.image);
+        VkImage targetImage = VK_NULL_HANDLE;
+
+        if (targetTexture != nullptr)
+        {
+            targetImage = targetTexture->vkImage;
+        }
+        else
+        {
+            // clear the current swap chain image
+            targetImage = vulkanContext->swapChain.vkSwapChainImages[vulkanContext->swapChain.swapChainImageIndex];
+        }
+
         vkCmdClearColorImage(
             commandBuffer->vkCommandBuffer, 
-            vulkanContext->swapChain.vkSwapChainImages[vulkanContext->swapChain.swapChainImageIndex],
+            targetImage,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
             &clearColor, 
             1, 
