@@ -1,4 +1,5 @@
 #include <chrono>
+#include <iostream>
 
 #include "litl-renderer/renderer.hpp"
 #include "litl-renderer/window.hpp"
@@ -12,6 +13,8 @@ color getClearColor(float elapsedSeconds) noexcept;
 
 int main()
 {
+    std::cout << "LITL Renderer Only" << std::endl;
+
     Window* window = nullptr;
     Renderer* renderer = nullptr;
 
@@ -41,8 +44,12 @@ int main()
         }
     }
 
+    std::cout << "Shutting down ..." << std::endl;
+
     destroyVulkanRenderer(renderer);
     destroyVulkanWindow(window);
+
+    std::cout << "Exiting" << std::endl;
 
     return 0;
 }
