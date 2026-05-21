@@ -75,6 +75,27 @@ namespace litl
         VertexAttributeInput         = 0b0010'0000'0000'0000'0000'0000'0000'0000'0000'0000,
         PreRasterizationShaders      = 0b0100'0000'0000'0000'0000'0000'0000'0000'0000'0000,
     };
+
+    /// <summary>
+    /// Based on: https://docs.vulkan.org/refpages/latest/refpages/source/VkAttachmentLoadOp.html
+    /// </summary>
+    enum class LoadOperationType : uint32_t
+    {
+        Load = 0,
+        Clear = 1,
+        DontCare = 2,
+        None = 1000400000
+    };
+
+    /// <summary>
+    /// Based on: https://docs.vulkan.org/refpages/latest/refpages/source/VkAttachmentStoreOp.html
+    /// </summary>
+    enum class StoreOperationType : uint32_t
+    {
+        Store = 0,
+        DontCare = 1,
+        None = 1000301000
+    };
 }
 
 #endif

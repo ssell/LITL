@@ -66,4 +66,15 @@ namespace litl
     static_assert(static_cast<uint64_t>(PipelineStageFlagBits::IndexInput) == VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT);
     static_assert(static_cast<uint64_t>(PipelineStageFlagBits::VertexAttributeInput) == VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT);
     static_assert(static_cast<uint64_t>(PipelineStageFlagBits::PreRasterizationShaders) == VK_PIPELINE_STAGE_2_PRE_RASTERIZATION_SHADERS_BIT);
+
+    // LoadOperationType
+    static_assert(static_cast<uint32_t>(LoadOperationType::Load) == VK_ATTACHMENT_LOAD_OP_LOAD);
+    static_assert(static_cast<uint32_t>(LoadOperationType::Clear) == VK_ATTACHMENT_LOAD_OP_CLEAR);
+    static_assert(static_cast<uint32_t>(LoadOperationType::DontCare) == VK_ATTACHMENT_LOAD_OP_DONT_CARE);
+    static_assert(static_cast<uint32_t>(LoadOperationType::None) == VK_ATTACHMENT_LOAD_OP_NONE);
+
+    // StoreOperationType
+    static_assert(static_cast<uint32_t>(StoreOperationType::Store) == VK_ATTACHMENT_STORE_OP_STORE);
+    static_assert(static_cast<uint32_t>(StoreOperationType::DontCare) == VK_ATTACHMENT_STORE_OP_DONT_CARE);
+    static_assert(static_cast<uint32_t>(StoreOperationType::None) == VK_ATTACHMENT_STORE_OP_NONE);
 }
