@@ -32,7 +32,7 @@ namespace litl::vulkan
 
         uint32_t swapChainImageIndex = 0;
 
-        if (!acquireSwapChainIndex(*vulkanContext, frameSync, Constants::millisecond_to_nanoseconds, vulkanContext->renderInfo.frameInFlightIndex, &swapChainImageIndex))
+        if (!acquireSwapChainIndex(*vulkanContext, frameSync, Constants::millisecond_to_nanoseconds * 32, vulkanContext->renderInfo.frameInFlightIndex, &swapChainImageIndex))
         {
             // Swapchain not ready.
             return false;
@@ -177,7 +177,7 @@ namespace litl::vulkan
             .pResults = nullptr                                                                 // (Optional) If using multiple swapchains, the success of each present will be stored in this array as opposed to the singular result from the upcoming call.
         };
 
-        const auto presentResult = vkQueuePresentKHR(vulkanContext->device.vkGraphicsQueue, &presentInfo);
+        const auto presentResult = vkQueuePresentKHR(vulkanContext->device.vkPresentQueue, &presentInfo);
 
         if (presentResult != VK_SUCCESS)
         {
