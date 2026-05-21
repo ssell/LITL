@@ -1,6 +1,6 @@
 #include <new>
 
-
+#include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer-vulkan/window.hpp"
@@ -18,13 +18,19 @@ namespace litl
 
     Window* createVulkanWindow() noexcept
     {
-        return new Window(&vulkan::VulkanWindowOps, new WindowContext());
+        auto* context = new WindowContext();
+        auto* window = new Window(&vulkan::VulkanWindowOps, context);
+
+        context->litlWindow = window;
+
+        return window;
     }
 
     void destroyVulkanWindow(Window* window) noexcept
     {
         if (window != nullptr)
         {
+
             delete window;
         }
     }
@@ -35,6 +41,9 @@ namespace litl::vulkan
     bool open(WindowContext* context, const char* title, uint32_t width, uint32_t height) noexcept
     {
         logInfo("Opening Vulkan Window");
+
+        LITL_ASSERT_MSG(context != nullptr, "Attempted to open window with a provided NULL context!", false);
+        LITL_ASSERT_MSG(context->litlWindow != nullptr, "Attempted to open with with a NULL internal window!", false);
 
         context->width = width;
         context->height = height;
@@ -89,7 +98,7 @@ namespace litl::vulkan
     bool shouldClose(WindowContext* context) noexcept
     {
         // Has the (GLFW) window received a close event?
-        glfwPollEvents();
+        pollForEvents(context);
         return glfwWindowShouldClose(context->glfwWindow);
     }
 
@@ -113,10 +122,22 @@ namespace litl::vulkan
         return static_cast<void*>(context->glfwWindow);
     }
 
-    void onResize(WindowContext* context, uint32_t width, uint32_t height)
+    void onResize(WindowContext* context, uint32_t width, uint32_t height) noexcept
     {
         context->state = (width == 0 && height == 0) ? WindowState::Minimized : WindowState::Open;
         context->width = width;
         context->height = height;
+    }
+
+    void pollForEvents(WindowContext* context) noexcept
+    {
+        // note: context is unused but still passed in for future proofing.
+        glfwPollEvents();
+    }
+
+    void waitForEvents(WindowContext* context, float timeoutSeconds) noexcept
+    {
+        // note: context is unused but still passed in for future proofing.
+        glfwWaitEventsTimeout(static_cast<double>(timeoutSeconds));
     }
 }
