@@ -68,34 +68,35 @@ namespace litl::vulkan
         // Color Texture Attachment
         // ---------------------------------------------------------------------------------
 
-        VkImageView colorTextureView = VK_NULL_HANDLE;
-        auto* colorTexture = vulkanContext->resources.getTexture(command.color.colorTexture);
+        const bool isSwapChain = !command.color.colorTexture.isValid();
 
-        if (colorTexture != nullptr)
+        VkRenderingAttachmentInfo colorAttachment{};
+        colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        colorAttachment.imageView = VK_NULL_HANDLE;
+        colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
+        colorAttachment.clearValue = VkClearValue{ .color = VkClearColorValue{ command.color.clearColor.r(), command.color.clearColor.g(), command.color.clearColor.b(), command.color.clearColor.a() } };
+
+        if (isSwapChain)
         {
-            colorTextureView = colorTexture->vkImageView;
+            // Swapchain color attachment
+            colorAttachment.imageView = vulkanContext->swapChain.vkSwapChainImageViews[vulkanContext->swapChain.swapChainImageIndex];
+            colorAttachment.loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
+            colorAttachment.storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
         }
         else
         {
-            colorTextureView = vulkanContext->swapChain.vkSwapChainImageViews[vulkanContext->swapChain.swapChainImageIndex];
-        }
+            // Custom color attachment info
+            auto* colorTexture = vulkanContext->resources.getTexture(command.color.colorTexture);
 
-        const VkRenderingAttachmentInfo colorAttachment{
-            .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
-            .imageView = colorTextureView,
-            .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-            .resolveMode = VK_RESOLVE_MODE_NONE,
-            .loadOp = static_cast<VkAttachmentLoadOp>(command.color.loadOp),
-            .storeOp = static_cast<VkAttachmentStoreOp>(command.color.storeOp),
-            .clearValue = VkClearValue{ 
-                .color = VkClearColorValue{
-                    command.color.clearColor.r(),
-                    command.color.clearColor.g(),
-                    command.color.clearColor.b(),
-                    command.color.clearColor.a(),
-                }
+            if (colorTexture != nullptr)
+            {
+                colorAttachment.imageView = colorTexture->vkImageView;
             }
-        };
+
+            colorAttachment.loadOp = static_cast<VkAttachmentLoadOp>(command.color.loadOp);
+            colorAttachment.storeOp = static_cast<VkAttachmentStoreOp>(command.color.storeOp);
+        }
 
         // ---------------------------------------------------------------------------------
         // Depth Texture Attachment
@@ -137,7 +138,7 @@ namespace litl::vulkan
         // Begin Render
         // ---------------------------------------------------------------------------------
 
-        const VkRenderingInfo renderingInfo{
+        VkRenderingInfo renderingInfo{
             .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
             .flags = 0,
             .renderArea = { 
@@ -157,6 +158,11 @@ namespace litl::vulkan
             .pDepthAttachment = command.depth.has_value() ? &depthAttachment : nullptr,
             .pStencilAttachment = nullptr
         };
+
+        if (isSwapChain)
+        {
+            renderingInfo.renderArea.extent = vulkanContext->swapChain.vkSwapChainExtent;
+        }
 
         vkCmdBeginRendering(commandBuffer->vkCommandBuffer, &renderingInfo);
     }

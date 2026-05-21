@@ -13,7 +13,8 @@ namespace litl
     struct ColorAttachmentDescriptor
     {
         /// <summary>
-        /// The color texture.
+        /// The color texture. If not specified (left at default value), then
+        /// the current swapchain image will be used.
         /// </summary>
         TextureHandle colorTexture{};
 
@@ -69,7 +70,8 @@ namespace litl
     struct BeginRenderCommand
     {
         /// <summary>
-        /// 
+        /// The color texture to render to.
+        /// If not specified, will default to the current swapchain image.
         /// </summary>
         ColorAttachmentDescriptor color;
         // ^ todo update to allow for multiple?
@@ -82,7 +84,7 @@ namespace litl
         /// <summary>
         /// 
         /// </summary>
-        rect2D area = { .offset = { 0.0f, 0.0f }, .extents = { 1.0f, 1.0f } };
+        rect2D area = { .offset = { 0.0f, 0.0f }, .extents = { 0.0f, 0.0f } };
 
         /// <summary>
         /// 
