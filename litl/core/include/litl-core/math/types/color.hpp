@@ -3,6 +3,7 @@
 
 #include "litl-core/math/glm.hpp"
 #include <glm/gtc/type_ptr.hpp>
+#include "litl-core/types.hpp"
 
 namespace litl
 {
@@ -52,6 +53,11 @@ namespace litl
         glm::vec4 value{ 0.0f, 0.0f, 0.0f, 1.0f };
     };
 
+    static_assert(std::is_nothrow_copy_constructible_v<color>);
+    static_assert(std::is_nothrow_move_constructible_v<color>);
+    static_assert(std::is_nothrow_copy_assignable_v<color>);
+    static_assert(std::is_nothrow_move_assignable_v<color>);
+
     namespace colors
     {
         static constexpr color Black { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -62,5 +68,7 @@ namespace litl
         static constexpr color Blue  { 0.0f, 0.0f, 1.0f, 1.0f };
     }
 }
+
+REGISTER_TYPE_NAME(litl::color)
 
 #endif

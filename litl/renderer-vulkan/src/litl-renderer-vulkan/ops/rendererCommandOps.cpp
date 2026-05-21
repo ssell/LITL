@@ -54,6 +54,125 @@ namespace litl::vulkan
         return vkEndCommandBuffer(commandBuffer->vkCommandBuffer) == VK_SUCCESS;
     }
 
+    void cmdBeginRender(litl::RendererContext* context, CommandBufferHandle handle, BeginRenderCommand const& command) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+        auto* commandBuffer = unwrap(context, handle);
+
+        if (!isValid(commandBuffer))
+        {
+            return;
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Color Texture Attachment
+        // ---------------------------------------------------------------------------------
+
+        VkImageView colorTextureView = VK_NULL_HANDLE;
+        auto* colorTexture = vulkanContext->resources.getTexture(command.color.colorTexture);
+
+        if (colorTexture != nullptr)
+        {
+            colorTextureView = colorTexture->vkImageView;
+        }
+        else
+        {
+            colorTextureView = vulkanContext->swapChain.vkSwapChainImageViews[vulkanContext->swapChain.swapChainImageIndex];
+        }
+
+        const VkRenderingAttachmentInfo colorAttachment{
+            .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+            .imageView = colorTextureView,
+            .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            .resolveMode = VK_RESOLVE_MODE_NONE,
+            .loadOp = static_cast<VkAttachmentLoadOp>(command.color.loadOp),
+            .storeOp = static_cast<VkAttachmentStoreOp>(command.color.storeOp),
+            .clearValue = VkClearValue{ 
+                .color = VkClearColorValue{
+                    command.color.clearColor.r(),
+                    command.color.clearColor.g(),
+                    command.color.clearColor.b(),
+                    command.color.clearColor.a(),
+                }
+            }
+        };
+
+        // ---------------------------------------------------------------------------------
+        // Depth Texture Attachment
+        // ---------------------------------------------------------------------------------
+
+        VkRenderingAttachmentInfo depthAttachment{};
+
+        if (command.depth.has_value())
+        {
+            VkImageView depthTextureView = VK_NULL_HANDLE;
+            auto* depthTexture = vulkanContext->resources.getTexture((*command.depth).depthTexture);
+
+            if (depthTexture != VK_NULL_HANDLE)
+            {
+                depthTextureView = depthTexture->vkImageView;
+            }
+
+            depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+            depthAttachment.imageView = depthTextureView;
+            depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+            depthAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
+            depthAttachment.loadOp = static_cast<VkAttachmentLoadOp>((*command.depth).loadOp);
+            depthAttachment.storeOp = static_cast<VkAttachmentStoreOp>((*command.depth).storeOp);
+            depthAttachment.clearValue = VkClearValue{
+                .depthStencil = VkClearDepthStencilValue{
+                    .depth = (*command.depth).clearDepth,
+                    .stencil = (*command.depth).clearStencil
+                }
+            };
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Stencil Texture Attachment
+        // ---------------------------------------------------------------------------------
+
+        // ... todo ...
+
+        // ---------------------------------------------------------------------------------
+        // Begin Render
+        // ---------------------------------------------------------------------------------
+
+        const VkRenderingInfo renderingInfo{
+            .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
+            .flags = 0,
+            .renderArea = { 
+                .offset = { 
+                    .x = static_cast<int32_t>(command.area.offset.x()), 
+                    .y = static_cast<int32_t>(command.area.offset.y()) 
+                },
+                .extent = { 
+                    .width  = static_cast<uint32_t>(command.area.extents.x()),
+                    .height = static_cast<uint32_t>(command.area.extents.y())
+                }
+            },
+            .layerCount = command.layerCount,
+            .viewMask = command.viewMask,
+            .colorAttachmentCount = 1u,
+            .pColorAttachments = &colorAttachment,
+            .pDepthAttachment = command.depth.has_value() ? &depthAttachment : nullptr,
+            .pStencilAttachment = nullptr
+        };
+
+        vkCmdBeginRendering(commandBuffer->vkCommandBuffer, &renderingInfo);
+    }
+
+    void cmdEndRender(litl::RendererContext* context, CommandBufferHandle handle) noexcept
+    {
+        auto* commandBuffer = unwrap(context, handle);
+
+        if (!isValid(commandBuffer))
+        {
+            return;
+        }
+
+        vkCmdEndRendering(commandBuffer->vkCommandBuffer);
+    }
+
     void cmdPipelineBarrier(litl::RendererContext* context, CommandBufferHandle handle, PipelineBarrierCommand const& command) noexcept
     {
         auto* vulkanContext = unwrap(context);

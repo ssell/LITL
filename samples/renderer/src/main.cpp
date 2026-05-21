@@ -27,7 +27,11 @@ int main()
             {
                 auto commandBuffer = renderer->cmdBeginFrame();
                 renderer->cmdPipelineBarrier(commandBuffer, PipelineBarrierUndefinedToColor);
-                renderer->cmdClearImage(commandBuffer, { .clearColor = getClearColor(elapsedSeconds) });
+                renderer->cmdBeginRender(commandBuffer, { .color = { .clearColor = getClearColor(elapsedSeconds) }});
+
+                // ... add other render commands ...
+
+                renderer->cmdEndRender(commandBuffer);
                 renderer->cmdPipelineBarrier(commandBuffer, PipelineBarrierColorToPresent);
                 renderer->cmdEnd(commandBuffer);
 

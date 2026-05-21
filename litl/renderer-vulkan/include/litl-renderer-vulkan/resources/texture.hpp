@@ -9,6 +9,7 @@ namespace litl::vulkan
     struct TextureResource
     {
         VkImage vkImage = VK_NULL_HANDLE;
+        VkImageView vkImageView = VK_NULL_HANDLE;
         VmaAllocator vmaAllocator = VK_NULL_HANDLE;
 
         // ... todo ...
