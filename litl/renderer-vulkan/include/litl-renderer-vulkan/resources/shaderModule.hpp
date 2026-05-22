@@ -3,13 +3,44 @@
 
 #include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer/resources/shaderModule.hpp"
+#include "litl-renderer/reflection.hpp"
 
 namespace litl::vulkan
 {
     struct ShaderModuleResource
     {
+        /// <summary>
+        /// Handle to a compiled shader module entry point.
+        /// </summary>
         VkShaderModule vkShaderModule = VK_NULL_HANDLE;
-        VkPipelineShaderStageCreateInfo vkCreateInfo{};
+
+        /// <summary>
+        /// The shader stage that the module is for.
+        /// </summary>
+        VkShaderStageFlagBits stage;
+
+        /// <summary>
+        /// Results of reflection on the SPIR-V bytecode.
+        /// </summary>
+        ShaderReflection reflection;
+
+        /// <summary>
+        /// The hash of the SPIR-V bytecode. Used for shader invalidation.
+        /// </summary>
+        uint64_t spirvHash;
+
+        VkPipelineShaderStageCreateInfo createStageInfo(char const* entryPoint, VkSpecializationInfo const* spec = nullptr) const noexcept
+        {
+            return VkPipelineShaderStageCreateInfo {
+                .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+                .pNext = nullptr,
+                .flags = 0,
+                .stage = stage,
+                .module = vkShaderModule,
+                .pName = entryPoint,
+                .pSpecializationInfo = spec,
+            };
+        }
     };
 
     constexpr VkShaderStageFlagBits convertToVkShaderStage(litl::ShaderStage stage)

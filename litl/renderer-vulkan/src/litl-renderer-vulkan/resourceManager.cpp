@@ -1,5 +1,7 @@
 #include "litl-renderer-vulkan/renderer.hpp"
+#include "litl-renderer/reflection.hpp"
 #include "litl-core/logging/logging.hpp"
+#include "litl-core/hash.hpp"
 
 namespace litl::vulkan
 {
@@ -156,8 +158,33 @@ namespace litl::vulkan
     // ShaderModule
     //--------------------------------------------------------------------------------------
 
+    ShaderModuleHandle ResourceManager::getShaderModuleHandle(std::string const& resource, std::string const& entryPoint) const noexcept
+    {
+        std::string key;
+        key.reserve(resource.size() + entryPoint.size() + 1);
+        key.append(resource);
+        key.append(":");
+        key.append(entryPoint);
+
+        auto find = m_shaderModuleMap.find(key);
+
+        if (find != m_shaderModuleMap.end())
+        {
+            return find->second;
+        }
+
+        return {};
+    }
+
     ShaderModuleHandle ResourceManager::createShaderModule(ShaderModuleDescriptor const& descriptor) noexcept
     {
+        ShaderModuleHandle handle = getShaderModuleHandle(descriptor.resource, descriptor.entryPoint);
+
+        if (handle.isValid())
+        {
+            return handle;
+        }
+
         ShaderModuleResource resource;
 
         const VkShaderModuleCreateInfo shaderModuleInfo{
@@ -166,6 +193,7 @@ namespace litl::vulkan
             .pCode = reinterpret_cast<uint32_t const*>(descriptor.bytes.data())
         };
 
+        // Compile the shader module
         const VkResult result = vkCreateShaderModule(m_pContext->device.vkDevice, &shaderModuleInfo, nullptr, &resource.vkShaderModule);
 
         if (result != VK_SUCCESS)
@@ -174,12 +202,25 @@ namespace litl::vulkan
             return {};
         }
 
-        resource.vkCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        resource.vkCreateInfo.stage = convertToVkShaderStage(descriptor.stage);
-        resource.vkCreateInfo.module = resource.vkShaderModule;
-        resource.vkCreateInfo.pName = descriptor.entryPoint.data();
+        // Reflect the SPIR-V for future pipeline binds
+        auto reflection = reflectSPIRV(descriptor.entryPoint.c_str(), descriptor.bytes);
 
-        return m_shaderModulePool.create(resource);
+        if (reflection.has_value())
+        {
+            resource.reflection = *reflection;
+        }
+        else
+        {
+            logWarning("Failed to reflection Vulkan Shader at '", descriptor.resource, "' with entry point '", descriptor.entryPoint + "'");
+        }
+
+        // Finish building the resource and the ncreate the handle
+        resource.stage = convertToVkShaderStage(descriptor.stage);
+        resource.spirvHash = hashArray(descriptor.bytes);
+
+        handle = m_shaderModulePool.create(resource);
+
+        return handle;
     }
 
     ShaderModuleResource* ResourceManager::getShaderModule(ShaderModuleHandle handle) noexcept

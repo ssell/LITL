@@ -1,6 +1,9 @@
 #ifndef LITL_RENDERER_VULKAN_RESOURCE_MANAGER_H__
 #define LITL_RENDERER_VULKAN_RESOURCE_MANAGER_H__
 
+#include <string>
+#include <unordered_map>
+
 #include "litl-core/handles.hpp"
 #include "litl-renderer-vulkan/resources/buffer.hpp"
 #include "litl-renderer-vulkan/resources/commandBuffer.hpp"
@@ -45,6 +48,7 @@ namespace litl::vulkan
         [[nodiscard]] SamplerResource* getSampler(SamplerHandle handle) noexcept;
         void destroySampler(SamplerHandle handle) noexcept;
 
+        [[nodiscard]] ShaderModuleHandle getShaderModuleHandle(std::string const& resource, std::string const& entryPoint) const noexcept;
         [[nodiscard]] ShaderModuleHandle createShaderModule(ShaderModuleDescriptor const& descriptor) noexcept;
         [[nodiscard]] ShaderModuleResource* getShaderModule(ShaderModuleHandle handle) noexcept;
         void destroyShaderModule(ShaderModuleHandle handle) noexcept;
@@ -62,8 +66,10 @@ namespace litl::vulkan
         HandlePool<ComputePipelineResource, ComputePipelineTag> m_computePipelinePool;
         HandlePool<GraphicsPipelineResource, GraphicsPipelineTag> m_graphicsPipelinePool;
         HandlePool<SamplerResource, SamplerTag> m_samplerPool;
-        HandlePool<ShaderModuleResource, ShaderModuleTag> m_shaderModulePool;
         HandlePool<TextureResource, TextureTag> m_texturePool;
+
+        HandlePool<ShaderModuleResource, ShaderModuleTag> m_shaderModulePool;
+        std::unordered_map<std::string, ShaderModuleHandle> m_shaderModuleMap;
     };
 }
 
