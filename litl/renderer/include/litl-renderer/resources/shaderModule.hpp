@@ -80,7 +80,12 @@ namespace litl
         ShaderStage stage;
 
         /// <summary>
-        /// Shader function name used as the entry point.
+        /// For now, the file path. In the future the asset name once the asset system is in place.
+        /// </summary>
+        std::string resource;
+
+        /// <summary>
+        /// Name of the function acting as the entrypoint into the shader.
         /// </summary>
         std::string entryPoint;
 
