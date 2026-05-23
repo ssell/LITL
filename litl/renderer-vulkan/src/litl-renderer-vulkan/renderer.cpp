@@ -415,7 +415,7 @@ namespace litl::vulkan
         VkPhysicalDeviceVulkan11Features vulkan11Features {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES,
             .pNext = &vulkan12Features,
-            //.shaderDrawParameters = true
+            .shaderDrawParameters = true
         };
 
         VkPhysicalDeviceFeatures2 physicalDeviceFeatures {
