@@ -91,18 +91,11 @@ namespace litl
 
         /// <summary>
         /// Non-owning view of the compiled bytecode (SPIR-V, DXIL, etc.)
+        /// The data must be valid until shader module creation is complete.
+        /// Once the shader module is constructed the bytecode itself is 
+        /// no longer referenced/used, only it's hash.
         /// </summary>
         std::span<uint8_t const> bytes;
-
-        /// <summary>
-        /// Calculated once at load time.
-        /// </summary>
-        uint64_t hashedEntryPoint;
-
-        /// <summary>
-        /// Calculated once at load time.
-        /// </summary>
-        uint64_t hashedBytes;
     };
 
     struct ShaderModuleTag {};
