@@ -194,7 +194,7 @@ namespace litl
     /// <summary>
     /// Given a blob of byte-code and a shader entry point, returns the reflected shader data.
     /// </summary>
-    std::optional<ShaderReflection> reflectSPIRV(const char* entryPoint, std::span<uint8_t const> spirvByteCode);
+    std::optional<ShaderReflection> reflectSPIRV(const char* entryPoint, std::span<std::byte const> spirvByteCode);
 }
 
 #endif

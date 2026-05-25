@@ -27,7 +27,7 @@ namespace litl
     bool reflectSpecializationConstants(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule);
     bool reflectComputeInfo(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint);
 
-    std::optional<ShaderReflection> reflectSPIRV(const char* entryPoint, std::span<uint8_t const> spirvByteCode)
+    std::optional<ShaderReflection> reflectSPIRV(const char* entryPoint, std::span<std::byte const> spirvByteCode)
     {
         std::optional<ShaderReflection> returnVal = std::nullopt;
         SpvReflectShaderModule module{};

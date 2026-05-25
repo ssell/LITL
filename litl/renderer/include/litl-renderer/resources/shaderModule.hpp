@@ -95,7 +95,7 @@ namespace litl
         /// Once the shader module is constructed the bytecode itself is 
         /// no longer referenced/used, only it's hash.
         /// </summary>
-        std::span<uint8_t const> bytes;
+        std::span<std::byte const> bytes;
     };
 
     struct ShaderModuleTag {};
