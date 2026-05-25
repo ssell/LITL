@@ -127,16 +127,6 @@ bool testBuildShader(Renderer* renderer) noexcept
     file.read(reinterpret_cast<char*>(fileBuffer.data()), fileSize);
     file.close();
 
-    auto vertReflection = reflectSPIRV(vertEntry.c_str(), fileBuffer);
-    auto fragReflection = reflectSPIRV(fragEntry.c_str(), fileBuffer);
-
-    if (!vertReflection.has_value() || !fragReflection.has_value())
-    {
-        // Need both vert + frag
-        std::cout << "Failed to reflect vert and/or fragment shader. Vert success = " << vertReflection.has_value() << ", Frag success = " << fragReflection.has_value() << std::endl;
-        return false;
-    }
-
     const ShaderModuleDescriptor vertDescriptor{
         .stage = ShaderStage::Vertex,
         .resource = path,

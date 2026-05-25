@@ -29,6 +29,11 @@ namespace litl::vulkan
         /// </summary>
         uint64_t spirvHash;
 
+        /// <summary>
+        /// Key for this module in the resource map.
+        /// </summary>
+        std::string resourceMapKey;
+
         VkPipelineShaderStageCreateInfo createStageInfo(char const* entryPoint, VkSpecializationInfo const* spec = nullptr) const noexcept
         {
             return VkPipelineShaderStageCreateInfo {

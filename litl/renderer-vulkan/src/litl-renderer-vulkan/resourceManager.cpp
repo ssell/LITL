@@ -12,7 +12,20 @@ namespace litl::vulkan
 
     void ResourceManager::destroy() noexcept
     {
-        // ... todo ...
+        // Command Buffers
+        std::vector<CommandBufferHandle> commandBufferHandles;
+        m_commandBufferPool.getAllHandles(commandBufferHandles);
+
+        for (auto commandBufferHandle : commandBufferHandles)
+        {
+            destroyCommandBuffer(commandBufferHandle);
+        }
+
+        // Shader Modules
+        for (auto shaderModuleHandleKvp : m_shaderModuleMap)
+        {
+            destroyShaderModule(shaderModuleHandleKvp.second);
+        }
     }
 
     //--------------------------------------------------------------------------------------
@@ -158,13 +171,18 @@ namespace litl::vulkan
     // ShaderModule
     //--------------------------------------------------------------------------------------
 
-    ShaderModuleHandle ResourceManager::getShaderModuleHandle(std::string const& resource, std::string const& entryPoint) const noexcept
+    static void buildShaderModuleMapKey(std::string const& resource, std::string const& entryPoint, std::string& key) noexcept
     {
-        std::string key;
         key.reserve(resource.size() + entryPoint.size() + 1);
         key.append(resource);
         key.append(":");
         key.append(entryPoint);
+    }
+
+    ShaderModuleHandle ResourceManager::getShaderModuleHandle(std::string const& resource, std::string const& entryPoint) const noexcept
+    {
+        std::string key;
+        buildShaderModuleMapKey(resource, entryPoint, key);
 
         auto find = m_shaderModuleMap.find(key);
 
@@ -186,6 +204,7 @@ namespace litl::vulkan
         }
 
         ShaderModuleResource resource;
+        buildShaderModuleMapKey(descriptor.resource, descriptor.entryPoint, resource.resourceMapKey);
 
         const VkShaderModuleCreateInfo shaderModuleInfo{
             .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
@@ -211,7 +230,14 @@ namespace litl::vulkan
         }
         else
         {
-            logWarning("Failed to reflection Vulkan Shader at '", descriptor.resource, "' with entry point '", descriptor.entryPoint + "'");
+            logError("Failed to reflect Vulkan Shader at '", descriptor.resource, "' with entry point '", descriptor.entryPoint + "'");
+            return {};
+        }
+
+        if (reflection->stage != descriptor.stage)
+        {
+            logError("Failed to create Vulkan ShaderModule at '", descriptor.resource, "' with entry point '", descriptor.entryPoint, "': user declared shader stage of ", static_cast<uint32_t>(descriptor.stage), " but reflection returned stage of ", static_cast<uint32_t>(reflection->stage));
+            return {};
         }
 
         // Finish building the resource and the ncreate the handle
@@ -219,6 +245,9 @@ namespace litl::vulkan
         resource.spirvHash = hashArray(descriptor.bytes);
 
         handle = m_shaderModulePool.create(resource);
+
+        // Record in the map
+        m_shaderModuleMap[resource.resourceMapKey] = handle;
 
         return handle;
     }
@@ -240,6 +269,7 @@ namespace litl::vulkan
             }
 
             m_shaderModulePool.destroy(handle);
+            m_shaderModuleMap.erase(shaderModule->resourceMapKey);
         }
     }
 
