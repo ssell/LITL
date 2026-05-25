@@ -1,10 +1,9 @@
 #include <chrono>
-#include <filesystem>
 #include <fstream>
 #include <iostream>
 
+#include "litl-core/containers/alignedByteBuffer.hpp"
 #include "litl-renderer/renderer.hpp"
-#include "litl-renderer/reflection.hpp"
 #include "litl-renderer/window.hpp"
 #include "litl-renderer-vulkan/integration.hpp"
 
@@ -119,26 +118,25 @@ bool testBuildShader(Renderer* renderer) noexcept
         return false;
     }
 
-    std::vector<uint8_t> fileBuffer;
-    const auto fileSize = static_cast<uint32_t>(file.tellg());
-    fileBuffer.resize(fileSize);
+    const auto fileSizeBytes = static_cast<size_t>(file.tellg());
+    AlignedByteBuffer<4> byteBuffer{ fileSizeBytes };
 
     file.seekg(0);
-    file.read(reinterpret_cast<char*>(fileBuffer.data()), fileSize);
+    file.read(byteBuffer.as<char>().data(), byteBuffer.size());
     file.close();
 
     const ShaderModuleDescriptor vertDescriptor{
         .stage = ShaderStage::Vertex,
         .resource = path,
         .entryPoint = vertEntry,
-        .bytes = fileBuffer
+        .bytes = byteBuffer.as<std::byte>()
     };
 
     const ShaderModuleDescriptor fragDescriptor{
         .stage = ShaderStage::Fragment,
         .resource = path,
         .entryPoint = fragEntry,
-        .bytes = fileBuffer
+        .bytes = byteBuffer.as<std::byte>()
     };
 
     const auto vertHandle = renderer->createShaderModule(vertDescriptor);
