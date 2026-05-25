@@ -55,6 +55,7 @@ namespace litl
 
             m_slots[index].version++;
             m_slots[index].payload = std::move(payload);
+            m_slots[index].set = true;
 
             return Handle<Tag>{ index, m_slots[index].version };
         }
@@ -88,6 +89,7 @@ namespace litl
 
             m_slots[handle.index].version++;    // invalidate the the old handle by bumping the version
             m_slots[handle.index].payload = T{};
+            m_slots[handle.index].set = false;
             m_freeList.push_back(handle.index);
 
             return true;
@@ -101,12 +103,26 @@ namespace litl
                 (handle.version > 0);
         }
 
+        void getAllHandles(std::vector<Handle<Tag>> handles) const noexcept
+        {
+            handles.reserve(m_slots.size());
+
+            for (auto i = 0u; i < static_cast<uint32_t>(m_slots.size()); ++i)
+            {
+                if (m_slots[i].set == true)
+                {
+                    handles.push_back(Handle<Tag>{ i, m_slots[i].version });
+                }
+            }
+        }
+
     private:
 
         struct Slot
         {
             uint32_t version;
             T payload;
+            bool set = false;
         };
 
         std::vector<Slot> m_slots;

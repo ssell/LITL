@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <cstring>
 #include <optional>
 #include <span>
 #include <spirv_reflect.h>
@@ -523,6 +524,10 @@ namespace litl
         case SPV_REFLECT_FORMAT_R64G64B64A64_SFLOAT:
             inputOutputVariable->scalarType = ShaderScalarType::Float;
             inputOutputVariable->componentCount = 4;
+            break;
+
+        default:
+            logWarning("Unhandled SPIR-V input/output variable format: ", static_cast<uint32_t>(interfaceVariable->format));
             break;
         }
     }
