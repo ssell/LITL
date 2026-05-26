@@ -133,6 +133,60 @@ namespace litl
     {
         std::vector<EntryPointReflection> entryPoints;
         std::vector<SpecializationConstant> specializationConstants;
+
+        /// <summary>
+        /// Returns if there is at least one entry point for the specified stage.
+        /// </summary>
+        /// <param name="stage"></param>
+        /// <returns></returns>
+        [[nodiscard]] bool hasShaderStage(ShaderStage stage) const noexcept
+        {
+            for (auto const& entryPoint : entryPoints)
+            {
+                if (entryPoint.stage == stage)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Returns the first entry point for the specified stage, if one exists.
+        /// </summary>
+        /// <param name="stage"></param>
+        /// <returns></returns>
+        [[nodiscard]] std::optional<EntryPointReflection const*> getEntryPoint(ShaderStage stage) const noexcept
+        {
+            for (auto const& entryPoint : entryPoints)
+            {
+                if (entryPoint.stage == stage)
+                {
+                    return &entryPoint;
+                }
+            }
+
+            return std::nullopt;
+        }
+
+        /// <summary>
+        /// Returns the entry point that matches the specified name, if it exists.
+        /// </summary>
+        /// <param name="entryPointName"></param>
+        /// <returns></returns>
+        [[nodiscard]] std::optional<EntryPointReflection const*> getEntryPoint(std::string_view entryPointName) const noexcept
+        {
+            for (auto const& entryPoint : entryPoints)
+            {
+                if (entryPointName == entryPoint.entryPoint)
+                {
+                    return &entryPoint;
+                }
+            }
+
+            return std::nullopt;
+        }
     };
 
     // -------------------------------------------------------------------------------------

@@ -48,7 +48,7 @@ namespace litl::vulkan
         [[nodiscard]] SamplerResource* getSampler(SamplerHandle handle) noexcept;
         void destroySampler(SamplerHandle handle) noexcept;
 
-        [[nodiscard]] ShaderModuleHandle getShaderModuleHandle(std::string const& resource, std::string const& entryPoint) const noexcept;
+        [[nodiscard]] ShaderModuleHandle getShaderModuleHandle(std::string const& resource) const noexcept;
         [[nodiscard]] ShaderModuleHandle createShaderModule(ShaderModuleDescriptor const& descriptor) noexcept;
         [[nodiscard]] ShaderModuleResource* getShaderModule(ShaderModuleHandle handle) noexcept;
         void destroyShaderModule(ShaderModuleHandle handle) noexcept;
