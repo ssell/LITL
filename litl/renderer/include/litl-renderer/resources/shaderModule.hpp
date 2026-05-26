@@ -75,19 +75,9 @@ namespace litl
     struct ShaderModuleDescriptor
     {
         /// <summary>
-        /// Shader stage (vertex, fragment, etc.)
-        /// </summary>
-        ShaderStage stage;
-
-        /// <summary>
         /// For now, the file path. In the future the asset name once the asset system is in place.
         /// </summary>
         std::string resource;
-
-        /// <summary>
-        /// Name of the function acting as the entrypoint into the shader.
-        /// </summary>
-        std::string entryPoint;
 
         /// <summary>
         /// Non-owning view of the compiled bytecode (SPIR-V, DXIL, etc.)

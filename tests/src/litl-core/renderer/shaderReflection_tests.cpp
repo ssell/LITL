@@ -20,11 +20,15 @@ namespace litl::tests
         file.read(byteBuffer.as<char>().data(), byteBuffer.size());
         file.close();
 
-        auto reflectedShader = litl::reflectSPIRV(byteBuffer.as<std::byte>());
+        const std::optional<ShaderReflection> reflectedShader = litl::reflectSPIRV(byteBuffer.as<std::byte>());
 
         REQUIRE(reflectedShader != std::nullopt);
         REQUIRE(reflectedShader->entryPoints.size() == 2);
-        REQUIRE((reflectedShader->entryPoints[0].stage == ShaderStage::Vertex) || (reflectedShader->entryPoints[0].stage == ShaderStage::Fragment));
-        REQUIRE((reflectedShader->entryPoints[1].stage == ShaderStage::Vertex) || (reflectedShader->entryPoints[1].stage == ShaderStage::Fragment));
+
+        const bool hasVertex = (reflectedShader->entryPoints[0].stage == ShaderStage::Vertex) || (reflectedShader->entryPoints[1].stage == ShaderStage::Vertex);
+        const bool hasFragment = (reflectedShader->entryPoints[0].stage == ShaderStage::Fragment) || (reflectedShader->entryPoints[1].stage == ShaderStage::Fragment);
+
+        REQUIRE(hasVertex == true);
+        REQUIRE(hasFragment == true);
     } LITL_END_TEST_CASE
 }

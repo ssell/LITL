@@ -125,35 +125,15 @@ bool testBuildShader(Renderer* renderer) noexcept
     file.read(byteBuffer.as<char>().data(), byteBuffer.size());
     file.close();
 
-    const ShaderModuleDescriptor vertDescriptor{
-        .stage = ShaderStage::Vertex,
-        .resource = path,
-        .entryPoint = vertEntry,
+    const ShaderModuleDescriptor shaderModuleDescriptor{
         .bytes = byteBuffer.as<std::byte>()
     };
 
-    const ShaderModuleDescriptor fragDescriptor{
-        .stage = ShaderStage::Fragment,
-        .resource = path,
-        .entryPoint = fragEntry,
-        .bytes = byteBuffer.as<std::byte>()
-    };
+    const auto shaderModuleHandle = renderer->createShaderModule(shaderModuleDescriptor);
 
-    const auto vertHandle = renderer->createShaderModule(vertDescriptor);
-    const auto fragHandle = renderer->createShaderModule(fragDescriptor);
-
-    if (!vertHandle.isValid() || !fragHandle.isValid())
+    if (!shaderModuleHandle.isValid())
     {
-        if (!vertHandle.isValid())
-        {
-            std::cout << "Failed to create vertex shader module" << std::endl;
-        }
-
-        if (!fragHandle.isValid())
-        {
-            std::cout << "Failed to create fragment shader module" << std::endl;
-        }
-
+        std::cout << "Failed to create shader module" << std::endl;
         return false;
     }
 
