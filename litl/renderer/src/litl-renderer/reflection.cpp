@@ -19,54 +19,60 @@ namespace litl
     ShaderScalarType fromSpvReflectTypeFlagBits(uint32_t typeFlag);
 
     SpvReflectEntryPoint* selectEntryPoint(const char* entryPoint, SpvReflectShaderModule const* reflectedModule);
-    bool reflectShaderStage(ShaderReflection* litlReflection, SpvReflectEntryPoint const* entryPoint);
-    bool reflectResourceBindings(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint);
-    bool reflectPushConstants(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint);
-    bool reflectVertexInputs(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint);
-    bool reflectFragmentOutputs(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint);
-    bool reflectSpecializationConstants(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule);
-    bool reflectComputeInfo(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint);
+    bool reflectShaderStage(EntryPointReflection& litlReflection, SpvReflectEntryPoint const* entryPoint);
+    bool reflectResourceBindings(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint);
+    bool reflectPushConstants(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint);
+    bool reflectVertexInputs(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint);
+    bool reflectFragmentOutputs(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint);
+    bool reflectSpecializationConstants(ShaderReflection& litlReflection, SpvReflectShaderModule const* reflectedModule);
+    bool reflectComputeInfo(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint);
 
-    std::optional<ShaderReflection> reflectSPIRV(const char* entryPoint, std::span<std::byte const> spirvByteCode)
+    std::optional<ShaderReflection> reflectSPIRV(std::span<std::byte const> spirvByteCode)
     {
-        std::optional<ShaderReflection> returnVal = std::nullopt;
-        SpvReflectShaderModule module{};
+        SpvReflectShaderModule reflectedSpvModule{};
+        const SpvReflectResult reflectionResult = spvReflectCreateShaderModule(spirvByteCode.size_bytes(), spirvByteCode.data(), &reflectedSpvModule);
 
-        auto result = spvReflectCreateShaderModule(spirvByteCode.size_bytes(), spirvByteCode.data(), &module);
-
-        if (result == SPV_REFLECT_RESULT_SUCCESS)
+        if (reflectionResult != SPV_REFLECT_RESULT_SUCCESS)
         {
-            ShaderReflection reflected{};
+            logError("SPIRV reflection failed with result ", reflectionResult);
+            return std::nullopt;
+        }
 
-            auto reflectedEntryPoint = selectEntryPoint(entryPoint, &module);
+        ShaderReflection shaderReflection{};
+        shaderReflection.entryPoints.reserve(reflectedSpvModule.entry_point_count);
 
-            if (reflectedEntryPoint != nullptr)
+        for (uint32_t i = 0u; i < reflectedSpvModule.entry_point_count; ++i)
+        {
+            auto* reflectedSpvEntryPoint = &reflectedSpvModule.entry_points[i];
+
+            EntryPointReflection entryPointReflection{};
+            entryPointReflection.entryPoint = reflectedSpvEntryPoint->name;
+
+            if (reflectShaderStage(entryPointReflection, reflectedSpvEntryPoint) &&
+                reflectResourceBindings(entryPointReflection, &reflectedSpvModule, reflectedSpvEntryPoint) &&
+                reflectPushConstants(entryPointReflection, &reflectedSpvModule, reflectedSpvEntryPoint) &&
+                reflectVertexInputs(entryPointReflection, &reflectedSpvModule, reflectedSpvEntryPoint) &&
+                reflectFragmentOutputs(entryPointReflection, &reflectedSpvModule, reflectedSpvEntryPoint) &&
+                reflectComputeInfo(entryPointReflection, &reflectedSpvModule, reflectedSpvEntryPoint))
             {
-                reflected.entryPoint = reflectedEntryPoint->name;
-
-                if (reflectShaderStage(&reflected, reflectedEntryPoint) &&
-                    reflectResourceBindings(&reflected, &module, reflectedEntryPoint) &&
-                    reflectPushConstants(&reflected, &module, reflectedEntryPoint) &&
-                    reflectVertexInputs(&reflected, &module, reflectedEntryPoint) &&
-                    reflectFragmentOutputs(&reflected, &module, reflectedEntryPoint) &&
-                    reflectSpecializationConstants(&reflected, &module) &&
-                    reflectComputeInfo(&reflected, &module, reflectedEntryPoint))
-                {
-                    returnVal = reflected;
-                }
+                shaderReflection.entryPoints.push_back(entryPointReflection);
             }
             else
             {
-                logError("SPIRV reflection failed to find desired entry point ", entryPoint);
+                logError("SPIRV reflection failed to find desired entry point ", entryPointReflection.entryPoint);
             }
         }
-        else
+
+        reflectSpecializationConstants(shaderReflection, &reflectedSpvModule);
+        spvReflectDestroyShaderModule(&reflectedSpvModule);
+
+        if (shaderReflection.entryPoints.size() == 0)
         {
-            logError("SPIRV reflection failed with result ", result);
+            logWarning("SPIRV reflection of shader resulted in 0 entry points.");
+            return std::nullopt;
         }
 
-        spvReflectDestroyShaderModule(&module);
-        return returnVal;
+        return shaderReflection;
     }
 
     SpvReflectEntryPoint* selectEntryPoint(const char* entryPoint, SpvReflectShaderModule const* reflectedModule)
@@ -82,44 +88,44 @@ namespace litl
         return nullptr;
     }
 
-    bool reflectShaderStage(ShaderReflection* litlReflection, SpvReflectEntryPoint const* entryPoint)
+    bool reflectShaderStage(EntryPointReflection& litlReflection, SpvReflectEntryPoint const* entryPoint)
     {
         switch (entryPoint->shader_stage)
         {
         case SPV_REFLECT_SHADER_STAGE_VERTEX_BIT:
-            litlReflection->stage = ShaderStage::Vertex;
+            litlReflection.stage = ShaderStage::Vertex;
             break;
 
         case SPV_REFLECT_SHADER_STAGE_FRAGMENT_BIT:
-            litlReflection->stage = ShaderStage::Fragment;
+            litlReflection.stage = ShaderStage::Fragment;
             break;
 
         case SPV_REFLECT_SHADER_STAGE_GEOMETRY_BIT:
-            litlReflection->stage = ShaderStage::Geometry;
+            litlReflection.stage = ShaderStage::Geometry;
             break;
 
         case SPV_REFLECT_SHADER_STAGE_TESSELLATION_CONTROL_BIT:
-            litlReflection->stage = ShaderStage::TessellationControl;
+            litlReflection.stage = ShaderStage::TessellationControl;
             break;
 
         case SPV_REFLECT_SHADER_STAGE_TESSELLATION_EVALUATION_BIT:
-            litlReflection->stage = ShaderStage::TessellationEvaluation;
+            litlReflection.stage = ShaderStage::TessellationEvaluation;
             break;
 
         case SPV_REFLECT_SHADER_STAGE_COMPUTE_BIT:
-            litlReflection->stage = ShaderStage::Compute;
+            litlReflection.stage = ShaderStage::Compute;
             break;
 
         case SPV_REFLECT_SHADER_STAGE_MESH_BIT_NV:
-            litlReflection->stage = ShaderStage::Mesh;
+            litlReflection.stage = ShaderStage::Mesh;
             break;
 
         case SPV_REFLECT_SHADER_STAGE_TASK_BIT_NV:
-            litlReflection->stage = ShaderStage::Task;
+            litlReflection.stage = ShaderStage::Task;
             break;
 
         default:
-            litlReflection->stage = ShaderStage::None;
+            litlReflection.stage = ShaderStage::None;
             logError("SPIRV reflection of unsupported shader stage ", entryPoint->shader_stage);
             return false;
         }
@@ -127,7 +133,7 @@ namespace litl
         return true;
     }
 
-    bool reflectResourceBindings(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint)
+    bool reflectResourceBindings(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint)
     {
         uint32_t resourceBindingsCount = 0;
         auto result = spvReflectEnumerateEntryPointDescriptorBindings(reflectedModule, entryPoint->name, &resourceBindingsCount, nullptr);
@@ -148,13 +154,13 @@ namespace litl
             return false;
         }
 
-        litlReflection->resources.reserve(resourceBindingsCount);
+        litlReflection.resources.reserve(resourceBindingsCount);
 
         for (uint32_t i = 0; i < resourceBindingsCount; ++i)
         {
             auto binding = *resourceBindings[i];
 
-            litlReflection->resources.push_back(ResourceBinding{
+            litlReflection.resources.push_back(ResourceBinding{
                     .name = (binding.name != nullptr ? binding.name : ""),
                     .type = fromSpvReflectResourceType(binding.descriptor_type),
                     .set = binding.set,
@@ -167,7 +173,7 @@ namespace litl
         return true;
     }
 
-    bool reflectPushConstants(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint)
+    bool reflectPushConstants(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint)
     {
         uint32_t pushConstantBlocksCount = 0;
         auto result = spvReflectEnumerateEntryPointPushConstantBlocks(reflectedModule, entryPoint->name, &pushConstantBlocksCount, nullptr);
@@ -187,13 +193,13 @@ namespace litl
             return false;
         }
 
-        litlReflection->pushConstants.reserve(pushConstantBlocksCount);
+        litlReflection.pushConstants.reserve(pushConstantBlocksCount);
 
         for (uint32_t i = 0; i < pushConstantBlocksCount; ++i)
         {
             auto pushConstantBlock = *pushConstantBlocks[i];
 
-            litlReflection->pushConstants.push_back(PushConstantRange{
+            litlReflection.pushConstants.push_back(PushConstantRange{
                     .offset = pushConstantBlock.offset,
                     .sizeBytes = pushConstantBlock.size
                 });
@@ -202,9 +208,9 @@ namespace litl
         return true;
     }
 
-    bool reflectVertexInputs(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint)
+    bool reflectVertexInputs(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint)
     {
-        if (litlReflection->stage != ShaderStage::Vertex)
+        if (litlReflection.stage != ShaderStage::Vertex)
         {
             return true;
         }
@@ -227,26 +233,26 @@ namespace litl
             return false;
         }
 
-        litlReflection->vertexInputs.reserve(vertexInputsCount);
+        litlReflection.vertexInputs.reserve(vertexInputsCount);
 
         for (uint32_t i = 0; i < vertexInputsCount; ++i)
         {
             auto inputVariable = *inputVariables[i];
 
-            litlReflection->vertexInputs.push_back(ShaderInputOutputVariable{
+            litlReflection.vertexInputs.push_back(ShaderInputOutputVariable{
                     .name = (inputVariable.name != nullptr ? inputVariable.name : ""),
                     .location = inputVariable.location
                 });
 
-            reflectIntoInputOutputVariable(&litlReflection->vertexInputs[i], &inputVariable);
+            reflectIntoInputOutputVariable(&litlReflection.vertexInputs[i], &inputVariable);
         }
 
         return true;
     }
 
-    bool reflectFragmentOutputs(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint)
+    bool reflectFragmentOutputs(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint)
     {
-        if (litlReflection->stage != ShaderStage::Fragment)
+        if (litlReflection.stage != ShaderStage::Fragment)
         {
             return true;
         }
@@ -269,24 +275,24 @@ namespace litl
             return false;
         }
 
-        litlReflection->fragmentOutputs.reserve(fragmentOutputsCount);
+        litlReflection.fragmentOutputs.reserve(fragmentOutputsCount);
 
         for (uint32_t i = 0; i < fragmentOutputsCount; ++i)
         {
             auto outputVariable = *outputVariables[i];
 
-            litlReflection->fragmentOutputs.push_back(ShaderInputOutputVariable{
+            litlReflection.fragmentOutputs.push_back(ShaderInputOutputVariable{
                     .name = (outputVariable.name != nullptr ? outputVariable.name : ""),
                     .location = outputVariable.location
                 });
 
-            reflectIntoInputOutputVariable(&litlReflection->fragmentOutputs[i], &outputVariable);
+            reflectIntoInputOutputVariable(&litlReflection.fragmentOutputs[i], &outputVariable);
         }
 
         return true;
     }
 
-    bool reflectSpecializationConstants(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule)
+    bool reflectSpecializationConstants(ShaderReflection& litlReflection, SpvReflectShaderModule const* reflectedModule)
     {
         uint32_t constantsCount = 0;
         auto result = spvReflectEnumerateSpecializationConstants(reflectedModule, &constantsCount, nullptr);
@@ -306,13 +312,13 @@ namespace litl
             return false;
         }
 
-        litlReflection->specializationConstants.reserve(constantsCount);
+        litlReflection.specializationConstants.reserve(constantsCount);
 
         for (uint32_t i = 0; i < constantsCount; ++i)
         {
             auto constant = *constants[i];
 
-            litlReflection->specializationConstants.push_back(SpecializationConstant{
+            litlReflection.specializationConstants.push_back(SpecializationConstant{
                     .name = (constant.name != nullptr ? constant.name : ""),
                     .id = constant.constant_id,
                     .scalarType = fromSpvReflectTypeFlagBits(constant.type_description->type_flags)
@@ -322,11 +328,11 @@ namespace litl
         return true;
     }
 
-    bool reflectComputeInfo(ShaderReflection* litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint)
+    bool reflectComputeInfo(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint)
     {
-        if (litlReflection->stage == ShaderStage::Compute)
+        if (litlReflection.stage == ShaderStage::Compute)
         {
-            litlReflection->computeInfo = ComputeInfo{
+            litlReflection.computeInfo = ComputeInfo{
                 .localSizeX = entryPoint->local_size.x,
                 .localSizeY = entryPoint->local_size.y,
                 .localSizeZ = entryPoint->local_size.z

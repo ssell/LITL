@@ -108,21 +108,31 @@ namespace litl
     };
 
     /// <summary>
-    /// Collection of reflected data about a shader.
+    /// Reflected data for a single entry point in a SPIR-V bytecode blob.
+    /// 
+    /// A blob may have one or more entry points, and entry points may even
+    /// share the same shader stage. For example, a blob might define one
+    /// vertex shader but two fragment shaders.
     /// </summary>
-    struct ShaderReflection
+    struct EntryPointReflection
     {
         std::string entryPoint;
-
         ShaderStage stage;
 
         std::vector<ResourceBinding> resources;
         std::vector<PushConstantRange> pushConstants;
         std::vector<ShaderInputOutputVariable> vertexInputs;
         std::vector<ShaderInputOutputVariable> fragmentOutputs;
-        std::vector<SpecializationConstant> specializationConstants;
-
         std::optional<ComputeInfo> computeInfo;
+    };
+
+    /// <summary>
+    /// Collection of reflected data about a shader.
+    /// </summary>
+    struct ShaderReflection
+    {
+        std::vector<EntryPointReflection> entryPoints;
+        std::vector<SpecializationConstant> specializationConstants;
     };
 
     // -------------------------------------------------------------------------------------
@@ -194,7 +204,7 @@ namespace litl
     /// <summary>
     /// Given a blob of byte-code and a shader entry point, returns the reflected shader data.
     /// </summary>
-    std::optional<ShaderReflection> reflectSPIRV(const char* entryPoint, std::span<std::byte const> spirvByteCode);
+    std::optional<ShaderReflection> reflectSPIRV(std::span<std::byte const> spirvByteCode);
 }
 
 #endif
