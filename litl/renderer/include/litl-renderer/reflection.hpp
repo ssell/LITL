@@ -131,6 +131,22 @@ namespace litl
     /// </summary>
     struct ShaderReflection
     {
+        /**
+         * Note on the entryPoints vector below.
+         *
+         * We could change it to a flat_map (well, our flatHashMap since flat_map is C++23) with a key
+         * on the entry point name or add a separate name-based map indexing the index. Which is what Claude suggests:
+         *
+         *     "The entry-point lookup ergonomics — reflection's entryPoints is a vector you'll search by name on every pipeline creation.
+         *      If you anticipate lots of pipelines, swap it for flat_map-style sorted vector or a small open-address map."
+         * 
+         * However, rudimentary performance tests show the linear scan of the vector to match the flat hash map when the
+         * number of entries is low (~10) and to beat it when the count is really low (~5). Considering an average shader blob
+         * is likely to only have 1-3 entry points, then the vector with the rudimentary string comparison actually wins out.
+         * 
+         * See "String Key Map Performance Test" in flatHashMap_tests.cpp
+         */
+
         std::vector<EntryPointReflection> entryPoints;
         std::vector<SpecializationConstant> specializationConstants;
 
