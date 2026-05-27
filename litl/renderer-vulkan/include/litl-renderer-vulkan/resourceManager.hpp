@@ -58,6 +58,9 @@ namespace litl::vulkan
         [[nodiscard]] TextureResource* getTexture(TextureHandle handle) noexcept;
         void destroyTexture(TextureHandle handle) noexcept;
 
+        [[nodiscard]] VkDescriptorSetLayout getOrCreateSetLayout(DescriptorSetLayoutDesc const& descriptorSetLayoutDesc) noexcept;
+        [[nodiscard]] VkPipelineLayout getOrCreatePipelineLayout(PipelineLayoutDescriptor const& pipelineLayoutDesc) noexcept;
+
     private:
 
         RendererContext* m_pContext = nullptr;

@@ -2,6 +2,7 @@
 #define LITL_RENDERER_H__
 
 #include <span>
+#include <string>
 
 #include "litl-core/assert.hpp"
 #include "litl-renderer/rendererConfiguration.hpp"
@@ -33,6 +34,7 @@ namespace litl
         SamplerHandle (*createSampler)(RendererContext*, SamplerDescriptor const&);
         void (*destroySampler)(RendererContext*, SamplerHandle);
         ShaderModuleHandle (*createShaderModule)(RendererContext*, ShaderModuleDescriptor const&);
+        ShaderModuleHandle(*getShaderModule)(RendererContext*, std::string const&);
         void (*destroyShaderModule)(RendererContext*, ShaderModuleHandle);
         TextureHandle (*createTexture)(RendererContext*, TextureDescriptor const&);
         void (*destroyTexture)(RendererContext*, TextureHandle);
@@ -50,6 +52,9 @@ namespace litl
         bool (*beginRender)(RendererContext*);
         void (*submitCommands)(RendererContext*, std::span<CommandBufferHandle const>);
         void (*endRender)(RendererContext*);
+
+        // TEMPORARY FOR TESTING PURPOSES
+        bool (*testPipelineLayoutCache)(RendererContext*, ShaderModuleHandle, std::string const&, ShaderModuleHandle, std::string const&);
     };
 
     /// <summary>
@@ -149,6 +154,11 @@ namespace litl
         [[nodiscard]] ShaderModuleHandle createShaderModule(ShaderModuleDescriptor const& descriptor) const noexcept
         {
             return m_pOps->createShaderModule(m_pContext, descriptor);
+        }
+
+        [[nodiscard]] ShaderModuleHandle getShaderModule(std::string const& resource) const noexcept
+        {
+            return m_pOps->getShaderModule(m_pContext, resource);
         }
 
         void destroyShaderModule(ShaderModuleHandle handle) const noexcept
@@ -278,6 +288,15 @@ namespace litl
         void endRender() const noexcept
         {
             m_pOps->endRender(m_pContext);
+        }
+
+        // ---------------------------------------------------------------------------------
+        // TEMPORARY FOR TESTING PURPOSES
+        // ---------------------------------------------------------------------------------
+
+        bool testPipelineLayoutCache(ShaderModuleHandle vertexShader, std::string const& vertexEntryPoint, ShaderModuleHandle fragmentShader, std::string const& fragmentEntryPoint) const noexcept
+        {
+            return m_pOps->testPipelineLayoutCache(m_pContext, vertexShader, vertexEntryPoint, fragmentShader, fragmentEntryPoint);
         }
 
     private:

@@ -29,6 +29,7 @@ namespace litl::vulkan
     [[nodiscard]] SamplerHandle createSampler(litl::RendererContext* context, SamplerDescriptor const& descriptor) noexcept;
     void destroySampler(litl::RendererContext* context, SamplerHandle handle) noexcept;
     [[nodiscard]] ShaderModuleHandle createShaderModule(litl::RendererContext* context, ShaderModuleDescriptor const& descriptor) noexcept;
+    [[nodiscard]] ShaderModuleHandle getShaderModule(litl::RendererContext* context, std::string const& resource) noexcept;
     void destroyShaderModule(litl::RendererContext* context, ShaderModuleHandle handle) noexcept;
     [[nodiscard]] TextureHandle createTexture(litl::RendererContext* context, TextureDescriptor const& descriptor) noexcept;
     void destroyTexture(litl::RendererContext* context, TextureHandle handle) noexcept;
@@ -53,6 +54,12 @@ namespace litl::vulkan
     void submitCommands(litl::RendererContext* context, std::span<CommandBufferHandle const> commands) noexcept;
     void endRender(litl::RendererContext* context) noexcept;
 
+    // ---------------------------------------------------------------------------------
+    // TEMPORARY FOR TESTING PURPOSES (rendererTesting.cpp)
+    // ---------------------------------------------------------------------------------
+
+    [[nodiscard]] bool testPipelineLayoutCache(litl::RendererContext* context, ShaderModuleHandle vertexShader, std::string const& vertexEntryPoint, ShaderModuleHandle fragmentShader, std::string const& fragmentEntryPoint) noexcept;
+
     inline constexpr litl::RendererOps VulkanRendererOps = {
         // renderer life-cycle
         &build,
@@ -70,6 +77,7 @@ namespace litl::vulkan
         &createSampler,
         &destroySampler,
         &createShaderModule,
+        &getShaderModule,
         &destroyShaderModule,
         &createTexture,
         &destroyTexture,
@@ -86,7 +94,10 @@ namespace litl::vulkan
         // drawing
         &beginRender,
         &submitCommands,
-        &endRender
+        &endRender,
+
+        // temporary
+        &testPipelineLayoutCache
     };
 }
 
