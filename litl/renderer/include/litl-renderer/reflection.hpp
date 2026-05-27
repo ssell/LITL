@@ -260,10 +260,10 @@ namespace litl
     enum class MergeShaderReflectionResult : uint8_t
     {
         Success = 0,
+        ErrorInvalidEntryPoint,
         ErrorTypeMismatch,        // same (set, binding), different ShaderResourceType
         ErrorArraySizeMismatch,   // same (set, binding), incompatible arraySize
         ErrorPushConstantOverlap, // push constants overlap incompatibly across stages
-        ErrorDuplicateStage,      // same stage reflected twice
         ErrorNoVertexStage        // graphics pipeline with no vertex stage
     };
 
