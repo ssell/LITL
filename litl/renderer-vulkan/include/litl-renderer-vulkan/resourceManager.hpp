@@ -12,6 +12,7 @@
 #include "litl-renderer-vulkan/resources/sampler.hpp"
 #include "litl-renderer-vulkan/resources/shaderModule.hpp"
 #include "litl-renderer-vulkan/resources/texture.hpp"
+#include "litl-renderer-vulkan/resources/cache/pipelineLayoutCache.hpp"
 
 namespace litl::vulkan
 {
@@ -70,6 +71,8 @@ namespace litl::vulkan
 
         HandlePool<ShaderModuleResource, ShaderModuleTag> m_shaderModulePool;
         std::unordered_map<std::string, ShaderModuleHandle> m_shaderModuleMap;
+
+        PipelineLayoutCache m_pipelineLayoutCache;
     };
 }
 

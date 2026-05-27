@@ -149,9 +149,9 @@ namespace litl::vulkan
         PipelineLayoutDescriptorShaderModuleInfo geometry;
         PipelineLayoutDescriptorShaderModuleInfo tessellationControl;
         PipelineLayoutDescriptorShaderModuleInfo tessellationEvaluation;
-        //PipelineLayoutDescriptorShaderModuleInfo compute;
-        //PipelineLayoutDescriptorShaderModuleInfo mesh;
-        //PipelineLayoutDescriptorShaderModuleInfo task;
+        PipelineLayoutDescriptorShaderModuleInfo compute;
+        PipelineLayoutDescriptorShaderModuleInfo mesh;
+        PipelineLayoutDescriptorShaderModuleInfo task;
     };
 
     /// <summary>
