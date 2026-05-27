@@ -189,6 +189,18 @@ namespace litl::vulkan
 
     ShaderModuleHandle ResourceManager::createShaderModule(ShaderModuleDescriptor const& descriptor) noexcept
     {
+        if (descriptor.resource.empty())
+        {
+            logError("Empty resource name provided to Vulkan ShaderModule creation");
+            return {};
+        }
+
+        if (descriptor.bytes.empty())
+        {
+            logError("Empty bytecode blob provided to Vulkan ShaderModule creation for resource '", descriptor.resource, "'");
+            return {};
+        }
+
         ShaderModuleHandle handle = getShaderModuleHandle(descriptor.resource);
 
         if (handle.isValid())
@@ -282,4 +294,17 @@ namespace litl::vulkan
         }
     }
 
+    //--------------------------------------------------------------------------------------
+    // Pipeline Layout
+    //--------------------------------------------------------------------------------------
+
+    VkDescriptorSetLayout ResourceManager::getOrCreateSetLayout(DescriptorSetLayoutDesc const& descriptorSetLayoutDesc) noexcept
+    {
+        return m_pipelineLayoutCache.getOrCreateSetLayout(descriptorSetLayoutDesc);
+    }
+
+    VkPipelineLayout ResourceManager::getOrCreatePipelineLayout(PipelineLayoutDescriptor const& pipelineLayoutDesc) noexcept
+    {
+        return m_pipelineLayoutCache.getOrCreatePipelineLayout(pipelineLayoutDesc);
+    }
 }

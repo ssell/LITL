@@ -97,19 +97,8 @@ color getClearColor(float elapsedSeconds) noexcept
     };
 }
 
-/// <summary>
-/// Temporary function to test shader module load, reflection, and creation.
-/// </summary>
-/// <param name="renderer"></param>
-/// <returns></returns>
-bool testBuildShader(Renderer* renderer) noexcept
+bool createShaderModule(Renderer* renderer, std::string const& path) noexcept
 {
-    std::cout << "Testing shader construction ..." << std::endl;
-
-    const std::string path = "assets/shaders/spirv/flat.spv";
-    const std::string vertEntry = "vertexMain";
-    const std::string fragEntry = "fragmentMain";
-
     std::ifstream file(path, std::ios::ate | std::ios::binary);
 
     if (!file.is_open())
@@ -126,6 +115,7 @@ bool testBuildShader(Renderer* renderer) noexcept
     file.close();
 
     const ShaderModuleDescriptor shaderModuleDescriptor{
+        .resource = path,
         .bytes = byteBuffer.as<std::byte>()
     };
 
@@ -138,6 +128,41 @@ bool testBuildShader(Renderer* renderer) noexcept
     }
 
     std::cout << "Successfully created shader modules" << std::endl;
+
+    return true;
+}
+
+/// <summary>
+/// Temporary function to test shader module load, reflection, and creation.
+/// </summary>
+/// <param name="renderer"></param>
+/// <returns></returns>
+bool testBuildShader(Renderer* renderer) noexcept
+{
+    std::cout << "Testing shader construction ..." << std::endl;
+
+    const std::string resourcePath = "assets/shaders/spirv/flat.spv";
+
+    if (!createShaderModule(renderer, resourcePath))
+    {
+        return false;
+    }
+
+    ShaderModuleHandle shaderHandle = renderer->getShaderModule(resourcePath);
+
+    if (!shaderHandle.isValid())
+    {
+        std::cout << "Failed to retrieve ShaderModuleHandle" << std::endl;
+        return false;
+    }
+
+    bool result = renderer->testPipelineLayoutCache(shaderHandle, "vertexMain", shaderHandle, "fragmentMain");
+
+    if (result == false)
+    {
+        std::cout << "PipelineLayoutCache test failed" << std::endl;
+        return false;
+    }
 
     return true;
 }

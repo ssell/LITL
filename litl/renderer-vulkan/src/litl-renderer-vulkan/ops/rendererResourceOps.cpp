@@ -68,6 +68,12 @@ namespace litl::vulkan
         return vulkanContext->resources.createShaderModule(descriptor);
     }
 
+    ShaderModuleHandle getShaderModule(litl::RendererContext* context, std::string const& resource) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+        return vulkanContext->resources.getShaderModuleHandle(resource);
+    }
+
     void destroyShaderModule(litl::RendererContext* context, ShaderModuleHandle handle) noexcept
     {
         auto* vulkanContext = unwrap(context);
