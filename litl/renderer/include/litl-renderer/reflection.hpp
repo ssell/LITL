@@ -232,6 +232,11 @@ namespace litl
         uint32_t arraySize;
 
         /// <summary>
+        /// For buffer validation only.
+        /// </summary>
+        uint32_t sizeBytes;
+
+        /// <summary>
         /// Bitmask of one or more ShaderStage that reference this binding.
         /// </summary>
         ShaderStage stages;
@@ -260,11 +265,15 @@ namespace litl
     enum class MergeShaderReflectionResult : uint8_t
     {
         Success = 0,
-        ErrorInvalidEntryPoint,
-        ErrorTypeMismatch,        // same (set, binding), different ShaderResourceType
-        ErrorArraySizeMismatch,   // same (set, binding), incompatible arraySize
-        ErrorPushConstantOverlap, // push constants overlap incompatibly across stages
-        ErrorNoVertexStage        // graphics pipeline with no vertex stage
+        ErrorInvalidShaderStage,    // The descriptor has an invalid shader stage defined
+        ErrorInvalidEntryPoint,     // The specified entry point was not found
+        ErrorDuplicateStage,        // The same stage was defined more than once in the descriptor
+        ErrorStageMismatch,         // The reflected stage does not match the stage specified in the descriptor
+        ErrorTypeMismatch,          // Same (set, binding), different ShaderResourceType
+        ErrorArraySizeMismatch,     // Same (set, binding), different arraySize
+        ErrorBufferSizeMismatch,    // Same (set, binding), different buffer size
+        ErrorPushConstantOverlap,   // Push constants overlap incompatibly across stages
+        ErrorNoVertexStage          // Graphics pipeline with no vertex stage
     };
 
     // -------------------------------------------------------------------------------------

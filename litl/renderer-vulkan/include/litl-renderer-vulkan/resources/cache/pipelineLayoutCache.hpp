@@ -29,6 +29,8 @@ namespace std
         {
             std::size_t h = 0;
 
+            static_assert(sizeof(VkDescriptorSetLayout) == sizeof(uint64_t), "litl::vulkan::PipelineLayoutCacheKey expects VkDescriptorSetLayout to be 64 bits");
+
             litl::hashCombine64(h, layout.setLayoutHandles.size());
             for (auto const& layoutHandle : layout.setLayoutHandles) { litl::hashCombine64(h, reinterpret_cast<uint64_t>(layoutHandle)); }
 

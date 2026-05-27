@@ -2,6 +2,8 @@
 #define LITL_VULKAN_RENDERER_CONVERSIONS_H__
 
 #include <vulkan/vulkan.h>
+
+#include "litl-renderer/enums.hpp"
 #include "litl-renderer/resources/shaderModule.hpp"
 
 namespace litl::vulkan
@@ -11,6 +13,9 @@ namespace litl::vulkan
 
     [[nodiscard]] VkDescriptorType toVkDescriptorType(ShaderResourceType type) noexcept;
     [[nodiscard]] ShaderResourceType fromVkDescriptorType(VkDescriptorType type) noexcept;
+
+    [[nodiscard]] VkFormat toVkFormat(ImageFormat format) noexcept;
+    [[nodiscard]] ImageFormat fromVkFormat(VkFormat format) noexcept;
 }
 
 #endif

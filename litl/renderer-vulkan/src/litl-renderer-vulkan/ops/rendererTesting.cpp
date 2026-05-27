@@ -16,13 +16,17 @@ namespace litl::vulkan
 
         // 2) Create the PipelineLayoutDescriptor
         const PipelineLayoutDescriptorCreateInfo createInfo{
-            .vertex = PipelineLayoutDescriptorShaderModuleInfo {
-                .resource = vertexShaderResource,
-                .entryPoint = vertexEntryPoint
-            },
-            .fragment = PipelineLayoutDescriptorShaderModuleInfo {
-                .resource = fragmentShaderResource,
-                .entryPoint = fragmentEntryPoint
+            .stages = {
+                PipelineLayoutDescriptorShaderModuleInfo {
+                    .resource = vertexShaderResource,
+                    .stage = ShaderStage::Vertex,
+                    .entryPoint = vertexEntryPoint
+                },
+                PipelineLayoutDescriptorShaderModuleInfo {
+                    .resource = fragmentShaderResource,
+                    .stage = ShaderStage::Fragment,
+                    .entryPoint = fragmentEntryPoint
+                }
             }
         };
 
