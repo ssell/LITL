@@ -8,10 +8,14 @@ namespace litl::vulkan
     void ResourceManager::build(RendererContext& context) noexcept
     {
         m_pContext = &context;
+        m_pipelineLayoutCache.build(context.device.vkDevice);
     }
 
     void ResourceManager::destroy() noexcept
     {
+        // Caches
+        m_pipelineLayoutCache.destroy();
+
         // Command Buffers
         std::vector<CommandBufferHandle> commandBufferHandles;
         m_commandBufferPool.getAllHandles(commandBufferHandles);

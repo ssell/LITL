@@ -266,7 +266,10 @@ namespace litl::vulkan
             mergeShaderModuleResource(info.fragment, resourceBindings, pushConstants, result) &&
             mergeShaderModuleResource(info.geometry, resourceBindings, pushConstants, result) &&
             mergeShaderModuleResource(info.tessellationControl, resourceBindings, pushConstants, result) &&
-            mergeShaderModuleResource(info.tessellationEvaluation, resourceBindings, pushConstants, result);
+            mergeShaderModuleResource(info.tessellationEvaluation, resourceBindings, pushConstants, result) &&
+            mergeShaderModuleResource(info.compute, resourceBindings, pushConstants, result) &&
+            mergeShaderModuleResource(info.mesh, resourceBindings, pushConstants, result) &&
+            mergeShaderModuleResource(info.task, resourceBindings, pushConstants, result);
 
         if (!success)
         {
