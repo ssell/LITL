@@ -75,6 +75,8 @@ namespace litl::vulkan
         bool operator==(DescriptorSetLayoutBindingDesc const&) const = default;
     };
 
+    static_assert(sizeof(DescriptorSetLayoutBindingDesc) == 4 * sizeof(uint32_t), "Layout has padding; bytewise hash is unsafe");
+
     /// <summary>
     /// An array of zero or more descriptor set resource bindings.
     /// </summary>
@@ -136,6 +138,7 @@ namespace litl::vulkan
     struct PipelineLayoutDescriptorShaderModuleInfo
     {
         ShaderModuleResource const* resource = nullptr;
+        ShaderStage stage;
         std::string entryPoint;
     };
 
@@ -144,14 +147,7 @@ namespace litl::vulkan
     /// </summary>
     struct PipelineLayoutDescriptorCreateInfo
     {
-        PipelineLayoutDescriptorShaderModuleInfo vertex;
-        PipelineLayoutDescriptorShaderModuleInfo fragment;
-        PipelineLayoutDescriptorShaderModuleInfo geometry;
-        PipelineLayoutDescriptorShaderModuleInfo tessellationControl;
-        PipelineLayoutDescriptorShaderModuleInfo tessellationEvaluation;
-        PipelineLayoutDescriptorShaderModuleInfo compute;
-        PipelineLayoutDescriptorShaderModuleInfo mesh;
-        PipelineLayoutDescriptorShaderModuleInfo task;
+        std::vector<PipelineLayoutDescriptorShaderModuleInfo> stages;
     };
 
     /// <summary>

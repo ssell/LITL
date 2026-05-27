@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <optional>
 #include <ranges>
 #include <span>
 
@@ -31,7 +32,7 @@ namespace litl::vulkan
     /// <returns></returns>
     MergeShaderReflectionResult addOrMergeResource(std::vector<MergedResourceBinding>& resources, ShaderStage stage, ResourceBinding const& resource) noexcept
     {
-        size_t index = Constants::uint32_null_index;
+        std::optional<size_t> index = std::nullopt;
 
         // Find existing resource
         for (size_t i = 0; i < resources.size(); ++i)
@@ -44,7 +45,7 @@ namespace litl::vulkan
             }
         }
 
-        if (index == Constants::uint32_null_index)
+        if (!index.has_value())
         {
             // New resource
             resources.push_back(MergedResourceBinding{
@@ -52,13 +53,14 @@ namespace litl::vulkan
                 .set = resource.set,
                 .binding = resource.binding,
                 .arraySize = resource.arraySize,
+                .sizeBytes = resource.sizeBytes,
                 .stages = stage
-                });
+            });
         }
         else
         {
             // Already exists, try to merge.
-            auto& existingResource = resources[index];
+            auto& existingResource = resources[index.value()];
 
             if (existingResource.type != resource.type)
             {
@@ -67,6 +69,10 @@ namespace litl::vulkan
             else if (existingResource.arraySize != resource.arraySize)
             {
                 return MergeShaderReflectionResult::ErrorArraySizeMismatch;
+            }
+            else if (existingResource.sizeBytes != resource.sizeBytes)
+            {
+                return MergeShaderReflectionResult::ErrorBufferSizeMismatch;
             }
 
             existingResource.stages = existingResource.stages | stage;
@@ -188,7 +194,7 @@ namespace litl::vulkan
     /// </summary>
     /// <param name="descriptor"></param>
     /// <param name="pushConstants"></param>
-    void sortAndAssignPushConstants(PipelineLayoutDescriptor& descriptor, std::span<MergedPushConstantRange> pushConstants)
+    void sortAndAssignPushConstants(PipelineLayoutDescriptor& descriptor, std::span<MergedPushConstantRange const> pushConstants)
     {
         descriptor.pushConstants.clear();
         descriptor.pushConstants.assign(pushConstants.begin(), pushConstants.end());
@@ -203,26 +209,60 @@ namespace litl::vulkan
     }
 
     /// <summary>
+    /// Returns true if the shader stage has already been seen.
+    /// </summary>
+    /// <param name="seenStages"></param>
+    /// <param name="stage"></param>
+    /// <returns></returns>
+    bool seenStage(ShaderStage& seenStages, ShaderStage stage) noexcept
+    {
+        return (static_cast<uint32_t>(seenStages) & static_cast<uint32_t>(stage)) != 0;
+    }
+
+    /// <summary>
     /// Given a info struct, attempts to retrieve the specified entry point and extract its reflection results.
     /// </summary>
     /// <param name="info"></param>
+    /// <param name="seenStages"></param>
     /// <param name="resourceBindings"></param>
     /// <param name="pushConstants"></param>
     /// <param name="error"></param>
     /// <returns></returns>
-    bool mergeShaderModuleResource(PipelineLayoutDescriptorShaderModuleInfo const& info, std::vector<MergedResourceBinding>& resourceBindings, std::vector<MergedPushConstantRange>& pushConstants, MergeShaderReflectionResult& error) noexcept
+    bool mergeShaderModuleResource(PipelineLayoutDescriptorShaderModuleInfo const& info, ShaderStage& seenStages, std::vector<MergedResourceBinding>& resourceBindings, std::vector<MergedPushConstantRange>& pushConstants, MergeShaderReflectionResult& error) noexcept
     {
+        error = MergeShaderReflectionResult::Success;
+
         if (info.resource == nullptr)
         {
             // skip silenty
             return true;
         }
 
+        if (info.stage == ShaderStage::None)
+        {
+            error = MergeShaderReflectionResult::ErrorInvalidShaderStage;
+            return false;
+        }
+
+        if (seenStage(seenStages, info.stage))
+        {
+            error = MergeShaderReflectionResult::ErrorDuplicateStage;
+            return false;
+        }
+
+        seenStages = seenStages | info.stage;
+
         auto entryPoint = info.resource->reflection.getEntryPoint(info.entryPoint);
 
         if (!entryPoint.has_value())
         {
             error = MergeShaderReflectionResult::ErrorInvalidEntryPoint;
+            return false;
+        }
+
+        if (entryPoint.value()->stage != info.stage)
+        {
+            error = MergeShaderReflectionResult::ErrorStageMismatch;
             return false;
         }
 
@@ -258,22 +298,23 @@ namespace litl::vulkan
         MergeShaderReflectionResult result = MergeShaderReflectionResult::Success;
 
         // Accumulate the resource bindings and push constants for each shader
+        ShaderStage seenStages = ShaderStage::None;
+
         std::vector<MergedResourceBinding> resourceBindings;
         std::vector<MergedPushConstantRange> pushConstants;
 
-        bool success =
-            mergeShaderModuleResource(info.vertex, resourceBindings, pushConstants, result) &&
-            mergeShaderModuleResource(info.fragment, resourceBindings, pushConstants, result) &&
-            mergeShaderModuleResource(info.geometry, resourceBindings, pushConstants, result) &&
-            mergeShaderModuleResource(info.tessellationControl, resourceBindings, pushConstants, result) &&
-            mergeShaderModuleResource(info.tessellationEvaluation, resourceBindings, pushConstants, result) &&
-            mergeShaderModuleResource(info.compute, resourceBindings, pushConstants, result) &&
-            mergeShaderModuleResource(info.mesh, resourceBindings, pushConstants, result) &&
-            mergeShaderModuleResource(info.task, resourceBindings, pushConstants, result);
-
-        if (!success)
+        for (auto const& stage : info.stages)
         {
-            return result;
+            if (!mergeShaderModuleResource(stage, seenStages, resourceBindings, pushConstants, result))
+            {
+                return result;
+            }
+        }
+
+        if (!seenStage(seenStages, ShaderStage::Vertex) && !(seenStage(seenStages, ShaderStage::Compute) || seenStage(seenStages, ShaderStage::Mesh)))
+        {
+            // If no vertex shader was seen AND neither a compute or mesh shader was seen then
+            return MergeShaderReflectionResult::ErrorNoVertexStage;
         }
 
         sortAndAssignMergedResources(descriptor, resourceBindings);

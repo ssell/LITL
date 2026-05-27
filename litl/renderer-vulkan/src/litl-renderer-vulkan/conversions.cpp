@@ -119,4 +119,89 @@ namespace litl::vulkan
             return ShaderResourceType::Unknown;
         }
     }
+
+    VkFormat toVkFormat(ImageFormat format) noexcept
+    {
+        switch (format)
+        {
+            // Color
+        case ImageFormat::RGBA8_UNorm:
+            return VkFormat::VK_FORMAT_R8G8B8A8_UNORM;
+
+        case ImageFormat::RGBA8_SRGB:
+            return VkFormat::VK_FORMAT_R8G8B8A8_SRGB;
+
+        case ImageFormat::BGRA8_Unorm:
+            return VkFormat::VK_FORMAT_B8G8R8A8_UNORM;
+
+        case ImageFormat::BGRA8_SRGB:
+            return VkFormat::VK_FORMAT_B8G8R8A8_SRGB;
+
+        case ImageFormat::ABGR10_UNorm_Pack32:
+            return VkFormat::VK_FORMAT_A2B10G10R10_UNORM_PACK32;
+
+            // HDR
+        case ImageFormat::RGBA16_SFloat:
+            return VkFormat::VK_FORMAT_R16G16B16A16_SFLOAT;
+
+        case ImageFormat::RGBA32_SFloat:
+            return VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
+
+        case ImageFormat::R11G11B10_UFloat:
+            return VkFormat::VK_FORMAT_B10G11R11_UFLOAT_PACK32;
+
+            // Single Channel
+        case ImageFormat::R8_UNorm:
+            return VkFormat::VK_FORMAT_R8_UNORM;
+
+        case ImageFormat::R16_SFloat:
+            return VkFormat::VK_FORMAT_R16_SFLOAT;
+
+        case ImageFormat::R32_SFloat:
+            return VkFormat::VK_FORMAT_R32_SFLOAT;
+
+            // Dual Channel
+        case ImageFormat::RG8_UNorm:
+            return VkFormat::VK_FORMAT_R8G8_UNORM;
+
+        case ImageFormat::RG16_SFloat:
+            return VkFormat::VK_FORMAT_R16G16_SFLOAT;
+
+            // Depth
+        case ImageFormat::D32_SFloat:
+            return VkFormat::VK_FORMAT_R32G32_SFLOAT;
+
+        case ImageFormat::D24_UNorm_S8_UInt:
+            return VkFormat::VK_FORMAT_D24_UNORM_S8_UINT;
+
+        case ImageFormat::D24_SFloat_S8_Uint:
+            return VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT;
+
+            // Compressed
+        case ImageFormat::BC7_UNorm:
+            return VkFormat::VK_FORMAT_BC7_UNORM_BLOCK;
+
+        case ImageFormat::BC7_SRGB:
+            return VkFormat::VK_FORMAT_BC7_SRGB_BLOCK;
+
+        case ImageFormat::BC4_UNorm:
+            return VkFormat::VK_FORMAT_BC4_UNORM_BLOCK;
+
+        case ImageFormat::BC5_UNorm:
+            return VkFormat::VK_FORMAT_BC5_UNORM_BLOCK;
+
+        case ImageFormat::BC6H_UFloat:
+            return VkFormat::VK_FORMAT_BC6H_UFLOAT_BLOCK;
+
+            // Fall-through
+        case ImageFormat::Undefined:
+        default:
+            return VkFormat::VK_FORMAT_UNDEFINED;
+        }
+    }
+
+    ImageFormat fromVkFormat(VkFormat format) noexcept
+    {
+
+    }
 }

@@ -96,6 +96,44 @@ namespace litl
         DontCare = 1,
         None = 1000301000
     };
+
+    enum class ImageFormat : uint32_t
+    {
+        Undefined = 0,
+
+        // Color LDR
+        RGBA8_UNorm,            // 32-bit RGBA color where each channel gets a 8-bit linear floating point value on the range [0,1].
+        RGBA8_SRGB,             // 32-bit RGBA color where each channel gets a 8-bit non-linear (gamma corrected) float point values on the range [0,1].
+        BGRA8_Unorm,            // 32-bit BGRA color where each channel gets a 8-bit linear floating point value on the range [0,1].
+        BGRA8_SRGB,             // 32-bit BGRA color where each channel gets a 8-bit non-linear (gamma corrected) float point values on the range [0,1].
+        ABGR10_UNorm_Pack32,    // 10-bit color, sometimes preferred for HDR-ish output or higher-precision G-buffers.
+
+        // HDR
+        RGBA16_SFloat,          // 64-bit RGBA color where each channel gets a 16-bit floating point value.
+        RGBA32_SFloat,          // 128-bit RGBA color where each channel gets a 32-bit floating point value.
+        R11G11B10_UFloat,       // 32-bit RGB color where R and G gets a 11-bit and B gets a 10-bit unsigned floating point value.
+
+        // Single Channel
+        R8_UNorm,               // Single 8-bit linear red channel on the range [0,1].
+        R16_SFloat,             // Single 16-bit floating point value in the red channel.
+        R32_SFloat,             // Single 32-bit floating point value in the red channel.
+
+        // Dual Channel
+        RG8_UNorm,              // Double channel 8-bit red and green on the range [0,1].
+        RG16_SFloat,            // Double channel 16-bit red and green floating point values.
+
+        // Depth
+        D32_SFloat,             // 32-bit depth floating point value.
+        D24_UNorm_S8_UInt,      // 32-bit format with a 24-bit linear depth value on the range [0,1] and 8-bit unsigned integer stencil.
+        D24_SFloat_S8_Uint,     // 32-bit format with a 24-bit floating point depth value and 8-bit unsigned integer stencil.
+
+        // Compressed
+        BC7_UNorm,              // A four-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned normalized RGBA texel data.
+        BC7_SRGB,               // A four-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned normalized RGBA texel data with sRGB nonlinear encoding applied to the RGB components.
+        BC4_UNorm,              // A one-component, block-compressed format where each 64-bit compressed texel block encodes a 4×4 rectangle of unsigned normalized red texel data.
+        BC5_UNorm,              // A two-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned normalized RG texel data with the first 64 bits encoding red values followed by 64 bits encoding green values.
+        BC6H_UFloat             // A  three-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned floating-point RGB texel data.
+    };
 }
 
 #endif

@@ -8,6 +8,7 @@ namespace litl::vulkan
 {
     void PipelineLayoutCache::build(VkDevice vkDevice) noexcept
     {
+        LITL_FATAL_ASSERT_MSG(m_vkDevice == VK_NULL_HANDLE, "Attempting to call PipelineLayoutCache::build twice");
         m_vkDevice = vkDevice;
     }
 
