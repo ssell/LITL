@@ -5,9 +5,14 @@
 
 #include "litl-core/handles.hpp"
 #include "litl-renderer/resources/shaderModule.hpp"
+#include "litl-renderer/enums.hpp"
 
 namespace litl
 {
+    /// <summary>
+    /// The shader module and entry point into that module.
+    /// The specified stage must match the reflected stage of the entry point.
+    /// </summary>
     struct GraphicsPipelineShaderDescriptor
     {
         ShaderModuleHandle handle{};
@@ -16,7 +21,10 @@ namespace litl
     };
 
     /// <summary>
-    /// Maps to VkPipelineRenderingCreateInfo
+    /// A graphics pipeline is compatible with any render target whose formats match.
+    /// 
+    /// As the underlying Vulkan renderer uses dynamic rendering, the pipeline does not need
+    /// to name the textures it render to, that is instead set with Renderer::cmdBeginRender.
     /// </summary>
     struct RenderTargetFormats
     {

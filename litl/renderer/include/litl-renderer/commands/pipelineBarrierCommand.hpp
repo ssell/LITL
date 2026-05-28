@@ -16,28 +16,28 @@ namespace litl
 
         ImageLayoutType fromLayout = ImageLayoutType::Undefined;
         ImageLayoutType toLayout = ImageLayoutType::Undefined;
-        ImageAccessFlagBits sourceAccess = ImageAccessFlagBits::None;
-        ImageAccessFlagBits destAccess = ImageAccessFlagBits::None;
-        PipelineStageFlagBits sourceStage = PipelineStageFlagBits::None;
-        PipelineStageFlagBits destStage = PipelineStageFlagBits::None;
+        ImageAccessFlag sourceAccess = static_cast<ImageAccessFlag>(ImageAccessFlagBits::None);
+        ImageAccessFlag destAccess = static_cast<ImageAccessFlag>(ImageAccessFlagBits::None);
+        PipelineStageFlag sourceStage = static_cast<PipelineStageFlag>(PipelineStageFlagBits::None);
+        PipelineStageFlag destStage = static_cast<PipelineStageFlag>(PipelineStageFlagBits::None);
     };
 
     static constexpr PipelineBarrierCommand PipelineBarrierUndefinedToColor{
         .fromLayout = ImageLayoutType::Undefined,
         .toLayout = ImageLayoutType::Color,
-        .sourceAccess = ImageAccessFlagBits::None,
-        .destAccess = ImageAccessFlagBits::ColorWrite,
-        .sourceStage = PipelineStageFlagBits::ColorAttachmentOutput,
-        .destStage = PipelineStageFlagBits::ColorAttachmentOutput
+        .sourceAccess = static_cast<ImageAccessFlag>(ImageAccessFlagBits::None),
+        .destAccess = static_cast<ImageAccessFlag>(ImageAccessFlagBits::ColorWrite),
+        .sourceStage = static_cast<PipelineStageFlag>(PipelineStageFlagBits::ColorAttachmentOutput),
+        .destStage = static_cast<PipelineStageFlag>(PipelineStageFlagBits::ColorAttachmentOutput)
     };
 
     static constexpr PipelineBarrierCommand PipelineBarrierColorToPresent{
         .fromLayout = ImageLayoutType::Color,
         .toLayout = ImageLayoutType::Present,
-        .sourceAccess = ImageAccessFlagBits::ColorWrite,
-        .destAccess = ImageAccessFlagBits::None,
-        .sourceStage = PipelineStageFlagBits::ColorAttachmentOutput,
-        .destStage = PipelineStageFlagBits::BottomOfPipe
+        .sourceAccess = static_cast<ImageAccessFlag>(ImageAccessFlagBits::ColorWrite),
+        .destAccess = static_cast<ImageAccessFlag>(ImageAccessFlagBits::None),
+        .sourceStage = static_cast<PipelineStageFlag>(PipelineStageFlagBits::ColorAttachmentOutput),
+        .destStage = static_cast<PipelineStageFlag>(PipelineStageFlagBits::BottomOfPipe)
     };
 }
 

@@ -1,4 +1,5 @@
 #include "litl-renderer-vulkan/renderer.hpp"
+#include "litl-renderer-vulkan/conversions.hpp"
 
 namespace litl::vulkan
 {
@@ -99,8 +100,8 @@ namespace litl::vulkan
                 colorAttachment.imageView = colorTexture->vkImageView;
             }
 
-            colorAttachment.loadOp = static_cast<VkAttachmentLoadOp>(command.color.loadOp);
-            colorAttachment.storeOp = static_cast<VkAttachmentStoreOp>(command.color.storeOp);
+            colorAttachment.loadOp = toVkAttachmentLoadOp(command.color.loadOp);
+            colorAttachment.storeOp = toVkAttachmentStoreOp(command.color.storeOp);
         }
 
         // ---------------------------------------------------------------------------------
@@ -123,8 +124,8 @@ namespace litl::vulkan
             depthAttachment.imageView = depthTextureView;
             depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
             depthAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
-            depthAttachment.loadOp = static_cast<VkAttachmentLoadOp>((*command.depth).loadOp);
-            depthAttachment.storeOp = static_cast<VkAttachmentStoreOp>((*command.depth).storeOp);
+            depthAttachment.loadOp = toVkAttachmentLoadOp((*command.depth).loadOp);
+            depthAttachment.storeOp = toVkAttachmentStoreOp((*command.depth).storeOp);
             depthAttachment.clearValue = VkClearValue{
                 .depthStencil = VkClearDepthStencilValue{
                     .depth = (*command.depth).clearDepth,
@@ -213,12 +214,12 @@ namespace litl::vulkan
 
         const VkImageMemoryBarrier2 barrier{
             .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-            .srcStageMask = static_cast<VkPipelineStageFlagBits2>(command.sourceStage),
-            .srcAccessMask = static_cast<VkAccessFlags2>(command.sourceAccess),
-            .dstStageMask = static_cast<VkPipelineStageFlagBits2>(command.destStage),
-            .dstAccessMask = static_cast<VkAccessFlags2>(command.destAccess),
-            .oldLayout = static_cast<VkImageLayout>(command.fromLayout),
-            .newLayout = static_cast<VkImageLayout>(command.toLayout),
+            .srcStageMask = toVkPipelineStageFlag(command.sourceStage),
+            .srcAccessMask = toVkAccessFlag(command.sourceAccess),
+            .dstStageMask = toVkPipelineStageFlag(command.destStage),
+            .dstAccessMask = toVkAccessFlag(command.destAccess),
+            .oldLayout = toVkImageLayout(command.fromLayout),
+            .newLayout = toVkImageLayout(command.toLayout),
             .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
             .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
             .image = vkImage,
@@ -284,7 +285,7 @@ namespace litl::vulkan
         vkCmdClearColorImage(
             commandBuffer->vkCommandBuffer, 
             targetImage,
-            static_cast<VkImageLayout>(command.destLayout),
+            toVkImageLayout(command.destLayout),
             &clearColor, 
             1, 
             &range);

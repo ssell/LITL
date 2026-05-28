@@ -8,83 +8,93 @@ namespace litl
     // Based on: https://docs.vulkan.org/refpages/latest/refpages/source/VkImageLayout.html
     enum class ImageLayoutType : uint32_t
     {
-        Undefined = 0,
-        General = 1,
-        Color = 2,
-        DepthStencil = 3,
+        Undefined            = 0,
+        General              = 1,
+        Color                = 2,
+        DepthStencil         = 3,
         DepthStencilReadOnly = 4,
-        ShaderReadOnly = 5,
-        TransferSrc = 6,
-        TransferDst = 7,
-        Preinitialized = 8,
-        Present = 1000001002
+        ShaderReadOnly       = 5,
+        TransferSrc          = 6,
+        TransferDst          = 7,
+        Preinitialized       = 8,
+        Present              = 9
     };
 
     // Based on: https://docs.vulkan.org/refpages/latest/refpages/source/VkAccessFlagBits2.html
     enum class ImageAccessFlagBits : uint64_t
     {
-        None                = 0b0000'0000'0000'0000'0000'0000'0000'0000'0000,
-        IndirectCommandRead = 0b0000'0000'0000'0000'0000'0000'0000'0000'0001,
-        IndexRead           = 0b0000'0000'0000'0000'0000'0000'0000'0000'0010,
-        VertexAttributeRead = 0b0000'0000'0000'0000'0000'0000'0000'0000'0100,
-        UniformRead         = 0b0000'0000'0000'0000'0000'0000'0000'0000'1000,
-        InputAttachmentRead = 0b0000'0000'0000'0000'0000'0000'0000'0001'0000,
-        ShaderRead          = 0b0000'0000'0000'0000'0000'0000'0000'0010'0000,
-        ShaderWrite         = 0b0000'0000'0000'0000'0000'0000'0000'0100'0000,
-        ColorRead           = 0b0000'0000'0000'0000'0000'0000'0000'1000'0000,
-        ColorWrite          = 0b0000'0000'0000'0000'0000'0000'0001'0000'0000,
-        DepthStencilRead    = 0b0000'0000'0000'0000'0000'0000'0010'0000'0000,
-        DepthStencilWrite   = 0b0000'0000'0000'0000'0000'0000'0100'0000'0000,
-        TransferRead        = 0b0000'0000'0000'0000'0000'0000'1000'0000'0000,
-        TransferWrite       = 0b0000'0000'0000'0000'0000'0001'0000'0000'0000,
-        HostRead            = 0b0000'0000'0000'0000'0000'0010'0000'0000'0000,
-        HostWrite           = 0b0000'0000'0000'0000'0000'0100'0000'0000'0000,
-        MemoryRead          = 0b0000'0000'0000'0000'0000'1000'0000'0000'0000,
-        MemoryWrite         = 0b0000'0000'0000'0000'0001'0000'0000'0000'0000,
-        ShaderSampledRead   = 0b0001'0000'0000'0000'0000'0000'0000'0000'0000,
-        ShaderStorageRead   = 0b0010'0000'0000'0000'0000'0000'0000'0000'0000,
-        ShaderStorageWrite  = 0b0100'0000'0000'0000'0000'0000'0000'0000'0000
+        None                = 0,
+        IndirectCommandRead = 1 << 0,
+        IndexRead           = 1 << 1,
+        VertexAttributeRead = 1 << 2,
+        UniformRead         = 1 << 3,
+        InputAttachmentRead = 1 << 4,
+        ShaderRead          = 1 << 5,
+        ShaderWrite         = 1 << 6,
+        ColorRead           = 1 << 7,
+        ColorWrite          = 1 << 8,
+        DepthStencilRead    = 1 << 9,
+        DepthStencilWrite   = 1 << 10,
+        TransferRead        = 1 << 11,
+        TransferWrite       = 1 << 12,
+        HostRead            = 1 << 13,
+        HostWrite           = 1 << 14,
+        MemoryRead          = 1 << 15,
+        MemoryWrite         = 1 << 16,
+        ShaderSampledRead   = 1 << 17,
+        ShaderStorageRead   = 1 << 18,
+        ShaderStorageWrite  = 1 << 19
     };
+
+    /// <summary>
+    /// Composed of ImageAccessFlagBits
+    /// </summary>
+    using ImageAccessFlag = uint64_t;
 
     // Based on https://docs.vulkan.org/refpages/latest/refpages/source/VkPipelineStageFlagBits2.html
     enum class PipelineStageFlagBits : uint64_t
     {
-        None                         = 0b0000'0000'0000'0000'0000'0000'0000'0000'0000'0000,
-        TopOfPipe                    = 0b0000'0000'0000'0000'0000'0000'0000'0000'0000'0001,
-        DrawIndirect                 = 0b0000'0000'0000'0000'0000'0000'0000'0000'0000'0010,
-        VertexInput                  = 0b0000'0000'0000'0000'0000'0000'0000'0000'0000'0100,
-        VertexShader                 = 0b0000'0000'0000'0000'0000'0000'0000'0000'0000'1000,
-        TessellationControlShader    = 0b0000'0000'0000'0000'0000'0000'0000'0000'0001'0000,
-        TessellationEvaluationShader = 0b0000'0000'0000'0000'0000'0000'0000'0000'0010'0000,
-        GeometryShader               = 0b0000'0000'0000'0000'0000'0000'0000'0000'0100'0000,
-        FragmentShader               = 0b0000'0000'0000'0000'0000'0000'0000'0000'1000'0000,
-        EarlyFragmentTests           = 0b0000'0000'0000'0000'0000'0000'0000'0001'0000'0000,
-        LateFragmentTests            = 0b0000'0000'0000'0000'0000'0000'0000'0010'0000'0000,
-        ColorAttachmentOutput        = 0b0000'0000'0000'0000'0000'0000'0000'0100'0000'0000,
-        ComputeShader                = 0b0000'0000'0000'0000'0000'0000'0000'1000'0000'0000,
-        Transfer                     = 0b0000'0000'0000'0000'0000'0000'0001'0000'0000'0000,
-        BottomOfPipe                 = 0b0000'0000'0000'0000'0000'0000'0010'0000'0000'0000,
-        Host                         = 0b0000'0000'0000'0000'0000'0000'0100'0000'0000'0000,
-        AllGraphics                  = 0b0000'0000'0000'0000'0000'0000'1000'0000'0000'0000,
-        AllCommands                  = 0b0000'0000'0000'0000'0000'0001'0000'0000'0000'0000,
-        Copy                         = 0b0000'0001'0000'0000'0000'0000'0000'0000'0000'0000,
-        Resolve                      = 0b0000'0010'0000'0000'0000'0000'0000'0000'0000'0000,
-        Blit                         = 0b0000'0100'0000'0000'0000'0000'0000'0000'0000'0000,
-        Clear                        = 0b0000'1000'0000'0000'0000'0000'0000'0000'0000'0000,
-        IndexInput                   = 0b0001'0000'0000'0000'0000'0000'0000'0000'0000'0000,
-        VertexAttributeInput         = 0b0010'0000'0000'0000'0000'0000'0000'0000'0000'0000,
-        PreRasterizationShaders      = 0b0100'0000'0000'0000'0000'0000'0000'0000'0000'0000,
+        None                         = 0,
+        TopOfPipe                    = 1 << 0,
+        DrawIndirect                 = 1 << 1,
+        VertexInput                  = 1 << 2,
+        VertexShader                 = 1 << 3,
+        TessellationControlShader    = 1 << 4,
+        TessellationEvaluationShader = 1 << 5,
+        GeometryShader               = 1 << 6,
+        FragmentShader               = 1 << 7,
+        EarlyFragmentTests           = 1 << 8,
+        LateFragmentTests            = 1 << 9,
+        ColorAttachmentOutput        = 1 << 10,
+        ComputeShader                = 1 << 11,
+        Transfer                     = 1 << 12,
+        BottomOfPipe                 = 1 << 13,
+        Host                         = 1 << 14,
+        AllGraphics                  = 1 << 15,
+        AllCommands                  = 1 << 16,
+        Copy                         = 1 << 17,
+        Resolve                      = 1 << 18,
+        Blit                         = 1 << 19,
+        Clear                        = 1 << 20,
+        IndexInput                   = 1 << 21,
+        VertexAttributeInput         = 1 << 22,
+        PreRasterizationShaders      = 1 << 23
     };
+
+    /// <summary>
+    /// Composed of PipelineStageFlagBits
+    /// </summary>
+    using PipelineStageFlag = uint64_t;
 
     /// <summary>
     /// Based on: https://docs.vulkan.org/refpages/latest/refpages/source/VkAttachmentLoadOp.html
     /// </summary>
     enum class LoadOperationType : uint32_t
     {
-        Load = 0,
-        Clear = 1,
-        DontCare = 2,
-        None = 1000400000
+        None     = 0,
+        Load     = 1,
+        Clear    = 2,
+        DontCare = 3
     };
 
     /// <summary>
@@ -92,9 +102,9 @@ namespace litl
     /// </summary>
     enum class StoreOperationType : uint32_t
     {
-        Store = 0,
-        DontCare = 1,
-        None = 1000301000
+        None     = 0,
+        Store    = 1,
+        DontCare = 2
     };
 
     enum class ImageFormat : uint32_t
