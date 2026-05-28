@@ -107,7 +107,7 @@ namespace litl
         DontCare = 2
     };
 
-    enum class ImageFormat : uint32_t
+    enum class DataFormat : uint32_t
     {
         Undefined = 0,
 
@@ -120,6 +120,7 @@ namespace litl
 
         // HDR
         RGBA16_SFloat,          // 64-bit RGBA color where each channel gets a 16-bit floating point value.
+        RGB32_SFloat,           // 96-bit RGB color where each channel gets a 32-bit floating point value.
         RGBA32_SFloat,          // 128-bit RGBA color where each channel gets a 32-bit floating point value.
         R11G11B10_UFloat,       // 32-bit RGB color where R and G gets a 11-bit and B gets a 10-bit unsigned floating point value.
 
@@ -143,6 +144,31 @@ namespace litl
         BC4_UNorm,              // A one-component, block-compressed format where each 64-bit compressed texel block encodes a 4×4 rectangle of unsigned normalized red texel data.
         BC5_UNorm,              // A two-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned normalized RG texel data with the first 64 bits encoding red values followed by 64 bits encoding green values.
         BC6H_UFloat             // A  three-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned floating-point RGB texel data.
+    };
+
+    enum class PrimitiveTopology : uint32_t
+    {
+        PointList = 0,
+        LineList,
+        LineStrip,
+        TriangleList,
+        TriangleStrip,
+        TriangleFan
+    };
+
+    enum class PolygonMode : uint32_t
+    {
+        Fill = 0,
+        Line,
+        Point
+    };
+
+    enum class CullMode : uint32_t
+    {
+        None = 0,               // No triangles discarded
+        Front,                  // Front-facing triangles discarded
+        Back,                   // Back-facing triangles discarded
+        Both                    // All triangles discarded
     };
 }
 

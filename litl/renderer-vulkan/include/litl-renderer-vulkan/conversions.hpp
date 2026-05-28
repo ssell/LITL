@@ -14,8 +14,8 @@ namespace litl::vulkan
     [[nodiscard]] VkDescriptorType toVkDescriptorType(ShaderResourceType type) noexcept;
     [[nodiscard]] ShaderResourceType fromVkDescriptorType(VkDescriptorType type) noexcept;
 
-    [[nodiscard]] VkFormat toVkFormat(ImageFormat format) noexcept;
-    [[nodiscard]] ImageFormat fromVkFormat(VkFormat format) noexcept;
+    [[nodiscard]] VkFormat toVkFormat(DataFormat format) noexcept;
+    [[nodiscard]] DataFormat fromVkFormat(VkFormat format) noexcept;
 
     [[nodiscard]] VkImageLayout toVkImageLayout(ImageLayoutType layout) noexcept;
     [[nodiscard]] ImageLayoutType fromVkImageLayout(VkImageLayout layout) noexcept;
@@ -31,6 +31,15 @@ namespace litl::vulkan
 
     [[nodiscard]] VkAttachmentStoreOp toVkAttachmentStoreOp(StoreOperationType op) noexcept;
     [[nodiscard]] StoreOperationType fromVkAttachmentStoreOp(VkAttachmentStoreOp op) noexcept;
+
+    [[nodiscard]] VkPrimitiveTopology toVkPrimitiveTopology(PrimitiveTopology topology) noexcept;
+    [[nodiscard]] PrimitiveTopology fromVkPrimitiveTopology(VkPrimitiveTopology topology) noexcept;
+
+    [[nodiscard]] VkPolygonMode toVkPolygonMode(PolygonMode mode) noexcept;
+    [[nodiscard]] PolygonMode fromVkPolygonMode(VkPolygonMode mode) noexcept;
+
+    [[nodiscard]] VkCullModeFlags toVkCullModeFlag(CullMode mode) noexcept;
+    [[nodiscard]] CullMode fromVkCullModeFlag(VkCullModeFlags mode) noexcept;
 }
 
 #endif

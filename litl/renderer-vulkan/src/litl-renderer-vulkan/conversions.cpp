@@ -124,162 +124,168 @@ namespace litl::vulkan
     // ImageFormat <-> VkFormat
     // -------------------------------------------------------------------------------------
 
-    VkFormat toVkFormat(ImageFormat format) noexcept
+    VkFormat toVkFormat(DataFormat format) noexcept
     {
         switch (format)
         {
             // Color
-        case ImageFormat::RGBA8_UNorm:
+        case DataFormat::RGBA8_UNorm:
             return VkFormat::VK_FORMAT_R8G8B8A8_UNORM;
 
-        case ImageFormat::RGBA8_SRGB:
+        case DataFormat::RGBA8_SRGB:
             return VkFormat::VK_FORMAT_R8G8B8A8_SRGB;
 
-        case ImageFormat::BGRA8_Unorm:
+        case DataFormat::BGRA8_Unorm:
             return VkFormat::VK_FORMAT_B8G8R8A8_UNORM;
 
-        case ImageFormat::BGRA8_SRGB:
+        case DataFormat::BGRA8_SRGB:
             return VkFormat::VK_FORMAT_B8G8R8A8_SRGB;
 
-        case ImageFormat::ABGR10_UNorm_Pack32:
+        case DataFormat::ABGR10_UNorm_Pack32:
             return VkFormat::VK_FORMAT_A2B10G10R10_UNORM_PACK32;
 
             // HDR
-        case ImageFormat::RGBA16_SFloat:
+        case DataFormat::RGBA16_SFloat:
             return VkFormat::VK_FORMAT_R16G16B16A16_SFLOAT;
 
-        case ImageFormat::RGBA32_SFloat:
+        case DataFormat::RGB32_SFloat:
+            return VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
+
+        case DataFormat::RGBA32_SFloat:
             return VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
 
-        case ImageFormat::R11G11B10_UFloat:
+        case DataFormat::R11G11B10_UFloat:
             return VkFormat::VK_FORMAT_B10G11R11_UFLOAT_PACK32;
 
             // Single Channel
-        case ImageFormat::R8_UNorm:
+        case DataFormat::R8_UNorm:
             return VkFormat::VK_FORMAT_R8_UNORM;
 
-        case ImageFormat::R16_SFloat:
+        case DataFormat::R16_SFloat:
             return VkFormat::VK_FORMAT_R16_SFLOAT;
 
-        case ImageFormat::R32_SFloat:
+        case DataFormat::R32_SFloat:
             return VkFormat::VK_FORMAT_R32_SFLOAT;
 
             // Dual Channel
-        case ImageFormat::RG8_UNorm:
+        case DataFormat::RG8_UNorm:
             return VkFormat::VK_FORMAT_R8G8_UNORM;
 
-        case ImageFormat::RG16_SFloat:
+        case DataFormat::RG16_SFloat:
             return VkFormat::VK_FORMAT_R16G16_SFLOAT;
 
             // Depth
-        case ImageFormat::D32_SFloat:
+        case DataFormat::D32_SFloat:
             return VkFormat::VK_FORMAT_R32G32_SFLOAT;
 
-        case ImageFormat::D24_UNorm_S8_UInt:
+        case DataFormat::D24_UNorm_S8_UInt:
             return VkFormat::VK_FORMAT_D24_UNORM_S8_UINT;
 
-        case ImageFormat::D24_SFloat_S8_Uint:
+        case DataFormat::D24_SFloat_S8_Uint:
             return VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT;
 
             // Compressed
-        case ImageFormat::BC7_UNorm:
+        case DataFormat::BC7_UNorm:
             return VkFormat::VK_FORMAT_BC7_UNORM_BLOCK;
 
-        case ImageFormat::BC7_SRGB:
+        case DataFormat::BC7_SRGB:
             return VkFormat::VK_FORMAT_BC7_SRGB_BLOCK;
 
-        case ImageFormat::BC4_UNorm:
+        case DataFormat::BC4_UNorm:
             return VkFormat::VK_FORMAT_BC4_UNORM_BLOCK;
 
-        case ImageFormat::BC5_UNorm:
+        case DataFormat::BC5_UNorm:
             return VkFormat::VK_FORMAT_BC5_UNORM_BLOCK;
 
-        case ImageFormat::BC6H_UFloat:
+        case DataFormat::BC6H_UFloat:
             return VkFormat::VK_FORMAT_BC6H_UFLOAT_BLOCK;
 
             // Fall-through
-        case ImageFormat::Undefined:
+        case DataFormat::Undefined:
         default:
             return VkFormat::VK_FORMAT_UNDEFINED;
         }
     }
 
-    ImageFormat fromVkFormat(VkFormat format) noexcept
+    DataFormat fromVkFormat(VkFormat format) noexcept
     {
         switch (format)
         {
             // Color
         case VkFormat::VK_FORMAT_R8G8B8A8_UNORM:
-            return ImageFormat::RGBA8_UNorm;
+            return DataFormat::RGBA8_UNorm;
 
         case VkFormat::VK_FORMAT_R8G8B8A8_SRGB:
-            return ImageFormat::RGBA8_SRGB;
+            return DataFormat::RGBA8_SRGB;
 
         case VkFormat::VK_FORMAT_B8G8R8A8_UNORM:
-            return ImageFormat::BGRA8_Unorm;
+            return DataFormat::BGRA8_Unorm;
 
         case VkFormat::VK_FORMAT_B8G8R8A8_SRGB:
-            return ImageFormat::BGRA8_SRGB;
+            return DataFormat::BGRA8_SRGB;
 
         case VkFormat::VK_FORMAT_A2B10G10R10_UNORM_PACK32:
-            return ImageFormat::ABGR10_UNorm_Pack32;
+            return DataFormat::ABGR10_UNorm_Pack32;
 
             // HDR
         case VkFormat::VK_FORMAT_R16G16B16A16_SFLOAT:
-            return ImageFormat::RGBA16_SFloat;
+            return DataFormat::RGBA16_SFloat;
+
+        case VkFormat::VK_FORMAT_R32G32B32_SFLOAT:
+            return DataFormat::RGB32_SFloat;
 
         case VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT:
-            return ImageFormat::RGBA32_SFloat;
+            return DataFormat::RGBA32_SFloat;
 
         case VkFormat::VK_FORMAT_B10G11R11_UFLOAT_PACK32:
-            return ImageFormat::R11G11B10_UFloat;
+            return DataFormat::R11G11B10_UFloat;
 
             // Single Channel
         case VkFormat::VK_FORMAT_R8_UNORM:
-            return ImageFormat::R8_UNorm;
+            return DataFormat::R8_UNorm;
 
         case VkFormat::VK_FORMAT_R16_SFLOAT:
-            return ImageFormat::R16_SFloat;
+            return DataFormat::R16_SFloat;
 
         case VkFormat::VK_FORMAT_R32_SFLOAT:
-            return ImageFormat::R32_SFloat;
+            return DataFormat::R32_SFloat;
 
             // Dual Channel
         case VkFormat::VK_FORMAT_R8G8_UNORM:
-            return ImageFormat::RG8_UNorm;
+            return DataFormat::RG8_UNorm;
 
         case VkFormat::VK_FORMAT_R16G16_SFLOAT:
-            return ImageFormat::RG16_SFloat;
+            return DataFormat::RG16_SFloat;
 
             // Depth
         case VkFormat::VK_FORMAT_R32G32_SFLOAT:
-            return ImageFormat::D32_SFloat;
+            return DataFormat::D32_SFloat;
 
         case VkFormat::VK_FORMAT_D24_UNORM_S8_UINT:
-            return ImageFormat::D24_UNorm_S8_UInt;
+            return DataFormat::D24_UNorm_S8_UInt;
 
         case VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT:
-            return ImageFormat::D24_SFloat_S8_Uint;
+            return DataFormat::D24_SFloat_S8_Uint;
 
             // Compressed
         case VkFormat::VK_FORMAT_BC7_UNORM_BLOCK:
-            return ImageFormat::BC7_UNorm;
+            return DataFormat::BC7_UNorm;
 
         case VkFormat::VK_FORMAT_BC7_SRGB_BLOCK:
-            return ImageFormat::BC7_SRGB;
+            return DataFormat::BC7_SRGB;
 
         case VkFormat::VK_FORMAT_BC4_UNORM_BLOCK:
-            return ImageFormat::BC4_UNorm;
+            return DataFormat::BC4_UNorm;
 
         case VkFormat::VK_FORMAT_BC5_UNORM_BLOCK:
-            return ImageFormat::BC5_UNorm;
+            return DataFormat::BC5_UNorm;
 
         case VkFormat::VK_FORMAT_BC6H_UFLOAT_BLOCK:
-            return ImageFormat::BC6H_UFloat;
+            return DataFormat::BC6H_UFloat;
 
         case VkFormat::VK_FORMAT_UNDEFINED:
         default:
-            return ImageFormat::Undefined;
+            return DataFormat::Undefined;
         }
     }
 
@@ -417,7 +423,7 @@ namespace litl::vulkan
         if ((flag & VK_ACCESS_2_SHADER_SAMPLED_READ_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::ShaderSampledRead); }
         if ((flag & VK_ACCESS_2_SHADER_STORAGE_READ_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::ShaderStorageRead); }
         if ((flag & VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::ShaderStorageWrite); }
-        
+
         return litlFlag;
     }
 
@@ -564,6 +570,156 @@ namespace litl::vulkan
         case VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_NONE:
         default:
             return StoreOperationType::None;
+        }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // PrimitiveTopology <-> VkPrimitiveTopology
+    // -------------------------------------------------------------------------------------
+
+    [[nodiscard]] VkPrimitiveTopology toVkPrimitiveTopology(PrimitiveTopology topology) noexcept
+    {
+        switch (topology)
+        {
+        case PrimitiveTopology::PointList:
+            return VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+
+        case PrimitiveTopology::LineList:
+            return VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+
+        case PrimitiveTopology::LineStrip:
+            return VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
+
+        case PrimitiveTopology::TriangleList:
+            return VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+
+        case PrimitiveTopology::TriangleStrip:
+            return VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+
+        case PrimitiveTopology::TriangleFan:
+            return VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
+
+        default:
+            logError("Unknown/unhandled primitive topology type of ", static_cast<uint32_t>(topology), " provided to toVkPrimitiveTopology");
+            return static_cast<VkPrimitiveTopology>(0);
+        }
+    }
+
+    [[nodiscard]] PrimitiveTopology fromVkPrimitiveTopology(VkPrimitiveTopology topology) noexcept
+    {
+        switch (topology)
+        {
+        case VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_POINT_LIST:
+            return PrimitiveTopology::PointList;
+
+        case VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_LINE_LIST:
+            return PrimitiveTopology::LineList;
+
+        case VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_LINE_STRIP:
+            return PrimitiveTopology::LineStrip;
+
+        case VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST:
+            return PrimitiveTopology::TriangleList;
+
+        case VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP:
+            return PrimitiveTopology::TriangleStrip;
+
+        case VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN:
+            return PrimitiveTopology::TriangleFan;
+
+        default:
+            logError("Unknown/unhandled primitive topology type of ", static_cast<uint32_t>(topology), " provided to fromVkPrimitiveTopology");
+            return static_cast<PrimitiveTopology>(0);
+        }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // PolygonMode <-> VkPolygonMode
+    // -------------------------------------------------------------------------------------
+
+    [[nodiscard]] VkPolygonMode toVkPolygonMode(PolygonMode mode) noexcept
+    {
+        switch (mode)
+        {
+        case PolygonMode::Fill:
+            return VkPolygonMode::VK_POLYGON_MODE_FILL;
+
+        case PolygonMode::Line:
+            return VkPolygonMode::VK_POLYGON_MODE_LINE;
+
+        case PolygonMode::Point:
+            return VkPolygonMode::VK_POLYGON_MODE_POINT;
+
+        default:
+            logError("Unknown/unhandled polygon mode of ", static_cast<uint32_t>(mode), " provided to toVkPolygonMode");
+            return static_cast<VkPolygonMode>(0);
+        }
+    }
+
+    [[nodiscard]] PolygonMode fromVkPolygonMode(VkPolygonMode mode) noexcept
+    {
+        switch (mode)
+        {
+        case VkPolygonMode::VK_POLYGON_MODE_FILL:
+            return PolygonMode::Fill;
+
+        case VkPolygonMode::VK_POLYGON_MODE_LINE:
+            return PolygonMode::Line;
+
+        case VkPolygonMode::VK_POLYGON_MODE_POINT:
+            return PolygonMode::Point;
+
+        default:
+            logError("Unknown/unhandled polygon mode of ", static_cast<uint32_t>(mode), " provided to fromVkPolygonMode");
+            return static_cast<PolygonMode>(0);
+        }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // CullMode <-> VkCullModeFlags
+    // -------------------------------------------------------------------------------------
+
+    [[nodiscard]] VkCullModeFlags toVkCullModeFlag(CullMode mode) noexcept
+    {
+        switch (mode)
+        {
+        case CullMode::None:
+            return VK_CULL_MODE_NONE;
+
+        case CullMode::Front:
+            return VK_CULL_MODE_FRONT_BIT;
+
+        case CullMode::Back:
+            return VK_CULL_MODE_BACK_BIT;
+
+        case CullMode::Both:
+            return VK_CULL_MODE_FRONT_AND_BACK;
+
+        default:
+            logError("Unknown/unhandled cull mode of ", static_cast<uint32_t>(mode), " provided to toVkCullModeFlag");
+            return static_cast<VkCullModeFlags>(0);
+        }
+    }
+
+    [[nodiscard]] CullMode fromVkCullModeFlag(VkCullModeFlags mode) noexcept
+    {
+        switch (mode)
+        {
+        case VK_CULL_MODE_NONE:
+            return CullMode::None;
+
+        case VK_CULL_MODE_FRONT_BIT:
+            return CullMode::Front;
+
+        case VK_CULL_MODE_BACK_BIT:
+            return CullMode::Back;
+
+        case VK_CULL_MODE_FRONT_AND_BACK:
+            return CullMode::Both;
+
+        default:
+            logError("Unknown/unhandled cull mode of ", static_cast<uint32_t>(mode), " provided to fromVkCullModeFlag");
+            return static_cast<CullMode>(0);
         }
     }
 }
