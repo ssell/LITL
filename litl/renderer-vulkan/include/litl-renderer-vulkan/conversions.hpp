@@ -16,6 +16,21 @@ namespace litl::vulkan
 
     [[nodiscard]] VkFormat toVkFormat(ImageFormat format) noexcept;
     [[nodiscard]] ImageFormat fromVkFormat(VkFormat format) noexcept;
+
+    [[nodiscard]] VkImageLayout toVkImageLayout(ImageLayoutType layout) noexcept;
+    [[nodiscard]] ImageLayoutType fromVkImageLayout(VkImageLayout layout) noexcept;
+
+    [[nodiscard]] VkAccessFlags2 toVkAccessFlag(ImageAccessFlag flag) noexcept;
+    [[nodiscard]] ImageAccessFlag fromVkAccessFlag(VkAccessFlags2 flag) noexcept;
+
+    [[nodiscard]] VkPipelineStageFlags2 toVkPipelineStageFlag(PipelineStageFlag flag) noexcept;
+    [[nodiscard]] PipelineStageFlag fromVkPipelineStageFlag(VkPipelineStageFlags2 flag) noexcept;
+
+    [[nodiscard]] VkAttachmentLoadOp toVkAttachmentLoadOp(LoadOperationType op) noexcept;
+    [[nodiscard]] LoadOperationType fromVkAttachmentLoadOp(VkAttachmentLoadOp op) noexcept;
+
+    [[nodiscard]] VkAttachmentStoreOp toVkAttachmentStoreOp(StoreOperationType op) noexcept;
+    [[nodiscard]] StoreOperationType fromVkAttachmentStoreOp(VkAttachmentStoreOp op) noexcept;
 }
 
 #endif
