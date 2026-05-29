@@ -164,25 +164,189 @@ namespace litl
         /// </summary>
         CullMode cullMode = CullMode::Back;
 
-        // todo front face
-        // todo depth bias
-        // todo line width
+        /// <summary>
+        /// The winding order the interprets a polygon front-facing orientation.
+        /// </summary>
+        FrontFace frontFace = FrontFace::Clockwise;
+
+        /// <summary>
+        /// Controls whether to bias fragment depth values.
+        /// </summary>
+        bool depthBiasEnabled = false;
+
+        /// <summary>
+        /// A scalar factor controlling the constant depth value added to each fragment.
+        /// </summary>
+        float depthBiasConstantFactor = 0.0f;
+
+        /// <summary>
+        /// The maximum (or minimum) depth bias of a fragment.
+        /// </summary>
+        float depthBiasClamp = 0.0f;
+
+        /// <summary>
+        /// A scalar factor applied to a fragment’s slope in depth bias calculations.
+        /// </summary>
+        float depthBiasSlopeFactor = 0.0f;
+
+        /// <summary>
+        /// The width of rasterized line segments.
+        /// </summary>
+        float lineWidth = 1.0f;
     };
 
     struct MultisampleState
     {
+        /// <summary>
+        /// Sets the number of samples used during rasterization.
+        /// 
+        /// A count of 1 indicates no multisampling (single sample) while 
+        /// increasing values indicate increased sample counts.
+        /// </summary>
+        MultisampleCount sampleCount = MultisampleCount::Count1;
 
+        /// <summary>
+        /// Enables sample shading, which runs the fragment shader per-sample 
+        /// rather than per-pixel to reduce texture aliasing.
+        /// </summary>
+        bool sampleShadingEnabled = false;
+
+        /// <summary>
+        /// Specifies the minimum fraction of sample shading when sample shading is enabled.
+        /// A value of 1.0 evaluates every sample.
+        /// </summary>
+        float minSampleShading = 0.0f;
+
+        // Note: no support for sample mask yet.
+
+        /// <summary>
+        /// Converts the alpha component of the first fragment color output into a temporary 
+        /// coverage mask (useful for rendering transparent foliage).
+        /// </summary>
+        bool alphaToCoverageEnabled = false;
+
+        /// <summary>
+        /// Replaces the alpha component of the fragment's first color output with 1.0.
+        /// </summary>
+        bool alphaToOneEnabled = false;
+    };
+
+    struct DepthState
+    {
+        /// <summary>
+        /// Enables or disables checking whether a fragment's depth is closer than the existing depth in the depth buffer.
+        /// </summary>
+        bool depthTestEnabled = true;
+
+        /// <summary>
+        /// When enabled, the fragment's depth is written into the depth buffer upon passing the test. 
+        /// Typically disabled for transparent objects.
+        /// </summary>
+        bool depthWriteEnabled = true;
+
+        /// <summary>
+        /// The comparison operator used for the depth test.
+        /// Remember: LITL uses a reversed depth buffer by default to avoid distance artifacts. So 0 = far and 1 = near.
+        /// </summary>
+        CompareOperationType compareOp = CompareOperationType::Greater;
+
+        /// <summary>
+        /// Controls whether to discard fragments outside a specific minimum and maximum depth range.
+        /// </summary>
+        bool depthBoundsTestEnabled = false;
+
+        /// <summary>
+        /// The minimum depth bound used in the depth bounds test.
+        /// </summary>
+        float minDepthBounds = 0.0f;
+
+        /// <summary>
+        /// The maximum depth bound used in the depth bounds test.
+        /// </summary>
+        float maxDepthBounds = 1.0f;
+    };
+
+    struct StencilFaceState
+    {
+        /// <summary>
+        /// Action performed on samples that fail the stencil test.
+        /// </summary>
+        StencilOperationType failOp = StencilOperationType::Keep;
+
+        /// <summary>
+        /// Action performed on samples that pass both the depth and stencil tests.
+        /// </summary>
+        StencilOperationType passOp = StencilOperationType::Keep;
+
+        /// <summary>
+        /// Action performed on samples that pass the stencil test and fail the depth test.
+        /// </summary>
+        StencilOperationType depthFailOp = StencilOperationType::Keep;
+
+        /// <summary>
+        /// Comparison operator used in the stencil test.
+        /// </summary>
+        CompareOperationType compareOp = CompareOperationType::Always;
+
+        /// <summary>
+        /// Selects the bits of the unsigned integer stencil values participating in the stencil test.
+        /// </summary>
+        uint32_t compareMask = 0xFFFFFFFF;
+
+        /// <summary>
+        /// Selects the bits of the unsigned integer stencil values updated by the stencil test in the stencil framebuffer attachment.
+        /// </summary>
+        uint32_t writeMask = 0xFFFFFFFF;
+
+        /// <summary>
+        /// An integer stencil reference value that is used in the unsigned stencil comparison.
+        /// </summary>
+        uint32_t reference = 0x00000000;
+    };
+
+    struct StencilState
+    {
+        /// <summary>
+        /// Enables or disables stencil testing.
+        /// </summary>
+        bool stencilTestEnabled = false;
+
+        /// <summary>
+        /// Controls front stencil test.
+        /// </summary>
+        StencilFaceState frontStencilState{};
+
+        /// <summary>
+        /// Controls back stencil test.
+        /// </summary>
+        StencilFaceState backStencilState{};
     };
 
     struct DepthStencilState
     {
-
+        DepthState depthState{};
+        StencilState stencilState{};
     };
 
     struct ColorBlendState
     {
+        /// <summary>
+        /// Enable a logical operation between the fragment's color values and the existing value in the framebuffer attachment.
+        /// </summary>
+        bool logicOpEnabled = false;
+        
+        /// <summary>
+        /// Selects which logical operation to apply.
+        /// </summary>
+        LogicOperationType logicOp = LogicOperationType::Clear;
 
+        // todo attachmentCount
+        // todo pAttachments
+        // todo blendConstants
     };
+
+    // continue from: https://docs.vulkan.org/refpages/latest/refpages/source/VkGraphicsPipelineCreateInfo.html
+    // https://docs.vulkan.org/refpages/latest/refpages/source/VkPipelineColorBlendStateCreateInfo.html
 
     struct GraphicsPipelineDescriptor
     {
@@ -199,9 +363,6 @@ namespace litl
         VertexInputState vertexInput;
         InputAssemblyState inputAssembly;
         std::optional<TessellationState> tessellation;
-
-
-        // ? ViewportState
 
         RasterizationState rasterization;
         MultisampleState multisample;

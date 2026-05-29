@@ -722,4 +722,333 @@ namespace litl::vulkan
             return static_cast<CullMode>(0);
         }
     }
+
+    // -------------------------------------------------------------------------------------
+    // FrontFace <-> VkFrontFace
+    // -------------------------------------------------------------------------------------
+
+    [[nodiscard]] VkFrontFace toVkFrontFace(FrontFace face) noexcept
+    {
+        if (face == FrontFace::Clockwise)
+        {
+            return VkFrontFace::VK_FRONT_FACE_CLOCKWISE;
+        }
+        else
+        {
+            return VkFrontFace::VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        }
+    }
+
+    [[nodiscard]] FrontFace fromVkFrontFace(VkFrontFace face) noexcept
+    {
+        if (face == VkFrontFace::VK_FRONT_FACE_CLOCKWISE)
+        {
+            return FrontFace::Clockwise;
+        }
+        else
+        {
+            return FrontFace::CounterClockwise;
+        }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // MultisampleCount <-> VkSampleCountFlags
+    // -------------------------------------------------------------------------------------
+
+    [[nodiscard]] VkSampleCountFlags toVkSampleCountFlag(MultisampleCount count) noexcept
+    {
+        switch (count)
+        {
+        case MultisampleCount::Count2:
+            return VkSampleCountFlagBits::VK_SAMPLE_COUNT_2_BIT;
+
+        case MultisampleCount::Count4:
+            return VkSampleCountFlagBits::VK_SAMPLE_COUNT_4_BIT;
+
+        case MultisampleCount::Count8:
+            return VkSampleCountFlagBits::VK_SAMPLE_COUNT_8_BIT;
+
+        case MultisampleCount::Count16:
+            return VkSampleCountFlagBits::VK_SAMPLE_COUNT_16_BIT;
+
+        case MultisampleCount::Count32:
+            return VkSampleCountFlagBits::VK_SAMPLE_COUNT_32_BIT;
+
+        case MultisampleCount::Count64:
+            return VkSampleCountFlagBits::VK_SAMPLE_COUNT_64_BIT;
+
+        case MultisampleCount::Count1:
+        default:
+            return VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+        }
+    }
+
+    [[nodiscard]] MultisampleCount fromVkSampleCountFlag(VkSampleCountFlags count) noexcept
+    {
+        switch (count)
+        {
+        case VkSampleCountFlagBits::VK_SAMPLE_COUNT_2_BIT:
+            return MultisampleCount::Count2;
+
+        case VkSampleCountFlagBits::VK_SAMPLE_COUNT_4_BIT:
+            return MultisampleCount::Count4;
+
+        case VkSampleCountFlagBits::VK_SAMPLE_COUNT_8_BIT:
+            return MultisampleCount::Count8;
+
+        case VkSampleCountFlagBits::VK_SAMPLE_COUNT_16_BIT:
+            return MultisampleCount::Count16;
+
+        case VkSampleCountFlagBits::VK_SAMPLE_COUNT_32_BIT:
+            return MultisampleCount::Count32;
+
+        case VkSampleCountFlagBits::VK_SAMPLE_COUNT_64_BIT:
+            return MultisampleCount::Count64;
+
+        case VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT:
+        default:
+            return MultisampleCount::Count1;
+        }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // CompareOperationType <-> VkCompareOp
+    // -------------------------------------------------------------------------------------
+
+    [[nodiscard]] VkCompareOp toVkCompareOp(CompareOperationType op) noexcept
+    {
+        switch (op)
+        {
+        case CompareOperationType::Never:
+            return VkCompareOp::VK_COMPARE_OP_NEVER;
+
+        case CompareOperationType::Less:
+            return VkCompareOp::VK_COMPARE_OP_LESS;
+
+        case CompareOperationType::Equal:
+            return VkCompareOp::VK_COMPARE_OP_EQUAL;
+
+        case CompareOperationType::LessOrEqual:
+            return VkCompareOp::VK_COMPARE_OP_LESS_OR_EQUAL;
+
+        case CompareOperationType::GreaterOrEqual:
+            return VkCompareOp::VK_COMPARE_OP_GREATER_OR_EQUAL;
+
+        case CompareOperationType::Always:
+            return VkCompareOp::VK_COMPARE_OP_ALWAYS;
+
+        case CompareOperationType::Greater:
+        default:
+            return VkCompareOp::VK_COMPARE_OP_GREATER;
+        }
+    }
+
+    [[nodiscard]] CompareOperationType fromVkCompareOp(CompareOperationType op) noexcept
+    {
+        switch (op)
+        {
+        case VkCompareOp::VK_COMPARE_OP_NEVER:
+            return CompareOperationType::Never;
+
+        case VkCompareOp::VK_COMPARE_OP_LESS:
+            return CompareOperationType::Less;
+
+        case VkCompareOp::VK_COMPARE_OP_EQUAL:
+            return CompareOperationType::Equal;
+
+        case VkCompareOp::VK_COMPARE_OP_LESS_OR_EQUAL:
+            return CompareOperationType::LessOrEqual;
+
+        case VkCompareOp::VK_COMPARE_OP_GREATER_OR_EQUAL:
+            return CompareOperationType::GreaterOrEqual;
+
+        case VkCompareOp::VK_COMPARE_OP_ALWAYS:
+            return CompareOperationType::Always;
+
+        case VkCompareOp::VK_COMPARE_OP_GREATER:
+        default:
+            return CompareOperationType::Greater;
+        }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // StencilOperationType <-> VkStencilOp
+    // -------------------------------------------------------------------------------------
+
+    [[nodiscard]] VkStencilOp toVkStencilOp(StencilOperationType op) noexcept
+    {
+        switch (op)
+        {
+        case StencilOperationType::Zero:
+            return VkStencilOp::VK_STENCIL_OP_ZERO;
+
+        case StencilOperationType::Replace:
+            return VkStencilOp::VK_STENCIL_OP_REPLACE;
+
+        case StencilOperationType::IncrementAndClamp:
+            return VkStencilOp::VK_STENCIL_OP_INCREMENT_AND_CLAMP;
+
+        case StencilOperationType::DecrementAndClamp:
+            return VkStencilOp::VK_STENCIL_OP_DECREMENT_AND_CLAMP;
+
+        case StencilOperationType::Invert:
+            return VkStencilOp::VK_STENCIL_OP_INVERT;
+
+        case StencilOperationType::IncrementAndWrap:
+            return VkStencilOp::VK_STENCIL_OP_INCREMENT_AND_WRAP;
+
+        case StencilOperationType::DecrementAndWrap:
+            return VkStencilOp::VK_STENCIL_OP_DECREMENT_AND_WRAP;
+
+        case StencilOperationType::Keep:
+        default:
+            return VkStencilOp::VK_STENCIL_OP_KEEP;
+        }
+    }
+
+    [[nodiscard]] StencilOperationType fromVkStencilOp(VkStencilOp op) noexcept
+    {
+        switch (op)
+        {
+        case VkStencilOp::VK_STENCIL_OP_ZERO:
+            return StencilOperationType::Zero;
+
+        case VkStencilOp::VK_STENCIL_OP_REPLACE:
+            return StencilOperationType::Replace;
+
+        case VkStencilOp::VK_STENCIL_OP_INCREMENT_AND_CLAMP:
+            return StencilOperationType::IncrementAndClamp;
+
+        case VkStencilOp::VK_STENCIL_OP_DECREMENT_AND_CLAMP:
+            return StencilOperationType::DecrementAndClamp;
+
+        case VkStencilOp::VK_STENCIL_OP_INVERT:
+            return StencilOperationType::Invert;
+
+        case VkStencilOp::VK_STENCIL_OP_INCREMENT_AND_WRAP:
+            return StencilOperationType::IncrementAndWrap;
+
+        case VkStencilOp::VK_STENCIL_OP_DECREMENT_AND_WRAP:
+            return StencilOperationType::DecrementAndWrap;
+
+        case VkStencilOp::VK_STENCIL_OP_KEEP:
+        default:
+            return StencilOperationType::Keep;
+        }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // LogicOperationType <-> VkLogicOp
+    // -------------------------------------------------------------------------------------
+
+    [[nodiscard]] VkLogicOp toVkLogicOp(LogicOperationType op) noexcept
+    {
+        switch (op)
+        {
+
+        case LogicOperationType::And:
+            return VkLogicOp::VK_LOGIC_OP_AND;
+
+        case LogicOperationType::AndReverse:
+            return VkLogicOp::VK_LOGIC_OP_AND_REVERSE;
+
+        case LogicOperationType::Copy:
+            return VkLogicOp::VK_LOGIC_OP_COPY;
+
+        case LogicOperationType::AndInverted:
+            return VkLogicOp::VK_LOGIC_OP_AND_INVERTED;
+
+        case LogicOperationType::NoOp:
+            return VkLogicOp::VK_LOGIC_OP_NO_OP;
+
+        case LogicOperationType::Xor:
+            return VkLogicOp::VK_LOGIC_OP_XOR;
+
+        case LogicOperationType::Or:
+            return VkLogicOp::VK_LOGIC_OP_OR;
+
+        case LogicOperationType::Nor:
+            return VkLogicOp::VK_LOGIC_OP_NOR;
+
+        case LogicOperationType::Equivalent:
+            return VkLogicOp::VK_LOGIC_OP_EQUIVALENT;
+
+        case LogicOperationType::Invert:
+            return VkLogicOp::VK_LOGIC_OP_INVERT;
+
+        case LogicOperationType::OrReverse:
+            return VkLogicOp::VK_LOGIC_OP_OR_REVERSE;
+
+        case LogicOperationType::CopyInverted:
+            return VkLogicOp::VK_LOGIC_OP_COPY_INVERTED;
+
+        case LogicOperationType::OrInverted:
+            return VkLogicOp::VK_LOGIC_OP_OR_INVERTED;
+
+        case LogicOperationType::Nand:
+            return VkLogicOp::VK_LOGIC_OP_NAND;
+
+        case LogicOperationType::Set:
+            return VkLogicOp::VK_LOGIC_OP_SET;
+
+        case LogicOperationType::Clear:
+        default:
+            return VkLogicOp::VK_LOGIC_OP_CLEAR;
+        }
+    }
+
+    [[nodiscard]] LogicOperationType fromVkLogicOp(VkLogicOp op) noexcept
+    {
+        switch (op)
+        {
+        case VkLogicOp::VK_LOGIC_OP_AND:
+            return LogicOperationType::And;
+
+        case VkLogicOp::VK_LOGIC_OP_AND_REVERSE:
+            return LogicOperationType::AndReverse;
+
+        case VkLogicOp::VK_LOGIC_OP_COPY:
+            return LogicOperationType::Copy;
+
+        case VkLogicOp::VK_LOGIC_OP_AND_INVERTED:
+            return LogicOperationType::AndInverted;
+
+        case VkLogicOp::VK_LOGIC_OP_NO_OP:
+            return LogicOperationType::NoOp;
+
+        case VkLogicOp::VK_LOGIC_OP_XOR:
+            return LogicOperationType::Xor;
+
+        case VkLogicOp::VK_LOGIC_OP_OR:
+            return LogicOperationType::Or;
+
+        case VkLogicOp::VK_LOGIC_OP_NOR:
+            return LogicOperationType::Nor;
+
+        case VkLogicOp::VK_LOGIC_OP_EQUIVALENT:
+            return LogicOperationType::Equivalent;
+
+        case VkLogicOp::VK_LOGIC_OP_INVERT:
+            return LogicOperationType::Invert;
+
+        case VkLogicOp::VK_LOGIC_OP_OR_REVERSE:
+            return LogicOperationType::OrReverse;
+
+        case VkLogicOp::VK_LOGIC_OP_COPY_INVERTED:
+            return LogicOperationType::CopyInverted;
+
+        case VkLogicOp::VK_LOGIC_OP_OR_INVERTED:
+            return LogicOperationType::OrInverted;
+
+        case VkLogicOp::VK_LOGIC_OP_NAND:
+            return LogicOperationType::Nand;
+
+        case VkLogicOp::VK_LOGIC_OP_SET:
+            return LogicOperationType::Set;
+
+        case VkLogicOp::VK_LOGIC_OP_CLEAR:
+        default:
+            return LogicOperationType::Clear;
+        }
+    }
 }
