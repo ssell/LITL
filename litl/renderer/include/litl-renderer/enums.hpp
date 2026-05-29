@@ -170,6 +170,68 @@ namespace litl
         Back,                   // Back-facing triangles discarded
         Both                    // All triangles discarded
     };
+    
+    enum class FrontFace : uint32_t
+    {
+        CounterClockwise = 0,
+        Clockwise = 1
+    };
+
+    enum MultisampleCount : uint32_t
+    {
+
+        Count1 = 0,             // No multisampling
+        Count2,
+        Count4,
+        Count8,
+        Count16,
+        Count32,
+        Count64
+    };
+
+    enum CompareOperationType
+    {
+        Never = 0,              // Comparison always evaluates false.
+        Less,                   // Comparison evaluates reference < test.
+        Equal,                  // Comparison evaluates reference = test.
+        NotEqual,               // Comparison evaluates reference ≠ test.
+        LessOrEqual,            // Comparison evaluates reference ≤ test.
+        Greater,                // Comparison evaluates reference > test.
+        GreaterOrEqual,         // Comparison evaluates reference ≥ test.
+        Always                  // Comparison always evaluates true.
+    };
+
+    enum StencilOperationType
+    {
+        Keep = 0,               // Keeps the current value.
+        Zero,                   // Sets the value to 0.
+        Replace,                // Sets the value to reference.
+        IncrementAndClamp,      // Increments the current value and clamps to the maximum representable unsigned value.
+        DecrementAndClamp,      // Decrements the current value and clamps to 0.
+        Invert,                 // Bitwise-inverts the current value.
+        IncrementAndWrap,       // Increments the current value and wraps to 0 when the maximum value would have been exceeded.
+        DecrementAndWrap        // Decrements the current value and wraps to the maximum possible value when the value would go below 0.
+    };
+
+    enum LogicOperationType
+    {
+        Clear = 0,
+        And,
+        AndReverse,
+        Copy,
+        AndInverted,
+        NoOp,
+        Xor,
+        Or,
+        Nor,
+        Equivalent,
+        Invert,
+        OrReverse,
+        CopyInverted,
+        OrInverted,
+        Nand,
+        Set
+    };
 }
 
 #endif

@@ -40,6 +40,21 @@ namespace litl::vulkan
 
     [[nodiscard]] VkCullModeFlags toVkCullModeFlag(CullMode mode) noexcept;
     [[nodiscard]] CullMode fromVkCullModeFlag(VkCullModeFlags mode) noexcept;
+
+    [[nodiscard]] VkFrontFace toVkFrontFace(FrontFace face) noexcept;
+    [[nodiscard]] FrontFace fromVkFrontFace(VkFrontFace face) noexcept;
+
+    [[nodiscard]] VkSampleCountFlags toVkSampleCountFlag(MultisampleCount count) noexcept;
+    [[nodiscard]] MultisampleCount fromVkSampleCountFlag(VkSampleCountFlags count) noexcept;
+
+    [[nodiscard]] VkCompareOp toVkCompareOp(CompareOperationType op) noexcept;
+    [[nodiscard]] CompareOperationType fromVkCompareOp(CompareOperationType op) noexcept;
+
+    [[nodiscard]] VkStencilOp toVkStencilOp(StencilOperationType op) noexcept;
+    [[nodiscard]] StencilOperationType fromVkStencilOp(VkStencilOp op) noexcept;
+
+    [[nodiscard]] VkLogicOp toVkLogicOp(LogicOperationType op) noexcept;
+    [[nodiscard]] LogicOperationType fromVkLogicOp(VkLogicOp op) noexcept;
 }
 
 #endif
