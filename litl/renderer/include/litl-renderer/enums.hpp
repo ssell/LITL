@@ -278,6 +278,18 @@ namespace litl
         OneMinusConstantAlpha,
         SrcAlphaSaturate
     };
+
+    enum class DynamicState : uint32_t
+    {
+        None = 0,
+        LineWidth,
+        DepthBias,
+        BlendConstants,
+        StencilRef,
+        CullMode
+
+        // More available, see: https://docs.vulkan.org/refpages/latest/refpages/source/VkDynamicState.html
+    };
 }
 
 #endif
