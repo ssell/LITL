@@ -64,6 +64,9 @@ namespace litl::vulkan
 
     [[nodiscard]] VkColorComponentFlags toVkColorComponentFlag(ColorComponentFlag flag) noexcept;
     [[nodiscard]] ColorComponentFlag fromVkColorComponentFlag(VkColorComponentFlags flag) noexcept;
+
+    [[nodiscard]] VkDynamicState toVkDynamicState(DynamicState state) noexcept;
+    [[nodiscard]] DynamicState fromVkDynamicState(VkDynamicState state) noexcept;
 }
 
 #endif

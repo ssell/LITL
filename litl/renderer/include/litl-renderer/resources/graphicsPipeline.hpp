@@ -2,6 +2,7 @@
 #define LITL_RENDERER_GRAPHICS_PIPELINE_H__
 
 #include <array>
+#include <optional>
 
 #include "litl-core/handles.hpp"
 #include "litl-renderer/resources/shaderModule.hpp"
@@ -388,12 +389,18 @@ namespace litl
         /// Configures per-target color and alpha blending behavior for an individual framebuffer color attachments.
         /// </summary>
         std::vector<ColorBlendAttachmentState> colorAttachmentBlendState;
-
-
     };
 
-    // continue from: https://docs.vulkan.org/refpages/latest/refpages/source/VkGraphicsPipelineCreateInfo.html
-    // https://docs.vulkan.org/refpages/latest/refpages/source/VkPipelineColorBlendStateCreateInfo.html
+    /// <summary>
+    /// Indicate which dynamic state is taken from dynamic state commands.
+    /// 
+    /// Note some states such as viewport region, scissor region, etc. are always dynamic
+    /// and thus do not have a corresponding DynamicState entry.
+    /// </summary>
+    struct DynamicStateMask
+    {
+        std::vector<DynamicState> states;
+    };
 
     struct GraphicsPipelineDescriptor
     {
@@ -415,15 +422,7 @@ namespace litl
         MultisampleState multisample;
         DepthStencilState depthStencil;
         ColorBlendState colorBlend;
-
-        /* 
-        todo:
-        
-
         DynamicStateMask dynamicState;
-
-        SpecializationValues specialization;
-        */
     };
 
     struct GraphicsPipelineTag {};

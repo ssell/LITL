@@ -1286,4 +1286,58 @@ namespace litl::vulkan
 
         return litlFlag;
     }
+
+    // -------------------------------------------------------------------------------------
+    // DynamicStateFlag <-> VkDynamicState
+    // -------------------------------------------------------------------------------------
+
+    [[nodiscard]] VkDynamicState toVkDynamicState(DynamicState state) noexcept
+    {
+        switch (state)
+        {
+        case DynamicState::LineWidth:
+            return VkDynamicState::VK_DYNAMIC_STATE_LINE_WIDTH;
+
+        case DynamicState::DepthBias:
+            return VkDynamicState::VK_DYNAMIC_STATE_DEPTH_BIAS;
+
+        case DynamicState::BlendConstants:
+            return VkDynamicState::VK_DYNAMIC_STATE_BLEND_CONSTANTS;
+
+        case DynamicState::StencilRef:
+            return VkDynamicState::VK_DYNAMIC_STATE_STENCIL_REFERENCE;
+
+        case DynamicState::CullMode:
+            return VkDynamicState::VK_DYNAMIC_STATE_CULL_MODE;
+
+        default:
+            logError("Unsupported DynamicState of '", static_cast<uint32_t>(state), "' defaulting to 0");
+            return static_cast<VkDynamicState>(0);
+        }
+    }
+
+    [[nodiscard]] DynamicState fromVkDynamicState(VkDynamicState state) noexcept
+    {
+        switch (state)
+        {
+        case VkDynamicState::VK_DYNAMIC_STATE_LINE_WIDTH:
+            return DynamicState::LineWidth;
+
+        case VkDynamicState::VK_DYNAMIC_STATE_DEPTH_BIAS:
+            return DynamicState::DepthBias;
+
+        case VkDynamicState::VK_DYNAMIC_STATE_BLEND_CONSTANTS:
+            return DynamicState::BlendConstants;
+
+        case VkDynamicState::VK_DYNAMIC_STATE_STENCIL_REFERENCE:
+            return DynamicState::StencilRef;
+
+        case VkDynamicState::VK_DYNAMIC_STATE_CULL_MODE:
+            return DynamicState::CullMode;
+
+        default:
+            logError("Unsupported VkDynamicState of '", static_cast<uint32_t>(state), "' defaulting to DynamicState::None");
+            return DynamicState::None;
+        }
+    }
 }
