@@ -37,7 +37,7 @@ namespace litl
         /// <summary>
         /// Format of the color attachments used in the pipeline.
         /// </summary>
-        std::array<ImageFormat, MaxColorAttachments> colorAttachments;
+        std::array<DataFormat, MaxColorAttachments> colorAttachments;
 
         /// <summary>
         /// Number of entries in colorAttachments.
@@ -328,6 +328,50 @@ namespace litl
         StencilState stencilState{};
     };
 
+    struct ColorBlendAttachmentState
+    {
+        /// <summary>
+        /// Controls whether blending is enabled for the corresponding color attachment. 
+        /// If blending is not enabled, the source fragment’s color for that attachment is passed through unmodified.
+        /// </summary>
+        bool attachmentBlendEnabled = false;
+
+        /// <summary>
+        /// Selects which blend factor is used to determine the destination factors (Sr,Sg,Sb).
+        /// </summary>
+        BlendFactor srcColorBlendFactor = BlendFactor::Zero;
+
+        /// <summary>
+        /// Selects which blend factor is used to determine the destination factors (Dr,Dg,Db).
+        /// </summary>
+        BlendFactor dstColorBlendFactor = BlendFactor::Zero;
+
+        /// <summary>
+        /// Selects which blend operation is used to calculate the RGB values to write to the color attachment.
+        /// </summary>
+        BlendOperationType colorBlendOp = BlendOperationType::Add;
+
+        /// <summary>
+        /// Selects which blend factor is used to determine the source factor Sa.
+        /// </summary>
+        BlendFactor srcAlphaBlendFactor = BlendFactor::Zero;
+
+        /// <summary>
+        /// Selects which blend factor is used to determine the destination factor Da.
+        /// </summary>
+        BlendFactor dstAlphaBlendFactor = BlendFactor::Zero;
+
+        /// <summary>
+        /// Selects which blend operation is used to calculate the alpha values to write to the color attachment.
+        /// </summary>
+        BlendOperationType alphaBlendOp = BlendOperationType::Add;
+
+        /// <summary>
+        /// A bitmask specifying which of R, G, B, and/or A components are enabled for writing.
+        /// </summary>
+        ColorComponentFlag colorWriteMask = static_cast<ColorComponentFlag>(ColorComponentFlagBits::RGBA);
+    };
+
     struct ColorBlendState
     {
         /// <summary>
@@ -340,9 +384,12 @@ namespace litl
         /// </summary>
         LogicOperationType logicOp = LogicOperationType::Clear;
 
-        // todo attachmentCount
-        // todo pAttachments
-        // todo blendConstants
+        /// <summary>
+        /// Configures per-target color and alpha blending behavior for an individual framebuffer color attachments.
+        /// </summary>
+        std::vector<ColorBlendAttachmentState> colorAttachmentBlendState;
+
+
     };
 
     // continue from: https://docs.vulkan.org/refpages/latest/refpages/source/VkGraphicsPipelineCreateInfo.html

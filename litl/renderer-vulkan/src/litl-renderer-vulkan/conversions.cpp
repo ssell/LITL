@@ -80,10 +80,9 @@ namespace litl::vulkan
         case ShaderResourceType::AccelerationStructure:
             return VkDescriptorType::VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
 
-        case ShaderResourceType::Unknown:
         default:
-            logError("Unknown/unhandled shader resource type of ", static_cast<uint32_t>(type), " provided to toVkDescriptorType");
-            return static_cast<VkDescriptorType>(0);
+            logError("Unsupported ShaderResourceType '", static_cast<uint32_t>(type), "' defaulting to VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLER");
+            return VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLER;  // = 0
         }
     }
 
@@ -116,6 +115,7 @@ namespace litl::vulkan
             return ShaderResourceType::AccelerationStructure;
 
         default:
+            logError("Unsupported VkDescriptorType '", type, "' defaulting to ShaderResourceType::Unknown");
             return ShaderResourceType::Unknown;
         }
     }
@@ -203,6 +203,7 @@ namespace litl::vulkan
             // Fall-through
         case DataFormat::Undefined:
         default:
+            logError("Unsupported ShaderResourceType '", static_cast<uint32_t>(format), "' defaulting to VkFormat::VK_FORMAT_UNDEFINED");
             return VkFormat::VK_FORMAT_UNDEFINED;
         }
     }
@@ -285,6 +286,7 @@ namespace litl::vulkan
 
         case VkFormat::VK_FORMAT_UNDEFINED:
         default:
+            logError("Unsupported VkFormat '", format, "' defaulting to DataFormat::Undefined");
             return DataFormat::Undefined;
         }
     }
@@ -326,6 +328,7 @@ namespace litl::vulkan
 
         case ImageLayoutType::Undefined:
         default:
+            logError("Unsupported ImageLayoutType '", static_cast<uint32_t>(layout), "' defaulting to VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED");
             return VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
         }
     }
@@ -363,6 +366,7 @@ namespace litl::vulkan
 
         case VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED:
         default:
+            logError("Unsupported VkImageLayout '", layout, "' defaulting to ImageLayoutType::Undefined");
             return ImageLayoutType::Undefined;
         }
     }
@@ -503,6 +507,9 @@ namespace litl::vulkan
     {
         switch (op)
         {
+        case LoadOperationType::None:
+            return VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_NONE;
+
         case LoadOperationType::Load:
             return VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_LOAD;
 
@@ -512,8 +519,8 @@ namespace litl::vulkan
         case LoadOperationType::DontCare:
             return VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 
-        case LoadOperationType::None:
         default:
+            logError("Unsupported LoadOperationType '", static_cast<uint32_t>(op), "' defaulting to  VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_NONE");
             return VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_NONE;
         }
     }
@@ -522,6 +529,9 @@ namespace litl::vulkan
     {
         switch (op)
         {
+        case VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_NONE:
+            return LoadOperationType::None;
+
         case VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_LOAD:
             return LoadOperationType::Load;
 
@@ -531,8 +541,8 @@ namespace litl::vulkan
         case VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE:
             return LoadOperationType::DontCare;
 
-        case VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_NONE:
         default:
+            logError("Unsupported VkAttachmentLoadOp '", op, "' defaulting to LoadOperationType::None");
             return LoadOperationType::None;
         }
     }
@@ -545,14 +555,17 @@ namespace litl::vulkan
     {
         switch (op)
         {
+        case StoreOperationType::None:
+            return VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_NONE;
+
         case StoreOperationType::Store:
             return VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
 
         case StoreOperationType::DontCare:
             return VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE;
 
-        case StoreOperationType::None:
         default:
+            logError("Unsupported StoreOperationType '", static_cast<uint32_t>(op), "' defaulting to  VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_NONE");
             return VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_NONE;
         }
     }
@@ -561,14 +574,17 @@ namespace litl::vulkan
     {
         switch (op)
         {
+        case VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_NONE:
+            return StoreOperationType::None;
+
         case VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE:
             return StoreOperationType::Store;
 
         case VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE:
             return StoreOperationType::DontCare;
 
-        case VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_NONE:
         default:
+            logError("Unsupported VkAttachmentStoreOp '", op, "' defaulting to StoreOperationType::None");
             return StoreOperationType::None;
         }
     }
@@ -600,7 +616,7 @@ namespace litl::vulkan
             return VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
 
         default:
-            logError("Unknown/unhandled primitive topology type of ", static_cast<uint32_t>(topology), " provided to toVkPrimitiveTopology");
+            logError("Unsupported PrimitiveTopology ", static_cast<uint32_t>(topology), " provided to toVkPrimitiveTopology");
             return static_cast<VkPrimitiveTopology>(0);
         }
     }
@@ -628,7 +644,7 @@ namespace litl::vulkan
             return PrimitiveTopology::TriangleFan;
 
         default:
-            logError("Unknown/unhandled primitive topology type of ", static_cast<uint32_t>(topology), " provided to fromVkPrimitiveTopology");
+            logError("Unsupported VkPrimitiveTopology ", static_cast<uint32_t>(topology), " provided to fromVkPrimitiveTopology");
             return static_cast<PrimitiveTopology>(0);
         }
     }
@@ -651,7 +667,7 @@ namespace litl::vulkan
             return VkPolygonMode::VK_POLYGON_MODE_POINT;
 
         default:
-            logError("Unknown/unhandled polygon mode of ", static_cast<uint32_t>(mode), " provided to toVkPolygonMode");
+            logError("Unsupported PolygonMode ", static_cast<uint32_t>(mode), " provided to toVkPolygonMode");
             return static_cast<VkPolygonMode>(0);
         }
     }
@@ -670,7 +686,7 @@ namespace litl::vulkan
             return PolygonMode::Point;
 
         default:
-            logError("Unknown/unhandled polygon mode of ", static_cast<uint32_t>(mode), " provided to fromVkPolygonMode");
+            logError("Unsupported VkPolygonMode ", static_cast<uint32_t>(mode), " provided to fromVkPolygonMode");
             return static_cast<PolygonMode>(0);
         }
     }
@@ -696,7 +712,7 @@ namespace litl::vulkan
             return VK_CULL_MODE_FRONT_AND_BACK;
 
         default:
-            logError("Unknown/unhandled cull mode of ", static_cast<uint32_t>(mode), " provided to toVkCullModeFlag");
+            logError("Unsupported CullMode ", static_cast<uint32_t>(mode), " provided to toVkCullModeFlag");
             return static_cast<VkCullModeFlags>(0);
         }
     }
@@ -718,7 +734,7 @@ namespace litl::vulkan
             return CullMode::Both;
 
         default:
-            logError("Unknown/unhandled cull mode of ", static_cast<uint32_t>(mode), " provided to fromVkCullModeFlag");
+            logError("Unsupported VkCullModeFlags ", static_cast<uint32_t>(mode), " provided to fromVkCullModeFlag");
             return static_cast<CullMode>(0);
         }
     }
@@ -759,6 +775,9 @@ namespace litl::vulkan
     {
         switch (count)
         {
+        case MultisampleCount::Count1:
+            return VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+
         case MultisampleCount::Count2:
             return VkSampleCountFlagBits::VK_SAMPLE_COUNT_2_BIT;
 
@@ -777,8 +796,8 @@ namespace litl::vulkan
         case MultisampleCount::Count64:
             return VkSampleCountFlagBits::VK_SAMPLE_COUNT_64_BIT;
 
-        case MultisampleCount::Count1:
         default:
+            logError("Unsupported MultisampleCount '", static_cast<uint32_t>(count), "' defaulting to VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT");
             return VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
         }
     }
@@ -787,6 +806,9 @@ namespace litl::vulkan
     {
         switch (count)
         {
+        case VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT:
+            return MultisampleCount::Count1;
+
         case VkSampleCountFlagBits::VK_SAMPLE_COUNT_2_BIT:
             return MultisampleCount::Count2;
 
@@ -805,8 +827,8 @@ namespace litl::vulkan
         case VkSampleCountFlagBits::VK_SAMPLE_COUNT_64_BIT:
             return MultisampleCount::Count64;
 
-        case VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT:
         default:
+            logError("Unsupported VkSampleCountFlags '", count, "' defaulting to MultisampleCount::Count1");
             return MultisampleCount::Count1;
         }
     }
@@ -819,6 +841,9 @@ namespace litl::vulkan
     {
         switch (op)
         {
+        case CompareOperationType::Greater:
+            return VkCompareOp::VK_COMPARE_OP_GREATER;
+
         case CompareOperationType::Never:
             return VkCompareOp::VK_COMPARE_OP_NEVER;
 
@@ -837,16 +862,19 @@ namespace litl::vulkan
         case CompareOperationType::Always:
             return VkCompareOp::VK_COMPARE_OP_ALWAYS;
 
-        case CompareOperationType::Greater:
         default:
+            logError("Unsupported CompareOperationType '", static_cast<uint32_t>(op), "' defaulting to VkCompareOp::VK_COMPARE_OP_GREATER");
             return VkCompareOp::VK_COMPARE_OP_GREATER;
         }
     }
 
-    [[nodiscard]] CompareOperationType fromVkCompareOp(CompareOperationType op) noexcept
+    [[nodiscard]] CompareOperationType fromVkCompareOp(VkCompareOp op) noexcept
     {
         switch (op)
         {
+        case VkCompareOp::VK_COMPARE_OP_GREATER:
+            return CompareOperationType::Greater;
+
         case VkCompareOp::VK_COMPARE_OP_NEVER:
             return CompareOperationType::Never;
 
@@ -865,8 +893,8 @@ namespace litl::vulkan
         case VkCompareOp::VK_COMPARE_OP_ALWAYS:
             return CompareOperationType::Always;
 
-        case VkCompareOp::VK_COMPARE_OP_GREATER:
         default:
+            logError("Unsupported VkCompareOp '", op, "' defaulting to CompareOperationType::Greater");
             return CompareOperationType::Greater;
         }
     }
@@ -879,6 +907,9 @@ namespace litl::vulkan
     {
         switch (op)
         {
+        case StencilOperationType::Keep:
+            return VkStencilOp::VK_STENCIL_OP_KEEP;
+
         case StencilOperationType::Zero:
             return VkStencilOp::VK_STENCIL_OP_ZERO;
 
@@ -900,8 +931,8 @@ namespace litl::vulkan
         case StencilOperationType::DecrementAndWrap:
             return VkStencilOp::VK_STENCIL_OP_DECREMENT_AND_WRAP;
 
-        case StencilOperationType::Keep:
         default:
+            logError("Unsupported StencilOperationType '", static_cast<uint32_t>(op), "' defaulting to VkStencilOp::VK_STENCIL_OP_KEEP");
             return VkStencilOp::VK_STENCIL_OP_KEEP;
         }
     }
@@ -910,6 +941,9 @@ namespace litl::vulkan
     {
         switch (op)
         {
+        case VkStencilOp::VK_STENCIL_OP_KEEP:
+            return StencilOperationType::Keep;
+
         case VkStencilOp::VK_STENCIL_OP_ZERO:
             return StencilOperationType::Zero;
 
@@ -931,8 +965,8 @@ namespace litl::vulkan
         case VkStencilOp::VK_STENCIL_OP_DECREMENT_AND_WRAP:
             return StencilOperationType::DecrementAndWrap;
 
-        case VkStencilOp::VK_STENCIL_OP_KEEP:
         default:
+            logError("Unsupported VkStencilOp '", op, "' defaulting to StencilOperationType::Keep");
             return StencilOperationType::Keep;
         }
     }
@@ -945,6 +979,8 @@ namespace litl::vulkan
     {
         switch (op)
         {
+        case LogicOperationType::Clear:
+            return VkLogicOp::VK_LOGIC_OP_CLEAR;
 
         case LogicOperationType::And:
             return VkLogicOp::VK_LOGIC_OP_AND;
@@ -991,8 +1027,8 @@ namespace litl::vulkan
         case LogicOperationType::Set:
             return VkLogicOp::VK_LOGIC_OP_SET;
 
-        case LogicOperationType::Clear:
         default:
+            logError("Unsupported LogicOperationType '", static_cast<uint32_t>(op), "' defaulting to VkLogicOp::VK_LOGIC_OP_CLEAR");
             return VkLogicOp::VK_LOGIC_OP_CLEAR;
         }
     }
@@ -1001,6 +1037,9 @@ namespace litl::vulkan
     {
         switch (op)
         {
+        case VkLogicOp::VK_LOGIC_OP_CLEAR:
+            return LogicOperationType::Clear;
+
         case VkLogicOp::VK_LOGIC_OP_AND:
             return LogicOperationType::And;
 
@@ -1046,9 +1085,205 @@ namespace litl::vulkan
         case VkLogicOp::VK_LOGIC_OP_SET:
             return LogicOperationType::Set;
 
-        case VkLogicOp::VK_LOGIC_OP_CLEAR:
         default:
+            logError("Unsupported VkLogicOp '", op, "' defaulting to LogicOperationType::Clear");
             return LogicOperationType::Clear;
         }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // BlendOperationType <-> VkBlendOp
+    // -------------------------------------------------------------------------------------
+
+    [[nodiscard]] VkBlendOp toVkBlendOp(BlendOperationType op) noexcept
+    {
+        switch (op)
+        {
+        case BlendOperationType::Add:
+            return VkBlendOp::VK_BLEND_OP_ADD;
+
+        case BlendOperationType::Subtract:
+            return VkBlendOp::VK_BLEND_OP_SUBTRACT;
+
+        case BlendOperationType::ReverseSubtract:
+            return VkBlendOp::VK_BLEND_OP_REVERSE_SUBTRACT;
+
+        case BlendOperationType::Min:
+            return VkBlendOp::VK_BLEND_OP_MIN;
+
+        case BlendOperationType::Max:
+            return VkBlendOp::VK_BLEND_OP_MAX;
+
+        default:
+            logError("Unsupported BlendOperationType '", static_cast<uint32_t>(op), "' defaulting to VK_BLEND_OP_ADD");
+            return VkBlendOp::VK_BLEND_OP_ADD;
+        }
+    }
+
+    [[nodiscard]] BlendOperationType fromVkBlendOp(VkBlendOp op) noexcept
+    {
+        switch (op)
+        {
+        case VkBlendOp::VK_BLEND_OP_ADD:
+            return BlendOperationType::Add;
+
+        case VkBlendOp::VK_BLEND_OP_SUBTRACT:
+            return BlendOperationType::Subtract;
+
+        case VkBlendOp::VK_BLEND_OP_REVERSE_SUBTRACT:
+            return BlendOperationType::ReverseSubtract;
+
+        case VkBlendOp::VK_BLEND_OP_MIN:
+            return BlendOperationType::Min;
+
+        case VkBlendOp::VK_BLEND_OP_MAX:
+            return BlendOperationType::Max;
+
+        default:
+            logError("Unsupported VkBlendOp '", op, "' defaulting to BlendOperationType::Add");
+            return BlendOperationType::Add;
+        }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // BlendFactor <-> VkBlendFactor
+    // -------------------------------------------------------------------------------------
+
+    [[nodiscard]] VkBlendFactor toVkBlendFactor(BlendFactor factor) noexcept
+    {
+        switch (factor)
+        {
+        case BlendFactor::Zero:
+            return VkBlendFactor::VK_BLEND_FACTOR_ZERO;
+
+        case BlendFactor::One:
+            return VkBlendFactor::VK_BLEND_FACTOR_ONE;
+
+        case BlendFactor::SrcColor:
+            return VkBlendFactor::VK_BLEND_FACTOR_SRC_COLOR;
+
+        case BlendFactor::OneMinusSrcColor:
+            return VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
+
+        case BlendFactor::DstColor:
+            return VkBlendFactor::VK_BLEND_FACTOR_DST_COLOR;
+
+        case BlendFactor::OneMinusDstColor:
+            return VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
+
+        case BlendFactor::SrcAlpha:
+            return VkBlendFactor::VK_BLEND_FACTOR_SRC_ALPHA;
+
+        case BlendFactor::OneMinusSrcAlpha:
+            return VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+
+        case BlendFactor::DstAlpha:
+            return VkBlendFactor::VK_BLEND_FACTOR_DST_ALPHA;
+
+        case BlendFactor::OneMinusDstAlpha:
+            return VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
+
+        case BlendFactor::ConstantColor:
+            return VkBlendFactor::VK_BLEND_FACTOR_CONSTANT_COLOR;
+
+        case BlendFactor::OneMinusConstantColor:
+            return VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR;
+
+        case BlendFactor::ConstantAlpha:
+            return VkBlendFactor::VK_BLEND_FACTOR_CONSTANT_ALPHA;
+
+        case BlendFactor::OneMinusConstantAlpha:
+            return VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA;
+
+        case BlendFactor::SrcAlphaSaturate:
+            return VkBlendFactor::VK_BLEND_FACTOR_SRC_ALPHA_SATURATE;
+
+        default:
+            logError("Unsupported BlendFactor '", static_cast<uint32_t>(factor), "' defaulting to VK_BLEND_FACTOR_ZERO");
+            return VkBlendFactor::VK_BLEND_FACTOR_ZERO;
+        }
+    }
+
+    [[nodiscard]] BlendFactor fromVkBlendFactor(VkBlendFactor factor) noexcept
+    {
+        switch (factor)
+        {
+        case VkBlendFactor::VK_BLEND_FACTOR_ZERO:
+            return BlendFactor::Zero;
+
+        case VkBlendFactor::VK_BLEND_FACTOR_ONE:
+            return BlendFactor::One;
+
+        case VkBlendFactor::VK_BLEND_FACTOR_SRC_COLOR:
+            return BlendFactor::SrcColor;
+
+        case VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR:
+            return BlendFactor::OneMinusSrcColor;
+
+        case VkBlendFactor::VK_BLEND_FACTOR_DST_COLOR:
+            return BlendFactor::DstColor;
+
+        case VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR:
+            return BlendFactor::OneMinusDstColor;
+
+        case VkBlendFactor::VK_BLEND_FACTOR_SRC_ALPHA:
+            return BlendFactor::SrcAlpha;
+
+        case VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA:
+            return BlendFactor::OneMinusSrcAlpha;
+
+        case VkBlendFactor::VK_BLEND_FACTOR_DST_ALPHA:
+            return BlendFactor::DstAlpha;
+
+        case VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA:
+            return BlendFactor::OneMinusDstAlpha;
+
+        case VkBlendFactor::VK_BLEND_FACTOR_CONSTANT_COLOR:
+            return BlendFactor::ConstantColor;
+
+        case VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR:
+            return BlendFactor::OneMinusConstantColor;
+
+        case VkBlendFactor::VK_BLEND_FACTOR_CONSTANT_ALPHA:
+            return BlendFactor::ConstantAlpha;
+
+        case VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA:
+            return BlendFactor::OneMinusConstantAlpha;
+
+        case VkBlendFactor::VK_BLEND_FACTOR_SRC_ALPHA_SATURATE:
+            return BlendFactor::SrcAlphaSaturate;
+
+        default:
+            logError("Unsupported VkBlendFactor '", factor, "' defaulting to BlendFactor::Zero");
+            return BlendFactor::Zero;
+        }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // ColorComponentFlag <-> VkColorComponentFlags
+    // -------------------------------------------------------------------------------------
+
+    [[nodiscard]] VkColorComponentFlags toVkColorComponentFlag(ColorComponentFlag flag) noexcept
+    {
+        VkColorComponentFlags vkFlag = 0;
+
+        if ((flag & static_cast<ColorComponentFlag>(ColorComponentFlagBits::R)) != 0) { vkFlag |= VkColorComponentFlagBits::VK_COLOR_COMPONENT_R_BIT; }
+        if ((flag & static_cast<ColorComponentFlag>(ColorComponentFlagBits::G)) != 0) { vkFlag |= VkColorComponentFlagBits::VK_COLOR_COMPONENT_G_BIT; }
+        if ((flag & static_cast<ColorComponentFlag>(ColorComponentFlagBits::B)) != 0) { vkFlag |= VkColorComponentFlagBits::VK_COLOR_COMPONENT_B_BIT; }
+        if ((flag & static_cast<ColorComponentFlag>(ColorComponentFlagBits::A)) != 0) { vkFlag |= VkColorComponentFlagBits::VK_COLOR_COMPONENT_A_BIT; }
+
+        return vkFlag;
+    }
+
+    [[nodiscard]] ColorComponentFlag fromVkColorComponentFlag(VkColorComponentFlags flag) noexcept
+    {
+        ColorComponentFlag litlFlag = 0;
+
+        if ((flag & VkColorComponentFlagBits::VK_COLOR_COMPONENT_R_BIT) != 0) { litlFlag |= static_cast<ColorComponentFlag>(ColorComponentFlagBits::R); }
+        if ((flag & VkColorComponentFlagBits::VK_COLOR_COMPONENT_G_BIT) != 0) { litlFlag |= static_cast<ColorComponentFlag>(ColorComponentFlagBits::G); }
+        if ((flag & VkColorComponentFlagBits::VK_COLOR_COMPONENT_B_BIT) != 0) { litlFlag |= static_cast<ColorComponentFlag>(ColorComponentFlagBits::B); }
+        if ((flag & VkColorComponentFlagBits::VK_COLOR_COMPONENT_A_BIT) != 0) { litlFlag |= static_cast<ColorComponentFlag>(ColorComponentFlagBits::A); }
+
+        return litlFlag;
     }
 }

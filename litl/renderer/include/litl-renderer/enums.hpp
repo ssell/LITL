@@ -86,6 +86,22 @@ namespace litl
     /// </summary>
     using PipelineStageFlag = uint64_t;
 
+    enum class ColorComponentFlagBits : uint32_t
+    {
+        None = 0b0000,
+        R    = 0b0001,
+        G    = 0b0010,
+        B    = 0b0100,
+        A    = 0b1000,
+        RGB  = 0b0111,
+        RGBA = 0b1111
+    };
+
+    /// <summary>
+    /// Composed of ColorComponentFlagBits
+    /// </summary>
+    using ColorComponentFlag = uint32_t;
+
     /// <summary>
     /// Based on: https://docs.vulkan.org/refpages/latest/refpages/source/VkAttachmentLoadOp.html
     /// </summary>
@@ -177,7 +193,7 @@ namespace litl
         Clockwise = 1
     };
 
-    enum MultisampleCount : uint32_t
+    enum class MultisampleCount : uint32_t
     {
 
         Count1 = 0,             // No multisampling
@@ -189,7 +205,7 @@ namespace litl
         Count64
     };
 
-    enum CompareOperationType
+    enum class CompareOperationType
     {
         Never = 0,              // Comparison always evaluates false.
         Less,                   // Comparison evaluates reference < test.
@@ -201,7 +217,7 @@ namespace litl
         Always                  // Comparison always evaluates true.
     };
 
-    enum StencilOperationType
+    enum class StencilOperationType
     {
         Keep = 0,               // Keeps the current value.
         Zero,                   // Sets the value to 0.
@@ -213,7 +229,7 @@ namespace litl
         DecrementAndWrap        // Decrements the current value and wraps to the maximum possible value when the value would go below 0.
     };
 
-    enum LogicOperationType
+    enum class LogicOperationType
     {
         Clear = 0,
         And,
@@ -231,6 +247,36 @@ namespace litl
         OrInverted,
         Nand,
         Set
+    };
+
+    enum class BlendOperationType
+    {
+        Add = 0,
+        Subtract,
+        ReverseSubtract,
+        Min,
+        Max
+
+        // further blend ops available via VK_EXT_blend_operation_advanced
+    };
+
+    enum class BlendFactor
+    {
+        Zero = 0,
+        One,
+        SrcColor,
+        OneMinusSrcColor,
+        DstColor,
+        OneMinusDstColor,
+        SrcAlpha,
+        OneMinusSrcAlpha,
+        DstAlpha,
+        OneMinusDstAlpha,
+        ConstantColor,
+        OneMinusConstantColor,
+        ConstantAlpha,
+        OneMinusConstantAlpha,
+        SrcAlphaSaturate
     };
 }
 
