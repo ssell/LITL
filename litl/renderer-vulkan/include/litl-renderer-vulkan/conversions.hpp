@@ -48,13 +48,22 @@ namespace litl::vulkan
     [[nodiscard]] MultisampleCount fromVkSampleCountFlag(VkSampleCountFlags count) noexcept;
 
     [[nodiscard]] VkCompareOp toVkCompareOp(CompareOperationType op) noexcept;
-    [[nodiscard]] CompareOperationType fromVkCompareOp(CompareOperationType op) noexcept;
+    [[nodiscard]] CompareOperationType fromVkCompareOp(VkCompareOp op) noexcept;
 
     [[nodiscard]] VkStencilOp toVkStencilOp(StencilOperationType op) noexcept;
     [[nodiscard]] StencilOperationType fromVkStencilOp(VkStencilOp op) noexcept;
 
     [[nodiscard]] VkLogicOp toVkLogicOp(LogicOperationType op) noexcept;
     [[nodiscard]] LogicOperationType fromVkLogicOp(VkLogicOp op) noexcept;
+
+    [[nodiscard]] VkBlendOp toVkBlendOp(BlendOperationType op) noexcept;
+    [[nodiscard]] BlendOperationType fromVkBlendOp(VkBlendOp op) noexcept;
+
+    [[nodiscard]] VkBlendFactor toVkBlendFactor(BlendFactor factor) noexcept;
+    [[nodiscard]] BlendFactor fromVkBlendFactor(VkBlendFactor factor) noexcept;
+
+    [[nodiscard]] VkColorComponentFlags toVkColorComponentFlag(ColorComponentFlag flag) noexcept;
+    [[nodiscard]] ColorComponentFlag fromVkColorComponentFlag(VkColorComponentFlags flag) noexcept;
 }
 
 #endif
