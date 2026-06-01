@@ -290,6 +290,15 @@ namespace litl
 
         // More available, see: https://docs.vulkan.org/refpages/latest/refpages/source/VkDynamicState.html
     };
+
+    /// <summary>
+    /// Is the vertex binding stepped at a per-vertex or per-instance rate?
+    /// </summary>
+    enum class VertexInputRate
+    {
+        PerVertex = 0,
+        PerInstance = 1
+    };
 }
 
 #endif

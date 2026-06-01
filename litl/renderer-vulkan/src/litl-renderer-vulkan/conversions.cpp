@@ -1340,4 +1340,40 @@ namespace litl::vulkan
             return DynamicState::None;
         }
     }
+
+    // -------------------------------------------------------------------------------------
+    // DynamicStateFlag <-> VkDynamicState
+    // -------------------------------------------------------------------------------------
+
+    [[nodiscard]] VkVertexInputRate toVkVertexInputRate(VertexInputRate rate) noexcept
+    {
+        switch (rate)
+        {
+        case VertexInputRate::PerVertex:
+            return VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX;
+
+        case VertexInputRate::PerInstance:
+            return VkVertexInputRate::VK_VERTEX_INPUT_RATE_INSTANCE;
+
+        default:
+            logError("Unsupported VertexInputRate of '", static_cast<uint32_t>(rate), "' defaulting to 0");
+            return static_cast<VkVertexInputRate>(0);
+        }
+    }
+
+    [[nodiscard]] VertexInputRate fromVkVertexInputRate(VkVertexInputRate rate) noexcept
+    {
+        switch (rate)
+        {
+        case VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX:
+            return VertexInputRate::PerVertex;
+
+        case VkVertexInputRate::VK_VERTEX_INPUT_RATE_INSTANCE:
+            return VertexInputRate::PerInstance;
+
+        default:
+            logError("Unsupported VkVertexInputRate of '", static_cast<uint32_t>(rate), "' defaulting to 0");
+            return static_cast<VertexInputRate>(0);
+        }
+    }
 }
