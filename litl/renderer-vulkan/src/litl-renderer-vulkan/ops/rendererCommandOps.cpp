@@ -89,6 +89,7 @@ namespace litl::vulkan
             colorAttachment.imageView = vulkanContext->swapChain.vkSwapChainImageViews[vulkanContext->swapChain.swapChainImageIndex];
             colorAttachment.loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
             colorAttachment.storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
+            vulkanContext->drawInfo.targetTextureSize = vulkanContext->swapChain.vkSwapChainExtent;
         }
         else
         {
@@ -102,6 +103,7 @@ namespace litl::vulkan
 
             colorAttachment.loadOp = toVkAttachmentLoadOp(command.color.loadOp);
             colorAttachment.storeOp = toVkAttachmentStoreOp(command.color.storeOp);
+            vulkanContext->drawInfo.targetTextureSize = colorTexture->extent;
         }
 
         // ---------------------------------------------------------------------------------
@@ -143,7 +145,7 @@ namespace litl::vulkan
         // ---------------------------------------------------------------------------------
         // Begin Render
         // ---------------------------------------------------------------------------------
-
+        
         VkRenderingInfo renderingInfo{
             .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
             .flags = 0,
@@ -153,8 +155,8 @@ namespace litl::vulkan
                     .y = static_cast<int32_t>(command.area.offset.y()) 
                 },
                 .extent = { 
-                    .width  = static_cast<uint32_t>(command.area.extents.x()),
-                    .height = static_cast<uint32_t>(command.area.extents.y())
+                    .width  = static_cast<uint32_t>(vulkanContext->drawInfo.targetTextureSize.width * command.area.extents.x()),
+                    .height = static_cast<uint32_t>(vulkanContext->drawInfo.targetTextureSize.height * command.area.extents.y())
                 }
             },
             .layerCount = command.layerCount,
@@ -289,5 +291,77 @@ namespace litl::vulkan
             &clearColor, 
             1, 
             &range);
+    }
+
+    void cmdSetViewportAndScissor(litl::RendererContext* context, CommandBufferHandle handle, SetViewportAndScissorCommand const& command) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+        auto* commandBuffer = unwrapCommandBuffer(context, handle);
+
+        if (!isValid(commandBuffer))
+        {
+            return;
+        }
+
+        if (command.setViewport.has_value())
+        {
+            // Note: incoming viewport regions are normalized so that the command caller does not need to track texture dimensions.
+            const VkViewport viewport{
+                .x = command.setViewport->region.offset.x(),
+                .y = command.setViewport->region.offset.y(),
+                .width = vulkanContext->drawInfo.targetTextureSize.width * command.setViewport->region.extents.x(),
+                .height = vulkanContext->drawInfo.targetTextureSize.height * command.setViewport->region.extents.y(),
+                .minDepth = command.setViewport->minDepth,
+                .maxDepth = command.setViewport->maxDepth
+            };
+
+            vkCmdSetViewport(commandBuffer->vkCommandBuffer, 0, 1, &viewport);
+        }
+
+        if (command.setScissor.has_value())
+        {
+            // Note: incoming scissor regions are normalized so that the command caller does not need to track texture dimensions.
+            const VkRect2D scissorRegion{
+                .offset = VkOffset2D {
+                    .x = static_cast<int32_t>(command.setScissor->region.offset.x()),
+                    .y = static_cast<int32_t>(command.setScissor->region.offset.y())
+                },
+                .extent = VkExtent2D {
+                    .width = static_cast<uint32_t>(vulkanContext->drawInfo.targetTextureSize.width * command.setScissor->region.extents.x()),
+                    .height = static_cast<uint32_t>(vulkanContext->drawInfo.targetTextureSize.height * command.setScissor->region.extents.y())
+                }
+            };
+
+            vkCmdSetScissor(commandBuffer->vkCommandBuffer, 0, 1, &scissorRegion);
+        }
+    }
+
+    void cmdBindGraphicsPipeline(litl::RendererContext* context, CommandBufferHandle handle, GraphicsPipelineHandle graphicsPipelineHandle) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+        auto* commandBuffer = unwrapCommandBuffer(context, handle);
+
+        if (!isValid(commandBuffer))
+        {
+            return;
+        }
+
+        auto* graphicsPipeline = vulkanContext->resources.getGraphicsPipeline(graphicsPipelineHandle);
+        VkPipeline pipeline = (graphicsPipeline != nullptr) ? graphicsPipeline->vkPipeline : VK_NULL_HANDLE;
+
+        vkCmdBindPipeline(commandBuffer->vkCommandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+    }
+
+    void cmdDraw(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+        auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
+
+        if (!isValid(commandBuffer))
+        {
+            return;
+        }
+
+        vkCmdDraw(commandBuffer->vkCommandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
     }
 }

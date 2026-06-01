@@ -47,6 +47,9 @@ namespace litl
         void (*cmdEndRender)(RendererContext*, CommandBufferHandle);
         void (*cmdPipelineBarrier)(RendererContext*, CommandBufferHandle, PipelineBarrierCommand const&);
         void (*cmdClearImage)(RendererContext*, CommandBufferHandle, ClearImageCommand const&);
+        void (*cmdSetViewportAndScissor)(RendererContext*, CommandBufferHandle, SetViewportAndScissorCommand const&);
+        void (*cmdBindGraphicsPipeline)(RendererContext*, CommandBufferHandle, GraphicsPipelineHandle);
+        void (*cmdDraw)(RendererContext*, CommandBufferHandle, uint32_t, uint32_t, uint32_t, uint32_t);
 
         // drawing
         bool (*beginRender)(RendererContext*);
@@ -249,6 +252,39 @@ namespace litl
         void cmdClearImage(CommandBufferHandle handle, ClearImageCommand const& command) const noexcept
         {
             m_pOps->cmdClearImage(m_pContext, handle, command);
+        }
+
+        /// <summary>
+        /// Dynamically sets the viewport and scissor regions being rendered into.
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <param name="command"></param>
+        void cmdSetViewportAndScissor(CommandBufferHandle handle, SetViewportAndScissorCommand const& command) const noexcept
+        {
+            m_pOps->cmdSetViewportAndScissor(m_pContext, handle, command);
+        }
+
+        /// <summary>
+        /// Binds the specified graphics pipeline.
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <param name="graphicsPipelineHandle"></param>
+        void cmdBindGraphicsPipeline(CommandBufferHandle handle, GraphicsPipelineHandle graphicsPipelineHandle) const noexcept
+        {
+            m_pOps->cmdBindGraphicsPipeline(m_pContext, handle, graphicsPipelineHandle);
+        }
+
+        /// <summary>
+        /// Issues a command to draw primitives.
+        /// </summary>
+        /// <param name="commandBuffer"></param>
+        /// <param name="vertexCount"></param>
+        /// <param name="instanceCount"></param>
+        /// <param name="firstVertex"></param>
+        /// <param name="firstInstance"></param>
+        void cmdDraw(CommandBufferHandle commandBuffer, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) const noexcept
+        {
+            m_pOps->cmdDraw(m_pContext, commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
         }
 
         // ---------------------------------------------------------------------------------

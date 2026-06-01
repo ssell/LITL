@@ -13,6 +13,8 @@ bool createWindow(Window** window) noexcept;
 bool createRenderer(Renderer** renderer, Window* window) noexcept;
 color getClearColor(float elapsedSeconds) noexcept;
 std::optional<GraphicsPipelineHandle> createTriangleGraphicsPipeline(Renderer* renderer) noexcept;
+void beginRender(Renderer* renderer, CommandBufferHandle commandBuffer, color clearColor) noexcept;
+void endRender(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
 
 int main()
 {
@@ -26,24 +28,23 @@ int main()
         const auto start = std::chrono::steady_clock::now();
         const auto graphicsPipelineHandle = createTriangleGraphicsPipeline(renderer);
 
-        while (!window->shouldClose())
+        if (graphicsPipelineHandle.has_value())
         {
-            const auto elapsedSeconds = std::chrono::duration<float>(std::chrono::steady_clock::now() - start).count();
-
-            if (renderer->beginRender())
+            while (!window->shouldClose())
             {
-                auto commandBuffer = renderer->cmdBeginFrame();
-                renderer->cmdPipelineBarrier(commandBuffer, PipelineBarrierUndefinedToColor);
-                renderer->cmdBeginRender(commandBuffer, { .color = { .clearColor = getClearColor(elapsedSeconds) }});
+                const auto elapsedSeconds = std::chrono::duration<float>(std::chrono::steady_clock::now() - start).count();
 
-                // ... add other render commands ...
+                if (renderer->beginRender())
+                {
+                    auto commandBuffer = renderer->cmdBeginFrame();
 
-                renderer->cmdEndRender(commandBuffer);
-                renderer->cmdPipelineBarrier(commandBuffer, PipelineBarrierColorToPresent);
-                renderer->cmdEnd(commandBuffer);
+                    beginRender(renderer, commandBuffer, getClearColor(elapsedSeconds));
 
-                renderer->submitCommands(commandBuffer);
-                renderer->endRender();
+                    renderer->cmdBindGraphicsPipeline(commandBuffer, graphicsPipelineHandle.value());
+                    renderer->cmdDraw(commandBuffer, 3, 1, 0, 0);
+
+                    endRender(renderer, commandBuffer);
+                }
             }
         }
     }
@@ -184,4 +185,48 @@ std::optional<GraphicsPipelineHandle> createTriangleGraphicsPipeline(Renderer* r
     }
 
     return handle;
+}
+
+void beginRender(Renderer* renderer, CommandBufferHandle commandBuffer, color clearColor) noexcept
+{
+    const BeginRenderCommand beginRenderCommand{
+        .color = ColorAttachmentDescriptor {
+            .clearColor = clearColor
+        },
+        .depth = DepthAttachmentDescriptor {
+            .clearDepth = 0.0,
+            .clearStencil = 0
+        }
+    };
+
+    const SetViewportAndScissorCommand setViewportScissorCommand{
+        .setViewport = SetViewportCommand {
+            .region = {
+                .offset = { 0.0f, 0.0f },
+                .extents = { 1.0f, 1.0f }           // normalized
+            },
+            .minDepth = 0.0f,
+            .maxDepth = 1.0f
+        },
+        .setScissor = SetScissorCommand {
+            .region = {
+                .offset = { 0.0f, 0.0f },
+                .extents = { 1.0f, 1.0f }           // normalized
+            }
+        }
+    };
+
+    renderer->cmdPipelineBarrier(commandBuffer, PipelineBarrierUndefinedToColor);
+    renderer->cmdBeginRender(commandBuffer, beginRenderCommand);
+    renderer->cmdSetViewportAndScissor(commandBuffer, setViewportScissorCommand);
+}
+
+void endRender(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept
+{
+    renderer->cmdEndRender(commandBuffer);
+    renderer->cmdPipelineBarrier(commandBuffer, PipelineBarrierColorToPresent);
+    renderer->cmdEnd(commandBuffer);
+
+    renderer->submitCommands(commandBuffer);
+    renderer->endRender();
 }
