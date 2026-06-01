@@ -52,15 +52,6 @@ namespace litl
     };
 
     /// <summary>
-    /// Is the vertex binding stepped at a per-vertex or per-instance rate?
-    /// </summary>
-    enum class VertexInputRate
-    {
-        PerVertex = 0,
-        PerInstance = 1
-    };
-
-    /// <summary>
     /// Defines how the vertex data is structured at the buffer level.
     /// </summary>
     struct VertexBinding
@@ -402,6 +393,11 @@ namespace litl
         std::vector<DynamicState> states;
     };
 
+    struct SpecializationConstants
+    {
+        // ... placeholder, not yet used ...
+    };
+
     struct GraphicsPipelineDescriptor
     {
         GraphicsPipelineShaderDescriptor vertex;
@@ -423,6 +419,7 @@ namespace litl
         DepthStencilState depthStencil;
         ColorBlendState colorBlend;
         DynamicStateMask dynamicState;
+        SpecializationConstants specializationConstants;
     };
 
     struct GraphicsPipelineTag {};

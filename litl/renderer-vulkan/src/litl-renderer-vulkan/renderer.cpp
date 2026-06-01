@@ -78,6 +78,7 @@ namespace litl::vulkan
     bool selectPhysicalDevice(RendererContext& context) noexcept;
     bool createLogicalDevice(RendererContext& context) noexcept;
     bool createMemoryAllocator(RendererContext& context) noexcept;
+    bool createPipelineCache(RendererContext& context) noexcept;
     bool createResourceManager(RendererContext& context) noexcept;
     bool createSwapChain(RendererContext& context, VkSwapchainKHR oldSwapchain) noexcept;
     bool createCommandPool(RendererContext& context) noexcept;
@@ -98,6 +99,7 @@ namespace litl::vulkan
             selectPhysicalDevice(*vulkanContext) &&
             createLogicalDevice(*vulkanContext) &&
             createMemoryAllocator(*vulkanContext) &&
+            createPipelineCache(*vulkanContext) &&
             createResourceManager(*vulkanContext) &&
             createSwapChain(*vulkanContext, VK_NULL_HANDLE) &&
             createCommandPool(*vulkanContext) &&
@@ -677,6 +679,28 @@ namespace litl::vulkan
         return true;
     }
 
+    bool createPipelineCache(RendererContext& context) noexcept
+    {
+        // TODO save/load cache to disk mechanism
+        const VkPipelineCacheCreateInfo cacheInfo{
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .initialDataSize = 0,
+            .pInitialData = nullptr
+        };
+
+        const VkResult result = vkCreatePipelineCache(context.device.vkDevice, &cacheInfo, nullptr, &context.device.vkPipelineCache);
+
+        if (result != VK_SUCCESS)
+        {
+            logError("Failed to create Vulkan Pipeline Cache with result ", result);
+            return false;
+        }
+
+        return true;
+    }
+
     bool createResourceManager(RendererContext& context) noexcept
     {
         context.resources.build(context);
@@ -688,6 +712,7 @@ namespace litl::vulkan
     // -------------------------------------------------------------------------------------
 
     void cleanupResources(RendererContext& context) noexcept;
+    void cleanupPipelineCache(RendererContext& context) noexcept;
     void cleanupFrameSync(RendererContext& context) noexcept;
     void cleanupImageSync(RendererContext& context) noexcept;
     void cleanupSwapChainImages(RendererContext& context) noexcept;
@@ -702,6 +727,7 @@ namespace litl::vulkan
         vkDeviceWaitIdle(vulkanContext->device.vkDevice);
 
         cleanupResources(*vulkanContext);
+        cleanupPipelineCache(*vulkanContext);
         cleanupFrameSync(*vulkanContext);
         cleanupImageSync(*vulkanContext);
         cleanupSwapChainImages(*vulkanContext);
@@ -714,6 +740,15 @@ namespace litl::vulkan
     void cleanupResources(RendererContext& context) noexcept
     {
         context.resources.destroy();
+    }
+
+    void cleanupPipelineCache(RendererContext& context) noexcept
+    {
+        if (context.device.vkPipelineCache != VK_NULL_HANDLE)
+        {
+            vkDestroyPipelineCache(context.device.vkDevice, context.device.vkPipelineCache, nullptr);
+            context.device.vkPipelineCache = VK_NULL_HANDLE;
+        }
     }
 
     void cleanupFrameSync(RendererContext& context) noexcept

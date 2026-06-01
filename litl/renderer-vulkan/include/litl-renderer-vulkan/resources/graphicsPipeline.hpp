@@ -8,7 +8,7 @@ namespace litl::vulkan
 {
     struct GraphicsPipelineResource
     {
-        // ... todo ...
+        VkPipeline vkPipeline = VK_NULL_HANDLE;
     };
 }
 

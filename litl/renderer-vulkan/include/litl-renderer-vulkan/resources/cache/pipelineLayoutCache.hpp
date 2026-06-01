@@ -1,11 +1,11 @@
 #ifndef LITL_RENDERER_VULKAN_PIPELINE_LAYOUT_CACHE_H__
 #define LITL_RENDERER_VULKAN_PIPELINE_LAYOUT_CACHE_H__
 
-#include <vulkan/vulkan.h>
 #include <unordered_map>
 #include <vector>
 
 #include "litl-core/hash.hpp"
+#include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer-vulkan/resources/pipelineLayoutDescriptor.hpp"
 
 namespace litl::vulkan

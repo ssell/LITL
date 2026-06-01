@@ -1,8 +1,7 @@
 #ifndef LITL_VULKAN_RENDERER_CONVERSIONS_H__
 #define LITL_VULKAN_RENDERER_CONVERSIONS_H__
 
-#include <vulkan/vulkan.h>
-
+#include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer/enums.hpp"
 #include "litl-renderer/resources/shaderModule.hpp"
 
@@ -67,6 +66,9 @@ namespace litl::vulkan
 
     [[nodiscard]] VkDynamicState toVkDynamicState(DynamicState state) noexcept;
     [[nodiscard]] DynamicState fromVkDynamicState(VkDynamicState state) noexcept;
+
+    [[nodiscard]] VkVertexInputRate toVkVertexInputRate(VertexInputRate rate) noexcept;
+    [[nodiscard]] VertexInputRate fromVkVertexInputRate(VkVertexInputRate rate) noexcept;
 }
 
 #endif
