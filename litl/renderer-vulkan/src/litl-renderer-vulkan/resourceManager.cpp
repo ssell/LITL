@@ -132,7 +132,7 @@ namespace litl::vulkan
     // GraphicsPipeline
     //--------------------------------------------------------------------------------------
 
-    void createPipelineShaderStageInfo(ShaderModuleResource* resource, GraphicsPipelineShaderDescriptor const& descriptor, std::array<VkPipelineShaderStageCreateInfo, 7>& stages, uint32_t& count) noexcept
+    void createPipelineShaderStageCreateInfo(ShaderModuleResource* resource, GraphicsPipelineShaderDescriptor const& descriptor, std::array<VkPipelineShaderStageCreateInfo, 7>& stages, uint32_t& count, PipelineLayoutDescriptorCreateInfo& pipelineLayoutDescriptorCreateInfo) noexcept
     {
         if (resource == nullptr)
         {
@@ -162,6 +162,12 @@ namespace litl::vulkan
                 .pName = descriptor.entryPoint.c_str(),
                 .pSpecializationInfo = nullptr
         };
+
+        pipelineLayoutDescriptorCreateInfo.stages.push_back(PipelineLayoutDescriptorShaderModuleInfo{
+            .resource = resource,
+            .stage = descriptor.stage,
+            .entryPoint = descriptor.entryPoint
+        });
     }
 
     VkPipelineVertexInputStateCreateInfo createVertexInputStateCreateInfo(VertexInputState const& vertexInput, std::vector<VkVertexInputBindingDescription>& bindingDescriptions, std::vector<VkVertexInputAttributeDescription>& attributeDescriptions)
@@ -209,16 +215,17 @@ namespace litl::vulkan
 
         uint32_t shaderStageCount = 0;
         std::array<VkPipelineShaderStageCreateInfo, 7> shaderStages;
+        PipelineLayoutDescriptorCreateInfo pipelineLayoutDescriptorCreateInfo{};        // used later, but everything we need to make it is retrieved now.
 
-        createPipelineShaderStageInfo(getShaderModule(descriptor.vertex.handle), descriptor.vertex, shaderStages, shaderStageCount);
-        createPipelineShaderStageInfo(getShaderModule(descriptor.fragment.handle), descriptor.fragment, shaderStages, shaderStageCount);
-        createPipelineShaderStageInfo(getShaderModule(descriptor.geometry.handle), descriptor.geometry, shaderStages, shaderStageCount);
-        createPipelineShaderStageInfo(getShaderModule(descriptor.tessellationEvaluation.handle), descriptor.tessellationEvaluation, shaderStages, shaderStageCount);
-        createPipelineShaderStageInfo(getShaderModule(descriptor.tessellationControl.handle), descriptor.tessellationControl, shaderStages, shaderStageCount);
-        createPipelineShaderStageInfo(getShaderModule(descriptor.mesh.handle), descriptor.mesh, shaderStages, shaderStageCount);
+        createPipelineShaderStageCreateInfo(getShaderModule(descriptor.vertex.handle), descriptor.vertex, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
+        createPipelineShaderStageCreateInfo(getShaderModule(descriptor.fragment.handle), descriptor.fragment, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
+        createPipelineShaderStageCreateInfo(getShaderModule(descriptor.geometry.handle), descriptor.geometry, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
+        createPipelineShaderStageCreateInfo(getShaderModule(descriptor.tessellationEvaluation.handle), descriptor.tessellationEvaluation, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
+        createPipelineShaderStageCreateInfo(getShaderModule(descriptor.tessellationControl.handle), descriptor.tessellationControl, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
+        createPipelineShaderStageCreateInfo(getShaderModule(descriptor.mesh.handle), descriptor.mesh, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
 
         // ---------------------------------------------------------------------------------
-        // Input Assembly
+        // Vertex Input
         // ---------------------------------------------------------------------------------
         
         std::vector<VkVertexInputBindingDescription> vertexInputBindingDescriptions;
@@ -226,6 +233,182 @@ namespace litl::vulkan
 
         const VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo = createVertexInputStateCreateInfo(descriptor.vertexInput, vertexInputBindingDescriptions, vertexInputAttributeDescriptions);
 
+
+        // ---------------------------------------------------------------------------------
+        // Input Assembly
+        // ---------------------------------------------------------------------------------
+        
+        const VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo{
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .topology = toVkPrimitiveTopology(descriptor.inputAssembly.topology),
+            .primitiveRestartEnable = descriptor.inputAssembly.primitiveRestartEnabled
+        };
+
+        // ---------------------------------------------------------------------------------
+        // Tessellation State
+        // ---------------------------------------------------------------------------------
+
+        const VkPipelineTessellationStateCreateInfo tessellationStateCreateInfo{
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .patchControlPoints = (descriptor.tessellation.has_value() ? descriptor.tessellation->patchControlPoints : 0)
+        };
+
+        // ---------------------------------------------------------------------------------
+        // Rasterization State
+        // ---------------------------------------------------------------------------------
+
+        const VkPipelineRasterizationStateCreateInfo rasterizationStateCreateInfo{
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .depthClampEnable = descriptor.rasterization.depthClampEnabled,
+            .rasterizerDiscardEnable = descriptor.rasterization.rasterizerDiscardEnabled,
+            .polygonMode = toVkPolygonMode(descriptor.rasterization.polygonMode),
+            .cullMode = toVkCullModeFlag(descriptor.rasterization.cullMode),
+            .frontFace = toVkFrontFace(descriptor.rasterization.frontFace),
+            .depthBiasEnable = descriptor.rasterization.depthBiasEnabled,
+            .depthBiasConstantFactor = descriptor.rasterization.depthBiasConstantFactor,
+            .depthBiasClamp = descriptor.rasterization.depthBiasClamp,
+            .depthBiasSlopeFactor = descriptor.rasterization.depthBiasSlopeFactor,
+            .lineWidth = descriptor.rasterization.lineWidth
+        };
+
+        // ---------------------------------------------------------------------------------
+        // Multisample State
+        // ---------------------------------------------------------------------------------
+
+        const VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo{
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .rasterizationSamples = static_cast<VkSampleCountFlagBits>(toVkSampleCountFlag(descriptor.multisample.sampleCount)),
+            .sampleShadingEnable = descriptor.multisample.sampleShadingEnabled,
+            .minSampleShading = descriptor.multisample.minSampleShading,
+            .pSampleMask = nullptr,     // not supported yet
+            .alphaToCoverageEnable = descriptor.multisample.alphaToCoverageEnabled,
+            .alphaToOneEnable = descriptor.multisample.alphaToOneEnabled
+        };
+
+        // ---------------------------------------------------------------------------------
+        // Depth Stencil State
+        // ---------------------------------------------------------------------------------
+
+        const VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo{
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .depthTestEnable = descriptor.depthStencil.depthState.depthTestEnabled,
+            .depthWriteEnable = descriptor.depthStencil.depthState.depthWriteEnabled,
+            .depthCompareOp = toVkCompareOp(descriptor.depthStencil.depthState.compareOp),
+            .depthBoundsTestEnable = descriptor.depthStencil.depthState.depthBoundsTestEnabled,
+            .stencilTestEnable = descriptor.depthStencil.stencilState.stencilTestEnabled,
+            .front = VkStencilOpState {
+                    .failOp = toVkStencilOp(descriptor.depthStencil.stencilState.frontStencilState.failOp),
+                    .passOp = toVkStencilOp(descriptor.depthStencil.stencilState.frontStencilState.passOp),
+                    .depthFailOp = toVkStencilOp(descriptor.depthStencil.stencilState.frontStencilState.depthFailOp),
+                    .compareOp = toVkCompareOp(descriptor.depthStencil.stencilState.frontStencilState.compareOp),
+                    .compareMask = descriptor.depthStencil.stencilState.frontStencilState.compareMask,
+                    .writeMask = descriptor.depthStencil.stencilState.frontStencilState.writeMask,
+                    .reference = descriptor.depthStencil.stencilState.frontStencilState.reference
+                },
+            .back = VkStencilOpState {
+                    .failOp = toVkStencilOp(descriptor.depthStencil.stencilState.backStencilState.failOp),
+                    .passOp = toVkStencilOp(descriptor.depthStencil.stencilState.backStencilState.passOp),
+                    .depthFailOp = toVkStencilOp(descriptor.depthStencil.stencilState.backStencilState.depthFailOp),
+                    .compareOp = toVkCompareOp(descriptor.depthStencil.stencilState.backStencilState.compareOp),
+                    .compareMask = descriptor.depthStencil.stencilState.backStencilState.compareMask,
+                    .writeMask = descriptor.depthStencil.stencilState.backStencilState.writeMask,
+                    .reference = descriptor.depthStencil.stencilState.backStencilState.reference
+                },
+            .minDepthBounds = descriptor.depthStencil.depthState.minDepthBounds,
+            .maxDepthBounds = descriptor.depthStencil.depthState.maxDepthBounds
+        };
+
+        // ---------------------------------------------------------------------------------
+        // Color Blend State
+        // ---------------------------------------------------------------------------------
+
+        std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachmentStates;
+        colorBlendAttachmentStates.reserve(descriptor.colorBlend.colorAttachmentBlendStates.size());
+
+        for (auto& colorBlendAttachment : descriptor.colorBlend.colorAttachmentBlendStates)
+        {
+            colorBlendAttachmentStates.push_back(VkPipelineColorBlendAttachmentState{
+                .blendEnable = colorBlendAttachment.attachmentBlendEnabled,
+                .srcColorBlendFactor = toVkBlendFactor(colorBlendAttachment.srcColorBlendFactor),
+                .dstColorBlendFactor = toVkBlendFactor(colorBlendAttachment.dstColorBlendFactor),
+                .colorBlendOp = toVkBlendOp(colorBlendAttachment.colorBlendOp),
+                .srcAlphaBlendFactor = toVkBlendFactor(colorBlendAttachment.srcAlphaBlendFactor),
+                .dstAlphaBlendFactor = toVkBlendFactor(colorBlendAttachment.dstAlphaBlendFactor),
+                .alphaBlendOp = toVkBlendOp(colorBlendAttachment.alphaBlendOp),
+                .colorWriteMask = toVkColorComponentFlag(colorBlendAttachment.colorWriteMask)
+            });
+        }
+
+        const VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo{
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .logicOpEnable = descriptor.colorBlend.logicOpEnabled,
+            .logicOp = toVkLogicOp(descriptor.colorBlend.logicOp),
+            .attachmentCount = static_cast<uint32_t>(colorBlendAttachmentStates.size()),
+            .pAttachments = colorBlendAttachmentStates.data(),
+            .blendConstants = { 
+                descriptor.colorBlend.blendConstants[0], 
+                descriptor.colorBlend.blendConstants[1], 
+                descriptor.colorBlend.blendConstants[2], 
+                descriptor.colorBlend.blendConstants[3] 
+            }
+        };
+
+        // ---------------------------------------------------------------------------------
+        // Dynamic State
+        // ---------------------------------------------------------------------------------
+
+        std::vector<VkDynamicState> dynamicStates;
+        dynamicStates.reserve(descriptor.dynamicState.states.size() + 2);
+
+        // These dynamic states are always enabled for LITL
+        dynamicStates.push_back(VK_DYNAMIC_STATE_VIEWPORT);
+        dynamicStates.push_back(VK_DYNAMIC_STATE_SCISSOR);
+
+        for (auto dynamicState : descriptor.dynamicState.states)
+        {
+            dynamicStates.push_back(toVkDynamicState(dynamicState));
+        }
+
+        const VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo{
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .dynamicStateCount = static_cast<uint32_t>(dynamicStates.size()),
+            .pDynamicStates = dynamicStates.data()
+        };
+
+        // ---------------------------------------------------------------------------------
+        // Pipeline Layout
+        // ---------------------------------------------------------------------------------
+
+        PipelineLayoutDescriptor pipelineLayoutDescriptor{};
+        const MergeShaderReflectionResult mergePipelineLayoutResult = createPipelineLayoutDescriptor(pipelineLayoutDescriptorCreateInfo, pipelineLayoutDescriptor);
+
+        if (mergePipelineLayoutResult != MergeShaderReflectionResult::Success)
+        {
+            logError("Failed to create Vulkan Graphics Pipeline due to failed pipeline layout merger with result ", static_cast<uint32_t>(mergePipelineLayoutResult));
+            return {};
+        }
+
+        const VkPipelineLayout vkPipelineLayout = getOrCreatePipelineLayout(pipelineLayoutDescriptor);
+
+        if (vkPipelineLayout == VK_NULL_HANDLE)
+        {
+            logError("Failed to create Vulkan Graphics Pipeline due to failure to get or create Pipeline Layout");
+            return {};
+        }
 
         // ---------------------------------------------------------------------------------
         // Create the Graphics Pipeline
@@ -237,9 +420,21 @@ namespace litl::vulkan
             .flags = 0,
             .stageCount = shaderStageCount,
             .pStages = shaderStages.data(),
-            .pVertexInputState = &vertexInputCreateInfo
+            .pVertexInputState = &vertexInputCreateInfo,
+            .pInputAssemblyState = &inputAssemblyStateCreateInfo,
+            .pTessellationState = (descriptor.tessellation.has_value() ? &tessellationStateCreateInfo : nullptr),
+            .pViewportState = nullptr,          // not used. viewport is supplied at draw time and not baked into the graphics pipeline
+            .pRasterizationState = &rasterizationStateCreateInfo,
+            .pMultisampleState = &multisampleStateCreateInfo,
+            .pDepthStencilState = &depthStencilStateCreateInfo,
+            .pColorBlendState = &colorBlendStateCreateInfo,
+            .pDynamicState = &dynamicStateCreateInfo,
+            .layout = vkPipelineLayout,
+            .renderPass = nullptr,              // not used with dynamic rendering
+            .subpass = 0,                       // not used with dynamic rendering
+            .basePipelineHandle = nullptr,      // not used yet
+            .basePipelineIndex = -1             // not used yet
         };
-
 
         const VkResult result = vkCreateGraphicsPipelines(m_pContext->device.vkDevice, m_pContext->device.vkPipelineCache, 1, &createInfo, nullptr, &resource.vkPipeline);
 
