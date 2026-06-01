@@ -379,7 +379,12 @@ namespace litl
         /// <summary>
         /// Configures per-target color and alpha blending behavior for an individual framebuffer color attachments.
         /// </summary>
-        std::vector<ColorBlendAttachmentState> colorAttachmentBlendState;
+        std::vector<ColorBlendAttachmentState> colorAttachmentBlendStates;
+
+        /// <summary>
+        /// An array of four values used as the R, G, B, and A components of the blend constant that are used in blending, depending on the blend factor.
+        /// </summary>
+        std::array<float, 4> blendConstants;
     };
 
     /// <summary>
