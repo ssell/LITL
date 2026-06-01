@@ -81,9 +81,9 @@ namespace litl
         std::optional<DepthAttachmentDescriptor> depth;
 
         /// <summary>
-        /// 
+        /// Both .offset and .extents are normalized coordinates within the target texture.
         /// </summary>
-        rect2D area = { .offset = { 0.0f, 0.0f }, .extents = { 0.0f, 0.0f } };
+        rect2D area = { .offset = { 0.0f, 0.0f }, .extents = { 1.0f, 1.0f } };
 
         /// <summary>
         /// 

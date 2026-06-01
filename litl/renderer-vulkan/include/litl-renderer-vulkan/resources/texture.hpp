@@ -11,6 +11,7 @@ namespace litl::vulkan
         VkImage vkImage = VK_NULL_HANDLE;
         VkImageView vkImageView = VK_NULL_HANDLE;
         VmaAllocator vmaAllocator = VK_NULL_HANDLE;
+        VkExtent2D extent = { 0u, 0u };
 
         // ... todo ...
     };

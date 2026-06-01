@@ -4,5 +4,6 @@
 #include "litl-renderer/commands/beginRenderCommand.hpp"
 #include "litl-renderer/commands/clearImageCommand.hpp"
 #include "litl-renderer/commands/pipelineBarrierCommand.hpp"
+#include "litl-renderer/commands/setViewportAndScissorCommand.hpp"
 
 #endif

@@ -136,6 +136,15 @@ namespace litl
         };
 
         /// <summary>
+        /// Information about the current draw command(s).
+        /// Populated whenever cmdBeginRender is called.
+        /// </summary>
+        struct DrawInfo
+        {
+            VkExtent2D targetTextureSize;
+        };
+
+        /// <summary>
         /// For syncinc.
         /// </summary>
         struct RenderInfo
@@ -173,6 +182,7 @@ namespace litl
             DeviceInfo device{};
             SwapChainInfo swapChain{};
             RenderInfo renderInfo{};
+            DrawInfo drawInfo{};
             ResourceManager resources;
 
             [[nodiscard]] PerFrameSyncInfo& getCurrFrameSyncInfo() noexcept

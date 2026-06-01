@@ -45,6 +45,9 @@ namespace litl::vulkan
     void cmdEndRender(litl::RendererContext* context, CommandBufferHandle handle);
     void cmdPipelineBarrier(litl::RendererContext* context, CommandBufferHandle handle, PipelineBarrierCommand const& command) noexcept;
     void cmdClearImage(litl::RendererContext* context, CommandBufferHandle handle, ClearImageCommand const& command) noexcept;
+    void cmdSetViewportAndScissor(litl::RendererContext* context, CommandBufferHandle handle, SetViewportAndScissorCommand const& command) noexcept;
+    void cmdBindGraphicsPipeline(litl::RendererContext* context, CommandBufferHandle handle, GraphicsPipelineHandle graphicsPipelineHandle) noexcept;
+    void cmdDraw(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) noexcept;
 
     // -------------------------------------------------------------------------------------
     // rendererDrawOps.cpp
@@ -90,6 +93,9 @@ namespace litl::vulkan
         &cmdEndRender,
         &cmdPipelineBarrier,
         &cmdClearImage,
+        &cmdSetViewportAndScissor,
+        &cmdBindGraphicsPipeline,
+        &cmdDraw,
 
         // drawing
         &beginRender,
