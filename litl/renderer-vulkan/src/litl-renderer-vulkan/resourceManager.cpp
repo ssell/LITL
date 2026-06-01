@@ -373,8 +373,8 @@ namespace litl::vulkan
         dynamicStates.reserve(descriptor.dynamicState.states.size() + 2);
 
         // These dynamic states are always enabled for LITL
-        dynamicStates.push_back(VK_DYNAMIC_STATE_VIEWPORT);
-        dynamicStates.push_back(VK_DYNAMIC_STATE_SCISSOR);
+        dynamicStates.push_back(VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT);      // dynamically modify both viewport data AND number of viewports
+        dynamicStates.push_back(VK_DYNAMIC_STATE_SCISSOR_WITH_COUNT);
 
         for (auto dynamicState : descriptor.dynamicState.states)
         {
@@ -435,6 +435,17 @@ namespace litl::vulkan
             .basePipelineHandle = nullptr,      // not used yet
             .basePipelineIndex = -1             // not used yet
         };
+
+        /**
+         * Note on the above structure. Several of the provided substructs can be VK_NULL_HANDLE with the following conditions:
+         * 
+         *     .pInputAssemblyState -> NULL if `PRIMITIVE_RESTART_ENABLE` + `PRIMITIVE_TOPOLOGY` (and `dynamicPrimitiveTopologyUnrestricted == VK_TRUE`)
+         *     .pTessellationState  -> NULL if `PATCH_CONTROL_POINTS_EXT`
+         *     .pViewportState      -> NULL if `VIEWPORT_WITH_COUNT` + `SCISSOR_WITH_COUNT`
+         *     .pMultisampleState   -> NULL if `RASTERIZATION_SAMPLES_EXT` + `SAMPLE_MASK_EXT` + `LPHA_TO_COVERAGE_ENABLE_EXT` (+ `ALPHA_TO_ONE_ENABLE_EXT` if `alphaToOne` feature on)
+         *     .pDepthStencilState  -> NULL if full set of `DEPTH_TEST_ENABLE`/`DEPTH_WRITE_ENABLE`/`DEPTH_COMPARE_OP`/`DEPTH_BOUNDS_TEST_ENABLE`/`STENCIL_TEST_ENABLE`/`STENCIL_OP` (+ `DEPTH_BOUNDS`)
+         */
+
 
         const VkResult result = vkCreateGraphicsPipelines(m_pContext->device.vkDevice, m_pContext->device.vkPipelineCache, 1, &createInfo, nullptr, &resource.vkPipeline);
 
