@@ -12,7 +12,7 @@ using namespace litl;
 bool createWindow(Window** window) noexcept;
 bool createRenderer(Renderer** renderer, Window* window) noexcept;
 color getClearColor(float elapsedSeconds) noexcept;
-bool testBuildShader(Renderer* renderer) noexcept;
+std::optional<GraphicsPipelineHandle> createTriangleGraphicsPipeline(Renderer* renderer) noexcept;
 
 int main()
 {
@@ -24,8 +24,7 @@ int main()
     if (createWindow(&window) && createRenderer(&renderer, window))
     {
         const auto start = std::chrono::steady_clock::now();
-
-        testBuildShader(renderer);
+        const auto graphicsPipelineHandle = createTriangleGraphicsPipeline(renderer);
 
         while (!window->shouldClose())
         {
@@ -132,37 +131,57 @@ bool createShaderModule(Renderer* renderer, std::string const& path) noexcept
     return true;
 }
 
-/// <summary>
-/// Temporary function to test shader module load, reflection, and creation.
-/// </summary>
-/// <param name="renderer"></param>
-/// <returns></returns>
-bool testBuildShader(Renderer* renderer) noexcept
+std::optional<GraphicsPipelineHandle> createTriangleGraphicsPipeline(Renderer* renderer) noexcept
 {
-    std::cout << "Testing shader construction ..." << std::endl;
+    std::cout << "Test Graphics Pipeline Creation ..." << std::endl;;
 
-    const std::string resourcePath = "assets/shaders/spirv/flat.spv";
+    const std::string shaderResourcePath = "assets/shaders/spirv/flat.spv";
 
-    if (!createShaderModule(renderer, resourcePath))
+    if (!createShaderModule(renderer, shaderResourcePath))
     {
-        return false;
+        return std::nullopt;
     }
 
-    ShaderModuleHandle shaderHandle = renderer->getShaderModule(resourcePath);
+    ShaderModuleHandle shaderHandle = renderer->getShaderModule(shaderResourcePath);
 
     if (!shaderHandle.isValid())
     {
         std::cout << "Failed to retrieve ShaderModuleHandle" << std::endl;
-        return false;
+        return std::nullopt;
     }
 
-    bool result = renderer->testPipelineLayoutCache(shaderHandle, "vertexMain", shaderHandle, "fragmentMain");
+    const GraphicsPipelineDescriptor graphicsPipelineDescriptor{
+        .vertex = GraphicsPipelineShaderDescriptor {
+            .handle = shaderHandle,
+            .stage = ShaderStage::Vertex,
+            .entryPoint = "vertexMain"
+        },
+        .fragment = GraphicsPipelineShaderDescriptor {
+            .handle = shaderHandle,
+            .stage = ShaderStage::Fragment,
+            .entryPoint = "fragmentMain"
+        },
+        .vertexInput = VertexInputState{},                      // Vertices hardcoded in the vertex shader for now
+        .inputAssembly = InputAssemblyState{},                  // Vertices hardcoded in the vertex shader for now
+        .tessellation = std::nullopt,                           // No tessellation
+        .rasterization = RasterizationState{},                  // Default rasterization state OK for this test
+        .multisample = MultisampleState{},                      // Default multisample state (no multisampling) for this test
+        .depthStencil = DepthStencilState{},                    // Default depth-stencil settings for this test
+        .colorBlend = ColorBlendState{},                        // Default color-blend state (no blending) for this test
+        .dynamicState = DynamicStateMask{},                     // Default dynamic state (viewport + stencil) for this test
+        .specializationConstants = SpecializationConstants{}    // Default specialization constants (none) for this test
+    };
 
-    if (result == false)
+    const GraphicsPipelineHandle handle = renderer->createGraphicsPipeline(graphicsPipelineDescriptor);
+
+    if (handle.isValid())
     {
-        std::cout << "PipelineLayoutCache test failed" << std::endl;
-        return false;
+        std::cout << "Successfully create GraphicsPipelineHandle" << std::endl;
+    }
+    else
+    {
+        std::cout << "Failed to created GraphicsPipelineHandle" << std::endl;
     }
 
-    return true;
+    return handle;
 }

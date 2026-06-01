@@ -63,7 +63,8 @@ namespace litl::vulkan
     /// Extensions required by our renderer.
     /// </summary>
     static const std::vector<const char*> RequiredDeviceExtensions = {
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+        VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME      // dynamic rendering to allow null viewport in graphics pipeline, etc.
     };
 
 
@@ -398,14 +399,14 @@ namespace litl::vulkan
         VkPhysicalDeviceExtendedDynamicStateFeaturesEXT vulkanDynamicStateFeatures {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT,
             .pNext = nullptr,
-            //.extendedDynamicState = true
+            .extendedDynamicState = true
         };
 
         VkPhysicalDeviceVulkan13Features vulkan13Features {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
             .pNext = &vulkanDynamicStateFeatures,
             .synchronization2 = true,
-            .dynamicRendering = true
+            .dynamicRendering = true,
         };
 
         VkPhysicalDeviceVulkan12Features vulkan12Features {
