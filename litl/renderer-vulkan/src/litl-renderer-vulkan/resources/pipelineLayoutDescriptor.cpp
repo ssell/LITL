@@ -93,7 +93,7 @@ namespace litl::vulkan
     /// <returns></returns>
     MergeShaderReflectionResult addOrMergePushConstant(std::vector<MergedPushConstantRange>& pushConstants, ShaderStage stage, PushConstantRange const& pushConstant) noexcept
     {
-        size_t index = Constants::uint32_null_index;
+        std::optional<size_t> index = std::nullopt;
 
         // Find existing push constant
         for (size_t i = 0; i < pushConstants.size(); ++i)
@@ -106,7 +106,7 @@ namespace litl::vulkan
             }
         }
 
-        if (index == Constants::uint32_null_index)
+        if (!index.has_value())
         {
             // Check if the range is already occupied
             bool overlap = std::ranges::any_of(pushConstants,
@@ -137,7 +137,7 @@ namespace litl::vulkan
         else
         {
             // Already exists
-            pushConstants[index].stages = pushConstants[index].stages | stage;
+            pushConstants[index.value()].stages = pushConstants[index.value()].stages | stage;
         }
 
         return MergeShaderReflectionResult::Success;

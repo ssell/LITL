@@ -351,10 +351,12 @@ namespace litl::vulkan
             return;
         }
 
-        auto* graphicsPipeline = vulkanContext->resources.getGraphicsPipeline(graphicsPipelineHandle);
-        VkPipeline pipeline = (graphicsPipeline != nullptr) ? graphicsPipeline->vkPipeline : VK_NULL_HANDLE;
+        GraphicsPipelineResource* graphicsPipeline = vulkanContext->resources.getGraphicsPipeline(graphicsPipelineHandle);
 
-        vkCmdBindPipeline(commandBuffer->vkCommandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+        if (graphicsPipeline != nullptr)
+        {
+            vkCmdBindPipeline(commandBuffer->vkCommandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->vkPipeline);
+        }
     }
 
     void cmdDraw(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) noexcept
