@@ -16,9 +16,6 @@ namespace litl::vulkan
 
     void ResourceManager::destroy() noexcept
     {
-        // Caches
-        m_pipelineLayoutCache.destroy();
-
         // Graphics Pipelines
         std::vector<GraphicsPipelineHandle> graphicsPipelineHandles;
         m_graphicsPipelinePool.getAllHandles(graphicsPipelineHandles);
@@ -36,6 +33,9 @@ namespace litl::vulkan
         {
             destroyCommandBuffer(commandBufferHandle);
         }
+
+        // Pipeline Layouts
+        m_pipelineLayoutCache.destroy();
 
         // Shader Modules
         for (auto shaderModuleHandleKvp : m_shaderModuleMap)
@@ -122,6 +122,7 @@ namespace litl::vulkan
     ComputePipelineHandle ResourceManager::createComputePipeline(ComputePipelineDescriptor const& descriptor) noexcept
     {
         // ... todo ...
+        // ... remember to update shader module reference map ...
         return ComputePipelineHandle{};
     }
 
@@ -135,6 +136,7 @@ namespace litl::vulkan
         if (m_computePipelinePool.destroy(handle))
         {
             // ... todo ...
+            // ... remember to update shader module reference map ...
         }
     }
 
@@ -154,12 +156,6 @@ namespace litl::vulkan
         if (!entryPoint.has_value() || (*entryPoint) == nullptr)
         {
             logWarning("Vulkan Graphics Pipeline creation requested invalid shader with entry point of '", descriptor.entryPoint, "'");
-            return;
-        }
-
-        if ((static_cast<uint32_t>(entryPoint.value()->stage) & static_cast<uint32_t>(descriptor.stage)) == 0)
-        {
-            logWarning("Vulkan Graphics Pipeline creation of sahder with entry point of '", descriptor.entryPoint, "' failed due to declared shader stage mismatch. Declared = ", static_cast<uint32_t>(descriptor.stage), ", Expected = ", static_cast<uint32_t>(entryPoint.value()->stage));
             return;
         }
 
@@ -231,6 +227,7 @@ namespace litl::vulkan
         createPipelineShaderStageCreateInfo(getShaderModule(descriptor.tessellationEvaluation.handle), descriptor.tessellationEvaluation, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
         createPipelineShaderStageCreateInfo(getShaderModule(descriptor.tessellationControl.handle), descriptor.tessellationControl, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
         createPipelineShaderStageCreateInfo(getShaderModule(descriptor.mesh.handle), descriptor.mesh, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
+        createPipelineShaderStageCreateInfo(getShaderModule(descriptor.task.handle), descriptor.task, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
 
         // ---- Vertex Input
         
@@ -404,15 +401,15 @@ namespace litl::vulkan
         std::vector<VkFormat> colorAttachmentFormats;
         colorAttachmentFormats.reserve(descriptor.renderTargets.colorAttachmentCount);
 
-        for (auto format : descriptor.renderTargets.colorAttachments)
+        for (uint32_t i = 0u; i < descriptor.renderTargets.colorAttachmentCount; ++i)
         {
-            colorAttachmentFormats.push_back(toVkFormat(format));
+            colorAttachmentFormats.push_back(toVkFormat(descriptor.renderTargets.colorAttachments[i]));
         }
 
         const VkPipelineRenderingCreateInfo pipelineRenderingCreateInfo{
             .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
             .pNext = nullptr,
-            .viewMask = 0,           // must match the view mask provided in vkCmdBeginRendering
+            .viewMask = descriptor.renderTargets.viewMask,           // must match the view mask provided in vkCmdBeginRendering
             .colorAttachmentCount = descriptor.renderTargets.colorAttachmentCount,
             .pColorAttachmentFormats = colorAttachmentFormats.data(),
             .depthAttachmentFormat = toVkFormat(descriptor.renderTargets.depthFormat),
@@ -461,7 +458,10 @@ namespace litl::vulkan
             return {};
         }
 
-        return m_graphicsPipelinePool.create(resource);
+        auto handle = m_graphicsPipelinePool.create(resource);
+        m_shaderModuleReferenceMap.onGraphicsPipelineAdded(m_graphicsPipelinePool.get(handle));
+
+        return handle;
     }
 
     GraphicsPipelineResource* ResourceManager::getGraphicsPipeline(GraphicsPipelineHandle handle) noexcept
@@ -475,6 +475,8 @@ namespace litl::vulkan
 
         if (resource != nullptr)
         {
+            m_shaderModuleReferenceMap.onGraphicsPipelineDestroyed(resource);
+
             if (resource->vkPipeline != VK_NULL_HANDLE)
             {
                 vkDestroyPipeline(m_pContext->device.vkDevice, resource->vkPipeline, nullptr);
@@ -523,28 +525,19 @@ namespace litl::vulkan
         return {};
     }
 
-    ShaderModuleHandle ResourceManager::createShaderModule(ShaderModuleDescriptor const& descriptor) noexcept
+    bool createShaderModuleResource(RendererContext* context, ShaderModuleResource& resource, ShaderModuleDescriptor const& descriptor) noexcept
     {
         if (descriptor.resource.empty())
         {
             logError("Empty resource name provided to Vulkan ShaderModule creation");
-            return {};
+            return false;
         }
 
         if (descriptor.bytes.empty())
         {
             logError("Empty bytecode blob provided to Vulkan ShaderModule creation for resource '", descriptor.resource, "'");
-            return {};
+            return false;
         }
-
-        ShaderModuleHandle handle = getShaderModuleHandle(descriptor.resource);
-
-        if (handle.isValid())
-        {
-            return handle;
-        }
-
-        ShaderModuleResource resource{};
 
         const VkShaderModuleCreateInfo shaderModuleInfo{
             .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
@@ -553,12 +546,12 @@ namespace litl::vulkan
         };
 
         // Compile the shader module
-        const VkResult result = vkCreateShaderModule(m_pContext->device.vkDevice, &shaderModuleInfo, nullptr, &resource.vkShaderModule);
+        const VkResult result = vkCreateShaderModule(context->device.vkDevice, &shaderModuleInfo, nullptr, &resource.vkShaderModule);
 
         if (result != VK_SUCCESS)
         {
             logError("Failed to create Vulkan ShaderModule with result ", result);
-            return {};
+            return false;
         }
 
         // Reflect the SPIR-V for future pipeline binds
@@ -571,17 +564,36 @@ namespace litl::vulkan
         else
         {
             logError("Failed to reflect Vulkan Shader at '", descriptor.resource, "'");
-            return {};
+            return false;
         }
 
         // Finish building the resource and then create the handle
         resource.spirvHash = hashArray(descriptor.bytes);
         resource.resource = descriptor.resource;
 
-        handle = m_shaderModulePool.create(resource);
+        return true;
+    }
 
-        // Record in the map
-        m_shaderModuleMap[resource.resource] = handle;
+    ShaderModuleHandle ResourceManager::createShaderModule(ShaderModuleDescriptor const& descriptor) noexcept
+    {
+        ShaderModuleHandle handle = getShaderModuleHandle(descriptor.resource);
+
+        if (handle.isValid())
+        {
+            // Already exists. Did it mean to do a reload?
+            return handle;
+        }
+
+        ShaderModuleResource resource{};
+
+        if (createShaderModuleResource(m_pContext, resource, descriptor))
+        {
+            handle = m_shaderModulePool.create(resource);
+
+            // Record in the map
+            m_shaderModuleReferenceMap.onShaderModuleAdded(m_shaderModulePool.get(handle));
+            m_shaderModuleMap[resource.resource] = handle;
+        }
 
         return handle;
     }
@@ -593,17 +605,67 @@ namespace litl::vulkan
 
     void ResourceManager::destroyShaderModule(ShaderModuleHandle handle) noexcept
     {
-        ShaderModuleResource* shaderModule = m_shaderModulePool.get(handle);
+        ShaderModuleResource* resource = m_shaderModulePool.get(handle);
 
-        if (shaderModule != nullptr)
+        if (resource != nullptr)
         {
-            if (shaderModule->vkShaderModule != VK_NULL_HANDLE)
+            if (resource->vkShaderModule != VK_NULL_HANDLE)
             {
-                vkDestroyShaderModule(m_pContext->device.vkDevice, shaderModule->vkShaderModule, nullptr);
+                vkDestroyShaderModule(m_pContext->device.vkDevice, resource->vkShaderModule, nullptr);
             }
 
+            m_shaderModuleReferenceMap.onShaderModuleDestroyed(resource);
             m_shaderModulePool.destroy(handle);
-            m_shaderModuleMap.erase(shaderModule->resource);
+            m_shaderModuleMap.erase(resource->resource);
+        }
+    }
+
+    void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descriptor)
+    {
+        auto handle = getShaderModuleHandle(descriptor.resource);
+        auto* resource = getShaderModule(handle);
+
+        if (resource == nullptr)
+        {
+            // no active shader module matching the descriptor - nothing to reload
+            return;
+        }
+
+        ShaderModuleResource reloadedResource{};
+
+        if (createShaderModuleResource(m_pContext, reloadedResource, descriptor))
+        {
+            if (reloadedResource.spirvHash == resource->spirvHash)
+            {
+                // Identical, nothing needs to happen. Destroy the new duplicate module
+                vkDestroyShaderModule(m_pContext->device.vkDevice, reloadedResource.vkShaderModule, nullptr);
+            }
+            else
+            {
+                VkShaderModule oldShaderModule = resource->vkShaderModule;
+
+                resource->vkShaderModule = reloadedResource.vkShaderModule;
+                resource->reflection = reloadedResource.reflection;
+                resource->spirvHash = reloadedResource.spirvHash;
+
+                std::vector<UnifiedPipelineHandle> affectedPipelines;
+                m_shaderModuleReferenceMap.getPipelinesFor(resource, affectedPipelines);
+
+                for (auto& unifiedPipeline : affectedPipelines)
+                {
+                    if (unifiedPipeline.graphicsPipeline != nullptr)
+                    {
+                        // ... todo ...
+                    }
+
+                    if (unifiedPipeline.computePipeline != nullptr)
+                    {
+                        // ... todo ...
+                    }
+                }
+
+                vkDestroyShaderModule(m_pContext->device.vkDevice, oldShaderModule, nullptr);
+            }
         }
     }
 

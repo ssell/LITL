@@ -13,6 +13,7 @@
 #include "litl-renderer-vulkan/resources/shaderModule.hpp"
 #include "litl-renderer-vulkan/resources/texture.hpp"
 #include "litl-renderer-vulkan/resources/cache/pipelineLayoutCache.hpp"
+#include "litl-renderer-vulkan/resources/map/shaderModuleReferenceMap.hpp"
 
 namespace litl::vulkan
 {
@@ -53,6 +54,7 @@ namespace litl::vulkan
         [[nodiscard]] ShaderModuleHandle createShaderModule(ShaderModuleDescriptor const& descriptor) noexcept;
         [[nodiscard]] ShaderModuleResource* getShaderModule(ShaderModuleHandle handle) noexcept;
         void destroyShaderModule(ShaderModuleHandle handle) noexcept;
+        void onShaderModuleReload(ShaderModuleDescriptor const& descriptor) noexcept;
 
         [[nodiscard]] TextureHandle createTexture(TextureDescriptor const& descriptor) noexcept;
         [[nodiscard]] TextureResource* getTexture(TextureHandle handle) noexcept;
@@ -74,6 +76,7 @@ namespace litl::vulkan
 
         HandlePool<ShaderModuleResource, ShaderModuleTag> m_shaderModulePool;
         std::unordered_map<std::string, ShaderModuleHandle> m_shaderModuleMap;
+        ShaderModuleReferenceMap m_shaderModuleReferenceMap;
 
         PipelineLayoutCache m_pipelineLayoutCache;
     };

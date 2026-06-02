@@ -12,7 +12,7 @@ using namespace litl;
 bool createWindow(Window** window) noexcept;
 bool createRenderer(Renderer** renderer, Window* window) noexcept;
 color getClearColor(float elapsedSeconds) noexcept;
-std::optional<GraphicsPipelineHandle> createTriangleGraphicsPipeline(Renderer* renderer) noexcept;
+GraphicsPipelineHandle createTriangleGraphicsPipeline(Renderer* renderer) noexcept;
 void beginRender(Renderer* renderer, CommandBufferHandle commandBuffer, color clearColor) noexcept;
 void endRender(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
 
@@ -28,7 +28,7 @@ int main()
         const auto start = std::chrono::steady_clock::now();
         const auto graphicsPipelineHandle = createTriangleGraphicsPipeline(renderer);
 
-        if (graphicsPipelineHandle.has_value())
+        if (graphicsPipelineHandle.isValid())
         {
             while (!window->shouldClose())
             {
@@ -40,8 +40,9 @@ int main()
 
                     beginRender(renderer, commandBuffer, getClearColor(elapsedSeconds));
 
-                    renderer->cmdBindGraphicsPipeline(commandBuffer, graphicsPipelineHandle.value());
+                    renderer->cmdBindGraphicsPipeline(commandBuffer, graphicsPipelineHandle);
                     renderer->cmdDraw(commandBuffer, 3, 1, 0, 0);
+                    renderer->cmdBindGraphicsPipeline(commandBuffer, {});
 
                     endRender(renderer, commandBuffer);
                 }
@@ -132,7 +133,7 @@ bool createShaderModule(Renderer* renderer, std::string const& path) noexcept
     return true;
 }
 
-std::optional<GraphicsPipelineHandle> createTriangleGraphicsPipeline(Renderer* renderer) noexcept
+GraphicsPipelineHandle createTriangleGraphicsPipeline(Renderer* renderer) noexcept
 {
     std::cout << "Test Graphics Pipeline Creation ..." << std::endl;;
 
@@ -140,7 +141,7 @@ std::optional<GraphicsPipelineHandle> createTriangleGraphicsPipeline(Renderer* r
 
     if (!createShaderModule(renderer, shaderResourcePath))
     {
-        return std::nullopt;
+        return {};
     }
 
     ShaderModuleHandle shaderHandle = renderer->getShaderModule(shaderResourcePath);
@@ -148,7 +149,7 @@ std::optional<GraphicsPipelineHandle> createTriangleGraphicsPipeline(Renderer* r
     if (!shaderHandle.isValid())
     {
         std::cout << "Failed to retrieve ShaderModuleHandle" << std::endl;
-        return std::nullopt;
+        return {};
     }
 
     const GraphicsPipelineDescriptor graphicsPipelineDescriptor{
@@ -203,10 +204,6 @@ void beginRender(Renderer* renderer, CommandBufferHandle commandBuffer, color cl
     const BeginRenderCommand beginRenderCommand{
         .color = ColorAttachmentDescriptor {
             .clearColor = clearColor
-        },
-        .depth = DepthAttachmentDescriptor {
-            .clearDepth = 0.0,
-            .clearStencil = 0
         }
     };
 
