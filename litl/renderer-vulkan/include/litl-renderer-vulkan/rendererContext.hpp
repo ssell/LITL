@@ -141,7 +141,9 @@ namespace litl
         /// </summary>
         struct DrawInfo
         {
-            VkExtent2D targetTextureSize;
+            VkExtent2D targetTextureSize = { 0, 0 };
+            VkFormat depthFormat = VkFormat::VK_FORMAT_UNDEFINED;
+            VkFormat stencilFormat = VkFormat::VK_FORMAT_UNDEFINED;
         };
 
         /// <summary>

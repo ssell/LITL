@@ -93,7 +93,7 @@ namespace litl
         /// <summary>
         /// 
         /// </summary>
-        uint32_t viewMask = 0u;
+        uint32_t viewMask = 0;
     };
 }
 

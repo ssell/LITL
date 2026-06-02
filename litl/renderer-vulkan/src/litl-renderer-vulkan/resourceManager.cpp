@@ -399,11 +399,41 @@ namespace litl::vulkan
             return {};
         }
 
+        // ---- Rendering Info
+
+        std::vector<VkFormat> colorAttachmentFormats;
+        colorAttachmentFormats.reserve(descriptor.renderTargets.colorAttachmentCount);
+
+        for (auto format : descriptor.renderTargets.colorAttachments)
+        {
+            colorAttachmentFormats.push_back(toVkFormat(format));
+        }
+
+        const VkPipelineRenderingCreateInfo pipelineRenderingCreateInfo{
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
+            .pNext = nullptr,
+            .viewMask = 0,           // must match the view mask provided in vkCmdBeginRendering
+            .colorAttachmentCount = descriptor.renderTargets.colorAttachmentCount,
+            .pColorAttachmentFormats = colorAttachmentFormats.data(),
+            .depthAttachmentFormat = toVkFormat(descriptor.renderTargets.depthFormat),
+            .stencilAttachmentFormat = toVkFormat(descriptor.renderTargets.stencilFormat)
+        };
+
         // ---- Create the Graphics Pipeline
+
+        /**
+         * Note on structure below, several of the provided substructs can be VK_NULL_HANDLE with the following conditions:
+         *
+         *     .pInputAssemblyState -> NULL if `PRIMITIVE_RESTART_ENABLE` + `PRIMITIVE_TOPOLOGY` (and `dynamicPrimitiveTopologyUnrestricted == VK_TRUE`)
+         *     .pTessellationState  -> NULL if `PATCH_CONTROL_POINTS_EXT`
+         *     .pViewportState      -> NULL if `VIEWPORT_WITH_COUNT` + `SCISSOR_WITH_COUNT`
+         *     .pMultisampleState   -> NULL if `RASTERIZATION_SAMPLES_EXT` + `SAMPLE_MASK_EXT` + `LPHA_TO_COVERAGE_ENABLE_EXT` (+ `ALPHA_TO_ONE_ENABLE_EXT` if `alphaToOne` feature on)
+         *     .pDepthStencilState  -> NULL if full set of `DEPTH_TEST_ENABLE`/`DEPTH_WRITE_ENABLE`/`DEPTH_COMPARE_OP`/`DEPTH_BOUNDS_TEST_ENABLE`/`STENCIL_TEST_ENABLE`/`STENCIL_OP` (+ `DEPTH_BOUNDS`)
+         */
 
         const VkGraphicsPipelineCreateInfo createInfo{
             .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-            .pNext = nullptr,
+            .pNext = &pipelineRenderingCreateInfo,
             .flags = 0,
             .stageCount = shaderStageCount,
             .pStages = shaderStages.data(),
@@ -422,17 +452,6 @@ namespace litl::vulkan
             .basePipelineHandle = nullptr,      // not used yet
             .basePipelineIndex = -1             // not used yet
         };
-
-        /**
-         * Note on the above structure. Several of the provided substructs can be VK_NULL_HANDLE with the following conditions:
-         * 
-         *     .pInputAssemblyState -> NULL if `PRIMITIVE_RESTART_ENABLE` + `PRIMITIVE_TOPOLOGY` (and `dynamicPrimitiveTopologyUnrestricted == VK_TRUE`)
-         *     .pTessellationState  -> NULL if `PATCH_CONTROL_POINTS_EXT`
-         *     .pViewportState      -> NULL if `VIEWPORT_WITH_COUNT` + `SCISSOR_WITH_COUNT`
-         *     .pMultisampleState   -> NULL if `RASTERIZATION_SAMPLES_EXT` + `SAMPLE_MASK_EXT` + `LPHA_TO_COVERAGE_ENABLE_EXT` (+ `ALPHA_TO_ONE_ENABLE_EXT` if `alphaToOne` feature on)
-         *     .pDepthStencilState  -> NULL if full set of `DEPTH_TEST_ENABLE`/`DEPTH_WRITE_ENABLE`/`DEPTH_COMPARE_OP`/`DEPTH_BOUNDS_TEST_ENABLE`/`STENCIL_TEST_ENABLE`/`STENCIL_OP` (+ `DEPTH_BOUNDS`)
-         */
-
 
         const VkResult result = vkCreateGraphicsPipelines(m_pContext->device.vkDevice, m_pContext->device.vkPipelineCache, 1, &createInfo, nullptr, &resource.vkPipeline);
 

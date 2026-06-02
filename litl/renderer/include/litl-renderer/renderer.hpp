@@ -56,6 +56,9 @@ namespace litl
         void (*submitCommands)(RendererContext*, std::span<CommandBufferHandle const>);
         void (*endRender)(RendererContext*);
 
+        // misc
+        DataFormat (*getSwapchainImageFormat)(RendererContext*);
+
         // TEMPORARY FOR TESTING PURPOSES
         bool (*testPipelineLayoutCache)(RendererContext*, ShaderModuleHandle, std::string const&, ShaderModuleHandle, std::string const&);
     };
@@ -324,6 +327,15 @@ namespace litl
         void endRender() const noexcept
         {
             m_pOps->endRender(m_pContext);
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Misc
+        // ---------------------------------------------------------------------------------
+
+        [[nodiscard]] DataFormat getSwapchainImageFormat() noexcept
+        {
+            return m_pOps->getSwapchainImageFormat(m_pContext);
         }
 
         // ---------------------------------------------------------------------------------
