@@ -162,13 +162,24 @@ std::optional<GraphicsPipelineHandle> createTriangleGraphicsPipeline(Renderer* r
             .stage = ShaderStage::Fragment,
             .entryPoint = "fragmentMain"
         },
+        .renderTargets = RenderTargetFormats {
+            .colorAttachments = { renderer->getSwapchainImageFormat() },
+            .colorAttachmentCount = 1
+        },
         .vertexInput = VertexInputState{},                      // Vertices hardcoded in the vertex shader for now
         .inputAssembly = InputAssemblyState{},                  // Vertices hardcoded in the vertex shader for now
         .tessellation = std::nullopt,                           // No tessellation
         .rasterization = RasterizationState{},                  // Default rasterization state OK for this test
         .multisample = MultisampleState{},                      // Default multisample state (no multisampling) for this test
         .depthStencil = DepthStencilState{},                    // Default depth-stencil settings for this test
-        .colorBlend = ColorBlendState{},                        // Default color-blend state (no blending) for this test
+        .colorBlend = ColorBlendState{
+            .logicOpEnabled = false,
+            .colorAttachmentBlendStates = {
+                ColorBlendAttachmentState {
+                    .attachmentBlendEnabled = false
+                }
+            }
+        },
         .dynamicState = DynamicStateMask{},                     // Default dynamic state (viewport + stencil) for this test
         .specializationConstants = SpecializationConstants{}    // Default specialization constants (none) for this test
     };

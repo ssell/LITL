@@ -57,6 +57,12 @@ namespace litl::vulkan
     void submitCommands(litl::RendererContext* context, std::span<CommandBufferHandle const> commands) noexcept;
     void endRender(litl::RendererContext* context) noexcept;
 
+    // -------------------------------------------------------------------------------------
+    // rendererMiscOps.cpp
+    // -------------------------------------------------------------------------------------
+
+    [[nodiscard]] DataFormat getSwapchainImageFormat(litl::RendererContext* context) noexcept;
+
     // ---------------------------------------------------------------------------------
     // TEMPORARY FOR TESTING PURPOSES (rendererTesting.cpp)
     // ---------------------------------------------------------------------------------
@@ -101,6 +107,9 @@ namespace litl::vulkan
         &beginRender,
         &submitCommands,
         &endRender,
+
+        // misc
+        &getSwapchainImageFormat,
 
         // temporary
         &testPipelineLayoutCache

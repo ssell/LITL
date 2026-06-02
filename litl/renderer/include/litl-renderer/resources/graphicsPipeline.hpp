@@ -43,12 +43,22 @@ namespace litl
         /// <summary>
         /// Number of entries in colorAttachments.
         /// </summary>
-        uint32_t colorAttachmentCount;
+        uint32_t colorAttachmentCount = 0u;
 
         /// <summary>
         /// A bitfield of view indices describing which views are active during rendering
         /// </summary>
-        uint32_t viewMask;
+        uint32_t viewMask = 0;
+
+        /// <summary>
+        /// Format of the depth attachment used in this pipeline.
+        /// </summary>
+        DataFormat depthFormat = DataFormat::Undefined;
+
+        /// <summary>
+        /// Format of the stencil attachment used in this pipeline.
+        /// </summary>
+        DataFormat stencilFormat = DataFormat::Undefined;
     };
 
     /// <summary>

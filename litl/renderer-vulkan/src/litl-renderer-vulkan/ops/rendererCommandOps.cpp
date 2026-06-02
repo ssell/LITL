@@ -120,6 +120,11 @@ namespace litl::vulkan
             if (depthTexture != nullptr)
             {
                 depthTextureView = depthTexture->vkImageView;
+                vulkanContext->drawInfo.depthFormat = depthTexture->vkFormat;
+            }
+            else
+            {
+                vulkanContext->drawInfo.depthFormat = VkFormat::VK_FORMAT_UNDEFINED;
             }
 
             depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
@@ -160,7 +165,7 @@ namespace litl::vulkan
                 }
             },
             .layerCount = command.layerCount,
-            .viewMask = command.viewMask,
+            .viewMask = command.viewMask,           // the graphics pipeline view mask must match this
             .colorAttachmentCount = 1u,
             .pColorAttachments = &colorAttachment,
             .pDepthAttachment = command.depth.has_value() ? &depthAttachment : nullptr,
@@ -315,7 +320,7 @@ namespace litl::vulkan
                 .maxDepth = command.setViewport->maxDepth
             };
 
-            vkCmdSetViewport(commandBuffer->vkCommandBuffer, 0, 1, &viewport);
+            vkCmdSetViewportWithCount(commandBuffer->vkCommandBuffer, 1, &viewport);
         }
 
         if (command.setScissor.has_value())
@@ -332,7 +337,7 @@ namespace litl::vulkan
                 }
             };
 
-            vkCmdSetScissor(commandBuffer->vkCommandBuffer, 0, 1, &scissorRegion);
+            vkCmdSetScissorWithCount(commandBuffer->vkCommandBuffer, 1, &scissorRegion);
         }
     }
 
