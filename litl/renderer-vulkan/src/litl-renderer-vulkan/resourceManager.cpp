@@ -19,6 +19,15 @@ namespace litl::vulkan
         // Caches
         m_pipelineLayoutCache.destroy();
 
+        // Graphics Pipelines
+        std::vector<GraphicsPipelineHandle> graphicsPipelineHandles;
+        m_graphicsPipelinePool.getAllHandles(graphicsPipelineHandles);
+
+        for (auto graphicsPipelineHandle : graphicsPipelineHandles)
+        {
+            destroyGraphicsPipeline(graphicsPipelineHandle);
+        }
+
         // Command Buffers
         std::vector<CommandBufferHandle> commandBufferHandles;
         m_commandBufferPool.getAllHandles(commandBufferHandles);
@@ -33,6 +42,7 @@ namespace litl::vulkan
         {
             destroyShaderModule(shaderModuleHandleKvp.second);
         }
+
     }
 
     //--------------------------------------------------------------------------------------
@@ -209,9 +219,7 @@ namespace litl::vulkan
     {
         GraphicsPipelineResource resource{};
 
-        // ---------------------------------------------------------------------------------
-        // Shader Stages
-        // ---------------------------------------------------------------------------------
+        // ---- Shader Stages
 
         uint32_t shaderStageCount = 0;
         std::array<VkPipelineShaderStageCreateInfo, 7> shaderStages;
@@ -224,19 +232,14 @@ namespace litl::vulkan
         createPipelineShaderStageCreateInfo(getShaderModule(descriptor.tessellationControl.handle), descriptor.tessellationControl, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
         createPipelineShaderStageCreateInfo(getShaderModule(descriptor.mesh.handle), descriptor.mesh, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
 
-        // ---------------------------------------------------------------------------------
-        // Vertex Input
-        // ---------------------------------------------------------------------------------
+        // ---- Vertex Input
         
         std::vector<VkVertexInputBindingDescription> vertexInputBindingDescriptions;
         std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescriptions;
 
         const VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo = createVertexInputStateCreateInfo(descriptor.vertexInput, vertexInputBindingDescriptions, vertexInputAttributeDescriptions);
 
-
-        // ---------------------------------------------------------------------------------
-        // Input Assembly
-        // ---------------------------------------------------------------------------------
+        // ---- Input Assembly
         
         const VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo{
             .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
@@ -246,9 +249,7 @@ namespace litl::vulkan
             .primitiveRestartEnable = descriptor.inputAssembly.primitiveRestartEnabled
         };
 
-        // ---------------------------------------------------------------------------------
-        // Tessellation State
-        // ---------------------------------------------------------------------------------
+        // ---- Tessellation State
 
         const VkPipelineTessellationStateCreateInfo tessellationStateCreateInfo{
             .sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO,
@@ -257,9 +258,7 @@ namespace litl::vulkan
             .patchControlPoints = (descriptor.tessellation.has_value() ? descriptor.tessellation->patchControlPoints : 0)
         };
 
-        // ---------------------------------------------------------------------------------
-        // Rasterization State
-        // ---------------------------------------------------------------------------------
+        // ---- Rasterization State
 
         const VkPipelineRasterizationStateCreateInfo rasterizationStateCreateInfo{
             .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
@@ -277,9 +276,7 @@ namespace litl::vulkan
             .lineWidth = descriptor.rasterization.lineWidth
         };
 
-        // ---------------------------------------------------------------------------------
-        // Multisample State
-        // ---------------------------------------------------------------------------------
+        // ---- Multisample State
 
         const VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo{
             .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
@@ -293,9 +290,7 @@ namespace litl::vulkan
             .alphaToOneEnable = descriptor.multisample.alphaToOneEnabled
         };
 
-        // ---------------------------------------------------------------------------------
-        // Depth Stencil State
-        // ---------------------------------------------------------------------------------
+        // ---- Depth Stencil State
 
         const VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo{
             .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
@@ -328,9 +323,7 @@ namespace litl::vulkan
             .maxDepthBounds = descriptor.depthStencil.depthState.maxDepthBounds
         };
 
-        // ---------------------------------------------------------------------------------
-        // Color Blend State
-        // ---------------------------------------------------------------------------------
+        // ---- Color Blend State
 
         std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachmentStates;
         colorBlendAttachmentStates.reserve(descriptor.colorBlend.colorAttachmentBlendStates.size());
@@ -365,9 +358,7 @@ namespace litl::vulkan
             }
         };
 
-        // ---------------------------------------------------------------------------------
-        // Dynamic State
-        // ---------------------------------------------------------------------------------
+        // ---- Dynamic State
 
         std::vector<VkDynamicState> dynamicStates;
         dynamicStates.reserve(descriptor.dynamicState.states.size() + 2);
@@ -389,9 +380,7 @@ namespace litl::vulkan
             .pDynamicStates = dynamicStates.data()
         };
 
-        // ---------------------------------------------------------------------------------
-        // Pipeline Layout
-        // ---------------------------------------------------------------------------------
+        // ---- Pipeline Layout
 
         PipelineLayoutDescriptor pipelineLayoutDescriptor{};
         const MergeShaderReflectionResult mergePipelineLayoutResult = createPipelineLayoutDescriptor(pipelineLayoutDescriptorCreateInfo, pipelineLayoutDescriptor);
@@ -410,9 +399,7 @@ namespace litl::vulkan
             return {};
         }
 
-        // ---------------------------------------------------------------------------------
-        // Create the Graphics Pipeline
-        // ---------------------------------------------------------------------------------
+        // ---- Create the Graphics Pipeline
 
         const VkGraphicsPipelineCreateInfo createInfo{
             .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
@@ -465,9 +452,16 @@ namespace litl::vulkan
 
     void ResourceManager::destroyGraphicsPipeline(GraphicsPipelineHandle handle) noexcept
     {
-        if (m_graphicsPipelinePool.destroy(handle))
+        GraphicsPipelineResource* resource = m_graphicsPipelinePool.get(handle);
+
+        if (resource != nullptr)
         {
-            // ... todo ...
+            if (resource->vkPipeline != VK_NULL_HANDLE)
+            {
+                vkDestroyPipeline(m_pContext->device.vkDevice, resource->vkPipeline, nullptr);
+            }
+
+            m_graphicsPipelinePool.destroy(handle);
         }
     }
 
