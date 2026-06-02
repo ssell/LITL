@@ -103,7 +103,7 @@ namespace litl
                 (handle.version > 0);
         }
 
-        void getAllHandles(std::vector<Handle<Tag>> handles) const noexcept
+        void getAllHandles(std::vector<Handle<Tag>>& handles) const noexcept
         {
             handles.reserve(m_slots.size());
 
