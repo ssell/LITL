@@ -2,8 +2,8 @@
 #define LITL_RENDERER_VULKAN_SHADER_MODULE_H__
 
 #include <optional>
-#include <string_view>
 
+#include "litl-core/stringId.hpp"
 #include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer-vulkan/conversions.hpp"
 #include "litl-renderer/resources/shaderModule.hpp"
@@ -32,6 +32,11 @@ namespace litl::vulkan
         /// The name of the resource from which this shader module was loaded.
         /// </summary>
         std::string resource;
+
+        /// <summary>
+        /// The hashed ID of the resource string.
+        /// </summary>
+        StringId resourceId;
 
         /// <summary>
         /// Given an entry point name, creates a corresponding VkPipelineShaderStageCreateInfo if it exists.

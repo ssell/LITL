@@ -64,6 +64,8 @@ namespace litl
 
     uint64_t hashString(std::string_view str);
     uint64_t hashString(std::string_view str, uint64_t seed);
+
+    uint64_t fastHashString(std::string_view s);
 }
 
 #endif

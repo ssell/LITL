@@ -489,7 +489,7 @@ namespace litl::vulkan
         if (createGraphicsPipelineResource(*this, m_pContext, resource, descriptor) == true)
         {
             handle = m_graphicsPipelinePool.create(resource);
-            m_shaderModuleReferenceMap.onGraphicsPipelineAdded(m_graphicsPipelinePool.get(handle));
+            m_shaderModuleReferenceMap.onGraphicsPipelineAdded(this, m_graphicsPipelinePool.get(handle));
         }
         else
         {
@@ -510,7 +510,7 @@ namespace litl::vulkan
 
         if (resource != nullptr)
         {
-            m_shaderModuleReferenceMap.onGraphicsPipelineDestroyed(resource);
+            m_shaderModuleReferenceMap.onGraphicsPipelineDestroyed(this, resource);
 
             if (resource->vkPipeline != VK_NULL_HANDLE)
             {
@@ -613,6 +613,7 @@ namespace litl::vulkan
         // Finish building the resource and then create the handle
         resource.spirvHash = hashArray(descriptor.bytes);
         resource.resource = descriptor.resource;
+        resource.resourceId = StringId(descriptor.resource);
 
         return true;
     }
