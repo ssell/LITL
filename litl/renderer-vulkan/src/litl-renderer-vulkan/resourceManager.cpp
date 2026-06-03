@@ -488,7 +488,9 @@ namespace litl::vulkan
 
         if (createGraphicsPipelineResource(*this, m_pContext, resource, descriptor) == true)
         {
+            resource.descriptor = descriptor;
             handle = m_graphicsPipelinePool.create(resource);
+
             m_shaderModuleReferenceMap.onGraphicsPipelineAdded(this, m_graphicsPipelinePool.get(handle));
         }
         else
