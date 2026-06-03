@@ -2,12 +2,13 @@
 #define LITL_RENDERER_BUFFER_H__
 
 #include "litl-core/handles.hpp"
+#include "litl-renderer/enums.hpp"
 
 namespace litl
 {
     struct BufferDescriptor
     {
-        // ... todo ...
+        BufferUsageFlag usage = static_cast<BufferUsageFlag>(BufferUsageFlagBits::None);
     };
 
     struct BufferTag {};

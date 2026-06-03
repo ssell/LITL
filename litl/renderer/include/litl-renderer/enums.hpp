@@ -51,6 +51,31 @@ namespace litl
     /// </summary>
     using ImageAccessFlag = uint64_t;
 
+    enum class BufferUsageFlagBits : uint64_t
+    {
+        None                = 0,
+        VertexBuffer        = 1 << 0,       // Used as a vertex buffer.
+        IndexBuffer         = 1 << 1,       // Used as an index buffer.
+        UniformBuffer       = 1 << 2,       // Referenced through an UBO descriptor.
+        StorageBuffer       = 1 << 3,       // Referenced through a SSBO descriptor.
+        TransferSource      = 1 << 4,       // Used as the source of a copy buffer command.
+        TransferDest        = 1 << 5,       // Used as the destination of a copy buffer command.
+        ShaderDeviceAddress = 1 << 6,       // Can be accessed via a 64-bit point in shaders (Buffer Device Address (BDA))
+    };
+
+    /// <summary>
+    /// Composed of BufferUsageFlagBits
+    /// </summary>
+    using BufferUsageFlag = uint64_t;
+
+    enum class BufferMemoryUsage : uint32_t
+    {
+        Unknown = 0,
+        Auto = 1,               // Recommended for most common use cases. Picks memory usage based on the declared buffer usage target.
+        PreferDevice = 2,       // Selects best memory type automatically with preference for GPU (device) memory. Staging buffer required for updates.
+        PreferHost = 3          // Selects best memory type automatically with preference for CPU (host) memory. Slower GPU access but does not require a staging buffer for updates.
+    };
+
     // Based on https://docs.vulkan.org/refpages/latest/refpages/source/VkPipelineStageFlagBits2.html
     enum class PipelineStageFlagBits : uint64_t
     {
@@ -294,7 +319,7 @@ namespace litl
     /// <summary>
     /// Is the vertex binding stepped at a per-vertex or per-instance rate?
     /// </summary>
-    enum class VertexInputRate
+    enum class VertexInputRate : uint32_t
     {
         PerVertex = 0,
         PerInstance = 1
