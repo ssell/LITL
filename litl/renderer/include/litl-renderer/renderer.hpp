@@ -35,6 +35,7 @@ namespace litl
         void (*destroySampler)(RendererContext*, SamplerHandle);
         ShaderModuleHandle (*createShaderModule)(RendererContext*, ShaderModuleDescriptor const&);
         ShaderModuleHandle(*getShaderModule)(RendererContext*, std::string const&);
+        void (*reloadShaderModule)(RendererContext*, ShaderModuleDescriptor const&);
         void (*destroyShaderModule)(RendererContext*, ShaderModuleHandle);
         TextureHandle (*createTexture)(RendererContext*, TextureDescriptor const&);
         void (*destroyTexture)(RendererContext*, TextureHandle);
@@ -165,6 +166,11 @@ namespace litl
         [[nodiscard]] ShaderModuleHandle getShaderModule(std::string const& resource) const noexcept
         {
             return m_pOps->getShaderModule(m_pContext, resource);
+        }
+
+        void reloadShaderModule(ShaderModuleDescriptor const& descriptor) const noexcept
+        {
+            m_pOps->reloadShaderModule(m_pContext, descriptor);
         }
 
         void destroyShaderModule(ShaderModuleHandle handle) const noexcept

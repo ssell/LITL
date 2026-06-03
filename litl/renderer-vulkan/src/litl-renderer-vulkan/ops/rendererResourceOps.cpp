@@ -74,6 +74,12 @@ namespace litl::vulkan
         return vulkanContext->resources.getShaderModuleHandle(resource);
     }
 
+    void reloadShaderModule(litl::RendererContext* context, ShaderModuleDescriptor const& descriptor) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+        vulkanContext->resources.onShaderModuleReload(descriptor);
+    }
+
     void destroyShaderModule(litl::RendererContext* context, ShaderModuleHandle handle) noexcept
     {
         auto* vulkanContext = unwrap(context);
