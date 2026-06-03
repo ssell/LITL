@@ -20,8 +20,8 @@ namespace litl::vulkan
     {
     public:
 
-        ShaderModuleReferenceMap();
-        ~ShaderModuleReferenceMap();
+        ShaderModuleReferenceMap() = default;
+        ~ShaderModuleReferenceMap() = default;
 
         ShaderModuleReferenceMap(ShaderModuleReferenceMap const&) = delete;
         ShaderModuleReferenceMap& operator=(ShaderModuleReferenceMap const&) = delete;

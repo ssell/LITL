@@ -16,7 +16,8 @@ namespace litl::vulkan
 
     void ResourceManager::destroy() noexcept
     {
-        // Graphics Pipelines
+        // ---- Graphics Pipelines
+
         std::vector<GraphicsPipelineHandle> graphicsPipelineHandles;
         m_graphicsPipelinePool.getAllHandles(graphicsPipelineHandles);
 
@@ -25,7 +26,8 @@ namespace litl::vulkan
             destroyGraphicsPipeline(graphicsPipelineHandle);
         }
 
-        // Command Buffers
+        // ---- Command Buffers
+
         std::vector<CommandBufferHandle> commandBufferHandles;
         m_commandBufferPool.getAllHandles(commandBufferHandles);
 
@@ -34,13 +36,23 @@ namespace litl::vulkan
             destroyCommandBuffer(commandBufferHandle);
         }
 
-        // Pipeline Layouts
+        // ---- Pipeline Layouts
+
         m_pipelineLayoutCache.destroy();
 
-        // Shader Modules
-        for (auto shaderModuleHandleKvp : m_shaderModuleMap)
+        // ---- Shader Modules
+
+        std::vector<ShaderModuleHandle> shaderModuleHandles;
+        shaderModuleHandles.reserve(m_shaderModuleMap.size());
+
+        for (auto const& [_, handle] : m_shaderModuleMap)
         {
-            destroyShaderModule(shaderModuleHandleKvp.second);
+            shaderModuleHandles.push_back(handle);
+        }
+
+        for (auto shaderModuleHandle : shaderModuleHandles)
+        {
+            destroyShaderModule(shaderModuleHandle);
         }
 
     }
@@ -666,79 +678,91 @@ namespace litl::vulkan
         }
     }
 
-    void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descriptor) noexcept
+void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descriptor) noexcept
+{
+    auto handle = getShaderModuleHandle(descriptor.resource);
+    auto* resource = getShaderModule(handle);
+
+    if (resource == nullptr)
     {
-        auto handle = getShaderModuleHandle(descriptor.resource);
-        auto* resource = getShaderModule(handle);
+        // no active shader module matching the descriptor - nothing to reload
+        return;
+    }
 
-        if (resource == nullptr)
+    ShaderModuleResource reloadedResource{};
+
+    if (createShaderModuleResource(m_pContext, reloadedResource, descriptor))
+    {
+        if (reloadedResource.spirvHash == resource->spirvHash)
         {
-            // no active shader module matching the descriptor - nothing to reload
-            return;
-        }
-
-        ShaderModuleResource reloadedResource{};
-
-        if (createShaderModuleResource(m_pContext, reloadedResource, descriptor))
-        {
-            if (reloadedResource.spirvHash == resource->spirvHash)
-            {
-                // Identical, nothing needs to happen. Destroy the new duplicate module
-                vkDestroyShaderModule(m_pContext->device.vkDevice, reloadedResource.vkShaderModule, nullptr);
-            }
-            else
-            {
-                // Recreate the shader module and any pipelines (both graphics and compute) that reference it.
-                // As the renderer library deals only with handles, we simply recreate the underlying resources associated with the handles.
-
-                VkShaderModule oldShaderModule = resource->vkShaderModule;
-
-                resource->vkShaderModule = reloadedResource.vkShaderModule;
-                resource->reflection = reloadedResource.reflection;
-                resource->spirvHash = reloadedResource.spirvHash;
-
-                std::vector<GraphicsPipelineResource*> affectedGraphicsPipelines;
-                std::vector<ComputePipelineResource*> affectedComputePipelines;
-
-                m_shaderModuleReferenceMap.getGraphicsPipelinesFor(resource, affectedGraphicsPipelines);
-                m_shaderModuleReferenceMap.getComputePipelinesFor(resource, affectedComputePipelines);
-
-                for (auto* graphicsPipelineResource : affectedGraphicsPipelines)
-                {
-                    VkPipeline oldGraphicsPipeline = graphicsPipelineResource->vkPipeline;
-
-                    if (createGraphicsPipelineResource(*this, m_pContext, *graphicsPipelineResource, graphicsPipelineResource->descriptor))
-                    {
-                        vkDestroyPipeline(m_pContext->device.vkDevice, oldGraphicsPipeline, nullptr);
-                    }
-                    else
-                    {
-                        logError("Failed to recreate Vulkan Graphics Pipeline following reload of shader at '", descriptor.resource, "'");
-                    }
-                }
-
-                for (auto* computePipelineResource : affectedComputePipelines)
-                {
-                    VkPipeline oldComputePipeline = computePipelineResource->vkPipeline;
-
-                    if (createComputePipelineResource(*this, m_pContext, *computePipelineResource, computePipelineResource->descriptor))
-                    {
-                        vkDestroyPipeline(m_pContext->device.vkDevice, oldComputePipeline, nullptr);
-                    }
-                    else
-                    {
-                        logError("Failed to recreate Vulkan Compute Pipeline following reload of shader at '", descriptor.resource, "'");
-                    }
-                }
-
-                vkDestroyShaderModule(m_pContext->device.vkDevice, oldShaderModule, nullptr);
-            }
+            // Identical, nothing needs to happen. Destroy the new duplicate module
+            vkDestroyShaderModule(m_pContext->device.vkDevice, reloadedResource.vkShaderModule, nullptr);
         }
         else
         {
-            logError("Failed to recreate Vulkan Shader Module following reload of shader at '", descriptor.resource, "'");
+            // First wait until idle to ensure the old pipeline is not in used before swapping.
+            // todo: add a delayed destruction queue where we can enqueue vulkan handles to be destroyed in X frames instead of hard waiting here.
+            vkDeviceWaitIdle(m_pContext->device.vkDevice);
+
+            // Recreate the shader module and any pipelines (both graphics and compute) that reference it.
+            // As the renderer library deals only with handles, we simply recreate the underlying resources associated with the handles.
+
+            VkShaderModule oldShaderModule = resource->vkShaderModule;
+
+            resource->vkShaderModule = reloadedResource.vkShaderModule;
+            resource->reflection = std::move(reloadedResource.reflection);      // move since 'reloadedResource' is dying anyways
+            resource->spirvHash = reloadedResource.spirvHash;
+
+            std::vector<GraphicsPipelineResource*> affectedGraphicsPipelines;
+            std::vector<ComputePipelineResource*> affectedComputePipelines;
+
+            m_shaderModuleReferenceMap.getGraphicsPipelinesFor(resource, affectedGraphicsPipelines);
+            m_shaderModuleReferenceMap.getComputePipelinesFor(resource, affectedComputePipelines);
+
+            for (auto* graphicsPipelineResource : affectedGraphicsPipelines)
+            {
+                // Create to a staged pipeline and only swap on success.
+                GraphicsPipelineResource stagedGraphicsPipeline{};
+
+                if (createGraphicsPipelineResource(*this, m_pContext, stagedGraphicsPipeline, graphicsPipelineResource->descriptor))
+                {
+                    VkPipeline oldGraphicsPipeline = graphicsPipelineResource->vkPipeline;
+                    graphicsPipelineResource->vkPipeline = stagedGraphicsPipeline.vkPipeline;
+
+                    vkDestroyPipeline(m_pContext->device.vkDevice, oldGraphicsPipeline, nullptr);
+                }
+                else
+                {
+                    logError("Failed to recreate Vulkan Graphics Pipeline following reload of shader at '", descriptor.resource, "'");
+                }
+            }
+
+            for (auto* computePipelineResource : affectedComputePipelines)
+            {
+                // Create to a staged pipeline and only swap on success.
+                ComputePipelineResource stagedComputePipeline{};
+
+                if (createComputePipelineResource(*this, m_pContext, stagedComputePipeline, computePipelineResource->descriptor))
+                {
+                    VkPipeline oldComputePipeline = computePipelineResource->vkPipeline;
+                    computePipelineResource->vkPipeline = stagedComputePipeline.vkPipeline;
+
+                    vkDestroyPipeline(m_pContext->device.vkDevice, oldComputePipeline, nullptr);
+                }
+                else
+                {
+                    logError("Failed to recreate Vulkan Compute Pipeline following reload of shader at '", descriptor.resource, "'");
+                }
+            }
+
+            vkDestroyShaderModule(m_pContext->device.vkDevice, oldShaderModule, nullptr);
         }
     }
+    else
+    {
+        logError("Failed to recreate Vulkan Shader Module following reload of shader at '", descriptor.resource, "'");
+    }
+}
 
     //--------------------------------------------------------------------------------------
     // Texture
