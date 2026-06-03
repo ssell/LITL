@@ -1,5 +1,6 @@
 #include "litl-renderer-vulkan/renderer.hpp"
 #include "litl-renderer-vulkan/conversions.hpp"
+#include "litl-core/assert.hpp"
 
 namespace litl::vulkan
 {
@@ -343,6 +344,8 @@ namespace litl::vulkan
 
     void cmdBindGraphicsPipeline(litl::RendererContext* context, CommandBufferHandle handle, GraphicsPipelineHandle graphicsPipelineHandle) noexcept
     {
+        LITL_ASSERT_MSG(graphicsPipelineHandle.isValid(), "Invalid GraphicsPipelineHandle provided to cmdBindGraphicsPipeline", );
+
         auto* vulkanContext = unwrap(context);
         auto* commandBuffer = unwrapCommandBuffer(context, handle);
 

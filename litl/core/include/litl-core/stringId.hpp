@@ -38,7 +38,10 @@ namespace litl
     /// </summary>
     struct StringIdHash
     {
-        using isTransparent = void;
+        /// <summary>
+        /// Needed for unordered-container heterogeneous-lookup path.
+        /// </summary>
+        using is_transparent = void;
         
         constexpr uint64_t operator()(StringId id) const noexcept
         {
@@ -56,7 +59,10 @@ namespace litl
     /// </summary>
     struct StringIdEquals
     {
-        using isTransparent = void;
+        /// <summary>
+        /// Needed for unordered-container heterogeneous-lookup path.
+        /// </summary>
+        using is_transparent = void;
 
         constexpr bool operator()(StringId a, StringId b) const noexcept
         {

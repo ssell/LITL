@@ -45,7 +45,6 @@ int main()
 
                     renderer->cmdBindGraphicsPipeline(commandBuffer, graphicsPipelineHandle);
                     renderer->cmdDraw(commandBuffer, 3, 1, 0, 0);
-                    renderer->cmdBindGraphicsPipeline(commandBuffer, {});
 
                     endRender(renderer, commandBuffer);
                 }
