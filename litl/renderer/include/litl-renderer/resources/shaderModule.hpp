@@ -90,6 +90,17 @@ namespace litl
 
     struct ShaderModuleTag {};
     using ShaderModuleHandle = Handle<ShaderModuleTag>;
+
+    /// <summary>
+    /// The shader module and entry point into that module.
+    /// The specified stage must match the reflected stage of the entry point.
+    /// </summary>
+    struct PipelineShaderDescriptor
+    {
+        ShaderModuleHandle handle{};
+        ShaderStage stage;
+        std::string entryPoint;
+    };
 }
 
 #endif

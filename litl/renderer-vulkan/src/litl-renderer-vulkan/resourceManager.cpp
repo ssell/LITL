@@ -144,7 +144,7 @@ namespace litl::vulkan
     // GraphicsPipeline
     //--------------------------------------------------------------------------------------
 
-    void createPipelineShaderStageCreateInfo(ShaderModuleResource* resource, GraphicsPipelineShaderDescriptor const& descriptor, std::array<VkPipelineShaderStageCreateInfo, 7>& stages, uint32_t& count, PipelineLayoutDescriptorCreateInfo& pipelineLayoutDescriptorCreateInfo) noexcept
+    void createPipelineShaderStageCreateInfo(ShaderModuleResource* resource, PipelineShaderDescriptor const& descriptor, std::array<VkPipelineShaderStageCreateInfo, 7>& stages, uint32_t& count, PipelineLayoutDescriptorCreateInfo& pipelineLayoutDescriptorCreateInfo) noexcept
     {
         if (resource == nullptr)
         {
@@ -211,33 +211,37 @@ namespace litl::vulkan
         };
     }
 
-    GraphicsPipelineHandle ResourceManager::createGraphicsPipeline(GraphicsPipelineDescriptor const& descriptor) noexcept
+    /// <summary>
+    /// Creates the resource.
+    /// This is split out because two paths need to be able to create a shader resource: createGraphicsPipeline and onShaderModuleReload.
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="resource"></param>
+    /// <param name="descriptor"></param>
+    /// <returns></returns>
+    bool createGraphicsPipelineResource(ResourceManager& resources, RendererContext* context, GraphicsPipelineResource& resource, GraphicsPipelineDescriptor const& descriptor)
     {
-        GraphicsPipelineResource resource{};
-
-        // ---- Shader Stages
-
         uint32_t shaderStageCount = 0;
         std::array<VkPipelineShaderStageCreateInfo, 7> shaderStages;
         PipelineLayoutDescriptorCreateInfo pipelineLayoutDescriptorCreateInfo{};        // used later, but everything we need to make it is retrieved now.
 
-        createPipelineShaderStageCreateInfo(getShaderModule(descriptor.vertex.handle), descriptor.vertex, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
-        createPipelineShaderStageCreateInfo(getShaderModule(descriptor.fragment.handle), descriptor.fragment, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
-        createPipelineShaderStageCreateInfo(getShaderModule(descriptor.geometry.handle), descriptor.geometry, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
-        createPipelineShaderStageCreateInfo(getShaderModule(descriptor.tessellationEvaluation.handle), descriptor.tessellationEvaluation, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
-        createPipelineShaderStageCreateInfo(getShaderModule(descriptor.tessellationControl.handle), descriptor.tessellationControl, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
-        createPipelineShaderStageCreateInfo(getShaderModule(descriptor.mesh.handle), descriptor.mesh, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
-        createPipelineShaderStageCreateInfo(getShaderModule(descriptor.task.handle), descriptor.task, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
+        createPipelineShaderStageCreateInfo(resources.getShaderModule(descriptor.vertex.handle), descriptor.vertex, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
+        createPipelineShaderStageCreateInfo(resources.getShaderModule(descriptor.fragment.handle), descriptor.fragment, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
+        createPipelineShaderStageCreateInfo(resources.getShaderModule(descriptor.geometry.handle), descriptor.geometry, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
+        createPipelineShaderStageCreateInfo(resources.getShaderModule(descriptor.tessellationEvaluation.handle), descriptor.tessellationEvaluation, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
+        createPipelineShaderStageCreateInfo(resources.getShaderModule(descriptor.tessellationControl.handle), descriptor.tessellationControl, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
+        createPipelineShaderStageCreateInfo(resources.getShaderModule(descriptor.mesh.handle), descriptor.mesh, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
+        createPipelineShaderStageCreateInfo(resources.getShaderModule(descriptor.task.handle), descriptor.task, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
 
         // ---- Vertex Input
-        
+
         std::vector<VkVertexInputBindingDescription> vertexInputBindingDescriptions;
         std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescriptions;
 
         const VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo = createVertexInputStateCreateInfo(descriptor.vertexInput, vertexInputBindingDescriptions, vertexInputAttributeDescriptions);
 
         // ---- Input Assembly
-        
+
         const VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo{
             .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
             .pNext = nullptr,
@@ -336,7 +340,7 @@ namespace litl::vulkan
                 .dstAlphaBlendFactor = toVkBlendFactor(colorBlendAttachment.dstAlphaBlendFactor),
                 .alphaBlendOp = toVkBlendOp(colorBlendAttachment.alphaBlendOp),
                 .colorWriteMask = toVkColorComponentFlag(colorBlendAttachment.colorWriteMask)
-            });
+                });
         }
 
         const VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo{
@@ -347,11 +351,11 @@ namespace litl::vulkan
             .logicOp = toVkLogicOp(descriptor.colorBlend.logicOp),
             .attachmentCount = static_cast<uint32_t>(colorBlendAttachmentStates.size()),
             .pAttachments = colorBlendAttachmentStates.data(),
-            .blendConstants = { 
-                descriptor.colorBlend.blendConstants[0], 
-                descriptor.colorBlend.blendConstants[1], 
-                descriptor.colorBlend.blendConstants[2], 
-                descriptor.colorBlend.blendConstants[3] 
+            .blendConstants = {
+                descriptor.colorBlend.blendConstants[0],
+                descriptor.colorBlend.blendConstants[1],
+                descriptor.colorBlend.blendConstants[2],
+                descriptor.colorBlend.blendConstants[3]
             }
         };
 
@@ -388,7 +392,7 @@ namespace litl::vulkan
             return {};
         }
 
-        const VkPipelineLayout vkPipelineLayout = getOrCreatePipelineLayout(pipelineLayoutDescriptor);
+        const VkPipelineLayout vkPipelineLayout = resources.getOrCreatePipelineLayout(pipelineLayoutDescriptor);
 
         if (vkPipelineLayout == VK_NULL_HANDLE)
         {
@@ -450,16 +454,31 @@ namespace litl::vulkan
             .basePipelineIndex = -1             // not used yet
         };
 
-        const VkResult result = vkCreateGraphicsPipelines(m_pContext->device.vkDevice, m_pContext->device.vkPipelineCache, 1, &createInfo, nullptr, &resource.vkPipeline);
+        const VkResult result = vkCreateGraphicsPipelines(context->device.vkDevice, context->device.vkPipelineCache, 1, &createInfo, nullptr, &resource.vkPipeline);
 
         if (result != VK_SUCCESS)
         {
             logError("Failed to create Vulkan Graphics Pipeline with result ", result);
-            return {};
+            return false;
         }
 
-        auto handle = m_graphicsPipelinePool.create(resource);
-        m_shaderModuleReferenceMap.onGraphicsPipelineAdded(m_graphicsPipelinePool.get(handle));
+        return true;
+    }
+
+    GraphicsPipelineHandle ResourceManager::createGraphicsPipeline(GraphicsPipelineDescriptor const& descriptor) noexcept
+    {
+        GraphicsPipelineResource resource{};
+        GraphicsPipelineHandle handle{};
+
+        if (createGraphicsPipelineResource(*this, m_pContext, resource, descriptor) == true)
+        {
+            handle = m_graphicsPipelinePool.create(resource);
+            m_shaderModuleReferenceMap.onGraphicsPipelineAdded(m_graphicsPipelinePool.get(handle));
+        }
+        else
+        {
+            logError("Error creating Vulkan Graphics Pipeline");
+        }
 
         return handle;
     }
@@ -525,6 +544,14 @@ namespace litl::vulkan
         return {};
     }
 
+    /// <summary>
+    /// Creates the resource.
+    /// This is split out because two paths need to be able to create a shader resource: createShaderModule and onShaderModuleReload.
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="resource"></param>
+    /// <param name="descriptor"></param>
+    /// <returns></returns>
     bool createShaderModuleResource(RendererContext* context, ShaderModuleResource& resource, ShaderModuleDescriptor const& descriptor) noexcept
     {
         if (descriptor.resource.empty())
@@ -620,7 +647,7 @@ namespace litl::vulkan
         }
     }
 
-    void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descriptor)
+    void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descriptor) noexcept
     {
         auto handle = getShaderModuleHandle(descriptor.resource);
         auto* resource = getShaderModule(handle);
@@ -648,20 +675,20 @@ namespace litl::vulkan
                 resource->reflection = reloadedResource.reflection;
                 resource->spirvHash = reloadedResource.spirvHash;
 
-                std::vector<UnifiedPipelineHandle> affectedPipelines;
-                m_shaderModuleReferenceMap.getPipelinesFor(resource, affectedPipelines);
+                std::vector<GraphicsPipelineResource*> affectedGraphicsPipelines;
+                std::vector<ComputePipelineResource*> affectedComputePipelines;
 
-                for (auto& unifiedPipeline : affectedPipelines)
+                m_shaderModuleReferenceMap.getGraphicsPipelinesFor(resource, affectedGraphicsPipelines);
+                m_shaderModuleReferenceMap.getComputePipelinesFor(resource, affectedComputePipelines);
+
+                for (auto* graphicsPipeline : affectedGraphicsPipelines)
                 {
-                    if (unifiedPipeline.graphicsPipeline != nullptr)
-                    {
-                        // ... todo ...
-                    }
+                    // ... todo recreate the pipeline ...
+                }
 
-                    if (unifiedPipeline.computePipeline != nullptr)
-                    {
-                        // ... todo ...
-                    }
+                for (auto* computePipeline : affectedComputePipelines)
+                {
+                    // ... todo recreate the pipeline ...
                 }
 
                 vkDestroyShaderModule(m_pContext->device.vkDevice, oldShaderModule, nullptr);
