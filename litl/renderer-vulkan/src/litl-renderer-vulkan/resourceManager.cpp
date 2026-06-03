@@ -119,6 +119,22 @@ namespace litl::vulkan
     // ComputePipeline
     //--------------------------------------------------------------------------------------
 
+    /// <summary>
+    /// Creates the resource.
+    /// This is split out because two paths need to be able to create a compute pipeline resource: createComputePipeline and onShaderModuleReload.
+    /// </summary>
+    /// <param name="resources"></param>
+    /// <param name="context"></param>
+    /// <param name="resource"></param>
+    /// <param name="descriptor"></param>
+    /// <returns></returns>
+    bool createComputePipelineResource(ResourceManager& resources, RendererContext* context, ComputePipelineResource& resource, ComputePipelineDescriptor const& descriptor)
+    {
+        // ... todo ...
+
+        return true;
+    }
+
     ComputePipelineHandle ResourceManager::createComputePipeline(ComputePipelineDescriptor const& descriptor) noexcept
     {
         // ... todo ...
@@ -213,7 +229,7 @@ namespace litl::vulkan
 
     /// <summary>
     /// Creates the resource.
-    /// This is split out because two paths need to be able to create a shader resource: createGraphicsPipeline and onShaderModuleReload.
+    /// This is split out because two paths need to be able to create a graphics pipeline resource: createGraphicsPipeline and onShaderModuleReload.
     /// </summary>
     /// <param name="context"></param>
     /// <param name="resource"></param>
@@ -669,6 +685,9 @@ namespace litl::vulkan
             }
             else
             {
+                // Recreate the shader module and any pipelines (both graphics and compute) that reference it.
+                // As the renderer library deals only with handles, we simply recreate the underlying resources associated with the handles.
+
                 VkShaderModule oldShaderModule = resource->vkShaderModule;
 
                 resource->vkShaderModule = reloadedResource.vkShaderModule;
@@ -681,18 +700,40 @@ namespace litl::vulkan
                 m_shaderModuleReferenceMap.getGraphicsPipelinesFor(resource, affectedGraphicsPipelines);
                 m_shaderModuleReferenceMap.getComputePipelinesFor(resource, affectedComputePipelines);
 
-                for (auto* graphicsPipeline : affectedGraphicsPipelines)
+                for (auto* graphicsPipelineResource : affectedGraphicsPipelines)
                 {
-                    // ... todo recreate the pipeline ...
+                    VkPipeline oldGraphicsPipeline = graphicsPipelineResource->vkPipeline;
+
+                    if (createGraphicsPipelineResource(*this, m_pContext, *graphicsPipelineResource, graphicsPipelineResource->descriptor))
+                    {
+                        vkDestroyPipeline(m_pContext->device.vkDevice, oldGraphicsPipeline, nullptr);
+                    }
+                    else
+                    {
+                        logError("Failed to recreate Vulkan Graphics Pipeline following reload of shader at '", descriptor.resource, "'");
+                    }
                 }
 
-                for (auto* computePipeline : affectedComputePipelines)
+                for (auto* computePipelineResource : affectedComputePipelines)
                 {
-                    // ... todo recreate the pipeline ...
+                    VkPipeline oldComputePipeline = computePipelineResource->vkPipeline;
+
+                    if (createComputePipelineResource(*this, m_pContext, *computePipelineResource, computePipelineResource->descriptor))
+                    {
+                        vkDestroyPipeline(m_pContext->device.vkDevice, oldComputePipeline, nullptr);
+                    }
+                    else
+                    {
+                        logError("Failed to recreate Vulkan Compute Pipeline following reload of shader at '", descriptor.resource, "'");
+                    }
                 }
 
                 vkDestroyShaderModule(m_pContext->device.vkDevice, oldShaderModule, nullptr);
             }
+        }
+        else
+        {
+            logError("Failed to recreate Vulkan Shader Module following reload of shader at '", descriptor.resource, "'");
         }
     }
 
