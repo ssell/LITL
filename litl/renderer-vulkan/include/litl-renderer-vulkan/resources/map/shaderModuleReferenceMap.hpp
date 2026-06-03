@@ -3,11 +3,11 @@
 
 #include <vector>
 
-#include "litl-renderer-vulkan/resources/unifiedPipeline.hpp"
-
 namespace litl::vulkan
 {
     struct ShaderModuleResource;
+    struct GraphicsPipelineResource;
+    struct ComputePipelineResource;
 
     /// <summary>
     /// Maintains mappings between Shader Modules and pipeliens that reference them.
@@ -32,7 +32,8 @@ namespace litl::vulkan
         void onComputePipelineAdded(ComputePipelineResource* resource) noexcept;
         void onComputePipelineDestroyed(ComputePipelineResource* resource) noexcept;
 
-        void getPipelinesFor(ShaderModuleResource* resource, std::vector<UnifiedPipelineHandle>& pipelines) const noexcept;
+        void getGraphicsPipelinesFor(ShaderModuleResource* resource, std::vector<GraphicsPipelineResource*>& pipelines) const noexcept;
+        void getComputePipelinesFor(ShaderModuleResource* resource, std::vector<ComputePipelineResource*>& pipelines) const noexcept;
 
     private:
     };

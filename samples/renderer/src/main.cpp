@@ -153,12 +153,12 @@ GraphicsPipelineHandle createTriangleGraphicsPipeline(Renderer* renderer) noexce
     }
 
     const GraphicsPipelineDescriptor graphicsPipelineDescriptor{
-        .vertex = GraphicsPipelineShaderDescriptor {
+        .vertex = PipelineShaderDescriptor {
             .handle = shaderHandle,
             .stage = ShaderStage::Vertex,
             .entryPoint = "vertexMain"
         },
-        .fragment = GraphicsPipelineShaderDescriptor {
+        .fragment = PipelineShaderDescriptor {
             .handle = shaderHandle,
             .stage = ShaderStage::Fragment,
             .entryPoint = "fragmentMain"

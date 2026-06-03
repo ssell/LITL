@@ -44,8 +44,13 @@ namespace litl::vulkan
 
     }
 
-    void ShaderModuleReferenceMap::getPipelinesFor(ShaderModuleResource* resource, std::vector<UnifiedPipelineHandle>& pipelines) const noexcept
+    void ShaderModuleReferenceMap::getGraphicsPipelinesFor(ShaderModuleResource* resource, std::vector<GraphicsPipelineResource*>& pipelines) const noexcept
     {
-        LITL_ASSERT_MSG(resource != nullptr, "ShaderModuleReferenceMap::getPipelinesFor provided NULL shader module resource", );
+        LITL_ASSERT_MSG(resource != nullptr, "ShaderModuleReferenceMap::getGraphicsPipelinesFor provided NULL shader module resource", );
+    }
+
+    void ShaderModuleReferenceMap::getComputePipelinesFor(ShaderModuleResource* resource, std::vector<ComputePipelineResource*>& pipelines) const noexcept
+    {
+        LITL_ASSERT_MSG(resource != nullptr, "ShaderModuleReferenceMap::getComputePipelinesFor provided NULL shader module resource", );
     }
 }

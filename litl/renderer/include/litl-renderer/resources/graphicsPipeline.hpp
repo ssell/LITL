@@ -11,17 +11,6 @@
 namespace litl
 {
     /// <summary>
-    /// The shader module and entry point into that module.
-    /// The specified stage must match the reflected stage of the entry point.
-    /// </summary>
-    struct GraphicsPipelineShaderDescriptor
-    {
-        ShaderModuleHandle handle{};
-        ShaderStage stage;
-        std::string entryPoint;
-    };
-
-    /// <summary>
     /// A graphics pipeline is compatible with any render target whose formats match.
     /// 
     /// As the underlying Vulkan renderer uses dynamic rendering, the pipeline does not need
@@ -415,13 +404,13 @@ namespace litl
 
     struct GraphicsPipelineDescriptor
     {
-        GraphicsPipelineShaderDescriptor vertex;
-        GraphicsPipelineShaderDescriptor fragment;
-        GraphicsPipelineShaderDescriptor geometry;
-        GraphicsPipelineShaderDescriptor tessellationEvaluation;
-        GraphicsPipelineShaderDescriptor tessellationControl;
-        GraphicsPipelineShaderDescriptor mesh;
-        GraphicsPipelineShaderDescriptor task;
+        PipelineShaderDescriptor vertex;
+        PipelineShaderDescriptor fragment;
+        PipelineShaderDescriptor geometry;
+        PipelineShaderDescriptor tessellationEvaluation;
+        PipelineShaderDescriptor tessellationControl;
+        PipelineShaderDescriptor mesh;
+        PipelineShaderDescriptor task;
 
         RenderTargetFormats renderTargets;
 
