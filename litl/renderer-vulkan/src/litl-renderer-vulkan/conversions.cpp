@@ -593,7 +593,7 @@ namespace litl::vulkan
     // PrimitiveTopology <-> VkPrimitiveTopology
     // -------------------------------------------------------------------------------------
 
-    [[nodiscard]] VkPrimitiveTopology toVkPrimitiveTopology(PrimitiveTopology topology) noexcept
+    VkPrimitiveTopology toVkPrimitiveTopology(PrimitiveTopology topology) noexcept
     {
         switch (topology)
         {
@@ -621,7 +621,7 @@ namespace litl::vulkan
         }
     }
 
-    [[nodiscard]] PrimitiveTopology fromVkPrimitiveTopology(VkPrimitiveTopology topology) noexcept
+    PrimitiveTopology fromVkPrimitiveTopology(VkPrimitiveTopology topology) noexcept
     {
         switch (topology)
         {
@@ -653,7 +653,7 @@ namespace litl::vulkan
     // PolygonMode <-> VkPolygonMode
     // -------------------------------------------------------------------------------------
 
-    [[nodiscard]] VkPolygonMode toVkPolygonMode(PolygonMode mode) noexcept
+    VkPolygonMode toVkPolygonMode(PolygonMode mode) noexcept
     {
         switch (mode)
         {
@@ -672,7 +672,7 @@ namespace litl::vulkan
         }
     }
 
-    [[nodiscard]] PolygonMode fromVkPolygonMode(VkPolygonMode mode) noexcept
+    PolygonMode fromVkPolygonMode(VkPolygonMode mode) noexcept
     {
         switch (mode)
         {
@@ -695,7 +695,7 @@ namespace litl::vulkan
     // CullMode <-> VkCullModeFlags
     // -------------------------------------------------------------------------------------
 
-    [[nodiscard]] VkCullModeFlags toVkCullModeFlag(CullMode mode) noexcept
+    VkCullModeFlags toVkCullModeFlag(CullMode mode) noexcept
     {
         switch (mode)
         {
@@ -717,7 +717,7 @@ namespace litl::vulkan
         }
     }
 
-    [[nodiscard]] CullMode fromVkCullModeFlag(VkCullModeFlags mode) noexcept
+    CullMode fromVkCullModeFlag(VkCullModeFlags mode) noexcept
     {
         switch (mode)
         {
@@ -743,7 +743,7 @@ namespace litl::vulkan
     // FrontFace <-> VkFrontFace
     // -------------------------------------------------------------------------------------
 
-    [[nodiscard]] VkFrontFace toVkFrontFace(FrontFace face) noexcept
+    VkFrontFace toVkFrontFace(FrontFace face) noexcept
     {
         if (face == FrontFace::Clockwise)
         {
@@ -755,7 +755,7 @@ namespace litl::vulkan
         }
     }
 
-    [[nodiscard]] FrontFace fromVkFrontFace(VkFrontFace face) noexcept
+    FrontFace fromVkFrontFace(VkFrontFace face) noexcept
     {
         if (face == VkFrontFace::VK_FRONT_FACE_CLOCKWISE)
         {
@@ -771,7 +771,7 @@ namespace litl::vulkan
     // MultisampleCount <-> VkSampleCountFlags
     // -------------------------------------------------------------------------------------
 
-    [[nodiscard]] VkSampleCountFlags toVkSampleCountFlag(MultisampleCount count) noexcept
+    VkSampleCountFlags toVkSampleCountFlag(MultisampleCount count) noexcept
     {
         switch (count)
         {
@@ -802,7 +802,7 @@ namespace litl::vulkan
         }
     }
 
-    [[nodiscard]] MultisampleCount fromVkSampleCountFlag(VkSampleCountFlags count) noexcept
+    MultisampleCount fromVkSampleCountFlag(VkSampleCountFlags count) noexcept
     {
         switch (count)
         {
@@ -837,7 +837,7 @@ namespace litl::vulkan
     // CompareOperationType <-> VkCompareOp
     // -------------------------------------------------------------------------------------
 
-    [[nodiscard]] VkCompareOp toVkCompareOp(CompareOperationType op) noexcept
+    VkCompareOp toVkCompareOp(CompareOperationType op) noexcept
     {
         switch (op)
         {
@@ -868,7 +868,7 @@ namespace litl::vulkan
         }
     }
 
-    [[nodiscard]] CompareOperationType fromVkCompareOp(VkCompareOp op) noexcept
+    CompareOperationType fromVkCompareOp(VkCompareOp op) noexcept
     {
         switch (op)
         {
@@ -903,7 +903,7 @@ namespace litl::vulkan
     // StencilOperationType <-> VkStencilOp
     // -------------------------------------------------------------------------------------
 
-    [[nodiscard]] VkStencilOp toVkStencilOp(StencilOperationType op) noexcept
+    VkStencilOp toVkStencilOp(StencilOperationType op) noexcept
     {
         switch (op)
         {
@@ -937,7 +937,7 @@ namespace litl::vulkan
         }
     }
 
-    [[nodiscard]] StencilOperationType fromVkStencilOp(VkStencilOp op) noexcept
+    StencilOperationType fromVkStencilOp(VkStencilOp op) noexcept
     {
         switch (op)
         {
@@ -975,7 +975,7 @@ namespace litl::vulkan
     // LogicOperationType <-> VkLogicOp
     // -------------------------------------------------------------------------------------
 
-    [[nodiscard]] VkLogicOp toVkLogicOp(LogicOperationType op) noexcept
+    VkLogicOp toVkLogicOp(LogicOperationType op) noexcept
     {
         switch (op)
         {
@@ -1033,7 +1033,7 @@ namespace litl::vulkan
         }
     }
 
-    [[nodiscard]] LogicOperationType fromVkLogicOp(VkLogicOp op) noexcept
+    LogicOperationType fromVkLogicOp(VkLogicOp op) noexcept
     {
         switch (op)
         {
@@ -1095,7 +1095,7 @@ namespace litl::vulkan
     // BlendOperationType <-> VkBlendOp
     // -------------------------------------------------------------------------------------
 
-    [[nodiscard]] VkBlendOp toVkBlendOp(BlendOperationType op) noexcept
+    VkBlendOp toVkBlendOp(BlendOperationType op) noexcept
     {
         switch (op)
         {
@@ -1120,7 +1120,7 @@ namespace litl::vulkan
         }
     }
 
-    [[nodiscard]] BlendOperationType fromVkBlendOp(VkBlendOp op) noexcept
+    BlendOperationType fromVkBlendOp(VkBlendOp op) noexcept
     {
         switch (op)
         {
@@ -1149,7 +1149,7 @@ namespace litl::vulkan
     // BlendFactor <-> VkBlendFactor
     // -------------------------------------------------------------------------------------
 
-    [[nodiscard]] VkBlendFactor toVkBlendFactor(BlendFactor factor) noexcept
+    VkBlendFactor toVkBlendFactor(BlendFactor factor) noexcept
     {
         switch (factor)
         {
@@ -1204,7 +1204,7 @@ namespace litl::vulkan
         }
     }
 
-    [[nodiscard]] BlendFactor fromVkBlendFactor(VkBlendFactor factor) noexcept
+    BlendFactor fromVkBlendFactor(VkBlendFactor factor) noexcept
     {
         switch (factor)
         {
@@ -1263,7 +1263,7 @@ namespace litl::vulkan
     // ColorComponentFlag <-> VkColorComponentFlags
     // -------------------------------------------------------------------------------------
 
-    [[nodiscard]] VkColorComponentFlags toVkColorComponentFlag(ColorComponentFlag flag) noexcept
+    VkColorComponentFlags toVkColorComponentFlag(ColorComponentFlag flag) noexcept
     {
         VkColorComponentFlags vkFlag = 0;
 
@@ -1275,7 +1275,7 @@ namespace litl::vulkan
         return vkFlag;
     }
 
-    [[nodiscard]] ColorComponentFlag fromVkColorComponentFlag(VkColorComponentFlags flag) noexcept
+    ColorComponentFlag fromVkColorComponentFlag(VkColorComponentFlags flag) noexcept
     {
         ColorComponentFlag litlFlag = 0;
 
@@ -1291,7 +1291,7 @@ namespace litl::vulkan
     // DynamicStateFlag <-> VkDynamicState
     // -------------------------------------------------------------------------------------
 
-    [[nodiscard]] VkDynamicState toVkDynamicState(DynamicState state) noexcept
+    VkDynamicState toVkDynamicState(DynamicState state) noexcept
     {
         switch (state)
         {
@@ -1316,7 +1316,7 @@ namespace litl::vulkan
         }
     }
 
-    [[nodiscard]] DynamicState fromVkDynamicState(VkDynamicState state) noexcept
+    DynamicState fromVkDynamicState(VkDynamicState state) noexcept
     {
         switch (state)
         {
@@ -1345,7 +1345,7 @@ namespace litl::vulkan
     // DynamicStateFlag <-> VkDynamicState
     // -------------------------------------------------------------------------------------
 
-    [[nodiscard]] VkVertexInputRate toVkVertexInputRate(VertexInputRate rate) noexcept
+    VkVertexInputRate toVkVertexInputRate(VertexInputRate rate) noexcept
     {
         switch (rate)
         {
@@ -1361,7 +1361,7 @@ namespace litl::vulkan
         }
     }
 
-    [[nodiscard]] VertexInputRate fromVkVertexInputRate(VkVertexInputRate rate) noexcept
+    VertexInputRate fromVkVertexInputRate(VkVertexInputRate rate) noexcept
     {
         switch (rate)
         {
@@ -1374,6 +1374,82 @@ namespace litl::vulkan
         default:
             logError("Unsupported VkVertexInputRate of '", static_cast<uint32_t>(rate), "' defaulting to 0");
             return static_cast<VertexInputRate>(0);
+        }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // BufferUsageFlag <-> VkBufferUsageFlags2
+    // -------------------------------------------------------------------------------------
+
+    VkBufferUsageFlags2 toVkBufferUsageFlag(BufferUsageFlag flag) noexcept
+    {
+        VkBufferUsageFlags2 vkFlag = 0;
+
+        if ((flag & static_cast<BufferUsageFlag>(BufferUsageFlagBits::VertexBuffer)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT; }
+        if ((flag & static_cast<BufferUsageFlag>(BufferUsageFlagBits::IndexBuffer)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_INDEX_BUFFER_BIT; }
+        if ((flag & static_cast<BufferUsageFlag>(BufferUsageFlagBits::UniformBuffer)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_UNIFORM_BUFFER_BIT; }
+        if ((flag & static_cast<BufferUsageFlag>(BufferUsageFlagBits::StorageBuffer)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT; }
+        if ((flag & static_cast<BufferUsageFlag>(BufferUsageFlagBits::TransferSource)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT; }
+        if ((flag & static_cast<BufferUsageFlag>(BufferUsageFlagBits::TransferDest)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_TRANSFER_DST_BIT; }
+        if ((flag & static_cast<BufferUsageFlag>(BufferUsageFlagBits::ShaderDeviceAddress)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT; }
+
+        return vkFlag;
+    }
+
+    BufferUsageFlag fromVkBufferUsageFlag(VkBufferUsageFlags2 flag) noexcept
+    {
+        BufferUsageFlag litlFlag = 0;
+
+        if ((flag & VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT) != 0) { litlFlag |= static_cast<BufferUsageFlag>(BufferUsageFlagBits::VertexBuffer); }
+        if ((flag & VK_BUFFER_USAGE_2_INDEX_BUFFER_BIT) != 0) { litlFlag |= static_cast<BufferUsageFlag>(BufferUsageFlagBits::IndexBuffer); }
+        if ((flag & VK_BUFFER_USAGE_2_UNIFORM_BUFFER_BIT) != 0) { litlFlag |= static_cast<BufferUsageFlag>(BufferUsageFlagBits::UniformBuffer); }
+        if ((flag & VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT) != 0) { litlFlag |= static_cast<BufferUsageFlag>(BufferUsageFlagBits::StorageBuffer); }
+        if ((flag & VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT) != 0) { litlFlag |= static_cast<BufferUsageFlag>(BufferUsageFlagBits::TransferSource); }
+        if ((flag & VK_BUFFER_USAGE_2_TRANSFER_DST_BIT) != 0) { litlFlag |= static_cast<BufferUsageFlag>(BufferUsageFlagBits::TransferDest); }
+        if ((flag & VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT) != 0) { litlFlag |= static_cast<BufferUsageFlag>(BufferUsageFlagBits::ShaderDeviceAddress); }
+
+        return litlFlag;
+    }
+
+    // -------------------------------------------------------------------------------------
+    // BufferMemoryUsage <-> VmaMemoryUsage
+    // -------------------------------------------------------------------------------------
+
+    [[nodiscard]] VmaMemoryUsage toVmaMemoryUsage(BufferMemoryUsage usage) noexcept
+    {
+        switch (usage)
+        {
+        case BufferMemoryUsage::Auto:
+            return VmaMemoryUsage::VMA_MEMORY_USAGE_AUTO;
+
+        case BufferMemoryUsage::PreferDevice:
+            return VmaMemoryUsage::VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+
+        case BufferMemoryUsage::PreferHost:
+            return VmaMemoryUsage::VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
+
+        case BufferMemoryUsage::Unknown:
+        default:
+            return VmaMemoryUsage::VMA_MEMORY_USAGE_UNKNOWN;
+        }
+    }
+
+    [[nodiscard]] BufferMemoryUsage fromVmaMemoryUsage(VmaMemoryUsage usage) noexcept
+    {
+        switch (usage)
+        {
+        case VmaMemoryUsage::VMA_MEMORY_USAGE_AUTO:
+            return BufferMemoryUsage::Auto;
+
+        case VmaMemoryUsage::VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE:
+            return BufferMemoryUsage::PreferDevice;
+
+        case VmaMemoryUsage::VMA_MEMORY_USAGE_AUTO_PREFER_HOST:
+            return BufferMemoryUsage::PreferHost;
+
+        case VmaMemoryUsage::VMA_MEMORY_USAGE_UNKNOWN:
+        default:
+            return BufferMemoryUsage::Unknown;
         }
     }
 }

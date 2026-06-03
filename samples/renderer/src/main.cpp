@@ -15,6 +15,7 @@ color getClearColor(float elapsedSeconds) noexcept;
 GraphicsPipelineHandle createTriangleGraphicsPipeline(Renderer* renderer) noexcept;
 void beginRender(Renderer* renderer, CommandBufferHandle commandBuffer, color clearColor) noexcept;
 void endRender(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
+void testShaderHotReload(Renderer* renderer) noexcept;
 
 int main()
 {
@@ -30,6 +31,8 @@ int main()
 
         if (graphicsPipelineHandle.isValid())
         {
+            auto lastTestReload = std::chrono::steady_clock::now();
+
             while (!window->shouldClose())
             {
                 const auto elapsedSeconds = std::chrono::duration<float>(std::chrono::steady_clock::now() - start).count();
@@ -44,6 +47,12 @@ int main()
                     renderer->cmdDraw(commandBuffer, 3, 1, 0, 0);
 
                     endRender(renderer, commandBuffer);
+                }
+
+                if (std::chrono::duration<float>(std::chrono::steady_clock::now() - lastTestReload).count() >= 1.0f)
+                {
+                    lastTestReload = std::chrono::steady_clock::now();
+                    testShaderHotReload(renderer);
                 }
             }
         }
@@ -236,4 +245,30 @@ void endRender(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept
 
     renderer->submitCommands(commandBuffer);
     renderer->endRender();
+}
+
+void testShaderHotReload(Renderer* renderer) noexcept
+{
+    const std::string shaderResourcePath = "assets/shaders/spirv/flat.spv";
+    std::ifstream file(shaderResourcePath, std::ios::ate | std::ios::binary);
+
+    if (!file.is_open())
+    {
+        std::cout << "Failed to open '" << shaderResourcePath << "'" << std::endl;
+        return;
+    }
+
+    const auto fileSizeBytes = static_cast<size_t>(file.tellg());
+    AlignedByteBuffer<4> byteBuffer{ fileSizeBytes };
+
+    file.seekg(0);
+    file.read(byteBuffer.as<char>().data(), byteBuffer.size());
+    file.close();
+
+    const ShaderModuleDescriptor shaderModuleDescriptor{
+        .resource = shaderResourcePath,
+        .bytes = byteBuffer.as<std::byte>()
+    };
+
+    renderer->reloadShaderModule(shaderModuleDescriptor);
 }
