@@ -142,33 +142,34 @@ namespace litl::vulkan
     /// <returns></returns>
     bool verifyValidationLayers() noexcept
     {
-#ifdef DEBUG
-        // See: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/02_Validation_layers.html
-        uint32_t layerCount;
-        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-
-        std::vector<VkLayerProperties> availableLayers(layerCount);
-        vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
-
-        for (uint32_t i = 0; i < RequiredValidationLayers.size(); ++i)
+        if constexpr (LITL_DEBUG)
         {
-            bool layerFound = false;
+            // See: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/02_Validation_layers.html
+            uint32_t layerCount;
+            vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
-            for (uint32_t j = 0; j < layerCount; ++j)
+            std::vector<VkLayerProperties> availableLayers(layerCount);
+            vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+            for (uint32_t i = 0; i < RequiredValidationLayers.size(); ++i)
             {
-                if (std::strcmp(RequiredValidationLayers[i], availableLayers[j].layerName) == 0)
+                bool layerFound = false;
+
+                for (uint32_t j = 0; j < layerCount; ++j)
                 {
-                    layerFound = true;
-                    break;
+                    if (std::strcmp(RequiredValidationLayers[i], availableLayers[j].layerName) == 0)
+                    {
+                        layerFound = true;
+                        break;
+                    }
+                }
+
+                if (!layerFound)
+                {
+                    return false;
                 }
             }
-
-            if (!layerFound)
-            {
-                return false;
-            }
         }
-#endif
 
         return true;
     }
@@ -261,7 +262,19 @@ namespace litl::vulkan
             requiredExtensions.erase(extension.extensionName);
         }
 
-        return requiredExtensions.empty();
+        if (!requiredExtensions.empty())
+        {
+            logError("One or more required Vulkan extensions are not available on the physical device:");
+
+            for (const auto& extension : requiredExtensions)
+            {
+                logError("Missing required extensions: ", extension);
+            }
+
+            return false;
+        }
+
+        return true;
     }
 
     /// <summary>
