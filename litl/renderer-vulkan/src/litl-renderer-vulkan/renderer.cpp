@@ -48,8 +48,6 @@ namespace litl::vulkan
     // Required Features
     // -------------------------------------------------------------------------------------
 
-    static constexpr auto VulkanVersion = VK_API_VERSION_1_4;
-
     /// <summary>
     /// Validation layers are intermediate layers mainly used for debug purposes.
     /// Vulkan by default does very little error checking. Validation layers are
@@ -185,7 +183,7 @@ namespace litl::vulkan
             .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
             .pApplicationName = "litl-engine",
             .pEngineName = "LITL",
-            .apiVersion = VulkanVersion,
+            .apiVersion = LITL_VULKAN_VERSION,
         };
 
         uint32_t glfwExtensionCount = 0;
@@ -494,7 +492,7 @@ namespace litl::vulkan
             .device = context.device.vkDevice,
             .pVulkanFunctions = &vulkanFunctions,       // wire together with Volk
             .instance = context.device.vkInstance,
-            .vulkanApiVersion = VulkanVersion
+            .vulkanApiVersion = LITL_VULKAN_VERSION
         };
 
         const VkResult result = vmaCreateAllocator(&createVmaInfo, &context.device.vmaAllocator);

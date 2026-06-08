@@ -72,8 +72,8 @@ namespace litl
     {
         Unknown = 0,
         Auto = 1,               // Recommended for most common use cases. Picks memory usage based on the declared buffer usage target.
-        PreferDevice = 2,       // Selects best memory type automatically with preference for GPU (device) memory. Staging buffer required for updates.
-        PreferHost = 3          // Selects best memory type automatically with preference for CPU (host) memory. Slower GPU access but does not require a staging buffer for updates.
+        PreferGpu = 2,                // Selects best memory type automatically with preference for GPU (device) memory. Staging buffer required for updates.
+        PreferCpu = 3                 // Selects best memory type automatically with preference for CPU (host) memory. Slower GPU access but does not require a staging buffer for updates.
     };
 
     // Based on https://docs.vulkan.org/refpages/latest/refpages/source/VkPipelineStageFlagBits2.html
@@ -323,6 +323,23 @@ namespace litl
     {
         PerVertex = 0,
         PerInstance = 1
+    };
+
+    /// <summary>
+    /// Buffer and image sharing modes.
+    /// </summary>
+    enum class SharingMode : uint32_t
+    {
+        Exclusive = 0,          // Access to any range or image subresource of the object will be exclusive to a single queue family at a time.
+        Concurrent = 1          // Concurrent access to any range or image subresource of the object from multiple queue families is supported.
+    };
+
+    enum class BufferMemoryUsage : uint32_t
+    {
+        GpuOnly = 0,            // A buffer that is used to write/read exclusively on the GPU
+        Staging = 1,            // A staging buffer used to transfer CPU provided data to a GPU buffer
+        ReadBack = 2,           // A buffer that is written to by the GPU and read back on the CPU
+        PersistentMap = 3,      // A buffer that is both frequently written on the CPU and read on the GPU
     };
 }
 

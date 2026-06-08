@@ -1422,10 +1422,10 @@ namespace litl::vulkan
         case BufferMemoryType::Auto:
             return VmaMemoryUsage::VMA_MEMORY_USAGE_AUTO;
 
-        case BufferMemoryType::PreferDevice:
+        case BufferMemoryType::PreferGpu:
             return VmaMemoryUsage::VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
 
-        case BufferMemoryType::PreferHost:
+        case BufferMemoryType::PreferCpu:
             return VmaMemoryUsage::VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
 
         case BufferMemoryType::Unknown:
@@ -1442,14 +1442,73 @@ namespace litl::vulkan
             return BufferMemoryType::Auto;
 
         case VmaMemoryUsage::VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE:
-            return BufferMemoryType::PreferDevice;
+            return BufferMemoryType::PreferGpu;
 
         case VmaMemoryUsage::VMA_MEMORY_USAGE_AUTO_PREFER_HOST:
-            return BufferMemoryType::PreferHost;
+            return BufferMemoryType::PreferCpu;
 
         case VmaMemoryUsage::VMA_MEMORY_USAGE_UNKNOWN:
         default:
             return BufferMemoryType::Unknown;
+        }
+    }
+
+    VmaAllocationCreateFlags toVmaAllocationCreateFlag(BufferMemoryUsage usage) noexcept
+    {
+        // See: https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/usage_patterns.html
+        switch (usage)
+        {
+        case BufferMemoryUsage::GpuOnly:
+            return VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;                      // own dedicated gpu memory block
+
+        case BufferMemoryUsage::Staging:
+            return VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |         // allow to map the allocation using vmaMapMemory and it will only be written to sequentially (memcpy) or a loop writing number-by-number, never random access
+                   VMA_ALLOCATION_CREATE_MAPPED_BIT;                                // memory will be persistently mapped and to retrieve a pointer to it
+        
+        case BufferMemoryUsage::ReadBack:
+            return VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT |                   // memory can be read, written, and accessed in random order
+                   VMA_ALLOCATION_CREATE_MAPPED_BIT;                                // memory will be persistently mapped and to retrieve a pointer to it
+        
+        case BufferMemoryUsage::PersistentMap:
+            return VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |         // allow to map the allocation using vmaMapMemory and it will only be written to sequentially (memcpy) or a loop writing number-by-number, never random access
+                   VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT |   // will need to check where the allocation ended up and act accordingly
+                   VMA_ALLOCATION_CREATE_MAPPED_BIT;                                // memory will be persistently mapped and to retrieve a pointer to it
+        }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // SharingMode <-> VkSharingMode
+    // -------------------------------------------------------------------------------------
+
+    [[nodiscard]] VkSharingMode toVkSharingMode(SharingMode mode) noexcept
+    {
+        switch (mode)
+        {
+        case SharingMode::Exclusive:
+            return VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;
+
+        case SharingMode::Concurrent:
+            return VkSharingMode::VK_SHARING_MODE_CONCURRENT;
+
+        default:
+            logError("Unsupported SharingMode of '", static_cast<uint32_t>(mode), "' defaulting to 0");
+            return static_cast<VkSharingMode>(0);
+        }
+    }
+
+    [[nodiscard]] SharingMode fromVkSharingMode(VkSharingMode mode) noexcept
+    {
+        switch (mode)
+        {
+        case VkSharingMode::VK_SHARING_MODE_EXCLUSIVE:
+            return SharingMode::Exclusive;
+
+        case VkSharingMode::VK_SHARING_MODE_CONCURRENT:
+            return SharingMode::Concurrent;
+
+        default:
+            logError("Unsupported VkSharingMode of '", static_cast<uint32_t>(mode), "' defaulting to 0");
+            return static_cast<SharingMode>(0);
         }
     }
 }

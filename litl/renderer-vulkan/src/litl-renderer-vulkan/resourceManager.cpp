@@ -40,6 +40,16 @@ namespace litl::vulkan
 
         m_pipelineLayoutCache.destroy();
 
+        // ---- Buffers
+
+        std::vector<BufferHandle> bufferHandles;
+        m_bufferPool.getAllHandles(bufferHandles);
+
+        for (auto bufferHandle : bufferHandles)
+        {
+            destroyBuffer(bufferHandle);
+        }
+
         // ---- Shader Modules
 
         std::vector<ShaderModuleHandle> shaderModuleHandles;
@@ -63,9 +73,72 @@ namespace litl::vulkan
 
     BufferHandle ResourceManager::createBuffer(BufferDescriptor const& descriptor) noexcept
     {
-        // ... todo ...
+        BufferResource resource{};
 
-        return BufferHandle{};
+        const VkBufferUsageFlags2CreateInfo bufferCreate2Info{
+            .sType = VK_STRUCTURE_TYPE_BUFFER_USAGE_FLAGS_2_CREATE_INFO,
+            .usage = toVkBufferUsageFlag(descriptor.type)
+        };
+
+        const VkBufferCreateInfo bufferInfo{
+            .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+            .pNext = &bufferCreate2Info,
+            .size = descriptor.bytes,
+            .sharingMode = toVkSharingMode(descriptor.sharing),
+        };
+
+        const VmaAllocationCreateInfo allocationInfo{
+            .usage = toVmaMemoryUsage(descriptor.memory),
+            .flags = toVmaAllocationCreateFlag(descriptor.memoryUsage)
+        };
+
+        const VkResult createResult = vmaCreateBuffer(m_pContext->device.vmaAllocator, &bufferInfo, &allocationInfo, &resource.vkBuffer, &resource.allocation, &resource.allocationInfo);
+
+        if (createResult != VK_SUCCESS)
+        {
+            logError("Failed to create Vulkan Buffer with result ", createResult);
+            return {};
+        }
+
+        const BufferHandle handle = m_bufferPool.create(resource);
+
+        if (descriptor.memoryUsage == BufferMemoryUsage::PersistentMap)
+        {
+            // As per https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/usage_patterns.html, need to check where the allocation ended up.
+            VkMemoryPropertyFlags memoryPropertyFlags;
+            vmaGetAllocationMemoryProperties(m_pContext->device.vmaAllocator, resource.allocation, &memoryPropertyFlags);
+
+            if (!(memoryPropertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT))
+            {
+                // The allocation ended up in non-mappable memory. Requires a dedicated staging buffer.
+                BufferResource stagingBufferResource{};
+
+                const VkBufferCreateInfo stagingBufferInfo{
+                    .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                    .size = descriptor.bytes,
+                    .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+                };
+
+                const VmaAllocationCreateInfo stagingBufferAllocationInfo{
+                    .usage = VMA_MEMORY_USAGE_AUTO,
+                    .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
+                };
+
+                const VkResult createStagingResult = vmaCreateBuffer(m_pContext->device.vmaAllocator, &stagingBufferInfo, &stagingBufferAllocationInfo, &stagingBufferResource.vkBuffer, &stagingBufferResource.allocation, &stagingBufferResource.allocationInfo);
+
+                if (createStagingResult != VK_SUCCESS)
+                {
+                    logError("Failed to create staging buffer for persistently-mapped Vulkan Buffer with result ", createStagingResult);
+                    destroyBuffer(handle);
+                    return {};
+                }
+
+                const BufferHandle stagingBufferHandle = m_bufferPool.create(stagingBufferResource);
+                m_bufferPool.get(handle)->stagingBuffer = stagingBufferHandle;
+            }
+        }
+        
+        return handle;
     }
 
     BufferResource* ResourceManager::getBuffer(BufferHandle handle) noexcept
@@ -75,9 +148,21 @@ namespace litl::vulkan
 
     void ResourceManager::destroyBuffer(BufferHandle handle) noexcept
     {
-        if (m_bufferPool.destroy(handle))
+        BufferResource* resource = m_bufferPool.get(handle);
+
+        if (resource != nullptr)
         {
-            // ... todo ...
+            if (resource->stagingBuffer.isValid())
+            {
+                destroyBuffer(resource->stagingBuffer);
+            }
+
+            if (resource->vkBuffer != VK_NULL_HANDLE)
+            {
+                vmaDestroyBuffer(m_pContext->device.vmaAllocator, resource->vkBuffer, resource->allocation);
+            }
+
+            m_bufferPool.destroy(handle);
         }
     }
 

@@ -75,6 +75,11 @@ namespace litl::vulkan
 
     [[nodiscard]] VmaMemoryUsage toVmaMemoryUsage(BufferMemoryType usage) noexcept;
     [[nodiscard]] BufferMemoryType fromVmaMemoryUsage(VmaMemoryUsage usage) noexcept;
+    [[nodiscard]] VmaAllocationCreateFlags toVmaAllocationCreateFlag(BufferMemoryUsage usage) noexcept;
+
+    [[nodiscard]] VkSharingMode toVkSharingMode(SharingMode mode) noexcept;
+    [[nodiscard]] SharingMode fromVkSharingMode(VkSharingMode mode) noexcept;
+
 }
 
 #endif
