@@ -8,4 +8,6 @@
 #include <GLFW/glfw3.h>
 #include <vk_mem_alloc.h>
 
+static constexpr auto LITL_VULKAN_VERSION = VK_API_VERSION_1_4;
+
 #endif
