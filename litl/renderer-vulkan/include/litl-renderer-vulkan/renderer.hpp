@@ -48,6 +48,10 @@ namespace litl::vulkan
     void cmdClearImage(litl::RendererContext* context, CommandBufferHandle handle, ClearImageCommand const& command) noexcept;
     void cmdSetViewportAndScissor(litl::RendererContext* context, CommandBufferHandle handle, SetViewportAndScissorCommand const& command) noexcept;
     void cmdBindGraphicsPipeline(litl::RendererContext* context, CommandBufferHandle handle, GraphicsPipelineHandle graphicsPipelineHandle) noexcept;
+    RendererResult cmdBindVertexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, uint64_t offset) noexcept;
+    RendererResult cmdBindVertexBuffers(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle* bufferHandles, uint64_t* bufferOffsets, uint32_t count) noexcept;
+    RendererResult cmdBindIndexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle) noexcept;
+    RendererResult cmdBufferWrite(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, void* source, size_t size, PipelineStageFlag bufferTargetStage) noexcept;
     void cmdDraw(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) noexcept;
 
     // -------------------------------------------------------------------------------------
@@ -103,6 +107,10 @@ namespace litl::vulkan
         &cmdClearImage,
         &cmdSetViewportAndScissor,
         &cmdBindGraphicsPipeline,
+        &cmdBindVertexBuffer,
+        &cmdBindVertexBuffers,
+        &cmdBindIndexBuffer,
+        &cmdBufferWrite,
         &cmdDraw,
 
         // drawing

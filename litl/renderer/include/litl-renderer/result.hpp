@@ -1,0 +1,26 @@
+#ifndef LITL_RENDERER_RESULT_H__
+#define LITL_RENDERER_RESULT_H__
+
+namespace litl
+{
+    enum class RendererResult : uint32_t
+    {
+        Success = 0,
+
+        InvalidRendererContext = 100,
+        InvalidCommandBufferHandle = 101,
+        InvalidBufferHandle = 102,
+        InvalidComputePipelineHandle = 103,
+        InvalidGraphicsPipelineHandle = 104,
+        InvalidSamplerHandle = 105,
+        InvalidShaderModuleHandle = 106,
+        InvalidTextureHandle = 107,
+
+        NullSource = 200,
+        ZeroSizedSource = 201,
+        MemoryCopyFailed = 202,
+        InvalidBufferForWriting = 203
+    };
+}
+
+#endif

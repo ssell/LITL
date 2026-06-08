@@ -362,6 +362,234 @@ namespace litl::vulkan
         }
     }
 
+    RendererResult cmdBindVertexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, uint64_t offset) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+        auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
+
+        if (!isValid(commandBuffer))
+        {
+            return RendererResult::InvalidCommandBufferHandle;
+        }
+
+        auto* bufferResource = vulkanContext->resources.getBuffer(bufferHandle);
+
+        if ((bufferResource == nullptr) || (bufferResource->vkBuffer == nullptr))
+        {
+            return RendererResult::InvalidBufferHandle;
+        }
+
+        vkCmdBindVertexBuffers(commandBuffer->vkCommandBuffer, 0, 1, &bufferResource->vkBuffer, &offset);
+
+        return RendererResult::Success;
+    }
+
+    RendererResult cmdBindVertexBuffers(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle* bufferHandles, uint64_t* offsets, uint32_t count) noexcept
+    {
+        if (bufferHandles == nullptr)
+        {
+            return RendererResult::NullSource;
+        }
+
+        auto* vulkanContext = unwrap(context);
+        auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
+
+        if (!isValid(commandBuffer))
+        {
+            return RendererResult::InvalidCommandBufferHandle;
+        }
+
+        std::vector<VkBuffer> buffers;
+        buffers.reserve(count);
+
+        for (auto i = 0; i < count; ++i)
+        {
+            auto* resource = vulkanContext->resources.getBuffer(bufferHandles[i]);
+
+            if ((resource == nullptr) || (resource->vkBuffer == VK_NULL_HANDLE))
+            {
+                return RendererResult::InvalidBufferHandle;
+            }
+
+            buffers.push_back(resource->vkBuffer);
+        }
+
+        vkCmdBindVertexBuffers(commandBuffer->vkCommandBuffer, 0, count, buffers.data(), offsets);
+    }
+
+    RendererResult cmdBindIndexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+        auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
+
+        if (!isValid(commandBuffer))
+        {
+            return RendererResult::InvalidCommandBufferHandle;
+        }
+
+        auto* bufferResource = vulkanContext->resources.getBuffer(bufferHandle);
+
+        if ((bufferResource == nullptr) || (bufferResource->vkBuffer == nullptr))
+        {
+            return RendererResult::InvalidBufferHandle;
+        }
+
+        vkCmdBindIndexBuffer(commandBuffer->vkCommandBuffer, bufferResource->vkBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+        return RendererResult::Success;
+    }
+
+    RendererResult cmdBufferWrite(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, void* source, size_t size, PipelineStageFlag bufferTargetStage) noexcept
+    {
+        if (source == nullptr)
+        {
+            return RendererResult::NullSource;
+        }
+
+        if (size == 0)
+        {
+            return RendererResult::ZeroSizedSource;
+        }
+
+        auto* vulkanContext = unwrap(context);
+        auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
+
+        if (!isValid(commandBuffer))
+        {
+            return RendererResult::InvalidCommandBufferHandle;
+        }
+
+        auto* bufferResource = vulkanContext->resources.getBuffer(bufferHandle);
+
+        if (bufferResource == nullptr)
+        {
+            return RendererResult::InvalidBufferHandle;
+        }
+
+        // Based on the "Advanced data upload" example from: https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/usage_patterns.html
+        const VkBufferUsageFlags2CreateInfo bufferCreate2Info{
+            .sType = VK_STRUCTURE_TYPE_BUFFER_USAGE_FLAGS_2_CREATE_INFO,
+            .usage = toVkBufferUsageFlag(bufferResource->descriptor.type)
+        };
+
+        if (bufferResource->allocationInfo.pMappedData != nullptr)
+        {
+            // Mapped buffer, can write directly to it.
+            VkResult result = vmaCopyMemoryToAllocation(vulkanContext->device.vmaAllocator, source, bufferResource->allocation, 0, size);     // copies AND flushes
+
+            if (result != VK_SUCCESS)
+            {
+                return RendererResult::MemoryCopyFailed;
+            }
+
+            // Barrier to make sure the copy has finished
+            const VkBufferMemoryBarrier memoryBarrier{
+                .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+                .pNext = &bufferCreate2Info,
+                .srcAccessMask = VK_ACCESS_HOST_WRITE_BIT,
+                //.dstAccessMask = supplied in pNext
+                .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                .buffer = bufferResource->vkBuffer,
+                .offset = 0,
+                .size = VK_WHOLE_SIZE
+            };
+
+            vkCmdPipelineBarrier(
+                commandBuffer->vkCommandBuffer,             // command buffer
+                VK_PIPELINE_STAGE_HOST_BIT,                 // source stage mask
+                toVkPipelineStageFlag(bufferTargetStage),   // dest stage mask
+                0,                                          // dependency flags
+                0,                                          // memory barrier count
+                nullptr,                                    // memory barriers
+                1,                                          // buffer memory barrier count
+                &memoryBarrier,                             // buffer memory barriers
+                0,                                          // image memory barrier count
+                nullptr);                                   // image memory barriers
+        }
+        else
+        {
+            // Has a staging buffer that needs to be written to first, and then copied over.
+            auto* stagingBufferResource = vulkanContext->resources.getBuffer(bufferResource->stagingBuffer);
+
+            if ((stagingBufferResource != nullptr) && (stagingBufferResource->allocationInfo.pMappedData != nullptr))
+            {
+                // Write to staging buffer
+                VkResult result = vmaCopyMemoryToAllocation(vulkanContext->device.vmaAllocator, source, stagingBufferResource->allocation, 0, size);
+
+                if (result != VK_SUCCESS)
+                {
+                    return RendererResult::MemoryCopyFailed;
+                }
+
+                // Barrier to make sure the write to the staging buffer is complete
+                const VkBufferMemoryBarrier memoryBarrier1{
+                    .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+                    .srcAccessMask = VK_ACCESS_HOST_WRITE_BIT,
+                    .dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT,
+                    .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                    .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                    .buffer = stagingBufferResource->vkBuffer,
+                    .offset = 0,
+                    .size = VK_WHOLE_SIZE
+                };
+
+                vkCmdPipelineBarrier(
+                    commandBuffer->vkCommandBuffer,         // command buffer
+                    VK_PIPELINE_STAGE_HOST_BIT,             // source stage mask
+                    VK_PIPELINE_STAGE_TRANSFER_BIT,         // dest stage mask
+                    0,                                      // dependency flags
+                    0,                                      // memory barrier count
+                    nullptr,                                // memory barriers
+                    1,                                      // buffer memory barrier count
+                    &memoryBarrier1,                        // buffer memory barriers
+                    0,                                      // image memory barrier count
+                    nullptr);                               // image memory barriers
+
+                // Copy to the target buffer
+                VkBufferCopy bufferCopy{
+                    .srcOffset = 0,
+                    .dstOffset = 0,
+                    .size = size
+                };
+
+                vkCmdCopyBuffer(commandBuffer->vkCommandBuffer, stagingBufferResource->vkBuffer, bufferResource->vkBuffer, 1, &bufferCopy);
+
+                // Barrier to make sure the copy has finished
+                const VkBufferMemoryBarrier memoryBarrier2{
+                    .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+                    .pNext = &bufferCreate2Info,
+                    .srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+                    //.dstAccessMask = supplied in pNext
+                    .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                    .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                    .buffer = bufferResource->vkBuffer,
+                    .offset = 0,
+                    .size = VK_WHOLE_SIZE
+                };
+
+                vkCmdPipelineBarrier(
+                    commandBuffer->vkCommandBuffer,             // command buffer
+                    VK_PIPELINE_STAGE_TRANSFER_BIT,             // source stage mask
+                    toVkPipelineStageFlag(bufferTargetStage),   // dest stage mask
+                    0,                                          // dependency flags
+                    0,                                          // memory barrier count
+                    nullptr,                                    // memory barriers
+                    1,                                          // buffer memory barrier count
+                    &memoryBarrier2,                            // buffer memory barriers
+                    0,                                          // image memory barrier count
+                    nullptr);                                   // image memory barriers
+            }
+            else
+            {
+                // Can not be directly written to and does not have an associated staging buffer. Invalid buffer for writing.
+                return RendererResult::InvalidBufferForWriting;
+            }
+        }
+
+        return RendererResult::Success;
+    }
+
     void cmdDraw(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) noexcept
     {
         auto* vulkanContext = unwrap(context);

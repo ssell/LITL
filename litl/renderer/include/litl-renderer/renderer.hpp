@@ -5,6 +5,7 @@
 #include <string>
 
 #include "litl-core/assert.hpp"
+#include "litl-renderer/result.hpp"
 #include "litl-renderer/rendererConfiguration.hpp"
 #include "litl-renderer/resources.hpp"
 #include "litl-renderer/commands.hpp"
@@ -50,6 +51,10 @@ namespace litl
         void (*cmdClearImage)(RendererContext*, CommandBufferHandle, ClearImageCommand const&);
         void (*cmdSetViewportAndScissor)(RendererContext*, CommandBufferHandle, SetViewportAndScissorCommand const&);
         void (*cmdBindGraphicsPipeline)(RendererContext*, CommandBufferHandle, GraphicsPipelineHandle);
+        RendererResult(*cmdBindVertexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, uint64_t);
+        RendererResult(*cmdBindVertexBuffers)(RendererContext*, CommandBufferHandle, BufferHandle*, uint64_t*, uint32_t);
+        RendererResult(*cmdBindIndexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle);
+        RendererResult (*cmdBufferWrite)(RendererContext*, CommandBufferHandle, BufferHandle, void*, size_t, PipelineStageFlag);
         void (*cmdDraw)(RendererContext*, CommandBufferHandle, uint32_t, uint32_t, uint32_t, uint32_t);
 
         // drawing
@@ -281,6 +286,35 @@ namespace litl
         void cmdBindGraphicsPipeline(CommandBufferHandle handle, GraphicsPipelineHandle graphicsPipelineHandle) const noexcept
         {
             m_pOps->cmdBindGraphicsPipeline(m_pContext, handle, graphicsPipelineHandle);
+        }
+
+        RendererResult cmdBindVertexBuffer(CommandBufferHandle commandBuffer, BufferHandle buffer, uint64_t offset = 0) const noexcept
+        {
+            return m_pOps->cmdBindVertexBuffer(m_pContext, commandBuffer, buffer, offset);
+        }
+
+        RendererResult cmdBindVertexBuffers(CommandBufferHandle commandBuffer, BufferHandle* buffers, uint64_t* offsets, uint32_t count) const noexcept
+        {
+            return m_pOps->cmdBindVertexBuffers(m_pContext, commandBuffer, buffers, offsets, count);
+        }
+
+        RendererResult cmdBindIndexBuffer(CommandBufferHandle commandBuffer, BufferHandle buffer) const noexcept
+        {
+            return m_pOps->cmdBindIndexBuffer(m_pContext, commandBuffer, buffer);
+        }
+
+        /// <summary>
+        /// Writes the specified data to the buffer.
+        /// </summary>
+        /// <param name="commandBuffer"></param>
+        /// <param name="buffer"></param>
+        /// <param name="source"></param>
+        /// <param name="size">Size of the data to be written, in bytes.</param>
+        /// <param name="bufferTargetStage">The pipeline stage(s) that the buffer is used in. Needed in order to create a proper barrier to ensure writing is complete.</param>
+        /// <returns></returns>
+        RendererResult cmdBufferWrite(CommandBufferHandle commandBuffer, BufferHandle buffer, void* source, size_t size, PipelineStageFlag bufferTargetStage) const noexcept
+        {
+            return m_pOps->cmdBufferWrite(m_pContext, commandBuffer, buffer, source, size, bufferTargetStage);
         }
 
         /// <summary>
