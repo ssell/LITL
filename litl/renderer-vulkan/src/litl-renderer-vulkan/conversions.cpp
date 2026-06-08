@@ -1378,78 +1378,78 @@ namespace litl::vulkan
     }
 
     // -------------------------------------------------------------------------------------
-    // BufferUsageFlag <-> VkBufferUsageFlags2
+    // BufferTypeFlag <-> VkBufferUsageFlags2
     // -------------------------------------------------------------------------------------
 
-    VkBufferUsageFlags2 toVkBufferUsageFlag(BufferUsageFlag flag) noexcept
+    VkBufferUsageFlags2 toVkBufferUsageFlag(BufferTypeFlag flag) noexcept
     {
         VkBufferUsageFlags2 vkFlag = 0;
 
-        if ((flag & static_cast<BufferUsageFlag>(BufferUsageFlagBits::VertexBuffer)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT; }
-        if ((flag & static_cast<BufferUsageFlag>(BufferUsageFlagBits::IndexBuffer)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_INDEX_BUFFER_BIT; }
-        if ((flag & static_cast<BufferUsageFlag>(BufferUsageFlagBits::UniformBuffer)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_UNIFORM_BUFFER_BIT; }
-        if ((flag & static_cast<BufferUsageFlag>(BufferUsageFlagBits::StorageBuffer)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT; }
-        if ((flag & static_cast<BufferUsageFlag>(BufferUsageFlagBits::TransferSource)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT; }
-        if ((flag & static_cast<BufferUsageFlag>(BufferUsageFlagBits::TransferDest)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_TRANSFER_DST_BIT; }
-        if ((flag & static_cast<BufferUsageFlag>(BufferUsageFlagBits::ShaderDeviceAddress)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT; }
+        if ((flag & static_cast<BufferTypeFlag>(BufferTypeFlagBits::VertexBuffer)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT; }
+        if ((flag & static_cast<BufferTypeFlag>(BufferTypeFlagBits::IndexBuffer)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_INDEX_BUFFER_BIT; }
+        if ((flag & static_cast<BufferTypeFlag>(BufferTypeFlagBits::UniformBuffer)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_UNIFORM_BUFFER_BIT; }
+        if ((flag & static_cast<BufferTypeFlag>(BufferTypeFlagBits::StorageBuffer)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT; }
+        if ((flag & static_cast<BufferTypeFlag>(BufferTypeFlagBits::TransferSource)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT; }
+        if ((flag & static_cast<BufferTypeFlag>(BufferTypeFlagBits::TransferDest)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_TRANSFER_DST_BIT; }
+        if ((flag & static_cast<BufferTypeFlag>(BufferTypeFlagBits::ShaderDeviceAddress)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT; }
 
         return vkFlag;
     }
 
-    BufferUsageFlag fromVkBufferUsageFlag(VkBufferUsageFlags2 flag) noexcept
+    BufferTypeFlag fromVkBufferUsageFlag(VkBufferUsageFlags2 flag) noexcept
     {
-        BufferUsageFlag litlFlag = 0;
+        BufferTypeFlag litlFlag = 0;
 
-        if ((flag & VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT) != 0) { litlFlag |= static_cast<BufferUsageFlag>(BufferUsageFlagBits::VertexBuffer); }
-        if ((flag & VK_BUFFER_USAGE_2_INDEX_BUFFER_BIT) != 0) { litlFlag |= static_cast<BufferUsageFlag>(BufferUsageFlagBits::IndexBuffer); }
-        if ((flag & VK_BUFFER_USAGE_2_UNIFORM_BUFFER_BIT) != 0) { litlFlag |= static_cast<BufferUsageFlag>(BufferUsageFlagBits::UniformBuffer); }
-        if ((flag & VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT) != 0) { litlFlag |= static_cast<BufferUsageFlag>(BufferUsageFlagBits::StorageBuffer); }
-        if ((flag & VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT) != 0) { litlFlag |= static_cast<BufferUsageFlag>(BufferUsageFlagBits::TransferSource); }
-        if ((flag & VK_BUFFER_USAGE_2_TRANSFER_DST_BIT) != 0) { litlFlag |= static_cast<BufferUsageFlag>(BufferUsageFlagBits::TransferDest); }
-        if ((flag & VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT) != 0) { litlFlag |= static_cast<BufferUsageFlag>(BufferUsageFlagBits::ShaderDeviceAddress); }
+        if ((flag & VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT) != 0) { litlFlag |= static_cast<BufferTypeFlag>(BufferTypeFlagBits::VertexBuffer); }
+        if ((flag & VK_BUFFER_USAGE_2_INDEX_BUFFER_BIT) != 0) { litlFlag |= static_cast<BufferTypeFlag>(BufferTypeFlagBits::IndexBuffer); }
+        if ((flag & VK_BUFFER_USAGE_2_UNIFORM_BUFFER_BIT) != 0) { litlFlag |= static_cast<BufferTypeFlag>(BufferTypeFlagBits::UniformBuffer); }
+        if ((flag & VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT) != 0) { litlFlag |= static_cast<BufferTypeFlag>(BufferTypeFlagBits::StorageBuffer); }
+        if ((flag & VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT) != 0) { litlFlag |= static_cast<BufferTypeFlag>(BufferTypeFlagBits::TransferSource); }
+        if ((flag & VK_BUFFER_USAGE_2_TRANSFER_DST_BIT) != 0) { litlFlag |= static_cast<BufferTypeFlag>(BufferTypeFlagBits::TransferDest); }
+        if ((flag & VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT) != 0) { litlFlag |= static_cast<BufferTypeFlag>(BufferTypeFlagBits::ShaderDeviceAddress); }
 
         return litlFlag;
     }
 
     // -------------------------------------------------------------------------------------
-    // BufferMemoryUsage <-> VmaMemoryUsage
+    // BufferMemoryType <-> VmaMemoryUsage
     // -------------------------------------------------------------------------------------
 
-    [[nodiscard]] VmaMemoryUsage toVmaMemoryUsage(BufferMemoryUsage usage) noexcept
+    [[nodiscard]] VmaMemoryUsage toVmaMemoryUsage(BufferMemoryType usage) noexcept
     {
         switch (usage)
         {
-        case BufferMemoryUsage::Auto:
+        case BufferMemoryType::Auto:
             return VmaMemoryUsage::VMA_MEMORY_USAGE_AUTO;
 
-        case BufferMemoryUsage::PreferDevice:
+        case BufferMemoryType::PreferDevice:
             return VmaMemoryUsage::VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
 
-        case BufferMemoryUsage::PreferHost:
+        case BufferMemoryType::PreferHost:
             return VmaMemoryUsage::VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
 
-        case BufferMemoryUsage::Unknown:
+        case BufferMemoryType::Unknown:
         default:
             return VmaMemoryUsage::VMA_MEMORY_USAGE_UNKNOWN;
         }
     }
 
-    [[nodiscard]] BufferMemoryUsage fromVmaMemoryUsage(VmaMemoryUsage usage) noexcept
+    [[nodiscard]] BufferMemoryType fromVmaMemoryUsage(VmaMemoryUsage usage) noexcept
     {
         switch (usage)
         {
         case VmaMemoryUsage::VMA_MEMORY_USAGE_AUTO:
-            return BufferMemoryUsage::Auto;
+            return BufferMemoryType::Auto;
 
         case VmaMemoryUsage::VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE:
-            return BufferMemoryUsage::PreferDevice;
+            return BufferMemoryType::PreferDevice;
 
         case VmaMemoryUsage::VMA_MEMORY_USAGE_AUTO_PREFER_HOST:
-            return BufferMemoryUsage::PreferHost;
+            return BufferMemoryType::PreferHost;
 
         case VmaMemoryUsage::VMA_MEMORY_USAGE_UNKNOWN:
         default:
-            return BufferMemoryUsage::Unknown;
+            return BufferMemoryType::Unknown;
         }
     }
 }
