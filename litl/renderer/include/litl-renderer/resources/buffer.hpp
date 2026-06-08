@@ -11,7 +11,7 @@ namespace litl
         /// <summary>
         /// Specifies allowed usages of the buffer.
         /// </summary>
-        BufferTypeFlag type = static_cast<BufferTypeFlag>(BufferTypeFlagBits::None);
+        BufferTypeFlag type = BufferTypeFlagBits::None;
 
         /// <summary>
         /// Where the memory for the buffer resides.

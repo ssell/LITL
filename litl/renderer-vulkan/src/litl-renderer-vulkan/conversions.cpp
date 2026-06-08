@@ -1,4 +1,5 @@
 #include "litl-core/logging/logging.hpp"
+#include "litl-core/enumBitFlags.hpp"
 #include "litl-renderer-vulkan/conversions.hpp"
 
 namespace litl::vulkan
@@ -1385,28 +1386,28 @@ namespace litl::vulkan
     {
         VkBufferUsageFlags2 vkFlag = 0;
 
-        if ((flag & static_cast<BufferTypeFlag>(BufferTypeFlagBits::VertexBuffer)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT; }
-        if ((flag & static_cast<BufferTypeFlag>(BufferTypeFlagBits::IndexBuffer)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_INDEX_BUFFER_BIT; }
-        if ((flag & static_cast<BufferTypeFlag>(BufferTypeFlagBits::UniformBuffer)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_UNIFORM_BUFFER_BIT; }
-        if ((flag & static_cast<BufferTypeFlag>(BufferTypeFlagBits::StorageBuffer)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT; }
-        if ((flag & static_cast<BufferTypeFlag>(BufferTypeFlagBits::TransferSource)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT; }
-        if ((flag & static_cast<BufferTypeFlag>(BufferTypeFlagBits::TransferDest)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_TRANSFER_DST_BIT; }
-        if ((flag & static_cast<BufferTypeFlag>(BufferTypeFlagBits::ShaderDeviceAddress)) != 0) { vkFlag |= VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT; }
+        if (litl::has_any(flag, BufferTypeFlagBits::VertexBuffer)) { vkFlag |= VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT; }
+        if (litl::has_any(flag, BufferTypeFlagBits::IndexBuffer)) { vkFlag |= VK_BUFFER_USAGE_2_INDEX_BUFFER_BIT; }
+        if (litl::has_any(flag, BufferTypeFlagBits::UniformBuffer)) { vkFlag |= VK_BUFFER_USAGE_2_UNIFORM_BUFFER_BIT; }
+        if (litl::has_any(flag, BufferTypeFlagBits::StorageBuffer)) { vkFlag |= VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT; }
+        if (litl::has_any(flag, BufferTypeFlagBits::TransferSource)) { vkFlag |= VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT; }
+        if (litl::has_any(flag, BufferTypeFlagBits::TransferDest)) { vkFlag |= VK_BUFFER_USAGE_2_TRANSFER_DST_BIT; }
+        if (litl::has_any(flag, BufferTypeFlagBits::ShaderDeviceAddress)) { vkFlag |= VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT; }
 
         return vkFlag;
     }
 
     BufferTypeFlag fromVkBufferUsageFlag(VkBufferUsageFlags2 flag) noexcept
     {
-        BufferTypeFlag litlFlag = 0;
+        BufferTypeFlag litlFlag = BufferTypeFlag::None;
 
-        if ((flag & VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT) != 0) { litlFlag |= static_cast<BufferTypeFlag>(BufferTypeFlagBits::VertexBuffer); }
-        if ((flag & VK_BUFFER_USAGE_2_INDEX_BUFFER_BIT) != 0) { litlFlag |= static_cast<BufferTypeFlag>(BufferTypeFlagBits::IndexBuffer); }
-        if ((flag & VK_BUFFER_USAGE_2_UNIFORM_BUFFER_BIT) != 0) { litlFlag |= static_cast<BufferTypeFlag>(BufferTypeFlagBits::UniformBuffer); }
-        if ((flag & VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT) != 0) { litlFlag |= static_cast<BufferTypeFlag>(BufferTypeFlagBits::StorageBuffer); }
-        if ((flag & VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT) != 0) { litlFlag |= static_cast<BufferTypeFlag>(BufferTypeFlagBits::TransferSource); }
-        if ((flag & VK_BUFFER_USAGE_2_TRANSFER_DST_BIT) != 0) { litlFlag |= static_cast<BufferTypeFlag>(BufferTypeFlagBits::TransferDest); }
-        if ((flag & VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT) != 0) { litlFlag |= static_cast<BufferTypeFlag>(BufferTypeFlagBits::ShaderDeviceAddress); }
+        if ((flag & VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT) != 0) { litlFlag |= BufferTypeFlagBits::VertexBuffer; }
+        if ((flag & VK_BUFFER_USAGE_2_INDEX_BUFFER_BIT) != 0) { litlFlag |= BufferTypeFlagBits::IndexBuffer; }
+        if ((flag & VK_BUFFER_USAGE_2_UNIFORM_BUFFER_BIT) != 0) { litlFlag |= BufferTypeFlagBits::UniformBuffer; }
+        if ((flag & VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT) != 0) { litlFlag |= BufferTypeFlagBits::StorageBuffer; }
+        if ((flag & VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT) != 0) { litlFlag |= BufferTypeFlagBits::TransferSource; }
+        if ((flag & VK_BUFFER_USAGE_2_TRANSFER_DST_BIT) != 0) { litlFlag |= BufferTypeFlagBits::TransferDest; }
+        if ((flag & VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT) != 0) { litlFlag |= BufferTypeFlagBits::ShaderDeviceAddress; }
 
         return litlFlag;
     }
