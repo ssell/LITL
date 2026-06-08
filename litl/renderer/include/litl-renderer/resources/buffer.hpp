@@ -8,7 +8,8 @@ namespace litl
 {
     struct BufferDescriptor
     {
-        BufferUsageFlag usage = static_cast<BufferUsageFlag>(BufferUsageFlagBits::None);
+        BufferTypeFlag type = static_cast<BufferTypeFlag>(BufferTypeFlagBits::None);
+        BufferMemoryType memory = BufferMemoryType::Auto;
     };
 
     struct BufferTag {};

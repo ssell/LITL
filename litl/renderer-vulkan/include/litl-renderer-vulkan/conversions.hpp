@@ -70,11 +70,11 @@ namespace litl::vulkan
     [[nodiscard]] VkVertexInputRate toVkVertexInputRate(VertexInputRate rate) noexcept;
     [[nodiscard]] VertexInputRate fromVkVertexInputRate(VkVertexInputRate rate) noexcept;
 
-    [[nodiscard]] VkBufferUsageFlags2 toVkBufferUsageFlag(BufferUsageFlag flag) noexcept;
-    [[nodiscard]] BufferUsageFlag fromVkBufferUsageFlag(VkBufferUsageFlags2 flag) noexcept;
+    [[nodiscard]] VkBufferUsageFlags2 toVkBufferUsageFlag(BufferTypeFlag flag) noexcept;
+    [[nodiscard]] BufferTypeFlag fromVkBufferUsageFlag(VkBufferUsageFlags2 flag) noexcept;
 
-    [[nodiscard]] VmaMemoryUsage toVmaMemoryUsage(BufferMemoryUsage usage) noexcept;
-    [[nodiscard]] BufferMemoryUsage fromVmaMemoryUsage(VmaMemoryUsage usage) noexcept;
+    [[nodiscard]] VmaMemoryUsage toVmaMemoryUsage(BufferMemoryType usage) noexcept;
+    [[nodiscard]] BufferMemoryType fromVmaMemoryUsage(VmaMemoryUsage usage) noexcept;
 }
 
 #endif

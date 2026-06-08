@@ -51,7 +51,7 @@ namespace litl
     /// </summary>
     using ImageAccessFlag = uint64_t;
 
-    enum class BufferUsageFlagBits : uint64_t
+    enum class BufferTypeFlagBits : uint64_t
     {
         None                = 0,
         VertexBuffer        = 1 << 0,       // Used as a vertex buffer.
@@ -64,11 +64,11 @@ namespace litl
     };
 
     /// <summary>
-    /// Composed of BufferUsageFlagBits
+    /// Composed of BufferTypeFlagBits
     /// </summary>
-    using BufferUsageFlag = uint64_t;
+    using BufferTypeFlag = uint64_t;
 
-    enum class BufferMemoryUsage : uint32_t
+    enum class BufferMemoryType : uint32_t
     {
         Unknown = 0,
         Auto = 1,               // Recommended for most common use cases. Picks memory usage based on the declared buffer usage target.
