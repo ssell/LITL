@@ -2,6 +2,9 @@
 #define LITL_RENDERER_ENUMS_H__
 
 #include <cstdint>
+#include <type_traits>
+
+#include "litl-core/enumBitFlags.hpp"
 
 namespace litl
 {
@@ -53,20 +56,22 @@ namespace litl
 
     enum class BufferTypeFlagBits : uint64_t
     {
-        None                = 0,
-        VertexBuffer        = 1 << 0,       // Used as a vertex buffer.
-        IndexBuffer         = 1 << 1,       // Used as an index buffer.
-        UniformBuffer       = 1 << 2,       // Referenced through an UBO descriptor.
-        StorageBuffer       = 1 << 3,       // Referenced through a SSBO descriptor.
-        TransferSource      = 1 << 4,       // Used as the source of a copy buffer command.
-        TransferDest        = 1 << 5,       // Used as the destination of a copy buffer command.
-        ShaderDeviceAddress = 1 << 6,       // Can be accessed via a 64-bit point in shaders (Buffer Device Address (BDA))
+        None                = 0ull,
+        VertexBuffer        = 1ull << 0,       // Used as a vertex buffer.
+        IndexBuffer         = 1ull << 1,       // Used as an index buffer.
+        UniformBuffer       = 1ull << 2,       // Referenced through an UBO descriptor.
+        StorageBuffer       = 1ull << 3,       // Referenced through a SSBO descriptor.
+        TransferSource      = 1ull << 4,       // Used as the source of a copy buffer command.
+        TransferDest        = 1ull << 5,       // Used as the destination of a copy buffer command.
+        ShaderDeviceAddress = 1ull << 6,       // Can be accessed via a 64-bit point in shaders (Buffer Device Address (BDA))
     };
+
+    LITL_ENABLE_BITMASK(BufferTypeFlagBits);
 
     /// <summary>
     /// Composed of BufferTypeFlagBits
     /// </summary>
-    using BufferTypeFlag = uint64_t;
+    using BufferTypeFlag = BufferTypeFlagBits;
 
     enum class BufferMemoryType : uint32_t
     {

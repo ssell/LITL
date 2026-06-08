@@ -17,6 +17,12 @@ void beginRender(Renderer* renderer, CommandBufferHandle commandBuffer, color cl
 void endRender(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
 void testShaderHotReload(Renderer* renderer) noexcept;
 
+struct Vertex
+{
+    vec3 position;
+    vec3 color;
+};
+
 int main()
 {
     std::cout << "LITL Renderer Only" << std::endl;
@@ -31,6 +37,49 @@ int main()
 
         if (graphicsPipelineHandle.isValid())
         {
+            // -----------------------------------------------------------------------------
+            // Create Vertex Buffer
+            // -----------------------------------------------------------------------------
+
+            std::array<Vertex, 3> vertices = {
+                Vertex {
+                    .position = { 0.0f, -0.5f, 0.0f },
+                    .color = { 1.0f, 0.0f, 0.0f }
+                },
+                Vertex {
+                    .position = { 0.5f, 0.5f, 0.0f },
+                    .color = { 0.0f, 1.0f, 0.0f }
+                },
+                Vertex {
+                    .position = { -0.5f, 0.5f, 0.0f },
+                    .color = { 0.0f, 0.0f, 1.0f }
+                }
+            };
+
+            BufferDescriptor vertexBufferDescriptor{
+                .type = BufferTypeFlagBits::VertexBuffer,
+                .bytes = sizeof(Vertex) * static_cast<uint32_t>(vertices.size())
+            };
+
+            BufferHandle vertexBufferHandle = renderer->createBuffer(vertexBufferDescriptor);
+
+            // -----------------------------------------------------------------------------
+            // Create Index Buffer
+            // -----------------------------------------------------------------------------
+
+            std::array<uint32_t, 3> indices = { 0, 1, 2 };
+
+            BufferDescriptor indexBufferDescriptor{
+                .type = BufferTypeFlagBits::IndexBuffer,
+                .bytes = sizeof(uint32_t) * static_cast<uint32_t>(indices.size())
+            };
+
+            BufferHandle indexBufferHandle = renderer->createBuffer(indexBufferDescriptor);
+
+            // -----------------------------------------------------------------------------
+            // Render
+            // -----------------------------------------------------------------------------
+
             while (!window->shouldClose())
             {
                 const auto elapsedSeconds = std::chrono::duration<float>(std::chrono::steady_clock::now() - start).count();
