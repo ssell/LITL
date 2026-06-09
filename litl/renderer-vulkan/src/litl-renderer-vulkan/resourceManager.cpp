@@ -77,15 +77,22 @@ namespace litl::vulkan
 
         const VkBufferUsageFlags2CreateInfo bufferCreate2Info{
             .sType = VK_STRUCTURE_TYPE_BUFFER_USAGE_FLAGS_2_CREATE_INFO,
+            .pNext = nullptr,
             .usage = toVkBufferUsageFlag(descriptor.type)
         };
 
         const VkBufferCreateInfo bufferInfo{
             .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
             .pNext = &bufferCreate2Info,
+            .flags = 0,
             .size = descriptor.bytes,
+            .usage = 0,         // usage routed through .pNext
             .sharingMode = toVkSharingMode(descriptor.sharing),
+            .queueFamilyIndexCount = 0,
+            .pQueueFamilyIndices = nullptr
         };
+
+        // ^ todo concurrent sharing mode
 
         const VmaAllocationCreateInfo allocationInfo{
             .usage = toVmaMemoryUsage(descriptor.memory),
@@ -93,7 +100,7 @@ namespace litl::vulkan
         };
 
         const VkResult createResult = vmaCreateBuffer(m_pContext->device.vmaAllocator, &bufferInfo, &allocationInfo, &resource.vkBuffer, &resource.allocation, &resource.allocationInfo);
-
+        
         if (createResult != VK_SUCCESS)
         {
             logError("Failed to create Vulkan Buffer with result ", createResult);
