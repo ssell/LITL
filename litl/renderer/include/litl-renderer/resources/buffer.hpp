@@ -26,7 +26,7 @@ namespace litl
         /// <summary>
         /// How the buffer can be shared between queue families.
         /// </summary>
-        SharingMode sharing = SharingMode::Concurrent;
+        SharingMode sharing = SharingMode::Exclusive;
 
         /// <summary>
         /// Size in bytes of the buffer to be created.

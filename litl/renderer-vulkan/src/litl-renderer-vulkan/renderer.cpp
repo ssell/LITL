@@ -487,10 +487,12 @@ namespace litl::vulkan
         };
 
         const VmaAllocatorCreateInfo createVmaInfo{
-            .flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
+            .flags = 
+                VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT | 
+                VMA_ALLOCATOR_CREATE_KHR_MAINTENANCE5_BIT,              // notify we are using VkBufferUsageFlags2
             .physicalDevice = context.device.vkPhysicalDevice,
             .device = context.device.vkDevice,
-            .pVulkanFunctions = &vulkanFunctions,       // wire together with Volk
+            .pVulkanFunctions = &vulkanFunctions,                       // wire together with Volk
             .instance = context.device.vkInstance,
             .vulkanApiVersion = LITL_VULKAN_VERSION
         };
