@@ -1,8 +1,7 @@
 #ifndef LITL_CORE_POOLED_HANDLE_H__
 #define LITL_CORE_POOLED_HANDLE_H__
 
-#include <cstdint>
-#include <vector>
+#include "litl-core/containers/pagedVector.hpp"
 
 namespace litl
 {
@@ -125,7 +124,7 @@ namespace litl
             bool set = false;
         };
 
-        std::vector<Slot> m_slots;
+        PagedVector<Slot, 32> m_slots;
         std::vector<uint32_t> m_freeList;
     };
 }
