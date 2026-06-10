@@ -439,7 +439,7 @@ namespace litl::vulkan
         return RendererResult::Success;
     }
 
-    RendererResult cmdBufferWrite(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, void* source, size_t size, PipelineStageFlag bufferTargetStage) noexcept
+    RendererResult cmdBufferWrite(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, void* source, size_t size, uint64_t destOffset, PipelineStageFlag bufferTargetStage) noexcept
     {
         if (source == nullptr)
         {
@@ -475,7 +475,7 @@ namespace litl::vulkan
         if (bufferResource->allocationInfo.pMappedData != nullptr)
         {
             // Mapped buffer, can write directly to it.
-            VkResult result = vmaCopyMemoryToAllocation(vulkanContext->device.vmaAllocator, source, bufferResource->allocation, 0, size);     // copies AND flushes
+            VkResult result = vmaCopyMemoryToAllocation(vulkanContext->device.vmaAllocator, source, bufferResource->allocation, static_cast<VkDeviceSize>(destOffset), size);     // copies AND flushes
 
             if (result != VK_SUCCESS)
             {
@@ -491,7 +491,7 @@ namespace litl::vulkan
                 .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
                 .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
                 .buffer = bufferResource->vkBuffer,
-                .offset = 0,
+                .offset = static_cast<VkDeviceSize>(destOffset),
                 .size = VK_WHOLE_SIZE
             };
 
@@ -530,7 +530,7 @@ namespace litl::vulkan
                     .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
                     .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
                     .buffer = stagingBufferResource->vkBuffer,
-                    .offset = 0,
+                    .offset = static_cast<VkDeviceSize>(destOffset),
                     .size = VK_WHOLE_SIZE
                 };
 
@@ -549,8 +549,8 @@ namespace litl::vulkan
                 // Copy to the target buffer
                 VkBufferCopy bufferCopy{
                     .srcOffset = 0,
-                    .dstOffset = 0,
-                    .size = size
+                    .dstOffset = static_cast<VkDeviceSize>(destOffset),
+                    .size = static_cast<VkDeviceSize>(size)
                 };
 
                 vkCmdCopyBuffer(commandBuffer->vkCommandBuffer, stagingBufferResource->vkBuffer, bufferResource->vkBuffer, 1, &bufferCopy);
@@ -564,7 +564,7 @@ namespace litl::vulkan
                     .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
                     .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
                     .buffer = bufferResource->vkBuffer,
-                    .offset = 0,
+                    .offset = static_cast<VkDeviceSize>(destOffset),
                     .size = VK_WHOLE_SIZE
                 };
 
@@ -586,6 +586,77 @@ namespace litl::vulkan
                 return RendererResult::InvalidBufferForWriting;
             }
         }
+
+        return RendererResult::Success;
+    }
+
+    RendererResult cmdBufferCopyInto(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle sourceBufferHandle, BufferHandle destBufferHandle, uint64_t size, uint64_t sourceOffset, uint64_t destOffset, PipelineStageFlag bufferTargetStage) noexcept
+    {
+        if (size == 0)
+        {
+            return RendererResult::ZeroSizedSource;
+        }
+
+        auto* vulkanContext = unwrap(context);
+        auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
+
+        if (!isValid(commandBuffer))
+        {
+            return RendererResult::InvalidCommandBufferHandle;
+        }
+
+        auto* sourceBuffer = vulkanContext->resources.getBuffer(sourceBufferHandle);
+
+        if (sourceBuffer == nullptr)
+        {
+            return RendererResult::InvalidBufferForReading;
+        }
+
+        auto* destBuffer = vulkanContext->resources.getBuffer(destBufferHandle);
+
+        if (destBuffer == nullptr)
+        {
+            return RendererResult::InvalidBufferForWriting;
+        }
+
+        // Copy from source into destination
+        VkBufferCopy bufferCopy{
+            .srcOffset = static_cast<VkDeviceSize>(sourceOffset),
+            .dstOffset = static_cast<VkDeviceSize>(destOffset),
+            .size = static_cast<VkDeviceSize>(size)
+        };
+
+        vkCmdCopyBuffer(commandBuffer->vkCommandBuffer, sourceBuffer->vkBuffer, destBuffer->vkBuffer, 1, &bufferCopy);
+
+        // Barrier to make sure the copy has finished
+        const VkBufferUsageFlags2CreateInfo bufferCreate2Info{
+            .sType = VK_STRUCTURE_TYPE_BUFFER_USAGE_FLAGS_2_CREATE_INFO,
+            .usage = toVkBufferUsageFlag(destBuffer->descriptor.type)
+        };
+
+        const VkBufferMemoryBarrier memoryBarrier{
+            .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+            .pNext = &bufferCreate2Info,
+            .srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+            //.dstAccessMask = supplied in pNext
+            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .buffer = destBuffer->vkBuffer,
+            .offset = static_cast<VkDeviceSize>(destOffset),
+            .size = static_cast<VkDeviceSize>(size)
+        };
+
+        vkCmdPipelineBarrier(
+            commandBuffer->vkCommandBuffer,             // command buffer
+            VK_PIPELINE_STAGE_TRANSFER_BIT,             // source stage mask
+            toVkPipelineStageFlag(bufferTargetStage),   // dest stage mask
+            0,                                          // dependency flags
+            0,                                          // memory barrier count
+            nullptr,                                    // memory barriers
+            1,                                          // buffer memory barrier count
+            &memoryBarrier,                             // buffer memory barriers
+            0,                                          // image memory barrier count
+            nullptr);                                   // image memory barriers
 
         return RendererResult::Success;
     }

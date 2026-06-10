@@ -54,7 +54,8 @@ namespace litl
         RendererResult(*cmdBindVertexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, uint64_t);
         RendererResult(*cmdBindVertexBuffers)(RendererContext*, CommandBufferHandle, BufferHandle*, uint64_t*, uint32_t);
         RendererResult(*cmdBindIndexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle);
-        RendererResult (*cmdBufferWrite)(RendererContext*, CommandBufferHandle, BufferHandle, void*, size_t, PipelineStageFlag);
+        RendererResult (*cmdBufferWrite)(RendererContext*, CommandBufferHandle, BufferHandle, void*, uint64_t, PipelineStageFlag);
+        RendererResult (*cmdBufferCopyInto)(RendererContext*, CommandBufferHandle, BufferHandle, BufferHandle, uint64_t, uint64_t, uint64_t, PipelineStageFlag);
         void (*cmdDraw)(RendererContext*, CommandBufferHandle, uint32_t, uint32_t, uint32_t, uint32_t);
 
         // drawing
@@ -305,6 +306,7 @@ namespace litl
 
         /// <summary>
         /// Writes the specified data to the buffer.
+        /// The target buffer must have been created such that is persistently mapped and available for CPU writes.
         /// </summary>
         /// <param name="commandBuffer"></param>
         /// <param name="buffer"></param>
@@ -312,9 +314,26 @@ namespace litl
         /// <param name="size">Size of the data to be written, in bytes.</param>
         /// <param name="bufferTargetStage">The pipeline stage(s) that the buffer is used in. Needed in order to create a proper barrier to ensure writing is complete.</param>
         /// <returns></returns>
-        RendererResult cmdBufferWrite(CommandBufferHandle commandBuffer, BufferHandle buffer, void* source, size_t size, PipelineStageFlag bufferTargetStage) const noexcept
+        RendererResult cmdBufferWrite(CommandBufferHandle commandBuffer, BufferHandle buffer, void* source, uint64_t size, PipelineStageFlag bufferTargetStage) const noexcept
         {
             return m_pOps->cmdBufferWrite(m_pContext, commandBuffer, buffer, source, size, bufferTargetStage);
+        }
+
+        /// <summary>
+        /// Copies the amount of data from the source buffer to the destination buffer.
+        /// This is used to fill buffers that have GPU-only access such as static vertex and index buffers.
+        /// </summary>
+        /// <param name="commandBuffer"></param>
+        /// <param name="sourceBuffer"></param>
+        /// <param name="destBuffer"></param>
+        /// <param name="size"></param>
+        /// <param name="sourceOffset"></param>
+        /// <param name="destOffset"></param>
+        /// <param name="bufferTargetStage"></param>
+        /// <returns></returns>
+        RendererResult cmdBufferCopyInto(CommandBufferHandle commandBuffer, BufferHandle sourceBuffer, BufferHandle destBuffer, uint64_t size, uint64_t sourceOffset, uint64_t destOffset, PipelineStageFlag bufferTargetStage) const noexcept
+        {
+            return m_pOps->cmdBufferCopyInto(m_pContext, commandBuffer, sourceBuffer, destBuffer, size, sourceOffset, destOffset, bufferTargetStage);
         }
 
         /// <summary>
