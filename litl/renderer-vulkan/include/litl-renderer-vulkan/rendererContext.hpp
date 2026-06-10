@@ -6,6 +6,7 @@
 
 #include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer-vulkan/resourceManager.hpp"
+#include "litl-renderer-vulkan/resources/utility/stagingRingBuffer.hpp"
 
 namespace litl
 {
@@ -125,6 +126,7 @@ namespace litl
             CommandBufferHandle commandBuffer{};
             VkSemaphore presentCompleteSemaphore = VK_NULL_HANDLE;
             VkFence renderFence = VK_NULL_HANDLE;
+            StagingRingBuffer stagingRingBuffer;
         };
 
         /// <summary>
