@@ -9,6 +9,7 @@
 #include "litl-renderer/rendererConfiguration.hpp"
 #include "litl-renderer/resources.hpp"
 #include "litl-renderer/commands.hpp"
+#include "litl-renderer/scopedBufferUpload.hpp"
 
 namespace litl
 {
@@ -51,12 +52,12 @@ namespace litl
         void (*cmdClearImage)(RendererContext*, CommandBufferHandle, ClearImageCommand const&);
         void (*cmdSetViewportAndScissor)(RendererContext*, CommandBufferHandle, SetViewportAndScissorCommand const&);
         void (*cmdBindGraphicsPipeline)(RendererContext*, CommandBufferHandle, GraphicsPipelineHandle);
-        RendererResult(*cmdBindVertexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, uint64_t);
-        RendererResult(*cmdBindVertexBuffers)(RendererContext*, CommandBufferHandle, BufferHandle*, uint64_t*, uint32_t);
-        RendererResult(*cmdBindIndexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle);
-        RendererResult (*cmdBufferWrite)(RendererContext*, CommandBufferHandle, BufferHandle, void*, uint64_t, uint64_t, PipelineStageFlag);
-        RendererResult (*cmdBufferWriteIndirect)(RendererContext*, CommandBufferHandle, BufferHandle, BufferHandle, void*, uint64_t, uint64_t, PipelineStageFlag);
-        RendererResult (*cmdBufferCopyInto)(RendererContext*, CommandBufferHandle, BufferHandle, BufferHandle, uint64_t, uint64_t, uint64_t, PipelineStageFlag);
+        RendererResult (*cmdBindVertexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, uint64_t);
+        RendererResult (*cmdBindVertexBuffers)(RendererContext*, CommandBufferHandle, BufferHandle*, uint64_t*, uint32_t);
+        RendererResult (*cmdBindIndexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle);
+        RendererResult (*cmdBufferUpload)(RendererContext* context, CommandBufferHandle, std::span<std::byte const>, BufferHandle);
+        RendererResult (*cmdBufferFlush)(RendererContext* context, CommandBufferHandle);
+
         void (*cmdDraw)(RendererContext*, CommandBufferHandle, uint32_t, uint32_t, uint32_t, uint32_t);
 
         // drawing
@@ -306,52 +307,22 @@ namespace litl
         }
 
         /// <summary>
-        /// Writes the specified data to the buffer.
-        /// The target buffer must have been created such that is persistently mapped and available for CPU writes.
+        /// 
         /// </summary>
-        /// <param name="commandBuffer"></param>
-        /// <param name="buffer"></param>
-        /// <param name="source"></param>
-        /// <param name="size">Size of the data to be written, in bytes.</param>
-        /// <param name="destOffset">Size of the data to be written, in bytes.</param>
-        /// <param name="bufferTargetStage">The pipeline stage(s) that the buffer is used in. Needed in order to create a proper barrier to ensure writing is complete.</param>
         /// <returns></returns>
-        RendererResult cmdBufferWrite(CommandBufferHandle commandBuffer, BufferHandle buffer, void* source, uint64_t size, uint64_t destOffset, PipelineStageFlag bufferTargetStage) const noexcept
+        ScopedBufferUpload cmdBeginBufferUpload(CommandBufferHandle commandBuffer) const noexcept
         {
-            return m_pOps->cmdBufferWrite(m_pContext, commandBuffer, buffer, source, size, destOffset, bufferTargetStage);
+            return ScopedBufferUpload(this, commandBuffer);
         }
 
-        /// <summary>
-        /// Writes into the provided staging buffer, then copies from the staging buffer into the destination buffer.
-        /// If no staging buffer is provided (default constructed) then a staging buffer is allocated internally.
-        /// </summary>
-        /// <param name="commandBuffer"></param>
-        /// <param name="stagingBuffer"></param>
-        /// <param name="destBuffer"></param>
-        /// <param name="source"></param>
-        /// <param name="size"></param>
-        /// <param name="bufferTargetStage"></param>
-        /// <returns></returns>
-        RendererResult cmdBufferWriteIndirect(CommandBufferHandle commandBuffer, BufferHandle stagingBuffer, BufferHandle destBuffer, void* source, uint64_t size, uint64_t destOffset, PipelineStageFlag bufferTargetStage) const noexcept
+        RendererResult cmdBufferUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, BufferHandle destBufferHandle) const noexcept
         {
-            return m_pOps->cmdBufferWriteIndirect(m_pContext, commandBuffer, stagingBuffer, destBuffer, source, size, destOffset, bufferTargetStage);
+            return m_pOps->cmdBufferUpload(m_pContext, commandBuffer, source, destBufferHandle);
         }
 
-        /// <summary>
-        /// Copies the amount of data from the source buffer to the destination buffer.
-        /// This is used to fill buffers that have GPU-only access such as static vertex and index buffers.
-        /// </summary>
-        /// <param name="commandBuffer"></param>
-        /// <param name="sourceBuffer"></param>
-        /// <param name="destBuffer"></param>
-        /// <param name="size"></param>
-        /// <param name="sourceOffset"></param>
-        /// <param name="destOffset"></param>
-        /// <param name="bufferTargetStage"></param>
-        /// <returns></returns>
-        RendererResult cmdBufferCopyInto(CommandBufferHandle commandBuffer, BufferHandle sourceBuffer, BufferHandle destBuffer, uint64_t size, uint64_t sourceOffset, uint64_t destOffset, PipelineStageFlag bufferTargetStage) const noexcept
+        RendererResult cmdBufferFlush(CommandBufferHandle commandBuffer) const noexcept
         {
-            return m_pOps->cmdBufferCopyInto(m_pContext, commandBuffer, sourceBuffer, destBuffer, size, sourceOffset, destOffset, bufferTargetStage);
+            return m_pOps->cmdBufferFlush(m_pContext, commandBuffer);
         }
 
         /// <summary>

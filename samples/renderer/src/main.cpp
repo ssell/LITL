@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "litl-core/containers/alignedByteBuffer.hpp"
+#include "litl-core/containers/common.hpp"
 #include "litl-renderer/renderer.hpp"
 #include "litl-renderer/window.hpp"
 #include "litl-renderer-vulkan/integration.hpp"
@@ -44,8 +45,11 @@ int main()
 
             {
                 auto commandBuffer = renderer->cmdBeginFrame();
-                vertexBuffer = createVertexBuffer(renderer, commandBuffer);
-                indexBuffer = createIndexBuffer(renderer, commandBuffer);
+                {
+                    auto scope = renderer->cmdBeginBufferUpload(commandBuffer);
+                    vertexBuffer = createVertexBuffer(renderer, commandBuffer);
+                    indexBuffer = createIndexBuffer(renderer, commandBuffer);
+                }
                 renderer->cmdEnd(commandBuffer);
             }
 
@@ -291,7 +295,7 @@ BufferHandle createVertexBuffer(Renderer* renderer, CommandBufferHandle commandB
         return {};
     }
 
-    const RendererResult result = renderer->cmdBufferWriteIndirect(commandBuffer, {}, vertexBufferHandle, vertices.data(), vertexBufferDescriptor.bytes, 0, PipelineStageFlagBits::VertexInput);
+    const auto result = renderer->cmdBufferUpload(commandBuffer, as_byte_span(vertices), vertexBufferHandle);
 
     if (result != RendererResult::Success)
     {
@@ -318,7 +322,7 @@ BufferHandle createIndexBuffer(Renderer* renderer, CommandBufferHandle commandBu
         return {};
     }
 
-    const RendererResult result = renderer->cmdBufferWriteIndirect(commandBuffer, {}, indexBufferHandle, indices.data(), indexBufferDescriptor.bytes, 0, PipelineStageFlagBits::VertexInput);
+    const auto result = renderer->cmdBufferUpload(commandBuffer, as_byte_span(indices), indexBufferHandle);
 
     if (result != RendererResult::Success)
     {
