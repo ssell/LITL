@@ -55,7 +55,7 @@ namespace litl
         RendererResult (*cmdBindVertexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, uint64_t);
         RendererResult (*cmdBindVertexBuffers)(RendererContext*, CommandBufferHandle, BufferHandle*, uint64_t*, uint32_t);
         RendererResult (*cmdBindIndexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle);
-        RendererResult (*cmdBufferUpload)(RendererContext* context, CommandBufferHandle, std::span<std::byte const>, BufferHandle);
+        RendererResult (*cmdBufferUpload)(RendererContext* context, CommandBufferHandle, std::span<std::byte const>, BufferHandle, uint64_t, uint64_t);
         RendererResult (*cmdBufferFlush)(RendererContext* context, CommandBufferHandle);
 
         void (*cmdDraw)(RendererContext*, CommandBufferHandle, uint32_t, uint32_t, uint32_t, uint32_t);
@@ -315,9 +315,9 @@ namespace litl
             return ScopedBufferUpload(this, commandBuffer);
         }
 
-        RendererResult cmdBufferUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, BufferHandle destBufferHandle) const noexcept
+        RendererResult cmdBufferUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, BufferHandle destBufferHandle, uint64_t sourceOffset = 0ull, uint64_t destOffset = 0ull) const noexcept
         {
-            return m_pOps->cmdBufferUpload(m_pContext, commandBuffer, source, destBufferHandle);
+            return m_pOps->cmdBufferUpload(m_pContext, commandBuffer, source, destBufferHandle, sourceOffset, destOffset);
         }
 
         RendererResult cmdBufferFlush(CommandBufferHandle commandBuffer) const noexcept

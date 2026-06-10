@@ -5,10 +5,11 @@
 
 #include "litl-core/constants.hpp"
 #include "litl-renderer-vulkan/resources/buffer.hpp"
+#include "litl-renderer-vulkan/resources/commandBuffer.hpp"
 
 namespace litl::vulkan
 {
-    class RendererContext;
+    struct RendererContext;
 
     struct StagingRingBufferIndex
     {
@@ -22,7 +23,7 @@ namespace litl::vulkan
     /// <summary>
     /// 
     /// </summary>
-    class StagingRingBuffer
+    class StagingRingBuffer final
     {
     public:
 
@@ -37,12 +38,14 @@ namespace litl::vulkan
         void build(RendererContext& context) noexcept;
 
         StagingRingBufferIndex copyIntoStaging(std::span<std::byte const> source, uint64_t sourceOffset) noexcept;
-        void copyIntoDestination(VkCommandBuffer vkCommandBuffer, StagingRingBufferIndex stagingIndex, BufferResource* destination, uint64_t destOffset) noexcept;
+        void copyIntoDestination(CommandBufferResource* commandBuffer, StagingRingBufferIndex stagingIndex, BufferResource* destination, uint64_t destOffset) noexcept;
+        void flushBuffers(CommandBufferResource* commandBuffer);
         void freeBuffers() noexcept;
 
     private:
 
         BufferHandle createStagingBuffer(uint64_t size) noexcept;
+        void flushBuffer(CommandBufferResource* commandBuffer, BufferResource* resource) noexcept;
 
         RendererContext* m_pContext;
         BufferResource* m_pFixedBuffer;

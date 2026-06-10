@@ -1518,28 +1518,38 @@ namespace litl::vulkan
     // -------------------------------------------------------------------------------------
 
 
-    VkPipelineStageFlags2 deriveDstStageFromUsageFlag(VkPipelineStageFlags2 flag) noexcept
+    VkPipelineStageFlags2 deriveDstStageFromBufferType(BufferTypeFlag flag) noexcept
+    {
+        return deriveDstStageFromUsageFlag(toVkBufferUsageFlag(flag));
+    }
+
+    VkAccessFlags2 deriveDstAccessFromBufferType(BufferTypeFlag flag) noexcept
+    {
+        return deriveDstAccessFromUsageFlag(toVkBufferUsageFlag(flag));
+    }
+
+    VkPipelineStageFlags2 deriveDstStageFromUsageFlag(VkBufferUsageFlags2 usage) noexcept
     {
         VkPipelineStageFlags2 dstStage = 0;
 
-        if (flag & VK_BUFFER_USAGE_VERTEX_BUFFER_BIT) { dstStage |= VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT; }
-        if (flag & VK_BUFFER_USAGE_INDEX_BUFFER_BIT) { dstStage |= VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT; }
-        if (flag & VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT) { dstStage |= VK_PIPELINE_STAGE_2_DRAW_INDIRECT_BIT; }
-        if (flag & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT) { dstStage |= VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT; }        // can't know which shader stage
-        if (flag & VK_BUFFER_USAGE_STORAGE_BUFFER_BIT) { dstStage |= VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT; }        // compute or graphics
+        if (usage & VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT) { dstStage |= VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT; }
+        if (usage & VK_BUFFER_USAGE_2_INDEX_BUFFER_BIT) { dstStage |= VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT; }
+        if (usage & VK_BUFFER_USAGE_2_INDIRECT_BUFFER_BIT) { dstStage |= VK_PIPELINE_STAGE_2_DRAW_INDIRECT_BIT; }
+        if (usage & VK_BUFFER_USAGE_2_UNIFORM_BUFFER_BIT) { dstStage |= VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT; }        // can't know which shader stage
+        if (usage & VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT) { dstStage |= VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT; }        // compute or graphics
 
         return dstStage;
     }
 
-    VkAccessFlags2 deriveDstAccessFromUsageFlag(VkPipelineStageFlags2 flag) noexcept
+    VkAccessFlags2 deriveDstAccessFromUsageFlag(VkBufferUsageFlags2 usage) noexcept
     {
         VkAccessFlags2 dstAccess = 0;
 
-        if (flag & VK_BUFFER_USAGE_VERTEX_BUFFER_BIT) { dstAccess |= VK_ACCESS_2_VERTEX_ATTRIBUTE_READ_BIT; }
-        if (flag & VK_BUFFER_USAGE_INDEX_BUFFER_BIT) { dstAccess |= VK_ACCESS_2_INDEX_READ_BIT; }
-        if (flag & VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT) { dstAccess |= VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT; }
-        if (flag & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT) { dstAccess |= VK_ACCESS_2_UNIFORM_READ_BIT; }               // can't know which shader stage
-        if (flag & VK_BUFFER_USAGE_STORAGE_BUFFER_BIT) { dstAccess |= VK_ACCESS_2_SHADER_STORAGE_READ_BIT; }        // compute or graphics
+        if (usage & VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT) { dstAccess |= VK_ACCESS_2_VERTEX_ATTRIBUTE_READ_BIT; }
+        if (usage & VK_BUFFER_USAGE_2_INDEX_BUFFER_BIT) { dstAccess |= VK_ACCESS_2_INDEX_READ_BIT; }
+        if (usage & VK_BUFFER_USAGE_2_INDIRECT_BUFFER_BIT) { dstAccess |= VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT; }
+        if (usage & VK_BUFFER_USAGE_2_UNIFORM_BUFFER_BIT) { dstAccess |= VK_ACCESS_2_UNIFORM_READ_BIT; }               // can't know which shader stage
+        if (usage & VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT) { dstAccess |= VK_ACCESS_2_SHADER_STORAGE_READ_BIT; }        // compute or graphics
 
         return dstAccess;
     }

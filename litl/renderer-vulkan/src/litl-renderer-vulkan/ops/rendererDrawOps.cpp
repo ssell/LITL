@@ -208,7 +208,7 @@ namespace litl::vulkan
         }
 
         // Clear any temporary buffers
-        vulkanContext->renderInfo.frameSyncInfo[vulkanContext->renderInfo.frameInFlightIndex].stagingRingBuffer.freeBuffers();
+        vulkanContext->getCurrFrameSyncInfo().stagingRingBuffer->freeBuffers();
 
         // Increment the frame
         vulkanContext->renderInfo.frameCount++;

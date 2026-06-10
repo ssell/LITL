@@ -439,7 +439,7 @@ namespace litl::vulkan
         return RendererResult::Success;
     }
 
-    RendererResult cmdBufferUpload(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, std::span<std::byte const> source, BufferHandle destBufferHandle) noexcept
+    RendererResult cmdBufferUpload(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, std::span<std::byte const> source, BufferHandle destBufferHandle, uint64_t sourceOffset, uint64_t destOffset) noexcept
     {
         auto* vulkanContext = unwrap(context);
         auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
@@ -449,7 +449,20 @@ namespace litl::vulkan
             return RendererResult::InvalidCommandBufferHandle;
         }
 
-        // ... 
+        auto* destBuffer = vulkanContext->resources.getBuffer(destBufferHandle);
+
+        if (destBuffer == nullptr)
+        {
+            return RendererResult::InvalidBufferForWriting;
+        }
+
+        auto& frameSync = vulkanContext->getCurrFrameSyncInfo();
+
+        // Source -> Staging
+        auto stagingIndex = frameSync.stagingRingBuffer->copyIntoStaging(source, sourceOffset);
+
+        // Staging -> Destination
+        frameSync.stagingRingBuffer->copyIntoDestination(commandBuffer, stagingIndex, destBuffer, destOffset);
 
         return RendererResult::Success;
     }
@@ -464,7 +477,7 @@ namespace litl::vulkan
             return RendererResult::InvalidCommandBufferHandle;
         }
 
-        // ... 
+        vulkanContext->getCurrFrameSyncInfo().stagingRingBuffer->flushBuffers(commandBuffer);
 
         return RendererResult::Success;
     }

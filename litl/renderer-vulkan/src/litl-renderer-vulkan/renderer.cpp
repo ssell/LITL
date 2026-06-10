@@ -666,7 +666,8 @@ namespace litl::vulkan
             }
 
             // Staging Ring Buffer
-            frameSyncInfo.stagingRingBuffer.allocateFixedBuffer();
+            frameSyncInfo.stagingRingBuffer = std::make_unique<StagingRingBuffer>();
+            frameSyncInfo.stagingRingBuffer->build(context);
         }
 
         return true;
