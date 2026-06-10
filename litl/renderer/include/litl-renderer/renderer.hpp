@@ -67,9 +67,6 @@ namespace litl
 
         // misc
         DataFormat (*getSwapchainImageFormat)(RendererContext*);
-
-        // TEMPORARY FOR TESTING PURPOSES
-        bool (*testPipelineLayoutCache)(RendererContext*, ShaderModuleHandle, std::string const&, ShaderModuleHandle, std::string const&);
     };
 
     /// <summary>
@@ -384,15 +381,6 @@ namespace litl
         [[nodiscard]] DataFormat getSwapchainImageFormat() noexcept
         {
             return m_pOps->getSwapchainImageFormat(m_pContext);
-        }
-
-        // ---------------------------------------------------------------------------------
-        // TEMPORARY FOR TESTING PURPOSES
-        // ---------------------------------------------------------------------------------
-
-        bool testPipelineLayoutCache(ShaderModuleHandle vertexShader, std::string const& vertexEntryPoint, ShaderModuleHandle fragmentShader, std::string const& fragmentEntryPoint) const noexcept
-        {
-            return m_pOps->testPipelineLayoutCache(m_pContext, vertexShader, vertexEntryPoint, fragmentShader, fragmentEntryPoint);
         }
 
     private:

@@ -283,7 +283,7 @@ BufferHandle createVertexBuffer(Renderer* renderer, CommandBufferHandle commandB
     };
 
     BufferDescriptor vertexBufferDescriptor{
-        .type = BufferTypeFlagBits::VertexBuffer,
+        .type = BufferTypeFlagBits::VertexBuffer | BufferTypeFlagBits::TransferDest,
         .bytes = sizeof(Vertex) * static_cast<uint32_t>(vertices.size())
     };
 
@@ -310,7 +310,7 @@ BufferHandle createIndexBuffer(Renderer* renderer, CommandBufferHandle commandBu
     std::array<uint32_t, 3> indices = { 0, 1, 2 };
 
     BufferDescriptor indexBufferDescriptor{
-        .type = BufferTypeFlagBits::IndexBuffer,
+        .type = BufferTypeFlagBits::IndexBuffer | BufferTypeFlagBits::TransferDest,
         .bytes = sizeof(uint32_t) * static_cast<uint32_t>(indices.size())
     };
 
