@@ -7,7 +7,7 @@ namespace litl
 {
     struct CommandBufferDescriptor
     {
-        // ... todo ...
+        // ...
     };
 
     struct CommandBufferTag {};

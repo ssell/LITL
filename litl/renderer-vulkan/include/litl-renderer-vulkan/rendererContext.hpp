@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "litl-renderer/renderer.hpp"
 #include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer-vulkan/resourceManager.hpp"
 #include "litl-renderer-vulkan/resources/utility/stagingRingBuffer.hpp"
@@ -123,10 +124,28 @@ namespace litl
         /// </summary>
         struct PerFrameSyncInfo
         {
+            /// <summary>
+            /// Shared command buffer for the frame.
+            /// </summary>
             CommandBufferHandle commandBuffer{};
-            VkSemaphore presentCompleteSemaphore = VK_NULL_HANDLE;
+
+            /// <summary>
+            /// Fence to signal the end of rendering.
+            /// </summary>
             VkFence renderFence = VK_NULL_HANDLE;
-            StagingRingBuffer stagingRingBuffer;
+
+            /// <summary>
+            /// Semaphore to signal the end of presentation.
+            /// </summary>
+            VkSemaphore presentCompleteSemaphore = VK_NULL_HANDLE;
+
+            /// <summary>
+            /// Holds both fixed and temporary staging buffers for GPU uploads.
+            /// Cleared out at the end of each frame.
+            /// 
+            /// Note: this is stored in an unique_ptr since PerFrameSyncInfo is itself stored in a vector.
+            /// </summary>
+            std::unique_ptr<StagingRingBuffer> stagingRingBuffer;
         };
 
         /// <summary>

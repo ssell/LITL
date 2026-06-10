@@ -61,8 +61,10 @@ namespace litl::vulkan
         return stagingIndex;
     }
 
-    void StagingRingBuffer::copyIntoDestination(VkCommandBuffer vkCommandBuffer, StagingRingBufferIndex stagingIndex, BufferResource* destination, uint64_t destOffset) noexcept
+    void StagingRingBuffer::copyIntoDestination(CommandBufferResource* commandBuffer, StagingRingBufferIndex stagingIndex, BufferResource* destination, uint64_t destOffset) noexcept
     {
+        LITL_ASSERT_MSG(commandBuffer != nullptr, "Invalid command buffer provided to StagingRingBuffer::copyIntoDestination", );
+
         VkBufferCopy bufferCopy{
             .srcOffset = static_cast<VkDeviceSize>(stagingIndex.bufferOffset),
             .dstOffset = static_cast<VkDeviceSize>(destOffset),
@@ -82,7 +84,56 @@ namespace litl::vulkan
             sourceVkBuffer = sourceBuffer->vkBuffer;
         }
 
-        vkCmdCopyBuffer(vkCommandBuffer, sourceVkBuffer, destination->vkBuffer, 1, &bufferCopy);
+        vkCmdCopyBuffer(commandBuffer->vkCommandBuffer, sourceVkBuffer, destination->vkBuffer, 1, &bufferCopy);
+        destination->accumulatedDstStageMask |= deriveDstStageFromBufferType(destination->descriptor.type);
+    }
+
+    void StagingRingBuffer::flushBuffers(CommandBufferResource* commandBuffer)
+    {
+        LITL_ASSERT_MSG(commandBuffer != nullptr, "Invalid command buffer provided to StagingRingBuffer::flushBuffers", );
+
+        flushBuffer(commandBuffer, m_pFixedBuffer);
+
+        for (auto& overflowHandle : m_overflowBuffers)
+        {
+            flushBuffer(commandBuffer, m_pContext->resources.getBuffer(overflowHandle));
+        }
+    }
+
+    void StagingRingBuffer::flushBuffer(CommandBufferResource* commandBuffer, BufferResource* buffer) noexcept
+    {
+        if ((buffer == nullptr) || (buffer->accumulatedDstStageMask == VK_PIPELINE_STAGE_2_NONE))
+        {
+            return;
+        }
+
+        const VkBufferMemoryBarrier memoryBarrier{
+            .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+            .pNext = nullptr,
+            .srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+            .dstAccessMask = static_cast<VkPipelineStageFlags>(deriveDstStageFromBufferType(buffer->descriptor.type)),
+            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .buffer = buffer->vkBuffer,
+            .offset = 0,
+            .size = buffer->allocationInfo.size
+        };
+
+
+        vkCmdPipelineBarrier(
+            commandBuffer->vkCommandBuffer,     // command buffer
+            VK_PIPELINE_STAGE_TRANSFER_BIT,     // source stage mask
+            buffer->accumulatedDstStageMask,    // dest stage mask
+            0,                                  // dependency flags
+            0,                                  // memory barrier count
+            nullptr,                            // memory barriers
+            1,                                  // buffer memory barrier count
+            &memoryBarrier,                     // buffer memory barriers
+            0,                                  // image memory barrier count
+            nullptr);                           // image memory barriers
+        
+
+        buffer->accumulatedDstStageMask = VK_PIPELINE_STAGE_2_NONE;
     }
 
     void StagingRingBuffer::freeBuffers() noexcept

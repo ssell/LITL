@@ -32,6 +32,14 @@ namespace litl::vulkan
         /// For persistently mapped buffers, they may require a dedicated staging buffer depending on where they were able to be allocated.
         /// </summary>
         BufferHandle stagingBuffer{};
+
+        /// <summary>
+        /// When buffers are copied via vkCmdCopyBuffer a memory barrier is required to ensure that the
+        /// data is ready before it is attempted to be used. As different buffers have different usage
+        /// requirements, this mask represents an accumulation of pipeline usage so that an accurate
+        /// memory barrier may be constructed.
+        /// </summary>
+        VkPipelineStageFlags2 accumulatedDstStageMask = VK_PIPELINE_STAGE_2_NONE;
     };
 }
 

@@ -8,8 +8,10 @@ namespace litl::vulkan
 {
     struct CommandBufferResource
     {
+        /// <summary>
+        /// The Vulkan command buffer.
+        /// </summary>
         VkCommandBuffer vkCommandBuffer = VK_NULL_HANDLE;
-        // ... todo ...
     };
 }
 
