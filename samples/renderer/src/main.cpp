@@ -38,6 +38,17 @@ int main()
 
         if (graphicsPipelineHandle.isValid())
         {
+            // Prepare the vertex and index buffers
+            BufferHandle vertexBuffer = {};
+            BufferHandle indexBuffer = {};
+
+            {
+                auto commandBuffer = renderer->cmdBeginFrame();
+                vertexBuffer = createVertexBuffer(renderer, commandBuffer);
+                indexBuffer = createIndexBuffer(renderer, commandBuffer);
+                renderer->cmdEnd(commandBuffer);
+            }
+
             while (!window->shouldClose())
             {
                 const auto elapsedSeconds = std::chrono::duration<float>(std::chrono::steady_clock::now() - start).count();
@@ -267,7 +278,6 @@ BufferHandle createVertexBuffer(Renderer* renderer, CommandBufferHandle commandB
         }
     };
 
-    // Vertex Buffer
     BufferDescriptor vertexBufferDescriptor{
         .type = BufferTypeFlagBits::VertexBuffer,
         .bytes = sizeof(Vertex) * static_cast<uint32_t>(vertices.size())
@@ -277,30 +287,16 @@ BufferHandle createVertexBuffer(Renderer* renderer, CommandBufferHandle commandB
 
     if (!vertexBufferHandle.isValid())
     {
-        std::cout << "Failed to create Vertex buffer" << std::endl;
+        std::cout << "Failed to create vertex buffer" << std::endl;
         return {};
     }
 
-    // Staging Buffer
-    BufferDescriptor stagingBufferDescriptor{
-        .type = BufferTypeFlagBits::TransferSource,
-        .memoryUsage = BufferMemoryUsage::Staging,
-        .bytes = vertexBufferDescriptor.bytes
-    };
+    const RendererResult result = renderer->cmdBufferWriteIndirect(commandBuffer, {}, vertexBufferHandle, vertices.data(), vertexBufferDescriptor.bytes, 0, PipelineStageFlagBits::VertexInput);
 
-    BufferHandle stagingBufferHandle = renderer->createBuffer(stagingBufferDescriptor);
-
-    if (!stagingBufferHandle.isValid())
+    if (result != RendererResult::Success)
     {
-        std::cout << "Failed to create staging buffer for Vertex buffer" << std::endl;
-        renderer->destroyBuffer(vertexBufferHandle);
-        return {};
+        std::cout << "Failed to write to vertex buffer with result " << static_cast<uint32_t>(result) << std::endl;
     }
-
-    // Write to Staging
-    renderer->cmdBufferWrite(commandBuffer, stagingBufferHandle, vertices.data(), vertexBufferDescriptor.bytes, PipelineStageFlagBits::VertexInput);
-
-    // Copy from Staging to Vertex Buffer
 
     return vertexBufferHandle;
 }
@@ -316,7 +312,18 @@ BufferHandle createIndexBuffer(Renderer* renderer, CommandBufferHandle commandBu
 
     BufferHandle indexBufferHandle = renderer->createBuffer(indexBufferDescriptor);
 
-    // ...
+    if (!indexBufferHandle.isValid())
+    {
+        std::cout << "Failed to create index buffer" << std::endl;
+        return {};
+    }
+
+    const RendererResult result = renderer->cmdBufferWriteIndirect(commandBuffer, {}, indexBufferHandle, indices.data(), indexBufferDescriptor.bytes, 0, PipelineStageFlagBits::VertexInput);
+
+    if (result != RendererResult::Success)
+    {
+        std::cout << "Failed to write to vertex index with result " << static_cast<uint32_t>(result) << std::endl;
+    }
 
     return indexBufferHandle;
 }
