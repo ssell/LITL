@@ -72,7 +72,9 @@ namespace litl::vulkan
     // TEMPORARY FOR TESTING PURPOSES (rendererTesting.cpp)
     // ---------------------------------------------------------------------------------
 
-    [[nodiscard]] bool testPipelineLayoutCache(litl::RendererContext* context, ShaderModuleHandle vertexShader, std::string const& vertexEntryPoint, ShaderModuleHandle fragmentShader, std::string const& fragmentEntryPoint) noexcept;
+    // ...
+
+    // ---------------------------------------------------------------------------------
 
     inline constexpr litl::RendererOps VulkanRendererOps = {
         // renderer life-cycle
