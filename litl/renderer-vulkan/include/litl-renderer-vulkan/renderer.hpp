@@ -51,9 +51,8 @@ namespace litl::vulkan
     RendererResult cmdBindVertexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, uint64_t offset) noexcept;
     RendererResult cmdBindVertexBuffers(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle* bufferHandles, uint64_t* bufferOffsets, uint32_t count) noexcept;
     RendererResult cmdBindIndexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle) noexcept;
-    RendererResult cmdBufferWrite(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, void* source, uint64_t size, uint64_t destOffset, PipelineStageFlag bufferTargetStage) noexcept;
-    RendererResult cmdBufferWriteIndirect(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle stagingBufferHandle, BufferHandle destBufferHandle, void* source, uint64_t size, uint64_t destOffset, PipelineStageFlag bufferTargetStage) noexcept;
-    RendererResult cmdBufferCopyInto(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle sourceBufferHandle, BufferHandle destBufferHandle, uint64_t size, uint64_t sourceOffset, uint64_t destOffset, PipelineStageFlag bufferTargetStage) noexcept;
+    RendererResult cmdBufferUpload(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, std::span<std::byte const> source, BufferHandle destBufferHandle) noexcept;
+    RendererResult cmdBufferFlush(litl::RendererContext* context, CommandBufferHandle commandBufferHandle) noexcept;
     void cmdDraw(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) noexcept;
 
     // -------------------------------------------------------------------------------------
@@ -112,9 +111,8 @@ namespace litl::vulkan
         &cmdBindVertexBuffer,
         &cmdBindVertexBuffers,
         &cmdBindIndexBuffer,
-        &cmdBufferWrite,
-        &cmdBufferWriteIndirect,
-        &cmdBufferCopyInto,
+        &cmdBufferUpload,
+        &cmdBufferFlush,
         &cmdDraw,
 
         // drawing

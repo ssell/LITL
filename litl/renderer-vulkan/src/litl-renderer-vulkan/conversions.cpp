@@ -1512,4 +1512,35 @@ namespace litl::vulkan
             return static_cast<SharingMode>(0);
         }
     }
+
+    // -------------------------------------------------------------------------------------
+    // .dstAccess and .dstStage from Pipeline Usage Flag
+    // -------------------------------------------------------------------------------------
+
+
+    VkPipelineStageFlags2 deriveDstStageFromUsageFlag(VkPipelineStageFlags2 flag) noexcept
+    {
+        VkPipelineStageFlags2 dstStage = 0;
+
+        if (flag & VK_BUFFER_USAGE_VERTEX_BUFFER_BIT) { dstStage |= VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT; }
+        if (flag & VK_BUFFER_USAGE_INDEX_BUFFER_BIT) { dstStage |= VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT; }
+        if (flag & VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT) { dstStage |= VK_PIPELINE_STAGE_2_DRAW_INDIRECT_BIT; }
+        if (flag & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT) { dstStage |= VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT; }        // can't know which shader stage
+        if (flag & VK_BUFFER_USAGE_STORAGE_BUFFER_BIT) { dstStage |= VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT; }        // compute or graphics
+
+        return dstStage;
+    }
+
+    VkAccessFlags2 deriveDstAccessFromUsageFlag(VkPipelineStageFlags2 flag) noexcept
+    {
+        VkAccessFlags2 dstAccess = 0;
+
+        if (flag & VK_BUFFER_USAGE_VERTEX_BUFFER_BIT) { dstAccess |= VK_ACCESS_2_VERTEX_ATTRIBUTE_READ_BIT; }
+        if (flag & VK_BUFFER_USAGE_INDEX_BUFFER_BIT) { dstAccess |= VK_ACCESS_2_INDEX_READ_BIT; }
+        if (flag & VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT) { dstAccess |= VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT; }
+        if (flag & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT) { dstAccess |= VK_ACCESS_2_UNIFORM_READ_BIT; }               // can't know which shader stage
+        if (flag & VK_BUFFER_USAGE_STORAGE_BUFFER_BIT) { dstAccess |= VK_ACCESS_2_SHADER_STORAGE_READ_BIT; }        // compute or graphics
+
+        return dstAccess;
+    }
 }

@@ -80,6 +80,8 @@ namespace litl::vulkan
     [[nodiscard]] VkSharingMode toVkSharingMode(SharingMode mode) noexcept;
     [[nodiscard]] SharingMode fromVkSharingMode(VkSharingMode mode) noexcept;
 
+    [[nodiscard]] VkPipelineStageFlags2 deriveDstStageFromUsageFlag(VkPipelineStageFlags2 flag) noexcept;
+    [[nodiscard]] VkAccessFlags2 deriveDstAccessFromUsageFlag(VkPipelineStageFlags2 flag) noexcept;
 }
 
 #endif
