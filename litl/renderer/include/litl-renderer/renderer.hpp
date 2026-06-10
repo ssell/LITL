@@ -54,7 +54,8 @@ namespace litl
         RendererResult(*cmdBindVertexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, uint64_t);
         RendererResult(*cmdBindVertexBuffers)(RendererContext*, CommandBufferHandle, BufferHandle*, uint64_t*, uint32_t);
         RendererResult(*cmdBindIndexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle);
-        RendererResult (*cmdBufferWrite)(RendererContext*, CommandBufferHandle, BufferHandle, void*, uint64_t, PipelineStageFlag);
+        RendererResult (*cmdBufferWrite)(RendererContext*, CommandBufferHandle, BufferHandle, void*, uint64_t, uint64_t, PipelineStageFlag);
+        RendererResult (*cmdBufferWriteIndirect)(RendererContext*, CommandBufferHandle, BufferHandle, BufferHandle, void*, uint64_t, uint64_t, PipelineStageFlag);
         RendererResult (*cmdBufferCopyInto)(RendererContext*, CommandBufferHandle, BufferHandle, BufferHandle, uint64_t, uint64_t, uint64_t, PipelineStageFlag);
         void (*cmdDraw)(RendererContext*, CommandBufferHandle, uint32_t, uint32_t, uint32_t, uint32_t);
 
@@ -312,11 +313,28 @@ namespace litl
         /// <param name="buffer"></param>
         /// <param name="source"></param>
         /// <param name="size">Size of the data to be written, in bytes.</param>
+        /// <param name="destOffset">Size of the data to be written, in bytes.</param>
         /// <param name="bufferTargetStage">The pipeline stage(s) that the buffer is used in. Needed in order to create a proper barrier to ensure writing is complete.</param>
         /// <returns></returns>
-        RendererResult cmdBufferWrite(CommandBufferHandle commandBuffer, BufferHandle buffer, void* source, uint64_t size, PipelineStageFlag bufferTargetStage) const noexcept
+        RendererResult cmdBufferWrite(CommandBufferHandle commandBuffer, BufferHandle buffer, void* source, uint64_t size, uint64_t destOffset, PipelineStageFlag bufferTargetStage) const noexcept
         {
-            return m_pOps->cmdBufferWrite(m_pContext, commandBuffer, buffer, source, size, bufferTargetStage);
+            return m_pOps->cmdBufferWrite(m_pContext, commandBuffer, buffer, source, size, destOffset, bufferTargetStage);
+        }
+
+        /// <summary>
+        /// Writes into the provided staging buffer, then copies from the staging buffer into the destination buffer.
+        /// If no staging buffer is provided (default constructed) then a staging buffer is allocated internally.
+        /// </summary>
+        /// <param name="commandBuffer"></param>
+        /// <param name="stagingBuffer"></param>
+        /// <param name="destBuffer"></param>
+        /// <param name="source"></param>
+        /// <param name="size"></param>
+        /// <param name="bufferTargetStage"></param>
+        /// <returns></returns>
+        RendererResult cmdBufferWriteIndirect(CommandBufferHandle commandBuffer, BufferHandle stagingBuffer, BufferHandle destBuffer, void* source, uint64_t size, uint64_t destOffset, PipelineStageFlag bufferTargetStage) const noexcept
+        {
+            return m_pOps->cmdBufferWriteIndirect(m_pContext, commandBuffer, stagingBuffer, destBuffer, source, size, destOffset, bufferTargetStage);
         }
 
         /// <summary>
