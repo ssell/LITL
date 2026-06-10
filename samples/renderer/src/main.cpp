@@ -15,7 +15,8 @@ color getClearColor(float elapsedSeconds) noexcept;
 GraphicsPipelineHandle createTriangleGraphicsPipeline(Renderer* renderer) noexcept;
 void beginRender(Renderer* renderer, CommandBufferHandle commandBuffer, color clearColor) noexcept;
 void endRender(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
-void testShaderHotReload(Renderer* renderer) noexcept;
+BufferHandle createVertexBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
+BufferHandle createIndexBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
 
 struct Vertex
 {
@@ -37,49 +38,6 @@ int main()
 
         if (graphicsPipelineHandle.isValid())
         {
-            // -----------------------------------------------------------------------------
-            // Create Vertex Buffer
-            // -----------------------------------------------------------------------------
-
-            std::array<Vertex, 3> vertices = {
-                Vertex {
-                    .position = { 0.0f, -0.5f, 0.0f },
-                    .color = { 1.0f, 0.0f, 0.0f }
-                },
-                Vertex {
-                    .position = { 0.5f, 0.5f, 0.0f },
-                    .color = { 0.0f, 1.0f, 0.0f }
-                },
-                Vertex {
-                    .position = { -0.5f, 0.5f, 0.0f },
-                    .color = { 0.0f, 0.0f, 1.0f }
-                }
-            };
-
-            BufferDescriptor vertexBufferDescriptor{
-                .type = BufferTypeFlagBits::VertexBuffer,
-                .bytes = sizeof(Vertex) * static_cast<uint32_t>(vertices.size())
-            };
-
-            BufferHandle vertexBufferHandle = renderer->createBuffer(vertexBufferDescriptor);
-
-            // -----------------------------------------------------------------------------
-            // Create Index Buffer
-            // -----------------------------------------------------------------------------
-
-            std::array<uint32_t, 3> indices = { 0, 1, 2 };
-
-            BufferDescriptor indexBufferDescriptor{
-                .type = BufferTypeFlagBits::IndexBuffer,
-                .bytes = sizeof(uint32_t) * static_cast<uint32_t>(indices.size())
-            };
-
-            BufferHandle indexBufferHandle = renderer->createBuffer(indexBufferDescriptor);
-
-            // -----------------------------------------------------------------------------
-            // Render
-            // -----------------------------------------------------------------------------
-
             while (!window->shouldClose())
             {
                 const auto elapsedSeconds = std::chrono::duration<float>(std::chrono::steady_clock::now() - start).count();
@@ -286,4 +244,79 @@ void endRender(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept
 
     renderer->submitCommands(commandBuffer);
     renderer->endRender();
+}
+
+// -----------------------------------------------------------------------------------------
+// Phase 9 Specific Test Code
+// -----------------------------------------------------------------------------------------
+
+BufferHandle createVertexBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept
+{
+    std::array<Vertex, 3> vertices = {
+        Vertex {
+            .position = { 0.0f, -0.5f, 0.0f },
+            .color = { 1.0f, 0.0f, 0.0f }
+        },
+        Vertex {
+            .position = { 0.5f, 0.5f, 0.0f },
+            .color = { 0.0f, 1.0f, 0.0f }
+        },
+        Vertex {
+            .position = { -0.5f, 0.5f, 0.0f },
+            .color = { 0.0f, 0.0f, 1.0f }
+        }
+    };
+
+    // Vertex Buffer
+    BufferDescriptor vertexBufferDescriptor{
+        .type = BufferTypeFlagBits::VertexBuffer,
+        .bytes = sizeof(Vertex) * static_cast<uint32_t>(vertices.size())
+    };
+
+    BufferHandle vertexBufferHandle = renderer->createBuffer(vertexBufferDescriptor);
+
+    if (!vertexBufferHandle.isValid())
+    {
+        std::cout << "Failed to create Vertex buffer" << std::endl;
+        return {};
+    }
+
+    // Staging Buffer
+    BufferDescriptor stagingBufferDescriptor{
+        .type = BufferTypeFlagBits::TransferSource,
+        .memoryUsage = BufferMemoryUsage::Staging,
+        .bytes = vertexBufferDescriptor.bytes
+    };
+
+    BufferHandle stagingBufferHandle = renderer->createBuffer(stagingBufferDescriptor);
+
+    if (!stagingBufferHandle.isValid())
+    {
+        std::cout << "Failed to create staging buffer for Vertex buffer" << std::endl;
+        renderer->destroyBuffer(vertexBufferHandle);
+        return {};
+    }
+
+    // Write to Staging
+    renderer->cmdBufferWrite(commandBuffer, stagingBufferHandle, vertices.data(), vertexBufferDescriptor.bytes, PipelineStageFlagBits::VertexInput);
+
+    // Copy from Staging to Vertex Buffer
+
+    return vertexBufferHandle;
+}
+
+BufferHandle createIndexBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept
+{
+    std::array<uint32_t, 3> indices = { 0, 1, 2 };
+
+    BufferDescriptor indexBufferDescriptor{
+        .type = BufferTypeFlagBits::IndexBuffer,
+        .bytes = sizeof(uint32_t) * static_cast<uint32_t>(indices.size())
+    };
+
+    BufferHandle indexBufferHandle = renderer->createBuffer(indexBufferDescriptor);
+
+    // ...
+
+    return indexBufferHandle;
 }

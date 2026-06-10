@@ -19,7 +19,8 @@ namespace litl
         NullSource = 200,
         ZeroSizedSource = 201,
         MemoryCopyFailed = 202,
-        InvalidBufferForWriting = 203
+        InvalidBufferForWriting = 203,
+        InvalidBufferForReading = 204
     };
 }
 

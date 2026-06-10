@@ -111,10 +111,12 @@ namespace litl
         PreRasterizationShaders      = 1 << 23
     };
 
+    LITL_ENABLE_BITMASK(PipelineStageFlagBits);
+
     /// <summary>
     /// Composed of PipelineStageFlagBits
     /// </summary>
-    using PipelineStageFlag = uint64_t;
+    using PipelineStageFlag = PipelineStageFlagBits;
 
     enum class ColorComponentFlagBits : uint32_t
     {

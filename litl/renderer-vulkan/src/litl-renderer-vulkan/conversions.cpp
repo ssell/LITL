@@ -440,62 +440,62 @@ namespace litl::vulkan
     {
         VkPipelineStageFlags2 vkFlag = 0;
 
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::TopOfPipe)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::DrawIndirect)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_DRAW_INDIRECT_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::VertexInput)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_VERTEX_INPUT_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::VertexShader)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::TessellationControlShader)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_TESSELLATION_CONTROL_SHADER_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::TessellationEvaluationShader)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_TESSELLATION_EVALUATION_SHADER_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::GeometryShader)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_GEOMETRY_SHADER_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::FragmentShader)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::EarlyFragmentTests)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::LateFragmentTests)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::ColorAttachmentOutput)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::ComputeShader)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::Transfer)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_TRANSFER_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::BottomOfPipe)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::Host)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_HOST_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::AllGraphics)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::AllCommands)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::Copy)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_COPY_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::Resolve)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_RESOLVE_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::Blit)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_BLIT_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::Clear)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_CLEAR_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::IndexInput)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::VertexAttributeInput)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT; }
-        if ((flag & static_cast<uint64_t>(PipelineStageFlagBits::PreRasterizationShaders)) != 0) { vkFlag |= VK_PIPELINE_STAGE_2_PRE_RASTERIZATION_SHADERS_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::TopOfPipe)) { vkFlag |= VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::DrawIndirect)) { vkFlag |= VK_PIPELINE_STAGE_2_DRAW_INDIRECT_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::VertexInput)) { vkFlag |= VK_PIPELINE_STAGE_2_VERTEX_INPUT_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::VertexShader)) { vkFlag |= VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::TessellationControlShader)) { vkFlag |= VK_PIPELINE_STAGE_2_TESSELLATION_CONTROL_SHADER_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::TessellationEvaluationShader)) { vkFlag |= VK_PIPELINE_STAGE_2_TESSELLATION_EVALUATION_SHADER_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::GeometryShader)) { vkFlag |= VK_PIPELINE_STAGE_2_GEOMETRY_SHADER_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::FragmentShader)) { vkFlag |= VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::EarlyFragmentTests)) { vkFlag |= VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::LateFragmentTests)) { vkFlag |= VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::ColorAttachmentOutput)) { vkFlag |= VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::ComputeShader)) { vkFlag |= VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::Transfer)) { vkFlag |= VK_PIPELINE_STAGE_2_TRANSFER_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::BottomOfPipe)) { vkFlag |= VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::Host)) { vkFlag |= VK_PIPELINE_STAGE_2_HOST_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::AllGraphics)) { vkFlag |= VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::AllCommands)) { vkFlag |= VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::Copy)) { vkFlag |= VK_PIPELINE_STAGE_2_COPY_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::Resolve)) { vkFlag |= VK_PIPELINE_STAGE_2_RESOLVE_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::Blit)) { vkFlag |= VK_PIPELINE_STAGE_2_BLIT_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::Clear)) { vkFlag |= VK_PIPELINE_STAGE_2_CLEAR_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::IndexInput)) { vkFlag |= VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::VertexAttributeInput)) { vkFlag |= VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT; }
+        if (has_any(flag, PipelineStageFlagBits::PreRasterizationShaders)) { vkFlag |= VK_PIPELINE_STAGE_2_PRE_RASTERIZATION_SHADERS_BIT; }
 
         return vkFlag;
     }
 
     PipelineStageFlag fromVkPipelineStageFlag(VkPipelineStageFlags2 flag) noexcept
     {
-        PipelineStageFlag litlFlag = 0;
+        PipelineStageFlag litlFlag = PipelineStageFlagBits::None;
 
-        if ((flag & VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::TopOfPipe); }
-        if ((flag & VK_PIPELINE_STAGE_2_DRAW_INDIRECT_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::DrawIndirect); }
-        if ((flag & VK_PIPELINE_STAGE_2_VERTEX_INPUT_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::VertexInput); }
-        if ((flag & VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::VertexShader); }
-        if ((flag & VK_PIPELINE_STAGE_2_TESSELLATION_CONTROL_SHADER_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::TessellationControlShader); }
-        if ((flag & VK_PIPELINE_STAGE_2_TESSELLATION_EVALUATION_SHADER_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::TessellationEvaluationShader); }
-        if ((flag & VK_PIPELINE_STAGE_2_GEOMETRY_SHADER_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::GeometryShader); }
-        if ((flag & VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::FragmentShader); }
-        if ((flag & VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::EarlyFragmentTests); }
-        if ((flag & VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::LateFragmentTests); }
-        if ((flag & VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::ColorAttachmentOutput); }
-        if ((flag & VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::ComputeShader); }
-        if ((flag & VK_PIPELINE_STAGE_2_TRANSFER_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::Transfer); }
-        if ((flag & VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::BottomOfPipe); }
-        if ((flag & VK_PIPELINE_STAGE_2_HOST_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::Host); }
-        if ((flag & VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::AllGraphics); }
-        if ((flag & VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::AllCommands); }
-        if ((flag & VK_PIPELINE_STAGE_2_COPY_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::Copy); }
-        if ((flag & VK_PIPELINE_STAGE_2_RESOLVE_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::Resolve); }
-        if ((flag & VK_PIPELINE_STAGE_2_BLIT_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::Blit); }
-        if ((flag & VK_PIPELINE_STAGE_2_CLEAR_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::Clear); }
-        if ((flag & VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::IndexInput); }
-        if ((flag & VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::VertexAttributeInput); }
-        if ((flag & VK_PIPELINE_STAGE_2_PRE_RASTERIZATION_SHADERS_BIT) != 0) { litlFlag |= static_cast<uint64_t>(PipelineStageFlagBits::PreRasterizationShaders); }
+        if ((flag & VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT) != 0) { litlFlag |= PipelineStageFlagBits::TopOfPipe; }
+        if ((flag & VK_PIPELINE_STAGE_2_DRAW_INDIRECT_BIT) != 0) { litlFlag |= PipelineStageFlagBits::DrawIndirect; }
+        if ((flag & VK_PIPELINE_STAGE_2_VERTEX_INPUT_BIT) != 0) { litlFlag |= PipelineStageFlagBits::VertexInput; }
+        if ((flag & VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT) != 0) { litlFlag |= PipelineStageFlagBits::VertexShader; }
+        if ((flag & VK_PIPELINE_STAGE_2_TESSELLATION_CONTROL_SHADER_BIT) != 0) { litlFlag |= PipelineStageFlagBits::TessellationControlShader; }
+        if ((flag & VK_PIPELINE_STAGE_2_TESSELLATION_EVALUATION_SHADER_BIT) != 0) { litlFlag |= PipelineStageFlagBits::TessellationEvaluationShader; }
+        if ((flag & VK_PIPELINE_STAGE_2_GEOMETRY_SHADER_BIT) != 0) { litlFlag |= PipelineStageFlagBits::GeometryShader; }
+        if ((flag & VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT) != 0) { litlFlag |= PipelineStageFlagBits::FragmentShader; }
+        if ((flag & VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT) != 0) { litlFlag |= PipelineStageFlagBits::EarlyFragmentTests; }
+        if ((flag & VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT) != 0) { litlFlag |= PipelineStageFlagBits::LateFragmentTests; }
+        if ((flag & VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT) != 0) { litlFlag |= PipelineStageFlagBits::ColorAttachmentOutput; }
+        if ((flag & VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT) != 0) { litlFlag |= PipelineStageFlagBits::ComputeShader; }
+        if ((flag & VK_PIPELINE_STAGE_2_TRANSFER_BIT) != 0) { litlFlag |= PipelineStageFlagBits::Transfer; }
+        if ((flag & VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT) != 0) { litlFlag |= PipelineStageFlagBits::BottomOfPipe; }
+        if ((flag & VK_PIPELINE_STAGE_2_HOST_BIT) != 0) { litlFlag |= PipelineStageFlagBits::Host; }
+        if ((flag & VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT) != 0) { litlFlag |= PipelineStageFlagBits::AllGraphics; }
+        if ((flag & VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT) != 0) { litlFlag |= PipelineStageFlagBits::AllCommands; }
+        if ((flag & VK_PIPELINE_STAGE_2_COPY_BIT) != 0) { litlFlag |= PipelineStageFlagBits::Copy; }
+        if ((flag & VK_PIPELINE_STAGE_2_RESOLVE_BIT) != 0) { litlFlag |= PipelineStageFlagBits::Resolve; }
+        if ((flag & VK_PIPELINE_STAGE_2_BLIT_BIT) != 0) { litlFlag |= PipelineStageFlagBits::Blit; }
+        if ((flag & VK_PIPELINE_STAGE_2_CLEAR_BIT) != 0) { litlFlag |= PipelineStageFlagBits::Clear; }
+        if ((flag & VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT) != 0) { litlFlag |= PipelineStageFlagBits::IndexInput; }
+        if ((flag & VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT) != 0) { litlFlag |= PipelineStageFlagBits::VertexAttributeInput; }
+        if ((flag & VK_PIPELINE_STAGE_2_PRE_RASTERIZATION_SHADERS_BIT) != 0) { litlFlag |= PipelineStageFlagBits::PreRasterizationShaders; }
 
         return litlFlag;
     }
@@ -1386,13 +1386,13 @@ namespace litl::vulkan
     {
         VkBufferUsageFlags2 vkFlag = 0;
 
-        if (litl::has_any(flag, BufferTypeFlagBits::VertexBuffer)) { vkFlag |= VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT; }
-        if (litl::has_any(flag, BufferTypeFlagBits::IndexBuffer)) { vkFlag |= VK_BUFFER_USAGE_2_INDEX_BUFFER_BIT; }
-        if (litl::has_any(flag, BufferTypeFlagBits::UniformBuffer)) { vkFlag |= VK_BUFFER_USAGE_2_UNIFORM_BUFFER_BIT; }
-        if (litl::has_any(flag, BufferTypeFlagBits::StorageBuffer)) { vkFlag |= VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT; }
-        if (litl::has_any(flag, BufferTypeFlagBits::TransferSource)) { vkFlag |= VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT; }
-        if (litl::has_any(flag, BufferTypeFlagBits::TransferDest)) { vkFlag |= VK_BUFFER_USAGE_2_TRANSFER_DST_BIT; }
-        if (litl::has_any(flag, BufferTypeFlagBits::ShaderDeviceAddress)) { vkFlag |= VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT; }
+        if (has_any(flag, BufferTypeFlagBits::VertexBuffer)) { vkFlag |= VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT; }
+        if (has_any(flag, BufferTypeFlagBits::IndexBuffer)) { vkFlag |= VK_BUFFER_USAGE_2_INDEX_BUFFER_BIT; }
+        if (has_any(flag, BufferTypeFlagBits::UniformBuffer)) { vkFlag |= VK_BUFFER_USAGE_2_UNIFORM_BUFFER_BIT; }
+        if (has_any(flag, BufferTypeFlagBits::StorageBuffer)) { vkFlag |= VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT; }
+        if (has_any(flag, BufferTypeFlagBits::TransferSource)) { vkFlag |= VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT; }
+        if (has_any(flag, BufferTypeFlagBits::TransferDest)) { vkFlag |= VK_BUFFER_USAGE_2_TRANSFER_DST_BIT; }
+        if (has_any(flag, BufferTypeFlagBits::ShaderDeviceAddress)) { vkFlag |= VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT; }
 
         return vkFlag;
     }
