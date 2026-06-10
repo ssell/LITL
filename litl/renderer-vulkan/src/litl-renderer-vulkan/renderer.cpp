@@ -664,6 +664,9 @@ namespace litl::vulkan
                 logError("Failed to create Vulkan Render Fence with result ", renderFenceResult);
                 return false;
             }
+
+            // Staging Ring Buffer
+            frameSyncInfo.stagingRingBuffer.allocateFixedBuffer();
         }
 
         return true;

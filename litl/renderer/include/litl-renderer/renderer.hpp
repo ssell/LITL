@@ -370,7 +370,7 @@ namespace litl
         }
 
         /// <summary>
-        /// Swaps and presents the rendered image.
+        /// Swaps and presents the rendered image. This effectively ends the current frame (as far as the renderer is concerned).
         /// </summary>
         void endRender() const noexcept
         {
