@@ -82,7 +82,7 @@ namespace litl::vulkan
         colorAttachment.imageView = VK_NULL_HANDLE;
         colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         colorAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
-        colorAttachment.clearValue = VkClearValue{ .color = VkClearColorValue{ command.color.clearColor.r(), command.color.clearColor.g(), command.color.clearColor.b(), command.color.clearColor.a() } };
+        colorAttachment.clearValue = VkClearValue{ .color = toVkClearColorValue(command.color.clearColor) };
 
         if (isSwapChain)
         {
@@ -415,6 +415,8 @@ namespace litl::vulkan
         }
 
         vkCmdBindVertexBuffers(commandBuffer->vkCommandBuffer, 0, count, buffers.data(), offsets);
+
+        return RendererResult::Success;
     }
 
     RendererResult cmdBindIndexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle) noexcept

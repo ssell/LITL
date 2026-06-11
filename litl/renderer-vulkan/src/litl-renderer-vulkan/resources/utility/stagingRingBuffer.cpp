@@ -7,7 +7,7 @@ namespace litl::vulkan
     StagingRingBuffer::StagingRingBuffer() 
         : m_pContext(nullptr), m_pFixedBuffer(nullptr), m_fixedHead(0ull)
     {
-        m_overflowBuffers.resize(32ull);
+        m_overflowBuffers.reserve(32ull);
     }
 
     StagingRingBuffer::~StagingRingBuffer()
@@ -51,12 +51,14 @@ namespace litl::vulkan
             m_fixedHead += stagingIndex.bufferSize;
         }
 
-        vmaCopyMemoryToAllocation(
+        const auto result = vmaCopyMemoryToAllocation(
             m_pContext->device.vmaAllocator,
             source.data() + sourceOffset,
             targetBuffer->allocation,
             static_cast<VkDeviceSize>(stagingIndex.bufferOffset),
             static_cast<VkDeviceSize>(source.size()));
+
+        LITL_ASSERT_MSG(result == VK_SUCCESS, "Failed to copy source memory into staging buffer", {});
 
         return stagingIndex;
     }
@@ -71,21 +73,19 @@ namespace litl::vulkan
             .size = static_cast<VkDeviceSize>(stagingIndex.bufferSize)
         };
 
-        VkBuffer sourceVkBuffer = m_pFixedBuffer->vkBuffer;
+        BufferResource* sourceBuffer = m_pFixedBuffer;
 
         if (stagingIndex.bufferIndex != StagingRingBufferIndex::FixedRingBufferIndex)
         {
             // Source data lies in an overflow buffer.
             LITL_ASSERT_MSG(stagingIndex.bufferIndex < static_cast<uint32_t>(m_overflowBuffers.size()), "Invalid overflow buffer index for StagingRingBuffer", );
             BufferHandle sourceBufferHandle = m_overflowBuffers[stagingIndex.bufferIndex];
-            BufferResource* sourceBuffer = m_pContext->resources.getBuffer(sourceBufferHandle);
+            sourceBuffer = m_pContext->resources.getBuffer(sourceBufferHandle);
             LITL_ASSERT_MSG((sourceBuffer != nullptr), "Invalid overflow buffer retrieved for StagingRingBuffer", );
-
-            sourceVkBuffer = sourceBuffer->vkBuffer;
         }
 
-        vkCmdCopyBuffer(commandBuffer->vkCommandBuffer, sourceVkBuffer, destination->vkBuffer, 1, &bufferCopy);
-        destination->accumulatedDstStageMask |= deriveDstStageFromBufferType(destination->descriptor.type);
+        vkCmdCopyBuffer(commandBuffer->vkCommandBuffer, sourceBuffer->vkBuffer, destination->vkBuffer, 1, &bufferCopy);
+        sourceBuffer->accumulatedDstStageMask |= deriveDstStageFromBufferType(destination->descriptor.type);                // record the accumulation on the staging buffer to be flushed at end of buffer upload scope (controlled by user)
     }
 
     void StagingRingBuffer::flushBuffers(CommandBufferResource* commandBuffer)
@@ -107,16 +107,11 @@ namespace litl::vulkan
             return;
         }
 
-        const VkBufferMemoryBarrier memoryBarrier{
-            .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+        const VkMemoryBarrier memoryBarrier{
+            .sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER,
             .pNext = nullptr,
             .srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
-            .dstAccessMask = static_cast<VkPipelineStageFlags>(deriveDstStageFromBufferType(buffer->descriptor.type)),
-            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-            .buffer = buffer->vkBuffer,
-            .offset = 0,
-            .size = buffer->allocationInfo.size
+            .dstAccessMask = static_cast<VkAccessFlags>(deriveDstAccessFromBufferType(buffer->descriptor.type))
         };
 
 
@@ -125,14 +120,13 @@ namespace litl::vulkan
             VK_PIPELINE_STAGE_TRANSFER_BIT,     // source stage mask
             buffer->accumulatedDstStageMask,    // dest stage mask
             0,                                  // dependency flags
-            0,                                  // memory barrier count
-            nullptr,                            // memory barriers
-            1,                                  // buffer memory barrier count
-            &memoryBarrier,                     // buffer memory barriers
+            1,                                  // memory barrier count
+            &memoryBarrier,                     // memory barriers
+            0,                                  // buffer memory barrier count
+            nullptr,                            // buffer memory barriers
             0,                                  // image memory barrier count
             nullptr);                           // image memory barriers
         
-
         buffer->accumulatedDstStageMask = VK_PIPELINE_STAGE_2_NONE;
     }
 

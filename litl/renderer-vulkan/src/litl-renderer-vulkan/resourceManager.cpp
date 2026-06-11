@@ -73,7 +73,7 @@ namespace litl::vulkan
 
     BufferHandle ResourceManager::createBuffer(BufferDescriptor const& descriptor) noexcept
     {
-        BufferResource resource{};
+        BufferResource resource{ .descriptor = descriptor };
 
         const VkBufferUsageFlags2CreateInfo bufferCreate2Info{
             .sType = VK_STRUCTURE_TYPE_BUFFER_USAGE_FLAGS_2_CREATE_INFO,
