@@ -23,17 +23,17 @@ namespace litl::vulkan
     /// <summary>
     /// 
     /// </summary>
-    class StagingRingBuffer final
+    class StagingBuffer final
     {
     public:
 
         static const uint64_t FixedBufferSize = 32768;
 
-        StagingRingBuffer();
-        ~StagingRingBuffer();
+        StagingBuffer();
+        ~StagingBuffer();
 
-        StagingRingBuffer(StagingRingBuffer const&) = delete;
-        StagingRingBuffer& operator=(StagingRingBuffer const&) = delete;
+        StagingBuffer(StagingBuffer const&) = delete;
+        StagingBuffer& operator=(StagingBuffer const&) = delete;
 
         void build(RendererContext& context) noexcept;
 

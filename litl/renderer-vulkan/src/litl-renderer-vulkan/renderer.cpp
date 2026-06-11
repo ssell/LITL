@@ -582,15 +582,19 @@ namespace litl::vulkan
                 .image = context.swapChain.vkSwapChainImages[i],
                 .viewType = VK_IMAGE_VIEW_TYPE_2D,
                 .format = context.swapChain.vkSwapChainImageFormat,
-                .components.r = VK_COMPONENT_SWIZZLE_IDENTITY,
-                .components.g = VK_COMPONENT_SWIZZLE_IDENTITY,
-                .components.b = VK_COMPONENT_SWIZZLE_IDENTITY,
-                .components.a = VK_COMPONENT_SWIZZLE_IDENTITY,
-                .subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                .subresourceRange.baseMipLevel = 0,
-                .subresourceRange.levelCount = 1,
-                .subresourceRange.baseArrayLayer = 0,
-                .subresourceRange.layerCount = 1
+                .components = VkComponentMapping {
+                    .r = VK_COMPONENT_SWIZZLE_IDENTITY,
+                    .g = VK_COMPONENT_SWIZZLE_IDENTITY,
+                    .b = VK_COMPONENT_SWIZZLE_IDENTITY,
+                    .a = VK_COMPONENT_SWIZZLE_IDENTITY
+                },
+                .subresourceRange = VkImageSubresourceRange {
+                    .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                    .baseMipLevel = 0,
+                    .levelCount = 1,
+                    .baseArrayLayer = 0,
+                    .layerCount = 1
+                }
             };
 
             result = vkCreateImageView(context.device.vkDevice, &createImageViewInfo, nullptr, &context.swapChain.vkSwapChainImageViews[i]);
@@ -666,7 +670,7 @@ namespace litl::vulkan
             }
 
             // Staging Ring Buffer
-            frameSyncInfo.stagingRingBuffer = std::make_unique<StagingRingBuffer>();
+            frameSyncInfo.stagingRingBuffer = std::make_unique<StagingBuffer>();
             frameSyncInfo.stagingRingBuffer->build(context);
         }
 
