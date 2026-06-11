@@ -122,10 +122,7 @@ namespace litl::vulkan
         &endRender,
 
         // misc
-        &getSwapchainImageFormat,
-
-        // temporary
-        &testPipelineLayoutCache
+        &getSwapchainImageFormat
     };
 }
 

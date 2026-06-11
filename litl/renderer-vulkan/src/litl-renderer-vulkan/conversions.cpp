@@ -1553,4 +1553,13 @@ namespace litl::vulkan
 
         return dstAccess;
     }
+
+    // -------------------------------------------------------------------------------------
+    // color -> VkClearColorValue
+    // -------------------------------------------------------------------------------------
+
+    VkClearColorValue toVkClearColorValue(color color) noexcept
+    {
+        return VkClearColorValue{ { color.r(), color.g(), color.b(), color.a() } };
+    }
 }

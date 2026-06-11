@@ -51,6 +51,7 @@ int main()
                     indexBuffer = createIndexBuffer(renderer, commandBuffer);
                 }
                 renderer->cmdEnd(commandBuffer);
+                renderer->submitCommands(commandBuffer);
             }
 
             while (!window->shouldClose())
@@ -64,6 +65,8 @@ int main()
                     beginRender(renderer, commandBuffer, getClearColor(elapsedSeconds));
 
                     renderer->cmdBindGraphicsPipeline(commandBuffer, graphicsPipelineHandle);
+                    renderer->cmdBindVertexBuffer(commandBuffer, vertexBuffer);
+                    renderer->cmdBindIndexBuffer(commandBuffer, indexBuffer);
                     renderer->cmdDraw(commandBuffer, 3, 1, 0, 0);
 
                     endRender(renderer, commandBuffer);
@@ -174,7 +177,7 @@ GraphicsPipelineHandle createTriangleGraphicsPipeline(Renderer* renderer) noexce
         return {};
     }
 
-    const GraphicsPipelineDescriptor graphicsPipelineDescriptor{
+    GraphicsPipelineDescriptor graphicsPipelineDescriptor{
         .vertex = PipelineShaderDescriptor {
             .handle = shaderHandle,
             .stage = ShaderStage::Vertex,
@@ -189,8 +192,8 @@ GraphicsPipelineHandle createTriangleGraphicsPipeline(Renderer* renderer) noexce
             .colorAttachments = { renderer->getSwapchainImageFormat() },
             .colorAttachmentCount = 1
         },
-        .vertexInput = VertexInputState{},                      // Vertices hardcoded in the vertex shader for now
-        .inputAssembly = InputAssemblyState{},                  // Vertices hardcoded in the vertex shader for now
+        .vertexInput = VertexInputState{},
+        .inputAssembly = InputAssemblyState{},
         .tessellation = std::nullopt,                           // No tessellation
         .rasterization = RasterizationState{},                  // Default rasterization state OK for this test
         .multisample = MultisampleState{},                      // Default multisample state (no multisampling) for this test
@@ -206,6 +209,10 @@ GraphicsPipelineHandle createTriangleGraphicsPipeline(Renderer* renderer) noexce
         .dynamicState = DynamicStateMask{},                     // Default dynamic state (viewport + stencil) for this test
         .specializationConstants = SpecializationConstants{}    // Default specialization constants (none) for this test
     };
+
+    graphicsPipelineDescriptor.vertexInput.bindings.emplace_back(0, sizeof(Vertex), VertexInputRate::PerVertex);
+    graphicsPipelineDescriptor.vertexInput.attributes.emplace_back(0, 0, DataFormat::RGB32_SFloat, 0);
+    graphicsPipelineDescriptor.vertexInput.attributes.emplace_back(1, 0, DataFormat::RGB32_SFloat, 0);
 
     const GraphicsPipelineHandle handle = renderer->createGraphicsPipeline(graphicsPipelineDescriptor);
 

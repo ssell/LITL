@@ -49,6 +49,6 @@ template <litl::bitmask_enum E>
 constexpr E& operator^=(E& a, E b) noexcept { return a = a ^ b; }
 
 #define LITL_ENABLE_BITMASK(E) \
-    template <> struct litl::enable_bitmask<E> : std::true_type {}
+    template <> struct enable_bitmask<E> : std::true_type {}
 
 #endif

@@ -1,6 +1,7 @@
 #ifndef LITL_VULKAN_RENDERER_CONVERSIONS_H__
 #define LITL_VULKAN_RENDERER_CONVERSIONS_H__
 
+#include "litl-core/math/types.hpp"
 #include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer/enums.hpp"
 #include "litl-renderer/resources/shaderModule.hpp"
@@ -85,6 +86,8 @@ namespace litl::vulkan
 
     [[nodiscard]] VkPipelineStageFlags2 deriveDstStageFromUsageFlag(VkBufferUsageFlags2 usage) noexcept;
     [[nodiscard]] VkAccessFlags2 deriveDstAccessFromUsageFlag(VkBufferUsageFlags2 usage) noexcept;
+
+    [[nodiscard]] VkClearColorValue toVkClearColorValue(color color) noexcept;
 }
 
 #endif
