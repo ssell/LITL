@@ -7,7 +7,7 @@
 #include "litl-renderer/renderer.hpp"
 #include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer-vulkan/resourceManager.hpp"
-#include "litl-renderer-vulkan/resources/utility/stagingRingBuffer.hpp"
+#include "litl-renderer-vulkan/resources/utility/stagingBuffer.hpp"
 
 namespace litl
 {
@@ -145,7 +145,7 @@ namespace litl
             /// 
             /// Note: this is stored in an unique_ptr since PerFrameSyncInfo is itself stored in a vector.
             /// </summary>
-            std::unique_ptr<StagingRingBuffer> stagingRingBuffer;
+            std::unique_ptr<StagingBuffer> stagingRingBuffer;
         };
 
         /// <summary>

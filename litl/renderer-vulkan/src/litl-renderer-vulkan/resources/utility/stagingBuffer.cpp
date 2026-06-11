@@ -1,28 +1,28 @@
 #include "litl-core/assert.hpp"
-#include "litl-renderer-vulkan/resources/utility/stagingRingBuffer.hpp"
+#include "litl-renderer-vulkan/resources/utility/stagingBuffer.hpp"
 #include "litl-renderer-vulkan/rendererContext.hpp"
 
 namespace litl::vulkan
 {
-    StagingRingBuffer::StagingRingBuffer() 
+    StagingBuffer::StagingBuffer() 
         : m_pContext(nullptr), m_pFixedBuffer(nullptr), m_fixedHead(0ull)
     {
         m_overflowBuffers.reserve(32ull);
     }
 
-    StagingRingBuffer::~StagingRingBuffer()
+    StagingBuffer::~StagingBuffer()
     {
 
     }
 
-    void StagingRingBuffer::build(RendererContext& context) noexcept
+    void StagingBuffer::build(RendererContext& context) noexcept
     {
         m_pContext = &context;
         m_pFixedBuffer = m_pContext->resources.getBuffer(createStagingBuffer(FixedBufferSize));
-        LITL_FATAL_ASSERT_MSG((m_pFixedBuffer != nullptr), "Failed to create fixed staging buffer for StagingRingBuffer");
+        LITL_FATAL_ASSERT_MSG((m_pFixedBuffer != nullptr), "Failed to create fixed staging buffer for StagingBuffer");
     }
 
-    StagingRingBufferIndex StagingRingBuffer::copyIntoStaging(std::span<std::byte const> source, uint64_t sourceOffset) noexcept
+    StagingRingBufferIndex StagingBuffer::copyIntoStaging(std::span<std::byte const> source, uint64_t sourceOffset) noexcept
     {
         BufferResource* targetBuffer = m_pFixedBuffer;
         VkDeviceSize targetOffset = static_cast<VkDeviceSize>(m_fixedHead);
@@ -39,7 +39,7 @@ namespace litl::vulkan
             BufferHandle tempStagingBufferHandle = createStagingBuffer(stagingIndex.bufferSize);
             targetBuffer = m_pContext->resources.getBuffer(tempStagingBufferHandle);
 
-            LITL_ASSERT_MSG((targetBuffer != nullptr), "Failed to allocate temporary staging buffer for StagingRingBuffer", {});
+            LITL_ASSERT_MSG((targetBuffer != nullptr), "Failed to allocate temporary staging buffer for StagingBuffer", {});
 
             stagingIndex.bufferIndex = static_cast<uint32_t>(m_overflowBuffers.size());
             stagingIndex.bufferOffset = 0ull;
@@ -63,9 +63,9 @@ namespace litl::vulkan
         return stagingIndex;
     }
 
-    void StagingRingBuffer::copyIntoDestination(CommandBufferResource* commandBuffer, StagingRingBufferIndex stagingIndex, BufferResource* destination, uint64_t destOffset) noexcept
+    void StagingBuffer::copyIntoDestination(CommandBufferResource* commandBuffer, StagingRingBufferIndex stagingIndex, BufferResource* destination, uint64_t destOffset) noexcept
     {
-        LITL_ASSERT_MSG(commandBuffer != nullptr, "Invalid command buffer provided to StagingRingBuffer::copyIntoDestination", );
+        LITL_ASSERT_MSG(commandBuffer != nullptr, "Invalid command buffer provided to StagingBuffer::copyIntoDestination", );
 
         VkBufferCopy bufferCopy{
             .srcOffset = static_cast<VkDeviceSize>(stagingIndex.bufferOffset),
@@ -78,19 +78,19 @@ namespace litl::vulkan
         if (stagingIndex.bufferIndex != StagingRingBufferIndex::FixedRingBufferIndex)
         {
             // Source data lies in an overflow buffer.
-            LITL_ASSERT_MSG(stagingIndex.bufferIndex < static_cast<uint32_t>(m_overflowBuffers.size()), "Invalid overflow buffer index for StagingRingBuffer", );
+            LITL_ASSERT_MSG(stagingIndex.bufferIndex < static_cast<uint32_t>(m_overflowBuffers.size()), "Invalid overflow buffer index for StagingBuffer", );
             BufferHandle sourceBufferHandle = m_overflowBuffers[stagingIndex.bufferIndex];
             sourceBuffer = m_pContext->resources.getBuffer(sourceBufferHandle);
-            LITL_ASSERT_MSG((sourceBuffer != nullptr), "Invalid overflow buffer retrieved for StagingRingBuffer", );
+            LITL_ASSERT_MSG((sourceBuffer != nullptr), "Invalid overflow buffer retrieved for StagingBuffer", );
         }
 
         vkCmdCopyBuffer(commandBuffer->vkCommandBuffer, sourceBuffer->vkBuffer, destination->vkBuffer, 1, &bufferCopy);
         sourceBuffer->accumulatedDstStageMask |= deriveDstStageFromBufferType(destination->descriptor.type);                // record the accumulation on the staging buffer to be flushed at end of buffer upload scope (controlled by user)
     }
 
-    void StagingRingBuffer::flushBuffers(CommandBufferResource* commandBuffer)
+    void StagingBuffer::flushBuffers(CommandBufferResource* commandBuffer)
     {
-        LITL_ASSERT_MSG(commandBuffer != nullptr, "Invalid command buffer provided to StagingRingBuffer::flushBuffers", );
+        LITL_ASSERT_MSG(commandBuffer != nullptr, "Invalid command buffer provided to StagingBuffer::flushBuffers", );
 
         flushBuffer(commandBuffer, m_pFixedBuffer);
 
@@ -100,7 +100,7 @@ namespace litl::vulkan
         }
     }
 
-    void StagingRingBuffer::flushBuffer(CommandBufferResource* commandBuffer, BufferResource* buffer) noexcept
+    void StagingBuffer::flushBuffer(CommandBufferResource* commandBuffer, BufferResource* buffer) noexcept
     {
         if ((buffer == nullptr) || (buffer->accumulatedDstStageMask == VK_PIPELINE_STAGE_2_NONE))
         {
@@ -130,7 +130,7 @@ namespace litl::vulkan
         buffer->accumulatedDstStageMask = VK_PIPELINE_STAGE_2_NONE;
     }
 
-    void StagingRingBuffer::freeBuffers() noexcept
+    void StagingBuffer::freeBuffers() noexcept
     {
         m_fixedHead = 0ull;
 
@@ -140,7 +140,7 @@ namespace litl::vulkan
         }
     }
 
-    BufferHandle StagingRingBuffer::createStagingBuffer(uint64_t size) noexcept
+    BufferHandle StagingBuffer::createStagingBuffer(uint64_t size) noexcept
     {
         BufferDescriptor descriptor {
             .type = BufferTypeFlagBits::TransferSource,
