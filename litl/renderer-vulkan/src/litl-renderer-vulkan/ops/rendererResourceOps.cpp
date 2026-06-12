@@ -14,17 +14,20 @@ namespace litl::vulkan
         vulkanContext->resources.destroyBuffer(handle);
     }
 
-    void* mapBuffer(litl::RendererContext* context, BufferHandle handle) noexcept
+    RendererResult mapBuffer(litl::RendererContext* context, BufferHandle handle, MappedBuffer& mapped) noexcept
     {
         auto* vulkanContext = unwrap(context);
         auto* buffer = vulkanContext->resources.getBuffer(handle);
 
         if (buffer == nullptr)
         {
-            return nullptr;
+            return RendererResult::InvalidBufferForWriting;
         }
 
-        return buffer->allocationInfo.pMappedData;
+        mapped.mappedPtr = buffer->allocationInfo.pMappedData;
+        mapped.shaderDeviceAddress = static_cast<uint64_t>(buffer->bdaAddress);
+
+        return RendererResult::Success;
     }
 
     void unmapBuffer(litl::RendererContext* context, BufferHandle handle) noexcept

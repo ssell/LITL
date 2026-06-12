@@ -53,6 +53,7 @@ namespace litl
         void (*cmdClearImage)(RendererContext*, CommandBufferHandle, ClearImageCommand const&);
         void (*cmdSetViewportAndScissor)(RendererContext*, CommandBufferHandle, SetViewportAndScissorCommand const&);
         void (*cmdBindGraphicsPipeline)(RendererContext*, CommandBufferHandle, GraphicsPipelineHandle);
+        RendererResult (*cmdPushConstants)(RendererContext*, CommandBufferHandle, ShaderStage, std::span<std::byte const>);
         void (*cmdDraw)(RendererContext*, CommandBufferHandle, uint32_t, uint32_t, uint32_t, uint32_t);
 
         // buffer commands and operations
@@ -61,7 +62,7 @@ namespace litl
         RendererResult (*cmdBindIndexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle);
         RendererResult (*cmdBufferUpload)(RendererContext* context, CommandBufferHandle, std::span<std::byte const>, BufferHandle, uint64_t, uint64_t);
         RendererResult (*cmdBufferFlush)(RendererContext* context, CommandBufferHandle);
-        void* (*mapBuffer)(RendererContext*, BufferHandle);
+        RendererResult (*mapBuffer)(RendererContext*, BufferHandle, MappedBuffer&);
         void (*unmapBuffer)(RendererContext*, BufferHandle);
 
         // drawing
@@ -72,6 +73,7 @@ namespace litl
         // misc
         DataFormat (*getSwapchainImageFormat)(RendererContext*);
         FrameData (*getFrameData)(RendererContext*);
+        uint32_t (*getMaxPushConstantSize)(RendererContext*);
     };
 
     /// <summary>
@@ -102,7 +104,14 @@ namespace litl
         bool build()
         {
             LITL_FATAL_ASSERT_MSG(valid(), "Renderer::build called with invalid internal state");
-            return m_pOps->build(m_pContext);
+            auto result = m_pOps->build(m_pContext);
+
+            if (result)
+            {
+                m_maxPushConstantSize = m_pOps->getMaxPushConstantSize(m_pContext);
+            }
+
+            return result;
         }
 
         void destroy()
@@ -294,6 +303,27 @@ namespace litl
         }
 
         /// <summary>
+        /// Submits the push constant data to the specified shader stage(s).
+        /// Push constants are a small buffer of data typically limited to 128 or 256 bytes.
+        /// 
+        /// Note: a valid pipeline must first be bound.
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <param name="shaderStage"></param>
+        /// <param name="data"></param>
+        RendererResult cmdPushConstants(CommandBufferHandle handle, ShaderStage shaderStage, std::span<std::byte const> data) const noexcept
+        {
+            if (data.size() <= m_maxPushConstantSize)
+            {
+                return m_pOps->cmdPushConstants(m_pContext, handle, shaderStage, data);
+            }
+            else
+            {
+                return RendererResult::InvalidPushConstantSize;
+            }
+        }
+
+        /// <summary>
         /// Issues a command to draw primitives.
         /// </summary>
         /// <param name="commandBuffer"></param>
@@ -340,9 +370,13 @@ namespace litl
             return m_pOps->cmdBufferFlush(m_pContext, commandBuffer);
         }
 
-        void* mapBuffer(BufferHandle buffer) const noexcept
+        MappedBuffer mapBuffer(BufferHandle buffer) const noexcept
         {
-            return m_pOps->mapBuffer(m_pContext, buffer);
+            MappedBuffer mapped{};
+
+            m_pOps->mapBuffer(m_pContext, buffer, mapped);
+
+            return mapped;
         }
 
         void unmapBuffer(BufferHandle buffer) const noexcept
@@ -412,6 +446,7 @@ namespace litl
 
         RendererOps const* m_pOps;
         RendererContext* m_pContext;
+        uint32_t m_maxPushConstantSize = 128u;
     };
 }
 

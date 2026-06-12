@@ -19,7 +19,7 @@ namespace litl::vulkan
 
     [[nodiscard]] BufferHandle createBuffer(litl::RendererContext* context, BufferDescriptor const& descriptor) noexcept;
     void destroyBuffer(litl::RendererContext* context, BufferHandle handle) noexcept;
-    [[nodiscard]] void* mapBuffer(litl::RendererContext* context, BufferHandle handle) noexcept;
+    [[nodiscard]] RendererResult mapBuffer(litl::RendererContext* context, BufferHandle handle, MappedBuffer& mapped) noexcept;
     void unmapBuffer(litl::RendererContext* context, BufferHandle handle) noexcept;
     [[nodiscard]] CommandBufferHandle createCommandBuffer(litl::RendererContext* context, CommandBufferDescriptor const& descriptor) noexcept;
     void destroyCommandBuffer(litl::RendererContext* context, CommandBufferHandle handle) noexcept;
@@ -49,6 +49,7 @@ namespace litl::vulkan
     void cmdClearImage(litl::RendererContext* context, CommandBufferHandle handle, ClearImageCommand const& command) noexcept;
     void cmdSetViewportAndScissor(litl::RendererContext* context, CommandBufferHandle handle, SetViewportAndScissorCommand const& command) noexcept;
     void cmdBindGraphicsPipeline(litl::RendererContext* context, CommandBufferHandle handle, GraphicsPipelineHandle graphicsPipelineHandle) noexcept;
+    RendererResult cmdPushConstants(litl::RendererContext* context, CommandBufferHandle handle, ShaderStage shaderStage, std::span<std::byte const> data) noexcept;
     void cmdDraw(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) noexcept;
     RendererResult cmdBindVertexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, uint64_t offset) noexcept;
     RendererResult cmdBindVertexBuffers(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle* bufferHandles, uint64_t* bufferOffsets, uint32_t count) noexcept;
@@ -70,6 +71,7 @@ namespace litl::vulkan
 
     [[nodiscard]] DataFormat getSwapchainImageFormat(litl::RendererContext* context) noexcept;
     [[nodiscard]] FrameData getFrameData(litl::RendererContext* context) noexcept;
+    [[nodiscard]] uint32_t getMaxPushConstantSize(litl::RendererContext* context) noexcept;
 
     // ---------------------------------------------------------------------------------
     // TEMPORARY FOR TESTING PURPOSES (rendererTesting.cpp)
@@ -112,6 +114,7 @@ namespace litl::vulkan
         &cmdClearImage,
         &cmdSetViewportAndScissor,
         &cmdBindGraphicsPipeline,
+        &cmdPushConstants,
         &cmdDraw,
         &cmdBindVertexBuffer,
         &cmdBindVertexBuffers,
@@ -128,7 +131,8 @@ namespace litl::vulkan
 
         // misc
         &getSwapchainImageFormat,
-        &getFrameData
+        &getFrameData,
+        &getMaxPushConstantSize
     };
 }
 

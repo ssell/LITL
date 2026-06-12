@@ -1,8 +1,20 @@
+struct PerFrameData
+{
+    float elapsedTime;
+    float deltaTime;
+    uint frameCount;
+};
+
+struct PushConstants
+{
+    PerFrameData* frame;
+};
+
 struct VertexInput
 {
     float3 position : POSITION;
     float3 color : COLOR;
-}
+};
 
 struct VertexOutput 
 {
@@ -14,6 +26,9 @@ struct FragmentOutput
 {
     float4 color : SV_Target;
 };
+
+[vk::push_constant]
+PushConstants _pc;
 
 [shader("vertex")]
 VertexOutput vertexMain(VertexInput input)
@@ -29,7 +44,7 @@ VertexOutput vertexMain(VertexInput input)
 FragmentOutput fragmentMain(VertexOutput input)
 {
     FragmentOutput output = (FragmentOutput)0;
-    output.color = float4(input.color, 1.0);
+    output.color = float4(input.color * sin(_pc.frame->elapsedTime), 1.0);
 
     return output;
 }

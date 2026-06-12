@@ -37,6 +37,19 @@ namespace litl
     struct BufferTag {};
     using BufferHandle = Handle<BufferTag>;
 
+    struct MappedBuffer
+    {
+        /// <summary>
+        /// If the buffer is mapped, this is the CPU address of start of its memory block.
+        /// </summary>
+        void* mappedPtr = nullptr;
+
+        /// <summary>
+        /// If the buffer uses Shader Device Address, this is the address on the GPU-side to the start of its memory block.
+        /// </summary>
+        uint64_t shaderDeviceAddress = 0ull;
+    };
+
 }
 
 #endif

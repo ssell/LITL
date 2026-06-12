@@ -21,7 +21,9 @@ namespace litl
         MemoryCopyFailed = 202,
         InvalidBufferForWriting = 203,
         InvalidBufferForReading = 204,
-        StagingBufferFailure = 205
+        StagingBufferFailure = 205,
+        InvalidPushConstantSize = 206,
+        NoGraphicsPipelineBound = 207
     };
 }
 

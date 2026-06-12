@@ -25,7 +25,6 @@ namespace litl::vulkan
     StagingRingBufferIndex StagingBuffer::copyIntoStaging(std::span<std::byte const> source, uint64_t sourceOffset) noexcept
     {
         BufferResource* targetBuffer = m_pFixedBuffer;
-        VkDeviceSize targetOffset = static_cast<VkDeviceSize>(m_fixedHead);
 
         StagingRingBufferIndex stagingIndex{
             .bufferOffset = m_fixedHead,

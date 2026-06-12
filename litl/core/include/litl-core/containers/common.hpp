@@ -25,6 +25,11 @@ namespace litl
     {
         return std::as_writable_bytes(std::span{ std::forward<R>(r) });
     }
+
+    [[nodiscard]] std::span<std::byte const> generic_as_byte_span(void* data, size_t size)
+    {
+        return std::span<std::byte const>{ reinterpret_cast<const std::byte*>(data), size };
+    }
 }
 
 #endif

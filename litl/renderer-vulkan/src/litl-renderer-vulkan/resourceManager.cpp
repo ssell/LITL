@@ -592,6 +592,8 @@ namespace litl::vulkan
             return false;
         }
 
+        resource.vkPipelineLayout = vkPipelineLayout;
+
         return true;
     }
 
