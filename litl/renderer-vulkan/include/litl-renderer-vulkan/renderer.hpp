@@ -69,6 +69,7 @@ namespace litl::vulkan
     // -------------------------------------------------------------------------------------
 
     [[nodiscard]] DataFormat getSwapchainImageFormat(litl::RendererContext* context) noexcept;
+    [[nodiscard]] FrameData getFrameData(litl::RendererContext* context) noexcept;
 
     // ---------------------------------------------------------------------------------
     // TEMPORARY FOR TESTING PURPOSES (rendererTesting.cpp)
@@ -126,7 +127,8 @@ namespace litl::vulkan
         &endRender,
 
         // misc
-        &getSwapchainImageFormat
+        &getSwapchainImageFormat,
+        &getFrameData
     };
 }
 

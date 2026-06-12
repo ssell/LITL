@@ -7,6 +7,7 @@
 #include "litl-core/assert.hpp"
 #include "litl-renderer/result.hpp"
 #include "litl-renderer/rendererConfiguration.hpp"
+#include "litl-renderer/frameData.hpp"
 #include "litl-renderer/resources.hpp"
 #include "litl-renderer/commands.hpp"
 #include "litl-renderer/scopedBufferUpload.hpp"
@@ -70,6 +71,7 @@ namespace litl
 
         // misc
         DataFormat (*getSwapchainImageFormat)(RendererContext*);
+        FrameData (*getFrameData)(RendererContext*);
     };
 
     /// <summary>
@@ -391,9 +393,14 @@ namespace litl
         // Misc
         // ---------------------------------------------------------------------------------
 
-        [[nodiscard]] DataFormat getSwapchainImageFormat() noexcept
+        [[nodiscard]] DataFormat getSwapchainImageFormat() const noexcept
         {
             return m_pOps->getSwapchainImageFormat(m_pContext);
+        }
+
+        [[nodiscard]] FrameData getFrameData() const noexcept
+        {
+            return m_pOps->getFrameData(m_pContext);
         }
 
     private:

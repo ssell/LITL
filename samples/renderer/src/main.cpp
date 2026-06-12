@@ -19,6 +19,7 @@ void endRender(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
 BufferHandle createVertexBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
 BufferHandle createIndexBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
 BufferHandle createFrameDataBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
+void updatePerFrameDataBuffer(Renderer* renderer, std::vector<BufferHandle> const& frameBuffers, float elapsedTime, float deltaTime) noexcept;
 
 struct Vertex
 {
@@ -30,6 +31,7 @@ struct PerFrameData
 {
     float elapsedTime;
     float deltaTime;
+    uint32_t frameCount;
 };
 
 int main()
@@ -49,14 +51,18 @@ int main()
             // Prepare the vertex and index buffers
             BufferHandle vertexBuffer = {};
             BufferHandle indexBuffer = {};
-            BufferHandle frameDataBuffer = {};
+            std::vector<BufferHandle> frameBuffers;
+
+            auto lastFrameStart = std::chrono::steady_clock::now();
 
             while (!window->shouldClose())
             {
-                const auto elapsedSeconds = std::chrono::duration<float>(std::chrono::steady_clock::now() - start).count();
-
                 if (renderer->beginRender())
                 {
+                    const auto frameTime = std::chrono::steady_clock::now();
+                    const auto elapsedTime = std::chrono::duration<float>(frameTime - start).count();
+                    const auto deltaTime = std::chrono::duration<float>(frameTime - lastFrameStart).count();
+
                     auto commandBuffer = renderer->cmdBeginFrame();
 
                     if (!vertexBuffer.isValid())
@@ -64,10 +70,15 @@ int main()
                         auto scope = renderer->cmdBeginBufferUpload(commandBuffer);
                         vertexBuffer = createVertexBuffer(renderer, commandBuffer);
                         indexBuffer = createIndexBuffer(renderer, commandBuffer);
-                        frameDataBuffer = createFrameDataBuffer(renderer, commandBuffer);
+
+                        for (auto i = 0; i < renderer->getFrameData().framesInFlight; ++i)
+                        {
+                            frameBuffers.push_back(createFrameDataBuffer(renderer, commandBuffer));
+                        }
                     }
 
-                    beginRender(renderer, commandBuffer, getClearColor(elapsedSeconds));
+                    updatePerFrameDataBuffer(renderer, frameBuffers, elapsedTime, 0.0f);
+                    beginRender(renderer, commandBuffer, getClearColor(elapsedTime));
 
                     renderer->cmdBindGraphicsPipeline(commandBuffer, graphicsPipelineHandle);
                     renderer->cmdBindVertexBuffer(commandBuffer, vertexBuffer);
@@ -75,6 +86,7 @@ int main()
                     renderer->cmdDraw(commandBuffer, 3, 1, 0, 0);
 
                     endRender(renderer, commandBuffer);
+                    lastFrameStart = frameTime;
                 }
             }
         }
@@ -348,6 +360,7 @@ BufferHandle createFrameDataBuffer(Renderer* renderer, CommandBufferHandle comma
 {
     BufferDescriptor frameDataDescriptor{
         .type = BufferTypeFlagBits::ShaderDeviceAddress,
+        .memoryUsage = BufferMemoryUsage::PersistentMap,
         .bytes = sizeof(PerFrameData)
     };
 
@@ -360,4 +373,23 @@ BufferHandle createFrameDataBuffer(Renderer* renderer, CommandBufferHandle comma
     }
 
     return frameDataBufferHandle;
+}
+
+void updatePerFrameDataBuffer(Renderer* renderer, std::vector<BufferHandle> const& frameBuffers, float elapsedTime, float deltaTime) noexcept
+{
+    const auto frameData = renderer->getFrameData();
+    const auto perFrameData = PerFrameData{
+        .elapsedTime = elapsedTime,
+        .deltaTime = deltaTime,
+        .frameCount = frameData.frameCount
+    };
+
+    auto frameBuffer = frameBuffers[frameData.frameInFlightIndex];
+    auto* bufferMemoryPtr = renderer->mapBuffer(frameBuffer);
+
+    if (bufferMemoryPtr != nullptr)
+    {
+        std::memcpy(bufferMemoryPtr, &perFrameData, sizeof(PerFrameData));
+        renderer->unmapBuffer(frameBuffer);
+    }
 }

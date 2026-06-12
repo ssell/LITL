@@ -28,7 +28,7 @@ namespace litl
         vulkan::RendererContext* vulkanContext = new(std::nothrow) vulkan::RendererContext();
 
         vulkanContext->window.window = pWindow;
-        vulkanContext->renderInfo.framesInFlight = rendererDescriptor.framesInFlight;
+        vulkanContext->renderInfo.frame.framesInFlight = rendererDescriptor.framesInFlight;
 
         return new litl::Renderer(&litl::vulkan::VulkanRendererOps, vulkan::wrap(vulkanContext));
     }
@@ -437,7 +437,8 @@ namespace litl::vulkan
             .pNext = &vulkan11Features,
             .features = VkPhysicalDeviceFeatures {
                 .geometryShader = true,
-                .tessellationShader = true
+                .tessellationShader = true,
+                .shaderInt64 = true                 // For BDA
             }
         };
 
@@ -642,9 +643,9 @@ namespace litl::vulkan
         };
 
         // Note that frameSync count is tied to FRAMES_IN_FLIGHT (which is currently 2)
-        context.renderInfo.frameSyncInfo.resize(context.renderInfo.framesInFlight);
+        context.renderInfo.frameSyncInfo.resize(context.renderInfo.frame.framesInFlight);
 
-        for (size_t i = 0; i < context.renderInfo.framesInFlight; ++i)
+        for (size_t i = 0; i < context.renderInfo.frame.framesInFlight; ++i)
         {
             auto& frameSyncInfo = context.renderInfo.frameSyncInfo[i];
 

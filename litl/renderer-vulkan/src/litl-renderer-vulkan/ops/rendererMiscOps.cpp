@@ -8,4 +8,10 @@ namespace litl::vulkan
         auto* vulkanContext = unwrap(context);
         return fromVkFormat(vulkanContext->swapChain.vkSwapChainImageFormat);
     }
+
+    FrameData getFrameData(litl::RendererContext* context) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+        return vulkanContext->renderInfo.frame;
+    }
 }
