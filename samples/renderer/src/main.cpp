@@ -18,11 +18,18 @@ void beginRender(Renderer* renderer, CommandBufferHandle commandBuffer, color cl
 void endRender(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
 BufferHandle createVertexBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
 BufferHandle createIndexBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
+BufferHandle createFrameDataBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
 
 struct Vertex
 {
     vec3 position;
     vec3 color;
+};
+
+struct PerFrameData
+{
+    float elapsedTime;
+    float deltaTime;
 };
 
 int main()
@@ -42,17 +49,7 @@ int main()
             // Prepare the vertex and index buffers
             BufferHandle vertexBuffer = {};
             BufferHandle indexBuffer = {};
-
-            {
-                auto commandBuffer = renderer->cmdBeginFrame();
-                {
-                    auto scope = renderer->cmdBeginBufferUpload(commandBuffer);
-                    vertexBuffer = createVertexBuffer(renderer, commandBuffer);
-                    indexBuffer = createIndexBuffer(renderer, commandBuffer);
-                }
-                renderer->cmdEnd(commandBuffer);
-                renderer->submitCommands(commandBuffer);
-            }
+            BufferHandle frameDataBuffer = {};
 
             while (!window->shouldClose())
             {
@@ -61,6 +58,14 @@ int main()
                 if (renderer->beginRender())
                 {
                     auto commandBuffer = renderer->cmdBeginFrame();
+
+                    if (!vertexBuffer.isValid())
+                    {
+                        auto scope = renderer->cmdBeginBufferUpload(commandBuffer);
+                        vertexBuffer = createVertexBuffer(renderer, commandBuffer);
+                        indexBuffer = createIndexBuffer(renderer, commandBuffer);
+                        frameDataBuffer = createFrameDataBuffer(renderer, commandBuffer);
+                    }
 
                     beginRender(renderer, commandBuffer, getClearColor(elapsedSeconds));
 
@@ -210,9 +215,9 @@ GraphicsPipelineHandle createTriangleGraphicsPipeline(Renderer* renderer) noexce
         .specializationConstants = SpecializationConstants{}    // Default specialization constants (none) for this test
     };
 
-    graphicsPipelineDescriptor.vertexInput.bindings.emplace_back(0, sizeof(Vertex), VertexInputRate::PerVertex);
-    graphicsPipelineDescriptor.vertexInput.attributes.emplace_back(0, 0, DataFormat::RGB32_SFloat, 0);
-    graphicsPipelineDescriptor.vertexInput.attributes.emplace_back(1, 0, DataFormat::RGB32_SFloat, 0);
+    graphicsPipelineDescriptor.vertexInput.addBinding(VertexBinding{ 0, sizeof(Vertex), VertexInputRate::PerVertex });
+    graphicsPipelineDescriptor.vertexInput.addAttribute(VertexAttribute{ 0, 0, DataFormat::RGB32_SFloat, 0 });
+    graphicsPipelineDescriptor.vertexInput.addAttribute(VertexAttribute{ 1, 0, DataFormat::RGB32_SFloat, sizeof(vec3) });
 
     const GraphicsPipelineHandle handle = renderer->createGraphicsPipeline(graphicsPipelineDescriptor);
 
@@ -337,4 +342,22 @@ BufferHandle createIndexBuffer(Renderer* renderer, CommandBufferHandle commandBu
     }
 
     return indexBufferHandle;
+}
+
+BufferHandle createFrameDataBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept
+{
+    BufferDescriptor frameDataDescriptor{
+        .type = BufferTypeFlagBits::ShaderDeviceAddress,
+        .bytes = sizeof(PerFrameData)
+    };
+
+    BufferHandle frameDataBufferHandle = renderer->createBuffer(frameDataDescriptor);
+
+    if (!frameDataBufferHandle.isValid())
+    {
+        std::cout << "Failed to create frame data buffer" << std::endl;;
+        return {};
+    }
+
+    return frameDataBufferHandle;
 }

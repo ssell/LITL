@@ -39,7 +39,6 @@ namespace litl::vulkan
         }
 
         vulkanContext->swapChain.swapChainImageIndex = swapChainImageIndex;
-
         vkResetFences(vulkanContext->device.vkDevice, 1, &frameSync.renderFence);
 
         return true;

@@ -29,7 +29,7 @@ VertexOutput vertexMain(VertexInput input)
 FragmentOutput fragmentMain(VertexOutput input)
 {
     FragmentOutput output = (FragmentOutput)0;
-    output.color = float4(1.0, 1.0, 1.0, 1.0);
+    output.color = float4(input.color, 1.0);
 
     return output;
 }

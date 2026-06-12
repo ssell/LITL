@@ -95,8 +95,8 @@ namespace litl::vulkan
         // ^ todo concurrent sharing mode
 
         const VmaAllocationCreateInfo allocationInfo{
-            .usage = toVmaMemoryUsage(descriptor.memory),
-            .flags = toVmaAllocationCreateFlag(descriptor.memoryUsage)
+            .flags = toVmaAllocationCreateFlag(descriptor.memoryUsage),
+            .usage = toVmaMemoryUsage(descriptor.memory)
         };
 
         const VkResult createResult = vmaCreateBuffer(m_pContext->device.vmaAllocator, &bufferInfo, &allocationInfo, &resource.vkBuffer, &resource.allocation, &resource.allocationInfo);
@@ -105,6 +105,16 @@ namespace litl::vulkan
         {
             logError("Failed to create Vulkan Buffer with result ", createResult);
             return {};
+        }
+
+        if (has_any(descriptor.type, BufferTypeFlagBits::ShaderDeviceAddress))
+        {
+            VkBufferDeviceAddressInfo bdaInfo{
+                .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+                .buffer = resource.vkBuffer
+            };
+
+            resource.bdaAddress = vkGetBufferDeviceAddress(m_pContext->device.vkDevice, &bdaInfo);
         }
 
         const BufferHandle handle = m_bufferPool.create(resource);
@@ -127,8 +137,8 @@ namespace litl::vulkan
                 };
 
                 const VmaAllocationCreateInfo stagingBufferAllocationInfo{
-                    .usage = VMA_MEMORY_USAGE_AUTO,
-                    .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
+                    .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
+                    .usage = VMA_MEMORY_USAGE_AUTO
                 };
 
                 const VkResult createStagingResult = vmaCreateBuffer(m_pContext->device.vmaAllocator, &stagingBufferInfo, &stagingBufferAllocationInfo, &stagingBufferResource.vkBuffer, &stagingBufferResource.allocation, &stagingBufferResource.allocationInfo);
