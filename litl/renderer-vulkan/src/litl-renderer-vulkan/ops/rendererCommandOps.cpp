@@ -58,6 +58,11 @@ namespace litl::vulkan
             return false;
         }
 
+        if (commandBuffer->boundGraphicsPipeline.isValid())
+        {
+            commandBuffer->boundGraphicsPipeline = {};
+        }
+
         return vkEndCommandBuffer(commandBuffer->vkCommandBuffer) == VK_SUCCESS;
     }
 
@@ -360,6 +365,36 @@ namespace litl::vulkan
         {
             vkCmdBindPipeline(commandBuffer->vkCommandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->vkPipeline);
         }
+
+        commandBuffer->boundGraphicsPipeline = graphicsPipelineHandle;
+    }
+
+    RendererResult cmdPushConstants(litl::RendererContext* context, CommandBufferHandle handle, ShaderStage shaderStage, std::span<std::byte const> data) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+        auto* commandBuffer = unwrapCommandBuffer(context, handle);
+
+        if (!isValid(commandBuffer))
+        {
+            return RendererResult::InvalidCommandBufferHandle;
+        }
+
+        auto* graphicsPipelineResource = vulkanContext->resources.getGraphicsPipeline(commandBuffer->boundGraphicsPipeline);
+
+        if (graphicsPipelineResource == nullptr)     /* todo check compute pipeline */
+        {
+            return RendererResult::NoGraphicsPipelineBound;
+        }
+
+        vkCmdPushConstants(
+            commandBuffer->vkCommandBuffer, 
+            graphicsPipelineResource->vkPipelineLayout,
+            toVkShaderStageFlags(shaderStage), 
+            0, 
+            static_cast<uint32_t>(data.size()), 
+            data.data());
+
+        return RendererResult::Success;
     }
 
     RendererResult cmdBindVertexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, uint64_t offset) noexcept

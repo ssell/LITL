@@ -14,4 +14,14 @@ namespace litl::vulkan
         auto* vulkanContext = unwrap(context);
         return vulkanContext->renderInfo.frame;
     }
+
+    uint32_t getMaxPushConstantSize(litl::RendererContext* context) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+
+        VkPhysicalDeviceProperties physicalProperties;
+        vkGetPhysicalDeviceProperties(vulkanContext->device.vkPhysicalDevice, &physicalProperties);
+
+        return physicalProperties.limits.maxPushConstantsSize;
+    }
 }

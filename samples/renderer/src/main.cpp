@@ -10,17 +10,6 @@
 
 using namespace litl;
 
-bool createWindow(Window** window) noexcept;
-bool createRenderer(Renderer** renderer, Window* window) noexcept;
-color getClearColor(float elapsedSeconds) noexcept;
-GraphicsPipelineHandle createTriangleGraphicsPipeline(Renderer* renderer) noexcept;
-void beginRender(Renderer* renderer, CommandBufferHandle commandBuffer, color clearColor) noexcept;
-void endRender(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
-BufferHandle createVertexBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
-BufferHandle createIndexBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
-BufferHandle createFrameDataBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
-void updatePerFrameDataBuffer(Renderer* renderer, std::vector<BufferHandle> const& frameBuffers, float elapsedTime, float deltaTime) noexcept;
-
 struct Vertex
 {
     vec3 position;
@@ -33,6 +22,22 @@ struct PerFrameData
     float deltaTime;
     uint32_t frameCount;
 };
+
+struct PushConstants
+{
+    uint64_t frameDataAddress = 0ull;
+};
+
+bool createWindow(Window** window) noexcept;
+bool createRenderer(Renderer** renderer, Window* window) noexcept;
+color getClearColor(float elapsedSeconds) noexcept;
+GraphicsPipelineHandle createTriangleGraphicsPipeline(Renderer* renderer) noexcept;
+void beginRender(Renderer* renderer, CommandBufferHandle commandBuffer, color clearColor) noexcept;
+void endRender(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
+BufferHandle createVertexBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
+BufferHandle createIndexBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
+BufferHandle createFrameDataBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
+void updatePerFrameDataBuffer(Renderer* renderer, std::vector<BufferHandle> const& frameBuffers, float elapsedTime, float deltaTime, PushConstants& pushConstants) noexcept;
 
 int main()
 {
@@ -52,6 +57,7 @@ int main()
             BufferHandle vertexBuffer = {};
             BufferHandle indexBuffer = {};
             std::vector<BufferHandle> frameBuffers;
+            PushConstants pushConstants{};
 
             auto lastFrameStart = std::chrono::steady_clock::now();
 
@@ -59,6 +65,7 @@ int main()
             {
                 if (renderer->beginRender())
                 {
+                    const auto frameData = renderer->getFrameData();
                     const auto frameTime = std::chrono::steady_clock::now();
                     const auto elapsedTime = std::chrono::duration<float>(frameTime - start).count();
                     const auto deltaTime = std::chrono::duration<float>(frameTime - lastFrameStart).count();
@@ -68,19 +75,21 @@ int main()
                     if (!vertexBuffer.isValid())
                     {
                         auto scope = renderer->cmdBeginBufferUpload(commandBuffer);
+
                         vertexBuffer = createVertexBuffer(renderer, commandBuffer);
                         indexBuffer = createIndexBuffer(renderer, commandBuffer);
 
-                        for (auto i = 0; i < renderer->getFrameData().framesInFlight; ++i)
+                        for (auto i = 0; i < frameData.framesInFlight; ++i)
                         {
                             frameBuffers.push_back(createFrameDataBuffer(renderer, commandBuffer));
                         }
                     }
 
-                    updatePerFrameDataBuffer(renderer, frameBuffers, elapsedTime, 0.0f);
+                    updatePerFrameDataBuffer(renderer, frameBuffers, elapsedTime, 0.0f, pushConstants);
                     beginRender(renderer, commandBuffer, getClearColor(elapsedTime));
 
                     renderer->cmdBindGraphicsPipeline(commandBuffer, graphicsPipelineHandle);
+                    renderer->cmdPushConstants(commandBuffer, ShaderStage::Fragment, generic_as_byte_span(&pushConstants, sizeof(PushConstants)));
                     renderer->cmdBindVertexBuffer(commandBuffer, vertexBuffer);
                     renderer->cmdBindIndexBuffer(commandBuffer, indexBuffer);
                     renderer->cmdDraw(commandBuffer, 3, 1, 0, 0);
@@ -375,7 +384,7 @@ BufferHandle createFrameDataBuffer(Renderer* renderer, CommandBufferHandle comma
     return frameDataBufferHandle;
 }
 
-void updatePerFrameDataBuffer(Renderer* renderer, std::vector<BufferHandle> const& frameBuffers, float elapsedTime, float deltaTime) noexcept
+void updatePerFrameDataBuffer(Renderer* renderer, std::vector<BufferHandle> const& frameBuffers, float elapsedTime, float deltaTime, PushConstants& pushConstants) noexcept
 {
     const auto frameData = renderer->getFrameData();
     const auto perFrameData = PerFrameData{
@@ -385,11 +394,12 @@ void updatePerFrameDataBuffer(Renderer* renderer, std::vector<BufferHandle> cons
     };
 
     auto frameBuffer = frameBuffers[frameData.frameInFlightIndex];
-    auto* bufferMemoryPtr = renderer->mapBuffer(frameBuffer);
+    auto mappedBuffer = renderer->mapBuffer(frameBuffer);
 
-    if (bufferMemoryPtr != nullptr)
+    if ((mappedBuffer.mappedPtr != nullptr) && (mappedBuffer.shaderDeviceAddress != 0ul))
     {
-        std::memcpy(bufferMemoryPtr, &perFrameData, sizeof(PerFrameData));
+        pushConstants.frameDataAddress = mappedBuffer.shaderDeviceAddress;
+        std::memcpy(mappedBuffer.mappedPtr, &perFrameData, sizeof(PerFrameData));
         renderer->unmapBuffer(frameBuffer);
     }
 }

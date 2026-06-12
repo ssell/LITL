@@ -6,6 +6,7 @@
 #include <string>
 
 #include "litl-core/handles.hpp"
+#include "litl-core/enumBitFlags.hpp"
 
 namespace litl
 {
@@ -26,20 +27,7 @@ namespace litl
         Task                   = 0b1000'0000
     };
 
-    constexpr ShaderStage operator|(ShaderStage a, ShaderStage b) noexcept
-    {
-        return static_cast<ShaderStage>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
-    }
-
-    constexpr ShaderStage operator&(ShaderStage a, ShaderStage b) noexcept
-    {
-        return static_cast<ShaderStage>(static_cast<uint32_t>(a) & static_cast<uint32_t>(b));
-    }
-
-    constexpr bool any(ShaderStage s) noexcept
-    {
-        return static_cast<uint32_t>(s) != 0;
-    }
+    LITL_ENABLE_BITMASK(ShaderStage);
 
     /// <summary>
     /// Resource types that can be bound to shader stages.
