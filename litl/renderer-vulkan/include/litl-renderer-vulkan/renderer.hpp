@@ -19,6 +19,8 @@ namespace litl::vulkan
 
     [[nodiscard]] BufferHandle createBuffer(litl::RendererContext* context, BufferDescriptor const& descriptor) noexcept;
     void destroyBuffer(litl::RendererContext* context, BufferHandle handle) noexcept;
+    [[nodiscard]] void* mapBuffer(litl::RendererContext* context, BufferHandle handle) noexcept;
+    void unmapBuffer(litl::RendererContext* context, BufferHandle handle) noexcept;
     [[nodiscard]] CommandBufferHandle createCommandBuffer(litl::RendererContext* context, CommandBufferDescriptor const& descriptor) noexcept;
     void destroyCommandBuffer(litl::RendererContext* context, CommandBufferHandle handle) noexcept;
     [[nodiscard]] ComputePipelineHandle createComputePipeline(litl::RendererContext* context, ComputePipelineDescriptor const& descriptor) noexcept;
@@ -47,12 +49,12 @@ namespace litl::vulkan
     void cmdClearImage(litl::RendererContext* context, CommandBufferHandle handle, ClearImageCommand const& command) noexcept;
     void cmdSetViewportAndScissor(litl::RendererContext* context, CommandBufferHandle handle, SetViewportAndScissorCommand const& command) noexcept;
     void cmdBindGraphicsPipeline(litl::RendererContext* context, CommandBufferHandle handle, GraphicsPipelineHandle graphicsPipelineHandle) noexcept;
+    void cmdDraw(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) noexcept;
     RendererResult cmdBindVertexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, uint64_t offset) noexcept;
     RendererResult cmdBindVertexBuffers(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle* bufferHandles, uint64_t* bufferOffsets, uint32_t count) noexcept;
     RendererResult cmdBindIndexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle) noexcept;
     RendererResult cmdBufferUpload(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, std::span<std::byte const> source, BufferHandle destBufferHandle, uint64_t sourceOffset, uint64_t destOffset) noexcept;
     RendererResult cmdBufferFlush(litl::RendererContext* context, CommandBufferHandle commandBufferHandle) noexcept;
-    void cmdDraw(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) noexcept;
 
     // -------------------------------------------------------------------------------------
     // rendererDrawOps.cpp
@@ -109,12 +111,14 @@ namespace litl::vulkan
         &cmdClearImage,
         &cmdSetViewportAndScissor,
         &cmdBindGraphicsPipeline,
+        &cmdDraw,
         &cmdBindVertexBuffer,
         &cmdBindVertexBuffers,
         &cmdBindIndexBuffer,
         &cmdBufferUpload,
         &cmdBufferFlush,
-        &cmdDraw,
+        &mapBuffer,
+        &unmapBuffer,
 
         // drawing
         &beginRender,

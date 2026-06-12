@@ -107,6 +107,16 @@ namespace litl
     {
         std::vector<VertexBinding> bindings;
         std::vector<VertexAttribute> attributes;
+
+        void addBinding(VertexBinding binding) noexcept
+        {
+            bindings.push_back(binding);
+        }
+
+        void addAttribute(VertexAttribute attribute) noexcept
+        {
+            attributes.push_back(attribute);
+        }
     };
 
     struct InputAssemblyState

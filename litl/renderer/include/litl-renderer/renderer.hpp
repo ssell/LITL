@@ -42,7 +42,7 @@ namespace litl
         TextureHandle (*createTexture)(RendererContext*, TextureDescriptor const&);
         void (*destroyTexture)(RendererContext*, TextureHandle);
 
-        // commands
+        // generic commands
         CommandBufferHandle (*cmdBeginFrame)(RendererContext*);
         bool (*cmdBegin)(RendererContext*, CommandBufferHandle);
         bool (*cmdEnd)(RendererContext*, CommandBufferHandle);
@@ -52,13 +52,16 @@ namespace litl
         void (*cmdClearImage)(RendererContext*, CommandBufferHandle, ClearImageCommand const&);
         void (*cmdSetViewportAndScissor)(RendererContext*, CommandBufferHandle, SetViewportAndScissorCommand const&);
         void (*cmdBindGraphicsPipeline)(RendererContext*, CommandBufferHandle, GraphicsPipelineHandle);
+        void (*cmdDraw)(RendererContext*, CommandBufferHandle, uint32_t, uint32_t, uint32_t, uint32_t);
+
+        // buffer commands and operations
         RendererResult (*cmdBindVertexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, uint64_t);
         RendererResult (*cmdBindVertexBuffers)(RendererContext*, CommandBufferHandle, BufferHandle*, uint64_t*, uint32_t);
         RendererResult (*cmdBindIndexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle);
         RendererResult (*cmdBufferUpload)(RendererContext* context, CommandBufferHandle, std::span<std::byte const>, BufferHandle, uint64_t, uint64_t);
         RendererResult (*cmdBufferFlush)(RendererContext* context, CommandBufferHandle);
-
-        void (*cmdDraw)(RendererContext*, CommandBufferHandle, uint32_t, uint32_t, uint32_t, uint32_t);
+        void* (*mapBuffer)(RendererContext*, BufferHandle);
+        void (*unmapBuffer)(RendererContext*, BufferHandle);
 
         // drawing
         bool (*beginRender)(RendererContext*);
@@ -288,6 +291,19 @@ namespace litl
             m_pOps->cmdBindGraphicsPipeline(m_pContext, handle, graphicsPipelineHandle);
         }
 
+        /// <summary>
+        /// Issues a command to draw primitives.
+        /// </summary>
+        /// <param name="commandBuffer"></param>
+        /// <param name="vertexCount"></param>
+        /// <param name="instanceCount"></param>
+        /// <param name="firstVertex"></param>
+        /// <param name="firstInstance"></param>
+        void cmdDraw(CommandBufferHandle commandBuffer, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) const noexcept
+        {
+            m_pOps->cmdDraw(m_pContext, commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
+        }
+
         RendererResult cmdBindVertexBuffer(CommandBufferHandle commandBuffer, BufferHandle buffer, uint64_t offset = 0) const noexcept
         {
             return m_pOps->cmdBindVertexBuffer(m_pContext, commandBuffer, buffer, offset);
@@ -322,17 +338,14 @@ namespace litl
             return m_pOps->cmdBufferFlush(m_pContext, commandBuffer);
         }
 
-        /// <summary>
-        /// Issues a command to draw primitives.
-        /// </summary>
-        /// <param name="commandBuffer"></param>
-        /// <param name="vertexCount"></param>
-        /// <param name="instanceCount"></param>
-        /// <param name="firstVertex"></param>
-        /// <param name="firstInstance"></param>
-        void cmdDraw(CommandBufferHandle commandBuffer, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) const noexcept
+        void* mapBuffer(BufferHandle buffer) const noexcept
         {
-            m_pOps->cmdDraw(m_pContext, commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
+            return m_pOps->mapBuffer(m_pContext, buffer);
+        }
+
+        void unmapBuffer(BufferHandle buffer) const noexcept
+        {
+            m_pOps->unmapBuffer(m_pContext, buffer);
         }
 
         // ---------------------------------------------------------------------------------

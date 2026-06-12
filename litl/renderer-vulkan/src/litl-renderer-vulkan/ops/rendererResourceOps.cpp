@@ -14,6 +14,24 @@ namespace litl::vulkan
         vulkanContext->resources.destroyBuffer(handle);
     }
 
+    void* mapBuffer(litl::RendererContext* context, BufferHandle handle) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+        auto* buffer = vulkanContext->resources.getBuffer(handle);
+
+        if (buffer == nullptr)
+        {
+            return nullptr;
+        }
+
+        return buffer->allocationInfo.pMappedData;
+    }
+
+    void unmapBuffer(litl::RendererContext* context, BufferHandle handle) noexcept
+    {
+        // ... no action needed for persistently mapped buffers ...
+    }
+
     CommandBufferHandle createCommandBuffer(litl::RendererContext* context, CommandBufferDescriptor const& descriptor) noexcept
     {
         auto* vulkanContext = unwrap(context);

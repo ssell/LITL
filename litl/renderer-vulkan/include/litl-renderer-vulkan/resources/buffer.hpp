@@ -40,6 +40,11 @@ namespace litl::vulkan
         /// memory barrier may be constructed.
         /// </summary>
         VkPipelineStageFlags2 accumulatedDstStageMask = VK_PIPELINE_STAGE_2_NONE;
+
+        /// <summary>
+        /// If the buffer is made with type ShaderDeviceAddress this is the buffer device address.
+        /// </summary>
+        VkDeviceAddress bdaAddress = 0;
     };
 }
 
