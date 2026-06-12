@@ -173,20 +173,9 @@ namespace litl
         struct RenderInfo
         {
             /// <summary>
-            /// Number of frames in flight.
+            /// Frame-specific data.
             /// </summary>
-            uint32_t framesInFlight = 2u;
-
-            /// <summary>
-            /// Total number of frames rendered
-            /// </summary>
-            uint32_t frameCount = 0u;
-
-            /// <summary>
-            /// The index of the current frame in flight.
-            /// This is (frameCount % framesInFlight)
-            /// </summary>
-            uint32_t frameInFlightIndex = 0u;
+            FrameData frame{};
 
             /// <summary>
             /// Indexed by FrameInfo::frameInFlight
@@ -210,7 +199,7 @@ namespace litl
 
             [[nodiscard]] PerFrameSyncInfo& getCurrFrameSyncInfo() noexcept
             {
-                return renderInfo.frameSyncInfo[renderInfo.frameInFlightIndex];
+                return renderInfo.frameSyncInfo[renderInfo.frame.frameInFlightIndex];
             }
 
             [[nodiscard]] PerImageSyncInfo& getCurrImageSyncInfo() noexcept

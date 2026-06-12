@@ -32,7 +32,7 @@ namespace litl::vulkan
 
         uint32_t swapChainImageIndex = 0;
 
-        if (!acquireSwapChainIndex(*vulkanContext, frameSync, Constants::millisecond_to_nanoseconds * 32, vulkanContext->renderInfo.frameInFlightIndex, &swapChainImageIndex))
+        if (!acquireSwapChainIndex(*vulkanContext, frameSync, Constants::millisecond_to_nanoseconds * 32, vulkanContext->renderInfo.frame.frameInFlightIndex, &swapChainImageIndex))
         {
             // Swapchain not ready.
             return false;
@@ -206,11 +206,7 @@ namespace litl::vulkan
             }
         }
 
-        // Clear any temporary buffers
         vulkanContext->getCurrFrameSyncInfo().stagingRingBuffer->freeBuffers();
-
-        // Increment the frame
-        vulkanContext->renderInfo.frameCount++;
-        vulkanContext->renderInfo.frameInFlightIndex = vulkanContext->renderInfo.frameCount % vulkanContext->renderInfo.framesInFlight;
+        vulkanContext->renderInfo.frame.incrementFrame();
     }
 }

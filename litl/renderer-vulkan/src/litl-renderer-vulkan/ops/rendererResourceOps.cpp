@@ -29,7 +29,16 @@ namespace litl::vulkan
 
     void unmapBuffer(litl::RendererContext* context, BufferHandle handle) noexcept
     {
-        // ... no action needed for persistently mapped buffers ...
+        auto* vulkanContext = unwrap(context);
+        auto* buffer = vulkanContext->resources.getBuffer(handle);
+
+        if ((buffer == nullptr) || (buffer->allocationInfo.pMappedData == nullptr))
+        {
+            return;
+        }
+
+        // AUTO + sequential-write usually lands on HOST_COHERENT memory, but this is a no-op when coherent and correct when not, so it's cheap insurance:
+        vmaFlushAllocation(vulkanContext->device.vmaAllocator, buffer->allocation, 0, VK_WHOLE_SIZE);
     }
 
     CommandBufferHandle createCommandBuffer(litl::RendererContext* context, CommandBufferDescriptor const& descriptor) noexcept

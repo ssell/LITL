@@ -28,9 +28,9 @@ namespace litl::vulkan
         VkDeviceSize targetOffset = static_cast<VkDeviceSize>(m_fixedHead);
 
         StagingRingBufferIndex stagingIndex{
-            .bufferIndex = StagingRingBufferIndex::FixedRingBufferIndex,
             .bufferOffset = m_fixedHead,
-            .bufferSize = static_cast<uint64_t>(source.size())
+            .bufferSize = static_cast<uint64_t>(source.size()),
+            .bufferIndex = StagingRingBufferIndex::FixedRingBufferIndex
         };
 
         if ((m_fixedHead + stagingIndex.bufferSize) >= FixedBufferSize)

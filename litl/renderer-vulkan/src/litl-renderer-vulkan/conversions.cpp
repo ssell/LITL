@@ -1472,7 +1472,6 @@ namespace litl::vulkan
         
         case BufferMemoryUsage::PersistentMap:
             return VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |         // allow to map the allocation using vmaMapMemory and it will only be written to sequentially (memcpy) or a loop writing number-by-number, never random access
-                   VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT |   // will need to check where the allocation ended up and act accordingly
                    VMA_ALLOCATION_CREATE_MAPPED_BIT;                                // memory will be persistently mapped and to retrieve a pointer to it
 
         default:
