@@ -5,6 +5,13 @@ struct PerFrameData
     uint frameCount;
 };
 
+struct PerCameraData
+{
+    float4x4 view;
+    float4x4 projection;
+    float4x4 viewProjection;
+}
+
 struct PushConstants
 {
     PerFrameData* frame;
@@ -27,14 +34,14 @@ struct FragmentOutput
     float4 color : SV_Target;
 };
 
-[vk::push_constant]
-PushConstants _pc;
+[vk::push_constant] PushConstants _pc;
+[vk::binding(0, 0)] ConstantBuffer<PerCameraData> _cameraData;
 
 [shader("vertex")]
 VertexOutput vertexMain(VertexInput input)
 {
     VertexOutput output = (VertexOutput)0;
-    output.position = float4(input.position.xy, 0.0, 1.0);
+    output.position = mul(_cameraData.viewProjection, float4(input.position.xy, 0.0, 1.0));
     output.color = input.color;
 
     return output;

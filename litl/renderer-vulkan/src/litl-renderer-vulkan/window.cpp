@@ -117,6 +117,11 @@ namespace litl::vulkan
         return context->height;
     }
 
+    float getAspectRatio(WindowContext* context) noexcept
+    {
+        return (static_cast<float>(context->width) / static_cast<float>(context->height));
+    }
+
     void* getSurfaceWindow(WindowContext* context) noexcept
     {
         return static_cast<void*>(context->glfwWindow);

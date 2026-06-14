@@ -27,6 +27,7 @@ struct PerCameraData
 {
     mat4 viewMatrix;
     mat4 projMatrix;
+    mat4 viewProjMatrix;
 };
 
 struct PushConstants
@@ -91,6 +92,7 @@ bool createIndexBuffer(SampleRenderState& sample) noexcept;
 bool createFrameDataBuffers(SampleRenderState& sample) noexcept;
 bool createFrameDataBuffer(SampleRenderState& sample) noexcept;
 void updatePerFrameDataBuffer(SampleRenderState& sample) noexcept;
+bool createCameraDataBuffers(SampleRenderState& sample) noexcept;
 bool createCameraDataBuffer(SampleRenderState& sample) noexcept;
 void updatePerCameraDataBuffer(SampleRenderState& sample) noexcept;
 
@@ -124,6 +126,8 @@ int main()
                     }
 
                     updatePerFrameDataBuffer(sample);
+                    updatePerCameraDataBuffer(sample);
+
                     beginRender(sample);
 
                     sample.renderer->cmdBindGraphicsPipeline(sample.commandBuffer, sample.graphicsPipeline);
@@ -336,7 +340,8 @@ bool prepareBuffers(SampleRenderState& sample) noexcept
 
     return createVertexBuffer(sample) &&
            createIndexBuffer(sample) &&
-           createFrameDataBuffers(sample);
+           createFrameDataBuffers(sample) &&
+           createCameraDataBuffers(sample);
 }
 
 bool createVertexBuffer(SampleRenderState& sample) noexcept
@@ -430,21 +435,21 @@ bool createFrameDataBuffers(SampleRenderState& sample) noexcept
 
 bool createFrameDataBuffer(SampleRenderState& sample) noexcept
 {
-    BufferDescriptor frameDataDescriptor{
+    BufferDescriptor frameBufferDescriptor{
         .type = BufferTypeFlagBits::ShaderDeviceAddress,
         .memoryUsage = BufferMemoryUsage::PersistentMap,
         .bytes = sizeof(PerFrameData)
     };
 
-    BufferHandle frameDataBufferHandle = sample.renderer->createBuffer(frameDataDescriptor);
+    BufferHandle frameBufferHandle = sample.renderer->createBuffer(frameBufferDescriptor);
 
-    if (!frameDataBufferHandle.isValid())
+    if (!frameBufferHandle.isValid())
     {
         std::cout << "Failed to create frame data buffer" << std::endl;;
         return false;
     }
 
-    sample.frameDataBuffers.push_back(frameDataBufferHandle);
+    sample.frameDataBuffers.push_back(frameBufferHandle);
 
     return true;
 }
@@ -469,12 +474,52 @@ void updatePerFrameDataBuffer(SampleRenderState& sample) noexcept
 // Camera Data Buffer
 // -----------------------------------------------------------------------------------------
 
+bool createCameraDataBuffers(SampleRenderState& sample) noexcept
+{
+    for (auto i = 0; i < sample.framesInFlight; ++i)
+    {
+        if (!createCameraDataBuffer(sample))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool createCameraDataBuffer(SampleRenderState& sample) noexcept
 {
+    BufferDescriptor cameraBufferDescriptor{
+        .type = BufferTypeFlagBits::UniformBuffer,
+        .memoryUsage = BufferMemoryUsage::PersistentMap,
+        .bytes = sizeof(PerCameraData)
+    };
+
+    BufferHandle cameraBufferHandle = sample.renderer->createBuffer(cameraBufferDescriptor);
+
+    if (!cameraBufferHandle.isValid())
+    {
+        std::cout << "Failed to create camera data buffer" << std::endl;;
+        return false;
+    }
+
+    sample.cameraDataBuffers.push_back(cameraBufferHandle);
+
     return true;
 }
 
 void updatePerCameraDataBuffer(SampleRenderState& sample) noexcept
 {
+    auto cameraBuffer = sample.cameraDataBuffers[sample.frameData.frameInFlightIndex];
+    auto mappedBuffer = sample.renderer->mapBuffer(cameraBuffer);
 
+    if (mappedBuffer.mappedPtr != nullptr)
+    {
+        sample.perCameraData.projMatrix = mat4::perspective(degreesToRadians(60.0f), sample.window->getAspectRatio(), 0.0f, 10.0f);
+        sample.perCameraData.viewMatrix = mat4::lookAt(vec3(0.0f, 0.0f, -5.0f), vec3(0.0f, 0.0f, 0.0f), vec3::up());
+        sample.perCameraData.viewProjMatrix = sample.perCameraData.projMatrix * sample.perCameraData.viewMatrix;
+
+        std::memcpy(mappedBuffer.mappedPtr, &sample.perCameraData, sizeof(PerCameraData));
+        sample.renderer->unmapBuffer(cameraBuffer);
+    }
 }

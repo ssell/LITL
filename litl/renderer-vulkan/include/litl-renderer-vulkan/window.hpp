@@ -12,6 +12,7 @@ namespace litl::vulkan
     litl::WindowState getState(WindowContext* context) noexcept;
     [[nodiscard]] uint32_t getWidth(WindowContext* context) noexcept;
     [[nodiscard]] uint32_t getHeight(WindowContext* context) noexcept;
+    [[nodiscard]] float getAspectRatio(WindowContext* context) noexcept;
     void* getSurfaceWindow(WindowContext* context) noexcept;
     void onResize(WindowContext* context, uint32_t width, uint32_t height) noexcept;
     void pollForEvents(WindowContext* context) noexcept;
@@ -25,6 +26,7 @@ namespace litl::vulkan
         &getState,
         &getWidth,
         &getHeight,
+        &getAspectRatio,
         &getSurfaceWindow,
         &onResize,
         &pollForEvents,
