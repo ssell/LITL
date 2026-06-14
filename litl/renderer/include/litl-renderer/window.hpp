@@ -22,9 +22,10 @@ namespace litl
         void (*close)(WindowContext*);
         void (*destroy)(WindowContext*);
         bool (*shouldClose)(WindowContext*);
-        WindowState(*getState)(WindowContext*);
-        uint32_t(*getWidth)(WindowContext*);
-        uint32_t(*getHeight)(WindowContext*);
+        WindowState (*getState)(WindowContext*);
+        uint32_t (*getWidth)(WindowContext*);
+        uint32_t (*getHeight)(WindowContext*);
+        float (*getAspectRatio)(WindowContext*);
         void* (*getSurfaceWindow)(WindowContext*);
         void (*onResize)(WindowContext*, uint32_t, uint32_t);
         void (*pollForEvents)(WindowContext*);
@@ -94,6 +95,15 @@ namespace litl
         [[nodiscard]] uint32_t getHeight() const noexcept
         {
             return m_pOps->getHeight(m_pContext);
+        }
+
+        /// <summary>
+        /// Returns the window aspect ratio (width / height).
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] float getAspectRatio() const noexcept
+        {
+            return m_pOps->getAspectRatio(m_pContext);
         }
 
         [[nodiscard]] void* getSurfaceWindow() const noexcept
