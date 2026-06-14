@@ -4,6 +4,7 @@
 
 #include "litl-core/containers/alignedByteBuffer.hpp"
 #include "litl-core/containers/common.hpp"
+#include "litl-core/math/types.hpp"
 #include "litl-renderer/renderer.hpp"
 #include "litl-renderer/window.hpp"
 #include "litl-renderer-vulkan/integration.hpp"
@@ -20,7 +21,12 @@ struct PerFrameData
 {
     float elapsedTime;
     float deltaTime;
-    uint32_t frameCount;
+};
+
+struct PerCameraData
+{
+    mat4 viewMatrix;
+    mat4 projMatrix;
 };
 
 struct PushConstants
@@ -28,74 +34,106 @@ struct PushConstants
     uint64_t frameDataAddress = 0ull;
 };
 
-bool createWindow(Window** window) noexcept;
-bool createRenderer(Renderer** renderer, Window* window) noexcept;
-color getClearColor(float elapsedSeconds) noexcept;
-GraphicsPipelineHandle createTriangleGraphicsPipeline(Renderer* renderer) noexcept;
-void beginRender(Renderer* renderer, CommandBufferHandle commandBuffer, color clearColor) noexcept;
-void endRender(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
-BufferHandle createVertexBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
-BufferHandle createIndexBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
-BufferHandle createFrameDataBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept;
-void updatePerFrameDataBuffer(Renderer* renderer, std::vector<BufferHandle> const& frameBuffers, float elapsedTime, float deltaTime, PushConstants& pushConstants) noexcept;
+/// <summary>
+/// Everything used by the Renderer sample.
+/// </summary>
+struct SampleRenderState
+{
+    // -------------------------------------------------------------------------------------
+    // Timing
+    // -------------------------------------------------------------------------------------
+
+    float elapsedTime = 0.0f;
+    float deltaTime = 0.0f;
+
+    std::chrono::steady_clock::time_point startTime;
+    std::chrono::steady_clock::time_point frameStartTime;
+    std::chrono::steady_clock::time_point lastFrameTime;
+
+    // -------------------------------------------------------------------------------------
+    // Renderer Resources
+    // -------------------------------------------------------------------------------------
+
+    Window* window = nullptr;
+    Renderer* renderer = nullptr;
+    uint32_t framesInFlight = 0u;
+    FrameData frameData{};
+    CommandBufferHandle commandBuffer{};
+    GraphicsPipelineHandle graphicsPipeline{};
+
+    // -------------------------------------------------------------------------------------
+    // Render Data
+    // -------------------------------------------------------------------------------------
+
+    PerFrameData perFrameData{};
+    PerCameraData perCameraData{};
+    PushConstants pushConstants{};
+
+    // -------------------------------------------------------------------------------------
+    // Buffers
+    // -------------------------------------------------------------------------------------
+
+    BufferHandle vertexBuffer{};
+    BufferHandle indexBuffer{};
+    std::vector<BufferHandle> frameDataBuffers;
+    std::vector<BufferHandle> cameraDataBuffers;
+};
+
+bool createWindow(SampleRenderState& sample) noexcept;
+bool createRenderer(SampleRenderState& sample) noexcept;
+bool createTriangleGraphicsPipeline(SampleRenderState& sample) noexcept;
+void updateTiming(SampleRenderState& sample) noexcept;
+void beginRender(SampleRenderState& sample) noexcept;
+void endRender(SampleRenderState& sample) noexcept;
+bool prepareBuffers(SampleRenderState& sample) noexcept;
+bool createVertexBuffer(SampleRenderState& sample) noexcept;
+bool createIndexBuffer(SampleRenderState& sample) noexcept;
+bool createFrameDataBuffers(SampleRenderState& sample) noexcept;
+bool createFrameDataBuffer(SampleRenderState& sample) noexcept;
+void updatePerFrameDataBuffer(SampleRenderState& sample) noexcept;
+bool createCameraDataBuffer(SampleRenderState& sample) noexcept;
+void updatePerCameraDataBuffer(SampleRenderState& sample) noexcept;
 
 int main()
 {
     std::cout << "LITL Renderer Only" << std::endl;
 
-    Window* window = nullptr;
-    Renderer* renderer = nullptr;
+    SampleRenderState sample{};
 
-    if (createWindow(&window) && createRenderer(&renderer, window))
+    if (createWindow(sample) && createRenderer(sample))
     {
-        const auto start = std::chrono::steady_clock::now();
-        const auto graphicsPipelineHandle = createTriangleGraphicsPipeline(renderer);
+        sample.startTime = std::chrono::steady_clock::now();
 
-        if (graphicsPipelineHandle.isValid())
+        if (createTriangleGraphicsPipeline(sample))
         {
-            // Prepare the vertex and index buffers
-            BufferHandle vertexBuffer = {};
-            BufferHandle indexBuffer = {};
-            std::vector<BufferHandle> frameBuffers;
-            PushConstants pushConstants{};
+            sample.lastFrameTime = std::chrono::steady_clock::now();
 
-            auto lastFrameStart = std::chrono::steady_clock::now();
-
-            while (!window->shouldClose())
+            while (!sample.window->shouldClose())
             {
-                if (renderer->beginRender())
+                if (sample.renderer->beginRender())
                 {
-                    const auto frameData = renderer->getFrameData();
-                    const auto frameTime = std::chrono::steady_clock::now();
-                    const auto elapsedTime = std::chrono::duration<float>(frameTime - start).count();
-                    const auto deltaTime = std::chrono::duration<float>(frameTime - lastFrameStart).count();
+                    updateTiming(sample);
 
-                    auto commandBuffer = renderer->cmdBeginFrame();
+                    sample.frameData = sample.renderer->getFrameData();
+                    sample.commandBuffer = sample.renderer->cmdBeginFrame();
 
-                    if (!vertexBuffer.isValid())
+                    if (!prepareBuffers(sample))
                     {
-                        auto scope = renderer->cmdBeginBufferUpload(commandBuffer);
-
-                        vertexBuffer = createVertexBuffer(renderer, commandBuffer);
-                        indexBuffer = createIndexBuffer(renderer, commandBuffer);
-
-                        for (auto i = 0; i < frameData.framesInFlight; ++i)
-                        {
-                            frameBuffers.push_back(createFrameDataBuffer(renderer, commandBuffer));
-                        }
+                        std::cout << "Failed to prepare sample buffers" << std::endl;
+                        break;
                     }
 
-                    updatePerFrameDataBuffer(renderer, frameBuffers, elapsedTime, 0.0f, pushConstants);
-                    beginRender(renderer, commandBuffer, getClearColor(elapsedTime));
+                    updatePerFrameDataBuffer(sample);
+                    beginRender(sample);
 
-                    renderer->cmdBindGraphicsPipeline(commandBuffer, graphicsPipelineHandle);
-                    renderer->cmdPushConstants(commandBuffer, ShaderStage::Fragment, generic_as_byte_span(&pushConstants, sizeof(PushConstants)));
-                    renderer->cmdBindVertexBuffer(commandBuffer, vertexBuffer);
-                    renderer->cmdBindIndexBuffer(commandBuffer, indexBuffer);
-                    renderer->cmdDraw(commandBuffer, 3, 1, 0, 0);
+                    sample.renderer->cmdBindGraphicsPipeline(sample.commandBuffer, sample.graphicsPipeline);
+                    sample.renderer->cmdPushConstants(sample.commandBuffer, ShaderStage::Fragment, generic_as_byte_span(&sample.pushConstants, sizeof(PushConstants)));
+                    sample.renderer->cmdBindVertexBuffer(sample.commandBuffer, sample.vertexBuffer);
+                    sample.renderer->cmdBindIndexBuffer(sample.commandBuffer, sample.indexBuffer);
+                    sample.renderer->cmdDraw(sample.commandBuffer, 3, 1, 0, 0);
 
-                    endRender(renderer, commandBuffer);
-                    lastFrameStart = frameTime;
+                    endRender(sample);
+                    sample.lastFrameTime = sample.frameStartTime;
                 }
             }
         }
@@ -103,50 +141,43 @@ int main()
 
     std::cout << "Shutting down ..." << std::endl;
 
-    destroyVulkanRenderer(renderer);
-    destroyVulkanWindow(window);
+    destroyVulkanRenderer(sample.renderer);
+    destroyVulkanWindow(sample.window);
 
     std::cout << "Exiting" << std::endl;
 
     return 0;
 }
 
-bool createWindow(Window** window) noexcept
+bool createWindow(SampleRenderState& sample) noexcept
 {
-    *window = createVulkanWindow();
+    sample.window = createVulkanWindow();
 
-    if (window == nullptr)
+    if (sample.window == nullptr)
     {
         return false;
     }
 
-    return (*window)->open("LITL Renderer Only Sample", 1024u, 768u);
+    return sample.window->open("LITL Renderer Only Sample", 1024u, 768u);
 }
 
-bool createRenderer(Renderer** renderer, Window* window) noexcept
+bool createRenderer(SampleRenderState& sample) noexcept
 {
     const RendererConfiguration rendererConfig{
         .rendererType = RendererBackendType::Vulkan,
         .framesInFlight = 2
     };
 
-    *renderer = createVulkanRenderer(window, rendererConfig);
+    sample.renderer = createVulkanRenderer(sample.window, rendererConfig);
 
-    if (renderer == nullptr)
+    if (sample.renderer == nullptr)
     {
         return false;
     }
 
-    return (*renderer)->build();
-}
+    sample.framesInFlight = sample.renderer->getFrameData().framesInFlight;
 
-color getClearColor(float elapsedSeconds) noexcept
-{
-    return {
-        (static_cast<float>(std::cos(elapsedSeconds)) + 1.0f) * 0.5f,
-        (static_cast<float>(std::sin(elapsedSeconds)) + 1.0f) * 0.5f,
-        0.5f
-    };
+    return sample.renderer->build();
 }
 
 bool createShaderModule(Renderer* renderer, std::string const& path) noexcept
@@ -179,23 +210,19 @@ bool createShaderModule(Renderer* renderer, std::string const& path) noexcept
         return false;
     }
 
-    std::cout << "Successfully created shader modules" << std::endl;
-
     return true;
 }
 
-GraphicsPipelineHandle createTriangleGraphicsPipeline(Renderer* renderer) noexcept
+bool createTriangleGraphicsPipeline(SampleRenderState& sample) noexcept
 {
-    std::cout << "Test Graphics Pipeline Creation ..." << std::endl;;
-
     const std::string shaderResourcePath = "assets/shaders/spirv/flat.spv";
 
-    if (!createShaderModule(renderer, shaderResourcePath))
+    if (!createShaderModule(sample.renderer, shaderResourcePath))
     {
         return {};
     }
 
-    ShaderModuleHandle shaderHandle = renderer->getShaderModule(shaderResourcePath);
+    ShaderModuleHandle shaderHandle = sample.renderer->getShaderModule(shaderResourcePath);
 
     if (!shaderHandle.isValid())
     {
@@ -215,7 +242,7 @@ GraphicsPipelineHandle createTriangleGraphicsPipeline(Renderer* renderer) noexce
             .entryPoint = "fragmentMain"
         },
         .renderTargets = RenderTargetFormats {
-            .colorAttachments = { renderer->getSwapchainImageFormat() },
+            .colorAttachments = { sample.renderer->getSwapchainImageFormat() },
             .colorAttachmentCount = 1
         },
         .vertexInput = VertexInputState{},
@@ -240,25 +267,29 @@ GraphicsPipelineHandle createTriangleGraphicsPipeline(Renderer* renderer) noexce
     graphicsPipelineDescriptor.vertexInput.addAttribute(VertexAttribute{ 0, 0, DataFormat::RGB32_SFloat, 0 });
     graphicsPipelineDescriptor.vertexInput.addAttribute(VertexAttribute{ 1, 0, DataFormat::RGB32_SFloat, sizeof(vec3) });
 
-    const GraphicsPipelineHandle handle = renderer->createGraphicsPipeline(graphicsPipelineDescriptor);
+    sample.graphicsPipeline = sample.renderer->createGraphicsPipeline(graphicsPipelineDescriptor);
 
-    if (handle.isValid())
-    {
-        std::cout << "Successfully create GraphicsPipelineHandle" << std::endl;
-    }
-    else
+    if (!sample.graphicsPipeline.isValid())
     {
         std::cout << "Failed to created GraphicsPipelineHandle" << std::endl;
+        return false;
     }
 
-    return handle;
+    return true;
 }
 
-void beginRender(Renderer* renderer, CommandBufferHandle commandBuffer, color clearColor) noexcept
+void updateTiming(SampleRenderState& sample) noexcept
+{
+    sample.frameStartTime = std::chrono::steady_clock::now();
+    sample.elapsedTime = std::chrono::duration<float>(sample.frameStartTime - sample.startTime).count();
+    sample.deltaTime = std::chrono::duration<float>(sample.frameStartTime - sample.lastFrameTime).count();
+}
+
+void beginRender(SampleRenderState& sample) noexcept
 {
     const BeginRenderCommand beginRenderCommand{
         .color = ColorAttachmentDescriptor {
-            .clearColor = clearColor
+            .clearColor = color(0.05f, 0.05f, 0.075f, 1.0f)
         }
     };
 
@@ -279,26 +310,36 @@ void beginRender(Renderer* renderer, CommandBufferHandle commandBuffer, color cl
         }
     };
 
-    renderer->cmdPipelineBarrier(commandBuffer, PipelineBarrierUndefinedToColor);
-    renderer->cmdBeginRender(commandBuffer, beginRenderCommand);
-    renderer->cmdSetViewportAndScissor(commandBuffer, setViewportScissorCommand);
+    sample.renderer->cmdPipelineBarrier(sample.commandBuffer, PipelineBarrierUndefinedToColor);
+    sample.renderer->cmdBeginRender(sample.commandBuffer, beginRenderCommand);
+    sample.renderer->cmdSetViewportAndScissor(sample.commandBuffer, setViewportScissorCommand);
 }
 
-void endRender(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept
+void endRender(SampleRenderState& sample) noexcept
 {
-    renderer->cmdEndRender(commandBuffer);
-    renderer->cmdPipelineBarrier(commandBuffer, PipelineBarrierColorToPresent);
-    renderer->cmdEnd(commandBuffer);
+    sample.renderer->cmdEndRender(sample.commandBuffer);
+    sample.renderer->cmdPipelineBarrier(sample.commandBuffer, PipelineBarrierColorToPresent);
+    sample.renderer->cmdEnd(sample.commandBuffer);
 
-    renderer->submitCommands(commandBuffer);
-    renderer->endRender();
+    sample.renderer->submitCommands(sample.commandBuffer);
+    sample.renderer->endRender();
 }
 
-// -----------------------------------------------------------------------------------------
-// Phase 9 Specific Test Code
-// -----------------------------------------------------------------------------------------
+bool prepareBuffers(SampleRenderState& sample) noexcept
+{
+    if (sample.vertexBuffer.isValid())
+    {
+        return true;
+    }
 
-BufferHandle createVertexBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept
+    auto scope = sample.renderer->cmdBeginBufferUpload(sample.commandBuffer);
+
+    return createVertexBuffer(sample) &&
+           createIndexBuffer(sample) &&
+           createFrameDataBuffers(sample);
+}
+
+bool createVertexBuffer(SampleRenderState& sample) noexcept
 {
     std::array<Vertex, 3> vertices = {
         Vertex {
@@ -320,25 +361,26 @@ BufferHandle createVertexBuffer(Renderer* renderer, CommandBufferHandle commandB
         .bytes = sizeof(Vertex) * static_cast<uint32_t>(vertices.size())
     };
 
-    BufferHandle vertexBufferHandle = renderer->createBuffer(vertexBufferDescriptor);
+    sample.vertexBuffer = sample.renderer->createBuffer(vertexBufferDescriptor);
 
-    if (!vertexBufferHandle.isValid())
+    if (!sample.vertexBuffer.isValid())
     {
         std::cout << "Failed to create vertex buffer" << std::endl;
-        return {};
+        return false;
     }
 
-    const auto result = renderer->cmdBufferUpload(commandBuffer, as_byte_span(vertices), vertexBufferHandle);
+    const auto result = sample.renderer->cmdBufferUpload(sample.commandBuffer, as_byte_span(vertices), sample.vertexBuffer);
 
     if (result != RendererResult::Success)
     {
         std::cout << "Failed to write to vertex buffer with result " << static_cast<uint32_t>(result) << std::endl;
+        return false;
     }
 
-    return vertexBufferHandle;
+    return true;
 }
 
-BufferHandle createIndexBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept
+bool createIndexBuffer(SampleRenderState& sample) noexcept
 {
     std::array<uint32_t, 3> indices = { 0, 1, 2 };
 
@@ -347,25 +389,46 @@ BufferHandle createIndexBuffer(Renderer* renderer, CommandBufferHandle commandBu
         .bytes = sizeof(uint32_t) * static_cast<uint32_t>(indices.size())
     };
 
-    BufferHandle indexBufferHandle = renderer->createBuffer(indexBufferDescriptor);
+    sample.indexBuffer = sample.renderer->createBuffer(indexBufferDescriptor);
 
-    if (!indexBufferHandle.isValid())
+    if (!sample.indexBuffer.isValid())
     {
         std::cout << "Failed to create index buffer" << std::endl;
         return {};
     }
 
-    const auto result = renderer->cmdBufferUpload(commandBuffer, as_byte_span(indices), indexBufferHandle);
+    const auto result = sample.renderer->cmdBufferUpload(sample.commandBuffer, as_byte_span(indices), sample.indexBuffer);
 
     if (result != RendererResult::Success)
     {
         std::cout << "Failed to write to vertex index with result " << static_cast<uint32_t>(result) << std::endl;
+        return false;
     }
 
-    return indexBufferHandle;
+    return true;
 }
 
-BufferHandle createFrameDataBuffer(Renderer* renderer, CommandBufferHandle commandBuffer) noexcept
+// -----------------------------------------------------------------------------------------
+// Frame Data Buffer
+// -----------------------------------------------------------------------------------------
+
+// Per-frame data is provided via a persistently-mapped multi-buffer buffer (one per frame-in-flight).
+// The shader samples the buffer using BDA via the buffer address being provided in the Push Constant.
+
+bool createFrameDataBuffers(SampleRenderState& sample) noexcept
+{
+    for (auto i = 0; i < sample.framesInFlight; ++i)
+    {
+        if (!createFrameDataBuffer(sample))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool createFrameDataBuffer(SampleRenderState& sample) noexcept
 {
     BufferDescriptor frameDataDescriptor{
         .type = BufferTypeFlagBits::ShaderDeviceAddress,
@@ -373,33 +436,45 @@ BufferHandle createFrameDataBuffer(Renderer* renderer, CommandBufferHandle comma
         .bytes = sizeof(PerFrameData)
     };
 
-    BufferHandle frameDataBufferHandle = renderer->createBuffer(frameDataDescriptor);
+    BufferHandle frameDataBufferHandle = sample.renderer->createBuffer(frameDataDescriptor);
 
     if (!frameDataBufferHandle.isValid())
     {
         std::cout << "Failed to create frame data buffer" << std::endl;;
-        return {};
+        return false;
     }
 
-    return frameDataBufferHandle;
+    sample.frameDataBuffers.push_back(frameDataBufferHandle);
+
+    return true;
 }
 
-void updatePerFrameDataBuffer(Renderer* renderer, std::vector<BufferHandle> const& frameBuffers, float elapsedTime, float deltaTime, PushConstants& pushConstants) noexcept
+void updatePerFrameDataBuffer(SampleRenderState& sample) noexcept
 {
-    const auto frameData = renderer->getFrameData();
-    const auto perFrameData = PerFrameData{
-        .elapsedTime = elapsedTime,
-        .deltaTime = deltaTime,
-        .frameCount = frameData.frameCount
-    };
+    sample.perFrameData.elapsedTime = sample.elapsedTime;
+    sample.perFrameData.deltaTime = sample.deltaTime;
 
-    auto frameBuffer = frameBuffers[frameData.frameInFlightIndex];
-    auto mappedBuffer = renderer->mapBuffer(frameBuffer);
+    auto frameBuffer = sample.frameDataBuffers[sample.frameData.frameInFlightIndex];
+    auto mappedBuffer = sample.renderer->mapBuffer(frameBuffer);
 
     if ((mappedBuffer.mappedPtr != nullptr) && (mappedBuffer.shaderDeviceAddress != 0ul))
     {
-        pushConstants.frameDataAddress = mappedBuffer.shaderDeviceAddress;
-        std::memcpy(mappedBuffer.mappedPtr, &perFrameData, sizeof(PerFrameData));
-        renderer->unmapBuffer(frameBuffer);
+        sample.pushConstants.frameDataAddress = mappedBuffer.shaderDeviceAddress;
+        std::memcpy(mappedBuffer.mappedPtr, &sample.perFrameData, sizeof(PerFrameData));
+        sample.renderer->unmapBuffer(frameBuffer);
     }
+}
+
+// -----------------------------------------------------------------------------------------
+// Camera Data Buffer
+// -----------------------------------------------------------------------------------------
+
+bool createCameraDataBuffer(SampleRenderState& sample) noexcept
+{
+    return true;
+}
+
+void updatePerCameraDataBuffer(SampleRenderState& sample) noexcept
+{
+
 }
