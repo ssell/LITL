@@ -1,8 +1,11 @@
 #ifndef LITL_RENDERER_VULKAN_GRAPHICS_PIPELINE_H__
 #define LITL_RENDERER_VULKAN_GRAPHICS_PIPELINE_H__
 
+#include <vector>
+
 #include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer/resources/graphicsPipeline.hpp"
+#include "litl-renderer/resources/pipelineResource.hpp"
 
 namespace litl::vulkan
 {
@@ -23,6 +26,11 @@ namespace litl::vulkan
         /// The pipeline interface that this graphics pipeline was built against.
         /// </summary>
         VkPipelineLayout vkPipelineLayout = VK_NULL_HANDLE;
+
+        /// <summary>
+        /// Map of resources bound in this pipeline.
+        /// </summary>
+        PipelineResourceMap resourceMap{};
     };
 }
 

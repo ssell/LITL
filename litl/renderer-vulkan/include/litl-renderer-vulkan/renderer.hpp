@@ -54,8 +54,8 @@ namespace litl::vulkan
     [[nodiscard]] RendererResult cmdBindVertexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, uint64_t offset) noexcept;
     [[nodiscard]] RendererResult cmdBindVertexBuffers(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle* bufferHandles, uint64_t* bufferOffsets, uint32_t count) noexcept;
     [[nodiscard]] RendererResult cmdBindIndexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle) noexcept;
-    [[nodiscard]] RendererResult cmdBindGraphicsBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle) noexcept;
-    [[nodiscard]] RendererResult cmdBindComputeBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle) noexcept;
+    [[nodiscard]] RendererResult cmdBindGraphicsBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, PipelineResourceKey key, uint64_t offset, uint64_t range) noexcept;
+    [[nodiscard]] RendererResult cmdBindComputeBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, PipelineResourceKey key, uint64_t offset, uint64_t range) noexcept;
     [[nodiscard]] RendererResult cmdBufferUpload(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, std::span<std::byte const> source, BufferHandle destBufferHandle, uint64_t sourceOffset, uint64_t destOffset) noexcept;
     [[nodiscard]] RendererResult cmdBufferFlush(litl::RendererContext* context, CommandBufferHandle commandBufferHandle) noexcept;
 
@@ -74,6 +74,7 @@ namespace litl::vulkan
     [[nodiscard]] DataFormat getSwapchainImageFormat(litl::RendererContext* context) noexcept;
     [[nodiscard]] FrameData getFrameData(litl::RendererContext* context) noexcept;
     [[nodiscard]] uint32_t getMaxPushConstantSize(litl::RendererContext* context) noexcept;
+    [[nodiscard]] PipelineResourceKey getPipelineResourceKey(litl::RendererContext* context, std::string_view name) noexcept;
 
     // ---------------------------------------------------------------------------------
     // TEMPORARY FOR TESTING PURPOSES (rendererTesting.cpp)

@@ -3,6 +3,7 @@
 
 #include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer/resources/computePipeline.hpp"
+#include "litl-renderer/resources/pipelineResource.hpp"
 
 namespace litl::vulkan
 {
@@ -23,6 +24,11 @@ namespace litl::vulkan
         /// The pipeline interface that this compute pipeline was built against.
         /// </summary>
         VkPipelineLayout vkPipelineLayout = VK_NULL_HANDLE;
+
+        /// <summary>
+        /// Map of resources bound in this pipeline.
+        /// </summary>
+        PipelineResourceMap resourceMap{};
     };
 }
 

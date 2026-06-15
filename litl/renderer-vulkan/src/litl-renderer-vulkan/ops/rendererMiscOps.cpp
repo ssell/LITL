@@ -1,5 +1,6 @@
 #include "litl-renderer-vulkan/renderer.hpp"
 #include "litl-renderer-vulkan/conversions.hpp"
+#include "litl-core/hash.hpp"
 
 namespace litl::vulkan
 {
@@ -23,5 +24,10 @@ namespace litl::vulkan
         vkGetPhysicalDeviceProperties(vulkanContext->device.vkPhysicalDevice, &physicalProperties);
 
         return physicalProperties.limits.maxPushConstantsSize;
+    }
+
+    PipelineResourceKey getPipelineResourceKey(litl::RendererContext* context, std::string_view name) noexcept
+    {
+        return fastHashString(name);
     }
 }

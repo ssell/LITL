@@ -4,6 +4,7 @@
 #include <span>
 #include <spirv_reflect.h>
 
+#include "litl-core/hash.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-renderer/reflection.hpp"
 
@@ -161,7 +162,8 @@ namespace litl
             auto binding = *resourceBindings[i];
 
             litlReflection.resources.push_back(ResourceBinding{
-                    .name = (binding.name != nullptr ? binding.name : ""),
+                    .name = binding.name,
+                    .key = PipelineResourceMap::getKey(binding.name),
                     .type = fromSpvReflectResourceType(binding.descriptor_type),
                     .set = binding.set,
                     .binding = binding.binding,
@@ -554,5 +556,28 @@ namespace litl
         }
 
         return ShaderScalarType::Unknown;
+    }
+
+    PipelineResourceKey PipelineResourceMap::getKey(std::string_view name) noexcept
+    {
+        return fastHashString(name);
+    }
+
+    ResourceBinding const* PipelineResourceMap::getResourceBinding(PipelineResourceKey key) const noexcept
+    {
+        for (auto& binding : resources)
+        {
+            if (binding.key == key)
+            {
+                return &binding;
+            }
+        }
+
+        return nullptr;
+    }
+
+    bool PipelineResourceMap::contains(PipelineResourceKey key) const noexcept
+    {
+        return getResourceBinding(key) != nullptr;
     }
 }

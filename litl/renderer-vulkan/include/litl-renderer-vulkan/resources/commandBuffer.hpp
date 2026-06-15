@@ -4,6 +4,7 @@
 #include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer/resources/commandBuffer.hpp"
 #include "litl-renderer/resources/graphicsPipeline.hpp"
+#include "litl-renderer/resources/computePipeline.hpp"
 
 namespace litl::vulkan
 {

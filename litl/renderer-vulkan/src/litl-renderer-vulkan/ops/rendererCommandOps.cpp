@@ -477,7 +477,7 @@ namespace litl::vulkan
         return RendererResult::Success;
     }
 
-    RendererResult cmdBindGraphicsBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle) noexcept
+    RendererResult cmdBindGraphicsBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, PipelineResourceKey key, uint64_t offset, uint64_t range) noexcept
     {
         auto* vulkanContext = unwrap(context);
         auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
@@ -493,20 +493,6 @@ namespace litl::vulkan
         {
             return RendererResult::InvalidBufferHandle;
         }
-
-        const VkDescriptorBufferInfo bufferInfo{
-            .buffer = bufferResource->vkBuffer,
-            .offset = 0,
-            .range = VK_WHOLE_SIZE
-        };
-
-        const VkWriteDescriptorSet write{
-            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstBinding = 0,
-            .descriptorCount = 1,
-            .descriptorType = toVkDescriptorType(resourceType),
-            .pBufferInfo = &bufferInfo
-        };
 
         auto* graphicsPipeline = vulkanContext->resources.getGraphicsPipeline(commandBuffer->boundGraphicsPipeline);
 
@@ -515,18 +501,39 @@ namespace litl::vulkan
             return RendererResult::NoBoundGraphicsPipeline;
         }
 
+        auto* resource = graphicsPipeline->resourceMap.getResourceBinding(key);
+
+        if (resource == nullptr)
+        {
+            RendererResult::InvalidPipelineResourceKey;
+        }
+
+        const VkDescriptorBufferInfo bufferInfo{
+            .buffer = bufferResource->vkBuffer,
+            .offset = offset,
+            .range = range
+        };
+
+        const VkWriteDescriptorSet write{
+            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .dstBinding = resource->binding,
+            .descriptorCount = 1,
+            .descriptorType = toVkDescriptorType(resource->type),
+            .pBufferInfo = &bufferInfo
+        };
+
         vkCmdPushDescriptorSet(
             commandBuffer->vkCommandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
             graphicsPipeline->vkPipelineLayout,
-            bindingSlot,
+            resource->set,
             1,
             &write);
 
         return RendererResult::Success;
     }
 
-    RendererResult cmdBindGraphicsBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle) noexcept
+    RendererResult cmdBindComputeBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, PipelineResourceKey key, uint64_t offset, uint64_t range) noexcept
     {
         auto* vulkanContext = unwrap(context);
         auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
@@ -543,20 +550,6 @@ namespace litl::vulkan
             return RendererResult::InvalidBufferHandle;
         }
 
-        const VkDescriptorBufferInfo bufferInfo{
-            .buffer = bufferResource->vkBuffer,
-            .offset = 0,
-            .range = VK_WHOLE_SIZE
-        };
-
-        const VkWriteDescriptorSet write{
-            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstBinding = 0,
-            .descriptorCount = 1,
-            .descriptorType = toVkDescriptorType(resourceType),
-            .pBufferInfo = &bufferInfo
-        };
-
         auto* computePipeline = vulkanContext->resources.getComputePipeline(commandBuffer->boundComputePipeline);
 
         if (computePipeline == nullptr)
@@ -564,11 +557,32 @@ namespace litl::vulkan
             return RendererResult::NoBoundComputePipeline;
         }
 
+        auto* resource = computePipeline->resourceMap.getResourceBinding(key);
+
+        if (resource == nullptr)
+        {
+            RendererResult::InvalidPipelineResourceKey;
+        }
+
+        const VkDescriptorBufferInfo bufferInfo{
+            .buffer = bufferResource->vkBuffer,
+            .offset = offset,
+            .range = range
+        };
+
+        const VkWriteDescriptorSet write{
+            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .dstBinding = resource->binding,
+            .descriptorCount = 1,
+            .descriptorType = toVkDescriptorType(resource->type),
+            .pBufferInfo = &bufferInfo
+        };
+
         vkCmdPushDescriptorSet(
             commandBuffer->vkCommandBuffer,
             VK_PIPELINE_BIND_POINT_COMPUTE,
             computePipeline->vkPipelineLayout,
-            bindingSlot,
+            resource->set,
             1,
             &write);
 

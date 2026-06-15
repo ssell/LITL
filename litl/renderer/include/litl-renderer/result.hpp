@@ -25,7 +25,8 @@ namespace litl
         InvalidPushConstantSize = 206,
         NoGraphicsPipelineBound = 207,
         NoBoundGraphicsPipeline = 208,
-        NoBoundComputePipeline = 209
+        NoBoundComputePipeline = 209,
+        InvalidPipelineResourceKey = 210
     };
 }
 
