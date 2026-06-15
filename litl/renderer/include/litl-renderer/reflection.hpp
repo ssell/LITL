@@ -7,51 +7,10 @@
 #include <string>
 #include <vector>
 
-#include "litl-renderer/resources/shaderModule.hpp"
+#include "litl-renderer/resources/pipelineResource.hpp"
 
 namespace litl
 {
-    // -------------------------------------------------------------------------------------
-    // Reflection Structures
-    // -------------------------------------------------------------------------------------
-
-    /// <summary>
-    /// Describes a single resource bound to one or more shader stages.
-    /// In Vulkan these are descriptor bindings.
-    /// </summary>
-    struct ResourceBinding
-    {
-        /// <summary>
-        /// "Camera", "AlbedoTexture", etc.
-        /// </summary>
-        std::string name;
-
-        /// <summary>
-        /// Buffer, image, sampler, etc.
-        /// </summary>
-        ShaderResourceType type;
-
-        /// <summary>
-        /// Vulkan set, D3D12 space.
-        /// </summary>
-        uint32_t set;
-
-        /// <summary>
-        /// Vulkan binding, D3D12 register.
-        /// </summary>
-        uint32_t binding;
-
-        /// <summary>
-        /// 0 = runtime bindless array, 1 = not array, >=2 = array of declared size
-        /// </summary>
-        uint32_t arraySize;
-
-        /// <summary>
-        /// For buffer validation only.
-        /// </summary>
-        uint32_t sizeBytes;
-    };
-
     /// <summary>
     /// Used with push constants to send small amounts of data directly to one or more stages.
     /// </summary>

@@ -3,6 +3,7 @@
 
 #include <span>
 #include <string>
+#include <string_view>
 
 #include "litl-core/assert.hpp"
 #include "litl-renderer/result.hpp"
@@ -11,6 +12,7 @@
 #include "litl-renderer/resources.hpp"
 #include "litl-renderer/commands.hpp"
 #include "litl-renderer/scopedBufferUpload.hpp"
+#include "litl-renderer/resources/pipelineResource.hpp"
 
 namespace litl
 {
@@ -60,8 +62,8 @@ namespace litl
         RendererResult (*cmdBindVertexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, uint64_t);
         RendererResult (*cmdBindVertexBuffers)(RendererContext*, CommandBufferHandle, BufferHandle*, uint64_t*, uint32_t);
         RendererResult (*cmdBindIndexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle);
-        RendererResult (*cmdBindGraphicsBuffer)(RendererContext*, CommandBufferHandle, BufferHandle);
-        RendererResult (*cmdBindComputeBuffer)(RendererContext*, CommandBufferHandle, BufferHandle);
+        RendererResult (*cmdBindGraphicsBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, PipelineResourceKey, uint64_t, uint64_t);
+        RendererResult (*cmdBindComputeBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, PipelineResourceKey, uint64_t, uint64_t);
         RendererResult (*cmdBufferUpload)(RendererContext* context, CommandBufferHandle, std::span<std::byte const>, BufferHandle, uint64_t, uint64_t);
         RendererResult (*cmdBufferFlush)(RendererContext* context, CommandBufferHandle);
         RendererResult (*mapBuffer)(RendererContext*, BufferHandle, MappedBuffer&);
@@ -357,18 +359,36 @@ namespace litl
         /// Binds a generic buffer to the specified slot.
         /// There must be an active graphics pipeline already bound prior to calling this command.
         /// </summary>
-        RendererResult cmdBindGraphicsBuffer(CommandBufferHandle handle, BufferHandle buffer) const noexcept
+        /// <param name="handle"></param>
+        /// <param name="buffer"></param>
+        /// <param name="key">The key for the resource being bound. Use Renderer::getPipelineResourceKey to retrieve it from a string value.</param>
+        RendererResult cmdBindGraphicsBuffer(CommandBufferHandle handle, BufferHandle buffer, PipelineResourceKey key, uint64_t offset, uint64_t range) const noexcept
         {
-            return m_pOps->cmdBindGraphicsBuffer(m_pContext, handle, buffer);
+            return m_pOps->cmdBindGraphicsBuffer(m_pContext, handle, buffer, key, offset, range);
+        }
+
+        RendererResult cmdBindGraphicsBuffer(CommandBufferHandle handle, BufferHandle buffer, PipelineResourceKey key) const noexcept
+        {
+            // Note: ~0ull == VK_WHOLE_SIZE == 0xFFFF...FFFF
+            return cmdBindGraphicsBuffer(handle, buffer, key, 0ull, ~0ull);
         }
 
         /// <summary>
         /// Binds a generic buffer to the specified slot.
         /// There must be an active compute pipeline already bound prior to calling this command.
         /// </summary>
-        RendererResult cmdBindComputeBuffer(CommandBufferHandle handle, BufferHandle buffer) const noexcept
+        /// <param name="handle"></param>
+        /// <param name="buffer"></param>
+        /// <param name="key">The key for the resource being bound. Use Renderer::getPipelineResourceKey to retrieve it from a string value.</param>
+        RendererResult cmdBindComputeBuffer(CommandBufferHandle handle, BufferHandle buffer, PipelineResourceKey key, uint64_t offset, uint64_t range) const noexcept
         {
-            return m_pOps->cmdBindComputeBuffer(m_pContext, handle, buffer);
+            return m_pOps->cmdBindComputeBuffer(m_pContext, handle, buffer, key, offset, range);
+        }
+
+        RendererResult cmdBindComputeBuffer(CommandBufferHandle handle, BufferHandle buffer, PipelineResourceKey key) const noexcept
+        {
+            // Note: ~0ull == VK_WHOLE_SIZE == 0xFFFF...FFFF
+            return cmdBindComputeBuffer(handle, buffer, key, 0ull, ~0ull);
         }
 
         /// <summary>
@@ -456,6 +476,8 @@ namespace litl
         {
             return m_pOps->getFrameData(m_pContext);
         }
+
+        [[nodiscard]] PipelineResourceKey getPipelineResourceKey(std::string_view name) const noexcept;
 
     private:
 
