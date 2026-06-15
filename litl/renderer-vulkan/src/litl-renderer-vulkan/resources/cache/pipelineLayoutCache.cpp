@@ -55,6 +55,7 @@ namespace litl::vulkan
 
         VkDescriptorSetLayoutCreateInfo info{
             .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+            .flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT,
             .bindingCount = static_cast<uint32_t>(descriptorSetLayoutDesc.bindings.size()),
             .pBindings = bindings.data()
         };

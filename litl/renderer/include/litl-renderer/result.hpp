@@ -23,7 +23,9 @@ namespace litl
         InvalidBufferForReading = 204,
         StagingBufferFailure = 205,
         InvalidPushConstantSize = 206,
-        NoGraphicsPipelineBound = 207
+        NoGraphicsPipelineBound = 207,
+        NoBoundGraphicsPipeline = 208,
+        NoBoundComputePipeline = 209
     };
 }
 

@@ -24,12 +24,12 @@ namespace litl::vulkan
     CommandBufferHandle cmdBeginFrame(litl::RendererContext* context) noexcept
     {
         auto commandBufferHandle = unwrap(context)->getCurrFrameSyncInfo().commandBuffer;
-        
+
         if (!cmdBegin(context, commandBufferHandle))
         {
             return {};  // return invalid handle (.isValid() == false)
         }
-        
+
         return commandBufferHandle;
     }
 
@@ -156,17 +156,17 @@ namespace litl::vulkan
         // ---------------------------------------------------------------------------------
         // Begin Render
         // ---------------------------------------------------------------------------------
-        
+
         VkRenderingInfo renderingInfo{
             .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
             .flags = 0,
-            .renderArea = { 
-                .offset = { 
-                    .x = static_cast<int32_t>(command.area.offset.x()), 
-                    .y = static_cast<int32_t>(command.area.offset.y()) 
+            .renderArea = {
+                .offset = {
+                    .x = static_cast<int32_t>(command.area.offset.x()),
+                    .y = static_cast<int32_t>(command.area.offset.y())
                 },
-                .extent = { 
-                    .width  = static_cast<uint32_t>(vulkanContext->drawInfo.targetTextureSize.width * command.area.extents.x()),
+                .extent = {
+                    .width = static_cast<uint32_t>(vulkanContext->drawInfo.targetTextureSize.width * command.area.extents.x()),
                     .height = static_cast<uint32_t>(vulkanContext->drawInfo.targetTextureSize.height * command.area.extents.y())
                 }
             },
@@ -265,13 +265,13 @@ namespace litl::vulkan
             return;
         }
 
-        const VkClearColorValue clearColor = { 
-            { 
+        const VkClearColorValue clearColor = {
+            {
                 command.clearColor.r(),
                 command.clearColor.g(),
                 command.clearColor.b(),
                 command.clearColor.a()
-            } 
+            }
         };
 
         const VkImageSubresourceRange range{
@@ -296,11 +296,11 @@ namespace litl::vulkan
         }
 
         vkCmdClearColorImage(
-            commandBuffer->vkCommandBuffer, 
+            commandBuffer->vkCommandBuffer,
             targetImage,
             toVkImageLayout(command.destLayout),
-            &clearColor, 
-            1, 
+            &clearColor,
+            1,
             &range);
     }
 
@@ -367,6 +367,7 @@ namespace litl::vulkan
         }
 
         commandBuffer->boundGraphicsPipeline = graphicsPipelineHandle;
+        commandBuffer->boundComputePipeline = {};
     }
 
     RendererResult cmdPushConstants(litl::RendererContext* context, CommandBufferHandle handle, ShaderStage shaderStage, std::span<std::byte const> data) noexcept
@@ -387,11 +388,11 @@ namespace litl::vulkan
         }
 
         vkCmdPushConstants(
-            commandBuffer->vkCommandBuffer, 
+            commandBuffer->vkCommandBuffer,
             graphicsPipelineResource->vkPipelineLayout,
-            toVkShaderStageFlags(shaderStage), 
-            0, 
-            static_cast<uint32_t>(data.size()), 
+            toVkShaderStageFlags(shaderStage),
+            0,
+            static_cast<uint32_t>(data.size()),
             data.data());
 
         return RendererResult::Success;
@@ -472,6 +473,104 @@ namespace litl::vulkan
         }
 
         vkCmdBindIndexBuffer(commandBuffer->vkCommandBuffer, bufferResource->vkBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+        return RendererResult::Success;
+    }
+
+    RendererResult cmdBindGraphicsBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+        auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
+
+        if (!isValid(commandBuffer))
+        {
+            return RendererResult::InvalidCommandBufferHandle;
+        }
+
+        auto* bufferResource = vulkanContext->resources.getBuffer(bufferHandle);
+
+        if ((bufferResource == nullptr) || (bufferResource->vkBuffer == nullptr))
+        {
+            return RendererResult::InvalidBufferHandle;
+        }
+
+        const VkDescriptorBufferInfo bufferInfo{
+            .buffer = bufferResource->vkBuffer,
+            .offset = 0,
+            .range = VK_WHOLE_SIZE
+        };
+
+        const VkWriteDescriptorSet write{
+            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .dstBinding = 0,
+            .descriptorCount = 1,
+            .descriptorType = toVkDescriptorType(resourceType),
+            .pBufferInfo = &bufferInfo
+        };
+
+        auto* graphicsPipeline = vulkanContext->resources.getGraphicsPipeline(commandBuffer->boundGraphicsPipeline);
+
+        if (graphicsPipeline == nullptr)
+        {
+            return RendererResult::NoBoundGraphicsPipeline;
+        }
+
+        vkCmdPushDescriptorSet(
+            commandBuffer->vkCommandBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            graphicsPipeline->vkPipelineLayout,
+            bindingSlot,
+            1,
+            &write);
+
+        return RendererResult::Success;
+    }
+
+    RendererResult cmdBindGraphicsBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+        auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
+
+        if (!isValid(commandBuffer))
+        {
+            return RendererResult::InvalidCommandBufferHandle;
+        }
+
+        auto* bufferResource = vulkanContext->resources.getBuffer(bufferHandle);
+
+        if ((bufferResource == nullptr) || (bufferResource->vkBuffer == nullptr))
+        {
+            return RendererResult::InvalidBufferHandle;
+        }
+
+        const VkDescriptorBufferInfo bufferInfo{
+            .buffer = bufferResource->vkBuffer,
+            .offset = 0,
+            .range = VK_WHOLE_SIZE
+        };
+
+        const VkWriteDescriptorSet write{
+            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .dstBinding = 0,
+            .descriptorCount = 1,
+            .descriptorType = toVkDescriptorType(resourceType),
+            .pBufferInfo = &bufferInfo
+        };
+
+        auto* computePipeline = vulkanContext->resources.getComputePipeline(commandBuffer->boundComputePipeline);
+
+        if (computePipeline == nullptr)
+        {
+            return RendererResult::NoBoundComputePipeline;
+        }
+
+        vkCmdPushDescriptorSet(
+            commandBuffer->vkCommandBuffer,
+            VK_PIPELINE_BIND_POINT_COMPUTE,
+            computePipeline->vkPipelineLayout,
+            bindingSlot,
+            1,
+            &write);
 
         return RendererResult::Success;
     }
