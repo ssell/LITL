@@ -275,7 +275,7 @@ bool createTriangleGraphicsPipeline(SampleRenderState& sample) noexcept
 
     if (!sample.graphicsPipeline.isValid())
     {
-        std::cout << "Failed to created GraphicsPipelineHandle" << std::endl;
+        std::cout << "Failed to create GraphicsPipelineHandle" << std::endl;
         return false;
     }
 

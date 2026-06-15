@@ -18,6 +18,11 @@ namespace litl::vulkan
         /// The Vulkan pipeline handle.
         /// </summary>
         VkPipeline vkPipeline = VK_NULL_HANDLE;
+
+        /// <summary>
+        /// The pipeline interface that this compute pipeline was built against.
+        /// </summary>
+        VkPipelineLayout vkPipelineLayout = VK_NULL_HANDLE;
     };
 }
 

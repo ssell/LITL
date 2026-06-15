@@ -18,6 +18,11 @@ namespace litl::vulkan
         /// The currently bound graphics pipeline (if any).
         /// </summary>
         GraphicsPipelineHandle boundGraphicsPipeline{};
+
+        /// <summary>
+        /// The currently bound compute pipeline (if any).
+        /// </summary>
+        ComputePipelineHandle boundComputePipeline{};
     };
 }
 

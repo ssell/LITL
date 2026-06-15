@@ -60,6 +60,8 @@ namespace litl
         RendererResult (*cmdBindVertexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, uint64_t);
         RendererResult (*cmdBindVertexBuffers)(RendererContext*, CommandBufferHandle, BufferHandle*, uint64_t*, uint32_t);
         RendererResult (*cmdBindIndexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle);
+        RendererResult (*cmdBindGraphicsBuffer)(RendererContext*, CommandBufferHandle, BufferHandle);
+        RendererResult (*cmdBindComputeBuffer)(RendererContext*, CommandBufferHandle, BufferHandle);
         RendererResult (*cmdBufferUpload)(RendererContext* context, CommandBufferHandle, std::span<std::byte const>, BufferHandle, uint64_t, uint64_t);
         RendererResult (*cmdBufferFlush)(RendererContext* context, CommandBufferHandle);
         RendererResult (*mapBuffer)(RendererContext*, BufferHandle, MappedBuffer&);
@@ -349,6 +351,24 @@ namespace litl
         RendererResult cmdBindIndexBuffer(CommandBufferHandle commandBuffer, BufferHandle buffer) const noexcept
         {
             return m_pOps->cmdBindIndexBuffer(m_pContext, commandBuffer, buffer);
+        }
+
+        /// <summary>
+        /// Binds a generic buffer to the specified slot.
+        /// There must be an active graphics pipeline already bound prior to calling this command.
+        /// </summary>
+        RendererResult cmdBindGraphicsBuffer(CommandBufferHandle handle, BufferHandle buffer) const noexcept
+        {
+            return m_pOps->cmdBindGraphicsBuffer(m_pContext, handle, buffer);
+        }
+
+        /// <summary>
+        /// Binds a generic buffer to the specified slot.
+        /// There must be an active compute pipeline already bound prior to calling this command.
+        /// </summary>
+        RendererResult cmdBindComputeBuffer(CommandBufferHandle handle, BufferHandle buffer) const noexcept
+        {
+            return m_pOps->cmdBindComputeBuffer(m_pContext, handle, buffer);
         }
 
         /// <summary>
