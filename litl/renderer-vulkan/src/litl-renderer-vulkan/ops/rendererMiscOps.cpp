@@ -25,9 +25,4 @@ namespace litl::vulkan
 
         return physicalProperties.limits.maxPushConstantsSize;
     }
-
-    PipelineResourceKey getPipelineResourceKey(litl::RendererContext* context, std::string_view name) noexcept
-    {
-        return fastHashString(name);
-    }
 }

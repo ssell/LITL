@@ -342,6 +342,30 @@ namespace litl::vulkan
     }
 
     /// <summary>
+    /// From the merge pipeline layout descriptors, populates the PipelineResourceMap which is used during buffer/resource binding
+    /// to map a resource name (in the form of a StringId) to the bound resource set, binding, and type.
+    /// </summary>
+    /// <param name="resource"></param>
+    /// <param name="pipelineLayout"></param>
+    void populatePipelineResourceMap(GraphicsPipelineResource& resource, PipelineLayoutDescriptor const& pipelineLayout) noexcept
+    {
+        for (uint32_t set = 0u; set < static_cast<uint32_t>(pipelineLayout.setLayouts.size()); ++set)
+        {
+            for (uint32_t binding = 0u; binding < static_cast<uint32_t>(pipelineLayout.setLayouts[set].bindings.size()); ++binding)
+            {
+                auto& boundResource = pipelineLayout.setLayouts[set].bindings[binding];
+
+                resource.resourceMap.resources.push_back(PipelineResourceBinding{
+                    .id = boundResource.id,
+                    .type = boundResource.type,
+                    .set = set,
+                    .binding = binding
+                });
+            }
+        }
+    }
+
+    /// <summary>
     /// Creates the resource.
     /// This is split out because two paths need to be able to create a graphics pipeline resource: createGraphicsPipeline and onShaderModuleReload.
     /// </summary>
@@ -530,13 +554,7 @@ namespace litl::vulkan
             return {};
         }
 
-        // TODO LEAVING OFF HERE
-        // Need to build up the resource.resourceMap after resource merger above.
-        // That takes in ResourceBinding and saves DescriptorSetLayoutBindingDesc.
-        // The main difference is that ResourceBinding has name, key, and set.
-        // DescriptorSetLayoutBindingDesc does not have set, but it can be inferred by the PipelineLayoutDescriptor::setLayouts index.
-        // So that means we lose name/key in the merge process. To get around that we first need to take key off of
-        // the ResourceBinding (it was just added so wont break anything), and find a way to preserve the name.
+        populatePipelineResourceMap(resource, pipelineLayoutDescriptor);
 
         // ---- Rendering Info
 

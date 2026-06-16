@@ -53,6 +53,11 @@ namespace litl::vulkan
     struct DescriptorSetLayoutBindingDesc
     {
         /// <summary>
+        /// Hash of the string name.
+        /// </summary>
+        StringId id;
+
+        /// <summary>
         /// Vulkan binding, D3D12 register.
         /// </summary>
         uint32_t binding;
@@ -75,7 +80,7 @@ namespace litl::vulkan
         bool operator==(DescriptorSetLayoutBindingDesc const&) const = default;
     };
 
-    static_assert(sizeof(DescriptorSetLayoutBindingDesc) == 4 * sizeof(uint32_t), "Layout has padding; bytewise hash is unsafe");
+    static_assert(sizeof(DescriptorSetLayoutBindingDesc) == 6 * sizeof(uint32_t), "Layout has padding; bytewise hash is unsafe");
 
     /// <summary>
     /// An array of zero or more descriptor set resource bindings.

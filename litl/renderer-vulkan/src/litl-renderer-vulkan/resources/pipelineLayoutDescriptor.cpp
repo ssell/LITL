@@ -1,9 +1,7 @@
 #include <algorithm>
 #include <optional>
-#include <ranges>
 #include <span>
 
-#include "litl-core/constants.hpp"
 #include "litl-renderer-vulkan/resources/shaderModule.hpp"
 #include "litl-renderer-vulkan/resources/pipelineLayoutDescriptor.hpp"
 
@@ -49,6 +47,7 @@ namespace litl::vulkan
         {
             // New resource
             resources.push_back(MergedResourceBinding{
+                .id = StringId(resource.name),
                 .type = resource.type,
                 .set = resource.set,
                 .binding = resource.binding,
@@ -168,6 +167,7 @@ namespace litl::vulkan
         {
             descriptor.setLayouts[mergedResource.set].bindings.push_back(
                 DescriptorSetLayoutBindingDesc{
+                    .id = mergedResource.id,
                     .binding = mergedResource.binding,
                     .type = mergedResource.type,
                     .arraySize = mergedResource.arraySize,

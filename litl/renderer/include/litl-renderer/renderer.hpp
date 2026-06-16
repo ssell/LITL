@@ -87,129 +87,126 @@ namespace litl
     {
     public:
 
-        /// <summary>
-        /// Provided only for initial service injection.
-        /// </summary>
-        Renderer() = default;
+        Renderer() = default;       // Provided only for initial service injection.
+        Renderer(RendererOps const* ops, RendererContext* context);
 
         Renderer(Renderer const&) = delete;
         Renderer& operator=(Renderer const&) = delete;
-
-        Renderer(RendererOps const* ops, RendererContext* context)
-            : m_pOps(ops), m_pContext(context)
-        {
-
-        }
 
         // ---------------------------------------------------------------------------------
         // Renderer Life-Cycle
         // ---------------------------------------------------------------------------------
 
-        bool build()
-        {
-            LITL_FATAL_ASSERT_MSG(valid(), "Renderer::build called with invalid internal state");
-            auto result = m_pOps->build(m_pContext);
-
-            if (result)
-            {
-                m_maxPushConstantSize = m_pOps->getMaxPushConstantSize(m_pContext);
-            }
-
-            return result;
-        }
-
-        void destroy()
-        {
-            LITL_FATAL_ASSERT_MSG(valid(), "Renderer::destroy called with invalid internal state");
-
-            m_pOps->destroy(m_pContext);
-            m_pContext = nullptr;
-            m_pOps = nullptr;
-        }
+        bool build();
+        void destroy();
 
         // ---------------------------------------------------------------------------------
         // Resource Life-Cycle
         // ---------------------------------------------------------------------------------
 
-        [[nodiscard]] BufferHandle createBuffer(BufferDescriptor const& descriptor) const noexcept
-        {
-            return m_pOps->createBuffer(m_pContext, descriptor);
-        }
-
-        void destroyBuffer(BufferHandle handle) const noexcept
-        {
-            m_pOps->destroyBuffer(m_pContext, handle);
-        }
-
-        [[nodiscard]] CommandBufferHandle createCommandBuffer(CommandBufferDescriptor const& descriptor) const noexcept
-        {
-            return m_pOps->createCommandBuffer(m_pContext, descriptor);
-        }
-
-        void destroyCommandBuffer(CommandBufferHandle handle) const noexcept
-        {
-            m_pOps->destroyCommandBuffer(m_pContext, handle);
-        }
-
-        [[nodiscard]] ComputePipelineHandle createComputePipeline(ComputePipelineDescriptor const& descriptor) const noexcept
-        {
-            return m_pOps->createComputePipeline(m_pContext, descriptor);
-        }
-
-        void destroyComputePipeline(ComputePipelineHandle handle) const noexcept
-        {
-            m_pOps->destroyComputePipeline(m_pContext, handle);
-        }
-
-        [[nodiscard]] GraphicsPipelineHandle createGraphicsPipeline(GraphicsPipelineDescriptor const& descriptor) const noexcept
-        {
-            return m_pOps->createGraphicsPipeline(m_pContext, descriptor);
-        }
-
-        void destroyGraphicsPipeline(GraphicsPipelineHandle handle) const noexcept
-        {
-            m_pOps->destroyGraphicsPipeline(m_pContext, handle);
-        }
-
-        [[nodiscard]] SamplerHandle createSampler(SamplerDescriptor const& descriptor) const noexcept
-        {
-            return m_pOps->createSampler(m_pContext, descriptor);
-        }
-
-        void destroySampler(SamplerHandle handle) const noexcept
-        {
-            m_pOps->destroySampler(m_pContext, handle);
-        }
-
-        [[nodiscard]] ShaderModuleHandle createShaderModule(ShaderModuleDescriptor const& descriptor) const noexcept
-        {
-            return m_pOps->createShaderModule(m_pContext, descriptor);
-        }
-
-        [[nodiscard]] ShaderModuleHandle getShaderModule(std::string const& resource) const noexcept
-        {
-            return m_pOps->getShaderModule(m_pContext, resource);
-        }
-
-        void reloadShaderModule(ShaderModuleDescriptor const& descriptor) const noexcept
-        {
-            m_pOps->reloadShaderModule(m_pContext, descriptor);
-        }
-
-        void destroyShaderModule(ShaderModuleHandle handle) const noexcept
-        {
-            m_pOps->destroyShaderModule(m_pContext, handle);
-        }
-
-        [[nodiscard]] TextureHandle createTexture(TextureDescriptor const& descriptor) const noexcept
-        {
-            return m_pOps->createTexture(m_pContext, descriptor);
-        }
-
-        void destroyTexture(TextureHandle handle) const noexcept
-        {
-            m_pOps->destroyTexture(m_pContext, handle);
-        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="descriptor"></param>
+        /// <returns></returns>
+        [[nodiscard]] BufferHandle createBuffer(BufferDescriptor const& descriptor) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="handle"></param>
+        void destroyBuffer(BufferHandle handle) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="descriptor"></param>
+        /// <returns></returns>
+        [[nodiscard]] CommandBufferHandle createCommandBuffer(CommandBufferDescriptor const& descriptor) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="handle"></param>
+        void destroyCommandBuffer(CommandBufferHandle handle) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="descriptor"></param>
+        /// <returns></returns>
+        [[nodiscard]] ComputePipelineHandle createComputePipeline(ComputePipelineDescriptor const& descriptor) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="handle"></param>
+        void destroyComputePipeline(ComputePipelineHandle handle) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="descriptor"></param>
+        /// <returns></returns>
+        [[nodiscard]] GraphicsPipelineHandle createGraphicsPipeline(GraphicsPipelineDescriptor const& descriptor) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="handle"></param>
+        void destroyGraphicsPipeline(GraphicsPipelineHandle handle) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="descriptor"></param>
+        /// <returns></returns>
+        [[nodiscard]] SamplerHandle createSampler(SamplerDescriptor const& descriptor) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="handle"></param>
+        void destroySampler(SamplerHandle handle) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="descriptor"></param>
+        /// <returns></returns>
+        [[nodiscard]] ShaderModuleHandle createShaderModule(ShaderModuleDescriptor const& descriptor) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="resource"></param>
+        /// <returns></returns>
+        [[nodiscard]] ShaderModuleHandle getShaderModule(std::string const& resource) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="descriptor"></param>
+        void reloadShaderModule(ShaderModuleDescriptor const& descriptor) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="handle"></param>
+        void destroyShaderModule(ShaderModuleHandle handle) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="descriptor"></param>
+        /// <returns></returns>
+        [[nodiscard]] TextureHandle createTexture(TextureDescriptor const& descriptor) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="handle"></param>
+        void destroyTexture(TextureHandle handle) const noexcept;
 
         // ---------------------------------------------------------------------------------
         // Commands
@@ -219,50 +216,35 @@ namespace litl
         /// Retrieves the command buffer for the current frame and instructs it to start recording commands.
         /// </summary>
         /// <returns></returns>
-        CommandBufferHandle cmdBeginFrame() const noexcept
-        {
-            return m_pOps->cmdBeginFrame(m_pContext);
-        }
-
+        CommandBufferHandle cmdBeginFrame() const noexcept;
+        
         /// <summary>
         /// Instructs the provided command buffer to start recording commands.
         /// </summary>
         /// <param name="handle"></param>
         /// <returns></returns>
-        bool cmdBegin(CommandBufferHandle handle) const noexcept
-        {
-            return m_pOps->cmdBegin(m_pContext, handle);
-        }
-
+        bool cmdBegin(CommandBufferHandle handle) const noexcept;
+        
         /// <summary>
         /// Instructs the provided command buffer to stop recording commands.
         /// </summary>
         /// <param name="handle"></param>
         /// <returns></returns>
-        bool cmdEnd(CommandBufferHandle handle) const noexcept
-        {
-            return m_pOps->cmdEnd(m_pContext, handle);
-        }
-
+        bool cmdEnd(CommandBufferHandle handle) const noexcept;
+        
         /// <summary>
         /// Issues a command to begin a dynamic render pass.
         /// </summary>
         /// <param name="handle"></param>
         /// <param name="command"></param>
-        void cmdBeginRender(CommandBufferHandle handle, BeginRenderCommand const& command) const noexcept
-        {
-            m_pOps->cmdBeginRender(m_pContext, handle, command);
-        }
-
+        void cmdBeginRender(CommandBufferHandle handle, BeginRenderCommand const& command) const noexcept;
+        
         /// <summary>
         /// Issues a command to end a dynamic render pass.
         /// </summary>
         /// <param name="handle"></param>
-        void cmdEndRender(CommandBufferHandle handle) const noexcept
-        {
-            m_pOps->cmdEndRender(m_pContext, handle);
-        }
-
+        void cmdEndRender(CommandBufferHandle handle) const noexcept;
+        
         /// <summary>
         /// Issues a command that inserts both an execution dependency and a memory dependency.
         /// Effectively tells the driver that:
@@ -271,41 +253,29 @@ namespace litl
         /// </summary>
         /// <param name="handle"></param>
         /// <param name="command"></param>
-        void cmdPipelineBarrier(CommandBufferHandle handle, PipelineBarrierCommand const& command) const noexcept
-        {
-            m_pOps->cmdPipelineBarrier(m_pContext, handle, command);
-        }
-
+        void cmdPipelineBarrier(CommandBufferHandle handle, PipelineBarrierCommand const& command) const noexcept;
+        
         /// <summary>
         /// Issues a command to clear the specified image/texture.
         /// </summary>
         /// <param name="handle"></param>
         /// <param name="command"></param>
-        void cmdClearImage(CommandBufferHandle handle, ClearImageCommand const& command) const noexcept
-        {
-            m_pOps->cmdClearImage(m_pContext, handle, command);
-        }
-
+        void cmdClearImage(CommandBufferHandle handle, ClearImageCommand const& command) const noexcept;
+        
         /// <summary>
         /// Dynamically sets the viewport and scissor regions being rendered into.
         /// </summary>
         /// <param name="handle"></param>
         /// <param name="command"></param>
-        void cmdSetViewportAndScissor(CommandBufferHandle handle, SetViewportAndScissorCommand const& command) const noexcept
-        {
-            m_pOps->cmdSetViewportAndScissor(m_pContext, handle, command);
-        }
-
+        void cmdSetViewportAndScissor(CommandBufferHandle handle, SetViewportAndScissorCommand const& command) const noexcept;
+        
         /// <summary>
         /// Binds the specified graphics pipeline.
         /// </summary>
         /// <param name="handle"></param>
         /// <param name="graphicsPipelineHandle"></param>
-        void cmdBindGraphicsPipeline(CommandBufferHandle handle, GraphicsPipelineHandle graphicsPipelineHandle) const noexcept
-        {
-            m_pOps->cmdBindGraphicsPipeline(m_pContext, handle, graphicsPipelineHandle);
-        }
-
+        void cmdBindGraphicsPipeline(CommandBufferHandle handle, GraphicsPipelineHandle graphicsPipelineHandle) const noexcept;
+        
         /// <summary>
         /// Submits the push constant data to the specified shader stage(s).
         /// Push constants are a small buffer of data typically limited to 128 or 256 bytes.
@@ -315,18 +285,8 @@ namespace litl
         /// <param name="handle"></param>
         /// <param name="shaderStage"></param>
         /// <param name="data"></param>
-        RendererResult cmdPushConstants(CommandBufferHandle handle, ShaderStage shaderStage, std::span<std::byte const> data) const noexcept
-        {
-            if (data.size() <= m_maxPushConstantSize)
-            {
-                return m_pOps->cmdPushConstants(m_pContext, handle, shaderStage, data);
-            }
-            else
-            {
-                return RendererResult::InvalidPushConstantSize;
-            }
-        }
-
+        RendererResult cmdPushConstants(CommandBufferHandle handle, ShaderStage shaderStage, std::span<std::byte const> data) const noexcept;
+        
         /// <summary>
         /// Issues a command to draw primitives.
         /// </summary>
@@ -335,88 +295,102 @@ namespace litl
         /// <param name="instanceCount"></param>
         /// <param name="firstVertex"></param>
         /// <param name="firstInstance"></param>
-        void cmdDraw(CommandBufferHandle commandBuffer, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) const noexcept
-        {
-            m_pOps->cmdDraw(m_pContext, commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
-        }
-
-        RendererResult cmdBindVertexBuffer(CommandBufferHandle commandBuffer, BufferHandle buffer, uint64_t offset = 0) const noexcept
-        {
-            return m_pOps->cmdBindVertexBuffer(m_pContext, commandBuffer, buffer, offset);
-        }
-
-        RendererResult cmdBindVertexBuffers(CommandBufferHandle commandBuffer, BufferHandle* buffers, uint64_t* offsets, uint32_t count) const noexcept
-        {
-            return m_pOps->cmdBindVertexBuffers(m_pContext, commandBuffer, buffers, offsets, count);
-        }
-
-        RendererResult cmdBindIndexBuffer(CommandBufferHandle commandBuffer, BufferHandle buffer) const noexcept
-        {
-            return m_pOps->cmdBindIndexBuffer(m_pContext, commandBuffer, buffer);
-        }
-
+        void cmdDraw(CommandBufferHandle commandBuffer, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="commandBuffer"></param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        RendererResult cmdBindVertexBuffer(CommandBufferHandle commandBuffer, BufferHandle buffer, uint64_t offset = 0) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="commandBuffer"></param>
+        /// <param name="buffers"></param>
+        /// <param name="offsets"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        RendererResult cmdBindVertexBuffers(CommandBufferHandle commandBuffer, BufferHandle* buffers, uint64_t* offsets, uint32_t count) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="commandBuffer"></param>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
+        RendererResult cmdBindIndexBuffer(CommandBufferHandle commandBuffer, BufferHandle buffer) const noexcept;
+        
         /// <summary>
         /// Binds a generic buffer to the specified slot.
         /// There must be an active graphics pipeline already bound prior to calling this command.
         /// </summary>
-        RendererResult cmdBindGraphicsBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key, uint64_t offset, uint64_t range) const noexcept
-        {
-            return m_pOps->cmdBindGraphicsBuffer(m_pContext, handle, buffer, key, offset, range);
-        }
-
-        RendererResult cmdBindGraphicsBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key) const noexcept
-        {
-            // Note: ~0ull == VK_WHOLE_SIZE == 0xFFFF...FFFF
-            return cmdBindGraphicsBuffer(handle, buffer, key, 0ull, ~0ull);
-        }
-
+        RendererResult cmdBindGraphicsBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key, uint64_t offset, uint64_t range) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <param name="buffer"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        RendererResult cmdBindGraphicsBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key) const noexcept;
+        
         /// <summary>
         /// Binds a generic buffer to the specified slot.
         /// There must be an active compute pipeline already bound prior to calling this command.
         /// </summary>
-        RendererResult cmdBindComputeBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key, uint64_t offset, uint64_t range) const noexcept
-        {
-            return m_pOps->cmdBindComputeBuffer(m_pContext, handle, buffer, key, offset, range);
-        }
-
-        RendererResult cmdBindComputeBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key) const noexcept
-        {
-            // Note: ~0ull == VK_WHOLE_SIZE == 0xFFFF...FFFF
-            return cmdBindComputeBuffer(handle, buffer, key, 0ull, ~0ull);
-        }
-
+        RendererResult cmdBindComputeBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key, uint64_t offset, uint64_t range) const noexcept;
+        
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="handle"></param>
+        /// <param name="buffer"></param>
+        /// <param name="key"></param>
         /// <returns></returns>
-        ScopedBufferUpload cmdBeginBufferUpload(CommandBufferHandle commandBuffer) const noexcept
-        {
-            return ScopedBufferUpload(this, commandBuffer);
-        }
-
-        RendererResult cmdBufferUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, BufferHandle destBufferHandle, uint64_t sourceOffset = 0ull, uint64_t destOffset = 0ull) const noexcept
-        {
-            return m_pOps->cmdBufferUpload(m_pContext, commandBuffer, source, destBufferHandle, sourceOffset, destOffset);
-        }
-
-        RendererResult cmdBufferFlush(CommandBufferHandle commandBuffer) const noexcept
-        {
-            return m_pOps->cmdBufferFlush(m_pContext, commandBuffer);
-        }
-
-        MappedBuffer mapBuffer(BufferHandle buffer) const noexcept
-        {
-            MappedBuffer mapped{};
-
-            m_pOps->mapBuffer(m_pContext, buffer, mapped);
-
-            return mapped;
-        }
-
-        void unmapBuffer(BufferHandle buffer) const noexcept
-        {
-            m_pOps->unmapBuffer(m_pContext, buffer);
-        }
+        RendererResult cmdBindComputeBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="commandBuffer"></param>
+        /// <returns></returns>
+        ScopedBufferUpload cmdBeginBufferUpload(CommandBufferHandle commandBuffer) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="commandBuffer"></param>
+        /// <param name="source"></param>
+        /// <param name="destBufferHandle"></param>
+        /// <param name="sourceOffset"></param>
+        /// <param name="destOffset"></param>
+        /// <returns></returns>
+        RendererResult cmdBufferUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, BufferHandle destBufferHandle, uint64_t sourceOffset = 0ull, uint64_t destOffset = 0ull) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="commandBuffer"></param>
+        /// <returns></returns>
+        RendererResult cmdBufferFlush(CommandBufferHandle commandBuffer) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
+        MappedBuffer mapBuffer(BufferHandle buffer) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="buffer"></param>
+        void unmapBuffer(BufferHandle buffer) const noexcept;
 
         // ---------------------------------------------------------------------------------
         // Drawing
@@ -426,59 +400,44 @@ namespace litl
         /// Checks if the previous frame is done rendering and if we can begin rendering the next frame.
         /// </summary>
         /// <returns></returns>
-        bool beginRender() const noexcept
-        {
-            return m_pOps->beginRender(m_pContext);
-        }
+        [[nodiscard]] bool beginRender() const noexcept;
 
         /// <summary>
         /// Submits the provided command buffer commands.
         /// </summary>
         /// <param name="commands"></param>
-        void submitCommands(CommandBufferHandle commands) const noexcept
-        {
-            submitCommands({&commands, 1});
-        }
+        void submitCommands(CommandBufferHandle commands) const noexcept;
 
         /// <summary>
         /// Submits all commands from the provided command buffers.
         /// </summary>
         /// <param name="commands"></param>
-        void submitCommands(std::span<CommandBufferHandle const> commands) const noexcept
-        {
-            m_pOps->submitCommands(m_pContext, commands);
-        }
+        void submitCommands(std::span<CommandBufferHandle const> commands) const noexcept;
 
         /// <summary>
         /// Swaps and presents the rendered image. This effectively ends the current frame (as far as the renderer is concerned).
         /// </summary>
-        void endRender() const noexcept
-        {
-            m_pOps->endRender(m_pContext);
-        }
+        void endRender() const noexcept;
 
         // ---------------------------------------------------------------------------------
         // Misc
         // ---------------------------------------------------------------------------------
 
-        [[nodiscard]] DataFormat getSwapchainImageFormat() const noexcept
-        {
-            return m_pOps->getSwapchainImageFormat(m_pContext);
-        }
-
-        [[nodiscard]] FrameData getFrameData() const noexcept
-        {
-            return m_pOps->getFrameData(m_pContext);
-        }
-
-        [[nodiscard]] PipelineResourceKey getPipelineResourceKey(std::string_view name) const noexcept;
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] DataFormat getSwapchainImageFormat() const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] FrameData getFrameData() const noexcept;
 
     private:
 
-        [[nodiscard]] bool valid() const noexcept
-        {
-            return (m_pContext != nullptr) && (m_pOps != nullptr);
-        }
+        [[nodiscard]] bool valid() const noexcept;
 
         RendererOps const* m_pOps;
         RendererContext* m_pContext;

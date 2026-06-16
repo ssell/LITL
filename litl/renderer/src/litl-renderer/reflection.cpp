@@ -162,13 +162,12 @@ namespace litl
             auto binding = *resourceBindings[i];
 
             litlReflection.resources.push_back(ResourceBinding{
-                    .name = binding.name,
-                    .key = PipelineResourceMap::getKey(binding.name),
                     .type = fromSpvReflectResourceType(binding.descriptor_type),
                     .set = binding.set,
                     .binding = binding.binding,
                     .arraySize = binding.count,
-                    .sizeBytes = binding.block.size
+                    .sizeBytes = binding.block.size,
+                    .name = binding.name
                 });
         }
 
@@ -242,8 +241,8 @@ namespace litl
             auto inputVariable = *inputVariables[i];
 
             litlReflection.vertexInputs.push_back(ShaderInputOutputVariable{
-                    .name = (inputVariable.name != nullptr ? inputVariable.name : ""),
-                    .location = inputVariable.location
+                    .location = inputVariable.location,
+                    .name = (inputVariable.name != nullptr ? inputVariable.name : "")
                 });
 
             reflectIntoInputOutputVariable(&litlReflection.vertexInputs[i], &inputVariable);
@@ -284,8 +283,8 @@ namespace litl
             auto outputVariable = *outputVariables[i];
 
             litlReflection.fragmentOutputs.push_back(ShaderInputOutputVariable{
-                    .name = (outputVariable.name != nullptr ? outputVariable.name : ""),
-                    .location = outputVariable.location
+                    .location = outputVariable.location,
+                    .name = (outputVariable.name != nullptr ? outputVariable.name : "")
                 });
 
             reflectIntoInputOutputVariable(&litlReflection.fragmentOutputs[i], &outputVariable);
@@ -321,9 +320,9 @@ namespace litl
             auto constant = *constants[i];
 
             litlReflection.specializationConstants.push_back(SpecializationConstant{
-                    .name = (constant.name != nullptr ? constant.name : ""),
                     .id = constant.constant_id,
-                    .scalarType = fromSpvReflectTypeFlagBits(constant.type_description->type_flags)
+                    .scalarType = fromSpvReflectTypeFlagBits(constant.type_description->type_flags),
+                    .name = (constant.name != nullptr ? constant.name : "")
                 });
         }
 
