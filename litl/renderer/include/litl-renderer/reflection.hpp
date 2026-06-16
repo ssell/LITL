@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "litl-core/stringId.hpp"
 #include "litl-renderer/resources/shaderModule.hpp"
 
 namespace litl
@@ -17,11 +18,6 @@ namespace litl
     /// </summary>
     struct ResourceBinding
     {
-        /// <summary>
-        /// "Camera", "AlbedoTexture", etc.
-        /// </summary>
-        std::string name;
-
         /// <summary>
         /// Buffer, image, sampler, etc.
         /// </summary>
@@ -46,6 +42,11 @@ namespace litl
         /// For buffer validation only.
         /// </summary>
         uint32_t sizeBytes;
+
+        /// <summary>
+        /// "Camera", "AlbedoTexture", etc.
+        /// </summary>
+        std::string name;
     };
 
     /// <summary>
@@ -63,11 +64,6 @@ namespace litl
     struct ShaderInputOutputVariable
     {
         /// <summary>
-        /// Optional semantic name.
-        /// </summary>
-        std::string name;
-
-        /// <summary>
         /// Maps to `layout(location)`
         /// </summary>
         uint32_t location;
@@ -81,6 +77,11 @@ namespace litl
         /// Number of scalars in the attribute. For example float vs vec2 vs vec3 vs vec4.
         /// </summary>
         uint32_t componentCount;
+
+        /// <summary>
+        /// Optional semantic name.
+        /// </summary>
+        std::string name;
     };
 
     /// <summary>
@@ -88,9 +89,9 @@ namespace litl
     /// </summary>
     struct SpecializationConstant
     {
-        std::string name;
         uint32_t id;
         ShaderScalarType scalarType;
+        std::string name;
     };
 
     /// <summary>
@@ -207,6 +208,11 @@ namespace litl
 
     struct MergedResourceBinding
     {
+        /// <summary>
+        /// Hash of the name.
+        /// </summary>
+        StringId id;
+
         /// <summary>
         /// Buffer, image, sampler, etc.
         /// </summary>

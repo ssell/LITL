@@ -74,7 +74,6 @@ namespace litl::vulkan
     [[nodiscard]] DataFormat getSwapchainImageFormat(litl::RendererContext* context) noexcept;
     [[nodiscard]] FrameData getFrameData(litl::RendererContext* context) noexcept;
     [[nodiscard]] uint32_t getMaxPushConstantSize(litl::RendererContext* context) noexcept;
-    [[nodiscard]] PipelineResourceKey getPipelineResourceKey(litl::RendererContext* context, std::string_view name) noexcept;
 
     // ---------------------------------------------------------------------------------
     // TEMPORARY FOR TESTING PURPOSES (rendererTesting.cpp)

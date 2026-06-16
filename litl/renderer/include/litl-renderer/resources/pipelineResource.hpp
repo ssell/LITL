@@ -14,14 +14,9 @@ namespace litl
     struct PipelineResourceBinding
     {
         /// <summary>
-        /// Hash of the string.
+        /// Hash of the string name.
         /// </summary>
         StringId id;
-
-        /// <summary>
-        /// "Camera", "AlbedoTexture", etc.
-        /// </summary>
-        std::string name;
 
         /// <summary>
         /// Buffer, image, sampler, etc.
