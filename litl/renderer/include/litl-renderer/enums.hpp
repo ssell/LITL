@@ -348,6 +348,13 @@ namespace litl
         ReadBack = 2,           // A buffer that is written to by the GPU and read back on the CPU
         PersistentMap = 3,      // A buffer that is both frequently written on the CPU and read on the GPU
     };
+
+    enum class IndexType : uint32_t
+    {
+        Uint32 = 0,
+        Uint16 = 1,
+        Uint8 = 2
+    };
 }
 
 #endif

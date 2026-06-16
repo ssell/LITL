@@ -41,18 +41,36 @@ namespace litl::vulkan
             return m_hasPresentIndex;
         }
 
+        void setTransferIndex(uint32_t index) noexcept
+        {
+            m_transferIndex = index;
+            m_hasTransferIndex = true;
+        }
+
+        [[nodiscard]] uint32_t getTransferIndex() const noexcept
+        {
+            return m_transferIndex;
+        }
+
+        [[nodiscard]] bool hasTransferIndex() const noexcept
+        {
+            return m_hasTransferIndex;
+        }
+
         [[nodiscard]] bool hasAll() noexcept
         {
-            return m_hasGraphicsIndex && m_hasPresentIndex;
+            return m_hasGraphicsIndex && m_hasPresentIndex && m_hasTransferIndex;
         }
 
     private:
 
-        uint32_t m_graphicsIndex;
-        uint32_t m_presentIndex;
+        uint32_t m_graphicsIndex = 0u;
+        uint32_t m_presentIndex = 0u;
+        uint32_t m_transferIndex = 0u;
 
-        bool m_hasGraphicsIndex;
-        bool m_hasPresentIndex;
+        bool m_hasGraphicsIndex = false;
+        bool m_hasPresentIndex = false;
+        bool m_hasTransferIndex = false;
     };
 }
 

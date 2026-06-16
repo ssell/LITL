@@ -27,6 +27,7 @@ namespace litl
 
         vulkan::RendererContext* vulkanContext = new(std::nothrow) vulkan::RendererContext();
 
+        vulkanContext->config = rendererDescriptor;
         vulkanContext->window.window = pWindow;
         vulkanContext->renderInfo.frame.framesInFlight = rendererDescriptor.framesInFlight;
 
@@ -336,6 +337,11 @@ namespace litl::vulkan
                 }
             }
 
+            if (!indices.hasTransferIndex() && (queueFamilies[i].queueFlags & VK_QUEUE_TRANSFER_BIT))
+            {
+                indices.setTransferIndex(i);
+            }
+
             if (indices.hasAll())
             {
                 break;
@@ -470,6 +476,7 @@ namespace litl::vulkan
 
         vkGetDeviceQueue(context.device.vkDevice, queueFamilies.getGraphicsIndex(), 0, &context.device.vkGraphicsQueue);
         vkGetDeviceQueue(context.device.vkDevice, queueFamilies.getPresentIndex(), 0, &context.device.vkPresentQueue);
+        vkGetDeviceQueue(context.device.vkDevice, queueFamilies.getTransferIndex(), 0, &context.device.vkTransferQueue);
 
         if (context.device.vkGraphicsQueue == VK_NULL_HANDLE)
         {
@@ -620,17 +627,31 @@ namespace litl::vulkan
     {
         // https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/03_Drawing/01_Command_buffers.html
 
-        const VkCommandPoolCreateInfo commandPoolInfo{
+        const VkCommandPoolCreateInfo standardCommandPoolInfo{
             .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
             .flags = VkCommandPoolCreateFlagBits::VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,       // Allow command buffers to be rerecorded individually, without this flag they all have to be reset together
             .queueFamilyIndex = context.device.graphicsQueueIndex
         };
 
-        const VkResult result = vkCreateCommandPool(context.device.vkDevice, &commandPoolInfo, nullptr, &context.device.vkCommandPool);
+        VkResult result = vkCreateCommandPool(context.device.vkDevice, &standardCommandPoolInfo, nullptr, &context.device.vkCommandPool);
 
         if (result != VK_SUCCESS)
         {
             logError("Failed to create Vulkan Command Buffer Pool with result ", result);
+            return false;
+        }
+
+        const VkCommandPoolCreateInfo transientCommandPoolInfo{
+            .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+            .flags = VkCommandPoolCreateFlagBits::VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT | VkCommandPoolCreateFlagBits::VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
+            .queueFamilyIndex = context.device.graphicsQueueIndex
+        };
+
+        result = vkCreateCommandPool(context.device.vkDevice, &transientCommandPoolInfo, nullptr, &context.device.vkCommandPoolTransient);
+
+        if (result != VK_SUCCESS)
+        {
+            logError("Failed to create transient Vulkan Command Buffer Pool with result ", result);
             return false;
         }
 

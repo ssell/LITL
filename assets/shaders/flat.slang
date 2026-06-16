@@ -36,7 +36,6 @@ struct PerFrameData
 {
     float elapsedTime;
     float deltaTime;
-    uint frameCount;
 };
 
 struct PushConstants

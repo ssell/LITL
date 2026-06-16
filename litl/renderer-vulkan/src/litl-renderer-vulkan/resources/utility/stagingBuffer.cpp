@@ -17,8 +17,10 @@ namespace litl::vulkan
 
     void StagingBuffer::build(RendererContext& context) noexcept
     {
+        LITL_FATAL_ASSERT_MSG(context.config.stagingBufferFixedSize > 0, "Renderer staging buffer fixed buffer size set to 0.");
+        m_fixedBufferSize = context.config.stagingBufferFixedSize;
         m_pContext = &context;
-        m_pFixedBuffer = m_pContext->resources.getBuffer(createStagingBuffer(FixedBufferSize));
+        m_pFixedBuffer = m_pContext->resources.getBuffer(createStagingBuffer(m_fixedBufferSize));
         LITL_FATAL_ASSERT_MSG((m_pFixedBuffer != nullptr), "Failed to create fixed staging buffer for StagingBuffer");
     }
 
@@ -32,7 +34,7 @@ namespace litl::vulkan
             .bufferIndex = StagingRingBufferIndex::FixedRingBufferIndex
         };
 
-        if ((m_fixedHead + stagingIndex.bufferSize) >= FixedBufferSize)
+        if ((m_fixedHead + stagingIndex.bufferSize) >= m_fixedBufferSize)
         {
             // No room in the fixed buffer for the source data. Allocate a temporary staging buffer to overflow into.
             BufferHandle tempStagingBufferHandle = createStagingBuffer(stagingIndex.bufferSize);

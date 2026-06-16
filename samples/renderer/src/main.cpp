@@ -87,8 +87,8 @@ void updateTiming(SampleRenderState& sample) noexcept;
 void beginRender(SampleRenderState& sample) noexcept;
 void endRender(SampleRenderState& sample) noexcept;
 bool prepareBuffers(SampleRenderState& sample) noexcept;
-bool createVertexBuffer(SampleRenderState& sample) noexcept;
-bool createIndexBuffer(SampleRenderState& sample) noexcept;
+bool createVertexBuffer(SampleRenderState& sample, CommandBufferHandle commandBuffer) noexcept;
+bool createIndexBuffer(SampleRenderState& sample, CommandBufferHandle commandBuffer) noexcept;
 bool createFrameDataBuffers(SampleRenderState& sample) noexcept;
 bool createFrameDataBuffer(SampleRenderState& sample) noexcept;
 void updatePerFrameDataBuffer(SampleRenderState& sample) noexcept;
@@ -106,7 +106,7 @@ int main()
     {
         sample.startTime = std::chrono::steady_clock::now();
 
-        if (createTriangleGraphicsPipeline(sample))
+        if (createTriangleGraphicsPipeline(sample) && prepareBuffers(sample))
         {
             sample.lastFrameTime = std::chrono::steady_clock::now();
 
@@ -118,12 +118,6 @@ int main()
 
                     sample.frameData = sample.renderer->getFrameData();
                     sample.commandBuffer = sample.renderer->cmdBeginFrame();
-
-                    if (!prepareBuffers(sample))
-                    {
-                        std::cout << "Failed to prepare sample buffers" << std::endl;
-                        break;
-                    }
 
                     updatePerFrameDataBuffer(sample);
                     updatePerCameraDataBuffer(sample);
@@ -337,15 +331,38 @@ bool prepareBuffers(SampleRenderState& sample) noexcept
         return true;
     }
 
-    auto scope = sample.renderer->cmdBeginBufferUpload(sample.commandBuffer);
+    // Create the buffers prior to the first frame using a transient, single-shot command buffer.
 
-    return createVertexBuffer(sample) &&
-           createIndexBuffer(sample) &&
-           createFrameDataBuffers(sample) &&
-           createCameraDataBuffers(sample);
+    bool success = false;
+    auto setupCommandBuffer = sample.renderer->createCommandBuffer({ .isTransient = true });
+
+    if ((setupCommandBuffer.isValid()) && sample.renderer->cmdBegin(setupCommandBuffer))
+    {
+        {
+            auto scope = sample.renderer->cmdBeginBufferUpload(setupCommandBuffer);
+
+            if (createVertexBuffer(sample, setupCommandBuffer) &&
+                createIndexBuffer(sample, setupCommandBuffer) &&
+                createFrameDataBuffers(sample) &&
+                createCameraDataBuffers(sample))
+            {
+                success = true;
+            }
+            else
+            {
+                std::cout << "Failed to prepare sample buffers" << std::endl;
+            };
+        }
+
+        sample.renderer->cmdEnd(setupCommandBuffer);
+        sample.renderer->submitCommandsAndWait(setupCommandBuffer);
+        sample.renderer->destroyCommandBuffer(setupCommandBuffer);
+    }
+
+    return success;
 }
 
-bool createVertexBuffer(SampleRenderState& sample) noexcept
+bool createVertexBuffer(SampleRenderState& sample, CommandBufferHandle commandBuffer) noexcept
 {
     std::array<Vertex, 3> vertices = {
         Vertex {
@@ -375,7 +392,7 @@ bool createVertexBuffer(SampleRenderState& sample) noexcept
         return false;
     }
 
-    const auto result = sample.renderer->cmdBufferUpload(sample.commandBuffer, as_byte_span(vertices), sample.vertexBuffer);
+    const auto result = sample.renderer->cmdBufferUpload(commandBuffer, as_byte_span(vertices), sample.vertexBuffer);
 
     if (result != RendererResult::Success)
     {
@@ -386,7 +403,7 @@ bool createVertexBuffer(SampleRenderState& sample) noexcept
     return true;
 }
 
-bool createIndexBuffer(SampleRenderState& sample) noexcept
+bool createIndexBuffer(SampleRenderState& sample, CommandBufferHandle commandBuffer) noexcept
 {
     std::array<uint32_t, 3> indices = { 0, 1, 2 };
 
@@ -403,7 +420,7 @@ bool createIndexBuffer(SampleRenderState& sample) noexcept
         return {};
     }
 
-    const auto result = sample.renderer->cmdBufferUpload(sample.commandBuffer, as_byte_span(indices), sample.indexBuffer);
+    const auto result = sample.renderer->cmdBufferUpload(commandBuffer, as_byte_span(indices), sample.indexBuffer);
 
     if (result != RendererResult::Success)
     {

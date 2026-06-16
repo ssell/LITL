@@ -59,9 +59,9 @@ namespace litl
         void (*cmdDraw)(RendererContext*, CommandBufferHandle, uint32_t, uint32_t, uint32_t, uint32_t);
 
         // buffer commands and operations
-        RendererResult (*cmdBindVertexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, uint64_t);
-        RendererResult (*cmdBindVertexBuffers)(RendererContext*, CommandBufferHandle, BufferHandle*, uint64_t*, uint32_t);
-        RendererResult (*cmdBindIndexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle);
+        RendererResult (*cmdBindVertexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, uint64_t, uint32_t);
+        RendererResult (*cmdBindVertexBuffers)(RendererContext*, CommandBufferHandle, BufferHandle*, uint64_t*, uint32_t, uint32_t);
+        RendererResult (*cmdBindIndexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, IndexType);
         RendererResult (*cmdBindGraphicsBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, StringId, uint64_t, uint64_t);
         RendererResult (*cmdBindComputeBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, StringId, uint64_t, uint64_t);
         RendererResult (*cmdBufferUpload)(RendererContext* context, CommandBufferHandle, std::span<std::byte const>, BufferHandle, uint64_t, uint64_t);
@@ -72,6 +72,7 @@ namespace litl
         // drawing
         bool (*beginRender)(RendererContext*);
         void (*submitCommands)(RendererContext*, std::span<CommandBufferHandle const>);
+        RendererResult (*submitCommandsAndWait)(RendererContext*, std::span<CommandBufferHandle const>);
         void (*endRender)(RendererContext*);
 
         // misc
@@ -304,7 +305,7 @@ namespace litl
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <returns></returns>
-        RendererResult cmdBindVertexBuffer(CommandBufferHandle commandBuffer, BufferHandle buffer, uint64_t offset = 0) const noexcept;
+        RendererResult cmdBindVertexBuffer(CommandBufferHandle commandBuffer, BufferHandle buffer, uint64_t offset = 0u, uint32_t firstBinding = 0u) const noexcept;
         
         /// <summary>
         /// 
@@ -314,15 +315,16 @@ namespace litl
         /// <param name="offsets"></param>
         /// <param name="count"></param>
         /// <returns></returns>
-        RendererResult cmdBindVertexBuffers(CommandBufferHandle commandBuffer, BufferHandle* buffers, uint64_t* offsets, uint32_t count) const noexcept;
+        RendererResult cmdBindVertexBuffers(CommandBufferHandle commandBuffer, BufferHandle* buffers, uint64_t* offsets, uint32_t count, uint32_t firstBinding = 0u) const noexcept;
         
         /// <summary>
         /// 
         /// </summary>
         /// <param name="commandBuffer"></param>
         /// <param name="buffer"></param>
+        /// <param name="indexType"></param>
         /// <returns></returns>
-        RendererResult cmdBindIndexBuffer(CommandBufferHandle commandBuffer, BufferHandle buffer) const noexcept;
+        RendererResult cmdBindIndexBuffer(CommandBufferHandle commandBuffer, BufferHandle buffer, IndexType indexType = IndexType::Uint32) const noexcept;
         
         /// <summary>
         /// Binds a generic buffer to the specified slot.
@@ -410,9 +412,25 @@ namespace litl
 
         /// <summary>
         /// Submits all commands from the provided command buffers.
+        /// The commands are synced with the current frame. To submit a transient intraframe command buffer, see submitCommandsAndWait.
         /// </summary>
         /// <param name="commands"></param>
         void submitCommands(std::span<CommandBufferHandle const> commands) const noexcept;
+
+        /// <summary>
+        /// Submits all commands from the provided command buffers.
+        /// The commands are waited on and can be considered complete when this function returns.
+        /// </summary>
+        /// <param name="commands"></param>
+        /// <returns></returns>
+        RendererResult submitCommandsAndWait(CommandBufferHandle commands) const noexcept;
+
+        /// <summary>
+        /// Submits all commands from the provided command buffers.
+        /// The commands are waited on and can be considered complete when this function returns.
+        /// </summary>
+        /// <param name="command"></param>
+        RendererResult submitCommandsAndWait(std::span<CommandBufferHandle const> command) const noexcept;
 
         /// <summary>
         /// Swaps and presents the rendered image. This effectively ends the current frame (as far as the renderer is concerned).

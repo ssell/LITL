@@ -27,8 +27,6 @@ namespace litl::vulkan
     {
     public:
 
-        static const uint64_t FixedBufferSize = 32768;
-
         StagingBuffer();
         ~StagingBuffer();
 
@@ -49,7 +47,8 @@ namespace litl::vulkan
 
         RendererContext* m_pContext;
         BufferResource* m_pFixedBuffer;
-        uint64_t m_fixedHead;
+        uint32_t m_fixedBufferSize;
+        uint32_t m_fixedHead;
 
         std::vector<BufferHandle> m_overflowBuffers;
     };

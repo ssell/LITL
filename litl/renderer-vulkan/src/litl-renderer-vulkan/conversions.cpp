@@ -1565,4 +1565,46 @@ namespace litl::vulkan
     {
         return VkClearColorValue{ { color.r(), color.g(), color.b(), color.a() } };
     }
+
+    // -------------------------------------------------------------------------------------
+    // IndexType <-> VkIndexType
+    // -------------------------------------------------------------------------------------
+
+    [[nodiscard]] VkIndexType toVkIndexType(IndexType type) noexcept
+    {
+        switch (type)
+        {
+        case IndexType::Uint32:
+            return VkIndexType::VK_INDEX_TYPE_UINT32;
+
+        case IndexType::Uint16:
+            return VkIndexType::VK_INDEX_TYPE_UINT16;
+
+        case IndexType::Uint8:
+            return VkIndexType::VK_INDEX_TYPE_UINT8;
+
+        default:
+            logError("Unsupported IndexType of '", static_cast<uint32_t>(type), "' defaulting to VkIndexType::VK_INDEX_TYPE_UINT32");
+            return VkIndexType::VK_INDEX_TYPE_UINT32;
+        }
+    }
+
+    [[nodiscard]] IndexType fromVkIndexType(VkIndexType type) noexcept
+    {
+        switch (type)
+        {
+        case VkIndexType::VK_INDEX_TYPE_UINT32:
+            return IndexType::Uint32;
+
+        case VkIndexType::VK_INDEX_TYPE_UINT16:
+            return IndexType::Uint16;
+
+        case VkIndexType::VK_INDEX_TYPE_UINT8:
+            return IndexType::Uint8;
+
+        default:
+            logError("Unsupported VkIndexType of '", static_cast<uint32_t>(type), "' defaulting to IndexType::Uint32");
+            return IndexType::Uint32;
+        }
+    }
 }

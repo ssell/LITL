@@ -7,7 +7,10 @@ namespace litl
 {
     struct CommandBufferDescriptor
     {
-        // ...
+        /// <summary>
+        /// Is this a short-lived buffer used for a single submission?
+        /// </summary>
+        bool isTransient = false;
     };
 
     struct CommandBufferTag {};

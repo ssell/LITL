@@ -56,9 +56,14 @@ namespace litl
             VkSurfaceKHR vkSurface = VK_NULL_HANDLE;
 
             /// <summary>
-            /// Command buffer pool.
+            /// Command buffer pool for long-lived buffers.
             /// </summary>
             VkCommandPool vkCommandPool = VK_NULL_HANDLE;
+
+            /// <summary>
+            /// Command buffer pool for short-lived, single-submission buffers.
+            /// </summary>
+            VkCommandPool vkCommandPoolTransient = VK_NULL_HANDLE;
 
             /// <summary>
             /// The graphics command queue.
@@ -79,6 +84,16 @@ namespace litl
             /// The present queue index.
             /// </summary>
             uint32_t presentQueueIndex = 0u;
+
+            /// <summary>
+            /// The transfer command queue.
+            /// </summary>
+            VkQueue vkTransferQueue = VK_NULL_HANDLE;
+
+            /// <summary>
+            /// The transfer queue index.
+            /// </summary>
+            uint32_t transferQueueIndex = 0u;
 
             /// <summary>
             /// Pipeline cache objects allow the result of pipeline construction to be reused between pipelines and between runs of an application.
@@ -190,6 +205,7 @@ namespace litl
 
         struct RendererContext
         {
+            RendererConfiguration config{};
             WindowInfo window{};
             DeviceInfo device{};
             SwapChainInfo swapChain{};
@@ -200,6 +216,12 @@ namespace litl
             [[nodiscard]] PerFrameSyncInfo& getCurrFrameSyncInfo() noexcept
             {
                 return renderInfo.frameSyncInfo[renderInfo.frame.frameInFlightIndex];
+            }
+
+            [[nodiscard]] PerFrameSyncInfo& getPrevFrameSyncInfo() noexcept
+            {
+                const uint32_t prevFrameInFlightIndex = (renderInfo.frame.frameCount + (renderInfo.frame.framesInFlight - 1)) % renderInfo.frame.framesInFlight;
+                return renderInfo.frameSyncInfo[prevFrameInFlightIndex];
             }
 
             [[nodiscard]] PerImageSyncInfo& getCurrImageSyncInfo() noexcept
