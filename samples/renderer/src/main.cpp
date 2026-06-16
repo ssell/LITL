@@ -132,6 +132,7 @@ int main()
 
                     sample.renderer->cmdBindGraphicsPipeline(sample.commandBuffer, sample.graphicsPipeline);
                     sample.renderer->cmdPushConstants(sample.commandBuffer, ShaderStage::Fragment, generic_as_byte_span(&sample.pushConstants, sizeof(PushConstants)));
+                    sample.renderer->cmdBindGraphicsBuffer(sample.commandBuffer, sample.cameraDataBuffers[sample.frameData.frameInFlightIndex], "_cameraData"_sid);
                     sample.renderer->cmdBindVertexBuffer(sample.commandBuffer, sample.vertexBuffer);
                     sample.renderer->cmdBindIndexBuffer(sample.commandBuffer, sample.indexBuffer);
                     sample.renderer->cmdDraw(sample.commandBuffer, 3, 1, 0, 0);
@@ -515,8 +516,11 @@ void updatePerCameraDataBuffer(SampleRenderState& sample) noexcept
 
     if (mappedBuffer.mappedPtr != nullptr)
     {
+        vec3 cameraPos{ 0.0f, 0.0f, -2.5f };
+        cameraPos.z() += cos(sample.elapsedTime);
+
         sample.perCameraData.projMatrix = mat4::perspective(degreesToRadians(60.0f), sample.window->getAspectRatio(), 0.0f, 10.0f);
-        sample.perCameraData.viewMatrix = mat4::lookAt(vec3(0.0f, 0.0f, -5.0f), vec3(0.0f, 0.0f, 0.0f), vec3::up());
+        sample.perCameraData.viewMatrix = mat4::lookAt(cameraPos, vec3(0.0f, 0.0f, 0.0f), vec3::up());
         sample.perCameraData.viewProjMatrix = sample.perCameraData.projMatrix * sample.perCameraData.viewMatrix;
 
         std::memcpy(mappedBuffer.mappedPtr, &sample.perCameraData, sizeof(PerCameraData));
