@@ -557,27 +557,4 @@ namespace litl
 
         return ShaderScalarType::Unknown;
     }
-
-    PipelineResourceKey PipelineResourceMap::getKey(std::string_view name) noexcept
-    {
-        return fastHashString(name);
-    }
-
-    ResourceBinding const* PipelineResourceMap::getResourceBinding(PipelineResourceKey key) const noexcept
-    {
-        for (auto& binding : resources)
-        {
-            if (binding.key == key)
-            {
-                return &binding;
-            }
-        }
-
-        return nullptr;
-    }
-
-    bool PipelineResourceMap::contains(PipelineResourceKey key) const noexcept
-    {
-        return getResourceBinding(key) != nullptr;
-    }
 }

@@ -537,8 +537,6 @@ namespace litl::vulkan
         // DescriptorSetLayoutBindingDesc does not have set, but it can be inferred by the PipelineLayoutDescriptor::setLayouts index.
         // So that means we lose name/key in the merge process. To get around that we first need to take key off of
         // the ResourceBinding (it was just added so wont break anything), and find a way to preserve the name.
-        // Then in the resource map stop using ResourceBinding and instead make a new minimal structure needed for, well, resource binding.
-        // Something like: struct Foo { uint32_t binding; uint32_t set; uint64_t key; std::string name; (debug build only maybe?) };
 
         // ---- Rendering Info
 

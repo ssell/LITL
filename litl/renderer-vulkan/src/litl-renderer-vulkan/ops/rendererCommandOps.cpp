@@ -477,7 +477,7 @@ namespace litl::vulkan
         return RendererResult::Success;
     }
 
-    RendererResult cmdBindGraphicsBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, PipelineResourceKey key, uint64_t offset, uint64_t range) noexcept
+    RendererResult cmdBindGraphicsBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, StringId key, uint64_t offset, uint64_t range) noexcept
     {
         auto* vulkanContext = unwrap(context);
         auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
@@ -533,7 +533,7 @@ namespace litl::vulkan
         return RendererResult::Success;
     }
 
-    RendererResult cmdBindComputeBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, PipelineResourceKey key, uint64_t offset, uint64_t range) noexcept
+    RendererResult cmdBindComputeBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, StringId key, uint64_t offset, uint64_t range) noexcept
     {
         auto* vulkanContext = unwrap(context);
         auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);

@@ -1,5 +1,5 @@
 add_library(litl-renderer STATIC 
-	"src/litl-renderer/reflection.cpp"  "src/litl-renderer/rendererConfiguration.cpp" "src/litl-renderer/scopedBufferUpload.cpp"  "src/litl-renderer/renderer.cpp")
+	"src/litl-renderer/reflection.cpp"  "src/litl-renderer/rendererConfiguration.cpp" "src/litl-renderer/scopedBufferUpload.cpp"  "src/litl-renderer/renderer.cpp" "src/litl-renderer/resources/pipelineResource.cpp")
 
 target_include_directories(litl-renderer 
 	PUBLIC 

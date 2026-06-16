@@ -6,27 +6,22 @@
 #include <string_view>
 #include <vector>
 
+#include "litl-core/stringId.hpp"
 #include "litl-renderer/resources/shaderModule.hpp"
 
 namespace litl
 {
-    using PipelineResourceKey = uint64_t;
-
-    /// <summary>
-    /// Describes a single resource bound to one or more shader stages.
-    /// In Vulkan these are descriptor bindings.
-    /// </summary>
-    struct ResourceBinding
+    struct PipelineResourceBinding
     {
+        /// <summary>
+        /// Hash of the string.
+        /// </summary>
+        StringId id;
+
         /// <summary>
         /// "Camera", "AlbedoTexture", etc.
         /// </summary>
         std::string name;
-
-        /// <summary>
-        /// Hash of the name.
-        /// </summary>
-        PipelineResourceKey key = 0ull;
 
         /// <summary>
         /// Buffer, image, sampler, etc.
@@ -42,16 +37,6 @@ namespace litl
         /// Vulkan binding, D3D12 register.
         /// </summary>
         uint32_t binding;
-
-        /// <summary>
-        /// 0 = runtime bindless array, 1 = not array, >=2 = array of declared size
-        /// </summary>
-        uint32_t arraySize;
-
-        /// <summary>
-        /// For buffer validation only.
-        /// </summary>
-        uint32_t sizeBytes;
     };
 
     /// <summary>
@@ -63,11 +48,10 @@ namespace litl
     /// </summary>
     struct PipelineResourceMap
     {
-        std::vector<ResourceBinding> resources;
+        std::vector<PipelineResourceBinding> resources;
 
-        [[nodiscard]] ResourceBinding const* getResourceBinding(PipelineResourceKey key) const noexcept;
-        [[nodiscard]] bool contains(PipelineResourceKey key) const noexcept;
-        [[nodiscard]] static PipelineResourceKey getKey(std::string_view name) noexcept;
+        [[nodiscard]] PipelineResourceBinding const* getResourceBinding(StringId key) const noexcept;
+        [[nodiscard]] bool contains(StringId key) const noexcept;
     };
 }
 
