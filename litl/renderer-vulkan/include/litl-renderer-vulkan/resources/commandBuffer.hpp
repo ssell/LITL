@@ -16,6 +16,16 @@ namespace litl::vulkan
         VkCommandBuffer vkCommandBuffer = VK_NULL_HANDLE;
 
         /// <summary>
+        /// The command pool that created the buffer.
+        /// </summary>
+        VkCommandPool vkCommandPool = VK_NULL_HANDLE;
+
+        /// <summary>
+        /// Is this a short-lived buffer?
+        /// </summary>
+        bool isTransient = false;
+
+        /// <summary>
         /// The currently bound graphics pipeline (if any).
         /// </summary>
         GraphicsPipelineHandle boundGraphicsPipeline{};

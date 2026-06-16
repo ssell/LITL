@@ -30,6 +30,9 @@ namespace litl::vulkan
             return false;
         }
 
+        // Free the staging buffers from the last frame.
+        vulkanContext->getPrevFrameSyncInfo().stagingRingBuffer->freeBuffers();
+
         uint32_t swapChainImageIndex = 0;
 
         if (!acquireSwapChainIndex(*vulkanContext, frameSync, Constants::millisecond_to_nanoseconds * 32, vulkanContext->renderInfo.frame.frameInFlightIndex, &swapChainImageIndex))
@@ -105,6 +108,90 @@ namespace litl::vulkan
     // Submit Draw Commands
     // -------------------------------------------------------------------------------------
 
+    RendererResult submitCommandsAndWait(litl::RendererContext* context, std::span<CommandBufferHandle const> commands) noexcept
+    {
+        if (commands.size() == 0)
+        {
+            return RendererResult::Success;
+        }
+
+        auto* vulkanContext = unwrap(context);
+
+        // Build up command buffer info
+        std::vector<VkCommandBufferSubmitInfo> vkCommandBufferSubmitInfos;
+        vkCommandBufferSubmitInfos.reserve(commands.size());
+
+        for (auto& commandBufferHandle : commands)
+        {
+            const auto* commandBufferResource = vulkanContext->resources.getCommandBuffer(commandBufferHandle);
+
+            if ((commandBufferResource != nullptr) &&
+                (commandBufferResource->vkCommandBuffer != VK_NULL_HANDLE))
+            {
+                if (commandBufferResource->isTransient == true)
+                {
+                    vkCommandBufferSubmitInfos.push_back(VkCommandBufferSubmitInfo{
+                        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO,
+                        .commandBuffer = commandBufferResource->vkCommandBuffer
+                    });
+                }
+                else
+                {
+                    logWarning("Non-transient command buffer submitted via submitCommandsAndWait. Its commands will not be processed.");
+                }
+            }
+        }
+
+        if (vkCommandBufferSubmitInfos.size() == 0ull)
+        {
+            return RendererResult::NoValidCommandBuffersForSubmission;
+        }
+
+        const VkFenceCreateInfo fenceInfo{
+            .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0u
+        };
+
+        VkFence submissionFence = VK_NULL_HANDLE;
+
+        const auto createFenceResult = vkCreateFence(vulkanContext->device.vkDevice, &fenceInfo, nullptr, &submissionFence);
+
+        if (createFenceResult != VK_SUCCESS)
+        {
+            return RendererResult::FenceCreationFailed;
+        }
+
+        const VkSubmitInfo2 submitInfo{
+            .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2,
+            .commandBufferInfoCount = static_cast<uint32_t>(vkCommandBufferSubmitInfos.size()),
+            .pCommandBufferInfos = vkCommandBufferSubmitInfos.data(),
+            .waitSemaphoreInfoCount = 0u,
+            .pWaitSemaphoreInfos = nullptr,         // this submission has no GPU dependencies
+            .signalSemaphoreInfoCount = 0u,
+            .pSignalSemaphoreInfos = nullptr
+        };
+
+        const VkResult submitResult = vkQueueSubmit2(vulkanContext->device.vkTransferQueue, 1, &submitInfo, submissionFence);
+
+        if (submitResult != VK_SUCCESS)
+        {
+            logError("Vulkan Renderer: vkQueueSubmit for transient command buffers failed with result ", submitResult);
+            return RendererResult::CommandBufferSubmissionFailed;
+        }
+
+        const VkResult waitResult = vkWaitForFences(vulkanContext->device.vkDevice, 1, &submissionFence, VK_TRUE, UINT64_MAX);
+        vkDestroyFence(vulkanContext->device.vkDevice, submissionFence, nullptr);
+
+        if (waitResult != VK_SUCCESS)
+        {
+            logError("Vulkan Renderer: vkWaitForFences for transient command buffers failed with result ", waitResult);
+            return RendererResult::WaitFailed;
+        }
+
+        return RendererResult::Success;
+    }
+
     void submitCommands(litl::RendererContext* context, std::span<CommandBufferHandle const> commands) noexcept
     {
         if (commands.size() == 0)
@@ -122,12 +209,20 @@ namespace litl::vulkan
         {
             const auto* commandBufferResource = vulkanContext->resources.getCommandBuffer(commandBufferHandle);
 
-            if ((commandBufferResource != nullptr) && (commandBufferResource->vkCommandBuffer != VK_NULL_HANDLE))
+            if ((commandBufferResource != nullptr) && 
+                (commandBufferResource->vkCommandBuffer != VK_NULL_HANDLE))
             {
-                vkCommandBuffers.push_back(VkCommandBufferSubmitInfo{
-                    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO,
-                    .commandBuffer = commandBufferResource->vkCommandBuffer
-                });
+                if (commandBufferResource->isTransient == false)
+                {
+                    vkCommandBuffers.push_back(VkCommandBufferSubmitInfo{
+                        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO,
+                        .commandBuffer = commandBufferResource->vkCommandBuffer
+                    });
+                }
+                else
+                {
+                    logWarning("Transient command buffer submitted via submitCommands. Its commands will not be processed.");
+                }
             }
         }
 
@@ -170,7 +265,7 @@ namespace litl::vulkan
 
         if (submitResult != VK_SUCCESS)
         {
-            logWarning("Vulkan Renderer: vkQueueSubmit failed with result ", submitResult);
+            logError("Vulkan Renderer: vkQueueSubmit failed with result ", submitResult);
         }
     }
 
@@ -206,7 +301,6 @@ namespace litl::vulkan
             }
         }
 
-        vulkanContext->getCurrFrameSyncInfo().stagingRingBuffer->freeBuffers();
         vulkanContext->renderInfo.frame.incrementFrame();
     }
 }

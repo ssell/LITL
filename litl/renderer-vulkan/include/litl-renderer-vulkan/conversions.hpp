@@ -88,6 +88,9 @@ namespace litl::vulkan
     [[nodiscard]] VkAccessFlags2 deriveDstAccessFromUsageFlag(VkBufferUsageFlags2 usage) noexcept;
 
     [[nodiscard]] VkClearColorValue toVkClearColorValue(color color) noexcept;
+
+    [[nodiscard]] VkIndexType toVkIndexType(IndexType type) noexcept;
+    [[nodiscard]] IndexType fromVkIndexType(VkIndexType type) noexcept;
 }
 
 #endif

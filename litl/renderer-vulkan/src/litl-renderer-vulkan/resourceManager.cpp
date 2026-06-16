@@ -189,11 +189,14 @@ namespace litl::vulkan
 
     CommandBufferHandle ResourceManager::createCommandBuffer(CommandBufferDescriptor const& descriptor) noexcept
     {
-        CommandBufferResource resource{};
+        CommandBufferResource resource{
+            .isTransient = descriptor.isTransient,
+            .vkCommandPool = (descriptor.isTransient ? m_pContext->device.vkCommandPoolTransient : m_pContext->device.vkCommandPool)
+        };
 
         const VkCommandBufferAllocateInfo allocateInfo{
             .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-            .commandPool = m_pContext->device.vkCommandPool,
+            .commandPool = resource.vkCommandPool,
             .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
             .commandBufferCount = 1u
         };
@@ -222,7 +225,7 @@ namespace litl::vulkan
         {
             if (resource->vkCommandBuffer != VK_NULL_HANDLE)
             {
-                vkFreeCommandBuffers(m_pContext->device.vkDevice, m_pContext->device.vkCommandPool, 1, &resource->vkCommandBuffer);
+                vkFreeCommandBuffers(m_pContext->device.vkDevice, resource->vkCommandPool, 1, &resource->vkCommandBuffer);
             }
 
             m_commandBufferPool.destroy(handle);
@@ -359,7 +362,7 @@ namespace litl::vulkan
                     .id = boundResource.id,
                     .type = boundResource.type,
                     .set = set,
-                    .binding = binding
+                    .binding = boundResource.binding
                 });
             }
         }

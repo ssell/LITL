@@ -24,8 +24,18 @@ namespace litl::vulkan
             return RendererResult::InvalidBufferForWriting;
         }
 
-        mapped.mappedPtr = buffer->allocationInfo.pMappedData;
-        mapped.shaderDeviceAddress = static_cast<uint64_t>(buffer->bdaAddress);
+        if (buffer->allocationInfo.pMappedData != nullptr)
+        {
+            mapped.mappedPtr = buffer->allocationInfo.pMappedData;
+            mapped.shaderDeviceAddress = static_cast<uint64_t>(buffer->bdaAddress);
+        }
+        else
+        {
+            if (vmaMapMemory(vulkanContext->device.vmaAllocator, buffer->allocation, &mapped.mappedPtr) != VK_SUCCESS)
+            {
+                return RendererResult::MemoryMapFailed;
+            }
+        }
 
         return RendererResult::Success;
     }
@@ -42,6 +52,11 @@ namespace litl::vulkan
 
         // AUTO + sequential-write usually lands on HOST_COHERENT memory, but this is a no-op when coherent and correct when not, so it's cheap insurance:
         vmaFlushAllocation(vulkanContext->device.vmaAllocator, buffer->allocation, 0, VK_WHOLE_SIZE);
+
+        if (buffer->allocationInfo.pMappedData == nullptr)
+        {
+            vmaUnmapMemory(vulkanContext->device.vmaAllocator, buffer->allocation);
+        }
     }
 
     CommandBufferHandle createCommandBuffer(litl::RendererContext* context, CommandBufferDescriptor const& descriptor) noexcept

@@ -26,7 +26,12 @@ namespace litl
         NoGraphicsPipelineBound = 207,
         NoBoundGraphicsPipeline = 208,
         NoBoundComputePipeline = 209,
-        InvalidPipelineResourceKey = 210
+        InvalidPipelineResourceKey = 210,
+        MemoryMapFailed = 211,
+        FenceCreationFailed,
+        NoValidCommandBuffersForSubmission,
+        CommandBufferSubmissionFailed,
+        WaitFailed
     };
 }
 

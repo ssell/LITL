@@ -181,19 +181,19 @@ namespace litl
         m_pOps->cmdDraw(m_pContext, commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
     }
 
-    RendererResult Renderer::cmdBindVertexBuffer(CommandBufferHandle commandBuffer, BufferHandle buffer, uint64_t offset) const noexcept
+    RendererResult Renderer::cmdBindVertexBuffer(CommandBufferHandle commandBuffer, BufferHandle buffer, uint64_t offset, uint32_t firstBinding) const noexcept
     {
-        return m_pOps->cmdBindVertexBuffer(m_pContext, commandBuffer, buffer, offset);
+        return m_pOps->cmdBindVertexBuffer(m_pContext, commandBuffer, buffer, offset, firstBinding);
     }
 
-    RendererResult Renderer::cmdBindVertexBuffers(CommandBufferHandle commandBuffer, BufferHandle* buffers, uint64_t* offsets, uint32_t count) const noexcept
+    RendererResult Renderer::cmdBindVertexBuffers(CommandBufferHandle commandBuffer, BufferHandle* buffers, uint64_t* offsets, uint32_t count, uint32_t firstBinding) const noexcept
     {
-        return m_pOps->cmdBindVertexBuffers(m_pContext, commandBuffer, buffers, offsets, count);
+        return m_pOps->cmdBindVertexBuffers(m_pContext, commandBuffer, buffers, offsets, count, firstBinding);
     }
 
-    RendererResult Renderer::cmdBindIndexBuffer(CommandBufferHandle commandBuffer, BufferHandle buffer) const noexcept
+    RendererResult Renderer::cmdBindIndexBuffer(CommandBufferHandle commandBuffer, BufferHandle buffer, IndexType indexType) const noexcept
     {
-        return m_pOps->cmdBindIndexBuffer(m_pContext, commandBuffer, buffer);
+        return m_pOps->cmdBindIndexBuffer(m_pContext, commandBuffer, buffer, indexType);
     }
 
     RendererResult Renderer::cmdBindGraphicsBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key, uint64_t offset, uint64_t range) const noexcept
@@ -251,36 +251,31 @@ namespace litl
     // Drawing
     // ---------------------------------------------------------------------------------
 
-    /// <summary>
-    /// Checks if the previous frame is done rendering and if we can begin rendering the next frame.
-    /// </summary>
-    /// <returns></returns>
     bool Renderer::beginRender() const noexcept
     {
         return m_pOps->beginRender(m_pContext);
     }
 
-    /// <summary>
-    /// Submits the provided command buffer commands.
-    /// </summary>
-    /// <param name="commands"></param>
     void Renderer::submitCommands(CommandBufferHandle commands) const noexcept
     {
         submitCommands({ &commands, 1 });
     }
 
-    /// <summary>
-    /// Submits all commands from the provided command buffers.
-    /// </summary>
-    /// <param name="commands"></param>
     void Renderer::submitCommands(std::span<CommandBufferHandle const> commands) const noexcept
     {
         m_pOps->submitCommands(m_pContext, commands);
     }
 
-    /// <summary>
-    /// Swaps and presents the rendered image. This effectively ends the current frame (as far as the renderer is concerned).
-    /// </summary>
+    RendererResult Renderer::submitCommandsAndWait(CommandBufferHandle commands) const noexcept
+    {
+        return submitCommandsAndWait({ &commands, 1 });
+    }
+
+    RendererResult Renderer::submitCommandsAndWait(std::span<CommandBufferHandle const> commands) const noexcept
+    {
+        return m_pOps->submitCommandsAndWait(m_pContext, commands);
+    }
+
     void Renderer::endRender() const noexcept
     {
         m_pOps->endRender(m_pContext);

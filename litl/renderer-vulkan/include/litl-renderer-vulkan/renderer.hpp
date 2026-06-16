@@ -51,9 +51,9 @@ namespace litl::vulkan
     void cmdBindGraphicsPipeline(litl::RendererContext* context, CommandBufferHandle handle, GraphicsPipelineHandle graphicsPipelineHandle) noexcept;
     [[nodiscard]] RendererResult cmdPushConstants(litl::RendererContext* context, CommandBufferHandle handle, ShaderStage shaderStage, std::span<std::byte const> data) noexcept;
     void cmdDraw(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) noexcept;
-    [[nodiscard]] RendererResult cmdBindVertexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, uint64_t offset) noexcept;
-    [[nodiscard]] RendererResult cmdBindVertexBuffers(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle* bufferHandles, uint64_t* bufferOffsets, uint32_t count) noexcept;
-    [[nodiscard]] RendererResult cmdBindIndexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle) noexcept;
+    [[nodiscard]] RendererResult cmdBindVertexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, uint64_t offset, uint32_t firstBinding) noexcept;
+    [[nodiscard]] RendererResult cmdBindVertexBuffers(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle* bufferHandles, uint64_t* bufferOffsets, uint32_t count, uint32_t firstBinding) noexcept;
+    [[nodiscard]] RendererResult cmdBindIndexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, IndexType indexType) noexcept;
     [[nodiscard]] RendererResult cmdBindGraphicsBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, StringId key, uint64_t offset, uint64_t range) noexcept;
     [[nodiscard]] RendererResult cmdBindComputeBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, StringId key, uint64_t offset, uint64_t range) noexcept;
     [[nodiscard]] RendererResult cmdBufferUpload(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, std::span<std::byte const> source, BufferHandle destBufferHandle, uint64_t sourceOffset, uint64_t destOffset) noexcept;
@@ -65,6 +65,7 @@ namespace litl::vulkan
 
     [[nodiscard]] bool beginRender(litl::RendererContext* context) noexcept;
     void submitCommands(litl::RendererContext* context, std::span<CommandBufferHandle const> commands) noexcept;
+    RendererResult submitCommandsAndWait(litl::RendererContext* context, std::span<CommandBufferHandle const> commands) noexcept;
     void endRender(litl::RendererContext* context) noexcept;
 
     // -------------------------------------------------------------------------------------
@@ -131,6 +132,7 @@ namespace litl::vulkan
         // drawing
         &beginRender,
         &submitCommands,
+        &submitCommandsAndWait,
         &endRender,
 
         // misc

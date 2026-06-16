@@ -42,9 +42,14 @@ namespace litl::vulkan
             return false;
         }
 
-        const VkCommandBufferBeginInfo info{
+        VkCommandBufferBeginInfo info{
             .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO
         };
+
+        if (commandBuffer->isTransient)
+        {
+            info.flags |= VkCommandBufferUsageFlagBits::VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        }
 
         return vkBeginCommandBuffer(commandBuffer->vkCommandBuffer, &info) == VK_SUCCESS;
     }
@@ -398,7 +403,7 @@ namespace litl::vulkan
         return RendererResult::Success;
     }
 
-    RendererResult cmdBindVertexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, uint64_t offset) noexcept
+    RendererResult cmdBindVertexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, uint64_t offset, uint32_t firstBinding) noexcept
     {
         auto* vulkanContext = unwrap(context);
         auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
@@ -415,12 +420,16 @@ namespace litl::vulkan
             return RendererResult::InvalidBufferHandle;
         }
 
-        vkCmdBindVertexBuffers(commandBuffer->vkCommandBuffer, 0, 1, &bufferResource->vkBuffer, &offset);
+        vkCmdBindVertexBuffers(
+            commandBuffer->vkCommandBuffer, 
+            firstBinding, 
+            1, 
+            &bufferResource->vkBuffer, &offset);
 
         return RendererResult::Success;
     }
 
-    RendererResult cmdBindVertexBuffers(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle* bufferHandles, uint64_t* offsets, uint32_t count) noexcept
+    RendererResult cmdBindVertexBuffers(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle* bufferHandles, uint64_t* offsets, uint32_t count, uint32_t firstBinding) noexcept
     {
         if (bufferHandles == nullptr)
         {
@@ -450,12 +459,17 @@ namespace litl::vulkan
             buffers.push_back(resource->vkBuffer);
         }
 
-        vkCmdBindVertexBuffers(commandBuffer->vkCommandBuffer, 0, count, buffers.data(), offsets);
+        vkCmdBindVertexBuffers(
+            commandBuffer->vkCommandBuffer, 
+            firstBinding,
+            count, 
+            buffers.data(), 
+            offsets);
 
         return RendererResult::Success;
     }
 
-    RendererResult cmdBindIndexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle) noexcept
+    RendererResult cmdBindIndexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, IndexType indexType) noexcept
     {
         auto* vulkanContext = unwrap(context);
         auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
@@ -472,7 +486,11 @@ namespace litl::vulkan
             return RendererResult::InvalidBufferHandle;
         }
 
-        vkCmdBindIndexBuffer(commandBuffer->vkCommandBuffer, bufferResource->vkBuffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdBindIndexBuffer(
+            commandBuffer->vkCommandBuffer, 
+            bufferResource->vkBuffer, 
+            0, 
+            toVkIndexType(indexType));
 
         return RendererResult::Success;
     }
@@ -505,7 +523,7 @@ namespace litl::vulkan
 
         if (resource == nullptr)
         {
-            RendererResult::InvalidPipelineResourceKey;
+            return RendererResult::InvalidPipelineResourceKey;
         }
 
         const VkDescriptorBufferInfo bufferInfo{
@@ -561,7 +579,7 @@ namespace litl::vulkan
 
         if (resource == nullptr)
         {
-            RendererResult::InvalidPipelineResourceKey;
+            return RendererResult::InvalidPipelineResourceKey;
         }
 
         const VkDescriptorBufferInfo bufferInfo{
