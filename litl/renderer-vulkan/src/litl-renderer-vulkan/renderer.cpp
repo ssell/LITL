@@ -413,9 +413,15 @@ namespace litl::vulkan
             .extendedDynamicState = true
         };
 
+        VkPhysicalDeviceVulkan14Features vulkan14Features{
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_FEATURES,
+            .pNext = &vulkanDynamicStateFeatures,
+            .pushDescriptor = true
+        };
+
         VkPhysicalDeviceVulkan13Features vulkan13Features {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
-            .pNext = &vulkanDynamicStateFeatures,
+            .pNext = &vulkan14Features,
             .synchronization2 = true,
             .dynamicRendering = true,
         };

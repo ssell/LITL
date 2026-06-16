@@ -98,7 +98,9 @@ struct FragmentOutput
 FragmentOutput fragmentMain(VertexOutput input)
 {
     FragmentOutput output = (FragmentOutput)0;
-    output.color = float4(input.color * sin(_pc.frame->elapsedTime), 1.0);
+
+    float colorMod = (sin(_pc.frame->elapsedTime) + 1.0f) * 0.5f;
+    output.color = float4(input.color * colorMod, 1.0);
 
     return output;
 }
