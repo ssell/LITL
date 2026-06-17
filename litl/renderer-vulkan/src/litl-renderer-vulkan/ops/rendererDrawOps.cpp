@@ -164,10 +164,10 @@ namespace litl::vulkan
 
         const VkSubmitInfo2 submitInfo{
             .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2,
-            .commandBufferInfoCount = static_cast<uint32_t>(vkCommandBufferSubmitInfos.size()),
-            .pCommandBufferInfos = vkCommandBufferSubmitInfos.data(),
             .waitSemaphoreInfoCount = 0u,
             .pWaitSemaphoreInfos = nullptr,         // this submission has no GPU dependencies
+            .commandBufferInfoCount = static_cast<uint32_t>(vkCommandBufferSubmitInfos.size()),
+            .pCommandBufferInfos = vkCommandBufferSubmitInfos.data(),
             .signalSemaphoreInfoCount = 0u,
             .pSignalSemaphoreInfos = nullptr
         };

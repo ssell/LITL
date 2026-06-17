@@ -331,33 +331,26 @@ bool prepareBuffers(SampleRenderState& sample) noexcept
         return true;
     }
 
-    // Create the buffers prior to the first frame using a transient, single-shot command buffer.
 
     bool success = false;
-    auto setupCommandBuffer = sample.renderer->createCommandBuffer({ .isTransient = true });
 
-    if ((setupCommandBuffer.isValid()) && sample.renderer->cmdBegin(setupCommandBuffer))
+    // Create the buffers prior to the first frame using a transient, single-shot command buffer.
+    auto scopedCommandBuffer = sample.renderer->createScopedCommandBuffer();
+    auto commandBufferHandle = scopedCommandBuffer.get();
+
+    if (createVertexBuffer(sample, commandBufferHandle) &&
+        createIndexBuffer(sample, commandBufferHandle) &&
+        createFrameDataBuffers(sample) &&
+        createCameraDataBuffers(sample))
     {
-        {
-            auto scope = sample.renderer->cmdBeginBufferUpload(setupCommandBuffer);
-
-            if (createVertexBuffer(sample, setupCommandBuffer) &&
-                createIndexBuffer(sample, setupCommandBuffer) &&
-                createFrameDataBuffers(sample) &&
-                createCameraDataBuffers(sample))
-            {
-                success = true;
-            }
-            else
-            {
-                std::cout << "Failed to prepare sample buffers" << std::endl;
-            };
-        }
-
-        sample.renderer->cmdEnd(setupCommandBuffer);
-        sample.renderer->submitCommandsAndWait(setupCommandBuffer);
-        sample.renderer->destroyCommandBuffer(setupCommandBuffer);
+        success = true;
     }
+    else
+    {
+        std::cout << "Failed to prepare sample buffers" << std::endl;
+    };
+
+    sample.renderer->cmdBufferFlush(commandBufferHandle);
 
     return success;
 }

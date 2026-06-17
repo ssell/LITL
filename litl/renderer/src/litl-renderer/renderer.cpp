@@ -50,6 +50,11 @@ namespace litl
         return m_pOps->createCommandBuffer(m_pContext, descriptor);
     }
 
+    ScopedCommandBuffer Renderer::createScopedCommandBuffer() const noexcept
+    {
+        return ScopedCommandBuffer(*this);
+    }
+
     void Renderer::destroyCommandBuffer(CommandBufferHandle handle) const noexcept
     {
         m_pOps->destroyCommandBuffer(m_pContext, handle);

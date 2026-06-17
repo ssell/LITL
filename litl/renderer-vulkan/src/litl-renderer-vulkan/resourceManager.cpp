@@ -190,8 +190,8 @@ namespace litl::vulkan
     CommandBufferHandle ResourceManager::createCommandBuffer(CommandBufferDescriptor const& descriptor) noexcept
     {
         CommandBufferResource resource{
-            .isTransient = descriptor.isTransient,
-            .vkCommandPool = (descriptor.isTransient ? m_pContext->device.vkCommandPoolTransient : m_pContext->device.vkCommandPool)
+            .vkCommandPool = (descriptor.isTransient ? m_pContext->device.vkCommandPoolTransient : m_pContext->device.vkCommandPool),
+            .isTransient = descriptor.isTransient
         };
 
         const VkCommandBufferAllocateInfo allocateInfo{
