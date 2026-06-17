@@ -126,6 +126,13 @@ namespace litl
         [[nodiscard]] CommandBufferHandle createCommandBuffer(CommandBufferDescriptor const& descriptor) const noexcept;
         
         /// <summary>
+        /// Creates a transient scoped command buffer that submits its commands and cleans up the command buffer when it leaves scope.
+        /// The transient buffer submits via submitCommandsAndWait and thus blocks until the commands have processed.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] ScopedCommandBuffer createScopedCommandBuffer() const noexcept;
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="handle"></param>
