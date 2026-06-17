@@ -114,7 +114,7 @@ namespace litl::vulkan
 
             colorAttachment.loadOp = toVkAttachmentLoadOp(command.color.loadOp);
             colorAttachment.storeOp = toVkAttachmentStoreOp(command.color.storeOp);
-            vulkanContext->drawInfo.targetTextureSize = colorTexture->extent;
+            vulkanContext->drawInfo.targetTextureSize = VkExtent2D{ .width = colorTexture->descriptor.width, .height = colorTexture->descriptor.height };
         }
 
         // ---------------------------------------------------------------------------------

@@ -9,11 +9,6 @@ namespace litl::vulkan
     struct BufferResource
     {
         /// <summary>
-        /// The descriptor that created the buffer.
-        /// </summary>
-        BufferDescriptor descriptor{};
-
-        /// <summary>
         /// The Vulkan buffer handle.
         /// </summary>
         VkBuffer vkBuffer = VK_NULL_HANDLE;
@@ -45,6 +40,11 @@ namespace litl::vulkan
         /// If the buffer is made with type ShaderDeviceAddress this is the buffer device address.
         /// </summary>
         VkDeviceAddress bdaAddress = 0;
+
+        /// <summary>
+        /// The descriptor that created the buffer.
+        /// </summary>
+        BufferDescriptor descriptor{};
     };
 }
 
