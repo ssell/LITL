@@ -5,6 +5,7 @@
 #include <unordered_map>
 
 #include "litl-core/handles.hpp"
+#include "litl-core/stringId.hpp"
 #include "litl-renderer-vulkan/resources/buffer.hpp"
 #include "litl-renderer-vulkan/resources/commandBuffer.hpp"
 #include "litl-renderer-vulkan/resources/computePipeline.hpp"
@@ -50,15 +51,17 @@ namespace litl::vulkan
         [[nodiscard]] SamplerResource* getSampler(SamplerHandle handle) noexcept;
         void destroySampler(SamplerHandle handle) noexcept;
 
-        [[nodiscard]] ShaderModuleHandle getShaderModuleHandle(std::string const& resource) const noexcept;
+        [[nodiscard]] ShaderModuleHandle getShaderModuleHandle(StringId resourceId) const noexcept;
         [[nodiscard]] ShaderModuleHandle createShaderModule(ShaderModuleDescriptor const& descriptor) noexcept;
         [[nodiscard]] ShaderModuleResource* getShaderModule(ShaderModuleHandle handle) noexcept;
         void destroyShaderModule(ShaderModuleHandle handle) noexcept;
         void onShaderModuleReload(ShaderModuleDescriptor const& descriptor) noexcept;
 
+        [[nodiscard]] TextureHandle getTextureHandle(StringId resourceId) const noexcept;
         [[nodiscard]] TextureHandle createTexture(TextureDescriptor const& descriptor) noexcept;
         [[nodiscard]] TextureResource* getTexture(TextureHandle handle) noexcept;
         void destroyTexture(TextureHandle handle) noexcept;
+        void onTextureReload(TextureDescriptor const& descriptor) noexcept;
 
         [[nodiscard]] VkDescriptorSetLayout getOrCreateSetLayout(DescriptorSetLayoutDesc const& descriptorSetLayoutDesc) noexcept;
         [[nodiscard]] VkPipelineLayout getOrCreatePipelineLayout(PipelineLayoutDescriptor const& pipelineLayoutDesc) noexcept;
@@ -75,10 +78,12 @@ namespace litl::vulkan
         HandlePool<TextureResource, TextureTag> m_texturePool;
 
         HandlePool<ShaderModuleResource, ShaderModuleTag> m_shaderModulePool;
-        std::unordered_map<std::string, ShaderModuleHandle> m_shaderModuleMap;
+        StringIdMap<ShaderModuleHandle> m_shaderModuleMap;
         ShaderModuleReferenceMap m_shaderModuleReferenceMap;
 
         PipelineLayoutCache m_pipelineLayoutCache;
+
+        StringIdMap<TextureHandle> m_textureMap;
     };
 }
 

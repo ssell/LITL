@@ -29,14 +29,14 @@ namespace litl::vulkan
         uint64_t spirvHash;
 
         /// <summary>
-        /// The name of the resource from which this shader module was loaded.
-        /// </summary>
-        std::string resource;
-
-        /// <summary>
         /// The hashed ID of the resource string.
         /// </summary>
         StringId resourceId;
+
+        /// <summary>
+        /// The name of the resource from which this shader module was loaded.
+        /// </summary>
+        std::string resource;
 
         /// <summary>
         /// Given an entry point name, creates a corresponding VkPipelineShaderStageCreateInfo if it exists.

@@ -695,9 +695,9 @@ namespace litl::vulkan
     // ShaderModule
     //--------------------------------------------------------------------------------------
 
-    ShaderModuleHandle ResourceManager::getShaderModuleHandle(std::string const& resource) const noexcept
+    ShaderModuleHandle ResourceManager::getShaderModuleHandle(StringId resourceId) const noexcept
     {
-        auto find = m_shaderModuleMap.find(resource);
+        auto find = m_shaderModuleMap.find(resourceId);
 
         if (find != m_shaderModuleMap.end())
         {
@@ -767,7 +767,8 @@ namespace litl::vulkan
 
     ShaderModuleHandle ResourceManager::createShaderModule(ShaderModuleDescriptor const& descriptor) noexcept
     {
-        ShaderModuleHandle handle = getShaderModuleHandle(descriptor.resource);
+        auto resourceStringId = StringId(descriptor.resource);
+        ShaderModuleHandle handle = getShaderModuleHandle(resourceStringId);
 
         if (handle.isValid())
         {
@@ -775,7 +776,10 @@ namespace litl::vulkan
             return handle;
         }
 
-        ShaderModuleResource resource{};
+        ShaderModuleResource resource{
+            .resourceId = resourceStringId,
+            .resource = descriptor.resource
+        };
 
         if (createShaderModuleResource(m_pContext, resource, descriptor))
         {
@@ -783,7 +787,7 @@ namespace litl::vulkan
 
             // Record in the map
             m_shaderModuleReferenceMap.onShaderModuleAdded(m_shaderModulePool.get(handle));
-            m_shaderModuleMap[resource.resource] = handle;
+            m_shaderModuleMap[resourceStringId] = handle;
         }
 
         return handle;
@@ -806,14 +810,14 @@ namespace litl::vulkan
             }
 
             m_shaderModuleReferenceMap.onShaderModuleDestroyed(resource);
+            m_shaderModuleMap.erase(resource->resourceId);
             m_shaderModulePool.destroy(handle);
-            m_shaderModuleMap.erase(resource->resource);
         }
     }
 
 void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descriptor) noexcept
 {
-    auto handle = getShaderModuleHandle(descriptor.resource);
+    auto handle = getShaderModuleHandle(StringId(descriptor.resource));
     auto* resource = getShaderModule(handle);
 
     if (resource == nullptr)
@@ -901,9 +905,34 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
     // Texture
     //--------------------------------------------------------------------------------------
 
+    TextureHandle ResourceManager::getTextureHandle(StringId resourceId) const noexcept
+    {
+        auto find = m_textureMap.find(resourceId);
+
+        if (find != m_textureMap.end())
+        {
+            return find->second;
+        }
+
+        return {};
+    }
+
     TextureHandle ResourceManager::createTexture(TextureDescriptor const& descriptor) noexcept
     {
+        if (descriptor.name.length() > 0)
+        {
+            auto nameId = StringId(descriptor.name);
+            auto existingHandle = getTextureHandle(nameId);
+
+            if (existingHandle.isValid())
+            {
+                // Already exists. Did it mean to do a reload?
+                return existingHandle;
+            }
+        }
+
         // ... todo ...
+
         return TextureHandle{};
     }
 
@@ -914,10 +943,30 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
 
     void ResourceManager::destroyTexture(TextureHandle handle) noexcept
     {
-        if (m_texturePool.destroy(handle))
+        TextureResource* resource = m_texturePool.get(handle);
+
+        if (resource != nullptr)
         {
-            // ... todo ...
+            if (resource->vkImage != VK_NULL_HANDLE)
+            {
+                vmaDestroyImage(m_pContext->device.vmaAllocator, resource->vkImage, resource->allocation);
+            }
+
+            m_textureMap.erase(resource->id);
+            m_texturePool.destroy(handle);
         }
+    }
+
+    void ResourceManager::onTextureReload(TextureDescriptor const& descriptor) noexcept
+    {
+        auto handle = getTextureHandle(StringId(descriptor.name));
+
+        if (!handle.isValid())
+        {
+            return;
+        }
+
+        // ... todo ...
     }
 
     //--------------------------------------------------------------------------------------
