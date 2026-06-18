@@ -227,7 +227,6 @@ namespace litl
 
     enum class MultisampleCount : uint32_t
     {
-
         Count1 = 0,             // No multisampling
         Count2,
         Count4,
@@ -354,6 +353,24 @@ namespace litl
         Uint32 = 0,
         Uint16 = 1,
         Uint8 = 2
+    };
+
+    enum class SampleCount : uint32_t
+    {
+        Sample1  = 0,
+        Sample2  = 1,
+        Sample4  = 2,
+        Sample8  = 3,
+        Sample16 = 4,
+        Sample32 = 5,
+        Sample64 = 6
+    };
+
+    enum class TextureDimensions : uint32_t
+    {
+        Texture1D = 0,
+        Texture2D = 1,
+        Texture3D = 3
     };
 }
 

@@ -931,9 +931,46 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
             }
         }
 
-        // ... todo ...
+        TextureResource resource{};
 
-        return TextureHandle{};
+        const VkImageCreateInfo createInfo{
+            .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+            .imageType = toVkImageType(descriptor.dimensions),
+            .format = toVkFormat(descriptor.format),
+            .extent = VkExtent3D {
+                .width = descriptor.width,
+                .height = descriptor.height,
+                .depth = descriptor.depth
+            },
+            .mipLevels = descriptor.mipLevels,
+            .arrayLayers = descriptor.arrayLayers,
+            .samples = static_cast<VkSampleCountFlagBits>(toVkSampleCountFlag(descriptor.sampleCount)),
+            .tiling = VK_IMAGE_TILING_OPTIMAL,
+            .usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+            .sharingMode = toVkSharingMode(descriptor.sharing),
+            .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
+        };
+
+        const VmaAllocationCreateInfo allocateInfo{
+            .flags = toVmaAllocationCreateFlag(descriptor.memoryUsage),
+            .usage = toVmaMemoryUsage(descriptor.memory)
+        };
+
+        const VkResult createResult = vmaCreateImage(
+            m_pContext->device.vmaAllocator, 
+            &createInfo, 
+            &allocateInfo, 
+            &resource.vkImage, 
+            &resource.allocation, 
+            &resource.allocationInfo);
+
+        if (createResult != VK_SUCCESS)
+        {
+            logError("Failed to create Vulkan texture with result ", createResult);
+            return {};
+        }
+
+        return m_texturePool.create(resource);
     }
 
     TextureResource* ResourceManager::getTexture(TextureHandle handle) noexcept

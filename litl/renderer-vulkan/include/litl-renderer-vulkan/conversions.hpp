@@ -91,6 +91,9 @@ namespace litl::vulkan
 
     [[nodiscard]] VkIndexType toVkIndexType(IndexType type) noexcept;
     [[nodiscard]] IndexType fromVkIndexType(VkIndexType type) noexcept;
+
+    [[nodiscard]] VkImageType toVkImageType(TextureDimensions type) noexcept;
+    [[nodiscard]] TextureDimensions fromVkImageType(VkImageType type) noexcept;
 }
 
 #endif
