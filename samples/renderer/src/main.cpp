@@ -78,6 +78,12 @@ struct SampleRenderState
     BufferHandle indexBuffer{};
     std::vector<BufferHandle> frameDataBuffers;
     std::vector<BufferHandle> cameraDataBuffers;
+
+    // -------------------------------------------------------------------------------------
+    // Textures
+    // -------------------------------------------------------------------------------------
+
+    TextureHandle stripedTexture{};
 };
 
 bool createWindow(SampleRenderState& sample) noexcept;
@@ -86,7 +92,7 @@ bool createTriangleGraphicsPipeline(SampleRenderState& sample) noexcept;
 void updateTiming(SampleRenderState& sample) noexcept;
 void beginRender(SampleRenderState& sample) noexcept;
 void endRender(SampleRenderState& sample) noexcept;
-bool prepareBuffers(SampleRenderState& sample) noexcept;
+bool prepareSample(SampleRenderState& sample) noexcept;
 bool createVertexBuffer(SampleRenderState& sample, CommandBufferHandle commandBuffer) noexcept;
 bool createIndexBuffer(SampleRenderState& sample, CommandBufferHandle commandBuffer) noexcept;
 bool createFrameDataBuffers(SampleRenderState& sample) noexcept;
@@ -95,6 +101,7 @@ void updatePerFrameDataBuffer(SampleRenderState& sample) noexcept;
 bool createCameraDataBuffers(SampleRenderState& sample) noexcept;
 bool createCameraDataBuffer(SampleRenderState& sample) noexcept;
 void updatePerCameraDataBuffer(SampleRenderState& sample) noexcept;
+bool createTexture(SampleRenderState& sample) noexcept;
 
 int main()
 {
@@ -106,7 +113,7 @@ int main()
     {
         sample.startTime = std::chrono::steady_clock::now();
 
-        if (createTriangleGraphicsPipeline(sample) && prepareBuffers(sample))
+        if (createTriangleGraphicsPipeline(sample) && prepareSample(sample))
         {
             sample.lastFrameTime = std::chrono::steady_clock::now();
 
@@ -324,7 +331,7 @@ void endRender(SampleRenderState& sample) noexcept
     sample.renderer->endRender();
 }
 
-bool prepareBuffers(SampleRenderState& sample) noexcept
+bool prepareSample(SampleRenderState& sample) noexcept
 {
     if (sample.vertexBuffer.isValid())
     {
@@ -341,13 +348,14 @@ bool prepareBuffers(SampleRenderState& sample) noexcept
     if (createVertexBuffer(sample, commandBufferHandle) &&
         createIndexBuffer(sample, commandBufferHandle) &&
         createFrameDataBuffers(sample) &&
-        createCameraDataBuffers(sample))
+        createCameraDataBuffers(sample) &&
+        createTexture(sample))
     {
         success = true;
     }
     else
     {
-        std::cout << "Failed to prepare sample buffers" << std::endl;
+        std::cout << "Failed to prepare resources for Renderer Sample" << std::endl;
     };
 
     sample.renderer->cmdBufferFlush(commandBufferHandle);
@@ -456,7 +464,7 @@ bool createFrameDataBuffer(SampleRenderState& sample) noexcept
 
     if (!frameBufferHandle.isValid())
     {
-        std::cout << "Failed to create frame data buffer" << std::endl;;
+        std::cout << "Failed to create frame data buffer" << std::endl;
         return false;
     }
 
@@ -536,4 +544,26 @@ void updatePerCameraDataBuffer(SampleRenderState& sample) noexcept
         std::memcpy(mappedBuffer.mappedPtr, &sample.perCameraData, sizeof(PerCameraData));
         sample.renderer->unmapBuffer(cameraBuffer);
     }
+}
+
+// -----------------------------------------------------------------------------------------
+// Texture
+// -----------------------------------------------------------------------------------------
+
+bool createTexture(SampleRenderState& sample) noexcept
+{
+    sample.stripedTexture = sample.renderer->createTexture(TextureDescriptor{
+        .width = 256,
+        .height = 256,
+        .format = DataFormat::RGBA8_SRGB,
+        .name = "Striped Texture"
+    });
+
+    if (!sample.stripedTexture.isValid())
+    {
+        std::cout << "Failed to create striped texture" << std::endl;
+        return false;
+    }
+
+    return true;
 }

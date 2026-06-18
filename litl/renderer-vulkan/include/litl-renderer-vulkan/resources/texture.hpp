@@ -31,6 +31,11 @@ namespace litl::vulkan
         VmaAllocation allocation = VK_NULL_HANDLE;
 
         /// <summary>
+        /// Optional pointer to mapped memory, offset, etc.
+        /// </summary>
+        VmaAllocationInfo allocationInfo{};
+
+        /// <summary>
         /// If the texture was provided a name, this is the hashed name.
         /// </summary>
         StringId id{};

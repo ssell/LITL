@@ -1607,4 +1607,46 @@ namespace litl::vulkan
             return IndexType::Uint32;
         }
     }
+
+    // -------------------------------------------------------------------------------------
+    // TextureDimensions <-> VkImageType
+    // -------------------------------------------------------------------------------------
+
+    [[nodiscard]] VkImageType toVkImageType(TextureDimensions type) noexcept
+    {
+        switch (type)
+        {
+        case TextureDimensions::Texture1D:
+            return VkImageType::VK_IMAGE_TYPE_1D;
+
+        case TextureDimensions::Texture2D:
+            return VkImageType::VK_IMAGE_TYPE_2D;
+
+        case TextureDimensions::Texture3D:
+            return VkImageType::VK_IMAGE_TYPE_3D;
+
+        default:
+            logError("Unsupported TextureDimensions of '", static_cast<uint32_t>(type), "' defaulting to VkImageType::VK_IMAGE_TYPE_1D");
+            return VkImageType::VK_IMAGE_TYPE_1D;
+        }
+    }
+
+    [[nodiscard]] TextureDimensions fromVkImageType(VkImageType type) noexcept
+    {
+        switch (type)
+        {
+        case VkImageType::VK_IMAGE_TYPE_1D:
+            return TextureDimensions::Texture1D;
+
+        case VkImageType::VK_IMAGE_TYPE_2D:
+            return TextureDimensions::Texture2D;
+
+        case VkImageType::VK_IMAGE_TYPE_3D:
+            return TextureDimensions::Texture3D;
+
+        default:
+            logError("Unsupported VkImageType of '", static_cast<uint32_t>(type), "' defaulting to TextureDimensions::Texture1D");
+            return TextureDimensions::Texture1D;
+        }
+    }
 }

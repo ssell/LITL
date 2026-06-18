@@ -19,7 +19,7 @@ namespace litl
         BufferMemoryType memory = BufferMemoryType::Auto;
 
         /// <summary>
-        /// 
+        /// How the memory will be accessed.
         /// </summary>
         BufferMemoryUsage memoryUsage = BufferMemoryUsage::GpuOnly;
 
