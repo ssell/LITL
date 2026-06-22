@@ -6,6 +6,7 @@ namespace litl
     enum class RendererResult : uint32_t
     {
         Success = 0,
+        NotImplemented = 1,
 
         InvalidRendererContext = 100,
         InvalidCommandBufferHandle = 101,

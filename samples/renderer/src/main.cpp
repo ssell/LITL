@@ -478,10 +478,11 @@ void updatePerFrameDataBuffer(SampleRenderState& sample) noexcept
     sample.perFrameData.elapsedTime = sample.elapsedTime;
     sample.perFrameData.deltaTime = sample.deltaTime;
 
-    auto frameBuffer = sample.frameDataBuffers[sample.frameData.frameInFlightIndex];
-    auto mappedBuffer = sample.renderer->mapBuffer(frameBuffer);
+    MappedBuffer mappedBuffer{};
 
-    if ((mappedBuffer.mappedPtr != nullptr) && (mappedBuffer.shaderDeviceAddress != 0ul))
+    auto frameBuffer = sample.frameDataBuffers[sample.frameData.frameInFlightIndex];
+
+    if (sample.renderer->mapBuffer(frameBuffer, mappedBuffer) == RendererResult::Success)
     {
         sample.pushConstants.frameDataAddress = mappedBuffer.shaderDeviceAddress;
         std::memcpy(mappedBuffer.mappedPtr, &sample.perFrameData, sizeof(PerFrameData));
@@ -529,10 +530,11 @@ bool createCameraDataBuffer(SampleRenderState& sample) noexcept
 
 void updatePerCameraDataBuffer(SampleRenderState& sample) noexcept
 {
-    auto cameraBuffer = sample.cameraDataBuffers[sample.frameData.frameInFlightIndex];
-    auto mappedBuffer = sample.renderer->mapBuffer(cameraBuffer);
+    MappedBuffer mappedBuffer{};
 
-    if (mappedBuffer.mappedPtr != nullptr)
+    auto cameraBuffer = sample.cameraDataBuffers[sample.frameData.frameInFlightIndex];
+
+    if (sample.renderer->mapBuffer(cameraBuffer, mappedBuffer) == RendererResult::Success)
     {
         vec3 cameraPos{ 0.0f, 0.0f, -2.5f };
         cameraPos.z() += cos(sample.elapsedTime);

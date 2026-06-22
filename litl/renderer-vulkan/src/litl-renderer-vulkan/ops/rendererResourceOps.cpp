@@ -40,14 +40,14 @@ namespace litl::vulkan
         return RendererResult::Success;
     }
 
-    void unmapBuffer(litl::RendererContext* context, BufferHandle handle) noexcept
+    RendererResult unmapBuffer(litl::RendererContext* context, BufferHandle handle) noexcept
     {
         auto* vulkanContext = unwrap(context);
         auto* buffer = vulkanContext->resources.getBuffer(handle);
 
         if ((buffer == nullptr) || (buffer->allocationInfo.pMappedData == nullptr))
         {
-            return;
+            return RendererResult::InvalidBufferHandle;
         }
 
         // AUTO + sequential-write usually lands on HOST_COHERENT memory, but this is a no-op when coherent and correct when not, so it's cheap insurance:
@@ -57,6 +57,8 @@ namespace litl::vulkan
         {
             vmaUnmapMemory(vulkanContext->device.vmaAllocator, buffer->allocation);
         }
+
+        return RendererResult::Success;
     }
 
     CommandBufferHandle createCommandBuffer(litl::RendererContext* context, CommandBufferDescriptor const& descriptor) noexcept
@@ -141,5 +143,17 @@ namespace litl::vulkan
     {
         auto* vulkanContext = unwrap(context);
         vulkanContext->resources.destroyTexture(handle);
+    }
+
+    RendererResult mapTexture(litl::RendererContext* context, TextureHandle textureHandle, MappedTexture& mapped) noexcept
+    {
+        // ... todo ...
+        return RendererResult::NotImplemented;
+    }
+    
+    RendererResult unmapTexture(litl::RendererContext* context, TextureHandle textureHandle) noexcept
+    {
+        // ... todo ...
+        return RendererResult::NotImplemented;
     }
 }

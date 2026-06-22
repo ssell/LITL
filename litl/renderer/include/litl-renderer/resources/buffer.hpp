@@ -40,7 +40,7 @@ namespace litl
     struct MappedBuffer
     {
         /// <summary>
-        /// If the buffer is mapped, this is the CPU address of start of its memory block.
+        /// If the buffer is mapped, this is the CPU address of the start of its memory block.
         /// </summary>
         void* mappedPtr = nullptr;
 

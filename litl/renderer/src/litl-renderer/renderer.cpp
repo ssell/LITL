@@ -238,18 +238,34 @@ namespace litl
         return m_pOps->cmdBufferFlush(m_pContext, commandBuffer);
     }
 
-    MappedBuffer Renderer::mapBuffer(BufferHandle buffer) const noexcept
+    RendererResult Renderer::mapBuffer(BufferHandle buffer, MappedBuffer& mapped) const noexcept
     {
-        MappedBuffer mapped{};
-
-        m_pOps->mapBuffer(m_pContext, buffer, mapped);
-
-        return mapped;
+        return m_pOps->mapBuffer(m_pContext, buffer, mapped);
     }
 
-    void Renderer::unmapBuffer(BufferHandle buffer) const noexcept
+    RendererResult Renderer::unmapBuffer(BufferHandle buffer) const noexcept
     {
-        m_pOps->unmapBuffer(m_pContext, buffer);
+        return m_pOps->unmapBuffer(m_pContext, buffer);
+    }
+
+    RendererResult Renderer::cmdTextureUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, TextureHandle destTextureHandle) const noexcept
+    {
+        return m_pOps->cmdTextureUpload(m_pContext, commandBuffer, source, destTextureHandle);
+    }
+    
+    RendererResult Renderer::cmdTextureFlush(CommandBufferHandle commandBuffer) const noexcept
+    {
+        return m_pOps->cmdTextureFlush(m_pContext, commandBuffer);
+    }
+    
+    RendererResult Renderer::mapTexture(TextureHandle texture, MappedTexture& mapped)
+    {
+        return m_pOps->mapTexture(m_pContext, texture, mapped);
+    }
+    
+    RendererResult Renderer::unmapTexture(TextureHandle texture)
+    {
+        return m_pOps->unmapTexture(m_pContext, texture);
     }
 
     // ---------------------------------------------------------------------------------
