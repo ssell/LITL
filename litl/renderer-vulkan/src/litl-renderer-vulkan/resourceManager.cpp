@@ -107,6 +107,8 @@ namespace litl::vulkan
             return {};
         }
 
+        resource.memoryMap.persistent = resource.allocationInfo.pMappedData;
+
         if (has_any(descriptor.type, BufferTypeFlagBits::ShaderDeviceAddress))
         {
             VkBufferDeviceAddressInfo bdaInfo{
@@ -114,7 +116,7 @@ namespace litl::vulkan
                 .buffer = resource.vkBuffer
             };
 
-            resource.bdaAddress = vkGetBufferDeviceAddress(m_pContext->device.vkDevice, &bdaInfo);
+            resource.memoryMap.bdaAddress = vkGetBufferDeviceAddress(m_pContext->device.vkDevice, &bdaInfo);
         }
 
         const BufferHandle handle = m_bufferPool.create(resource);
@@ -969,6 +971,8 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
             logError("Failed to create Vulkan texture with result ", createResult);
             return {};
         }
+
+        resource.memoryMap.persistent = resource.allocationInfo.pMappedData;
 
         return m_texturePool.create(resource);
     }

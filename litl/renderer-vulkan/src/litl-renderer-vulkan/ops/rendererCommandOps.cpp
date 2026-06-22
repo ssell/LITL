@@ -389,7 +389,7 @@ namespace litl::vulkan
 
         if (graphicsPipelineResource == nullptr)     /* todo check compute pipeline */
         {
-            return RendererResult::NoGraphicsPipelineBound;
+            return RendererResult::NoBoundGraphgicsPipeline;
         }
 
         vkCmdPushConstants(
@@ -516,7 +516,7 @@ namespace litl::vulkan
 
         if (graphicsPipeline == nullptr)
         {
-            return RendererResult::NoBoundGraphicsPipeline;
+            return RendererResult::NoBoundGraphgicsPipeline;
         }
 
         auto* resource = graphicsPipeline->resourceMap.getResourceBinding(key);
@@ -652,13 +652,38 @@ namespace litl::vulkan
 
     RendererResult cmdTextureUpload(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, std::span<std::byte const> source, TextureHandle destTextureHandle) noexcept
     {
-        // ... todo ...
+        auto* vulkanContext = unwrap(context);
+        auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
+
+        if (!isValid(commandBuffer))
+        {
+            return RendererResult::InvalidCommandBufferHandle;
+        }
+
+        auto* destTexture = vulkanContext->resources.getTexture(destTextureHandle);
+
+        if (destTexture == nullptr)
+        {
+            return RendererResult::InvalidBufferForWriting;
+        }
+
+        // ... todo 
+
         return RendererResult::NotImplemented;
     }
 
     RendererResult cmdTextureFlush(litl::RendererContext* context, CommandBufferHandle commandBufferHandle) noexcept
     {
+        auto* vulkanContext = unwrap(context);
+        auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
+
+        if (!isValid(commandBuffer))
+        {
+            return RendererResult::InvalidCommandBufferHandle;
+        }
+
         // ... todo ...
+
         return RendererResult::NotImplemented;
     }
 
