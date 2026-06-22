@@ -21,7 +21,7 @@ namespace litl
         uint32_t framesInFlight = 2;
 
         /// <summary>
-        /// The size of the fixed portion of the staging ring buffer.
+        /// The size of the fixed portion of the staging buffer memory arena.
         /// This portion does not resize during application lifetime.
         /// </summary>
         uint32_t stagingBufferFixedSize = 32u * Constants::bytes_to_megabyte;

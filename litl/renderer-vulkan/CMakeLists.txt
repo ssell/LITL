@@ -43,7 +43,7 @@ add_library(litl-renderer-vulkan
 		"src/litl-renderer-vulkan/conversions.cpp" 
 		"src/litl-renderer-vulkan/ops/rendererTesting.cpp" 
 		"src/litl-renderer-vulkan/ops/rendererMiscOps.cpp" 
-		"src/litl-renderer-vulkan/resources/map/shaderModuleReferenceMap.cpp" "src/litl-renderer-vulkan/resources/utility/stagingBuffer.cpp")
+		"src/litl-renderer-vulkan/resources/map/shaderModuleReferenceMap.cpp" "src/litl-renderer-vulkan/resources/utility/stagingBuffer.cpp" "src/litl-renderer-vulkan/resources/utility/stagingTexture.cpp")
 
 target_include_directories(litl-renderer-vulkan
 	PUBLIC

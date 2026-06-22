@@ -31,7 +31,7 @@ namespace litl::vulkan
         }
 
         // Free the staging buffers from the last frame.
-        vulkanContext->getPrevFrameSyncInfo().stagingRingBuffer->freeBuffers();
+        vulkanContext->getPrevFrameSyncInfo().stagingBufferArena->freeBuffers();
 
         uint32_t swapChainImageIndex = 0;
 
