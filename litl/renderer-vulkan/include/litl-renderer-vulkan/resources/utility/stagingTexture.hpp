@@ -6,12 +6,22 @@
 #include <vector>
 
 #include "litl-core/constants.hpp"
+#include "litl-renderer-vulkan/resources/buffer.hpp"
 #include "litl-renderer-vulkan/resources/texture.hpp"
 #include "litl-renderer-vulkan/resources/commandBuffer.hpp"
 
 namespace litl::vulkan
 {
     struct RendererContext;
+
+    struct StagingTextureIndex
+    {
+        static const uint32_t FixedStagingTextureIndex = litl::Constants::uint32_null_index;
+
+        uint64_t bufferOffset = 0ull;
+        uint64_t bufferSize = 0ull;
+        uint32_t bufferIndex = FixedStagingTextureIndex;
+    };
 
     /// <summary>
     /// 
@@ -28,18 +38,22 @@ namespace litl::vulkan
 
         void build(RendererContext& context) noexcept;
 
-        [[nodiscard]] std::optional<uint64_t> copyIntoStaging(TextureDimensions dimensions, DataFormat format, uint32_t width, uint32_t height, uint32_t depth, std::span<std::byte const> source) noexcept;
-        [[nodiscard]] bool copyIntoDestination(CommandBufferResource* commandBuffer, uint64_t stagingIndex, TextureResource* destination) noexcept;
-        void flushTextures(CommandBufferResource* commandBuffer);
-        void freeTextures() noexcept;
+        [[nodiscard]] std::optional<StagingTextureIndex> copyIntoStaging(std::span<std::byte const> source, uint64_t sourceOffset) noexcept;
+        [[nodiscard]] bool copyIntoDestination(CommandBufferResource* commandBuffer, StagingTextureIndex stagingIndex, TextureResource* destination) noexcept;
+        void flushBuffers(CommandBufferResource* commandBuffer);
+        void freeBuffers() noexcept;
 
     private:
 
-        TextureHandle createStagingTexture(TextureDimensions dimensions, DataFormat format, uint32_t width, uint32_t height, uint32_t depth) noexcept;
-        void flushTexture(CommandBufferResource* commandBuffer, TextureResource* resource) noexcept;
+        BufferHandle createStagingBuffer(uint64_t size) noexcept;
+        void flushBuffer(CommandBufferResource* commandBuffer, BufferResource* buffer) noexcept;
 
         RendererContext* m_pContext;
-        std::vector<TextureHandle> m_stagingTextures;
+        BufferResource* m_pFixedBuffer;
+        uint32_t m_fixedBufferSize;
+        uint32_t m_fixedHead;
+
+        std::vector<BufferHandle> m_overflowBuffers;
     };
 }
 

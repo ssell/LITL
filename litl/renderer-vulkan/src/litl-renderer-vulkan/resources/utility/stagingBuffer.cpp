@@ -26,12 +26,14 @@ namespace litl::vulkan
 
     std::optional<StagingBufferIndex> StagingBuffer::copyIntoStaging(std::span<std::byte const> source, uint64_t sourceOffset) noexcept
     {
+        // 1. Allocate staging buffer
+
         BufferResource* targetBuffer = m_pFixedBuffer;
 
         StagingBufferIndex stagingIndex{
             .bufferOffset = m_fixedHead,
             .bufferSize = static_cast<uint64_t>(source.size()),
-            .bufferIndex = StagingBufferIndex::FixedRingBufferIndex
+            .bufferIndex = StagingBufferIndex::FixedStagingBufferIndex
         };
 
         if ((m_fixedHead + stagingIndex.bufferSize) >= m_fixedBufferSize)
@@ -40,7 +42,7 @@ namespace litl::vulkan
             BufferHandle tempStagingBufferHandle = createStagingBuffer(stagingIndex.bufferSize);
             targetBuffer = m_pContext->resources.getBuffer(tempStagingBufferHandle);
 
-            LITL_ASSERT_MSG((targetBuffer != nullptr), "Failed to allocate temporary staging buffer for StagingBuffer", {});
+            LITL_ASSERT_MSG((targetBuffer != nullptr), "Failed to allocate temporary staging buffer for StagingBuffer", std::nullopt);
 
             stagingIndex.bufferIndex = static_cast<uint32_t>(m_overflowBuffers.size());
             stagingIndex.bufferOffset = 0ull;
@@ -51,6 +53,8 @@ namespace litl::vulkan
             // Room in the fixed buffer for the allocation. Increment the fixed head index.
             m_fixedHead += stagingIndex.bufferSize;
         }
+        
+        // 2. Copy into staging buffer
 
         const auto result = vmaCopyMemoryToAllocation(
             m_pContext->device.vmaAllocator,
@@ -59,14 +63,14 @@ namespace litl::vulkan
             static_cast<VkDeviceSize>(stagingIndex.bufferOffset),
             static_cast<VkDeviceSize>(source.size()));
 
-        LITL_ASSERT_MSG(result == VK_SUCCESS, "Failed to copy source memory into staging buffer", std::nullopt);
+        LITL_ASSERT_MSG((result == VK_SUCCESS), "Failed to copy source memory into staging buffer", std::nullopt);
 
         return stagingIndex;
     }
 
     bool StagingBuffer::copyIntoDestination(CommandBufferResource* commandBuffer, StagingBufferIndex stagingIndex, BufferResource* destination, uint64_t destOffset) noexcept
     {
-        LITL_ASSERT_MSG(commandBuffer != nullptr, "Invalid command buffer provided to StagingBuffer::copyIntoDestination", false);
+        LITL_ASSERT_MSG((commandBuffer != nullptr), "Invalid command buffer provided to StagingBuffer::copyIntoDestination", false);
 
         VkBufferCopy bufferCopy{
             .srcOffset = static_cast<VkDeviceSize>(stagingIndex.bufferOffset),
@@ -76,7 +80,7 @@ namespace litl::vulkan
 
         BufferResource* sourceBuffer = m_pFixedBuffer;
 
-        if (stagingIndex.bufferIndex != StagingBufferIndex::FixedRingBufferIndex)
+        if (stagingIndex.bufferIndex != StagingBufferIndex::FixedStagingBufferIndex)
         {
             // Source data lies in an overflow buffer.
             LITL_ASSERT_MSG(stagingIndex.bufferIndex < static_cast<uint32_t>(m_overflowBuffers.size()), "Invalid overflow buffer index for StagingBuffer", false);

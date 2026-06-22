@@ -7,7 +7,7 @@ namespace litl::vulkan
     StagingTexture::StagingTexture()
         : m_pContext(nullptr)
     {
-        m_stagingTextures.reserve(32ull);
+        m_overflowBuffers.reserve(32ull);
     }
 
     StagingTexture::~StagingTexture()
@@ -17,58 +17,160 @@ namespace litl::vulkan
 
     void StagingTexture::build(RendererContext& context) noexcept
     {
+        LITL_FATAL_ASSERT_MSG((context.config.stagingTextureFixedSize > 0u), "Renderer staging texture fixed buffer size set to 0.");
+        m_fixedBufferSize = context.config.stagingBufferFixedSize;
         m_pContext = &context;
+        m_pFixedBuffer = m_pContext->resources.getBuffer(createStagingBuffer(m_fixedBufferSize));
+        LITL_FATAL_ASSERT_MSG((m_pFixedBuffer != nullptr), "Failed to create fixed staging buffer for StagingTexture");
     }
 
-    std::optional<uint64_t> StagingTexture::copyIntoStaging(TextureDimensions dimensions, DataFormat format, uint32_t width, uint32_t height, uint32_t depth, std::span<std::byte const> source) noexcept
+    std::optional<StagingTextureIndex> StagingTexture::copyIntoStaging(std::span<std::byte const> source, uint64_t sourceOffset) noexcept
     {
-        // ... todo ...
+        // 1. Allocate staging texture
 
-        return {};
+        BufferResource* targetBuffer = m_pFixedBuffer;
+
+        StagingTextureIndex stagingIndex{
+            .bufferOffset = m_fixedHead,
+            .bufferSize = static_cast<uint64_t>(source.size()),
+            .bufferIndex = StagingTextureIndex::FixedStagingTextureIndex
+        };
+
+        if ((m_fixedHead + stagingIndex.bufferSize) >= m_fixedBufferSize)
+        {
+            // No room in the fixed buffer for the source data. Allocate a temporary staging buffer to overflow into.
+            BufferHandle tempStagingBufferHandle = createStagingBuffer(stagingIndex.bufferSize);
+            targetBuffer = m_pContext->resources.getBuffer(tempStagingBufferHandle);
+
+            LITL_ASSERT_MSG((targetBuffer != nullptr), "Failed to allocate temporary staging buffer for StagingTexture", std::nullopt);
+
+            stagingIndex.bufferIndex = static_cast<uint32_t>(m_overflowBuffers.size());
+            stagingIndex.bufferOffset = 0ull;
+            m_overflowBuffers.push_back(tempStagingBufferHandle);
+        }
+        else
+        {
+            // Room in the fixed buffer for the allocation. Increment the fixed head index.
+            m_fixedHead += stagingIndex.bufferSize;
+        }
+
+        // 2. Copy into staging texture
+
+        const auto result = vmaCopyMemoryToAllocation(
+            m_pContext->device.vmaAllocator,
+            source.data() + sourceOffset,
+            targetBuffer->allocation,
+            static_cast<VkDeviceSize>(stagingIndex.bufferOffset),
+            static_cast<VkDeviceSize>(source.size()));
+
+        LITL_ASSERT_MSG((result == VK_SUCCESS), "Failed to copy source memory into staging buffer", std::nullopt);
+
+        return stagingIndex;
     }
 
-    bool StagingTexture::copyIntoDestination(CommandBufferResource* commandBuffer, uint64_t stagingIndex, TextureResource* destination) noexcept
+    bool StagingTexture::copyIntoDestination(CommandBufferResource* commandBuffer, StagingTextureIndex stagingIndex, TextureResource* destination) noexcept
     {
-        // ... todo ...
+        LITL_ASSERT_MSG((commandBuffer != nullptr), "Invalid command buffer provided to StagingTexture::copyIntoDestination", false);
+
+        BufferResource* sourceBuffer = m_pFixedBuffer;
+
+        if (stagingIndex.bufferIndex != StagingTextureIndex::FixedStagingTextureIndex)
+        {
+            // Source data lies in an oveflow buffer.
+            LITL_ASSERT_MSG(stagingIndex.bufferIndex < static_cast<uint32_t>(m_overflowBuffers.size()), "Invalid overflow buffer index for StagingTexture", false);
+            BufferHandle sourceBufferHandle = m_overflowBuffers[stagingIndex.bufferIndex];
+            sourceBuffer = m_pContext->resources.getBuffer(sourceBufferHandle);
+            LITL_ASSERT_MSG((sourceBuffer != nullptr), "Invalid overflow buffer retrieved for StagingTexture", false);
+        }
+
+        VkBufferImageCopy2 copyRegion{
+            .sType = VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2,
+            .bufferRowLength = 0,
+            .bufferImageHeight = 0,
+            .imageSubresource = VkImageSubresourceLayers {
+                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,        // todo update to support depth, etc.
+                .mipLevel = 0,
+                .baseArrayLayer = 0,
+                .layerCount = 0
+            },
+            .imageExtent = VkExtent3D {
+                .width = destination->descriptor.width,
+                .height = destination->descriptor.height,
+                .depth = destination->descriptor.depth
+            }
+        };
+
+        VkCopyBufferToImageInfo2 copyInfo{
+            .sType = VK_STRUCTURE_TYPE_COPY_BUFFER_TO_IMAGE_INFO_2,
+            .srcBuffer = nullptr,
+            .dstImage = destination->vkImage,
+            .dstImageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            .regionCount = 1,
+            .pRegions = &copyRegion
+        };
+
+        vkCmdCopyBufferToImage2(commandBuffer->vkCommandBuffer, &copyInfo);
+        sourceBuffer->accumulatedDstStageMask |= VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT;     // todo, prob wont work for compute (do compute shaders even use textures?)
 
         return true;
     }
 
-    void StagingTexture::flushTextures(CommandBufferResource* commandBuffer) noexcept
+    void StagingTexture::flushBuffers(CommandBufferResource* commandBuffer) noexcept
     {
         LITL_ASSERT_MSG((commandBuffer != nullptr), "Invalid command buffer provided to StagingTexture::flushTextures", );
 
-        for (auto& textureHandle : m_stagingTextures)
+        flushBuffer(commandBuffer, m_pFixedBuffer);
+
+        for (auto& overflowHandle : m_overflowBuffers)
         {
-            flushTexture(commandBuffer, m_pContext->resources.getTexture(textureHandle));
+            flushBuffer(commandBuffer, m_pContext->resources.getBuffer(overflowHandle));
         }
     }
 
-    void StagingTexture::flushTexture(CommandBufferResource* commandBuffer, TextureResource* texture) noexcept
+    void StagingTexture::flushBuffer(CommandBufferResource* commandBuffer, BufferResource* buffer) noexcept
     {
-        // ... todo ...
-    }
-
-    void StagingTexture::freeTextures() noexcept
-    {
-        for (auto& textureHandle : m_stagingTextures)
+        if ((buffer == nullptr) || (buffer->accumulatedDstStageMask == VK_PIPELINE_STAGE_2_NONE))
         {
-            m_pContext->resources.destroyTexture(textureHandle);
+            return;
         }
-    }
 
-    TextureHandle StagingTexture::createStagingTexture(TextureDimensions dimensions, DataFormat format, uint32_t width, uint32_t height, uint32_t depth) noexcept
-    {
-        TextureDescriptor descriptor{
-            .dimensions = dimensions,
-            .width = (width == 0u ? 1u : width),            // Caller may set to "0" intending to mean "unused", but 0 is never a valid value.
-            .height = (height == 0u ? 1u : height),
-            .depth = (depth == 0u ? 1u : depth),
-            .format = format,
-            .memory = BufferMemoryType::Auto,
-            .memoryUsage = BufferMemoryUsage::Staging
+        const VkImageMemoryBarrier2 imageBarrier{
+            .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+            .srcStageMask = VK_PIPELINE_STAGE_2_COPY_BIT,
+            .srcAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT,
+            .dstStageMask = buffer->accumulatedDstStageMask,
+            .dstAccessMask = VK_ACCESS_2_SHADER_SAMPLED_READ_BIT,
+            .oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            .newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
         };
 
-        return m_pContext->resources.createTexture(descriptor);
+        const VkDependencyInfo dependencyInfo{
+            .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+            .imageMemoryBarrierCount = 1,
+            .pImageMemoryBarriers = &imageBarrier
+        };
+
+        vkCmdPipelineBarrier2(commandBuffer->vkCommandBuffer, &dependencyInfo);
+    }
+
+    void StagingTexture::freeBuffers() noexcept
+    {
+        m_fixedHead = 0u;
+
+        for (auto& bufferHandle : m_overflowBuffers)
+        {
+            m_pContext->resources.destroyBuffer(bufferHandle);
+        }
+    }
+
+    BufferHandle StagingTexture::createStagingBuffer(uint64_t size) noexcept
+    {
+        BufferDescriptor descriptor{
+            .type = BufferTypeFlagBits::TransferSource,
+            .memoryUsage = BufferMemoryUsage::Staging,
+            .bytes = size
+        };
+
+        return m_pContext->resources.createBuffer(descriptor);
     }
 }
