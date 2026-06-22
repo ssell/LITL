@@ -8,6 +8,7 @@
 #include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer-vulkan/resourceManager.hpp"
 #include "litl-renderer-vulkan/resources/utility/stagingBuffer.hpp"
+#include "litl-renderer-vulkan/resources/utility/stagingTexture.hpp"
 
 namespace litl
 {
@@ -156,11 +157,19 @@ namespace litl
 
             /// <summary>
             /// Holds both fixed and temporary staging buffers for GPU uploads.
-            /// Cleared out at the end of each frame.
+            /// Cleared out at the start of each frame.
             /// 
             /// Note: this is stored in an unique_ptr since PerFrameSyncInfo is itself stored in a vector.
             /// </summary>
-            std::unique_ptr<StagingBuffer> stagingRingBuffer;
+            std::unique_ptr<StagingBuffer> stagingBufferArena;
+
+            /// <summary>
+            /// Holds temporary staging textures for GPU uploads.
+            /// Cleared out at the start of each frame.
+            /// 
+            /// Note: this is stored in an unique_ptr since PerFrameSyncInfo is itself stored in a vector.
+            /// </summary>
+            std::unique_ptr<StagingTexture> stagingTextureArena;
         };
 
         /// <summary>

@@ -2,6 +2,7 @@
 #define LITL_RENDERER_TEXTURE_H__
 
 #include <cstdint>
+#include <string>
 
 #include "litl-core/handles.hpp"
 #include "litl-renderer/enums.hpp"

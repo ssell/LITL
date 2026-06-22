@@ -1,7 +1,9 @@
 #ifndef LITL_RENDERER_VULKAN_STAGING_RING_BUFFER_H__
 #define LITL_RENDERER_VULKAN_STAGING_RING_BUFFER_H__
 
+#include <optional>
 #include <span>
+#include <vector>
 
 #include "litl-core/constants.hpp"
 #include "litl-renderer-vulkan/resources/buffer.hpp"
@@ -11,7 +13,7 @@ namespace litl::vulkan
 {
     struct RendererContext;
 
-    struct StagingRingBufferIndex
+    struct StagingBufferIndex
     {
         static const uint32_t FixedRingBufferIndex = litl::Constants::uint32_null_index;
 
@@ -21,7 +23,8 @@ namespace litl::vulkan
     };
 
     /// <summary>
-    /// 
+    /// A memory arena for staging/transit buffers.
+    /// Composed of a fixed size persistent buffer and a list of temporary overflow buffers.
     /// </summary>
     class StagingBuffer final
     {
@@ -35,9 +38,9 @@ namespace litl::vulkan
 
         void build(RendererContext& context) noexcept;
 
-        StagingRingBufferIndex copyIntoStaging(std::span<std::byte const> source, uint64_t sourceOffset) noexcept;
-        void copyIntoDestination(CommandBufferResource* commandBuffer, StagingRingBufferIndex stagingIndex, BufferResource* destination, uint64_t destOffset) noexcept;
-        void flushBuffers(CommandBufferResource* commandBuffer);
+        [[nodiscard]] std::optional<StagingBufferIndex> copyIntoStaging(std::span<std::byte const> source, uint64_t sourceOffset) noexcept;
+        [[nodiscard]] bool copyIntoDestination(CommandBufferResource* commandBuffer, StagingBufferIndex stagingIndex, BufferResource* destination, uint64_t destOffset) noexcept;
+        void flushBuffers(CommandBufferResource* commandBuffer) noexcept;
         void freeBuffers() noexcept;
 
     private:

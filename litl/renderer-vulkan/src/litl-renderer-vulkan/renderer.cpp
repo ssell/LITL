@@ -697,9 +697,12 @@ namespace litl::vulkan
                 return false;
             }
 
-            // Staging Ring Buffer
-            frameSyncInfo.stagingRingBuffer = std::make_unique<StagingBuffer>();
-            frameSyncInfo.stagingRingBuffer->build(context);
+            // Staging Resources
+            frameSyncInfo.stagingBufferArena = std::make_unique<StagingBuffer>();
+            frameSyncInfo.stagingBufferArena->build(context);
+
+            frameSyncInfo.stagingTextureArena = std::make_unique<StagingTexture>();
+            frameSyncInfo.stagingTextureArena->build(context);
         }
 
         return true;

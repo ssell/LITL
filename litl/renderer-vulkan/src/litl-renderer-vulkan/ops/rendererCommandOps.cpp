@@ -621,16 +621,32 @@ namespace litl::vulkan
 
         if (destBuffer == nullptr)
         {
-            return RendererResult::InvalidBufferForWriting;
+            return RendererResult::InvalidBufferHandle;
         }
 
         auto& frameSync = vulkanContext->getCurrFrameSyncInfo();
 
         // Source -> Staging
-        auto stagingIndex = frameSync.stagingRingBuffer->copyIntoStaging(source, sourceOffset);
+        auto stagingIndex = frameSync.stagingBufferArena->copyIntoStaging(
+            source, 
+            sourceOffset);
+
+        if (!stagingIndex.has_value())
+        {
+            return RendererResult::MemoryCopyFailed;
+        }
 
         // Staging -> Destination
-        frameSync.stagingRingBuffer->copyIntoDestination(commandBuffer, stagingIndex, destBuffer, destOffset);
+        const bool result = frameSync.stagingBufferArena->copyIntoDestination(
+            commandBuffer, 
+            stagingIndex.value(),
+            destBuffer, 
+            destOffset);
+
+        if (!result)
+        {
+            return RendererResult::MemoryCopyFailed;
+        }
 
         return RendererResult::Success;
     }
@@ -645,7 +661,7 @@ namespace litl::vulkan
             return RendererResult::InvalidCommandBufferHandle;
         }
 
-        vulkanContext->getCurrFrameSyncInfo().stagingRingBuffer->flushBuffers(commandBuffer);
+        vulkanContext->getCurrFrameSyncInfo().stagingBufferArena->flushBuffers(commandBuffer);
 
         return RendererResult::Success;
     }
@@ -664,10 +680,35 @@ namespace litl::vulkan
 
         if (destTexture == nullptr)
         {
-            return RendererResult::InvalidBufferForWriting;
+            return RendererResult::InvalidTextureHandle;
         }
 
-        // ... todo 
+        auto& frameSync = vulkanContext->getCurrFrameSyncInfo();
+
+        // Source -> Staging
+        auto stagingIndex = frameSync.stagingTextureArena->copyIntoStaging(
+            destTexture->descriptor.dimensions, 
+            destTexture->descriptor.format, 
+            destTexture->descriptor.width, 
+            destTexture->descriptor.height, 
+            destTexture->descriptor.depth, 
+            source);
+
+        if (!stagingIndex.has_value())
+        {
+            return RendererResult::MemoryCopyFailed;
+        }
+
+        // Staging -> Destination
+        const bool result = frameSync.stagingTextureArena->copyIntoDestination(
+            commandBuffer, 
+            stagingIndex.value(), 
+            destTexture);
+
+        if (!result)
+        {
+            return RendererResult::MemoryCopyFailed;
+        }
 
         return RendererResult::NotImplemented;
     }
