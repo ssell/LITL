@@ -64,10 +64,16 @@ namespace litl
         RendererResult (*cmdBindIndexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, IndexType);
         RendererResult (*cmdBindGraphicsBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, StringId, uint64_t, uint64_t);
         RendererResult (*cmdBindComputeBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, StringId, uint64_t, uint64_t);
-        RendererResult (*cmdBufferUpload)(RendererContext* context, CommandBufferHandle, std::span<std::byte const>, BufferHandle, uint64_t, uint64_t);
-        RendererResult (*cmdBufferFlush)(RendererContext* context, CommandBufferHandle);
+        RendererResult (*cmdBufferUpload)(RendererContext*, CommandBufferHandle, std::span<std::byte const>, BufferHandle, uint64_t, uint64_t);
+        RendererResult (*cmdBufferFlush)(RendererContext*, CommandBufferHandle);
         RendererResult (*mapBuffer)(RendererContext*, BufferHandle, MappedBuffer&);
-        void (*unmapBuffer)(RendererContext*, BufferHandle);
+        RendererResult (*unmapBuffer)(RendererContext*, BufferHandle);
+
+        // texture commands and operations
+        RendererResult (*cmdTextureUpload)(RendererContext*, CommandBufferHandle, std::span<std::byte const>, TextureHandle);
+        RendererResult (*cmdTextureFlush)(RendererContext*, CommandBufferHandle);
+        RendererResult (*mapTexture)(RendererContext*, TextureHandle, MappedTexture&);
+        RendererResult (*unmapTexture)(RendererContext*, TextureHandle);
 
         // drawing
         bool (*beginRender)(RendererContext*);
@@ -392,14 +398,46 @@ namespace litl
         /// 
         /// </summary>
         /// <param name="buffer"></param>
+        /// <param name="mapped"></param>
         /// <returns></returns>
-        MappedBuffer mapBuffer(BufferHandle buffer) const noexcept;
+        RendererResult mapBuffer(BufferHandle buffer, MappedBuffer& mapped) const noexcept;
         
         /// <summary>
         /// 
         /// </summary>
         /// <param name="buffer"></param>
-        void unmapBuffer(BufferHandle buffer) const noexcept;
+        RendererResult unmapBuffer(BufferHandle buffer) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="commandBuffer"></param>
+        /// <param name="source"></param>
+        /// <param name="destTextureHandle"></param>
+        /// <returns></returns>
+        RendererResult cmdTextureUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, TextureHandle destTextureHandle) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="commandBuffer"></param>
+        /// <returns></returns>
+        RendererResult cmdTextureFlush(CommandBufferHandle commandBuffer) const noexcept;
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="texture"></param>
+        /// <param name="mapped"></param>
+        /// <returns></returns>
+        RendererResult mapTexture(TextureHandle texture, MappedTexture& mapped);
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="texture"></param>
+        /// <returns></returns>
+        RendererResult unmapTexture(TextureHandle texture);
 
         // ---------------------------------------------------------------------------------
         // Drawing

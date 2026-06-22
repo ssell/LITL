@@ -650,6 +650,18 @@ namespace litl::vulkan
         return RendererResult::Success;
     }
 
+    RendererResult cmdTextureUpload(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, std::span<std::byte const> source, TextureHandle destTextureHandle) noexcept
+    {
+        // ... todo ...
+        return RendererResult::NotImplemented;
+    }
+
+    RendererResult cmdTextureFlush(litl::RendererContext* context, CommandBufferHandle commandBufferHandle) noexcept
+    {
+        // ... todo ...
+        return RendererResult::NotImplemented;
+    }
+
     void cmdDraw(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) noexcept
     {
         auto* vulkanContext = unwrap(context);

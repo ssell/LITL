@@ -78,6 +78,14 @@ namespace litl
 
     struct TextureTag {};
     using TextureHandle = Handle<TextureTag>;
+
+    struct MappedTexture
+    {
+        /// <summary>
+        /// If the texture is mapped, this is the CPU address of the start of its memory block.
+        /// </summary>
+        void* mappedPtr = nullptr;
+    };
 }
 
 #endif
