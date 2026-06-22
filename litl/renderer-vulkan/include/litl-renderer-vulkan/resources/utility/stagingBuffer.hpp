@@ -15,11 +15,11 @@ namespace litl::vulkan
 
     struct StagingBufferIndex
     {
-        static const uint32_t FixedRingBufferIndex = litl::Constants::uint32_null_index;
+        static const uint32_t FixedStagingBufferIndex = litl::Constants::uint32_null_index;
 
         uint64_t bufferOffset = 0ull;
         uint64_t bufferSize = 0ull;
-        uint32_t bufferIndex = FixedRingBufferIndex;
+        uint32_t bufferIndex = FixedStagingBufferIndex;
     };
 
     /// <summary>

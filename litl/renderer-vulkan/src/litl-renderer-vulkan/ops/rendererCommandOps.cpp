@@ -661,7 +661,9 @@ namespace litl::vulkan
             return RendererResult::InvalidCommandBufferHandle;
         }
 
-        vulkanContext->getCurrFrameSyncInfo().stagingBufferArena->flushBuffers(commandBuffer);
+        auto& currFrameSync = vulkanContext->getCurrFrameSyncInfo();
+        currFrameSync.stagingBufferArena->flushBuffers(commandBuffer);
+        currFrameSync.stagingTextureArena->flushBuffers(commandBuffer);
 
         return RendererResult::Success;
     }
@@ -687,12 +689,8 @@ namespace litl::vulkan
 
         // Source -> Staging
         auto stagingIndex = frameSync.stagingTextureArena->copyIntoStaging(
-            destTexture->descriptor.dimensions, 
-            destTexture->descriptor.format, 
-            destTexture->descriptor.width, 
-            destTexture->descriptor.height, 
-            destTexture->descriptor.depth, 
-            source);
+            source,
+            0ull);
 
         if (!stagingIndex.has_value())
         {
@@ -710,7 +708,7 @@ namespace litl::vulkan
             return RendererResult::MemoryCopyFailed;
         }
 
-        return RendererResult::NotImplemented;
+        return RendererResult::Success;
     }
 
     RendererResult cmdTextureFlush(litl::RendererContext* context, CommandBufferHandle commandBufferHandle) noexcept
@@ -723,9 +721,9 @@ namespace litl::vulkan
             return RendererResult::InvalidCommandBufferHandle;
         }
 
-        // ... todo ...
+        vulkanContext->getCurrFrameSyncInfo().stagingTextureArena->flushBuffers(commandBuffer);
 
-        return RendererResult::NotImplemented;
+        return RendererResult::Success;
     }
 
     void cmdDraw(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) noexcept
