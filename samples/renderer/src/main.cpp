@@ -83,7 +83,7 @@ struct SampleRenderState
     // Textures
     // -------------------------------------------------------------------------------------
 
-    TextureHandle stripedTexture{};
+    TextureHandle sampleTexture{};
 };
 
 bool createWindow(SampleRenderState& sample) noexcept;
@@ -101,7 +101,7 @@ void updatePerFrameDataBuffer(SampleRenderState& sample) noexcept;
 bool createCameraDataBuffers(SampleRenderState& sample) noexcept;
 bool createCameraDataBuffer(SampleRenderState& sample) noexcept;
 void updatePerCameraDataBuffer(SampleRenderState& sample) noexcept;
-bool createTexture(SampleRenderState& sample) noexcept;
+bool createTexture(SampleRenderState& sample, CommandBufferHandle commandBuffer) noexcept;
 
 int main()
 {
@@ -349,7 +349,7 @@ bool prepareSample(SampleRenderState& sample) noexcept
         createIndexBuffer(sample, commandBufferHandle) &&
         createFrameDataBuffers(sample) &&
         createCameraDataBuffers(sample) &&
-        createTexture(sample))
+        createTexture(sample, commandBufferHandle))
     {
         success = true;
     }
@@ -552,18 +552,32 @@ void updatePerCameraDataBuffer(SampleRenderState& sample) noexcept
 // Texture
 // -----------------------------------------------------------------------------------------
 
-bool createTexture(SampleRenderState& sample) noexcept
+bool createTexture(SampleRenderState& sample, CommandBufferHandle commandBuffer) noexcept
 {
-    sample.stripedTexture = sample.renderer->createTexture(TextureDescriptor{
-        .width = 256,
-        .height = 256,
+    sample.sampleTexture = sample.renderer->createTexture(TextureDescriptor{
+        .width = 3,
+        .height = 3,
         .format = DataFormat::RGBA8_SRGB,
-        .name = "Striped Texture"
+        .name = "Sample Texture"
     });
 
-    if (!sample.stripedTexture.isValid())
+    if (!sample.sampleTexture.isValid())
     {
-        std::cout << "Failed to create striped texture" << std::endl;
+        std::cout << "Failed to create sample texture" << std::endl;
+        return false;
+    }
+
+    std::array<color, 9> pixels = {
+        colors::Red, colors::Red, colors::Red,
+        colors::Green, colors::White, colors::Green,
+        colors::Blue, colors::Blue, colors::Blue
+    };
+
+    const auto result = sample.renderer->cmdTextureUpload(commandBuffer, as_byte_span(pixels), sample.sampleTexture);
+
+    if (result != RendererResult::Success)
+    {
+        std::cout << "Failed to write to sample texture with result " << static_cast<uint32_t>(result) << std::endl;
         return false;
     }
 
