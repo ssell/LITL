@@ -144,7 +144,7 @@ namespace litl::vulkan
 
         if (vkCommandBufferSubmitInfos.size() == 0ull)
         {
-            return RendererResult::NoValidCommandBuffersForSubmission;
+            return RendererResult::InvalidCommandBufferHandle;
         }
 
         const VkFenceCreateInfo fenceInfo{

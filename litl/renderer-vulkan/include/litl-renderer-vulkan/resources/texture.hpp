@@ -7,6 +7,19 @@
 
 namespace litl::vulkan
 {
+    struct TextureMemoryMap
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        void* persistent = nullptr;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        void* temporary = nullptr;
+    };
+
     struct TextureResource
     {
         /// <summary>
@@ -34,6 +47,11 @@ namespace litl::vulkan
         /// Optional pointer to mapped memory, offset, etc.
         /// </summary>
         VmaAllocationInfo allocationInfo{};
+
+        /// <summary>
+        /// 
+        /// </summary>
+        TextureMemoryMap memoryMap{};
 
         /// <summary>
         /// If the texture was provided a name, this is the hashed name.

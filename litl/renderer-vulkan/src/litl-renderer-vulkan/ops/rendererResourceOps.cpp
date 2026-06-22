@@ -21,19 +21,32 @@ namespace litl::vulkan
 
         if (buffer == nullptr)
         {
-            return RendererResult::InvalidBufferForWriting;
+            return RendererResult::InvalidBufferHandle;
         }
 
-        if (buffer->allocationInfo.pMappedData != nullptr)
+        if (buffer->memoryMap.persistent != nullptr)
         {
-            mapped.mappedPtr = buffer->allocationInfo.pMappedData;
-            mapped.shaderDeviceAddress = static_cast<uint64_t>(buffer->bdaAddress);
+            mapped.mappedPtr = buffer->memoryMap.persistent;
+            mapped.shaderDeviceAddress = static_cast<uint64_t>(buffer->memoryMap.bdaAddress);
         }
         else
         {
-            if (vmaMapMemory(vulkanContext->device.vmaAllocator, buffer->allocation, &mapped.mappedPtr) != VK_SUCCESS)
+            if (buffer->memoryMap.temporary == nullptr)
             {
-                return RendererResult::MemoryMapFailed;
+                const VkResult mapResult = vmaMapMemory(vulkanContext->device.vmaAllocator, buffer->allocation, &buffer->memoryMap.temporary);
+
+                if (mapResult == VK_SUCCESS)
+                {
+                    mapped.mappedPtr = buffer->memoryMap.temporary;
+                }
+                else
+                {
+                    return RendererResult::MemoryMapFailed;
+                }
+            }
+            else
+            {
+                return RendererResult::MemoryAlreadyMapped;
             }
         }
 
@@ -45,17 +58,18 @@ namespace litl::vulkan
         auto* vulkanContext = unwrap(context);
         auto* buffer = vulkanContext->resources.getBuffer(handle);
 
-        if ((buffer == nullptr) || (buffer->allocationInfo.pMappedData == nullptr))
+        if (buffer == nullptr)
         {
             return RendererResult::InvalidBufferHandle;
         }
 
         // AUTO + sequential-write usually lands on HOST_COHERENT memory, but this is a no-op when coherent and correct when not, so it's cheap insurance:
-        vmaFlushAllocation(vulkanContext->device.vmaAllocator, buffer->allocation, 0, VK_WHOLE_SIZE);
+        vmaFlushAllocation(vulkanContext->device.vmaAllocator, buffer->allocation, 0ul, VK_WHOLE_SIZE);
 
-        if (buffer->allocationInfo.pMappedData == nullptr)
+        if (buffer->memoryMap.temporary != nullptr)
         {
             vmaUnmapMemory(vulkanContext->device.vmaAllocator, buffer->allocation);
+            buffer->memoryMap.temporary = nullptr;
         }
 
         return RendererResult::Success;
@@ -147,13 +161,60 @@ namespace litl::vulkan
 
     RendererResult mapTexture(litl::RendererContext* context, TextureHandle textureHandle, MappedTexture& mapped) noexcept
     {
-        // ... todo ...
-        return RendererResult::NotImplemented;
+        auto* vulkanContext = unwrap(context);
+        auto* texture = vulkanContext->resources.getTexture(textureHandle);
+
+        if (texture == nullptr)
+        {
+            return RendererResult::InvalidTextureHandle;
+        }
+
+        if (texture->memoryMap.persistent != nullptr)
+        {
+            mapped.mappedPtr = texture->memoryMap.persistent;
+        }
+        else
+        {
+            if (texture->memoryMap.temporary == nullptr)
+            {
+                const VkResult mapResult = vmaMapMemory(vulkanContext->device.vmaAllocator, texture->allocation, &texture->memoryMap.temporary);
+
+                if (mapResult == VK_SUCCESS)
+                {
+                    mapped.mappedPtr = texture->memoryMap.temporary;
+                }
+                else
+                {
+                    return RendererResult::MemoryMapFailed;
+                }
+            }
+            else
+            {
+                return RendererResult::MemoryAlreadyMapped;
+            }
+        }
+
+        return RendererResult::Success;
     }
     
     RendererResult unmapTexture(litl::RendererContext* context, TextureHandle textureHandle) noexcept
     {
-        // ... todo ...
-        return RendererResult::NotImplemented;
+        auto* vulkanContext = unwrap(context);
+        auto* texture = vulkanContext->resources.getTexture(textureHandle);
+
+        if (texture == nullptr)
+        {
+            return RendererResult::InvalidTextureHandle;
+        }
+
+        vmaFlushAllocation(vulkanContext->device.vmaAllocator, texture->allocation, 0ul, VK_WHOLE_SIZE);
+
+        if (texture->memoryMap.temporary != nullptr)
+        {
+            vmaUnmapMemory(vulkanContext->device.vmaAllocator, texture->allocation);
+            texture->memoryMap.temporary = nullptr;
+        }
+
+        return RendererResult::Success;
     }
 }
