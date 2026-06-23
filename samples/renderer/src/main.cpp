@@ -596,7 +596,8 @@ bool createSampler(SampleRenderState& sample) noexcept
 {
     sample.sampler = sample.renderer->createSampler(SamplerDescriptor{ 
         .minFilter = SamplerFilter::Nearest, 
-        .magFilter = SamplerFilter::Nearest 
+        .magFilter = SamplerFilter::Nearest,
+        .minLod = 0.123f
     });
 
     if (!sample.sampler.isValid())

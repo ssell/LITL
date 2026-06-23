@@ -87,7 +87,6 @@ VertexOutput vertexMain(VertexInput input)
 // Fragment Shader
 // -----------------------------------------------------------------------------------------
 
-
 struct FragmentOutput
 {
     float4 color : SV_Target;

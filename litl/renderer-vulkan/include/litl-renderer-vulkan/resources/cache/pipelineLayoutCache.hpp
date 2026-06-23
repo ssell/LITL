@@ -27,7 +27,7 @@ namespace std
     {
         std::size_t operator()(litl::vulkan::PipelineLayoutCacheKey const& layout) const noexcept
         {
-            std::size_t h = 0;
+            std::size_t h = 0ull;
 
             static_assert(sizeof(VkDescriptorSetLayout) == sizeof(uint64_t), "litl::vulkan::PipelineLayoutCacheKey expects VkDescriptorSetLayout to be 64 bits");
 
@@ -57,6 +57,12 @@ namespace litl::vulkan
     class PipelineLayoutCache
     {
     public:
+
+        PipelineLayoutCache() = default;
+        ~PipelineLayoutCache() = default;
+
+        PipelineLayoutCache(PipelineLayoutCache const&) = delete;
+        PipelineLayoutCache& operator=(PipelineLayoutCache const&) = delete;
 
         void build(VkDevice vkDevice) noexcept;
         void destroy() noexcept;

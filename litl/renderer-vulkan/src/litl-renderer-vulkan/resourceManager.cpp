@@ -12,6 +12,7 @@ namespace litl::vulkan
     {
         m_pContext = &context;
         m_pipelineLayoutCache.build(context.device.vkDevice);
+        m_samplerCache.build(context.device.vkDevice);
     }
 
     void ResourceManager::destroy() noexcept
@@ -718,7 +719,14 @@ namespace litl::vulkan
 
     SamplerHandle ResourceManager::createSampler(SamplerDescriptor const& descriptor) noexcept
     {
-        // ... todo look at sampler map ...
+        SamplerCacheKey samplerKey = m_samplerCache.hashSampler(descriptor);
+        SamplerHandle cachedSampler = m_samplerCache.getSampler(samplerKey);
+
+        if (cachedSampler.isValid())
+        {
+            // Already exists based on the descriptor.
+            return cachedSampler;
+        }
 
         SamplerResource resource{
             .descriptor = descriptor
@@ -751,7 +759,10 @@ namespace litl::vulkan
             return {};
         }
 
-        return m_samplerPool.create(resource);
+        SamplerHandle samplerHandle = m_samplerPool.create(resource);
+        m_samplerCache.setSampler(samplerKey, samplerHandle);
+
+        return samplerHandle;
     }
 
     SamplerResource* ResourceManager::getSampler(SamplerHandle handle) noexcept
@@ -770,6 +781,7 @@ namespace litl::vulkan
                 vkDestroySampler(m_pContext->device.vkDevice, resource->vkSampler, nullptr);
             }
 
+            m_samplerCache.removeSampler(handle);
             m_samplerPool.destroy(handle);
         }
     }

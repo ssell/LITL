@@ -14,6 +14,7 @@
 #include "litl-renderer-vulkan/resources/shaderModule.hpp"
 #include "litl-renderer-vulkan/resources/texture.hpp"
 #include "litl-renderer-vulkan/resources/cache/pipelineLayoutCache.hpp"
+#include "litl-renderer-vulkan/resources/cache/samplerCache.hpp"
 #include "litl-renderer-vulkan/resources/map/shaderModuleReferenceMap.hpp"
 
 namespace litl::vulkan
@@ -82,6 +83,7 @@ namespace litl::vulkan
         ShaderModuleReferenceMap m_shaderModuleReferenceMap;
 
         PipelineLayoutCache m_pipelineLayoutCache;
+        SamplerCache m_samplerCache;
 
         StringIdMap<TextureHandle> m_textureMap;
     };
