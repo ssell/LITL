@@ -1015,18 +1015,19 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
         }
 
         TextureResource resource{
-            .descriptor = descriptor
+            .descriptor = descriptor,
+            .vkExtent = VkExtent3D {
+                .width = descriptor.width,
+                .height = descriptor.height,
+                .depth = descriptor.depth
+            }
         };
 
         VkImageCreateInfo createImageInfo{
             .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
             .imageType = toVkImageType(descriptor.dimensions),
             .format = toVkFormat(descriptor.format),
-            .extent = VkExtent3D {
-                .width = descriptor.width,
-                .height = descriptor.height,
-                .depth = descriptor.depth
-            },
+            .extent = resource.vkExtent,
             .mipLevels = descriptor.mipLevels,
             .arrayLayers = descriptor.arrayLayers,
             .samples = static_cast<VkSampleCountFlagBits>(toVkSampleCountFlag(descriptor.sampleCount)),

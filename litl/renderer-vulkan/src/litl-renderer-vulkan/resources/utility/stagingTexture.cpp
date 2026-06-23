@@ -110,11 +110,7 @@ namespace litl::vulkan
                 .baseArrayLayer = destination->vkImageSubresourceRange.baseArrayLayer,
                 .layerCount = destination->vkImageSubresourceRange.layerCount
             },
-            .imageExtent = VkExtent3D {
-                .width = destination->descriptor.width,
-                .height = destination->descriptor.height,
-                .depth = destination->descriptor.depth
-            }
+            .imageExtent = destination->vkExtent
         };
 
         VkCopyBufferToImageInfo2 copyInfo{

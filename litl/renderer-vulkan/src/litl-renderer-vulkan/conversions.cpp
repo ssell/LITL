@@ -175,6 +175,9 @@ namespace litl::vulkan
         case DataFormat::RG16_SFloat:
             return VkFormat::VK_FORMAT_R16G16_SFLOAT;
 
+        case DataFormat::RG32_SFloat:
+            return VkFormat::VK_FORMAT_R32G32_SFLOAT;
+
             // Depth
         case DataFormat::D32_SFloat:
             return VkFormat::VK_FORMAT_R32G32_SFLOAT;
@@ -259,8 +262,11 @@ namespace litl::vulkan
         case VkFormat::VK_FORMAT_R16G16_SFLOAT:
             return DataFormat::RG16_SFloat;
 
-            // Depth
         case VkFormat::VK_FORMAT_R32G32_SFLOAT:
+            return DataFormat::RG32_SFloat;
+
+            // Depth
+        case VkFormat::VK_FORMAT_D32_SFLOAT:
             return DataFormat::D32_SFloat;
 
         case VkFormat::VK_FORMAT_D24_UNORM_S8_UINT:
