@@ -15,6 +15,7 @@ struct Vertex
 {
     vec3 position;
     vec3 color;
+    vec2 uv;
 };
 
 struct PerFrameData
@@ -370,17 +371,20 @@ bool prepareSample(SampleRenderState& sample) noexcept
 bool createVertexBuffer(SampleRenderState& sample, CommandBufferHandle commandBuffer) noexcept
 {
     std::array<Vertex, 3> vertices = {
-        Vertex {
+        Vertex {                                        // top
             .position = { 0.0f, -0.5f, 0.0f },
-            .color = { 1.0f, 0.0f, 0.0f }
+            .color = { 1.0f, 0.0f, 0.0f },
+            .uv = { 0.5f, 1.0f }
         },
-        Vertex {
+        Vertex {                                        // right
             .position = { 0.5f, 0.5f, 0.0f },
-            .color = { 0.0f, 1.0f, 0.0f }
+            .color = { 0.0f, 1.0f, 0.0f },
+            .uv = { 1.0f, 0.0f }
         },
-        Vertex {
+        Vertex {                                        // left
             .position = { -0.5f, 0.5f, 0.0f },
-            .color = { 0.0f, 0.0f, 1.0f }
+            .color = { 0.0f, 0.0f, 1.0f },
+            .uv = { 0.0f, 0.0f }
         }
     };
 

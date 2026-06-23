@@ -731,6 +731,8 @@ namespace litl::vulkan
             1,
             &write
         );
+
+        return RendererResult::Success;
     }
 
     RendererResult cmdTextureUpload(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, std::span<std::byte const> source, TextureHandle destTextureHandle) noexcept
