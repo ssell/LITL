@@ -39,6 +39,11 @@ namespace litl::vulkan
         VkImageView vkImageView = VK_NULL_HANDLE;
 
         /// <summary>
+        /// 
+        /// </summary>
+        VkExtent3D vkExtent{};
+
+        /// <summary>
         /// Used by view creation, barriers, transitions, etc.
         /// </summary>
         VkImageSubresourceRange vkImageSubresourceRange{};

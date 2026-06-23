@@ -274,8 +274,11 @@ bool createTriangleGraphicsPipeline(SampleRenderState& sample) noexcept
     };
 
     graphicsPipelineDescriptor.vertexInput.addBinding(VertexBinding{ 0, sizeof(Vertex), VertexInputRate::PerVertex });
-    graphicsPipelineDescriptor.vertexInput.addAttribute(VertexAttribute{ 0, 0, DataFormat::RGB32_SFloat, 0 });
-    graphicsPipelineDescriptor.vertexInput.addAttribute(VertexAttribute{ 1, 0, DataFormat::RGB32_SFloat, sizeof(vec3) });
+
+    uint32_t offset = 0u;
+    graphicsPipelineDescriptor.vertexInput.addAttribute<vec3>(VertexAttribute{ 0, 0, DataFormat::RGB32_SFloat }, offset);  // position
+    graphicsPipelineDescriptor.vertexInput.addAttribute<vec3>(VertexAttribute{ 1, 0, DataFormat::RGB32_SFloat }, offset);  // color
+    graphicsPipelineDescriptor.vertexInput.addAttribute<vec2>(VertexAttribute{ 2, 0, DataFormat::RG32_SFloat }, offset);   // uv
 
     sample.graphicsPipeline = sample.renderer->createGraphicsPipeline(graphicsPipelineDescriptor);
 
@@ -576,9 +579,9 @@ bool createTexture(SampleRenderState& sample, CommandBufferHandle commandBuffer)
     }
 
     std::array<color, 9> pixels = {
-        colors::Green, colors::Red, colors::Red,
-        colors::Green, colors::White, colors::Green,
-        colors::Red, colors::Red, colors::Red
+        colors::Red, colors::Green, colors::Blue,
+        colors::Blue, colors::Red, colors::Green,
+        colors::Green, colors::Blue, colors::Red
     };
 
     const auto result = sample.renderer->cmdTextureUpload(commandBuffer, as_byte_span(pixels), sample.texture);
@@ -594,7 +597,10 @@ bool createTexture(SampleRenderState& sample, CommandBufferHandle commandBuffer)
 
 bool createSampler(SampleRenderState& sample) noexcept
 {
-    sample.sampler = sample.renderer->createSampler({});
+    sample.sampler = sample.renderer->createSampler(SamplerDescriptor{ 
+        .minFilter = SamplerFilter::Nearest, 
+        .magFilter = SamplerFilter::Nearest 
+    });
 
     if (!sample.sampler.isValid())
     {

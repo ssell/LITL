@@ -117,6 +117,21 @@ namespace litl
         {
             attributes.push_back(attribute);
         }
+
+        /// <summary>
+        /// Variant of addAttribute that updates the offset of the input attribute and returns the offset that the next attribute will be at.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="attribute"></param>
+        /// <param name="rollingOffset"></param>
+        /// <returns></returns>
+        template<typename T>
+        void addAttribute(VertexAttribute attribute, uint32_t& rollingOffset) noexcept
+        {
+            attribute.offset = rollingOffset;
+            attributes.push_back(attribute);
+            rollingOffset += sizeof(T);
+        }
     };
 
     struct InputAssemblyState

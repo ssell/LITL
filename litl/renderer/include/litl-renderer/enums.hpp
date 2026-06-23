@@ -180,6 +180,7 @@ namespace litl
         // Dual Channel
         RG8_UNorm,              // Double channel 8-bit red and green on the range [0,1].
         RG16_SFloat,            // Double channel 16-bit red and green floating point values.
+        RG32_SFloat,            // Double channel 32-bit.
 
         // Depth
         D32_SFloat,             // 32-bit depth floating point value.
