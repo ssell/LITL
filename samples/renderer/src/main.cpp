@@ -90,7 +90,7 @@ struct SampleRenderState
 
 bool createWindow(SampleRenderState& sample) noexcept;
 bool createRenderer(SampleRenderState& sample) noexcept;
-bool createTriangleGraphicsPipeline(SampleRenderState& sample) noexcept;
+bool createGraphicsPipeline(SampleRenderState& sample) noexcept;
 void updateTiming(SampleRenderState& sample) noexcept;
 void beginRender(SampleRenderState& sample) noexcept;
 void endRender(SampleRenderState& sample) noexcept;
@@ -112,39 +112,35 @@ int main()
 
     SampleRenderState sample{};
 
-    if (createWindow(sample) && createRenderer(sample))
+    if (createWindow(sample) && createRenderer(sample) && prepareSample(sample))
     {
         sample.startTime = std::chrono::steady_clock::now();
+        sample.lastFrameTime = std::chrono::steady_clock::now();
 
-        if (createTriangleGraphicsPipeline(sample) && prepareSample(sample))
+        while (!sample.window->shouldClose())
         {
-            sample.lastFrameTime = std::chrono::steady_clock::now();
-
-            while (!sample.window->shouldClose())
+            if (sample.renderer->beginRender())
             {
-                if (sample.renderer->beginRender())
-                {
-                    updateTiming(sample);
+                updateTiming(sample);
 
-                    sample.frameData = sample.renderer->getFrameData();
-                    sample.commandBuffer = sample.renderer->cmdBeginFrame();
+                sample.frameData = sample.renderer->getFrameData();
+                sample.commandBuffer = sample.renderer->cmdBeginFrame();
 
-                    updatePerFrameDataBuffer(sample);
-                    updatePerCameraDataBuffer(sample);
+                updatePerFrameDataBuffer(sample);
+                updatePerCameraDataBuffer(sample);
 
-                    beginRender(sample);
+                beginRender(sample);
 
-                    sample.renderer->cmdBindGraphicsPipeline(sample.commandBuffer, sample.graphicsPipeline);
-                    sample.renderer->cmdPushConstants(sample.commandBuffer, ShaderStage::Fragment, generic_as_byte_span(&sample.pushConstants, sizeof(PushConstants)));
-                    sample.renderer->cmdBindGraphicsBuffer(sample.commandBuffer, sample.cameraDataBuffers[sample.frameData.frameInFlightIndex], "_cameraData"_sid);
-                    sample.renderer->cmdBindVertexBuffer(sample.commandBuffer, sample.vertexBuffer);
-                    sample.renderer->cmdBindIndexBuffer(sample.commandBuffer, sample.indexBuffer);
-                    sample.renderer->cmdBindTexture(sample.commandBuffer, sample.texture, "_texture"_sid, sample.sampler, "_texture_sampler"_sid);
-                    sample.renderer->cmdDraw(sample.commandBuffer, 3, 1, 0, 0);
+                sample.renderer->cmdBindGraphicsPipeline(sample.commandBuffer, sample.graphicsPipeline);
+                sample.renderer->cmdPushConstants(sample.commandBuffer, ShaderStage::Fragment, generic_as_byte_span(&sample.pushConstants, sizeof(PushConstants)));
+                sample.renderer->cmdBindGraphicsBuffer(sample.commandBuffer, sample.cameraDataBuffers[sample.frameData.frameInFlightIndex], "_cameraData"_sid);
+                sample.renderer->cmdBindVertexBuffer(sample.commandBuffer, sample.vertexBuffer);
+                sample.renderer->cmdBindIndexBuffer(sample.commandBuffer, sample.indexBuffer);
+                sample.renderer->cmdBindTexture(sample.commandBuffer, sample.texture, "_texture"_sid, sample.sampler, "_texture_sampler"_sid);
+                sample.renderer->cmdDraw(sample.commandBuffer, 3, 1, 0, 0);
 
-                    endRender(sample);
-                    sample.lastFrameTime = sample.frameStartTime;
-                }
+                endRender(sample);
+                sample.lastFrameTime = sample.frameStartTime;
             }
         }
     }
@@ -223,7 +219,7 @@ bool createShaderModule(Renderer* renderer, std::string const& path) noexcept
     return true;
 }
 
-bool createTriangleGraphicsPipeline(SampleRenderState& sample) noexcept
+bool createGraphicsPipeline(SampleRenderState& sample) noexcept
 {
     const std::string shaderResourcePath = "assets/shaders/spirv/flat.spv";
 
@@ -352,7 +348,8 @@ bool prepareSample(SampleRenderState& sample) noexcept
     auto scopedCommandBuffer = sample.renderer->createScopedCommandBuffer();
     auto commandBufferHandle = scopedCommandBuffer.get();
 
-    if (createVertexBuffer(sample, commandBufferHandle) &&
+    if (createGraphicsPipeline(sample) &&
+        createVertexBuffer(sample, commandBufferHandle) &&
         createIndexBuffer(sample, commandBufferHandle) &&
         createFrameDataBuffers(sample) &&
         createCameraDataBuffers(sample) &&
@@ -374,20 +371,20 @@ bool prepareSample(SampleRenderState& sample) noexcept
 bool createVertexBuffer(SampleRenderState& sample, CommandBufferHandle commandBuffer) noexcept
 {
     std::array<Vertex, 3> vertices = {
+        Vertex {                                        // left
+            .position = { -0.5f, 0.0f, 0.0f },
+            .color = { 0.0f, 1.0f, 0.0f },
+            .uv = { 0.0f, 0.0f }
+        },
         Vertex {                                        // top
-            .position = { 0.0f, -0.5f, 0.0f },
+            .position = { 0.0f, 1.0f, 0.0f },
             .color = { 1.0f, 0.0f, 0.0f },
             .uv = { 0.5f, 1.0f }
         },
         Vertex {                                        // right
-            .position = { 0.5f, 0.5f, 0.0f },
-            .color = { 0.0f, 1.0f, 0.0f },
-            .uv = { 1.0f, 0.0f }
-        },
-        Vertex {                                        // left
-            .position = { -0.5f, 0.5f, 0.0f },
+            .position = { 0.5f, 0.0f, 0.0f },
             .color = { 0.0f, 0.0f, 1.0f },
-            .uv = { 0.0f, 0.0f }
+            .uv = { 1.0f, 0.0f }
         }
     };
 
@@ -547,11 +544,11 @@ void updatePerCameraDataBuffer(SampleRenderState& sample) noexcept
 
     if (sample.renderer->mapBuffer(cameraBuffer, mappedBuffer) == RendererResult::Success)
     {
-        vec3 cameraPos{ 0.0f, 0.0f, -2.5f };
+        vec3 cameraPos{ 0.0f, 0.5f, -2.5f };
         cameraPos.z() += cos(sample.elapsedTime);
 
         sample.perCameraData.projMatrix = mat4::perspective(degreesToRadians(60.0f), sample.window->getAspectRatio(), 0.0f, 10.0f);
-        sample.perCameraData.viewMatrix = mat4::lookAt(cameraPos, vec3(0.0f, 0.0f, 0.0f), vec3::up());
+        sample.perCameraData.viewMatrix = mat4::lookAt(cameraPos, vec3(0.0f, 0.5f, 0.0f), vec3::up());
         sample.perCameraData.viewProjMatrix = sample.perCameraData.projMatrix * sample.perCameraData.viewMatrix;
 
         std::memcpy(mappedBuffer.mappedPtr, &sample.perCameraData, sizeof(PerCameraData));
@@ -579,9 +576,9 @@ bool createTexture(SampleRenderState& sample, CommandBufferHandle commandBuffer)
     }
 
     std::array<color, 9> pixels = {
-        colors::Red, colors::Green, colors::Blue,
-        colors::Blue, colors::Red, colors::Green,
-        colors::Green, colors::Blue, colors::Red
+        colors::Red, colors::Red, colors::Red,
+        colors::Green, colors::Green, colors::Green,
+        colors::Blue, colors::Blue, colors::Blue
     };
 
     const auto result = sample.renderer->cmdTextureUpload(commandBuffer, as_byte_span(pixels), sample.texture);
