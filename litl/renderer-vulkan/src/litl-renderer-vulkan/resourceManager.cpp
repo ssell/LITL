@@ -50,6 +50,26 @@ namespace litl::vulkan
             destroyBuffer(bufferHandle);
         }
 
+        // ---- Samplers
+
+        std::vector<SamplerHandle> samplerHandles;
+        m_samplerPool.getAllHandles(samplerHandles);
+
+        for (auto samplerHandle : samplerHandles)
+        {
+            destroySampler(samplerHandle);
+        }
+
+        // ---- Textures
+
+        std::vector<TextureHandle> textureHandles;
+        m_texturePool.getAllHandles(textureHandles);
+
+        for (auto textureHandle : textureHandles)
+        {
+            destroyTexture(textureHandle);
+        }
+
         // ---- Shader Modules
 
         std::vector<ShaderModuleHandle> shaderModuleHandles;
@@ -676,8 +696,23 @@ namespace litl::vulkan
 
     SamplerHandle ResourceManager::createSampler(SamplerDescriptor const& descriptor) noexcept
     {
-        // ... todo ...
-        return SamplerHandle{};
+        SamplerResource resource{
+            .descriptor = descriptor
+        };
+
+        const VkSamplerCreateInfo createInfo{
+            .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+        };
+
+        const VkResult createResult = vkCreateSampler(m_pContext->device.vkDevice, &createInfo, nullptr, &resource.vkSampler);
+
+        if (createResult != VK_SUCCESS)
+        {
+            logError("Failed to create Vulkan Graphics Sampler with result ", createResult);
+            return {};
+        }
+
+        return m_samplerPool.create(resource);
     }
 
     SamplerResource* ResourceManager::getSampler(SamplerHandle handle) noexcept
@@ -687,9 +722,16 @@ namespace litl::vulkan
 
     void ResourceManager::destroySampler(SamplerHandle handle) noexcept
     {
-        if (m_samplerPool.destroy(handle))
+        SamplerResource* resource = m_samplerPool.get(handle);
+
+        if (resource != nullptr)
         {
-            // ... todo ...
+            if (resource->vkSampler != VK_NULL_HANDLE)
+            {
+                vkDestroySampler(m_pContext->device.vkDevice, resource->vkSampler, nullptr);
+            }
+
+            m_samplerPool.destroy(handle);
         }
     }
 

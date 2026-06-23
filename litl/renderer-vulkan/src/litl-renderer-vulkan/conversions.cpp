@@ -1612,7 +1612,7 @@ namespace litl::vulkan
     // TextureDimensions <-> VkImageType
     // -------------------------------------------------------------------------------------
 
-    [[nodiscard]] VkImageType toVkImageType(TextureDimensions type) noexcept
+    VkImageType toVkImageType(TextureDimensions type) noexcept
     {
         switch (type)
         {
@@ -1631,7 +1631,7 @@ namespace litl::vulkan
         }
     }
 
-    [[nodiscard]] TextureDimensions fromVkImageType(VkImageType type) noexcept
+    TextureDimensions fromVkImageType(VkImageType type) noexcept
     {
         switch (type)
         {
@@ -1647,6 +1647,177 @@ namespace litl::vulkan
         default:
             logError("Unsupported VkImageType of '", static_cast<uint32_t>(type), "' defaulting to TextureDimensions::Texture1D");
             return TextureDimensions::Texture1D;
+        }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // SamplerFilter <-> VkFilter
+    // -------------------------------------------------------------------------------------
+
+    VkFilter toVkFilter(SamplerFilter filter) noexcept
+    {
+        switch (filter)
+        {
+        case SamplerFilter::Nearest:
+            return VkFilter::VK_FILTER_NEAREST;
+
+        case SamplerFilter::Linear:
+            return VkFilter::VK_FILTER_LINEAR;
+
+        default:
+            logError("Unsupported SamplerFilter of '", static_cast<uint32_t>(filter), "' defaulting to VkFilter::VK_FILTER_NEAREST");
+            return VkFilter::VK_FILTER_NEAREST;
+        }
+    }
+
+    SamplerFilter fromVkFilter(VkFilter filter) noexcept
+    {
+        switch (filter)
+        {
+        case VkFilter::VK_FILTER_NEAREST:
+            return SamplerFilter::Nearest;
+
+        case VkFilter::VK_FILTER_LINEAR:
+            return SamplerFilter::Linear;
+
+        default:
+            logError("Unsupported VkFilter of '", static_cast<uint32_t>(filter), "' defaulting to SamplerFilter::Nearest");
+            return SamplerFilter::Nearest;
+        }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // SamplerMipFilter <-> VkSamplerMipmapMode
+    // -------------------------------------------------------------------------------------
+
+    VkSamplerMipmapMode toVkSamplerMipmapMode(SamplerMipFilter filter) noexcept
+    {
+        switch (filter)
+        {
+        case SamplerMipFilter::None:
+            return VkSamplerMipmapMode::VK_SAMPLER_MIPMAP_MODE_NEAREST;
+
+        case SamplerMipFilter::Nearest:
+            return VkSamplerMipmapMode::VK_SAMPLER_MIPMAP_MODE_NEAREST;
+
+        case SamplerMipFilter::Linear:
+            return VkSamplerMipmapMode::VK_SAMPLER_MIPMAP_MODE_LINEAR;
+
+        default:
+            logError("Unsupported SamplerMipFilter of '", static_cast<uint32_t>(filter), "' defaulting to VkFilter::VK_SAMPLER_MIPMAP_MODE_NEAREST");
+            return VkSamplerMipmapMode::VK_SAMPLER_MIPMAP_MODE_NEAREST;
+        }
+    }
+
+    SamplerMipFilter fromVkSamplerMipmapMode(VkSamplerMipmapMode filter) noexcept
+    {
+        switch (filter)
+        {
+        case VkSamplerMipmapMode::VK_SAMPLER_MIPMAP_MODE_NEAREST:
+            return SamplerMipFilter::Nearest;
+
+        case VkSamplerMipmapMode::VK_SAMPLER_MIPMAP_MODE_LINEAR:
+            return SamplerMipFilter::Linear;
+
+        default:
+            logError("Unsupported VkSamplerMipmapMode of '", static_cast<uint32_t>(filter), "' defaulting to SamplerMipFilter::Nearest");
+            return SamplerMipFilter::Nearest;
+        }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // SamplerAddressMode <-> VkSamplerAddressMode
+    // -------------------------------------------------------------------------------------
+
+    VkSamplerAddressMode toVkSamplerAddressMode(SamplerAddressMode mode) noexcept
+    {
+        switch (mode)
+        {
+        case SamplerAddressMode::Repeat:
+            return VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
+
+        case SamplerAddressMode::MirrorRepeat:
+            return VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+
+        case SamplerAddressMode::ClampEdge:
+            return VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+
+        case SamplerAddressMode::ClampBorder:
+            return VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+
+        case SamplerAddressMode::MirrorClampEdge:
+            return VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
+
+        default:
+            logError("Unsupported SamplerAddressMode of '", static_cast<uint32_t>(mode), "' defaulting to VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT");
+            return VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+        }
+    }
+
+    SamplerAddressMode fromVkSamplerAddressMode(VkSamplerAddressMode mode) noexcept
+    {
+        switch (mode)
+        {
+        case VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT:
+            return SamplerAddressMode::Repeat;
+
+        case VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT:
+            return SamplerAddressMode::MirrorRepeat;
+
+        case VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE:
+            return SamplerAddressMode::ClampEdge;
+
+        case VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER:
+            return SamplerAddressMode::ClampBorder;
+
+        case VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE:
+            return SamplerAddressMode::MirrorClampEdge;
+
+        default:
+            logError("Unsupported VkSamplerAddressMode of '", static_cast<uint32_t>(mode), "' defaulting to SamplerAddressMode::Repeat");
+            return SamplerAddressMode::Repeat;
+        }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // SamplerBorderColor <-> VkBorderColor
+    // -------------------------------------------------------------------------------------
+
+    VkBorderColor toVkBorderColor(SamplerBorderColor color) noexcept
+    {
+        switch (color)
+        {
+        case SamplerBorderColor::TransparentBlack:
+            return VkBorderColor::VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
+
+        case SamplerBorderColor::OpaqueBlack:
+            return VkBorderColor::VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+
+        case SamplerBorderColor::OpaqueWhite:
+            return VkBorderColor::VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+
+        default:
+            logError("Unsupported SamplerBorderColor of '", static_cast<uint32_t>(color), "' defaulting to VkBorderColor::VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK");
+            return VkBorderColor::VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
+        }
+    }
+
+    SamplerBorderColor fromVkBorderColor(VkBorderColor color) noexcept
+    {
+        switch (color)
+        {
+        case VkBorderColor::VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK:
+            return SamplerBorderColor::TransparentBlack;
+
+        case VkBorderColor::VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK:
+            return SamplerBorderColor::OpaqueBlack;
+
+        case VkBorderColor::VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE:
+            return SamplerBorderColor::OpaqueWhite;
+
+        default:
+            logError("Unsupported VkBorderColor of '", static_cast<uint32_t>(color), "' defaulting to SamplerBorderColor::TransparentBlack");
+            return SamplerBorderColor::TransparentBlack;
         }
     }
 }
