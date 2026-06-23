@@ -35,7 +35,7 @@ namespace litl
         InvalidTextureForReading,
         InvalidPushConstantSize,
 
-        NoBoundGraphgicsPipeline,
+        NoBoundGraphicsPipeline,
         NoBoundComputePipeline,
         InvalidPipelineResourceKey
     };

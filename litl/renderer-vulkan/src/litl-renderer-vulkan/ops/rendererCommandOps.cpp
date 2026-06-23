@@ -389,7 +389,7 @@ namespace litl::vulkan
 
         if (graphicsPipelineResource == nullptr)     /* todo check compute pipeline */
         {
-            return RendererResult::NoBoundGraphgicsPipeline;
+            return RendererResult::NoBoundGraphicsPipeline;
         }
 
         vkCmdPushConstants(
@@ -507,7 +507,7 @@ namespace litl::vulkan
 
         auto* bufferResource = vulkanContext->resources.getBuffer(bufferHandle);
 
-        if ((bufferResource == nullptr) || (bufferResource->vkBuffer == nullptr))
+        if ((bufferResource == nullptr) || (bufferResource->vkBuffer == VK_NULL_HANDLE))
         {
             return RendererResult::InvalidBufferHandle;
         }
@@ -516,7 +516,7 @@ namespace litl::vulkan
 
         if (graphicsPipeline == nullptr)
         {
-            return RendererResult::NoBoundGraphgicsPipeline;
+            return RendererResult::NoBoundGraphicsPipeline;
         }
 
         auto* resource = graphicsPipeline->resourceMap.getResourceBinding(key);
@@ -563,7 +563,7 @@ namespace litl::vulkan
 
         auto* bufferResource = vulkanContext->resources.getBuffer(bufferHandle);
 
-        if ((bufferResource == nullptr) || (bufferResource->vkBuffer == nullptr))
+        if ((bufferResource == nullptr) || (bufferResource->vkBuffer == VK_NULL_HANDLE))
         {
             return RendererResult::InvalidBufferHandle;
         }
@@ -666,6 +666,64 @@ namespace litl::vulkan
         currFrameSync.stagingTextureArena->flushBuffers(commandBuffer);
 
         return RendererResult::Success;
+    }
+
+    RendererResult cmdBindTexture(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, TextureHandle textureHandle, StringId key, uint64_t offset, uint64_t range) noexcept
+    {
+        // Note this function is _nearly_ identical to cmdBindGraphicsBuffer except for the creation of a VkDescriptorImageInfo instead of a VkDescriptorBufferInfo.
+        // As such, the common logic which comprises 90% of the function could probably be combined.
+
+        auto* vulkanContext = unwrap(context);
+        auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
+
+        if (!isValid(commandBuffer))
+        {
+            return RendererResult::InvalidCommandBufferHandle;
+        }
+
+        auto* textureResource = vulkanContext->resources.getTexture(textureHandle);
+
+        if ((textureResource == nullptr) || (textureResource->vkImage == VK_NULL_HANDLE))
+        {
+            return RendererResult::InvalidTextureHandle;
+        }
+
+        auto* graphicsPipeline = vulkanContext->resources.getGraphicsPipeline(commandBuffer->boundGraphicsPipeline);
+
+        if (graphicsPipeline == nullptr)
+        {
+            return RendererResult::NoBoundGraphicsPipeline;
+        }
+
+        auto* resource = graphicsPipeline->resourceMap.getResourceBinding(key);
+
+        if (resource == nullptr)
+        {
+            return RendererResult::InvalidPipelineResourceKey;
+        }
+
+        const VkDescriptorImageInfo imageInfo{
+            .sampler = VK_NULL_HANDLE,
+            .imageView = textureResource->vkImageView,
+            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL             // todo update to allow shader write to texture
+        };
+
+        const VkWriteDescriptorSet write{
+            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .dstBinding = resource->binding,
+            .descriptorCount = 1,
+            .descriptorType = toVkDescriptorType(resource->type),
+            .pImageInfo = &imageInfo
+        };
+
+        vkCmdPushDescriptorSet(
+            commandBuffer->vkCommandBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            graphicsPipeline->vkPipelineLayout,
+            resource->set,
+            1,
+            &write
+        );
     }
 
     RendererResult cmdTextureUpload(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, std::span<std::byte const> source, TextureHandle destTextureHandle) noexcept
