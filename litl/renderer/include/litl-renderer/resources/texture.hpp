@@ -70,6 +70,11 @@ namespace litl
         MultisampleCount sampleCount = MultisampleCount::Count1;
 
         /// <summary>
+        /// Is the texture to be intrepeted as a cube map?
+        /// </summary>
+        bool isCubeMap = false;
+
+        /// <summary>
         /// Optional name for the texture.
         /// If specified, it needs to be unique (or the original resource path).
         /// Used for hotreloads and debugging.

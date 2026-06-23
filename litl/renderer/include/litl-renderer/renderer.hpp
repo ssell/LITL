@@ -70,7 +70,7 @@ namespace litl
         RendererResult (*unmapBuffer)(RendererContext*, BufferHandle);
 
         // texture commands and operations
-        RendererResult (*cmdBindTexture)(RendererContext*, CommandBufferHandle, TextureHandle, SamplerHandle, StringId, uint64_t, uint64_t);
+        RendererResult (*cmdBindTexture)(RendererContext*, CommandBufferHandle, TextureHandle, StringId, SamplerHandle, StringId);
         RendererResult (*cmdTextureUpload)(RendererContext*, CommandBufferHandle, std::span<std::byte const>, TextureHandle);
         RendererResult (*cmdTextureFlush)(RendererContext*, CommandBufferHandle);
         RendererResult (*mapTexture)(RendererContext*, TextureHandle, MappedTexture&);
@@ -414,9 +414,11 @@ namespace litl
         /// </summary>
         /// <param name="commandBuffer"></param>
         /// <param name="texture"></param>
-        /// <param name="id"></param>
+        /// <param name="textureId"></param>
+        /// <param name="sampler"></param>
+        /// <param name="samplerIdd"></param>
         /// <returns></returns>
-        RendererResult cmdBindTexture(CommandBufferHandle commandBuffer, TextureHandle texture, SamplerHandle sampler, StringId id) const noexcept;
+        RendererResult cmdBindTexture(CommandBufferHandle commandBuffer, TextureHandle texture, StringId textureId, SamplerHandle sampler, StringId samplerIdd) const noexcept;
 
         /// <summary>
         /// 

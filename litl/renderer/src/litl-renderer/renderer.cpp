@@ -248,9 +248,9 @@ namespace litl
         return m_pOps->unmapBuffer(m_pContext, buffer);
     }
 
-    RendererResult Renderer::cmdBindTexture(CommandBufferHandle commandBuffer, TextureHandle texture, SamplerHandle sampler, StringId id) const noexcept
+    RendererResult Renderer::cmdBindTexture(CommandBufferHandle commandBuffer, TextureHandle texture, StringId textureId, SamplerHandle sampler, StringId samplerId) const noexcept
     {
-        return m_pOps->cmdBindTexture(m_pContext, commandBuffer, texture, sampler, id, 0ull, 0ull);
+        return m_pOps->cmdBindTexture(m_pContext, commandBuffer, texture, textureId, sampler, samplerId);
     }
 
     RendererResult Renderer::cmdTextureUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, TextureHandle destTextureHandle) const noexcept

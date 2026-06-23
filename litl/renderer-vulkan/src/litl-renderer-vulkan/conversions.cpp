@@ -1650,6 +1650,55 @@ namespace litl::vulkan
         }
     }
 
+    VkImageViewType toVkImageViewType(TextureDimensions type, bool isArray, bool isCubeMap) noexcept
+    {
+        if (isArray)
+        {
+            if (isCubeMap)
+            {
+                return VkImageViewType::VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
+            }
+
+            switch (type)
+            {
+            case TextureDimensions::Texture1D:
+                return VkImageViewType::VK_IMAGE_VIEW_TYPE_1D_ARRAY;
+
+            case TextureDimensions::Texture2D:
+                return VkImageViewType::VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+
+            default:
+                break;
+            }
+        }
+        else
+        {
+            if (isCubeMap)
+            {
+                return VkImageViewType::VK_IMAGE_VIEW_TYPE_CUBE;
+            }
+
+            switch (type)
+            {
+            case TextureDimensions::Texture1D:
+                return VkImageViewType::VK_IMAGE_VIEW_TYPE_1D;
+
+            case TextureDimensions::Texture2D:
+                return VkImageViewType::VK_IMAGE_VIEW_TYPE_2D;
+
+            case TextureDimensions::Texture3D:
+                return VkImageViewType::VK_IMAGE_VIEW_TYPE_3D;
+
+            default:
+                break;
+            }
+        }
+
+        logError("Unsupported Image View Type specified with type = ", static_cast<uint32_t>(type), ", isArray = ", isArray, ", isCubeMap = ", isCubeMap);
+
+        return VkImageViewType::VK_IMAGE_VIEW_TYPE_MAX_ENUM;
+    }
+
     // -------------------------------------------------------------------------------------
     // SamplerFilter <-> VkFilter
     // -------------------------------------------------------------------------------------

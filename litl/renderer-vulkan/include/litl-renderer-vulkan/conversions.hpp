@@ -94,6 +94,7 @@ namespace litl::vulkan
 
     [[nodiscard]] VkImageType toVkImageType(TextureDimensions type) noexcept;
     [[nodiscard]] TextureDimensions fromVkImageType(VkImageType type) noexcept;
+    [[nodiscard]] VkImageViewType toVkImageViewType(TextureDimensions type, bool isArray, bool isCubeMap) noexcept;
 
     [[nodiscard]] VkFilter toVkFilter(SamplerFilter filter) noexcept;
     [[nodiscard]] SamplerFilter fromVkFilter(VkFilter filter) noexcept;

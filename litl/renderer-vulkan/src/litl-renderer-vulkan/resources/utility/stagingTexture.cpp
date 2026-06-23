@@ -92,7 +92,7 @@ namespace litl::vulkan
         toDst.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         toDst.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
         toDst.image = destination->vkImage;
-        toDst.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, destination->descriptor.mipLevels, 0, 1 };
+        toDst.subresourceRange = destination->vkImageSubresourceRange;
 
         VkDependencyInfo dep{ VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
         dep.imageMemoryBarrierCount = 1;
@@ -105,10 +105,10 @@ namespace litl::vulkan
             .bufferRowLength = 0,                               // tightly packed
             .bufferImageHeight = 0,
             .imageSubresource = VkImageSubresourceLayers {
-                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,        // todo update to support depth, etc.
-                .mipLevel = 0,
-                .baseArrayLayer = 0,
-                .layerCount = 1
+                .aspectMask = destination->vkImageSubresourceRange.aspectMask,
+                .mipLevel = 0u,                                 // todo support mipmapping
+                .baseArrayLayer = destination->vkImageSubresourceRange.baseArrayLayer,
+                .layerCount = destination->vkImageSubresourceRange.layerCount
             },
             .imageExtent = VkExtent3D {
                 .width = destination->descriptor.width,

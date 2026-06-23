@@ -139,7 +139,7 @@ int main()
                     sample.renderer->cmdBindGraphicsBuffer(sample.commandBuffer, sample.cameraDataBuffers[sample.frameData.frameInFlightIndex], "_cameraData"_sid);
                     sample.renderer->cmdBindVertexBuffer(sample.commandBuffer, sample.vertexBuffer);
                     sample.renderer->cmdBindIndexBuffer(sample.commandBuffer, sample.indexBuffer);
-                    sample.renderer->cmdBindTexture(sample.commandBuffer, sample.texture, sample.sampler, "_texture"_sid);
+                    sample.renderer->cmdBindTexture(sample.commandBuffer, sample.texture, "_texture"_sid, sample.sampler, "_texture_sampler"_sid);
                     sample.renderer->cmdDraw(sample.commandBuffer, 3, 1, 0, 0);
 
                     endRender(sample);
@@ -565,7 +565,7 @@ bool createTexture(SampleRenderState& sample, CommandBufferHandle commandBuffer)
     sample.texture = sample.renderer->createTexture(TextureDescriptor{
         .width = 3,
         .height = 3,
-        .format = DataFormat::RGBA8_SRGB,
+        .format = DataFormat::RGBA32_SFloat,
         .name = "Sample Texture"
     });
 
@@ -578,7 +578,7 @@ bool createTexture(SampleRenderState& sample, CommandBufferHandle commandBuffer)
     std::array<color, 9> pixels = {
         colors::Red, colors::Red, colors::Red,
         colors::Green, colors::White, colors::Green,
-        colors::Blue, colors::Blue, colors::Blue
+        colors::Red, colors::Red, colors::Red
     };
 
     const auto result = sample.renderer->cmdTextureUpload(commandBuffer, as_byte_span(pixels), sample.texture);
