@@ -576,7 +576,7 @@ bool createTexture(SampleRenderState& sample, CommandBufferHandle commandBuffer)
     }
 
     std::array<color, 9> pixels = {
-        colors::Red, colors::Red, colors::Red,
+        colors::Green, colors::Red, colors::Red,
         colors::Green, colors::White, colors::Green,
         colors::Red, colors::Red, colors::Red
     };

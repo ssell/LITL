@@ -1014,7 +1014,9 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
             }
         }
 
-        TextureResource resource{};
+        TextureResource resource{
+            .descriptor = descriptor
+        };
 
         VkImageCreateInfo createImageInfo{
             .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
