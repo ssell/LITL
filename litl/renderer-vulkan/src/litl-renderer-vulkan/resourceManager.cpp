@@ -694,14 +694,53 @@ namespace litl::vulkan
     // Sampler
     //--------------------------------------------------------------------------------------
 
+    float toMaxAnisotropy(SamplerAnisotropy anisotropy)
+    {
+        switch (anisotropy)
+        {
+        case SamplerAnisotropy::X2:
+            return 2.0f;
+
+        case SamplerAnisotropy::X4:
+            return 4.0f;
+
+        case SamplerAnisotropy::X8:
+            return 8.0f;
+
+        case SamplerAnisotropy::X16:
+            return 16.0f;
+
+        case SamplerAnisotropy::Off:
+        default:
+            return 0.0f;
+        }
+    }
+
     SamplerHandle ResourceManager::createSampler(SamplerDescriptor const& descriptor) noexcept
     {
+        // ... todo look at sampler map ...
+
         SamplerResource resource{
             .descriptor = descriptor
         };
 
         const VkSamplerCreateInfo createInfo{
             .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+            .magFilter = toVkFilter(descriptor.magFilter),
+            .minFilter = toVkFilter(descriptor.minFilter),
+            .mipmapMode = toVkSamplerMipmapMode(descriptor.mipFilter),
+            .addressModeU = toVkSamplerAddressMode(descriptor.addressU),
+            .addressModeV = toVkSamplerAddressMode(descriptor.addressV),
+            .addressModeW = toVkSamplerAddressMode(descriptor.addressW),
+            .mipLodBias = 0.0f,
+            .anisotropyEnable = (descriptor.anisotropy == SamplerAnisotropy::Off ? VK_FALSE : VK_TRUE),
+            .maxAnisotropy = toMaxAnisotropy(descriptor.anisotropy),
+            .compareEnable = (descriptor.compareOp.has_value() ? VK_TRUE : VK_FALSE),
+            .compareOp = (descriptor.compareOp.has_value() ? toVkCompareOp(descriptor.compareOp.value()) : VK_COMPARE_OP_NEVER),
+            .minLod = descriptor.minLod,
+            .maxLod = descriptor.maxLod,
+            .borderColor = toVkBorderColor(descriptor.border),
+            .unnormalizedCoordinates = VK_FALSE
         };
 
         const VkResult createResult = vkCreateSampler(m_pContext->device.vkDevice, &createInfo, nullptr, &resource.vkSampler);

@@ -83,7 +83,8 @@ struct SampleRenderState
     // Textures
     // -------------------------------------------------------------------------------------
 
-    TextureHandle sampleTexture{};
+    TextureHandle texture{};
+    SamplerHandle sampler{};
 };
 
 bool createWindow(SampleRenderState& sample) noexcept;
@@ -102,6 +103,7 @@ bool createCameraDataBuffers(SampleRenderState& sample) noexcept;
 bool createCameraDataBuffer(SampleRenderState& sample) noexcept;
 void updatePerCameraDataBuffer(SampleRenderState& sample) noexcept;
 bool createTexture(SampleRenderState& sample, CommandBufferHandle commandBuffer) noexcept;
+bool createSampler(SampleRenderState& sample) noexcept;
 
 int main()
 {
@@ -136,6 +138,7 @@ int main()
                     sample.renderer->cmdBindGraphicsBuffer(sample.commandBuffer, sample.cameraDataBuffers[sample.frameData.frameInFlightIndex], "_cameraData"_sid);
                     sample.renderer->cmdBindVertexBuffer(sample.commandBuffer, sample.vertexBuffer);
                     sample.renderer->cmdBindIndexBuffer(sample.commandBuffer, sample.indexBuffer);
+                    sample.renderer->cmdBindTexture(sample.commandBuffer, sample.texture, sample.sampler, "_texture"_sid);
                     sample.renderer->cmdDraw(sample.commandBuffer, 3, 1, 0, 0);
 
                     endRender(sample);
@@ -349,7 +352,8 @@ bool prepareSample(SampleRenderState& sample) noexcept
         createIndexBuffer(sample, commandBufferHandle) &&
         createFrameDataBuffers(sample) &&
         createCameraDataBuffers(sample) &&
-        createTexture(sample, commandBufferHandle))
+        createTexture(sample, commandBufferHandle) &&
+        createSampler(sample))
     {
         success = true;
     }
@@ -554,14 +558,14 @@ void updatePerCameraDataBuffer(SampleRenderState& sample) noexcept
 
 bool createTexture(SampleRenderState& sample, CommandBufferHandle commandBuffer) noexcept
 {
-    sample.sampleTexture = sample.renderer->createTexture(TextureDescriptor{
+    sample.texture = sample.renderer->createTexture(TextureDescriptor{
         .width = 3,
         .height = 3,
         .format = DataFormat::RGBA8_SRGB,
         .name = "Sample Texture"
     });
 
-    if (!sample.sampleTexture.isValid())
+    if (!sample.texture.isValid())
     {
         std::cout << "Failed to create sample texture" << std::endl;
         return false;
@@ -573,11 +577,24 @@ bool createTexture(SampleRenderState& sample, CommandBufferHandle commandBuffer)
         colors::Blue, colors::Blue, colors::Blue
     };
 
-    const auto result = sample.renderer->cmdTextureUpload(commandBuffer, as_byte_span(pixels), sample.sampleTexture);
+    const auto result = sample.renderer->cmdTextureUpload(commandBuffer, as_byte_span(pixels), sample.texture);
 
     if (result != RendererResult::Success)
     {
         std::cout << "Failed to write to sample texture with result " << static_cast<uint32_t>(result) << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+bool createSampler(SampleRenderState& sample) noexcept
+{
+    sample.sampler = sample.renderer->createSampler({});
+
+    if (!sample.sampler.isValid())
+    {
+        std::cout << "Failed to create sample sampler" << std::endl;
         return false;
     }
 

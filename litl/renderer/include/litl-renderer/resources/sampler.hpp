@@ -9,14 +9,14 @@ namespace litl
     struct SamplerDescriptor
     {
         SamplerFilter minFilter = SamplerFilter::Linear;
-        SamplerFilter maxFilter = SamplerFilter::Linear;
+        SamplerFilter magFilter = SamplerFilter::Linear;
         SamplerMipFilter mipFilter = SamplerMipFilter::Linear;
 
         SamplerAddressMode addressU = SamplerAddressMode::Repeat;
         SamplerAddressMode addressV = SamplerAddressMode::Repeat;
         SamplerAddressMode addressW = SamplerAddressMode::Repeat;
 
-        SamplerAnisotropy anisotrop = SamplerAnisotropy::Off;
+        SamplerAnisotropy anisotropy = SamplerAnisotropy::Off;
         std::optional<CompareOperationType> compareOp = std::nullopt;
 
         SamplerBorderColor border = SamplerBorderColor::OpaqueBlack;
