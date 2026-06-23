@@ -50,6 +50,9 @@ struct PerCameraData
 [vk::binding(0, 0)] ConstantBuffer<PerCameraData> _cameraData;
 [vk::binding(1, 0)] Texture2D<float4> _texture;
 [vk::binding(2, 0)] SamplerState _texture_sampler;
+// ^ Remember, for vkCmdPushDescriptorSet it can only push to a single set. It can be called multiple times, but must be for the same set.
+//   In the future, there will be a set designated as the "push descriptor set" and shader authors need to use that set.
+//   The other sets will be handled/populated internally by the engine using descriptor pools or BDA.
 
 // -----------------------------------------------------------------------------------------
 // Vertex Shader
@@ -95,10 +98,11 @@ FragmentOutput fragmentMain(VertexOutput input)
 {
     FragmentOutput output = (FragmentOutput)0;
 
-    //float colorMod = (sin(_pc.frame->elapsedTime) + 1.0f) * 0.5f;
-    //output.color = float4(input.color * colorMod, 1.0);
+    float transition = (sin(_pc.frame->elapsedTime) + 1.0f) * 0.5f;
+    float3 vrtColor = input.color.rgb;
+    float3 texColor = _texture.Sample(_texture_sampler, input.uv).rgb;
 
-    output.color = _texture.Sample(_texture_sampler, input.uv);
+    output.color = float4(lerp(vrtColor, texColor, transition), 1.0f);
 
     return output;
 }
