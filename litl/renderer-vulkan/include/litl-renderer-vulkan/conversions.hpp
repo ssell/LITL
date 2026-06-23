@@ -94,6 +94,20 @@ namespace litl::vulkan
 
     [[nodiscard]] VkImageType toVkImageType(TextureDimensions type) noexcept;
     [[nodiscard]] TextureDimensions fromVkImageType(VkImageType type) noexcept;
+
+    [[nodiscard]] VkFilter toVkFilter(SamplerFilter filter) noexcept;
+    [[nodiscard]] SamplerFilter fromVkFilter(VkFilter filter) noexcept;
+
+    [[nodiscard]] VkSamplerMipmapMode toVkSamplerMipmapMode(SamplerMipFilter filter) noexcept;
+    [[nodiscard]] SamplerMipFilter fromVkSamplerMipmapMode(VkSamplerMipmapMode filter) noexcept;
+
+    [[nodiscard]] VkSamplerAddressMode toVkSamplerAddressMode(SamplerAddressMode mode) noexcept;
+    [[nodiscard]] SamplerAddressMode fromVkSamplerAddressMode(VkSamplerAddressMode mode) noexcept;
+
+    [[nodiscard]] VkBorderColor toVkBorderColor(SamplerBorderColor color) noexcept;
+    [[nodiscard]] SamplerBorderColor fromVkBorderColor(VkBorderColor color) noexcept;
+
+
 }
 
 #endif

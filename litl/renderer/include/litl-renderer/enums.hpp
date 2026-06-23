@@ -372,6 +372,44 @@ namespace litl
         Texture2D = 1,
         Texture3D = 3
     };
+
+    enum class SamplerFilter : uint32_t
+    {
+        Nearest = 0,
+        Linear = 1
+    };
+
+    enum class SamplerMipFilter : uint32_t
+    {
+        None = 0,
+        Nearest = 1,
+        Linear = 2
+    };
+
+    enum class SamplerAddressMode : uint32_t
+    {
+        Repeat = 0,
+        MirrorRepeat = 1,
+        ClampEdge = 2,
+        ClampBorder = 3,
+        MirrorClampEdge = 4
+    };
+
+    enum class SamplerBorderColor : uint32_t
+    {
+        TransparentBlack = 0,
+        OpaqueBlack = 1,
+        OpaqueWhite = 2
+    };
+
+    enum class SamplerAnisotropy : uint32_t
+    {
+        Off = 0,
+        X2 = 1,
+        X4 = 2,
+        X8 = 3,
+        X16 = 4
+    };
 }
 
 #endif

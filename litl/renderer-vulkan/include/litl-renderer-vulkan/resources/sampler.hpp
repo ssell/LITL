@@ -8,7 +8,15 @@ namespace litl::vulkan
 {
     struct SamplerResource
     {
-        // ... todo ...
+        /// <summary>
+        /// The Vulkan sampler handle.
+        /// </summary>
+        VkSampler vkSampler = VK_NULL_HANDLE;
+
+        /// <summary>
+        /// The descriptor that defined the sampler.
+        /// </summary>
+        SamplerDescriptor descriptor{};
     };
 }
 
