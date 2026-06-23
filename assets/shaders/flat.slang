@@ -66,12 +66,14 @@ struct VertexInput
 {
     float3 position : POSITION;
     float3 color : COLOR;
+    float2 uv : UV;
 };
 
 struct VertexOutput
 {
     float4 position : SV_Position;
     float3 color : COLOR;
+    float2 uv : UV;
 };
 
 [shader("vertex")]
@@ -80,13 +82,17 @@ VertexOutput vertexMain(VertexInput input)
     VertexOutput output = (VertexOutput)0;
     output.position = mul(_cameraData.viewProjection, float4(input.position.xy, 0.0, 1.0));
     output.color = input.color;
-
+    output.uv = input.uv;
+    
     return output;
 }
 
 // -----------------------------------------------------------------------------------------
 // Fragment Shader
 // -----------------------------------------------------------------------------------------
+
+[vk::binding(1, 0)] Texture2D<float4> _texture;
+[vk::binding(2, 0)] SamplerState _sampler;
 
 struct FragmentOutput
 {
@@ -98,8 +104,10 @@ FragmentOutput fragmentMain(VertexOutput input)
 {
     FragmentOutput output = (FragmentOutput)0;
 
-    float colorMod = (sin(_pc.frame->elapsedTime) + 1.0f) * 0.5f;
-    output.color = float4(input.color * colorMod, 1.0);
+    //float colorMod = (sin(_pc.frame->elapsedTime) + 1.0f) * 0.5f;
+    //output.color = float4(input.color * colorMod, 1.0);
+
+    output.color = _texture.Sample(_sampler, input.uv);
 
     return output;
 }
