@@ -668,7 +668,7 @@ namespace litl::vulkan
         return RendererResult::Success;
     }
 
-    RendererResult cmdBindTexture(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, TextureHandle textureHandle, StringId key, uint64_t offset, uint64_t range) noexcept
+    RendererResult cmdBindTexture(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, TextureHandle textureHandle, SamplerHandle samplerHandle, StringId key, uint64_t offset, uint64_t range) noexcept
     {
         // Note this function is _nearly_ identical to cmdBindGraphicsBuffer except for the creation of a VkDescriptorImageInfo instead of a VkDescriptorBufferInfo.
         // As such, the common logic which comprises 90% of the function could probably be combined.
@@ -688,6 +688,13 @@ namespace litl::vulkan
             return RendererResult::InvalidTextureHandle;
         }
 
+        auto* samplerResource = vulkanContext->resources.getSampler(samplerHandle);
+
+        if ((samplerResource == nullptr) || (samplerResource->vkSampler == VK_NULL_HANDLE))
+        {
+            return RendererResult::InvalidSamplerHandle;
+        }
+
         auto* graphicsPipeline = vulkanContext->resources.getGraphicsPipeline(commandBuffer->boundGraphicsPipeline);
 
         if (graphicsPipeline == nullptr)
@@ -703,7 +710,7 @@ namespace litl::vulkan
         }
 
         const VkDescriptorImageInfo imageInfo{
-            .sampler = VK_NULL_HANDLE,
+            .sampler = samplerResource->vkSampler,
             .imageView = textureResource->vkImageView,
             .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL             // todo update to allow shader write to texture
         };
