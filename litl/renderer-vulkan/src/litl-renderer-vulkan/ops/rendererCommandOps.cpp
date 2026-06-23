@@ -668,7 +668,7 @@ namespace litl::vulkan
         return RendererResult::Success;
     }
 
-    RendererResult cmdBindTexture(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, TextureHandle textureHandle, SamplerHandle samplerHandle, StringId key, uint64_t offset, uint64_t range) noexcept
+    RendererResult cmdBindTexture(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, TextureHandle textureHandle, StringId textureId, SamplerHandle samplerHandle, StringId samplerId) noexcept
     {
         // Note this function is _nearly_ identical to cmdBindGraphicsBuffer except for the creation of a VkDescriptorImageInfo instead of a VkDescriptorBufferInfo.
         // As such, the common logic which comprises 90% of the function could probably be combined.
@@ -702,34 +702,50 @@ namespace litl::vulkan
             return RendererResult::NoBoundGraphicsPipeline;
         }
 
-        auto* resource = graphicsPipeline->resourceMap.getResourceBinding(key);
+        auto* textureBinding = graphicsPipeline->resourceMap.getResourceBinding(textureId);
+        auto* samplerBinding = graphicsPipeline->resourceMap.getResourceBinding(samplerId);
 
-        if (resource == nullptr)
+        if ((textureBinding == nullptr) || (samplerBinding == nullptr))
         {
             return RendererResult::InvalidPipelineResourceKey;
         }
 
-        const VkDescriptorImageInfo imageInfo{
-            .sampler = samplerResource->vkSampler,
+        const VkDescriptorImageInfo textureDescriptorInfo{
+            .sampler = VK_NULL_HANDLE,
             .imageView = textureResource->vkImageView,
             .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL             // todo update to allow shader write to texture
         };
 
-        const VkWriteDescriptorSet write{
-            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstBinding = resource->binding,
-            .descriptorCount = 1,
-            .descriptorType = toVkDescriptorType(resource->type),
-            .pImageInfo = &imageInfo
+        const VkDescriptorImageInfo samplerDescriptorInfo{
+            .sampler = samplerResource->vkSampler,
+            .imageView = VK_NULL_HANDLE,
+            .imageLayout = VK_IMAGE_LAYOUT_UNDEFINED
+        };
+
+        const VkWriteDescriptorSet descriptorWrites[] {
+                VkWriteDescriptorSet{
+                    .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                    .dstBinding = textureBinding->binding,
+                    .descriptorCount = 1,
+                    .descriptorType = toVkDescriptorType(textureBinding->type),
+                    .pImageInfo = &textureDescriptorInfo
+                },
+                VkWriteDescriptorSet {
+                    .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                    .dstBinding = samplerBinding->binding,
+                    .descriptorCount = 1,
+                    .descriptorType = toVkDescriptorType(samplerBinding->type),
+                    .pImageInfo = &samplerDescriptorInfo
+                }
         };
 
         vkCmdPushDescriptorSet(
             commandBuffer->vkCommandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
             graphicsPipeline->vkPipelineLayout,
-            resource->set,
-            1,
-            &write
+            textureBinding->set,
+            2u,
+            descriptorWrites
         );
 
         return RendererResult::Success;

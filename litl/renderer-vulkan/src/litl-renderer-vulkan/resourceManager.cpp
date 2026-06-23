@@ -1016,7 +1016,7 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
 
         TextureResource resource{};
 
-        const VkImageCreateInfo createInfo{
+        VkImageCreateInfo createImageInfo{
             .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
             .imageType = toVkImageType(descriptor.dimensions),
             .format = toVkFormat(descriptor.format),
@@ -1034,22 +1034,75 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
             .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
         };
 
+        uint32_t layerCount = descriptor.arrayLayers;
+
+        if (descriptor.isCubeMap)
+        {
+            // 6 layers = 1 cube map, 18 layers = array of 3 cube maps, etc.
+            layerCount = descriptor.arrayLayers / 6u;
+
+            if (descriptor.width != descriptor.height)
+            {
+                logError("Failed to create Vulkan image: descriptor specified cube map but dimensions are not square. Width must equal height.");
+                return {};
+            }
+
+            if ((descriptor.arrayLayers == 0u) || ((descriptor.arrayLayers % 6u) != 0u))
+            {
+                logError("Failed to create Vulkan image: descriptor specified cube map but layer count must be a multiple of 6.");
+                return {};
+            }
+
+            createImageInfo.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+        }
+
+        bool isArray = layerCount > 1u;
+
         const VmaAllocationCreateInfo allocateInfo{
             .flags = toVmaAllocationCreateFlag(descriptor.memoryUsage),
             .usage = toVmaMemoryUsage(descriptor.memory)
         };
 
-        const VkResult createResult = vmaCreateImage(
+        const VkResult createImageResult = vmaCreateImage(
             m_pContext->device.vmaAllocator, 
-            &createInfo, 
+            &createImageInfo,
             &allocateInfo, 
             &resource.vkImage, 
             &resource.allocation, 
             &resource.allocationInfo);
 
-        if (createResult != VK_SUCCESS)
+        if (createImageResult != VK_SUCCESS)
         {
-            logError("Failed to create Vulkan texture with result ", createResult);
+            logError("Failed to create Vulkan image with result ", createImageResult);
+            return {};
+        }
+
+        resource.vkImageSubresourceRange = VkImageSubresourceRange{
+                .aspectMask = VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT,     // todo depth
+                .baseMipLevel = 0u,
+                .levelCount = 1u,                   // todo support mipmapping
+                .baseArrayLayer = 0u,
+                .layerCount = layerCount,           // Do not use descriptor.arrayLayers directly. layerCount here includes cube map adjustments.
+        };
+
+        const VkImageViewCreateInfo createImageViewInfo{
+            .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+            .image = resource.vkImage,
+            .viewType = toVkImageViewType(descriptor.dimensions, isArray, descriptor.isCubeMap),
+            .format = toVkFormat(descriptor.format),
+            .components = { VK_COMPONENT_SWIZZLE_IDENTITY },
+            .subresourceRange = resource.vkImageSubresourceRange
+        };
+
+        const VkResult createImageViewResult = vkCreateImageView(
+            m_pContext->device.vkDevice,
+            &createImageViewInfo, nullptr,
+            &resource.vkImageView);
+
+        if (createImageViewResult != VK_SUCCESS)
+        {
+            logError("Failed to create Vulkan image view with result ", createImageViewResult);
+            vmaDestroyImage(m_pContext->device.vmaAllocator, resource.vkImage, resource.allocation);
             return {};
         }
 
@@ -1072,6 +1125,11 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
             if (resource->vkImage != VK_NULL_HANDLE)
             {
                 vmaDestroyImage(m_pContext->device.vmaAllocator, resource->vkImage, resource->allocation);
+            }
+
+            if (resource->vkImageView != VK_NULL_HANDLE)
+            {
+                vkDestroyImageView(m_pContext->device.vkDevice, resource->vkImageView, nullptr);
             }
 
             m_textureMap.erase(resource->id);

@@ -39,6 +39,11 @@ namespace litl::vulkan
         VkImageView vkImageView = VK_NULL_HANDLE;
 
         /// <summary>
+        /// Used by view creation, barriers, transitions, etc.
+        /// </summary>
+        VkImageSubresourceRange vkImageSubresourceRange{};
+
+        /// <summary>
         /// The VMA allocated texture memory.
         /// </summary>
         VmaAllocation allocation = VK_NULL_HANDLE;

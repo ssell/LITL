@@ -28,10 +28,6 @@
  * Where [vk::binding(binding_index, set_index)].
  */
 
-// -----------------------------------------------------------------------------------------
-// Frame Data
-// -----------------------------------------------------------------------------------------
-
 struct PerFrameData
 {
     float elapsedTime;
@@ -43,12 +39,6 @@ struct PushConstants
     PerFrameData *frame;
 };
 
-[vk::push_constant] PushConstants _pc;
-
-// -----------------------------------------------------------------------------------------
-// Camera Data
-// -----------------------------------------------------------------------------------------
-
 struct PerCameraData
 {
     float4x4 view;
@@ -56,7 +46,10 @@ struct PerCameraData
     float4x4 viewProjection;
 }
 
+[vk::push_constant] PushConstants _pc;
 [vk::binding(0, 0)] ConstantBuffer<PerCameraData> _cameraData;
+[vk::binding(1, 0)] Texture2D<float4> _texture;
+[vk::binding(2, 0)] SamplerState _texture_sampler;
 
 // -----------------------------------------------------------------------------------------
 // Vertex Shader
@@ -91,8 +84,6 @@ VertexOutput vertexMain(VertexInput input)
 // Fragment Shader
 // -----------------------------------------------------------------------------------------
 
-[vk::binding(1, 0)] Texture2D<float4> _texture;
-[vk::binding(2, 0)] SamplerState _sampler;
 
 struct FragmentOutput
 {
@@ -107,7 +98,7 @@ FragmentOutput fragmentMain(VertexOutput input)
     //float colorMod = (sin(_pc.frame->elapsedTime) + 1.0f) * 0.5f;
     //output.color = float4(input.color * colorMod, 1.0);
 
-    output.color = _texture.Sample(_sampler, input.uv);
+    output.color = _texture.Sample(_texture_sampler, input.uv);
 
     return output;
 }
