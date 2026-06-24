@@ -32,6 +32,11 @@ namespace litl
         /// Vulkan binding, D3D12 register.
         /// </summary>
         uint32_t binding;
+
+        [[nodiscard]] constexpr bool isPushCompatible() const noexcept
+        {
+            return static_cast<DescriptorSetIndex>(set) == DescriptorSetIndex::PerObject;
+        }
     };
 
     /// <summary>

@@ -57,10 +57,11 @@ namespace litl::vulkan
     [[nodiscard]] RendererResult cmdBindVertexBuffers(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle* bufferHandles, uint64_t* bufferOffsets, uint32_t count, uint32_t firstBinding) noexcept;
     [[nodiscard]] RendererResult cmdBindIndexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, IndexType indexType) noexcept;
     [[nodiscard]] RendererResult cmdBindGraphicsBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, StringId key, uint64_t offset, uint64_t range) noexcept;
-    [[nodiscard]] RendererResult cmdBindComputeBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, StringId key, uint64_t offset, uint64_t range) noexcept;
+    [[nodiscard]] RendererResult cmdBindBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, StringId key, uint64_t offset, uint64_t range, bool isGraphics) noexcept;
     [[nodiscard]] RendererResult cmdBufferUpload(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, std::span<std::byte const> source, BufferHandle destBufferHandle, uint64_t sourceOffset, uint64_t destOffset) noexcept;
     [[nodiscard]] RendererResult cmdBufferFlush(litl::RendererContext* context, CommandBufferHandle commandBufferHandle) noexcept;
-    [[nodiscard]] RendererResult cmdBindTexture(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, TextureHandle textureHandle, StringId textureId, SamplerHandle samplerHandle, StringId samplerId) noexcept;
+    [[nodiscard]] RendererResult cmdBindTexture(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, TextureHandle textureHandle, StringId textureId, bool isGraphics) noexcept;
+    [[nodiscard]] RendererResult cmdBindSampler(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, SamplerHandle samplerHandle, StringId samplerId, bool isGraphics) noexcept;
     [[nodiscard]] RendererResult cmdTextureUpload(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, std::span<std::byte const> source, TextureHandle destTextureHandle) noexcept;
     [[nodiscard]] RendererResult cmdTextureFlush(litl::RendererContext* context, CommandBufferHandle commandBufferHandle) noexcept;
 
@@ -127,13 +128,13 @@ namespace litl::vulkan
         &cmdBindVertexBuffer,
         &cmdBindVertexBuffers,
         &cmdBindIndexBuffer,
-        &cmdBindGraphicsBuffer,
-        &cmdBindComputeBuffer,
+        &cmdBindBuffer,
         &cmdBufferUpload,
         &cmdBufferFlush,
         &mapBuffer,
         &unmapBuffer,
         &cmdBindTexture,
+        &cmdBindSampler,
         &cmdTextureUpload,
         &cmdTextureFlush,
         &mapTexture,
