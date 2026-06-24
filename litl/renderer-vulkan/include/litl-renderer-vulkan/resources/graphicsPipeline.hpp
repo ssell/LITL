@@ -31,6 +31,12 @@ namespace litl::vulkan
         /// Must be retained so that the pipeline can be updated on a shader hot reload.
         /// </summary>
         GraphicsPipelineDescriptor descriptor;
+
+        /// <summary>
+        /// One entry per set the pipeline declares.
+        /// Note: these are owned by the pipeline cache, not by this resource.
+        /// </summary>
+        std::vector<VkDescriptorSetLayout> setLayouts;
     };
 }
 

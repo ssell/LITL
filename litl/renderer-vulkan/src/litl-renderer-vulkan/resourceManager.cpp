@@ -582,6 +582,13 @@ namespace litl::vulkan
 
         populatePipelineResourceMap(resource, pipelineLayoutDescriptor);
 
+        resource.setLayouts.reserve(pipelineLayoutDescriptor.setLayouts.size());
+
+        for (auto i = 0u; i < pipelineLayoutDescriptor.setLayouts.size(); ++i)
+        {
+            resource.setLayouts.push_back(resources.getOrCreateSetLayout(pipelineLayoutDescriptor.setLayouts[i], i));
+        }
+
         // ---- Rendering Info
 
         std::vector<VkFormat> colorAttachmentFormats;
@@ -1172,6 +1179,11 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
     //--------------------------------------------------------------------------------------
     // Pipeline Layout
     //--------------------------------------------------------------------------------------
+
+    VkDescriptorSetLayout ResourceManager::getOrCreateSetLayout(DescriptorSetLayoutDesc const& descriptorSetLayoutDesc, uint32_t setIndex) noexcept
+    {
+        return m_pipelineLayoutCache.getOrCreateSetLayout(descriptorSetLayoutDesc, setIndex);
+    }
 
     VkPipelineLayout ResourceManager::getOrCreatePipelineLayout(PipelineLayoutDescriptor const& pipelineLayoutDesc) noexcept
     {

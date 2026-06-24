@@ -25,8 +25,6 @@ namespace litl::vulkan
         return (resource != nullptr) && (resource->vkCommandBuffer != VK_NULL_HANDLE);
     }
 
-
-
     void cmdPushDescriptorSetBuffer(VkCommandBuffer vkCommandBuffer, VkPipelineLayout vkPipelineLayout, PipelineResourceBinding const* resourceBinding, VkBuffer vkBuffer, VkDeviceSize offset, VkDeviceSize range, VkPipelineBindPoint bindPoint) noexcept
     {
         const VkDescriptorBufferInfo bufferInfo{
@@ -50,6 +48,36 @@ namespace litl::vulkan
             resourceBinding->set,
             1,
             &write);
+    }
+
+    void cmdBindDescriptorSetBuffer(VkDevice vkDevice, VkCommandBuffer vkCommandBuffer, VkPipelineLayout vkPipelineLayout, VkDescriptorSet vkDescriptorSet, PipelineResourceBinding const* resourceBinding, VkBuffer vkBuffer, VkDeviceSize offset, VkDeviceSize range, VkPipelineBindPoint bindPoint) noexcept
+    {
+        const VkDescriptorBufferInfo bufferInfo{
+            .buffer = vkBuffer,
+            .offset = offset,
+            .range = range
+        };
+
+        VkWriteDescriptorSet write{
+            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .dstSet = vkDescriptorSet,
+            .dstBinding = resourceBinding->binding,
+            .descriptorCount = 1,
+            .descriptorType = toVkDescriptorType(resourceBinding->type),
+            .pBufferInfo = &bufferInfo
+        };
+
+        vkUpdateDescriptorSets(vkDevice, 1, &write, 0, nullptr);
+
+        vkCmdBindDescriptorSets(
+            vkCommandBuffer,
+            bindPoint,
+            vkPipelineLayout,
+            resourceBinding->set,
+            1,
+            &vkDescriptorSet,
+            0,
+            nullptr);
     }
 
     void cmdPushDescriptorSetTexture(VkCommandBuffer vkCommandBuffer, VkPipelineLayout vkPipelineLayout, PipelineResourceBinding const* resourceBinding, VkImage vkImage, VkImageView vkImageView, VkPipelineBindPoint bindPoint) noexcept
@@ -141,6 +169,26 @@ namespace litl::vulkan
             }
 
             return nullptr;
+        }
+
+        [[nodiscard]] VkDescriptorSetLayout getSetLayout(uint32_t set) const noexcept
+        {
+            if (graphics != nullptr)
+            {
+                if (graphics->setLayouts.size() > set)
+                {
+                    return graphics->setLayouts[set];
+                }
+            }
+            else if (compute != nullptr)
+            {
+                if (compute->setLayouts.size() > set)
+                {
+                    return compute->setLayouts[set];
+                }
+            }
+
+            return VK_NULL_HANDLE;
         }
     };
 
@@ -665,6 +713,8 @@ namespace litl::vulkan
             return RendererResult::InvalidPipelineResourceKey;
         }
 
+        const auto bindPoint = (isGraphics ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE);
+
         if (bindingResource->isPushCompatible())
         {
             cmdPushDescriptorSetBuffer(
@@ -674,11 +724,23 @@ namespace litl::vulkan
                 bufferResource->vkBuffer, 
                 offset, 
                 range,
-                (isGraphics ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE));
+                bindPoint);
         }
         else
         {
-            // ... todo traditional binding ...
+            VkDescriptorSetLayout layout = boundPipeline.getSetLayout(bindingResource->set);
+            VkDescriptorSet set = vulkanContext->getCurrFrameSyncInfo().descriptorSetAllocator->allocate(layout);
+
+            cmdBindDescriptorSetBuffer(
+                vulkanContext->device.vkDevice,
+                commandBuffer->vkCommandBuffer,
+                boundPipeline.getPipelineLayout(),
+                set,
+                bindingResource,
+                bufferResource->vkBuffer,
+                offset,
+                range,
+                bindPoint);
         }
 
         return RendererResult::Success;

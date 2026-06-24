@@ -29,6 +29,12 @@ namespace litl::vulkan
         /// Map of resources bound in this pipeline.
         /// </summary>
         PipelineResourceMap resourceMap{};
+
+        /// <summary>
+        /// One entry per set the pipeline declares.
+        /// Note: these are owned by the pipeline cache, not by this resource.
+        /// </summary>
+        std::vector<VkDescriptorSetLayout> setLayouts;
     };
 }
 
