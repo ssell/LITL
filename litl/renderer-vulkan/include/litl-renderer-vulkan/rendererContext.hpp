@@ -9,6 +9,7 @@
 #include "litl-renderer-vulkan/resourceManager.hpp"
 #include "litl-renderer-vulkan/resources/utility/stagingBuffer.hpp"
 #include "litl-renderer-vulkan/resources/utility/stagingTexture.hpp"
+#include "litl-renderer-vulkan/resources/utility/descriptorSetAllocator.hpp"
 
 namespace litl
 {
@@ -170,6 +171,13 @@ namespace litl
             /// Note: this is stored in an unique_ptr since PerFrameSyncInfo is itself stored in a vector.
             /// </summary>
             std::unique_ptr<StagingTexture> stagingTextureArena;
+            
+            /// <summary>
+            /// Holds the per-frame descriptor set allocator (collection of pools).
+            /// 
+            /// Note: this is stored in an unique_ptr since PerFrameSyncInfo is itself stored in a vector.
+            /// </summary>
+            std::unique_ptr<DescriptorSetAllocator> descriptorSetAllocator;
         };
 
         /// <summary>

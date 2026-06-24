@@ -697,12 +697,35 @@ namespace litl::vulkan
                 return false;
             }
 
-            // Staging Resources
+            // Per-Frame Staging Arenas
             frameSyncInfo.stagingBufferArena = std::make_unique<StagingBuffer>();
             frameSyncInfo.stagingBufferArena->build(context);
 
             frameSyncInfo.stagingTextureArena = std::make_unique<StagingTexture>();
             frameSyncInfo.stagingTextureArena->build(context);
+
+            // Per-Frame Descriptor Pools
+            const VkDescriptorPoolSize sizes[]{
+                VkDescriptorPoolSize {
+                    .type = VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                    .descriptorCount = context.config.descriptorSet.uboCount
+                },
+                VkDescriptorPoolSize {
+                    .type = VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                    .descriptorCount = context.config.descriptorSet.ssboCount
+                },
+                VkDescriptorPoolSize {
+                    .type = VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+                    .descriptorCount = context.config.descriptorSet.textureCount
+                },
+                VkDescriptorPoolSize {
+                    .type = VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLER,
+                    .descriptorCount = context.config.descriptorSet.samplerCount
+                },
+            };
+
+            frameSyncInfo.descriptorSetAllocator = std::make_unique<DescriptorSetAllocator>();
+            frameSyncInfo.descriptorSetAllocator->build(context, context.config.descriptorSet.setsPerPool, sizes);
         }
 
         return true;
