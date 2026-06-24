@@ -35,6 +35,7 @@ namespace litl
 
         [[nodiscard]] constexpr bool isPushCompatible() const noexcept
         {
+            // Pushes can only be done to a single set, and for LITL that is the PerObject (index 3) set as it has the most potential churn.
             return static_cast<DescriptorSetIndex>(set) == DescriptorSetIndex::PerObject;
         }
     };

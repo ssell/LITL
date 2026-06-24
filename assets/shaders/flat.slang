@@ -30,13 +30,13 @@
 
  // todo: these will be moved into some sort of common file
 #define BindSetPerFrame    0
-#define BindSetPerCamera   1
+#define BindSetPerPass     1
 #define BindSetPerMaterial 2
 #define BindSetPerObject   3
 
 #define Bind(_b, _s)        [[vk::binding(binding, _s)]]
 #define BindPerFrame(_b)    [[vk::binding(_b, BindSetPerFrame)]]
-#define BindPerCamera(_b)   [[vk::binding(_b, BindSetPerCamera)]]
+#define BindPerPass(_b)     [[vk::binding(_b, BindSetPerPass)]]
 #define BindPerMaterial(_b) [[vk::binding(_b, BindSetPerMaterial)]]
 #define BindPerObject(_b)   [[vk::binding(_b, BindSetPerObject)]]
 
@@ -63,9 +63,9 @@ struct PerCameraData
 }
 
 [[vk::push_constant]] PushConstants _pc;
-BindPerObject(0) ConstantBuffer<PerCameraData> _cameraData;
-BindPerObject(1) Texture2D<float4> _texture;
-BindPerObject(2) SamplerState _texture_sampler;
+BindPerPass(0)   ConstantBuffer<PerCameraData> _cameraData;
+BindPerObject(0) Texture2D<float4> _texture;
+BindPerObject(1) SamplerState _texture_sampler;
 
 // -----------------------------------------------------------------------------------------
 // Vertex Shader
