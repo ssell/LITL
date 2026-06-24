@@ -39,7 +39,9 @@ namespace litl::vulkan
         /// Descriptor set specific to each object though the layout may be implicitly shared by other objects.
         /// Example: (object index, instance data)
         /// </summary>
-        PerObject = 3
+        PerObject = 3,
+
+        DescriptorSetMaxCount = 4
     };
 
     /// <summary>

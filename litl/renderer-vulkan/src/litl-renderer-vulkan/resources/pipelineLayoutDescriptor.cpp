@@ -161,7 +161,7 @@ namespace litl::vulkan
             maxSet = std::max(maxSet, mergedResource.set);
         }
 
-        descriptor.setLayouts.resize(resourceBindings.empty() ? 0 : maxSet + 1);
+        descriptor.setLayouts.resize(resourceBindings.empty() ? 0u : maxSet + 1u);
 
         for (auto const& mergedResource : resourceBindings)
         {

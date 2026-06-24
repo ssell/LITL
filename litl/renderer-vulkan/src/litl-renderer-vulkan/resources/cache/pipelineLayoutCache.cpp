@@ -37,7 +37,7 @@ namespace litl::vulkan
     // Get or Create VkDescriptorSetLayout
     // -------------------------------------------------------------------------------------
 
-    VkDescriptorSetLayout createVkDescriptorSetLayout(VkDevice vkDevice, DescriptorSetLayoutDesc const& descriptorSetLayoutDesc) noexcept
+    VkDescriptorSetLayout createVkDescriptorSetLayout(VkDevice vkDevice, DescriptorSetLayoutDesc const& descriptorSetLayoutDesc, bool isPushSet) noexcept
     {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
         bindings.reserve(descriptorSetLayoutDesc.bindings.size());
@@ -55,10 +55,15 @@ namespace litl::vulkan
 
         VkDescriptorSetLayoutCreateInfo info{
             .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-            .flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT,
+            .flags = 0u,
             .bindingCount = static_cast<uint32_t>(descriptorSetLayoutDesc.bindings.size()),
             .pBindings = bindings.data()
         };
+
+        if (isPushSet)
+        {
+            info.flags |= VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT;
+        }
 
         VkDescriptorSetLayout vkDescriptorSetLayout = VK_NULL_HANDLE;
         const VkResult result = vkCreateDescriptorSetLayout(vkDevice, &info, nullptr, &vkDescriptorSetLayout);
@@ -72,7 +77,7 @@ namespace litl::vulkan
         return vkDescriptorSetLayout;
     }
 
-    VkDescriptorSetLayout PipelineLayoutCache::getOrCreateSetLayout(DescriptorSetLayoutDesc const& descriptorSetLayoutDesc) noexcept
+    VkDescriptorSetLayout PipelineLayoutCache::getOrCreateSetLayout(DescriptorSetLayoutDesc const& descriptorSetLayoutDesc, DescriptorSetIndex index) noexcept
     {
         LITL_ASSERT_MSG(m_vkDevice != VK_NULL_HANDLE, "Attempting to use Vulkan PipelineLayoutCache without providing a VkDevice", VK_NULL_HANDLE);
 
@@ -85,7 +90,7 @@ namespace litl::vulkan
         }
 
         // Create
-        auto vkDescriptorSetLayout = createVkDescriptorSetLayout(m_vkDevice, descriptorSetLayoutDesc);
+        auto vkDescriptorSetLayout = createVkDescriptorSetLayout(m_vkDevice, descriptorSetLayoutDesc, (index == DescriptorSetIndex::PerObject));
 
         if (vkDescriptorSetLayout != VK_NULL_HANDLE)
         {
@@ -142,9 +147,12 @@ namespace litl::vulkan
         cacheKey.pushConstants = pipelineLayoutDesc.pushConstants;
         cacheKey.setLayoutHandles.reserve(pipelineLayoutDesc.setLayouts.size());
 
-        for (auto const& setLayout : pipelineLayoutDesc.setLayouts)
+        LITL_ASSERT_MSG((pipelineLayoutDesc.setLayouts.size() <= static_cast<size_t>(DescriptorSetIndex::DescriptorSetMaxCount)), "Pipeline Layout Descriptor Set count exceeds expected maximum count.", VK_NULL_HANDLE);
+
+        for (auto i = 0ull; i < pipelineLayoutDesc.setLayouts.size(); ++i)
         {
-            cacheKey.setLayoutHandles.push_back(getOrCreateSetLayout(setLayout));
+            auto& setLayout = pipelineLayoutDesc.setLayouts[i];
+            cacheKey.setLayoutHandles.push_back(getOrCreateSetLayout(setLayout, static_cast<DescriptorSetIndex>(i)));
         }
 
         // Get

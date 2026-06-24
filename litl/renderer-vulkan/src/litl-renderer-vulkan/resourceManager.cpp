@@ -1173,11 +1173,6 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
     // Pipeline Layout
     //--------------------------------------------------------------------------------------
 
-    VkDescriptorSetLayout ResourceManager::getOrCreateSetLayout(DescriptorSetLayoutDesc const& descriptorSetLayoutDesc) noexcept
-    {
-        return m_pipelineLayoutCache.getOrCreateSetLayout(descriptorSetLayoutDesc);
-    }
-
     VkPipelineLayout ResourceManager::getOrCreatePipelineLayout(PipelineLayoutDescriptor const& pipelineLayoutDesc) noexcept
     {
         return m_pipelineLayoutCache.getOrCreatePipelineLayout(pipelineLayoutDesc);
