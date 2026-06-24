@@ -39,6 +39,24 @@ namespace litl
         .sourceStage = static_cast<PipelineStageFlag>(PipelineStageFlagBits::ColorAttachmentOutput),
         .destStage = static_cast<PipelineStageFlag>(PipelineStageFlagBits::BottomOfPipe)
     };
+
+    static constexpr PipelineBarrierCommand PipelineBarrierUndefinedToTransferDst{
+        .fromLayout = ImageLayoutType::Undefined,
+        .toLayout = ImageLayoutType::TransferDst,
+        .sourceAccess = static_cast<ImageAccessFlag>(ImageAccessFlagBits::None),
+        .destAccess = static_cast<ImageAccessFlag>(ImageAccessFlagBits::TransferWrite),
+        .sourceStage = static_cast<PipelineStageFlag>(PipelineStageFlagBits::None),
+        .destStage = static_cast<PipelineStageFlag>(PipelineStageFlagBits::Copy)
+    };
+
+    static constexpr PipelineBarrierCommand PipelineBarrierTransferDstToShaderRead{
+        .fromLayout = ImageLayoutType::TransferDst,
+        .toLayout = ImageLayoutType::ShaderReadOnly,
+        .sourceAccess = static_cast<ImageAccessFlag>(ImageAccessFlagBits::TransferWrite),
+        .destAccess = static_cast<ImageAccessFlag>(ImageAccessFlagBits::ShaderSampledRead),
+        .sourceStage = static_cast<PipelineStageFlag>(PipelineStageFlagBits::Copy),
+        .destStage = static_cast<PipelineStageFlag>(PipelineStageFlagBits::VertexShader)
+    };
 }
 
 #endif

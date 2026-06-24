@@ -5,7 +5,7 @@
 namespace litl::vulkan
 {
     StagingTexture::StagingTexture()
-        : m_pContext(nullptr)
+        : m_pContext(nullptr), m_fixedHead(0u)
     {
         m_overflowBuffers.reserve(32ull);
     }
@@ -36,7 +36,7 @@ namespace litl::vulkan
             .bufferIndex = StagingTextureIndex::FixedStagingTextureIndex
         };
 
-        if (true) // ((m_fixedHead + stagingIndex.bufferSize) >= m_fixedBufferSize)
+        if ((m_fixedHead + stagingIndex.bufferSize) >= m_fixedBufferSize)
         {
             // No room in the fixed buffer for the source data. Allocate a temporary staging buffer to overflow into.
             BufferHandle tempStagingBufferHandle = createStagingBuffer(stagingIndex.bufferSize);
@@ -83,7 +83,7 @@ namespace litl::vulkan
             LITL_ASSERT_MSG((sourceBuffer != nullptr), "Invalid overflow buffer retrieved for StagingTexture", false);
         }
 
-        // barrier
+        // barrier (undefined -> transfer write)
         VkImageMemoryBarrier2 toDst{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
         toDst.srcStageMask = VK_PIPELINE_STAGE_2_NONE;
         toDst.srcAccessMask = 0;
@@ -124,7 +124,7 @@ namespace litl::vulkan
 
         vkCmdCopyBufferToImage2(commandBuffer->vkCommandBuffer, &copyInfo);
         
-        sourceBuffer->accumulatedDstStageMask |= VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT;     // todo, prob wont work for compute (do compute shaders even use textures?)
+        // barrier (transfer write -> shader sample read)
         toDst.srcStageMask = VK_PIPELINE_STAGE_2_COPY_BIT;
         toDst.srcAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT;
         toDst.dstStageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
@@ -150,39 +150,7 @@ namespace litl::vulkan
 
     void StagingTexture::flushBuffer(CommandBufferResource* commandBuffer, BufferResource* buffer) noexcept
     {
-        if ((buffer == nullptr) || (buffer->accumulatedDstStageMask == VK_PIPELINE_STAGE_2_NONE))
-        {
-            return;
-        }
 
-        /*
-
-        const VkMemoryBarrier memoryBarrier{
-            .sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER,
-            .pNext = nullptr,
-            .srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
-            .dstAccessMask = static_cast<VkAccessFlags>(VK_ACCESS_2_SHADER_STORAGE_READ_BIT)
-        };
-
-
-        vkCmdPipelineBarrier(
-            commandBuffer->vkCommandBuffer,     // command buffer
-            VK_PIPELINE_STAGE_TRANSFER_BIT,     // source stage mask
-            buffer->accumulatedDstStageMask,    // dest stage mask
-            0,                                  // dependency flags
-            1,                                  // memory barrier count
-            &memoryBarrier,                     // memory barriers
-            0,                                  // buffer memory barrier count
-            nullptr,                            // buffer memory barriers
-            0,                                  // image memory barrier count
-            nullptr);                           // image memory barriers
-
-        buffer->accumulatedDstStageMask = VK_PIPELINE_STAGE_2_NONE;
-
-        */
-
-
-        buffer->accumulatedDstStageMask = VK_PIPELINE_STAGE_2_NONE;
     }
 
     void StagingTexture::freeBuffers() noexcept
