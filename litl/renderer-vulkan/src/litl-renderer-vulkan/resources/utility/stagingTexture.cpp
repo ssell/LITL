@@ -102,6 +102,7 @@ namespace litl::vulkan
         // copy
         VkBufferImageCopy2 copyRegion{
             .sType = VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2,
+            .bufferOffset = stagingIndex.bufferOffset,
             .bufferRowLength = 0,                               // tightly packed
             .bufferImageHeight = 0,
             .imageSubresource = VkImageSubresourceLayers {
