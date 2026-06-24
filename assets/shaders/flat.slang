@@ -28,6 +28,22 @@
  * Where [vk::binding(binding_index, set_index)].
  */
 
+ // todo: these will be moved into some sort of common file
+#define BindSetPerFrame    0
+#define BindSetPerCamera   1
+#define BindSetPerMaterial 2
+#define BindSetPerObject   3
+
+#define Bind(_b, _s)        [[vk::binding(binding, _s)]]
+#define BindPerFrame(_b)    [[vk::binding(_b, BindSetPerFrame)]]
+#define BindPerCamera(_b)   [[vk::binding(_b, BindSetPerCamera)]]
+#define BindPerMaterial(_b) [[vk::binding(_b, BindSetPerMaterial)]]
+#define BindPerObject(_b)   [[vk::binding(_b, BindSetPerObject)]]
+
+// -----------------------------------------------------------------------------------------
+// Input
+// -----------------------------------------------------------------------------------------
+
 struct PerFrameData
 {
     float elapsedTime;
@@ -46,13 +62,10 @@ struct PerCameraData
     float4x4 viewProjection;
 }
 
-[vk::push_constant] PushConstants _pc;
-[vk::binding(0, 0)] ConstantBuffer<PerCameraData> _cameraData;
-[vk::binding(1, 0)] Texture2D<float4> _texture;
-[vk::binding(2, 0)] SamplerState _texture_sampler;
-// ^ Remember, for vkCmdPushDescriptorSet it can only push to a single set. It can be called multiple times, but must be for the same set.
-//   In the future, there will be a set designated as the "push descriptor set" and shader authors need to use that set.
-//   The other sets will be handled/populated internally by the engine using descriptor pools or BDA.
+[[vk::push_constant]] PushConstants _pc;
+BindPerObject(0) ConstantBuffer<PerCameraData> _cameraData;
+BindPerObject(1) Texture2D<float4> _texture;
+BindPerObject(2) SamplerState _texture_sampler;
 
 // -----------------------------------------------------------------------------------------
 // Vertex Shader
