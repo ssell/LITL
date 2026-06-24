@@ -740,7 +740,7 @@ namespace litl::vulkan
             .addressModeU = toVkSamplerAddressMode(descriptor.addressU),
             .addressModeV = toVkSamplerAddressMode(descriptor.addressV),
             .addressModeW = toVkSamplerAddressMode(descriptor.addressW),
-            .mipLodBias = 0.0f,
+            .mipLodBias = descriptor.lodBias,
             .anisotropyEnable = (descriptor.anisotropy == SamplerAnisotropy::Off ? VK_FALSE : VK_TRUE),
             .maxAnisotropy = toMaxAnisotropy(descriptor.anisotropy),
             .compareEnable = (descriptor.compareOp.has_value() ? VK_TRUE : VK_FALSE),
@@ -1014,9 +1014,10 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
 
     TextureHandle ResourceManager::createTexture(TextureDescriptor const& descriptor) noexcept
     {
+        auto nameId = StringId(descriptor.name);
+
         if (descriptor.name.length() > 0)
         {
-            auto nameId = StringId(descriptor.name);
             auto existingHandle = getTextureHandle(nameId);
 
             if (existingHandle.isValid())
@@ -1095,9 +1096,9 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
         resource.vkImageSubresourceRange = VkImageSubresourceRange{
                 .aspectMask = VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT,     // todo depth
                 .baseMipLevel = 0u,
-                .levelCount = 1u,                   // todo support mipmapping
+                .levelCount = descriptor.mipLevels,
                 .baseArrayLayer = 0u,
-                .layerCount = layerCount,           // Do not use descriptor.arrayLayers directly. layerCount here includes cube map adjustments.
+                .layerCount = descriptor.arrayLayers,
         };
 
         const VkImageViewCreateInfo createImageViewInfo{
@@ -1123,7 +1124,11 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
 
         resource.memoryMap.persistent = resource.allocationInfo.pMappedData;
 
-        return m_texturePool.create(resource);
+        auto textureHandle = m_texturePool.create(resource);
+
+        m_textureMap[nameId] = textureHandle;
+
+        return textureHandle;
     }
 
     TextureResource* ResourceManager::getTexture(TextureHandle handle) noexcept

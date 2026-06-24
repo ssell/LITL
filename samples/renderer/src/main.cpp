@@ -576,9 +576,9 @@ bool createTexture(SampleRenderState& sample, CommandBufferHandle commandBuffer)
     }
 
     std::array<color, 9> pixels = {
-        colors::Red, colors::Red, colors::Red,
-        colors::Green, colors::Green, colors::Green,
-        colors::Blue, colors::Blue, colors::Blue
+        colors::Black, colors::Black, colors::Black,
+        colors::Pink, colors::Pink, colors::Pink,
+        colors::Black, colors::Black, colors::Black
     };
 
     const auto result = sample.renderer->cmdTextureUpload(commandBuffer, as_byte_span(pixels), sample.texture);

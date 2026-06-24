@@ -28,9 +28,9 @@ namespace litl::vulkan
         }
 
         hashCombine64(hash, static_cast<uint64_t>(descriptor.border));
-        hashCombine64(hash, static_cast<uint64_t>(descriptor.lodBias * 1000.0f));
-        hashCombine64(hash, static_cast<uint64_t>(descriptor.minLod * 1000.0f));
-        hashCombine64(hash, static_cast<uint64_t>(descriptor.maxLod * 1000.0f));
+        hashCombine64(hash, static_cast<uint64_t>(descriptor.lodBias));
+        hashCombine64(hash, static_cast<uint64_t>(descriptor.minLod));
+        hashCombine64(hash, static_cast<uint64_t>(descriptor.maxLod));
 
         return hash;
     }

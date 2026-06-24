@@ -60,12 +60,14 @@ namespace litl
 
     namespace colors
     {
-        static constexpr color Black { 0.0f, 0.0f, 0.0f, 1.0f };
-        static constexpr color White { 1.0f, 1.0f, 1.0f, 1.0f };
-        static constexpr color Clear { 0.0f, 0.0f, 0.0f, 0.0f };
-        static constexpr color Red   { 1.0f, 0.0f, 0.0f, 1.0f };
-        static constexpr color Green { 0.0f, 1.0f, 0.0f, 1.0f };
-        static constexpr color Blue  { 0.0f, 0.0f, 1.0f, 1.0f };
+        static constexpr color Black  { 0.0f, 0.0f, 0.0f, 1.0f };
+        static constexpr color White  { 1.0f, 1.0f, 1.0f, 1.0f };
+        static constexpr color Clear  { 0.0f, 0.0f, 0.0f, 0.0f };
+        static constexpr color Red    { 1.0f, 0.0f, 0.0f, 1.0f };
+        static constexpr color Green  { 0.0f, 1.0f, 0.0f, 1.0f };
+        static constexpr color Blue   { 0.0f, 0.0f, 1.0f, 1.0f };
+        static constexpr color Yellow { 1.0f, 1.0f, 0.0f, 1.0f };
+        static constexpr color Pink   { 1.0f, 0.0f, 1.0f, 1.0f };
     }
 }
 
