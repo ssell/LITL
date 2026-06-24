@@ -34,6 +34,7 @@ namespace litl::vulkan
         auto& prevFrameSync = vulkanContext->getPrevFrameSyncInfo();
         prevFrameSync.stagingBufferArena->freeBuffers();
         prevFrameSync.stagingTextureArena->freeBuffers();
+        prevFrameSync.descriptorSetAllocator->resetTransient();
 
         uint32_t swapChainImageIndex = 0;
 

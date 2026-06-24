@@ -67,7 +67,7 @@ namespace litl::vulkan
         void build(VkDevice vkDevice) noexcept;
         void destroy() noexcept;
 
-        [[nodiscard]] VkDescriptorSetLayout getOrCreateSetLayout(DescriptorSetLayoutDesc const& descriptorSetLayoutDesc, DescriptorSetIndex index) noexcept;
+        [[nodiscard]] VkDescriptorSetLayout getOrCreateSetLayout(DescriptorSetLayoutDesc const& descriptorSetLayoutDesc, uint32_t setIndex) noexcept;
         [[nodiscard]] VkPipelineLayout getOrCreatePipelineLayout(PipelineLayoutDescriptor const& pipelineLayoutDesc) noexcept;
 
     private:
