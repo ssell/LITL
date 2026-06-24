@@ -13,38 +13,6 @@ namespace litl::vulkan
     struct ShaderModuleResource;
 
     /// <summary>
-    /// What each set within a DescriptorSetLayout correlates to.
-    /// </summary>
-    enum class DescriptorSetIndex : uint32_t
-    {
-        /// <summary>
-        /// Descriptor set that is consistent the entire frame.
-        /// Example: (view matrix, projection matrix, time, camera position, frame uniforms)
-        /// </summary>
-        PerFrame = 0,
-
-        /// <summary>
-        /// Descriptor set that is consistent for an entire render pass.
-        /// Example: opaque = (shadow maps, environment data) or transparent = (depth buffer)
-        /// </summary>
-        PerPass = 1,
-
-        /// <summary>
-        /// Descriptor set shared by all objects using the same material.
-        /// Example: skybox = (cloud texture) or opaque = (material textures) or transparent = (smoke texture, noise texture)
-        /// </summary>
-        PerMaterial = 2,
-
-        /// <summary>
-        /// Descriptor set specific to each object though the layout may be implicitly shared by other objects.
-        /// Example: (object index, instance data)
-        /// </summary>
-        PerObject = 3,
-
-        DescriptorSetMaxCount = 4
-    };
-
-    /// <summary>
     /// A singular resource descriptor binding. Each individual descriptor binding is
     /// specified by a descriptor/resource type, an array size, and the set of shader
     /// stages that can access the binding.

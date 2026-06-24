@@ -201,26 +201,15 @@ namespace litl
         return m_pOps->cmdBindIndexBuffer(m_pContext, commandBuffer, buffer, indexType);
     }
 
-    RendererResult Renderer::cmdBindGraphicsBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key, uint64_t offset, uint64_t range) const noexcept
+    RendererResult Renderer::cmdBindBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key, uint64_t offset, uint64_t range, bool isGraphics) const noexcept
     {
-        return m_pOps->cmdBindGraphicsBuffer(m_pContext, handle, buffer, key, offset, range);
+        return m_pOps->cmdBindBuffer(m_pContext, handle, buffer, key, offset, range, isGraphics);
     }
 
-    RendererResult Renderer::cmdBindGraphicsBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key) const noexcept
+    RendererResult Renderer::cmdBindBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key, bool isGraphics) const noexcept
     {
         // Note: ~0ull == VK_WHOLE_SIZE == 0xFFFF...FFFF
-        return cmdBindGraphicsBuffer(handle, buffer, key, 0ull, ~0ull);
-    }
-
-    RendererResult Renderer::cmdBindComputeBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key, uint64_t offset, uint64_t range) const noexcept
-    {
-        return m_pOps->cmdBindComputeBuffer(m_pContext, handle, buffer, key, offset, range);
-    }
-
-    RendererResult Renderer::cmdBindComputeBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key) const noexcept
-    {
-        // Note: ~0ull == VK_WHOLE_SIZE == 0xFFFF...FFFF
-        return cmdBindComputeBuffer(handle, buffer, key, 0ull, ~0ull);
+        return cmdBindBuffer(handle, buffer, key, 0ull, ~0ull, isGraphics);
     }
 
     ScopedBufferUpload Renderer::cmdBeginBufferUpload(CommandBufferHandle commandBuffer) const noexcept
@@ -248,9 +237,14 @@ namespace litl
         return m_pOps->unmapBuffer(m_pContext, buffer);
     }
 
-    RendererResult Renderer::cmdBindTexture(CommandBufferHandle commandBuffer, TextureHandle texture, StringId textureId, SamplerHandle sampler, StringId samplerId) const noexcept
+    RendererResult Renderer::cmdBindTexture(CommandBufferHandle commandBuffer, TextureHandle texture, StringId textureId, bool isGraphics) const noexcept
     {
-        return m_pOps->cmdBindTexture(m_pContext, commandBuffer, texture, textureId, sampler, samplerId);
+        return m_pOps->cmdBindTexture(m_pContext, commandBuffer, texture, textureId, isGraphics);
+    }
+
+    RendererResult Renderer::cmdBindSampler(CommandBufferHandle commandBuffer, SamplerHandle sampler, StringId samplerId, bool isGraphics) const noexcept
+    {
+        return m_pOps->cmdBindSampler(m_pContext, commandBuffer, sampler, samplerId, isGraphics);
     }
 
     RendererResult Renderer::cmdTextureUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, TextureHandle destTextureHandle) const noexcept

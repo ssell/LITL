@@ -4,6 +4,10 @@
 
 namespace litl::vulkan
 {
+    // -------------------------------------------------------------------------------------
+    // Internal Utilities
+    // -------------------------------------------------------------------------------------
+
     CommandBufferResource* unwrapCommandBuffer(litl::RendererContext* context, CommandBufferHandle handle) noexcept
     {
         auto* vulkanContext = unwrap(context);
@@ -20,6 +24,141 @@ namespace litl::vulkan
     {
         return (resource != nullptr) && (resource->vkCommandBuffer != VK_NULL_HANDLE);
     }
+
+
+
+    void cmdPushDescriptorSetBuffer(VkCommandBuffer vkCommandBuffer, VkPipelineLayout vkPipelineLayout, PipelineResourceBinding const* resourceBinding, VkBuffer vkBuffer, VkDeviceSize offset, VkDeviceSize range, VkPipelineBindPoint bindPoint) noexcept
+    {
+        const VkDescriptorBufferInfo bufferInfo{
+            .buffer = vkBuffer,
+            .offset = offset,
+            .range = range
+        };
+
+        VkWriteDescriptorSet write{
+            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .dstBinding = resourceBinding->binding,
+            .descriptorCount = 1,
+            .descriptorType = toVkDescriptorType(resourceBinding->type),
+            .pBufferInfo = &bufferInfo
+        };
+
+        vkCmdPushDescriptorSet(
+            vkCommandBuffer,
+            bindPoint,
+            vkPipelineLayout,
+            resourceBinding->set,
+            1,
+            &write);
+    }
+
+    void cmdPushDescriptorSetTexture(VkCommandBuffer vkCommandBuffer, VkPipelineLayout vkPipelineLayout, PipelineResourceBinding const* resourceBinding, VkImage vkImage, VkImageView vkImageView, VkPipelineBindPoint bindPoint) noexcept
+    {
+        const VkDescriptorImageInfo textureDescriptorInfo{
+            .sampler = VK_NULL_HANDLE,
+            .imageView = vkImageView,
+            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL             // todo update to allow shader write to texture
+        };
+
+        const VkWriteDescriptorSet write{
+            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .dstBinding = resourceBinding->binding,
+            .descriptorCount = 1,
+            .descriptorType = toVkDescriptorType(resourceBinding->type),
+            .pImageInfo = &textureDescriptorInfo
+        };
+
+        vkCmdPushDescriptorSet(
+            vkCommandBuffer,
+            bindPoint,
+            vkPipelineLayout,
+            resourceBinding->set,
+            1u,
+            &write
+        );
+    }
+
+    void cmdPushDescriptorSetSampler(VkCommandBuffer vkCommandBuffer, VkPipelineLayout vkPipelineLayout, PipelineResourceBinding const* resourceBinding, VkSampler vkSampler, VkPipelineBindPoint bindPoint) noexcept
+    {
+        const VkDescriptorImageInfo samplerDescriptorInfo{
+            .sampler = vkSampler,
+            .imageView = VK_NULL_HANDLE,
+            .imageLayout = VK_IMAGE_LAYOUT_UNDEFINED
+        };
+
+        const VkWriteDescriptorSet write{
+            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .dstBinding = resourceBinding->binding,
+            .descriptorCount = 1,
+            .descriptorType = toVkDescriptorType(resourceBinding->type),
+            .pImageInfo = &samplerDescriptorInfo
+        };
+
+
+        vkCmdPushDescriptorSet(
+            vkCommandBuffer,
+            bindPoint,
+            vkPipelineLayout,
+            resourceBinding->set,
+            1u,
+            &write
+        );
+    }
+
+    struct BoundPipeline
+    {
+        GraphicsPipelineResource* graphics = nullptr;
+        ComputePipelineResource* compute = nullptr;
+
+        [[nodiscard]] constexpr bool isValid() const noexcept
+        {
+            return (graphics != nullptr) || (compute != nullptr);
+        }
+
+        [[nodiscard]] VkPipelineLayout getPipelineLayout() const noexcept
+        {
+            if (graphics != nullptr)
+            {
+                return graphics->vkPipelineLayout;
+            }
+            else if (compute != nullptr)
+            {
+                return compute->vkPipelineLayout;
+            }
+
+            return VK_NULL_HANDLE;
+        }
+
+        [[nodiscard]] PipelineResourceBinding const* getResourceBinding(StringId id) const noexcept
+        {
+            if (graphics != nullptr)
+            {
+                return graphics->resourceMap.getResourceBinding(id);
+            }
+            else if (compute != nullptr)
+            {
+                return compute->resourceMap.getResourceBinding(id);
+            }
+
+            return nullptr;
+        }
+    };
+
+    BoundPipeline getBoundPipeline(RendererContext* vulkanContext, CommandBufferResource* commandBuffer, bool isGraphicsPipeline)
+    {
+        if (isGraphicsPipeline)
+        {
+            return BoundPipeline { .graphics = vulkanContext->resources.getGraphicsPipeline(commandBuffer->boundGraphicsPipeline) };
+        }
+        else
+        {
+            return BoundPipeline{ .compute = vulkanContext->resources.getComputePipeline(commandBuffer->boundComputePipeline) };
+        }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // General
+    // -------------------------------------------------------------------------------------
 
     CommandBufferHandle cmdBeginFrame(litl::RendererContext* context) noexcept
     {
@@ -495,7 +634,7 @@ namespace litl::vulkan
         return RendererResult::Success;
     }
 
-    RendererResult cmdBindGraphicsBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, StringId key, uint64_t offset, uint64_t range) noexcept
+    RendererResult cmdBindBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, StringId key, uint64_t offset, uint64_t range, bool isGraphics) noexcept
     {
         auto* vulkanContext = unwrap(context);
         auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
@@ -505,60 +644,11 @@ namespace litl::vulkan
             return RendererResult::InvalidCommandBufferHandle;
         }
 
-        auto* bufferResource = vulkanContext->resources.getBuffer(bufferHandle);
+        auto boundPipeline = getBoundPipeline(vulkanContext, commandBuffer, isGraphics);
 
-        if ((bufferResource == nullptr) || (bufferResource->vkBuffer == VK_NULL_HANDLE))
+        if (!boundPipeline.isValid())
         {
-            return RendererResult::InvalidBufferHandle;
-        }
-
-        auto* graphicsPipeline = vulkanContext->resources.getGraphicsPipeline(commandBuffer->boundGraphicsPipeline);
-
-        if (graphicsPipeline == nullptr)
-        {
-            return RendererResult::NoBoundGraphicsPipeline;
-        }
-
-        auto* resource = graphicsPipeline->resourceMap.getResourceBinding(key);
-
-        if (resource == nullptr)
-        {
-            return RendererResult::InvalidPipelineResourceKey;
-        }
-
-        const VkDescriptorBufferInfo bufferInfo{
-            .buffer = bufferResource->vkBuffer,
-            .offset = offset,
-            .range = range
-        };
-
-        const VkWriteDescriptorSet write{
-            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstBinding = resource->binding,
-            .descriptorCount = 1,
-            .descriptorType = toVkDescriptorType(resource->type),
-            .pBufferInfo = &bufferInfo
-        };
-
-        vkCmdPushDescriptorSet(
-            commandBuffer->vkCommandBuffer,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            graphicsPipeline->vkPipelineLayout,
-            resource->set,
-            1,
-            &write);
-
-        return RendererResult::Success;
-    }
-
-    RendererResult cmdBindComputeBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, StringId key, uint64_t offset, uint64_t range) noexcept
-    {
-        auto* vulkanContext = unwrap(context);
-        auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
-
-        if (!isValid(commandBuffer))
-        {
-            return RendererResult::InvalidCommandBufferHandle;
+            return (isGraphics ? RendererResult::NoBoundGraphicsPipeline : RendererResult::NoBoundComputePipeline);
         }
 
         auto* bufferResource = vulkanContext->resources.getBuffer(bufferHandle);
@@ -568,41 +658,28 @@ namespace litl::vulkan
             return RendererResult::InvalidBufferHandle;
         }
 
-        auto* computePipeline = vulkanContext->resources.getComputePipeline(commandBuffer->boundComputePipeline);
+        auto* bindingResource = boundPipeline.getResourceBinding(key);
 
-        if (computePipeline == nullptr)
-        {
-            return RendererResult::NoBoundComputePipeline;
-        }
-
-        auto* resource = computePipeline->resourceMap.getResourceBinding(key);
-
-        if (resource == nullptr)
+        if (bindingResource == nullptr)
         {
             return RendererResult::InvalidPipelineResourceKey;
         }
 
-        const VkDescriptorBufferInfo bufferInfo{
-            .buffer = bufferResource->vkBuffer,
-            .offset = offset,
-            .range = range
-        };
-
-        const VkWriteDescriptorSet write{
-            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstBinding = resource->binding,
-            .descriptorCount = 1,
-            .descriptorType = toVkDescriptorType(resource->type),
-            .pBufferInfo = &bufferInfo
-        };
-
-        vkCmdPushDescriptorSet(
-            commandBuffer->vkCommandBuffer,
-            VK_PIPELINE_BIND_POINT_COMPUTE,
-            computePipeline->vkPipelineLayout,
-            resource->set,
-            1,
-            &write);
+        if (bindingResource->isPushCompatible())
+        {
+            cmdPushDescriptorSetBuffer(
+                commandBuffer->vkCommandBuffer, 
+                boundPipeline.getPipelineLayout(),
+                bindingResource,
+                bufferResource->vkBuffer, 
+                offset, 
+                range,
+                (isGraphics ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE));
+        }
+        else
+        {
+            // ... todo traditional binding ...
+        }
 
         return RendererResult::Success;
     }
@@ -668,17 +745,21 @@ namespace litl::vulkan
         return RendererResult::Success;
     }
 
-    RendererResult cmdBindTexture(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, TextureHandle textureHandle, StringId textureId, SamplerHandle samplerHandle, StringId samplerId) noexcept
+    RendererResult cmdBindTexture(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, TextureHandle textureHandle, StringId textureId, bool isGraphics) noexcept
     {
-        // Note this function is _nearly_ identical to cmdBindGraphicsBuffer except for the creation of a VkDescriptorImageInfo instead of a VkDescriptorBufferInfo.
-        // As such, the common logic which comprises 90% of the function could probably be combined.
-
         auto* vulkanContext = unwrap(context);
         auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
 
         if (!isValid(commandBuffer))
         {
             return RendererResult::InvalidCommandBufferHandle;
+        }
+
+        auto boundPipeline = getBoundPipeline(vulkanContext, commandBuffer, isGraphics);
+
+        if (!boundPipeline.isValid())
+        {
+            return (isGraphics ? RendererResult::NoBoundGraphicsPipeline : RendererResult::NoBoundComputePipeline);
         }
 
         auto* textureResource = vulkanContext->resources.getTexture(textureHandle);
@@ -688,6 +769,48 @@ namespace litl::vulkan
             return RendererResult::InvalidTextureHandle;
         }
 
+        auto* textureBinding = boundPipeline.getResourceBinding(textureId);
+
+        if (textureBinding == nullptr)
+        {
+            return RendererResult::InvalidPipelineResourceKey;
+        }
+
+        if (textureBinding->isPushCompatible())
+        {
+            cmdPushDescriptorSetTexture(
+                commandBuffer->vkCommandBuffer,
+                boundPipeline.getPipelineLayout(),
+                textureBinding,
+                textureResource->vkImage,
+                textureResource->vkImageView,
+                (isGraphics ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE));
+        }
+        else
+        {
+            // ... todo traditional binding ...
+        }
+
+        return RendererResult::Success;
+    }
+
+    RendererResult cmdBindSampler(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, SamplerHandle samplerHandle, StringId samplerId, bool isGraphics) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+        auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
+
+        if (!isValid(commandBuffer))
+        {
+            return RendererResult::InvalidCommandBufferHandle;
+        }
+
+        auto boundPipeline = getBoundPipeline(vulkanContext, commandBuffer, isGraphics);
+
+        if (!boundPipeline.isValid())
+        {
+            return (isGraphics ? RendererResult::NoBoundGraphicsPipeline : RendererResult::NoBoundComputePipeline);
+        }
+
         auto* samplerResource = vulkanContext->resources.getSampler(samplerHandle);
 
         if ((samplerResource == nullptr) || (samplerResource->vkSampler == VK_NULL_HANDLE))
@@ -695,59 +818,75 @@ namespace litl::vulkan
             return RendererResult::InvalidSamplerHandle;
         }
 
-        auto* graphicsPipeline = vulkanContext->resources.getGraphicsPipeline(commandBuffer->boundGraphicsPipeline);
+        auto* samplerBinding = boundPipeline.getResourceBinding(samplerId);
 
-        if (graphicsPipeline == nullptr)
-        {
-            return RendererResult::NoBoundGraphicsPipeline;
-        }
-
-        auto* textureBinding = graphicsPipeline->resourceMap.getResourceBinding(textureId);
-        auto* samplerBinding = graphicsPipeline->resourceMap.getResourceBinding(samplerId);
-
-        if ((textureBinding == nullptr) || (samplerBinding == nullptr))
+        if (samplerBinding == nullptr)
         {
             return RendererResult::InvalidPipelineResourceKey;
         }
 
-        const VkDescriptorImageInfo textureDescriptorInfo{
-            .sampler = VK_NULL_HANDLE,
-            .imageView = textureResource->vkImageView,
-            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL             // todo update to allow shader write to texture
-        };
+        if (samplerBinding->isPushCompatible())
+        {
+            cmdPushDescriptorSetSampler(
+                commandBuffer->vkCommandBuffer,
+                boundPipeline.getPipelineLayout(),
+                samplerBinding,
+                samplerResource->vkSampler,
+                (isGraphics ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE));
+        }
+        else
+        {
+            // ... todo traditional binding ...
+        }
 
-        const VkDescriptorImageInfo samplerDescriptorInfo{
-            .sampler = samplerResource->vkSampler,
-            .imageView = VK_NULL_HANDLE,
-            .imageLayout = VK_IMAGE_LAYOUT_UNDEFINED
-        };
+        return RendererResult::Success;
+    }
 
-        const VkWriteDescriptorSet descriptorWrites[] {
-                VkWriteDescriptorSet{
-                    .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-                    .dstBinding = textureBinding->binding,
-                    .descriptorCount = 1,
-                    .descriptorType = toVkDescriptorType(textureBinding->type),
-                    .pImageInfo = &textureDescriptorInfo
-                },
-                VkWriteDescriptorSet {
-                    .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-                    .dstBinding = samplerBinding->binding,
-                    .descriptorCount = 1,
-                    .descriptorType = toVkDescriptorType(samplerBinding->type),
-                    .pImageInfo = &samplerDescriptorInfo
-                }
-        };
+    RendererResult cmdBindComputeSampler(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, SamplerHandle samplerHandle, StringId samplerId) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+        auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
 
+        if (!isValid(commandBuffer))
+        {
+            return RendererResult::InvalidCommandBufferHandle;
+        }
 
-        vkCmdPushDescriptorSet(
-            commandBuffer->vkCommandBuffer,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            graphicsPipeline->vkPipelineLayout,
-            textureBinding->set,
-            2u,
-            descriptorWrites
-        );
+        auto* samplerResource = vulkanContext->resources.getSampler(samplerHandle);
+
+        if ((samplerResource == nullptr) || (samplerResource->vkSampler == VK_NULL_HANDLE))
+        {
+            return RendererResult::InvalidSamplerHandle;
+        }
+
+        auto* computePipeline = vulkanContext->resources.getComputePipeline(commandBuffer->boundComputePipeline);
+
+        if (computePipeline == nullptr)
+        {
+            return RendererResult::NoBoundComputePipeline;
+        }
+
+        auto* samplerBinding = computePipeline->resourceMap.getResourceBinding(samplerId);
+
+        if (samplerBinding == nullptr)
+        {
+            return RendererResult::InvalidPipelineResourceKey;
+        }
+
+        if (samplerBinding->isPushCompatible())
+        {
+            cmdPushDescriptorSetSampler(
+                commandBuffer->vkCommandBuffer,
+                computePipeline->vkPipelineLayout,
+                samplerBinding,
+                samplerResource->vkSampler,
+                VK_PIPELINE_BIND_POINT_COMPUTE
+            );
+        }
+        else
+        {
+            // ... todo traditional binding ...
+        }
 
         return RendererResult::Success;
     }

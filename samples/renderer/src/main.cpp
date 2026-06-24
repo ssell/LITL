@@ -133,10 +133,11 @@ int main()
 
                 sample.renderer->cmdBindGraphicsPipeline(sample.commandBuffer, sample.graphicsPipeline);
                 sample.renderer->cmdPushConstants(sample.commandBuffer, ShaderStage::Fragment, generic_as_byte_span(&sample.pushConstants, sizeof(PushConstants)));
-                sample.renderer->cmdBindGraphicsBuffer(sample.commandBuffer, sample.cameraDataBuffers[sample.frameData.frameInFlightIndex], "_cameraData"_sid);
+                sample.renderer->cmdBindBuffer(sample.commandBuffer, sample.cameraDataBuffers[sample.frameData.frameInFlightIndex], "_cameraData"_sid, true);
                 sample.renderer->cmdBindVertexBuffer(sample.commandBuffer, sample.vertexBuffer);
                 sample.renderer->cmdBindIndexBuffer(sample.commandBuffer, sample.indexBuffer);
-                sample.renderer->cmdBindTexture(sample.commandBuffer, sample.texture, "_texture"_sid, sample.sampler, "_texture_sampler"_sid);
+                sample.renderer->cmdBindSampler(sample.commandBuffer, sample.sampler, "_texture_sampler"_sid, true);
+                sample.renderer->cmdBindTexture(sample.commandBuffer, sample.texture, "_texture"_sid, true);
                 sample.renderer->cmdDraw(sample.commandBuffer, 3, 1, 0, 0);
 
                 endRender(sample);

@@ -62,15 +62,15 @@ namespace litl
         RendererResult (*cmdBindVertexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, uint64_t, uint32_t);
         RendererResult (*cmdBindVertexBuffers)(RendererContext*, CommandBufferHandle, BufferHandle*, uint64_t*, uint32_t, uint32_t);
         RendererResult (*cmdBindIndexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, IndexType);
-        RendererResult (*cmdBindGraphicsBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, StringId, uint64_t, uint64_t);
-        RendererResult (*cmdBindComputeBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, StringId, uint64_t, uint64_t);
+        RendererResult (*cmdBindBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, StringId, uint64_t, uint64_t, bool);
         RendererResult (*cmdBufferUpload)(RendererContext*, CommandBufferHandle, std::span<std::byte const>, BufferHandle, uint64_t, uint64_t);
         RendererResult (*cmdBufferFlush)(RendererContext*, CommandBufferHandle);
         RendererResult (*mapBuffer)(RendererContext*, BufferHandle, MappedBuffer&);
         RendererResult (*unmapBuffer)(RendererContext*, BufferHandle);
 
         // texture commands and operations
-        RendererResult (*cmdBindTexture)(RendererContext*, CommandBufferHandle, TextureHandle, StringId, SamplerHandle, StringId);
+        RendererResult (*cmdBindTexture)(RendererContext*, CommandBufferHandle, TextureHandle, StringId, bool);
+        RendererResult (*cmdBindSampler)(RendererContext*, CommandBufferHandle, SamplerHandle, StringId, bool);
         RendererResult (*cmdTextureUpload)(RendererContext*, CommandBufferHandle, std::span<std::byte const>, TextureHandle);
         RendererResult (*cmdTextureFlush)(RendererContext*, CommandBufferHandle);
         RendererResult (*mapTexture)(RendererContext*, TextureHandle, MappedTexture&);
@@ -344,7 +344,7 @@ namespace litl
         /// Binds a generic buffer to the specified slot.
         /// There must be an active graphics pipeline already bound prior to calling this command.
         /// </summary>
-        RendererResult cmdBindGraphicsBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key, uint64_t offset, uint64_t range) const noexcept;
+        RendererResult cmdBindBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key, uint64_t offset, uint64_t range, bool isGraphics) const noexcept;
         
         /// <summary>
         /// 
@@ -353,22 +353,7 @@ namespace litl
         /// <param name="buffer"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        RendererResult cmdBindGraphicsBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key) const noexcept;
-        
-        /// <summary>
-        /// Binds a generic buffer to the specified slot.
-        /// There must be an active compute pipeline already bound prior to calling this command.
-        /// </summary>
-        RendererResult cmdBindComputeBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key, uint64_t offset, uint64_t range) const noexcept;
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="handle"></param>
-        /// <param name="buffer"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        RendererResult cmdBindComputeBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key) const noexcept;
+        RendererResult cmdBindBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key, bool isGraphics) const noexcept;
         
         /// <summary>
         /// 
@@ -415,10 +400,19 @@ namespace litl
         /// <param name="commandBuffer"></param>
         /// <param name="texture"></param>
         /// <param name="textureId"></param>
-        /// <param name="sampler"></param>
-        /// <param name="samplerIdd"></param>
+        /// <param name="isGraphics"></param>
         /// <returns></returns>
-        RendererResult cmdBindTexture(CommandBufferHandle commandBuffer, TextureHandle texture, StringId textureId, SamplerHandle sampler, StringId samplerIdd) const noexcept;
+        RendererResult cmdBindTexture(CommandBufferHandle commandBuffer, TextureHandle texture, StringId textureId, bool isGraphics) const noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="commandBuffer"></param>
+        /// <param name="sampler"></param>
+        /// <param name="samplerId"></param>
+        /// <param name="isGraphics"></param>
+        /// <returns></returns>
+        RendererResult cmdBindSampler(CommandBufferHandle commandBuffer, SamplerHandle sampler, StringId samplerId, bool isGraphics) const noexcept;
 
         /// <summary>
         /// 
