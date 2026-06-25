@@ -381,7 +381,7 @@ namespace litl::vulkan
             {
                 auto& boundResource = pipelineLayout.setLayouts[set].bindings[binding];
 
-                resource.resourceMap.resources.push_back(PipelineResourceBinding{
+                resource.pipeline.resourceMap.resources.push_back(PipelineResourceBinding{
                     .id = boundResource.id,
                     .type = boundResource.type,
                     .set = set,
@@ -582,11 +582,11 @@ namespace litl::vulkan
 
         populatePipelineResourceMap(resource, pipelineLayoutDescriptor);
 
-        resource.setLayouts.reserve(pipelineLayoutDescriptor.setLayouts.size());
+        resource.pipeline.setLayouts.reserve(pipelineLayoutDescriptor.setLayouts.size());
 
         for (auto i = 0u; i < pipelineLayoutDescriptor.setLayouts.size(); ++i)
         {
-            resource.setLayouts.push_back(resources.getOrCreateSetLayout(pipelineLayoutDescriptor.setLayouts[i], i));
+            resource.pipeline.setLayouts.push_back(resources.getOrCreateSetLayout(pipelineLayoutDescriptor.setLayouts[i], i));
         }
 
         // ---- Rendering Info
@@ -643,7 +643,7 @@ namespace litl::vulkan
             .basePipelineIndex = -1             // not used yet
         };
 
-        const VkResult result = vkCreateGraphicsPipelines(context->device.vkDevice, context->device.vkPipelineCache, 1, &createInfo, nullptr, &resource.vkPipeline);
+        const VkResult result = vkCreateGraphicsPipelines(context->device.vkDevice, context->device.vkPipelineCache, 1, &createInfo, nullptr, &resource.pipeline.vkPipeline);
 
         if (result != VK_SUCCESS)
         {
@@ -651,7 +651,7 @@ namespace litl::vulkan
             return false;
         }
 
-        resource.vkPipelineLayout = vkPipelineLayout;
+        resource.pipeline.vkPipelineLayout = vkPipelineLayout;
 
         return true;
     }
@@ -689,9 +689,9 @@ namespace litl::vulkan
         {
             m_shaderModuleReferenceMap.onGraphicsPipelineDestroyed(this, resource);
 
-            if (resource->vkPipeline != VK_NULL_HANDLE)
+            if (resource->pipeline.vkPipeline != VK_NULL_HANDLE)
             {
-                vkDestroyPipeline(m_pContext->device.vkDevice, resource->vkPipeline, nullptr);
+                vkDestroyPipeline(m_pContext->device.vkDevice, resource->pipeline.vkPipeline, nullptr);
             }
 
             m_graphicsPipelinePool.destroy(handle);
@@ -965,8 +965,8 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
 
                 if (createGraphicsPipelineResource(*this, m_pContext, stagedGraphicsPipeline, graphicsPipelineResource->descriptor))
                 {
-                    VkPipeline oldGraphicsPipeline = graphicsPipelineResource->vkPipeline;
-                    graphicsPipelineResource->vkPipeline = stagedGraphicsPipeline.vkPipeline;
+                    VkPipeline oldGraphicsPipeline = graphicsPipelineResource->pipeline.vkPipeline;
+                    graphicsPipelineResource->pipeline.vkPipeline = stagedGraphicsPipeline.pipeline.vkPipeline;
 
                     vkDestroyPipeline(m_pContext->device.vkDevice, oldGraphicsPipeline, nullptr);
                 }
@@ -983,8 +983,8 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
 
                 if (createComputePipelineResource(*this, m_pContext, stagedComputePipeline, computePipelineResource->descriptor))
                 {
-                    VkPipeline oldComputePipeline = computePipelineResource->vkPipeline;
-                    computePipelineResource->vkPipeline = stagedComputePipeline.vkPipeline;
+                    VkPipeline oldComputePipeline = computePipelineResource->pipeline.vkPipeline;
+                    computePipelineResource->pipeline.vkPipeline = stagedComputePipeline.pipeline.vkPipeline;
 
                     vkDestroyPipeline(m_pContext->device.vkDevice, oldComputePipeline, nullptr);
                 }

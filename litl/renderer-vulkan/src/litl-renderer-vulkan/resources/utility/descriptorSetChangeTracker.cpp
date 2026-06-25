@@ -3,6 +3,7 @@
 #include "litl-core/math/bit.hpp"
 #include "litl-renderer/resources/shaderModule.hpp"
 #include "litl-renderer-vulkan/rendererContext.hpp"
+#include "litl-renderer-vulkan/resources/pipeline.hpp"
 
 namespace litl::vulkan
 {
@@ -34,7 +35,27 @@ namespace litl::vulkan
         bitSet(m_dirtyMask, set);
     }
 
-    void DescriptorSetChangeTracker::flushChanges(
+    void DescriptorSetChangeTracker::flushChanges(RendererContext& context, VkCommandBuffer vkCommandBuffer, PipelineResource& pipeline, bool isGraphics) noexcept
+    {
+        if (m_dirtyMask == 0u)
+        {
+            return;
+        }
+
+        const VkPipelineBindPoint vkBindPoint = (isGraphics ? VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS : VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE);
+
+        for (uint32_t i = 0u; i < MaxDescriptorSets; ++i)
+        {
+            if (bitCheck(m_dirtyMask, i))
+            {
+                flushChange(context, vkCommandBuffer, pipeline.vkPipelineLayout, vkBindPoint, pipeline.setLayouts[i], i);
+            }
+        }
+
+        m_dirtyMask = 0u;
+    }
+
+    void DescriptorSetChangeTracker::flushChange(
         RendererContext& context, 
         VkCommandBuffer vkCommandBuffer, 
         VkPipelineLayout vkPipelineLayout, 
@@ -42,68 +63,62 @@ namespace litl::vulkan
         VkDescriptorSetLayout vkDescriptorSetLayout, 
         uint32_t set) noexcept
     {
-        LITL_ASSERT_MSG((set < m_pendingChanges.size()), "DescriptorSetChangeTracker provided out-of-bounds set index for image/sampler change.", );
-        
-        if (bitCheck(m_dirtyMask, set))
+        auto& pending = m_pendingChanges[set];
+
+        std::vector<VkWriteDescriptorSet> writes;
+        writes.reserve(pending.size());
+
+        for (auto& change : pending)
         {
-            auto const& pending = m_pendingChanges[set];
-
-            std::vector<VkWriteDescriptorSet> writes;
-            writes.reserve(pending.size());
-
-            for (auto& change : pending)
-            {
-                writes.push_back(VkWriteDescriptorSet{
-                    .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-                    .dstBinding = change.binding,
-                    .descriptorCount = 1,
-                    .descriptorType = change.type,
-                    .pBufferInfo = &change.bufferInfo
+            writes.push_back(VkWriteDescriptorSet{
+                .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                .dstBinding = change.binding,
+                .descriptorCount = 1,
+                .descriptorType = change.type,
+                .pBufferInfo = &change.bufferInfo
                 });
-            }
-
-            // PerObject is the dedicated "push" set. There can only be one push set.
-            if (set == static_cast<uint32_t>(DescriptorSetIndex::PerObject))
-            {
-                vkCmdPushDescriptorSet(
-                    vkCommandBuffer,
-                    vkBindPoint,
-                    vkPipelineLayout,
-                    set,
-                    static_cast<uint32_t>(writes.size()),
-                    writes.data()
-                );
-            }
-            else
-            {
-                VkDescriptorSet vkDescriptorSet = context.getCurrFrameSyncInfo().descriptorSetAllocator->allocate(vkDescriptorSetLayout);
-
-                for (auto& write : writes)
-                {
-                    // Push path does not specify a dstSet, so set it now
-                    write.dstSet = vkDescriptorSet;
-                }
-                
-                vkUpdateDescriptorSets(
-                    context.device.vkDevice,
-                    static_cast<uint32_t>(writes.size()),
-                    writes.data(),
-                    0,
-                    nullptr);
-
-                vkCmdBindDescriptorSets(
-                    vkCommandBuffer,
-                    vkBindPoint,
-                    vkPipelineLayout,
-                    set,
-                    1,
-                    &vkDescriptorSet,
-                    0,
-                    nullptr);
-            }
-
-            m_pendingChanges[set].clear();
-            bitClear(m_dirtyMask, set);
         }
+
+        // PerObject is the dedicated "push" set. There can only be one push set.
+        if (set == static_cast<uint32_t>(DescriptorSetIndex::PerObject))
+        {
+            vkCmdPushDescriptorSet(
+                vkCommandBuffer,
+                vkBindPoint,
+                vkPipelineLayout,
+                set,
+                static_cast<uint32_t>(writes.size()),
+                writes.data()
+            );
+        }
+        else
+        {
+            VkDescriptorSet vkDescriptorSet = context.getCurrFrameSyncInfo().descriptorSetAllocator->allocate(vkDescriptorSetLayout);
+
+            for (auto& write : writes)
+            {
+                // Push path does not specify a dstSet, so set it now
+                write.dstSet = vkDescriptorSet;
+            }
+
+            vkUpdateDescriptorSets(
+                context.device.vkDevice,
+                static_cast<uint32_t>(writes.size()),
+                writes.data(),
+                0,
+                nullptr);
+
+            vkCmdBindDescriptorSets(
+                vkCommandBuffer,
+                vkBindPoint,
+                vkPipelineLayout,
+                set,
+                1,
+                &vkDescriptorSet,
+                0,
+                nullptr);
+        }
+
+        pending.clear();
     }
 }
