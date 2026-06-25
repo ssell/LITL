@@ -72,7 +72,6 @@ namespace litl
         RendererResult (*cmdBindTexture)(RendererContext*, CommandBufferHandle, TextureHandle, StringId, bool);
         RendererResult (*cmdBindSampler)(RendererContext*, CommandBufferHandle, SamplerHandle, StringId, bool);
         RendererResult (*cmdTextureUpload)(RendererContext*, CommandBufferHandle, std::span<std::byte const>, TextureHandle);
-        RendererResult (*cmdTextureFlush)(RendererContext*, CommandBufferHandle);
         RendererResult (*mapTexture)(RendererContext*, TextureHandle, MappedTexture&);
         RendererResult (*unmapTexture)(RendererContext*, TextureHandle);
 
@@ -120,7 +119,7 @@ namespace litl
         [[nodiscard]] BufferHandle createBuffer(BufferDescriptor const& descriptor) const noexcept;
         
         /// <summary>
-        /// 
+        /// Destroys the underlying buffer resource pointed to by the provided handle.
         /// </summary>
         /// <param name="handle"></param>
         void destroyBuffer(BufferHandle handle) const noexcept;
@@ -140,13 +139,13 @@ namespace litl
         [[nodiscard]] ScopedCommandBuffer createScopedCommandBuffer() const noexcept;
 
         /// <summary>
-        /// 
+        /// Destroys the underlying command buffer resource pointed to by the provided handle.
         /// </summary>
         /// <param name="handle"></param>
         void destroyCommandBuffer(CommandBufferHandle handle) const noexcept;
         
         /// <summary>
-        /// 
+        /// Destroys the underlying compute pipeline resource pointed to by the provided handle.
         /// </summary>
         /// <param name="descriptor"></param>
         /// <returns></returns>
@@ -166,7 +165,7 @@ namespace litl
         [[nodiscard]] GraphicsPipelineHandle createGraphicsPipeline(GraphicsPipelineDescriptor const& descriptor) const noexcept;
         
         /// <summary>
-        /// 
+        /// Destroys the underlying graphics pipeline resource pointed to by the provided handle.
         /// </summary>
         /// <param name="handle"></param>
         void destroyGraphicsPipeline(GraphicsPipelineHandle handle) const noexcept;
@@ -179,7 +178,7 @@ namespace litl
         [[nodiscard]] SamplerHandle createSampler(SamplerDescriptor const& descriptor) const noexcept;
         
         /// <summary>
-        /// 
+        /// Destroys the underlying sampler resource pointed to by the provided handle.
         /// </summary>
         /// <param name="handle"></param>
         void destroySampler(SamplerHandle handle) const noexcept;
@@ -205,7 +204,7 @@ namespace litl
         void reloadShaderModule(ShaderModuleDescriptor const& descriptor) const noexcept;
         
         /// <summary>
-        /// 
+        /// Destroys the underlying shader resource pointed to by the provided handle.
         /// </summary>
         /// <param name="handle"></param>
         void destroyShaderModule(ShaderModuleHandle handle) const noexcept;
@@ -218,7 +217,7 @@ namespace litl
         [[nodiscard]] TextureHandle createTexture(TextureDescriptor const& descriptor) const noexcept;
         
         /// <summary>
-        /// 
+        /// Destroys the underlying texture resource pointed to by the provided handle.
         /// </summary>
         /// <param name="handle"></param>
         void destroyTexture(TextureHandle handle) const noexcept;
@@ -313,7 +312,7 @@ namespace litl
         void cmdDraw(CommandBufferHandle commandBuffer, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) const noexcept;
         
         /// <summary>
-        /// 
+        /// Binds the vertex buffer as the current vertex input vertex source.
         /// </summary>
         /// <param name="commandBuffer"></param>
         /// <param name="buffer"></param>
@@ -322,7 +321,7 @@ namespace litl
         RendererResult cmdBindVertexBuffer(CommandBufferHandle commandBuffer, BufferHandle buffer, uint64_t offset = 0u, uint32_t firstBinding = 0u) const noexcept;
         
         /// <summary>
-        /// 
+        /// Binds one or more vertex buffers as the current vertex input vertex source(s).
         /// </summary>
         /// <param name="commandBuffer"></param>
         /// <param name="buffers"></param>
@@ -332,7 +331,7 @@ namespace litl
         RendererResult cmdBindVertexBuffers(CommandBufferHandle commandBuffer, BufferHandle* buffers, uint64_t* offsets, uint32_t count, uint32_t firstBinding = 0u) const noexcept;
         
         /// <summary>
-        /// 
+        /// Binds the index buffer as the current vertex input index source.
         /// </summary>
         /// <param name="commandBuffer"></param>
         /// <param name="buffer"></param>
@@ -347,7 +346,7 @@ namespace litl
         RendererResult cmdBindBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key, uint64_t offset, uint64_t range, bool isGraphics) const noexcept;
         
         /// <summary>
-        /// 
+        /// Binds the buffer to the currently bound graphics or compute pipeline.
         /// </summary>
         /// <param name="handle"></param>
         /// <param name="buffer"></param>
@@ -356,14 +355,17 @@ namespace litl
         RendererResult cmdBindBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key, bool isGraphics) const noexcept;
         
         /// <summary>
-        /// 
+        /// Utility for ensuring that a flush is called following buffer uploads.
+        /// When the returned ScopedBufferUpload goes out of scope it automatically calls cmdBufferFlush.
         /// </summary>
         /// <param name="commandBuffer"></param>
         /// <returns></returns>
         ScopedBufferUpload cmdBeginBufferUpload(CommandBufferHandle commandBuffer) const noexcept;
         
         /// <summary>
-        /// 
+        /// Writes the provided data to the buffer.
+        /// If necessary, a temporary staging buffer is employed to transfer the data to the GPU.
+        /// Must call cmdBufferFlush after all uploads commands have been written if a ScopedBufferUpload (cmdBeginBfuferUpload) is not being used.
         /// </summary>
         /// <param name="commandBuffer"></param>
         /// <param name="source"></param>
@@ -374,14 +376,14 @@ namespace litl
         RendererResult cmdBufferUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, BufferHandle destBufferHandle, uint64_t sourceOffset = 0ull, uint64_t destOffset = 0ull) const noexcept;
         
         /// <summary>
-        /// 
+        /// Ensures that all buffer uploads are complete.
         /// </summary>
         /// <param name="commandBuffer"></param>
         /// <returns></returns>
         RendererResult cmdBufferFlush(CommandBufferHandle commandBuffer) const noexcept;
         
         /// <summary>
-        /// 
+        /// Maps the memory address of the buffer so that it can be written to.
         /// </summary>
         /// <param name="buffer"></param>
         /// <param name="mapped"></param>
@@ -389,13 +391,13 @@ namespace litl
         RendererResult mapBuffer(BufferHandle buffer, MappedBuffer& mapped) const noexcept;
         
         /// <summary>
-        /// 
+        /// Unmaps the buffer memory address to conclude any writes.
         /// </summary>
         /// <param name="buffer"></param>
         RendererResult unmapBuffer(BufferHandle buffer) const noexcept;
 
         /// <summary>
-        /// 
+        /// Binds the texture to the currently bound graphics or compute pipeline.
         /// </summary>
         /// <param name="commandBuffer"></param>
         /// <param name="texture"></param>
@@ -405,7 +407,7 @@ namespace litl
         RendererResult cmdBindTexture(CommandBufferHandle commandBuffer, TextureHandle texture, StringId textureId, bool isGraphics) const noexcept;
 
         /// <summary>
-        /// 
+        /// Binds the sampler to the currently bound graphics or compute pipeline.
         /// </summary>
         /// <param name="commandBuffer"></param>
         /// <param name="sampler"></param>
@@ -415,7 +417,8 @@ namespace litl
         RendererResult cmdBindSampler(CommandBufferHandle commandBuffer, SamplerHandle sampler, StringId samplerId, bool isGraphics) const noexcept;
 
         /// <summary>
-        /// 
+        /// Writes the provided data to the texture.
+        /// If necessary, a temporary staging texture is employed to transfer the data to the GPU.
         /// </summary>
         /// <param name="commandBuffer"></param>
         /// <param name="source"></param>
@@ -424,14 +427,7 @@ namespace litl
         RendererResult cmdTextureUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, TextureHandle destTextureHandle) const noexcept;
         
         /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="commandBuffer"></param>
-        /// <returns></returns>
-        RendererResult cmdTextureFlush(CommandBufferHandle commandBuffer) const noexcept;
-        
-        /// <summary>
-        /// 
+        /// Maps the memory address of the texture so that it can be written to.
         /// </summary>
         /// <param name="texture"></param>
         /// <param name="mapped"></param>
@@ -439,7 +435,7 @@ namespace litl
         RendererResult mapTexture(TextureHandle texture, MappedTexture& mapped);
         
         /// <summary>
-        /// 
+        /// Unmaps the texture memory address to conclude any writes.
         /// </summary>
         /// <param name="texture"></param>
         /// <returns></returns>
@@ -493,13 +489,13 @@ namespace litl
         // ---------------------------------------------------------------------------------
 
         /// <summary>
-        /// 
+        /// Returns the format of  the current swapchain target.
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] DataFormat getSwapchainImageFormat() const noexcept;
         
         /// <summary>
-        /// 
+        /// Returns information about the current frame such as count and index.
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] FrameData getFrameData() const noexcept;

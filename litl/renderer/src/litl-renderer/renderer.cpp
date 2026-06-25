@@ -1,6 +1,4 @@
 #include "litl-renderer/renderer.hpp"
-#include "litl-renderer/reflection.hpp"
-
 namespace litl
 {
     Renderer::Renderer(RendererOps const* ops, RendererContext* context)
@@ -250,11 +248,6 @@ namespace litl
     RendererResult Renderer::cmdTextureUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, TextureHandle destTextureHandle) const noexcept
     {
         return m_pOps->cmdTextureUpload(m_pContext, commandBuffer, source, destTextureHandle);
-    }
-    
-    RendererResult Renderer::cmdTextureFlush(CommandBufferHandle commandBuffer) const noexcept
-    {
-        return m_pOps->cmdTextureFlush(m_pContext, commandBuffer);
     }
     
     RendererResult Renderer::mapTexture(TextureHandle texture, MappedTexture& mapped)

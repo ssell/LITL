@@ -10,11 +10,6 @@ namespace litl::vulkan
         m_overflowBuffers.reserve(32ull);
     }
 
-    StagingBuffer::~StagingBuffer()
-    {
-
-    }
-
     void StagingBuffer::build(RendererContext& context) noexcept
     {
         LITL_FATAL_ASSERT_MSG((context.config.stagingBufferFixedSize > 0u), "Renderer staging buffer fixed buffer size set to 0.");
@@ -22,6 +17,11 @@ namespace litl::vulkan
         m_pContext = &context;
         m_pFixedBuffer = m_pContext->resources.getBuffer(createStagingBuffer(m_fixedBufferSize));
         LITL_FATAL_ASSERT_MSG((m_pFixedBuffer != nullptr), "Failed to create fixed staging buffer for StagingBuffer");
+    }
+
+    void StagingBuffer::destroy() noexcept
+    {
+        freeBuffers();
     }
 
     std::optional<StagingBufferIndex> StagingBuffer::copyIntoStaging(std::span<std::byte const> source, uint64_t sourceOffset) noexcept

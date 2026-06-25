@@ -31,12 +31,12 @@ namespace litl::vulkan
     public:
 
         StagingBuffer();
-        ~StagingBuffer();
 
         StagingBuffer(StagingBuffer const&) = delete;
         StagingBuffer& operator=(StagingBuffer const&) = delete;
 
         void build(RendererContext& context) noexcept;
+        void destroy() noexcept;
 
         [[nodiscard]] std::optional<StagingBufferIndex> copyIntoStaging(std::span<std::byte const> source, uint64_t sourceOffset) noexcept;
         [[nodiscard]] bool copyIntoDestination(CommandBufferResource* commandBuffer, StagingBufferIndex stagingIndex, BufferResource* destination, uint64_t destOffset) noexcept;

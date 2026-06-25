@@ -31,22 +31,20 @@ namespace litl::vulkan
     public:
 
         StagingTexture();
-        ~StagingTexture();
 
         StagingTexture(StagingTexture const&) = delete;
         StagingTexture& operator=(StagingTexture const&) = delete;
 
         void build(RendererContext& context) noexcept;
+        void destroy() noexcept;
 
         [[nodiscard]] std::optional<StagingTextureIndex> copyIntoStaging(std::span<std::byte const> source, uint64_t sourceOffset) noexcept;
         [[nodiscard]] bool copyIntoDestination(CommandBufferResource* commandBuffer, StagingTextureIndex stagingIndex, TextureResource* destination) noexcept;
-        void flushBuffers(CommandBufferResource* commandBuffer);
         void freeBuffers() noexcept;
 
     private:
 
         BufferHandle createStagingBuffer(uint64_t size) noexcept;
-        void flushBuffer(CommandBufferResource* commandBuffer, BufferResource* buffer) noexcept;
 
         RendererContext* m_pContext;
         BufferResource* m_pFixedBuffer;

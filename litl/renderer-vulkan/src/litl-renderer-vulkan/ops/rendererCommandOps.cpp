@@ -685,9 +685,7 @@ namespace litl::vulkan
             return RendererResult::InvalidCommandBufferHandle;
         }
 
-        auto& currFrameSync = vulkanContext->getCurrFrameSyncInfo();
-        currFrameSync.stagingBufferArena->flushBuffers(commandBuffer);
-        currFrameSync.stagingTextureArena->flushBuffers(commandBuffer);
+        vulkanContext->getCurrFrameSyncInfo().stagingBufferArena->flushBuffers(commandBuffer);
 
         return RendererResult::Success;
     }
@@ -821,21 +819,6 @@ namespace litl::vulkan
         {
             return RendererResult::MemoryCopyFailed;
         }
-
-        return RendererResult::Success;
-    }
-
-    RendererResult cmdTextureFlush(litl::RendererContext* context, CommandBufferHandle commandBufferHandle) noexcept
-    {
-        auto* vulkanContext = unwrap(context);
-        auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
-
-        if (!isValid(commandBuffer))
-        {
-            return RendererResult::InvalidCommandBufferHandle;
-        }
-
-        vulkanContext->getCurrFrameSyncInfo().stagingTextureArena->flushBuffers(commandBuffer);
 
         return RendererResult::Success;
     }

@@ -10,11 +10,6 @@ namespace litl::vulkan
         m_overflowBuffers.reserve(32ull);
     }
 
-    StagingTexture::~StagingTexture()
-    {
-
-    }
-
     void StagingTexture::build(RendererContext& context) noexcept
     {
         LITL_FATAL_ASSERT_MSG((context.config.stagingTextureFixedSize > 0u), "Renderer staging texture fixed buffer size set to 0.");
@@ -22,6 +17,11 @@ namespace litl::vulkan
         m_pContext = &context;
         m_pFixedBuffer = m_pContext->resources.getBuffer(createStagingBuffer(m_fixedBufferSize));
         LITL_FATAL_ASSERT_MSG((m_pFixedBuffer != nullptr), "Failed to create fixed staging buffer for StagingTexture");
+    }
+
+    void StagingTexture::destroy() noexcept
+    {
+        freeBuffers();
     }
 
     std::optional<StagingTextureIndex> StagingTexture::copyIntoStaging(std::span<std::byte const> source, uint64_t sourceOffset) noexcept
@@ -135,23 +135,6 @@ namespace litl::vulkan
         vkCmdPipelineBarrier2(commandBuffer->vkCommandBuffer, &dep);
 
         return true;
-    }
-
-    void StagingTexture::flushBuffers(CommandBufferResource* commandBuffer) noexcept
-    {
-        LITL_ASSERT_MSG((commandBuffer != nullptr), "Invalid command buffer provided to StagingTexture::flushTextures", );
-
-        flushBuffer(commandBuffer, m_pFixedBuffer);
-
-        for (auto& overflowHandle : m_overflowBuffers)
-        {
-            flushBuffer(commandBuffer, m_pContext->resources.getBuffer(overflowHandle));
-        }
-    }
-
-    void StagingTexture::flushBuffer(CommandBufferResource* commandBuffer, BufferResource* buffer) noexcept
-    {
-
     }
 
     void StagingTexture::freeBuffers() noexcept
