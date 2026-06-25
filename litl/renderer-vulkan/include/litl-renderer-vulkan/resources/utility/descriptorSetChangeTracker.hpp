@@ -10,6 +10,7 @@
 namespace litl::vulkan
 {
     struct RendererContext;
+    struct PipelineResource;
 
     class DescriptorSetChangeTracker final
     {
@@ -31,14 +32,18 @@ namespace litl::vulkan
 
     public:
 
+        static constexpr uint32_t MaxDescriptorSets = 32u;
+
         void addChange(uint32_t binding, uint32_t set, VkDescriptorType type, VkDescriptorBufferInfo bufferInfo) noexcept;
         void addChange(uint32_t binding, uint32_t set, VkDescriptorType type, VkDescriptorImageInfo imageInfo) noexcept;
-        void flushChanges(RendererContext& context, VkCommandBuffer vkCommandBuffer, VkPipelineLayout vkPipelineLayout, VkPipelineBindPoint vkBindPoint, VkDescriptorSetLayout vkDescriptorSetLayout, uint32_t set) noexcept;
+        void flushChanges(RendererContext& context, VkCommandBuffer vkCommandBuffer, PipelineResource& pipeline, bool isGraphics) noexcept;
 
     private:
 
+        void flushChange(RendererContext& context, VkCommandBuffer vkCommandBuffer, VkPipelineLayout vkPipelineLayout, VkPipelineBindPoint vkBindPoint, VkDescriptorSetLayout vkDescriptorSetLayout, uint32_t set) noexcept;
+
         uint32_t m_dirtyMask = 0u;
-        std::array<std::vector<DescriptorSetChange>, 32ull> m_pendingChanges;
+        std::array<std::vector<DescriptorSetChange>, MaxDescriptorSets> m_pendingChanges;
 
     };
 }

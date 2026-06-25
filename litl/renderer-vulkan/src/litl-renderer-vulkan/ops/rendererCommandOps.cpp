@@ -39,11 +39,11 @@ namespace litl::vulkan
         {
             if (graphics != nullptr)
             {
-                return graphics->vkPipelineLayout;
+                return graphics->pipeline.vkPipelineLayout;
             }
             else if (compute != nullptr)
             {
-                return compute->vkPipelineLayout;
+                return compute->pipeline.vkPipelineLayout;
             }
 
             return VK_NULL_HANDLE;
@@ -53,11 +53,11 @@ namespace litl::vulkan
         {
             if (graphics != nullptr)
             {
-                return graphics->resourceMap.getResourceBinding(id);
+                return graphics->pipeline.resourceMap.getResourceBinding(id);
             }
             else if (compute != nullptr)
             {
-                return compute->resourceMap.getResourceBinding(id);
+                return compute->pipeline.resourceMap.getResourceBinding(id);
             }
 
             return nullptr;
@@ -67,16 +67,16 @@ namespace litl::vulkan
         {
             if (graphics != nullptr)
             {
-                if (graphics->setLayouts.size() > set)
+                if (graphics->pipeline.setLayouts.size() > set)
                 {
-                    return graphics->setLayouts[set];
+                    return graphics->pipeline.setLayouts[set];
                 }
             }
             else if (compute != nullptr)
             {
-                if (compute->setLayouts.size() > set)
+                if (compute->pipeline.setLayouts.size() > set)
                 {
-                    return compute->setLayouts[set];
+                    return compute->pipeline.setLayouts[set];
                 }
             }
 
@@ -87,11 +87,11 @@ namespace litl::vulkan
         {
             if (graphics != nullptr)
             {
-                return graphics->descriptorSetChanges;
+                return graphics->pipeline.descriptorSetChanges;
             }
             else
             {
-                return compute->descriptorSetChanges;
+                return compute->pipeline.descriptorSetChanges;
             }
         }
     };
@@ -459,7 +459,7 @@ namespace litl::vulkan
 
         if (graphicsPipeline != nullptr)
         {
-            vkCmdBindPipeline(commandBuffer->vkCommandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->vkPipeline);
+            vkCmdBindPipeline(commandBuffer->vkCommandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->pipeline.vkPipeline);
         }
 
         commandBuffer->boundGraphicsPipeline = graphicsPipelineHandle;
@@ -485,7 +485,7 @@ namespace litl::vulkan
 
         vkCmdPushConstants(
             commandBuffer->vkCommandBuffer,
-            graphicsPipelineResource->vkPipelineLayout,
+            graphicsPipelineResource->pipeline.vkPipelineLayout,
             toVkShaderStageFlags(shaderStage),
             0,
             static_cast<uint32_t>(data.size()),
