@@ -802,12 +802,12 @@ namespace litl::vulkan
 
         vkDeviceWaitIdle(vulkanContext->device.vkDevice);
 
-        cleanupResources(*vulkanContext);
         cleanupPipelineCache(*vulkanContext);
         cleanupFrameSync(*vulkanContext);
         cleanupImageSync(*vulkanContext);
         cleanupSwapChainImages(*vulkanContext);
         cleanupSwapChain(*vulkanContext, vulkanContext->swapChain.vkSwapChain);
+        cleanupResources(*vulkanContext);
         cleanupDevice(*vulkanContext);
 
         delete vulkanContext;
@@ -843,6 +843,10 @@ namespace litl::vulkan
             {
                 vkDestroyFence(context.device.vkDevice, frameInfo.renderFence, nullptr);
             }
+
+            frameInfo.stagingBufferArena->destroy();
+            frameInfo.stagingTextureArena->destroy();
+            frameInfo.descriptorSetAllocator->destroy();
         }
 
         context.renderInfo.frameSyncInfo.clear();

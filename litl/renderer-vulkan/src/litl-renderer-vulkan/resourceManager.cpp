@@ -1035,12 +1035,12 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
         }
 
         TextureResource resource{
-            .descriptor = descriptor,
             .vkExtent = VkExtent3D {
                 .width = descriptor.width,
                 .height = descriptor.height,
                 .depth = descriptor.depth
-            }
+            },
+            .descriptor = descriptor
         };
 
         VkImageCreateInfo createImageInfo{

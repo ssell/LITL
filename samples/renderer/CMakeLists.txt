@@ -15,8 +15,9 @@ target_include_directories(litl-samples-renderer
 target_link_libraries(litl-samples-renderer PRIVATE litl-engine)
 target_compile_definitions(litl-samples-renderer PRIVATE $<$<CONFIG:Debug>:DEBUG>)
 
+# Copy the samples asset directory
 add_custom_command(TARGET litl-samples-renderer POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory
-			${LITL_ASSETS_DIR}
+			"${CMAKE_CURRENT_SOURCE_DIR}/assets"
 			$<TARGET_FILE_DIR:litl-samples-renderer>/assets
 )

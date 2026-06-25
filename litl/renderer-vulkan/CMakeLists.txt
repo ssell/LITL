@@ -43,7 +43,12 @@ add_library(litl-renderer-vulkan
 		"src/litl-renderer-vulkan/conversions.cpp" 
 		"src/litl-renderer-vulkan/ops/rendererTesting.cpp" 
 		"src/litl-renderer-vulkan/ops/rendererMiscOps.cpp" 
-		"src/litl-renderer-vulkan/resources/map/shaderModuleReferenceMap.cpp" "src/litl-renderer-vulkan/resources/utility/stagingBuffer.cpp" "src/litl-renderer-vulkan/resources/utility/stagingTexture.cpp" "src/litl-renderer-vulkan/resources/cache/samplerCache.cpp" "src/litl-renderer-vulkan/resources/utility/descriptorSetAllocator.cpp" "src/litl-renderer-vulkan/resources/utility/descriptorSetChangeTracker.cpp")
+		"src/litl-renderer-vulkan/resources/map/shaderModuleReferenceMap.cpp" 
+		"src/litl-renderer-vulkan/resources/utility/stagingBuffer.cpp" 
+		"src/litl-renderer-vulkan/resources/utility/stagingTexture.cpp" 
+		"src/litl-renderer-vulkan/resources/cache/samplerCache.cpp" 
+		"src/litl-renderer-vulkan/resources/utility/descriptorSetAllocator.cpp" 
+		"src/litl-renderer-vulkan/resources/utility/descriptorSetChangeTracker.cpp")
 
 target_include_directories(litl-renderer-vulkan
 	PUBLIC

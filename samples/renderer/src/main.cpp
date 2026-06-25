@@ -1,3 +1,14 @@
+/**
+ * ----------------------------------------------------------------------------------------- 
+ * ---- LITL Renderer Sample
+ * -----------------------------------------------------------------------------------------
+ * 
+ * This is a sample of using the litl-renderer.
+ * 
+ * While the litl-renderer is intended to be abstracted away and rarely used directly outside
+ * of the litl-engine library, there may still be use-cases for interacting with it directly.
+ */
+
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -88,13 +99,15 @@ struct SampleRenderState
     SamplerHandle sampler{};
 };
 
+bool setupSample(SampleRenderState& sample) noexcept;
+void cleanupSample(SampleRenderState& sample) noexcept;
 bool createWindow(SampleRenderState& sample) noexcept;
 bool createRenderer(SampleRenderState& sample) noexcept;
 bool createGraphicsPipeline(SampleRenderState& sample) noexcept;
 void updateTiming(SampleRenderState& sample) noexcept;
 void beginRender(SampleRenderState& sample) noexcept;
 void endRender(SampleRenderState& sample) noexcept;
-bool prepareSample(SampleRenderState& sample) noexcept;
+bool createResources(SampleRenderState& sample) noexcept;
 bool createVertexBuffer(SampleRenderState& sample, CommandBufferHandle commandBuffer) noexcept;
 bool createIndexBuffer(SampleRenderState& sample, CommandBufferHandle commandBuffer) noexcept;
 bool createFrameDataBuffers(SampleRenderState& sample) noexcept;
@@ -112,7 +125,7 @@ int main()
 
     SampleRenderState sample{};
 
-    if (createWindow(sample) && createRenderer(sample) && prepareSample(sample))
+    if (setupSample(sample))
     {
         sample.startTime = std::chrono::steady_clock::now();
         sample.lastFrameTime = std::chrono::steady_clock::now();
@@ -146,16 +159,64 @@ int main()
         }
     }
 
-    std::cout << "Shutting down ..." << std::endl;
-
-    destroyVulkanRenderer(sample.renderer);
-    destroyVulkanWindow(sample.window);
+    cleanupSample(sample);
 
     std::cout << "Exiting" << std::endl;
 
     return 0;
 }
 
+/// <summary>
+/// Prepares the window, renderer, and various resources used by the sample.
+/// </summary>
+/// <param name="sample"></param>
+/// <returns></returns>
+bool setupSample(SampleRenderState& sample) noexcept
+{
+    return createWindow(sample) && createRenderer(sample) && createResources(sample);
+}
+
+/// <summary>
+/// Cleans up all resources used by the sample.
+/// 
+/// The renderer will automatically dispose any resources on shutdown but it
+/// is a good practice to cleanup resources manually when possible.
+/// </summary>
+/// <param name="sample"></param>
+void cleanupSample(SampleRenderState& sample) noexcept
+{
+    std::cout << "Shutting down ..." << std::endl;
+
+    if (sample.renderer != nullptr)
+    {
+        sample.renderer->destroySampler(sample.sampler);
+        sample.renderer->destroyTexture(sample.texture);
+
+        for (auto cb : sample.cameraDataBuffers)
+        {
+            sample.renderer->destroyBuffer(cb);
+        }
+
+        for (auto fb : sample.frameDataBuffers)
+        {
+            sample.renderer->destroyBuffer(fb);
+        }
+
+        sample.renderer->destroyBuffer(sample.indexBuffer);
+        sample.renderer->destroyBuffer(sample.vertexBuffer);
+        sample.renderer->destroyGraphicsPipeline(sample.graphicsPipeline);
+
+        destroyVulkanRenderer(sample.renderer);
+    }
+
+    destroyVulkanWindow(sample.window);
+}
+
+/// <summary>
+/// Creates the window that we will render into.
+/// </summary>
+/// <param name="sample"></param>
+/// <returns></returns>
 bool createWindow(SampleRenderState& sample) noexcept
 {
     sample.window = createVulkanWindow();
@@ -168,6 +229,11 @@ bool createWindow(SampleRenderState& sample) noexcept
     return sample.window->open("LITL Renderer Only Sample", 1024u, 768u);
 }
 
+/// <summary>
+/// Creates the Vulkan renderer.
+/// </summary>
+/// <param name="sample"></param>
+/// <returns></returns>
 bool createRenderer(SampleRenderState& sample) noexcept
 {
     const RendererConfiguration rendererConfig{
@@ -187,6 +253,12 @@ bool createRenderer(SampleRenderState& sample) noexcept
     return sample.renderer->build();
 }
 
+/// <summary>
+/// Creates the shader module for the shader at the specified path.
+/// </summary>
+/// <param name="renderer"></param>
+/// <param name="path"></param>
+/// <returns></returns>
 bool createShaderModule(Renderer* renderer, std::string const& path) noexcept
 {
     std::ifstream file(path, std::ios::ate | std::ios::binary);
@@ -220,74 +292,10 @@ bool createShaderModule(Renderer* renderer, std::string const& path) noexcept
     return true;
 }
 
-bool createGraphicsPipeline(SampleRenderState& sample) noexcept
-{
-    const std::string shaderResourcePath = "assets/shaders/spirv/flat.spv";
-
-    if (!createShaderModule(sample.renderer, shaderResourcePath))
-    {
-        return {};
-    }
-
-    ShaderModuleHandle shaderHandle = sample.renderer->getShaderModule(shaderResourcePath);
-
-    if (!shaderHandle.isValid())
-    {
-        std::cout << "Failed to retrieve ShaderModuleHandle" << std::endl;
-        return {};
-    }
-
-    GraphicsPipelineDescriptor graphicsPipelineDescriptor{
-        .vertex = PipelineShaderDescriptor {
-            .handle = shaderHandle,
-            .stage = ShaderStage::Vertex,
-            .entryPoint = "vertexMain"
-        },
-        .fragment = PipelineShaderDescriptor {
-            .handle = shaderHandle,
-            .stage = ShaderStage::Fragment,
-            .entryPoint = "fragmentMain"
-        },
-        .renderTargets = RenderTargetFormats {
-            .colorAttachments = { sample.renderer->getSwapchainImageFormat() },
-            .colorAttachmentCount = 1
-        },
-        .vertexInput = VertexInputState{},
-        .inputAssembly = InputAssemblyState{},
-        .tessellation = std::nullopt,                           // No tessellation
-        .rasterization = RasterizationState{},                  // Default rasterization state OK for this test
-        .multisample = MultisampleState{},                      // Default multisample state (no multisampling) for this test
-        .depthStencil = DepthStencilState{},                    // Default depth-stencil settings for this test
-        .colorBlend = ColorBlendState{
-            .logicOpEnabled = false,
-            .colorAttachmentBlendStates = {
-                ColorBlendAttachmentState {
-                    .attachmentBlendEnabled = false
-                }
-            }
-        },
-        .dynamicState = DynamicStateMask{},                     // Default dynamic state (viewport + stencil) for this test
-        .specializationConstants = SpecializationConstants{}    // Default specialization constants (none) for this test
-    };
-
-    graphicsPipelineDescriptor.vertexInput.addBinding(VertexBinding{ 0, sizeof(Vertex), VertexInputRate::PerVertex });
-
-    uint32_t offset = 0u;
-    graphicsPipelineDescriptor.vertexInput.addAttribute<vec3>(VertexAttribute{ 0, 0, DataFormat::RGB32_SFloat }, offset);  // position
-    graphicsPipelineDescriptor.vertexInput.addAttribute<vec3>(VertexAttribute{ 1, 0, DataFormat::RGB32_SFloat }, offset);  // color
-    graphicsPipelineDescriptor.vertexInput.addAttribute<vec2>(VertexAttribute{ 2, 0, DataFormat::RG32_SFloat }, offset);   // uv
-
-    sample.graphicsPipeline = sample.renderer->createGraphicsPipeline(graphicsPipelineDescriptor);
-
-    if (!sample.graphicsPipeline.isValid())
-    {
-        std::cout << "Failed to create GraphicsPipelineHandle" << std::endl;
-        return false;
-    }
-
-    return true;
-}
-
+/// <summary>
+/// Updates timing data for the current frame.
+/// </summary>
+/// <param name="sample"></param>
 void updateTiming(SampleRenderState& sample) noexcept
 {
     sample.frameStartTime = std::chrono::steady_clock::now();
@@ -295,6 +303,10 @@ void updateTiming(SampleRenderState& sample) noexcept
     sample.deltaTime = std::chrono::duration<float>(sample.frameStartTime - sample.lastFrameTime).count();
 }
 
+/// <summary>
+/// Issues the commands to start rendering a new frame.
+/// </summary>
+/// <param name="sample"></param>
 void beginRender(SampleRenderState& sample) noexcept
 {
     const BeginRenderCommand beginRenderCommand{
@@ -325,6 +337,10 @@ void beginRender(SampleRenderState& sample) noexcept
     sample.renderer->cmdSetViewportAndScissor(sample.commandBuffer, setViewportScissorCommand);
 }
 
+/// <summary>
+/// Issues the commands to end rendering the current frame.
+/// </summary>
+/// <param name="sample"></param>
 void endRender(SampleRenderState& sample) noexcept
 {
     sample.renderer->cmdEndRender(sample.commandBuffer);
@@ -335,7 +351,12 @@ void endRender(SampleRenderState& sample) noexcept
     sample.renderer->endRender();
 }
 
-bool prepareSample(SampleRenderState& sample) noexcept
+/// <summary>
+/// Creates all resources used by the sample.
+/// </summary>
+/// <param name="sample"></param>
+/// <returns></returns>
+bool createResources(SampleRenderState& sample) noexcept
 {
     if (sample.vertexBuffer.isValid())
     {
@@ -369,8 +390,88 @@ bool prepareSample(SampleRenderState& sample) noexcept
     return success;
 }
 
+/// <summary>
+/// Creates the graphics pipeline resource for the sample shader.
+/// </summary>
+/// <param name="sample"></param>
+/// <returns></returns>
+bool createGraphicsPipeline(SampleRenderState& sample) noexcept
+{
+    const std::string shaderResourcePath = "assets/shaders/spirv/triangleSample.spv";
+
+    if (!createShaderModule(sample.renderer, shaderResourcePath))
+    {
+        return { };
+    }
+
+    ShaderModuleHandle shaderHandle = sample.renderer->getShaderModule(shaderResourcePath);
+
+    if (!shaderHandle.isValid())
+    {
+        std::cout << "Failed to retrieve ShaderModuleHandle" << std::endl;
+        return {};
+    }
+
+    GraphicsPipelineDescriptor graphicsPipelineDescriptor{
+        .vertex = PipelineShaderDescriptor {
+            .handle = shaderHandle,
+            .stage = ShaderStage::Vertex,
+            .entryPoint = "vertexMain"
+        },
+        .fragment = PipelineShaderDescriptor {
+            .handle = shaderHandle,
+            .stage = ShaderStage::Fragment,
+            .entryPoint = "fragmentMain"
+        },
+        .renderTargets = RenderTargetFormats {
+            .colorAttachments = { sample.renderer->getSwapchainImageFormat() },
+            .colorAttachmentCount = 1
+        },
+        .vertexInput = VertexInputState{},
+        .inputAssembly = InputAssemblyState{},                  // Default input assembly for this sample
+        .tessellation = std::nullopt,                           // No tessellation
+        .rasterization = RasterizationState{},                  // Default rasterization state for this sample
+        .multisample = MultisampleState{},                      // Default multisample state (no multisampling) for this sample
+        .depthStencil = DepthStencilState{},                    // Default depth-stencil settings for this sample
+        .colorBlend = ColorBlendState{
+            .logicOpEnabled = false,
+            .colorAttachmentBlendStates = {
+                ColorBlendAttachmentState {
+                    .attachmentBlendEnabled = false
+                }
+            }
+        },
+        .dynamicState = DynamicStateMask{},                     // Default dynamic state (viewport + stencil) for this sample
+        .specializationConstants = SpecializationConstants{}    // Default specialization constants (none) for this sample
+    };
+
+    graphicsPipelineDescriptor.vertexInput.addBinding(VertexBinding{ 0, sizeof(Vertex), VertexInputRate::PerVertex });
+
+    uint32_t offset = 0u;
+    graphicsPipelineDescriptor.vertexInput.addAttribute<vec3>(VertexAttribute{ 0, 0, DataFormat::RGB32_SFloat }, offset);  // position
+    graphicsPipelineDescriptor.vertexInput.addAttribute<vec3>(VertexAttribute{ 1, 0, DataFormat::RGB32_SFloat }, offset);  // color
+    graphicsPipelineDescriptor.vertexInput.addAttribute<vec2>(VertexAttribute{ 2, 0, DataFormat::RG32_SFloat }, offset);   // uv
+
+    sample.graphicsPipeline = sample.renderer->createGraphicsPipeline(graphicsPipelineDescriptor);
+
+    if (!sample.graphicsPipeline.isValid())
+    {
+        std::cout << "Failed to create GraphicsPipelineHandle" << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+/// <summary>
+/// Creates the vertex buffer composed of three vertices to form the sample triangle.
+/// </summary>
+/// <param name="sample"></param>
+/// <param name="commandBuffer"></param>
+/// <returns></returns>
 bool createVertexBuffer(SampleRenderState& sample, CommandBufferHandle commandBuffer) noexcept
 {
+    // litl uses clockwise winding by default (can be changed in the graphics pipeline setup)
     std::array<Vertex, 3> vertices = {
         Vertex {                                        // left
             .position = { -0.5f, 0.0f, 0.0f },
@@ -413,6 +514,12 @@ bool createVertexBuffer(SampleRenderState& sample, CommandBufferHandle commandBu
     return true;
 }
 
+/// <summary>
+/// Creates the index buffer composed of three indices to form the sample triangle.
+/// </summary>
+/// <param name="sample"></param>
+/// <param name="commandBuffer"></param>
+/// <returns></returns>
 bool createIndexBuffer(SampleRenderState& sample, CommandBufferHandle commandBuffer) noexcept
 {
     std::array<uint32_t, 3> indices = { 0, 1, 2 };
@@ -445,9 +552,12 @@ bool createIndexBuffer(SampleRenderState& sample, CommandBufferHandle commandBuf
 // Frame Data Buffer
 // -----------------------------------------------------------------------------------------
 
-// Per-frame data is provided via a persistently-mapped multi-buffer buffer (one per frame-in-flight).
-// The shader samples the buffer using BDA via the buffer address being provided in the Push Constant.
-
+/// <summary>
+/// Per-frame data is provided via a persistently-mapped multi-buffer buffer (one per frame-in-flight).
+/// The shader samples the buffer using BDA via the buffer address being provided in the Push Constant.
+/// </summary>
+/// <param name="sample"></param>
+/// <returns></returns>
 bool createFrameDataBuffers(SampleRenderState& sample) noexcept
 {
     for (auto i = 0; i < sample.framesInFlight; ++i)
@@ -461,6 +571,11 @@ bool createFrameDataBuffers(SampleRenderState& sample) noexcept
     return true;
 }
 
+/// <summary>
+/// Creates a frame data buffer for an individual frame-in-flight.
+/// </summary>
+/// <param name="sample"></param>
+/// <returns></returns>
 bool createFrameDataBuffer(SampleRenderState& sample) noexcept
 {
     BufferDescriptor frameBufferDescriptor{
@@ -482,6 +597,10 @@ bool createFrameDataBuffer(SampleRenderState& sample) noexcept
     return true;
 }
 
+/// <summary>
+/// Updates the frame data buffer for the current frame.
+/// </summary>
+/// <param name="sample"></param>
 void updatePerFrameDataBuffer(SampleRenderState& sample) noexcept
 {
     sample.perFrameData.elapsedTime = sample.elapsedTime;
@@ -503,6 +622,11 @@ void updatePerFrameDataBuffer(SampleRenderState& sample) noexcept
 // Camera Data Buffer
 // -----------------------------------------------------------------------------------------
 
+/// <summary>
+/// Creates a camera data buffer for each frame-in-flight.
+/// </summary>
+/// <param name="sample"></param>
+/// <returns></returns>
 bool createCameraDataBuffers(SampleRenderState& sample) noexcept
 {
     for (auto i = 0; i < sample.framesInFlight; ++i)
@@ -516,6 +640,11 @@ bool createCameraDataBuffers(SampleRenderState& sample) noexcept
     return true;
 }
 
+/// <summary>
+/// Creates a camera data buffer for an individual frame-in-flight.
+/// </summary>
+/// <param name="sample"></param>
+/// <returns></returns>
 bool createCameraDataBuffer(SampleRenderState& sample) noexcept
 {
     BufferDescriptor cameraBufferDescriptor{
@@ -537,6 +666,10 @@ bool createCameraDataBuffer(SampleRenderState& sample) noexcept
     return true;
 }
 
+/// <summary>
+/// Updates the camera data buffer for the current frame.
+/// </summary>
+/// <param name="sample"></param>
 void updatePerCameraDataBuffer(SampleRenderState& sample) noexcept
 {
     MappedBuffer mappedBuffer{};
@@ -561,6 +694,12 @@ void updatePerCameraDataBuffer(SampleRenderState& sample) noexcept
 // Texture
 // -----------------------------------------------------------------------------------------
 
+/// <summary>
+/// Creates the sample texture that is applied to the triangle.
+/// </summary>
+/// <param name="sample"></param>
+/// <param name="commandBuffer"></param>
+/// <returns></returns>
 bool createTexture(SampleRenderState& sample, CommandBufferHandle commandBuffer) noexcept
 {
     sample.texture = sample.renderer->createTexture(TextureDescriptor{
@@ -577,9 +716,9 @@ bool createTexture(SampleRenderState& sample, CommandBufferHandle commandBuffer)
     }
 
     std::array<color, 9> pixels = {
-        colors::Black, colors::Black, colors::Black,
-        colors::Pink, colors::Pink, colors::Pink,
-        colors::Black, colors::Black, colors::Black
+        colors::Blue, colors::Blue, colors::Blue,           // bottom
+        colors::Green, colors::Green, colors::Green,
+        colors::Red, colors::Red, colors::Red               // top
     };
 
     const auto result = sample.renderer->cmdTextureUpload(commandBuffer, as_byte_span(pixels), sample.texture);
@@ -593,12 +732,17 @@ bool createTexture(SampleRenderState& sample, CommandBufferHandle commandBuffer)
     return true;
 }
 
+/// <summary>
+/// Creates the sampler used to sample the texture.
+/// </summary>
+/// <param name="sample"></param>
+/// <returns></returns>
 bool createSampler(SampleRenderState& sample) noexcept
 {
+    // A basic nearest/point sampler to maintain the crisp lines in the 3x3 texture.
     sample.sampler = sample.renderer->createSampler(SamplerDescriptor{ 
         .minFilter = SamplerFilter::Nearest, 
-        .magFilter = SamplerFilter::Nearest,
-        .minLod = 0.123f
+        .magFilter = SamplerFilter::Nearest
     });
 
     if (!sample.sampler.isValid())
