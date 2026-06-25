@@ -30,11 +30,10 @@ namespace litl::vulkan
             return false;
         }
 
-        // Free the staging buffers from the last frame.
-        auto& prevFrameSync = vulkanContext->getPrevFrameSyncInfo();
-        prevFrameSync.stagingBufferArena->freeBuffers();
-        prevFrameSync.stagingTextureArena->freeBuffers();
-        prevFrameSync.descriptorSetAllocator->resetTransient();
+        auto& currFrameSync = vulkanContext->getCurrFrameSyncInfo();
+        currFrameSync.stagingBufferArena->freeBuffers();
+        currFrameSync.stagingTextureArena->freeBuffers();
+        currFrameSync.descriptorSetAllocator->resetTransient();
 
         uint32_t swapChainImageIndex = 0;
 
