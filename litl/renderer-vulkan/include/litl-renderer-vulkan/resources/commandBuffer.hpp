@@ -5,6 +5,7 @@
 #include "litl-renderer/resources/commandBuffer.hpp"
 #include "litl-renderer/resources/graphicsPipeline.hpp"
 #include "litl-renderer/resources/computePipeline.hpp"
+#include "litl-renderer-vulkan/resources/utility/descriptorSetChangeTracker.hpp"
 
 namespace litl::vulkan
 {
@@ -34,6 +35,11 @@ namespace litl::vulkan
         /// The currently bound compute pipeline (if any).
         /// </summary>
         ComputePipelineHandle boundComputePipeline{};
+
+        /// <summary>
+        /// Accumulated descriptor set changes.
+        /// </summary>
+        DescriptorSetChangeTracker descriptorSetChanges;
     };
 }
 

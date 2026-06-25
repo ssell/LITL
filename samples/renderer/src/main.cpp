@@ -154,6 +154,7 @@ int main()
                 sample.renderer->cmdDraw(sample.commandBuffer, 3, 1, 0, 0);
 
                 endRender(sample);
+
                 sample.lastFrameTime = sample.frameStartTime;
             }
         }
