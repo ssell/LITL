@@ -75,8 +75,9 @@ namespace litl::vulkan
                 .dstBinding = change.binding,
                 .descriptorCount = 1,
                 .descriptorType = change.type,
-                .pBufferInfo = &change.bufferInfo
-                });
+                .pBufferInfo = (change.isBuffer ? &change.bufferInfo : VK_NULL_HANDLE),
+                .pImageInfo = (change.isBuffer ? VK_NULL_HANDLE : &change.imageInfo)
+            });
         }
 
         // PerObject is the dedicated "push" set. There can only be one push set.

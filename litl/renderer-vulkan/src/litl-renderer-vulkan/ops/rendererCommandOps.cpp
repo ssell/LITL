@@ -850,6 +850,12 @@ namespace litl::vulkan
             return;
         }
 
-        vkCmdDraw(commandBuffer->vkCommandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
+        GraphicsPipelineResource* graphicsPipeline = vulkanContext->resources.getGraphicsPipeline(commandBuffer->boundGraphicsPipeline);
+
+        if (graphicsPipeline != nullptr)
+        {
+            graphicsPipeline->pipeline.descriptorSetChanges.flushChanges(*vulkanContext, commandBuffer->vkCommandBuffer, graphicsPipeline->pipeline, true);
+            vkCmdDraw(commandBuffer->vkCommandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
+        }
     }
 }
