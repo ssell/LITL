@@ -82,18 +82,6 @@ namespace litl::vulkan
 
             return VK_NULL_HANDLE;
         }
-
-        [[nodiscard]] DescriptorSetChangeTracker& getChangeTracker() noexcept
-        {
-            if (graphics != nullptr)
-            {
-                return graphics->pipeline.descriptorSetChanges;
-            }
-            else
-            {
-                return compute->pipeline.descriptorSetChanges;
-            }
-        }
     };
 
     BoundPipeline getBoundPipeline(RendererContext* vulkanContext, CommandBufferResource* commandBuffer, bool isGraphicsPipeline)
@@ -455,6 +443,11 @@ namespace litl::vulkan
             return;
         }
 
+        if (commandBuffer->boundGraphicsPipeline == graphicsPipelineHandle)
+        {
+            return;
+        }
+
         GraphicsPipelineResource* graphicsPipeline = vulkanContext->resources.getGraphicsPipeline(graphicsPipelineHandle);
 
         if (graphicsPipeline != nullptr)
@@ -463,7 +456,6 @@ namespace litl::vulkan
         }
 
         commandBuffer->boundGraphicsPipeline = graphicsPipelineHandle;
-        commandBuffer->boundComputePipeline = {};
     }
 
     RendererResult cmdPushConstants(litl::RendererContext* context, CommandBufferHandle handle, ShaderStage shaderStage, std::span<std::byte const> data) noexcept
@@ -618,7 +610,7 @@ namespace litl::vulkan
         }
 
         // Defer the change to the next draw command
-        boundPipeline.getChangeTracker().addChange(
+        commandBuffer->descriptorSetChanges.addChange(
             bindingResource->binding,
             bindingResource->set,
             toVkDescriptorType(bindingResource->type),
@@ -722,7 +714,7 @@ namespace litl::vulkan
         }
 
         // Defer the change to the next draw command
-        boundPipeline.getChangeTracker().addChange(
+        commandBuffer->descriptorSetChanges.addChange(
             bindingResource->binding,
             bindingResource->set,
             toVkDescriptorType(bindingResource->type),
@@ -767,7 +759,7 @@ namespace litl::vulkan
         }
 
         // Defer the change to the next draw command
-        boundPipeline.getChangeTracker().addChange(
+        commandBuffer->descriptorSetChanges.addChange(
             bindingResource->binding,
             bindingResource->set,
             toVkDescriptorType(bindingResource->type),
@@ -837,8 +829,18 @@ namespace litl::vulkan
 
         if (graphicsPipeline != nullptr)
         {
-            graphicsPipeline->pipeline.descriptorSetChanges.flushChanges(*vulkanContext, commandBuffer->vkCommandBuffer, graphicsPipeline->pipeline, true);
-            vkCmdDraw(commandBuffer->vkCommandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
+            commandBuffer->descriptorSetChanges.flushChanges(
+                *vulkanContext, 
+                commandBuffer->vkCommandBuffer, 
+                graphicsPipeline->pipeline, 
+                true);
+
+            vkCmdDraw(
+                commandBuffer->vkCommandBuffer, 
+                vertexCount, 
+                instanceCount, 
+                firstVertex, 
+                firstInstance);
         }
     }
 }

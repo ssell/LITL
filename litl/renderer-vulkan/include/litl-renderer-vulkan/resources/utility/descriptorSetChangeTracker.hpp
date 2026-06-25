@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <vector>
 
 #include "litl-renderer-vulkan/common.hpp"
@@ -40,10 +41,12 @@ namespace litl::vulkan
 
     private:
 
+        void addChange(DescriptorSetChange change, uint32_t set) noexcept;
+        [[nodiscard]] std::optional<uint32_t> findBindingIndex(uint32_t binding, std::vector<DescriptorSetChange>& changes) const noexcept;
         void flushChange(RendererContext& context, VkCommandBuffer vkCommandBuffer, VkPipelineLayout vkPipelineLayout, VkPipelineBindPoint vkBindPoint, VkDescriptorSetLayout vkDescriptorSetLayout, uint32_t set) noexcept;
 
         uint32_t m_dirtyMask = 0u;
-        std::array<std::vector<DescriptorSetChange>, MaxDescriptorSets> m_pendingChanges;
+        std::array<std::vector<DescriptorSetChange>, MaxDescriptorSets> m_changes;
 
     };
 }

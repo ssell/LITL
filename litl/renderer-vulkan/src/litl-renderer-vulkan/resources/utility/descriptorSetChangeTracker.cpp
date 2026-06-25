@@ -9,28 +9,41 @@ namespace litl::vulkan
 {
     void DescriptorSetChangeTracker::addChange(uint32_t binding, uint32_t set, VkDescriptorType type, VkDescriptorBufferInfo bufferInfo) noexcept
     {
-        LITL_ASSERT_MSG((set < m_pendingChanges.size()), "DescriptorSetChangeTracker provided out-of-bounds set index for buffer change.", );
-        
-        m_pendingChanges[set].push_back(DescriptorSetChange{
+        addChange(DescriptorSetChange{
             .binding = binding,
             .type = type,
             .isBuffer = true,
             .bufferInfo = bufferInfo
-        });
-
-        bitSet(m_dirtyMask, set);
+        }, set);
     }
 
     void DescriptorSetChangeTracker::addChange(uint32_t binding, uint32_t set, VkDescriptorType type, VkDescriptorImageInfo imageInfo) noexcept
     {
-        LITL_ASSERT_MSG((set < m_pendingChanges.size()), "DescriptorSetChangeTracker provided out-of-bounds set index for image/sampler change.", );
-        
-        m_pendingChanges[set].push_back(DescriptorSetChange{
+        addChange(DescriptorSetChange{
             .binding = binding,
             .type = type,
             .isBuffer = false,
             .imageInfo = imageInfo
-        });
+        }, set);
+    }
+
+    void DescriptorSetChangeTracker::addChange(DescriptorSetChange change, uint32_t set) noexcept
+    {
+        LITL_ASSERT_MSG((set < m_changes.size()), "DescriptorSetChangeTracker provided out-of-bounds set index for buffer change.", );
+
+        auto& changes = m_changes[set];
+        auto bindingIndex = findBindingIndex(change.binding, changes);
+
+        if (bindingIndex.has_value())
+        {
+            // Replace the change already bound to this index
+            changes[bindingIndex.value()] = change;
+        }
+        else
+        {
+            // No existing binding, add it
+            changes.push_back(change);
+        }
 
         bitSet(m_dirtyMask, set);
     }
@@ -55,6 +68,19 @@ namespace litl::vulkan
         m_dirtyMask = 0u;
     }
 
+    [[nodiscard]] std::optional<uint32_t> DescriptorSetChangeTracker::findBindingIndex(uint32_t binding, std::vector<DescriptorSetChange>& changes) const noexcept
+    {
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(changes.size()); ++i)
+        {
+            if (changes[i].binding == binding)
+            {
+                return i;
+            }
+        }
+
+        return std::nullopt;
+    }
+
     void DescriptorSetChangeTracker::flushChange(
         RendererContext& context, 
         VkCommandBuffer vkCommandBuffer, 
@@ -63,12 +89,12 @@ namespace litl::vulkan
         VkDescriptorSetLayout vkDescriptorSetLayout, 
         uint32_t set) noexcept
     {
-        auto& pending = m_pendingChanges[set];
+        auto& changes = m_changes[set];
 
         std::vector<VkWriteDescriptorSet> writes;
-        writes.reserve(pending.size());
+        writes.reserve(changes.size());
 
-        for (auto& change : pending)
+        for (auto& change : changes)
         {
             writes.push_back(VkWriteDescriptorSet{
                 .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
@@ -119,7 +145,5 @@ namespace litl::vulkan
                 0,
                 nullptr);
         }
-
-        pending.clear();
     }
 }
