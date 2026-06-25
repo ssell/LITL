@@ -25,114 +25,6 @@ namespace litl::vulkan
         return (resource != nullptr) && (resource->vkCommandBuffer != VK_NULL_HANDLE);
     }
 
-    void cmdPushDescriptorSetBuffer(VkCommandBuffer vkCommandBuffer, VkPipelineLayout vkPipelineLayout, PipelineResourceBinding const* resourceBinding, VkBuffer vkBuffer, VkDeviceSize offset, VkDeviceSize range, VkPipelineBindPoint bindPoint) noexcept
-    {
-        const VkDescriptorBufferInfo bufferInfo{
-            .buffer = vkBuffer,
-            .offset = offset,
-            .range = range
-        };
-
-        VkWriteDescriptorSet write{
-            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstBinding = resourceBinding->binding,
-            .descriptorCount = 1,
-            .descriptorType = toVkDescriptorType(resourceBinding->type),
-            .pBufferInfo = &bufferInfo
-        };
-
-        vkCmdPushDescriptorSet(
-            vkCommandBuffer,
-            bindPoint,
-            vkPipelineLayout,
-            resourceBinding->set,
-            1,
-            &write);
-    }
-
-    void cmdBindDescriptorSetBuffer(VkDevice vkDevice, VkCommandBuffer vkCommandBuffer, VkPipelineLayout vkPipelineLayout, VkDescriptorSet vkDescriptorSet, PipelineResourceBinding const* resourceBinding, VkBuffer vkBuffer, VkDeviceSize offset, VkDeviceSize range, VkPipelineBindPoint bindPoint) noexcept
-    {
-        const VkDescriptorBufferInfo bufferInfo{
-            .buffer = vkBuffer,
-            .offset = offset,
-            .range = range
-        };
-
-        VkWriteDescriptorSet write{
-            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstSet = vkDescriptorSet,
-            .dstBinding = resourceBinding->binding,
-            .descriptorCount = 1,
-            .descriptorType = toVkDescriptorType(resourceBinding->type),
-            .pBufferInfo = &bufferInfo
-        };
-
-        vkUpdateDescriptorSets(vkDevice, 1, &write, 0, nullptr);
-
-        vkCmdBindDescriptorSets(
-            vkCommandBuffer,
-            bindPoint,
-            vkPipelineLayout,
-            resourceBinding->set,
-            1,
-            &vkDescriptorSet,
-            0,
-            nullptr);
-    }
-
-    void cmdPushDescriptorSetTexture(VkCommandBuffer vkCommandBuffer, VkPipelineLayout vkPipelineLayout, PipelineResourceBinding const* resourceBinding, VkImage vkImage, VkImageView vkImageView, VkPipelineBindPoint bindPoint) noexcept
-    {
-        const VkDescriptorImageInfo textureDescriptorInfo{
-            .sampler = VK_NULL_HANDLE,
-            .imageView = vkImageView,
-            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL             // todo update to allow shader write to texture
-        };
-
-        const VkWriteDescriptorSet write{
-            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstBinding = resourceBinding->binding,
-            .descriptorCount = 1,
-            .descriptorType = toVkDescriptorType(resourceBinding->type),
-            .pImageInfo = &textureDescriptorInfo
-        };
-
-        vkCmdPushDescriptorSet(
-            vkCommandBuffer,
-            bindPoint,
-            vkPipelineLayout,
-            resourceBinding->set,
-            1u,
-            &write
-        );
-    }
-
-    void cmdPushDescriptorSetSampler(VkCommandBuffer vkCommandBuffer, VkPipelineLayout vkPipelineLayout, PipelineResourceBinding const* resourceBinding, VkSampler vkSampler, VkPipelineBindPoint bindPoint) noexcept
-    {
-        const VkDescriptorImageInfo samplerDescriptorInfo{
-            .sampler = vkSampler,
-            .imageView = VK_NULL_HANDLE,
-            .imageLayout = VK_IMAGE_LAYOUT_UNDEFINED
-        };
-
-        const VkWriteDescriptorSet write{
-            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstBinding = resourceBinding->binding,
-            .descriptorCount = 1,
-            .descriptorType = toVkDescriptorType(resourceBinding->type),
-            .pImageInfo = &samplerDescriptorInfo
-        };
-
-
-        vkCmdPushDescriptorSet(
-            vkCommandBuffer,
-            bindPoint,
-            vkPipelineLayout,
-            resourceBinding->set,
-            1u,
-            &write
-        );
-    }
-
     struct BoundPipeline
     {
         GraphicsPipelineResource* graphics = nullptr;
@@ -189,6 +81,18 @@ namespace litl::vulkan
             }
 
             return VK_NULL_HANDLE;
+        }
+
+        [[nodiscard]] DescriptorSetChangeTracker& getChangeTracker() noexcept
+        {
+            if (graphics != nullptr)
+            {
+                return graphics->descriptorSetChanges;
+            }
+            else
+            {
+                return compute->descriptorSetChanges;
+            }
         }
     };
 
@@ -713,35 +617,16 @@ namespace litl::vulkan
             return RendererResult::InvalidPipelineResourceKey;
         }
 
-        const auto bindPoint = (isGraphics ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE);
-
-        if (bindingResource->isPushCompatible())
-        {
-            cmdPushDescriptorSetBuffer(
-                commandBuffer->vkCommandBuffer, 
-                boundPipeline.getPipelineLayout(),
-                bindingResource,
-                bufferResource->vkBuffer, 
-                offset, 
-                range,
-                bindPoint);
-        }
-        else
-        {
-            VkDescriptorSetLayout layout = boundPipeline.getSetLayout(bindingResource->set);
-            VkDescriptorSet set = vulkanContext->getCurrFrameSyncInfo().descriptorSetAllocator->allocate(layout);
-
-            cmdBindDescriptorSetBuffer(
-                vulkanContext->device.vkDevice,
-                commandBuffer->vkCommandBuffer,
-                boundPipeline.getPipelineLayout(),
-                set,
-                bindingResource,
-                bufferResource->vkBuffer,
-                offset,
-                range,
-                bindPoint);
-        }
+        // Defer the change to the next draw command
+        boundPipeline.getChangeTracker().addChange(
+            bindingResource->binding,
+            bindingResource->set,
+            toVkDescriptorType(bindingResource->type),
+            VkDescriptorBufferInfo{
+                .buffer = bufferResource->vkBuffer,
+                .offset = offset,
+                .range = range
+            });
 
         return RendererResult::Success;
     }
@@ -831,27 +716,23 @@ namespace litl::vulkan
             return RendererResult::InvalidTextureHandle;
         }
 
-        auto* textureBinding = boundPipeline.getResourceBinding(textureId);
+        auto* bindingResource = boundPipeline.getResourceBinding(textureId);
 
-        if (textureBinding == nullptr)
+        if (bindingResource == nullptr)
         {
             return RendererResult::InvalidPipelineResourceKey;
         }
 
-        if (textureBinding->isPushCompatible())
-        {
-            cmdPushDescriptorSetTexture(
-                commandBuffer->vkCommandBuffer,
-                boundPipeline.getPipelineLayout(),
-                textureBinding,
-                textureResource->vkImage,
-                textureResource->vkImageView,
-                (isGraphics ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE));
-        }
-        else
-        {
-            // ... todo traditional binding ...
-        }
+        // Defer the change to the next draw command
+        boundPipeline.getChangeTracker().addChange(
+            bindingResource->binding,
+            bindingResource->set,
+            toVkDescriptorType(bindingResource->type),
+            VkDescriptorImageInfo{
+                .sampler = VK_NULL_HANDLE,
+                .imageView = textureResource->vkImageView,
+                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            });
 
         return RendererResult::Success;
     }
@@ -880,75 +761,23 @@ namespace litl::vulkan
             return RendererResult::InvalidSamplerHandle;
         }
 
-        auto* samplerBinding = boundPipeline.getResourceBinding(samplerId);
+        auto* bindingResource = boundPipeline.getResourceBinding(samplerId);
 
-        if (samplerBinding == nullptr)
+        if (bindingResource == nullptr)
         {
             return RendererResult::InvalidPipelineResourceKey;
         }
 
-        if (samplerBinding->isPushCompatible())
-        {
-            cmdPushDescriptorSetSampler(
-                commandBuffer->vkCommandBuffer,
-                boundPipeline.getPipelineLayout(),
-                samplerBinding,
-                samplerResource->vkSampler,
-                (isGraphics ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE));
-        }
-        else
-        {
-            // ... todo traditional binding ...
-        }
-
-        return RendererResult::Success;
-    }
-
-    RendererResult cmdBindComputeSampler(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, SamplerHandle samplerHandle, StringId samplerId) noexcept
-    {
-        auto* vulkanContext = unwrap(context);
-        auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
-
-        if (!isValid(commandBuffer))
-        {
-            return RendererResult::InvalidCommandBufferHandle;
-        }
-
-        auto* samplerResource = vulkanContext->resources.getSampler(samplerHandle);
-
-        if ((samplerResource == nullptr) || (samplerResource->vkSampler == VK_NULL_HANDLE))
-        {
-            return RendererResult::InvalidSamplerHandle;
-        }
-
-        auto* computePipeline = vulkanContext->resources.getComputePipeline(commandBuffer->boundComputePipeline);
-
-        if (computePipeline == nullptr)
-        {
-            return RendererResult::NoBoundComputePipeline;
-        }
-
-        auto* samplerBinding = computePipeline->resourceMap.getResourceBinding(samplerId);
-
-        if (samplerBinding == nullptr)
-        {
-            return RendererResult::InvalidPipelineResourceKey;
-        }
-
-        if (samplerBinding->isPushCompatible())
-        {
-            cmdPushDescriptorSetSampler(
-                commandBuffer->vkCommandBuffer,
-                computePipeline->vkPipelineLayout,
-                samplerBinding,
-                samplerResource->vkSampler,
-                VK_PIPELINE_BIND_POINT_COMPUTE
-            );
-        }
-        else
-        {
-            // ... todo traditional binding ...
-        }
+        // Defer the change to the next draw command
+        boundPipeline.getChangeTracker().addChange(
+            bindingResource->binding,
+            bindingResource->set,
+            toVkDescriptorType(bindingResource->type),
+            VkDescriptorImageInfo{
+                .sampler = samplerResource->vkSampler,
+                .imageView = VK_NULL_HANDLE,
+                .imageLayout = VK_IMAGE_LAYOUT_UNDEFINED
+            });
 
         return RendererResult::Success;
     }
