@@ -4,7 +4,7 @@
 #include <span>
 #include <spirv_reflect.h>
 
-#include "litl-core/hash.hpp"
+#include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-renderer/reflection.hpp"
 
@@ -160,6 +160,14 @@ namespace litl
         for (uint32_t i = 0; i < resourceBindingsCount; ++i)
         {
             auto binding = *resourceBindings[i];
+
+            if (binding.set >= 32u)
+            {
+                // Set indices >= 32 are invalid due to the DescriptorSetChangeTracker.
+                // If we need to support more than 32 sets, then that is where the change will need to be done.
+                logError("Shader reflection processing encountered binding set index = ", binding.set, ". Only set indices [0, 31] are valid.");
+                return false;
+            }
 
             litlReflection.resources.push_back(ResourceBinding{
                     .type = fromSpvReflectResourceType(binding.descriptor_type),

@@ -6,6 +6,7 @@
 #include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer/resources/graphicsPipeline.hpp"
 #include "litl-renderer/resources/pipelineResource.hpp"
+#include "litl-renderer-vulkan/resources/utility/descriptorSetChangeTracker.hpp"
 
 namespace litl::vulkan
 {
@@ -37,6 +38,11 @@ namespace litl::vulkan
         /// Note: these are owned by the pipeline cache, not by this resource.
         /// </summary>
         std::vector<VkDescriptorSetLayout> setLayouts;
+
+        /// <summary>
+        /// Accumulated pending descriptor set changes for this pipeline.
+        /// </summary>
+        DescriptorSetChangeTracker descriptorSetChanges;
     };
 }
 

@@ -174,7 +174,6 @@ namespace litl
             
             /// <summary>
             /// Holds the per-frame descriptor set allocator (collection of pools).
-            /// 
             /// Note: this is stored in an unique_ptr since PerFrameSyncInfo is itself stored in a vector.
             /// </summary>
             std::unique_ptr<DescriptorSetAllocator> descriptorSetAllocator;
