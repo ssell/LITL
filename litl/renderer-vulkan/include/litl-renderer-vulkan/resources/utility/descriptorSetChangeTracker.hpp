@@ -9,6 +9,8 @@
 
 namespace litl::vulkan
 {
+    struct RendererContext;
+
     class DescriptorSetChangeTracker final
     {
         /// <summary>
@@ -31,7 +33,7 @@ namespace litl::vulkan
 
         void addChange(uint32_t binding, uint32_t set, VkDescriptorType type, VkDescriptorBufferInfo bufferInfo) noexcept;
         void addChange(uint32_t binding, uint32_t set, VkDescriptorType type, VkDescriptorImageInfo imageInfo) noexcept;
-        void flushChanges(uint32_t set) noexcept;
+        void flushChanges(RendererContext& context, VkCommandBuffer vkCommandBuffer, VkPipelineLayout vkPipelineLayout, VkPipelineBindPoint vkBindPoint, VkDescriptorSetLayout vkDescriptorSetLayout, uint32_t set) noexcept;
 
     private:
 
