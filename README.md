@@ -17,6 +17,7 @@ There are additional third-party dependencies included as submodules.
 As the engine is new and still under active development this may be small, but is actively growing.
 
 * **Renderer**: abstract renderer in `litl-renderer` with a concerete Vulkan 1.4 backend in `litl-renderer-vulkan`. [(read more)](docs/renderer.md)
-* **ECS**: chunk-based Archetypal ECS implementation, compile-time system dependencies for seamless component injection, etc.
+* **ECS**: chunk-based Archetypal ECS implementation, compile-time system dependencies for seamless component injection, etc. [(read more)](docs/ecs.md)
 * **Jobs**: work stealing with per-thread and global job pools, priority lanes, dependencies, local and shared data, fences, etc. [(read more)](docs/jobs.md)
+* **Scene**: transform hierarchy with topologically-sorted updates and pluggable spatial partitioning for culling and queries, driven by ECS structural changes. [(read more)](docs/scene.md)
 * **Logging**: thread-safe with support for multiple sinks (console, file, custom)
