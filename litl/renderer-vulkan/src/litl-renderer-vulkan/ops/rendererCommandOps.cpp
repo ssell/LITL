@@ -129,8 +129,12 @@ namespace litl::vulkan
         {
             info.flags |= VkCommandBufferUsageFlagBits::VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         }
+        else
+        {
+            commandBuffer->descriptorSetChanges.reset();
+        }
 
-        return vkBeginCommandBuffer(commandBuffer->vkCommandBuffer, &info) == VK_SUCCESS;
+        return (vkBeginCommandBuffer(commandBuffer->vkCommandBuffer, &info) == VK_SUCCESS);
     }
 
     bool cmdEnd(litl::RendererContext* context, CommandBufferHandle handle) noexcept
@@ -433,8 +437,6 @@ namespace litl::vulkan
 
     void cmdBindGraphicsPipeline(litl::RendererContext* context, CommandBufferHandle handle, GraphicsPipelineHandle graphicsPipelineHandle) noexcept
     {
-        LITL_ASSERT_MSG(graphicsPipelineHandle.isValid(), "Invalid GraphicsPipelineHandle provided to cmdBindGraphicsPipeline", );
-
         auto* vulkanContext = unwrap(context);
         auto* commandBuffer = unwrapCommandBuffer(context, handle);
 
@@ -448,14 +450,15 @@ namespace litl::vulkan
             return;
         }
 
-        GraphicsPipelineResource* graphicsPipeline = vulkanContext->resources.getGraphicsPipeline(graphicsPipelineHandle);
+        GraphicsPipelineResource* prevPipeline = vulkanContext->resources.getGraphicsPipeline(commandBuffer->boundGraphicsPipeline);
+        GraphicsPipelineResource* currPipeline = vulkanContext->resources.getGraphicsPipeline(graphicsPipelineHandle);
 
-        if (graphicsPipeline != nullptr)
-        {
-            vkCmdBindPipeline(commandBuffer->vkCommandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->pipeline.vkPipeline);
-        }
+        LITL_ASSERT_MSG((currPipeline != nullptr), "Invalid GraphicsPipelineHandle provided to cmdBindGraphicsPipeline", );
+
+        vkCmdBindPipeline(commandBuffer->vkCommandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, currPipeline->pipeline.vkPipeline);
 
         commandBuffer->boundGraphicsPipeline = graphicsPipelineHandle;
+        commandBuffer->descriptorSetChanges.onPipelineLayoutChange((prevPipeline != nullptr ? &prevPipeline->pipeline : nullptr), currPipeline->pipeline);
     }
 
     RendererResult cmdPushConstants(litl::RendererContext* context, CommandBufferHandle handle, ShaderStage shaderStage, std::span<std::byte const> data) noexcept
@@ -827,20 +830,19 @@ namespace litl::vulkan
 
         GraphicsPipelineResource* graphicsPipeline = vulkanContext->resources.getGraphicsPipeline(commandBuffer->boundGraphicsPipeline);
 
-        if (graphicsPipeline != nullptr)
-        {
-            commandBuffer->descriptorSetChanges.flushChanges(
-                *vulkanContext, 
-                commandBuffer->vkCommandBuffer, 
-                graphicsPipeline->pipeline, 
-                true);
+        LITL_ASSERT_MSG((graphicsPipeline != nullptr), "cmdDraw called without a bound Graphics Pipeline", );
 
-            vkCmdDraw(
-                commandBuffer->vkCommandBuffer, 
-                vertexCount, 
-                instanceCount, 
-                firstVertex, 
-                firstInstance);
-        }
+        commandBuffer->descriptorSetChanges.flushChanges(
+            *vulkanContext,
+            commandBuffer->vkCommandBuffer,
+            graphicsPipeline->pipeline,
+            true);
+
+        vkCmdDraw(
+            commandBuffer->vkCommandBuffer,
+            vertexCount,
+            instanceCount,
+            firstVertex,
+            firstInstance);
     }
 }
