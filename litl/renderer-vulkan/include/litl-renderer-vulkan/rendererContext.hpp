@@ -2,6 +2,7 @@
 #define LITL_VULKAN_RENDERER_CONTEXT_H__
 
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 #include "litl-renderer/renderer.hpp"
@@ -10,6 +11,7 @@
 #include "litl-renderer-vulkan/resources/utility/stagingBuffer.hpp"
 #include "litl-renderer-vulkan/resources/utility/stagingTexture.hpp"
 #include "litl-renderer-vulkan/resources/utility/descriptorSetAllocator.hpp"
+#include "litl-renderer-vulkan/resources/utility/destructionQueue.hpp"
 
 namespace litl
 {
@@ -155,6 +157,12 @@ namespace litl
             /// Semaphore to signal the end of presentation.
             /// </summary>
             VkSemaphore presentCompleteSemaphore = VK_NULL_HANDLE;
+
+            /// <summary>
+            /// Queue of items that are deferred to be destroyed.
+            /// Note: this is stored in an unique_ptr since PerFrameSyncInfo is itself stored in a vector.
+            /// </summary>
+            std::unique_ptr<DestructionQueue> destructionQueue;
 
             /// <summary>
             /// Holds both fixed and temporary staging buffers for GPU uploads.

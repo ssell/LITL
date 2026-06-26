@@ -31,6 +31,8 @@ namespace litl::vulkan
         }
 
         auto& currFrameSync = vulkanContext->getCurrFrameSyncInfo();
+
+        currFrameSync.destructionQueue->process();
         currFrameSync.stagingBufferArena->freeBuffers();
         currFrameSync.stagingTextureArena->freeBuffers();
         currFrameSync.descriptorSetAllocator->resetTransient();
