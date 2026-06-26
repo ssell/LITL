@@ -929,17 +929,18 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
     }
 
     ShaderModuleResource reloadedResource{};
+    auto* destructionQueue = m_pContext->getCurrFrameSyncInfo().destructionQueue.get();
 
     if (createShaderModuleResource(m_pContext, reloadedResource, descriptor))
     {
         if (reloadedResource.spirvHash == resource->spirvHash)
         {
             // Identical, nothing needs to happen. Destroy the new duplicate module
-            vkDestroyShaderModule(m_pContext->device.vkDevice, reloadedResource.vkShaderModule, nullptr);
+            destructionQueue->enqueue(reloadedResource.vkShaderModule);
         }
         else
         {
-            // First wait until idle to ensure the old pipeline is not in used before swapping.
+            // First wait until idle to ensure the old pipeline is not in use before swapping.
             // todo: add a delayed destruction queue where we can enqueue vulkan handles to be destroyed in X frames instead of hard waiting here.
             vkDeviceWaitIdle(m_pContext->device.vkDevice);
 
@@ -967,8 +968,7 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
                 {
                     VkPipeline oldGraphicsPipeline = graphicsPipelineResource->pipeline.vkPipeline;
                     graphicsPipelineResource->pipeline.vkPipeline = stagedGraphicsPipeline.pipeline.vkPipeline;
-
-                    vkDestroyPipeline(m_pContext->device.vkDevice, oldGraphicsPipeline, nullptr);
+                    destructionQueue->enqueue(oldGraphicsPipeline);
                 }
                 else
                 {
@@ -985,8 +985,7 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
                 {
                     VkPipeline oldComputePipeline = computePipelineResource->pipeline.vkPipeline;
                     computePipelineResource->pipeline.vkPipeline = stagedComputePipeline.pipeline.vkPipeline;
-
-                    vkDestroyPipeline(m_pContext->device.vkDevice, oldComputePipeline, nullptr);
+                    destructionQueue->enqueue(oldComputePipeline);
                 }
                 else
                 {
@@ -994,7 +993,7 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
                 }
             }
 
-            vkDestroyShaderModule(m_pContext->device.vkDevice, oldShaderModule, nullptr);
+            destructionQueue->enqueue(oldShaderModule);
         }
     }
     else
