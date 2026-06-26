@@ -1,147 +1,269 @@
-#ifndef LITL_VULKAN_RENDER_CONTEXT_H__
-#define LITL_VULKAN_RENDER_CONTEXT_H__
+#ifndef LITL_VULKAN_RENDERER_CONTEXT_H__
+#define LITL_VULKAN_RENDERER_CONTEXT_H__
 
 #include <cstdint>
-#include <vulkan/vulkan.h>
+#include <memory>
 #include <vector>
 
-#include "litl-core/window.hpp"
+#include "litl-renderer/renderer.hpp"
+#include "litl-renderer-vulkan/common.hpp"
+#include "litl-renderer-vulkan/resourceManager.hpp"
+#include "litl-renderer-vulkan/resources/utility/stagingBuffer.hpp"
+#include "litl-renderer-vulkan/resources/utility/stagingTexture.hpp"
+#include "litl-renderer-vulkan/resources/utility/descriptorSetAllocator.hpp"
+#include "litl-renderer-vulkan/resources/utility/destructionQueue.hpp"
 
-namespace litl::vulkan
+namespace litl
 {
-    /// <summary>
-    /// The context of a Vulkan Renderer.
-    /// 
-    /// This is exposed in this header as it makes passing around certain core Vulkan objects easier.
-    /// For example, the Vulkan ResourceAllocator requires access to many of the same objects as the Renderer itself.
-    /// </summary>
-    struct RendererContext
+    class Window;
+
+    namespace vulkan
     {
-        Window* pWindow;
+        struct WindowInfo
+        {
+            /// <summary>
+            /// The abstract window to which we are rendering.
+            /// </summary>
+            Window* window;
+
+            /// <summary>
+            /// Has the window been resized.
+            /// </summary>
+            bool wasResized;
+        };
+
+        struct DeviceInfo
+        {
+            /// <summary>
+            /// Connection to the Vulkan library.
+            /// </summary>
+            VkInstance vkInstance = VK_NULL_HANDLE;
+
+            /// <summary>
+            /// A specific physical device (GPU).
+            /// </summary>
+            VkPhysicalDevice vkPhysicalDevice = VK_NULL_HANDLE;
+
+            /// <summary>
+            /// Logical interface to the physical device.
+            /// </summary>
+            VkDevice vkDevice = VK_NULL_HANDLE;
+
+            /// <summary>
+            /// Memory allocator used by buffers and textures.
+            /// </summary>
+            VmaAllocator vmaAllocator = VK_NULL_HANDLE;
+
+            /// <summary>
+            /// The window surface on which to render.
+            /// </summary>
+            VkSurfaceKHR vkSurface = VK_NULL_HANDLE;
+
+            /// <summary>
+            /// Command buffer pool for long-lived buffers.
+            /// </summary>
+            VkCommandPool vkCommandPool = VK_NULL_HANDLE;
+
+            /// <summary>
+            /// Command buffer pool for short-lived, single-submission buffers.
+            /// </summary>
+            VkCommandPool vkCommandPoolTransient = VK_NULL_HANDLE;
+
+            /// <summary>
+            /// The graphics command queue.
+            /// </summary>
+            VkQueue vkGraphicsQueue = VK_NULL_HANDLE;
+
+            /// <summary>
+            /// The graphics queue index.
+            /// </summary>
+            uint32_t graphicsQueueIndex = 0u;
+
+            /// <summary>
+            /// The present command queue.
+            /// </summary>
+            VkQueue vkPresentQueue = VK_NULL_HANDLE;
+
+            /// <summary>
+            /// The present queue index.
+            /// </summary>
+            uint32_t presentQueueIndex = 0u;
+
+            /// <summary>
+            /// The transfer command queue.
+            /// </summary>
+            VkQueue vkTransferQueue = VK_NULL_HANDLE;
+
+            /// <summary>
+            /// The transfer queue index.
+            /// </summary>
+            uint32_t transferQueueIndex = 0u;
+
+            /// <summary>
+            /// Pipeline cache objects allow the result of pipeline construction to be reused between pipelines and between runs of an application.
+            /// </summary>
+            VkPipelineCache vkPipelineCache = VK_NULL_HANDLE;
+        };
+
+        struct SwapChainInfo
+        {
+            /// <summary>
+            /// Our swap chain.
+            /// </summary>
+            VkSwapchainKHR vkSwapChain = VK_NULL_HANDLE;
+
+            /// <summary>
+            /// The format of the swap chain images.
+            /// </summary>
+            VkFormat vkSwapChainImageFormat;
+
+            /// <summary>
+            /// The size of the swap chain images.
+            /// </summary>
+            VkExtent2D vkSwapChainExtent;
+
+            /// <summary>
+            /// The currently secured swapchain image index.
+            /// </summary>
+            uint32_t swapChainImageIndex = 0u;
+
+            /// <summary>
+            /// The images in the swap chain.
+            /// </summary>
+            std::vector<VkImage> vkSwapChainImages;
+
+            /// <summary>
+            /// The views into the swap chain images.
+            /// </summary>
+            std::vector<VkImageView> vkSwapChainImageViews;
+        };
 
         /// <summary>
-        /// Frame count.
+        /// For syncing an entire frame.
         /// </summary>
-        uint32_t frame = 0;
+        struct PerFrameSyncInfo
+        {
+            /// <summary>
+            /// Shared command buffer for the frame.
+            /// </summary>
+            CommandBufferHandle commandBuffer{};
+
+            /// <summary>
+            /// Fence to signal the end of rendering.
+            /// </summary>
+            VkFence renderFence = VK_NULL_HANDLE;
+
+            /// <summary>
+            /// Semaphore to signal the end of presentation.
+            /// </summary>
+            VkSemaphore presentCompleteSemaphore = VK_NULL_HANDLE;
+
+            /// <summary>
+            /// Queue of items that are deferred to be destroyed.
+            /// Note: this is stored in an unique_ptr since PerFrameSyncInfo is itself stored in a vector.
+            /// </summary>
+            std::unique_ptr<DestructionQueue> destructionQueue;
+
+            /// <summary>
+            /// Holds both fixed and temporary staging buffers for GPU uploads.
+            /// Cleared out at the start of each frame.
+            /// 
+            /// Note: this is stored in an unique_ptr since PerFrameSyncInfo is itself stored in a vector.
+            /// </summary>
+            std::unique_ptr<StagingBuffer> stagingBufferArena;
+
+            /// <summary>
+            /// Holds temporary staging textures for GPU uploads.
+            /// Cleared out at the start of each frame.
+            /// 
+            /// Note: this is stored in an unique_ptr since PerFrameSyncInfo is itself stored in a vector.
+            /// </summary>
+            std::unique_ptr<StagingTexture> stagingTextureArena;
+            
+            /// <summary>
+            /// Holds the per-frame descriptor set allocator (collection of pools).
+            /// Note: this is stored in an unique_ptr since PerFrameSyncInfo is itself stored in a vector.
+            /// </summary>
+            std::unique_ptr<DescriptorSetAllocator> descriptorSetAllocator;
+        };
 
         /// <summary>
-        /// frame % framesInFlight. Used for selecting resources that alternate between frames.
+        /// For syncing an individual image.
         /// </summary>
-        uint32_t frameIndex = 0;
+        struct PerImageSyncInfo
+        {
+            VkSemaphore renderCompleteSemaphore = VK_NULL_HANDLE;
+        };
 
         /// <summary>
-        /// The currently secured swapchain image index.
+        /// Information about the current draw command(s).
+        /// Populated whenever cmdBeginRender is called.
         /// </summary>
-        uint32_t swapChainImageIndex = 0;
+        struct DrawInfo
+        {
+            VkExtent2D targetTextureSize = { 0, 0 };
+            VkFormat depthFormat = VkFormat::VK_FORMAT_UNDEFINED;
+            VkFormat stencilFormat = VkFormat::VK_FORMAT_UNDEFINED;
+        };
 
         /// <summary>
-        /// Number of frames in flight.
+        /// For syncinc.
         /// </summary>
-        uint32_t framesInFlight = 2;
+        struct RenderInfo
+        {
+            /// <summary>
+            /// Frame-specific data.
+            /// </summary>
+            FrameData frame{};
 
-        /// <summary>
-        /// Was the framebuffer/window resized?
-        /// </summary>
-        bool wasResized = false;
+            /// <summary>
+            /// Indexed by FrameInfo::frameInFlight
+            /// </summary>
+            std::vector<PerFrameSyncInfo> frameSyncInfo;
 
-        /// <summary>
-        /// Our window surface. Typically a GLFWwindow.
-        /// </summary>
-        void* pSurfaceWindow = nullptr;
+            /// <summary>
+            /// Indexed by the swapchain image index.
+            /// </summary>
+            std::vector<PerImageSyncInfo> imageSyncInfo;
+        };
 
-        /// <summary>
-        /// Connection to the Vulkan library.
-        /// </summary>
-        VkInstance vkInstance = VK_NULL_HANDLE;
+        struct RendererContext
+        {
+            RendererConfiguration config{};
+            WindowInfo window{};
+            DeviceInfo device{};
+            SwapChainInfo swapChain{};
+            RenderInfo renderInfo{};
+            DrawInfo drawInfo{};
+            ResourceManager resources;
 
-        /// <summary>
-        /// A specific physical device (GPU).
-        /// </summary>
-        VkPhysicalDevice vkPhysicalDevice = VK_NULL_HANDLE;
+            [[nodiscard]] PerFrameSyncInfo& getCurrFrameSyncInfo() noexcept
+            {
+                return renderInfo.frameSyncInfo[renderInfo.frame.frameInFlightIndex];
+            }
 
-        /// <summary>
-        /// Logical interface to the physical device.
-        /// </summary>
-        VkDevice vkDevice = VK_NULL_HANDLE;
+            [[nodiscard]] PerFrameSyncInfo& getPrevFrameSyncInfo() noexcept
+            {
+                const uint32_t prevFrameInFlightIndex = (renderInfo.frame.frameCount + (renderInfo.frame.framesInFlight - 1)) % renderInfo.frame.framesInFlight;
+                return renderInfo.frameSyncInfo[prevFrameInFlightIndex];
+            }
 
-        /// <summary>
-        /// The window surface on which to render.
-        /// </summary>
-        VkSurfaceKHR vkSurface = VK_NULL_HANDLE;
+            [[nodiscard]] PerImageSyncInfo& getCurrImageSyncInfo() noexcept
+            {
+                return renderInfo.imageSyncInfo[swapChain.swapChainImageIndex];
+            }
+        };
 
-        /// <summary>
-        /// Our graphics command queue.
-        /// </summary>
-        VkQueue vkGraphicsQueue = VK_NULL_HANDLE;
+        static RendererContext* unwrap(litl::RendererContext* opaqueContext) noexcept
+        {
+            return reinterpret_cast<RendererContext*>(opaqueContext);
+        }
 
-        /// <summary>
-        /// Our graphics queue index.
-        /// </summary>
-        uint32_t graphicsQueueIndex = 0;
-
-        /// <summary>
-        /// Our present command queue.
-        /// </summary>
-        VkQueue vkPresentQueue = VK_NULL_HANDLE;
-
-        /// <summary>
-        /// Our present queue index.
-        /// </summary>
-        uint32_t presentQueueIndex = 0;
-
-        /// <summary>
-        /// Our swap chain.
-        /// </summary>
-        VkSwapchainKHR vkSwapChain = VK_NULL_HANDLE;
-
-        /// <summary>
-        /// The images in the swap chain.
-        /// </summary>
-        std::vector<VkImage> vkSwapChainImages;
-
-        /// <summary>
-        /// The views into the swap chain images.
-        /// </summary>
-        std::vector<VkImageView> vkSwapChainImageViews;
-
-        /// <summary>
-        /// The format of the swap chain images.
-        /// </summary>
-        VkFormat vkSwapChainImageFormat;
-
-        /// <summary>
-        /// The size of the swap chain images.
-        /// </summary>
-        VkExtent2D vkSwapChainExtent;
-
-        /// <summary>
-        /// Manage memory that is used to store command buffers.
-        /// </summary>
-        VkCommandPool vkCommandPool = VK_NULL_HANDLE;
-
-        /// <summary>
-        /// Semaphore (GPU) that is signaled when we are done presenting the swapchain image to the screen.
-        /// One semaphore per swapchain image.
-        /// </summary>
-        std::vector<VkSemaphore> vkPresentCompleteSemaphores;
-
-        /// <summary>
-        /// Semaphore (GPU) that is signaled when the swapchain image is done being drawn.
-        /// One semaphore per swapchain image.
-        /// </summary>
-        std::vector<VkSemaphore> vkRenderCompleteSemaphores;
-
-        /// <summary>
-        /// Fence (CPU) that is signaled when an entire frame is complete.
-        /// One fence per swapchain image.
-        /// </summary>
-        std::vector<VkFence> vkRenderFences;
-    };
-
-    struct RendererHandle
-    {
-        RendererContext context;
-    };
+        static litl::RendererContext* wrap(RendererContext* concreteContext) noexcept
+        {
+            return reinterpret_cast<litl::RendererContext*>(concreteContext);
+        }
+    }
 }
 
 #endif

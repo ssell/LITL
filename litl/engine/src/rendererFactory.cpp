@@ -1,23 +1,52 @@
-#include "litl-core/logging/logging.hpp"
+#include "litl-core/assert.hpp"
+#include "litl-core/services/serviceProvider.hpp"
+#include "litl-renderer/renderer.hpp"
 #include "litl-engine/rendererFactory.hpp"
-#include "litl-renderer-vulkan/renderer.hpp"
+
+#ifdef LITL_RENDERER_VULKAN
+#include "litl-renderer-vulkan/integration.hpp"
+#endif
+
+#ifdef LITL_RENDERER_D3D12
+#include "litl-renderer-d3d12/integration.hpp"
+#endif
+
+#ifdef LITL_RENDERER_METAL
+#include "litl-renderer-metal/integration.hpp"
+#endif
 
 namespace litl
 {
-    bool injectRenderer(ServiceProvider& serviceProvider, Window* pWindow, RendererConfiguration const& rendererDescriptor)
+    void injectRenderer(ServiceProvider& serviceProvider, Window* pWindow, RendererConfiguration const& rendererDescriptor)
     {
-        logInfo("Creating Renderer of type ", RendererBackendNames[static_cast<uint32_t>(rendererDescriptor.rendererType)]);
+        Renderer* renderer = nullptr;
 
         switch (rendererDescriptor.rendererType)
         {
+#ifdef LITL_RENDERER_VULKAN
         case RendererBackendType::Vulkan:
-            serviceProvider.setSingleton<Renderer, Renderer>(vulkan::createVulkanRenderer(pWindow, rendererDescriptor));
-            return true;
+            renderer = createVulkanRenderer(pWindow, rendererDescriptor);
+            break;
+#endif
 
-        case RendererBackendType::None:
+#ifdef LITL_RENDERER_D3D12
+        case RendererBackendType::D3D12:
+            renderer = createD3D12Renderer(pWindow, rendererDescriptor);
+            break;
+#endif
+
+#ifdef LITL_RENDERER_METAL
+        case RendererBackendType::Metal:
+            renderer = createMetalRenderer(pWindow, rendererDescriptor);
+            break;
+#endif
+
         default:
-            logError("Requested to create Renderer of unsupported backend of ", RendererBackendNames[static_cast<uint32_t>(rendererDescriptor.rendererType)]);
-            return false;
+            break;
         }
+
+        LITL_FATAL_ASSERT_MSG(renderer != nullptr, "Failed to create Renderer");
+
+        serviceProvider.setSingleton<Renderer, Renderer>(renderer);
     }
 }

@@ -1,8 +1,9 @@
-#include "litl-core/window.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/job/jobScheduler.hpp"
 #include "litl-core/services/serviceCollection.hpp"
 #include "litl-core/services/serviceProvider.hpp"
+#include "litl-renderer/window.hpp"
+#include "litl-renderer/renderer.hpp"
 #include "litl-ecs/frameCallbacks.hpp"
 #include "litl-ecs/world.hpp"
 #include "litl-engine/engine.hpp"
@@ -154,11 +155,7 @@ namespace litl
 
         logInfo("Opening window \"", title, "\" (", width, "x", height, ") ...");
         
-        if (!injectWindow((*m_pImpl->pServiceProvider), m_pImpl->pSharedConfig->rendererSettings.rendererType))
-        {
-            logCritical("Failed to create window.");
-            return false;
-        }
+        injectWindow((*m_pImpl->pServiceProvider), m_pImpl->pSharedConfig->rendererSettings.rendererType);
 
         m_pImpl->pSharedWindow = m_pImpl->pServiceProvider->get<Window>();
 
@@ -175,12 +172,7 @@ namespace litl
     {
         logInfo("Creating renderer with ", RendererBackendNames[static_cast<uint32_t>(m_pImpl->pSharedConfig->rendererSettings.rendererType)], " backend ...");
 
-        if (!injectRenderer((*m_pImpl->pServiceProvider), m_pImpl->pSharedWindow.get(), m_pImpl->pSharedConfig->rendererSettings))
-        {
-            logCritical("Failed to create Renderer");
-            return false;
-        }
-
+        injectRenderer((*m_pImpl->pServiceProvider), m_pImpl->pSharedWindow.get(), m_pImpl->pSharedConfig->rendererSettings);
         m_pImpl->pSharedRenderer = m_pImpl->pServiceProvider->get<Renderer>();
 
         if (!m_pImpl->pSharedRenderer->build())

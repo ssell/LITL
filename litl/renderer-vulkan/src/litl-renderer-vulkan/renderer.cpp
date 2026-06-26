@@ -1,21 +1,47 @@
+#include <cstring>
 #include <set>
 #include <string>
 #include <vector>
 
-#define GLFW_INCLUDE_VULKAN
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
-
+#include "litl-core/debug.hpp"
+#include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/math.hpp"
-#include "litl-renderer/pipeline/graphicsPipeline.hpp"
-#include "litl-renderer-vulkan/queueFamily.hpp"
-#include "litl-renderer-vulkan/rendererContext.hpp"
+#include "litl-renderer/window.hpp"
+#include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer-vulkan/renderer.hpp"
-#include "litl-renderer-vulkan/resourceAllocator.hpp"
-#include "litl-renderer-vulkan/swapchainSupport.hpp"
-#include "litl-renderer-vulkan/commands/commandBuffer.hpp"
+#include "litl-renderer-vulkan/queueFamily.hpp"
+#include "litl-renderer-vulkan/swapChainSupport.hpp"
+
+namespace litl
+{
+    /// <summary>
+    /// Defined in integration.hpp and used by the RendererFactory in litl-engine
+    /// </summary>
+    /// <param name="pWindow"></param>
+    /// <param name="rendererDescriptor"></param>
+    /// <returns></returns>
+    litl::Renderer* createVulkanRenderer(Window* pWindow, RendererConfiguration const& rendererDescriptor) noexcept
+    {
+        LITL_FATAL_ASSERT_MSG(pWindow != nullptr, "Attempting to create Vulkan Renderer with a null Window");
+
+        vulkan::RendererContext* vulkanContext = new(std::nothrow) vulkan::RendererContext();
+
+        vulkanContext->config = rendererDescriptor;
+        vulkanContext->window.window = pWindow;
+        vulkanContext->renderInfo.frame.framesInFlight = rendererDescriptor.framesInFlight;
+
+        return new litl::Renderer(&litl::vulkan::VulkanRendererOps, vulkan::wrap(vulkanContext));
+    }
+
+    void destroyVulkanRenderer(Renderer* renderer) noexcept
+    {
+        if (renderer != nullptr)
+        {
+            delete renderer;
+        }
+    }
+}
 
 namespace litl::vulkan
 {
@@ -37,98 +63,72 @@ namespace litl::vulkan
     /// </summary>
     static const std::vector<const char*> RequiredDeviceExtensions = {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-        VK_KHR_MAINTENANCE1_EXTENSION_NAME          // to allow negative viewport heights
+        VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME      // dynamic rendering to allow null viewport in graphics pipeline, etc.
     };
 
+
     // -------------------------------------------------------------------------------------
-    // Renderer Creation
+    // Creation
     // -------------------------------------------------------------------------------------
 
-    litl::Renderer* createVulkanRenderer(Window* pWindow, RendererConfiguration const& rendererDescriptor)
+    bool verifyValidationLayers() noexcept;
+    bool initializeVolk() noexcept;
+    bool createInstance(RendererContext& context) noexcept;
+    bool createWindowSurface(RendererContext& context) noexcept;
+    bool selectPhysicalDevice(RendererContext& context) noexcept;
+    bool createLogicalDevice(RendererContext& context) noexcept;
+    bool createMemoryAllocator(RendererContext& context) noexcept;
+    bool createPipelineCache(RendererContext& context) noexcept;
+    bool createResourceManager(RendererContext& context) noexcept;
+    bool createSwapChain(RendererContext& context, VkSwapchainKHR oldSwapchain) noexcept;
+    bool createCommandPool(RendererContext& context) noexcept;
+    bool createFrameSyncObjects(RendererContext& context) noexcept;
+    bool createImageSyncObjects(RendererContext& context) noexcept;
+
+    bool build(litl::RendererContext* context) noexcept
     {
-        auto handle = new RendererHandle{};
-        handle->context.pWindow = pWindow;
-        handle->context.pSurfaceWindow = pWindow->getSurfaceWindow();
-        handle->context.framesInFlight = rendererDescriptor.framesInFlight;
+        auto* vulkanContext = unwrap(context);
 
-        return new litl::Renderer(
-            &VulkanRendererOperations,
-            LITL_PACK_HANDLE(litl::RendererHandle, handle)
-        );
-    }
-
-    // -------------------------------------------------------------------------------------
-    // Initialization
-    // -------------------------------------------------------------------------------------
-
-    bool createInstance(RendererHandle* handle);
-    bool createWindowSurface(RendererHandle* handle);
-    bool selectPhysicalDevice(RendererHandle* handle);
-    bool createLogicalDevice(RendererHandle* handle);
-    bool createSwapChain(RendererHandle* handle);
-    bool createCommandPool(RendererHandle* handle);
-    bool createSyncObjects(RendererHandle* handle);
-
-    bool build(litl::RendererHandle const& litlHandle) noexcept
-    {
-        auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
-
-        if (handle->context.pWindow == nullptr)
-        {
-            logError("Vulkan Window provided to Vulkan Renderer is null.");
-            return false;
-        }
+        LITL_ASSERT_MSG(vulkanContext->window.window != nullptr, "Vulkan Renderer requires a non-null Window. Headless rendering not yet supported.", false);
 
         return
-            createInstance(handle) &&
-            createWindowSurface(handle) &&
-            selectPhysicalDevice(handle) &&
-            createLogicalDevice(handle) &&
-            createSwapChain(handle) &&
-            createCommandPool(handle) &&
-            createSyncObjects(handle);
+            initializeVolk() &&
+            verifyValidationLayers() &&
+            createInstance(*vulkanContext) &&
+            createWindowSurface(*vulkanContext) &&
+            selectPhysicalDevice(*vulkanContext) &&
+            createLogicalDevice(*vulkanContext) &&
+            createMemoryAllocator(*vulkanContext) &&
+            createPipelineCache(*vulkanContext) &&
+            createResourceManager(*vulkanContext) &&
+            createSwapChain(*vulkanContext, VK_NULL_HANDLE) &&
+            createCommandPool(*vulkanContext) &&
+            createFrameSyncObjects(*vulkanContext) &&
+            createImageSyncObjects(*vulkanContext);
     }
 
     /// <summary>
-    /// Creates the Vulkan instance that we will use.
+    /// Initializes Volk.
+    /// 
+    /// Volk is a meta-loader for Vulkan that bypasses the default loader's trampoline functions.
+    /// 
+    /// When you call something like vkCmdDraw, you're not calling the driver directly. 
+    /// You're calling into the loader, which dispatches through a trampoline that figures out 
+    /// which ICD (Installable Client Driver) and which device the call belongs to, then forwards it. 
+    /// For functions called millions of times per frame, that indirection adds up.
+    /// 
+    /// Volk solves this by loading Vulkan dynamically at runtime and resolving function pointers directly 
+    /// from the driver, skipping the trampoline entirely.
     /// </summary>
-    /// <param name="applicationName"></param>
     /// <returns></returns>
-    bool createInstance(RendererHandle* handle)
+    bool initializeVolk() noexcept
     {
-        // See: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/01_Instance.html
-        VkApplicationInfo appInfo{};
-        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = "litl-engine";
-        appInfo.pEngineName = "LITL";
-        appInfo.apiVersion = VK_API_VERSION_1_4;
-
-        uint32_t glfwExtensionCount = 0;
-        const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-        VkInstanceCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        createInfo.pApplicationInfo = &appInfo;
-        createInfo.enabledExtensionCount = glfwExtensionCount;
-        createInfo.ppEnabledExtensionNames = glfwExtensions;
-        createInfo.enabledLayerCount = 0;
-
-#ifdef DEBUG
-        if (!verifyValidationLayers())
-        {
-            return false;
-        }
-
-        createInfo.enabledLayerCount = static_cast<uint32_t>(RequiredValidationLayers.size());
-        createInfo.ppEnabledLayerNames = RequiredValidationLayers.data();
-        // by default these just print to standard out. can use callbacks if needed. see: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/02_Validation_layers.html#_message_callback
-#endif
-
-        VkResult result = vkCreateInstance(&createInfo, nullptr, &handle->context.vkInstance);
+        // must be called before any vulkan call
+        const VkResult result = volkInitialize();
 
         if (result != VK_SUCCESS)
         {
-            logError("Failed to create Vulkan Instance with result ", result);
+            logError("Failed to initialize Volk with result ", result);
             return false;
         }
 
@@ -139,33 +139,83 @@ namespace litl::vulkan
     /// Ensures all required validation layers are present.
     /// </summary>
     /// <returns></returns>
-    bool verifyValidationLayers(RendererHandle* handle)
+    bool verifyValidationLayers() noexcept
     {
-        // See: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/02_Validation_layers.html
-        uint32_t layerCount;
-        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-
-        std::vector<VkLayerProperties> availableLayers(layerCount);
-        vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
-
-        for (uint32_t i = 0; i < RequiredValidationLayers.size(); ++i)
+        if constexpr (LITL_DEBUG)
         {
-            bool layerFound = false;
+            // See: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/02_Validation_layers.html
+            uint32_t layerCount;
+            vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
-            for (uint32_t j = 0; j < layerCount; ++j)
+            std::vector<VkLayerProperties> availableLayers(layerCount);
+            vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+            for (uint32_t i = 0; i < RequiredValidationLayers.size(); ++i)
             {
-                if (std::strcmp(RequiredValidationLayers[i], availableLayers[j].layerName) == 0)
+                bool layerFound = false;
+
+                for (uint32_t j = 0; j < layerCount; ++j)
                 {
-                    layerFound = true;
-                    break;
+                    if (std::strcmp(RequiredValidationLayers[i], availableLayers[j].layerName) == 0)
+                    {
+                        layerFound = true;
+                        break;
+                    }
+                }
+
+                if (!layerFound)
+                {
+                    return false;
                 }
             }
-
-            if (!layerFound)
-            {
-                return false;
-            }
         }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Creates the Vulkan instance that we will use.
+    /// </summary>
+    /// <returns></returns>
+    bool createInstance(RendererContext& context) noexcept
+    {
+        // See: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/01_Instance.html
+        const VkApplicationInfo appInfo{
+            .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+            .pApplicationName = "litl-engine",
+            .pEngineName = "LITL",
+            .apiVersion = LITL_VULKAN_VERSION,
+        };
+
+        uint32_t glfwExtensionCount = 0;
+        const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+        VkInstanceCreateInfo createInfo{
+            .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+            .pApplicationInfo = &appInfo,
+            .enabledLayerCount = 0,
+            .ppEnabledLayerNames = nullptr,
+            .enabledExtensionCount = glfwExtensionCount,
+            .ppEnabledExtensionNames = glfwExtensions,
+        };
+
+        if constexpr (LITL_DEBUG)
+        {
+            // by default these just print to standard out. can use callbacks if needed. see: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/02_Validation_layers.html#_message_callback
+            createInfo.enabledLayerCount = static_cast<uint32_t>(RequiredValidationLayers.size());
+            createInfo.ppEnabledLayerNames = RequiredValidationLayers.data();
+        }
+
+        VkResult result = vkCreateInstance(&createInfo, nullptr, &context.device.vkInstance);
+
+        if (result != VK_SUCCESS)
+        {
+            logError("Failed to create Vulkan Instance with result ", result);
+            return false;
+        }
+
+        // populate instance-level functions
+        volkLoadInstance(context.device.vkInstance);
 
         return true;
     }
@@ -174,9 +224,13 @@ namespace litl::vulkan
     /// Creates the surface to which we will render.
     /// </summary>
     /// <returns></returns>
-    bool createWindowSurface(RendererHandle* handle)
+    bool createWindowSurface(RendererContext& context) noexcept
     {
-        VkResult result = glfwCreateWindowSurface(handle->context.vkInstance, static_cast<GLFWwindow*>(handle->context.pSurfaceWindow), nullptr, &handle->context.vkSurface);
+        VkResult result = glfwCreateWindowSurface(
+            context.device.vkInstance, 
+            static_cast<GLFWwindow*>(context.window.window->getSurfaceWindow()),
+            nullptr, 
+            &context.device.vkSurface);
 
         if (result != VK_SUCCESS)
         {
@@ -192,7 +246,7 @@ namespace litl::vulkan
     /// </summary>
     /// <param name="device"></param>
     /// <returns></returns>
-    bool checkPhysicalDeviceExtensionSupport(VkPhysicalDevice device)
+    bool checkPhysicalDeviceExtensionSupport(VkPhysicalDevice device) noexcept
     {
         uint32_t extensionCount = 0;
         vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
@@ -207,7 +261,19 @@ namespace litl::vulkan
             requiredExtensions.erase(extension.extensionName);
         }
 
-        return requiredExtensions.empty();
+        if (!requiredExtensions.empty())
+        {
+            logError("One or more required Vulkan extensions are not available on the physical device:");
+
+            for (const auto& extension : requiredExtensions)
+            {
+                logError("Missing required extensions: ", extension);
+            }
+
+            return false;
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -215,7 +281,7 @@ namespace litl::vulkan
     /// </summary>
     /// <param name="device"></param>
     /// <returns></returns>
-    bool isPhysicalDeviceSuitable(VkPhysicalDevice device)
+    bool isPhysicalDeviceSuitable(VkPhysicalDevice device) noexcept
     {
         // Don't need this for these demos, but in reality see: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/03_Physical_devices_and_queue_families.html#_base_device_suitability_checks
         VkPhysicalDeviceProperties deviceProperties;
@@ -224,9 +290,12 @@ namespace litl::vulkan
         vkGetPhysicalDeviceProperties(device, &deviceProperties);
         vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
-        return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
+        return
+            ((deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) || (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)) &&
             checkPhysicalDeviceExtensionSupport(device) &&
-            deviceFeatures.geometryShader;
+            deviceFeatures.geometryShader &&
+            deviceFeatures.tessellationShader;
+            // TODO the full feature set will need to be specified by the engine/user/game/whatever
     }
 
     /// <summary>
@@ -235,7 +304,7 @@ namespace litl::vulkan
     /// <param name="device"></param>
     /// <param name="surface"></param>
     /// <returns></returns>
-    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface)
+    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface) noexcept
     {
         QueueFamilyIndices indices{};
 
@@ -268,6 +337,11 @@ namespace litl::vulkan
                 }
             }
 
+            if (!indices.hasTransferIndex() && (queueFamilies[i].queueFlags & VK_QUEUE_TRANSFER_BIT))
+            {
+                indices.setTransferIndex(i);
+            }
+
             if (indices.hasAll())
             {
                 break;
@@ -281,10 +355,10 @@ namespace litl::vulkan
     /// Selects the best-fit physical device to integrate with.
     /// </summary>
     /// <returns></returns>
-    bool selectPhysicalDevice(RendererHandle* handle)
+    bool selectPhysicalDevice(RendererContext& context) noexcept
     {
         uint32_t deviceCount = 0;
-        vkEnumeratePhysicalDevices(handle->context.vkInstance, &deviceCount, nullptr);
+        vkEnumeratePhysicalDevices(context.device.vkInstance, &deviceCount, nullptr);
 
         if (deviceCount == 0)
         {
@@ -292,40 +366,40 @@ namespace litl::vulkan
         }
 
         std::vector<VkPhysicalDevice> availableDevices(deviceCount);
-        vkEnumeratePhysicalDevices(handle->context.vkInstance, &deviceCount, availableDevices.data());
+        vkEnumeratePhysicalDevices(context.device.vkInstance, &deviceCount, availableDevices.data());
 
         for (auto device : availableDevices)
         {
-            auto queueFamilies = findQueueFamilies(device, handle->context.vkSurface);
+            auto queueFamilies = findQueueFamilies(device, context.device.vkSurface);
 
             if (isPhysicalDeviceSuitable(device) && queueFamilies.hasAll())
             {
-                auto swapChainSupport = SwapChainSupport::querySwapChainSupport(device, handle->context.vkSurface);
+                auto swapChainSupport = SwapChainSupport::querySwapChainSupport(device, context.device.vkSurface);
 
                 if (swapChainSupport.isSwapChainSufficient())
                 {
-                    handle->context.vkPhysicalDevice = device;
+                    context.device.vkPhysicalDevice = device;
                     break;
                 }
             }
         }
 
-        return (handle->context.vkPhysicalDevice != VK_NULL_HANDLE);
+        return (context.device.vkPhysicalDevice != VK_NULL_HANDLE);
     }
 
     /// <summary>
     /// Creates the logical device and command queues.
     /// </summary>
     /// <returns></returns>
-    bool createLogicalDevice(RendererHandle* handle)
+    bool createLogicalDevice(RendererContext& context) noexcept
     {
-        auto queueFamilies = findQueueFamilies(handle->context.vkPhysicalDevice, handle->context.vkSurface);
+        auto queueFamilies = findQueueFamilies(context.device.vkPhysicalDevice, context.device.vkSurface);
 
-        handle->context.graphicsQueueIndex = queueFamilies.getGraphicsIndex();
-        handle->context.presentQueueIndex = queueFamilies.getPresentIndex();
+        context.device.graphicsQueueIndex = queueFamilies.getGraphicsIndex();
+        context.device.presentQueueIndex = queueFamilies.getPresentIndex();
 
         std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-        std::set<uint32_t> uniqueQueueFamilies = { handle->context.graphicsQueueIndex, handle->context.presentQueueIndex };
+        std::set<uint32_t> uniqueQueueFamilies = { context.device.graphicsQueueIndex, context.device.presentQueueIndex };
         float queuePriorities[1] = { 1.0f };
 
         for (auto queueFamilyIndex : uniqueQueueFamilies)
@@ -338,42 +412,49 @@ namespace litl::vulkan
                 });
         }
 
-
         // query for Vulkan advanced feature set
-        auto vulkanDyanmicStateFeatures = VkPhysicalDeviceExtendedDynamicStateFeaturesEXT{
+        VkPhysicalDeviceExtendedDynamicStateFeaturesEXT vulkanDynamicStateFeatures {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT,
             .pNext = nullptr,
             .extendedDynamicState = true
         };
 
-        auto vulkan13Features = VkPhysicalDeviceVulkan13Features{
-            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
-            .pNext = &vulkanDyanmicStateFeatures,
-            .synchronization2 = true,
-            .dynamicRendering = true
+        VkPhysicalDeviceVulkan14Features vulkan14Features{
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_FEATURES,
+            .pNext = &vulkanDynamicStateFeatures,
+            .pushDescriptor = true
         };
 
-        auto vulkan12Features = VkPhysicalDeviceVulkan12Features{
+        VkPhysicalDeviceVulkan13Features vulkan13Features {
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
+            .pNext = &vulkan14Features,
+            .synchronization2 = true,
+            .dynamicRendering = true,
+        };
+
+        VkPhysicalDeviceVulkan12Features vulkan12Features {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
             .pNext = &vulkan13Features,
             .bufferDeviceAddress = VK_TRUE
         };
 
-        auto vulkan11Features = VkPhysicalDeviceVulkan11Features{
+        VkPhysicalDeviceVulkan11Features vulkan11Features {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES,
             .pNext = &vulkan12Features,
             .shaderDrawParameters = true
         };
 
-        auto physicalDeviceFeatures = VkPhysicalDeviceFeatures2{
+        VkPhysicalDeviceFeatures2 physicalDeviceFeatures {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
             .pNext = &vulkan11Features,
             .features = VkPhysicalDeviceFeatures {
-                .geometryShader = true
+                .geometryShader = true,
+                .tessellationShader = true,
+                .shaderInt64 = true                 // For BDA
             }
         };
 
-        const auto deviceCreateInfo = VkDeviceCreateInfo{
+        const VkDeviceCreateInfo deviceCreateInfo {
             .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
             .pNext = &physicalDeviceFeatures,
             .queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size()),
@@ -382,7 +463,7 @@ namespace litl::vulkan
             .ppEnabledExtensionNames = RequiredDeviceExtensions.data()
         };
 
-        const VkResult result = vkCreateDevice(handle->context.vkPhysicalDevice, &deviceCreateInfo, nullptr, &handle->context.vkDevice);
+        const VkResult result = vkCreateDevice(context.device.vkPhysicalDevice, &deviceCreateInfo, nullptr, &context.device.vkDevice);
 
         if (result != VK_SUCCESS)
         {
@@ -390,16 +471,20 @@ namespace litl::vulkan
             return false;
         }
 
-        vkGetDeviceQueue(handle->context.vkDevice, queueFamilies.getGraphicsIndex(), 0, &handle->context.vkGraphicsQueue);
-        vkGetDeviceQueue(handle->context.vkDevice, queueFamilies.getPresentIndex(), 0, &handle->context.vkPresentQueue);
+        // populate device-level functions
+        volkLoadDevice(context.device.vkDevice);
 
-        if (handle->context.vkGraphicsQueue == VK_NULL_HANDLE)
+        vkGetDeviceQueue(context.device.vkDevice, queueFamilies.getGraphicsIndex(), 0, &context.device.vkGraphicsQueue);
+        vkGetDeviceQueue(context.device.vkDevice, queueFamilies.getPresentIndex(), 0, &context.device.vkPresentQueue);
+        vkGetDeviceQueue(context.device.vkDevice, queueFamilies.getTransferIndex(), 0, &context.device.vkTransferQueue);
+
+        if (context.device.vkGraphicsQueue == VK_NULL_HANDLE)
         {
             logError("Failed to retrieved Vulkan Graphics Queue");
             return false;
         }
 
-        if (handle->context.vkPresentQueue == VK_NULL_HANDLE)
+        if (context.device.vkPresentQueue == VK_NULL_HANDLE)
         {
             logError("Failed to retrieve Vulkan Present Queue");
             return false;
@@ -408,16 +493,45 @@ namespace litl::vulkan
         return true;
     }
 
-    bool createSwapChain(RendererHandle* handle)
+    bool createMemoryAllocator(RendererContext& context) noexcept
     {
-        handle->context.wasResized = false;
+        const VmaVulkanFunctions vulkanFunctions{
+            .vkGetInstanceProcAddr = vkGetInstanceProcAddr,
+            .vkGetDeviceProcAddr = vkGetDeviceProcAddr
+        };
+
+        const VmaAllocatorCreateInfo createVmaInfo{
+            .flags = 
+                VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT | 
+                VMA_ALLOCATOR_CREATE_KHR_MAINTENANCE5_BIT,              // notify we are using VkBufferUsageFlags2
+            .physicalDevice = context.device.vkPhysicalDevice,
+            .device = context.device.vkDevice,
+            .pVulkanFunctions = &vulkanFunctions,                       // wire together with Volk
+            .instance = context.device.vkInstance,
+            .vulkanApiVersion = LITL_VULKAN_VERSION
+        };
+
+        const VkResult result = vmaCreateAllocator(&createVmaInfo, &context.device.vmaAllocator);
+
+        if (result != VK_SUCCESS)
+        {
+            logError("Failed to create Vulkan Memory Allocator with result ", result);
+            return false;
+        }
+
+        return true;
+    }
+
+    bool createSwapChain(RendererContext& context, VkSwapchainKHR oldSwapchain) noexcept
+    {
+        context.window.wasResized = false;
 
         int32_t frameBufferWidth = 0;
         int32_t frameBufferHeight = 0;
 
-        glfwGetFramebufferSize(static_cast<GLFWwindow*>(handle->context.pSurfaceWindow), &frameBufferWidth, &frameBufferHeight);
+        glfwGetFramebufferSize(static_cast<GLFWwindow*>(context.window.window->getSurfaceWindow()), &frameBufferWidth, &frameBufferHeight);
 
-        auto swapChainSupport = SwapChainSupport::querySwapChainSupport(handle->context.vkPhysicalDevice, handle->context.vkSurface);
+        auto swapChainSupport = SwapChainSupport::querySwapChainSupport(context.device.vkPhysicalDevice, context.device.vkSurface);
         auto surfaceFormat = swapChainSupport.chooseSwapSurfaceFormat();
         auto presentMode = swapChainSupport.chooseSwapPresentMode();
         auto imageExtent = swapChainSupport.chooseSwapExtent(frameBufferWidth, frameBufferHeight);
@@ -430,7 +544,7 @@ namespace litl::vulkan
 
         VkSwapchainCreateInfoKHR createSwapChainInfo{};
         createSwapChainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        createSwapChainInfo.surface = handle->context.vkSurface;
+        createSwapChainInfo.surface = context.device.vkSurface;
         createSwapChainInfo.minImageCount = imageCount;
         createSwapChainInfo.imageFormat = surfaceFormat.format;
         createSwapChainInfo.imageColorSpace = surfaceFormat.colorSpace;
@@ -441,9 +555,9 @@ namespace litl::vulkan
         createSwapChainInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
         createSwapChainInfo.presentMode = presentMode;
         createSwapChainInfo.clipped = VK_TRUE;
-        createSwapChainInfo.oldSwapchain = VK_NULL_HANDLE;
+        createSwapChainInfo.oldSwapchain = oldSwapchain;
 
-        auto queueIndices = findQueueFamilies(handle->context.vkPhysicalDevice, handle->context.vkSurface);
+        auto queueIndices = findQueueFamilies(context.device.vkPhysicalDevice, context.device.vkSurface);
         uint32_t queueFamilyIndices[] = { queueIndices.getGraphicsIndex(), queueIndices.getPresentIndex() };
 
         if (queueIndices.getGraphicsIndex() != queueIndices.getPresentIndex())
@@ -459,7 +573,7 @@ namespace litl::vulkan
             createSwapChainInfo.pQueueFamilyIndices = nullptr;
         }
 
-        VkResult result = vkCreateSwapchainKHR(handle->context.vkDevice, &createSwapChainInfo, nullptr, &handle->context.vkSwapChain);
+        VkResult result = vkCreateSwapchainKHR(context.device.vkDevice, &createSwapChainInfo, nullptr, &context.swapChain.vkSwapChain);
 
         if (result != VK_SUCCESS)
         {
@@ -467,32 +581,37 @@ namespace litl::vulkan
             return false;
         }
 
-        handle->context.vkSwapChainImageFormat = surfaceFormat.format;
-        handle->context.vkSwapChainExtent = imageExtent;
+        context.swapChain.vkSwapChainImageFormat = surfaceFormat.format;
+        context.swapChain.vkSwapChainExtent = imageExtent;
 
-        vkGetSwapchainImagesKHR(handle->context.vkDevice, handle->context.vkSwapChain, &imageCount, nullptr);
-        handle->context.vkSwapChainImages.resize(imageCount);
-        handle->context.vkSwapChainImageViews.resize(imageCount);
-        vkGetSwapchainImagesKHR(handle->context.vkDevice, handle->context.vkSwapChain, &imageCount, handle->context.vkSwapChainImages.data());
+        vkGetSwapchainImagesKHR(context.device.vkDevice, context.swapChain.vkSwapChain, &imageCount, nullptr);
+        context.swapChain.vkSwapChainImages.resize(imageCount);
+        context.swapChain.vkSwapChainImageViews.resize(imageCount);
+        vkGetSwapchainImagesKHR(context.device.vkDevice, context.swapChain.vkSwapChain, &imageCount, context.swapChain.vkSwapChainImages.data());
 
         for (uint32_t i = 0; i < imageCount; ++i)
         {
-            VkImageViewCreateInfo createImageViewInfo{};
-            createImageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            createImageViewInfo.image = handle->context.vkSwapChainImages[i];
-            createImageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            createImageViewInfo.format = handle->context.vkSwapChainImageFormat;
-            createImageViewInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createImageViewInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createImageViewInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createImageViewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createImageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            createImageViewInfo.subresourceRange.baseMipLevel = 0;
-            createImageViewInfo.subresourceRange.levelCount = 1;
-            createImageViewInfo.subresourceRange.baseArrayLayer = 0;
-            createImageViewInfo.subresourceRange.layerCount = 1;
+            const VkImageViewCreateInfo createImageViewInfo{
+                .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+                .image = context.swapChain.vkSwapChainImages[i],
+                .viewType = VK_IMAGE_VIEW_TYPE_2D,
+                .format = context.swapChain.vkSwapChainImageFormat,
+                .components = VkComponentMapping {
+                    .r = VK_COMPONENT_SWIZZLE_IDENTITY,
+                    .g = VK_COMPONENT_SWIZZLE_IDENTITY,
+                    .b = VK_COMPONENT_SWIZZLE_IDENTITY,
+                    .a = VK_COMPONENT_SWIZZLE_IDENTITY
+                },
+                .subresourceRange = VkImageSubresourceRange {
+                    .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                    .baseMipLevel = 0,
+                    .levelCount = 1,
+                    .baseArrayLayer = 0,
+                    .layerCount = 1
+                }
+            };
 
-            result = vkCreateImageView(handle->context.vkDevice, &createImageViewInfo, nullptr, &handle->context.vkSwapChainImageViews[i]);
+            result = vkCreateImageView(context.device.vkDevice, &createImageViewInfo, nullptr, &context.swapChain.vkSwapChainImageViews[i]);
 
             if (result != VK_SUCCESS)
             {
@@ -504,17 +623,17 @@ namespace litl::vulkan
         return true;
     }
 
-    bool createCommandPool(RendererHandle* handle)
+    bool createCommandPool(RendererContext& context) noexcept
     {
         // https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/03_Drawing/01_Command_buffers.html
 
-        const auto commandPoolInfo = VkCommandPoolCreateInfo{
+        const VkCommandPoolCreateInfo standardCommandPoolInfo{
             .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
             .flags = VkCommandPoolCreateFlagBits::VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,       // Allow command buffers to be rerecorded individually, without this flag they all have to be reset together
-            .queueFamilyIndex = handle->context.graphicsQueueIndex
+            .queueFamilyIndex = context.device.graphicsQueueIndex
         };
 
-        const VkResult result = vkCreateCommandPool(handle->context.vkDevice, &commandPoolInfo, nullptr, &handle->context.vkCommandPool);
+        VkResult result = vkCreateCommandPool(context.device.vkDevice, &standardCommandPoolInfo, nullptr, &context.device.vkCommandPool);
 
         if (result != VK_SUCCESS)
         {
@@ -522,39 +641,113 @@ namespace litl::vulkan
             return false;
         }
 
-        return true;
-    }
+        const VkCommandPoolCreateInfo transientCommandPoolInfo{
+            .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+            .flags = VkCommandPoolCreateFlagBits::VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT | VkCommandPoolCreateFlagBits::VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
+            .queueFamilyIndex = context.device.graphicsQueueIndex
+        };
 
-    bool createSyncObjects(RendererHandle* handle)
-    {
-        if (handle->context.vkPresentCompleteSemaphores.size() > 0)
+        result = vkCreateCommandPool(context.device.vkDevice, &transientCommandPoolInfo, nullptr, &context.device.vkCommandPoolTransient);
+
+        if (result != VK_SUCCESS)
         {
+            logError("Failed to create transient Vulkan Command Buffer Pool with result ", result);
             return false;
         }
 
-        const auto presentSemaphoreInfo = VkSemaphoreCreateInfo{
+        return true;
+    }
+
+    bool createFrameSyncObjects(RendererContext& context) noexcept
+    {
+        const VkSemaphoreCreateInfo presentSemaphoreInfo{
             .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
         };
 
-        const auto renderSemaphoreInfo = VkSemaphoreCreateInfo{
-            .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
-        };
-
-        const auto renderFenceInfo = VkFenceCreateInfo{
+        const VkFenceCreateInfo renderFenceInfo{
             .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
             .flags = VK_FENCE_CREATE_SIGNALED_BIT
         };
 
-        // Note that renderCompleteSemaphores are tied to swapchain image count (which is the device minimum + 1 (so 3 on this machine))
-        // And that presentCompleteSemaphores and renderFences are tied to FRAMES_IN_FLIGHT (which is currently 2)
+        // Note that frameSync count is tied to FRAMES_IN_FLIGHT (which is currently 2)
+        context.renderInfo.frameSyncInfo.resize(context.renderInfo.frame.framesInFlight);
 
-        handle->context.vkRenderCompleteSemaphores.resize(handle->context.vkSwapChainImages.size(), VK_NULL_HANDLE);
-        handle->context.vkPresentCompleteSemaphores.resize(handle->context.framesInFlight, VK_NULL_HANDLE);
-        handle->context.vkRenderFences.resize(handle->context.framesInFlight, VK_NULL_HANDLE);
-
-        for (size_t i = 0; i < handle->context.vkSwapChainImages.size(); ++i)
+        for (size_t i = 0; i < context.renderInfo.frame.framesInFlight; ++i)
         {
-            const auto renderCompleteSemaphoreResult = vkCreateSemaphore(handle->context.vkDevice, &renderSemaphoreInfo, nullptr, &handle->context.vkRenderCompleteSemaphores[i]);
+            auto& frameSyncInfo = context.renderInfo.frameSyncInfo[i];
+
+            // Command Buffer
+            frameSyncInfo.commandBuffer = context.resources.createCommandBuffer({});
+
+            // Present Semaphore
+            const auto presentCompleteSemaphoreResult = vkCreateSemaphore(context.device.vkDevice, &presentSemaphoreInfo, nullptr, &frameSyncInfo.presentCompleteSemaphore);
+
+            if (presentCompleteSemaphoreResult != VK_SUCCESS)
+            {
+                logError("Failed to create Vulkan Present Complete Semaphore with result ", presentCompleteSemaphoreResult);
+                return false;
+            }
+
+            // Render Fence
+            const auto renderFenceResult = vkCreateFence(context.device.vkDevice, &renderFenceInfo, nullptr, &frameSyncInfo.renderFence);
+
+            if (renderFenceResult != VK_SUCCESS)
+            {
+                logError("Failed to create Vulkan Render Fence with result ", renderFenceResult);
+                return false;
+            }
+
+            // Destruction Queue
+            frameSyncInfo.destructionQueue = std::make_unique<DestructionQueue>();
+            frameSyncInfo.destructionQueue->build(context.device.vkDevice);
+
+            // Per-Frame Staging Arenas
+            frameSyncInfo.stagingBufferArena = std::make_unique<StagingBuffer>();
+            frameSyncInfo.stagingBufferArena->build(context);
+
+            frameSyncInfo.stagingTextureArena = std::make_unique<StagingTexture>();
+            frameSyncInfo.stagingTextureArena->build(context);
+
+            // Per-Frame Descriptor Pools
+            const VkDescriptorPoolSize sizes[]{
+                VkDescriptorPoolSize {
+                    .type = VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                    .descriptorCount = context.config.descriptorSet.uboCount
+                },
+                VkDescriptorPoolSize {
+                    .type = VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                    .descriptorCount = context.config.descriptorSet.ssboCount
+                },
+                VkDescriptorPoolSize {
+                    .type = VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+                    .descriptorCount = context.config.descriptorSet.textureCount
+                },
+                VkDescriptorPoolSize {
+                    .type = VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLER,
+                    .descriptorCount = context.config.descriptorSet.samplerCount
+                },
+            };
+
+            frameSyncInfo.descriptorSetAllocator = std::make_unique<DescriptorSetAllocator>();
+            frameSyncInfo.descriptorSetAllocator->build(context, context.config.descriptorSet.setsPerPool, sizes);
+        }
+
+        return true;
+    }
+
+    bool createImageSyncObjects(RendererContext& context) noexcept
+    {
+        const VkSemaphoreCreateInfo renderSemaphoreInfo{
+            .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
+        };
+
+        // Note that imageSync count is tied to swapchain image count (which is the device minimum + 1 (so 3 on this machine))
+        context.renderInfo.imageSyncInfo.clear();
+        context.renderInfo.imageSyncInfo.resize(context.swapChain.vkSwapChainImages.size());
+
+        for (size_t i = 0; i < context.swapChain.vkSwapChainImages.size(); ++i)
+        {
+            const auto renderCompleteSemaphoreResult = vkCreateSemaphore(context.device.vkDevice, &renderSemaphoreInfo, nullptr, &context.renderInfo.imageSyncInfo[i].renderCompleteSemaphore);
 
             if (renderCompleteSemaphoreResult != VK_SUCCESS)
             {
@@ -563,419 +756,190 @@ namespace litl::vulkan
             }
         }
 
-        for (size_t i = 0; i < handle->context.framesInFlight; ++i)
+        return true;
+    }
+
+    bool createPipelineCache(RendererContext& context) noexcept
+    {
+        // TODO save/load cache to disk mechanism
+        const VkPipelineCacheCreateInfo cacheInfo{
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .initialDataSize = 0,
+            .pInitialData = nullptr
+        };
+
+        const VkResult result = vkCreatePipelineCache(context.device.vkDevice, &cacheInfo, nullptr, &context.device.vkPipelineCache);
+
+        if (result != VK_SUCCESS)
         {
-            const auto presentCompleteSemaphoreResult = vkCreateSemaphore(handle->context.vkDevice, &presentSemaphoreInfo, nullptr, &handle->context.vkPresentCompleteSemaphores[i]);
-            const auto renderFenceResult = vkCreateFence(handle->context.vkDevice, &renderFenceInfo, nullptr, &handle->context.vkRenderFences[i]);
-
-            if (presentCompleteSemaphoreResult != VK_SUCCESS)
-            {
-                logError("Failed to create Vulkan Present Complete Semaphore with result ", presentCompleteSemaphoreResult);
-                return false;
-            }
-
-            if (renderFenceResult != VK_SUCCESS)
-            {
-                logError("Failed to create Vulkan Render Fence with result ", renderFenceResult);
-                return false;
-            }
+            logError("Failed to create Vulkan Pipeline Cache with result ", result);
+            return false;
         }
 
         return true;
     }
 
-    // -------------------------------------------------------------------------------------
-    // Cleanup
-    // -------------------------------------------------------------------------------------
-
-    void cleanup(RendererHandle* handle);
-    void cleanupSwapchain(RendererHandle* handle);
-    void recreateSwapchain(RendererHandle* handle);
-
-    void destroy(litl::RendererHandle const& litlHandle) noexcept
+    bool createResourceManager(RendererContext& context) noexcept
     {
-        auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
-        cleanup(handle);
-        delete handle;
+        context.resources.build(context);
+        return true;
     }
 
-    void cleanup(RendererHandle* handle)
+    // -------------------------------------------------------------------------------------
+    // Destruction
+    // -------------------------------------------------------------------------------------
+
+    void cleanupResources(RendererContext& context) noexcept;
+    void cleanupPipelineCache(RendererContext& context) noexcept;
+    void cleanupFrameSync(RendererContext& context) noexcept;
+    void cleanupImageSync(RendererContext& context) noexcept;
+    void cleanupSwapChainImages(RendererContext& context) noexcept;
+    void cleanupSwapChain(RendererContext& context, VkSwapchainKHR swapchain) noexcept;
+    void cleanupDevice(RendererContext& context) noexcept;
+    void recreateSwapchain(RendererContext& context) noexcept;
+
+    void destroy(litl::RendererContext* context) noexcept
     {
-        for (auto i = 0; i < handle->context.vkPresentCompleteSemaphores.size(); ++i)
+        auto* vulkanContext = unwrap(context);
+
+        vkDeviceWaitIdle(vulkanContext->device.vkDevice);
+
+        cleanupPipelineCache(*vulkanContext);
+        cleanupFrameSync(*vulkanContext);
+        cleanupImageSync(*vulkanContext);
+        cleanupSwapChainImages(*vulkanContext);
+        cleanupSwapChain(*vulkanContext, vulkanContext->swapChain.vkSwapChain);
+        cleanupResources(*vulkanContext);
+        cleanupDevice(*vulkanContext);
+
+        delete vulkanContext;
+    }
+
+    void cleanupResources(RendererContext& context) noexcept
+    {
+        context.resources.destroy();
+    }
+
+    void cleanupPipelineCache(RendererContext& context) noexcept
+    {
+        if (context.device.vkPipelineCache != VK_NULL_HANDLE)
         {
-            if (handle->context.vkPresentCompleteSemaphores[i] != VK_NULL_HANDLE)
-            {
-                vkDestroySemaphore(handle->context.vkDevice, handle->context.vkPresentCompleteSemaphores[i], nullptr);
-            }
-
-            handle->context.vkPresentCompleteSemaphores.clear();
-        }
-
-        for (auto i = 0; i < handle->context.vkRenderCompleteSemaphores.size(); ++i)
-        {
-            if (handle->context.vkRenderCompleteSemaphores[i] != VK_NULL_HANDLE)
-            {
-                vkDestroySemaphore(handle->context.vkDevice, handle->context.vkRenderCompleteSemaphores[i], nullptr);
-            }
-
-            handle->context.vkRenderCompleteSemaphores.clear();
-        }
-
-        for (auto i = 0; i < handle->context.vkRenderFences.size(); ++i)
-        {
-            if (handle->context.vkRenderFences[i] != VK_NULL_HANDLE)
-            {
-                vkDestroyFence(handle->context.vkDevice, handle->context.vkRenderFences[i], nullptr);
-            }
-
-            handle->context.vkRenderFences.clear();
-        }
-
-        if (handle->context.vkCommandPool != VK_NULL_HANDLE)
-        {
-            vkDestroyCommandPool(handle->context.vkDevice, handle->context.vkCommandPool, nullptr);
-        }
-
-        cleanupSwapchain(handle);
-
-        if (handle->context.vkSurface != VK_NULL_HANDLE)
-        {
-            vkDestroySurfaceKHR(handle->context.vkInstance, handle->context.vkSurface, nullptr);
-        }
-
-        if (handle->context.vkDevice != VK_NULL_HANDLE)
-        {
-            vkDestroyDevice(handle->context.vkDevice, nullptr);
-        }
-
-        if (handle->context.vkInstance != VK_NULL_HANDLE)
-        {
-            vkDestroyInstance(handle->context.vkInstance, nullptr);
+            vkDestroyPipelineCache(context.device.vkDevice, context.device.vkPipelineCache, nullptr);
+            context.device.vkPipelineCache = VK_NULL_HANDLE;
         }
     }
 
-    void cleanupSwapchain(RendererHandle* handle)
+    void cleanupFrameSync(RendererContext& context) noexcept
     {
-        if (!handle->context.vkSwapChainImageViews.empty())
+        for (auto& frameInfo : context.renderInfo.frameSyncInfo)
+        {
+            context.resources.destroyCommandBuffer(frameInfo.commandBuffer);
+            frameInfo.commandBuffer = {};
+
+            if (frameInfo.presentCompleteSemaphore != VK_NULL_HANDLE)
+            {
+                vkDestroySemaphore(context.device.vkDevice, frameInfo.presentCompleteSemaphore, nullptr);
+            }
+
+            if (frameInfo.renderFence != VK_NULL_HANDLE)
+            {
+                vkDestroyFence(context.device.vkDevice, frameInfo.renderFence, nullptr);
+            }
+
+            frameInfo.stagingBufferArena->destroy();
+            frameInfo.stagingTextureArena->destroy();
+            frameInfo.descriptorSetAllocator->destroy();
+        }
+
+        context.renderInfo.frameSyncInfo.clear();
+    }
+
+    void cleanupImageSync(RendererContext& context) noexcept
+    {
+        for (auto& imageInfo : context.renderInfo.imageSyncInfo)
+        {
+            if (imageInfo.renderCompleteSemaphore != VK_NULL_HANDLE)
+            {
+                vkDestroySemaphore(context.device.vkDevice, imageInfo.renderCompleteSemaphore, nullptr);
+            }
+        }
+
+        context.renderInfo.imageSyncInfo.clear();
+    }
+
+    void cleanupSwapChainImages(RendererContext& context) noexcept
+    {
+        if (!context.swapChain.vkSwapChainImageViews.empty())
         {
             // Note: only have to destroy the views since we explicitly made them, and not the underlying images.
             // Those will be destroyed alongside the swap chain itself since it made them.
-            for (auto imageView : handle->context.vkSwapChainImageViews)
+            for (auto imageView : context.swapChain.vkSwapChainImageViews)
             {
-                vkDestroyImageView(handle->context.vkDevice, imageView, nullptr);
+                vkDestroyImageView(context.device.vkDevice, imageView, nullptr);
             }
         }
+    }
 
-        if (handle->context.vkSwapChain != VK_NULL_HANDLE)
+    void cleanupSwapChain(RendererContext& context, VkSwapchainKHR swapchain) noexcept
+    {
+        if (swapchain != VK_NULL_HANDLE)
         {
-            vkDestroySwapchainKHR(handle->context.vkDevice, handle->context.vkSwapChain, nullptr);
+            vkDestroySwapchainKHR(context.device.vkDevice, swapchain, nullptr);
         }
     }
 
-    void recreateSwapchain(RendererHandle* handle)
+    void cleanupDevice(RendererContext& context) noexcept
     {
-        // Wait for our resources to be unused.
-        vkDeviceWaitIdle(handle->context.vkDevice);
-
-        cleanupSwapchain(handle);
-        createSwapChain(handle);
-    }
-
-    // -------------------------------------------------------------------------------------
-    // Rendering
-    // -------------------------------------------------------------------------------------
-
-    bool isRenderReady(RendererHandle* handle);
-    bool acquireSwapChainIndex(RendererHandle* handle, uint32_t timeoutNs, uint32_t frameIndex, uint32_t* imageIndex);
-    void recordCommandBuffers(RendererHandle* handle, litl::CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers, uint32_t swapChainImageIndex);
-    void renderCommandBuffer(RendererHandle* handle, litl::CommandBuffer* pCommandBuffer, uint32_t imageIndex);
-    void transitionImageLayout(VkCommandBuffer vkCommandBuffer, VkImage vkImage, uint32_t oldLayout, uint32_t newLayout, uint32_t srcAccessMask, uint32_t dstAccessMask, uint32_t srcStageMask, uint32_t dstStageMask);
-
-
-    bool beginRender(litl::RendererHandle const& litlHandle)
-    {
-        auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
-
-        if (!isRenderReady(handle))
+        if (context.device.vkCommandPool != VK_NULL_HANDLE)
         {
-            // Fence not ready. Previous frame is still rendering.
-            return false;
+            vkDestroyCommandPool(context.device.vkDevice, context.device.vkCommandPool, nullptr);
         }
 
-        uint32_t swapChainImageIndex = 0;
-
-        if (!acquireSwapChainIndex(handle, Constants::millisecond_to_nanoseconds, handle->context.frameIndex, &swapChainImageIndex))
+        if (context.device.vkSurface != VK_NULL_HANDLE)
         {
-            // Swapchain not ready.
-            return false;
+            vkDestroySurfaceKHR(context.device.vkInstance, context.device.vkSurface, nullptr);
         }
 
-        handle->context.swapChainImageIndex = swapChainImageIndex;
-
-        vkResetFences(handle->context.vkDevice, 1, &(handle->context.vkRenderFences[handle->context.frameIndex]));
-
-        return true;
-    }
-
-    void submitCommands(litl::RendererHandle const& litlHandle, litl::CommandBuffer* pCommandBuffers, uint32_t const numCommandBuffers)
-    {
-        auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
-
-        const auto waitDestinationStageMask = VkPipelineStageFlags(VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
-
-        // Only 1 expected command buffer atm. If we move to actually have multiple, reconsider redesigning CommandBuffer for AoS vs SoA.
-        const auto vkCommandBuffer = (pCommandBuffers != nullptr ? extractCurrentVkCommandBuffer((&pCommandBuffers)[0]) : VK_NULL_HANDLE);
-
-        const auto submitInfo = VkSubmitInfo{
-            .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-            .waitSemaphoreCount = 1,
-            .pWaitSemaphores = &handle->context.vkPresentCompleteSemaphores[handle->context.frameIndex],            // Wait for current swapchain image to be done presenting
-            .pWaitDstStageMask = &waitDestinationStageMask,                                                         // Wait for writing colors to the image until's available
-            .commandBufferCount = numCommandBuffers,
-            .pCommandBuffers = &vkCommandBuffer,
-            .signalSemaphoreCount = 1,
-            .pSignalSemaphores = &handle->context.vkRenderCompleteSemaphores[handle->context.swapChainImageIndex]   // The semaphore to signal once the command buffer(s) have finished execution.
-        };
-
-        const auto submitResult = vkQueueSubmit(handle->context.vkGraphicsQueue, 1, &submitInfo, handle->context.vkRenderFences[handle->context.frameIndex]);   // Submit the command buffer
-
-        if (submitResult != VK_SUCCESS)
+        if (context.device.vmaAllocator != VK_NULL_HANDLE)
         {
-            logWarning("Vulkan Renderer: vkQueueSubmit failed with result ", submitResult);
+            vmaDestroyAllocator(context.device.vmaAllocator);
+        }
+
+        if (context.device.vkDevice != VK_NULL_HANDLE)
+        {
+            vkDestroyDevice(context.device.vkDevice, nullptr);
+        }
+
+        if (context.device.vkInstance != VK_NULL_HANDLE)
+        {
+            vkDestroyInstance(context.device.vkInstance, nullptr);
         }
     }
 
-    void endRender(litl::RendererHandle const& litlHandle)
+    void waitForValidFramebufferSize(RendererContext& context) noexcept
     {
-        auto* handle = LITL_UNPACK_HANDLE(RendererHandle, litlHandle);
-
-        const auto presentInfo = VkPresentInfoKHR{
-            .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
-            .waitSemaphoreCount = 1,
-            .pWaitSemaphores = &handle->context.vkRenderCompleteSemaphores[handle->context.swapChainImageIndex],    // Wait for the command buffer to finish executing
-            .swapchainCount = 1,
-            .pSwapchains = &handle->context.vkSwapChain,
-            .pImageIndices = &handle->context.swapChainImageIndex,                                                  // Which image to draw onto
-            .pResults = nullptr                                                                                     // (Optional) If using multiple swapchains, the success of each present will be stored in this array as opposed to the singular result from the upcoming call.
-        };
-
-        const auto presentResult = vkQueuePresentKHR(handle->context.vkGraphicsQueue, &presentInfo);
-
-        if (presentResult != VK_SUCCESS)
+        while (context.window.window->getWidth() == 0u || context.window.window->getHeight() == 0u)
         {
-            logWarning("Vulkan Renderer: vkQueuePresentKHR failed with result ", presentResult);
-        }
-
-        handle->context.frame++;
-        handle->context.frameIndex = handle->context.frame % handle->context.framesInFlight;
-    }
-
-    /// <summary>
-    /// Checks if the render fence is open. If not, we are still rendering the last frame and need to wait.
-    /// </summary>
-    /// <returns></returns>
-    bool isRenderReady(RendererHandle* handle)
-    {
-        VkResult fenceResult = vkGetFenceStatus(handle->context.vkDevice, handle->context.vkRenderFences[handle->context.frameIndex]);
-
-        if (fenceResult != VK_SUCCESS)
-        {
-            // Fence is not signaled OR is in error state.
-            if (fenceResult == VK_NOT_READY)
-            {
-                // Exit out of rendering so time can be spent on logic, etc.
-                return false;
-            }
-            else
-            {
-                // todo log error
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /// <summary>
-    /// Acquires the index into our swapchain array for the next image to render to.
-    /// </summary>
-    /// <param name="timeoutNs"></param>
-    /// <param name="frameIndex"></param>
-    /// <param name="imageIndex"></param>
-    /// <returns></returns>
-    bool acquireSwapChainIndex(RendererHandle* handle, uint32_t timeoutNs, uint32_t frameIndex, uint32_t* imageIndex)
-    {
-        const auto result = vkAcquireNextImageKHR(
-            handle->context.vkDevice,
-            handle->context.vkSwapChain,
-            timeoutNs,
-            handle->context.vkPresentCompleteSemaphores[frameIndex],
-            VK_NULL_HANDLE,
-            imageIndex);
-
-        if ((result == VK_ERROR_OUT_OF_DATE_KHR) || (result == VK_SUBOPTIMAL_KHR) || handle->context.wasResized)
-        {
-            recreateSwapchain(handle);
-            return false;
-        }
-        else
-        {
-            return (result == VK_SUCCESS);
+            context.window.window->waitForEvents();
         }
     }
 
-    /// <summary>
-    /// Records all command buffers and reets the render fence.
-    /// </summary>
-    /// <param name="pCommandBuffers"></param>
-    /// <param name="numCommandBuffers"></param>
-    /// <param name="swapChainImageIndex"></param>
-    void recordCommandBuffers(RendererHandle* handle, litl::CommandBuffer* pCommandBuffers, uint32_t numCommandBuffers, uint32_t swapChainImageIndex)
+    void recreateSwapchain(RendererContext& context) noexcept
     {
-        for (uint32_t i = 0; i < numCommandBuffers; ++i)
-        {
-            renderCommandBuffer(handle, &pCommandBuffers[i], swapChainImageIndex);  // Record our render commands
-        }
+        // Wait for a valid recreation state
+        waitForValidFramebufferSize(context);           // wait for frame buffer to have non-zero dimensions (minimized, etc.)
+        vkDeviceWaitIdle(context.device.vkDevice);      // wait for all resources to be free
 
-        vkResetFences(handle->context.vkDevice, 1, &handle->context.vkRenderFences[handle->context.frameIndex]);     // Reset our draw frame fence
-    }
+        VkSwapchainKHR oldSwapchain = context.swapChain.vkSwapChain;
 
-    /// <summary>
-    /// Renders the specified command buffer onto the specified image.
-    /// </summary>
-    /// <param name="pCommandBuffer"></param>
-    /// <param name="imageIndex"></param>
-    void renderCommandBuffer(RendererHandle* handle, litl::CommandBuffer* pCommandBuffer, uint32_t imageIndex)
-    {
-        pCommandBuffer->begin(handle->context.frame);
-        auto vkCommandBuffer = extractCurrentVkCommandBuffer(pCommandBuffer);
+        cleanupSwapChainImages(context);
+        createSwapChain(context, oldSwapchain);         // pass in the old swapchain to make creating the new one
+        cleanupSwapChain(context, oldSwapchain);        // destroy the old one
 
-        // We are perfmorming dynamic rendering, so need to specify the image layout we are writing to.
-        // Transition from undefined to color
-        transitionImageLayout(
-            vkCommandBuffer,
-            handle->context.vkSwapChainImages[imageIndex],
-            VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,                   // From Layout
-            VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,    // To Layout
-            {},                                                         // Source Access Mask
-            VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,                     // Dest Access Mask
-            VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,            // Source Stage Mask
-            VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT             // Dest Stage Mask
-        );
-
-        const auto viewport = VkViewport{
-            .x = 0.0f,
-            .y = 0.0f,
-            .width = static_cast<float>(handle->context.vkSwapChainExtent.width),
-            .height = -static_cast<float>(handle->context.vkSwapChainExtent.height),
-            .minDepth = 0.0f,
-            .maxDepth = 1.0f
-        };
-
-        // ^ note the negative viewport height.
-        // Vulkan's clip-space has the y-axis pointing down - the opposite of OpenGL and our GLM-based math library.
-        // So we flip it here so it doesn't need to be flipped anywhere else (projection matrix or shaders).
-
-        const auto scissor = VkRect2D{
-            .offset = {
-                .x = 0,
-                .y = 0
-            },
-            .extent = {
-                .width = handle->context.vkSwapChainExtent.width,
-                .height = handle->context.vkSwapChainExtent.height
-            }
-        };
-
-        pCommandBuffer->cmdBeginRenderPass(nullptr, imageIndex);
-
-        pCommandBuffer->cmdEndRenderPass();
-
-       // pCommandBuffer->cmdTransitionResource(/* ... todo ... */);
-       // pCommandBuffer->cmdBeginRenderPass();
-       // pCommandBuffer->cmdBindGraphicsPipeline(/* ... todo ... */);
-       // pCommandBuffer->cmdSetViewport(/* ... todo ... */);
-       // pCommandBuffer->cmdSetScissor(/* ... todo ... */);
-       // pCommandBuffer->cmdDraw(3, 1, 0, 0);
-       // pCommandBuffer->cmdEndRenderPass();
-       // pCommandBuffer->cmdTransitionResource(/* ... todo ... */);
-
-        //vkCmdBeginRendering(vkCommandBuffer, &renderingInfo);
-        //
-        //vkCmdBindPipeline(vkCommandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, handle->context.vkPipeline);
-        //vkCmdSetViewport(vkCommandBuffer, 0, 1, &viewport);
-        //vkCmdSetScissor(vkCommandBuffer, 0, 1, &scissor);
-        //vkCmdDraw(vkCommandBuffer, 3, 1, 0, 0);
-        //
-        //vkCmdEndRendering(vkCommandBuffer);
-
-        // Transition from color to present
-        transitionImageLayout(
-            vkCommandBuffer,
-            handle->context.vkSwapChainImages[imageIndex],
-            VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,    // From Layout
-            VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,             // To Layout
-            VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,                     // Source Access Mask
-            {},                                                         // Dest Access Mask
-            VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,            // Source Stage Mask
-            VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT                      // Dest Stage Mask
-        );
-
-        pCommandBuffer->end();
-    }
-
-    void transitionImageLayout(VkCommandBuffer vkCommandBuffer, VkImage vkImage, uint32_t oldLayout, uint32_t newLayout, uint32_t srcAccessMask, uint32_t dstAccessMask, uint32_t srcStageMask, uint32_t dstStageMask)
-    {
-        const auto barrier = VkImageMemoryBarrier2{
-            .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-            .srcStageMask = srcStageMask,
-            .srcAccessMask = srcAccessMask,
-            .dstStageMask = dstStageMask,
-            .dstAccessMask = dstAccessMask,
-            .oldLayout = static_cast<VkImageLayout>(oldLayout),
-            .newLayout = static_cast<VkImageLayout>(newLayout),
-            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-            .image = vkImage,
-            .subresourceRange = VkImageSubresourceRange {
-                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                .baseMipLevel = 0,
-                .levelCount = 1,
-                .baseArrayLayer = 0,
-                .layerCount = 1
-            }
-        };
-
-        const auto info = VkDependencyInfo{
-            .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-            .dependencyFlags = {},
-            .imageMemoryBarrierCount = 1,
-            .pImageMemoryBarriers = &barrier
-        };
-
-        vkCmdPipelineBarrier2(vkCommandBuffer, &info);
-    }
-
-    // -------------------------------------------------------------------------------------
-    // Object Creation
-    // -------------------------------------------------------------------------------------
-
-    litl::ResourceAllocator* buildResourceAllocator(litl::RendererHandle const& litlHandle) noexcept
-    {
-        return createResourceAllocator(litlHandle);
-    }
-
-    // -------------------------------------------------------------------------------------
-    // Utility
-    // -------------------------------------------------------------------------------------
-
-    uint32_t getFrame(litl::RendererHandle const& litlHandle) noexcept
-    {
-        return LITL_UNPACK_HANDLE(RendererHandle, litlHandle)->context.frame;
-    }
-
-    uint32_t getFrameIndex(litl::RendererHandle const& litlHandle) noexcept
-    {
-        return LITL_UNPACK_HANDLE(RendererHandle, litlHandle)->context.frameIndex;
+        // Swapchain image count _can_ change. So must recreate the image sync objects.
+        cleanupImageSync(context);
+        createImageSyncObjects(context);
     }
 }

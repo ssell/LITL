@@ -3,8 +3,9 @@ project (litl-samples-triangle VERSION 1.0.0 LANGUAGES C CXX)
 
 add_executable(litl-samples-triangle)
 
-target_sources(litl-samples-triangle PRIVATE
-	"src/main.cpp")
+target_sources(litl-samples-triangle 
+	PRIVATE
+		"src/main.cpp")
 
 target_include_directories(litl-samples-triangle 
 	PUBLIC 

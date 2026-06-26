@@ -14,12 +14,15 @@ namespace litl
         // Numeric
         // ---------------------------------------------------------------------------------
 
-        static constexpr uint32_t second_to_milliseconds = 1000;
-        static constexpr uint32_t second_to_microseconds = 1000000;
-        static constexpr uint32_t second_to_nanoseconds = 1000000000;
-        static constexpr uint32_t millisecond_to_nanoseconds = 1000000;
-        static constexpr uint32_t millisecond_to_microseconds = 1000;
-        static constexpr uint32_t microsecond_to_nanoseconds = 1000;
+        static constexpr uint32_t second_to_milliseconds = 1000u;
+        static constexpr uint32_t second_to_microseconds = 1000000u;
+        static constexpr uint32_t second_to_nanoseconds = 1000000000u;
+        static constexpr uint32_t millisecond_to_nanoseconds = 1000000u;
+        static constexpr uint32_t millisecond_to_microseconds = 1000u;
+        static constexpr uint32_t microsecond_to_nanoseconds = 1000u;
+        static constexpr uint32_t bytes_to_kilobyte = 1000u;
+        static constexpr uint32_t bytes_to_megabyte = bytes_to_kilobyte * 1000u;
+        static constexpr uint32_t bytes_to_gigabyte = bytes_to_megabyte * 1000u;
 
         // ---------------------------------------------------------------------------------
         // General

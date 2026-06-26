@@ -2,7 +2,8 @@
 #include <vector>
 
 #include "tests.hpp"
-#include "litl-renderer/pipeline/shaderReflection.hpp"
+#include "litl-core/containers/alignedByteBuffer.hpp"
+#include "litl-renderer/reflection.hpp"
 
 namespace litl::tests
 {
@@ -12,21 +13,22 @@ namespace litl::tests
 
         REQUIRE(file.is_open());
 
-        const auto fileSize = static_cast<uint32_t>(file.tellg());
-        std::vector<uint8_t> fileBuffer(fileSize);
+        const auto fileSizeBytes = static_cast<size_t>(file.tellg());
+        AlignedByteBuffer<4> byteBuffer{ fileSizeBytes };               // alignment of 4 as vkCreateShaderModule requires 4-byte aligment
 
         file.seekg(0);
-        file.read(reinterpret_cast<char*>(fileBuffer.data()), fileSize);
+        file.read(byteBuffer.as<char>().data(), byteBuffer.size());
         file.close();
 
-        std::span<uint8_t> bytes(fileBuffer);
+        const std::optional<ShaderReflection> reflectedShader = litl::reflectSPIRV(byteBuffer.as<std::byte>());
 
-        auto reflectedVertex = litl::reflectSPIRV("vertexMain", bytes);
-        auto reflectedFragment = litl::reflectSPIRV("fragmentMain", bytes);
-        auto reflectedGeometry = litl::reflectSPIRV("geometryMain", bytes);
+        REQUIRE(reflectedShader != std::nullopt);
+        REQUIRE(reflectedShader->entryPoints.size() == 2);
 
-        REQUIRE(reflectedVertex != std::nullopt);
-        REQUIRE(reflectedFragment != std::nullopt);
-        REQUIRE(reflectedGeometry == std::nullopt);
+        const bool hasVertex = (reflectedShader->entryPoints[0].stage == ShaderStage::Vertex) || (reflectedShader->entryPoints[1].stage == ShaderStage::Vertex);
+        const bool hasFragment = (reflectedShader->entryPoints[0].stage == ShaderStage::Fragment) || (reflectedShader->entryPoints[1].stage == ShaderStage::Fragment);
+
+        REQUIRE(hasVertex == true);
+        REQUIRE(hasFragment == true);
     } LITL_END_TEST_CASE
 }

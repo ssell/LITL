@@ -14,7 +14,7 @@ Write-Host ""
 
 Get-ChildItem -Path .\ -include ("*.slang") -Recurse -File | ForEach-Object {
     Write-Host "... $($_.Name)"
-    $params = $_.Name, "-profile", "glsl_450", "-target", "spirv", "-o", ".\spirv\$($_.BaseName).spv"
+    $params = $_.Name, "-profile", "glsl_450", "-target", "spirv", "-matrix-layout-column-major", "-o", ".\spirv\$($_.BaseName).spv"
     & $compiler $params
 }
 
