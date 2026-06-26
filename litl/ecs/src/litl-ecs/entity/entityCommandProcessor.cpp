@@ -97,7 +97,6 @@ namespace litl
 
             switch (command.type)
             {
-
             case EntityCommandType::CreateEntity:
                 // Just output that the entity was created
                 entityChanges.emplace_back(EntityChangeType::CreateEntity, currEntity, prevArchetype, currArchetype);

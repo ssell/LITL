@@ -1,6 +1,7 @@
-#ifndef LITL_RENDERER_RENDERER_TYPES_H__
-#define LITL_RENDERER_RENDERER_TYPES_H__
+#ifndef LITL_RENDERER_TYPES_H__
+#define LITL_RENDERER_TYPES_H__
 
+#include <array>
 #include <string>
 
 namespace litl
@@ -8,12 +9,16 @@ namespace litl
     enum class RendererBackendType : uint32_t
     {
         None = 0,
-        Vulkan = 1
+        Vulkan = 1,
+        D3D12 = 2,
+        Metal = 3
     };
 
-    static char const* RendererBackendNames[] = {
+    inline constexpr std::array<char const*, 4> RendererBackendNames = {
         "None",
-        "Vulkan"
+        "Vulkan",
+        "D3D12",
+        "Metal"
     };
 
     enum class PipelineBindType : uint32_t

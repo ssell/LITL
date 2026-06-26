@@ -83,4 +83,5 @@ namespace litl
     template class FlatHashMap<uint32_t, uint64_t>;
     template class FlatHashMap<uint64_t, uint64_t>;
     template class FlatHashMap<uint64_t, uint32_t>;
+    template class FlatHashMap<std::string, uint32_t>;
 }

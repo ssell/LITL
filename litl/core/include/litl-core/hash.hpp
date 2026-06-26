@@ -64,6 +64,22 @@ namespace litl
 
     uint64_t hashString(std::string_view str);
     uint64_t hashString(std::string_view str, uint64_t seed);
+
+    constexpr uint64_t fastHashString(std::string_view str)
+    {
+        // Hashes using FNV-1A instead of xxHash.
+        // xxHash has better statistical quality and is better suited for large data sets, but FNV-1A is faster.
+
+        uint64_t h = 1469598103934665603ull;        // offset basis
+
+        for (char c : str)
+        {
+            h ^= static_cast<std::uint8_t>(c);
+            h *= 1099511628211ull;                  // prime
+        }
+
+        return h;
+    }
 }
 
 #endif

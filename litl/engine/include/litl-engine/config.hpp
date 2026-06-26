@@ -46,7 +46,7 @@ namespace litl
     private:
 
         friend class Engine;
-        void set(Configuration& other);
+        void set(Configuration& other) noexcept;
         void sanitize() noexcept;
     };
 }

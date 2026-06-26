@@ -64,7 +64,7 @@ namespace litl
 
         std::string name = "";
 
-        if constexpr (IS_DEBUG)
+        if constexpr (LITL_DEBUG)
         {
             name = buildArchetypeDebugName(archetypeHash, components);
         }
