@@ -940,10 +940,6 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
         }
         else
         {
-            // First wait until idle to ensure the old pipeline is not in use before swapping.
-            // todo: add a delayed destruction queue where we can enqueue vulkan handles to be destroyed in X frames instead of hard waiting here.
-            vkDeviceWaitIdle(m_pContext->device.vkDevice);
-
             // Recreate the shader module and any pipelines (both graphics and compute) that reference it.
             // As the renderer library deals only with handles, we simply recreate the underlying resources associated with the handles.
 
