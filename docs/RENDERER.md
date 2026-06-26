@@ -1,10 +1,6 @@
 # LITL Renderer — Design Reference
 
-A high-level overview of `litl-renderer` and `litl-renderer-vulkan`. Written for someone (probably future-you) who needs to understand the design well enough to use the renderer or extend it.
-
-This is not API documentation — header comments handle that. This is the *why* behind the shape.
-
----
+A high-level overview of `litl-renderer` and `litl-renderer-vulkan`.
 
 ## Overview
 
@@ -309,8 +305,6 @@ Both maps grow during a run and clear only at `destroy()`. The inner map's hashi
 
 The "in-place update" trick preserves handle stability — user code holding `ShaderModuleHandle` or `GraphicsPipelineHandle` doesn't need to know anything changed. The user's draw code, written against the handles, just keeps working with the new SPIR-V.
 
-Caveat: this currently uses `vkDeviceWaitIdle` (or should — check `onShaderModuleReload`) to ensure the GPU isn't using the old objects. For a production engine, defer the old object's destruction by `framesInFlight` instead.
-
 ---
 
 ## Conventions and invariants
@@ -320,7 +314,8 @@ Caveat: this currently uses `vkDeviceWaitIdle` (or should — check `onShaderMod
 - **Left-handed world space**: +X right, +Y up, +Z forward.
 - **Y-up convention**: world up is `(0, 1, 0)`.
 - **Reversed-Z depth**: near plane → 1, far plane → 0. Pairs with `CompareOp::Greater`. Better precision distribution at distance.
-- **Vulkan Y-down NDC compensation**: `mat4::perspective` applies a `proj[1][1] *= -1` after `glm::perspectiveLH` so world-Y-up vertices appear right-side-up on screen. Side effect: triangle winding flips relative to GL conventions — the renderer's default `FrontFace::CounterClockwise` accounts for this.
+- **Winding order**: default is clockwise (`RasterizationState::frontFace = FrontFace::Clockwise`)
+- **Vulkan Y-down NDC compensation**: `mat4::perspective` applies a `proj[1][1] *= -1` after `glm::perspectiveLH` so world-Y-up vertices appear right-side-up on screen.
 
 ### Descriptor set frequency tiers
 
@@ -410,8 +405,7 @@ pushConstants.dataAddress = mapped.shaderDeviceAddress;
 // Push the address through push constants. The shader dereferences:
 //   struct PushConstants { MyData *data; };
 //   _pc.data->field
-renderer->cmdPushConstants(cb, ShaderStage::Fragment,
-    generic_as_byte_span(&pushConstants, sizeof(PushConstants)));
+renderer->cmdPushConstants(cb, ShaderStage::Fragment, generic_as_byte_span(&pushConstants, sizeof(PushConstants)));
 ```
 
 ### A draw call with allocated + push descriptors
@@ -420,8 +414,7 @@ renderer->cmdPushConstants(cb, ShaderStage::Fragment,
 renderer->cmdBindGraphicsPipeline(cb, materialPipeline);
 renderer->cmdBindGraphicsBuffer (cb, perFrameUbo,  "_view"_sid);     // PerFrame set
 renderer->cmdBindGraphicsBuffer (cb, materialUbo,  "_material"_sid); // PerMaterial set
-renderer->cmdBindTexture        (cb, albedoTex, "_albedo"_sid,
-                                     linearSampler, "_albedoSampler"_sid);
+renderer->cmdBindTexture        (cb, albedoTex, "_albedo"_sid, linearSampler, "_albedoSampler"_sid);
 renderer->cmdBindVertexBuffer   (cb, vertexBuffer);
 renderer->cmdBindIndexBuffer    (cb, indexBuffer);
 renderer->cmdDrawIndexed        (cb, indexCount, 1, 0, 0, 0);
