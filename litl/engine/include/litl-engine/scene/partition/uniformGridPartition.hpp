@@ -27,7 +27,7 @@ namespace litl
 
         UniformGridPartition();
         UniformGridPartition(UniformGridOptions const& options);
-        UniformGridPartition(UniformGridPartition&) = delete;
+        UniformGridPartition(UniformGridPartition const&) = delete;
         UniformGridPartition& operator=(UniformGridPartition const&) = delete;
 
         ~UniformGridPartition();

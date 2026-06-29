@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "litl-engine/scene/scene.hpp"
-#include "litl-engine/scene/sceneCommand.hpp"
 #include "litl-ecs/entity/entityCommand.hpp"
 #include "litl-ecs/world.hpp"
 
