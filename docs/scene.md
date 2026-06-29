@@ -93,8 +93,6 @@ void SceneCommandProcessor::onChangeArchetype(Scene& scene, World& world, Entity
 
 This leans on the ECS processor's guarantees: a destroy already cancels that entity's other commands, and adds/removes are already collapsed into a single archetype move. The scene processor therefore never has to untangle conflicting changes — it reacts to a clean, final per-entity delta. The archetype ids are resolved back to `Archetype*` via `ArchetypeRegistry::getById`, and `hasComponent<Transform>()` / `hasComponent<WorldBounds>()` answer the gain/loss questions.
 
-> Note: `SceneCommand` / `SceneCommandType` exist in the headers (`AddToGraph`, `RemoveFromPartition`, …) but the processor currently works directly off `EntityChange`. The command struct is forward-looking scaffolding, not yet on the live path.
-
 ---
 
 ## Scene — graph + partition
@@ -259,7 +257,6 @@ Gaps worth knowing about, for context on the current shape:
 
 - **World-matrix computation isn't in `scene/`.** The graph hands out the sorted order and per-entity GPU index; the actual matrix multiply/propagation lives in a transform system that consumes them. (And GPU-index *assignment* itself is currently stubbed — `add` stores a null index.)
 - **Render integration is stubbed.** `EngineCallbacks::onRender` documents the intended path (frustum-cull via the partition → build a draw list of visible `transform-index + mesh + material` → submit to the renderer) but is a `todo`.
-- **`SceneCommand` is unused.** The processor works off `EntityChange` directly; the `SceneCommand`/`SceneCommandType` types are forward-looking.
 - **One partition strategy.** Only `UniformGrid` (plus `NullPartition`); no octree / BVH / loose grid, and the grid is 2D (XZ) — tall scenes get no vertical discrimination.
 - **Limited cycle protection.** `setParent` asserts against direct self-parenting and absent parents, but there's no deep cycle check (A→B→A).
 - **Subtree destroy semantics.** Removing a tracked parent vacates its descendants' graph nodes but does not destroy those ECS entities; the lifetime coupling is left to the caller.

@@ -49,18 +49,40 @@ namespace litl
 
     void SceneCommandProcessor::sortCommands(std::span<EntityChange const> entityChanges) noexcept
     {
+        /**
+         * Sorts the commands to be processed by the Scene.
+         * Note that process order in the Scene differs from that in the ECS library.
+         * For ECS we process commands in their enum order:
+         * 
+         *     Destroy -> Create -> Change Archetype -> Set Parent
+         * 
+         * By putting Destroy first in the ECS it lets it remove unnecessary commands
+         * related to newly destroyed entities.
+         * 
+         * But for the Scene we want to process Destroy last so that an accurate collection
+         * of affected descendent entities (so all children, grandchildren, etc. of a to-be
+         * destroy entity) can be made. The ECS does not, and can not, do this because the
+         * entity relationship hierarchy does not exist in the ECS library and exists within
+         * the Scene. So for the Scene we prioritize changes in the order of:
+         * 
+         *    Create -> Change Archetype -> Set Parent -> Destroy
+         * 
+         * This cleans up the logic relating to destruction, especially when an affected
+         * entity has its parentage changed in the same change set.
+         */
+
         m_sortedChanges.clear();
         m_sortedChanges.reserve(entityChanges.size());
         m_sortedChanges.assign(entityChanges.begin(), entityChanges.end());
 
         std::ranges::stable_sort(m_sortedChanges, [](EntityChange a, EntityChange b)
         {
-            // SetParent commands go last, everything else groups by entity
-            const bool aIsSetParent = a.type == EntityChangeType::SetParent;
-            const bool bIsSetParent = b.type == EntityChangeType::SetParent;
+            // DestroyEntity commands go last, everything else groups by entity
+            const bool aIsDestroy = a.type == EntityChangeType::DestroyEntity;
+            const bool bIsDestroy = b.type == EntityChangeType::DestroyEntity;
 
-            // Create a tuple of references. Tuple comparison is lexicographic, so it compares SetParent first then entity and then command type.
-            return std::tie(aIsSetParent, a.entity, a.type) < std::tie(bIsSetParent, b.entity, b.type);
+            // Create a tuple of references. Tuple comparison is lexicographic, so it compares DestroyEntity first then entity and then command type.
+            return std::tie(aIsDestroy, a.entity, a.type) < std::tie(bIsDestroy, b.entity, b.type);
         });
     }
 
