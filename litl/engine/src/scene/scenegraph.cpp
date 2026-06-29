@@ -44,12 +44,6 @@ namespace litl
         ensureFit(entity.index);
         LITL_ASSERT_MSG(m_nodeOccupied[entity.index] == NodeState::Present, "Attempting to untrack entity that is not tracked.", );
 
-        // Handle child nodes
-        if (m_childNodes.contains(entity.index))
-        {
-            removeChildrenOf(entity);
-        }
-
         // Remove from parent
         uint32_t parentIndex = m_nodeParent[entity.index];
 
@@ -148,45 +142,67 @@ namespace litl
         return Entity::null();
     }
 
-    std::vector<Entity> SceneGraph::getChildren(Entity entity) const noexcept
+    std::vector<Entity> SceneGraph::getChildren(Entity entity, bool recursive) const noexcept
     {
         std::vector<Entity> children;
 
-        if (isPresent(entity))
-        {
-            auto find = m_childNodes.find(entity.index);
-
-            if (find != m_childNodes.end())
-            {
-                for (auto childIndex : find->second)
-                {
-                    children.push_back(m_nodeToEntity[childIndex]);
-                }
-            }
-        }
+        getChildren(entity, children, recursive);
 
         return children;
     }
 
-    uint32_t SceneGraph::getChildren(Entity entity, std::vector<Entity>& children) const noexcept
+    uint32_t SceneGraph::getChildren(Entity entity, std::vector<Entity>& children, bool recursive) const noexcept
     {
-        uint32_t added = 0u;
-
-        if (isPresent(entity))
+        if (!isPresent(entity))
         {
+            return 0u;      // Entity not tracked.
+        }
+
+        size_t startCount = children.size();
+        auto find = m_childNodes.find(entity.index);
+
+        if (find == m_childNodes.end())
+        {
+            return 0u;      // No children.
+        }
+
+        if (!recursive)
+        {
+            for (auto childIndex : find->second)
+            {
+                children.push_back(m_nodeToEntity[childIndex]);
+            }
+        }
+        else
+        {
+            std::stack<uint32_t> frontier;
+
             auto find = m_childNodes.find(entity.index);
 
-            if (find != m_childNodes.end())
+            for (auto childIndex : find->second)
             {
-                for (auto childIndex : find->second)
+                frontier.push(childIndex);
+            }
+
+            while (!frontier.empty())
+            {
+                uint32_t nodeIndex = frontier.top(); frontier.pop();
+
+                children.push_back(m_nodeToEntity[nodeIndex]);
+
+                find = m_childNodes.find(nodeIndex);
+
+                if (find != m_childNodes.end())
                 {
-                    children.push_back(m_nodeToEntity[childIndex]);
-                    added++;
+                    for (auto grandchildIndex : find->second)
+                    {
+                        frontier.push(grandchildIndex);
+                    }
                 }
             }
         }
 
-        return added;
+        return static_cast<uint32_t>(children.size() - startCount);
     }
 
     uint32_t SceneGraph::getGpuBufferIndex(Entity entity) const noexcept
@@ -248,48 +264,5 @@ namespace litl
         m_nodeDepth[index] = depth;
         m_nodeGpuIndex[index] = gpuIndex;
         m_nodeOccupied[index] = (entity.isNull() ? NodeState::Vacant : NodeState::Present);
-    }
-
-    void SceneGraph::removeChildrenOf(Entity entity)
-    {
-        std::vector<uint32_t> descendents;
-        std::stack<uint32_t> frontier;
-
-        auto find = m_childNodes.find(entity.index);
-
-        if (find == m_childNodes.end())
-        {
-            return;
-        }
-
-        for (auto childIndex : find->second)
-        {
-            frontier.push(childIndex);
-        }
-
-        while (!frontier.empty())
-        {
-            uint32_t nodeIndex = frontier.top(); frontier.pop();
-            descendents.push_back(nodeIndex);
-
-            find = m_childNodes.find(nodeIndex);
-
-            if (find != m_childNodes.end())
-            {
-                for (auto grandchildIndex : find->second)
-                {
-                    frontier.push(grandchildIndex);
-                }
-            }
-        }
-
-        for (auto nodeIndex : descendents)
-        {
-            m_childNodes.erase(nodeIndex);
-            updateEntity(nodeIndex, Entity::null(), Entity::null(), 0, Constants::uint32_null_index);
-            m_activeCount--;
-        }
-
-        m_childNodes.erase(entity.index);
     }
 }

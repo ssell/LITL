@@ -73,8 +73,14 @@ namespace litl
                 }
 
                 m_doomedEntities.push_back(destroyChange.entity);
-                scene.getChildren(destroyChange.entity, m_doomedEntities);
+
+                if (scene.isPresent(destroyChange.entity))
+                {
+                    scene.getChildren(destroyChange.entity, m_doomedEntities, true);
+                }
             }
+
+            // todo: dedupe before delete
 
             // Remove all doomed entities from the scene and the ECS.
             // Note that the original parent entities are already destroyed, but for simplicity we don't discern from them here.
@@ -126,16 +132,6 @@ namespace litl
             // Create a tuple of references. Tuple comparison is lexicographic, so it compares DestroyEntity first then entity and then command type.
             return std::tie(aIsDestroy, a.entity, a.type) < std::tie(bIsDestroy, b.entity, b.type);
         });
-    }
-
-    void SceneCommandProcessor::onDestroyEntity(Scene& scene, World& world, EntityChange const& change) const noexcept
-    {
-        auto* archetype = ArchetypeRegistry::getById(change.prevArchetype);
-
-        if (archetype->hasComponent<Transform>())
-        {
-            scene.untrack(change.entity);
-        }
     }
 
     void SceneCommandProcessor::onChangeArchetype(Scene& scene, World& world, EntityChange const& change) const noexcept
