@@ -115,6 +115,54 @@ namespace litl::tests
         REQUIRE(children.size() == 0);
     } LITL_END_TEST_CASE
 
+    LITL_TEST_CASE("get children", "[engine::scenegraph]")
+    {
+        // There are two variants of getChildren. Test them both.
+
+        SceneGraph sceneGraph;
+
+        Entity child0{ .index = 0, .version = 0 };
+        Entity child1{ .index = 1, .version = 0 };
+        Entity child2{ .index = 2, .version = 0 };
+        Entity child3{ .index = 3, .version = 0 };
+        Entity child4{ .index = 4, .version = 0 };
+        Entity parent{ .index = 5, .version = 0 };
+
+        sceneGraph.add(child0, Transform{});
+        sceneGraph.add(child1, Transform{});
+        sceneGraph.add(child2, Transform{});
+        sceneGraph.add(child3, Transform{});
+        sceneGraph.add(child4, Transform{});
+        sceneGraph.add(parent, Transform{});
+
+        std::vector<Entity> children;
+
+        children = sceneGraph.getChildren(parent);
+        REQUIRE(children.size() == 0ull);
+
+        sceneGraph.getChildren(parent, children);
+        REQUIRE(children.size() == 0ull);
+
+        sceneGraph.setParent(child0, parent);
+        sceneGraph.setParent(child1, parent);
+        sceneGraph.setParent(child2, parent);
+
+        children.clear(); children = sceneGraph.getChildren(parent);
+        REQUIRE(children.size() == 3ull);
+
+        children.clear(); sceneGraph.getChildren(parent, children);
+        REQUIRE(children.size() == 3ull);
+
+        sceneGraph.setParent(child3, parent);
+        sceneGraph.setParent(child4, parent);
+
+        children.clear(); sceneGraph.getChildren(parent, children);
+        REQUIRE(children.size() == 5ull);
+
+        children.clear(); children = sceneGraph.getChildren(parent);
+        REQUIRE(children.size() == 5ull);
+    } LITL_END_TEST_CASE
+
     LITL_TEST_CASE("remove", "[engine::scenegraph]")
     {
         SceneGraph sceneGraph;

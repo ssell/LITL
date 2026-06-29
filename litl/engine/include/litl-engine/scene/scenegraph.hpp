@@ -99,6 +99,15 @@ namespace litl
         [[nodiscard]] std::vector<Entity> getChildren(Entity entity) const noexcept;
 
         /// <summary>
+        /// Appends all children of the specified entity to the provided vector.
+        /// Returns the number of children added.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="children"></param>
+        /// <returns></returns>
+        uint32_t getChildren(Entity entity, std::vector<Entity>& children) const noexcept;
+
+        /// <summary>
         /// Retrieves the index into the GPU buffers that store data associated with the specified entity.
         /// </summary>
         /// <param name="entity"></param>
