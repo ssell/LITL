@@ -58,7 +58,7 @@ namespace litl
 
         if (i != m_sortedChanges.size())
         {
-            // There are destroys to process.
+            // There are destroys to process. Gather all affected entities - those being destroyed AND their descendants.
             m_doomedEntities.clear();
             m_doomedEntities.reserve(m_sortedChanges.size() - i);
 
@@ -73,8 +73,16 @@ namespace litl
                 }
 
                 m_doomedEntities.push_back(destroyChange.entity);
+                scene.getChildren(destroyChange.entity, m_doomedEntities);
+            }
 
-                scene.getChildren(destroyChange.entity);
+            // Remove all doomed entities from the scene and the ECS.
+            // Note that the original parent entities are already destroyed, but for simplicity we don't discern from them here.
+            // Their internal ID state is already marked invalid and so the ECS will skip over them. A little wasteful but makes this logic cleaner.
+            for (auto doomedEntity : m_doomedEntities)
+            {
+                scene.untrack(doomedEntity);
+                world.destroyImmediate(doomedEntity);       // Safe to call immediate here because we are at a sync point already (or should be!)
             }
         }
 
