@@ -52,14 +52,14 @@ namespace litl
             graph.setParent(child, parent);
         }
 
-        [[nodiscard]] std::vector<Entity> getChildren(Entity entity) const noexcept
+        [[nodiscard]] std::vector<Entity> getChildren(Entity entity, bool recursive) const noexcept
         {
-            return graph.getChildren(entity);
+            return graph.getChildren(entity, recursive);
         }
 
-        uint32_t getChildren(Entity entity, std::vector<Entity>& children) const noexcept
+        uint32_t getChildren(Entity entity, std::vector<Entity>& children, bool recursive) const noexcept
         {
-
+            return graph.getChildren(entity, children, recursive);
         }
 
         [[nodiscard]] uint32_t getGpuBufferIndex(Entity entity) const noexcept
@@ -141,14 +141,14 @@ namespace litl
         m_impl->setParent(child, parent);
     }
 
-    std::vector<Entity> Scene::getChildren(Entity entity) const noexcept
+    std::vector<Entity> Scene::getChildren(Entity entity, bool recursive) const noexcept
     {
-        return m_impl->getChildren(entity);
+        return m_impl->getChildren(entity, recursive);
     }
 
-    uint32_t Scene::getChildren(Entity entity, std::vector<Entity>& children) const noexcept
+    uint32_t Scene::getChildren(Entity entity, std::vector<Entity>& children, bool recursive) const noexcept
     {
-        return m_impl->getChildren(entity, children);
+        return m_impl->getChildren(entity, children, recursive);
     }
 
     uint32_t Scene::getGpuBufferIndex(Entity entity) const noexcept

@@ -25,8 +25,6 @@ namespace litl
     private:
 
         void sortCommands(std::span<EntityChange const> entityChanges) noexcept;
-
-        void onDestroyEntity(Scene& scene, World& world, EntityChange const& change) const noexcept;
         void onChangeArchetype(Scene& scene, World& world, EntityChange const& change) const noexcept;
         void onSetParent(Scene& scene, World& world, EntityChange const& change) const noexcept;
 

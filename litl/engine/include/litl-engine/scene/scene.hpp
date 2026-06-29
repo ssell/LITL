@@ -88,8 +88,9 @@ namespace litl
         /// Returns all entities that are children of the specified entity.
         /// </summary>
         /// <param name="entity"></param>
+        /// <param name="recursive">If false, then only direct descendants (immediate children) will be returned.</param>
         /// <returns></returns>
-        [[nodiscard]] std::vector<Entity> getChildren(Entity entity) const noexcept;
+        [[nodiscard]] std::vector<Entity> getChildren(Entity entity, bool recursive = false) const noexcept;
 
         /// <summary>
         /// Appends all children of the specified entity to the provided vector.
@@ -97,7 +98,8 @@ namespace litl
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="children"></param>
-        uint32_t getChildren(Entity entity, std::vector<Entity>& children) const noexcept;
+        /// <param name="recursive">If false, then only direct descendants (immediate children) will be returned.</param>
+        uint32_t getChildren(Entity entity, std::vector<Entity>& children, bool recursive = false) const noexcept;
 
         /// <summary>
         /// Returns the index into the GPU buffers which the entity occupies.

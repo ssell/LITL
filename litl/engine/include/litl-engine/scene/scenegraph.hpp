@@ -95,8 +95,9 @@ namespace litl
         /// Retrieves all child Entities of the specified Entity.
         /// </summary>
         /// <param name="entity"></param>
+        /// <param name="recursive">If false, then only direct descendants (immediate children) will be returned.</param>
         /// <returns></returns>
-        [[nodiscard]] std::vector<Entity> getChildren(Entity entity) const noexcept;
+        [[nodiscard]] std::vector<Entity> getChildren(Entity entity, bool recursive = false) const noexcept;
 
         /// <summary>
         /// Appends all children of the specified entity to the provided vector.
@@ -104,8 +105,9 @@ namespace litl
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="children"></param>
+        /// <param name="recursive">If false, then only direct descendants (immediate children) will be returned.</param>
         /// <returns></returns>
-        uint32_t getChildren(Entity entity, std::vector<Entity>& children) const noexcept;
+        uint32_t getChildren(Entity entity, std::vector<Entity>& children, bool recursive = false) const noexcept;
 
         /// <summary>
         /// Retrieves the index into the GPU buffers that store data associated with the specified entity.
@@ -158,12 +160,6 @@ namespace litl
         /// <param name="depth"></param>
         /// <param name="gpuIndex"></param>
         void updateEntity(uint32_t index, Entity entity, Entity parent, uint32_t depth, uint32_t gpuIndex);
-
-        /// <summary>
-        /// Removes all children of the specified entity.
-        /// </summary>
-        /// <param name="entity"></param>
-        void removeChildrenOf(Entity entity);
 
         enum class NodeState : uint8_t
         {
