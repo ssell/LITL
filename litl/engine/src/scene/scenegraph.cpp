@@ -168,6 +168,27 @@ namespace litl
         return children;
     }
 
+    uint32_t SceneGraph::getChildren(Entity entity, std::vector<Entity>& children) const noexcept
+    {
+        uint32_t added = 0u;
+
+        if (isPresent(entity))
+        {
+            auto find = m_childNodes.find(entity.index);
+
+            if (find != m_childNodes.end())
+            {
+                for (auto childIndex : find->second)
+                {
+                    children.push_back(m_nodeToEntity[childIndex]);
+                    added++;
+                }
+            }
+        }
+
+        return added;
+    }
+
     uint32_t SceneGraph::getGpuBufferIndex(Entity entity) const noexcept
     {
         if (isPresent(entity))

@@ -35,6 +35,12 @@ namespace litl
         /// Kept as a member (instead of just a local in the process method) to potentially avoid reallocations.
         /// </summary>
         std::vector<EntityChange> m_sortedChanges;
+
+        /// <summary>
+        /// Entities to be destroyed.
+        /// Kept as a member (instead of just a local in the process method) to potentially avoid reallocations.
+        /// </summary>
+        std::vector<Entity> m_doomedEntities;
     };
 }
 

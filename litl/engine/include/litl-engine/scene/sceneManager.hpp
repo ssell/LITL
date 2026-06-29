@@ -43,7 +43,7 @@ namespace litl
         void setup(ServiceProvider& services) noexcept;
 
         struct Impl;
-        ImplPtr<Impl, 88> m_impl;
+        ImplPtr<Impl, 120> m_impl;
     };
 }
 

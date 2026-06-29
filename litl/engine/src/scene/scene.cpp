@@ -57,6 +57,11 @@ namespace litl
             return graph.getChildren(entity);
         }
 
+        uint32_t getChildren(Entity entity, std::vector<Entity>& children) const noexcept
+        {
+
+        }
+
         [[nodiscard]] uint32_t getGpuBufferIndex(Entity entity) const noexcept
         {
             return graph.getGpuBufferIndex(entity);
@@ -139,6 +144,11 @@ namespace litl
     std::vector<Entity> Scene::getChildren(Entity entity) const noexcept
     {
         return m_impl->getChildren(entity);
+    }
+
+    uint32_t Scene::getChildren(Entity entity, std::vector<Entity>& children) const noexcept
+    {
+        return m_impl->getChildren(entity, children);
     }
 
     uint32_t Scene::getGpuBufferIndex(Entity entity) const noexcept

@@ -1,5 +1,6 @@
 #include <algorithm>
 
+#include "litl-core/logging/logging.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
 #include "litl-engine/scene/sceneCommandProcessor.hpp"
 #include "litl-engine/ecs/components/transform.hpp"
@@ -14,23 +15,33 @@ namespace litl
             return;
         }
 
+        /**
+         * The logic below is dependent on the EntityCommandProcessor performing deduplication and remove non-SetParent commands
+         * when an entity is also being destroyed at the same time. This allows the logic below to avoid having to perform checks itself.
+         * 
+         * We perform Create -> Change Archetype -> Set Parent first on all entities.
+         * 
+         * And then we find all entities that will be destroyed. This includes both those being explicity destroyed in an EntityChange
+         * and also their descendants. 
+         */
+
         sortCommands(entityChanges);
 
-        // The logic below is dependent on the EntityCommandProcessor performing deduplication and remove non-SetParent commands
-        // when an entity is also being destroyed at the same time. This allows the logic below to avoid having to perform checks itself.
+        size_t i = 0ull;
 
-        for (auto& change : m_sortedChanges)
+        for (; i < m_sortedChanges.size(); ++i)
         {
+            auto& change = m_sortedChanges[i];
+
+            if (change.type == EntityChangeType::DestroyEntity)
+            {
+                // All destroys are placed at the end of the list (see sortCommands).
+                // We need to gather descendants before we can start processing destroys.
+                break;
+            }
+
             switch (change.type)
             {
-            case EntityChangeType::CreateEntity:
-                // Create on its own does not impact the scene. A newly created entity has no components and thus can not be tracked.
-                break;
-
-            case EntityChangeType::DestroyEntity:
-                onDestroyEntity(scene, world, change);
-                break;
-
             case EntityChangeType::ChangeArchetype:
                 onChangeArchetype(scene, world, change);
                 break;
@@ -39,8 +50,31 @@ namespace litl
                 onSetParent(scene, world, change);
                 break;
 
+            case EntityChangeType::CreateEntity:            // Create on its own does not impact the scene. A newly created entity has no components and thus can not be tracked.
             default:
                 break;
+            }
+        }
+
+        if (i != m_sortedChanges.size())
+        {
+            // There are destroys to process.
+            m_doomedEntities.clear();
+            m_doomedEntities.reserve(m_sortedChanges.size() - i);
+
+            for (; i < m_sortedChanges.size(); ++i)
+            {
+                auto& destroyChange = m_sortedChanges[i];
+
+                if (destroyChange.type != EntityChangeType::DestroyEntity)
+                {
+                    logWarning("Unexpected EntityChangeType in destroy path of SceneCommandProcessor::process");
+                    continue;
+                }
+
+                m_doomedEntities.push_back(destroyChange.entity);
+
+                scene.getChildren(destroyChange.entity);
             }
         }
 
