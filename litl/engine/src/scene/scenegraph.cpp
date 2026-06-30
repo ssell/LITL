@@ -53,6 +53,9 @@ namespace litl
             std::erase(siblings, entity.index);
         }
 
+        // Clear children
+        m_childNodes.erase(entity.index);
+
         updateEntity(entity.index, Entity::null(), Entity::null(), 0, Constants::uint32_null_index);
         m_activeCount--;
         m_isDirty = true;

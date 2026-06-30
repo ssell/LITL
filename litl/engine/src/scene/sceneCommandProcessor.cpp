@@ -72,15 +72,16 @@ namespace litl
                     continue;
                 }
 
-                m_doomedEntities.push_back(destroyChange.entity);
-
                 if (scene.isPresent(destroyChange.entity))
                 {
+                    m_doomedEntities.push_back(destroyChange.entity);
                     scene.getChildren(destroyChange.entity, m_doomedEntities, true);
                 }
             }
             
             // Dedupe as child entities could have been both destroyed explicitly by the user and added transitively by the above operation.
+            m_dedupedDoomedEntities.clear();
+
             for (auto doomedEntity : m_doomedEntities)
             {
                 m_dedupedDoomedEntities.insert(doomedEntity);

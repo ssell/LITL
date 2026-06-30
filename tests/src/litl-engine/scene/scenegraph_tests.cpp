@@ -198,9 +198,16 @@ namespace litl::tests
         REQUIRE(sceneGraph.getParent(child) == parent);
 
         sceneGraph.remove(parent);
+
+        // The conditionals below may not be immediately intuitive.
+        // Removal from SceneGraph directly DOES NOT CASCADE. The cascade of a destroyed entity
+        // is actually handled by the SceneCommandProcessor. This is a deliberate separation of concerns.
+        // When you tell the SceneGraph to remove an entity, it removes only the specific entity that
+        // it was instructed to. This simplifies the handling of potentially conflicting/clashing commands
+        // being processed at the same time.
         
-        REQUIRE(sceneGraph.count() == 0);
-        REQUIRE(sceneGraph.isPresent(child) == false);
+        REQUIRE(sceneGraph.count() == 1);
+        REQUIRE(sceneGraph.isPresent(child) == true);
         REQUIRE(sceneGraph.isPresent(parent) == false);
 
     } LITL_END_TEST_CASE
@@ -344,39 +351,6 @@ namespace litl::tests
         }
 
         REQUIRE(sceneGraph.getChildren(chain[depth - 1]).size() == 0);
-    } LITL_END_TEST_CASE
-
-    LITL_TEST_CASE("cascade destroy removes entire subtree", "[engine::scenegraph]")
-    {
-        SceneGraph sceneGraph;
-
-        Entity root{ .index = 0, .version = 0 };
-        Entity mid{ .index = 1, .version = 0 };
-        Entity leaf1{ .index = 2, .version = 0 };
-        Entity leaf2{ .index = 3, .version = 0 };
-        Entity unrelated{ .index = 4, .version = 0 };
-
-        sceneGraph.add(root, Transform{});
-        sceneGraph.add(mid, Transform{});
-        sceneGraph.add(leaf1, Transform{});
-        sceneGraph.add(leaf2, Transform{});
-        sceneGraph.add(unrelated, Transform{});
-
-        sceneGraph.setParent(mid, root);
-        sceneGraph.setParent(leaf1, mid);
-        sceneGraph.setParent(leaf2, mid);
-
-        sceneGraph.remove(root);
-
-        REQUIRE(sceneGraph.count() == 1);
-        REQUIRE(sceneGraph.isPresent(root) == false);
-        REQUIRE(sceneGraph.isPresent(mid) == false);
-        REQUIRE(sceneGraph.isPresent(leaf1) == false);
-        REQUIRE(sceneGraph.isPresent(leaf2) == false);
-        REQUIRE(sceneGraph.isPresent(unrelated) == true);
-
-        sceneGraph.update();
-        REQUIRE(sceneGraph.count() == 1);
     } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("entity version mismatch is not present", "[engine::scenegraph]")
