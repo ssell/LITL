@@ -5,6 +5,7 @@
 #include <span>
 #include <vector>
 
+#include "litl-core/containers/flatHashMap.hpp"
 #include "litl-engine/scene/scene.hpp"
 #include "litl-ecs/entity/entityCommand.hpp"
 #include "litl-ecs/world.hpp"
@@ -35,10 +36,11 @@ namespace litl
         std::vector<EntityChange> m_sortedChanges;
 
         /// <summary>
-        /// Entities to be destroyed.
+        /// Entities to be destroyed. Not dedepulicated.
         /// Kept as a member (instead of just a local in the process method) to potentially avoid reallocations.
         /// </summary>
         std::vector<Entity> m_doomedEntities;
+
     };
 }
 

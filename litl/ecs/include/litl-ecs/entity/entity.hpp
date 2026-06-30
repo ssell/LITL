@@ -48,7 +48,6 @@ namespace litl
     /// </summary>
     struct Entity
     {
-
         /// <summary>
         /// The index of this Entity. Used to map it to its components. 
         /// </summary>
@@ -81,6 +80,19 @@ namespace litl
         [[nodiscard]] constexpr bool isNull() const noexcept
         {
             return (index == null().index);
+        }
+
+        /// <summary>
+        /// For use with hash containers.
+        /// </summary>
+        /// <typeparam name="H"></typeparam>
+        /// <param name="h"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        template <typename H>
+        friend H AbslHashValue(H h, Entity e) noexcept
+        {
+            return H::combine(std::move(h), e.index, e.version);
         }
     };
 }
