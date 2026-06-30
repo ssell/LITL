@@ -79,13 +79,17 @@ namespace litl
                     scene.getChildren(destroyChange.entity, m_doomedEntities, true);
                 }
             }
-
-            // todo: dedupe before delete
+            
+            // Dedupe as child entities could have been both destroyed explicitly by the user and added transitively by the above operation.
+            for (auto doomedEntity : m_doomedEntities)
+            {
+                m_dedupedDoomedEntities.insert(doomedEntity);
+            }
 
             // Remove all doomed entities from the scene and the ECS.
             // Note that the original parent entities are already destroyed, but for simplicity we don't discern from them here.
             // Their internal ID state is already marked invalid and so the ECS will skip over them. A little wasteful but makes this logic cleaner.
-            for (auto doomedEntity : m_doomedEntities)
+            for (auto doomedEntity : m_dedupedDoomedEntities)
             {
                 scene.untrack(doomedEntity);
                 world.destroyImmediate(doomedEntity);       // Safe to call immediate here because we are at a sync point already (or should be!)

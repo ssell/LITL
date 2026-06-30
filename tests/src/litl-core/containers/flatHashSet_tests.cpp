@@ -45,4 +45,34 @@ namespace litl::tests
         REQUIRE(set.contains(55u) == false);
         REQUIRE(set.contains(56u) == false);
     } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("Deduplication", "[core::containers::flatHashSet]")
+    {
+        FlatHashSet<uint32_t> set{};
+
+        // Add [1, 2, 2, 3, 3, 3, 4, 4, 4, 4, ..., 9]
+        for (uint32_t i = 0u; i < 10u; ++i)
+        {
+            for (uint32_t j = 0u; j < i; ++j)
+            {
+                set.insert(i);
+            }
+        }
+
+        REQUIRE(set.size() == 9ull);        // 1 to 9 with no dupes
+
+        for (uint32_t i = 1u; i < 10u; ++i)
+        {
+            REQUIRE(set.contains(i));
+        }
+
+        REQUIRE(set.erase(0u) == false);
+        REQUIRE(set.erase(1u) == true);
+
+        REQUIRE(set.size() == 8ull);
+
+        REQUIRE(set.empty() == false);
+        set.clear();
+        REQUIRE(set.empty() == true);
+    } LITL_END_TEST_CASE
 }
