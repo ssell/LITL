@@ -1,5 +1,6 @@
 #include <algorithm>
 
+#include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
 #include "litl-engine/scene/sceneChangeProcessor.hpp"
@@ -32,6 +33,8 @@ namespace litl
         for (; i < m_sortedChanges.size(); ++i)
         {
             auto& change = m_sortedChanges[i];
+
+            LITL_ASSERT_MSG((!change.entity.isNull()), "SceneChangeProcessor provided with a NULL entity", );
 
             if (change.type == EntityChangeType::DestroyEntity)
             {
@@ -160,7 +163,7 @@ namespace litl
             // Lost the Transform component. Can no longer be tracked.
             scene.untrack(change.entity);
         }
-        else
+        else if (currHasTransform)
         {
             auto transform = currArchetype->getComponent<Transform>(world.getEntityRecord(change.entity));
 
