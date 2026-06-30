@@ -5,7 +5,7 @@
 #include "litl-core/assert.hpp"
 #include "litl-engine/scene/sceneManager.hpp"
 #include "litl-engine/scene/sceneView.hpp"
-#include "litl-engine/scene/sceneCommandProcessor.hpp"
+#include "litl-engine/scene/sceneChangeProcessor.hpp"
 #include "litl-ecs/world.hpp"
 #include "litl-ecs/entity/entityCommand.hpp"
 
@@ -15,7 +15,7 @@ namespace litl
     {
         std::vector<std::shared_ptr<Scene>> scenes;
         std::shared_ptr<SceneView> view;
-        SceneCommandProcessor commandProcessor;
+        SceneChangeProcessor sceneChangeProcessor;
         uint32_t activeIndex{ 0 };
 
         void processEntityChanges(World& world, std::span<EntityChange const> entityChanges) noexcept
@@ -25,7 +25,7 @@ namespace litl
                 return;
             }
 
-            commandProcessor.process(*scenes[activeIndex], world, entityChanges);
+            sceneChangeProcessor.process(*scenes[activeIndex], world, entityChanges);
         }
     };
 

@@ -18,7 +18,7 @@ The pieces:
 - **`SceneGraph`** — the parent/child hierarchy in flattened parallel arrays, plus the per-entity GPU-buffer (world-matrix) index and a topological sort.
 - **`ScenePartition`** — a compile-time concept for spatial acceleration; `UniformGridPartition` is the real implementation, `NullPartition` the no-op.
 - **`SceneView`** — a read-only, parallel-safe handle to the active scene, for use inside systems.
-- **`SceneCommandProcessor`** — translates ECS `EntityChange`s into scene `track`/`untrack`/`setParent` calls.
+- **`SceneChangeProcessor`** — translates ECS `EntityChange`s into scene `track`/`untrack`/`setParent` calls.
 
 The governing idea mirrors the ECS: **structural scene changes are deferred and applied single-threaded at sync points; reads are available to parallel systems through a view.**
 
@@ -49,25 +49,22 @@ system records EntityCommands  (per-thread, during parallel execution)
    onSyncPoint → SceneManager::processEntityChanges
         │
         ▼
-   SceneCommandProcessor::process → Scene mutations → scene.sync()
+   SceneChangeProcessor::process → Scene mutations → scene.sync()
 ```
 
 The scene never observes individual `EntityCommands`. It only sees the *outcome* — the post-move `EntityChange` records with their `prevArchetype` / `currArchetype` — and decides what that means for the hierarchy and partition.
 
 ---
 
-## SceneCommandProcessor — interpreting changes
+## SceneChangeProcessor
 
 `process(scene, world, entityChanges)` is where ECS semantics become scene semantics. It first sorts a local copy of the changes, then dispatches each, then calls `scene.sync()` once at the end.
 
 ### Sort order
 
-```cpp
-// SetParent last; everything else grouped by entity then change type.
-return std::tie(aIsSetParent, a.entity, a.type) < std::tie(bIsSetParent, b.entity, b.type);
-```
+Commands are processed in the following order:
 
-`SetParent` is deferred to the very end of the batch so that every entity has been tracked (or untracked) before any parent links are wired — you can't parent to an entity the graph hasn't seen yet. (See the assert in `SceneGraph::setParent` that the parent be present.)
+(`Create Entity` → `Change Archetype` → `SetParent`) → `DestroyEntity`
 
 ### The four change types
 
@@ -78,20 +75,21 @@ return std::tie(aIsSetParent, a.entity, a.type) < std::tie(bIsSetParent, b.entit
 | `ChangeArchetype` | Compare `prev`/`curr` archetypes for `Transform` and `WorldBounds`; `track`/`untrack`/`update` accordingly. |
 | `SetParent` | `scene.setParent(entity, parent)`. |
 
-The pivot component is **`Transform`**. An entity is in the scene if and only if it has a `Transform`; gaining one (`!prevHadTransform && currHasTransform`) tracks it, losing one untracks it. `WorldBounds` is the secondary signal: losing it falls back to a unit-cube AABB around the transform's position; it's otherwise maintained by a separate world-bounds system.
+#### Archetype Change
 
-```cpp
-void SceneCommandProcessor::onChangeArchetype(Scene& scene, World& world, EntityChange const& change) const noexcept
-{
-    if (change.prevArchetype == change.currArchetype) return;
-    // ... resolve prev/curr archetypes via ArchetypeRegistry::getById ...
-    // lost Transform  → untrack
-    // gained Transform → track (bounds left for WorldBoundsSystem)
-    // lost Bounds      → update to unit-cube AABB at transform position
-}
-```
+The pivot component is **`Transform`**. 
+
+An entity is in the scene if and only if it has a `Transform`; gaining one (`!prevHadTransform && currHasTransform`) tracks it, losing one untracks it. `WorldBounds` is the secondary signal: losing it falls back to a unit-cube AABB around the transform's position; it's otherwise maintained by a separate world-bounds system.
 
 This leans on the ECS processor's guarantees: a destroy already cancels that entity's other commands, and adds/removes are already collapsed into a single archetype move. The scene processor therefore never has to untangle conflicting changes — it reacts to a clean, final per-entity delta. The archetype ids are resolved back to `Archetype*` via `ArchetypeRegistry::getById`, and `hasComponent<Transform>()` / `hasComponent<WorldBounds>()` answer the gain/loss questions.
+
+#### Entity Destruction
+
+All destroys happen together, after every other command has processed. This is opposite to how Entity commands are processed which handle destroys first to eliminate unnecessary commands.
+
+When destroys are processed, every Entity has already changed archetypes (potentially losing `Transform` and untracking) and switched parents and so the scene is in a stable state. As destroys cascade all affected entities are gathered - both the explicitly destroyed entities and all of their children. These are then removed from the scene.
+
+Any entities that were transitively removed (children not explicitly destroyed) then have their entities destroyed as well.
 
 ---
 
@@ -160,7 +158,11 @@ The invariant this buys: **a parent always precedes its children in `m_sortedNod
 
 - **`add`** — asserts the slot is vacant; if the transform names a parent, wires it into `m_childNodes`; marks dirty.
 - **`setParent`** — unlinks from the previous parent's child list, links into the new one (or leaves it a root if parent is null); marks dirty. Asserts against self-parenting and against parenting to an absent entity.
-- **`remove`** — unlinks from its parent, then **cascades**: `removeChildrenOf` walks the whole subtree and vacates every descendant. Destroying a tracked parent therefore drops its entire branch from the graph in one go.
+- **`remove`** — unlinks from its parent, remove its children, and removes it from the Scene.
+
+A note on `remove`: it intentionally does not cascade to its children. In fact, the children will be left with bad links to a now non-existent parent. This is done to simplify both the `remove` implementation and to also define a clear separation of concerns. If children are to be removed, then those must also be individually removed.
+
+While this appears restrictive on the surface, it has little bearing for most use-cases. That is because it is rare/discouraged for a user to directly manipulate the scene. Instead the scene is populated/transformed automatically by the `SceneChangeProcessor` which itself reacts to changes made via `EntityCommands`. So even though `SceneGraph::remove` does not cascade, destroying an Entity via `EntityCommands` does cascade and all of its children are likewise destroyed.
 
 ---
 
@@ -213,14 +215,14 @@ The safety argument: during system execution the scene is **not** being mutated 
 
 ## SceneManager — ownership and routing
 
-`SceneManager` is the public surface and the engine's integration point. It owns the scenes and the single `SceneCommandProcessor`:
+`SceneManager` is the public surface and the engine's integration point. It owns the scenes and the single `SceneChangeProcessor`:
 
 ```cpp
 struct SceneManager::Impl
 {
     std::vector<std::shared_ptr<Scene>> scenes;
     std::shared_ptr<SceneView>          view;
-    SceneCommandProcessor               commandProcessor;
+    SceneChangeProcessor               commandProcessor;
     uint32_t                            activeIndex{ 0 };
 };
 ```
@@ -276,7 +278,7 @@ When the document is no longer enough, these are the load-bearing files:
 | `litl/engine/src/scene/scene.cpp` | Graph + partition fan-out, partition `std::variant` dispatch |
 | `litl/engine/include/litl-engine/scene/sceneGraph.hpp` | Parallel-array layout, the flattened-node rationale |
 | `litl/engine/src/scene/scenegraph.cpp` | DFS topological sort, cascade removal, parent wiring |
-| `litl/engine/src/scene/sceneCommandProcessor.cpp` | `EntityChange` → scene action translation (the ECS bridge) |
+| `litl/engine/src/scene/SceneChangeProcessor.cpp` | `EntityChange` → scene action translation (the ECS bridge) |
 | `litl/engine/include/litl-engine/scene/partition/scenePartition.hpp` | The `ScenePartition` concept |
 | `litl/engine/src/scene/partition/uniformGridPartition.cpp` | XZ grid, oversized overflow cell, range queries |
 | `litl/engine/include/litl-engine/scene/sceneView.hpp` | Parallel-safe read interface |

@@ -201,7 +201,7 @@ namespace litl::tests
 
         // The conditionals below may not be immediately intuitive.
         // Removal from SceneGraph directly DOES NOT CASCADE. The cascade of a destroyed entity
-        // is actually handled by the SceneCommandProcessor. This is a deliberate separation of concerns.
+        // is actually handled by the SceneChangeProcessor. This is a deliberate separation of concerns.
         // When you tell the SceneGraph to remove an entity, it removes only the specific entity that
         // it was instructed to. This simplifies the handling of potentially conflicting/clashing commands
         // being processed at the same time.

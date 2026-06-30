@@ -2,13 +2,13 @@
 
 #include "litl-core/logging/logging.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
-#include "litl-engine/scene/sceneCommandProcessor.hpp"
+#include "litl-engine/scene/sceneChangeProcessor.hpp"
 #include "litl-engine/ecs/components/transform.hpp"
 #include "litl-engine/ecs/components/bounds.hpp"
 
 namespace litl
 {
-    void SceneCommandProcessor::process(Scene& scene, World& world, std::span<EntityChange const> entityChanges) noexcept
+    void SceneChangeProcessor::process(Scene& scene, World& world, std::span<EntityChange const> entityChanges) noexcept
     {
         if (entityChanges.size() == 0)
         {
@@ -68,7 +68,7 @@ namespace litl
 
                 if (destroyChange.type != EntityChangeType::DestroyEntity)
                 {
-                    logWarning("Unexpected EntityChangeType in destroy path of SceneCommandProcessor::process");
+                    logWarning("Unexpected EntityChangeType in destroy path of SceneChangeProcessor::process");
                     continue;
                 }
 
@@ -100,7 +100,7 @@ namespace litl
         scene.sync();
     }
 
-    void SceneCommandProcessor::sortCommands(std::span<EntityChange const> entityChanges) noexcept
+    void SceneChangeProcessor::sortCommands(std::span<EntityChange const> entityChanges) noexcept
     {
         /**
          * Sorts the commands to be processed by the Scene.
@@ -139,7 +139,7 @@ namespace litl
         });
     }
 
-    void SceneCommandProcessor::onChangeArchetype(Scene& scene, World& world, EntityChange const& change) const noexcept
+    void SceneChangeProcessor::onChangeArchetype(Scene& scene, World& world, EntityChange const& change) const noexcept
     {
         if (change.prevArchetype == change.currArchetype)
         {
@@ -178,7 +178,7 @@ namespace litl
         }
     }
 
-    void SceneCommandProcessor::onSetParent(Scene& scene, World& world, EntityChange const& change) const noexcept
+    void SceneChangeProcessor::onSetParent(Scene& scene, World& world, EntityChange const& change) const noexcept
     {
         scene.setParent(change.entity, change.parent);
     }

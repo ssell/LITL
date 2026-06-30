@@ -11,8 +11,8 @@ add_library(litl-engine STATIC
 	"src/scene/scene.cpp"  
 	"src/scene/sceneView.cpp" 
 	"src/engineCallbacks.cpp" 
-	"src/scene/sceneCommandProcessor.cpp"
- "src/containers/containerSpecializations.cpp")
+	"src/scene/sceneChangeProcessor.cpp"
+	"src/containers/containerSpecializations.cpp")
 
 target_include_directories(litl-engine
 	PUBLIC

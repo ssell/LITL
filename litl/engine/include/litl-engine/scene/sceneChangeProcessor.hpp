@@ -15,7 +15,7 @@ namespace litl
     /// <summary>
     /// Processes a list of EntitySceneCommands output by the SceneManager into a specified Scene.
     /// </summary>
-    class SceneCommandProcessor
+    class SceneChangeProcessor
     {
     public:
 
