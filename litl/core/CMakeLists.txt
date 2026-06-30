@@ -25,7 +25,7 @@ add_library(litl-core
 		"src/litl-core/job/jobHandle.cpp" 
 		"src/litl-core/math/dag.cpp"
 		"src/litl-core/math/types.cpp" 
-		"src/litl-core/containers/flatHashSet.cpp")
+		)
 		
 target_include_directories(litl-core 
 	PUBLIC 

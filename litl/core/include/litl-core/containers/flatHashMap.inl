@@ -26,7 +26,7 @@ namespace litl
     template<typename K, typename V>
     FlatHashMap<K, V>::~FlatHashMap()
     {
-
+        // ... needed for m_pImpl ...
     }
 
     template<typename K, typename V>
