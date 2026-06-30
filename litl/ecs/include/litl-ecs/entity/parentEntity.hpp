@@ -5,7 +5,7 @@
 
 namespace litl
 {
-    class SceneCommandProcessor;
+    class SceneChangeProcessor;
 
     /// <summary>
     /// The passkey that allows a class to set the parent of an entity.
@@ -17,7 +17,7 @@ namespace litl
     protected:
 
         ParentEntityWriteKey() = default;
-        friend class SceneCommandProcessor;
+        friend class SceneChangeProcessor;
     };
 
     /// <summary>

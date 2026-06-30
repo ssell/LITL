@@ -58,7 +58,7 @@ namespace litl
         /// This action does NOT cascade. Any child entities will remain and
         /// still reference the removed entity as their parent. This is intentional
         /// as it (A) simplifies the removal implementation and (B) simplifies the
-        /// SceneCommandProcessor which is the primary user of this method.
+        /// SceneChangeProcessor which is the primary user of this method.
         /// 
         /// Note: this is a structural/topological change and can only be called by the appropriate internal systems.
         /// </summary>
