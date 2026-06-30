@@ -1,8 +1,6 @@
-#include "tests.hpp"
-
-#include <array>
 #include <cstdint>
 
+#include "tests.hpp"
 #include "litl-core/containers/flatHashMap.hpp"
 
 namespace litl::tests

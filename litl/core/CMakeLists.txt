@@ -24,7 +24,8 @@ add_library(litl-core
 		"src/litl-core/services/serviceScope.cpp"  
 		"src/litl-core/job/jobHandle.cpp" 
 		"src/litl-core/math/dag.cpp"
-		"src/litl-core/math/types.cpp")
+		"src/litl-core/math/types.cpp" 
+		"src/litl-core/containers/flatHashSet.cpp")
 		
 target_include_directories(litl-core 
 	PUBLIC 
@@ -58,7 +59,7 @@ target_link_libraries(litl-core PUBLIC glm::glm)
 FetchContent_Declare(abseil-cpp GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git GIT_TAG 20260107.0)
 FetchContent_MakeAvailable(abseil-cpp)
 
-target_link_libraries(litl-core PRIVATE absl::flat_hash_map)
+target_link_libraries(litl-core PUBLIC absl::flat_hash_set absl::flat_hash_map)
 
 # ------------------------------------------------------------------------------------------
 # spirv-reflect
