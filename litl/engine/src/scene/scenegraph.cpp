@@ -54,6 +54,13 @@ namespace litl
         }
 
         // Clear children
+        auto& childNodes = m_childNodes[entity.index];
+
+        for (auto childNode : childNodes)
+        {
+            m_nodeParent[childNode] = Constants::uint32_null_index;
+        }
+
         m_childNodes.erase(entity.index);
 
         updateEntity(entity.index, Entity::null(), Entity::null(), 0, Constants::uint32_null_index);

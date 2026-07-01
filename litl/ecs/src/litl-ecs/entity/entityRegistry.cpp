@@ -169,7 +169,7 @@ namespace litl
 
     bool EntityRegistry::isAlive(Entity entity) noexcept
     {
-        return instance().entityRecords[entity.index].entity.version == entity.version;
+        return !entity.isNull() && (instance().entityRecords[entity.index].entity.version == entity.version);
     }
 
     void EntityRegistry::clear() noexcept

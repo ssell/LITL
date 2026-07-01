@@ -5,6 +5,8 @@
 #include <functional>
 #include <utility>
 
+#include "litl-core/logging/logging.hpp"
+
 namespace litl
 {
     using AssertHandler = std::function<void(char const* expression, char const* message, char const* file, uint32_t line)>;
@@ -26,7 +28,7 @@ namespace litl
             {
                 static AssertHandler handler = [](char const* expression, char const* message, char const* file, uint32_t line)
                     {
-                        // ... todo tie into logger, error tracker, etc. ...
+                        logError("Assert triggered in '", file, "' @ line ", line, " for expression '", expression, "'. ", message);
                     };
 
                 return handler;
