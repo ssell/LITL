@@ -2,6 +2,14 @@
 
 namespace litl::vulkan
 {
+    /**
+     * Note/todo to future self:
+     * 
+     * All of the destroys here do so immediately with disregard to whether the resource is currently
+     * being used by a frame-in-flight. All destructions issued by the user should ideally be deferred
+     * frames-in-flight number of frames to ensure (or attempt to) that the resource is no longer in use.
+     */
+
     BufferHandle createBuffer(litl::RendererContext* context, BufferDescriptor const& descriptor) noexcept
     {
         auto* vulkanContext = unwrap(context);

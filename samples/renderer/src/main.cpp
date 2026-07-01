@@ -11,11 +11,10 @@
 
 #include <chrono>
 #include <fstream>
-#include <iostream>
 
+#include "litl-core/logging/logging.hpp"
 #include "litl-core/containers/alignedByteBuffer.hpp"
 #include "litl-core/containers/common.hpp"
-#include "litl-core/math/types.hpp"
 #include "litl-renderer/renderer.hpp"
 #include "litl-renderer/window.hpp"
 #include "litl-renderer-vulkan/integration.hpp"
@@ -121,7 +120,9 @@ bool createSampler(SampleRenderState& sample) noexcept;
 
 int main()
 {
-    std::cout << "LITL Renderer Only" << std::endl;
+    litl::Logger::initialize("litl-renderer-sample", true, false);
+
+    logInfo("LITL Renderer Only");
 
     SampleRenderState sample{};
 
@@ -161,8 +162,7 @@ int main()
     }
 
     cleanupSample(sample);
-
-    std::cout << "Exiting" << std::endl;
+    logInfo("Exiting");
 
     return 0;
 }
@@ -179,34 +179,15 @@ bool setupSample(SampleRenderState& sample) noexcept
 
 /// <summary>
 /// Cleans up all resources used by the sample.
-/// 
-/// The renderer will automatically dispose any resources on shutdown but it
-/// is a good practice to cleanup resources manually when possible.
 /// </summary>
 /// <param name="sample"></param>
 void cleanupSample(SampleRenderState& sample) noexcept
 {
-    std::cout << "Shutting down ..." << std::endl;
+    logInfo("Shutting down ...");
 
     if (sample.renderer != nullptr)
     {
-        sample.renderer->destroySampler(sample.sampler);
-        sample.renderer->destroyTexture(sample.texture);
-
-        for (auto cb : sample.cameraDataBuffers)
-        {
-            sample.renderer->destroyBuffer(cb);
-        }
-
-        for (auto fb : sample.frameDataBuffers)
-        {
-            sample.renderer->destroyBuffer(fb);
-        }
-
-        sample.renderer->destroyBuffer(sample.indexBuffer);
-        sample.renderer->destroyBuffer(sample.vertexBuffer);
-        sample.renderer->destroyGraphicsPipeline(sample.graphicsPipeline);
-
+        // This will automatically cleanup all outstanding resources.
         destroyVulkanRenderer(sample.renderer);
     }
 
@@ -266,7 +247,7 @@ bool createShaderModule(Renderer* renderer, std::string const& path) noexcept
 
     if (!file.is_open())
     {
-        std::cout << "Failed to open '" << path << "'" << std::endl;
+        logError("Failed to open '", path, "'");
         return false;
     }
 
@@ -286,7 +267,7 @@ bool createShaderModule(Renderer* renderer, std::string const& path) noexcept
 
     if (!shaderModuleHandle.isValid())
     {
-        std::cout << "Failed to create shader module" << std::endl;
+        logError("Failed to created shader module");
         return false;
     }
 
@@ -383,7 +364,7 @@ bool createResources(SampleRenderState& sample) noexcept
     }
     else
     {
-        std::cout << "Failed to prepare resources for Renderer Sample" << std::endl;
+        logError("Failed to prepare resources for Renderer Sample");
     };
 
     sample.renderer->cmdBufferFlush(commandBufferHandle);
@@ -409,7 +390,7 @@ bool createGraphicsPipeline(SampleRenderState& sample) noexcept
 
     if (!shaderHandle.isValid())
     {
-        std::cout << "Failed to retrieve ShaderModuleHandle" << std::endl;
+        logError("Failed to retrieve ShaderModuleHandle");
         return {};
     }
 
@@ -457,7 +438,7 @@ bool createGraphicsPipeline(SampleRenderState& sample) noexcept
 
     if (!sample.graphicsPipeline.isValid())
     {
-        std::cout << "Failed to create GraphicsPipelineHandle" << std::endl;
+        logError("Failed to create GraphicsPipelineHandle");
         return false;
     }
 
@@ -500,7 +481,7 @@ bool createVertexBuffer(SampleRenderState& sample, CommandBufferHandle commandBu
 
     if (!sample.vertexBuffer.isValid())
     {
-        std::cout << "Failed to create vertex buffer" << std::endl;
+        logError("Failed to create vertex buffer");
         return false;
     }
 
@@ -508,7 +489,7 @@ bool createVertexBuffer(SampleRenderState& sample, CommandBufferHandle commandBu
 
     if (result != RendererResult::Success)
     {
-        std::cout << "Failed to write to vertex buffer with result " << static_cast<uint32_t>(result) << std::endl;
+        logError("Failed to write to vertex buffer with result ", static_cast<uint32_t>(result));
         return false;
     }
 
@@ -534,7 +515,7 @@ bool createIndexBuffer(SampleRenderState& sample, CommandBufferHandle commandBuf
 
     if (!sample.indexBuffer.isValid())
     {
-        std::cout << "Failed to create index buffer" << std::endl;
+        logError("Failed to create index buffer");
         return {};
     }
 
@@ -542,7 +523,7 @@ bool createIndexBuffer(SampleRenderState& sample, CommandBufferHandle commandBuf
 
     if (result != RendererResult::Success)
     {
-        std::cout << "Failed to write to vertex index with result " << static_cast<uint32_t>(result) << std::endl;
+        logError("Failed to write to vertex index with result ",static_cast<uint32_t>(result));
         return false;
     }
 
@@ -589,7 +570,7 @@ bool createFrameDataBuffer(SampleRenderState& sample) noexcept
 
     if (!frameBufferHandle.isValid())
     {
-        std::cout << "Failed to create frame data buffer" << std::endl;
+        logError("Failed to create frame data buffer");
         return false;
     }
 
@@ -658,7 +639,7 @@ bool createCameraDataBuffer(SampleRenderState& sample) noexcept
 
     if (!cameraBufferHandle.isValid())
     {
-        std::cout << "Failed to create camera data buffer" << std::endl;;
+        logError("Failed to create camera data buffer");
         return false;
     }
 
@@ -712,7 +693,7 @@ bool createTexture(SampleRenderState& sample, CommandBufferHandle commandBuffer)
 
     if (!sample.texture.isValid())
     {
-        std::cout << "Failed to create sample texture" << std::endl;
+        logError("Failed to create sample texture");
         return false;
     }
 
@@ -726,7 +707,7 @@ bool createTexture(SampleRenderState& sample, CommandBufferHandle commandBuffer)
 
     if (result != RendererResult::Success)
     {
-        std::cout << "Failed to write to sample texture with result " << static_cast<uint32_t>(result) << std::endl;
+        logError("Failed to write to sample texture with result ", static_cast<uint32_t>(result));
         return false;
     }
 
@@ -748,7 +729,7 @@ bool createSampler(SampleRenderState& sample) noexcept
 
     if (!sample.sampler.isValid())
     {
-        std::cout << "Failed to create sample sampler" << std::endl;
+        logError("Failed to create sample sampler");
         return false;
     }
 

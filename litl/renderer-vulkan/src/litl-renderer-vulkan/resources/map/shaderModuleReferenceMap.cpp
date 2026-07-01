@@ -97,16 +97,6 @@ namespace litl::vulkan
         auto find = m_shaderToGraphicsPipelineMap.find(shader->resourceId);
 
         LITL_ASSERT_MSG(find != m_shaderToGraphicsPipelineMap.end(), "ShaderModuleReferenceMap::mapGraphicsPipelineToShader provided unknown shader resource", );
-    
-        if constexpr (LITL_DEBUG)
-        {
-            // Make sure the pipeline isn't already mapped.
-            for (auto* trackedPipeline : find->second)
-            {
-                LITL_ASSERT_MSG(pipeline != trackedPipeline, "ShaderModuleReferenceMap::mapGraphicsPipelineToShader provided already tracked graphics pipeline", );
-                std::ignore = trackedPipeline; // get rid of the "unused variable" warning
-            }
-        }
 
         find->second.push_back(pipeline);
     }
@@ -150,16 +140,6 @@ namespace litl::vulkan
         auto find = m_shaderToComputePipelineMap.find(shader->resourceId);
 
         LITL_ASSERT_MSG(find != m_shaderToComputePipelineMap.end(), "ShaderModuleReferenceMap::mapComputePipelineToShader provided unknown shader resource", );
-
-        if constexpr (LITL_DEBUG)
-        {
-            // Make sure the pipeline isn't already mapped.
-            for (auto* trackedPipeline : find->second)
-            {
-                LITL_ASSERT_MSG(pipeline != trackedPipeline, "ShaderModuleReferenceMap::mapComputePipelineToShader provided already tracked compute pipeline", );
-                std::ignore = trackedPipeline; // get rid of the "unused variable" warning
-            }
-        }
 
         find->second.push_back(pipeline);
     }
