@@ -17,15 +17,7 @@ namespace litl::vulkan
 
     void ResourceManager::destroy() noexcept
     {
-        // ---- Graphics Pipelines
-
-        std::vector<GraphicsPipelineHandle> graphicsPipelineHandles;
-        m_graphicsPipelinePool.getAllHandles(graphicsPipelineHandles);
-
-        for (auto graphicsPipelineHandle : graphicsPipelineHandles)
-        {
-            destroyGraphicsPipeline(graphicsPipelineHandle);
-        }
+        vkDeviceWaitIdle(m_pContext->device.vkDevice);
 
         // ---- Command Buffers
 
@@ -35,6 +27,16 @@ namespace litl::vulkan
         for (auto commandBufferHandle : commandBufferHandles)
         {
             destroyCommandBuffer(commandBufferHandle);
+        }
+
+        // ---- Graphics Pipelines
+
+        std::vector<GraphicsPipelineHandle> graphicsPipelineHandles;
+        m_graphicsPipelinePool.getAllHandles(graphicsPipelineHandles);
+
+        for (auto graphicsPipelineHandle : graphicsPipelineHandles)
+        {
+            destroyGraphicsPipeline(graphicsPipelineHandle);
         }
 
         // ---- Pipeline Layouts

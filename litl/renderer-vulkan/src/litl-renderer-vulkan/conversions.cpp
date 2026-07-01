@@ -204,10 +204,12 @@ namespace litl::vulkan
         case DataFormat::BC6H_UFloat:
             return VkFormat::VK_FORMAT_BC6H_UFLOAT_BLOCK;
 
+        case DataFormat::Undefined:                     // Undefined is perfectly valid. For example, when disabling/not using depth or stencil targets.
+            return VkFormat::VK_FORMAT_UNDEFINED;
+
             // Fall-through
-        case DataFormat::Undefined:
         default:
-            logError("Unsupported ShaderResourceType '", static_cast<uint32_t>(format), "' defaulting to VkFormat::VK_FORMAT_UNDEFINED");
+            logError("Unsupported DataFormat '", static_cast<uint32_t>(format), "' defaulting to VkFormat::VK_FORMAT_UNDEFINED");
             return VkFormat::VK_FORMAT_UNDEFINED;
         }
     }
@@ -292,6 +294,8 @@ namespace litl::vulkan
             return DataFormat::BC6H_UFloat;
 
         case VkFormat::VK_FORMAT_UNDEFINED:
+            return DataFormat::Undefined;
+
         default:
             logError("Unsupported VkFormat '", format, "' defaulting to DataFormat::Undefined");
             return DataFormat::Undefined;
@@ -333,9 +337,10 @@ namespace litl::vulkan
         case ImageLayoutType::Present:
             return VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-        case ImageLayoutType::Undefined:
+        case ImageLayoutType::Undefined:        // Undefined is perfectly valid, especially with things such as barriers. For example our predefined PipelineBarrierUndefinedToColor
+            return VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+
         default:
-            logError("Unsupported ImageLayoutType '", static_cast<uint32_t>(layout), "' defaulting to VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED");
             return VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
         }
     }
@@ -372,8 +377,9 @@ namespace litl::vulkan
             return ImageLayoutType::Present;
 
         case VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED:
+            return ImageLayoutType::Undefined;
+
         default:
-            logError("Unsupported VkImageLayout '", layout, "' defaulting to ImageLayoutType::Undefined");
             return ImageLayoutType::Undefined;
         }
     }
