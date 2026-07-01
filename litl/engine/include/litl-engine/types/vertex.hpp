@@ -1,5 +1,5 @@
-#ifndef LITL_ENGINE_RENDERING_VERTEX_H__
-#define LITL_ENGINE_RENDERING_VERTEX_H__
+#ifndef LITL_ENGINE_TYPES_VERTEX_H__
+#define LITL_ENGINE_TYPES_VERTEX_H__
 
 #include "litl-core/math/types.hpp"
 
