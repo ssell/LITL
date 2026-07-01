@@ -54,12 +54,6 @@ namespace litl
         /// <summary>
         /// Updates the scene tree when the specified entity is to be untracked.
         /// Must call update after for the changes to fully take effect.
-        /// 
-        /// This action does NOT cascade. Any child entities will remain and
-        /// still reference the removed entity as their parent. This is intentional
-        /// as it (A) simplifies the removal implementation and (B) simplifies the
-        /// SceneChangeProcessor which is the primary user of this method.
-        /// 
         /// Note: this is a structural/topological change and can only be called by the appropriate internal systems.
         /// </summary>
         /// <param name="entity"></param>

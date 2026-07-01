@@ -1,6 +1,7 @@
 #include "tests.hpp"
 #include "litl-engine/scene/sceneChangeProcessor.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
+#include "litl-ecs/entity/entityRegistry.hpp"
 
 namespace litl::tests
 {
@@ -79,6 +80,7 @@ namespace litl::tests
 
     LITL_TEST_CASE("Basic Operations", "[engine::sceneChangeProcessor]")
     {
+        EntityRegistry::clear();
         World world{};
         Scene scene{ SceneConfig{} };
         SceneChangeProcessor processor{};
@@ -102,6 +104,7 @@ namespace litl::tests
 
     LITL_TEST_CASE("Remove Transform Untracks", "[engine::sceneChangeProcessor]")
     {
+        EntityRegistry::clear();
         World world{};
         Scene scene{ SceneConfig{} };
         SceneChangeProcessor processor{};
@@ -122,7 +125,7 @@ namespace litl::tests
     LITL_TEST_CASE("Cascade destroy", "[engine::sceneChangeProcessor]")
     {
         // Destroying an entity should also destroy all descendants.
-
+        EntityRegistry::clear();
         World world{};
         Scene scene{ SceneConfig{} };
         SceneChangeProcessor processor{};
@@ -133,6 +136,7 @@ namespace litl::tests
         Entity child1 = createTrackableEntity(world, changes);
         Entity gchild0 = createTrackableEntity(world, changes);
         Entity unrelated = createTrackableEntity(world, changes);
+        processChanges(processor, world, scene, changes);
 
         setParent(child0, parent, changes);
         setParent(child1, parent, changes);
@@ -164,7 +168,7 @@ namespace litl::tests
     LITL_TEST_CASE("Destroy child", "[engine::sceneChangeProcessor]")
     {
         // Destroying a child should not destroy other children or the parent.
-
+        EntityRegistry::clear();
         World world{};
         Scene scene{ SceneConfig{} };
         SceneChangeProcessor processor{};
@@ -175,6 +179,7 @@ namespace litl::tests
         Entity child1 = createTrackableEntity(world, changes);
         Entity gchild0 = createTrackableEntity(world, changes);
         Entity unrelated = createTrackableEntity(world, changes);
+        processChanges(processor, world, scene, changes);
 
         setParent(child0, parent, changes);
         setParent(child1, parent, changes);
@@ -204,10 +209,10 @@ namespace litl::tests
         REQUIRE(world.isAlive(unrelated) == true);
     } LITL_END_TEST_CASE
 
-        LITL_TEST_CASE("Reparent Prevents Destruction", "[engine::sceneChangeProcessor]")
+    LITL_TEST_CASE("Reparent Prevents Destruction", "[engine::sceneChangeProcessor]")
     {
         // If gchild0 is reparented to child1 at the same time child0 is destroyed, it should _not_ be destroyed.
-
+        EntityRegistry::clear();
         World world{};
         Scene scene{ SceneConfig{} };
         SceneChangeProcessor processor{};
@@ -218,6 +223,7 @@ namespace litl::tests
         Entity child1 = createTrackableEntity(world, changes);
         Entity gchild0 = createTrackableEntity(world, changes);
         Entity unrelated = createTrackableEntity(world, changes);
+        processChanges(processor, world, scene, changes);
 
         setParent(child0, parent, changes);
         setParent(child1, parent, changes);
@@ -251,7 +257,7 @@ namespace litl::tests
     LITL_TEST_CASE("Dedupe Destruction", "[engine::sceneChangeProcessor]")
     {
         // Explicitly calling destroy on a child whose parent is being destroyed should be deduped.
-
+        EntityRegistry::clear();
         World world{};
         Scene scene{ SceneConfig{} };
         SceneChangeProcessor processor{};
@@ -262,6 +268,7 @@ namespace litl::tests
         Entity child1 = createTrackableEntity(world, changes);
         Entity gchild0 = createTrackableEntity(world, changes);
         Entity unrelated = createTrackableEntity(world, changes);
+        processChanges(processor, world, scene, changes);
 
         setParent(child0, parent, changes);
         setParent(child1, parent, changes);
@@ -291,5 +298,32 @@ namespace litl::tests
         REQUIRE(world.isAlive(child1) == false);
         REQUIRE(world.isAlive(gchild0) == false);
         REQUIRE(world.isAlive(unrelated) == true);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("Assert on Invalid Entity", "[engine::sceneChangeProcessor]")
+    {
+        EntityRegistry::clear();
+        World world{};
+        Scene scene{ SceneConfig{} };
+        SceneChangeProcessor processor{};
+        std::vector<EntityChange> changes;
+
+        destroyEntity(Entity::null(), world, changes);
+
+        LITL_START_ASSERT_CAPTURE
+            processChanges(processor, world, scene, changes);
+        LITL_END_ASSERT_CAPTURE
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("No Changes", "[engine::sceneChangeProcesor]")
+    {
+        // Just make sure nothing crashes if no changes are provided.
+        EntityRegistry::clear();
+        World world{};
+        Scene scene{ SceneConfig{} };
+        SceneChangeProcessor processor{};
+        std::vector<EntityChange> changes;
+
+        processChanges(processor, world, scene, changes);
     } LITL_END_TEST_CASE
 }

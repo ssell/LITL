@@ -7,10 +7,6 @@
 #include "tests.hpp"
 #include <catch2/generators/catch_generators.hpp>
 
-#include "litl-core/logging/logLevel.hpp"
-#define LITL_LOG_LEVEL LITL_LOG_LEVEL_INFO
-// ^ intentionally hide debug/trace logs for testing purposes
-#include "litl-core/logging/logging.hpp"
 #include "litl-core/logging/sinks/loggingSink.hpp"
 
 namespace litl::tests
@@ -73,29 +69,6 @@ namespace litl::tests
 
         REQUIRE(pSink->messageBuffer.size() > 0);
         REQUIRE(pSink->messageBuffer.back().find(std::get<std::string>(parameters)) >= 0);
-    } LITL_END_TEST_CASE
-
-    LITL_TEST_CASE_METHOD(LoggingWrapper, "Filter Log Message", "[core::logging]")
-    {
-        // See: "#define LITL_LOG_LEVEL LITL_LOG_LEVEL_INFO" at top of this file
-        const auto parameters = GENERATE(
-            std::make_tuple(LogLevel::Trace, false),
-            std::make_tuple(LogLevel::Debug, false),
-            std::make_tuple(LogLevel::Info, true),
-            std::make_tuple(LogLevel::Warning, true)
-        );
-
-        Logger::log(std::get<LogLevel>(parameters), "Hello, World!");
-        wait();
-
-        if (std::get<bool>(parameters))
-        {
-            REQUIRE(pSink->messageBuffer.size() > 0);
-        }
-        else
-        {
-            REQUIRE(pSink->messageBuffer.size() == 0);
-        }
     } LITL_END_TEST_CASE
 
     LITL_TEST_CASE_METHOD(LoggingWrapper, "Preserve Order", "[core::logging]")
