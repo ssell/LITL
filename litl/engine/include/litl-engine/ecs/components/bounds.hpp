@@ -2,7 +2,7 @@
 #define LITL_ENGINE_ECS_COMPONENTS_BOUNDS_H__
 
 #include "litl-core/math/bounds.hpp"
-#include "litl-ecs/constants.hpp"
+#include "litl-ecs/register.hpp"
 
 namespace litl
 {
@@ -27,12 +27,9 @@ namespace litl
         /// </summary>
         uint32_t version{ Constants::uint32_null_index };
     };
-
-    static_assert(ValidComponentType<litl::LocalBounds>);
-    static_assert(ValidComponentType<litl::WorldBounds>);
 }
 
-REGISTER_TYPE_NAME(litl::LocalBounds);
-REGISTER_TYPE_NAME(litl::WorldBounds);
+LITL_REGISTER_COMPONENT(litl::LocalBounds);
+LITL_REGISTER_COMPONENT(litl::WorldBounds);
 
 #endif

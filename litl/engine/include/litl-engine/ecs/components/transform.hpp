@@ -2,6 +2,7 @@
 #define LITL_ENGINE_ECS_COMPONENTS_TRANSFORM_H__
 
 #include "litl-core/math.hpp"
+#include "litl-ecs/register.hpp"
 #include "litl-ecs/world.hpp"
 #include "litl-ecs/entity/entity.hpp"
 #include "litl-ecs/entity/parentEntity.hpp"
@@ -95,9 +96,8 @@ namespace litl
         ParentEntity parent{};
     };
 
-    static_assert(ValidComponentType<litl::Transform>);
 }
 
-REGISTER_TYPE_NAME(litl::Transform);
+LITL_REGISTER_COMPONENT(litl::Transform);
 
 #endif

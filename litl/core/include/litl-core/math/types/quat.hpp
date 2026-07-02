@@ -333,6 +333,6 @@ namespace litl
     static_assert(std::is_nothrow_move_assignable_v<quat>);
 }
 
-REGISTER_TYPE_NAME(litl::quat)
+LITL_REGISTER_TYPE_NAME(litl::quat)
 
 #endif

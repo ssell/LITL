@@ -61,6 +61,6 @@ namespace litl
 }
 
 // Typically needs to be called outside of any enclosing namespace.
-#define REGISTER_TYPE_NAME(T) template<> struct litl::TypeName<T> { static constexpr std::string_view value = #T; };                                                \
+#define LITL_REGISTER_TYPE_NAME(T) template<> struct litl::TypeName<T> { static constexpr std::string_view value = #T; };                                                \
 
 #endif

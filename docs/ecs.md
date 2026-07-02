@@ -102,7 +102,7 @@ Removal is **swap-and-pop**: `removeAndSwap` moves the last entity into the vaca
 
 ## Components
 
-A component is any type satisfying `ValidComponentType`: standard layout and no larger than `max_component_size` (1024 bytes). For a type to be used a component the `REGISTER_TYPE_NAME` macro must be used on it - typically outside of the owning namespace. Example:
+A component is any type satisfying `ValidComponentType`: standard layout and no larger than `max_component_size` (1024 bytes). For a type to be used a component the `LITL_REGISTER_TYPE_NAME` macro must be used on it - typically outside of the owning namespace. Example:
 
 ```cpp
 namespace game
@@ -114,7 +114,7 @@ namespace game
     };
 }
 
-REGISTER_TYPE_NAME(game::Health);
+LITL_REGISTER_TYPE_NAME(game::Health);
 ```
 
 ### Descriptors and the two ids
@@ -126,7 +126,7 @@ REGISTER_TYPE_NAME(game::Health);
 - **`size` / `alignment`** — for chunk layout.
 - **`build` / `move` / `destroy`** — function pointers that placement-new, move-construct, and destroy a `T` at a given address. This is how chunk code manipulates type-erased component bytes without ever naming `T`.
 
-`stableId` is the reason that `REGISTER_TYPE_NAME` needs to be called on each prospective component type.
+`stableId` is the reason that `LITL_REGISTER_TYPE_NAME` needs to be called on each prospective component type.
 
 ```cpp
 build   = [](void* to)              { new (to) T(); };

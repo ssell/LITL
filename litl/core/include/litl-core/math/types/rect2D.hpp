@@ -18,6 +18,6 @@ namespace litl
     static_assert(std::is_nothrow_move_assignable_v<rect2D>);
 }
 
-REGISTER_TYPE_NAME(litl::rect2D)
+LITL_REGISTER_TYPE_NAME(litl::rect2D)
 
 #endif

@@ -509,7 +509,7 @@ namespace litl
     static_assert(std::is_nothrow_move_assignable_v<mat3>);
 }
 
-REGISTER_TYPE_NAME(litl::mat3)
+LITL_REGISTER_TYPE_NAME(litl::mat3)
 
 // ... todo from quat when it is added ...
 
