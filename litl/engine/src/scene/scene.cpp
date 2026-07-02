@@ -82,9 +82,16 @@ namespace litl
             std::visit([&](auto& partition) { partition.query(frustum, entities); }, partition);
         }
 
-        void sync() noexcept
+        void onPreRender() noexcept
         {
+            // Update the graph to account for structural changes: create, destroy, reparent.
             graph.update();
+
+            // Update the world transforms for the frame.
+            // ... todo ...
+
+            // Update the scene partition based on the newly minted transforms.
+            // ... todo ...
         }
     };
 
@@ -171,8 +178,8 @@ namespace litl
         m_impl->query(frustum, entities);
     }
 
-    void Scene::sync() noexcept
+    void Scene::onPreRender(Authority<SceneManager> authority) noexcept
     {
-        m_impl->sync();
+        m_impl->onPreRender();
     }
 }

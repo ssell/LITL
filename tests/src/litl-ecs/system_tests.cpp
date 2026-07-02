@@ -8,7 +8,7 @@ namespace litl::tests
 {
     struct TraitsTestSystem
     {
-        void setup(ServiceProvider& service) {};
+        void setup(ServiceProvider& services) {};
         void update(EntityCommands& commands, float dt, Foo const& read, Bar& write) {}
     };
 

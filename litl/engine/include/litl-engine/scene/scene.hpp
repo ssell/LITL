@@ -1,14 +1,16 @@
 #ifndef LITL_ENGINE_SCENE_H__
 #define LITL_ENGINE_SCENE_H__
 
+#include "litl-core/authority.hpp"
 #include "litl-core/impl.hpp"
 #include "litl-core/math/bounds.hpp"
-
 #include "litl-engine/scene/sceneConfig.hpp"
 #include "litl-engine/ecs/components/transform.hpp"
 
 namespace litl
 {
+    class SceneManager;
+
     /// <summary>
     /// Responsible for tracking entities and their relationships to each other.
     /// 
@@ -130,9 +132,11 @@ namespace litl
         void query(bounds::Frustum frustum, std::vector<Entity>& entities) const noexcept;
 
         /// <summary>
-        /// Syncs all hierarchical changes (parent/child) and any newly added or removed entities.
+        /// Invoked once per-frame immediately before the PreRender ECS group.
+        /// Updates scene hierarchy, world transforms, and spatial partition.
         /// </summary>
-        void sync() noexcept;
+        /// <param name="authority"></param>
+        void onPreRender(Authority<SceneManager> authority) noexcept;
 
     protected:
 
