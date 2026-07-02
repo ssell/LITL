@@ -6,12 +6,12 @@
 #include "litl-core/impl.hpp"
 #include "litl-engine/scene/scene.hpp"
 #include "litl-engine/scene/sceneConfig.hpp"
-#include "litl-core/services/serviceProvider.hpp"
 
 namespace litl
 {
     class Engine;
     class World;
+    class ServiceProvider;
     struct EntityChange;
 
     /// <summary>

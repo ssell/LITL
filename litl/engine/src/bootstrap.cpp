@@ -1,6 +1,7 @@
 #include "litl-engine/bootstrap.hpp"
 #include "litl-engine/config.hpp"
 #include "litl-engine/frameLimiter.hpp"
+#include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/scene/sceneManager.hpp"
 #include "litl-engine/scene/sceneView.hpp"
 #include "litl-renderer/window.hpp"
@@ -17,6 +18,7 @@ namespace litl::Internal
         services.addSingleton<World>();
         services.addSingleton<Window>();
         services.addSingleton<Renderer>();
+        services.addSingleton<ObjectPool>();
         services.addSingleton<SceneManager>();
         services.addSingleton<SceneView>();
         //m_pImpl->serviceCollection.addSingleton<RefPtr<CommandBuffer>>();
