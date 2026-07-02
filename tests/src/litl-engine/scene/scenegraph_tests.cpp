@@ -1,18 +1,9 @@
 #include "tests.hpp"
 #include "litl-engine/scene/sceneGraph.hpp"
+#include "litl-engine/scene/sceneChangeProcessor.hpp"
 
 namespace litl::tests
 {
-    namespace
-    {
-        struct TestParentEntityWriteKey : ParentEntityWriteKey
-        {
-            TestParentEntityWriteKey() {}
-        };
-
-        static TestParentEntityWriteKey ParentWriteKey{};
-    }
-
     LITL_TEST_CASE("add and remove", "[engine::scenegraph]")
     {
         SceneGraph sceneGraph;
@@ -49,21 +40,21 @@ namespace litl::tests
         Transform childTransform{};
         Transform parentTransform{};
 
-        childTransform.getParent().set(parent, ParentWriteKey);
+        childTransform.getParent().set(parent, Authority<SceneChangeProcessor>::mint());
 
         // fail to add child with removed parent
         LITL_START_ASSERT_CAPTURE
             sceneGraph.add(child, childTransform);
         LITL_END_ASSERT_CAPTURE
 
-        childTransform.getParent().set(child, ParentWriteKey);
+        childTransform.getParent().set(child, Authority<SceneChangeProcessor>::mint());
 
         // fail to add child with self parentage
         LITL_START_ASSERT_CAPTURE
             sceneGraph.add(child, childTransform);
         LITL_END_ASSERT_CAPTURE
 
-        childTransform.getParent().set(parent, ParentWriteKey);
+        childTransform.getParent().set(parent, Authority<SceneChangeProcessor>::mint());
 
         sceneGraph.add(parent, parentTransform);
         sceneGraph.add(child, childTransform);

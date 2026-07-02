@@ -1,24 +1,12 @@
 #ifndef LITL_ECS_ENTITY_PARENT_ENTITY_H__
 #define LITL_ECS_ENTITY_PARENT_ENTITY_H__
 
+#include "litl-core/authority.hpp"
 #include "litl-ecs/entity/entity.hpp"
 
 namespace litl
 {
     class SceneChangeProcessor;
-
-    /// <summary>
-    /// The passkey that allows a class to set the parent of an entity.
-    /// Only those classes marked as friends can create the passkey and
-    /// thus are able to set the value.
-    /// </summary>
-    struct ParentEntityWriteKey
-    {
-    protected:
-
-        ParentEntityWriteKey() = default;
-        friend class SceneChangeProcessor;
-    };
 
     /// <summary>
     /// Wrapper around the parent entity to avoid accidental non-deferred parent writes.
@@ -40,12 +28,12 @@ namespace litl
             return value;
         }
 
-        constexpr void set(Entity parent, ParentEntityWriteKey) noexcept
+        constexpr void set(Entity parent, Authority<SceneChangeProcessor> authority) noexcept
         {
             value = parent;
         }
 
-        [[nodiscard]] static ParentEntity create(Entity parent, ParentEntityWriteKey) noexcept
+        [[nodiscard]] static ParentEntity create(Entity parent, Authority<SceneChangeProcessor> authority) noexcept
         {
             return ParentEntity{ parent };
         }

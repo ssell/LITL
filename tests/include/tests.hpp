@@ -1,6 +1,8 @@
 #ifndef LITL_TESTS_H__
 #define LITL_TESTS_H__
 
+#define LITL_TEST_SUITE
+
 #include <chrono>
 #include <catch2/catch_test_macros.hpp>
 #include <iomanip>
