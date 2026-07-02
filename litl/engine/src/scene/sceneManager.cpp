@@ -28,6 +28,16 @@ namespace litl
 
             sceneChangeProcessor.process(*scenes[activeIndex], world, entityChanges);
         }
+
+        void onPreRender() noexcept
+        {
+            if (scenes.empty())
+            {
+                return;
+            }
+
+            scenes[activeIndex]->onPreRender(Authority<SceneManager>{});
+        }
     };
 
     SceneManager::SceneManager()
@@ -40,7 +50,7 @@ namespace litl
 
     }
 
-    void SceneManager::setup(ServiceProvider& services) noexcept
+    void SceneManager::setup(Authority<Engine> authority, ServiceProvider& services) noexcept
     {
         m_impl->view = services.get<SceneView>();
     }
@@ -75,8 +85,13 @@ namespace litl
         // ... todo whatever is actually needed to swap to a different scene ...
     }
 
-    void SceneManager::processEntityChanges(World& world, std::span<EntityChange const> entityChanges) noexcept
+    void SceneManager::processEntityChanges(Authority<EngineCallbacks> authority, World& world, std::span<EntityChange const> entityChanges) noexcept
     {
         m_impl->processEntityChanges(world, entityChanges);
+    }
+
+    void SceneManager::onPreRender(Authority<EngineCallbacks> authority) noexcept
+    {
+        m_impl->onPreRender();
     }
 }

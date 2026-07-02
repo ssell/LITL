@@ -99,8 +99,6 @@ namespace litl
                 world.destroyImmediate(doomedEntity);       // Safe to call immediate here because we are at a sync point already (or should be!)
             }
         }
-
-        scene.sync();
     }
 
     void SceneChangeProcessor::sortCommands(std::span<EntityChange const> entityChanges) noexcept

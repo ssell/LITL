@@ -1,4 +1,5 @@
 #include "litl-engine/engineCallbacks.hpp"
+#include "litl-core/authority.hpp"
 
 namespace litl
 {
@@ -12,8 +13,8 @@ namespace litl
         LITL_FATAL_ASSERT_MSG(m_pSceneManager != nullptr, "Failed to inject litl::SceneManager into EngineCallbacks");
 
         m_pFrameCallbacks->onFrameStart = [this]()
-            {
                 // ... todo anything else? ...
+            {
 
                 m_pUserFrameCallbacks->invokeFrameStart();
             };
@@ -38,7 +39,7 @@ namespace litl
 
         m_pFrameCallbacks->onSyncPoint = [this](SystemGroup group, std::span<EntityChange const> entityChanges)
             {
-                m_pSceneManager->processEntityChanges(*m_pWorld, entityChanges);
+                m_pSceneManager->processEntityChanges(Authority<EngineCallbacks>{}, * m_pWorld, entityChanges);
                 m_pUserFrameCallbacks->invokeSyncPoint(group, entityChanges);
             };
 
@@ -103,12 +104,7 @@ namespace litl
 
         m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::PreRender)] = [this](SystemGroup group)
             {
-                // ... todo ...
-                // rebuild scene graph topological order
-                // propagate world transforms -> write to mapped SSBO
-                // update world bounds
-                // update scene partition with new world positions / bounds
-
+                m_pSceneManager->onPreRender(Authority<EngineCallbacks>{});
                 m_pUserFrameCallbacks->invokePreGroup(group);
             };
 

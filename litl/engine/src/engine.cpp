@@ -99,7 +99,7 @@ namespace litl
         m_pImpl->pSharedSceneManager = m_pImpl->pServiceProvider->get<SceneManager>();
 
         m_pImpl->pSharedObjectPool->setup((*m_pImpl->pServiceProvider));
-        m_pImpl->pSharedSceneManager->setup((*m_pImpl->pServiceProvider));
+        m_pImpl->pSharedSceneManager->setup(Authority<Engine>{}, (*m_pImpl->pServiceProvider));
 
         m_pImpl->pSharedConfig->set(config);
         m_pImpl->pSharedFrameLimiter->setTargetFps(static_cast<float>(m_pImpl->pSharedConfig->engineSettings.framesPerSecond));
