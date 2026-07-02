@@ -10,24 +10,56 @@
 
 namespace litl
 {
+    class ObjectPool;
+
     class GpuBuffer
     {
     public:
 
-        void setData(std::span<std::byte const> data) noexcept
-        {
-            m_data.clear();
-            m_data.assign(data.begin(), data.end());
-        }
+        /// <summary>
+        /// Retrieves the descriptor that was used to create this buffer.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] GpuBufferDescriptor const& getDescriptor() const noexcept;
 
-        [[nodiscard]] std::span<std::byte const> getData() const noexcept
-        {
-            return m_data;
-        }
+        /// <summary>
+        /// Retrieves the handle of the underlying GPU buffer.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] BufferHandle getBufferHandle() const noexcept;
+
+        /// <summary>
+        /// Sets the data in the buffer.
+        /// </summary>
+        /// <param name="data"></param>
+        void setData(std::span<std::byte const> data) noexcept;
+
+        /// <summary>
+        /// Retrieves the data in the buffer if it has not been disposed.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] std::span<std::byte const> getData() const noexcept;
 
     private:
 
+        friend class ObjectPool;
+
+        void create(GpuBufferDescriptor const& descriptor) noexcept;
+
+        /// <summary>
+        /// The descriptor that created the mesh.
+        /// </summary>
+        GpuBufferDescriptor m_descriptor;
+
+        /// <summary>
+        /// The underlying GPU buffer.
+        /// </summary>
         BufferHandle m_handle{};
+
+        /// <summary>
+        /// The CPU-side buffer data. 
+        /// Depending on the buffer configuration this may be held only temporarily.
+        /// </summary>
         std::vector<std::byte> m_data;
     };
 }

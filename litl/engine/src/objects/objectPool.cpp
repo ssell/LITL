@@ -20,9 +20,7 @@ namespace litl
     GpuBufferHandle ObjectPool::createGpuBuffer(GpuBufferDescriptor const& descriptor) noexcept
     {
         GpuBuffer buffer{};
-
-        // ... todo ...
-
+        buffer.create(descriptor);
         return m_gpuBufferPool.create(buffer);
     }
 
