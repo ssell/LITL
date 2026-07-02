@@ -14,8 +14,8 @@ namespace litl::tests
     };
 }
 
-REGISTER_TYPE_NAME(litl::tests::Foo)
-REGISTER_TYPE_NAME(litl::tests::Bar)
+LITL_REGISTER_TYPE_NAME(litl::tests::Foo)
+LITL_REGISTER_TYPE_NAME(litl::tests::Bar)
 
 namespace litl::tests
 {

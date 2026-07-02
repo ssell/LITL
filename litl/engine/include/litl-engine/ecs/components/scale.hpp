@@ -2,7 +2,7 @@
 #define LITL_ENGINE_ECS_COMPONENTS_SCALE_H__
 
 #include "litl-core/math.hpp"
-#include "litl-ecs/entity/entity.hpp"
+#include "litl-ecs/register.hpp"
 
 namespace litl
 {
@@ -18,6 +18,6 @@ namespace litl
     };
 }
 
-REGISTER_TYPE_NAME(litl::NonUniformScale);
+LITL_REGISTER_COMPONENT(litl::NonUniformScale);
 
 #endif

@@ -50,8 +50,8 @@ namespace litl::tests
     };
 }
 
-REGISTER_TYPE_NAME(litl::tests::Foo)
-REGISTER_TYPE_NAME(litl::tests::Bar)
-REGISTER_TYPE_NAME(litl::tests::Baz)
+LITL_REGISTER_TYPE_NAME(litl::tests::Foo)
+LITL_REGISTER_TYPE_NAME(litl::tests::Bar)
+LITL_REGISTER_TYPE_NAME(litl::tests::Baz)
 
 #endif

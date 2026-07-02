@@ -71,6 +71,6 @@ namespace litl
     }
 }
 
-REGISTER_TYPE_NAME(litl::color)
+LITL_REGISTER_TYPE_NAME(litl::color)
 
 #endif

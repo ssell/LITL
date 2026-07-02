@@ -487,4 +487,4 @@ namespace litl::tests
     } LITL_END_TEST_CASE
 }
 
-REGISTER_TYPE_NAME(litl::tests::ComponentCtorDtorCallTest::CtorDtorTestComponent)
+LITL_REGISTER_TYPE_NAME(litl::tests::ComponentCtorDtorCallTest::CtorDtorTestComponent)

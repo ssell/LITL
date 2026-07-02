@@ -120,5 +120,5 @@ namespace litl::tests
     } LITL_END_TEST_CASE
 }
 
-REGISTER_TYPE_NAME(litl::tests::NewArchetypesTest::Apple);
-REGISTER_TYPE_NAME(litl::tests::NewArchetypesTest::Orange);
+LITL_REGISTER_TYPE_NAME(litl::tests::NewArchetypesTest::Apple);
+LITL_REGISTER_TYPE_NAME(litl::tests::NewArchetypesTest::Orange);

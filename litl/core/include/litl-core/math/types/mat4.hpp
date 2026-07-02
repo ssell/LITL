@@ -619,6 +619,6 @@ namespace litl
     static_assert(std::is_nothrow_move_assignable_v<mat4>);
 }
 
-REGISTER_TYPE_NAME(litl::mat4)
+LITL_REGISTER_TYPE_NAME(litl::mat4)
 
 #endif

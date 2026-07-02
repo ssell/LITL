@@ -349,6 +349,6 @@ namespace litl
     static_assert(std::is_nothrow_move_assignable_v<vec4>);
 }
 
-REGISTER_TYPE_NAME(litl::vec4)
+LITL_REGISTER_TYPE_NAME(litl::vec4)
 
 #endif
