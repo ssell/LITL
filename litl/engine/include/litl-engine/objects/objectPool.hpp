@@ -1,12 +1,16 @@
 #ifndef LITL_ENGINE_OBJECT_POOLS_H__
 #define LITL_ENGINE_OBJECT_POOLS_H__
 
+#include "litl-core/impl.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
 #include "litl-engine/objects/mesh/mesh.hpp"
 #include "litl-engine/objects/buffer/gpuBuffer.hpp"
 
 namespace litl
 {
+    class Engine;
+    class ServiceProvider;
+
     class ObjectPool
     {
     public:
@@ -27,8 +31,12 @@ namespace litl
 
     private:
 
-        HandlePool<GpuBuffer, GpuBufferHandleTag> m_gpuBufferPool;
-        HandlePool<Mesh, MeshHandleTag> m_meshPool;
+        friend class Engine;
+
+        void setup(ServiceProvider& services) noexcept;
+
+        struct Impl;
+        ImplPtr<Impl, 512> m_impl;
     };
 }
 

@@ -1,8 +1,19 @@
+#include <memory>
+
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-core/assert.hpp"
+#include "litl-core/services/serviceProvider.hpp"
+#include "litl-renderer/renderer.hpp"
 
 namespace litl
 {
+    struct ObjectPool::Impl
+    {
+        std::shared_ptr<Renderer> renderer;
+        HandlePool<GpuBuffer, GpuBufferHandleTag> gpuBufferPool;
+        HandlePool<Mesh, MeshHandleTag> meshPool;
+    };
+
     ObjectPool::ObjectPool()
     {
 
@@ -13,6 +24,11 @@ namespace litl
 
     }
 
+    void ObjectPool::setup(ServiceProvider& services) noexcept
+    {
+        m_impl->renderer = services.get<Renderer>();
+    }
+
     //--------------------------------------------------------------------------------------
     // GpuBuffer
     //--------------------------------------------------------------------------------------
@@ -21,12 +37,12 @@ namespace litl
     {
         GpuBuffer buffer{};
         buffer.create(descriptor);
-        return m_gpuBufferPool.create(buffer);
+        return m_impl->gpuBufferPool.create(buffer);
     }
 
     GpuBuffer* ObjectPool::getGpuBuffer(GpuBufferHandle handle) noexcept
     {
-        return m_gpuBufferPool.get(handle);
+        return m_impl->gpuBufferPool.get(handle);
     }
 
     void ObjectPool::destroyGpuBuffer(GpuBufferHandle handle) noexcept
@@ -37,7 +53,7 @@ namespace litl
         {
             // ... todo ...
 
-            m_gpuBufferPool.destroy(handle);
+            m_impl->gpuBufferPool.destroy(handle);
         }
     }
 
@@ -64,12 +80,12 @@ namespace litl
 
         mesh.create(this, descriptor, vertexBuffer, indexBuffer);
 
-        return m_meshPool.create(mesh);
+        return m_impl->meshPool.create(mesh);
     }
 
     Mesh* ObjectPool::getMesh(MeshHandle handle) noexcept
     {
-        return m_meshPool.get(handle);
+        return m_impl->meshPool.get(handle);
     }
 
     void ObjectPool::destroyMesh(MeshHandle handle) noexcept
@@ -80,7 +96,7 @@ namespace litl
         {
             // ... todo ...
 
-            m_meshPool.destroy(handle);
+            m_impl->meshPool.destroy(handle);
         }
     }
 }
