@@ -4,6 +4,17 @@
 
 namespace litl
 {
+    void GpuBuffer::swapBuffers() noexcept
+    {
+        // Works for double, triple, etc. incremental buffering.
+        m_currentHandle = (m_currentHandle + 1) % m_handles.size();
+    }
+
+    void GpuBuffer::swapBuffers(uint32_t frameIndex) noexcept
+    {
+        LITL_ASSERT_MSG((frameIndex < m_handles.size()), "Requested to buffer swap to invalid index.", );
+        m_currentHandle = frameIndex;
+    }
     void GpuBuffer::create(GpuBufferDescriptor const& descriptor) noexcept
     {
         m_descriptor = descriptor;
@@ -16,7 +27,7 @@ namespace litl
 
     BufferHandle GpuBuffer::getBufferHandle() const noexcept
     {
-        return m_handle;
+        return m_handles[m_currentHandle];
     }
 
     void GpuBuffer::setData(std::span<std::byte const> data) noexcept

@@ -14,7 +14,7 @@ add_library(litl-engine STATIC
 	"src/scene/sceneChangeProcessor.cpp"
 	"src/containers/containerSpecializations.cpp"
 	"src/objects/objectPool.cpp" 
-	"src/objects/mesh/mesh.cpp" "src/objects/buffer/gpuBuffer.cpp" )
+	"src/objects/mesh/mesh.cpp" "src/objects/buffer/gpuBuffer.cpp"  "src/scene/sceneTransforms.cpp")
 
 target_include_directories(litl-engine
 	PUBLIC
