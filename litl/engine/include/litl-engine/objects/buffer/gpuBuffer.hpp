@@ -17,6 +17,21 @@ namespace litl
     public:
 
         /// <summary>
+        /// Swaps the underlying buffers.
+        /// Use this swap if the buffer was created with GpuBufferingStrategy::Double.
+        /// </summary>
+        void swapBuffers() noexcept;
+
+        /// <summary>
+        /// Swaps the underlying buffers.
+        /// 
+        /// Input is the current frame-in-flight index. Use this swap if the buffer
+        /// was created with GpuBufferingStrategy::Frame.
+        /// </summary>
+        /// <param name="frameIndex"></param>
+        void swapBuffers(uint32_t frameIndex) noexcept;
+
+        /// <summary>
         /// Retrieves the descriptor that was used to create this buffer.
         /// </summary>
         /// <returns></returns>
@@ -52,9 +67,15 @@ namespace litl
         GpuBufferDescriptor m_descriptor;
 
         /// <summary>
-        /// The underlying GPU buffer.
+        /// The current underlying buffer being written to.
         /// </summary>
-        BufferHandle m_handle{};
+        uint32_t m_currentHandle = 0u;
+
+        /// <summary>
+        /// The underlying GPU buffers. There may be multiple buffers depending 
+        /// on the GpuBufferingStrategy that the buffer was created with.
+        /// </summary>
+        std::vector<BufferHandle> m_handles;
 
         /// <summary>
         /// The CPU-side buffer data. 
