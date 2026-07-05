@@ -1,8 +1,10 @@
 #include <variant>
 
 #include "litl-core/assert.hpp"
+#include "litl-ecs/world.hpp"
 #include "litl-engine/scene/scene.hpp"
 #include "litl-engine/scene/sceneGraph.hpp"
+#include "litl-engine/scene/sceneTransforms.hpp"
 #include "litl-engine/scene/partition/scenePartition.hpp"
 #include "litl-engine/scene/partition/nullPartition.hpp"
 #include "litl-engine/scene/partition/uniformGridPartition.hpp"
@@ -17,6 +19,7 @@ namespace litl
 
     struct Scene::Impl
     {
+        SceneTransforms transforms;
         SceneGraph graph;
         ScenePartitionVariant partition;
 
@@ -82,13 +85,31 @@ namespace litl
             std::visit([&](auto& partition) { partition.query(frustum, entities); }, partition);
         }
 
-        void onPreRender() noexcept
+        void onPreRender(World const& world) noexcept
         {
             // Update the graph to account for structural changes: create, destroy, reparent.
             graph.update();
 
             // Update the world transforms for the frame.
-            // ... todo ...
+            for (auto sortedIndex : graph.m_sortedNodes)
+            {
+                auto localTransform = world.getComponent<Transform>(graph.m_nodeToEntity[sortedIndex]);
+
+                if (localTransform.has_value())
+                {
+                    mat4 worldMatrix = localTransform->getWorldMatrix();
+                    uint32_t parentIndex = graph.m_nodeParent[sortedIndex];
+
+                    if (graph.m_nodeParent[sortedIndex] != Constants::uint32_null_index)
+                    {
+                        // This node has a parent. Use it to calculate the world transform.
+                        worldMatrix = transforms.getWorldMatrix(graph.m_nodeGpuIndex[parentIndex]) * worldMatrix;
+                    }
+
+                    transforms.setWorldMatrix(graph.m_nodeGpuIndex[sortedIndex], worldMatrix);
+                }
+
+            }
 
             // Update the scene partition based on the newly minted transforms.
             // ... todo ...
@@ -106,6 +127,8 @@ namespace litl
         default:
             LITL_ASSERT_MSG(false, "Unsupported Scene Partition strategy.", );
         }
+
+        m_impl->transforms.reserve(1024u);
     }
 
     Scene::~Scene()
@@ -178,8 +201,8 @@ namespace litl
         m_impl->query(frustum, entities);
     }
 
-    void Scene::onPreRender(Authority<SceneManager> authority) noexcept
+    void Scene::onPreRender(Authority<SceneManager> authority, World const& world) noexcept
     {
-        m_impl->onPreRender();
+        m_impl->onPreRender(world);
     }
 }

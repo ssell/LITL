@@ -104,7 +104,7 @@ namespace litl
 
         m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::PreRender)] = [this](SystemGroup group)
             {
-                m_pSceneManager->onPreRender(Authority<EngineCallbacks>{});
+                m_pSceneManager->onPreRender(Authority<EngineCallbacks>{}, *m_pWorld);
                 m_pUserFrameCallbacks->invokePreGroup(group);
             };
 

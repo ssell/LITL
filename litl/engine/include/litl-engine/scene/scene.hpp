@@ -10,6 +10,7 @@
 namespace litl
 {
     class SceneManager;
+    class World;
 
     /// <summary>
     /// Responsible for tracking entities and their relationships to each other.
@@ -136,14 +137,14 @@ namespace litl
         /// Updates scene hierarchy, world transforms, and spatial partition.
         /// </summary>
         /// <param name="authority"></param>
-        void onPreRender(Authority<SceneManager> authority) noexcept;
+        void onPreRender(Authority<SceneManager> authority, World const& world) noexcept;
 
     protected:
 
     private:
 
         struct Impl;
-        ImplPtr<Impl, 544> m_impl;
+        ImplPtr<Impl, 600> m_impl;
     };
 }
 
