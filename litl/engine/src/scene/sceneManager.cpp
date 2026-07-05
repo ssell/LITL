@@ -29,14 +29,14 @@ namespace litl
             sceneChangeProcessor.process(*scenes[activeIndex], world, entityChanges);
         }
 
-        void onPreRender() noexcept
+        void onPreRender(World& world) noexcept
         {
             if (scenes.empty())
             {
                 return;
             }
 
-            scenes[activeIndex]->onPreRender(Authority<SceneManager>{});
+            scenes[activeIndex]->onPreRender(Authority<SceneManager>{}, world);
         }
     };
 
@@ -90,8 +90,8 @@ namespace litl
         m_impl->processEntityChanges(world, entityChanges);
     }
 
-    void SceneManager::onPreRender(Authority<EngineCallbacks> authority) noexcept
+    void SceneManager::onPreRender(Authority<EngineCallbacks> authority, World& world) noexcept
     {
-        m_impl->onPreRender();
+        m_impl->onPreRender(world);
     }
 }

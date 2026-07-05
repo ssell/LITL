@@ -15,17 +15,17 @@ namespace litl
     /// </summary>
     struct Transform
     {
-        quat getRotation() const noexcept
+        [[nodiscard]] quat getRotation() const noexcept
         {
             return rotation;
         }
 
-        vec3 getPosition() const noexcept
+        [[nodiscard]] vec3 getPosition() const noexcept
         {
             return position;
         }
 
-        float getUniformScale() const noexcept
+        [[nodiscard]] float getUniformScale() const noexcept
         {
             return uniformScale;
         }
@@ -53,14 +53,34 @@ namespace litl
             return version;
         }
 
-        ParentEntity const& getParent() const noexcept
+        [[nodiscard]] ParentEntity const& getParent() const noexcept
         {
             return parent;
         }
 
-        ParentEntity& getParent() noexcept
+        [[nodiscard]] ParentEntity& getParent() noexcept
         {
             return parent;
+        }
+
+        [[nodiscard]] mat4 getWorldMatrix() const noexcept
+        {
+            mat4 worldMatrix{};
+
+            const float x2 = rotation.x() + rotation.x();
+            const float y2 = rotation.y() + rotation.y();
+            const float z2 = rotation.z() + rotation.z();
+
+            const float xx = rotation.x() * x2, xy = rotation.x() * y2, xz = rotation.x() * z2;
+            const float yy = rotation.y() * y2, yz = rotation.y() * z2, zz = rotation.z() * z2;
+            const float wx = rotation.w() * x2, wy = rotation.w() * y2, wz = rotation.w() * z2;
+
+            worldMatrix.setCol(0, { uniformScale * (1.0f - (yy + zz)), uniformScale * (xy + wz),          uniformScale * (xz - wy),          0.0f });
+            worldMatrix.setCol(1, { uniformScale * (xy - wz),          uniformScale * (1.0f - (xx + zz)), uniformScale * (yz + wx),          0.0f });
+            worldMatrix.setCol(2, { uniformScale * (xz + wy),          uniformScale * (yz - wx),          uniformScale * (1.0f - (xx + yy)), 0.0f });
+            worldMatrix.setCol(3, { position.x(),                      position.y(),                      position.z(),                      1.0f });
+
+            return worldMatrix;
         }
 
     private:

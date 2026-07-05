@@ -37,7 +37,7 @@ namespace litl
         void setActiveScene(uint32_t index) noexcept;
 
         void processEntityChanges(Authority<EngineCallbacks> authority, World& world, std::span<EntityChange const> entityChanges) noexcept;
-        void onPreRender(Authority<EngineCallbacks> authority) noexcept;
+        void onPreRender(Authority<EngineCallbacks> authority, World& world) noexcept;
 
     protected:
 

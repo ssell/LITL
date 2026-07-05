@@ -10,6 +10,8 @@
 
 namespace litl
 {
+    class Scene;
+
     /// <summary>
     /// The scene graph has three main responsibilities:
     /// 
@@ -135,6 +137,11 @@ namespace litl
     protected:
 
     private:
+        
+        /// <summary>
+        /// Its easier/cleaner to just grant the owning Scene access than build in multiple getters that are needed for preRender updates.
+        /// </summary>
+        friend class Scene;
 
         /// <summary>
         /// Returns the size of the underlying arrays.
