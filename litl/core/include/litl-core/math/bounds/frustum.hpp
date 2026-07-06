@@ -65,10 +65,8 @@ namespace litl::bounds
     /// Composed of six individual planes, a frustum is commonly used for efficient bounds and culling tests.
     /// A point is considered to be within a frustum if its signed distance to all six planes is positive (plane normals point inward).
     /// </summary>
-    class Frustum
+    struct Frustum
     {
-    public:
-
         enum Side
         {
             Left = 0,
@@ -300,8 +298,6 @@ namespace litl::bounds
         }
 
     private:
-
-        Frustum() = default;
 
         std::array<Plane, 6> m_planes{};
         uint32_t m_sideCount{ 6 };
