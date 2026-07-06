@@ -40,12 +40,12 @@ namespace litl
             std::visit([&](auto& partition) { partition.update(entity, bounds); }, partition);
         }
 
-        [[nodiscard]] bool isPresent(Entity entity) const noexcept
+        bool isPresent(Entity entity) const noexcept
         {
             return graph.isPresent(entity);
         }
 
-        [[nodiscard]] Entity getParent(Entity entity) const noexcept
+        Entity getParent(Entity entity) const noexcept
         {
             return graph.getParent(entity);
         }
@@ -55,7 +55,7 @@ namespace litl
             graph.setParent(child, parent);
         }
 
-        [[nodiscard]] std::vector<Entity> getChildren(Entity entity, bool recursive) const noexcept
+        std::vector<Entity> getChildren(Entity entity, bool recursive) const noexcept
         {
             return graph.getChildren(entity, recursive);
         }
@@ -65,9 +65,23 @@ namespace litl
             return graph.getChildren(entity, children, recursive);
         }
 
-        [[nodiscard]] uint32_t getGpuBufferIndex(Entity entity) const noexcept
+        uint32_t getGpuBufferIndex(Entity entity) const noexcept
         {
             return graph.getGpuBufferIndex(entity);
+        }
+
+        mat4 getWorldMatrix(Entity entity) const noexcept
+        {
+            uint32_t gpuBufferIndexForEntity = graph.getGpuBufferIndex(entity);
+
+            if (gpuBufferIndexForEntity == Constants::uint32_null_index)
+            {
+                return {};
+            }
+            else
+            {
+                return transforms.getWorldMatrix(gpuBufferIndexForEntity);
+            }
         }
 
         void query(bounds::AABB aabb, std::vector<Entity>& entities) const noexcept
@@ -186,6 +200,11 @@ namespace litl
         return m_impl->getGpuBufferIndex(entity);
     }
 
+    void Scene::onPreRender(Authority<SceneManager> authority, World const& world) noexcept
+    {
+        m_impl->onPreRender(world);
+    }
+
     void Scene::query(bounds::AABB aabb, std::vector<Entity>& entities) const noexcept
     {
         m_impl->query(aabb, entities);
@@ -201,8 +220,8 @@ namespace litl
         m_impl->query(frustum, entities);
     }
 
-    void Scene::onPreRender(Authority<SceneManager> authority, World const& world) noexcept
+    mat4 Scene::getWorldMatrix(Entity entity) const noexcept
     {
-        m_impl->onPreRender(world);
+        return m_impl->getWorldMatrix(entity);
     }
 }
