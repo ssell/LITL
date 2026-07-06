@@ -8,6 +8,7 @@
 #include "litl-engine/scene/partition/scenePartition.hpp"
 #include "litl-engine/scene/partition/nullPartition.hpp"
 #include "litl-engine/scene/partition/uniformGridPartition.hpp"
+#include "litl-engine/ecs/components/bounds.hpp"
 
 namespace litl
 {
@@ -99,7 +100,7 @@ namespace litl
             std::visit([&](auto& partition) { partition.query(frustum, entities); }, partition);
         }
 
-        void onPreRender(World const& world) noexcept
+        void onPreRender(World& world) noexcept
         {
             // Update the graph to account for structural changes: create, destroy, reparent.
             graph.update();
@@ -107,10 +108,12 @@ namespace litl
             // Update the world transforms for the frame.
             for (auto sortedIndex : graph.m_sortedNodes)
             {
-                auto localTransform = world.getComponent<Transform>(graph.m_nodeToEntity[sortedIndex]);
+                auto entity = graph.m_nodeToEntity[sortedIndex];
+                auto localTransform = world.getComponent<Transform>(entity);
 
                 if (localTransform.has_value())
                 {
+                    // Calculate the new world matrix for the entity
                     mat4 worldMatrix = localTransform->getWorldMatrix();
                     uint32_t parentIndex = graph.m_nodeParent[sortedIndex];
 
@@ -120,13 +123,30 @@ namespace litl
                         worldMatrix = transforms.getWorldMatrix(graph.m_nodeGpuIndex[parentIndex]) * worldMatrix;
                     }
 
+                    // Set the world matrix in the scene transforms buffer
                     transforms.setWorldMatrix(graph.m_nodeGpuIndex[sortedIndex], worldMatrix);
+
+                    // Update the entity bounds in the scene partition
+                    auto localBounds = world.getComponent<LocalBounds>(entity);
+
+                    if (localBounds.has_value())
+                    {
+                        // Update the scene partition with the world bounds
+                        bounds::AABB calculatedWorldBounds = localBounds.value().bounds;
+                        calculatedWorldBounds.min = worldMatrix * calculatedWorldBounds.min;
+                        calculatedWorldBounds.max = worldMatrix * calculatedWorldBounds.max;
+
+                        std::visit([&](auto& partition) { partition.update(entity, calculatedWorldBounds); }, partition);
+
+                        // Update the WorldBounds component. This has no effect is the entity does not have the component already.
+                        world.setComponent<WorldBounds>(entity, WorldBounds{
+                            .bounds = calculatedWorldBounds,
+                            .version = localTransform->getVersion()
+                        });
+                    }
                 }
 
             }
-
-            // Update the scene partition based on the newly minted transforms.
-            // ... todo ...
         }
     };
 
@@ -200,7 +220,7 @@ namespace litl
         return m_impl->getGpuBufferIndex(entity);
     }
 
-    void Scene::onPreRender(Authority<SceneManager> authority, World const& world) noexcept
+    void Scene::onPreRender(Authority<SceneManager> authority, World& world) noexcept
     {
         m_impl->onPreRender(world);
     }
