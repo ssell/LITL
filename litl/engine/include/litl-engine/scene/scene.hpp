@@ -112,6 +112,15 @@ namespace litl
         [[nodiscard]] uint32_t getGpuBufferIndex(Entity entity) const noexcept;
 
         /// <summary>
+        /// Retrieves the previously calculated world matrix for the specified entity.
+        /// World matrices are calculated once per frame immediately prior the PreRender ECS grouping.
+        /// As such the matrix may be up to one frame stale.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        [[nodiscard]] mat4 getWorldMatrix(Entity entity) const noexcept;
+
+        /// <summary>
         /// Returns all entities that are within or intersect the specified AABB.
         /// </summary>
         /// <param name="aabb"></param>

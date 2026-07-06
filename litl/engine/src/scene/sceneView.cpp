@@ -44,6 +44,12 @@ namespace litl
         return m_pActiveScene->getGpuBufferIndex(entity);
     }
 
+    mat4 SceneView::getWorldMatrix(Entity entity) const noexcept
+    {
+        LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::getGpuBufferIndex on a null scene.", {});
+        return m_pActiveScene->getWorldMatrix(entity);
+    }
+
     void SceneView::query(bounds::AABB aabb, std::vector<Entity>& entities) const noexcept
     {
         LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::query(aabb,) on a null scene.", );
