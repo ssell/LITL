@@ -146,7 +146,7 @@ namespace litl
         /// Updates scene hierarchy, world transforms, and spatial partition.
         /// </summary>
         /// <param name="authority"></param>
-        void onPreRender(Authority<SceneManager> authority, World const& world) noexcept;
+        void onPreRender(Authority<SceneManager> authority, World& world) noexcept;
 
     protected:
 
