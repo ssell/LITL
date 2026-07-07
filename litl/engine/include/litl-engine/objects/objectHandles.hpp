@@ -5,6 +5,9 @@
 
 namespace litl
 {
+    struct CameraHandleTag {};
+    using CameraHandle = Handle<CameraHandleTag>;
+
     struct GpuBufferHandleTag {};
     using GpuBufferHandle = Handle<GpuBufferHandleTag>;
 

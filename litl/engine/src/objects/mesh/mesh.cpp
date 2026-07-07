@@ -5,12 +5,18 @@
 
 namespace litl
 {
-    void Mesh::create(ObjectPool* pool, MeshDescriptor const& descriptor, GpuBufferHandle vertexBuffer, GpuBufferHandle indexBuffer) noexcept
+    void Mesh::create(ObjectPool& pool, MeshDescriptor const& descriptor, GpuBufferHandle vertexBuffer, GpuBufferHandle indexBuffer) noexcept
     {
-        m_pObjectPool = pool;
+        m_pObjectPool = &pool;
         m_descriptor = descriptor;
         m_vertexBufferHandle = vertexBuffer;
         m_indexBufferHandle = indexBuffer;
+    }
+
+    void Mesh::destroy() noexcept
+    {
+        m_pObjectPool->destroyGpuBuffer(m_vertexBufferHandle);
+        m_pObjectPool->destroyGpuBuffer(m_indexBufferHandle);
     }
 
     MeshDescriptor const& Mesh::getDescriptor() const noexcept

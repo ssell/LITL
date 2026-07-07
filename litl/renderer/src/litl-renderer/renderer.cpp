@@ -7,6 +7,14 @@ namespace litl
 
     }
 
+    Renderer::~Renderer()
+    {
+        if (valid())
+        {
+            destroy();
+        }
+    }
+
     bool Renderer::build()
     {
         LITL_FATAL_ASSERT_MSG(valid(), "Renderer::build called with invalid internal state");

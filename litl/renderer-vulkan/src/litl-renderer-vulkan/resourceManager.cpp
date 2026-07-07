@@ -17,12 +17,16 @@ namespace litl::vulkan
 
     void ResourceManager::destroy() noexcept
     {
+        logInfo("Destroying Vulkan Resource Manager ...");
+
         vkDeviceWaitIdle(m_pContext->device.vkDevice);
 
         // ---- Command Buffers
 
         std::vector<CommandBufferHandle> commandBufferHandles;
         m_commandBufferPool.getAllHandles(commandBufferHandles);
+
+        logTrace("... destroying ", commandBufferHandles.size(), " Command Buffer handles.");
 
         for (auto commandBufferHandle : commandBufferHandles)
         {
@@ -34,6 +38,8 @@ namespace litl::vulkan
         std::vector<GraphicsPipelineHandle> graphicsPipelineHandles;
         m_graphicsPipelinePool.getAllHandles(graphicsPipelineHandles);
 
+        logTrace("... destroying ", graphicsPipelineHandles.size(), " Graphic Pipeline handles.");
+
         for (auto graphicsPipelineHandle : graphicsPipelineHandles)
         {
             destroyGraphicsPipeline(graphicsPipelineHandle);
@@ -41,12 +47,15 @@ namespace litl::vulkan
 
         // ---- Pipeline Layouts
 
+        logTrace("... destroying Pipeline Layout Cache.");
         m_pipelineLayoutCache.destroy();
 
         // ---- Buffers
 
         std::vector<BufferHandle> bufferHandles;
         m_bufferPool.getAllHandles(bufferHandles);
+
+        logTrace("... destroying ", bufferHandles.size(), " Buffer handles.");
 
         for (auto bufferHandle : bufferHandles)
         {
@@ -58,6 +67,8 @@ namespace litl::vulkan
         std::vector<SamplerHandle> samplerHandles;
         m_samplerPool.getAllHandles(samplerHandles);
 
+        logTrace("... destroying ", samplerHandles.size(), " Sampler handles.");
+
         for (auto samplerHandle : samplerHandles)
         {
             destroySampler(samplerHandle);
@@ -67,6 +78,8 @@ namespace litl::vulkan
 
         std::vector<TextureHandle> textureHandles;
         m_texturePool.getAllHandles(textureHandles);
+
+        logTrace("... destroying ", textureHandles.size(), " Texture handles.");
 
         for (auto textureHandle : textureHandles)
         {
@@ -82,6 +95,8 @@ namespace litl::vulkan
         {
             shaderModuleHandles.push_back(handle);
         }
+
+        logTrace("... destroying ", shaderModuleHandles.size(), " ShaderModule handles.");
 
         for (auto shaderModuleHandle : shaderModuleHandles)
         {

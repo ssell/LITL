@@ -1,9 +1,18 @@
 #include "litl-engine/objects/buffer/gpuBuffer.hpp"
-#include "litl-engine/objects/objectPool.hpp"
 #include "litl-core/assert.hpp"
 
 namespace litl
 {
+    void GpuBuffer::create(GpuBufferDescriptor const& descriptor) noexcept
+    {
+        m_descriptor = descriptor;
+    }
+
+    void GpuBuffer::destroy() noexcept
+    {
+        // ... todo? ...
+    }
+
     void GpuBuffer::swapBuffers() noexcept
     {
         // Works for double, triple, etc. incremental buffering.
@@ -14,10 +23,6 @@ namespace litl
     {
         LITL_ASSERT_MSG((frameIndex < m_handles.size()), "Requested to buffer swap to invalid index.", );
         m_currentHandle = frameIndex;
-    }
-    void GpuBuffer::create(GpuBufferDescriptor const& descriptor) noexcept
-    {
-        m_descriptor = descriptor;
     }
 
     GpuBufferDescriptor const& GpuBuffer::getDescriptor() const noexcept

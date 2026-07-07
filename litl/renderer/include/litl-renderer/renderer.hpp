@@ -96,6 +96,7 @@ namespace litl
 
         Renderer() = default;       // Provided only for initial service injection.
         Renderer(RendererOps const* ops, RendererContext* context);
+        ~Renderer();
 
         Renderer(Renderer const&) = delete;
         Renderer& operator=(Renderer const&) = delete;

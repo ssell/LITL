@@ -2,8 +2,5 @@
 
 namespace litl
 {
-    void SceneCulling::registerCameraForFrame(Entity entity, Camera camera) noexcept
-    {
-        // ... todo ...
-    }
+
 }

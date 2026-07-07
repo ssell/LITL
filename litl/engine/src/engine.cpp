@@ -68,6 +68,9 @@ namespace litl
     Engine::~Engine()
     {
         logInfo("LITL Engine Shutdown");
+
+        m_pImpl->pSharedObjectPool->destroy();
+
         litl::Logger::shutdown();
     }
 
