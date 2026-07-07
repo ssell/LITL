@@ -10,7 +10,7 @@
 #include "litl-core/logging/logLevel.hpp"
 
 #ifndef LITL_LOG_LEVEL
-#define LITL_LOG_LEVEL LITL_LOG_LEVEL_DEBUG
+#define LITL_LOG_LEVEL LITL_LOG_LEVEL_TRACE
 #endif
 
 namespace litl

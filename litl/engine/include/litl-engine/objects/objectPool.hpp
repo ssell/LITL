@@ -3,6 +3,7 @@
 
 #include "litl-core/impl.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
+#include "litl-engine/objects/camera/camera.hpp"
 #include "litl-engine/objects/mesh/mesh.hpp"
 #include "litl-engine/objects/buffer/gpuBuffer.hpp"
 
@@ -21,6 +22,10 @@ namespace litl
         ObjectPool(ObjectPool const&) = delete;
         ObjectPool& operator=(ObjectPool const&) = delete;
 
+        [[nodiscard]] CameraHandle createCamera(CameraDescriptor const& descriptor) noexcept;
+        [[nodiscard]] Camera* getCamera(CameraHandle handle) noexcept;
+        void destroyCamera(CameraHandle handle) noexcept;
+
         [[nodiscard]] GpuBufferHandle createGpuBuffer(GpuBufferDescriptor const& descriptor) noexcept;
         [[nodiscard]] GpuBuffer* getGpuBuffer(GpuBufferHandle handle) noexcept;
         void destroyGpuBuffer(GpuBufferHandle handle) noexcept;
@@ -34,6 +39,7 @@ namespace litl
         friend class Engine;
 
         void setup(ServiceProvider& services) noexcept;
+        void destroy() noexcept;
 
         struct Impl;
         ImplPtr<Impl, 512> m_impl;

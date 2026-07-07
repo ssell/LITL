@@ -60,6 +60,7 @@ namespace litl
         friend class ObjectPool;
 
         void create(GpuBufferDescriptor const& descriptor) noexcept;
+        void destroy() noexcept;
 
         /// <summary>
         /// The descriptor that created the mesh.

@@ -52,7 +52,8 @@ namespace litl
 
         friend class ObjectPool;
 
-        void create(ObjectPool* pool, MeshDescriptor const& descriptor, GpuBufferHandle vertexBuffer, GpuBufferHandle indexBuffer) noexcept;
+        void create(ObjectPool& pool, MeshDescriptor const& descriptor, GpuBufferHandle vertexBuffer, GpuBufferHandle indexBuffer) noexcept;
+        void destroy() noexcept;
         
         /// <summary>
         /// The object pool that owns the mesh.
@@ -62,7 +63,7 @@ namespace litl
         /// <summary>
         /// The descriptor that created the mesh.
         /// </summary>
-        MeshDescriptor m_descriptor;
+        MeshDescriptor m_descriptor{};
 
         /// <summary>
         /// The underlying vertex buffer.

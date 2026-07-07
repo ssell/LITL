@@ -1,8 +1,8 @@
 #include <memory>
 
-#include "litl-engine/objects/objectPool.hpp"
 #include "litl-core/assert.hpp"
 #include "litl-core/services/serviceProvider.hpp"
+#include "litl-engine/objects/objectPool.hpp"
 #include "litl-renderer/renderer.hpp"
 
 namespace litl
@@ -10,6 +10,8 @@ namespace litl
     struct ObjectPool::Impl
     {
         std::shared_ptr<Renderer> renderer;
+
+        HandlePool<Camera, CameraHandleTag> cameraPool;
         HandlePool<GpuBuffer, GpuBufferHandleTag> gpuBufferPool;
         HandlePool<Mesh, MeshHandleTag> meshPool;
     };
@@ -21,12 +23,80 @@ namespace litl
 
     ObjectPool::~ObjectPool()
     {
-
+        // ... Required since the ServiceProvider stores this in a std::shared_ptr ...
     }
 
     void ObjectPool::setup(ServiceProvider& services) noexcept
     {
         m_impl->renderer = services.get<Renderer>();
+    }
+
+    void ObjectPool::destroy() noexcept
+    {
+        logInfo("Destroying ObjectPool ...");
+
+        // ---- Cameras
+
+        std::vector<CameraHandle> cameraHandles;
+        m_impl->cameraPool.getAllHandles(cameraHandles);
+
+        logTrace("... destroying ", cameraHandles.size(), " Camera handles.");
+
+        for (auto cameraHandle : cameraHandles)
+        {
+            destroyCamera(cameraHandle);
+        }
+
+        // ---- Meshes
+
+        std::vector<MeshHandle> meshHandles;
+        m_impl->meshPool.getAllHandles(meshHandles);
+
+        logTrace("... destroying ", meshHandles.size(), " Mesh handles.");
+
+        for (auto meshHandle : meshHandles)
+        {
+            destroyMesh(meshHandle);
+        }
+
+        // ---- GPU Buffers
+
+        std::vector<GpuBufferHandle> gpuBufferHandles;
+        m_impl->gpuBufferPool.getAllHandles(gpuBufferHandles);
+
+        logTrace("... destroying ", gpuBufferHandles.size(), " GPU Buffer handles.");
+
+        for (auto gpuBufferHandle : gpuBufferHandles)
+        {
+            destroyGpuBuffer(gpuBufferHandle);
+        }
+    }
+
+    //--------------------------------------------------------------------------------------
+    // Camera
+    //--------------------------------------------------------------------------------------
+
+    CameraHandle ObjectPool::createCamera(CameraDescriptor const& descriptor) noexcept
+    {
+        Camera camera{};
+        camera.create(descriptor);
+        return m_impl->cameraPool.create(camera);
+    }
+
+    Camera* ObjectPool::getCamera(CameraHandle handle) noexcept
+    {
+        return m_impl->cameraPool.get(handle);
+    }
+
+    void ObjectPool::destroyCamera(CameraHandle handle) noexcept
+    {
+        Camera* camera = getCamera(handle);
+
+        if (camera != nullptr)
+        {
+            camera->destroy();
+            m_impl->cameraPool.destroy(handle);
+        }
     }
 
     //--------------------------------------------------------------------------------------
@@ -51,8 +121,7 @@ namespace litl
 
         if (buffer != nullptr)
         {
-            // ... todo ...
-
+            buffer->destroy();
             m_impl->gpuBufferPool.destroy(handle);
         }
     }
@@ -78,7 +147,7 @@ namespace litl
 
         LITL_ASSERT_MSG((vertexBuffer.isValid() && indexBuffer.isValid()), "Failed to create vertex and/or index buffer for mesh.", {});
 
-        mesh.create(this, descriptor, vertexBuffer, indexBuffer);
+        mesh.create(*this, descriptor, vertexBuffer, indexBuffer);
 
         return m_impl->meshPool.create(mesh);
     }
@@ -94,8 +163,7 @@ namespace litl
 
         if (mesh != nullptr)
         {
-            // ... todo ...
-
+            mesh->destroy();
             m_impl->meshPool.destroy(handle);
         }
     }

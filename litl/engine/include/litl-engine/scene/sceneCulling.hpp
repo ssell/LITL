@@ -4,7 +4,6 @@
 #include <vector>
 
 #include "litl-ecs/entity/entity.hpp"
-#include "litl-engine/ecs/components/camera.hpp"
 
 namespace litl
 {
@@ -15,11 +14,6 @@ namespace litl
         SceneCulling() = default;
         SceneCulling(SceneCulling const&) = delete;
         SceneCulling& operator=(SceneCulling const&) = delete;
-
-        /// <summary>
-        /// Registers that the specified camera is rendering this frame.
-        /// </summary>
-        void registerCameraForFrame(Entity entity, Camera camera) noexcept;
 
     private:
 
