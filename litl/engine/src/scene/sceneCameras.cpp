@@ -11,7 +11,23 @@ namespace litl
 
     void SceneCameras::setMainCamera(CameraHandle handle) noexcept
     {
+        if (m_mainCameraHandle == handle)
+        {
+            return;
+        }
+
+        for (auto* camera : m_cameras)
+        {
+            camera->setAsMainCamera({}, false);
+        }
+
         m_mainCameraHandle = handle;
+        auto* mainCamera = m_pObjectPool->getCamera(handle);
+
+        if (mainCamera != nullptr)
+        {
+            mainCamera->setAsMainCamera({}, true);
+        }
     }
 
     CameraHandle SceneCameras::getMainCameraHandle() const noexcept
