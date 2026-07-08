@@ -45,6 +45,11 @@ namespace litl
             m_pRunner->setup(services);
         }
 
+        void prepare()
+        {
+            m_pRunner->prepare();
+        }
+
         void run(EntityCommands& commands, float dt, Chunk& chunk, ChunkLayout const& layout)
         {
             m_pRunner->run(commands, dt, chunk, layout);

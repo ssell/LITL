@@ -37,6 +37,11 @@ namespace litl
             m_pSystem->setup(services);
         }
 
+        void prepare()
+        {
+            m_pSystem->prepare();
+        }
+
         // Must match SystemRunFunc
         void run(EntityCommands& commands, float dt, Chunk& chunk, ChunkLayout const& layout)
         {

@@ -24,6 +24,7 @@ namespace litl
     {
         alignas(16) std::byte storedSystemWrapper[SystemWrapperFuncStorageSize];
         ErasedSystemSetupFunc setupFunc{ nullptr };
+        ErasedSystemPrepareFunc prepareFunc{ nullptr };
         ErasedSystemRunFunc runFunc{ nullptr };
         ErasedSystemWrapperDestroyFunc destroyFunc{ nullptr };
 
@@ -90,9 +91,10 @@ namespace litl
         return &m_pImpl->functions.storedSystemWrapper;
     }
 
-    void System::storeLocalWrapperFunctions(ErasedSystemSetupFunc setup, ErasedSystemRunFunc run, ErasedSystemWrapperDestroyFunc destroy)
+    void System::storeLocalWrapperFunctions(ErasedSystemSetupFunc setup, ErasedSystemPrepareFunc prepare, ErasedSystemRunFunc run, ErasedSystemWrapperDestroyFunc destroy)
     {
         m_pImpl->functions.setupFunc = setup;
+        m_pImpl->functions.prepareFunc = prepare;
         m_pImpl->functions.runFunc = run;
         m_pImpl->functions.destroyFunc = destroy;
     }
@@ -125,6 +127,12 @@ namespace litl
     {
         assert(m_pImpl->functions.setupFunc != nullptr);
         m_pImpl->functions.setupFunc(m_pImpl->functions.storedSystemWrapper, services);
+    }
+
+    void System::prepare()
+    {
+        assert(m_pImpl->functions.prepareFunc != nullptr);
+        m_pImpl->functions.prepareFunc(m_pImpl->functions.storedSystemWrapper);
     }
 
     void System::run(World& world, float dt)
