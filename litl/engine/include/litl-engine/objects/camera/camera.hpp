@@ -3,11 +3,14 @@
 
 #include "litl-core/math/types.hpp"
 #include "litl-core/math/bounds.hpp"
+#include "litl-ecs/entity/entity.hpp"
+#include "litl-engine/objects/objectHandles.hpp"
 #include "litl-engine/objects/camera/cameraDescriptor.hpp"
 
 namespace litl
 {
     class ObjectPool;
+    class World;
 
     class Camera
     {
@@ -19,11 +22,17 @@ namespace litl
         /// <returns></returns>
         [[nodiscard]] CameraDescriptor const& getDescriptor() const noexcept;
 
+        /// <summary>
+        /// Retrieves the entity that represents this camera in the world.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] Entity getEntity() const noexcept;
+
     private:
 
         friend class ObjectPool;
 
-        void create(CameraDescriptor const& descriptor) noexcept;
+        void create(CameraDescriptor const& descriptor, World& world, CameraHandle handle) noexcept;
         void destroy() noexcept;
 
         /// <summary>
@@ -55,6 +64,11 @@ namespace litl
         /// The descriptor that created this camera.
         /// </summary>
         CameraDescriptor m_descriptor{};
+
+        /// <summary>
+        /// The entity associated with this camera.
+        /// </summary>
+        Entity m_entity{};
     };
 }
 
