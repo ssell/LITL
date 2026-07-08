@@ -24,16 +24,6 @@ namespace litl
         // ... todo? ...
     }
 
-    CameraDescriptor const& Camera::getDescriptor() const noexcept
-    {
-        return m_descriptor;
-    }
-
-    Entity Camera::getEntity() const noexcept
-    {
-        return m_entity;
-    }
-
     void Camera::update(Authority<Scene> authority, mat4 worldMatrix) noexcept
     {
         m_worldMatrix = worldMatrix;
@@ -55,5 +45,50 @@ namespace litl
     bool Camera::isMainCamera() const noexcept
     {
         return m_isMain;
+    }
+
+    mat4 const& Camera::getWorldMatrix() const noexcept
+    {
+        return m_worldMatrix;
+    }
+
+    mat4 const& Camera::getViewMatrix() const noexcept
+    {
+        return m_viewMatrix;
+    }
+
+    void Camera::setProjectionMatrix(mat4 const& projMatrix) noexcept
+    {
+        m_projMatrix = projMatrix;
+    }
+
+    mat4 const& Camera::getProjectionMatrix() const noexcept
+    {
+        return m_projMatrix;
+    }
+
+    mat4 const& Camera::getViewProjectionMatrix() const noexcept
+    {
+        return m_viewProjMatrix;
+    }
+
+    vec3 Camera::getWorldPosition() const noexcept
+    {
+        return m_worldPosition;
+    }
+
+    bounds::Frustum const& Camera::getFrustum() const noexcept
+    {
+        return m_frustum;
+    }
+
+    Entity Camera::getEntity() const noexcept
+    {
+        return m_entity;
+    }
+
+    CameraDescriptor const& Camera::getDescriptor() const noexcept
+    {
+        return m_descriptor;
     }
 }

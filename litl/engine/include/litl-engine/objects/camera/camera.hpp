@@ -20,18 +20,6 @@ namespace litl
     public:
 
         /// <summary>
-        /// Retrieves the descriptor that was used to create this camera.
-        /// </summary>
-        /// <returns></returns>
-        [[nodiscard]] CameraDescriptor const& getDescriptor() const noexcept;
-
-        /// <summary>
-        /// Retrieves the entity that represents this camera in the world.
-        /// </summary>
-        /// <returns></returns>
-        [[nodiscard]] Entity getEntity() const noexcept;
-
-        /// <summary>
         /// Updates the cameras view matrix, world position, etc. with the provided world matrix.
         /// </summary>
         /// <param name="worldMatrix"></param>
@@ -49,6 +37,67 @@ namespace litl
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] bool isMainCamera() const noexcept;
+
+        /// <summary>
+        /// Retrieves the world matrix of the camera.
+        /// This may be up to one frame old as it is updated only once during PreRender.
+        /// </summary>
+        /// <returns></returns>
+        mat4 const& getWorldMatrix() const noexcept;
+        
+        /// <summary>
+        /// Retrieves the view matrix of the camera.
+        /// This may be up to one frame old as it is updated only once during PreRender.
+        /// </summary>
+        /// <returns></returns>
+        mat4 const& getViewMatrix() const noexcept;
+
+        /// <summary>
+        /// Sets the projection matrix of the camera.
+        /// This may take up to a frame to propagate to the view-projection matrix and frustum
+        /// as the camera is updated only once per frame during PreRender.
+        /// </summary>
+        /// <param name="projMatrix"></param>
+        void setProjectionMatrix(mat4 const& projMatrix) noexcept;
+
+        /// <summary>
+        /// Retrieves the projection matrix of the camera.
+        /// </summary>
+        /// <returns></returns>
+        mat4 const& getProjectionMatrix() const noexcept;
+
+        /// <summary>
+        /// Retrieves the view-projection matrix of the camera.
+        /// This may be up to one frame old as it is updated only once during PreRender.
+        /// </summary>
+        /// <returns></returns>
+        mat4 const& getViewProjectionMatrix() const noexcept;
+
+        /// <summary>
+        /// Retrieves the world position of the camera.
+        /// This may be up to one frame old as it is updated only once during PreRender.
+        /// </summary>
+        /// <returns></returns>
+        vec3 getWorldPosition() const noexcept;
+
+        /// <summary>
+        /// Retrieves the viewing frustum of the camera.
+        /// This may be up to one frame old as it is updated only once during PreRender.
+        /// </summary>
+        /// <returns></returns>
+        bounds::Frustum const& getFrustum() const noexcept;
+
+        /// <summary>
+        /// Retrieves the entity that represents this camera in the world.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] Entity getEntity() const noexcept;
+
+        /// <summary>
+        /// Retrieves the descriptor that was used to create this camera.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] CameraDescriptor const& getDescriptor() const noexcept;
 
     private:
 
