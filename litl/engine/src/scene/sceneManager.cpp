@@ -4,6 +4,7 @@
 
 #include "litl-core/assert.hpp"
 #include "litl-core/services/serviceProvider.hpp"
+#include "litl-engine/scene/scene.hpp"
 #include "litl-engine/scene/sceneManager.hpp"
 #include "litl-engine/scene/sceneView.hpp"
 #include "litl-engine/scene/sceneChangeProcessor.hpp"

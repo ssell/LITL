@@ -2,6 +2,7 @@
 
 #include "litl-core/assert.hpp"
 #include "litl-core/services/serviceProvider.hpp"
+#include "litl-ecs/world.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-renderer/renderer.hpp"
 
@@ -10,6 +11,7 @@ namespace litl
     struct ObjectPool::Impl
     {
         std::shared_ptr<Renderer> renderer;
+        std::shared_ptr<World> world;
 
         HandlePool<Camera, CameraHandleTag> cameraPool;
         HandlePool<GpuBuffer, GpuBufferHandleTag> gpuBufferPool;
@@ -29,6 +31,7 @@ namespace litl
     void ObjectPool::setup(ServiceProvider& services) noexcept
     {
         m_impl->renderer = services.get<Renderer>();
+        m_impl->world = services.get<World>();
     }
 
     void ObjectPool::destroy() noexcept
@@ -78,9 +81,12 @@ namespace litl
 
     CameraHandle ObjectPool::createCamera(CameraDescriptor const& descriptor) noexcept
     {
-        Camera camera{};
-        camera.create(descriptor);
-        return m_impl->cameraPool.create(camera);
+        auto handle = m_impl->cameraPool.create({});
+        auto* cameraRef = m_impl->cameraPool.get(handle);
+
+        cameraRef->create(descriptor, *(m_impl->world.get()), handle);
+
+        return handle;
     }
 
     Camera* ObjectPool::getCamera(CameraHandle handle) noexcept

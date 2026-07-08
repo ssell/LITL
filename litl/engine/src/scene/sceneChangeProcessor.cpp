@@ -3,6 +3,7 @@
 #include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
+#include "litl-engine/scene/scene.hpp"
 #include "litl-engine/scene/sceneChangeProcessor.hpp"
 #include "litl-engine/ecs/components/transform.hpp"
 #include "litl-engine/ecs/components/bounds.hpp"

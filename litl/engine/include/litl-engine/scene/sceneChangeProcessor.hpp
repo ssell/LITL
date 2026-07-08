@@ -6,12 +6,13 @@
 #include <vector>
 
 #include "litl-core/containers/flatHashSet.hpp"
-#include "litl-engine/scene/scene.hpp"
 #include "litl-ecs/entity/entityCommand.hpp"
 #include "litl-ecs/world.hpp"
 
 namespace litl
 {
+    class Scene;
+
     /// <summary>
     /// Processes a list of EntitySceneCommands output by the SceneManager into a specified Scene.
     /// </summary>

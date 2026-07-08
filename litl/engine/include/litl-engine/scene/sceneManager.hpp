@@ -5,7 +5,6 @@
 
 #include "litl-core/impl.hpp"
 #include "litl-core/authority.hpp"
-#include "litl-engine/scene/scene.hpp"
 #include "litl-engine/scene/sceneConfig.hpp"
 
 namespace litl

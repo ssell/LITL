@@ -2,10 +2,16 @@
 #define LITL_ENGINE_SCENE_H__
 
 #include "litl-core/authority.hpp"
-#include "litl-core/impl.hpp"
 #include "litl-core/math/bounds.hpp"
 #include "litl-engine/scene/sceneConfig.hpp"
 #include "litl-engine/ecs/components/transform.hpp"
+#include "litl-engine/scene/sceneGraph.hpp"
+#include "litl-engine/scene/sceneTransforms.hpp"
+#include "litl-engine/scene/sceneCameras.hpp"
+#include "litl-engine/scene/partition/scenePartition.hpp"
+#include "litl-engine/scene/partition/nullPartition.hpp"
+#include "litl-engine/scene/partition/uniformGridPartition.hpp"
+#include <variant>
 
 namespace litl
 {
@@ -121,6 +127,13 @@ namespace litl
         [[nodiscard]] mat4 getWorldMatrix(Entity entity) const noexcept;
 
         /// <summary>
+        /// Invoked once per-frame immediately before the PreRender ECS group.
+        /// Updates scene hierarchy, world transforms, and spatial partition.
+        /// </summary>
+        /// <param name="authority"></param>
+        void onPreRender(Authority<SceneManager> authority, World& world) noexcept;
+
+        /// <summary>
         /// Returns all entities that are within or intersect the specified AABB.
         /// </summary>
         /// <param name="aabb"></param>
@@ -141,19 +154,20 @@ namespace litl
         /// <param name="entities"></param>
         void query(bounds::Frustum frustum, std::vector<Entity>& entities) const noexcept;
 
-        /// <summary>
-        /// Invoked once per-frame immediately before the PreRender ECS group.
-        /// Updates scene hierarchy, world transforms, and spatial partition.
-        /// </summary>
-        /// <param name="authority"></param>
-        void onPreRender(Authority<SceneManager> authority, World& world) noexcept;
-
     protected:
 
     private:
 
-        struct Impl;
-        ImplPtr<Impl, 600> m_impl;
+        using ScenePartitionVariant = std::variant<
+            NullPartition,
+            UniformGridPartition
+            /* add future partition strategies here */
+        >;
+
+        SceneTransforms m_transforms;
+        SceneGraph m_graph;
+        ScenePartitionVariant m_partition;
+        SceneCameras m_cameras;
     };
 }
 
