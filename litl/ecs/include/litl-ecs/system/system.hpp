@@ -22,6 +22,7 @@ namespace litl
 
     using SystemSetupFunc = void(ServiceProvider&);
     using ErasedSystemSetupFunc = void(*)(void*, ServiceProvider&);
+    using ErasedSystemPrepareFunc = void(*)(void*);
     using ErasedSystemWrapperDestroyFunc = void(*)(void*);
 
     class SystemManager;
@@ -68,6 +69,11 @@ namespace litl
                         auto* wrapper = std::launder(reinterpret_cast<LocalWrapper*>(storage));
                         wrapper->setup(services);
                     }),
+                std::move([](void* storage)
+                    {
+                        auto* wrapper = std::launder(reinterpret_cast<LocalWrapper*>(storage));
+                        wrapper->prepare();
+                    }),
                 std::move([](void* storage, EntityCommands& commands, float dt, Chunk& chunk, ChunkLayout const& layout)
                     {
                         auto* wrapper = std::launder(reinterpret_cast<LocalWrapper*>(storage));
@@ -94,14 +100,23 @@ namespace litl
         void updateArchetypes(std::vector<ArchetypeId> const& newArchetypes) const noexcept;
 
         /// <summary>
-        /// 
+        /// Called once per system lifetime to initialize its internal state.
         /// </summary>
         /// <param name="services"></param>
         void setup(ServiceProvider& services);
 
         /// <summary>
+        /// Called once per frame, immediately prior to the parallel execution of the run method.
+        /// </summary>
+        void prepare();
+
+        /// <summary>
         /// Runs the underyling user system over the provided chunk.
         /// The actual execution is performed by a SystemRunner.
+        /// 
+        /// Execution of the "run" method is done in a parallel manner 
+        /// and there may be any number of invocations of it operating
+        /// at the same time on other chunks.
         /// </summary>
         /// <param name="world"></param>
         /// <param name="dt"></param>
@@ -150,9 +165,10 @@ namespace litl
         /// Store the wrapped typed SystemWrapper setup, run, and destroy functions.
         /// </summary>
         /// <param name="setup"></param>
+        /// <param name="prepare"></param>
         /// <param name="run"></param>
         /// <param name="destroy"></param>
-        void storeLocalWrapperFunctions(ErasedSystemSetupFunc setup, ErasedSystemRunFunc run, ErasedSystemWrapperDestroyFunc destroy);
+        void storeLocalWrapperFunctions(ErasedSystemSetupFunc setup, ErasedSystemPrepareFunc prepare, ErasedSystemRunFunc run, ErasedSystemWrapperDestroyFunc destroy);
 
         /// <summary>
         /// Adds the component type.

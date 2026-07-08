@@ -42,6 +42,11 @@ namespace litl::tests
             }
         }
 
+        void prepare()
+        {
+
+        }
+
         void update(EntityCommands& commands, float dt, Foo& foo, Bar& bar)
         {
             foo.a++;

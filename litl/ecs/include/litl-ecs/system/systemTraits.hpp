@@ -62,6 +62,7 @@ namespace litl
     concept ValidSystem = requires(S s, ServiceProvider& services)
     {
         { s.setup(services) } -> std::same_as<void>;                            // must have a "setup(ServiceProvider& services)" method
+        { s.prepare() } -> std::same_as<void>;                                  // must have a "prepare()" method
         &S::update;                                                             // must have an "update" method (more on that below)
     }
     && [] {
