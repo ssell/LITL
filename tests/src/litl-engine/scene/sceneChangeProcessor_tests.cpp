@@ -1,6 +1,7 @@
 #include "tests.hpp"
+#include "litl-engine/scene/scene.hpp"
 #include "litl-engine/scene/sceneChangeProcessor.hpp"
-#include "litl-ecs/archetype/archetypeRegistry.hpp"
+#include "litl-engine/ecs/components/transform.hpp"
 #include "litl-ecs/entity/entityRegistry.hpp"
 
 namespace litl::tests

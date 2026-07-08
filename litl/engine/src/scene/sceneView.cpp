@@ -1,6 +1,6 @@
 #include "litl-core/assert.hpp"
 #include "litl-engine/scene/sceneView.hpp"
-#include "litl-engine/scene/sceneManager.hpp"
+#include "litl-engine/scene/scene.hpp"
 
 namespace litl
 {

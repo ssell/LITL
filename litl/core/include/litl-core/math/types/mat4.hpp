@@ -472,6 +472,11 @@ namespace litl
             return mat3{ glm::mat3(value) };
         }
 
+        [[nodiscard]] constexpr vec3 position() const noexcept
+        {
+            return vec3{ value[0][3], value[1][3], value[2][3] };
+        }
+
         // ---------------------------------------------------------------------------------
         // Utility
         // ---------------------------------------------------------------------------------

@@ -1,4 +1,5 @@
 #include "litl-core/assert.hpp"
+#include "litl-core/authority.hpp"
 #include "litl-ecs/world.hpp"
 #include "litl-engine/scene/scene.hpp"
 #include "litl-engine/ecs/components/bounds.hpp"
@@ -150,6 +151,20 @@ namespace litl
                         .version = localTransform->getVersion()
                     });
                 }
+            }
+        }
+
+        // Update all cameras
+        auto cameras = m_cameras.getCameras();
+
+        for (auto* camera : cameras)
+        {
+            auto entity = camera->getEntity();
+            auto gpuIndex = m_graph.getGpuBufferIndex(entity);
+
+            if (gpuIndex != Constants::uint32_null_index)
+            {
+                camera->update({}, m_transforms.getWorldMatrix(gpuIndex));
             }
         }
     }
