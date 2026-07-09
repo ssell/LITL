@@ -192,4 +192,24 @@ namespace litl
             partition.query(frustum, entities); 
         }, m_partition);
     }
+
+    void Scene::setMainCamera(CameraHandle handle) noexcept
+    {
+        m_cameras.setMainCamera(handle);
+    }
+
+    CameraHandle Scene::getMainCameraHandle() const noexcept
+    {
+        return m_cameras.getMainCameraHandle();
+    }
+
+    Camera* Scene::getMainCamera() const noexcept
+    {
+        return m_cameras.getMainCamera();
+    }
+
+    std::span<Camera*> Scene::getCameras() noexcept
+    {
+        return m_cameras.getCameras();
+    }
 }

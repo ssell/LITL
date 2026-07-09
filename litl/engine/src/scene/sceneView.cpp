@@ -67,4 +67,28 @@ namespace litl
         LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::query(frustum,) on a null scene.", );
         m_pActiveScene->query(frustum, entities);
     }
+
+    void SceneView::setMainCamera(CameraHandle handle) const noexcept
+    {
+        LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::setMainCamera on a null scene.", );
+        m_pActiveScene->setMainCamera(handle);
+    }
+
+    CameraHandle SceneView::getMainCameraHandle() const noexcept
+    {
+        LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::getMainCameraHandle on a null scene.", {});
+        return m_pActiveScene->getMainCameraHandle();
+    }
+
+    Camera* SceneView::getMainCamera() const noexcept
+    {
+        LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::getMainCamera on a null scene.", nullptr);
+        return m_pActiveScene->getMainCamera();
+    }
+
+    std::span<Camera*> SceneView::getCameras() noexcept
+    {
+        LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::getCameras on a null scene.", {});
+        return m_pActiveScene->getCameras();
+    }
 }
