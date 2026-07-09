@@ -94,6 +94,13 @@ namespace litl
         [[nodiscard]] Entity getEntity() const noexcept;
 
         /// <summary>
+        /// Returns the process order position for the camera.
+        /// Lower values are processed first.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] uint32_t getProcessPosition() const noexcept;
+
+        /// <summary>
         /// Retrieves the descriptor that was used to create this camera.
         /// </summary>
         /// <returns></returns>
@@ -110,6 +117,14 @@ namespace litl
         /// Is this camera the current main camera?
         /// </summary>
         bool m_isMain = false;
+
+        /// <summary>
+        /// The order that the camera is processed. Lower values are processed first.
+        /// This is set at time of creation (via the descriptor) unless the camera is marked as the main camera.
+        /// When a camera is set as the main camera it uses the hardcoded CameraProcessOrder::MainCamera value.
+        /// If a camera is unset from being the main camera then it reverts back to its original value.
+        /// </summary>
+        uint32_t m_processPosition = 0u;
 
         /// <summary>
         /// The world matrix of the camera. Updated once per frame during PreRender.

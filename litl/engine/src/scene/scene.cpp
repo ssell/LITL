@@ -155,6 +155,7 @@ namespace litl
         }
 
         // Update all cameras
+        m_cameras.update();
         auto cameras = m_cameras.getCameras();
 
         for (auto* camera : cameras)

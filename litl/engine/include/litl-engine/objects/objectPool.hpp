@@ -24,14 +24,17 @@ namespace litl
 
         [[nodiscard]] CameraHandle createCamera(CameraDescriptor const& descriptor) noexcept;
         [[nodiscard]] Camera* getCamera(CameraHandle handle) noexcept;
+        void getAllCameraHandles(std::vector<CameraHandle>& handles) const noexcept;
         void destroyCamera(CameraHandle handle) noexcept;
 
         [[nodiscard]] GpuBufferHandle createGpuBuffer(GpuBufferDescriptor const& descriptor) noexcept;
         [[nodiscard]] GpuBuffer* getGpuBuffer(GpuBufferHandle handle) noexcept;
+        void getAllGpuBufferHandles(std::vector<GpuBufferHandle>& handles) const noexcept;
         void destroyGpuBuffer(GpuBufferHandle handle) noexcept;
 
         [[nodiscard]] MeshHandle createMesh(MeshDescriptor const& descriptor) noexcept;
         [[nodiscard]] Mesh* getMesh(MeshHandle handle) noexcept;
+        void getAllMeshHandles(std::vector<MeshHandle>& handles) const noexcept;
         void destroyMesh(MeshHandle handle) noexcept;
 
     private:
