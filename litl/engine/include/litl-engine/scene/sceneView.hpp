@@ -2,15 +2,18 @@
 #define LITL_ENGINE_SCENE_VIEW_H__
 
 #include <memory>
+#include <span>
 #include <vector>
 
 #include "litl-core/math/bounds.hpp"
 #include "litl-ecs/entity/entity.hpp"
+#include "litl-engine/objects/objectHandles.hpp"
 
 namespace litl
 {
     class SceneManager;
     class Scene;
+    class Camera;
 
     /// <summary>
     /// Provides a read-only view into the current active scene.
@@ -80,6 +83,33 @@ namespace litl
         /// <param name="frustum"></param>
         /// <param name="entities"></param>
         void query(bounds::Frustum frustum, std::vector<Entity>& entities) const noexcept;
+
+        /// <summary>
+        /// Sets the specified valid camera handle as the main camera.
+        /// The main camera is the one used to render to the primary swapchain render target.
+        /// </summary>
+        /// <param name="handle"></param>
+        void setMainCamera(CameraHandle handle) const noexcept;
+
+        /// <summary>
+        /// Returns the handle of the camera that was last designated as the main camera.
+        /// If no main camera was set, or it has been destroyed, this may return an invalid handle.
+        /// </summary>
+        /// <returns></returns>
+        CameraHandle getMainCameraHandle() const noexcept;
+
+        /// <summary>
+        /// Returns the camera that was last designated as the main camera.
+        /// If no main camera was set, or it has been destroyed, this may return null.
+        /// </summary>
+        /// <returns></returns>
+        Camera* getMainCamera() const noexcept;
+
+        /// <summary>
+        /// Returns all cameras.
+        /// </summary>
+        /// <returns></returns>
+        std::span<Camera*> getCameras() noexcept;
 
     protected:
 
