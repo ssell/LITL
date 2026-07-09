@@ -4,7 +4,6 @@
 #include "litl-core/constants.hpp"
 #include "litl-ecs/entity/entityCommandQueue.hpp"
 #include "litl-ecs/constants.hpp"
-#include "litl-ecs/world.hpp"
 
 namespace litl
 {
