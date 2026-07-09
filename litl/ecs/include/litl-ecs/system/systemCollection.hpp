@@ -45,12 +45,12 @@ namespace litl
         }
 
         template<ValidSystem S>
-        void contains() const noexcept
+        bool contains() const noexcept
         {
-            return contains(getSystem<S>());
+            return contains(SystemRegistry::getSystem<S>());
         }
 
-        bool contains(System const* system) const noexcept;
+        [[nodiscard]] bool contains(System const* system) const noexcept;
         void dependsOn(System const* thisSystem, System const* dependsOnThisSystem) const noexcept;
         void placement(System const* system, SystemPlacementHint hint) const noexcept;
 

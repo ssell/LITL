@@ -30,10 +30,23 @@ namespace litl::tests
         bool wasSetup{ false };
     };
 
+    static bool& getTestSystemPrepared() noexcept
+    {
+        static bool prepared = false;
+        return prepared;
+    }
+
+    static void setTestSystemPrepared(bool prepared)
+    {
+        getTestSystemPrepared() = prepared;
+    }
+
     struct TestSystem
     {
         void setup(ServiceProvider& services)
         {
+            setTestSystemPrepared(false);
+
             auto setupService = services.get<SystemSetupService>();
 
             if (setupService != nullptr)
@@ -44,7 +57,7 @@ namespace litl::tests
 
         void prepare()
         {
-
+            setTestSystemPrepared(true);
         }
 
         void update(EntityCommands& commands, float dt, Foo& foo, Bar& bar)

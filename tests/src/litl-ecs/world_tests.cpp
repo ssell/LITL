@@ -443,7 +443,12 @@ namespace litl::tests
         world.addComponentsImmediate(entity0, Foo{ 0 }, Bar{ 0.0f, 0 });
         world.addComponentsImmediate(entity1, Foo{ 100 }, Bar{ 1.0f, 500 });
         world.getSystemCollection().addSystem<TestSystem>(SystemGroup::Update);
+
+        REQUIRE(world.getSystemCollection().contains<TestSystem>() == true);
+
         world.setupSystems((*serviceProvider));
+
+        REQUIRE(getTestSystemPrepared() == false);
 
         auto initialVersion = World::getVersion();
 
@@ -452,6 +457,7 @@ namespace litl::tests
             world.run(0.1f, 0.1f);
         }
 
+        REQUIRE(getTestSystemPrepared() == true);                   // system->prepare() should be called before system->run(...)
         REQUIRE(World::getVersion() == (initialVersion + 10));
 
         REQUIRE(world.getComponent<Foo>(entity0)->a == 10);
