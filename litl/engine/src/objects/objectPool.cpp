@@ -32,6 +32,9 @@ namespace litl
     {
         m_impl->renderer = services.get<Renderer>();
         m_impl->world = services.get<World>();
+
+        LITL_FATAL_ASSERT_MSG((m_impl->renderer != nullptr), "Failed to inject Renderer to ObjectPool");
+        LITL_FATAL_ASSERT_MSG((m_impl->world != nullptr), "Failed to inject World to ObjectPool");
     }
 
     void ObjectPool::destroy() noexcept
