@@ -3,11 +3,12 @@
 #include "litl-ecs/world.hpp"
 #include "litl-engine/scene/scene.hpp"
 #include "litl-engine/ecs/components/bounds.hpp"
+#include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/objects/camera/camera.hpp"
 
 namespace litl
 {
-    Scene::Scene(SceneConfig const& config)
+    Scene::Scene(SceneConfig const& config, ObjectPool* objectPool)
     {
         switch (config.partition)
         {
@@ -20,6 +21,7 @@ namespace litl
         }
 
         m_transforms.reserve(1024u);
+        m_cameras.setup(objectPool);
     }
 
     Scene::~Scene()

@@ -6,9 +6,9 @@
 
 namespace litl
 {
-    void SceneCameras::setup(ObjectPool& objectPool) noexcept
+    void SceneCameras::setup(ObjectPool* objectPool) noexcept
     {
-        m_pObjectPool = &objectPool;
+        m_pObjectPool = objectPool;
     }
 
     void SceneCameras::update() noexcept

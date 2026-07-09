@@ -17,7 +17,7 @@ namespace litl
 
         static constexpr uint32_t MaxSceneCameras = 32u;
 
-        void setup(ObjectPool& objectPool) noexcept;
+        void setup(ObjectPool* objectPool) noexcept;
 
         /// <summary>
         /// Updates the list of cameras from those stored in the object pool and then sorts them.

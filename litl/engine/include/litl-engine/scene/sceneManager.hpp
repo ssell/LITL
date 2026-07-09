@@ -11,7 +11,6 @@ namespace litl
 {
     class Engine;
     class EngineCallbacks;
-
     class World;
     class ServiceProvider;
     struct EntityChange;
@@ -45,7 +44,7 @@ namespace litl
         friend class Engine;
 
         struct Impl;
-        ImplPtr<Impl, 152> m_impl;
+        ImplPtr<Impl, 168> m_impl;
     };
 }
 
