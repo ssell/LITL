@@ -63,6 +63,7 @@ namespace litl
             //    componentArrays[1] = Bar*
             // Ends with: std::tuple<Foo*, Bar*>
             auto componentArrays = SystemComponentsTupleOperations<SystemComponentTuple>::extractComponentBuffers(chunk, layout);
+            auto* chunkEntities = chunk.getEntities(layout);
 
             const uint32_t entityCount = chunk.size();
 
@@ -73,11 +74,14 @@ namespace litl
                 // Applies the provded lambda to each member of the tuple.
                 std::apply([&](auto&... componentArray)
                     {
-                        m_pSystem->update(commands, dt, componentArray[i]...);
+                        m_pSystem->update(commands, dt, chunkEntities[i], componentArray[i]...);
                     }, componentArrays);
             }
         }
 
+        /// <summary>
+        /// The actual system instance underneath all of the layers of wrapping.
+        /// </summary>
         S* m_pSystem;
     };
 }

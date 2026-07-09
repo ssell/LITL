@@ -2,6 +2,8 @@
 #define LITL_ENGINE_ECS_ENTITY_H__
 
 #include <cstdint>
+#include <compare>
+
 #include "litl-ecs/constants.hpp"
 
 namespace litl
