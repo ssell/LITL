@@ -60,7 +60,7 @@ namespace litl::tests
             setTestSystemPrepared(true);
         }
 
-        void update(EntityCommands& commands, float dt, Foo& foo, Bar& bar)
+        void update(EntityCommands& commands, float dt, Entity entity, Foo& foo, Bar& bar)
         {
             foo.a++;
             bar.b++;

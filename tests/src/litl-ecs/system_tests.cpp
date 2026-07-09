@@ -10,7 +10,7 @@ namespace litl::tests
     {
         void setup(ServiceProvider& services) {}
         void prepare() {}
-        void update(EntityCommands& commands, float dt, Foo const& read, Bar& write) {}
+        void update(EntityCommands& commands, float dt, Entity entity, Foo const& read, Bar& write) {}
     };
 
     /// <summary>

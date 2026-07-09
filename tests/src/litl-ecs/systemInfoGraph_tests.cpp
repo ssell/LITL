@@ -5,7 +5,7 @@
 #include "litl-ecs/world.hpp"
 #include "litl-ecs/system/systemRegistry.hpp"
 
-#define BasicSystem(A) struct A { void setup(ServiceProvider& services) {} void prepare() {} void update(EntityCommands& commands, float dt) {} };
+#define BasicSystem(A) struct A { void setup(ServiceProvider& services) {} void prepare() {} void update(EntityCommands& commands, float dt, Entity entity) {} };
 
 namespace litl::tests
 {

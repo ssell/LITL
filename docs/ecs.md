@@ -34,9 +34,16 @@ struct Velocity { float dx, dy, dz; };
 //    update() must begin with (EntityCommands&, float); the rest is the query.
 struct MovementSystem
 {
+    // Called one time for the lifetime of the application.
     void setup(ServiceProvider& services) {}
 
-    void update(EntityCommands& commands, float dt, Position& p, Velocity const& v)
+    // Called each frame prior to any calls to update(...)
+    void prepare() {}
+
+    // Called each frame according to its SystemGroup and dependencies.
+    // There is only a single instance of the System but it is invoked in parallel on separate chunks.
+    // The first three parameters (EntityCommands, float, Entity) are required and at least one component.
+    void update(EntityCommands& commands, float dt, Entity e, Position& p, Velocity const& v)
     {
         p.x += v.dx * dt;
         p.y += v.dy * dt;
@@ -296,7 +303,8 @@ A global version counter increments once per frame and is stamped into a chunk's
 struct RenderExtractSystem
 {
     void setup(ServiceProvider&) {}
-    void update(EntityCommands&, float, Transform const& t, MeshRef const& m)
+    void prepare() {}
+    void update(EntityCommands&, float, Entity e, Transform const& t, MeshRef const& m)
     {
         // const& everywhere ⇒ no write conflicts ⇒ runs parallel to other readers
     }
