@@ -29,6 +29,11 @@ namespace litl
         // ---------------------------------------------------------------------------------
 
         /// <summary>
+        /// Maximum number of threads that LITL can take advantage of.
+        /// </summary>
+        static constexpr uint32_t max_thread_count = 32u;
+
+        /// <summary>
         /// Use when aligning members to individual cache lines.
         /// On modern x86/x64/ARM processors this is typically 64 bytes.
         /// However on Apple M-series this is 128 bytes. 
