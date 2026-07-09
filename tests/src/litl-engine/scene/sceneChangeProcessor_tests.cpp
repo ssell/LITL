@@ -3,6 +3,7 @@
 #include "litl-engine/scene/sceneChangeProcessor.hpp"
 #include "litl-engine/ecs/components/transform.hpp"
 #include "litl-ecs/entity/entityRegistry.hpp"
+#include "litl-engine/objects/objectPool.hpp"
 
 namespace litl::tests
 {
@@ -83,7 +84,7 @@ namespace litl::tests
     {
         EntityRegistry::clear();
         World world{};
-        Scene scene{ SceneConfig{} };
+        Scene scene{ SceneConfig{}, nullptr };
         SceneChangeProcessor processor{};
         std::vector<EntityChange> changes;
 
@@ -107,7 +108,7 @@ namespace litl::tests
     {
         EntityRegistry::clear();
         World world{};
-        Scene scene{ SceneConfig{} };
+        Scene scene{ SceneConfig{}, nullptr };
         SceneChangeProcessor processor{};
         std::vector<EntityChange> changes;
 
@@ -128,7 +129,7 @@ namespace litl::tests
         // Destroying an entity should also destroy all descendants.
         EntityRegistry::clear();
         World world{};
-        Scene scene{ SceneConfig{} };
+        Scene scene{ SceneConfig{}, nullptr };
         SceneChangeProcessor processor{};
         std::vector<EntityChange> changes;
 
@@ -171,7 +172,7 @@ namespace litl::tests
         // Destroying a child should not destroy other children or the parent.
         EntityRegistry::clear();
         World world{};
-        Scene scene{ SceneConfig{} };
+        Scene scene{ SceneConfig{}, nullptr };
         SceneChangeProcessor processor{};
         std::vector<EntityChange> changes;
 
@@ -215,7 +216,7 @@ namespace litl::tests
         // If gchild0 is reparented to child1 at the same time child0 is destroyed, it should _not_ be destroyed.
         EntityRegistry::clear();
         World world{};
-        Scene scene{ SceneConfig{} };
+        Scene scene{ SceneConfig{}, nullptr };
         SceneChangeProcessor processor{};
         std::vector<EntityChange> changes;
 
@@ -260,7 +261,7 @@ namespace litl::tests
         // Explicitly calling destroy on a child whose parent is being destroyed should be deduped.
         EntityRegistry::clear();
         World world{};
-        Scene scene{ SceneConfig{} };
+        Scene scene{ SceneConfig{}, nullptr };
         SceneChangeProcessor processor{};
         std::vector<EntityChange> changes;
 
@@ -305,7 +306,7 @@ namespace litl::tests
     {
         EntityRegistry::clear();
         World world{};
-        Scene scene{ SceneConfig{} };
+        Scene scene{ SceneConfig{}, nullptr };
         SceneChangeProcessor processor{};
         std::vector<EntityChange> changes;
 
@@ -321,7 +322,7 @@ namespace litl::tests
         // Just make sure nothing crashes if no changes are provided.
         EntityRegistry::clear();
         World world{};
-        Scene scene{ SceneConfig{} };
+        Scene scene{ SceneConfig{}, nullptr };
         SceneChangeProcessor processor{};
         std::vector<EntityChange> changes;
 

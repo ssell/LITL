@@ -17,6 +17,7 @@
 namespace litl
 {
     class SceneManager;
+    class ObjectPool;
     class World;
 
     /// <summary>
@@ -31,7 +32,7 @@ namespace litl
     {
     public:
 
-        Scene(SceneConfig const& config);
+        Scene(SceneConfig const& config, ObjectPool* objectPool);
         ~Scene();
 
         Scene(Scene const&) = delete;

@@ -10,6 +10,7 @@
 #include "litl-engine/scene/sceneChangeProcessor.hpp"
 #include "litl-ecs/world.hpp"
 #include "litl-ecs/entity/entityCommand.hpp"
+#include "litl-engine/objects/objectPool.hpp"
 
 namespace litl
 {
@@ -17,8 +18,10 @@ namespace litl
     {
         std::vector<std::shared_ptr<Scene>> scenes;
         std::shared_ptr<SceneView> view;
+        std::shared_ptr<ObjectPool> objectPool;
+
         SceneChangeProcessor sceneChangeProcessor;
-        uint32_t activeIndex{ 0 };
+        uint32_t activeIndex{ Constants::uint32_null_index };
 
         void processEntityChanges(World& world, std::span<EntityChange const> entityChanges) noexcept
         {
@@ -54,11 +57,18 @@ namespace litl
     void SceneManager::setup(Authority<Engine> authority, ServiceProvider& services) noexcept
     {
         m_impl->view = services.get<SceneView>();
+        m_impl->objectPool = services.get<ObjectPool>();
     }
 
     void SceneManager::createScene(SceneConfig const& config) noexcept
     {
-        m_impl->scenes.push_back(std::make_shared<Scene>(config));
+        m_impl->scenes.push_back(std::make_shared<Scene>(config, m_impl->objectPool.get()));
+
+        // If this is the first scene, automatically set it as the active scene.
+        if (m_impl->activeIndex == Constants::uint32_null_index)
+        {
+            setActiveScene(0u);
+        }
     }
 
     uint32_t SceneManager::getSceneCount() const noexcept

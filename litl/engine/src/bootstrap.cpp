@@ -22,7 +22,6 @@ namespace litl::Internal
         services.addSingleton<ObjectPool>();
         services.addSingleton<SceneManager>();
         services.addSingleton<SceneView>();
-        //m_pImpl->serviceCollection.addSingleton<RefPtr<CommandBuffer>>();
     }
 
     void defaultConfigureSystems(SystemCollection& systems)

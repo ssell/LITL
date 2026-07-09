@@ -14,6 +14,9 @@ namespace litl
         std::atomic<uint32_t> g_nextThreadIndex{ 0 };
     }
 
+    std::array<CullingBucket, Constants::max_thread_count> CullingSystem::s_cullingBuckets{};
+    CullingBucket CullingSystem::s_combinedBucket{};
+    bool CullingSystem::s_combined{ false };
     thread_local uint32_t CullingSystem::t_threadIndex = g_nextThreadIndex.fetch_add(1);
 
     void CullingSystem::setup(ServiceProvider& services)
@@ -58,21 +61,31 @@ namespace litl
             cameraEntities.entities.clear();
         }
 
-        for (auto& cullingBucket : m_cullingBuckets)
+        s_combinedBucket.reset();
+
+        for (auto& cullingBucket : s_cullingBuckets)
         {
-            for (auto cameraRenderableEntities : cullingBucket.cameraRenderableEntities)
-            {
-                cameraRenderableEntities.camera = nullptr;
-                cameraRenderableEntities.entities.clear();
-            }
+            cullingBucket.reset();
+        }
+
+        s_combined = false;
+    }
+
+    void CullingBucket::reset() noexcept
+    {
+        for (auto cameraRenderableEntities : cameraRenderableEntities)
+        {
+            cameraRenderableEntities.camera = nullptr;
+            cameraRenderableEntities.entities.clear();
         }
     }
 
     void CullingSystem::setCameraAtIndex(uint32_t i, Camera* camera) noexcept
     {
         m_cameraVisibleEntities[i].camera = camera;
+        s_combinedBucket.cameraRenderableEntities[i].camera = camera;
 
-        for (auto& cullingBucket : m_cullingBuckets)
+        for (auto& cullingBucket : s_cullingBuckets)
         {
             cullingBucket.cameraRenderableEntities[i].camera = camera;
         }
@@ -91,8 +104,38 @@ namespace litl
             if (m_cameraVisibleEntities[cameraIndex].entities.contains(entity))
             {
                 // We are visible to this camera, add to our thread-specific culling bucket.
-                m_cullingBuckets[t_threadIndex].cameraRenderableEntities[cameraIndex].entities.push_back(entity);
+                s_cullingBuckets[t_threadIndex].cameraRenderableEntities[cameraIndex].entities.push_back(entity);
             }
         }
+    }
+
+    CullingBucket const& CullingSystem::getCombinedCullingBucket() noexcept
+    {
+        if (!s_combined)
+        {
+            // For each camera,
+            for (uint32_t cameraIndex = 0u; cameraIndex < s_combinedBucket.cameraRenderableEntities.size(); ++cameraIndex)
+            {
+                auto& cameraRenderableEntities = s_combinedBucket.cameraRenderableEntities[cameraIndex];
+
+                if (cameraRenderableEntities.camera == nullptr)
+                {
+                    // We have checked all cameras. Break out.
+                    break;
+                }
+
+                // For each thread,
+                for (auto& threadCullingBucket : s_cullingBuckets)
+                {
+                    // Add the visible renderable entities found for this camera for this thread
+                    auto& threadRenderableEntities = threadCullingBucket.cameraRenderableEntities[cameraIndex].entities;
+                    cameraRenderableEntities.entities.insert(cameraRenderableEntities.entities.end(), threadRenderableEntities.begin(), threadRenderableEntities.end());
+                }
+            }
+
+            s_combined = true;
+        }
+
+        return s_combinedBucket;
     }
 }
