@@ -14,7 +14,7 @@ namespace litl
 
     }
 
-    void CullingSystem::update(EntityCommands& commands, float dt, Entity entity, Transform const& transform)
+    void CullingSystem::update(EntityCommands& commands, float dt, Entity entity, Transform const& transform, MeshRef const& mesh, MaterialRef const& material)
     {
 
     }
