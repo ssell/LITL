@@ -38,7 +38,7 @@ namespace litl
             {
                 static AssertHandler handler = [](char const* expression, char const* message, char const* file, uint32_t line)
                     {
-                        // ... todo tie into logger, error tracker, etc. ...
+                        logCritical("Fatal assert triggered in '", file, "' @ line ", line, " for expression '", expression, "'. ", message);
                         std::abort();
                     };
 

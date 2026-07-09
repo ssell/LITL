@@ -4,9 +4,12 @@ using namespace litl;
 
 void bootstrap(ServiceProvider& services, EntityCommands& commands)
 {
-    services.get<SceneManager>()->createScene({});
-    //auto entity = commands.createEntity();
-    //commands.addComponent<Transform>(entity, Transform{ .position = vec3{0.0f, 0.0f, 5.0} });
+    auto objectPool = services.get<ObjectPool>();
+    auto sceneManager = services.get<SceneManager>();
+    auto sceneView = services.get<SceneView>();
+
+    sceneManager->createScene({});
+    sceneView->setMainCamera(objectPool->createCamera({}));
 }
 
 int main()

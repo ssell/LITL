@@ -12,30 +12,9 @@ namespace litl
         LITL_FATAL_ASSERT_MSG(m_pWorld != nullptr, "Failed to inject litl::World into EngineCallbacks");
         LITL_FATAL_ASSERT_MSG(m_pSceneManager != nullptr, "Failed to inject litl::SceneManager into EngineCallbacks");
 
-        m_pFrameCallbacks->onFrameStart = [this]()
-                // ... todo anything else? ...
-            {
-
-                m_pUserFrameCallbacks->invokeFrameStart();
-            };
-
-        m_pFrameCallbacks->onRender = [this]()
-            {
-                // ... todo ...
-                // frustum cull via scene partition
-                // build draw list form visible entities (transform index (gpu index) + mesh + material)
-                // submit draw list to renderer
-                // renderer binds transform SSBO and issues draw calls
-
-                m_pUserFrameCallbacks->invokeRender();
-            };
-
-        m_pFrameCallbacks->onFrameEnd = [this]()
-            {
-                // ... todo anything else? ...
-
-                m_pUserFrameCallbacks->invokeFrameEnd();
-            };
+        // ---------------------------------------------------------------------------------
+        // Intraframe Sync Points
+        // ---------------------------------------------------------------------------------
 
         m_pFrameCallbacks->onSyncPoint = [this](SystemGroup group, std::span<EntityChange const> entityChanges)
             {
@@ -44,13 +23,19 @@ namespace litl
             };
 
         // ---------------------------------------------------------------------------------
+        // Frame Start
+        // ---------------------------------------------------------------------------------
+
+        m_pFrameCallbacks->onFrameStart = [this]()
+            {
+                m_pUserFrameCallbacks->invokeFrameStart();
+            };
+        // ---------------------------------------------------------------------------------
         // Startup Group
         // ---------------------------------------------------------------------------------
 
         m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::Startup)] = [this](SystemGroup group)
             {
-                // ... todo anything else? ...
-
                 m_pUserFrameCallbacks->invokePreGroup(group);
             };
 
@@ -60,8 +45,6 @@ namespace litl
 
         m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::Input)] = [this](SystemGroup group)
             {
-                // ... todo anything else? ...
-
                 m_pUserFrameCallbacks->invokePreGroup(group);
             };
 
@@ -71,8 +54,6 @@ namespace litl
 
         m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::FixedUpdate)] = [this](SystemGroup group)
             {
-                // ... todo anything else? ...
-
                 m_pUserFrameCallbacks->invokePreGroup(group);
             };
 
@@ -82,8 +63,6 @@ namespace litl
 
         m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::Update)] = [this](SystemGroup group)
             {
-                // ... todo anything else? ...
-
                 m_pUserFrameCallbacks->invokePreGroup(group);
             };
 
@@ -93,8 +72,6 @@ namespace litl
 
         m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::LateUpdate)] = [this](SystemGroup group)
             {
-                // ... todo anything else? ...
-
                 m_pUserFrameCallbacks->invokePreGroup(group);
             };
 
@@ -109,13 +86,20 @@ namespace litl
             };
 
         // ---------------------------------------------------------------------------------
+        // Render
+        // ---------------------------------------------------------------------------------
+
+        m_pFrameCallbacks->onRender = [this]()
+            {
+                m_pUserFrameCallbacks->invokeRender();
+            };
+
+        // ---------------------------------------------------------------------------------
         // Post-Render Group
         // ---------------------------------------------------------------------------------
 
         m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::PostRender)] = [this](SystemGroup group)
             {
-                // ... todo anything else? ...
-
                 m_pUserFrameCallbacks->invokePreGroup(group);
             };
 
@@ -125,9 +109,16 @@ namespace litl
 
         m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::Final)] = [this](SystemGroup group)
             {
-                // ... todo anything else? ...
-
                 m_pUserFrameCallbacks->invokePreGroup(group);
+            };
+
+        // ---------------------------------------------------------------------------------
+        // Frame End
+        // ---------------------------------------------------------------------------------
+
+        m_pFrameCallbacks->onFrameEnd = [this]()
+            {
+                m_pUserFrameCallbacks->invokeFrameEnd();
             };
     }
 

@@ -4,6 +4,8 @@
 // Collection of headers commonly needed for setting up an application using LITL
 #include "litl-engine/engine.hpp"
 #include "litl-engine/scene/sceneManager.hpp"
+#include "litl-engine/scene/sceneView.hpp"
+#include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/ecs/common.hpp"
 
 #endif
