@@ -27,6 +27,7 @@ namespace litl
         std::mutex systemsMutex;
         std::array<SystemGraph, SystemGroupCount> schedules;
         std::vector<System*> systems;
+        std::vector<System*> runningSystems;
         FlatHashMap<SystemTypeId, uint32_t> systemMap;        // value = index into systems
         std::vector<System*> newSystems;
         std::vector<EntityChange> entityChanges;
@@ -39,6 +40,7 @@ namespace litl
         : m_pImpl(std::make_unique<SystemManager::Impl>())
     {
         m_pImpl->schedules.fill({});
+        m_pImpl->runningSystems.reserve(32u);
     }
 
     SystemManager::~SystemManager()
@@ -169,15 +171,30 @@ namespace litl
 
         for (auto& layer : graph.getLayers())
         {
-            JobFence layerFence{ &scheduler, JobPriority::High };
+            m_pImpl->runningSystems.clear();
 
             for (auto layerNodeIndex : layer)
             {
                 auto& layerNode = schedule.getNode(layerNodeIndex);                 // get the fixed index into the schedule
                 auto systemIndex = m_pImpl->systemMap.find(layerNode.systemId);     // get the fixed index into our systems vector
                 auto* system = m_pImpl->systems[systemIndex.value()];               // get the system pointer
+                m_pImpl->runningSystems.push_back(system);
+            }
 
-                system->run(world, dt, scheduler, layerFence);
+            // Prepare (sequential)
+
+            for (auto* runningSystem : m_pImpl->runningSystems)
+            {
+                runningSystem->prepare();
+            }
+
+            // Run (parallel)
+
+            JobFence layerFence{ &scheduler, JobPriority::High };
+
+            for (auto* runningSystem : m_pImpl->runningSystems)
+            {
+                runningSystem->run(world, dt, scheduler, layerFence);
             }
 
             layerFence.wait();
