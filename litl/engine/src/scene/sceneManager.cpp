@@ -58,6 +58,9 @@ namespace litl
     {
         m_impl->view = services.get<SceneView>();
         m_impl->objectPool = services.get<ObjectPool>();
+
+        LITL_FATAL_ASSERT_MSG((m_impl->view != nullptr), "Failed to inject SceneView to SceneManager");
+        LITL_FATAL_ASSERT_MSG((m_impl->objectPool != nullptr), "Failed to inject ObjectPool to SceneManager");
     }
 
     void SceneManager::createScene(SceneConfig const& config) noexcept

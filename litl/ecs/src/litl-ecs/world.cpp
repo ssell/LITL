@@ -5,6 +5,7 @@
 #include <thread>
 #include <vector>
 
+#include "litl-core/assert.hpp"
 #include "litl-core/containers/fixedSortedArray.hpp"
 #include "litl-core/job/jobScheduler.hpp"
 #include "litl-core/services/serviceProvider.hpp"
@@ -128,6 +129,8 @@ namespace litl
         m_pImpl->jobScheduler = services.get<JobScheduler>();
         m_pImpl->callbacks = callbacks;
         m_pImpl->systemManager.setup(m_pImpl->callbacks);
+
+        LITL_FATAL_ASSERT_MSG((m_pImpl->jobScheduler != nullptr), "Failed to inject JobScheduler to World");
     }
 
     void World::setupSystems(ServiceProvider& services) const noexcept
