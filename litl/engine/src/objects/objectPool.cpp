@@ -94,6 +94,11 @@ namespace litl
         return m_impl->cameraPool.get(handle);
     }
 
+    void ObjectPool::getAllCameraHandles(std::vector<CameraHandle>& handles) const noexcept
+    {
+        m_impl->cameraPool.getAllHandles(handles);
+    }
+
     void ObjectPool::destroyCamera(CameraHandle handle) noexcept
     {
         Camera* camera = getCamera(handle);
@@ -119,6 +124,11 @@ namespace litl
     GpuBuffer* ObjectPool::getGpuBuffer(GpuBufferHandle handle) noexcept
     {
         return m_impl->gpuBufferPool.get(handle);
+    }
+
+    void ObjectPool::getAllGpuBufferHandles(std::vector<GpuBufferHandle>& handles) const noexcept
+    {
+        m_impl->gpuBufferPool.getAllHandles(handles);
     }
 
     void ObjectPool::destroyGpuBuffer(GpuBufferHandle handle) noexcept
@@ -161,6 +171,11 @@ namespace litl
     Mesh* ObjectPool::getMesh(MeshHandle handle) noexcept
     {
         return m_impl->meshPool.get(handle);
+    }
+
+    void ObjectPool::getAllMeshHandles(std::vector<MeshHandle>& handles) const noexcept
+    {
+        m_impl->meshPool.getAllHandles(handles);
     }
 
     void ObjectPool::destroyMesh(MeshHandle handle) noexcept

@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "litl-engine/scene/sceneCameras.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/objects/camera/camera.hpp"
@@ -7,6 +9,28 @@ namespace litl
     void SceneCameras::setup(ObjectPool& objectPool) noexcept
     {
         m_pObjectPool = &objectPool;
+    }
+
+    void SceneCameras::update() noexcept
+    {
+        m_cameraHandles.clear();
+        m_cameras.clear();
+
+        m_pObjectPool->getAllCameraHandles(m_cameraHandles);
+
+        for (auto handle : m_cameraHandles)
+        {
+            auto* camera = m_pObjectPool->getCamera(handle);
+
+            if (camera != nullptr)
+            {
+                m_cameras.push_back(camera);
+            }
+        }
+
+        std::sort(m_cameras.begin(), m_cameras.end(), [](Camera* a, Camera* b) -> bool { 
+            return (a->getProcessPosition() < b->getProcessPosition()); 
+        });
     }
 
     void SceneCameras::setMainCamera(CameraHandle handle) noexcept

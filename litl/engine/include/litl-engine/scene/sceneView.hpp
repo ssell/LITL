@@ -106,7 +106,7 @@ namespace litl
         Camera* getMainCamera() const noexcept;
 
         /// <summary>
-        /// Returns all cameras.
+        /// Returns all cameras. They are sorted according to their process order value.
         /// </summary>
         /// <returns></returns>
         std::span<Camera*> getCameras() noexcept;

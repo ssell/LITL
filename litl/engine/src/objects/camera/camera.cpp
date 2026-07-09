@@ -10,6 +10,7 @@ namespace litl
     void Camera::create(CameraDescriptor const& descriptor, World& world, CameraHandle handle) noexcept
     {
         m_descriptor = descriptor;
+        m_processPosition = descriptor.processOrder;
         m_entity = world.createImmediate();
 
         world.addComponentsImmediate<Transform, CameraRef>(
@@ -40,6 +41,15 @@ namespace litl
     void Camera::setAsMainCamera(Authority<SceneCameras> authority, bool main) noexcept
     {
         m_isMain = main;
+
+        if (main)
+        {
+            m_processPosition = static_cast<uint32_t>(CameraProcessOrder::MainCamera);
+        }
+        else
+        {
+            m_processPosition = m_descriptor.processOrder;
+        }
     }
 
     bool Camera::isMainCamera() const noexcept
@@ -85,6 +95,11 @@ namespace litl
     Entity Camera::getEntity() const noexcept
     {
         return m_entity;
+    }
+
+    uint32_t Camera::getProcessPosition() const noexcept
+    {
+        return m_processPosition;
     }
 
     CameraDescriptor const& Camera::getDescriptor() const noexcept
