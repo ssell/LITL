@@ -238,7 +238,10 @@ namespace litl
     {
         for (auto& sortedNode : m_nodeGraph.getSorted())
         {
-            systems[m_systemNodes[sortedNode].systemId]->run(world, dt);
+            auto* system = systems[m_systemNodes[sortedNode].systemId];
+
+            system->prepare();
+            system->run(world, dt);
         }
     }
 

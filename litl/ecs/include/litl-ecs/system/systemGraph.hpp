@@ -83,6 +83,7 @@ namespace litl
         /// <param name="dt"></param>
         /// <param name="systems"></param>
         /// <returns></returns>
+        [[deprecated("Sequential implementation of run is deprecated. Use the parallel version instead.")]]
         void run(World& world, float dt, std::vector<System*> const& systems);
 
         /// <summary>

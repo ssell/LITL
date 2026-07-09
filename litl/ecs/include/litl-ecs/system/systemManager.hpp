@@ -70,6 +70,7 @@ namespace litl
         /// <param name="world"></param>
         /// <param name="dt"></param>
         /// <param name="group"></param>
+        [[deprecated("Sequential implementation of run is deprecated. Use the parallel version instead.")]]
         void run(World& world, float dt, SystemGroup group);
 
         /// <summary>
