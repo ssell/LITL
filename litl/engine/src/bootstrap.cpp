@@ -7,6 +7,7 @@
 #include "litl-renderer/window.hpp"
 #include "litl-renderer/renderer.hpp"
 #include "litl-ecs/world.hpp"
+#include "litl-engine/ecs/systems/cullingSystem.hpp"
 
 namespace litl::Internal
 {
@@ -26,7 +27,7 @@ namespace litl::Internal
 
     void defaultConfigureSystems(SystemCollection& systems)
     {
-
+        systems.addSystem<CullingSystem>(SystemGroup::PreRender);
     }
 
     void defaultBootstrap(ServiceProvider& services, EntityCommands& commands)
