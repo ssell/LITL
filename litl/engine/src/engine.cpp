@@ -220,7 +220,8 @@ namespace litl
 
     void Engine::render()
     {
-        if (m_pImpl->pSharedRenderer->beginRender())
+        // this is temporary ...
+        if (m_pImpl->pSharedRenderer->beginRender(0u))
         {
             //m_pImpl->pSharedRenderer->submitCommands(m_pImpl->pFrameCommandBuffer.get(), 0);
             m_pImpl->pSharedRenderer->endRender();

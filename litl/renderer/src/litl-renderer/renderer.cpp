@@ -272,9 +272,9 @@ namespace litl
     // Drawing
     // ---------------------------------------------------------------------------------
 
-    bool Renderer::beginRender() const noexcept
+    bool Renderer::beginRender(uint32_t maxWaitMs) const noexcept
     {
-        return m_pOps->beginRender(m_pContext);
+        return m_pOps->beginRender(m_pContext, maxWaitMs);
     }
 
     void Renderer::submitCommands(CommandBufferHandle commands) const noexcept

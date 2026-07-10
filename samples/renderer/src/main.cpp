@@ -133,7 +133,7 @@ int main()
 
         while (!sample.window->shouldClose())
         {
-            if (sample.renderer->beginRender())
+            if (sample.renderer->beginRender(0u))
             {
                 updateTiming(sample);
 

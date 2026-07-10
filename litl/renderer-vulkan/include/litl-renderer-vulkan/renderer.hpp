@@ -68,7 +68,7 @@ namespace litl::vulkan
     // rendererDrawOps.cpp
     // -------------------------------------------------------------------------------------
 
-    [[nodiscard]] bool beginRender(litl::RendererContext* context) noexcept;
+    [[nodiscard]] bool beginRender(litl::RendererContext* context, uint32_t maxWaitMs) noexcept;
     void submitCommands(litl::RendererContext* context, std::span<CommandBufferHandle const> commands) noexcept;
     RendererResult submitCommandsAndWait(litl::RendererContext* context, std::span<CommandBufferHandle const> commands) noexcept;
     void endRender(litl::RendererContext* context) noexcept;
