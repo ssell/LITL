@@ -9,7 +9,7 @@ namespace litl
         static constexpr uint32_t MaxRenderWaitTimeMs = 1000u;
     }
 
-    void RenderPass::render(Renderer* renderer, Camera* camera, std::vector<Entity> const& entities) const noexcept
+    void RenderPass::render(Renderer* renderer, Camera* camera, std::vector<RenderableEntity> const& entities) const noexcept
     {
         if (!camera->isMainCamera())
         {
