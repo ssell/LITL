@@ -16,7 +16,7 @@
 namespace litl
 {
     /// <summary>
-    /// Defined in integration.hpp and used by the RendererFactory in litl-engine
+    /// Defined in integration.hpp and used by the RenderManager in litl-engine
     /// </summary>
     /// <param name="pWindow"></param>
     /// <param name="rendererDescriptor"></param>

@@ -11,11 +11,14 @@
 
 namespace litl
 {
+    class Engine;
+    class RenderManager;
+
     class EngineCallbacks
     {
     public:
 
-        void setup(std::shared_ptr<ServiceProvider> serviceProvider, std::shared_ptr<FrameCallbacks> userCallbacks) noexcept;
+        void setup(Authority<Engine> authority, ServiceProvider& services, std::shared_ptr<FrameCallbacks> userCallbacks) noexcept;
         std::shared_ptr<FrameCallbacks> getFrameCallbacks() noexcept;
 
     protected:
@@ -24,6 +27,7 @@ namespace litl
 
         std::shared_ptr<World> m_pWorld{ nullptr };
         std::shared_ptr<SceneManager> m_pSceneManager{ nullptr };
+        std::shared_ptr<RenderManager> m_pRenderManager{ nullptr };
         std::shared_ptr<FrameCallbacks> m_pFrameCallbacks{ std::make_shared<FrameCallbacks>() };
         std::shared_ptr<FrameCallbacks> m_pUserFrameCallbacks{ nullptr };
     };

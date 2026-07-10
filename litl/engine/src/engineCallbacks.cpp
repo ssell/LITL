@@ -1,16 +1,20 @@
-#include "litl-engine/engineCallbacks.hpp"
 #include "litl-core/authority.hpp"
+#include "litl-engine/engine.hpp"
+#include "litl-engine/engineCallbacks.hpp"
+#include "litl-engine/render/renderManager.hpp"
 
 namespace litl
 {
-    void EngineCallbacks::setup(std::shared_ptr<ServiceProvider> serviceProvider, std::shared_ptr<FrameCallbacks> userCallbacks) noexcept
+    void EngineCallbacks::setup(Authority<Engine> authority, ServiceProvider& services, std::shared_ptr<FrameCallbacks> userCallbacks) noexcept
     {
-        m_pWorld = serviceProvider->get<World>();
-        m_pSceneManager = serviceProvider->get<SceneManager>();
+        m_pWorld = services.get<World>();
+        m_pSceneManager = services.get<SceneManager>();
+        m_pRenderManager = services.get<RenderManager>();
         m_pUserFrameCallbacks = (userCallbacks != nullptr) ? userCallbacks : std::make_shared<FrameCallbacks>();
 
-        LITL_FATAL_ASSERT_MSG(m_pWorld != nullptr, "Failed to inject litl::World into EngineCallbacks");
-        LITL_FATAL_ASSERT_MSG(m_pSceneManager != nullptr, "Failed to inject litl::SceneManager into EngineCallbacks");
+        LITL_FATAL_ASSERT_MSG((m_pWorld != nullptr), "Failed to inject World into EngineCallbacks");
+        LITL_FATAL_ASSERT_MSG((m_pSceneManager != nullptr), "Failed to inject SceneManager into EngineCallbacks");
+        LITL_FATAL_ASSERT_MSG((m_pRenderManager != nullptr), "Failed to inject RenderManager into EngineCallbacks");
 
         // ---------------------------------------------------------------------------------
         // Intraframe Sync Points
@@ -30,6 +34,7 @@ namespace litl
             {
                 m_pUserFrameCallbacks->invokeFrameStart();
             };
+
         // ---------------------------------------------------------------------------------
         // Startup Group
         // ---------------------------------------------------------------------------------
@@ -91,6 +96,7 @@ namespace litl
 
         m_pFrameCallbacks->onRender = [this]()
             {
+                m_pRenderManager->onRender({});
                 m_pUserFrameCallbacks->invokeRender();
             };
 

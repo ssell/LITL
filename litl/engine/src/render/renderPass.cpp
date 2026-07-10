@@ -1,9 +1,5 @@
-#include <chrono>
-
-#include "litl-core/assert.hpp"
 #include "litl-renderer/renderer.hpp"
 #include "litl-engine/render/renderPass.hpp"
-#include "litl-engine/ecs/systems/cullingSystem.hpp"
 #include "litl-engine/objects/camera.hpp"
 
 namespace litl
@@ -13,39 +9,7 @@ namespace litl
         static constexpr uint32_t MaxRenderWaitTimeMs = 1000u;
     }
 
-    void RenderPass::setup(ServiceProvider& services) noexcept
-    {
-        m_pRenderer = services.get<Renderer>();
-        LITL_FATAL_ASSERT_MSG((m_pRenderer != nullptr), "Failed to inject Renderer to RenderPass");
-    }
-
-    void RenderPass::onRender() noexcept
-    {
-        auto const& cullingBucket = CullingSystem::getCombinedCullingBucket();
-
-        if (!m_pRenderer->beginRender(MaxRenderWaitTimeMs))
-        {
-            logWarning("Failed to secure renderer before timing out after ", MaxRenderWaitTimeMs, " ms");
-            return;
-        }
-
-        for (auto& renderCamera : cullingBucket.cameraRenderableEntities)
-        {
-            if (renderCamera.camera == nullptr)
-            {
-                break;
-            }
-
-            if (renderCamera.entities.empty())
-            {
-                continue;
-            }
-
-            render(renderCamera.camera, renderCamera.entities);
-        }
-    }
-
-    void RenderPass::render(Camera* camera, std::vector<Entity> const& entities) noexcept
+    void RenderPass::render(Renderer* renderer, Camera* camera, std::vector<Entity> const& entities) const noexcept
     {
         if (!camera->isMainCamera())
         {
@@ -53,6 +17,49 @@ namespace litl
             return;
         }
 
-        // ... todo ...
+        auto commandBuffer = renderer->cmdBeginFrame();
+
+        // --- Begin rendering
+
+        const BeginRenderCommand beginRenderCommand{
+            .color = ColorAttachmentDescriptor {
+                .clearColor = color(0.05f, 0.05f, 0.075f, 1.0f)
+            }
+        };
+
+        const SetViewportAndScissorCommand setViewportScissorCommand{
+            .setViewport = SetViewportCommand {
+                .region = {
+                    .offset = { 0.0f, 0.0f },
+                    .extents = { 1.0f, 1.0f }           // normalized
+                },
+                .minDepth = 0.0f,
+                .maxDepth = 1.0f
+            },
+            .setScissor = SetScissorCommand {
+                .region = {
+                    .offset = { 0.0f, 0.0f },
+                    .extents = { 1.0f, 1.0f }           // normalized
+                }
+            }
+        };
+
+        renderer->cmdPipelineBarrier(commandBuffer, PipelineBarrierUndefinedToColor);
+        renderer->cmdBeginRender(commandBuffer, beginRenderCommand);
+        renderer->cmdSetViewportAndScissor(commandBuffer, setViewportScissorCommand);
+
+        // --- Render
+
+        if (!entities.empty())
+        {
+            // ... todo ...
+        }
+
+        // -- End rendering
+
+        renderer->cmdEndRender(commandBuffer);
+        renderer->cmdPipelineBarrier(commandBuffer, PipelineBarrierColorToPresent);
+        renderer->cmdEnd(commandBuffer);
+        renderer->submitCommands(commandBuffer);
     }
 }

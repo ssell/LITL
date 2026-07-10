@@ -1,7 +1,7 @@
 add_library(litl-engine STATIC
 	"src/engine.cpp"
 	"src/windowFactory.cpp" 
-	"src/rendererFactory.cpp" 
+	 
 	"src/frameLimiter.cpp" 
 	"src/config.cpp" 
 	"src/bootstrap.cpp" 
@@ -21,7 +21,7 @@ add_library(litl-engine STATIC
 	"src/objects/camera.cpp" 
 	"src/scene/sceneCameras.cpp" 
 	"src/ecs/systems/cullingSystem.cpp" 
-	"src/render/renderPass.cpp")
+	"src/render/renderPass.cpp" "src/render/renderManager.cpp")
 
 target_include_directories(litl-engine
 	PUBLIC
