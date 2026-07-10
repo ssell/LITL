@@ -93,9 +93,20 @@ namespace litl
                 break;
             }
 
-            // Simple sort by material and then mesh for now.
-            // In the future will need to check if the material is transparent so we can also sort from far to near.
+            std::sort(renderCamera.entities.begin(), renderCamera.entities.end(), [](RenderableEntity const& a, RenderableEntity const& b) -> bool {
+                // Simple sort by material and then mesh for now. In the future will need to check if the material is transparent so we can also sort from far to near.
+                // This sort will group all entities of the same material and mesh together. Example result:
+                //     [(mat0, mesh0), (mat0, mesh0), (mat0, mesh3), (mat1, mesh2), (mat1, mesh2), (mat1, mesh4), (mat2, mesh5)]
 
+                if (a.material.handle.index < b.material.handle.index)
+                {
+                    return true;
+                }
+                else
+                {
+                    return (a.mesh.handle.index < b.material.handle.index);
+                }
+            });
         }
     }
 
