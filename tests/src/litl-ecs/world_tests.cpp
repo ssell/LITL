@@ -478,6 +478,7 @@ namespace litl::tests
         World world;
         ServiceCollection collection{};
         collection.addSingleton<SystemSetupService>();
+        collection.addSingleton<JobScheduler>();
 
         auto services = collection.build();
         auto setupService = services->get<SystemSetupService>();
