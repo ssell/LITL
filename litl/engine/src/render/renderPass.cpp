@@ -1,10 +1,18 @@
+#include <chrono>
+
 #include "litl-core/assert.hpp"
 #include "litl-renderer/renderer.hpp"
 #include "litl-engine/render/renderPass.hpp"
 #include "litl-engine/ecs/systems/cullingSystem.hpp"
+#include "litl-engine/objects/camera.hpp"
 
 namespace litl
 {
+    namespace
+    {
+        static constexpr uint32_t MaxRenderWaitTimeMs = 1000u;
+    }
+
     void RenderPass::setup(ServiceProvider& services) noexcept
     {
         m_pRenderer = services.get<Renderer>();
@@ -14,6 +22,12 @@ namespace litl
     void RenderPass::onRender() noexcept
     {
         auto const& cullingBucket = CullingSystem::getCombinedCullingBucket();
+
+        if (!m_pRenderer->beginRender(MaxRenderWaitTimeMs))
+        {
+            logWarning("Failed to secure renderer before timing out after ", MaxRenderWaitTimeMs, " ms");
+            return;
+        }
 
         for (auto& renderCamera : cullingBucket.cameraRenderableEntities)
         {
@@ -33,6 +47,12 @@ namespace litl
 
     void RenderPass::render(Camera* camera, std::vector<Entity> const& entities) noexcept
     {
+        if (!camera->isMainCamera())
+        {
+            // ... only main camera for now just to get things working ...
+            return;
+        }
 
+        // ... todo ...
     }
 }

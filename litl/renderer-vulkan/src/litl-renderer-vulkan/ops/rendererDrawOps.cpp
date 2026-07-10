@@ -10,7 +10,7 @@ namespace litl::vulkan
     // Begin Render
     // -------------------------------------------------------------------------------------
 
-    bool isRenderReady(RendererContext& context, PerFrameSyncInfo const& frameSync) noexcept;
+    bool isRenderReady(RendererContext& context, PerFrameSyncInfo const& frameSync, uint32_t maxWaitMs) noexcept;
     bool acquireSwapChainIndex(RendererContext& context, PerFrameSyncInfo const& frameSync, uint32_t timeoutNs, uint32_t frameIndex, uint32_t* imageIndex) noexcept;
 
     /// <summary>
@@ -19,12 +19,12 @@ namespace litl::vulkan
     /// </summary>
     /// <param name="context"></param>
     /// <returns></returns>
-    bool beginRender(litl::RendererContext* context) noexcept
+    bool beginRender(litl::RendererContext* context, uint32_t maxWaitMs) noexcept
     {
         auto* vulkanContext = unwrap(context);
         auto& frameSync = vulkanContext->getCurrFrameSyncInfo();
 
-        if (!isRenderReady(*vulkanContext, frameSync))
+        if (!isRenderReady(*vulkanContext, frameSync, maxWaitMs))
         {
             // Fence not ready. Previous frame is still rendering.
             return false;
@@ -56,27 +56,13 @@ namespace litl::vulkan
     /// </summary>
     /// <param name="context"></param>
     /// <param name="frameSync"></param>
+    /// <param name="maxWaitMs"></param>
     /// <returns></returns>
-    bool isRenderReady(RendererContext& context, PerFrameSyncInfo const& frameSync) noexcept
+    bool isRenderReady(RendererContext& context, PerFrameSyncInfo const& frameSync, uint32_t maxWaitMs) noexcept
     {
-        const VkResult fenceResult = vkGetFenceStatus(context.device.vkDevice, frameSync.renderFence);
-
-        if (fenceResult != VK_SUCCESS)
-        {
-            // Fence is not signaled OR is in error state.
-            if (fenceResult == VK_NOT_READY)
-            {
-                // Exit out of rendering so time can be spent on logic, etc.
-                return false;
-            }
-            else
-            {
-                // todo log error
-                return false;
-            }
-        }
-
-        return true;
+        // wait time for vkWaitForFences is in nanoseconds
+        const VkResult fenceResult = vkWaitForFences(context.device.vkDevice, 1u, &frameSync.renderFence, VK_TRUE, static_cast<uint64_t>(Constants::millisecond_to_nanoseconds) * static_cast<uint64_t>(maxWaitMs));
+        return fenceResult == VK_SUCCESS;
     }
 
     /// <summary>

@@ -76,7 +76,7 @@ namespace litl
         RendererResult (*unmapTexture)(RendererContext*, TextureHandle);
 
         // drawing
-        bool (*beginRender)(RendererContext*);
+        bool (*beginRender)(RendererContext*, uint32_t);
         void (*submitCommands)(RendererContext*, std::span<CommandBufferHandle const>);
         RendererResult (*submitCommandsAndWait)(RendererContext*, std::span<CommandBufferHandle const>);
         void (*endRender)(RendererContext*);
@@ -449,8 +449,9 @@ namespace litl
         /// <summary>
         /// Checks if the previous frame is done rendering and if we can begin rendering the next frame.
         /// </summary>
+        /// <param name="maxWaitMs">If 0, then there will be no waiting for the frame to be ready.</param>
         /// <returns></returns>
-        [[nodiscard]] bool beginRender() const noexcept;
+        [[nodiscard]] bool beginRender(uint32_t maxWaitMs) const noexcept;
 
         /// <summary>
         /// Submits the provided command buffer commands.
