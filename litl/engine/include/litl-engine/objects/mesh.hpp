@@ -4,13 +4,19 @@
 #include <memory>
 #include <span>
 
+#include "litl-engine/objects/objectDescriptor.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
-#include "litl-engine/objects/mesh/meshDescriptor.hpp"
+#include "litl-engine/objects/mesh.hpp"
 #include "litl-engine/types/vertex.hpp"
 
 namespace litl
 {
     class ObjectPool;
+
+    struct MeshDescriptor : ObjectDescriptor
+    {
+        // ... 
+    };
 
     class Mesh
     {

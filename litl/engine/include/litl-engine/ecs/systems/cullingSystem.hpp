@@ -37,6 +37,9 @@ namespace litl
         void reset() noexcept;
     };
 
+    /// <summary>
+    /// Responsible for compiling a list of all renderable entities visible to each camera.
+    /// </summary>
     class CullingSystem
     {
         /// <summary>
@@ -51,6 +54,10 @@ namespace litl
 
     public:
 
+        /// <summary>
+        /// Injects the required services.
+        /// </summary>
+        /// <param name="services"></param>
         void setup(ServiceProvider& services);
 
         /// <summary>
@@ -80,6 +87,7 @@ namespace litl
         std::shared_ptr<SceneView> m_pSceneView;
         std::vector<Entity> m_tempVisibleEntities;
         std::array<CameraFrustumEntities, SceneCameras::MaxSceneCameras> m_cameraVisibleEntities;
+
         static std::array<CullingBucket, Constants::max_thread_count> s_cullingBuckets;
         static CullingBucket s_combinedBucket;
         static bool s_combined;

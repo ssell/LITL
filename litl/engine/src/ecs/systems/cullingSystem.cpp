@@ -5,7 +5,7 @@
 #include "litl-ecs/entity/entityCommands.hpp"
 #include "litl-engine/ecs/systems/cullingSystem.hpp"
 #include "litl-engine/scene/sceneView.hpp"
-#include "litl-engine/objects/camera/camera.hpp"
+#include "litl-engine/objects/camera.hpp"
 
 namespace litl
 {

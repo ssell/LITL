@@ -1,4 +1,4 @@
-#include "litl-engine/objects/buffer/gpuBuffer.hpp"
+#include "litl-engine/objects/gpuBuffer.hpp"
 #include "litl-core/assert.hpp"
 
 namespace litl

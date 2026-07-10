@@ -5,8 +5,8 @@
 #include "litl-core/math/types.hpp"
 #include "litl-core/math/bounds.hpp"
 #include "litl-ecs/entity/entity.hpp"
+#include "litl-engine/objects/objectDescriptor.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
-#include "litl-engine/objects/camera/cameraDescriptor.hpp"
 
 namespace litl
 {
@@ -14,6 +14,37 @@ namespace litl
     class Scene;
     class SceneCameras;
     class World;
+
+    /// <summary>
+    /// Predefined selection of camera processing order values.
+    /// Lower values are processed first.
+    /// </summary>
+    enum class CameraProcessOrder : uint32_t
+    {
+        /// <summary>
+        /// Use for cameras that are to be rendered/processed before the main camera.
+        /// </summary>
+        Preprocess = 50u,
+
+        /// <summary>
+        /// The process position enforced for main camera.
+        /// </summary>
+        MainCamera = 100u,
+
+        /// <summary>
+        /// Use for cameras that are to be rendered/processed after the main camera.
+        /// </summary>
+        Postprocess = 150u
+    };
+
+    struct CameraDescriptor : ObjectDescriptor
+    {
+        /// <summary>
+        /// The priority level for the camera.
+        /// Cameras with a lower level are processed first.
+        /// </summary>
+        uint32_t processOrder = static_cast<uint32_t>(CameraProcessOrder::Postprocess);
+    };
 
     class Camera
     {

@@ -1,4 +1,4 @@
-#include "litl-engine/objects/camera/camera.hpp"
+#include "litl-engine/objects/camera.hpp"
 #include "litl-ecs/world.hpp"
 #include "litl-engine/ecs/components/transform.hpp"
 #include "litl-engine/ecs/components/cameraRef.hpp"

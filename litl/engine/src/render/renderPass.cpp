@@ -33,6 +33,6 @@ namespace litl
 
     void RenderPass::render(Camera* camera, std::vector<Entity> const& entities) noexcept
     {
-        // ... todo ...
+
     }
 }
