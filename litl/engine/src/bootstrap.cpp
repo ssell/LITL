@@ -4,8 +4,8 @@
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/scene/sceneManager.hpp"
 #include "litl-engine/scene/sceneView.hpp"
+#include "litl-engine/render/renderManager.hpp"
 #include "litl-renderer/window.hpp"
-#include "litl-renderer/renderer.hpp"
 #include "litl-ecs/world.hpp"
 #include "litl-engine/ecs/systems/cullingSystem.hpp"
 
@@ -18,7 +18,7 @@ namespace litl::Internal
         services.addSingleton<JobScheduler>();
         services.addSingleton<World>();
         services.addSingleton<Window>();
-        services.addSingleton<Renderer>();
+        services.addSingleton<RenderManager>();
         services.addSingleton<ObjectPool>();
         services.addSingleton<SceneManager>();
         services.addSingleton<SceneView>();

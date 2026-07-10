@@ -29,13 +29,9 @@ namespace litl
     private:
 
         bool createWindow() noexcept;
-        bool createRenderer() noexcept;
-
         bool shouldRun() noexcept;
-
         void run();
         void update();
-        void render();
 
         struct Impl;
         std::unique_ptr<Impl> m_pImpl;

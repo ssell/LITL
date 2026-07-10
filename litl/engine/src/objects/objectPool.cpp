@@ -4,13 +4,13 @@
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/world.hpp"
 #include "litl-engine/objects/objectPool.hpp"
-#include "litl-renderer/renderer.hpp"
+#include "litl-engine/render/renderManager.hpp"
 
 namespace litl
 {
     struct ObjectPool::Impl
     {
-        std::shared_ptr<Renderer> renderer;
+        std::shared_ptr<RenderManager> renderer;
         std::shared_ptr<World> world;
 
         HandlePool<Camera, CameraHandleTag> cameraPool;
@@ -30,10 +30,10 @@ namespace litl
 
     void ObjectPool::setup(ServiceProvider& services) noexcept
     {
-        m_impl->renderer = services.get<Renderer>();
+        m_impl->renderer = services.get<RenderManager>();
         m_impl->world = services.get<World>();
 
-        LITL_FATAL_ASSERT_MSG((m_impl->renderer != nullptr), "Failed to inject Renderer to ObjectPool");
+        LITL_FATAL_ASSERT_MSG((m_impl->renderer != nullptr), "Failed to inject RenderManager to ObjectPool");
         LITL_FATAL_ASSERT_MSG((m_impl->world != nullptr), "Failed to inject World to ObjectPool");
     }
 

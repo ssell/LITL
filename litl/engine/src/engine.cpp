@@ -8,11 +8,11 @@
 #include "litl-ecs/world.hpp"
 #include "litl-engine/engine.hpp"
 #include "litl-engine/windowFactory.hpp"
-#include "litl-engine/rendererFactory.hpp"
 #include "litl-engine/frameLimiter.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/scene/sceneManager.hpp"
 #include "litl-engine/engineCallbacks.hpp"
+#include "litl-engine/render/renderManager.hpp"
 
 namespace litl
 {
@@ -35,7 +35,7 @@ namespace litl
         std::shared_ptr<Window> pSharedWindow{ nullptr };
         std::shared_ptr<JobScheduler> pSharedJobScheduler{ nullptr };
         std::shared_ptr<World> pSharedECSWorld{ nullptr };
-        std::shared_ptr<Renderer> pSharedRenderer{ nullptr };
+        std::shared_ptr<RenderManager> pShaderRenderManager{ nullptr };
         std::shared_ptr<ObjectPool> pSharedObjectPool{ nullptr };
         std::shared_ptr<SceneManager> pSharedSceneManager{ nullptr };
         
@@ -48,7 +48,7 @@ namespace litl
                 userCallbacksFunc(userCallbacks);
             }
 
-            callbacks.setup(pServiceProvider, userCallbacks);
+            callbacks.setup({}, *pServiceProvider, userCallbacks);
         }
     };
 
@@ -100,6 +100,7 @@ namespace litl
         m_pImpl->pSharedECSWorld = m_pImpl->pServiceProvider->get<World>();
         m_pImpl->pSharedObjectPool = m_pImpl->pServiceProvider->get<ObjectPool>();
         m_pImpl->pSharedSceneManager = m_pImpl->pServiceProvider->get<SceneManager>();
+        m_pImpl->pShaderRenderManager = m_pImpl->pServiceProvider->get<RenderManager>();
 
         m_pImpl->pSharedObjectPool->setup((*m_pImpl->pServiceProvider));
         m_pImpl->pSharedSceneManager->setup(Authority<Engine>{}, (*m_pImpl->pServiceProvider));
@@ -125,13 +126,13 @@ namespace litl
             return false;
         }
 
-        if (!createWindow() || !createRenderer())
+        if (!createWindow())
         {
             return false;
         }
 
+        m_pImpl->pShaderRenderManager->setup({}, (*m_pImpl->pServiceProvider));
         m_pImpl->pSharedECSWorld->setup((*m_pImpl->pServiceProvider), m_pImpl->callbacks.getFrameCallbacks());
-
         m_pImpl->setup.bootstrap((*m_pImpl->pServiceProvider), (m_pImpl->pSharedECSWorld->getCommandBuffer()));
 
         if (m_pImpl->userBootstrap != nullptr)
@@ -175,26 +176,6 @@ namespace litl
         return true;
     }
 
-    bool Engine::createRenderer() noexcept
-    {
-        logInfo("Creating renderer with ", RendererBackendNames[static_cast<uint32_t>(m_pImpl->pSharedConfig->rendererSettings.rendererType)], " backend ...");
-
-        injectRenderer((*m_pImpl->pServiceProvider), m_pImpl->pSharedWindow.get(), m_pImpl->pSharedConfig->rendererSettings);
-        m_pImpl->pSharedRenderer = m_pImpl->pServiceProvider->get<Renderer>();
-
-        if (!m_pImpl->pSharedRenderer->build())
-        {
-            logCritical("Failed to initialize Renderer");
-            return false;
-        }
-
-        //m_pImpl->pFrameCommandBuffer = m_pImpl->pSharedRenderer->getResourceAllocator()->createCommandBuffer();
-
-        logInfo("... Window and Renderer creation successful.");
-
-        return true;
-    }
-
     bool Engine::shouldRun() noexcept
     {
         return !m_pImpl->pSharedWindow->shouldClose();
@@ -205,7 +186,6 @@ namespace litl
         m_pImpl->pSharedFrameLimiter->frameStart();
 
         update();
-        render();
 
         m_pImpl->pSharedJobScheduler->wait();
         m_pImpl->pSharedFrameLimiter->frameEnd();
@@ -216,15 +196,5 @@ namespace litl
         m_pImpl->pSharedECSWorld->run(
             m_pImpl->pSharedFrameLimiter->frameDelta(),
             1.0f / static_cast<float>(m_pImpl->pSharedConfig->engineSettings.ticksPerSecond));
-    }
-
-    void Engine::render()
-    {
-        // this is temporary ...
-        if (m_pImpl->pSharedRenderer->beginRender(0u))
-        {
-            //m_pImpl->pSharedRenderer->submitCommands(m_pImpl->pFrameCommandBuffer.get(), 0);
-            m_pImpl->pSharedRenderer->endRender();
-        }
     }
 }
