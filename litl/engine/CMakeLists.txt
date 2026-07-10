@@ -14,7 +14,14 @@ add_library(litl-engine STATIC
 	"src/scene/sceneChangeProcessor.cpp"
 	"src/containers/containerSpecializations.cpp"
 	"src/objects/objectPool.cpp" 
-	"src/objects/mesh/mesh.cpp" "src/objects/buffer/gpuBuffer.cpp"  "src/scene/sceneTransforms.cpp" "src/scene/sceneCulling.cpp"  "src/objects/camera/camera.cpp" "src/scene/sceneCameras.cpp" "src/ecs/systems/cullingSystem.cpp" "src/render/renderPass.cpp")
+	"src/objects/mesh.cpp" 
+	"src/objects/gpuBuffer.cpp"  
+	"src/scene/sceneTransforms.cpp" 
+	"src/scene/sceneCulling.cpp"  
+	"src/objects/camera.cpp" 
+	"src/scene/sceneCameras.cpp" 
+	"src/ecs/systems/cullingSystem.cpp" 
+	"src/render/renderPass.cpp")
 
 target_include_directories(litl-engine
 	PUBLIC

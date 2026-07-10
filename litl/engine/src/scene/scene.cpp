@@ -4,7 +4,7 @@
 #include "litl-engine/scene/scene.hpp"
 #include "litl-engine/ecs/components/bounds.hpp"
 #include "litl-engine/objects/objectPool.hpp"
-#include "litl-engine/objects/camera/camera.hpp"
+#include "litl-engine/objects/camera.hpp"
 
 namespace litl
 {

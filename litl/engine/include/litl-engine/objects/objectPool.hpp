@@ -3,9 +3,9 @@
 
 #include "litl-core/impl.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
-#include "litl-engine/objects/camera/camera.hpp"
-#include "litl-engine/objects/mesh/mesh.hpp"
-#include "litl-engine/objects/buffer/gpuBuffer.hpp"
+#include "litl-engine/objects/camera.hpp"
+#include "litl-engine/objects/mesh.hpp"
+#include "litl-engine/objects/gpuBuffer.hpp"
 
 namespace litl
 {

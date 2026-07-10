@@ -2,7 +2,7 @@
 
 #include "litl-engine/scene/sceneCameras.hpp"
 #include "litl-engine/objects/objectPool.hpp"
-#include "litl-engine/objects/camera/camera.hpp"
+#include "litl-engine/objects/camera.hpp"
 
 namespace litl
 {
