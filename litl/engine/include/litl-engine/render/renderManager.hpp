@@ -11,6 +11,7 @@ namespace litl
     class Engine;
     class EngineCallbacks;
     class Window;
+    struct CullingBucket;
 
     struct RendererConfiguration;
 
@@ -27,6 +28,7 @@ namespace litl
 
     private:
 
+        void sortVisibleEntities(CullingBucket& cullingBucket) noexcept;
         void createRenderer(Window* window, RendererConfiguration const& rendererDescriptor) noexcept;
 
         Renderer* m_pRenderer{ nullptr };

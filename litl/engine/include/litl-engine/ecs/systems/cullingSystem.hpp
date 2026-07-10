@@ -6,11 +6,8 @@
 #include <vector>
 
 #include "litl-core/containers/flatHashSet.hpp"
-#include "litl-ecs/entity/entity.hpp"
-#include "litl-engine/ecs/components/materialRef.hpp"
-#include "litl-engine/ecs/components/meshRef.hpp"
-#include "litl-engine/ecs/components/transform.hpp"
 #include "litl-engine/scene/sceneCameras.hpp"
+#include "litl-engine/render/renderableEntity.hpp"
 
 namespace litl
 {
@@ -30,7 +27,7 @@ namespace litl
         struct CameraRenderableEntities
         {
             Camera* camera = nullptr;
-            std::vector<Entity> entities;
+            std::vector<RenderableEntity> entities;
         };
 
         std::array<CameraRenderableEntities, SceneCameras::MaxSceneCameras> cameraRenderableEntities;

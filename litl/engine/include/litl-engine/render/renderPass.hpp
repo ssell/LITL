@@ -2,7 +2,7 @@
 #define LITL_ENGINE_RENDER_PASS_H__
 
 #include <vector>
-#include "litl-ecs/entity/entity.hpp"
+#include "litl-engine/render/renderableEntity.hpp"
 
 namespace litl
 {
@@ -13,7 +13,7 @@ namespace litl
     {
     public:
 
-        void render(Renderer* renderer, Camera* camera, std::vector<Entity> const& entities) const noexcept;
+        void render(Renderer* renderer, Camera* camera, std::vector<RenderableEntity> const& entities) const noexcept;
     };
 }
 

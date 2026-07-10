@@ -93,6 +93,11 @@ namespace litl
 
     void CullingSystem::update(EntityCommands& commands, float dt, Entity entity, Transform const& transform, MeshRef const& mesh, MaterialRef const& material)
     {
+        if (!mesh.handle.isValid() || !material.handle.isValid())
+        {
+            return;
+        }
+
         for (uint32_t cameraIndex = 0u; cameraIndex < m_cameraVisibleEntities.size(); ++cameraIndex)
         {
             if (m_cameraVisibleEntities[cameraIndex].camera == nullptr)
@@ -104,7 +109,12 @@ namespace litl
             if (m_cameraVisibleEntities[cameraIndex].entities.contains(entity))
             {
                 // We are visible to this camera, add to our thread-specific culling bucket.
-                s_cullingBuckets[t_threadIndex].cameraRenderableEntities[cameraIndex].entities.push_back(entity);
+                s_cullingBuckets[t_threadIndex].cameraRenderableEntities[cameraIndex].entities.push_back(RenderableEntity{
+                    .entity = entity,
+                    .transform = transform,
+                    .mesh = mesh,
+                    .material = material
+                });
             }
         }
     }

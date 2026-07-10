@@ -81,6 +81,24 @@ namespace litl
         return m_pRenderer;
     }
 
+    void RenderManager::sortVisibleEntities(CullingBucket& cullingBucket) noexcept
+    {
+        // Do a single-thread sequential sort of all camera entities for now.
+        // Profile in the future under stress tests and determine if we need to split work into jobs.
+
+        for (auto& renderCamera : cullingBucket.cameraRenderableEntities)
+        {
+            if (renderCamera.camera == nullptr)
+            {
+                break;
+            }
+
+            // Simple sort by material and then mesh for now.
+            // In the future will need to check if the material is transparent so we can also sort from far to near.
+
+        }
+    }
+
     void RenderManager::onRender(Authority<EngineCallbacks> authority) noexcept
     {
         auto const& cullingBucket = CullingSystem::getCombinedCullingBucket();
