@@ -2,12 +2,10 @@
 #include <unordered_set>
 
 #include "litl-ecs/entity/entityCommandProcessor.hpp"
-#include "litl-ecs/archetype/archetypeRegistry.hpp"
-
 
 namespace litl
 {
-    void EntityCommandProcessor::process(World* world, std::vector<EntityCommands*>& incomingCommands, std::vector<EntityChange>& entityChanges) noexcept
+    void EntityCommandProcessor::process(World const& world, std::vector<EntityCommands*>& incomingCommands, std::vector<EntityChange>& entityChanges) noexcept
     {
         for (auto* commandBuffer : incomingCommands)
         {
@@ -75,13 +73,13 @@ namespace litl
                 // Apply the awaiting queued up add/remove component commands
                 if (!entityRemoved && archetypeChanged)
                 {
-                    currArchetype = world->mutateImmediate(currEntity, addedComponents, removedComponents);
+                    currArchetype = world.mutateImmediate(currEntity, addedComponents, removedComponents);
                     entityChanges.emplace_back(EntityChangeType::ChangeArchetype, currEntity, prevArchetype, currArchetype);
                 }
 
                 // Reset loop state
                 currEntity = command.entity;
-                prevArchetype = world->getEntityRecord(currEntity).archetype->id();
+                prevArchetype = world.getEntityRecord(currEntity).archetype->id();
                 currArchetype = prevArchetype;
                 entityRemoved = false;
                 archetypeChanged = false;
@@ -104,7 +102,7 @@ namespace litl
 
             case EntityCommandType::DestroyEntity:
                 entityRemoved = true;
-                world->destroyImmediate(currEntity);
+                world.destroyImmediate(currEntity);
                 entityChanges.emplace_back(EntityChangeType::DestroyEntity, currEntity, prevArchetype, ecs::Constants::empty_archetype_id);
                 break;
 
@@ -128,6 +126,16 @@ namespace litl
 
             default:
                 break;
+            }
+        }
+
+        // Capture potential archetype change for the last entity to be modified.
+        if (!currEntity.isNull())
+        {
+            if (!entityRemoved && archetypeChanged)
+            {
+                currArchetype = world.mutateImmediate(currEntity, addedComponents, removedComponents);
+                entityChanges.emplace_back(EntityChangeType::ChangeArchetype, currEntity, prevArchetype, currArchetype);
             }
         }
 

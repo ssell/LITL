@@ -174,7 +174,7 @@ namespace litl::tests
 
         std::vector<EntityCommand> materialized;
         materialized.resize(commands.actionableCommandCount());
-        commands.extractCommands(&world, materialized, 0);
+        commands.extractCommands(world, materialized, 0);
 
         REQUIRE(materialized[0].entity.isNull() == false);
         REQUIRE(materialized[0].type == EntityCommandType::CreateEntity);
@@ -213,7 +213,7 @@ namespace litl::tests
 
         std::vector<EntityCommand> materialized;
         materialized.resize(commands.actionableCommandCount());
-        commands.extractCommands(&world, materialized, 0);
+        commands.extractCommands(world, materialized, 0);
 
         REQUIRE(materialized[0].type == EntityCommandType::CreateEntity);
         REQUIRE(materialized[0].entity.isNull() == false);
@@ -269,7 +269,7 @@ namespace litl::tests
 
             std::vector<EntityCommand> materialized;
             materialized.resize(commands.actionableCommandCount());
-            commands.extractCommands(&world, materialized, 0);
+            commands.extractCommands(world, materialized, 0);
 
             REQUIRE(materialized.size() == ExpectedCommandCount);
 

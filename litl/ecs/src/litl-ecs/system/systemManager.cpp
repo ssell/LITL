@@ -11,8 +11,8 @@
 #include "litl-ecs/system/systemManager.hpp"
 #include "litl-ecs/system/systemGraph.hpp"
 #include "litl-ecs/system/system.hpp"
-#include "litl-ecs/entity/entityCommandProcessor.hpp"
 #include "litl-ecs/frameCallbacks.hpp"
+#include "litl-ecs/world.hpp"
 
 namespace litl
 {
@@ -30,10 +30,6 @@ namespace litl
         std::vector<System*> runningSystems;
         FlatHashMap<SystemTypeId, uint32_t> systemMap;        // value = index into systems
         std::vector<System*> newSystems;
-        std::vector<EntityChange> entityChanges;
-
-        EntityCommandProcessor commandProcessor;
-        std::vector<EntityCommands*> commandBuffers;
     };
 
     SystemManager::SystemManager()
@@ -199,28 +195,8 @@ namespace litl
 
             layerFence.wait();
 
-            processCommandBuffers(world, group);                                    // Sync command buffers now that all system-related jobs are done.
+            world.processCommandBuffers(group);
         }
-    }
-
-    void SystemManager::processCommandBuffers(World& world, SystemGroup group) const noexcept
-    {
-        auto& allCommandBuffers = world.getCommandBuffers();
-
-        if (allCommandBuffers.size() > m_pImpl->commandBuffers.size())
-        {
-            m_pImpl->commandBuffers.reserve(allCommandBuffers.size());
-            m_pImpl->commandBuffers.clear();
-
-            for (auto& commandBufferPtr : allCommandBuffers)
-            {
-                m_pImpl->commandBuffers.push_back(commandBufferPtr.get());
-            }
-        }
-
-        m_pImpl->commandProcessor.process(&world, m_pImpl->commandBuffers, m_pImpl->entityChanges);
-        m_pImpl->callbacks->invokeSyncPoint(group, m_pImpl->entityChanges);
-        m_pImpl->entityChanges.clear();
     }
 
     SystemInfoGraph SystemManager::buildInfoGraph() const noexcept

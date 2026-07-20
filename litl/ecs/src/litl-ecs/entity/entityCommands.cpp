@@ -21,7 +21,7 @@ namespace litl
         /// Implementation of material here (instead of the "parent") to avoid constantly hitting the m_pImpl point.
         /// </summary>
         /// <param name="world"></param>
-        void materialize(World* world) noexcept
+        void materialize(World const& world) noexcept
         {
             materialized.resize(nextId);
 
@@ -30,7 +30,7 @@ namespace litl
             {
                 if (deferredCommand.type == EntityCommandType::CreateEntity)
                 {
-                    auto materializedEntity = world->createImmediate();
+                    auto materializedEntity = world.createImmediate();
                     materialized[deferredCommand.deferredEntity.index] = materializedEntity;
 
                     // Though nothing else is done within the ECS library with this command,
@@ -80,9 +80,8 @@ namespace litl
         return m_pImpl->commands.actionableCommandCount();
     }
 
-    void EntityCommands::extractCommands(World* world, std::vector<EntityCommand>& commands, size_t offset) noexcept
+    void EntityCommands::extractCommands(World const& world, std::vector<EntityCommand>& commands, size_t offset) noexcept
     {
-        assert(world != nullptr);
         assert(commands.size() >= (m_pImpl->commands.count() + offset));
 
         materialize(world);
@@ -266,7 +265,7 @@ namespace litl
         setParent(entity, Entity::null());
     }
 
-    void EntityCommands::materialize(World* world) noexcept
+    void EntityCommands::materialize(World const& world) noexcept
     {
         m_pImpl->materialize(world);
     }

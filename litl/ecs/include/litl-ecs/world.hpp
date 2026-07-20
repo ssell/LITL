@@ -3,7 +3,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <optional>
 #include <type_traits>
 
 #include "litl-core/services/serviceProvider.hpp"
@@ -46,8 +45,7 @@ namespace litl
         /// <summary>
         /// Invoked once by the Engine prior to the first frame.
         /// </summary>
-        /// <param name="services"></param>
-        void setupSystems(ServiceProvider& services) const noexcept;
+        void finalize() const noexcept;
 
         /// <summary>
         /// Immediately creates a new Entity.
@@ -359,7 +357,6 @@ namespace litl
         /// <returns></returns>
         [[nodiscard]] EntityCommands& getCommandBuffer() const noexcept;
 
-
         /// <summary>
         /// Builds and returns a SystemInfoGraph which details all systems in the world and where they are "located" (group and layer).
         /// </summary>
@@ -380,7 +377,7 @@ namespace litl
         friend class SystemManager;
 
         [[nodiscard]] SystemManager& getSystemManager() const noexcept;
-        [[nodiscard]] std::vector<std::unique_ptr<EntityCommands>> const& getCommandBuffers() const noexcept;
+        void processCommandBuffers(SystemGroup group) const noexcept;
         
         struct Impl;
         std::unique_ptr<Impl> m_pImpl;

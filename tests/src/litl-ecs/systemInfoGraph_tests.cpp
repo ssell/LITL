@@ -1,8 +1,8 @@
 #include "tests.hpp"
 
+#include "litl-ecs/world.hpp"
 #include "litl-core/services/serviceCollection.hpp"
 #include "litl-core/services/serviceProvider.hpp"
-#include "litl-ecs/world.hpp"
 #include "litl-ecs/system/systemRegistry.hpp"
 
 #define BasicSystem(A) struct A { void setup(ServiceProvider& services) {} void prepare() {} void update(EntityCommands& commands, float dt, Entity entity) {} };
@@ -39,8 +39,8 @@ namespace litl::tests
         SystemCollection& systemCollection = world.getSystemCollection();
 
         systemCollection.addSystem<SIGSystemA>(SystemGroup::Update);
+        world.finalize();
 
-        world.setupSystems(serviceProvider);
         SystemInfoGraph graph = world.buildInfoGraph();
 
         REQUIRE(graph.size() == 1);
@@ -64,7 +64,7 @@ namespace litl::tests
         systemCollection.addSystem<SIGSystemD>(SystemGroup::Update).placement(SystemPlacementHint::First);
         systemCollection.addSystem<SIGSystemE>(SystemGroup::Update).dependsOn<SIGSystemA>();;
 
-        world.setupSystems(serviceProvider);
+        world.finalize();
 
         // Expected layers:
         // [D]                  <--- wants first
@@ -96,7 +96,7 @@ namespace litl::tests
         systemCollection.addSystem<SIGSystemD>(SystemGroup::Startup).placement(SystemPlacementHint::First);
         systemCollection.addSystem<SIGSystemE>(SystemGroup::PreRender).dependsOn<SIGSystemA>();;
 
-        world.setupSystems(serviceProvider);
+        world.finalize();
 
         // Expected to just confirm to the group ordering.
 

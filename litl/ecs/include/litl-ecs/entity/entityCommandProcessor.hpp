@@ -24,7 +24,7 @@ namespace litl
         /// <param name="world"></param>
         /// <param name="incomingCommands"></param>
         /// <param name="outgoingCommands"></param>
-        void process(World* world, std::vector<EntityCommands*>& incomingCommands, std::vector<EntityChange>& entityChanges) noexcept;
+        void process(World const& world, std::vector<EntityCommands*>& incomingCommands, std::vector<EntityChange>& entityChanges) noexcept;
 
     protected:
 

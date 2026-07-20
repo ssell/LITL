@@ -1,4 +1,5 @@
 #include "litl-engine/startup.hpp"
+#include "litl-engine/ecs/common.hpp"
 
 using namespace litl;
 
@@ -49,7 +50,10 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     sceneManager->createScene({});
     sceneView->setMainCamera(objectPool->createCamera({}));
 
-    auto meshHandle = createTriangleMesh(*objectPool);
+    auto triangleEntity = commands.createEntity();
+    commands.addComponent(triangleEntity, Transform{});
+    commands.addComponent(triangleEntity, MeshRef{ .handle = createTriangleMesh(*objectPool) });
+    commands.addComponent(triangleEntity, MaterialRef{ .handle = {} });     // ... todo ...
 }
 
 int main()
