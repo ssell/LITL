@@ -87,7 +87,7 @@ namespace litl
         auto handle = m_impl->cameraPool.create({});
         auto* cameraRef = m_impl->cameraPool.get(handle);
 
-        cameraRef->create(descriptor, *(m_impl->world.get()), handle);
+        cameraRef->create({}, descriptor, *(m_impl->world.get()), handle);
 
         return handle;
     }
@@ -108,7 +108,7 @@ namespace litl
 
         if (camera != nullptr)
         {
-            camera->destroy();
+            camera->destroy({});
             m_impl->cameraPool.destroy(handle);
         }
     }
@@ -120,7 +120,7 @@ namespace litl
     GpuBufferHandle ObjectPool::createGpuBuffer(GpuBufferDescriptor const& descriptor) noexcept
     {
         GpuBuffer buffer{};
-        buffer.create(descriptor);
+        buffer.create({}, descriptor);
         return m_impl->gpuBufferPool.create(buffer);
     }
 
@@ -140,7 +140,7 @@ namespace litl
 
         if (buffer != nullptr)
         {
-            buffer->destroy();
+            buffer->destroy({});
             m_impl->gpuBufferPool.destroy(handle);
         }
     }
@@ -154,11 +154,13 @@ namespace litl
         Mesh mesh{};
 
         const GpuBufferDescriptor vertexBufferDescriptor{
-            // ... todo ...
+            .bufferStrategy = GpuBufferingStrategy::Single,
+            .bytes = descriptor.vertexInfo.vertexCount * descriptor.vertexInfo.vertexByteSize
         };
 
         const GpuBufferDescriptor indexBufferDescriptor{
-            // ... todo ...
+            .bufferStrategy = GpuBufferingStrategy::Single,
+            .bytes = descriptor.indexInfo.indexCount * descriptor.indexInfo.indexByteSize
         };
 
         const GpuBufferHandle vertexBuffer = createGpuBuffer(vertexBufferDescriptor);
@@ -166,7 +168,7 @@ namespace litl
 
         LITL_ASSERT_MSG((vertexBuffer.isValid() && indexBuffer.isValid()), "Failed to create vertex and/or index buffer for mesh.", {});
 
-        mesh.create(*this, descriptor, vertexBuffer, indexBuffer);
+        mesh.create({}, *this, descriptor, vertexBuffer, indexBuffer);
 
         return m_impl->meshPool.create(mesh);
     }
@@ -187,7 +189,7 @@ namespace litl
 
         if (mesh != nullptr)
         {
-            mesh->destroy();
+            mesh->destroy({});
             m_impl->meshPool.destroy(handle);
         }
     }

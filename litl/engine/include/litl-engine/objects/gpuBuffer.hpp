@@ -5,6 +5,7 @@
 #include <span>
 #include <vector>
 
+#include "litl-core/authority.hpp"
 #include "litl-engine/objects/objectDescriptor.hpp"
 #include "litl-renderer/resources/buffer.hpp"
 
@@ -38,11 +39,29 @@ namespace litl
         /// How many underlying buffers store data for this buffer.
         /// </summary>
         GpuBufferingStrategy bufferStrategy = GpuBufferingStrategy::Single;
+
+        /// <summary>
+        /// The size of this buffer in bytes.
+        /// </summary>
+        uint32_t bytes{ 0u };
     };
 
     class GpuBuffer
     {
     public:
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="auth"></param>
+        /// <param name="descriptor"></param>
+        void create(Authority<ObjectPool> auth, GpuBufferDescriptor const& descriptor) noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="auth"></param>
+        void destroy(Authority<ObjectPool> auth) noexcept;
 
         /// <summary>
         /// Swaps the underlying buffers.
@@ -84,11 +103,6 @@ namespace litl
         [[nodiscard]] std::span<std::byte const> getData() const noexcept;
 
     private:
-
-        friend class ObjectPool;
-
-        void create(GpuBufferDescriptor const& descriptor) noexcept;
-        void destroy() noexcept;
 
         /// <summary>
         /// The descriptor that created the mesh.
