@@ -446,7 +446,7 @@ namespace litl::tests
 
         REQUIRE(world.getSystemCollection().contains<TestSystem>() == true);
 
-        world.setupSystems((*serviceProvider));
+        world.finalize();
 
         REQUIRE(getTestSystemPrepared() == false);
 
@@ -488,7 +488,7 @@ namespace litl::tests
 
         world.setup((*services), {});
         world.getSystemCollection().addSystem<TestSystem>(SystemGroup::Update);
-        world.setupSystems((*services));
+        world.finalize();
 
         REQUIRE(setupService->wasSetup == true);
     } LITL_END_TEST_CASE

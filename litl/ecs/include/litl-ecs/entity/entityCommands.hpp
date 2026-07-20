@@ -39,7 +39,7 @@ namespace litl
         /// <param name="world"></param>
         /// <param name="commands"></param>
         /// <param name="offset"></param>
-        void extractCommands(World* world, std::vector<EntityCommand>& commands, size_t offset) noexcept;
+        void extractCommands(World const& world, std::vector<EntityCommand>& commands, size_t offset) noexcept;
 
         /// <summary>
         /// Creates a temporary DeferredEntity.
@@ -213,7 +213,7 @@ namespace litl
         /// Transforms all DeferredEntities into Entities.
         /// </summary>
         /// <param name="world"></param>
-        void materialize(World* world) noexcept;
+        void materialize(World const& world) noexcept;
 
         struct Impl;
         std::unique_ptr<Impl> m_pImpl;

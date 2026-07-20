@@ -16,6 +16,7 @@
 #include "litl-ecs/system/systemCollection.hpp"
 #include "litl-ecs/system/systemManager.hpp"
 #include "litl-ecs/frameCallbacks.hpp"
+#include "litl-ecs/entity/entityCommandProcessor.hpp"
 
 namespace litl
 {
@@ -49,18 +50,78 @@ namespace litl
 
     struct World::Impl
     {
+        // ---------------------------------------------------------------------------------
+        // --- General State
+
+        /// <summary>
+        /// External service dependency injector.
+        /// </summary>
+        ServiceProvider* services = nullptr;
+
+        /// <summary>
+        /// External shared job scheduler.
+        /// </summary>
         std::shared_ptr<JobScheduler> jobScheduler{ nullptr };
 
-        SystemCollection systemCollection;
-        SystemManager systemManager;
-
+        /// <summary>
+        /// Per-frame callbacks that are invoked between system groups, at sync points, etc.
+        /// </summary>
         std::shared_ptr<FrameCallbacks> callbacks;
 
+        /// <summary>
+        /// Accumulated time since the last fixed update.
+        /// </summary>
         float accumulatedTime{ 0.0f };
 
-        std::mutex commandBufferMutex;
-        std::vector<std::unique_ptr<EntityCommands>> threadLocalCommandBuffers;
+        /// <summary>
+        /// Is the world finalized and ready to run?
+        /// </summary>
+        bool finalized{ false };
 
+        // ---------------------------------------------------------------------------------
+        // --- System State
+
+        /// <summary>
+        /// Splits out the add/track system logic from World proper.
+        /// It is used as a middleman for the SystemManager so that it is not exposed in the public contract.
+        /// Once systems are finalized, the collection itself becomes unused.
+        /// </summary>
+        SystemCollection systemCollection;
+
+        /// <summary>
+        /// Owner and manager of all systems. Responsible for running system groups.
+        /// </summary>
+        SystemManager systemManager;
+
+        // ---------------------------------------------------------------------------------
+        // --- Command Buffer State
+
+        /// <summary>
+        /// All thread-specific command buffers.
+        /// </summary>
+        std::vector<EntityCommands*> threadLocalCommandBuffers;
+
+        /// <summary>
+        /// Responsible for running all submitted entity commands from the thread-specific buffers.
+        /// </summary>
+        EntityCommandProcessor commandProcessor;
+
+        /// <summary>
+        /// Entity change sets from after running the command processor.
+        /// </summary>
+        std::vector<EntityChange> entityChanges;
+
+        /// <summary>
+        /// Used when retrieving a thread-specific command buffer.
+        /// </summary>
+        std::mutex commandBufferMutex;
+
+        /// <summary>
+        /// Runs the world for a single frame.
+        /// </summary>
+        /// <param name="world"></param>
+        /// <param name="dt"></param>
+        /// <param name="fixedStep"></param>
         void run(World& world, float const dt, float const fixedStep)
         {
             callbacks->invokeFrameStart();
@@ -102,7 +163,7 @@ namespace litl
 
         for (auto i = 0; i < defaultBufferCount; ++i)
         {
-            m_pImpl->threadLocalCommandBuffers.push_back(std::make_unique<EntityCommands>());
+            m_pImpl->threadLocalCommandBuffers.push_back(new EntityCommands);
         }
 
         assert(t_threadIndex == 0);     // world must be made on the main thread
@@ -110,7 +171,15 @@ namespace litl
 
     World::~World()
     {
+        for (auto* commandBuffer : m_pImpl->threadLocalCommandBuffers)
+        {
+            if (commandBuffer != nullptr)
+            {
+                delete commandBuffer;
+            }
+        }
 
+        m_pImpl->threadLocalCommandBuffers.clear();
     }
 
     SystemCollection& World::getSystemCollection() const noexcept
@@ -126,19 +195,32 @@ namespace litl
             return;
         }
 
-        m_pImpl->jobScheduler = services.get<JobScheduler>();
+        m_pImpl->services = &services;
+        m_pImpl->jobScheduler = m_pImpl->services->get<JobScheduler>();
         m_pImpl->callbacks = callbacks;
         m_pImpl->systemManager.setup(m_pImpl->callbacks);
 
         LITL_FATAL_ASSERT_MSG((m_pImpl->jobScheduler != nullptr), "Failed to inject JobScheduler to World");
     }
 
-    void World::setupSystems(ServiceProvider& services) const noexcept
+    void World::finalize() const noexcept
     {
+        if (m_pImpl->finalized)
+        {
+            return;
+        }
+
+        m_pImpl->finalized = true;
+
         if (m_pImpl->systemCollection.build(this))
         {
-            m_pImpl->systemManager.finalize(services);
+            m_pImpl->systemManager.finalize(*m_pImpl->services);
         }
+
+        // technically this will cause two "Startup" sync point triggers for the first frame,
+        // which _shouldn't_ be a problem. alternative is to add a new method or system group or ...
+        // but we do need to invoke a sync point so that the engine can be alerted of any bootstrapped entities.
+        processCommandBuffers(SystemGroup::Startup);
     }
 
     // -------------------------------------------------------------------------------------
@@ -412,16 +494,18 @@ namespace litl
 
             while (t_threadIndex >= m_pImpl->threadLocalCommandBuffers.size())
             {
-                m_pImpl->threadLocalCommandBuffers.push_back(std::make_unique<EntityCommands>());
+                m_pImpl->threadLocalCommandBuffers.push_back(new EntityCommands());
             }
         }
 
-        return *(m_pImpl->threadLocalCommandBuffers[t_threadIndex].get());
+        return *(m_pImpl->threadLocalCommandBuffers[t_threadIndex]);
     }
 
-    std::vector<std::unique_ptr<EntityCommands>> const& World::getCommandBuffers() const noexcept
+    void World::processCommandBuffers(SystemGroup group) const noexcept
     {
-        return m_pImpl->threadLocalCommandBuffers;
+        m_pImpl->commandProcessor.process(*this, m_pImpl->threadLocalCommandBuffers, m_pImpl->entityChanges);
+        m_pImpl->callbacks->invokeSyncPoint(group, m_pImpl->entityChanges);
+        m_pImpl->entityChanges.clear();
     }
 
     // -------------------------------------------------------------------------------------

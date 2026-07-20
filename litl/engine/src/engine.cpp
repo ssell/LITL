@@ -143,7 +143,7 @@ namespace litl
 
         logInfo("ECS system setup ...");
 
-        m_pImpl->pSharedECSWorld->setupSystems((*m_pImpl->pServiceProvider));
+        m_pImpl->pSharedECSWorld->finalize();
 
         logInfo("Running ...");
 

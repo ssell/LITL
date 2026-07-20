@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include "litl-core/services/serviceProvider.hpp"
@@ -16,6 +17,7 @@
 namespace litl
 {
     struct FrameCallbacks;
+    class World;
 
     /// <summary>
     /// Owner and manager of all ECS systems.
@@ -92,8 +94,9 @@ namespace litl
 
     private:
 
+        friend World;
+
         void updateSystemArchetypes() const noexcept;
-        void processCommandBuffers(World& world, SystemGroup group) const noexcept;
 
         struct Impl;
         std::unique_ptr<Impl> m_pImpl;
