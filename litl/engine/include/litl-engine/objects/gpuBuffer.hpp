@@ -12,6 +12,7 @@
 namespace litl
 {
     class ObjectPool;
+    class Renderer;
 
     enum class GpuBufferingStrategy : uint32_t
     {
@@ -36,6 +37,16 @@ namespace litl
     struct GpuBufferDescriptor : ObjectDescriptor
     {
         /// <summary>
+        /// Specifies allowed usages of the buffer.
+        /// </summary>
+        BufferTypeFlag type = BufferTypeFlagBits::None;
+
+        /// <summary>
+        /// How the memory will be accessed.
+        /// </summary>
+        BufferMemoryUsage memoryUsage = BufferMemoryUsage::GpuOnly;
+
+        /// <summary>
         /// How many underlying buffers store data for this buffer.
         /// </summary>
         GpuBufferingStrategy bufferStrategy = GpuBufferingStrategy::Single;
@@ -55,7 +66,8 @@ namespace litl
         /// </summary>
         /// <param name="auth"></param>
         /// <param name="descriptor"></param>
-        void create(Authority<ObjectPool> auth, GpuBufferDescriptor const& descriptor) noexcept;
+        /// <param name="renderer"></param>
+        bool create(Authority<ObjectPool> auth, GpuBufferDescriptor const& descriptor, Renderer const* renderer) noexcept;
 
         /// <summary>
         /// 
@@ -103,6 +115,11 @@ namespace litl
         [[nodiscard]] std::span<std::byte const> getData() const noexcept;
 
     private:
+
+        /// <summary>
+        /// Reference to the renderer implementation.
+        /// </summary>
+        Renderer const* m_pRenderer = nullptr;
 
         /// <summary>
         /// The descriptor that created the mesh.

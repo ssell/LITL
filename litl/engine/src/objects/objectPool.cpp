@@ -10,7 +10,7 @@ namespace litl
 {
     struct ObjectPool::Impl
     {
-        std::shared_ptr<RenderManager> renderer;
+        std::shared_ptr<RenderManager> renderManager;
         std::shared_ptr<World> world;
 
         HandlePool<Camera, CameraHandleTag> cameraPool;
@@ -30,10 +30,10 @@ namespace litl
 
     void ObjectPool::setup(ServiceProvider& services) noexcept
     {
-        m_impl->renderer = services.get<RenderManager>();
+        m_impl->renderManager = services.get<RenderManager>();
         m_impl->world = services.get<World>();
 
-        LITL_FATAL_ASSERT_MSG((m_impl->renderer != nullptr), "Failed to inject RenderManager to ObjectPool");
+        LITL_FATAL_ASSERT_MSG((m_impl->renderManager != nullptr), "Failed to inject RenderManager to ObjectPool");
         LITL_FATAL_ASSERT_MSG((m_impl->world != nullptr), "Failed to inject World to ObjectPool");
     }
 
@@ -120,7 +120,13 @@ namespace litl
     GpuBufferHandle ObjectPool::createGpuBuffer(GpuBufferDescriptor const& descriptor) noexcept
     {
         GpuBuffer buffer{};
-        buffer.create({}, descriptor);
+        
+        if (!buffer.create({}, descriptor, m_impl->renderManager->getRenderer()))
+        {
+            buffer.destroy({});     // make sure there are no lingering resources depending on when in the creation process the error occurred.
+            return {};
+        }
+
         return m_impl->gpuBufferPool.create(buffer);
     }
 
@@ -152,23 +158,12 @@ namespace litl
     MeshHandle ObjectPool::createMesh(MeshDescriptor const& descriptor) noexcept
     {
         Mesh mesh{};
-
-        const GpuBufferDescriptor vertexBufferDescriptor{
-            .bufferStrategy = GpuBufferingStrategy::Single,
-            .bytes = descriptor.vertexInfo.vertexCount * descriptor.vertexInfo.vertexByteSize
-        };
-
-        const GpuBufferDescriptor indexBufferDescriptor{
-            .bufferStrategy = GpuBufferingStrategy::Single,
-            .bytes = descriptor.indexInfo.indexCount * descriptor.indexInfo.indexByteSize
-        };
-
-        const GpuBufferHandle vertexBuffer = createGpuBuffer(vertexBufferDescriptor);
-        const GpuBufferHandle indexBuffer = createGpuBuffer(indexBufferDescriptor);
-
-        LITL_ASSERT_MSG((vertexBuffer.isValid() && indexBuffer.isValid()), "Failed to create vertex and/or index buffer for mesh.", {});
-
-        mesh.create({}, *this, descriptor, vertexBuffer, indexBuffer);
+        
+        if (!mesh.create({}, *this, descriptor))
+        {
+            mesh.destroy({});       // make sure there are no lingering resources depending on when in the creation process the error occurred.
+            return {};
+        }
 
         return m_impl->meshPool.create(mesh);
     }
