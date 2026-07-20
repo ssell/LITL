@@ -126,8 +126,8 @@ namespace litl::vulkan
                 .dstBinding = change.binding,
                 .descriptorCount = 1,
                 .descriptorType = change.type,
-                .pBufferInfo = (change.isBuffer ? &change.bufferInfo : VK_NULL_HANDLE),
-                .pImageInfo = (change.isBuffer ? VK_NULL_HANDLE : &change.imageInfo)
+                .pImageInfo = (change.isBuffer ? VK_NULL_HANDLE : &change.imageInfo),
+                .pBufferInfo = (change.isBuffer ? &change.bufferInfo : VK_NULL_HANDLE)
             };
         }
 

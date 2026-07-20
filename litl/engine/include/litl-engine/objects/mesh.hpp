@@ -71,9 +71,7 @@ namespace litl
         /// <param name="auth"></param>
         /// <param name="pool"></param>
         /// <param name="descriptor"></param>
-        /// <param name="vertexBuffer"></param>
-        /// <param name="indexBuffer"></param>
-        void create(Authority<ObjectPool> auth, ObjectPool& pool, MeshDescriptor const& descriptor, GpuBufferHandle vertexBuffer, GpuBufferHandle indexBuffer) noexcept;
+        bool create(Authority<ObjectPool> auth, ObjectPool& pool, MeshDescriptor const& descriptor) noexcept;
 
         /// <summary>
         /// 
@@ -103,14 +101,14 @@ namespace litl
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        bool setVertices(std::span<Vertex const> data) noexcept;
+        bool setVertices(std::span<std::byte const> data) noexcept;
 
         /// <summary>
         /// Sets the indices for the mesh.
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        bool setIndices(std::span<uint32_t const> data) noexcept;
+        bool setIndices(std::span<std::byte const> data) noexcept;
 
     private:
         

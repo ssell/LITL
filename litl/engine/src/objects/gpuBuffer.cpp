@@ -1,16 +1,53 @@
 #include "litl-engine/objects/gpuBuffer.hpp"
 #include "litl-core/assert.hpp"
+#include "litl-engine/objects/objectPool.hpp"
+#include "litl-renderer/renderer.hpp"
 
 namespace litl
 {
-    void GpuBuffer::create(GpuBufferDescriptor const& descriptor) noexcept
+    bool GpuBuffer::create(Authority<ObjectPool> auth, GpuBufferDescriptor const& descriptor, Renderer const* renderer) noexcept
     {
         m_descriptor = descriptor;
+        m_pRenderer = renderer;
+
+        switch (m_descriptor.bufferStrategy)
+        {
+        case GpuBufferingStrategy::Single:
+            m_handles.resize(1);
+            break;
+
+        case GpuBufferingStrategy::Double:
+            m_handles.resize(2);
+            break;
+
+        case GpuBufferingStrategy::Frame:
+            m_handles.resize(m_pRenderer->getFrameData().framesInFlight);
+            break;
+        }
+
+        const auto bufferDescriptor = BufferDescriptor{
+                .type = descriptor.type,
+                .memory = BufferMemoryType::Auto,
+                .memoryUsage = descriptor.memoryUsage,
+                .sharing = SharingMode::Exclusive,
+                .bytes = descriptor.bytes
+        };
+
+        for (auto i = 0; i < m_handles.size(); ++i)
+        {
+            m_handles[i] = m_pRenderer->createBuffer(bufferDescriptor);
+            LITL_ASSERT_MSG(m_handles[i].isValid(), "Failed to create GPU Buffer", false);
+        }
+
+        return true;
     }
 
-    void GpuBuffer::destroy() noexcept
+    void GpuBuffer::destroy(Authority<ObjectPool> auth) noexcept
     {
-        // ... todo? ...
+        for (auto& bufferHandle : m_handles)
+        {
+            m_pRenderer->destroyBuffer(bufferHandle);
+        }
     }
 
     void GpuBuffer::swapBuffers() noexcept
