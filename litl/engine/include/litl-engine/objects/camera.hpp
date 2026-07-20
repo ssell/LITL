@@ -51,6 +51,21 @@ namespace litl
     public:
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="auth"></param>
+        /// <param name="descriptor"></param>
+        /// <param name="world"></param>
+        /// <param name="handle"></param>
+        void create(Authority<ObjectPool> auth, CameraDescriptor const& descriptor, World& world, CameraHandle handle) noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="auth"></param>
+        void destroy(Authority<ObjectPool> auth) noexcept;
+
+        /// <summary>
         /// Updates the cameras view matrix, world position, etc. with the provided world matrix.
         /// </summary>
         /// <param name="worldMatrix"></param>
@@ -138,11 +153,6 @@ namespace litl
         [[nodiscard]] CameraDescriptor const& getDescriptor() const noexcept;
 
     private:
-
-        friend class ObjectPool;
-
-        void create(CameraDescriptor const& descriptor, World& world, CameraHandle handle) noexcept;
-        void destroy() noexcept;
 
         /// <summary>
         /// Is this camera the current main camera?

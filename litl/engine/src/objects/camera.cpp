@@ -7,7 +7,7 @@
 
 namespace litl
 {
-    void Camera::create(CameraDescriptor const& descriptor, World& world, CameraHandle handle) noexcept
+    void Camera::create(Authority<ObjectPool> auth, CameraDescriptor const& descriptor, World& world, CameraHandle handle) noexcept
     {
         m_descriptor = descriptor;
         m_processPosition = descriptor.processOrder;
@@ -20,7 +20,7 @@ namespace litl
         );
     }
 
-    void Camera::destroy() noexcept
+    void Camera::destroy(Authority<ObjectPool> auth) noexcept
     {
         // ... todo? ...
     }

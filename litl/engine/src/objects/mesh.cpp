@@ -5,15 +5,16 @@
 
 namespace litl
 {
-    void Mesh::create(ObjectPool& pool, MeshDescriptor const& descriptor, GpuBufferHandle vertexBuffer, GpuBufferHandle indexBuffer) noexcept
+    void Mesh::create(Authority<ObjectPool> auth, ObjectPool& pool, MeshDescriptor const& descriptor, GpuBufferHandle vertexBuffer, GpuBufferHandle indexBuffer) noexcept
     {
+        LITL_ASSERT_MSG(!m_vertexBufferHandle.isValid() && !m_indexBufferHandle.isValid(), "Attempting to recreate Mesh that has already been created.", );
         m_pObjectPool = &pool;
         m_descriptor = descriptor;
         m_vertexBufferHandle = vertexBuffer;
         m_indexBufferHandle = indexBuffer;
     }
 
-    void Mesh::destroy() noexcept
+    void Mesh::destroy(Authority<ObjectPool> auth) noexcept
     {
         m_pObjectPool->destroyGpuBuffer(m_vertexBufferHandle);
         m_pObjectPool->destroyGpuBuffer(m_indexBufferHandle);
