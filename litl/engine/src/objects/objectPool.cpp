@@ -15,6 +15,7 @@ namespace litl
 
         HandlePool<Camera, CameraHandleTag> cameraPool;
         HandlePool<GpuBuffer, GpuBufferHandleTag> gpuBufferPool;
+        HandlePool<Material, MaterialHandleTag> materialPool;
         HandlePool<Mesh, MeshHandleTag> meshPool;
     };
 
@@ -44,7 +45,7 @@ namespace litl
         // ---- Cameras
 
         std::vector<CameraHandle> cameraHandles;
-        m_impl->cameraPool.getAllHandles(cameraHandles);
+        getAllCameraHandles(cameraHandles);
 
         logTrace("... destroying ", cameraHandles.size(), " Camera handles.");
 
@@ -53,10 +54,22 @@ namespace litl
             destroyCamera(cameraHandle);
         }
 
+        // ---- Materials
+
+        std::vector<MaterialHandle> materialHandles;
+        getAllMaterialHandles(materialHandles);
+
+        logTrace("... destroying ", materialHandles.size(), " Material handles.");
+
+        for (auto materialHandle : materialHandles)
+        {
+            destroyMaterial(materialHandle);
+        }
+
         // ---- Meshes
 
         std::vector<MeshHandle> meshHandles;
-        m_impl->meshPool.getAllHandles(meshHandles);
+        getAllMeshHandles(meshHandles);
 
         logTrace("... destroying ", meshHandles.size(), " Mesh handles.");
 
@@ -68,7 +81,7 @@ namespace litl
         // ---- GPU Buffers
 
         std::vector<GpuBufferHandle> gpuBufferHandles;
-        m_impl->gpuBufferPool.getAllHandles(gpuBufferHandles);
+        getAllGpuBufferHandles(gpuBufferHandles);
 
         logTrace("... destroying ", gpuBufferHandles.size(), " GPU Buffer handles.");
 
@@ -148,6 +161,44 @@ namespace litl
         {
             buffer->destroy({});
             m_impl->gpuBufferPool.destroy(handle);
+        }
+    }
+
+    //--------------------------------------------------------------------------------------
+    // Material
+    //--------------------------------------------------------------------------------------
+
+    MaterialHandle ObjectPool::createMaterial(MaterialDescriptor const& descriptor) noexcept
+    {
+        Material material{};
+
+        if (!material.create({}, descriptor))
+        {
+            material.destroy({});
+            return {};
+        }
+
+        return m_impl->materialPool.create(material);
+    }
+
+    Material* ObjectPool::getMaterial(MaterialHandle handle) noexcept
+    {
+        return m_impl->materialPool.get(handle);
+    }
+
+    void ObjectPool::getAllMaterialHandles(std::vector<MaterialHandle>& handles) const noexcept
+    {
+        m_impl->materialPool.getAllHandles(handles);
+    }
+
+    void ObjectPool::destroyMaterial(MaterialHandle handle) noexcept
+    {
+        Material* material = getMaterial(handle);
+
+        if (material != nullptr)
+        {
+            material->destroy({});
+            m_impl->materialPool.destroy(handle);
         }
     }
 
