@@ -51,9 +51,12 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     sceneView->setMainCamera(objectPool->createCamera({}));
 
     auto triangleEntity = commands.createEntity();
+    auto triangleMaterial = objectPool->createMaterial({});
+    auto triangleMesh = createTriangleMesh(*objectPool);
+
     commands.addComponent(triangleEntity, Transform{});
-    commands.addComponent(triangleEntity, MeshRef{ .handle = createTriangleMesh(*objectPool) });
-    commands.addComponent(triangleEntity, MaterialRef{ .handle = {} });     // ... todo ...
+    commands.addComponent(triangleEntity, MaterialRef{ .handle = triangleMaterial });
+    commands.addComponent(triangleEntity, MeshRef{ .handle = triangleMesh });
 }
 
 int main()
