@@ -2,6 +2,7 @@
 #include "litl-engine/engine.hpp"
 #include "litl-engine/render/renderManager.hpp"
 #include "litl-engine/engineCallbacks.hpp"
+#include "litl-engine/objects/objectPool.hpp"
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-engine/ecs/systems/cullingSystem.hpp"
 
@@ -36,9 +37,11 @@ namespace litl
 
     void RenderManager::setup(Authority<Engine> authority, ServiceProvider& services) noexcept
     {
+        m_pObjectPool = services.get<ObjectPool>();
         auto config = services.get<Configuration>();
         auto window = services.get<Window>();
 
+        LITL_FATAL_ASSERT_MSG((m_pObjectPool != nullptr), "Failed to inject ObjectPool into RenderManager");
         LITL_FATAL_ASSERT_MSG((config != nullptr), "Failed to inject Configuration into RenderManager");
         LITL_FATAL_ASSERT_MSG((window != nullptr), "Failed to inject Window into RenderManager");
 
@@ -127,7 +130,7 @@ namespace litl
                 break;
             }
 
-            m_renderPass.render(m_pRenderer, renderCamera.camera, renderCamera.entities);
+            m_renderPass.render(*m_pRenderer, *m_pObjectPool, renderCamera.camera, renderCamera.entities);
         }
 
         m_pRenderer->endRender();

@@ -1,6 +1,8 @@
 #ifndef LITL_ENGINE_RENDER_MANAGER_H__
 #define LITL_ENGINE_RENDER_MANAGER_H__
 
+#include <memory>
+
 #include "litl-core/authority.hpp"
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-renderer/renderer.hpp"
@@ -10,6 +12,7 @@ namespace litl
 {
     class Engine;
     class EngineCallbacks;
+    class ObjectPool;
     class Window;
     struct CullingBucket;
 
@@ -31,6 +34,7 @@ namespace litl
         void sortVisibleEntities(CullingBucket& cullingBucket) noexcept;
         void createRenderer(Window* window, RendererConfiguration const& rendererDescriptor) noexcept;
 
+        std::shared_ptr<ObjectPool> m_pObjectPool{ nullptr };
         Renderer* m_pRenderer{ nullptr };
         RenderPass m_renderPass{};
     };
