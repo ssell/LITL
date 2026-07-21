@@ -1,7 +1,11 @@
+#include <chrono>
+#include <span>
+
 #include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-engine/engine.hpp"
 #include "litl-engine/render/renderManager.hpp"
+#include "litl-engine/render/renderStructs.hpp"
 #include "litl-engine/engineCallbacks.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/objects/gpuBuffer.hpp"
@@ -29,13 +33,30 @@ namespace litl
 
     struct RenderManager::Impl
     {
+        struct FrameData
+        {
+            RenderPerFrameData data{};
+            GpuBufferHandle buffer{};
+        };
+
+        struct DataMap
+        {
+            RenderDataMap dataMap{};
+            GpuBufferHandle buffer{};
+        };
+
+        std::chrono::steady_clock::time_point startTime;
         std::shared_ptr<ObjectPool> objectPool{ nullptr };
         std::queue<GpuBufferHandle> dirtyBuffers;
         Renderer* renderer{ nullptr };
         RenderPass renderPass{};
+        FrameData frameData{};
+        DataMap dataMap{};
+        RenderPushConstants pushConstants{};
 
         void setup(ServiceProvider& services) noexcept
         {
+            startTime = std::chrono::steady_clock::now();
             objectPool = services.get<ObjectPool>();
             auto config = services.get<Configuration>();
             auto window = services.get<Window>();
@@ -45,6 +66,15 @@ namespace litl
             LITL_FATAL_ASSERT_MSG((window != nullptr), "Failed to inject Window into RenderManager");
 
             createRenderer(window.get(), config.get()->rendererSettings);
+
+            frameData.buffer = objectPool->createGpuBuffer(GpuBufferDescriptor{
+                .type = BufferTypeFlagBits::ShaderDeviceAddress,
+                .memoryUsage = BufferMemoryUsage::PersistentMap,
+                .bufferStrategy = GpuBufferingStrategy::Frame,
+                .bytes = sizeof(RenderPerFrameData)
+            });
+
+            renderPass.setup(*renderer, *objectPool);
         }
 
         void createRenderer(Window* window, RendererConfiguration const& rendererDescriptor) noexcept
@@ -86,7 +116,7 @@ namespace litl
         /// <summary>
         /// Invoked once per frame to render the scene.
         /// </summary>
-        void onRender() noexcept
+        void onRender(float dt) noexcept
         {
             processDeferredDataTransfers();     // is this where this should live? ... todo ...
 
@@ -100,6 +130,8 @@ namespace litl
 
             auto frameCommandBuffer = renderer->cmdBeginFrame();
 
+            updatePerFrameData(dt, frameCommandBuffer);
+
             for (auto& renderCamera : cullingBucket.cameraRenderableEntities)
             {
                 if (renderCamera.camera == nullptr)
@@ -107,7 +139,7 @@ namespace litl
                     break;
                 }
 
-                renderPass.render(*renderer, frameCommandBuffer, *objectPool, renderCamera.camera, renderCamera.entities);
+                renderPass.render(frameCommandBuffer, *renderCamera.camera, renderCamera.entities);
             }
 
             renderer->endRender();
@@ -174,6 +206,27 @@ namespace litl
                 });
             }
         }
+
+        /// <summary>
+        /// Updates the FrameData buffer which is supplied by default to all shaders via the pushed data map.
+        /// </summary>
+        /// <param name="dt"></param>
+        /// <param name="commandBuffer"></param>
+        void updatePerFrameData(float dt, CommandBufferHandle commandBuffer) noexcept
+        {
+            auto data = renderer->getFrameData();
+
+            frameData.data.frame = data.frameCount;
+            frameData.data.frameIndex = data.frameInFlightIndex;
+            frameData.data.deltaTime = dt;
+            frameData.data.elapsedTime = std::chrono::duration<float>(std::chrono::steady_clock::now() - startTime).count();
+
+            auto* frameGpuBuffer = objectPool->getGpuBuffer(frameData.buffer);
+            LITL_ASSERT_MSG((frameGpuBuffer != nullptr), "Attempting to render without a valid frame data buffer.", );
+
+            frameGpuBuffer->swapBuffers(data.frameInFlightIndex);
+            frameGpuBuffer->setDataImmediate(as_byte_span(frameData.data), commandBuffer);
+        }
     };
 
     RenderManager::RenderManager()
@@ -202,8 +255,8 @@ namespace litl
         m_pImpl->trackDirtyBuffer(handle);
     }
 
-    void RenderManager::onRender(Authority<EngineCallbacks> authority) noexcept
+    void RenderManager::onRender(Authority<EngineCallbacks> authority, float dt) noexcept
     {
-        m_pImpl->onRender();
+        m_pImpl->onRender(dt);
     }
 }

@@ -65,7 +65,7 @@ namespace litl
 
     void GpuBuffer::swapBuffers(uint32_t frameIndex) noexcept
     {
-        LITL_ASSERT_MSG((frameIndex < m_handles.size()), "Requested to buffer swap to invalid index.", );
+        LITL_ASSERT_MSG((frameIndex < m_handles.size()), "Requested swap GPU Buffer internal handle to invalid index.", );
         m_currHandleIndex = frameIndex;
     }
 
@@ -87,11 +87,20 @@ namespace litl
         m_pRenderManager->trackDirtyBuffer({}, m_selfHandle);
     }
 
-    void GpuBuffer::setDataImmediate(std::span<std::byte const> data) noexcept
+    void GpuBuffer::setDataImmediate(std::span<std::byte const> data, std::optional<CommandBufferHandle> commandBuffer) noexcept
     {
-        auto scopedCommandBuffer = m_pRenderer->createScopedCommandBuffer();
-        m_pRenderer->cmdBufferUpload(scopedCommandBuffer.get(), data, m_handles[m_currHandleIndex]);
-        reset();
+        m_dataPtr = data;
+        m_isDirty = true;
+
+        if (commandBuffer.has_value() && commandBuffer.value().isValid())
+        {
+            flushData(commandBuffer.value());
+        }
+        else
+        {
+            ScopedCommandBuffer scopedCommandBuffer = m_pRenderer->createScopedCommandBuffer();
+            flushData(scopedCommandBuffer.get());
+        }
     }
 
     void GpuBuffer::setDataPtr(std::span<std::byte const> data) noexcept
@@ -107,6 +116,11 @@ namespace litl
     }
 
     void GpuBuffer::flushData(Authority<RenderManager> auth, CommandBufferHandle commandBuffer) noexcept
+    {
+        flushData(commandBuffer);
+    }
+
+    void GpuBuffer::flushData(CommandBufferHandle commandBuffer) noexcept
     {
         if (!m_isDirty)
         {
@@ -129,17 +143,17 @@ namespace litl
                 break;
 
             case BufferMemoryUsage::PersistentMap:  // GPU and CPU read/write.
+            {
+                MappedBuffer mappedBuffer{};
+
+                if (m_pRenderer->mapBuffer(currHandle, mappedBuffer) == RendererResult::Success)
                 {
-                    MappedBuffer mappedBuffer{};
-
-                    if (m_pRenderer->mapBuffer(currHandle, mappedBuffer) == RendererResult::Success)
-                    {
-                        std::memcpy(mappedBuffer.mappedPtr, data.data(), data.size());
-                        m_pRenderer->unmapBuffer(currHandle);
-                    }
-
-                    break;
+                    std::memcpy(mappedBuffer.mappedPtr, data.data(), data.size());
+                    m_pRenderer->unmapBuffer(currHandle);
                 }
+
+                break;
+            }
             }
         }
 

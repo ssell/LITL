@@ -143,7 +143,7 @@ namespace litl
             systemManager.run(world, dt, SystemGroup::LateUpdate, (*jobScheduler));
             systemManager.run(world, dt, SystemGroup::PreRender, (*jobScheduler));
 
-            callbacks->invokeRender();
+            callbacks->invokeRender(dt);
 
             systemManager.run(world, dt, SystemGroup::PostRender, (*jobScheduler));
             systemManager.run(world, dt, SystemGroup::Final, (*jobScheduler));

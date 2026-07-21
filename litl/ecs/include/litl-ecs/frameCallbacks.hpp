@@ -20,7 +20,7 @@ namespace litl
 
         inline_function<void()> onFrameStart{ nullptr };
         inline_function<void()> onFrameEnd{ nullptr };
-        inline_function<void()> onRender{ nullptr };
+        inline_function<void(float) > onRender{ nullptr };
         inline_function<void(SystemGroup, std::span<EntityChange const>)> onSyncPoint{ nullptr };
 
         std::array<inline_function<void(SystemGroup)>, GroupCount> onPreGroup{ nullptr };
@@ -33,11 +33,11 @@ namespace litl
             }
         }
 
-        void invokeRender() const noexcept
+        void invokeRender(float dt) const noexcept
         {
             if (onRender)
             {
-                onRender();
+                onRender(dt);
             }
         }
 
