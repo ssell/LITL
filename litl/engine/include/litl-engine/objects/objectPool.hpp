@@ -4,6 +4,7 @@
 #include "litl-core/impl.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
 #include "litl-engine/objects/camera.hpp"
+#include "litl-engine/objects/material.hpp"
 #include "litl-engine/objects/mesh.hpp"
 #include "litl-engine/objects/gpuBuffer.hpp"
 
@@ -31,6 +32,11 @@ namespace litl
         [[nodiscard]] GpuBuffer* getGpuBuffer(GpuBufferHandle handle) noexcept;
         void getAllGpuBufferHandles(std::vector<GpuBufferHandle>& handles) const noexcept;
         void destroyGpuBuffer(GpuBufferHandle handle) noexcept;
+
+        [[nodiscard]] MaterialHandle createMaterial(MaterialDescriptor const& descriptor) noexcept;
+        [[nodiscard]] Material* getMaterial(MaterialHandle handle) noexcept;
+        void getAllMaterialHandles(std::vector<MaterialHandle>& handles) const noexcept;
+        void destroyMaterial(MaterialHandle handle) noexcept;
 
         [[nodiscard]] MeshHandle createMesh(MeshDescriptor const& descriptor) noexcept;
         [[nodiscard]] Mesh* getMesh(MeshHandle handle) noexcept;

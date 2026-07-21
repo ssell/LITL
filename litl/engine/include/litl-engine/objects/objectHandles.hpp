@@ -11,11 +11,11 @@ namespace litl
     struct GpuBufferHandleTag {};
     using GpuBufferHandle = Handle<GpuBufferHandleTag>;
 
-    struct MeshHandleTag {};
-    using MeshHandle = Handle<MeshHandleTag>;
-
     struct MaterialHandleTag {};
     using MaterialHandle = Handle<MaterialHandleTag>;
+
+    struct MeshHandleTag {};
+    using MeshHandle = Handle<MeshHandleTag>;
 }
 
 #endif
