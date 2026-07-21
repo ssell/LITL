@@ -7,12 +7,14 @@
 
 #include "litl-core/authority.hpp"
 #include "litl-engine/objects/objectDescriptor.hpp"
+#include "litl-engine/objects/objectHandles.hpp"
 #include "litl-renderer/resources/buffer.hpp"
+#include "litl-renderer/resources/commandBuffer.hpp"
 
 namespace litl
 {
     class ObjectPool;
-    class Renderer;
+    class RenderManager;
 
     enum class GpuBufferingStrategy : uint32_t
     {
@@ -66,14 +68,21 @@ namespace litl
         /// </summary>
         /// <param name="auth"></param>
         /// <param name="descriptor"></param>
-        /// <param name="renderer"></param>
-        bool create(Authority<ObjectPool> auth, GpuBufferDescriptor const& descriptor, Renderer const* renderer) noexcept;
+        bool create(Authority<ObjectPool> auth, GpuBufferDescriptor const& descriptor, RenderManager* renderManager) noexcept;
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="auth"></param>
         void destroy(Authority<ObjectPool> auth) noexcept;
+
+        /// <summary>
+        /// Sets the handle that references this buffer.
+        /// Needed for integrating with the render manager for deferred data transfers.
+        /// </summary>
+        /// <param name="auth"></param>
+        /// <param name="handle"></param>
+        void setBufferHandle(Authority<ObjectPool> auth, GpuBufferHandle handle) noexcept;
 
         /// <summary>
         /// Swaps the underlying buffers.
@@ -104,9 +113,36 @@ namespace litl
 
         /// <summary>
         /// Sets the data in the buffer.
+        /// 
+        /// This involves a copy to a CPU-local buffer and then the data is
+        /// transferred to the GPU within one frame.
         /// </summary>
         /// <param name="data"></param>
         void setData(std::span<std::byte const> data) noexcept;
+
+        /// <summary>
+        /// Immediately sets the data in the buffer.
+        /// 
+        /// This forgoes the CPU-local buffer copy present in setData and
+        /// transfers to the GPU buffer immediately. 
+        /// 
+        /// This is the potentially the least performant of the three choices, 
+        /// especially if the underlying buffer is not persistently mapped, 
+        /// but there is no delay to the data being available on the GPU.
+        /// </summary>
+        /// <param name="data"></param>
+        void setDataImmediate(std::span<std::byte const> data) noexcept;
+
+        /// <summary>
+        /// Sets the CPU-source data pointer.
+        /// 
+        /// Once per frame, the renderer performs all data pointer transfers.
+        /// 
+        /// This approach is more performant than setData but it is deferred
+        /// and requires that the source pointer is valid until the transfer is complete.
+        /// </summary>
+        /// <param name="data"></param>
+        void setDataPtr(std::span<std::byte const> data) noexcept;
 
         /// <summary>
         /// Retrieves the data in the buffer if it has not been disposed.
@@ -114,10 +150,27 @@ namespace litl
         /// <returns></returns>
         [[nodiscard]] std::span<std::byte const> getData() const noexcept;
 
+        /// <summary>
+        /// Invoked by the renderer when it is time to transfer any CPU data to the GPU.
+        /// </summary>
+        /// <param name="auth"></param>
+        /// <param name="commandBuffer"></param>
+        void flushData(Authority<RenderManager> auth, CommandBufferHandle commandBuffer) noexcept;
+
     private:
 
         /// <summary>
-        /// Reference to the renderer implementation.
+        /// Resets the internal dirty/buffer state.
+        /// </summary>
+        void reset() noexcept;
+
+        /// <summary>
+        /// Reference to the renderer manager for deferred data transfers.
+        /// </summary>
+        RenderManager* m_pRenderManager = nullptr;
+
+        /// <summary>
+        /// Used to invoke command buffer actions.
         /// </summary>
         Renderer const* m_pRenderer = nullptr;
 
@@ -127,9 +180,14 @@ namespace litl
         GpuBufferDescriptor m_descriptor;
 
         /// <summary>
+        /// The handle to this buffer in the ObjectPool.
+        /// </summary>
+        GpuBufferHandle m_selfHandle{};
+
+        /// <summary>
         /// The current underlying buffer being written to.
         /// </summary>
-        uint32_t m_currentHandle = 0u;
+        uint32_t m_currHandleIndex = 0u;
 
         /// <summary>
         /// The underlying GPU buffers. There may be multiple buffers depending 
@@ -142,6 +200,16 @@ namespace litl
         /// Depending on the buffer configuration this may be held only temporarily.
         /// </summary>
         std::vector<std::byte> m_data;
+
+        /// <summary>
+        /// Pointer to user provided data that is to be copied.
+        /// </summary>
+        std::span<std::byte const> m_dataPtr;
+
+        /// <summary>
+        /// Is there data waiting to be written?
+        /// </summary>
+        bool m_isDirty = false;
     };
 }
 

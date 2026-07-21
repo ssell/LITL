@@ -1,8 +1,10 @@
 #include "litl-core/assert.hpp"
+#include "litl-core/logging/logging.hpp"
 #include "litl-engine/engine.hpp"
 #include "litl-engine/render/renderManager.hpp"
 #include "litl-engine/engineCallbacks.hpp"
 #include "litl-engine/objects/objectPool.hpp"
+#include "litl-engine/objects/gpuBuffer.hpp"
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-engine/ecs/systems/cullingSystem.hpp"
 
@@ -84,6 +86,37 @@ namespace litl
         return m_pRenderer;
     }
 
+    void RenderManager::trackDirtyBuffer(Authority<GpuBuffer> auth, GpuBufferHandle handle) noexcept
+    {
+        m_dirtyBuffers.push(handle);
+    }
+
+    void RenderManager::processDeferredDataTransfers() noexcept
+    {
+        if (m_dirtyBuffers.empty())
+        {
+            return;
+        }
+
+        // todo: update this to use jobs in the future. doing single-threaded for the moment just to get it working.
+        logTrace("Processing ", m_dirtyBuffers.size(), " deferred data transfers ...");
+
+        {
+            auto scopedCommandBuffer = m_pRenderer->createScopedCommandBuffer();
+
+            while (!m_dirtyBuffers.empty())
+            {
+                auto gpuBufferHandle = m_dirtyBuffers.front(); m_dirtyBuffers.pop();
+                auto* gpuBuffer = m_pObjectPool->getGpuBuffer(gpuBufferHandle);
+
+                if (gpuBuffer != nullptr)
+                {
+                    gpuBuffer->flushData({}, scopedCommandBuffer.get());
+                }
+            }
+        }
+    }
+
     void RenderManager::sortVisibleEntities(CullingBucket& cullingBucket) noexcept
     {
         // Do a single-thread sequential sort of all camera entities for now.
@@ -115,6 +148,8 @@ namespace litl
 
     void RenderManager::onRender(Authority<EngineCallbacks> authority) noexcept
     {
+        processDeferredDataTransfers();     // is this where this should live? ... todo ...
+
         auto const& cullingBucket = CullingSystem::getCombinedCullingBucket();
 
         if (!m_pRenderer->beginRender(MaxRenderWaitTimeMs))
@@ -123,6 +158,8 @@ namespace litl
             return;
         }
 
+        auto frameCommandBuffer = m_pRenderer->cmdBeginFrame();
+
         for (auto& renderCamera : cullingBucket.cameraRenderableEntities)
         {
             if (renderCamera.camera == nullptr)
@@ -130,7 +167,7 @@ namespace litl
                 break;
             }
 
-            m_renderPass.render(*m_pRenderer, *m_pObjectPool, renderCamera.camera, renderCamera.entities);
+            m_renderPass.render(*m_pRenderer, frameCommandBuffer, *m_pObjectPool, renderCamera.camera, renderCamera.entities);
         }
 
         m_pRenderer->endRender();

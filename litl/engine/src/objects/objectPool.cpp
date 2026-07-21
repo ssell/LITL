@@ -134,13 +134,21 @@ namespace litl
     {
         GpuBuffer buffer{};
         
-        if (!buffer.create({}, descriptor, m_impl->renderManager->getRenderer()))
+        if (!buffer.create({}, descriptor, m_impl->renderManager.get()))
         {
             buffer.destroy({});     // make sure there are no lingering resources depending on when in the creation process the error occurred.
             return {};
         }
 
-        return m_impl->gpuBufferPool.create(buffer);
+        auto handle = m_impl->gpuBufferPool.create(buffer);
+        auto* bufferPtr = m_impl->gpuBufferPool.get(handle);
+
+        if (bufferPtr != nullptr)
+        {
+            bufferPtr->setBufferHandle({}, handle);
+        }
+
+        return handle;
     }
 
     GpuBuffer* ObjectPool::getGpuBuffer(GpuBufferHandle handle) noexcept

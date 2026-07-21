@@ -13,15 +13,18 @@ namespace litl
         static constexpr uint32_t MaxRenderWaitTimeMs = 1000u;
     }
 
-    void RenderPass::render(Renderer const& renderer, ObjectPool& objectPool, Camera* camera, std::vector<RenderableEntity> const& entities) const noexcept
+    void RenderPass::render(
+        Renderer const& renderer, 
+        CommandBufferHandle frameCommandBuffer, 
+        ObjectPool& objectPool, 
+        Camera* camera, 
+        std::vector<RenderableEntity> const& entities) const noexcept
     {
         if (!camera->isMainCamera())
         {
             // ... only main camera for now just to get things working ...
             return;
         }
-
-        auto commandBuffer = renderer.cmdBeginFrame();
 
         // --- Begin rendering
 
@@ -48,9 +51,9 @@ namespace litl
             }
         };
 
-        renderer.cmdPipelineBarrier(commandBuffer, PipelineBarrierUndefinedToColor);
-        renderer.cmdBeginRender(commandBuffer, beginRenderCommand);
-        renderer.cmdSetViewportAndScissor(commandBuffer, setViewportScissorCommand);
+        renderer.cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierUndefinedToColor);
+        renderer.cmdBeginRender(frameCommandBuffer, beginRenderCommand);
+        renderer.cmdSetViewportAndScissor(frameCommandBuffer, setViewportScissorCommand);
 
         // --- Render
 
@@ -78,21 +81,21 @@ namespace litl
                     auto* currMesh = objectPool.getMesh(currMeshHandle);
                     auto* currVertexBuffer = objectPool.getGpuBuffer(currMesh->getVertexBuffer());
                     auto* currIndexBuffer = objectPool.getGpuBuffer(currMesh->getIndexBuffer());
-                    currVertexCount = currMesh->getDescriptor().vertexInfo.vertexCount;                                 // todo this only works for static sized buffers
+                    currVertexCount = currMesh->getDescriptor().vertexInfo.vertexCount;                                     // todo this only works for static sized buffers
 
-                    renderer.cmdBindVertexBuffer(commandBuffer, currVertexBuffer->getBufferHandle(), 0ull, 0u);
-                    renderer.cmdBindIndexBuffer(commandBuffer, currIndexBuffer->getBufferHandle(), IndexType::Uint32);  // todo support other index sizes
+                    renderer.cmdBindVertexBuffer(frameCommandBuffer, currVertexBuffer->getBufferHandle(), 0ull, 0u);
+                    renderer.cmdBindIndexBuffer(frameCommandBuffer, currIndexBuffer->getBufferHandle(), IndexType::Uint32);  // todo support other index sizes
                 }
 
-                renderer.cmdDraw(commandBuffer, currVertexCount, 1u, 0u, 0u);
+                renderer.cmdDraw(frameCommandBuffer, currVertexCount, 1u, 0u, 0u);
             }
         }
 
         // -- End rendering
 
-        renderer.cmdEndRender(commandBuffer);
-        renderer.cmdPipelineBarrier(commandBuffer, PipelineBarrierColorToPresent);
-        renderer.cmdEnd(commandBuffer);
-        renderer.submitCommands(commandBuffer);
+        renderer.cmdEndRender(frameCommandBuffer);
+        renderer.cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierColorToPresent);
+        renderer.cmdEnd(frameCommandBuffer);
+        renderer.submitCommands(frameCommandBuffer);
     }
 }
