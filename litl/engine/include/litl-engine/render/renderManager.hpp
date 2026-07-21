@@ -35,15 +35,8 @@ namespace litl
 
     private:
 
-        void processDeferredDataTransfers() noexcept;
-        void sortVisibleEntities(CullingBucket& cullingBucket) noexcept;
-        void createRenderer(Window* window, RendererConfiguration const& rendererDescriptor) noexcept;
-
-        std::shared_ptr<ObjectPool> m_pObjectPool{ nullptr };
-        std::queue<GpuBufferHandle> m_dirtyBuffers;
-
-        Renderer* m_pRenderer{ nullptr };
-        RenderPass m_renderPass{};
+        struct Impl;
+        std::unique_ptr<Impl> m_pImpl;
     };
 }
 

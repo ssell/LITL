@@ -120,10 +120,10 @@ namespace litl
         {
             switch (m_descriptor.memoryUsage)
             {
-            case BufferMemoryUsage::GpuOnly:        // GPU read/write, CPU nothing.
             case BufferMemoryUsage::ReadBack:       // GPU write, CPU read. Nothing to do.
                 break;
 
+            case BufferMemoryUsage::GpuOnly:        // GPU read/write. CPU can't write directly, but can do so via staging buffers.
             case BufferMemoryUsage::Staging:        // GPU read, CPU write.
                 m_pRenderer->cmdBufferUpload(commandBuffer, data, currHandle);
                 break;

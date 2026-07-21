@@ -28,7 +28,7 @@ namespace litl
             {
                 static AssertHandler handler = [](char const* expression, char const* message, char const* file, uint32_t line)
                     {
-                        logError("Assert triggered in '", file, "' @ line ", line, " for expression '", expression, "'. ", message);
+                        logError("Assert '", expression, "' with message '", message, "' triggered in '", file, "@", line, "'");
                     };
 
                 return handler;
@@ -38,7 +38,7 @@ namespace litl
             {
                 static AssertHandler handler = [](char const* expression, char const* message, char const* file, uint32_t line)
                     {
-                        logCritical("Fatal assert triggered in '", file, "' @ line ", line, " for expression '", expression, "'. ", message);
+                        logError("Fatal assert '", expression, "' with message '", message, "' triggered in '", file, "@", line, "'");
                         std::abort();
                     };
 
