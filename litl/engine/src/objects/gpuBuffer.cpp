@@ -1,14 +1,16 @@
-#include "litl-engine/objects/gpuBuffer.hpp"
 #include "litl-core/assert.hpp"
-#include "litl-engine/objects/objectPool.hpp"
 #include "litl-renderer/renderer.hpp"
+#include "litl-engine/objects/gpuBuffer.hpp"
+#include "litl-engine/objects/objectPool.hpp"
+#include "litl-engine/render/renderManager.hpp"
 
 namespace litl
 {
-    bool GpuBuffer::create(Authority<ObjectPool> auth, GpuBufferDescriptor const& descriptor, Renderer const* renderer) noexcept
+    bool GpuBuffer::create(Authority<ObjectPool> auth, GpuBufferDescriptor const& descriptor, RenderManager* renderManager) noexcept
     {
         m_descriptor = descriptor;
-        m_pRenderer = renderer;
+        m_pRenderManager = renderManager;
+        m_pRenderer = m_pRenderManager->getRenderer();
 
         switch (m_descriptor.bufferStrategy)
         {
@@ -26,11 +28,11 @@ namespace litl
         }
 
         const auto bufferDescriptor = BufferDescriptor{
-                .type = descriptor.type,
-                .memory = BufferMemoryType::Auto,
-                .memoryUsage = descriptor.memoryUsage,
-                .sharing = SharingMode::Exclusive,
-                .bytes = descriptor.bytes
+            .type = descriptor.type,
+            .memory = BufferMemoryType::Auto,
+            .memoryUsage = descriptor.memoryUsage,
+            .sharing = SharingMode::Exclusive,
+            .bytes = descriptor.bytes
         };
 
         for (auto i = 0; i < m_handles.size(); ++i)
@@ -50,16 +52,21 @@ namespace litl
         }
     }
 
+    void GpuBuffer::setBufferHandle(Authority<ObjectPool> auth, GpuBufferHandle handle) noexcept
+    {
+        m_selfHandle = handle;
+    }
+
     void GpuBuffer::swapBuffers() noexcept
     {
         // Works for double, triple, etc. incremental buffering.
-        m_currentHandle = (m_currentHandle + 1) % m_handles.size();
+        m_currHandleIndex = (m_currHandleIndex + 1) % m_handles.size();
     }
 
     void GpuBuffer::swapBuffers(uint32_t frameIndex) noexcept
     {
         LITL_ASSERT_MSG((frameIndex < m_handles.size()), "Requested to buffer swap to invalid index.", );
-        m_currentHandle = frameIndex;
+        m_currHandleIndex = frameIndex;
     }
 
     GpuBufferDescriptor const& GpuBuffer::getDescriptor() const noexcept
@@ -69,17 +76,80 @@ namespace litl
 
     BufferHandle GpuBuffer::getBufferHandle() const noexcept
     {
-        return m_handles[m_currentHandle];
+        return m_handles[m_currHandleIndex];
     }
 
     void GpuBuffer::setData(std::span<std::byte const> data) noexcept
     {
         m_data.clear();
         m_data.assign(data.begin(), data.end());
+        m_isDirty = true;
+        m_pRenderManager->trackDirtyBuffer({}, m_selfHandle);
+    }
+
+    void GpuBuffer::setDataImmediate(std::span<std::byte const> data) noexcept
+    {
+        auto scopedCommandBuffer = m_pRenderer->createScopedCommandBuffer();
+        m_pRenderer->cmdBufferUpload(scopedCommandBuffer.get(), data, m_handles[m_currHandleIndex]);
+        reset();
+    }
+
+    void GpuBuffer::setDataPtr(std::span<std::byte const> data) noexcept
+    {
+        m_dataPtr = data;
+        m_isDirty = true;
+        m_pRenderManager->trackDirtyBuffer({}, m_selfHandle);
     }
 
     std::span<std::byte const> GpuBuffer::getData() const noexcept
     {
         return m_data;
+    }
+
+    void GpuBuffer::flushData(Authority<RenderManager> auth, CommandBufferHandle commandBuffer) noexcept
+    {
+        if (!m_isDirty)
+        {
+            return;
+        }
+
+        auto const currHandle = m_handles[m_currHandleIndex];
+        std::span<std::byte const> data = (m_data.empty() ? m_dataPtr : m_data);
+
+        if (!data.empty())
+        {
+            switch (m_descriptor.memoryUsage)
+            {
+            case BufferMemoryUsage::GpuOnly:        // GPU read/write, CPU nothing.
+            case BufferMemoryUsage::ReadBack:       // GPU write, CPU read. Nothing to do.
+                break;
+
+            case BufferMemoryUsage::Staging:        // GPU read, CPU write.
+                m_pRenderer->cmdBufferUpload(commandBuffer, data, currHandle);
+                break;
+
+            case BufferMemoryUsage::PersistentMap:  // GPU and CPU read/write.
+                {
+                    MappedBuffer mappedBuffer{};
+
+                    if (m_pRenderer->mapBuffer(currHandle, mappedBuffer) == RendererResult::Success)
+                    {
+                        std::memcpy(mappedBuffer.mappedPtr, data.data(), data.size());
+                        m_pRenderer->unmapBuffer(currHandle);
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        reset();
+    }
+
+    void GpuBuffer::reset() noexcept
+    {
+        m_isDirty = false;
+        m_data.clear();             // todo buffer option to maintain CPU data
+        m_dataPtr = {};
     }
 }

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "litl-engine/render/renderableEntity.hpp"
+#include "litl-renderer/resources/commandBuffer.hpp"
 
 namespace litl
 {
@@ -14,7 +15,7 @@ namespace litl
     {
     public:
 
-        void render(Renderer const& renderer, ObjectPool& objectPool, Camera* camera, std::vector<RenderableEntity> const& entities) const noexcept;
+        void render(Renderer const& renderer, CommandBufferHandle frameCommandBuffer, ObjectPool& objectPool, Camera* camera, std::vector<RenderableEntity> const& entities) const noexcept;
     };
 }
 

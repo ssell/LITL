@@ -17,7 +17,7 @@ namespace litl
         const auto vertexBytesSize = m_descriptor.vertexInfo.vertexCount * m_descriptor.vertexInfo.vertexByteSize;
 
         m_vertexBufferHandle = m_pObjectPool->createGpuBuffer(GpuBufferDescriptor{
-            .type = BufferTypeFlagBits::VertexBuffer,
+            .type = BufferTypeFlagBits::VertexBuffer | BufferTypeFlagBits::TransferDest,
             .memoryUsage = BufferMemoryUsage::GpuOnly,
             .bufferStrategy = GpuBufferingStrategy::Single,
             .bytes = vertexBytesSize
@@ -40,7 +40,7 @@ namespace litl
         const auto indexBytesSize = m_descriptor.indexInfo.indexCount * m_descriptor.indexInfo.indexByteSize;
 
         m_indexBufferHandle = m_pObjectPool->createGpuBuffer(GpuBufferDescriptor{
-            .type = BufferTypeFlagBits::IndexBuffer,
+            .type = BufferTypeFlagBits::IndexBuffer | BufferTypeFlagBits::TransferDest,
             .memoryUsage = BufferMemoryUsage::GpuOnly,
             .bufferStrategy = GpuBufferingStrategy::Single,
             .bytes = indexBytesSize
