@@ -94,10 +94,10 @@ namespace litl
         // Render
         // ---------------------------------------------------------------------------------
 
-        m_pFrameCallbacks->onRender = [this]()
+        m_pFrameCallbacks->onRender = [this](float dt)
             {
-                m_pRenderManager->onRender({});
-                m_pUserFrameCallbacks->invokeRender();
+                m_pRenderManager->onRender({}, dt);
+                m_pUserFrameCallbacks->invokeRender(dt);
             };
 
         // ---------------------------------------------------------------------------------

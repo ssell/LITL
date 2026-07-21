@@ -2,6 +2,7 @@
 #define LITL_ENGINE_OBJECTS_GPU_BUFFER_H__
 
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <vector>
 
@@ -131,7 +132,8 @@ namespace litl
         /// but there is no delay to the data being available on the GPU.
         /// </summary>
         /// <param name="data"></param>
-        void setDataImmediate(std::span<std::byte const> data) noexcept;
+        /// <param name="commandBuffer">Optional command buffer to write the flush commands to. If none is provided, then a temporary command buffer is used.</param>
+        void setDataImmediate(std::span<std::byte const> data, std::optional<CommandBufferHandle> commandBuffer) noexcept;
 
         /// <summary>
         /// Sets the CPU-source data pointer.
@@ -158,6 +160,12 @@ namespace litl
         void flushData(Authority<RenderManager> auth, CommandBufferHandle commandBuffer) noexcept;
 
     private:
+
+        /// <summary>
+        /// Pushes the CPU data to the GPU.
+        /// </summary>
+        /// <param name="commandBuffer"></param>
+        void flushData(CommandBufferHandle commandBuffer) noexcept;
 
         /// <summary>
         /// Resets the internal dirty/buffer state.
