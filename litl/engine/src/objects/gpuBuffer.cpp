@@ -15,6 +15,18 @@ namespace litl
         m_pRenderManager = &renderManager;
         m_pRenderer = m_pRenderManager->getRenderer();
 
+        if (m_descriptor.itemBytes > 0u)
+        {
+            if (m_descriptor.bytes < m_descriptor.itemBytes)
+            {
+                logWarning("GPU Buffer requested with byte size less than that of a single item byte size.");
+            }
+            else if ((m_descriptor.bytes % m_descriptor.itemBytes) != 0u)
+            {
+                logWarning("GPU Buffer requested with byte size not equal to an evenly divisible number of item bytes.");
+            }
+        }
+
         // ---------------------------------------------------------------------------------
         // --- Handles
 
@@ -33,6 +45,12 @@ namespace litl
             break;
         }
 
+        if (has_any(descriptor.type, BufferTypeFlagBits::BufferDeviceAddress))
+        {
+            m_usesBDA = true;
+            m_bdaAddresses.resize(m_buffers.size());
+        }
+
         for (auto i = 0; i < m_buffers.size(); ++i)
         {
             createBuffer(i);
@@ -40,18 +58,6 @@ namespace litl
 
         // ---------------------------------------------------------------------------------
         // --- Buffer Device Addresses
-
-        if (has_any(descriptor.type, BufferTypeFlagBits::BufferDeviceAddress))
-        {
-            m_bdaAddresses.resize(m_buffers.size());
-
-            for (auto i = 0; i < m_buffers.size(); ++i)
-            {
-                auto bda = m_pRenderer->getBufferDeviceAddress(m_buffers[i].handle);
-                LITL_ASSERT_MSG(bda.has_value(), "Failed to retrieve BDA for buffer created with BufferDeviceAddress flag.", false);
-                m_bdaAddresses[i] = *bda;
-            }
-        }
 
         return true;
     }
@@ -74,11 +80,13 @@ namespace litl
             .bytes = m_descriptor.bytes
         };
 
+        bool bufferUpdated = false;
+
         if (m_buffers[index].version == 0u)
         {
             // First creation of the buffer.
             m_buffers[index].handle = m_pRenderer->createBuffer(bufferDescriptor);
-            m_buffers[index].version = m_version;
+            bufferUpdated = true;
         }
         else
         {
@@ -91,9 +99,23 @@ namespace litl
                 // ... todo copy data from old to new ...
 
                 m_buffers[index].handle = newBufferHandle;
-                m_buffers[index].version = m_version;
+                bufferUpdated = true;
 
                 m_pRenderer->destroyBuffer(oldBufferHandle);
+            }
+        }
+
+        if (bufferUpdated)
+        {
+            // Update to match the current version of the GPU Buffer wrapper
+            m_buffers[index].version = m_version;
+
+            if (m_usesBDA)
+            {
+                // Update the Buffer Device Address
+                auto bda = m_pRenderer->getBufferDeviceAddress(m_buffers[index].handle);
+                LITL_ASSERT_MSG(bda.has_value(), "Failed to retrieve BDA for buffer created with BufferDeviceAddress flag.", );
+                m_bdaAddresses[index] = *bda;
             }
         }
     }
@@ -242,19 +264,19 @@ namespace litl
         return m_descriptor.bytes;
     }
 
-    void GpuBuffer::resize(uint32_t size, bool canShrink, bool immediate) noexcept
+    uint32_t GpuBuffer::getItemCapacity() const noexcept
     {
-        if (!m_descriptor.canResize)
+        if (m_descriptor.itemBytes == 0u)
         {
-            // Buffer was not created with the ability to resize.
-            return;
+            return 0u;
         }
 
-        if (size == m_descriptor.bytes)
-        {
-            // The size is the same, no action.
-            return;
-        }
+        return (m_descriptor.bytes / m_descriptor.itemBytes);
+    }
+
+    void GpuBuffer::resizeBytes(uint32_t size, bool canShrink, bool immediate) noexcept
+    {
+        LITL_ASSERT_MSG((m_descriptor.canResize && (size > 0u)), "Invalid buffer resize requested.", );
 
         if ((size < m_descriptor.bytes) && !canShrink)
         {
@@ -269,5 +291,10 @@ namespace litl
             // Update the current buffer. Other buffers will be updated when they are swapped to.
             createBuffer(m_currHandleIndex);
         }
+    }
+
+    void GpuBuffer::resizeItems(uint32_t items, bool canShrink, bool immediate) noexcept
+    {
+        resizeBytes(items * m_descriptor.itemBytes);
     }
 }
