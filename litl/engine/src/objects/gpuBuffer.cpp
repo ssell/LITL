@@ -21,30 +21,21 @@ namespace litl
         switch (m_descriptor.bufferStrategy)
         {
         case GpuBufferingStrategy::Single:
-            m_handles.resize(1ull);
+            m_buffers.resize(1ull);
             break;
 
         case GpuBufferingStrategy::Double:
-            m_handles.resize(2ull);
+            m_buffers.resize(2ull);
             break;
 
         case GpuBufferingStrategy::Frame:
-            m_handles.resize(m_pRenderer->getFrameData().framesInFlight);
+            m_buffers.resize(m_pRenderer->getFrameData().framesInFlight);
             break;
         }
 
-        const auto bufferDescriptor = BufferDescriptor{
-            .type = descriptor.type,
-            .memory = BufferMemoryType::Auto,
-            .memoryUsage = descriptor.memoryUsage,
-            .sharing = SharingMode::Exclusive,
-            .bytes = descriptor.bytes
-        };
-
-        for (auto i = 0; i < m_handles.size(); ++i)
+        for (auto i = 0; i < m_buffers.size(); ++i)
         {
-            m_handles[i] = m_pRenderer->createBuffer(bufferDescriptor);
-            LITL_ASSERT_MSG(m_handles[i].isValid(), "Failed to create GPU Buffer", false);
+            createBuffer(i);
         }
 
         // ---------------------------------------------------------------------------------
@@ -52,11 +43,11 @@ namespace litl
 
         if (has_any(descriptor.type, BufferTypeFlagBits::BufferDeviceAddress))
         {
-            m_bdaAddresses.resize(m_handles.size());
+            m_bdaAddresses.resize(m_buffers.size());
 
-            for (auto i = 0; i < m_handles.size(); ++i)
+            for (auto i = 0; i < m_buffers.size(); ++i)
             {
-                auto bda = m_pRenderer->getBufferDeviceAddress(m_handles[i]);
+                auto bda = m_pRenderer->getBufferDeviceAddress(m_buffers[i].handle);
                 LITL_ASSERT_MSG(bda.has_value(), "Failed to retrieve BDA for buffer created with BufferDeviceAddress flag.", false);
                 m_bdaAddresses[i] = *bda;
             }
@@ -65,11 +56,53 @@ namespace litl
         return true;
     }
 
+    void GpuBuffer::createBuffer(uint32_t index) noexcept
+    {
+        LITL_ASSERT_MSG((index < m_buffers.size()), "Index into GPU Buffer internal buffer is out-of-range.", );
+
+        if (m_buffers[index].version == m_version)
+        {
+            // Buffer is already up-to-date. No action.
+            return;
+        }
+
+        const auto bufferDescriptor = BufferDescriptor{
+            .type = m_descriptor.type,
+            .memory = BufferMemoryType::Auto,
+            .memoryUsage = m_descriptor.memoryUsage,
+            .sharing = SharingMode::Exclusive,
+            .bytes = m_descriptor.bytes
+        };
+
+        if (m_buffers[index].version == 0u)
+        {
+            // First creation of the buffer.
+            m_buffers[index].handle = m_pRenderer->createBuffer(bufferDescriptor);
+            m_buffers[index].version = m_version;
+        }
+        else
+        {
+            if (m_descriptor.canResize)
+            {
+                // Resizing of the buffer. Need to transfer from the old buffer.
+                auto oldBufferHandle = m_buffers[index].handle;
+                auto newBufferHandle = m_pRenderer->createBuffer(bufferDescriptor);
+
+                // ... todo copy data from old to new ...
+
+                m_buffers[index].handle = newBufferHandle;
+                m_buffers[index].version = m_version;
+
+                m_pRenderer->destroyBuffer(oldBufferHandle);
+            }
+        }
+    }
+
     void GpuBuffer::destroy(Authority<ObjectPool> auth) noexcept
     {
-        for (auto& bufferHandle : m_handles)
+        for (auto& versionedBuffer : m_buffers)
         {
-            m_pRenderer->destroyBuffer(bufferHandle);
+            m_pRenderer->destroyBuffer(versionedBuffer.handle);
         }
     }
 
@@ -81,12 +114,17 @@ namespace litl
     void GpuBuffer::swapBuffers() noexcept
     {
         // Works for double, triple, etc. incremental buffering.
-        m_currHandleIndex = (m_currHandleIndex + 1) % m_handles.size();
+        m_currHandleIndex = (m_currHandleIndex + 1) % m_buffers.size();
+
+        if (m_buffers[m_currHandleIndex].version < m_version)
+        {
+            createBuffer(m_currHandleIndex);
+        }
     }
 
     void GpuBuffer::swapBuffers(uint32_t frameIndex) noexcept
     {
-        LITL_ASSERT_MSG((frameIndex < m_handles.size()), "Requested swap GPU Buffer internal handle to invalid index.", );
+        LITL_ASSERT_MSG((frameIndex < m_buffers.size()), "Requested swap GPU Buffer internal handle to invalid index.", );
         m_currHandleIndex = frameIndex;
     }
 
@@ -97,7 +135,7 @@ namespace litl
 
     BufferHandle GpuBuffer::getBufferHandle() const noexcept
     {
-        return m_handles[m_currHandleIndex];
+        return m_buffers[m_currHandleIndex].handle;
     }
 
     std::optional<uint64_t> GpuBuffer::getBufferDeviceAddress() const noexcept
@@ -159,7 +197,7 @@ namespace litl
             return;
         }
 
-        auto const currHandle = m_handles[m_currHandleIndex];
+        auto const currHandle = m_buffers[m_currHandleIndex].handle;
         std::span<std::byte const> data = (m_data.empty() ? m_dataPtr : m_data);
 
         if (!data.empty())
@@ -175,17 +213,17 @@ namespace litl
                 break;
 
             case BufferMemoryUsage::PersistentMap:  // GPU and CPU read/write.
-            {
-                MappedBuffer mappedBuffer{};
-
-                if (m_pRenderer->mapBuffer(currHandle, mappedBuffer) == RendererResult::Success)
                 {
-                    std::memcpy(mappedBuffer.mappedPtr, data.data(), data.size());
-                    m_pRenderer->unmapBuffer(currHandle);
-                }
+                    MappedBuffer mappedBuffer{};
 
-                break;
-            }
+                    if (m_pRenderer->mapBuffer(currHandle, mappedBuffer) == RendererResult::Success)
+                    {
+                        std::memcpy(mappedBuffer.mappedPtr, data.data(), data.size());
+                        m_pRenderer->unmapBuffer(currHandle);
+                    }
+
+                    break;
+                }
             }
         }
 
@@ -197,5 +235,39 @@ namespace litl
         m_isDirty = false;
         m_data.clear();             // todo buffer option to maintain CPU data
         m_dataPtr = {};
+    }
+
+    uint32_t GpuBuffer::getSizeBytes() const noexcept
+    {
+        return m_descriptor.bytes;
+    }
+
+    void GpuBuffer::resize(uint32_t size, bool canShrink, bool immediate) noexcept
+    {
+        if (!m_descriptor.canResize)
+        {
+            // Buffer was not created with the ability to resize.
+            return;
+        }
+
+        if (size == m_descriptor.bytes)
+        {
+            // The size is the same, no action.
+            return;
+        }
+
+        if ((size < m_descriptor.bytes) && !canShrink)
+        {
+            // Requested a smaller buffer, but did not provide permission to shrink.
+            return;
+        }
+
+        m_version++;
+
+        if (immediate)
+        {
+            // Update the current buffer. Other buffers will be updated when they are swapped to.
+            createBuffer(m_currHandleIndex);
+        }
     }
 }

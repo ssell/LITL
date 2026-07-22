@@ -106,6 +106,11 @@ namespace litl
         }
     }
 
+    std::span<mat4 const> Scene::getWorldMatrices() const noexcept
+    {
+        return m_transforms.getWorldMatrices();
+    }
+
     void Scene::onPreRender(Authority<SceneManager> authority, World& world) noexcept
     {
         // Update the graph to account for structural changes: create, destroy, reparent.

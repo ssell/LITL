@@ -9,6 +9,7 @@
 #include "litl-engine/engineCallbacks.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/objects/gpuBuffer.hpp"
+#include "litl-engine/scene/sceneView.hpp"
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-engine/ecs/systems/cullingSystem.hpp"
 
@@ -45,6 +46,11 @@ namespace litl
             GpuBufferHandle handle{};
         };
 
+        struct EntityTransforms
+        {
+            GpuBufferHandle handle{};
+        };
+
         struct DataMap
         {
             RenderDataMap data{};
@@ -53,11 +59,14 @@ namespace litl
 
         std::chrono::steady_clock::time_point startTime;
         std::shared_ptr<ObjectPool> objectPool{ nullptr };
+        std::shared_ptr<SceneView> sceneView{ nullptr };
         std::queue<GpuBufferHandle> dirtyBuffers;
+
         Renderer* renderer{ nullptr };
         RenderPass renderPass{};
         FrameData frameData{};
         PassData passData{};
+        EntityTransforms entityTransforms{};
         DataMap dataMap{};
         RenderPushConstants pushConstants{};
 
@@ -65,10 +74,13 @@ namespace litl
         {
             startTime = std::chrono::steady_clock::now();
             objectPool = services.get<ObjectPool>();
+            sceneView = services.get<SceneView>();
+
             auto config = services.get<Configuration>();
             auto window = services.get<Window>();
 
             LITL_FATAL_ASSERT_MSG((objectPool != nullptr), "Failed to inject ObjectPool into RenderManager.");
+            LITL_FATAL_ASSERT_MSG((sceneView != nullptr), "Failed to inject SceneView into RenderManager.");
             LITL_FATAL_ASSERT_MSG((config != nullptr), "Failed to inject Configuration into RenderManager.");
             LITL_FATAL_ASSERT_MSG((window != nullptr), "Failed to inject Window into RenderManager.");
 
@@ -88,6 +100,14 @@ namespace litl
                 .memoryUsage = BufferMemoryUsage::PersistentMap,
                 .bufferStrategy = GpuBufferingStrategy::Frame,
                 .bytes = sizeof(RenderPerPassData)
+            });
+
+            entityTransforms.handle = objectPool->createGpuBuffer(GpuBufferDescriptor{
+                .type = BufferTypeFlagBits::BufferDeviceAddress,
+                .memoryUsage = BufferMemoryUsage::PersistentMap,
+                .bufferStrategy = GpuBufferingStrategy::Frame,
+                .bytes = sizeof(RenderPerPassData),
+                .canResize = true
             });
 
             dataMap.handle = objectPool->createGpuBuffer(GpuBufferDescriptor{
@@ -294,6 +314,8 @@ namespace litl
         {
             auto* dataMapBuffer = objectPool->getGpuBuffer(dataMap.handle);
             LITL_ASSERT_MSG((dataMapBuffer != nullptr), "Attempting to render without a valid data map buffer.", );
+
+            dataMap.data.entityTransformsAddr = sceneView->getEntityTransformsBufferAddress();
 
             dataMapBuffer->swapBuffers(frameData.data.frameIndex);
             dataMapBuffer->setDataImmediate(generic_as_byte_span(&dataMap.data, sizeof(RenderDataMap)), commandBuffer);

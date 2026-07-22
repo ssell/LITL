@@ -50,6 +50,12 @@ namespace litl
         return m_pActiveScene->getWorldMatrix(entity);
     }
 
+    std::span<mat4 const> SceneView::getWorldMatrices() const noexcept
+    {
+        LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::getEntityTransformsBufferAddress on a null scene.", {});
+        return m_pActiveScene->getWorldMatrices();
+    }
+
     void SceneView::query(bounds::AABB aabb, std::vector<Entity>& entities) const noexcept
     {
         LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::query(aabb,) on a null scene.", );

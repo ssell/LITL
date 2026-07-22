@@ -36,6 +36,7 @@ struct DataMap
 {
     PerFrameData* frameData;
     PerPassData* passData;
+    float4x4* entityTransforms;
 }
 
 // Maps to RenderPushConstants in litl-engine/render/renderStructs.hpp

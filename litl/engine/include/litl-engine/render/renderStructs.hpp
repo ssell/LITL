@@ -33,6 +33,7 @@ namespace litl
     {
         uint64_t perFrameDataAddr = 0ull;
         uint64_t perPassDataAddr = 0ull;
+        uint64_t entityTransformsAddr = 0ull;
     };
 
     /// <summary>
