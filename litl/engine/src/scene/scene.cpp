@@ -5,10 +5,11 @@
 #include "litl-engine/ecs/components/bounds.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/objects/camera.hpp"
+#include "litl-renderer/renderer.hpp"
 
 namespace litl
 {
-    Scene::Scene(SceneConfig const& config, ObjectPool* objectPool)
+    Scene::Scene(SceneConfig const& config, Renderer const* renderer, ObjectPool* objectPool)
     {
         switch (config.partition)
         {
@@ -20,6 +21,7 @@ namespace litl
             LITL_ASSERT_MSG(false, "Unsupported Scene Partition strategy.", );
         }
 
+        m_pRenderer = renderer;
         m_transforms.reserve(1024u);
         m_cameras.setup(objectPool);
     }
@@ -113,8 +115,7 @@ namespace litl
 
     void Scene::onPreRender(Authority<SceneManager> authority, World& world) noexcept
     {
-        // Update the graph to account for structural changes: create, destroy, reparent.
-        m_graph.update();
+        m_graph.update();           // Update the graph to account for structural changes: create, destroy, reparent.
 
         // Update the world transforms for the frame.
         for (auto sortedIndex : m_graph.m_sortedNodes)
@@ -182,6 +183,12 @@ namespace litl
 
             if (gpuIndex != Constants::uint32_null_index)
             {
+                if (camera->isMainCamera())
+                {
+                    // Set the aspect ratio to match the render target.
+                    camera->setAspectRatio(m_pRenderer->getSwapchainDimensions().aspectRatio);
+                }
+
                 camera->update({}, m_transforms.getWorldMatrix(gpuIndex));
             }
         }

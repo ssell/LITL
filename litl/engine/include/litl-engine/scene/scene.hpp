@@ -17,6 +17,7 @@
 namespace litl
 {
     class SceneManager;
+    class Renderer;
     class ObjectPool;
     class World;
 
@@ -32,7 +33,7 @@ namespace litl
     {
     public:
 
-        Scene(SceneConfig const& config, ObjectPool* objectPool);
+        Scene(SceneConfig const& config, Renderer const* renderer, ObjectPool* objectPool);
         ~Scene();
 
         Scene(Scene const&) = delete;
@@ -199,6 +200,7 @@ namespace litl
             /* add future partition strategies here */
         >;
 
+        Renderer const* m_pRenderer{ nullptr };
         SceneTransforms m_transforms;
         SceneGraph m_graph;
         ScenePartitionVariant m_partition;

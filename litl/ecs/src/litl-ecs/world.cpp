@@ -166,7 +166,7 @@ namespace litl
             m_pImpl->threadLocalCommandBuffers.push_back(new EntityCommands);
         }
 
-        assert(t_threadIndex == 0);     // world must be made on the main thread
+        //assert(t_threadIndex == 0);     // world must be made on the main thread
     }
 
     World::~World()

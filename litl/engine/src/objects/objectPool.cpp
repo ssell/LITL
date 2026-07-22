@@ -5,6 +5,7 @@
 #include "litl-ecs/world.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/render/renderManager.hpp"
+#include "litl-engine/scene/sceneView.hpp"
 
 namespace litl
 {
@@ -12,6 +13,7 @@ namespace litl
     {
         std::shared_ptr<RenderManager> renderManager;
         std::shared_ptr<World> world;
+        std::shared_ptr<SceneView> sceneView;
 
         HandlePool<Camera, CameraHandleTag> cameraPool;
         HandlePool<GpuBuffer, GpuBufferHandleTag> gpuBufferPool;
@@ -33,9 +35,11 @@ namespace litl
     {
         m_impl->renderManager = services.get<RenderManager>();
         m_impl->world = services.get<World>();
+        m_impl->sceneView = services.get<SceneView>();
 
         LITL_FATAL_ASSERT_MSG((m_impl->renderManager != nullptr), "Failed to inject RenderManager to ObjectPool");
         LITL_FATAL_ASSERT_MSG((m_impl->world != nullptr), "Failed to inject World to ObjectPool");
+        LITL_FATAL_ASSERT_MSG((m_impl->sceneView != nullptr), "Failed to inject SceneView to ObjectPool");
     }
 
     void ObjectPool::destroy() noexcept
@@ -100,7 +104,7 @@ namespace litl
         auto handle = m_impl->cameraPool.create({});
         auto* cameraRef = m_impl->cameraPool.get(handle);
 
-        cameraRef->create({}, descriptor, *(m_impl->world.get()), handle);
+        cameraRef->create({}, descriptor, *m_impl->world, *m_impl->sceneView, handle);
 
         return handle;
     }
