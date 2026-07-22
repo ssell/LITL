@@ -26,6 +26,11 @@ namespace litl::vulkan
         PipelineResourceMap resourceMap{};
 
         /// <summary>
+        /// Which shader stages (if any) that make use of push constants?
+        /// </summary>
+        ShaderStage pushConstantStages{ ShaderStage::None };
+
+        /// <summary>
         /// One entry per set the pipeline declares.
         /// Note: these are owned by the pipeline cache, not by this resource.
         /// </summary>

@@ -80,10 +80,15 @@ namespace litl
                         {
                             renderer->cmdBindGraphicsPipeline(frameCommandBuffer, graphicsPipelineHandle);
 
-                            renderer->cmdPushConstants(
-                                frameCommandBuffer,
-                                ShaderStage::Vertex | ShaderStage::Fragment,                            // ... todo push only to active stages (?) ...
-                                generic_as_byte_span(&pushConstants, sizeof(RenderPushConstants)));
+                            auto pushConstantStages = renderer->getGraphicsPipelinePushConstantStages(graphicsPipelineHandle);
+
+                            if (pushConstantStages != ShaderStage::None)
+                            {
+                                renderer->cmdPushConstants(
+                                    frameCommandBuffer,
+                                    pushConstantStages,
+                                    generic_as_byte_span(&pushConstants, sizeof(RenderPushConstants)));
+                            }
                         }
 
                         if (computePipelineHandle.isValid())

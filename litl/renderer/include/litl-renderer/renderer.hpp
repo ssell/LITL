@@ -76,6 +76,9 @@ namespace litl
         RendererResult (*mapTexture)(RendererContext*, TextureHandle, MappedTexture&);
         RendererResult (*unmapTexture)(RendererContext*, TextureHandle);
 
+        // pipeline commands and operations
+        ShaderStage (*getGraphicsPipelinePushConstantStages)(RendererContext*, GraphicsPipelineHandle);
+
         // drawing
         bool (*beginRender)(RendererContext*, uint32_t);
         void (*submitCommands)(RendererContext*, std::span<CommandBufferHandle const>);
@@ -509,6 +512,13 @@ namespace litl
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] FrameData getFrameData() const noexcept;
+
+        /// <summary>
+        /// Returns the shader stages that use push constants for the specified graphics pipeline.
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <returns></returns>
+        [[nodiscard]] ShaderStage getGraphicsPipelinePushConstantStages(GraphicsPipelineHandle handle) const noexcept;
 
     private:
 

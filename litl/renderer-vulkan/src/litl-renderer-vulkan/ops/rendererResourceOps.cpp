@@ -246,4 +246,17 @@ namespace litl::vulkan
 
         return RendererResult::Success;
     }
+
+    ShaderStage getGraphicsPipelinePushConstantStages(litl::RendererContext* context, GraphicsPipelineHandle pipelineHandle) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+        auto* graphicsPipeline = vulkanContext->resources.getGraphicsPipeline(pipelineHandle);
+
+        if (graphicsPipeline == nullptr)
+        {
+            return ShaderStage::None;
+        }
+
+        return graphicsPipeline->pipeline.pushConstantStages;
+    }
 }

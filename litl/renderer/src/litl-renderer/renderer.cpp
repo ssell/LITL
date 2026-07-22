@@ -321,6 +321,11 @@ namespace litl
         return m_pOps->getFrameData(m_pContext);
     }
 
+    ShaderStage Renderer::getGraphicsPipelinePushConstantStages(GraphicsPipelineHandle handle) const noexcept
+    {
+        return m_pOps->getGraphicsPipelinePushConstantStages(m_pContext, handle);
+    }
+
     bool Renderer::valid() const noexcept
     {
         return (m_pContext != nullptr) && (m_pOps != nullptr);
