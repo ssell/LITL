@@ -44,7 +44,7 @@ namespace litl
     /// <param name="data"></param>
     /// <param name="size"></param>
     /// <returns></returns>
-    [[nodiscard]] static std::span<std::byte const> generic_as_byte_span(void* data, size_t size)
+    [[nodiscard]] static std::span<std::byte const> generic_as_byte_span(void const* data, size_t size)
     {
         return std::span<std::byte const>{ reinterpret_cast<const std::byte*>(data), size };
     }

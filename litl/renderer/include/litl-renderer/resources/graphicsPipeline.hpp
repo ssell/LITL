@@ -432,8 +432,8 @@ namespace litl
         PipelineShaderDescriptor vertex;
         PipelineShaderDescriptor fragment;
         PipelineShaderDescriptor geometry;
-        PipelineShaderDescriptor tessellationEvaluation;
         PipelineShaderDescriptor tessellationControl;
+        PipelineShaderDescriptor tessellationEvaluation;
         PipelineShaderDescriptor mesh;
         PipelineShaderDescriptor task;
 

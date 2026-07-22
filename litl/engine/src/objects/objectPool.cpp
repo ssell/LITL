@@ -134,7 +134,7 @@ namespace litl
     {
         GpuBuffer buffer{};
         
-        if (!buffer.create({}, descriptor, m_impl->renderManager.get()))
+        if (!buffer.create({}, descriptor, *m_impl->renderManager.get()))
         {
             buffer.destroy({});     // make sure there are no lingering resources depending on when in the creation process the error occurred.
             return {};
@@ -180,7 +180,7 @@ namespace litl
     {
         Material material{};
 
-        if (!material.create({}, descriptor))
+        if (!material.create({}, descriptor, *(m_impl->renderManager->getRenderer())))
         {
             material.destroy({});
             return {};
