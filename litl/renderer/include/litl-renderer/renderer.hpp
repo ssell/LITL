@@ -67,6 +67,7 @@ namespace litl
         RendererResult (*cmdBufferFlush)(RendererContext*, CommandBufferHandle);
         RendererResult (*mapBuffer)(RendererContext*, BufferHandle, MappedBuffer&);
         RendererResult (*unmapBuffer)(RendererContext*, BufferHandle);
+        std::optional<uint64_t> (*getBufferDeviceAddress)(RendererContext*, BufferHandle);
 
         // texture commands and operations
         RendererResult (*cmdBindTexture)(RendererContext*, CommandBufferHandle, TextureHandle, StringId, bool);
@@ -396,6 +397,13 @@ namespace litl
         /// </summary>
         /// <param name="buffer"></param>
         RendererResult unmapBuffer(BufferHandle buffer) const noexcept;
+
+        /// <summary>
+        /// If the buffer was created with the BufferDeviceAddress flag, this will return the 64-bit address.
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
+        [[nodiscard]] std::optional<uint64_t> getBufferDeviceAddress(BufferHandle buffer) const noexcept;
 
         /// <summary>
         /// Binds the texture to the currently bound graphics or compute pipeline.

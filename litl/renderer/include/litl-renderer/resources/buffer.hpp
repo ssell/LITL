@@ -47,7 +47,7 @@ namespace litl
         /// <summary>
         /// If the buffer uses Shader Device Address, this is the address on the GPU-side to the start of its memory block.
         /// </summary>
-        uint64_t shaderDeviceAddress = 0ull;
+        uint64_t BufferDeviceAddress = 0ull;
     };
 
 }

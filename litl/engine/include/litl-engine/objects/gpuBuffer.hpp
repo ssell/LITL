@@ -113,6 +113,13 @@ namespace litl
         [[nodiscard]] BufferHandle getBufferHandle() const noexcept;
 
         /// <summary>
+        /// Retrieves the Buffer Device Address for the active buffer.
+        /// This is only available to buffers created with the BufferDeviceAddress flag.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] std::optional<uint64_t> getBufferDeviceAddress() const noexcept;
+
+        /// <summary>
         /// Sets the data in the buffer.
         /// 
         /// This involves a copy to a CPU-local buffer and then the data is
@@ -151,6 +158,12 @@ namespace litl
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] std::span<std::byte const> getData() const noexcept;
+
+        /// <summary>
+        /// Returns the Buffer Device Address (BDA) for this buffer, if applicable.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] std::optional<uint64_t> getBDA() const noexcept;
 
         /// <summary>
         /// Invoked by the renderer when it is time to transfer any CPU data to the GPU.
@@ -213,6 +226,11 @@ namespace litl
         /// Pointer to user provided data that is to be copied.
         /// </summary>
         std::span<std::byte const> m_dataPtr;
+
+        /// <summary>
+        /// If applicable, the Buffer Device Addresses (BDA) for this buffer.
+        /// </summary>
+        std::vector<uint64_t> m_bdaAddresses;
 
         /// <summary>
         /// Is there data waiting to be written?

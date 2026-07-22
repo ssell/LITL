@@ -61,18 +61,30 @@ namespace litl
             auto config = services.get<Configuration>();
             auto window = services.get<Window>();
 
-            LITL_FATAL_ASSERT_MSG((objectPool != nullptr), "Failed to inject ObjectPool into RenderManager");
-            LITL_FATAL_ASSERT_MSG((config != nullptr), "Failed to inject Configuration into RenderManager");
-            LITL_FATAL_ASSERT_MSG((window != nullptr), "Failed to inject Window into RenderManager");
+            LITL_FATAL_ASSERT_MSG((objectPool != nullptr), "Failed to inject ObjectPool into RenderManager.");
+            LITL_FATAL_ASSERT_MSG((config != nullptr), "Failed to inject Configuration into RenderManager.");
+            LITL_FATAL_ASSERT_MSG((window != nullptr), "Failed to inject Window into RenderManager.");
 
             createRenderer(window.get(), config.get()->rendererSettings);
 
+            LITL_FATAL_ASSERT_MSG((renderer != nullptr), "Failed to create Renderer.");
+
+            dataMap.buffer = objectPool->createGpuBuffer(GpuBufferDescriptor{
+                .type = BufferTypeFlagBits::BufferDeviceAddress,
+                .memoryUsage = BufferMemoryUsage::PersistentMap,
+                .bufferStrategy = GpuBufferingStrategy::Frame,
+                .bytes = sizeof(RenderDataMap)
+            });
+
             frameData.buffer = objectPool->createGpuBuffer(GpuBufferDescriptor{
-                .type = BufferTypeFlagBits::ShaderDeviceAddress,
+                .type = BufferTypeFlagBits::BufferDeviceAddress,
                 .memoryUsage = BufferMemoryUsage::PersistentMap,
                 .bufferStrategy = GpuBufferingStrategy::Frame,
                 .bytes = sizeof(RenderPerFrameData)
             });
+
+            LITL_FATAL_ASSERT_MSG(dataMap.buffer.isValid(), "Failed to create Data Map buffer.");
+            LITL_FATAL_ASSERT_MSG(frameData.buffer.isValid(), "Failed to create Frame Data buffer.");
 
             renderPass.setup(*renderer, *objectPool);
         }

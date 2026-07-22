@@ -19,7 +19,7 @@ namespace litl::vulkan
         void* temporary = nullptr;
 
         /// <summary>
-        /// If the buffer is made with type ShaderDeviceAddress this is the buffer device address.
+        /// If the buffer is made with type BufferDeviceAddress this is the buffer device address.
         /// </summary>
         VkDeviceAddress bdaAddress = 0;
     };

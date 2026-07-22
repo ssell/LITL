@@ -8,18 +8,24 @@ namespace litl
 {
     bool GpuBuffer::create(Authority<ObjectPool> auth, GpuBufferDescriptor const& descriptor, RenderManager* renderManager) noexcept
     {
+        // ---------------------------------------------------------------------------------
+        // --- State
+
         m_descriptor = descriptor;
         m_pRenderManager = renderManager;
         m_pRenderer = m_pRenderManager->getRenderer();
 
+        // ---------------------------------------------------------------------------------
+        // --- Handles
+
         switch (m_descriptor.bufferStrategy)
         {
         case GpuBufferingStrategy::Single:
-            m_handles.resize(1);
+            m_handles.resize(1ull);
             break;
 
         case GpuBufferingStrategy::Double:
-            m_handles.resize(2);
+            m_handles.resize(2ull);
             break;
 
         case GpuBufferingStrategy::Frame:
@@ -39,6 +45,21 @@ namespace litl
         {
             m_handles[i] = m_pRenderer->createBuffer(bufferDescriptor);
             LITL_ASSERT_MSG(m_handles[i].isValid(), "Failed to create GPU Buffer", false);
+        }
+
+        // ---------------------------------------------------------------------------------
+        // --- Buffer Device Addresses
+
+        if (has_any(descriptor.type, BufferTypeFlagBits::BufferDeviceAddress))
+        {
+            m_bdaAddresses.resize(m_handles.size());
+
+            for (auto i = 0; i < m_handles.size(); ++i)
+            {
+                auto bda = m_pRenderer->getBufferDeviceAddress(m_handles[i]);
+                LITL_ASSERT_MSG(bda.has_value(), "Failed to retrieve BDA for buffer created with BufferDeviceAddress flag.", false);
+                m_bdaAddresses[i] = *bda;
+            }
         }
 
         return true;
@@ -77,6 +98,17 @@ namespace litl
     BufferHandle GpuBuffer::getBufferHandle() const noexcept
     {
         return m_handles[m_currHandleIndex];
+    }
+
+    std::optional<uint64_t> GpuBuffer::getBufferDeviceAddress() const noexcept
+    {
+        if (m_bdaAddresses.empty())
+        {
+            return std::nullopt;
+        }
+
+        LITL_ASSERT_MSG((m_currHandleIndex < m_bdaAddresses.size()), "Request for GPU Buffer BDA is out-of-range.", std::nullopt);
+        return m_bdaAddresses[m_currHandleIndex];
     }
 
     void GpuBuffer::setData(std::span<std::byte const> data) noexcept
