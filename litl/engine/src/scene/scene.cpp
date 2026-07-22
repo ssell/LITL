@@ -128,14 +128,24 @@ namespace litl
                 mat4 worldMatrix = localTransform->getWorldMatrix();
                 uint32_t parentIndex = m_graph.m_nodeParent[sortedIndex];
 
-                if (m_graph.m_nodeParent[sortedIndex] != Constants::uint32_null_index)
+                if (parentIndex != Constants::uint32_null_index)
                 {
                     // This node has a parent. Use it to calculate the world transform.
-                    worldMatrix = m_transforms.getWorldMatrix(m_graph.m_nodeGpuIndex[parentIndex]) * worldMatrix;
+                    uint32_t parentGpuIndex = m_graph.m_nodeGpuIndex[parentIndex];
+
+                    if (parentGpuIndex != Constants::uint32_null_index)
+                    {
+                        worldMatrix = m_transforms.getWorldMatrix(parentGpuIndex) * worldMatrix;
+                    }
                 }
 
                 // Set the world matrix in the scene transforms buffer
-                m_transforms.setWorldMatrix(m_graph.m_nodeGpuIndex[sortedIndex], worldMatrix);
+                uint32_t gpuIndex = m_graph.m_nodeGpuIndex[sortedIndex];
+
+                if (gpuIndex != Constants::uint32_null_index)
+                {
+                    m_transforms.setWorldMatrix(gpuIndex, worldMatrix);
+                }
 
                 // Update the entity bounds in the scene partition
                 auto localBounds = world.getComponent<LocalBounds>(entity);

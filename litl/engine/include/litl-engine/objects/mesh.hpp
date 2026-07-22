@@ -51,8 +51,9 @@ namespace litl
         std::span<std::byte const> indexData;
     };
 
-    struct MeshDescriptor : ObjectDescriptor
+    struct MeshDescriptor
     {
+        ObjectDescriptor objectInfo{};
         MeshVertexDescriptor vertexInfo{};
         MeshIndexDescriptor indexInfo{};
     };

@@ -136,6 +136,7 @@ namespace litl
         
         if (!buffer.create({}, descriptor, *m_impl->renderManager.get()))
         {
+            logWarning("Failed to create GPU Buffer '", descriptor.objectInfo.name, "'");
             buffer.destroy({});     // make sure there are no lingering resources depending on when in the creation process the error occurred.
             return {};
         }
@@ -182,6 +183,7 @@ namespace litl
 
         if (!material.create({}, descriptor, *(m_impl->renderManager->getRenderer())))
         {
+            logWarning("Failed to create Material '", descriptor.objectInfo.name, "'");
             material.destroy({});
             return {};
         }
@@ -220,6 +222,7 @@ namespace litl
         
         if (!mesh.create({}, *this, descriptor))
         {
+            logWarning("Failed to create Mesh '", descriptor.objectInfo.name, "'");
             mesh.destroy({});       // make sure there are no lingering resources depending on when in the creation process the error occurred.
             return {};
         }

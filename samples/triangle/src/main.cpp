@@ -29,6 +29,7 @@ MeshHandle createTriangleMesh(ObjectPool& objectPool)
     std::array<uint32_t, 3> indices = { 0, 1, 2 };
 
     auto meshHandle = objectPool.createMesh(MeshDescriptor{
+        .objectInfo = ObjectDescriptor { .name = "Triangle" },
         .vertexInfo = MeshVertexDescriptor{
             .vertexCount = 3u,
             .vertexByteSize = sizeof(Vertex),
@@ -66,6 +67,7 @@ MaterialHandle createTriangleMaterial(ObjectPool& objectPool)
 
     // Create the material
     auto materialDescriptor = MaterialDescriptor{
+        .objectInfo = ObjectDescriptor { .name = "Flat" },
         .vertexShader = ShaderResourceDescriptor {
             .resource = resourcePath,
             .entryPoint = "vertexMain",

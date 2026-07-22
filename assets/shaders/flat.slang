@@ -45,7 +45,7 @@ struct PushConstants
     DataMap* dataMap;
 };
 
-[[vk::push_constant]] PushConstants _pushConstants;
+[[vk::push_constant]] PushConstants _pc;
 
 // -----------------------------------------------------------------------------------------
 // Vertex Shader
@@ -70,7 +70,10 @@ struct VertexOutput
 VertexOutput vertexMain(VertexInput input)
 {
     VertexOutput output = (VertexOutput)0;
-    output.position = mul(_pushConstants->dataMap->passData->viewProjection, float4(input.position.xy, 0.0, 1.0));
+
+    float4x4 mvpMatrix = mul(_pc->dataMap->passData->viewProjection, _pc->dataMap->worldMatrices[0]);
+
+    output.position = mul(mvpMatrix, float4(input.position.xy, 0.0, 1.0));
     output.color = input.color;
     output.uv = input.uv;
     
@@ -91,8 +94,8 @@ FragmentOutput fragmentMain(VertexOutput input)
 {
     FragmentOutput output = (FragmentOutput)0;
 
-    // float transition = (sin(_pushConstants->dataMap->frameData->elapsedTime) + 1.0f) * 0.5f;
-    output.color = float4(input.color.rgb, 1.0f);
+    float transition = (sin(_pc->dataMap->frameData->elapsedTime) + 1.0f) * 0.5f;
+    output.color = float4(input.color.rgb * transition, 1.0f);
 
     return output;
 }

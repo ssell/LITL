@@ -37,8 +37,10 @@ namespace litl
         Frame = 2
     };
 
-    struct GpuBufferDescriptor : ObjectDescriptor
+    struct GpuBufferDescriptor
     {
+        ObjectDescriptor objectInfo{};
+
         /// <summary>
         /// Specifies allowed usages of the buffer.
         /// </summary>

@@ -89,6 +89,7 @@ namespace litl
             LITL_FATAL_ASSERT_MSG((renderer != nullptr), "Failed to create Renderer.");
 
             frameData.handle = objectPool->createGpuBuffer(GpuBufferDescriptor{
+                .objectInfo = ObjectDescriptor { .name = "LITL_INTERNAL_Buffer_PerFrameData" },
                 .type = BufferTypeFlagBits::BufferDeviceAddress,
                 .memoryUsage = BufferMemoryUsage::PersistentMap,
                 .bufferStrategy = GpuBufferingStrategy::Frame,
@@ -97,6 +98,7 @@ namespace litl
             });
 
             passData.handle = objectPool->createGpuBuffer(GpuBufferDescriptor{
+                .objectInfo = ObjectDescriptor { .name = "LITL_INTERNAL_Buffer_PerPassData" },
                 .type = BufferTypeFlagBits::BufferDeviceAddress,
                 .memoryUsage = BufferMemoryUsage::PersistentMap,
                 .bufferStrategy = GpuBufferingStrategy::Frame,
@@ -105,6 +107,7 @@ namespace litl
             });
 
             worldMatrices.handle = objectPool->createGpuBuffer(GpuBufferDescriptor{
+                .objectInfo = ObjectDescriptor { .name = "LITL_INTERNAL_Buffer_WorldMatrices" },
                 .type = BufferTypeFlagBits::BufferDeviceAddress,
                 .memoryUsage = BufferMemoryUsage::PersistentMap,
                 .bufferStrategy = GpuBufferingStrategy::Frame,
@@ -114,6 +117,7 @@ namespace litl
             });
 
             dataMap.handle = objectPool->createGpuBuffer(GpuBufferDescriptor{
+                .objectInfo = ObjectDescriptor { .name = "LITL_INTERNAL_Buffer_DataMap" },
                 .type = BufferTypeFlagBits::BufferDeviceAddress,
                 .memoryUsage = BufferMemoryUsage::PersistentMap,
                 .bufferStrategy = GpuBufferingStrategy::Frame,
@@ -182,6 +186,7 @@ namespace litl
             auto frameCommandBuffer = renderer->cmdBeginFrame();
 
             updatePerFrameData(frameCommandBuffer, dt);
+            updateWorldMatrices(frameCommandBuffer);
 
             for (auto& renderCamera : cullingBucket.cameraRenderableEntities)
             {
@@ -317,7 +322,6 @@ namespace litl
         void updateWorldMatrices(CommandBufferHandle commandBuffer) noexcept
         {
             auto currWorldMatrices = sceneView->getWorldMatrices();
-
             auto* worldMatrixBuffer = objectPool->getGpuBuffer(worldMatrices.handle);
             LITL_ASSERT_MSG((worldMatrixBuffer != nullptr), "Attempting to render without a valid world matrix buffer.", );
 
