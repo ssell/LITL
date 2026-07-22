@@ -26,6 +26,26 @@ namespace litl
         return m_pActiveScene->isPresent(entity);
     }
 
+    void SceneView::track(Entity entity, Transform const& transform) noexcept
+    {
+        LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::track on a null scene.", );
+
+        if (!m_pActiveScene->isPresent(entity))
+        {
+            m_pActiveScene->track(entity, transform);
+        }
+    }
+
+    void SceneView::track(Entity entity, Transform const& transform, bounds::AABB bounds) noexcept
+    {
+        LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::track on a null scene.", );
+
+        if (!m_pActiveScene->isPresent(entity))
+        {
+            m_pActiveScene->track(entity, transform, bounds);
+        }
+    }
+
     Entity SceneView::getParent(Entity entity) const noexcept
     {
         LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::getParent on a null scene.", Entity::null());

@@ -96,7 +96,10 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     auto triangleMaterial = createTriangleMaterial(*objectPool);
     auto triangleMesh = createTriangleMesh(*objectPool);
 
-    commands.addComponent(triangleEntity, Transform{});
+    Transform transform{};
+    transform.setPosition({ 0.0f, -0.5f, 1.5f });
+
+    commands.addComponent(triangleEntity, transform);
     commands.addComponent(triangleEntity, MaterialRef{ .handle = triangleMaterial });
     commands.addComponent(triangleEntity, MeshRef{ .handle = triangleMesh });
 }

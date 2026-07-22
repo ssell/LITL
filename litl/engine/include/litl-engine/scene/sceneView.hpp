@@ -14,6 +14,7 @@ namespace litl
     class SceneManager;
     class Scene;
     class Camera;
+    struct Transform;
 
     /// <summary>
     /// Provides a read-only view into the current active scene.
@@ -32,6 +33,29 @@ namespace litl
         /// <param name="entity"></param>
         /// <returns></returns>
         [[nodiscard]] bool isPresent(Entity entity) const noexcept;
+
+        /// <summary>
+        /// Adds the entity to the scene.
+        /// This is not needed if the entity is made via EntityCommands.
+        /// 
+        /// Note that this method is not thread-safe and should only be invoked from
+        /// the main thread at a sync point.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="transform"></param>
+        void track(Entity entity, Transform const& transform) noexcept;
+
+        /// <summary>
+        /// Adds the entity to the scene.
+        /// This is not needed if the entity is made via EntityCommands.
+        /// 
+        /// Note that this method is not thread-safe and should only be invoked from
+        /// the main thread at a sync point.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="transform"></param>
+        /// <param name="bounds"></param>
+        void track(Entity entity, Transform const& transform, bounds::AABB bounds) noexcept;
 
         /// <summary>
         /// Returns the parent of the entity. If it has no parent, returns Entity::null().

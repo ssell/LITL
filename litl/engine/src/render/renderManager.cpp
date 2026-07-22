@@ -202,7 +202,12 @@ namespace litl
                 if (renderCamera.camera->isMainCamera())
                 {
                     updatePerPassData(frameCommandBuffer, *renderCamera.camera);
-                    renderPass.render(frameCommandBuffer, pushConstants, *renderCamera.camera, renderCamera.entities);
+                    updateDataMapData(frameCommandBuffer);
+
+                    if (goodToGo())
+                    {
+                        renderPass.render(frameCommandBuffer, pushConstants, *renderCamera.camera, renderCamera.entities);
+                    }
 
                     break;
                 }
@@ -348,6 +353,16 @@ namespace litl
             dataMapBuffer->swapBuffers(frameData.data.frameIndex);
             dataMapBuffer->setDataImmediate(generic_as_byte_span(&dataMap.data, sizeof(RenderDataMap)), commandBuffer);
             pushConstants.dataMapAddr = dataMapBuffer->getBufferDeviceAddress().value();
+        }
+
+        bool goodToGo() noexcept
+        {
+            LITL_ASSERT_MSG(pushConstants.dataMapAddr != 0ull, "Attempting to render with an invalid DataMap address.", false);
+            LITL_ASSERT_MSG(dataMap.data.perFrameDataAddr != 0ull, "Attempting to render with an invalid PerFrameData address.", false);
+            LITL_ASSERT_MSG(dataMap.data.perPassDataAddr != 0ull, "Attempting to render with an invalid PerPassData address.", false);
+            LITL_ASSERT_MSG(dataMap.data.worldMatricesAddr != 0ull, "Attempting to render with an invalid WorldMatrices address.", false);
+
+            return true;
         }
     };
 

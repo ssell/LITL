@@ -3,21 +3,26 @@
 #include "litl-engine/ecs/components/transform.hpp"
 #include "litl-engine/ecs/components/cameraRef.hpp"
 #include "litl-engine/scene/scene.hpp"
+#include "litl-engine/scene/sceneView.hpp"
 #include "litl-engine/scene/sceneCameras.hpp"
 
 namespace litl
 {
-    void Camera::create(Authority<ObjectPool> auth, CameraDescriptor const& descriptor, World& world, CameraHandle handle) noexcept
+    void Camera::create(Authority<ObjectPool> auth, CameraDescriptor const& descriptor, World& world, SceneView& sceneView, CameraHandle handle) noexcept
     {
         m_descriptor = descriptor;
         m_processPosition = descriptor.processOrder;
         m_entity = world.createImmediate();
 
+        rebuildProjectionMatrix();
+
         world.addComponentsImmediate<Transform, CameraRef>(
             m_entity, 
-            Transform{}, 
+            Transform{},
             CameraRef{ .handle = handle }
         );
+
+        sceneView.track(m_entity, world.getComponent<Transform>(m_entity).value());
     }
 
     void Camera::destroy(Authority<ObjectPool> auth) noexcept
@@ -38,6 +43,30 @@ namespace litl
             });
     }
 
+    void Camera::rebuildProjectionMatrix() noexcept
+    {
+        switch (m_descriptor.projection)
+        {
+        case CameraProjection::Perspective:
+            m_projMatrix = mat4::perspective(
+                m_descriptor.perspective.fieldOfViewY,
+                m_descriptor.perspective.aspectRatio,
+                m_descriptor.zNear,
+                m_descriptor.zFar);
+            break;
+
+        case CameraProjection::Orthographic:
+            m_projMatrix = mat4::orthographic(
+                m_descriptor.orthographic.left,
+                m_descriptor.orthographic.right,
+                m_descriptor.orthographic.bottom,
+                m_descriptor.orthographic.top,
+                m_descriptor.zNear,
+                m_descriptor.zFar);
+            break;
+        }
+    }
+
     void Camera::setAsMainCamera(Authority<SceneCameras> authority, bool main) noexcept
     {
         m_isMain = main;
@@ -55,6 +84,43 @@ namespace litl
     bool Camera::isMainCamera() const noexcept
     {
         return m_isMain;
+    }
+
+    void Camera::setFieldOfView(float radians) noexcept
+    {
+        LITL_ASSERT_MSG((radians > 0.0f), "Camera field-of-view must be positive and greater than 0.", );
+        m_descriptor.perspective.fieldOfViewY = radians;
+        rebuildProjectionMatrix();
+    }
+
+    float Camera::getFieldOfView() const noexcept
+    {
+        return m_descriptor.perspective.fieldOfViewY;
+    }
+
+    void Camera::setAspectRatio(float aspectRatio) noexcept
+    {
+        LITL_ASSERT_MSG((aspectRatio > 0.0f), "Camera aspect ratio must be positive and greater than 0.", );
+        m_descriptor.perspective.aspectRatio = aspectRatio;
+        rebuildProjectionMatrix();
+    }
+
+    float Camera::getAspectRatio() const noexcept
+    {
+        return m_descriptor.perspective.aspectRatio;
+    }
+
+    void Camera::setOrthographicBounds(float left, float right, float bottom, float top) noexcept
+    {
+        m_descriptor.orthographic.left = left;
+        m_descriptor.orthographic.right = right;
+        m_descriptor.orthographic.bottom = bottom;
+        m_descriptor.orthographic.top = top;
+    }
+
+    vec4 Camera::getOrthographicBounds() const noexcept
+    {
+        return { m_descriptor.orthographic.left, m_descriptor.orthographic.right, m_descriptor.orthographic.bottom, m_descriptor.orthographic.top };
     }
 
     mat4 const& Camera::getWorldMatrix() const noexcept

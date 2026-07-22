@@ -662,6 +662,7 @@ void updatePerCameraDataBuffer(SampleRenderState& sample) noexcept
     {
         vec3 cameraPos{ 0.0f, 0.5f, -2.5f };
         cameraPos.z() += cos(sample.elapsedTime);
+        
 
         sample.perCameraData.projMatrix = mat4::perspective(degreesToRadians(60.0f), sample.window->getAspectRatio(), 0.0f, 10.0f);
         sample.perCameraData.viewMatrix = mat4::lookAt(cameraPos, vec3(0.0f, 0.5f, 0.0f), vec3::up());

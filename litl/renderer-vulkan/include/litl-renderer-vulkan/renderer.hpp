@@ -80,6 +80,7 @@ namespace litl::vulkan
     // -------------------------------------------------------------------------------------
 
     [[nodiscard]] DataFormat getSwapchainImageFormat(litl::RendererContext* context) noexcept;
+    [[nodiscard]] SwapChainDimensions getSwapchainDimensions(litl::RendererContext* context) noexcept;
     [[nodiscard]] FrameData getFrameData(litl::RendererContext* context) noexcept;
     [[nodiscard]] uint32_t getMaxPushConstantSize(litl::RendererContext* context) noexcept;
 
@@ -150,6 +151,7 @@ namespace litl::vulkan
 
         // misc
         &getSwapchainImageFormat,
+        &getSwapchainDimensions,
         &getFrameData,
         &getMaxPushConstantSize
     };

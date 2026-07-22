@@ -11,6 +11,7 @@
 #include "litl-ecs/world.hpp"
 #include "litl-ecs/entity/entityCommand.hpp"
 #include "litl-engine/objects/objectPool.hpp"
+#include "litl-engine/render/renderManager.hpp"
 
 namespace litl
 {
@@ -19,6 +20,7 @@ namespace litl
         std::vector<std::shared_ptr<Scene>> scenes;
         std::shared_ptr<SceneView> view;
         std::shared_ptr<ObjectPool> objectPool;
+        std::shared_ptr<RenderManager> renderManager;
 
         SceneChangeProcessor sceneChangeProcessor;
         uint32_t activeIndex{ Constants::uint32_null_index };
@@ -58,14 +60,16 @@ namespace litl
     {
         m_impl->view = services.get<SceneView>();
         m_impl->objectPool = services.get<ObjectPool>();
+        m_impl->renderManager = services.get<RenderManager>();
 
         LITL_FATAL_ASSERT_MSG((m_impl->view != nullptr), "Failed to inject SceneView to SceneManager");
         LITL_FATAL_ASSERT_MSG((m_impl->objectPool != nullptr), "Failed to inject ObjectPool to SceneManager");
+        LITL_FATAL_ASSERT_MSG((m_impl->renderManager != nullptr), "Failed to inject RenderManager to SceneManager");
     }
 
     void SceneManager::createScene(SceneConfig const& config) noexcept
     {
-        m_impl->scenes.push_back(std::make_shared<Scene>(config, m_impl->objectPool.get()));
+        m_impl->scenes.push_back(std::make_shared<Scene>(config, m_impl->renderManager->getRenderer(), m_impl->objectPool.get()));
 
         // If this is the first scene, automatically set it as the active scene.
         if (m_impl->activeIndex == Constants::uint32_null_index)

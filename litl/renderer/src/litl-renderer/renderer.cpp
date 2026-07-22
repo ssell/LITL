@@ -316,6 +316,11 @@ namespace litl
         return m_pOps->getSwapchainImageFormat(m_pContext);
     }
 
+    SwapChainDimensions Renderer::getSwapchainDimensions() const noexcept
+    {
+        return m_pOps->getSwapchainDimensions(m_pContext);
+    }
+
     FrameData Renderer::getFrameData() const noexcept
     {
         return m_pOps->getFrameData(m_pContext);

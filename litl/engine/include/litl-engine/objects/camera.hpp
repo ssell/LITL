@@ -12,6 +12,7 @@ namespace litl
 {
     class ObjectPool;
     class Scene;
+    class SceneView;
     class SceneCameras;
     class World;
 
@@ -37,8 +38,84 @@ namespace litl
         Postprocess = 150u
     };
 
+    enum class CameraProjection : uint32_t
+    {
+        Perspective = 0u,
+        Orthographic = 1u
+    };
+
+    /// <summary>
+    /// Series of fields related to configuring a perspective projection.
+    /// </summary>
+    struct PerspectiveDescriptor
+    {
+        /// <summary>
+        /// The field-of-view on the y-axis in radians.
+        /// </summary>
+        float fieldOfViewY = degreesToRadians(60.0f);
+
+        /// <summary>
+        /// The aspect ratio of the perspective projection.
+        /// This should be render target (width / height).
+        /// 
+        /// If the camera is the main camera, then this is set automatically to match the swapchain render target.
+        /// </summary>
+        float aspectRatio = 1.0f;
+    };
+
+    /// <summary>
+    /// Series of fields related to configuring an orthographic projection.
+    /// </summary>
+    struct OrthographicDescriptor
+    {
+        /// <summary>
+        /// The left side of the frustum.
+        /// </summary>
+        float left = -10.0f;
+
+        /// <summary>
+        /// The right side of the frustum.
+        /// </summary>
+        float right = 10.0f;
+
+        /// <summary>
+        /// The bottom of the frustum.
+        /// </summary>
+        float bottom = -10.0f;
+
+        /// <summary>
+        /// The top of the frustum.
+        /// </summary>
+        float top = 10.0f;
+    };
+
     struct CameraDescriptor : ObjectDescriptor
     {
+        /// <summary>
+        /// The projection type that the camera is using.
+        /// </summary>
+        CameraProjection projection = CameraProjection::Perspective;
+
+        /// <summary>
+        /// Relevant settings if the projection is set to Perspective.
+        /// </summary>
+        PerspectiveDescriptor perspective{};
+
+        /// <summary>
+        /// Relevant settings if the projection is set to Orthographic.
+        /// </summary>
+        OrthographicDescriptor orthographic{};
+
+        /// <summary>
+        /// The near clip-plane of the frustum in world units.
+        /// </summary>
+        float zNear = 0.0f;
+
+        /// <summary>
+        /// The far clip-plane of the frustum in world units.
+        /// </summary>
+        float zFar = 1000.0f;
+
         /// <summary>
         /// The priority level for the camera.
         /// Cameras with a lower level are processed first.
@@ -57,7 +134,7 @@ namespace litl
         /// <param name="descriptor"></param>
         /// <param name="world"></param>
         /// <param name="handle"></param>
-        void create(Authority<ObjectPool> auth, CameraDescriptor const& descriptor, World& world, CameraHandle handle) noexcept;
+        void create(Authority<ObjectPool> auth, CameraDescriptor const& descriptor, World& world, SceneView& sceneView, CameraHandle handle) noexcept;
 
         /// <summary>
         /// 
@@ -83,6 +160,50 @@ namespace litl
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] bool isMainCamera() const noexcept;
+
+        /// <summary>
+        /// Sets the y-axis field-of-view (in radians) for the camera.
+        /// Only relevant for perspective projections. 
+        /// </summary>
+        /// <param name="radians"></param>
+        void setFieldOfView(float radians) noexcept;
+
+        /// <summary>
+        /// Retrieves the y-axis field-of-view (in radians) for the camera.
+        /// Only relevant for perspective projections.
+        /// </summary>
+        [[nodiscard]] float getFieldOfView() const noexcept;
+
+        /// <summary>
+        /// Sets the aspect ratio (width/height) of the camera.
+        /// Only relevant for perspective projections.
+        /// </summary>
+        /// <param name="aspectRatio"></param>
+        void setAspectRatio(float aspectRatio) noexcept;
+
+        /// <summary>
+        /// Gets the aspect ratio (width/height) of the camera.
+        /// Only relevant for perspective projections.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] float getAspectRatio() const noexcept;
+
+        /// <summary>
+        /// Sets the orthographic projection bounds of the camera.
+        /// Only relevant for orthographic projections.
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <param name="bottom"></param>
+        /// <param name="top"></param>
+        void setOrthographicBounds(float left, float right, float bottom, float top) noexcept;
+
+        /// <summary>
+        /// Retrieves the orthographic bounds (left, right, bottom, top) of the camera.
+        /// Only relevant for orthographic projections.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] vec4 getOrthographicBounds() const noexcept;
 
         /// <summary>
         /// Retrieves the world matrix of the camera.
@@ -153,6 +274,11 @@ namespace litl
         [[nodiscard]] CameraDescriptor const& getDescriptor() const noexcept;
 
     private:
+
+        /// <summary>
+        /// Rebuilds the projection matrix.
+        /// </summary>
+        void rebuildProjectionMatrix() noexcept;
 
         /// <summary>
         /// Is this camera the current main camera?

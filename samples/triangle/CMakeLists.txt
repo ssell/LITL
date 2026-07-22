@@ -15,7 +15,7 @@ target_include_directories(litl-samples-triangle
 target_link_libraries(litl-samples-triangle PRIVATE litl-engine)
 target_compile_definitions(litl-samples-triangle PRIVATE $<$<CONFIG:Debug>:DEBUG>)
 
-add_custom_command(TARGET litl-samples-triangle POST_BUILD
+add_custom_command(TARGET litl-samples-triangle PRE_LINK
 	COMMAND ${CMAKE_COMMAND} -E copy_directory
 			${LITL_ASSETS_DIR}
 			$<TARGET_FILE_DIR:litl-samples-triangle>/assets

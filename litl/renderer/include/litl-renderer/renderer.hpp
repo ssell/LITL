@@ -21,6 +21,13 @@ namespace litl
     /// </summary>
     struct RendererContext;
 
+    struct SwapChainDimensions
+    {
+        uint32_t width = 1u;
+        uint32_t height = 1u;
+        float aspectRatio = 1.0f;
+    };
+
     struct RendererOps
     {
         // renderer life-cycle
@@ -87,6 +94,7 @@ namespace litl
 
         // misc
         DataFormat (*getSwapchainImageFormat)(RendererContext*);
+        SwapChainDimensions (*getSwapchainDimensions)(RendererContext*);
         FrameData (*getFrameData)(RendererContext*);
         uint32_t (*getMaxPushConstantSize)(RendererContext*);
     };
@@ -506,6 +514,12 @@ namespace litl
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] DataFormat getSwapchainImageFormat() const noexcept;
+
+        /// <summary>
+        /// Retrieves the swap chain width and height and aspect ratio.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] SwapChainDimensions getSwapchainDimensions() const noexcept;
         
         /// <summary>
         /// Returns information about the current frame such as count and index.
