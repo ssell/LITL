@@ -60,6 +60,12 @@ namespace litl
         uint32_t bytes{ 0u };
 
         /// <summary>
+        /// The size of an individual item in the buffer in bytes.
+        /// May not be applicable to all buffers.
+        /// </summary>
+        uint32_t itemBytes{ 0u };
+
+        /// <summary>
         /// Can this buffer be resized?
         /// </summary>
         bool canResize = false;
@@ -178,7 +184,16 @@ namespace litl
         [[nodiscard]] uint32_t getSizeBytes() const noexcept;
 
         /// <summary>
-        /// Resizes the internal buffers to the specified size.
+        /// Utility to get the number of items in the buffer based on its current size.
+        /// May not be applicable to all buffers. Will return 0 if the buffer with created
+        /// with an itemBytes value of 0.
+        /// </summary>
+        /// <param name="itemSize"></param>
+        /// <returns></returns>
+        [[nodiscard]] uint32_t getItemCapacity() const noexcept;
+
+        /// <summary>
+        /// Resizes the internal buffers to the specified size in bytes.
         /// Note that only a buffer created with canResize set to true can be resized.
         /// 
         /// By default, this will not resize down but will if canShrink is set to true.
@@ -190,7 +205,23 @@ namespace litl
         /// <param name="size"></param>
         /// <param name="canShrink"></param>
         /// <param name="immediate"></param>
-        void resize(uint32_t size, bool canShrink = false, bool immediate = false) noexcept;
+        void resizeBytes(uint32_t size, bool canShrink = false, bool immediate = false) noexcept;
+
+        /// <summary>
+        /// Resizes the internal buffers to the specified size in terms of item count.
+        /// Note that only a buffer created with canResize and a non-zero itemBytes value can be resized via this method.
+        /// 
+        /// By default, this will not resize down but will if canShrink is set to true.
+        /// If resizing down, this must resize down to at the minimum a single item.
+        /// 
+        /// The resize by default is also deferred until the next call to swap. This
+        /// can be overridden if the resize needs to be immediate or if this is a 
+        /// single-buffered buffer.
+        /// </summary>
+        /// <param name="items"></param>
+        /// <param name="canShrink"></param>
+        /// <param name="immediate"></param>
+        void resizeItems(uint32_t items, bool canShrink = false, bool immediate = false) noexcept;
 
     private:
 
@@ -272,6 +303,11 @@ namespace litl
         /// may be in use by frames currently being rendered.
         /// </summary>
         uint32_t m_version = 1u;
+
+        /// <summary>
+        /// Does this buffer support Buffer Device Addresses?
+        /// </summary>
+        bool m_usesBDA = false;
 
         /// <summary>
         /// Is there data waiting to be written?

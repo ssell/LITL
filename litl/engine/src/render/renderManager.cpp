@@ -46,7 +46,7 @@ namespace litl
             GpuBufferHandle handle{};
         };
 
-        struct EntityTransforms
+        struct EntityWorldMatrices
         {
             GpuBufferHandle handle{};
         };
@@ -66,7 +66,7 @@ namespace litl
         RenderPass renderPass{};
         FrameData frameData{};
         PassData passData{};
-        EntityTransforms entityTransforms{};
+        EntityWorldMatrices worldMatrices{};
         DataMap dataMap{};
         RenderPushConstants pushConstants{};
 
@@ -92,21 +92,24 @@ namespace litl
                 .type = BufferTypeFlagBits::BufferDeviceAddress,
                 .memoryUsage = BufferMemoryUsage::PersistentMap,
                 .bufferStrategy = GpuBufferingStrategy::Frame,
-                .bytes = sizeof(RenderPerFrameData)
+                .bytes = sizeof(RenderPerFrameData),
+                .itemBytes = sizeof(RenderPerFrameData)
             });
 
             passData.handle = objectPool->createGpuBuffer(GpuBufferDescriptor{
                 .type = BufferTypeFlagBits::BufferDeviceAddress,
                 .memoryUsage = BufferMemoryUsage::PersistentMap,
                 .bufferStrategy = GpuBufferingStrategy::Frame,
-                .bytes = sizeof(RenderPerPassData)
+                .bytes = sizeof(RenderPerPassData),
+                .itemBytes = sizeof(RenderPerPassData)
             });
 
-            entityTransforms.handle = objectPool->createGpuBuffer(GpuBufferDescriptor{
+            worldMatrices.handle = objectPool->createGpuBuffer(GpuBufferDescriptor{
                 .type = BufferTypeFlagBits::BufferDeviceAddress,
                 .memoryUsage = BufferMemoryUsage::PersistentMap,
                 .bufferStrategy = GpuBufferingStrategy::Frame,
-                .bytes = sizeof(RenderPerPassData),
+                .bytes = sizeof(mat4) * 1024u,
+                .itemBytes = sizeof(mat4),
                 .canResize = true
             });
 
@@ -114,7 +117,8 @@ namespace litl
                 .type = BufferTypeFlagBits::BufferDeviceAddress,
                 .memoryUsage = BufferMemoryUsage::PersistentMap,
                 .bufferStrategy = GpuBufferingStrategy::Frame,
-                .bytes = sizeof(RenderDataMap)
+                .bytes = sizeof(RenderDataMap),
+                .itemBytes = sizeof(RenderDataMap)
             });
 
             LITL_FATAL_ASSERT_MSG(frameData.handle.isValid(), "Failed to create Frame Data buffer.");
@@ -307,6 +311,28 @@ namespace litl
         }
 
         /// <summary>
+        /// Updates the world matrix SSBO whose source is the active SceneTransforms.
+        /// </summary>
+        /// <param name="commandBuffer"></param>
+        void updateWorldMatrices(CommandBufferHandle commandBuffer) noexcept
+        {
+            auto currWorldMatrices = sceneView->getWorldMatrices();
+
+            auto* worldMatrixBuffer = objectPool->getGpuBuffer(worldMatrices.handle);
+            LITL_ASSERT_MSG((worldMatrixBuffer != nullptr), "Attempting to render without a valid world matrix buffer.", );
+
+            worldMatrixBuffer->swapBuffers(frameData.data.frameIndex);
+
+            if (worldMatrixBuffer->getItemCapacity() < currWorldMatrices.size())
+            {
+                worldMatrixBuffer->resizeItems(currWorldMatrices.size() * 2u, false, true);
+            }
+
+            worldMatrixBuffer->setDataImmediate(generic_as_byte_span(currWorldMatrices.data(), currWorldMatrices.size()), commandBuffer);
+            dataMap.data.worldMatricesAddr = worldMatrixBuffer->getBufferDeviceAddress().value();
+        }
+
+        /// <summary>
         /// Updates the DataMap buffer which is supplied by default to all shaders via the push constants.
         /// </summary>
         /// <param name="commandBuffer"></param>
@@ -314,8 +340,6 @@ namespace litl
         {
             auto* dataMapBuffer = objectPool->getGpuBuffer(dataMap.handle);
             LITL_ASSERT_MSG((dataMapBuffer != nullptr), "Attempting to render without a valid data map buffer.", );
-
-            dataMap.data.entityTransformsAddr = sceneView->getEntityTransformsBufferAddress();
 
             dataMapBuffer->swapBuffers(frameData.data.frameIndex);
             dataMapBuffer->setDataImmediate(generic_as_byte_span(&dataMap.data, sizeof(RenderDataMap)), commandBuffer);
