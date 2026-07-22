@@ -160,12 +160,6 @@ namespace litl
         [[nodiscard]] std::span<std::byte const> getData() const noexcept;
 
         /// <summary>
-        /// Returns the Buffer Device Address (BDA) for this buffer, if applicable.
-        /// </summary>
-        /// <returns></returns>
-        [[nodiscard]] std::optional<uint64_t> getBDA() const noexcept;
-
-        /// <summary>
         /// Invoked by the renderer when it is time to transfer any CPU data to the GPU.
         /// </summary>
         /// <param name="auth"></param>

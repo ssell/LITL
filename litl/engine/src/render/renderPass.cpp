@@ -17,39 +17,17 @@ namespace litl
 
     struct RenderPass::Impl
     {
-        struct PassData
-        {
-            RenderPerPassData data{};
-            GpuBufferHandle handle{};
-        };
-
         Renderer* renderer{ nullptr };
         ObjectPool* objectPool{ nullptr };
-        PassData passData{};
 
         void setup(Renderer& renderer, ObjectPool& objectPool) noexcept
         {
             this->renderer = &renderer;
             this->objectPool = &objectPool;
-
-            passData.handle = this->objectPool->createGpuBuffer(GpuBufferDescriptor{
-                .type = BufferTypeFlagBits::UniformBuffer,
-                .memoryUsage = BufferMemoryUsage::PersistentMap,
-                .bufferStrategy = GpuBufferingStrategy::Frame,
-                .bytes = sizeof(RenderPerPassData)
-            });
         }
 
         void render(CommandBufferHandle frameCommandBuffer, Camera& camera, std::vector<RenderableEntity> const& entities) noexcept
         {
-            if (!camera.isMainCamera())
-            {
-                // ... only main camera for now just to get things working ...
-                return;
-            }
-
-            updatePerPassData(frameCommandBuffer, camera);
-
             // --- Begin rendering
 
             const BeginRenderCommand beginRenderCommand{
@@ -121,20 +99,6 @@ namespace litl
             renderer->cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierColorToPresent);
             renderer->cmdEnd(frameCommandBuffer);
             renderer->submitCommands(frameCommandBuffer);
-        }
-
-        void updatePerPassData(CommandBufferHandle commandBuffer, Camera& camera) noexcept
-        {
-            passData.data.projMatrix = camera.getProjectionMatrix();
-            passData.data.viewMatrix = camera.getViewMatrix();
-            passData.data.viewProjMatrix = camera.getViewProjectionMatrix();
-
-            auto frameData = renderer->getFrameData();
-            auto* passGpuBuffer = objectPool->getGpuBuffer(passData.handle);
-            LITL_ASSERT_MSG((passGpuBuffer != nullptr), "Attempting to render without a valid pass data buffer.", );
-            
-            passGpuBuffer->swapBuffers(frameData.frameInFlightIndex);
-            passGpuBuffer->setDataImmediate(generic_as_byte_span(&passData.data, sizeof(RenderPerPassData)), commandBuffer);
         }
     };
 

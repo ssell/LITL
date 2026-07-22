@@ -36,13 +36,19 @@ namespace litl
         struct FrameData
         {
             RenderPerFrameData data{};
-            GpuBufferHandle buffer{};
+            GpuBufferHandle handle{};
+        };
+
+        struct PassData
+        {
+            RenderPerPassData data{};
+            GpuBufferHandle handle{};
         };
 
         struct DataMap
         {
-            RenderDataMap dataMap{};
-            GpuBufferHandle buffer{};
+            RenderDataMap data{};
+            GpuBufferHandle handle{};
         };
 
         std::chrono::steady_clock::time_point startTime;
@@ -51,6 +57,7 @@ namespace litl
         Renderer* renderer{ nullptr };
         RenderPass renderPass{};
         FrameData frameData{};
+        PassData passData{};
         DataMap dataMap{};
         RenderPushConstants pushConstants{};
 
@@ -69,22 +76,30 @@ namespace litl
 
             LITL_FATAL_ASSERT_MSG((renderer != nullptr), "Failed to create Renderer.");
 
-            dataMap.buffer = objectPool->createGpuBuffer(GpuBufferDescriptor{
-                .type = BufferTypeFlagBits::BufferDeviceAddress,
-                .memoryUsage = BufferMemoryUsage::PersistentMap,
-                .bufferStrategy = GpuBufferingStrategy::Frame,
-                .bytes = sizeof(RenderDataMap)
-            });
-
-            frameData.buffer = objectPool->createGpuBuffer(GpuBufferDescriptor{
+            frameData.handle = objectPool->createGpuBuffer(GpuBufferDescriptor{
                 .type = BufferTypeFlagBits::BufferDeviceAddress,
                 .memoryUsage = BufferMemoryUsage::PersistentMap,
                 .bufferStrategy = GpuBufferingStrategy::Frame,
                 .bytes = sizeof(RenderPerFrameData)
             });
 
-            LITL_FATAL_ASSERT_MSG(dataMap.buffer.isValid(), "Failed to create Data Map buffer.");
-            LITL_FATAL_ASSERT_MSG(frameData.buffer.isValid(), "Failed to create Frame Data buffer.");
+            passData.handle = objectPool->createGpuBuffer(GpuBufferDescriptor{
+                .type = BufferTypeFlagBits::BufferDeviceAddress,
+                .memoryUsage = BufferMemoryUsage::PersistentMap,
+                .bufferStrategy = GpuBufferingStrategy::Frame,
+                .bytes = sizeof(RenderPerPassData)
+            });
+
+            dataMap.handle = objectPool->createGpuBuffer(GpuBufferDescriptor{
+                .type = BufferTypeFlagBits::BufferDeviceAddress,
+                .memoryUsage = BufferMemoryUsage::PersistentMap,
+                .bufferStrategy = GpuBufferingStrategy::Frame,
+                .bytes = sizeof(RenderDataMap)
+            });
+
+            LITL_FATAL_ASSERT_MSG(frameData.handle.isValid(), "Failed to create Frame Data buffer.");
+            LITL_FATAL_ASSERT_MSG(passData.handle.isValid(), "Failed to create Pass Data buffer.");
+            LITL_FATAL_ASSERT_MSG(dataMap.handle.isValid(), "Failed to create Data Map buffer.");
 
             renderPass.setup(*renderer, *objectPool);
         }
@@ -142,7 +157,8 @@ namespace litl
 
             auto frameCommandBuffer = renderer->cmdBeginFrame();
 
-            updatePerFrameData(dt, frameCommandBuffer);
+            updatePerFrameData(frameCommandBuffer, dt);
+
 
             for (auto& renderCamera : cullingBucket.cameraRenderableEntities)
             {
@@ -151,7 +167,19 @@ namespace litl
                     break;
                 }
 
-                renderPass.render(frameCommandBuffer, *renderCamera.camera, renderCamera.entities);
+                // Only main camera for now to get things working.
+                // todo this implementation of "per pass data" via bda wont really work beyond the main camera.
+                // the draws are deferred but the changes to the data map buffer (pointing to the appropriate per pass buffer) are immediate
+
+                if (renderCamera.camera->isMainCamera())
+                {
+                    updatePerPassData(frameCommandBuffer, *renderCamera.camera);
+                    updatePushConstants(frameCommandBuffer);
+                    renderPass.render(frameCommandBuffer, *renderCamera.camera, renderCamera.entities);
+
+                    break;
+                }
+
             }
 
             renderer->endRender();
@@ -222,9 +250,9 @@ namespace litl
         /// <summary>
         /// Updates the FrameData buffer which is supplied by default to all shaders via the pushed data map.
         /// </summary>
-        /// <param name="dt"></param>
         /// <param name="commandBuffer"></param>
-        void updatePerFrameData(float dt, CommandBufferHandle commandBuffer) noexcept
+        /// <param name="dt"></param>
+        void updatePerFrameData(CommandBufferHandle commandBuffer, float dt) noexcept
         {
             auto data = renderer->getFrameData();
 
@@ -233,11 +261,57 @@ namespace litl
             frameData.data.deltaTime = dt;
             frameData.data.elapsedTime = std::chrono::duration<float>(std::chrono::steady_clock::now() - startTime).count();
 
-            auto* frameGpuBuffer = objectPool->getGpuBuffer(frameData.buffer);
+            auto* frameGpuBuffer = objectPool->getGpuBuffer(frameData.handle);
             LITL_ASSERT_MSG((frameGpuBuffer != nullptr), "Attempting to render without a valid frame data buffer.", );
 
             frameGpuBuffer->swapBuffers(data.frameInFlightIndex);
             frameGpuBuffer->setDataImmediate(as_byte_span(frameData.data), commandBuffer);
+            dataMap.data.perFrameDataAddr = frameGpuBuffer->getBufferDeviceAddress().value();
+        }
+
+        /// <summary>
+        /// Updates the PassData buffer which is supplied by default to all shaders via the pushed data map.
+        /// </summary>
+        /// <param name="commandBuffer"></param>
+        /// <param name="camera"></param>
+        void updatePerPassData(CommandBufferHandle commandBuffer, Camera& camera) noexcept
+        {
+            passData.data.projMatrix = camera.getProjectionMatrix();
+            passData.data.viewMatrix = camera.getViewMatrix();
+            passData.data.viewProjMatrix = camera.getViewProjectionMatrix();
+
+            auto* passGpuBuffer = objectPool->getGpuBuffer(passData.handle);
+            LITL_ASSERT_MSG((passGpuBuffer != nullptr), "Attempting to render without a valid pass data buffer.", );
+
+            passGpuBuffer->swapBuffers(frameData.data.frameIndex);
+            passGpuBuffer->setDataImmediate(generic_as_byte_span(&passData.data, sizeof(RenderPerPassData)), commandBuffer);
+            dataMap.data.perPassDataAddr = passGpuBuffer->getBufferDeviceAddress().value();
+        }
+
+        /// <summary>
+        /// Updates the DataMap buffer which is supplied by default to all shaders via the push constants.
+        /// </summary>
+        /// <param name="commandBuffer"></param>
+        void updateDataMapData(CommandBufferHandle commandBuffer) noexcept
+        {
+            auto* dataMapBuffer = objectPool->getGpuBuffer(dataMap.handle);
+            LITL_ASSERT_MSG((dataMapBuffer != nullptr), "Attempting to render without a valid data map buffer.", );
+
+            dataMapBuffer->swapBuffers(frameData.data.frameIndex);
+            dataMapBuffer->setDataImmediate(generic_as_byte_span(&dataMap.data, sizeof(RenderDataMap)), commandBuffer);
+            pushConstants.dataMapAddr = dataMapBuffer->getBufferDeviceAddress().value();
+        }
+
+        /// <summary>
+        /// Updates the push constants which are a small buffer of constant data for the frame.
+        /// </summary>
+        /// <param name="commandBuffer"></param>
+        void updatePushConstants(CommandBufferHandle commandBuffer) noexcept
+        {
+            renderer->cmdPushConstants(
+                commandBuffer, 
+                ShaderStage::Vertex | ShaderStage::Fragment, 
+                generic_as_byte_span(&pushConstants, sizeof(RenderPushConstants)));
         }
     };
 
