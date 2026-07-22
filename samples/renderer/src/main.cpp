@@ -561,7 +561,7 @@ bool createFrameDataBuffers(SampleRenderState& sample) noexcept
 bool createFrameDataBuffer(SampleRenderState& sample) noexcept
 {
     BufferDescriptor frameBufferDescriptor{
-        .type = BufferTypeFlagBits::ShaderDeviceAddress,
+        .type = BufferTypeFlagBits::BufferDeviceAddress,
         .memoryUsage = BufferMemoryUsage::PersistentMap,
         .bytes = sizeof(PerFrameData)
     };
@@ -594,7 +594,7 @@ void updatePerFrameDataBuffer(SampleRenderState& sample) noexcept
 
     if (sample.renderer->mapBuffer(frameBuffer, mappedBuffer) == RendererResult::Success)
     {
-        sample.pushConstants.frameDataAddress = mappedBuffer.shaderDeviceAddress;
+        sample.pushConstants.frameDataAddress = mappedBuffer.BufferDeviceAddress;
         std::memcpy(mappedBuffer.mappedPtr, &sample.perFrameData, sizeof(PerFrameData));
         sample.renderer->unmapBuffer(frameBuffer);
     }

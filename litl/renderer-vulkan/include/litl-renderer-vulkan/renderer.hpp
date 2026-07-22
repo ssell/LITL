@@ -21,6 +21,7 @@ namespace litl::vulkan
     void destroyBuffer(litl::RendererContext* context, BufferHandle handle) noexcept;
     [[nodiscard]] RendererResult mapBuffer(litl::RendererContext* context, BufferHandle handle, MappedBuffer& mapped) noexcept;
     [[nodiscard]] RendererResult unmapBuffer(litl::RendererContext* context, BufferHandle handle) noexcept;
+    [[nodiscard]] std::optional<uint64_t> getBufferDeviceAddress(litl::RendererContext* context, BufferHandle handle) noexcept;
     [[nodiscard]] CommandBufferHandle createCommandBuffer(litl::RendererContext* context, CommandBufferDescriptor const& descriptor) noexcept;
     void destroyCommandBuffer(litl::RendererContext* context, CommandBufferHandle handle) noexcept;
     [[nodiscard]] ComputePipelineHandle createComputePipeline(litl::RendererContext* context, ComputePipelineDescriptor const& descriptor) noexcept;
@@ -132,6 +133,7 @@ namespace litl::vulkan
         &cmdBufferFlush,
         &mapBuffer,
         &unmapBuffer,
+        &getBufferDeviceAddress,
         &cmdBindTexture,
         &cmdBindSampler,
         &cmdTextureUpload,

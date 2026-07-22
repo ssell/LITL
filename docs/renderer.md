@@ -188,7 +188,7 @@ The merger validates each `(slot, entry-point)` pair: the entry point must exist
 
 `BufferDescriptor` has four orthogonal axes:
 
-- `BufferTypeFlag` — what the buffer is for (Vertex, Index, Uniform, Storage, TransferSrc, TransferDst, ShaderDeviceAddress). Composable as flags.
+- `BufferTypeFlag` — what the buffer is for (Vertex, Index, Uniform, Storage, TransferSrc, TransferDst, BufferDeviceAddress). Composable as flags.
 - `BufferMemoryType` — preference for where memory lives (Auto, PreferGpu, PreferCpu).
 - `BufferMemoryUsage` — how the CPU will touch it (GpuOnly, Staging, ReadBack, PersistentMap).
 - `bytes` — size.
@@ -207,7 +207,7 @@ For first-time uploads at startup, use a one-shot transient command buffer inste
 
 ### Buffer Device Address
 
-Buffers created with `BufferTypeFlagBits::ShaderDeviceAddress` get a stable 64-bit GPU pointer (`bdaAddress`), accessible via `mapBuffer().shaderDeviceAddress`. Shaders dereference these pointers directly — no descriptor binding required. This is the recommended path for global storage buffers (transforms, materials, light lists) — descriptor pressure drops, and indices become the natural per-draw parameter.
+Buffers created with `BufferTypeFlagBits::BufferDeviceAddress` get a stable 64-bit GPU pointer (`bdaAddress`), accessible via `mapBuffer().BufferDeviceAddress`. Shaders dereference these pointers directly — no descriptor binding required. This is the recommended path for global storage buffers (transforms, materials, light lists) — descriptor pressure drops, and indices become the natural per-draw parameter.
 
 ---
 
@@ -392,7 +392,7 @@ renderer->unmapBuffer(buf);  // flushes if not coherent
 ```cpp
 // Create a buffer with shader device address.
 BufferHandle bdaBuffer = renderer->createBuffer(BufferDescriptor{
-    .type        = BufferTypeFlagBits::ShaderDeviceAddress,
+    .type        = BufferTypeFlagBits::BufferDeviceAddress,
     .memoryUsage = BufferMemoryUsage::PersistentMap,
     .bytes       = sizeof(MyData),
 });
@@ -400,7 +400,7 @@ BufferHandle bdaBuffer = renderer->createBuffer(BufferDescriptor{
 // At frame time: write data, fetch address.
 auto mapped = renderer->mapBuffer(bdaBuffer);
 std::memcpy(mapped.mappedPtr, &myData, sizeof(MyData));
-pushConstants.dataAddress = mapped.shaderDeviceAddress;
+pushConstants.dataAddress = mapped.BufferDeviceAddress;
 
 // Push the address through push constants. The shader dereferences:
 //   struct PushConstants { MyData *data; };

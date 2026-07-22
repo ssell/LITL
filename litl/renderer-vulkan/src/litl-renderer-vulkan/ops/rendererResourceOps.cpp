@@ -35,7 +35,7 @@ namespace litl::vulkan
         if (buffer->memoryMap.persistent != nullptr)
         {
             mapped.mappedPtr = buffer->memoryMap.persistent;
-            mapped.shaderDeviceAddress = static_cast<uint64_t>(buffer->memoryMap.bdaAddress);
+            mapped.BufferDeviceAddress = static_cast<uint64_t>(buffer->memoryMap.bdaAddress);
         }
         else
         {
@@ -81,6 +81,27 @@ namespace litl::vulkan
         }
 
         return RendererResult::Success;
+    }
+
+    std::optional<uint64_t> getBufferDeviceAddress(litl::RendererContext* context, BufferHandle handle) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+        auto* buffer = vulkanContext->resources.getBuffer(handle);
+
+        /**
+         * From the docs:
+         *
+         *     A value of zero is reserved as a "null" pointer and must not be returned as a valid buffer device address.
+         *
+         * https://docs.vulkan.org/refpages/latest/refpages/source/vkGetBufferDeviceAddress.html
+         */
+
+        if ((buffer != nullptr) && (buffer->memoryMap.bdaAddress != 0ull))
+        {
+            return buffer->memoryMap.bdaAddress;
+        }
+
+        return std::nullopt;
     }
 
     CommandBufferHandle createCommandBuffer(litl::RendererContext* context, CommandBufferDescriptor const& descriptor) noexcept

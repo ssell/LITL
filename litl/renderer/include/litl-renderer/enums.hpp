@@ -63,7 +63,7 @@ namespace litl
         StorageBuffer       = 1ull << 3,       // Referenced through a SSBO descriptor.
         TransferSource      = 1ull << 4,       // Used as the source of a copy buffer command.
         TransferDest        = 1ull << 5,       // Used as the destination of a copy buffer command.
-        ShaderDeviceAddress = 1ull << 6,       // Can be accessed via a 64-bit point in shaders (Buffer Device Address (BDA))
+        BufferDeviceAddress = 1ull << 6,       // Can be accessed via a 64-bit point in shaders (Buffer Device Address (BDA))
     };
 
     LITL_ENABLE_BITMASK(BufferTypeFlagBits);

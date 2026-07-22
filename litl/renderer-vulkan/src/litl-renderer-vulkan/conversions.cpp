@@ -1404,7 +1404,7 @@ namespace litl::vulkan
         if (has_any(flag, BufferTypeFlagBits::StorageBuffer)) { vkFlag |= VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT; }
         if (has_any(flag, BufferTypeFlagBits::TransferSource)) { vkFlag |= VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT; }
         if (has_any(flag, BufferTypeFlagBits::TransferDest)) { vkFlag |= VK_BUFFER_USAGE_2_TRANSFER_DST_BIT; }
-        if (has_any(flag, BufferTypeFlagBits::ShaderDeviceAddress)) { vkFlag |= VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT; }
+        if (has_any(flag, BufferTypeFlagBits::BufferDeviceAddress)) { vkFlag |= VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT; }
 
         return vkFlag;
     }
@@ -1419,7 +1419,7 @@ namespace litl::vulkan
         if ((flag & VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT) != 0) { litlFlag |= BufferTypeFlagBits::StorageBuffer; }
         if ((flag & VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT) != 0) { litlFlag |= BufferTypeFlagBits::TransferSource; }
         if ((flag & VK_BUFFER_USAGE_2_TRANSFER_DST_BIT) != 0) { litlFlag |= BufferTypeFlagBits::TransferDest; }
-        if ((flag & VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT) != 0) { litlFlag |= BufferTypeFlagBits::ShaderDeviceAddress; }
+        if ((flag & VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT) != 0) { litlFlag |= BufferTypeFlagBits::BufferDeviceAddress; }
 
         return litlFlag;
     }

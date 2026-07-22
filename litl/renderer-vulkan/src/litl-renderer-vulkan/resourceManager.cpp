@@ -147,7 +147,7 @@ namespace litl::vulkan
 
         resource.memoryMap.persistent = resource.allocationInfo.pMappedData;
 
-        if (has_any(descriptor.type, BufferTypeFlagBits::ShaderDeviceAddress))
+        if (has_any(descriptor.type, BufferTypeFlagBits::BufferDeviceAddress))
         {
             VkBufferDeviceAddressInfo bdaInfo{
                 .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
