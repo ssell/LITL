@@ -42,6 +42,11 @@ namespace litl
     struct ObjectDescriptor
     {
         /// <summary>
+        /// Optional name. Used for debugging and diagnostics.
+        /// </summary>
+        std::string name;
+
+        /// <summary>
         /// How long the object persists for.
         /// </summary>
         ObjectLifetime lifetime = ObjectLifetime::Application;

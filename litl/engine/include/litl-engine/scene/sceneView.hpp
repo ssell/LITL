@@ -67,7 +67,7 @@ namespace litl
         /// Returns a read-only span of all entity world matrices.
         /// </summary>
         /// <returns></returns>
-        [[nodisard]] std::span<mat4 const> getWorldMatrices() const noexcept;
+        [[nodiscard]] std::span<mat4 const> getWorldMatrices() const noexcept;
 
         /// <summary>
         /// Returns all entities that are within or intersect the specified AABB.

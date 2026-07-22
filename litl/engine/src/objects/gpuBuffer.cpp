@@ -88,21 +88,17 @@ namespace litl
             m_buffers[index].handle = m_pRenderer->createBuffer(bufferDescriptor);
             bufferUpdated = true;
         }
-        else
+        else if (m_descriptor.canResize)
         {
-            if (m_descriptor.canResize)
-            {
-                // Resizing of the buffer. Need to transfer from the old buffer.
-                auto oldBufferHandle = m_buffers[index].handle;
-                auto newBufferHandle = m_pRenderer->createBuffer(bufferDescriptor);
+            auto oldBufferHandle = m_buffers[index].handle;
+            auto newBufferHandle = m_pRenderer->createBuffer(bufferDescriptor);
 
-                // ... todo copy data from old to new ...
+            // ... todo copy data from old to new ...
+            // ... not yet implemented because (a) i dont know how i want to do this yet and (b) its not needed as the resizable buffers currently get completely rewritten ...
 
-                m_buffers[index].handle = newBufferHandle;
-                bufferUpdated = true;
-
-                m_pRenderer->destroyBuffer(oldBufferHandle);
-            }
+            m_buffers[index].handle = newBufferHandle;
+            m_pRenderer->destroyBuffer(oldBufferHandle);
+            bufferUpdated = true;
         }
 
         if (bufferUpdated)

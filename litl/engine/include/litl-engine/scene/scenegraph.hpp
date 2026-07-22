@@ -216,6 +216,31 @@ namespace litl
 
         /// <summary>
         /// Index into the GPU buffers (world matrix, etc.).
+        /// The key is the node index and the value is the gpu/sorted index.
+        /// 
+        /// This index is not static and may change each frame. This is because
+        /// the scene is not static and the number of active entities is in flux.
+        /// As the GPU buffers can not have gaps, the indices may change to ensure
+        /// the buffers are whole.
+        /// 
+        /// For example, if we have two top level nodes, each with two children:
+        /// 
+        ///   0 -> 1
+        ///     -> 4
+        /// 
+        ///   2 -> 3
+        ///     -> 5
+        /// 
+        /// The GPU index (and sorted order) would be: [0, 1, 3, 4, 2, 5]
+        /// 
+        /// So,
+        /// 
+        ///     Node 0 => GPU / Sorted Index 0
+        ///     Node 1 => GPU / Sorted Index 1
+        ///     Node 2 => GPU / Sorted Index 3
+        ///     Node 3 => GPU / Sorted Index 4
+        ///     Node 4 => GPU / Sorted Index 2
+        ///     Node 5 => GPU / Sorted Index 5
         /// </summary>
         std::vector<uint32_t> m_nodeGpuIndex;
 
@@ -230,6 +255,26 @@ namespace litl
 
         /// <summary>
         /// Topologically sorted and flattened scene tree.
+        /// The key is the sorted order and the value is the node index.
+        /// 
+        /// For example, if we have two top level nodes, each with two children:
+        /// 
+        ///   0 -> 1
+        ///     -> 4
+        /// 
+        ///   2 -> 3
+        ///     -> 5
+        /// 
+        /// The sorted order would be: [0, 1, 4, 2, 3, 5]
+        /// 
+        /// So,
+        /// 
+        ///     Sorted Node 0 => Node Index 0
+        ///     Sorted Node 1 => Node Index 1
+        ///     Sorted Node 2 => Node Index 4
+        ///     Sorted Node 3 => Node Index 2
+        ///     Sorted Node 4 => Node Index 3
+        ///     Sorted Node 5 => Node Index 5
         /// </summary>
         std::vector<uint32_t> m_sortedNodes;
 

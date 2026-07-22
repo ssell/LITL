@@ -121,6 +121,8 @@ namespace litl
         while (!frontier.empty())
         {
             uint32_t nodeIndex = frontier.top(); frontier.pop();
+
+            m_nodeGpuIndex[nodeIndex] = static_cast<uint32_t>(m_sortedNodes.size());
             m_sortedNodes.push_back(nodeIndex);
 
             auto iter = m_childNodes.find(nodeIndex);

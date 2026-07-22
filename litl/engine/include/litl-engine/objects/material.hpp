@@ -22,13 +22,17 @@ namespace litl
         std::span<std::byte const> bytes{};
     };
 
-    struct MaterialDescriptor : ObjectDescriptor
+    struct MaterialDescriptor
     {
-        ShaderResourceDescriptor vertexShader;
-        ShaderResourceDescriptor fragmentShader;
-        ShaderResourceDescriptor geometryShader;
-        ShaderResourceDescriptor tessellationControlShader;
-        ShaderResourceDescriptor tessellationEvaluationShader;
+        ObjectDescriptor objectInfo{};
+        ShaderResourceDescriptor vertexShader{};
+        ShaderResourceDescriptor fragmentShader{};
+        ShaderResourceDescriptor geometryShader{};
+        ShaderResourceDescriptor tessellationControlShader{};
+        ShaderResourceDescriptor tessellationEvaluationShader{};
+        ShaderResourceDescriptor computeShader{};
+        ShaderResourceDescriptor meshShader{};
+        ShaderResourceDescriptor taskShader{};
     };
 
     class Material

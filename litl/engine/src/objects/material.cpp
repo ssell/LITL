@@ -18,6 +18,9 @@ namespace litl
         auto geometryHandle = createShaderModuleHandle(m_descriptor.geometryShader);
         auto tessellationControlHandle = createShaderModuleHandle(m_descriptor.tessellationControlShader);
         auto tessellationEvaluationHandle = createShaderModuleHandle(m_descriptor.tessellationControlShader);
+        auto meshHandle = createShaderModuleHandle(m_descriptor.meshShader);
+        auto taskHandle = createShaderModuleHandle(m_descriptor.taskShader);
+        auto computeHandle = createShaderModuleHandle(m_descriptor.computeShader);
 
         // Clear the temporary span viewing the shader bytes
         m_descriptor.vertexShader.bytes = {};
@@ -25,12 +28,17 @@ namespace litl
         m_descriptor.geometryShader.bytes = {};
         m_descriptor.tessellationControlShader.bytes = {};
         m_descriptor.tessellationEvaluationShader.bytes = {};
+        m_descriptor.meshShader.bytes = {};
+        m_descriptor.taskShader.bytes = {};
+        m_descriptor.computeShader.bytes = {};
 
         // ---------------------------------------------------------------------------------
         // --- Standard Graphics Pipeline (vertex + fragment + optional geometry/tessellation)
 
         if (vertexHandle.isValid() && fragmentHandle.isValid())
         {
+            // --- Base Graphics Pipeline Descriptor
+
             GraphicsPipelineDescriptor graphicsPipelineDescriptor {
                 .vertex = PipelineShaderDescriptor {
                     .handle = vertexHandle,
@@ -80,54 +88,66 @@ namespace litl
                 .specializationConstants = SpecializationConstants{}                        // ... todo expand this functionality ...
             };
 
-            if (vertexHandle.isValid())
-            {
-                // ... todo expand this functionality to support alternative/custom vertex input layouts ...
-                graphicsPipelineDescriptor.vertexInput.addBinding(VertexBinding{
-                    .binding = 0u,
-                    .stride = sizeof(Vertex),
-                    .rate = VertexInputRate::PerVertex
-                });
+            // --- Vertex Input
 
-                uint32_t runningAttributeOffset = 0u;
+            // ... todo expand this functionality to support alternative/custom vertex input layouts ...
+            graphicsPipelineDescriptor.vertexInput.addBinding(VertexBinding{
+                .binding = 0u,
+                .stride = sizeof(Vertex),
+                .rate = VertexInputRate::PerVertex
+            });
 
-                // position
-                graphicsPipelineDescriptor.vertexInput.addAttribute<vec3>(VertexAttribute{
-                    .location = 0u,
-                    .binding = 0u,
-                    .format = DataFormat::RGB32_SFloat
-                }, runningAttributeOffset);
+            uint32_t runningAttributeOffset = 0u;
 
-                // color
-                graphicsPipelineDescriptor.vertexInput.addAttribute<vec3>(VertexAttribute{
-                    .location = 1u,
-                    .binding = 0u,
-                    .format = DataFormat::RGB32_SFloat
-                }, runningAttributeOffset);
+            graphicsPipelineDescriptor.vertexInput.addAttribute<vec3>(VertexAttribute{      // position
+                .location = 0u,
+                .binding = 0u,
+                .format = DataFormat::RGB32_SFloat
+            }, runningAttributeOffset);
 
-                // uv
-                graphicsPipelineDescriptor.vertexInput.addAttribute<vec3>(VertexAttribute{
-                    .location = 2u,
-                    .binding = 0u,
-                    .format = DataFormat::RG32_SFloat
-                }, runningAttributeOffset);
-            }
+            graphicsPipelineDescriptor.vertexInput.addAttribute<vec3>(VertexAttribute{      // color
+                .location = 1u,
+                .binding = 0u,
+                .format = DataFormat::RGB32_SFloat
+            }, runningAttributeOffset);
+
+            graphicsPipelineDescriptor.vertexInput.addAttribute<vec3>(VertexAttribute{      // uv
+                .location = 2u,
+                .binding = 0u,
+                .format = DataFormat::RG32_SFloat
+            }, runningAttributeOffset);
+
+            // --- Create the Pipeline
 
             m_graphicsPipelineHandle = m_pRenderer->createGraphicsPipeline(graphicsPipelineDescriptor);
         }
-        
-        // ... todo alt graphics path (mesh/task) ...
+
+        // ---------------------------------------------------------------------------------
+        // --- Alternate Graphics Pipeline (mesh + task)
+
+        else if (meshHandle.isValid() && taskHandle.isValid())
+        {
+            // ... todo ...
+        }
 
         // ---------------------------------------------------------------------------------
         // --- Compute Pipeline
 
-        // ... todo ...
+        if (computeHandle.isValid())
+        {
+            // ... todo ...
+        }
 
         return true;
     }
 
     ShaderModuleHandle Material::createShaderModuleHandle(ShaderResourceDescriptor& descriptor) const noexcept
     {
+        if (descriptor.resource.empty() || descriptor.bytes.empty())
+        {
+            return {};
+        }
+
         return m_pRenderer->createShaderModule(ShaderModuleDescriptor{
             .resource = descriptor.resource,
             .bytes = descriptor.bytes
