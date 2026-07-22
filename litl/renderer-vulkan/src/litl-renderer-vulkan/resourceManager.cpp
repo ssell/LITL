@@ -606,6 +606,11 @@ namespace litl::vulkan
             resource.pipeline.setLayouts.push_back(resources.getOrCreateSetLayout(pipelineLayoutDescriptor.setLayouts[i], i));
         }
 
+        for (auto i = 0u; i < pipelineLayoutDescriptor.pushConstants.size(); ++i)
+        {
+            resource.pipeline.pushConstantStages |= pipelineLayoutDescriptor.pushConstants[i].stages;
+        }
+
         // ---- Rendering Info
 
         std::vector<VkFormat> colorAttachmentFormats;

@@ -38,6 +38,7 @@ namespace litl::vulkan
     void destroyTexture(litl::RendererContext* context, TextureHandle handle) noexcept;
     [[nodiscard]] RendererResult mapTexture(litl::RendererContext* context, TextureHandle textureHandle, MappedTexture& mapped) noexcept;
     [[nodiscard]] RendererResult unmapTexture(litl::RendererContext* context, TextureHandle textureHandle) noexcept;
+    [[nodiscard]] ShaderStage getGraphicsPipelinePushConstantStages(litl::RendererContext* context, GraphicsPipelineHandle pipelineHandle) noexcept;
 
     // -------------------------------------------------------------------------------------
     // rendererCommandOps.cpp
@@ -139,6 +140,7 @@ namespace litl::vulkan
         &cmdTextureUpload,
         &mapTexture,
         &unmapTexture,
+        &getGraphicsPipelinePushConstantStages,
 
         // drawing
         &beginRender,
