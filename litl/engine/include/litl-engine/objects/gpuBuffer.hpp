@@ -58,6 +58,11 @@ namespace litl
         /// The size of this buffer in bytes.
         /// </summary>
         uint32_t bytes{ 0u };
+
+        /// <summary>
+        /// Can this buffer be resized?
+        /// </summary>
+        bool canResize = false;
     };
 
     class GpuBuffer
@@ -166,7 +171,40 @@ namespace litl
         /// <param name="commandBuffer"></param>
         void flushData(Authority<RenderManager> auth, CommandBufferHandle commandBuffer) noexcept;
 
+        /// <summary>
+        /// Gets the current size of the buffer in bytes.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] uint32_t getSizeBytes() const noexcept;
+
+        /// <summary>
+        /// Resizes the internal buffers to the specified size.
+        /// Note that only a buffer created with canResize set to true can be resized.
+        /// 
+        /// By default, this will not resize down but will if canShrink is set to true.
+        /// 
+        /// The resize by default is also deferred until the next call to swap. This
+        /// can be overridden if the resize needs to be immediate or if this is a 
+        /// single-buffered buffer.
+        /// </summary>
+        /// <param name="size"></param>
+        /// <param name="canShrink"></param>
+        /// <param name="immediate"></param>
+        void resize(uint32_t size, bool canShrink = false, bool immediate = false) noexcept;
+
     private:
+
+        struct VersionedBuffer
+        {
+            BufferHandle handle{};
+            uint32_t version = 0u;
+        };
+
+        /// <summary>
+        /// Creates (or recreates) the buffer at the specified index.
+        /// </summary>
+        /// <param name="index"></param>
+        void createBuffer(uint32_t index) noexcept;
 
         /// <summary>
         /// Pushes the CPU data to the GPU.
@@ -208,7 +246,7 @@ namespace litl
         /// The underlying GPU buffers. There may be multiple buffers depending 
         /// on the GpuBufferingStrategy that the buffer was created with.
         /// </summary>
-        std::vector<BufferHandle> m_handles;
+        std::vector<VersionedBuffer> m_buffers;
 
         /// <summary>
         /// The CPU-side buffer data. 
@@ -225,6 +263,15 @@ namespace litl
         /// If applicable, the Buffer Device Addresses (BDA) for this buffer.
         /// </summary>
         std::vector<uint64_t> m_bdaAddresses;
+
+        /// <summary>
+        /// The current version of the internal buffers.
+        /// When the GPU Buffer as a whole is resized, the version increments.
+        /// When we swap to an out-of-date buffer then we create a new appropriately sized buffer.
+        /// We can not immediately recreate all internal buffers at the time of swap as they
+        /// may be in use by frames currently being rendered.
+        /// </summary>
+        uint32_t m_version = 1u;
 
         /// <summary>
         /// Is there data waiting to be written?

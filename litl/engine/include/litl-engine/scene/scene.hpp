@@ -129,6 +129,12 @@ namespace litl
         [[nodiscard]] mat4 getWorldMatrix(Entity entity) const noexcept;
 
         /// <summary>
+        /// Returns a read-only span of all entity world matrices.
+        /// </summary>
+        /// <returns></returns>
+        [[nodisard]] std::span<mat4 const> getWorldMatrices() const noexcept;
+
+        /// <summary>
         /// Invoked once per-frame immediately before the PreRender ECS group.
         /// Updates scene hierarchy, world transforms, and spatial partition.
         /// </summary>
