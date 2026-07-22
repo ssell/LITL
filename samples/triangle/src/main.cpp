@@ -1,5 +1,8 @@
+#include <fstream>
+
 #include "litl-engine/startup.hpp"
 #include "litl-engine/ecs/common.hpp"
+#include "litl-core/containers/alignedByteBuffer.hpp"
 
 using namespace litl;
 
@@ -41,6 +44,43 @@ MeshHandle createTriangleMesh(ObjectPool& objectPool)
     return meshHandle;
 }
 
+MaterialHandle createTriangleMaterial(ObjectPool& objectPool)
+{
+    // Load the shader SPIR-V bytes
+    const std::string resourcePath = "assets/shaders/spirv/flat.spv";
+    std::ifstream file(resourcePath, std::ios::ate | std::ios::binary);
+
+    if (!file.is_open())
+    {
+        return{};
+    }
+
+    const auto fileSizeBytes = static_cast<size_t>(file.tellg());
+    AlignedByteBuffer<4> byteBuffer{ fileSizeBytes };
+
+    file.seekg(0);
+    file.read(byteBuffer.as<char>().data(), byteBuffer.size());
+    file.close();
+
+    auto spirvBytes = byteBuffer.as<std::byte const>();
+
+    // Create the material
+    auto materialDescriptor = MaterialDescriptor{
+        .vertexShader = ShaderResourceDescriptor {
+            .resource = resourcePath,
+            .entryPoint = "vertexMain",
+            .bytes = spirvBytes
+        },
+        .fragmentShader = ShaderResourceDescriptor {
+            .resource = resourcePath,
+            .entryPoint = "fragmentMain",
+            .bytes = spirvBytes
+        }
+    };
+
+    return objectPool.createMaterial(materialDescriptor);
+}
+
 void bootstrap(ServiceProvider& services, EntityCommands& commands)
 {
     auto objectPool = services.get<ObjectPool>();
@@ -51,7 +91,7 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     sceneView->setMainCamera(objectPool->createCamera({}));
 
     auto triangleEntity = commands.createEntity();
-    auto triangleMaterial = objectPool->createMaterial({});
+    auto triangleMaterial = createTriangleMaterial(*objectPool);
     auto triangleMesh = createTriangleMesh(*objectPool);
 
     commands.addComponent(triangleEntity, Transform{});

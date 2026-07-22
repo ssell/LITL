@@ -159,7 +159,6 @@ namespace litl
 
             updatePerFrameData(frameCommandBuffer, dt);
 
-
             for (auto& renderCamera : cullingBucket.cameraRenderableEntities)
             {
                 if (renderCamera.camera == nullptr)
@@ -174,8 +173,7 @@ namespace litl
                 if (renderCamera.camera->isMainCamera())
                 {
                     updatePerPassData(frameCommandBuffer, *renderCamera.camera);
-                    updatePushConstants(frameCommandBuffer);
-                    renderPass.render(frameCommandBuffer, *renderCamera.camera, renderCamera.entities);
+                    renderPass.render(frameCommandBuffer, pushConstants, *renderCamera.camera, renderCamera.entities);
 
                     break;
                 }
@@ -300,18 +298,6 @@ namespace litl
             dataMapBuffer->swapBuffers(frameData.data.frameIndex);
             dataMapBuffer->setDataImmediate(generic_as_byte_span(&dataMap.data, sizeof(RenderDataMap)), commandBuffer);
             pushConstants.dataMapAddr = dataMapBuffer->getBufferDeviceAddress().value();
-        }
-
-        /// <summary>
-        /// Updates the push constants which are a small buffer of constant data for the frame.
-        /// </summary>
-        /// <param name="commandBuffer"></param>
-        void updatePushConstants(CommandBufferHandle commandBuffer) noexcept
-        {
-            renderer->cmdPushConstants(
-                commandBuffer, 
-                ShaderStage::Vertex | ShaderStage::Fragment, 
-                generic_as_byte_span(&pushConstants, sizeof(RenderPushConstants)));
         }
     };
 

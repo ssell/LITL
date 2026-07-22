@@ -6,13 +6,13 @@
 
 namespace litl
 {
-    bool GpuBuffer::create(Authority<ObjectPool> auth, GpuBufferDescriptor const& descriptor, RenderManager* renderManager) noexcept
+    bool GpuBuffer::create(Authority<ObjectPool> auth, GpuBufferDescriptor const& descriptor, RenderManager& renderManager) noexcept
     {
         // ---------------------------------------------------------------------------------
         // --- State
 
         m_descriptor = descriptor;
-        m_pRenderManager = renderManager;
+        m_pRenderManager = &renderManager;
         m_pRenderer = m_pRenderManager->getRenderer();
 
         // ---------------------------------------------------------------------------------

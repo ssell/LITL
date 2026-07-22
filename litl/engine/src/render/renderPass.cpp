@@ -26,7 +26,7 @@ namespace litl
             this->objectPool = &objectPool;
         }
 
-        void render(CommandBufferHandle frameCommandBuffer, Camera& camera, std::vector<RenderableEntity> const& entities) noexcept
+        void render(CommandBufferHandle frameCommandBuffer, RenderPushConstants const& pushConstants, Camera& camera, std::vector<RenderableEntity> const& entities) noexcept
         {
             // --- Begin rendering
 
@@ -73,8 +73,24 @@ namespace litl
                     {
                         currMaterialHandle = entity.material.handle;
                         auto* currMaterial = objectPool->getMaterial(currMaterialHandle);
+                        auto graphicsPipelineHandle = currMaterial->getGraphicsPipelineHandle();
+                        auto computePipelineHandle = currMaterial->getComputePipelineHandle();
 
-                        // ... todo bind material ...
+                        if (graphicsPipelineHandle.isValid())
+                        {
+                            renderer->cmdBindGraphicsPipeline(frameCommandBuffer, graphicsPipelineHandle);
+
+                            renderer->cmdPushConstants(
+                                frameCommandBuffer,
+                                ShaderStage::Vertex | ShaderStage::Fragment,                            // ... todo push only to active stages (?) ...
+                                generic_as_byte_span(&pushConstants, sizeof(RenderPushConstants)));
+                        }
+
+                        if (computePipelineHandle.isValid())
+                        {
+                            // ... todo ...
+                            // renderer->cmdBindComputePipeline(frameCommandBuffer, computePipelineHandle);
+                        }
                     }
 
                     if (entity.mesh.handle != currMeshHandle)
@@ -118,8 +134,8 @@ namespace litl
         m_pImpl->setup(renderer, objectPool);
     }
 
-    void RenderPass::render(CommandBufferHandle frameCommandBuffer, Camera& camera, std::vector<RenderableEntity> const& entities) noexcept
+    void RenderPass::render(CommandBufferHandle frameCommandBuffer, RenderPushConstants const& pushConstants, Camera& camera, std::vector<RenderableEntity> const& entities) noexcept
     {
-        m_pImpl->render(frameCommandBuffer, camera, entities);
+        m_pImpl->render(frameCommandBuffer, pushConstants, camera, entities);
     }
 }

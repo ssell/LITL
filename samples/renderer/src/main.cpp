@@ -260,14 +260,14 @@ bool createShaderModule(Renderer* renderer, std::string const& path) noexcept
 
     const ShaderModuleDescriptor shaderModuleDescriptor{
         .resource = path,
-        .bytes = byteBuffer.as<std::byte>()
+        .bytes = byteBuffer.as<std::byte const>()
     };
 
     const auto shaderModuleHandle = renderer->createShaderModule(shaderModuleDescriptor);
 
     if (!shaderModuleHandle.isValid())
     {
-        logError("Failed to created shader module");
+        logError("Failed to create shader module");
         return false;
     }
 
