@@ -1,8 +1,8 @@
 #include <fstream>
 
 #include "litl-engine/startup.hpp"
-#include "litl-engine/ecs/common.hpp"
 #include "litl-core/containers/alignedByteBuffer.hpp"
+#include "spinSystem.hpp"
 
 using namespace litl;
 
@@ -102,6 +102,12 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     commands.addComponent(triangleEntity, transform);
     commands.addComponent(triangleEntity, MaterialRef{ .handle = triangleMaterial });
     commands.addComponent(triangleEntity, MeshRef{ .handle = triangleMesh });
+    commands.addComponent(triangleEntity, Spin{});
+}
+
+void configureSystems(SystemCollection& systems)
+{
+    systems.addSystem<SpinSystem>(SystemGroup::Update);
 }
 
 int main()
@@ -111,7 +117,7 @@ int main()
     engine.setup(
         { .engineSettings { .applicationName = "LITL - Triangle Sample" } },
         nullptr, 
-        nullptr,
+        configureSystems,
         bootstrap,
         nullptr);
 

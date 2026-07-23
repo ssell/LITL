@@ -145,6 +145,11 @@ namespace litl
             return quat{ glm::vec3{ pitch, yaw, roll } };
         }
 
+        [[nodiscard]] static constexpr quat fromEuler(vec3 pitchYawRoll) noexcept
+        {
+            return quat{ glm::vec3{ pitchYawRoll.x(), pitchYawRoll.y(), pitchYawRoll.z() } };
+        }
+
         [[nodiscard]] static constexpr quat lookRotation(vec3 const& forward, vec3 const& up) noexcept
         {
             return quat{ glm::quatLookAt(forward.data(), up.data()) };

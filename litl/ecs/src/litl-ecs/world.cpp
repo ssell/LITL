@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <atomic>
-#include <cassert>
 #include <mutex>
 #include <thread>
 #include <vector>

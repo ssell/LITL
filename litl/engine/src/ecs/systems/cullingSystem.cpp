@@ -73,7 +73,7 @@ namespace litl
 
     void CullingBucket::reset() noexcept
     {
-        for (auto cameraRenderableEntities : cameraRenderableEntities)
+        for (auto& cameraRenderableEntities : cameraRenderableEntities)
         {
             cameraRenderableEntities.camera = nullptr;
             cameraRenderableEntities.entities.clear();
