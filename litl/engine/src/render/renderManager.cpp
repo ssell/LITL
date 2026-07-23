@@ -46,14 +46,13 @@ namespace litl
             GpuBufferHandle handle{};
         };
 
-        struct EntityWorldMatrices
+        struct InstanceData
         {
             GpuBufferHandle handle{};
         };
 
-        struct DataMap
+        struct EntityWorldMatrices
         {
-            RenderDataMap data{};
             GpuBufferHandle handle{};
         };
 
@@ -66,8 +65,8 @@ namespace litl
         RenderPass renderPass{};
         FrameData frameData{};
         PassData passData{};
+        InstanceData instanceData{};
         EntityWorldMatrices worldMatrices{};
-        DataMap dataMap{};
         RenderPushConstants pushConstants{};
 
         void setup(ServiceProvider& services) noexcept
@@ -106,6 +105,16 @@ namespace litl
                 .itemBytes = sizeof(RenderPerPassData)
             });
 
+            instanceData.handle = objectPool->createGpuBuffer(GpuBufferDescriptor{
+                .objectInfo = ObjectDescriptor {.name = "LITL_INTERNAL_Buffer_InstanceData" },
+                .type = BufferTypeFlagBits::BufferDeviceAddress,
+                .memoryUsage = BufferMemoryUsage::PersistentMap,
+                .bufferStrategy = GpuBufferingStrategy::Frame,
+                .bytes = sizeof(RenderInstanceData) * 1024u,
+                .itemBytes = sizeof(RenderInstanceData),
+                .canResize = true
+            });
+
             worldMatrices.handle = objectPool->createGpuBuffer(GpuBufferDescriptor{
                 .objectInfo = ObjectDescriptor { .name = "LITL_INTERNAL_Buffer_WorldMatrices" },
                 .type = BufferTypeFlagBits::BufferDeviceAddress,
@@ -116,18 +125,10 @@ namespace litl
                 .canResize = true
             });
 
-            dataMap.handle = objectPool->createGpuBuffer(GpuBufferDescriptor{
-                .objectInfo = ObjectDescriptor { .name = "LITL_INTERNAL_Buffer_DataMap" },
-                .type = BufferTypeFlagBits::BufferDeviceAddress,
-                .memoryUsage = BufferMemoryUsage::PersistentMap,
-                .bufferStrategy = GpuBufferingStrategy::Frame,
-                .bytes = sizeof(RenderDataMap),
-                .itemBytes = sizeof(RenderDataMap)
-            });
-
             LITL_FATAL_ASSERT_MSG(frameData.handle.isValid(), "Failed to create Frame Data buffer.");
             LITL_FATAL_ASSERT_MSG(passData.handle.isValid(), "Failed to create Pass Data buffer.");
-            LITL_FATAL_ASSERT_MSG(dataMap.handle.isValid(), "Failed to create Data Map buffer.");
+            LITL_FATAL_ASSERT_MSG(instanceData.handle.isValid(), "Failed to create Instance Data buffer.");
+            LITL_FATAL_ASSERT_MSG(worldMatrices.handle.isValid(), "Failed to create World Matrices buffer.");
 
             renderPass.setup(*renderer, *objectPool);
         }
@@ -186,6 +187,7 @@ namespace litl
             auto frameCommandBuffer = renderer->cmdBeginFrame();
 
             updatePerFrameData(frameCommandBuffer, dt);
+            updateInstanceData();
             updateWorldMatrices(frameCommandBuffer);
 
             for (auto& renderCamera : cullingBucket.cameraRenderableEntities)
@@ -202,7 +204,6 @@ namespace litl
                 if (renderCamera.camera->isMainCamera())
                 {
                     updatePerPassData(frameCommandBuffer, *renderCamera.camera);
-                    updateDataMapData(frameCommandBuffer);
 
                     if (goodToGo())
                     {
@@ -280,7 +281,7 @@ namespace litl
         }
 
         /// <summary>
-        /// Updates the FrameData buffer which is supplied by default to all shaders via the pushed data map.
+        /// Updates the FrameData buffer which is supplied by default to all shaders via the push constants.
         /// </summary>
         /// <param name="commandBuffer"></param>
         /// <param name="dt"></param>
@@ -294,15 +295,15 @@ namespace litl
             frameData.data.elapsedTime = std::chrono::duration<float>(std::chrono::steady_clock::now() - startTime).count();
 
             auto* frameGpuBuffer = objectPool->getGpuBuffer(frameData.handle);
-            LITL_ASSERT_MSG((frameGpuBuffer != nullptr), "Attempting to render without a valid frame data buffer.", );
+            LITL_ASSERT_MSG((frameGpuBuffer != nullptr), "Attempting to render without a valid PerFrameData buffer.", );
 
             frameGpuBuffer->swapBuffers(data.frameInFlightIndex);
             frameGpuBuffer->setDataImmediate(as_byte_span(frameData.data), commandBuffer);
-            dataMap.data.perFrameDataAddr = frameGpuBuffer->getBufferDeviceAddress().value();
+            pushConstants.perFrameDataAddr = frameGpuBuffer->getBufferDeviceAddress().value();
         }
 
         /// <summary>
-        /// Updates the PassData buffer which is supplied by default to all shaders via the pushed data map.
+        /// Updates the PassData buffer which is supplied by default to all shaders via the push constants.
         /// </summary>
         /// <param name="commandBuffer"></param>
         /// <param name="camera"></param>
@@ -313,11 +314,23 @@ namespace litl
             passData.data.viewProjMatrix = camera.getViewProjectionMatrix();
 
             auto* passGpuBuffer = objectPool->getGpuBuffer(passData.handle);
-            LITL_ASSERT_MSG((passGpuBuffer != nullptr), "Attempting to render without a valid pass data buffer.", );
+            LITL_ASSERT_MSG((passGpuBuffer != nullptr), "Attempting to render without a valid PerPassData buffer.", );
 
             passGpuBuffer->swapBuffers(frameData.data.frameIndex);
             passGpuBuffer->setDataImmediate(generic_as_byte_span(&passData.data, sizeof(RenderPerPassData)), commandBuffer);
-            dataMap.data.perPassDataAddr = passGpuBuffer->getBufferDeviceAddress().value();
+            pushConstants.perPassDataAddr = passGpuBuffer->getBufferDeviceAddress().value();
+        }
+
+        /// <summary>
+        /// Updates the InstanceData buffer which is supplied by default to all shaders via the push constants.
+        /// </summary>
+        void updateInstanceData() noexcept
+        {
+            auto* instanceDataGpuBuffer = objectPool->getGpuBuffer(instanceData.handle);
+            LITL_ASSERT_MSG((instanceDataGpuBuffer != nullptr), "Attempting to render without a valid InstanceData buffer.", );
+
+            instanceDataGpuBuffer->swapBuffers(frameData.data.frameIndex);
+            pushConstants.instanceDataAddr = instanceDataGpuBuffer->getBufferDeviceAddress().value();
         }
 
         /// <summary>
@@ -328,7 +341,7 @@ namespace litl
         {
             auto currWorldMatrices = sceneView->getWorldMatrices();
             auto* worldMatrixBuffer = objectPool->getGpuBuffer(worldMatrices.handle);
-            LITL_ASSERT_MSG((worldMatrixBuffer != nullptr), "Attempting to render without a valid world matrix buffer.", );
+            LITL_ASSERT_MSG((worldMatrixBuffer != nullptr), "Attempting to render without a valid WorldMatrices buffer.", );
 
             worldMatrixBuffer->swapBuffers(frameData.data.frameIndex);
 
@@ -338,29 +351,15 @@ namespace litl
             }
 
             worldMatrixBuffer->setDataImmediate(generic_as_byte_span(currWorldMatrices.data(), currWorldMatrices.size()), commandBuffer);
-            dataMap.data.worldMatricesAddr = worldMatrixBuffer->getBufferDeviceAddress().value();
-        }
-
-        /// <summary>
-        /// Updates the DataMap buffer which is supplied by default to all shaders via the push constants.
-        /// </summary>
-        /// <param name="commandBuffer"></param>
-        void updateDataMapData(CommandBufferHandle commandBuffer) noexcept
-        {
-            auto* dataMapBuffer = objectPool->getGpuBuffer(dataMap.handle);
-            LITL_ASSERT_MSG((dataMapBuffer != nullptr), "Attempting to render without a valid data map buffer.", );
-
-            dataMapBuffer->swapBuffers(frameData.data.frameIndex);
-            dataMapBuffer->setDataImmediate(generic_as_byte_span(&dataMap.data, sizeof(RenderDataMap)), commandBuffer);
-            pushConstants.dataMapAddr = dataMapBuffer->getBufferDeviceAddress().value();
+            pushConstants.worldMatricesAddr = worldMatrixBuffer->getBufferDeviceAddress().value();
         }
 
         bool goodToGo() noexcept
         {
-            LITL_ASSERT_MSG(pushConstants.dataMapAddr != 0ull, "Attempting to render with an invalid DataMap address.", false);
-            LITL_ASSERT_MSG(dataMap.data.perFrameDataAddr != 0ull, "Attempting to render with an invalid PerFrameData address.", false);
-            LITL_ASSERT_MSG(dataMap.data.perPassDataAddr != 0ull, "Attempting to render with an invalid PerPassData address.", false);
-            LITL_ASSERT_MSG(dataMap.data.worldMatricesAddr != 0ull, "Attempting to render with an invalid WorldMatrices address.", false);
+            LITL_ASSERT_MSG(pushConstants.perFrameDataAddr != 0ull, "Attempting to render with an invalid PerFrameData address.", false);
+            LITL_ASSERT_MSG(pushConstants.perPassDataAddr != 0ull, "Attempting to render with an invalid PerPassData address.", false);
+            LITL_ASSERT_MSG(pushConstants.instanceDataAddr != 0ull, "Attempting to render with an invalid InstanceData address.", false);
+            LITL_ASSERT_MSG(pushConstants.worldMatricesAddr != 0ull, "Attempting to render with an invalid WorldMatrices address.", false);
 
             return true;
         }

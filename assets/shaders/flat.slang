@@ -32,17 +32,19 @@ struct PerPassData
 }
 
 // Maps to RenderDataMap in litl-engine/render/renderStructs.hpp
-struct DataMap
+struct RenderInstanceData
 {
-    PerFrameData* frameData;
-    PerPassData* passData;
-    float4x4* worldMatrices;
+    uint gpuIndex;
+    uint materialSlot;
 }
 
 // Maps to RenderPushConstants in litl-engine/render/renderStructs.hpp
 struct PushConstants
 {
-    DataMap* dataMap;
+    PerFrameData* frameData;
+    PerPassData *passData;
+    RenderInstanceData* instanceData;
+    float4x4* worldMatrices;
 };
 
 [[vk::push_constant]] PushConstants _pc;
@@ -71,7 +73,7 @@ VertexOutput vertexMain(VertexInput input)
 {
     VertexOutput output = (VertexOutput)0;
 
-     float4x4 mvpMatrix = mul(_pc->dataMap->passData->viewProjection, _pc->dataMap->worldMatrices[0]);
+     float4x4 mvpMatrix = mul(_pc->passData->viewProjection, _pc->worldMatrices[0]);
 
     output.position = mul(mvpMatrix, float4(input.position.xy, 0.0, 1.0));
     output.color = input.color;
@@ -94,7 +96,7 @@ FragmentOutput fragmentMain(VertexOutput input)
 {
     FragmentOutput output = (FragmentOutput)0;
 
-    float transition = 1.0f;//(sin(_pc->dataMap->frameData->elapsedTime) + 1.0f) * 0.5f;
+    float transition = 1.0f;//(sin(_pc->frameData->elapsedTime) + 1.0f) * 0.5f;
     output.color = float4(input.color.rgb * transition, 1.0f);
     //output.color.r = 1.0f;
 

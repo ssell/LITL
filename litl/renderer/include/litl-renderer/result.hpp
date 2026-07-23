@@ -37,7 +37,9 @@ namespace litl
 
         NoBoundGraphicsPipeline,
         NoBoundComputePipeline,
-        InvalidPipelineResourceKey
+        InvalidPipelineResourceKey,
+
+        InvalidPushConstantsSize
     };
 }
 

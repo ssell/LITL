@@ -24,7 +24,8 @@ namespace litl
         TessellationEvaluation = 0b0001'0000,
         Compute                = 0b0010'0000,
         Mesh                   = 0b0100'0000,
-        Task                   = 0b1000'0000
+        Task                   = 0b1000'0000,
+        All                    = ~0u
     };
 
     LITL_ENABLE_BITMASK(ShaderStage);

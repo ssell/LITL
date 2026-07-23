@@ -86,7 +86,7 @@ namespace litl
                             {
                                 renderer->cmdPushConstants(
                                     frameCommandBuffer,
-                                    pushConstantStages,
+                                    ShaderStage::All,
                                     generic_as_byte_span(&pushConstants, sizeof(RenderPushConstants)));
                             }
                         }
