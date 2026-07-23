@@ -69,11 +69,14 @@ struct VertexOutput
 };
 
 [shader("vertex")]
-VertexOutput vertexMain(VertexInput input)
+VertexOutput vertexMain(
+    VertexInput input, 
+    uint globalInstanceId : SV_VulkanInstanceID, 
+    uint localInstanceId : SV_InstanceID)
 {
     VertexOutput output = (VertexOutput)0;
 
-     float4x4 mvpMatrix = mul(_pc->passData->viewProjection, _pc->worldMatrices[0]);
+    float4x4 mvpMatrix = mul(_pc->passData->viewProjection, _pc->worldMatrices[globalInstanceId]);
 
     output.position = mul(mvpMatrix, float4(input.position.xy, 0.0, 1.0));
     output.color = input.color;

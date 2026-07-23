@@ -13,6 +13,10 @@ namespace litl
     {
         switch (config.partition)
         {
+        case ScenePartitionType::Null:
+            m_partition.emplace<NullPartition>();
+            break;
+
         case ScenePartitionType::UniformGrid:
             m_partition.emplace<UniformGridPartition>(config.uniformGridOptions);
             break;

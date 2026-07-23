@@ -57,7 +57,8 @@ namespace litl
 
     enum class ScenePartitionType : uint32_t
     {
-        UniformGrid = 0u
+        Null = 0u,
+        UniformGrid = 1u
     };
 }
 
