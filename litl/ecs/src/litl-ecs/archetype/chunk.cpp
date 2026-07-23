@@ -8,12 +8,12 @@ namespace litl
     Chunk::Chunk(uint32_t const index, ChunkLayout const* layout)
     {
         new (m_data) ChunkHeader();
-        auto header = getHeader();
+        auto* header = getHeader();
         header->archetype = layout->archetype;
-        header->count = 0;
+        header->count = 0u;
         header->capacity = layout->entityCapacity;
         header->chunkIndex = index;
-        header->version = 0;
+        header->version = 0u;
     }
 
     Chunk::~Chunk()
@@ -31,9 +31,23 @@ namespace litl
         return reinterpret_cast<ChunkHeader const*>(m_data + 0);
     }
 
-    Entity* Chunk::getEntities(ChunkLayout const& layout) noexcept
+    std::span<Entity const> Chunk::getEntities(ChunkLayout const& layout) const noexcept
     {
-        return std::bit_cast<Entity*>(m_data + layout.entityArrayOffset);
+        const uint32_t entityCount = static_cast<uint32_t>(getHeader()->count);
+
+        if (entityCount == 0u)
+        {
+            return {};
+        }
+
+        auto const* ptr = std::launder(reinterpret_cast<Entity const*>(m_data + layout.entityArrayOffset));
+
+        return { ptr, entityCount };
+    }
+
+    Entity* Chunk::getEntityPtr(ChunkLayout const& layout) noexcept
+    {
+        return std::launder(reinterpret_cast<Entity*>(m_data + layout.entityArrayOffset));
     }
 
     uint32_t Chunk::size() const noexcept
@@ -62,7 +76,7 @@ namespace litl
         auto to = data();
 
         //getEntities(layout)->entities[addAtIndex] = entity;
-        getEntities(layout)[addAtIndex] = entity;
+        getEntityPtr(layout)[addAtIndex] = entity;
         for (auto i = 0; i < layout.componentTypeCount; ++i)
         {
             const auto component = layout.componentOrder[i];
@@ -90,7 +104,7 @@ namespace litl
                 auto* to = data();
 
                 // Entity swap
-                getEntities(layout)[removeAtIndex] = swapFromChunk->getEntities(layout)[swapFromChunkIndex];
+                getEntityPtr(layout)[removeAtIndex] = swapFromChunk->getEntityPtr(layout)[swapFromChunkIndex];
 
                 // Components swap
                 for (auto i = 0; i < layout.componentTypeCount; ++i)
@@ -108,7 +122,7 @@ namespace litl
                 swapFromChunk->removeAndSwap(layout, swapFromChunkIndex, nullptr, 0);
 
                 // Return the entity that was swapped into the removed index
-                return getEntities(layout)[removeAtIndex];
+                return getEntityPtr(layout)[removeAtIndex];
             }
         }
         else

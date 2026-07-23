@@ -50,8 +50,7 @@ namespace litl
         using result_type = R;
 
         // ---- Construction ----
-        inline_function() noexcept = default;
-        inline_function(std::nullptr_t) noexcept {}
+        inline_function() = default;
 
         template<typename F,
             typename Fn = std::decay_t<F>,

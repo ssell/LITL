@@ -11,7 +11,7 @@ namespace litl
 {
     namespace
     {
-        std::atomic<uint32_t> g_nextThreadIndex{ 0 };
+        std::atomic<uint32_t> g_nextThreadIndex{ 0u };
     }
 
     std::array<CullingBucket, Constants::max_thread_count> CullingSystem::s_cullingBuckets{};
@@ -132,6 +132,13 @@ namespace litl
                 {
                     // We have checked all cameras. Break out.
                     break;
+                }
+
+                uint32_t totalCameraEntities = 0u;
+
+                for (auto& threadCullingBucket : s_cullingBuckets)
+                {
+                    totalCameraEntities += threadCullingBucket.cameraRenderableEntities[cameraIndex].entities.size();
                 }
 
                 // For each thread,

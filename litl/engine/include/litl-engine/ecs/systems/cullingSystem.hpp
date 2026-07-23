@@ -4,6 +4,7 @@
 #include <memory>
 #include <span>
 #include <vector>
+#include <unordered_set>
 
 #include "litl-core/containers/flatHashSet.hpp"
 #include "litl-engine/scene/sceneCameras.hpp"
@@ -46,7 +47,8 @@ namespace litl
         struct CameraFrustumEntities
         {
             Camera* camera = nullptr;
-            FlatHashSet<Entity> entities;
+            //FlatHashSet<Entity> entities;
+            std::unordered_set<Entity> entities;
         };
 
     public:
