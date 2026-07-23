@@ -2,6 +2,7 @@
 #define LITL_ENGINE_RENDER_STRUCTS_H__
 
 #include "litl-core/math/types.hpp"
+#include "litl-renderer/constants.hpp"
 
 namespace litl
 {
@@ -27,13 +28,13 @@ namespace litl
     };
 
     /// <summary>
-    /// Engine-provided address map pointing to other data.
+    /// Engine-provided data that maps an instance id (SV_InstanceID) to a
+    /// general GPU buffer index and material slot value.
     /// </summary>
-    struct RenderDataMap
+    struct RenderInstanceData
     {
-        uint64_t perFrameDataAddr = 0ull;
-        uint64_t perPassDataAddr = 0ull;
-        uint64_t worldMatricesAddr = 0ull;
+        uint32_t gpuIndex = 0u;
+        uint32_t materialSlot = 0u;
     };
 
     /// <summary>
@@ -41,8 +42,13 @@ namespace litl
     /// </summary>
     struct RenderPushConstants
     {
-        uint64_t dataMapAddr = 0ull;
+        uint64_t perFrameDataAddr = 0ull;
+        uint64_t perPassDataAddr = 0ull;
+        uint64_t instanceDataAddr = 0ull;
+        uint64_t worldMatricesAddr = 0ull;
     };
+
+    static_assert(sizeof(RenderPushConstants) <= RendererConstants::MaxPushConstantSize);
 }
 
 #endif

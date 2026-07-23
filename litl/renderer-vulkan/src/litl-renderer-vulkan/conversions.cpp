@@ -21,6 +21,11 @@ namespace litl::vulkan
     {
         VkShaderStageFlags flags = 0;
 
+        if (stages == ShaderStage::All)
+        {
+            return VK_SHADER_STAGE_ALL;
+        }
+
         if (any(stages & ShaderStage::Vertex)) { flags |= VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT; }
         if (any(stages & ShaderStage::Fragment)) { flags |= VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT; }
         if (any(stages & ShaderStage::Geometry)) { flags |= VkShaderStageFlagBits::VK_SHADER_STAGE_GEOMETRY_BIT; }
@@ -36,6 +41,11 @@ namespace litl::vulkan
     ShaderStage fromVkShaderStageFlags(VkShaderStageFlags flags) noexcept
     {
         ShaderStage stages = ShaderStage::None;
+
+        if (flags == VK_SHADER_STAGE_ALL)
+        {
+            return ShaderStage::All;
+        }
 
         if (flags & VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT) { stages = stages | ShaderStage::Vertex; }
         if (flags & VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT) { stages = stages | ShaderStage::Fragment; }

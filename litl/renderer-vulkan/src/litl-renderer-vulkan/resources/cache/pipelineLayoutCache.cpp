@@ -106,24 +106,22 @@ namespace litl::vulkan
 
     VkPipelineLayout createVkPipelineLayout(VkDevice vkDevice, PipelineLayoutCacheKey const& pipelineLayout) noexcept
     {
-        std::vector<VkPushConstantRange> pushConstants;
-        pushConstants.reserve(pipelineLayout.pushConstants.size());
+        // While we have the actual exact push constant ranges via reflection, we instead assign a general global range of all shaders and 128 bytes.
+        // This is to avoid potential silent bugs where a pipeline is bound with an incompatible push constant layout than what is currently bound and
+        // the user forgets to bind the new push constant layout. So all we have to do instead is enforce that no push constant structure exceedes this size.
 
-        for (auto const& pushConstant : pipelineLayout.pushConstants)
-        {
-            pushConstants.push_back(VkPushConstantRange{
-                .stageFlags = toVkShaderStageFlags(pushConstant.stages),
-                .offset = pushConstant.offset,
-                .size = pushConstant.sizeBytes
-                });
-        }
+        const VkPushConstantRange pushConstantRange {
+            .stageFlags = VK_SHADER_STAGE_ALL,
+            .offset = 0u,
+            .size = 128u
+        };
 
         VkPipelineLayoutCreateInfo info{
             .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
             .setLayoutCount = static_cast<uint32_t>(pipelineLayout.setLayoutHandles.size()),
             .pSetLayouts = pipelineLayout.setLayoutHandles.data(),
-            .pushConstantRangeCount = static_cast<uint32_t>(pipelineLayout.pushConstants.size()),
-            .pPushConstantRanges = pushConstants.data()
+            .pushConstantRangeCount = 1u,
+            .pPushConstantRanges = &pushConstantRange
         };
 
         VkPipelineLayout vkPipelineLayout = VK_NULL_HANDLE;

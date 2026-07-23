@@ -6,6 +6,7 @@
 #include <string_view>
 
 #include "litl-core/assert.hpp"
+#include "litl-renderer/constants.hpp"
 #include "litl-renderer/result.hpp"
 #include "litl-renderer/rendererConfiguration.hpp"
 #include "litl-renderer/frameData.hpp"
