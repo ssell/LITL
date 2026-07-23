@@ -48,11 +48,13 @@ namespace litl
 
         struct InstanceData
         {
+            std::vector<RenderInstanceData> data;
             GpuBufferHandle handle{};
         };
 
         struct EntityWorldMatrices
         {
+            // data for this is stored in SceneTransforms
             GpuBufferHandle handle{};
         };
 
@@ -187,7 +189,6 @@ namespace litl
             auto frameCommandBuffer = renderer->cmdBeginFrame();
 
             updatePerFrameData(frameCommandBuffer, dt);
-            updateInstanceData();
             updateWorldMatrices(frameCommandBuffer);
 
             for (auto& renderCamera : cullingBucket.cameraRenderableEntities)
@@ -203,6 +204,7 @@ namespace litl
 
                 if (renderCamera.camera->isMainCamera())
                 {
+                    updateInstanceData(frameCommandBuffer, renderCamera.entities);
                     updatePerPassData(frameCommandBuffer, *renderCamera.camera);
 
                     if (goodToGo())
@@ -324,12 +326,31 @@ namespace litl
         /// <summary>
         /// Updates the InstanceData buffer which is supplied by default to all shaders via the push constants.
         /// </summary>
-        void updateInstanceData() noexcept
+        void updateInstanceData(CommandBufferHandle commandBuffer, std::span<RenderableEntity const> renderableEntities) noexcept
         {
+            // --- Update the CPU copy of the data, ordered by our render order. Users key into instanceData based on the instance id supplied to the shader.
+
+            instanceData.data.clear();
+            instanceData.data.reserve(renderableEntities.size());
+
+            for (auto& renderableEntity : renderableEntities)
+            {
+                instanceData.data.emplace_back(sceneView->getGpuBufferIndex(renderableEntity.entity), 0u);
+            }
+
+            // --- Swap, resize, and update the GPU buffer
+
             auto* instanceDataGpuBuffer = objectPool->getGpuBuffer(instanceData.handle);
             LITL_ASSERT_MSG((instanceDataGpuBuffer != nullptr), "Attempting to render without a valid InstanceData buffer.", );
 
             instanceDataGpuBuffer->swapBuffers(frameData.data.frameIndex);
+
+            if (instanceDataGpuBuffer->getItemCapacity() < renderableEntities.size())
+            {
+                instanceDataGpuBuffer->resizeItems(renderableEntities.size() * 2u, false, true);
+            }
+
+            instanceDataGpuBuffer->setDataImmediate(generic_as_byte_span(instanceData.data.data(), sizeof(RenderInstanceData) * instanceData.data.size()), commandBuffer);
             pushConstants.instanceDataAddr = instanceDataGpuBuffer->getBufferDeviceAddress().value();
         }
 
@@ -350,7 +371,7 @@ namespace litl
                 worldMatrixBuffer->resizeItems(currWorldMatrices.size() * 2u, false, true);
             }
 
-            worldMatrixBuffer->setDataImmediate(generic_as_byte_span(currWorldMatrices.data(), currWorldMatrices.size()), commandBuffer);
+            worldMatrixBuffer->setDataImmediate(generic_as_byte_span(currWorldMatrices.data(), currWorldMatrices.size_bytes()), commandBuffer);
             pushConstants.worldMatricesAddr = worldMatrixBuffer->getBufferDeviceAddress().value();
         }
 

@@ -83,26 +83,38 @@ MaterialHandle createTriangleMaterial(ObjectPool& objectPool)
     return objectPool.createMaterial(materialDescriptor);
 }
 
+void createSpinningTriangle(EntityCommands& commands, MaterialHandle material, MeshHandle mesh, vec3 position, float spinRate)
+{
+    auto triangleEntity = commands.createEntity();
+
+    Transform transform{};
+    transform.setPosition(position);
+
+    commands.addComponent(triangleEntity, transform);
+    commands.addComponent(triangleEntity, MaterialRef{ .handle = material });
+    commands.addComponent(triangleEntity, MeshRef{ .handle = mesh });
+    commands.addComponent(triangleEntity, Spin{ .rate = spinRate });
+}
+
 void bootstrap(ServiceProvider& services, EntityCommands& commands)
 {
     auto objectPool = services.get<ObjectPool>();
     auto sceneManager = services.get<SceneManager>();
     auto sceneView = services.get<SceneView>();
 
-    sceneManager->createScene({});
+    sceneManager->createScene({.partition = ScenePartitionType::Null });
     sceneView->setMainCamera(objectPool->createCamera({}));
 
-    auto triangleEntity = commands.createEntity();
     auto triangleMaterial = createTriangleMaterial(*objectPool);
     auto triangleMesh = createTriangleMesh(*objectPool);
 
-    Transform transform{};
-    transform.setPosition({ 0.0f, -0.5f, 1.5f });
-
-    commands.addComponent(triangleEntity, transform);
-    commands.addComponent(triangleEntity, MaterialRef{ .handle = triangleMaterial });
-    commands.addComponent(triangleEntity, MeshRef{ .handle = triangleMesh });
-    commands.addComponent(triangleEntity, Spin{});
+    for (float x = -5.0f; x <= 5.0f; x += 0.5f)
+    {
+        for (float y = -5.0f; y <= 5.0f; y += 0.5f)
+        {
+            createSpinningTriangle(commands, triangleMaterial, triangleMesh, { x,  y, 5.0f }, 1.0f);
+        }
+    }
 }
 
 void configureSystems(SystemCollection& systems)

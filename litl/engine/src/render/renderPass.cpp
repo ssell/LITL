@@ -66,6 +66,7 @@ namespace litl
                 MaterialHandle currMaterialHandle{};
                 MeshHandle currMeshHandle{};
                 uint32_t currVertexCount = 0u;
+                uint32_t currInstanceId = 0u;               // this gets passed in as SV_InstanceID (0-based per batch) and SV_VulkanInstanceID (this exact value)
 
                 for (auto& entity : entities)
                 {
@@ -110,7 +111,8 @@ namespace litl
                         renderer->cmdBindIndexBuffer(frameCommandBuffer, currIndexBuffer->getBufferHandle(), IndexType::Uint32);  // todo support other index sizes
                     }
 
-                    renderer->cmdDraw(frameCommandBuffer, currVertexCount, 1u, 0u, 0u);
+                    renderer->cmdDraw(frameCommandBuffer, currVertexCount, 1u, 0u, currInstanceId);
+                    currInstanceId++;   // since we are just drawing one at a time for the moment ...
                 }
             }
 
