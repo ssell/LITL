@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <compare>
 
+#include "litl-core/hash.hpp"
 #include "litl-ecs/constants.hpp"
 
 namespace litl
@@ -95,6 +96,19 @@ namespace litl
         friend H AbslHashValue(H h, Entity e) noexcept
         {
             return H::combine(std::move(h), e.index, e.version);
+        }
+    };
+}
+
+// For if using with a standard hash container (unordered_map, unordered_set, etc.)
+namespace std
+{
+    template<>
+    struct hash<litl::Entity>
+    {
+        std::size_t operator()(litl::Entity const& entity) const noexcept
+        {
+            return static_cast<size_t>(litl::hashPOD(entity));
         }
     };
 }

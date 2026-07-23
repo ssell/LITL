@@ -63,12 +63,10 @@ namespace litl
             //    componentArrays[1] = Bar*
             // Ends with: std::tuple<Foo*, Bar*>
             auto componentArrays = SystemComponentsTupleOperations<SystemComponentTuple>::extractComponentBuffers(chunk, layout);
-            auto* chunkEntities = chunk.getEntities(layout);
-
-            const uint32_t entityCount = chunk.size();
+            auto chunkEntities = chunk.getEntities(layout);
 
             // Call System::update for each entity in the chunk.
-            for (uint32_t i = 0; i < entityCount; ++i)
+            for (uint32_t i = 0; i < chunkEntities.size(); ++i)
             {
                 // Use apply to expand the tuple into parameters.
                 // Applies the provded lambda to each member of the tuple.

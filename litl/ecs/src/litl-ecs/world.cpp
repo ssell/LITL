@@ -65,7 +65,7 @@ namespace litl
         /// <summary>
         /// Per-frame callbacks that are invoked between system groups, at sync points, etc.
         /// </summary>
-        std::shared_ptr<FrameCallbacks> callbacks;
+        std::shared_ptr<FrameCallbacks> callbacks{ nullptr };
 
         /// <summary>
         /// Accumulated time since the last fixed update.
@@ -503,7 +503,12 @@ namespace litl
     void World::processCommandBuffers(SystemGroup group) const noexcept
     {
         m_pImpl->commandProcessor.process(*this, m_pImpl->threadLocalCommandBuffers, m_pImpl->entityChanges);
-        m_pImpl->callbacks->invokeSyncPoint(group, m_pImpl->entityChanges);
+
+        if (m_pImpl->callbacks)
+        {
+            m_pImpl->callbacks->invokeSyncPoint(group, m_pImpl->entityChanges);
+        }
+
         m_pImpl->entityChanges.clear();
     }
 

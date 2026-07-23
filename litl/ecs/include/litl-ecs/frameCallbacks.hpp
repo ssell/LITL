@@ -18,12 +18,12 @@ namespace litl
     {
         static constexpr uint32_t GroupCount = static_cast<uint32_t>(SystemGroup::Count);
 
-        inline_function<void()> onFrameStart{ nullptr };
-        inline_function<void()> onFrameEnd{ nullptr };
-        inline_function<void(float) > onRender{ nullptr };
-        inline_function<void(SystemGroup, std::span<EntityChange const>)> onSyncPoint{ nullptr };
+        inline_function<void()> onFrameStart;
+        inline_function<void()> onFrameEnd;
+        inline_function<void(float) > onRender;
+        inline_function<void(SystemGroup, std::span<EntityChange const>)> onSyncPoint;
 
-        std::array<inline_function<void(SystemGroup)>, GroupCount> onPreGroup{ nullptr };
+        std::array<inline_function<void(SystemGroup)>, GroupCount> onPreGroup;
 
         void invokeFrameStart() const noexcept
         {

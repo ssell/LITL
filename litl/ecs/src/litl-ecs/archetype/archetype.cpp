@@ -185,7 +185,7 @@ namespace litl
         // Get the chunk and element index for where we are adding to
         const auto toArchetypeIndex = to->getNextIndex();
         const auto toChunkIndex = toArchetypeIndex / to->m_chunkLayout.entityCapacity;
-        const auto toChunkElementIndex = toArchetypeIndex % m_chunkLayout.entityCapacity;
+        const auto toChunkElementIndex = toArchetypeIndex % to->m_chunkLayout.entityCapacity;
 
         auto fromChunkData = m_chunks[fromChunkIndex].data();
         auto toChunkData = to->m_chunks[toChunkIndex].data();

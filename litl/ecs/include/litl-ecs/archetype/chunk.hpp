@@ -44,14 +44,13 @@ namespace litl
 
         ChunkHeader* getHeader() noexcept;
         ChunkHeader const* getHeader() const noexcept;
-        Entity* getEntities(ChunkLayout const& layout) noexcept;
         uint32_t size() const noexcept;
 
         std::byte* data() noexcept;
 
         void incrementEntityCount() noexcept;
         void decrementEntityCount() noexcept;
-
+        std::span<Entity const> getEntities(ChunkLayout const& layout) const noexcept;
         void add(ChunkLayout const& layout, uint32_t addAtIndex, Entity entity) noexcept;
         std::optional<Entity> removeAndSwap(ChunkLayout const& layout, uint32_t removeAtIndex, Chunk* swapFromChunk, uint32_t swapFromChunkIndex) noexcept;
 
@@ -74,6 +73,8 @@ namespace litl
         void setComponentValue(ChunkLayout const& layout, ComponentDescriptor const* component, uint32_t entityChunkIndex, void* from) noexcept;
 
     protected:
+
+        Entity* getEntityPtr(ChunkLayout const& layout) noexcept;
 
     private:
 
