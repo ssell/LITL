@@ -108,11 +108,15 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     auto triangleMaterial = createTriangleMaterial(*objectPool);
     auto triangleMesh = createTriangleMesh(*objectPool);
 
+    float rate = 1.0f;
+    float rateChange = 1.0f / 450.0f;
+
     for (float x = -5.0f; x <= 5.0f; x += 0.5f)
     {
         for (float y = -5.0f; y <= 5.0f; y += 0.5f)
         {
-            createSpinningTriangle(commands, triangleMaterial, triangleMesh, { x,  y, 5.0f }, 1.0f);
+            createSpinningTriangle(commands, triangleMaterial, triangleMesh, { x,  y, 5.0f }, rate);
+            rate -= rateChange;
         }
     }
 }

@@ -56,7 +56,63 @@ namespace litl::tests
         REQUIRE(fooBarArchetype->entityCount() == initialFooBarCount);
         REQUIRE(ArchetypeRegistry::Empty()->entityCount() == (initialEmptyCount + entityCount));
     } LITL_END_TEST_CASE
-        
+
+    LITL_TEST_CASE("Add Many Valid Entities", "[ecs::world]")
+    {
+        // This stems from a bug where the archetype was not correctly inserting entities into the correct chunk
+        // when it had more than one chunk. The entity indices and versions were coming back over corrupted.
+
+        constexpr auto entityCount = 2048; // fill up multiple chunks worth
+
+        World world;
+        Archetype* fooBarArchetype = ArchetypeRegistry::get<Foo, Bar>();
+
+        std::vector<Entity> entities;
+        entities.reserve(entityCount);
+
+        for (auto i = 0; i < entityCount; ++i)
+        {
+            entities.push_back(world.createImmediate());
+            world.addComponentsImmediate<Foo, Bar>(entities[i]);
+        }
+
+        REQUIRE(fooBarArchetype->chunkCount() > 1u);
+
+        // Chunk 1 should pick up (in terms of entity indices) where Chunk 0 left off.
+
+        auto layout = fooBarArchetype->chunkLayout();
+        auto& chunk0 = fooBarArchetype->getChunk(0u);
+        auto& chunk1 = fooBarArchetype->getChunk(1u);
+
+        auto chunk0Entities = chunk0.getEntities(layout);
+        auto chunk1Entities = chunk1.getEntities(layout);
+
+        auto chunk0LastEntity = chunk0Entities.back();
+        auto chunk1FirstEntity = chunk1Entities.front();
+
+        REQUIRE(chunk1FirstEntity.index > chunk0LastEntity.index);
+        REQUIRE((chunk1FirstEntity.index - 1u) == chunk0LastEntity.index);
+
+        // And check all subsequent entities in the second chunk
+
+        auto prevEntity = chunk1FirstEntity;
+
+        for (auto i = 1; i < chunk1Entities.size(); ++i)
+        {
+            auto currEntity = chunk1Entities[i];
+
+            REQUIRE(currEntity.index > prevEntity.index);
+            REQUIRE((currEntity.index - 1u) == prevEntity.index);
+
+            prevEntity = currEntity;
+        }
+
+        for (auto i = 0; i < entityCount; ++i)
+        {
+            world.destroyImmediate(entities[i]);
+        }
+    } LITL_END_TEST_CASE
+
     LITL_TEST_CASE("Entity Add/Remove Component", "[ecs::world]")
     {
         World world;
