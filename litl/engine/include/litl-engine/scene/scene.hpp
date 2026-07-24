@@ -5,7 +5,7 @@
 
 #include "litl-core/authority.hpp"
 #include "litl-core/math/bounds.hpp"
-#include "litl-engine/scene/sceneConfig.hpp"
+#include "litl-engine/scene/sceneConfiguration.hpp"
 #include "litl-engine/ecs/components/transform.hpp"
 #include "litl-engine/scene/sceneGraph.hpp"
 #include "litl-engine/scene/sceneTransforms.hpp"
@@ -33,7 +33,7 @@ namespace litl
     {
     public:
 
-        Scene(SceneConfig const& config, Renderer const* renderer, ObjectPool* objectPool);
+        Scene(SceneConfiguration const& config, Renderer const* renderer, ObjectPool* objectPool);
         ~Scene();
 
         Scene(Scene const&) = delete;
