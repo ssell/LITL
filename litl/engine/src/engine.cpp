@@ -35,7 +35,7 @@ namespace litl
         std::shared_ptr<Window> pSharedWindow{ nullptr };
         std::shared_ptr<JobScheduler> pSharedJobScheduler{ nullptr };
         std::shared_ptr<World> pSharedECSWorld{ nullptr };
-        std::shared_ptr<RenderManager> pShaderRenderManager{ nullptr };
+        std::shared_ptr<RenderManager> pSharedRenderManager{ nullptr };
         std::shared_ptr<ObjectPool> pSharedObjectPool{ nullptr };
         std::shared_ptr<SceneManager> pSharedSceneManager{ nullptr };
         
@@ -100,7 +100,7 @@ namespace litl
         m_pImpl->pSharedECSWorld = m_pImpl->pServiceProvider->get<World>();
         m_pImpl->pSharedObjectPool = m_pImpl->pServiceProvider->get<ObjectPool>();
         m_pImpl->pSharedSceneManager = m_pImpl->pServiceProvider->get<SceneManager>();
-        m_pImpl->pShaderRenderManager = m_pImpl->pServiceProvider->get<RenderManager>();
+        m_pImpl->pSharedRenderManager = m_pImpl->pServiceProvider->get<RenderManager>();
 
         m_pImpl->pSharedObjectPool->setup((*m_pImpl->pServiceProvider));
         m_pImpl->pSharedSceneManager->setup(Authority<Engine>{}, (*m_pImpl->pServiceProvider));
@@ -126,14 +126,20 @@ namespace litl
             return false;
         }
 
+        // --- Setup Renderer
         if (!createWindow())
         {
             return false;
         }
 
-        m_pImpl->pShaderRenderManager->setup({}, (*m_pImpl->pServiceProvider));
+        m_pImpl->pSharedRenderManager->setup({}, (*m_pImpl->pServiceProvider));
+
+        // --- Setup ECS
         m_pImpl->pSharedECSWorld->setup((*m_pImpl->pServiceProvider), m_pImpl->callbacks.getFrameCallbacks());
         m_pImpl->setup.bootstrap((*m_pImpl->pServiceProvider), (m_pImpl->pSharedECSWorld->getCommandBuffer()));
+
+        // --- Setup Scene
+        m_pImpl->pSharedSceneManager->createScene(m_pImpl->pSharedConfig->sceneSettings);
 
         if (m_pImpl->userBootstrap != nullptr)
         {

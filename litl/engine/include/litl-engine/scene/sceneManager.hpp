@@ -5,7 +5,7 @@
 
 #include "litl-core/impl.hpp"
 #include "litl-core/authority.hpp"
-#include "litl-engine/scene/sceneConfig.hpp"
+#include "litl-engine/scene/sceneConfiguration.hpp"
 
 namespace litl
 {
@@ -29,7 +29,7 @@ namespace litl
         SceneManager& operator=(SceneManager const&) = delete;
 
         void setup(Authority<Engine> authority, ServiceProvider& services) noexcept;
-        void createScene(SceneConfig const& config) noexcept;
+        void createScene(SceneConfiguration const& config) noexcept;
         [[nodiscard]] uint32_t getSceneCount() const noexcept;
         [[nodiscard]] uint32_t getActiveSceneIndex() const noexcept;
         void setActiveScene(uint32_t index) noexcept;

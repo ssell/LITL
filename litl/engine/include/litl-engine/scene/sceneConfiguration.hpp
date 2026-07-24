@@ -6,7 +6,7 @@
 
 namespace litl
 {
-    struct SceneConfig
+    struct SceneConfiguration
     {
         ScenePartitionType partition{ ScenePartitionType::UniformGrid };
         UniformGridOptions uniformGridOptions{};

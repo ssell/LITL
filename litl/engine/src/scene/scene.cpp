@@ -9,7 +9,7 @@
 
 namespace litl
 {
-    Scene::Scene(SceneConfig const& config, Renderer const* renderer, ObjectPool* objectPool)
+    Scene::Scene(SceneConfiguration const& config, Renderer const* renderer, ObjectPool* objectPool)
     {
         switch (config.partition)
         {

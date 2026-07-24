@@ -67,7 +67,7 @@ namespace litl
         LITL_FATAL_ASSERT_MSG((m_impl->renderManager != nullptr), "Failed to inject RenderManager to SceneManager");
     }
 
-    void SceneManager::createScene(SceneConfig const& config) noexcept
+    void SceneManager::createScene(SceneConfiguration const& config) noexcept
     {
         m_impl->scenes.push_back(std::make_shared<Scene>(config, m_impl->renderManager->getRenderer(), m_impl->objectPool.get()));
 
