@@ -12,6 +12,9 @@ namespace litl
     /// <summary>
     /// The local transform of an entity.
     /// If the entity has no parent (null), then this is also the world transform.
+    /// 
+    /// Note that Transform uses getters and setters for its members. This is intentional
+    /// as it has internal version tracking which is used for performance improvements.
     /// </summary>
     struct Transform
     {

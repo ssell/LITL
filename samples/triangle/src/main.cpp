@@ -58,7 +58,7 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
 /// </summary>
 void createSpinningTriangle(EntityCommands& commands, MaterialHandle material, MeshHandle mesh, vec3 position, float spinRate)
 {
-    auto triangleEntity = commands.createEntity();
+    auto triangleEntity = commands.createEntity();      // Note that this is a DeferredEntity. It will be materialized into a true Entity when the commands are processed.
 
     Transform transform{};
     transform.setPosition(position);

@@ -42,7 +42,8 @@ namespace litl
         void extractCommands(World const& world, std::vector<EntityCommand>& commands, size_t offset) noexcept;
 
         /// <summary>
-        /// Creates a temporary DeferredEntity.
+        /// Creates a temporary DeferredEntity. The DeferredEntity will be materialized into a true Entity
+        /// when commands are next processed - typically at a sync point inbetween system groups.
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] DeferredEntity createEntity() noexcept;
