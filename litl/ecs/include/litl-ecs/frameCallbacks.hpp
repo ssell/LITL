@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "litl-core/inlineFunc.hpp"
+#include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/system/systemGroup.hpp"
 #include "litl-ecs/entity/entityCommand.hpp"
 
@@ -18,52 +19,52 @@ namespace litl
     {
         static constexpr uint32_t GroupCount = static_cast<uint32_t>(SystemGroup::Count);
 
-        inline_function<void()> onFrameStart;
-        inline_function<void()> onFrameEnd;
-        inline_function<void(float) > onRender;
-        inline_function<void(SystemGroup, std::span<EntityChange const>)> onSyncPoint;
+        inline_function<void(ServiceProvider&, float)> onFrameStart;
+        inline_function<void(ServiceProvider&, float)> onFrameEnd;
+        inline_function<void(ServiceProvider&, float)> onRender;
+        inline_function<void(ServiceProvider&, SystemGroup, std::span<EntityChange const>)> onSyncPoint;
 
-        std::array<inline_function<void(SystemGroup)>, GroupCount> onPreGroup;
+        std::array<inline_function<void(ServiceProvider&, float, SystemGroup)>, GroupCount> onPreGroup;
 
-        void invokeFrameStart() const noexcept
+        void invokeFrameStart(ServiceProvider& services, float dt) const noexcept
         {
             if (onFrameStart)
             {
-                onFrameStart();
+                onFrameStart(services, dt);
             }
         }
 
-        void invokeRender(float dt) const noexcept
+        void invokeRender(ServiceProvider& services, float dt) const noexcept
         {
             if (onRender)
             {
-                onRender(dt);
+                onRender(services, dt);
             }
         }
 
-        void invokeFrameEnd() const noexcept
+        void invokeFrameEnd(ServiceProvider& services, float dt) const noexcept
         {
             if (onFrameEnd)
             {
-                onFrameEnd();
+                onFrameEnd(services, dt);
             }
         }
 
-        void invokePreGroup(SystemGroup group) const noexcept
+        void invokePreGroup(ServiceProvider& services, float dt, SystemGroup group) const noexcept
         {
             auto& callback = onPreGroup[static_cast<uint32_t>(group)];
 
             if (callback)
             {
-                callback(group);
+                callback(services, dt, group);
             }
         }
 
-        void invokeSyncPoint(SystemGroup group, std::span<EntityChange const> entityChanges)
+        void invokeSyncPoint(ServiceProvider& services, SystemGroup group, std::span<EntityChange const> entityChanges)
         {
             if (onSyncPoint)
             {
-                onSyncPoint(group, entityChanges);
+                onSyncPoint(services, group, entityChanges);
             }
         }
     };

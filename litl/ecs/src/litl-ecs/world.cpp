@@ -123,7 +123,7 @@ namespace litl
         /// <param name="fixedStep"></param>
         void run(World& world, float const dt, float const fixedStep)
         {
-            callbacks->invokeFrameStart();
+            callbacks->invokeFrameStart(*services, dt);
 
             accumulatedTime += dt;
             systemManager.prepareFrame();
@@ -142,12 +142,12 @@ namespace litl
             systemManager.run(world, dt, SystemGroup::LateUpdate, (*jobScheduler));
             systemManager.run(world, dt, SystemGroup::PreRender, (*jobScheduler));
 
-            callbacks->invokeRender(dt);
+            callbacks->invokeRender(*services, dt);
 
             systemManager.run(world, dt, SystemGroup::PostRender, (*jobScheduler));
             systemManager.run(world, dt, SystemGroup::Final, (*jobScheduler));
 
-            callbacks->invokeFrameEnd();
+            callbacks->invokeFrameEnd(*services, dt);
 
             incrementGlobalWorldVersion();
         }
@@ -197,7 +197,7 @@ namespace litl
         m_pImpl->services = &services;
         m_pImpl->jobScheduler = m_pImpl->services->get<JobScheduler>();
         m_pImpl->callbacks = callbacks;
-        m_pImpl->systemManager.setup(m_pImpl->callbacks);
+        m_pImpl->systemManager.setup(*m_pImpl->services, m_pImpl->callbacks);
 
         LITL_FATAL_ASSERT_MSG((m_pImpl->jobScheduler != nullptr), "Failed to inject JobScheduler to World");
     }
@@ -506,7 +506,7 @@ namespace litl
 
         if (m_pImpl->callbacks)
         {
-            m_pImpl->callbacks->invokeSyncPoint(group, m_pImpl->entityChanges);
+            m_pImpl->callbacks->invokeSyncPoint(*m_pImpl->services, group, m_pImpl->entityChanges);
         }
 
         m_pImpl->entityChanges.clear();
