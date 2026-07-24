@@ -18,6 +18,30 @@ namespace litl
     /// </summary>
     struct Transform
     {
+        [[nodiscard]] static Transform create(vec3 position) noexcept
+        {
+            Transform transform{};
+            transform.setPosition(position);
+            return transform;
+        }
+
+        [[nodiscard]] static Transform create(vec3 position, quat rotation) noexcept
+        {
+            Transform transform{};
+            transform.setPosition(position);
+            transform.setRotation(rotation);
+            return transform;
+        }
+
+        [[nodiscard]] static Transform create(vec3 position, quat rotation, float uniformScale) noexcept
+        {
+            Transform transform{};
+            transform.setPosition(position);
+            transform.setRotation(rotation);
+            transform.setUniformScale(uniformScale);
+            return transform;
+        }
+
         [[nodiscard]] quat getRotation() const noexcept
         {
             return rotation;
