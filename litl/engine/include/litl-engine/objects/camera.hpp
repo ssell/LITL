@@ -107,6 +107,11 @@ namespace litl
         OrthographicDescriptor orthographic{};
 
         /// <summary>
+        /// The color the render target is set to at the start of each frame.
+        /// </summary>
+        color clearColor = colors::Black;
+
+        /// <summary>
         /// The near clip-plane of the frustum in world units.
         /// </summary>
         float zNear = 0.0f;
@@ -266,6 +271,18 @@ namespace litl
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] uint32_t getProcessPosition() const noexcept;
+
+        /// <summary>
+        /// Returns the clear color of the camera.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] color const& getClearColor() const noexcept;
+
+        /// <summary>
+        /// Sets the clear color of the camera.
+        /// </summary>
+        /// <param name="clearColor"></param>
+        void setClearColor(color const& clearColor) noexcept;
 
         /// <summary>
         /// Retrieves the descriptor that was used to create this camera.

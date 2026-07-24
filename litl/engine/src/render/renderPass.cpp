@@ -32,7 +32,7 @@ namespace litl
 
             const BeginRenderCommand beginRenderCommand{
                 .color = ColorAttachmentDescriptor {
-                    .clearColor = color(0.05f, 0.05f, 0.075f, 1.0f)
+                    .clearColor = camera.getClearColor()
                 }
             };
 
