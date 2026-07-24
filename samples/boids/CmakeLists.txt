@@ -1,0 +1,22 @@
+cmake_minimum_required (VERSION 3.10)
+project (litl-samples-boids VERSION 1.0.0 LANGUAGES C CXX)
+
+add_executable(litl-samples-boids)
+
+target_sources(litl-samples-boids
+	PRIVATE 
+		"src/main.cpp")
+
+target_include_directories(litl-samples-boids
+	PUBLIC
+		"${CMAKE_CURRENT_SOURCE_DIR}/include"
+)
+
+target_link_libraries(litl-samples-boids PRIVATE litl-engine)
+target_compile_definitions(litl-samples-boids PRIVATE $<$<CONFIG:Debug>:DEBUG>)
+
+add_custom_command(TARGET litl-samples-boids POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
+	${LITL_ASSETS_DIR}
+	$<TARGET_FILE_DIR:litl-samples-boids>/assets
+)

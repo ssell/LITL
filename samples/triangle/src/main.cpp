@@ -1,7 +1,4 @@
-#include <fstream>
-
 #include "litl-engine/startup.hpp"
-#include "litl-core/containers/alignedByteBuffer.hpp"
 #include "spinSystem.hpp"
 
 using namespace litl;
@@ -45,7 +42,7 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     auto objectPool = services.get<ObjectPool>();       // Source of common objects such as GPU buffers, meshes, materials, cameras, etc.
     auto sceneView = services.get<SceneView>();         // A view into the current active scene.
 
-    sceneView->setMainCamera(objectPool->createCamera({}));
+    sceneView->setMainCamera(objectPool->createCamera({ .clearColor = { 0.035f, 0.035f, 0.05f } }));
 
     auto triangleMaterial = createTriangleMaterial(*objectPool);
     auto triangleMesh = createTriangleMesh(*objectPool);
@@ -74,10 +71,7 @@ void createSpinningTriangle(EntityCommands& commands, MaterialHandle material, M
 /// </summary>
 MaterialHandle createTriangleMaterial(ObjectPool& objectPool)
 {
-    // Load the shader SPIR-V bytes
     auto spirvBytes = File("assets/shaders/spirv/flat.spv").readAllBytes();
-
-    // Create the material
     auto materialDescriptor = MaterialDescriptor{
         .objectInfo = ObjectDescriptor {.name = "Flat" },
         .vertexShader = ShaderResourceDescriptor {

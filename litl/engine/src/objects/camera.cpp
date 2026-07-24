@@ -168,6 +168,16 @@ namespace litl
         return m_processPosition;
     }
 
+    color const& Camera::getClearColor() const noexcept
+    {
+        return m_descriptor.clearColor;
+    }
+
+    void Camera::setClearColor(color const& clearColor) noexcept
+    {
+        m_descriptor.clearColor = clearColor;
+    }
+
     CameraDescriptor const& Camera::getDescriptor() const noexcept
     {
         return m_descriptor;
