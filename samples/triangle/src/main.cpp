@@ -75,35 +75,20 @@ void createSpinningTriangle(EntityCommands& commands, MaterialHandle material, M
 MaterialHandle createTriangleMaterial(ObjectPool& objectPool)
 {
     // Load the shader SPIR-V bytes
-    const std::string resourcePath = "assets/shaders/spirv/flat.spv";
-    std::ifstream file(resourcePath, std::ios::ate | std::ios::binary);
-
-    if (!file.is_open())
-    {
-        return{};
-    }
-
-    const auto fileSizeBytes = static_cast<size_t>(file.tellg());
-    AlignedByteBuffer<4> byteBuffer{ fileSizeBytes };
-
-    file.seekg(0);
-    file.read(byteBuffer.as<char>().data(), byteBuffer.size());
-    file.close();
-
-    auto spirvBytes = byteBuffer.as<std::byte const>();
+    auto spirvBytes = File("assets/shaders/spirv/flat.spv").readAllBytes();
 
     // Create the material
     auto materialDescriptor = MaterialDescriptor{
         .objectInfo = ObjectDescriptor {.name = "Flat" },
         .vertexShader = ShaderResourceDescriptor {
-            .resource = resourcePath,
+            .resource = "flat.spv",
             .entryPoint = "vertexMain",
-            .bytes = spirvBytes
+            .bytes = spirvBytes.value()
         },
         .fragmentShader = ShaderResourceDescriptor {
-            .resource = resourcePath,
+            .resource = "flat.spv",
             .entryPoint = "fragmentMain",
-            .bytes = spirvBytes
+            .bytes = spirvBytes.value()
         }
     };
 

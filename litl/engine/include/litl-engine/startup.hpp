@@ -7,5 +7,6 @@
 #include "litl-engine/scene/sceneView.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/ecs/common.hpp"
+#include "litl-core/file.hpp"
 
 #endif
