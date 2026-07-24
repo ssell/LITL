@@ -47,8 +47,10 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
 {
     auto objectPool = services.get<ObjectPool>();
     auto sceneView = services.get<SceneView>();
+    auto simulator = services.get<Simulator>();
 
     sceneView->setMainCamera(objectPool->createCamera({ .clearColor = { 0.035f, 0.035f, 0.05f } }));
+    simulator->setup(services, { .maxBoidCount = 100u, .maxPredatorCount = 2u });
 }
 
 /// <summary>

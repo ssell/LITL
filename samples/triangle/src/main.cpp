@@ -72,7 +72,8 @@ void createSpinningTriangle(EntityCommands& commands, MaterialHandle material, M
 MaterialHandle createTriangleMaterial(ObjectPool& objectPool)
 {
     auto spirvBytes = File("assets/shaders/spirv/flat.spv").readAllBytes();
-    auto materialDescriptor = MaterialDescriptor{
+
+    return objectPool.createMaterial(MaterialDescriptor{
         .objectInfo = ObjectDescriptor {.name = "Flat" },
         .vertexShader = ShaderResourceDescriptor {
             .resource = "flat.spv",
@@ -84,9 +85,7 @@ MaterialHandle createTriangleMaterial(ObjectPool& objectPool)
             .entryPoint = "fragmentMain",
             .bytes = spirvBytes.value()
         }
-    };
-
-    return objectPool.createMaterial(materialDescriptor);
+    });
 }
 
 /// <summary>

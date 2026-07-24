@@ -53,6 +53,12 @@ namespace litl
         /// It is recommended to use an ECS Command Buffer instead. The use of this, 
         /// or other *Immediate methods, should be limited to internal engine use, 
         /// setting up simple demos, tests, etc.
+        /// 
+        /// Aside from thread-safety concerns, the command buffer should be used 
+        /// when possible as other core systems, such as the Scene, are updated
+        /// automatically when a command buffer is processed. If one would create
+        /// an entity that should be tracked by the scene directly, they would also
+        /// need to remember to manually invoke the scene to do so.
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] Entity createImmediate() const noexcept;
