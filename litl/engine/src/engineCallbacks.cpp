@@ -20,111 +20,111 @@ namespace litl
         // Intraframe Sync Points
         // ---------------------------------------------------------------------------------
 
-        m_pFrameCallbacks->onSyncPoint = [this](SystemGroup group, std::span<EntityChange const> entityChanges)
+        m_pFrameCallbacks->onSyncPoint = [this](ServiceProvider& services, SystemGroup group, std::span<EntityChange const> entityChanges)
             {
                 m_pSceneManager->processEntityChanges(Authority<EngineCallbacks>{}, * m_pWorld, entityChanges);
-                m_pUserFrameCallbacks->invokeSyncPoint(group, entityChanges);
+                m_pUserFrameCallbacks->invokeSyncPoint(services, group, entityChanges);
             };
 
         // ---------------------------------------------------------------------------------
         // Frame Start
         // ---------------------------------------------------------------------------------
 
-        m_pFrameCallbacks->onFrameStart = [this]()
+        m_pFrameCallbacks->onFrameStart = [this](ServiceProvider& services, float dt)
             {
-                m_pUserFrameCallbacks->invokeFrameStart();
+                m_pUserFrameCallbacks->invokeFrameStart(services, dt);
             };
 
         // ---------------------------------------------------------------------------------
         // Startup Group
         // ---------------------------------------------------------------------------------
 
-        m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::Startup)] = [this](SystemGroup group)
+        m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::Startup)] = [this](ServiceProvider& services, float dt, SystemGroup group)
             {
-                m_pUserFrameCallbacks->invokePreGroup(group);
+                m_pUserFrameCallbacks->invokePreGroup(services, dt, group);
             };
 
         // ---------------------------------------------------------------------------------
         // Input Group
         // ---------------------------------------------------------------------------------
 
-        m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::Input)] = [this](SystemGroup group)
+        m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::Input)] = [this](ServiceProvider& services, float dt, SystemGroup group)
             {
-                m_pUserFrameCallbacks->invokePreGroup(group);
+                m_pUserFrameCallbacks->invokePreGroup(services, dt, group);
             };
 
         // ---------------------------------------------------------------------------------
         // Fixed Update Group
         // ---------------------------------------------------------------------------------
 
-        m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::FixedUpdate)] = [this](SystemGroup group)
+        m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::FixedUpdate)] = [this](ServiceProvider& services, float dt, SystemGroup group)
             {
-                m_pUserFrameCallbacks->invokePreGroup(group);
+                m_pUserFrameCallbacks->invokePreGroup(services, dt, group);
             };
 
         // ---------------------------------------------------------------------------------
         // Update Group
         // ---------------------------------------------------------------------------------
 
-        m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::Update)] = [this](SystemGroup group)
+        m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::Update)] = [this](ServiceProvider& services, float dt, SystemGroup group)
             {
-                m_pUserFrameCallbacks->invokePreGroup(group);
+                m_pUserFrameCallbacks->invokePreGroup(services, dt, group);
             };
 
         // ---------------------------------------------------------------------------------
         // Late Update Group
         // ---------------------------------------------------------------------------------
 
-        m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::LateUpdate)] = [this](SystemGroup group)
+        m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::LateUpdate)] = [this](ServiceProvider& services, float dt, SystemGroup group)
             {
-                m_pUserFrameCallbacks->invokePreGroup(group);
+                m_pUserFrameCallbacks->invokePreGroup(services, dt, group);
             };
 
         // ---------------------------------------------------------------------------------
         // Pre-Render Group
         // ---------------------------------------------------------------------------------
 
-        m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::PreRender)] = [this](SystemGroup group)
+        m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::PreRender)] = [this](ServiceProvider& services, float dt, SystemGroup group)
             {
                 m_pSceneManager->onPreRender(Authority<EngineCallbacks>{}, *m_pWorld);
-                m_pUserFrameCallbacks->invokePreGroup(group);
+                m_pUserFrameCallbacks->invokePreGroup(services, dt, group);
             };
 
         // ---------------------------------------------------------------------------------
         // Render
         // ---------------------------------------------------------------------------------
 
-        m_pFrameCallbacks->onRender = [this](float dt)
+        m_pFrameCallbacks->onRender = [this](ServiceProvider& services, float dt)
             {
                 m_pRenderManager->onRender({}, dt);
-                m_pUserFrameCallbacks->invokeRender(dt);
+                m_pUserFrameCallbacks->invokeRender(services, dt);
             };
 
         // ---------------------------------------------------------------------------------
         // Post-Render Group
         // ---------------------------------------------------------------------------------
 
-        m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::PostRender)] = [this](SystemGroup group)
+        m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::PostRender)] = [this](ServiceProvider& services, float dt, SystemGroup group)
             {
-                m_pUserFrameCallbacks->invokePreGroup(group);
+                m_pUserFrameCallbacks->invokePreGroup(services, dt, group);
             };
 
         // ---------------------------------------------------------------------------------
         // Final Group
         // ---------------------------------------------------------------------------------
 
-        m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::Final)] = [this](SystemGroup group)
+        m_pFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::Final)] = [this](ServiceProvider& services, float dt, SystemGroup group)
             {
-                m_pUserFrameCallbacks->invokePreGroup(group);
+                m_pUserFrameCallbacks->invokePreGroup(services, dt, group);
             };
 
         // ---------------------------------------------------------------------------------
         // Frame End
         // ---------------------------------------------------------------------------------
 
-        m_pFrameCallbacks->onFrameEnd = [this]()
+        m_pFrameCallbacks->onFrameEnd = [this](ServiceProvider& services, float dt)
             {
-                m_pUserFrameCallbacks->invokeFrameEnd();
+                m_pUserFrameCallbacks->invokeFrameEnd(services, dt);
             };
     }
 

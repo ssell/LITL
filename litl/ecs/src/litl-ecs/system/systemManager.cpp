@@ -23,7 +23,8 @@ namespace litl
 
     struct SystemManager::Impl
     {
-        std::shared_ptr<FrameCallbacks> callbacks;
+        ServiceProvider* services = nullptr;
+        std::shared_ptr<FrameCallbacks> callbacks = nullptr;
         std::mutex systemsMutex;
         std::array<SystemGraph, SystemGroupCount> schedules;
         std::vector<System*> systems;
@@ -47,8 +48,9 @@ namespace litl
         }
     }
 
-    void SystemManager::setup(std::shared_ptr<FrameCallbacks> callbacks) noexcept
+    void SystemManager::setup(ServiceProvider& services, std::shared_ptr<FrameCallbacks> callbacks) noexcept
     {
+        m_pImpl->services = &services;
         m_pImpl->callbacks = callbacks;
     }
 
@@ -160,7 +162,7 @@ namespace litl
 
     void SystemManager::run(World& world, float dt, SystemGroup group, JobScheduler& scheduler)
     {
-        m_pImpl->callbacks->invokePreGroup(group);
+        m_pImpl->callbacks->invokePreGroup(*m_pImpl->services, dt, group);
 
         auto& schedule = m_pImpl->schedules[static_cast<uint32_t>(group)];
         auto& graph = schedule.getNodeGraph();

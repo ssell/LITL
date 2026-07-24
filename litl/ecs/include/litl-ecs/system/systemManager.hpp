@@ -31,7 +31,7 @@ namespace litl
         SystemManager& operator=(SystemManager const&) = delete;
         ~SystemManager();
 
-        void setup(std::shared_ptr<FrameCallbacks> callbacks) noexcept;
+        void setup(ServiceProvider& services, std::shared_ptr<FrameCallbacks> callbacks) noexcept;
 
         /// <summary>
         /// 
