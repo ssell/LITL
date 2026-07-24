@@ -6,14 +6,7 @@ int main()
 {
     Engine engine{};
 
-    engine.setup(
-        { .engineSettings {.applicationName = "LITL - Boids Sample" } },
-        nullptr,
-        nullptr,
-        nullptr,
-        nullptr
-    );
-
+    engine.setup({}, nullptr, nullptr, nullptr, nullptr);
     engine.start();
     
     return 0;

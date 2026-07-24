@@ -191,30 +191,38 @@ namespace litl
             updatePerFrameData(frameCommandBuffer, dt);
             updateWorldMatrices(frameCommandBuffer);
 
-            for (auto& renderCamera : cullingBucket.cameraRenderableEntities)
+            if (cullingBucket.activeCameraCount() > 0u)
             {
-                if (renderCamera.camera == nullptr)
+                for (auto& renderCamera : cullingBucket.cameraRenderableEntities)
                 {
-                    break;
-                }
-
-                // Only main camera for now to get things working.
-                // todo this implementation of "per pass data" via bda wont really work beyond the main camera.
-                // the draws are deferred but the changes to the data map buffer (pointing to the appropriate per pass buffer) are immediate
-
-                if (renderCamera.camera->isMainCamera())
-                {
-                    updateInstanceData(frameCommandBuffer, renderCamera.entities);
-                    updatePerPassData(frameCommandBuffer, *renderCamera.camera);
-
-                    if (goodToGo())
+                    if (renderCamera.camera == nullptr)
                     {
-                        renderPass.render(frameCommandBuffer, pushConstants, *renderCamera.camera, renderCamera.entities);
+                        break;
                     }
 
-                    break;
-                }
+                    // Only main camera for now to get things working.
+                    // todo this implementation of "per pass data" via bda wont really work beyond the main camera.
+                    // the draws are deferred but the changes to the data map buffer (pointing to the appropriate per pass buffer) are immediate
 
+                    if (renderCamera.camera->isMainCamera())
+                    {
+                        updateInstanceData(frameCommandBuffer, renderCamera.entities);
+                        updatePerPassData(frameCommandBuffer, *renderCamera.camera);
+
+                        if (goodToGo())
+                        {
+                            renderPass.render(frameCommandBuffer, pushConstants, *renderCamera.camera, renderCamera.entities);
+                        }
+
+                        break;
+                    }
+
+                }
+            }
+            else
+            {
+                // No active cameras. Just perform a screen clear.
+                emptyRender(frameCommandBuffer);
             }
 
             renderer->endRender();
@@ -375,6 +383,10 @@ namespace litl
             pushConstants.worldMatricesAddr = worldMatrixBuffer->getBufferDeviceAddress().value();
         }
 
+        /// <summary>
+        /// Are all buffer addresses valid?
+        /// </summary>
+        /// <returns></returns>
         bool goodToGo() noexcept
         {
             LITL_ASSERT_MSG(pushConstants.perFrameDataAddr != 0ull, "Attempting to render with an invalid PerFrameData address.", false);
@@ -383,6 +395,20 @@ namespace litl
             LITL_ASSERT_MSG(pushConstants.worldMatricesAddr != 0ull, "Attempting to render with an invalid WorldMatrices address.", false);
 
             return true;
+        }
+
+        /// <summary>
+        /// Used when there are no active cameras.
+        /// </summary>
+        void emptyRender(CommandBufferHandle commandBuffer) noexcept
+        {
+            // Simply clear the screen to black.
+            renderer->cmdPipelineBarrier(commandBuffer, PipelineBarrierUndefinedToColor);
+            renderer->cmdBeginRender(commandBuffer, { .color = ColorAttachmentDescriptor { .clearColor = colors::Black } });
+            renderer->cmdEndRender(commandBuffer);
+            renderer->cmdPipelineBarrier(commandBuffer, PipelineBarrierColorToPresent);
+            renderer->cmdEnd(commandBuffer);
+            renderer->submitCommands(commandBuffer);
         }
     };
 

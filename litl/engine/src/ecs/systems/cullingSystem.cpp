@@ -80,6 +80,23 @@ namespace litl
         }
     }
 
+    uint32_t CullingBucket::activeCameraCount() const noexcept
+    {
+        uint32_t count = 0u;
+
+        for (auto& cameraRenderableEntities : cameraRenderableEntities)
+        {
+            if (cameraRenderableEntities.camera == nullptr)
+            {
+                break;
+            }
+
+            count++;
+        }
+
+        return count;
+    }
+
     void CullingSystem::setCameraAtIndex(uint32_t i, Camera* camera) noexcept
     {
         m_cameraVisibleEntities[i].camera = camera;
