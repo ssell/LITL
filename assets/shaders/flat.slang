@@ -78,7 +78,7 @@ VertexOutput vertexMain(
 
     float4x4 mvpMatrix = mul(_pc->passData->viewProjection, _pc->worldMatrices[globalInstanceId]);
 
-    output.position = mul(mvpMatrix, float4(input.position.xy, 0.0, 1.0));
+    output.position = mul(mvpMatrix, float4(input.position.xyz, 1.0));
     output.color = input.color;
     output.uv = input.uv;
     

@@ -15,6 +15,8 @@ namespace litl
     {
         engineSettings = other.engineSettings;
         rendererSettings = other.rendererSettings;
+        sceneSettings = other.sceneSettings;
+
         // ...
 
         sanitize();

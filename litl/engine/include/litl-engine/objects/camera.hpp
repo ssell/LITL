@@ -114,7 +114,7 @@ namespace litl
         /// <summary>
         /// The near clip-plane of the frustum in world units.
         /// </summary>
-        float zNear = 0.0f;
+        float zNear = 0.1f;
 
         /// <summary>
         /// The far clip-plane of the frustum in world units.
@@ -236,28 +236,40 @@ namespace litl
         /// Retrieves the projection matrix of the camera.
         /// </summary>
         /// <returns></returns>
-        mat4 const& getProjectionMatrix() const noexcept;
+        [[nodiscard]] mat4 const& getProjectionMatrix() const noexcept;
 
         /// <summary>
         /// Retrieves the view-projection matrix of the camera.
         /// This may be up to one frame old as it is updated only once during PreRender.
         /// </summary>
         /// <returns></returns>
-        mat4 const& getViewProjectionMatrix() const noexcept;
+        [[nodiscard]] mat4 const& getViewProjectionMatrix() const noexcept;
 
         /// <summary>
         /// Retrieves the world position of the camera.
         /// This may be up to one frame old as it is updated only once during PreRender.
         /// </summary>
         /// <returns></returns>
-        vec3 getWorldPosition() const noexcept;
+        [[nodiscard]] vec3 getWorldPosition() const noexcept;
+
+        /// <summary>
+        /// Forcibly overrides the cameras world position.
+        /// </summary>
+        void setWorldPosition(vec3 position) noexcept;
+
+        /// <summary>
+        /// Rotates the camera so it is looking at the specified position.
+        /// </summary>
+        /// <param name="target">The world-space point to look at.</param>
+        /// <param name="up">The normalized up vector.</param>
+        void lookAt(vec3 target, vec3 up) noexcept;
 
         /// <summary>
         /// Retrieves the viewing frustum of the camera.
         /// This may be up to one frame old as it is updated only once during PreRender.
         /// </summary>
         /// <returns></returns>
-        bounds::Frustum const& getFrustum() const noexcept;
+        [[nodiscard]] bounds::Frustum const& getFrustum() const noexcept;
 
         /// <summary>
         /// Retrieves the entity that represents this camera in the world.
@@ -298,17 +310,14 @@ namespace litl
         void rebuildProjectionMatrix() noexcept;
 
         /// <summary>
-        /// Is this camera the current main camera?
+        /// The descriptor that created this camera.
         /// </summary>
-        bool m_isMain = false;
+        CameraDescriptor m_descriptor{};
 
         /// <summary>
-        /// The order that the camera is processed. Lower values are processed first.
-        /// This is set at time of creation (via the descriptor) unless the camera is marked as the main camera.
-        /// When a camera is set as the main camera it uses the hardcoded CameraProcessOrder::MainCamera value.
-        /// If a camera is unset from being the main camera then it reverts back to its original value.
+        /// The culling frustum. Updated once per frame during PreRender.
         /// </summary>
-        uint32_t m_processPosition = 0u;
+        bounds::Frustum m_frustum{};
 
         /// <summary>
         /// The world matrix of the camera. Updated once per frame during PreRender.
@@ -331,24 +340,32 @@ namespace litl
         mat4 m_viewProjMatrix{};
 
         /// <summary>
-        /// The culling frustum. Updated once per frame during PreRender.
-        /// </summary>
-        bounds::Frustum m_frustum{};
-
-        /// <summary>
         /// The current world-space position of the camera. Updated once per frame during PreRender.
         /// </summary>
         vec3 m_worldPosition{};
 
         /// <summary>
-        /// The descriptor that created this camera.
+        /// The world that created this camera.
         /// </summary>
-        CameraDescriptor m_descriptor{};
+        World* m_pWorld{ nullptr };
 
         /// <summary>
         /// The entity associated with this camera.
         /// </summary>
         Entity m_entity{};
+
+        /// <summary>
+        /// The order that the camera is processed. Lower values are processed first.
+        /// This is set at time of creation (via the descriptor) unless the camera is marked as the main camera.
+        /// When a camera is set as the main camera it uses the hardcoded CameraProcessOrder::MainCamera value.
+        /// If a camera is unset from being the main camera then it reverts back to its original value.
+        /// </summary>
+        uint32_t m_processPosition = 0u;
+
+        /// <summary>
+        /// Is this camera the current main camera?
+        /// </summary>
+        bool m_isMain = false;
     };
 }
 

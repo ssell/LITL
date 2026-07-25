@@ -13,6 +13,7 @@ namespace litl
         m_descriptor = descriptor;
         m_processPosition = descriptor.processOrder;
         m_entity = world.createImmediate();
+        m_pWorld = &world;
 
         rebuildProjectionMatrix();
 
@@ -151,6 +152,30 @@ namespace litl
     vec3 Camera::getWorldPosition() const noexcept
     {
         return m_worldPosition;
+    }
+
+    void Camera::setWorldPosition(vec3 position) noexcept
+    {
+        m_worldPosition = position;
+        auto transform = m_pWorld->getComponent<Transform>(m_entity);
+        
+        if (transform.has_value())
+        {
+            transform->setPosition(m_worldPosition);                // todo handle if the camera is a child
+            m_pWorld->setComponent<Transform>(m_entity, transform.value());
+        }
+    }
+
+    void Camera::lookAt(vec3 target, vec3 up) noexcept
+    {
+        auto transform = m_pWorld->getComponent<Transform>(m_entity);
+
+        if (transform.has_value())
+        {
+            vec3 forward = (target - m_worldPosition).normalized();
+            transform->setRotation(quat::lookRotation(forward, up));
+            m_pWorld->setComponent<Transform>(m_entity, transform.value());
+        }
     }
 
     bounds::Frustum const& Camera::getFrustum() const noexcept
