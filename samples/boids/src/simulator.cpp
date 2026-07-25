@@ -12,11 +12,11 @@ namespace litl
         constexpr std::array<Vertex, 3> s_boidVertices = {
             Vertex {                                        // left
                 .position = { -0.5f, 0.0f, 0.0f },
-                .color = { 0.0f, 1.0f, 0.0f },
+                .color = { 0.0f, 0.0f, 1.0f },
                 .uv = { 0.0f, 0.0f }
             },
             Vertex {                                        // top
-                .position = { 0.0f, 1.0f, 0.0f },
+                .position = { 0.0f, 0.0f, 1.0f },
                 .color = { 1.0f, 0.0f, 0.0f },
                 .uv = { 0.5f, 1.0f }
             },
@@ -109,10 +109,10 @@ namespace litl
         auto& commands = m_pWorld->getCommandBuffer();
 
         auto boidEntity = commands.createEntity();
-        commands.addComponent(boidEntity, Boid{});
-        commands.addComponent(boidEntity, Transform::create({ 0.0f, 0.0f, 3.0f }));
-        commands.addComponent(boidEntity, MaterialRef{ .handle = m_boidMaterial });
-        commands.addComponent(boidEntity, MeshRef{ .handle = m_boidMesh });
+        commands.addComponent<Boid>(boidEntity, Boid{});
+        commands.addComponent<Transform>(boidEntity, Transform::create({ 0.0f, 0.0f, 3.0f }));
+        commands.addComponent<MaterialRef>(boidEntity, MaterialRef{ .handle = m_boidMaterial });
+        commands.addComponent<MeshRef>(boidEntity, MeshRef{ .handle = m_boidMesh });
 
         m_boidCount++;
     }

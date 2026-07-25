@@ -321,7 +321,6 @@ namespace litl
 
             auto proj = glm::perspectiveLH(fovY, aspect, zFar, zNear);
             proj[1][1] *= -1.0f;                                        // Account for Vulkan Y-down NDC
-
             return mat4{ proj };
         }
 
@@ -340,7 +339,9 @@ namespace litl
         {
             // Note below we are intentionally flipping the near and flar clip. such that far = 0 and near = w. In floating point numbers, a greater
             // amount of precision is given to those numbers closer to zero. By flipping far and near we gain precision at the far clip and reduce artifacts.
-            return mat4{ glm::orthoLH(left, right, bottom, top, zFar, zNear) };
+            auto proj = glm::orthoLH(left, right, bottom, top, zFar, zNear);
+            proj[1][1] *= -1.0f;                                        // Account for Vulkan Y-down NDC
+            return mat4{ proj };
         }
 
         [[nodiscard]] constexpr static mat4 fromAxis(vec4 const& right, vec4 const& up, vec4 const& forward, vec4 const& position)
