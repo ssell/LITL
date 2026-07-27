@@ -61,6 +61,14 @@ namespace litl
         void query(bounds::AABB aabb, std::vector<Entity>& entities) const noexcept;
 
         /// <summary>
+        /// Queries for all entities in the grid that intersect the specified AABB.
+        /// Only those entities with the specified component are returned.
+        /// </summary>
+        /// <param name="aabb"></param>
+        /// <param name="entities"></param>
+        void query(bounds::AABB aabb, World& world, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept;
+
+        /// <summary>
         /// Queries for all entities in the grid that intersect the specified Sphere.
         /// </summary>
         /// <param name="sphere"></param>
@@ -68,11 +76,27 @@ namespace litl
         void query(bounds::Sphere sphere, std::vector<Entity>& entities) const noexcept;
 
         /// <summary>
+        /// Queries for all entities in the grid that intersect the specified Sphere.
+        /// Only those entities with the specified component are returned.
+        /// </summary>
+        /// <param name="sphere"></param>
+        /// <param name="entities"></param>
+        void query(bounds::Sphere sphere, World& world, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept;
+
+        /// <summary>
         /// Queries for all entities in the grid that intersect the specified Frustum.
         /// </summary>
         /// <param name="frustum"></param>
         /// <param name="entities"></param>
         void query(bounds::Frustum const& frustum, std::vector<Entity>& entities) const noexcept;
+
+        /// <summary>
+        /// Queries for all entities in the grid that intersect the specified Frustum.
+        /// Only those entities with the specified component are returned.
+        /// </summary>
+        /// <param name="frustum"></param>
+        /// <param name="entities"></param>
+        void query(bounds::Frustum const& frustum, World& world, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept;
 
         /// <summary>
         /// Returns the size along each dimensions for an individual cell.

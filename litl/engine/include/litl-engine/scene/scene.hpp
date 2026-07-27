@@ -218,8 +218,6 @@ namespace litl
 
     private:
 
-        void filterEntities(std::vector<Entity>& entities, ComponentTypeId componentType) const noexcept;
-
         using ScenePartitionVariant = std::variant<
             NullPartition,
             UniformGridPartition

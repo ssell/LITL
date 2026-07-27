@@ -121,7 +121,7 @@ namespace litl::tests
 
     LITL_TEST_CASE("ArchetypeRegistry::getArchetypesWithComponent", "[ecs::archetype]")
     {
-        // Make sure there at the minimum the following archetypes in existence
+        // Make sure there is at the minimum the following archetypes in existence
         std::ignore = ArchetypeRegistry::get<Foo>();
         std::ignore = ArchetypeRegistry::get<Bar>();
         std::ignore = ArchetypeRegistry::get<Foo, Bar>();
