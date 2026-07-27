@@ -82,16 +82,34 @@ namespace litl
         m_pActiveScene->query(aabb, entities);
     }
 
+    void SceneView::query(bounds::AABB aabb, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
+    {
+        LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::query(aabb,componentType) on a null scene.", );
+        m_pActiveScene->query(aabb, componentType, entities);
+    }
+
     void SceneView::query(bounds::Sphere sphere, std::vector<Entity>& entities) const noexcept
     {
         LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::query(sphere,) on a null scene.", );
         m_pActiveScene->query(sphere, entities);
     }
 
+    void SceneView::query(bounds::Sphere sphere, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
+    {
+        LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::query(sphere,componentType) on a null scene.", );
+        m_pActiveScene->query(sphere, componentType, entities);
+    }
+
     void SceneView::query(bounds::Frustum frustum, std::vector<Entity>& entities) const noexcept
     {
         LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::query(frustum,) on a null scene.", );
         m_pActiveScene->query(frustum, entities);
+    }
+
+    void SceneView::query(bounds::Frustum frustum, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
+    {
+        LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::query(frustum,componentType) on a null scene.", );
+        m_pActiveScene->query(frustum, componentType, entities);
     }
 
     void SceneView::setMainCamera(CameraHandle handle) const noexcept

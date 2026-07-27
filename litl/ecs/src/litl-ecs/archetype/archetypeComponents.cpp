@@ -17,6 +17,8 @@ namespace litl
     {
         assert(components.size() <= ecs::Constants::max_components);
 
+        m_components.fill(ecs::Constants::null_component_id);
+
         for (auto i = 0; i < components.size(); ++i)
         {
             m_components[i] = components[i];
@@ -137,9 +139,19 @@ namespace litl
             {
                 return true;
             }
+
+            if (m_components[i] == ecs::Constants::null_component_id)
+            {
+                return false;
+            }
         }
 
         return false;
+    }
+
+    std::array<ComponentTypeId, ecs::Constants::max_components> const& ArchetypeComponents::data() const noexcept
+    {
+        return m_components;
     }
 
     size_t ArchetypeComponents::size() const noexcept

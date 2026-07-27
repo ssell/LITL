@@ -85,11 +85,18 @@ namespace litl
         static Archetype* getByComponents(ArchetypeComponents& components) noexcept;
 
         /// <summary>
-        /// 
+        /// Retrieves the archetype by the provided list of component ids.
         /// </summary>
         /// <param name="components"></param>
         /// <returns></returns>
         static Archetype* getByComponents(std::initializer_list<ComponentTypeId> components) noexcept;
+
+        /// <summary>
+        /// Retrieves all archetype ids that have the specified component.
+        /// </summary>
+        /// <param name="componentId"></param>
+        /// <returns></returns>
+        std::vector<ArchetypeId> const* getArchetypesWithComponent(ComponentTypeId componentId) const noexcept;
 
         /// <summary>
         /// 

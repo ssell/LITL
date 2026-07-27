@@ -1,8 +1,10 @@
 #ifndef LITL_SAMPLES_BOIDS_BOID_H__
 #define LITL_SAMPLES_BOIDS_BOID_H__
 
-#include "litl-core/math/types.hpp"
+#include <memory>
+
 #include "litl-ecs/register.hpp"
+#include "litl-engine/ecs/common.hpp"
 
 namespace litl
 {
@@ -18,12 +20,31 @@ namespace litl
         /// <summary>
         /// The current state of this boid.
         /// </summary>
-        BoidState stage{ BoidState::Idle };
+        BoidState state{ BoidState::Idle };
 
         /// <summary>
         /// The fixed target that the boid is currently travelling to.
         /// </summary>
         vec3 target{};
+    };
+
+    class SceneView;
+
+    class BoidSystem
+    {
+    public:
+
+        void setup(ServiceProvider& services);
+        void prepare();
+        void update(EntityCommands& commands, float dt, Entity entity, Boid& boid, Transform const& transform);
+
+    private:
+
+        void onIdle(Boid& boid, Transform const& transform);
+        void onTraveling(Boid& boid, Transform const& transform);
+        void onFleeing(Boid& boid, Transform const& transform);
+
+        std::shared_ptr<SceneView> m_pSceneView{ nullptr };
     };
 }
 

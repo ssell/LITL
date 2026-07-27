@@ -21,6 +21,7 @@ namespace litl
         std::shared_ptr<SceneView> view;
         std::shared_ptr<ObjectPool> objectPool;
         std::shared_ptr<RenderManager> renderManager;
+        std::shared_ptr<World> world;
 
         SceneChangeProcessor sceneChangeProcessor;
         uint32_t activeIndex{ Constants::uint32_null_index };
@@ -42,7 +43,7 @@ namespace litl
                 return;
             }
 
-            scenes[activeIndex]->onPreRender(Authority<SceneManager>{}, world);
+            scenes[activeIndex]->onPreRender(Authority<SceneManager>{});
         }
     };
 
@@ -61,15 +62,17 @@ namespace litl
         m_impl->view = services.get<SceneView>();
         m_impl->objectPool = services.get<ObjectPool>();
         m_impl->renderManager = services.get<RenderManager>();
+        m_impl->world = services.get<World>();
 
         LITL_FATAL_ASSERT_MSG((m_impl->view != nullptr), "Failed to inject SceneView to SceneManager");
         LITL_FATAL_ASSERT_MSG((m_impl->objectPool != nullptr), "Failed to inject ObjectPool to SceneManager");
         LITL_FATAL_ASSERT_MSG((m_impl->renderManager != nullptr), "Failed to inject RenderManager to SceneManager");
+        LITL_FATAL_ASSERT_MSG((m_impl->world != nullptr), "Failed to inject World to SceneManager");
     }
 
     void SceneManager::createScene(SceneConfiguration const& config) noexcept
     {
-        m_impl->scenes.push_back(std::make_shared<Scene>(config, m_impl->renderManager->getRenderer(), m_impl->objectPool.get()));
+        m_impl->scenes.push_back(std::make_shared<Scene>(config, m_impl->renderManager->getRenderer(), m_impl->objectPool.get(), m_impl->world.get()));
 
         // If this is the first scene, automatically set it as the active scene.
         if (m_impl->activeIndex == Constants::uint32_null_index)

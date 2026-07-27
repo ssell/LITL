@@ -5,9 +5,9 @@
 
 namespace litl
 {
-    File::File(std::string const& path)
+    File::File(std::span<char const> path)
     {
-        m_file = path;
+        m_file = path.data();
     }
 
     std::string File::localPath() const noexcept

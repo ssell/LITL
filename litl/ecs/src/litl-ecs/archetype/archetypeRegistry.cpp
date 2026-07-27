@@ -5,6 +5,7 @@
 #include <mutex>
 #include <optional>
 #include <sstream>
+#include <unordered_map>
 #include <vector>
 
 #include "litl-core/hash.hpp"
@@ -17,7 +18,8 @@ namespace litl
     {
         std::mutex archetypeMutex;
         std::vector<std::unique_ptr<Archetype>> archetypes;
-        FlatHashMap<uint64_t, uint32_t> archetypeMap;           // key = archetype component hash, value = archetypes index.
+        FlatHashMap<uint64_t, uint32_t> archetypeMap;                                           // key = archetype component hash, value = archetypes index.
+        std::unordered_map<ComponentTypeId, std::vector<ArchetypeId>> componentArchetypeMap;   // key = Component id, value = archetypes that have that component.
         std::vector<ArchetypeId> newArchetypes;
     };
 
@@ -69,7 +71,7 @@ namespace litl
             name = buildArchetypeDebugName(archetypeHash, components);
         }
 
-        const auto newArchetypeIndex = static_cast<uint32_t>(registry.archetypes.size());
+        const auto newArchetypeIndex = static_cast<ArchetypeId>(registry.archetypes.size());
         const auto archetype = new Archetype(name, newArchetypeIndex, archetypeHash);
 
         populateChunkLayout(&archetype->m_chunkLayout, components);
@@ -78,6 +80,18 @@ namespace litl
         registry.archetypes.push_back(std::unique_ptr<Archetype>(archetype));
         registry.newArchetypes.push_back(newArchetypeIndex);
         registry.archetypeMap.insert(archetypeHash, newArchetypeIndex);
+
+        for (auto componentType : components.data())
+        {
+            if (componentType != ecs::Constants::null_component_id)
+            {
+                registry.componentArchetypeMap[componentType].push_back(newArchetypeIndex);
+            }
+            else
+            {
+                break;
+            }
+        }
 
         return registry.archetypes[newArchetypeIndex].get();
     }
@@ -122,13 +136,27 @@ namespace litl
         return getByComponents(archetypeComponents);
     }
 
+    std::vector<ArchetypeId> const* ArchetypeRegistry::getArchetypesWithComponent(ComponentTypeId component) const noexcept
+    {
+        auto find = instance().componentArchetypeMap.find(component);
+
+        if (find != instance().componentArchetypeMap.end())
+        {
+            return &find->second;
+        }
+
+        return nullptr;
+    }
+
     Archetype* ArchetypeRegistry::getById(ArchetypeId const id) noexcept
     {
         assert(id < instance().archetypes.size());
 
-        if (id < instance().archetypes.size())
+        auto& archetypes = instance().archetypes;
+
+        if (id < archetypes.size())
         {
-            return instance().archetypes[id].get();
+            return archetypes[id].get();
         }
 
         return nullptr;

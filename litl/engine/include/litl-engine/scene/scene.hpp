@@ -33,7 +33,7 @@ namespace litl
     {
     public:
 
-        Scene(SceneConfiguration const& config, Renderer const* renderer, ObjectPool* objectPool);
+        Scene(SceneConfiguration const& config, Renderer const* renderer, ObjectPool* objectPool, World* world);
         ~Scene();
 
         Scene(Scene const&) = delete;
@@ -140,7 +140,7 @@ namespace litl
         /// Updates scene hierarchy, world transforms, and spatial partition.
         /// </summary>
         /// <param name="authority"></param>
-        void onPreRender(Authority<SceneManager> authority, World& world) noexcept;
+        void onPreRender(Authority<SceneManager> authority) noexcept;
 
         /// <summary>
         /// Returns all entities that are within or intersect the specified AABB.
@@ -148,6 +148,14 @@ namespace litl
         /// <param name="aabb"></param>
         /// <param name="entities"></param>
         void query(bounds::AABB aabb, std::vector<Entity>& entities) const noexcept;
+
+        /// <summary>
+        /// Returns all entities that within or intersect the specified AABB and that have the specified component attached to them.
+        /// </summary>
+        /// <param name="aabb"></param>
+        /// <param name="componentType"></param>
+        /// <param name="entities"></param>
+        void query(bounds::AABB aabb, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept;
         
         /// <summary>
         /// Returns all entities that are within or intersect the specified Sphere.
@@ -157,11 +165,27 @@ namespace litl
         void query(bounds::Sphere sphere, std::vector<Entity>& entities) const noexcept;
 
         /// <summary>
+        /// Returns all entities that are within or intersects the specified Sphere and that have the specified component attached to them.
+        /// </summary>
+        /// <param name="sphere"></param>
+        /// <param name="componentType"></param>
+        /// <param name="entities"></param>
+        void query(bounds::Sphere sphere, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept;
+
+        /// <summary>
         /// Returns all entities that are within or intersect the specified Frustum.
         /// </summary>
         /// <param name="frustum"></param>
         /// <param name="entities"></param>
         void query(bounds::Frustum frustum, std::vector<Entity>& entities) const noexcept;
+
+        /// <summary>
+        /// Returns all entities that are within or intersect the specified Frustum and that have the specified component attached to them.
+        /// </summary>
+        /// <param name="frustum"></param>
+        /// <param name="componentType"></param>
+        /// <param name="entity"></param>
+        void query(bounds::Frustum frustum, ComponentTypeId componentType, std::vector<Entity>& entity) const noexcept;
 
         /// <summary>
         /// Sets the specified valid camera handle as the main camera.
@@ -194,6 +218,8 @@ namespace litl
 
     private:
 
+        void filterEntities(std::vector<Entity>& entities, ComponentTypeId componentType) const noexcept;
+
         using ScenePartitionVariant = std::variant<
             NullPartition,
             UniformGridPartition
@@ -201,6 +227,7 @@ namespace litl
         >;
 
         Renderer const* m_pRenderer{ nullptr };
+        World* m_pWorld{ nullptr };
         SceneTransforms m_transforms;
         SceneGraph m_graph;
         ScenePartitionVariant m_partition;

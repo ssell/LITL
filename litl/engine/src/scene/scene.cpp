@@ -9,7 +9,7 @@
 
 namespace litl
 {
-    Scene::Scene(SceneConfiguration const& config, Renderer const* renderer, ObjectPool* objectPool)
+    Scene::Scene(SceneConfiguration const& config, Renderer const* renderer, ObjectPool* objectPool, World* world)
     {
         switch (config.partition)
         {
@@ -26,6 +26,7 @@ namespace litl
         }
 
         m_pRenderer = renderer;
+        m_pWorld = world;
         m_transforms.reserve(1024u);
         m_cameras.setup(objectPool);
     }
@@ -117,7 +118,7 @@ namespace litl
         return m_transforms.getWorldMatrices();
     }
 
-    void Scene::onPreRender(Authority<SceneManager> authority, World& world) noexcept
+    void Scene::onPreRender(Authority<SceneManager> authority) noexcept
     {
         m_graph.update();           // Update the graph to account for structural changes: create, destroy, reparent.
 
@@ -125,7 +126,7 @@ namespace litl
         for (auto sortedIndex : m_graph.m_sortedNodes)
         {
             auto entity = m_graph.m_nodeToEntity[sortedIndex];
-            auto localTransform = world.getComponent<Transform>(entity);
+            auto localTransform = m_pWorld->getComponent<Transform>(entity);
 
             if (localTransform.has_value())
             {
@@ -153,7 +154,7 @@ namespace litl
                 }
 
                 // Update the entity bounds in the scene partition
-                auto localBounds = world.getComponent<LocalBounds>(entity);
+                auto localBounds = m_pWorld->getComponent<LocalBounds>(entity);
 
                 if (localBounds.has_value())
                 {
@@ -168,7 +169,7 @@ namespace litl
                     }, m_partition);
 
                     // Update the WorldBounds component. This has no effect is the entity does not have the component already.
-                    world.setComponent<WorldBounds>(entity, WorldBounds{
+                    m_pWorld->setComponent<WorldBounds>(entity, WorldBounds{
                         .bounds = calculatedWorldBounds,
                         .version = localTransform->getVersion()
                     });
@@ -200,26 +201,55 @@ namespace litl
 
     void Scene::query(bounds::AABB aabb, std::vector<Entity>& entities) const noexcept
     {
-        std::visit([&](auto& partition) 
-        { 
-            partition.query(aabb, entities); 
+        std::visit([&](auto& partition)
+        {
+            partition.query(aabb, entities);
         }, m_partition);
+    }
+
+    void Scene::query(bounds::AABB aabb, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
+    {
+        query(aabb, entities);
+        filterEntities(entities, componentType);
     }
 
     void Scene::query(bounds::Sphere sphere, std::vector<Entity>& entities) const noexcept
     {
-        std::visit([&](auto& partition) 
+        std::visit([&](auto& partition)
         {
-            partition.query(sphere, entities); 
+            partition.query(sphere, entities);
         }, m_partition);
+    }
+
+    void Scene::query(bounds::Sphere sphere, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
+    {
+        query(sphere, entities);
+        filterEntities(entities, componentType);
     }
 
     void Scene::query(bounds::Frustum frustum, std::vector<Entity>& entities) const noexcept
     {
-        std::visit([&](auto& partition) 
-        { 
-            partition.query(frustum, entities); 
+        std::visit([&](auto& partition)
+        {
+            partition.query(frustum, entities);
         }, m_partition);
+    }
+
+    void Scene::query(bounds::Frustum frustum, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
+    {
+        query(frustum, entities);
+        filterEntities(entities, componentType);
+    }
+
+    void Scene::filterEntities(std::vector<Entity>& entities, ComponentTypeId componentType) const noexcept
+    {
+        for (auto entity : entities)
+        {
+            if (!m_pWorld->hasComponent(entity, componentType))
+            {
+                // ... get rid of it ...
+            }
+        }
     }
 
     void Scene::setMainCamera(CameraHandle handle) noexcept
