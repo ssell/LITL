@@ -210,7 +210,6 @@ namespace litl
     void Scene::query(bounds::AABB aabb, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
     {
         query(aabb, entities);
-        filterEntities(entities, componentType);
     }
 
     void Scene::query(bounds::Sphere sphere, std::vector<Entity>& entities) const noexcept
@@ -224,7 +223,6 @@ namespace litl
     void Scene::query(bounds::Sphere sphere, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
     {
         query(sphere, entities);
-        filterEntities(entities, componentType);
     }
 
     void Scene::query(bounds::Frustum frustum, std::vector<Entity>& entities) const noexcept
@@ -238,18 +236,6 @@ namespace litl
     void Scene::query(bounds::Frustum frustum, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
     {
         query(frustum, entities);
-        filterEntities(entities, componentType);
-    }
-
-    void Scene::filterEntities(std::vector<Entity>& entities, ComponentTypeId componentType) const noexcept
-    {
-        for (auto entity : entities)
-        {
-            if (!m_pWorld->hasComponent(entity, componentType))
-            {
-                // ... get rid of it ...
-            }
-        }
     }
 
     void Scene::setMainCamera(CameraHandle handle) noexcept

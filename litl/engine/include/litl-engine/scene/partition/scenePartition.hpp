@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "litl-ecs/entity/entity.hpp"
+#include "litl-ecs/world.hpp"
 #include "litl-core/math/bounds.hpp"
 
 namespace litl
@@ -23,15 +24,20 @@ namespace litl
         bounds::AABB const& bounds,         // <-- const& avoids copy construction (doesn't have to be in the actual impl, needed for the compile-time check)
         bounds::Sphere const& sphere,       // <-- const& avoids copy construction (doesn't have to be in the actual impl, needed for the compile-time check)
         bounds::Frustum const& frustum,
+        World& world,
+        ComponentTypeId componentType,
         std::vector<Entity>& entities)
     {
         { partition.add(entity, bounds) } noexcept -> std::same_as<void>;
         { partition.remove(entity) } noexcept -> std::same_as<void>;
         { partition.update(entity, bounds) } noexcept -> std::same_as<void>;
 
-        { cpartition.query(bounds, entities) } noexcept -> std::same_as<void>;      // const
-        { cpartition.query(sphere, entities) } noexcept -> std::same_as<void>;      // const
-        { cpartition.query(frustum, entities) } noexcept -> std::same_as<void>;     // const
+        { cpartition.query(bounds, entities) } noexcept -> std::same_as<void>;
+        { cpartition.query(bounds, world, componentType, entities) } noexcept -> std::same_as<void>;
+        { cpartition.query(sphere, entities) } noexcept -> std::same_as<void>;
+        { cpartition.query(sphere, world, componentType, entities) } noexcept -> std::same_as<void>;
+        { cpartition.query(frustum, entities) } noexcept -> std::same_as<void>;
+        { cpartition.query(frustum, world, componentType, entities) } noexcept -> std::same_as<void>;
     };
 
     /*

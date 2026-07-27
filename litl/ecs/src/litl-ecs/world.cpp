@@ -257,6 +257,16 @@ namespace litl
         return !entity.isNull() && EntityRegistry::isAlive(entity);
     }
 
+    ArchetypeId World::getArchetypeId(Entity entity) const noexcept
+    {
+        if (entity.isNull() || !EntityRegistry::isAlive(entity))
+        {
+            return ecs::Constants::null_archetype_id;
+        }
+
+        return EntityRegistry::getRecord(entity).archetypeId;
+    }
+
     uint32_t World::componentCount(Entity entity) const noexcept
     {
         if (!EntityRegistry::isAlive(entity))

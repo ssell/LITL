@@ -88,6 +88,13 @@ namespace litl
         bool isAlive(Entity entity) const noexcept;
 
         /// <summary>
+        /// Returns the id of the archetype the entity is in.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        [[nodiscard]] ArchetypeId getArchetypeId(Entity entity) const noexcept;
+
+        /// <summary>
         /// Returns the number of components attached to this entity.
         /// </summary>
         /// <param name="entity"></param>
