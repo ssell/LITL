@@ -1,79 +1,79 @@
 #include <chrono>
 #include <random>
 
-#include "litl-core/math/random/fastRng.hpp"
+#include "litl-core/math/random/randomLCG.hpp"
 
 namespace litl
 {
-    FastRng& FastRng::shared() noexcept
+    RandomLCG& RandomLCG::shared() noexcept
     {
-        static thread_local FastRng rng;
+        static thread_local RandomLCG rng;
         return rng;
     }
 
-    struct FastRng::Impl
+    struct RandomLCG::Impl
     {
         std::minstd_rand rng;
         uint32_t seed;
     };
 
-    FastRng::FastRng()
+    RandomLCG::RandomLCG()
     {
         seed(0);
     }
 
-    FastRng::FastRng(uint_fast32_t seed)
+    RandomLCG::RandomLCG(uint_fast32_t seed)
     {
         this->seed(seed);
     }
 
-    FastRng::~FastRng()
+    RandomLCG::~RandomLCG()
     {
 
     }
 
-    uint_fast32_t FastRng::operator()() noexcept
+    uint_fast32_t RandomLCG::operator()() noexcept
     {
         return next();
     }
 
-    uint_fast32_t FastRng::next() noexcept
+    uint_fast32_t RandomLCG::next() noexcept
     {
         return m_impl->rng();
     }
 
-    uint_fast32_t FastRng::next(uint_fast32_t max) noexcept
+    uint_fast32_t RandomLCG::next(uint_fast32_t max) noexcept
     {
         return next() % max;
     }
 
-    void FastRng::discard(uint32_t steps) noexcept
+    void RandomLCG::discard(uint32_t steps) noexcept
     {
         m_impl->rng.discard(steps);
     }
 
-    void FastRng::seed() noexcept
+    void RandomLCG::seed() noexcept
     {
         seed(static_cast<uint32_t>(std::chrono::system_clock::now().time_since_epoch().count()));
     }
 
-    void FastRng::seed(uint_fast32_t seed) noexcept
+    void RandomLCG::seed(uint_fast32_t seed) noexcept
     {
         m_impl->seed = seed;
         m_impl->rng.seed(seed);
     }
 
-    uint32_t FastRng::getSeed() const noexcept
+    uint32_t RandomLCG::getSeed() const noexcept
     {
         return m_impl->seed;
     }
 
-    uint_fast32_t FastRng::min() const noexcept
+    uint_fast32_t RandomLCG::min() const noexcept
     {
         return m_impl->rng.min();
     }
 
-    uint_fast32_t FastRng::max() const noexcept
+    uint_fast32_t RandomLCG::max() const noexcept
     {
         return m_impl->rng.max();
     }

@@ -9,13 +9,13 @@ namespace litl
     /// <summary>
     /// Wrapper over a Mersenne Twister 19937 PRNG.
     /// </summary>
-    class GoodRng
+    class RandomMT19937
     {
     public:
 
-        GoodRng();
-        explicit GoodRng(uint_fast32_t seed);
-        ~GoodRng();
+        RandomMT19937();
+        explicit RandomMT19937(uint_fast32_t seed);
+        ~RandomMT19937();
 
         /// <summary>
         /// Alias for ::next.
@@ -76,7 +76,7 @@ namespace litl
         /// Returns a thread-specific shared copy of the PRNG.
         /// </summary>
         /// <returns></returns>
-        [[nodiscard]] static GoodRng& shared() noexcept;
+        [[nodiscard]] static RandomMT19937& shared() noexcept;
 
     protected:
 

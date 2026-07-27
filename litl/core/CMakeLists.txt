@@ -16,8 +16,8 @@ add_library(litl-core
 		"src/litl-core/job/jobPool.cpp" 
 		"src/litl-core/job/jobFence.cpp" 
 		"src/litl-core/thread.cpp"  
-		"src/litl-core/math/random/fastRng.cpp" 
-		"src/litl-core/math/random/goodRng.cpp" 
+		"src/litl-core/math/random/randomLCG.cpp" 
+		"src/litl-core/math/random/randomMT19937.cpp" 
 		"src/litl-core/math/math.cpp" 
 		"src/litl-core/services/serviceCollection.cpp" 
 		"src/litl-core/services/serviceProvider.cpp" 
@@ -25,7 +25,7 @@ add_library(litl-core
 		"src/litl-core/job/jobHandle.cpp" 
 		"src/litl-core/math/dag.cpp"
 		"src/litl-core/math/types.cpp" 
-		 "src/litl-core/file.cpp")
+		"src/litl-core/file.cpp")
 		
 target_include_directories(litl-core 
 	PUBLIC 

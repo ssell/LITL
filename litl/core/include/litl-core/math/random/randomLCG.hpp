@@ -7,15 +7,15 @@
 namespace litl
 {
     /// <summary>
-    /// Wrapper over a smple multiplicative congruential PRNG.
+    /// Wrapper over a simple multiplicative congruential PRNG.
     /// </summary>
-    class FastRng
+    class RandomLCG
     {
     public:
 
-        FastRng();
-        explicit FastRng(uint_fast32_t seed);
-        ~FastRng();
+        RandomLCG();
+        explicit RandomLCG(uint_fast32_t seed);
+        ~RandomLCG();
 
         /// <summary>
         /// Alias for ::next.
@@ -76,7 +76,7 @@ namespace litl
         /// Returns a thread-specific shared copy of the PRNG.
         /// </summary>
         /// <returns></returns>
-        [[nodiscard]] static FastRng& shared() noexcept;
+        [[nodiscard]] static RandomLCG& shared() noexcept;
 
     protected:
 
