@@ -32,6 +32,11 @@ namespace litl
 
     void Simulator::setup(ServiceProvider& services, SimulatorConfiguration const& config) noexcept
     {
+        LITL_FATAL_ASSERT_MSG(config.worldDimensions > 0u, "Invalid world dimensions.");
+        LITL_FATAL_ASSERT_MSG(config.tickRateMs >= 100u, "Invalid simulator tick rate. Minimum rate of 100ms between ticks.");
+        LITL_FATAL_ASSERT_MSG(config.minBoidCount <= config.maxBoidCount, "Invalid min/max boid count.");
+        LITL_FATAL_ASSERT_MSG(config.minPredatorCount <= config.maxPredatorCount, "Invalid min/max predator count.");
+
         m_pObjectPool = services.get<ObjectPool>();
         m_pWorld = services.get<World>();
         m_config = config;

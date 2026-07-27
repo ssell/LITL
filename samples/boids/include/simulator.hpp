@@ -19,9 +19,9 @@ namespace litl
         uint32_t worldDimensions = 1024u;
         uint32_t tickRateMs = 500u;
         uint32_t minBoidCount = 100u;
-        uint32_t maxBoidCount = 100u;
+        uint32_t maxBoidCount = 1000u;
         uint32_t minPredatorCount = 1u;
-        uint32_t maxPredatorCount = 1u;
+        uint32_t maxPredatorCount = 10u;
     };
 
     /// <summary>
