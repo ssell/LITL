@@ -1,9 +1,10 @@
-#include "simulator.hpp"
-#include "boid.hpp"
-
 #include "litl-core/file.hpp"
 #include "litl-ecs/world.hpp"
 #include "litl-engine/objects/objectPool.hpp"
+
+#include "simulator.hpp"
+#include "boid.hpp"
+#include "food.hpp"
 
 namespace litl
 {
@@ -41,6 +42,9 @@ namespace litl
         m_pWorld = services.get<World>();
         m_config = config;
 
+        m_boidMaterial = loadMaterial("assets/shaders/spirv/flat.spv", "Boid Material", "flat.spv", "vertexMain", "fragmentMain");
+        m_boidMesh = loadMesh(s_boidVertices, s_boidIndices, "Boid Mesh");
+
         tick();
     }
 
@@ -62,9 +66,14 @@ namespace litl
             spawnBoid();
         }
 
-        while (m_predatorCount < m_config.maxPredatorCount)
+        while (m_predatorCount < m_config.minPredatorCount)
         {
             spawnPredator();
+        }
+
+        while (m_foodCount < m_config.minFoodCount)
+        {
+            spawnFood();
         }
     }
 
@@ -75,47 +84,11 @@ namespace litl
             return;
         }
 
-        if (!m_boidMaterial.isValid())
-        {
-            auto spirvBytes = File("assets/shaders/spirv/flat.spv").readAllBytes();
-
-            m_boidMaterial = m_pObjectPool->createMaterial(MaterialDescriptor{
-                .objectInfo = ObjectDescriptor {.name = "Boid Material" },
-                .vertexShader = ShaderResourceDescriptor {
-                    .resource = "flat.spv",
-                    .entryPoint = "vertexMain",
-                    .bytes = spirvBytes.value()
-                },
-                .fragmentShader = ShaderResourceDescriptor {
-                    .resource = "flat.spv",
-                    .entryPoint = "fragmentMain",
-                    .bytes = spirvBytes.value()
-                }
-            });
-        }
-
-        if (!m_boidMesh.isValid())
-        {
-            m_boidMesh = m_pObjectPool->createMesh(MeshDescriptor{
-                .objectInfo = ObjectDescriptor { .name = "Boid Mesh" },
-                .vertexInfo = MeshVertexDescriptor {
-                    .vertexCount = 3u,
-                    .vertexByteSize = sizeof(Vertex),
-                    .vertexData = as_byte_span(s_boidVertices)
-                },
-                .indexInfo = MeshIndexDescriptor {
-                    .indexCount = 3u,
-                    .indexByteSize = sizeof(uint32_t),
-                    .indexData = as_byte_span(s_boidIndices)
-                }
-            });
-        }
-
         auto& commands = m_pWorld->getCommandBuffer();
-        auto pos = getRandomSpawnPoint();
         auto boidEntity = commands.createEntity();
+
         commands.addComponent<Boid>(boidEntity, Boid{});
-        commands.addComponent<Transform>(boidEntity, Transform::create(pos));
+        commands.addComponent<Transform>(boidEntity, Transform::create(getRandomSpawnPoint()));
         commands.addComponent<MaterialRef>(boidEntity, MaterialRef{ .handle = m_boidMaterial });
         commands.addComponent<MeshRef>(boidEntity, MeshRef{ .handle = m_boidMesh });
 
@@ -134,11 +107,63 @@ namespace litl
         m_predatorCount++;
     }
 
+    void Simulator::spawnFood() noexcept
+    {
+        if (m_foodCount >= m_config.maxFoodCount)
+        {
+            return;
+        }
+
+        auto& commands = m_pWorld->getCommandBuffer();
+        auto foodEntity = commands.createEntity();
+
+        commands.addComponent<Food>(foodEntity, Food{});
+        commands.addComponent<Transform>(foodEntity, Transform::create(getRandomSpawnPoint()));
+
+        m_foodCount++;
+    }
+
     vec3 Simulator::getRandomSpawnPoint() const noexcept
     {
         return vec3(
             static_cast<float>(Random::shared().next(m_config.worldDimensions)), 
             0.0f, 
             static_cast<float>(Random::shared().next(m_config.worldDimensions)));
+    }
+
+    MaterialHandle Simulator::loadMaterial(std::span<char const> path, std::span<char const> name, std::span<char const> resource, std::span<char const> vertEntry, std::span<char const> fragEntry) const noexcept
+    {
+        auto spirvBytes = File(path).readAllBytes();
+
+        return m_pObjectPool->createMaterial(MaterialDescriptor{
+            .objectInfo = ObjectDescriptor {.name = name.data()},
+            .vertexShader = ShaderResourceDescriptor {
+                .resource = resource.data(),
+                .entryPoint = vertEntry.data(),
+                .bytes = spirvBytes.value()
+            },
+            .fragmentShader = ShaderResourceDescriptor {
+                .resource = resource.data(),
+                .entryPoint = fragEntry.data(),
+                .bytes = spirvBytes.value()
+            }
+        });
+    }
+
+    MeshHandle Simulator::loadMesh(std::span<Vertex const> vertices, std::span<uint32_t const> indices, std::span<char const> name) const noexcept
+    {
+        return m_pObjectPool->createMesh(MeshDescriptor{
+            .objectInfo = ObjectDescriptor {.name = name.data()},
+            .vertexInfo = MeshVertexDescriptor {
+                .vertexCount = static_cast<uint32_t>(vertices.size()),
+                .vertexByteSize = sizeof(Vertex),
+                .vertexData = as_byte_span(vertices)
+            },
+            .indexInfo = MeshIndexDescriptor {
+                .indexCount = static_cast<uint32_t>(indices.size()),
+                .indexByteSize = sizeof(uint32_t),
+                .indexData = as_byte_span(indices)
+            }
+        });
     }
 }

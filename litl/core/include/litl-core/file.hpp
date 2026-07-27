@@ -14,7 +14,7 @@ namespace litl
     {
     public:
 
-        File(std::string const& path);
+        File(std::span<char const> path);
 
         /// <summary>
         /// Returns the path to the file local from the current directory that the application is running from.

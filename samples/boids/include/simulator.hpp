@@ -8,6 +8,7 @@
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-core/math/random.hpp"
 #include "litl-engine/ecs/common.hpp"
+#include "litl-engine/types/vertex.hpp"
 
 namespace litl
 {
@@ -22,6 +23,8 @@ namespace litl
         uint32_t maxBoidCount = 1000u;
         uint32_t minPredatorCount = 1u;
         uint32_t maxPredatorCount = 10u;
+        uint32_t minFoodCount = 1u;
+        uint32_t maxFoodCount = 1u;
     };
 
     /// <summary>
@@ -40,8 +43,10 @@ namespace litl
         void tick() noexcept;
         void spawnBoid() noexcept;
         void spawnPredator() noexcept;
-        vec3 getRandomSpawnPoint() const noexcept;
-
+        void spawnFood() noexcept;
+        [[nodiscard]] vec3 getRandomSpawnPoint() const noexcept;
+        [[nodiscard]] MaterialHandle loadMaterial(std::span<char const> path, std::span<char const> name, std::span<char const> resource, std::span<char const> vertEntry, std::span<char const> fragEntry) const noexcept;
+        [[nodiscard]] MeshHandle loadMesh(std::span<Vertex const> vertices, std::span<uint32_t const> indices, std::span<char const> name) const noexcept;
         /// <summary>
         /// The configuration used to setup the simulation.
         /// </summary>
@@ -81,6 +86,11 @@ namespace litl
         /// The current number of predators in the simulation.
         /// </summary>
         uint32_t m_predatorCount = 0u;
+
+        /// <summary>
+        /// The current number of foods in the simulation.
+        /// </summary>
+        uint32_t m_foodCount = 0u;
     };
 }
 
