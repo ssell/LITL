@@ -3,6 +3,11 @@
 
 using namespace litl;
 
+namespace
+{
+    constexpr uint32_t WorldDimensions = 1024u;
+}
+
 void configureServices(ServiceCollection& services);
 void configureSystems(SystemCollection& systems);
 void bootstrap(ServiceProvider& services, EntityCommands& commands);
@@ -48,26 +53,29 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     auto objectPool = services.get<ObjectPool>();
     auto sceneView = services.get<SceneView>();
     auto simulator = services.get<Simulator>();
+    auto cameraSize = static_cast<float>(WorldDimensions / 2u);
 
     CameraDescriptor cameraDescriptor{
         .projection = CameraProjection::Orthographic,               // For this sample we want an orthographic camera that is looking "down" so that +x is to the right, and +z is up.
         .orthographic = OrthographicDescriptor {
-            .left   = -10.0f,
-            .right  =  10.0f,
-            .bottom = -10.0f,
-            .top    =  10.0f
+            .left   = -cameraSize,
+            .right  =  cameraSize,
+            .bottom = -cameraSize,
+            .top    =  cameraSize
         },
         .clearColor = { 0.035f, 0.035f, 0.05f }
     };
 
     auto cameraHandle = objectPool->createCamera(cameraDescriptor);
     auto* camera = objectPool->getCamera(cameraHandle);
+    auto cameraPos = vec3{ cameraSize, 100.0f, cameraSize };
+    auto cameraTarget = vec3{ cameraSize, 0.0f, cameraSize };
 
-    camera->setWorldPosition({ 0.0f, 10.0f, 0.0f });                // Set the camera 10 units up.
-    camera->lookAt({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f });     // Look down at the origin, with +y being forward and +z being up.
+    camera->setWorldPosition(cameraPos);
+    camera->lookAt(cameraTarget, vec3::forward());
 
     sceneView->setMainCamera(cameraHandle);
-    simulator->setup(services, { .maxBoidCount = 100u, .maxPredatorCount = 2u });
+    simulator->setup(services, { .worldDimensions = WorldDimensions, .maxBoidCount = 100u, .maxPredatorCount = 2u });
 }
 
 /// <summary>

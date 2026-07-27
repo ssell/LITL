@@ -11,17 +11,17 @@ namespace litl
     {
         constexpr std::array<Vertex, 3> s_boidVertices = {
             Vertex {                                        // left
-                .position = { -0.5f, 0.0f, 0.0f },
+                .position = { -2.0f, 0.0f, 0.0f },
                 .color = { 0.0f, 0.0f, 1.0f },
                 .uv = { 0.0f, 0.0f }
             },
             Vertex {                                        // top
-                .position = { 0.0f, 0.0f, 1.0f },
+                .position = { 0.0f, 0.0f, 4.0f },
                 .color = { 1.0f, 0.0f, 0.0f },
                 .uv = { 0.5f, 1.0f }
             },
             Vertex {                                        // right
-                .position = { 0.5f, 0.0f, 0.0f },
+                .position = { 2.0f, 0.0f, 0.0f },
                 .color = { 0.0f, 0.0f, 1.0f },
                 .uv = { 1.0f, 0.0f }
             }
@@ -107,10 +107,10 @@ namespace litl
         }
 
         auto& commands = m_pWorld->getCommandBuffer();
-
+        auto pos = getRandomSpawnPoint();
         auto boidEntity = commands.createEntity();
         commands.addComponent<Boid>(boidEntity, Boid{});
-        commands.addComponent<Transform>(boidEntity, Transform::create({ 0.0f, 0.0f, 3.0f }));
+        commands.addComponent<Transform>(boidEntity, Transform::create(pos));
         commands.addComponent<MaterialRef>(boidEntity, MaterialRef{ .handle = m_boidMaterial });
         commands.addComponent<MeshRef>(boidEntity, MeshRef{ .handle = m_boidMesh });
 
@@ -127,5 +127,13 @@ namespace litl
         // ... todo ...
 
         m_predatorCount++;
+    }
+
+    vec3 Simulator::getRandomSpawnPoint() const noexcept
+    {
+        return vec3(
+            static_cast<float>(Random::shared().next(m_config.worldDimensions)), 
+            0.0f, 
+            static_cast<float>(Random::shared().next(m_config.worldDimensions)));
     }
 }
