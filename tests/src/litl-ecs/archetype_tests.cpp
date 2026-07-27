@@ -118,6 +118,21 @@ namespace litl::tests
         REQUIRE(std::find(newArchetypes.begin(), newArchetypes.end(), orangeArchetype->id()) != newArchetypes.end());
         REQUIRE(std::find(newArchetypes.begin(), newArchetypes.end(), appleOrangeArchetype->id()) != newArchetypes.end());
     } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("ArchetypeRegistry::getArchetypesWithComponent", "[ecs::archetype]")
+    {
+        // Make sure there at the minimum the following archetypes in existence
+        std::ignore = ArchetypeRegistry::get<Foo>();
+        std::ignore = ArchetypeRegistry::get<Bar>();
+        std::ignore = ArchetypeRegistry::get<Foo, Bar>();
+
+        auto archetypesWithFoo = ArchetypeRegistry::getArchetypesWithComponent(ComponentDescriptor::get<Foo>()->id);
+        auto archetypesWithBar = ArchetypeRegistry::getArchetypesWithComponent<Bar>();
+
+        REQUIRE(archetypesWithFoo.size() >= 2ull);
+        REQUIRE(archetypesWithBar.size() >= 2ull);
+
+    } LITL_END_TEST_CASE
 }
 
 LITL_REGISTER_TYPE_NAME(litl::tests::NewArchetypesTest::Apple);

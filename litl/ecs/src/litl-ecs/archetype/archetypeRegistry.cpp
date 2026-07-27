@@ -136,16 +136,16 @@ namespace litl
         return getByComponents(archetypeComponents);
     }
 
-    std::vector<ArchetypeId> const* ArchetypeRegistry::getArchetypesWithComponent(ComponentTypeId component) const noexcept
+    std::span<ArchetypeId const> ArchetypeRegistry::getArchetypesWithComponent(ComponentTypeId component) noexcept
     {
         auto find = instance().componentArchetypeMap.find(component);
 
         if (find != instance().componentArchetypeMap.end())
         {
-            return &find->second;
+            return find->second;
         }
 
-        return nullptr;
+        return {};
     }
 
     Archetype* ArchetypeRegistry::getById(ArchetypeId const id) noexcept

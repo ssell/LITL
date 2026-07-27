@@ -94,9 +94,20 @@ namespace litl
         /// <summary>
         /// Retrieves all archetype ids that have the specified component.
         /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        template<ValidComponentType T>
+        static std::span<ArchetypeId const> getArchetypesWithComponent() noexcept
+        {
+            return getArchetypesWithComponent(ComponentDescriptor::get<T>()->id);
+        }
+
+        /// <summary>
+        /// Retrieves all archetype ids that have the specified component.
+        /// </summary>
         /// <param name="componentId"></param>
         /// <returns></returns>
-        std::vector<ArchetypeId> const* getArchetypesWithComponent(ComponentTypeId componentId) const noexcept;
+        static std::span<ArchetypeId const> getArchetypesWithComponent(ComponentTypeId componentId) noexcept;
 
         /// <summary>
         /// 
