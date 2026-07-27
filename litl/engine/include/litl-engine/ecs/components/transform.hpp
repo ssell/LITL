@@ -57,16 +57,21 @@ namespace litl
             return uniformScale;
         }
 
-        void setRotation(quat rot)
+        void setRotation(quat rot) noexcept
         {
             rotation = rot;
             version = World::getVersion();
         }
 
-        void setPosition(vec3 pos)
+        void setPosition(vec3 pos) noexcept
         {
             position = pos;
             version = World::getVersion();
+        }
+
+        void translate(vec3 vec) noexcept
+        {
+            setPosition(position + vec);
         }
 
         void setUniformScale(float scale)

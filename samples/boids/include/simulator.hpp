@@ -37,7 +37,7 @@ namespace litl
 
         void setup(ServiceProvider& services, SimulatorConfiguration const& config) noexcept;
         void update(float dt) noexcept;
-
+        [[nodiscard]] SimulatorConfiguration const& getConfig() const noexcept;
     private:
 
         void tick() noexcept;
