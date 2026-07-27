@@ -6,9 +6,9 @@
 
 namespace litl::tests
 {
-    LITL_TEST_CASE("FastRng Seed", "[math::random]")
+    LITL_TEST_CASE("RandomLCG Seed", "[math::random]")
     {
-        FastRng rng;
+        RandomLCG rng;
 
         REQUIRE(rng.getSeed() == 0);
 
@@ -36,10 +36,10 @@ namespace litl::tests
         }
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("FastRng Seed Time", "[math::random]")
+    LITL_TEST_CASE("RandomLCG Seed Time", "[math::random]")
     {
-        FastRng rng0;
-        FastRng rng1;
+        RandomLCG rng0;
+        RandomLCG rng1;
 
         rng0.seed();
 
@@ -55,10 +55,10 @@ namespace litl::tests
         }
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("FastRng Discard", "[math::random]")
+    LITL_TEST_CASE("RandomLCG Discard", "[math::random]")
     {
-        FastRng rng0;
-        FastRng rng1;
+        RandomLCG rng0;
+        RandomLCG rng1;
 
         for (auto i = 0; i < 10; ++i)
         {
@@ -71,15 +71,15 @@ namespace litl::tests
         REQUIRE(rng0() == rng1());
     } LITL_END_TEST_CASE
 
-        LITL_TEST_CASE("FastRng Min/Max", "[math::random]")
+        LITL_TEST_CASE("RandomLCG Min/Max", "[math::random]")
     {
-        FastRng rng(0);
+        RandomLCG rng(0);
         REQUIRE(rng.min() < rng.max());
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("FastRng Next Limit", "[math::random]")
+    LITL_TEST_CASE("RandomLCG Next Limit", "[math::random]")
     {
-        FastRng rng(0);
+        RandomLCG rng(0);
 
         for (auto i = 0; i < 100; ++i)
         {
@@ -87,9 +87,9 @@ namespace litl::tests
         }
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("GoodRng Seed", "[math::random]")
+    LITL_TEST_CASE("RandomMT19937 Seed", "[math::random]")
     {
-        GoodRng rng;
+        RandomMT19937 rng;
         REQUIRE(rng.getSeed() == 0);
 
         std::array<uint32_t, 10> first10Seed0;
@@ -116,10 +116,10 @@ namespace litl::tests
         }
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("GoodRng Seed Time", "[math::random]")
+    LITL_TEST_CASE("RandomMT19937 Seed Time", "[math::random]")
     {
-        GoodRng rng0;
-        GoodRng rng1;
+        RandomMT19937 rng0;
+        RandomMT19937 rng1;
 
         rng0.seed();
 
@@ -135,10 +135,10 @@ namespace litl::tests
         }
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("GoodRng Discard", "[math::random]")
+    LITL_TEST_CASE("RandomMT19937 Discard", "[math::random]")
     {
-        GoodRng rng0;
-        GoodRng rng1;
+        RandomMT19937 rng0;
+        RandomMT19937 rng1;
 
         for (auto i = 0; i < 10; ++i)
         {
@@ -151,15 +151,15 @@ namespace litl::tests
         REQUIRE(rng0() == rng1());
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("GoodRng Min/Max", "[math::random]")
+    LITL_TEST_CASE("RandomMT19937 Min/Max", "[math::random]")
     {
-        GoodRng rng(0);
+        RandomMT19937 rng(0);
         REQUIRE(rng.min() < rng.max());
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("GoodRng Next Limit", "[math::random]")
+    LITL_TEST_CASE("RandomMT19937 Next Limit", "[math::random]")
     {
-        GoodRng rng(0);
+        RandomMT19937 rng(0);
 
         for (auto i = 0; i < 100; ++i)
         {

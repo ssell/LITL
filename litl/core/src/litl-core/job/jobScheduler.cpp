@@ -319,7 +319,7 @@ namespace litl
     std::optional<JobHandle> JobScheduler::stealWork(JobPriority priority) const noexcept
     {
         // Try to steal a job from another thread.
-        uint32_t victimIndex = FastRng::shared().next(m_pImpl->workers.size());
+        uint32_t victimIndex = RandomFast::shared().next(m_pImpl->workers.size());
 
         if (victimIndex != t_threadIndex)
         {
