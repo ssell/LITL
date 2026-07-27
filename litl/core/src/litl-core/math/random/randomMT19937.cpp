@@ -47,6 +47,12 @@ namespace litl
         return next() % max;
     }
 
+    float RandomMT19937::next01() noexcept
+    {
+        // No point in using the full range of unsigned value as floats can accurately portray them ...
+        return static_cast<float>(next(1000000u)) * 0.000001f;
+    }
+
     void RandomMT19937::discard(uint32_t steps) noexcept
     {
         m_impl->rng.discard(steps);

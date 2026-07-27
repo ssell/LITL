@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "litl-core/services/serviceProvider.hpp"
+#include "litl-core/math/random.hpp"
 #include "litl-engine/ecs/common.hpp"
 
 namespace litl
@@ -15,9 +16,10 @@ namespace litl
 
     struct SimulatorConfiguration
     {
+        uint32_t worldDimensions = 1024u;
         uint32_t tickRateMs = 500u;
-        uint32_t minBoidCount = 1u;
-        uint32_t maxBoidCount = 10u;
+        uint32_t minBoidCount = 100u;
+        uint32_t maxBoidCount = 100u;
         uint32_t minPredatorCount = 1u;
         uint32_t maxPredatorCount = 1u;
     };
@@ -38,6 +40,7 @@ namespace litl
         void tick() noexcept;
         void spawnBoid() noexcept;
         void spawnPredator() noexcept;
+        vec3 getRandomSpawnPoint() const noexcept;
 
         /// <summary>
         /// The configuration used to setup the simulation.

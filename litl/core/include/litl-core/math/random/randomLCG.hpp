@@ -37,6 +37,13 @@ namespace litl
         [[nodiscard]] uint_fast32_t next(uint_fast32_t max) noexcept;
 
         /// <summary>
+        /// Generates a random float on the range [0, 1].
+        /// The returned float will have up to 6 digits of precision.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] float next01() noexcept;
+
+        /// <summary>
         /// Advances the PRNG the specified number of steps.
         /// Equivalent to calling ::next a number of times and discarding the result(s).
         /// </summary>
