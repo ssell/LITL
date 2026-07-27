@@ -29,6 +29,7 @@ namespace litl
     };
 
     class SceneView;
+    class Simulator;
 
     class BoidSystem
     {
@@ -36,15 +37,16 @@ namespace litl
 
         void setup(ServiceProvider& services);
         void prepare();
-        void update(EntityCommands& commands, float dt, Entity entity, Boid& boid, Transform const& transform);
+        void update(EntityCommands& commands, float dt, Entity entity, Boid& boid, Transform& transform);
 
     private:
 
-        void onIdle(Boid& boid, Transform const& transform);
-        void onTraveling(Boid& boid, Transform const& transform);
-        void onFleeing(Boid& boid, Transform const& transform);
+        void onIdle(Boid& boid, Transform& transform);
+        void onTraveling(Boid& boid, Transform& transform, float dt);
+        void onFleeing(Boid& boid, Transform& transform);
 
         std::shared_ptr<SceneView> m_pSceneView{ nullptr };
+        uint32_t m_worldSize = 1024u;
     };
 }
 

@@ -76,6 +76,11 @@ namespace litl
         return m_pActiveScene->getWorldMatrices();
     }
 
+    vec3 SceneView::getWorldPosition(Entity entity) const noexcept
+    {
+        return m_pActiveScene->getWorldMatrix(entity).position();
+    }
+
     void SceneView::query(bounds::AABB aabb, std::vector<Entity>& entities) const noexcept
     {
         LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::query(aabb,) on a null scene.", );

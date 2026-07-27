@@ -7,6 +7,7 @@
 
 #include "litl-core/math/bounds.hpp"
 #include "litl-ecs/entity/entity.hpp"
+#include "litl-ecs/component/component.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
 
 namespace litl
@@ -81,7 +82,7 @@ namespace litl
         /// <summary>
         /// Retrieves the previously calculated world matrix for the specified entity.
         /// World matrices are calculated once per frame immediately prior the PreRender ECS grouping.
-        /// As such the matrix may be up to one frame stale.
+        /// As such, the matrix may be up to one frame stale.
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
@@ -92,6 +93,15 @@ namespace litl
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] std::span<mat4 const> getWorldMatrices() const noexcept;
+
+        /// <summary>
+        /// Retrieves the previously calculated world position for the specified entity.
+        /// World positions (as part of world matrices) are calculated once per frame immediately prior to the PreRender ECS grouping.
+        /// As such, the position may be up to one frame stale.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        [[nodiscard]] vec3 getWorldPosition(Entity entity) const noexcept;
 
         /// <summary>
         /// Returns all entities that are within or intersect the specified AABB.
@@ -122,6 +132,12 @@ namespace litl
         /// <param name="componentType"></param>
         /// <param name="entities"></param>
         void query(bounds::Sphere sphere, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept;
+
+        template<ValidComponentType T>
+        void query(bounds::Sphere sphere, std::vector<Entity>& entities) const noexcept
+        {
+            query(sphere, ComponentDescriptor::get<T>()->id, entities);
+        }
 
         /// <summary>
         /// Returns all entities that are within or intersect the specified Frustum.

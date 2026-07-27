@@ -59,6 +59,11 @@ namespace litl
         }
     }
 
+    SimulatorConfiguration const& Simulator::getConfig() const noexcept
+    {
+        return m_config;
+    }
+
     void Simulator::tick() noexcept
     {
         while (m_boidCount < m_config.minBoidCount)
