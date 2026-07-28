@@ -4,8 +4,6 @@
 
 #include "simulator.hpp"
 #include "boid.hpp"
-#include "food.hpp"
-#include "movement.hpp"
 
 namespace litl
 {
@@ -13,23 +11,36 @@ namespace litl
     {
         constexpr std::array<Vertex, 3> s_boidVertices = {
             Vertex {                                        // left
-                .position = { -2.0f, 0.0f, 0.0f },
+                .position = { -3.0f, 0.0f, 0.0f },
                 .color = { 0.0f, 0.0f, 1.0f },
                 .uv = { 0.0f, 0.0f }
             },
             Vertex {                                        // top
-                .position = { 0.0f, 0.0f, 4.0f },
+                .position = { 0.0f, 0.0f, 6.0f },
                 .color = { 1.0f, 0.0f, 0.0f },
                 .uv = { 0.5f, 1.0f }
             },
             Vertex {                                        // right
-                .position = { 2.0f, 0.0f, 0.0f },
+                .position = { 3.0f, 0.0f, 0.0f },
                 .color = { 0.0f, 0.0f, 1.0f },
                 .uv = { 1.0f, 0.0f }
             }
         };
 
         const std::array<uint32_t, 3> s_boidIndices = { 0, 1, 2 };
+
+        vec3 getRandomSpawnPoint(RandomMT19937& rng, uint32_t worldDimensions) noexcept
+        {
+            return vec3(
+                static_cast<float>(rng.next(worldDimensions)),
+                0.0f,
+                static_cast<float>(rng.next(worldDimensions)));
+        }
+
+        vec3 getRandomSpawnDirection(RandomMT19937& rng) noexcept
+        {
+            return vec3{ rng.next01() * 2.0f - 1.0f, 0.0f, rng.next01() * 2.0f - 1.0f }.normalized();
+        }
     }
 
     void Simulator::setup(ServiceProvider& services, SimulatorConfiguration const& config) noexcept
@@ -91,13 +102,14 @@ namespace litl
         }
 
         auto& commands = m_pWorld->getCommandBuffer();
+        auto& rng = Random::shared();
         auto boidEntity = commands.createEntity();
 
-        commands.addComponent<Boid>(boidEntity, Boid{});
-        commands.addComponent<Transform>(boidEntity, Transform::create(getRandomSpawnPoint()));
+        commands.addComponent<Boid>(boidEntity, Boid{ .lastTick = -rng.next01() * BoidSystem::TickIntervalSec });                           // Boid system calculates targets at a set interval. Set random lastTick times so all the initial boids dont tick at the same time.
+        commands.addComponent<Transform>(boidEntity, Transform::create(getRandomSpawnPoint(rng, m_config.worldDimensions)));
         commands.addComponent<LocalBounds>(boidEntity, LocalBounds{});
         commands.addComponent<WorldBounds>(boidEntity, WorldBounds{});
-        commands.addComponent<Movement>(boidEntity, Movement{ .direction = vec3::right(), .speed = Boid::BoidMovementSpeed });
+        commands.addComponent<Movement>(boidEntity, Movement{ .velocity = getRandomSpawnDirection(rng) * g_boidSteering.maxSpeed });
         commands.addComponent<MaterialRef>(boidEntity, MaterialRef{ .handle = m_boidMaterial });
         commands.addComponent<MeshRef>(boidEntity, MeshRef{ .handle = m_boidMesh });
 
@@ -124,22 +136,15 @@ namespace litl
         }
 
         auto& commands = m_pWorld->getCommandBuffer();
+        auto& rng = Random::shared();
         auto foodEntity = commands.createEntity();
 
         commands.addComponent<Food>(foodEntity, Food{});
-        commands.addComponent<Transform>(foodEntity, Transform::create(getRandomSpawnPoint()));
+        commands.addComponent<Transform>(foodEntity, Transform::create(getRandomSpawnPoint(rng, m_config.worldDimensions)));
         commands.addComponent<LocalBounds>(foodEntity, LocalBounds{});
         commands.addComponent<WorldBounds>(foodEntity, WorldBounds{});
 
         m_foodCount++;
-    }
-
-    vec3 Simulator::getRandomSpawnPoint() const noexcept
-    {
-        return vec3(
-            static_cast<float>(Random::shared().next(m_config.worldDimensions)), 
-            0.0f, 
-            static_cast<float>(Random::shared().next(m_config.worldDimensions)));
     }
 
     MaterialHandle Simulator::loadMaterial(std::span<char const> path, std::span<char const> name, std::span<char const> resource, std::span<char const> vertEntry, std::span<char const> fragEntry) const noexcept

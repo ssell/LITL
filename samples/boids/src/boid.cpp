@@ -1,11 +1,6 @@
-#include <limits>
-
 #include "litl-engine/scene/sceneView.hpp"
-#include "litl-core/math/random.hpp"
-#include "simulator.hpp"
 #include "boid.hpp"
-#include "food.hpp"
-#include "predator.hpp"
+#include "simulator.hpp"
 
 namespace litl
 {
@@ -30,56 +25,115 @@ namespace litl
     /// Invoked each frame for each entity that matches the required components. 
     /// Each valid chunk of relevant entities is run at the same time in parallel as other matching chunks.
     /// </summary>
-    void BoidSystem::update(SystemData const& data, Entity entity, Boid& boid, Transform& transform, Movement& movement)
+    void BoidSystem::update(SystemData const& data, Entity entity, Boid& boid, Transform const& transform, Movement const& movement)
     {
-        if ((data.elapsedTime - boid.lastTick) < 0.5f)
+        vec3 selfPos = transform.getPosition();
+
+        if ((data.elapsedTime - boid.lastTick) > TickIntervalSec)
         {
-            return;
+            boid.lastTick = data.elapsedTime;
+            boid.target = getTargetVector(boid, selfPos, movement);
         }
 
-        boid.lastTick = data.elapsedTime;
+        vec3 steering = computeSteeringAcceleration(data.world, entity, selfPos, movement.velocity, boid.target);
+        boid.acceleration = steering;
+        boid.maxSpeed = g_boidSteering.maxSpeed;
+    }
 
+    /// <summary>
+    /// Determines the boids target vector. This the vector directly to food or away from a predator.
+    /// </summary>
+    vec3 BoidSystem::getTargetVector(Boid& boid, vec3 selfPos, Movement const& movement)
+    {
         // Each tick the boid is looking for two things: food and predators.
         // The boid searches for predators in a small radius, and if one is found it attempts to move away from them.
         // If there are no nearby predators, then the boid searches for the nearest food in a larger radius.
         // Finally, if there is no food, the boid continues on its current path until it nears the edge of the simulation.
 
-        boid.state = BoidState::Searching;       // generic searching state: looking for food or predators
-        std::vector<PartitionQueryResult> findResults; findResults.reserve(8u);
+        vec3 desiredVelocity = movement.velocity;       // if no food or predators found, will continue in current direction
 
         // 1. Check for predators.
-        m_pSceneView->query<Predator>(bounds::Sphere::fromCenterRadius(transform.getPosition(), 10.0f), findResults, true);
+        std::vector<PartitionQueryResult> findResults; findResults.reserve(8u);
+        m_pSceneView->query<Predator>(bounds::Sphere::fromCenterRadius(selfPos, 50.0f), findResults, true);
 
         if (!findResults.empty())
         {
-            vec3 awayFromPredator = (transform.getPosition() - findResults[0].worldPosition);
+            vec3 awayFromPredator = (selfPos - findResults[0].worldPosition);
             if (awayFromPredator.isZeroed()) { awayFromPredator = vec3::right(); }
 
-            movement.direction = awayFromPredator.normalized();
-            boid.state = BoidState::Fleeing;
+            desiredVelocity = awayFromPredator.normalized();
         }
-
-        findResults.clear();
-
-        // 2. Check for food.
-        m_pSceneView->query<Food>(bounds::Sphere::fromCenterRadius(transform.getPosition(), 250.0f), findResults, true);
-
-        if (!findResults.empty())
+        else
         {
-            vec3 toFood = (findResults[0].worldPosition - transform.getPosition());
+            // 2. Check for food.
+            findResults.clear();
+            m_pSceneView->query<Food>(bounds::Sphere::fromCenterRadius(selfPos, 250.0f), findResults, true);
 
-            if (toFood.isZeroed())
+            if (!findResults.empty())
             {
-                toFood = vec3::right();
-                movement.speed = 0.0f;
-            }
-            else
-            {
-                movement.speed = Boid::BoidMovementSpeed;
-            }
+                vec3 toFood = (findResults[0].worldPosition - selfPos);
+                if (toFood.isZeroed()) { toFood = vec3::right(); }
 
-            movement.direction = toFood.normalized();
-            boid.state = BoidState::Traveling;
+                desiredVelocity = toFood.normalized();
+            }
         }
+
+        return desiredVelocity;
+    }
+
+    vec3 BoidSystem::computeSteeringAcceleration(World& world, Entity self, vec3 selfPos, vec3 selfVelocity, vec3 targetVector)
+    {
+        std::vector<PartitionQueryResult> neighbors; neighbors.reserve(8u);
+        m_pSceneView->query<Boid>(bounds::Sphere::fromCenterRadius(selfPos, g_boidSteering.perceptionRadius), neighbors, false);
+
+        const float separationRadiusSq = g_boidSteering.separationRadius * g_boidSteering.separationRadius;
+
+        vec3 accumulatedSeparation{};
+        vec3 accumulatedVelocity{};
+        vec3 accumulatedPosition{};
+        uint32_t flockCount = 0u;
+
+        for (auto& neighbor : neighbors)
+        {
+            if (neighbor.entity == self)
+            {
+                continue;
+            }
+
+            const auto awayFromNeighbor = selfPos - neighbor.worldPosition;
+            const auto distFromNeighborSq = awayFromNeighbor.lengthSquared();
+
+            if (distFromNeighborSq < kEpsilonSq)
+            {
+                continue;
+            }
+
+            if (distFromNeighborSq < separationRadiusSq)
+            {
+                accumulatedSeparation += (awayFromNeighbor / distFromNeighborSq);     // normalize "away from neighbor" vector
+            }
+
+            accumulatedVelocity += world.getComponent<Movement>(neighbor.entity).value().velocity;
+            accumulatedPosition += neighbor.worldPosition;
+            flockCount++;
+        }
+
+        vec3 acceleration{};
+
+        acceleration += steerTowards(targetVector, selfVelocity, g_boidSteering) * g_boidSteering.targetWeight;
+
+        if (accumulatedSeparation.lengthSquared() > kEpsilonSq)
+        {
+            acceleration += steerTowards(accumulatedSeparation, selfVelocity, g_boidSteering) * g_boidSteering.separationWeight;
+        }
+
+        if (flockCount > 0u)
+        {
+            const float inverse = 1.0f / static_cast<float>(flockCount);
+            acceleration += steerTowards(accumulatedVelocity * inverse, selfVelocity, g_boidSteering) * g_boidSteering.alignmentWeight;
+            acceleration += steerTowards((accumulatedPosition * inverse) - selfPos, selfVelocity, g_boidSteering) * g_boidSteering.cohesionWeight;
+        }
+
+        return truncate(acceleration, g_boidSteering.maxForce);
     }
 }

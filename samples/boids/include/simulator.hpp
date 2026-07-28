@@ -9,6 +9,7 @@
 #include "litl-core/math/random.hpp"
 #include "litl-engine/ecs/common.hpp"
 #include "litl-engine/types/vertex.hpp"
+#include "components.hpp"
 
 namespace litl
 {
@@ -44,9 +45,9 @@ namespace litl
         void spawnBoid() noexcept;
         void spawnPredator() noexcept;
         void spawnFood() noexcept;
-        [[nodiscard]] vec3 getRandomSpawnPoint() const noexcept;
         [[nodiscard]] MaterialHandle loadMaterial(std::span<char const> path, std::span<char const> name, std::span<char const> resource, std::span<char const> vertEntry, std::span<char const> fragEntry) const noexcept;
         [[nodiscard]] MeshHandle loadMesh(std::span<Vertex const> vertices, std::span<uint32_t const> indices, std::span<char const> name) const noexcept;
+
         /// <summary>
         /// The configuration used to setup the simulation.
         /// </summary>
