@@ -32,7 +32,7 @@ namespace litl
         /// </summary>
         /// <param name="aabb"></param>
         /// <param name="outEntities"></param>
-        void query(bounds::AABB aabb, World* world, ComponentTypeId componentType, std::vector<Entity>& outEntities) const noexcept
+        void query(bounds::AABB aabb, World* world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& outEntities) const noexcept
         {
             const auto intersection = bounds::classify(aabb, cellBounds);
 
@@ -51,7 +51,10 @@ namespace litl
                     {
                         if ((world == nullptr) || (world->hasComponent(entities[i], componentType)))
                         {
-                            outEntities.push_back(entities[i]);
+                            outEntities.push_back(PartitionQueryResult{
+                                .entity = entities[i],
+                                .worldPosition = entityBounds[i].center()
+                            });
                         }
                     }
                 }
@@ -69,7 +72,7 @@ namespace litl
         /// </summary>
         /// <param name="sphere"></param>
         /// <param name="outEntities"></param>
-        void query(bounds::Sphere sphere, World* world, ComponentTypeId componentType, std::vector<Entity>& outEntities) const noexcept
+        void query(bounds::Sphere sphere, World* world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& outEntities) const noexcept
         {
             const auto intersection = bounds::classify(sphere, cellBounds);
 
@@ -88,7 +91,10 @@ namespace litl
                     {
                         if ((world == nullptr) || (world->hasComponent(entities[i], componentType)))
                         {
-                            outEntities.push_back(entities[i]);
+                            outEntities.push_back(PartitionQueryResult{
+                                .entity = entities[i],
+                                .worldPosition = entityBounds[i].center()
+                            });
                         }
                     }
                 }
@@ -106,7 +112,7 @@ namespace litl
         /// </summary>
         /// <param name="frustum"></param>
         /// <param name="outEntities"></param>
-        void query(bounds::Frustum const& frustum, World* world, ComponentTypeId componentType, std::vector<Entity>& outEntities) const noexcept
+        void query(bounds::Frustum const& frustum, World* world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& outEntities) const noexcept
         {
             const auto classification = bounds::classify(frustum, cellBounds);
 
@@ -125,7 +131,10 @@ namespace litl
                     {
                         if ((world == nullptr) || (world->hasComponent(entities[i], componentType)))
                         {
-                            outEntities.push_back(entities[i]);
+                            outEntities.push_back(PartitionQueryResult{
+                                .entity = entities[i],
+                                .worldPosition = entityBounds[i].center()
+                            });
                         }
                     }
                 }
@@ -153,7 +162,7 @@ namespace litl
         /// Adds all entities in the cell to the vector.
         /// </summary>
         /// <param name="entities"></param>
-        void addAllTo(std::vector<Entity>& outEntities, World* world, ComponentTypeId componentType) const noexcept
+        void addAllTo(std::vector<PartitionQueryResult>& outEntities, World* world, ComponentTypeId componentType) const noexcept
         {
             if (world == nullptr)
             {
@@ -161,11 +170,14 @@ namespace litl
             }
             else
             {
-                for (auto entity : entities)
+                for (size_t i = 0ull; i < entities.size(); ++i)
                 {
-                    if (world->hasComponent(entity, componentType))
+                    if (world->hasComponent(entities[i], componentType))
                     {
-                        outEntities.push_back(entity);
+                        outEntities.push_back(PartitionQueryResult{
+                            .entity = entities[i],
+                            .worldPosition = entityBounds[i].center()
+                        });
                     }
                 }
             }
@@ -381,7 +393,7 @@ namespace litl
         /// </summary>
         /// <param name="aabb"></param>
         /// <param name="entities"></param>
-        void query(bounds::AABB aabb, World* world, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
+        void query(bounds::AABB aabb, World* world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities) const noexcept
         {
             const uint32_t startX = getCellIndexX(aabb.min.x());
             const uint32_t endX = getCellIndexX(aabb.max.x());
@@ -398,6 +410,13 @@ namespace litl
             }
 
             getOversizedCell().query(aabb, world, componentType, entities);
+
+            auto queryCenter = aabb.center();
+
+            for (auto& result : entities)
+            {
+                result.distanceSquared = queryCenter.distanceSqTo(result.worldPosition);
+            }
         }
 
         /// <summary>
@@ -405,7 +424,7 @@ namespace litl
         /// </summary>
         /// <param name="sphere"></param>
         /// <param name="entities"></param>
-        void query(bounds::Sphere sphere, World* world, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
+        void query(bounds::Sphere sphere, World* world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities) const noexcept
         {
             const uint32_t startX = getCellIndexX(sphere.center.x() - sphere.radius);
             const uint32_t endX = getCellIndexX(sphere.center.x() + sphere.radius);
@@ -422,6 +441,13 @@ namespace litl
             }
 
             getOversizedCell().query(sphere, world, componentType, entities);
+
+            auto queryCenter = sphere.center;
+
+            for (auto& result : entities)
+            {
+                result.distanceSquared = queryCenter.distanceSqTo(result.worldPosition);
+            }
         }
 
         /// <summary>
@@ -429,7 +455,7 @@ namespace litl
         /// </summary>
         /// <param name="frustum"></param>
         /// <param name="entities"></param>
-        void query(bounds::Frustum const& frustum, World* world, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
+        void query(bounds::Frustum const& frustum, World* world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities) const noexcept
         {
             const bounds::AABB frustumAABB = bounds::computeAABB(frustum);
 
@@ -449,6 +475,13 @@ namespace litl
             }
 
             getOversizedCell().query(frustum, world, componentType, entities);
+
+            auto queryCenter = frustum.getOrigin();
+
+            for (auto& result : entities)
+            {
+                result.distanceSquared = queryCenter.distanceSqTo(result.worldPosition);
+            }
         }
 
         /// <summary>
@@ -601,32 +634,32 @@ namespace litl
         m_impl->update(entity, bounds);
     }
 
-    void UniformGridPartition::query(bounds::AABB aabb, std::vector<Entity>& entities) const noexcept
+    void UniformGridPartition::query(bounds::AABB aabb, std::vector<PartitionQueryResult>& entities) const noexcept
     {
         m_impl->query(aabb, nullptr, ecs::Constants::null_component_id, entities);
     }
 
-    void UniformGridPartition::query(bounds::AABB aabb, World& world, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
+    void UniformGridPartition::query(bounds::AABB aabb, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities) const noexcept
     {
         m_impl->query(aabb, &world, componentType, entities);
     }
 
-    void UniformGridPartition::query(bounds::Sphere sphere, std::vector<Entity>& entities) const noexcept
+    void UniformGridPartition::query(bounds::Sphere sphere, std::vector<PartitionQueryResult>& entities) const noexcept
     {
         m_impl->query(sphere, nullptr, ecs::Constants::null_component_id, entities);
     }
 
-    void UniformGridPartition::query(bounds::Sphere sphere, World& world, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
+    void UniformGridPartition::query(bounds::Sphere sphere, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities) const noexcept
     {
         m_impl->query(sphere, &world, componentType, entities);
     }
 
-    void UniformGridPartition::query(bounds::Frustum const& frustum, std::vector<Entity>& entities) const noexcept
+    void UniformGridPartition::query(bounds::Frustum const& frustum, std::vector<PartitionQueryResult>& entities) const noexcept
     {
         m_impl->query(frustum, nullptr, ecs::Constants::null_component_id, entities);
     }
 
-    void UniformGridPartition::query(bounds::Frustum const& frustum, World& world, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
+    void UniformGridPartition::query(bounds::Frustum const& frustum, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities) const noexcept
     {
         m_impl->query(frustum, &world, componentType, entities);
     }

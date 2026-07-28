@@ -178,6 +178,9 @@ namespace litl::bounds
                 }
             }
 
+            auto corners = extractCorners(frustum);
+            frustum.m_origin = midpoint(corners.nearLL, corners.nearUR);
+
             return frustum;
         }
 
@@ -212,6 +215,8 @@ namespace litl::bounds
                     frustum.m_planes[i].normalize();
                 }
             }
+
+            frustum.m_origin = midpoint(corners.nearLL, corners.nearUR);
 
             return frustum;
         }
@@ -297,9 +302,15 @@ namespace litl::bounds
             return { minPoint, maxPoint };
         }
 
+        [[nodiscard]] vec3 getOrigin() const noexcept
+        {
+            return m_origin;
+        }
+
     private:
 
         std::array<Plane, 6> m_planes{};
+        vec3 m_origin{};
         uint32_t m_sideCount{ 6 };
     };
 }

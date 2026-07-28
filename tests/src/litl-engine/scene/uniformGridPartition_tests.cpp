@@ -244,7 +244,7 @@ namespace litl::tests
         bounds::AABB straddles = bounds::AABB::fromMinMax(vec3{ 4.5f, 0.5f, 4.5f }, vec3{ 8.0f, 8.0f, 8.0f });
         bounds::AABB outside = bounds::AABB::fromMinMax(vec3{ 7.0f, 0.0f, 7.0f }, vec3{ 8.0f, 8.0f, 8.0f });
 
-        std::vector<Entity> found;
+        std::vector<PartitionQueryResult> found;
 
         grid.query(contains, found);
 
@@ -273,7 +273,7 @@ namespace litl::tests
         bounds::Sphere straddles = bounds::Sphere::fromCenterRadius(vec3{ 5.0f, 0.0f, 5.0f }, 1.0f);
         bounds::Sphere outside = bounds::Sphere::fromCenterRadius(vec3{ 16.0f, 0.0f, 16.0f }, 1.0f);
 
-        std::vector<Entity> found;
+        std::vector<PartitionQueryResult> found;
 
         grid.query(contains, found);
 
@@ -331,7 +331,7 @@ namespace litl::tests
             .farUL  = vec3{ 10.0f, 18.0f, 18.0f }
             }, {});
 
-        std::vector<Entity> found;
+        std::vector<PartitionQueryResult> found;
 
         grid.query(contains, found);
 
@@ -432,7 +432,7 @@ namespace litl::tests
         REQUIRE(grid.getOversizedCellPopulation() == 1);
 
         // AABB query should find both
-        std::vector<Entity> found;
+        std::vector<PartitionQueryResult> found;
         bounds::AABB queryBounds = bounds::AABB::fromMinMax(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 8.0f, 8.0f, 8.0f });
         grid.query(queryBounds, found);
 
@@ -462,7 +462,7 @@ namespace litl::tests
         GRID_ADD_AND_UPDATE(e3, bounds::AABB::fromPointRadius(vec3{ 36.0f, 0.0f, 36.0f }, 0.5f)); // cell (4,4)
 
         // Query that covers cells (0,0) and (1,0) and (0,1) and (1,1)
-        std::vector<Entity> found;
+        std::vector<PartitionQueryResult> found;
         bounds::AABB queryBounds = bounds::AABB::fromMinMax(vec3{ 0.0f, -1.0f, 0.0f }, vec3{ 16.0f, 1.0f, 16.0f });
         grid.query(queryBounds, found);
 
@@ -545,7 +545,7 @@ namespace litl::tests
         REQUIRE(grid.getCellPopulation(0, 0) == count);
 
         // Query should return all
-        std::vector<Entity> found;
+        std::vector<PartitionQueryResult> found;
         bounds::AABB queryBounds = bounds::AABB::fromMinMax(vec3{ 0.0f, -1.0f, 0.0f }, vec3{ 8.0f, 1.0f, 8.0f });
         grid.query(queryBounds, found);
 
@@ -571,7 +571,7 @@ namespace litl::tests
         REQUIRE(grid.getCellPopulation(0, 0) == 1);
 
         // Query in world space should find it
-        std::vector<Entity> found;
+        std::vector<PartitionQueryResult> found;
         bounds::AABB queryBounds = bounds::AABB::fromMinMax(
             vec3{ 100.0f, -1.0f, 200.0f },
             vec3{ 108.0f, 1.0f, 208.0f });
@@ -591,7 +591,7 @@ namespace litl::tests
     {
         UniformGridPartition grid{ testOptions };
 
-        std::vector<Entity> found;
+        std::vector<PartitionQueryResult> found;
 
         grid.query(bounds::AABB::fromMinMax(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 64.0f, 64.0f, 64.0f }), found);
         REQUIRE(found.empty());

@@ -5,27 +5,35 @@
 
 #include "litl-ecs/register.hpp"
 #include "litl-engine/ecs/common.hpp"
+#include "movement.hpp"
 
 namespace litl
 {
     enum class BoidState : uint8_t
     {
-        Idle = 0u,
+        Searching = 0u,
         Traveling = 1u,
         Fleeing = 2
     };
 
     struct Boid
     {
+        static constexpr float BoidMovementSpeed = 50.0f;
+
         /// <summary>
         /// The current state of this boid.
         /// </summary>
-        BoidState state{ BoidState::Idle };
+        BoidState state{ BoidState::Searching };
 
         /// <summary>
         /// The fixed target that the boid is currently travelling to.
         /// </summary>
         vec3 target{};
+
+        /// <summary>
+        /// The last time tick was called for this boid.
+        /// </summary>
+        float lastTick{ 0.0f };
     };
 
     class SceneView;
@@ -37,13 +45,9 @@ namespace litl
 
         void setup(ServiceProvider& services);
         void prepare();
-        void update(SystemData const& data, Entity entity, Boid& boid, Transform& transform);
+        void update(SystemData const& data, Entity entity, Boid& boid, Transform& transform, Movement& movement);
 
     private:
-
-        void onIdle(Boid& boid, Transform& transform);
-        void onTraveling(Boid& boid, Transform& transform, float dt);
-        void onFleeing(Boid& boid, Transform& transform);
 
         std::shared_ptr<SceneView> m_pSceneView{ nullptr };
         uint32_t m_worldSize = 1024u;

@@ -9,6 +9,7 @@
 #include "litl-core/containers/flatHashSet.hpp"
 #include "litl-engine/scene/sceneCameras.hpp"
 #include "litl-engine/render/renderableEntity.hpp"
+#include "litl-engine/scene/partition/scenePartition.hpp"
 
 namespace litl
 {
@@ -86,7 +87,7 @@ namespace litl
         void setCameraAtIndex(uint32_t i, Camera* camera) noexcept;
 
         std::shared_ptr<SceneView> m_pSceneView;
-        std::vector<Entity> m_tempVisibleEntities;
+        std::vector<PartitionQueryResult> m_tempVisibleEntities;
         std::array<CameraFrustumEntities, SceneCameras::MaxSceneCameras> m_cameraVisibleEntities;
 
         static std::array<CullingBucket, Constants::max_thread_count> s_cullingBuckets;

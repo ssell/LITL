@@ -316,6 +316,11 @@ namespace litl
             return vec3(value / length);
         }
 
+        [[nodiscard]] constexpr bool isNormalized() const noexcept
+        {
+            return isOne(lengthSquared());
+        }
+
         /// <summary>
         /// The dot product is the measure of how aligned two vectors are.
         /// Though the result differs depending on if both, one, or none of the
