@@ -5,6 +5,7 @@
 #include "simulator.hpp"
 #include "boid.hpp"
 #include "food.hpp"
+#include "predator.hpp"
 
 namespace litl
 {
@@ -29,76 +30,56 @@ namespace litl
     /// Invoked each frame for each entity that matches the required components. 
     /// Each valid chunk of relevant entities is run at the same time in parallel as other matching chunks.
     /// </summary>
-    void BoidSystem::update(SystemData const& data, Entity entity, Boid& boid, Transform& transform)
+    void BoidSystem::update(SystemData const& data, Entity entity, Boid& boid, Transform& transform, Movement& movement)
     {
-        switch (boid.state)
+        if ((data.elapsedTime - boid.lastTick) < 0.5f)
         {
-        case BoidState::Idle:
-            onIdle(boid, transform);
-            break;
-
-        case BoidState::Traveling:
-            onTraveling(boid, transform, data.deltaTime);
-            break;
-
-        case BoidState::Fleeing:
-            onFleeing(boid, transform);
-            break;
+            return;
         }
-    }
 
-    void BoidSystem::onIdle(Boid& boid, Transform& transform)
-    {
-        // Search for any nearby food.
-        std::vector<Entity> foundFood; foundFood.reserve(8u);
-        m_pSceneView->query<Food>(bounds::Sphere::fromCenterRadius(transform.getPosition(), 1000.0f), foundFood);
+        boid.lastTick = data.elapsedTime;
 
-        if (!foundFood.empty())
+        // Each tick the boid is looking for two things: food and predators.
+        // The boid searches for predators in a small radius, and if one is found it attempts to move away from them.
+        // If there are no nearby predators, then the boid searches for the nearest food in a larger radius.
+        // Finally, if there is no food, the boid continues on its current path until it nears the edge of the simulation.
+
+        boid.state = BoidState::Searching;       // generic searching state: looking for food or predators
+        std::vector<PartitionQueryResult> findResults; findResults.reserve(8u);
+
+        // 1. Check for predators.
+        m_pSceneView->query<Predator>(bounds::Sphere::fromCenterRadius(transform.getPosition(), 10.0f), findResults, true);
+
+        if (!findResults.empty())
         {
-            // found food. move to the nearest one.
-            float nearestDistSq = std::numeric_limits<float>::max();
-            vec3 nearestFoodPos = {};
+            vec3 awayFromPredator = (transform.getPosition() - findResults[0].worldPosition);
+            if (awayFromPredator.isZeroed()) { awayFromPredator = vec3::right(); }
 
-            for (auto foodEntity : foundFood)
+            movement.direction = awayFromPredator.normalized();
+            boid.state = BoidState::Fleeing;
+        }
+
+        findResults.clear();
+
+        // 2. Check for food.
+        m_pSceneView->query<Food>(bounds::Sphere::fromCenterRadius(transform.getPosition(), 250.0f), findResults, true);
+
+        if (!findResults.empty())
+        {
+            vec3 toFood = (findResults[0].worldPosition - transform.getPosition());
+
+            if (toFood.isZeroed())
             {
-                auto foodPos = m_pSceneView->getWorldPosition(foodEntity);
-                auto distSqToFood = transform.getPosition().distanceSqTo(foodPos);
-
-                if (distSqToFood < nearestDistSq)
-                {
-                    nearestDistSq = distSqToFood;
-                    nearestFoodPos = foodPos;
-                }
+                toFood = vec3::right();
+                movement.speed = 0.0f;
+            }
+            else
+            {
+                movement.speed = Boid::BoidMovementSpeed;
             }
 
-            boid.target = nearestFoodPos;
+            movement.direction = toFood.normalized();
             boid.state = BoidState::Traveling;
         }
-        else
-        {
-            // move to a random target.
-            //RandomFast rng{};
-            //boid.target = vec3(rng.next(m_worldSize), rng.next(m_worldSize), rng.next(m_worldSize));
-        }
-    }
-
-    void BoidSystem::onTraveling(Boid& boid, Transform& transform, float dt)
-    {
-        vec3 toTarget = (boid.target - transform.getPosition());
-        vec3 toTargetDir = toTarget.normalized();
-
-        if (toTarget.lengthSquared() <= 1.0f)
-        {
-            // ... nothing todo ...
-        }
-        else
-        {
-            transform.translate(toTargetDir * 10.0f * dt);
-        }
-    }
-
-    void BoidSystem::onFleeing(Boid& boid, Transform& transform)
-    {
-
     }
 }

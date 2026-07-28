@@ -42,11 +42,11 @@ namespace litl
 
             setCameraAtIndex(i, camera);
 
-            m_pSceneView->query(camera->getFrustum(), m_tempVisibleEntities);
+            m_pSceneView->query(camera->getFrustum(), m_tempVisibleEntities, false);
 
             for (auto entity : m_tempVisibleEntities)
             {
-                visibleEntities.entities.insert(entity);
+                visibleEntities.entities.insert(entity.entity);
             }
         }
     }

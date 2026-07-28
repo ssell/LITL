@@ -68,6 +68,11 @@ namespace litl
         std::shared_ptr<FrameCallbacks> callbacks{ nullptr };
 
         /// <summary>
+        /// Time since the start of the world running.
+        /// </summary>
+        float elapsedTime{ 0.0f };
+
+        /// <summary>
         /// Accumulated time since the last fixed update.
         /// </summary>
         float accumulatedTime{ 0.0f };
@@ -125,27 +130,28 @@ namespace litl
         {
             callbacks->invokeFrameStart(*services, dt);
 
+            elapsedTime += dt;
             accumulatedTime += dt;
             systemManager.prepareFrame();
 
-            systemManager.run(world, 0.0f, dt, SystemGroup::Startup, (*jobScheduler));
-            systemManager.run(world, 0.0f, dt, SystemGroup::Input, (*jobScheduler));
+            systemManager.run(world, elapsedTime, dt, SystemGroup::Startup, (*jobScheduler));
+            systemManager.run(world, elapsedTime, dt, SystemGroup::Input, (*jobScheduler));
 
             // Run fixed update 0 or more times. On fast frames it may not run every frame. On slow frames it may run multiple times.
             while (accumulatedTime >= fixedStep)
             {
-                systemManager.run(world, 0.0f, fixedStep, SystemGroup::FixedUpdate, (*jobScheduler));
+                systemManager.run(world, elapsedTime, fixedStep, SystemGroup::FixedUpdate, (*jobScheduler));
                 accumulatedTime -= fixedStep;
             }
 
-            systemManager.run(world, 0.0f, dt, SystemGroup::Update, (*jobScheduler));
-            systemManager.run(world, 0.0f, dt, SystemGroup::LateUpdate, (*jobScheduler));
-            systemManager.run(world, 0.0f, dt, SystemGroup::PreRender, (*jobScheduler));
+            systemManager.run(world, elapsedTime, dt, SystemGroup::Update, (*jobScheduler));
+            systemManager.run(world, elapsedTime, dt, SystemGroup::LateUpdate, (*jobScheduler));
+            systemManager.run(world, elapsedTime, dt, SystemGroup::PreRender, (*jobScheduler));
 
             callbacks->invokeRender(*services, dt);
 
-            systemManager.run(world, 0.0f, dt, SystemGroup::PostRender, (*jobScheduler));
-            systemManager.run(world, 0.0f, dt, SystemGroup::Final, (*jobScheduler));
+            systemManager.run(world, elapsedTime, dt, SystemGroup::PostRender, (*jobScheduler));
+            systemManager.run(world, elapsedTime, dt, SystemGroup::Final, (*jobScheduler));
 
             callbacks->invokeFrameEnd(*services, dt);
 

@@ -35,6 +35,10 @@ namespace litl
                 {
                     m_entities[i] = m_entities.back();
                     m_entities.pop_back();
+
+                    m_bounds[i] = m_bounds.back();
+                    m_bounds.pop_back();
+
                     break;
                 }
             }
@@ -53,59 +57,112 @@ namespace litl
 
         void preUpdate() noexcept
         {
-            m_entities.insert(m_entities.end(), m_newEntities.begin(), m_newEntities.end());
+            for (auto entity : m_newEntities)
+            {
+                m_entities.push_back(entity);
+                m_bounds.push_back({});
+            }
+
             m_newEntities.clear();
         }
 
         void update(Entity entity, bounds::AABB bounds) noexcept 
         {
-            // ... no action ...
-        }
-
-        void query(bounds::AABB bounds, std::vector<Entity>& entities) const noexcept
-        {
-            entities.insert(entities.begin(), m_entities.begin(), m_entities.end());        // return all
-        }
-
-        void query(bounds::AABB bounds, World& world, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
-        {
-            for (auto entity : entities)
+            for (size_t i = 0ull; i < m_entities.size(); ++i)
             {
-                if (world.hasComponent(entity, componentType))
+                if (m_entities[i] == entity)
                 {
-                    entities.push_back(entity);
+                    m_bounds[i] = bounds;
+                    break;
                 }
             }
         }
 
-        void query(bounds::Sphere bounds, std::vector<Entity>& entities) const noexcept
+        void query(bounds::AABB bounds, std::vector<PartitionQueryResult>& entities) const noexcept
         {
-            entities.insert(entities.begin(), m_entities.begin(), m_entities.end());        // return all
+            auto queryCenter = bounds.center();
+
+            for (size_t i = 0ull; i < m_entities.size(); ++i)
+            {
+                entities.push_back(PartitionQueryResult{
+                    .entity = m_entities[i],
+                    .worldPosition = m_bounds[i].center(),
+                    .distanceSquared = m_bounds[i].center().distanceSqTo(queryCenter)
+                });
+            }
         }
 
-        void query(bounds::Sphere bounds, World& world, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
+        void query(bounds::AABB bounds, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities) const noexcept
         {
-            for (auto entity : m_entities)
+            auto queryCenter = bounds.center();
+
+            for (size_t i = 0ull; i < m_entities.size(); ++i)
             {
-                if (world.hasComponent(entity, componentType))
+                if (world.hasComponent(m_entities[i], componentType))
                 {
-                    entities.push_back(entity);
+                    entities.push_back(PartitionQueryResult{
+                        .entity = m_entities[i],
+                        .worldPosition = m_bounds[i].center(),
+                        .distanceSquared = m_bounds[i].center().distanceSqTo(queryCenter)
+                    });
                 }
             }
         }
 
-        void query(bounds::Frustum const& frustum, std::vector<Entity>& entities) const noexcept
+        void query(bounds::Sphere bounds, std::vector<PartitionQueryResult>& entities) const noexcept
         {
-            entities.insert(entities.begin(), m_entities.begin(), m_entities.end());        // return all
+            for (size_t i = 0ull; i < m_entities.size(); ++i)
+            {
+                entities.push_back(PartitionQueryResult{
+                    .entity = m_entities[i],
+                    .worldPosition = m_bounds[i].center(),
+                    .distanceSquared = m_bounds[i].center().distanceSqTo(bounds.center)
+                });
+            }
         }
 
-        void query(bounds::Frustum const& frustum, World& world, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
+        void query(bounds::Sphere bounds, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities) const noexcept
         {
-            for (auto entity : entities)
+            for (size_t i = 0ull; i < m_entities.size(); ++i)
             {
-                if (world.hasComponent(entity, componentType))
+                if (world.hasComponent(m_entities[i], componentType))
                 {
-                    entities.push_back(entity);
+                    entities.push_back(PartitionQueryResult{
+                        .entity = m_entities[i],
+                        .worldPosition = m_bounds[i].center(),
+                        .distanceSquared = m_bounds[i].center().distanceSqTo(bounds.center)
+                    });
+                }
+            }
+        }
+
+        void query(bounds::Frustum const& frustum, std::vector<PartitionQueryResult>& entities) const noexcept
+        {
+            auto queryCenter = frustum.getOrigin();
+
+            for (size_t i = 0ull; i < m_entities.size(); ++i)
+            {
+                entities.push_back(PartitionQueryResult{
+                    .entity = m_entities[i],
+                    .worldPosition = m_bounds[i].center(),
+                    .distanceSquared = queryCenter.distanceSqTo(m_bounds[i].center())
+                });
+            }
+        }
+
+        void query(bounds::Frustum const& frustum, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities) const noexcept
+        {
+            auto queryCenter = frustum.getOrigin();
+
+            for (size_t i = 0ull; i < m_entities.size(); ++i)
+            {
+                if (world.hasComponent(m_entities[i], componentType))
+                {
+                    entities.push_back(PartitionQueryResult{
+                        .entity = m_entities[i],
+                        .worldPosition = m_bounds[i].center(),
+                        .distanceSquared = queryCenter.distanceSqTo(m_bounds[i].center())
+                    });
                 }
             }
         }
@@ -124,6 +181,11 @@ namespace litl
         /// Entities that have been present since the last update and have valid world-space positions.
         /// </summary>
         std::vector<Entity> m_entities;
+
+        /// <summary>
+        /// Entity bounds.
+        /// </summary>
+        std::vector<bounds::AABB> m_bounds;
     };
 
     static_assert(ScenePartition<NullPartition>);

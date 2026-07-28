@@ -5,6 +5,7 @@
 #include "simulator.hpp"
 #include "boid.hpp"
 #include "food.hpp"
+#include "movement.hpp"
 
 namespace litl
 {
@@ -96,6 +97,7 @@ namespace litl
         commands.addComponent<Transform>(boidEntity, Transform::create(getRandomSpawnPoint()));
         commands.addComponent<LocalBounds>(boidEntity, LocalBounds{});
         commands.addComponent<WorldBounds>(boidEntity, WorldBounds{});
+        commands.addComponent<Movement>(boidEntity, Movement{ .direction = vec3::right(), .speed = Boid::BoidMovementSpeed });
         commands.addComponent<MaterialRef>(boidEntity, MaterialRef{ .handle = m_boidMaterial });
         commands.addComponent<MeshRef>(boidEntity, MeshRef{ .handle = m_boidMesh });
 

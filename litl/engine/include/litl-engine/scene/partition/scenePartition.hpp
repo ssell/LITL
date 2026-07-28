@@ -11,6 +11,13 @@
 
 namespace litl
 {
+    struct PartitionQueryResult
+    {
+        Entity entity{};
+        vec3 worldPosition{};
+        float distanceSquared{ 0.0f };
+    };
+
     /// <summary>
     /// Defines the compile-time interface/contract that any scene partition implementation must abide by.
     /// 
@@ -26,19 +33,19 @@ namespace litl
         bounds::Frustum const& frustum,
         World& world,
         ComponentTypeId componentType,
-        std::vector<Entity>& entities)
+        std::vector<PartitionQueryResult>& results)
     {
         { partition.add(entity, bounds) } noexcept -> std::same_as<void>;
         { partition.remove(entity) } noexcept -> std::same_as<void>;
         { partition.preUpdate() } noexcept -> std::same_as<void>;
         { partition.update(entity, bounds) } noexcept -> std::same_as<void>;
 
-        { cpartition.query(bounds, entities) } noexcept -> std::same_as<void>;
-        { cpartition.query(bounds, world, componentType, entities) } noexcept -> std::same_as<void>;
-        { cpartition.query(sphere, entities) } noexcept -> std::same_as<void>;
-        { cpartition.query(sphere, world, componentType, entities) } noexcept -> std::same_as<void>;
-        { cpartition.query(frustum, entities) } noexcept -> std::same_as<void>;
-        { cpartition.query(frustum, world, componentType, entities) } noexcept -> std::same_as<void>;
+        { cpartition.query(bounds, results) } noexcept -> std::same_as<void>;
+        { cpartition.query(bounds, world, componentType, results) } noexcept -> std::same_as<void>;
+        { cpartition.query(sphere, results) } noexcept -> std::same_as<void>;
+        { cpartition.query(sphere, world, componentType, results) } noexcept -> std::same_as<void>;
+        { cpartition.query(frustum, results) } noexcept -> std::same_as<void>;
+        { cpartition.query(frustum, world, componentType, results) } noexcept -> std::same_as<void>;
     };
 
     /*

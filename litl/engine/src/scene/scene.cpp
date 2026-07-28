@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "litl-core/assert.hpp"
 #include "litl-core/authority.hpp"
 #include "litl-ecs/world.hpp"
@@ -200,52 +202,82 @@ namespace litl
         }
     }
 
-    void Scene::query(bounds::AABB aabb, std::vector<Entity>& entities) const noexcept
+    void Scene::query(bounds::AABB aabb, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept
     {
         std::visit([&](auto& partition)
         {
             partition.query(aabb, entities);
         }, m_partition);
+
+        if (sorted)
+        {
+            sortPartitionResults(entities);
+        }
     }
 
-    void Scene::query(bounds::AABB aabb, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
+    void Scene::query(bounds::AABB aabb, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept
     {
         std::visit([&](auto& partition)
         {
             partition.query(aabb, *m_pWorld, componentType, entities);
         }, m_partition);
+
+        if (sorted)
+        {
+            sortPartitionResults(entities);
+        }
     }
 
-    void Scene::query(bounds::Sphere sphere, std::vector<Entity>& entities) const noexcept
+    void Scene::query(bounds::Sphere sphere, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept
     {
         std::visit([&](auto& partition)
         {
             partition.query(sphere, entities);
         }, m_partition);
+
+        if (sorted)
+        {
+            sortPartitionResults(entities);
+        }
     }
 
-    void Scene::query(bounds::Sphere sphere, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
+    void Scene::query(bounds::Sphere sphere, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept
     {
         std::visit([&](auto& partition)
         {
             partition.query(sphere, *m_pWorld, componentType, entities);
         }, m_partition);
+
+        if (sorted)
+        {
+            sortPartitionResults(entities);
+        }
     }
 
-    void Scene::query(bounds::Frustum frustum, std::vector<Entity>& entities) const noexcept
+    void Scene::query(bounds::Frustum frustum, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept
     {
         std::visit([&](auto& partition)
         {
             partition.query(frustum, entities);
         }, m_partition);
+
+        if (sorted)
+        {
+            sortPartitionResults(entities);
+        }
     }
 
-    void Scene::query(bounds::Frustum frustum, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
+    void Scene::query(bounds::Frustum frustum, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept
     {
         std::visit([&](auto& partition)
         {
             partition.query(frustum, *m_pWorld, componentType, entities);
         }, m_partition);
+
+        if (sorted)
+        {
+            sortPartitionResults(entities);
+        }
     }
 
     void Scene::setMainCamera(CameraHandle handle) noexcept
@@ -266,5 +298,13 @@ namespace litl
     std::span<Camera*> Scene::getCameras() noexcept
     {
         return m_cameras.getCameras();
+    }
+
+    void Scene::sortPartitionResults(std::vector<PartitionQueryResult>& results) noexcept
+    {
+        std::sort(results.begin(), results.end(), [](PartitionQueryResult const& a, PartitionQueryResult const& b) -> bool 
+        {
+            return a.distanceSquared < b.distanceSquared; 
+        });
     }
 }

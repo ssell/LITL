@@ -1,6 +1,7 @@
 #include "litl-engine/startup.hpp"
 #include "simulator.hpp"
 #include "boid.hpp"
+#include "movement.hpp"
 
 using namespace litl;
 
@@ -52,7 +53,8 @@ void configureServices(ServiceCollection& services)
 /// </summary>
 void configureSystems(SystemCollection& systems)
 {
-    systems.addSystem<BoidSystem>(SystemGroup::Update);
+    systems.addSystem<BoidSystem>(SystemGroup::FixedUpdate);
+    systems.addSystem<MovementSystem>(SystemGroup::Update);
 }
 
 /// <summary>
