@@ -1,6 +1,8 @@
 #include "tests.hpp"
 #include "litl-engine/scene/partition/uniformGridPartition.hpp"
 
+#define GRID_ADD_AND_UPDATE(e, b) grid.add(e, b); grid.update(e, b);
+
 namespace litl::tests
 {
     namespace
@@ -53,6 +55,9 @@ namespace litl::tests
         //   cell index = (z * 8) + x = (1 * 8) + 4 = 12
 
         grid.add(entity, bounds);
+        REQUIRE(grid.getGridPopulation() == 0u);        // entity not visible until update is called (deferred visibility)
+
+        grid.update(entity, bounds);                    // entity has been updated and should now be visible
         REQUIRE(grid.getGridPopulation() == 1u);
 
         LITL_START_ASSERT_CAPTURE
@@ -68,6 +73,7 @@ namespace litl::tests
         REQUIRE((*info).isOversized == false);
     } LITL_END_TEST_CASE
 
+
     LITL_TEST_CASE("add out-of-bounds", "[engine::scene::uniformGridPartition]")
     {
         UniformGridPartition grid{ testOptions };
@@ -82,8 +88,8 @@ namespace litl::tests
         REQUIRE(grid.getCellPopulation(0, 0) == 0);
         REQUIRE(grid.getCellPopulation(7, 7) == 0);
 
-        grid.add(entityNeg, boundsNeg);
-        grid.add(entityPos, boundsPos);
+        GRID_ADD_AND_UPDATE(entityNeg, boundsNeg);
+        GRID_ADD_AND_UPDATE(entityPos, boundsPos);
 
         REQUIRE(grid.getGridPopulation() == 2);
         REQUIRE(grid.getCellPopulation(0, 0) == 1);
@@ -99,8 +105,7 @@ namespace litl::tests
         Entity entity{ .index = 0, .version = 0 };
         bounds::AABB bounds = bounds::AABB::fromPointRadius(vec3{ 16.0f, 0.0f, 16.0f }, 1.0f);
 
-        grid.add(entity, bounds);
-
+        GRID_ADD_AND_UPDATE(entity, bounds);
         REQUIRE(grid.getGridPopulation() == 1);
 
         grid.remove(entity);
@@ -115,7 +120,7 @@ namespace litl::tests
         Entity entity{ .index = 0, .version = 0 };
         bounds::AABB bounds = bounds::AABB::fromPointRadius(vec3{ 0.0f, 0.0f, 0.0f }, 1.0f);
 
-        grid.add(entity, bounds);
+        GRID_ADD_AND_UPDATE(entity, bounds);
 
         REQUIRE(grid.getGridPopulation() == 1);
         REQUIRE(grid.getCellPopulation(0, 0) == 1);
@@ -161,7 +166,7 @@ namespace litl::tests
         bounds::AABB bounds = bounds::AABB::fromPointRadius(vec3{ 0.0f, 0.0f, 0.0f }, 10.0f);
         REQUIRE(grid.getOversizedCellPopulation() == 0);
 
-        grid.add(entity, bounds);
+        GRID_ADD_AND_UPDATE(entity, bounds);
         REQUIRE(grid.getGridPopulation() == 1);
         REQUIRE(grid.getCellPopulation(0, 0) == 0);         // not added to the first cell, oversized are kept separate
         REQUIRE(grid.getOversizedCellPopulation() == 1);
@@ -180,7 +185,7 @@ namespace litl::tests
         bounds::AABB bounds = bounds::AABB::fromPointRadius(vec3{ 0.0f, 0.0f, 0.0f }, 10.0f);
         REQUIRE(grid.getOversizedCellPopulation() == 0);
 
-        grid.add(entity, bounds);
+        GRID_ADD_AND_UPDATE(entity, bounds);
         REQUIRE(grid.getOversizedCellPopulation() == 1);
 
         grid.remove(entity);
@@ -193,7 +198,7 @@ namespace litl::tests
         Entity entity{ .index = 0, .version = 0 };
         bounds::AABB bounds = bounds::AABB::fromPointRadius(vec3{ 0.0f, 0.0f, 0.0f }, 1.0f);
 
-        grid.add(entity, bounds);
+        GRID_ADD_AND_UPDATE(entity, bounds);
 
         REQUIRE(grid.getGridPopulation() == 1);
         REQUIRE(grid.getCellPopulation(0, 0) == 1);
@@ -213,7 +218,7 @@ namespace litl::tests
         Entity entity{ .index = 0, .version = 0 };
         bounds::AABB bounds = bounds::AABB::fromPointRadius(vec3{ 0.0f, 0.0f, 0.0f }, 100.0f);
 
-        grid.add(entity, bounds);
+        GRID_ADD_AND_UPDATE(entity, bounds);
 
         REQUIRE(grid.getGridPopulation() == 1);
         REQUIRE(grid.getCellPopulation(0, 0) == 0);
@@ -233,7 +238,7 @@ namespace litl::tests
         Entity entity{ .index = 0, .version = 0 };
         bounds::AABB bounds = bounds::AABB::fromPointRadius(vec3{ 4.0f, 0.0f, 4.0f }, 1.0f);
 
-        grid.add(entity, bounds);
+        GRID_ADD_AND_UPDATE(entity, bounds);
 
         bounds::AABB contains = bounds::AABB::fromMinMax(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 8.0f, 8.0f, 8.0f });
         bounds::AABB straddles = bounds::AABB::fromMinMax(vec3{ 4.5f, 0.5f, 4.5f }, vec3{ 8.0f, 8.0f, 8.0f });
@@ -262,7 +267,7 @@ namespace litl::tests
         Entity entity{ .index = 0, .version = 0 };
         bounds::AABB bounds = bounds::AABB::fromPointRadius(vec3{ 4.0f, 0.0f, 4.0f }, 1.0f);
 
-        grid.add(entity, bounds);
+        GRID_ADD_AND_UPDATE(entity, bounds);
 
         bounds::Sphere contains = bounds::Sphere::fromCenterRadius(vec3{ 0.0f, 0.0f, 0.0f }, 5.0f);
         bounds::Sphere straddles = bounds::Sphere::fromCenterRadius(vec3{ 5.0f, 0.0f, 5.0f }, 1.0f);
@@ -291,7 +296,7 @@ namespace litl::tests
         Entity entity{ .index = 0, .version = 0 };
         bounds::AABB bounds = bounds::AABB::fromPointRadius(vec3{ 4.0f, 0.0f, 4.0f }, 2.0f);
 
-        grid.add(entity, bounds);
+        GRID_ADD_AND_UPDATE(entity, bounds);
 
         bounds::Frustum contains = bounds::Frustum::fromCorners(bounds::FrustumCorners{
             .nearLL = vec3{ 0.0f, 0.0f, 0.0f },
@@ -384,9 +389,9 @@ namespace litl::tests
 
         bounds::AABB bounds = bounds::AABB::fromPointRadius(vec3{ 4.0f, 0.0f, 4.0f }, 0.5f);
 
-        grid.add(e0, bounds);
-        grid.add(e1, bounds);
-        grid.add(e2, bounds);
+        GRID_ADD_AND_UPDATE(e0, bounds);
+        GRID_ADD_AND_UPDATE(e1, bounds);
+        GRID_ADD_AND_UPDATE(e2, bounds);
 
         REQUIRE(grid.getCellPopulation(0, 0) == 3);
 
@@ -421,8 +426,8 @@ namespace litl::tests
         bounds::AABB normalBounds = bounds::AABB::fromPointRadius(vec3{ 4.0f, 0.0f, 4.0f }, 1.0f);
         bounds::AABB oversizedBounds = bounds::AABB::fromPointRadius(vec3{ 4.0f, 0.0f, 4.0f }, 100.0f);
 
-        grid.add(normal, normalBounds);
-        grid.add(oversized, oversizedBounds);
+        GRID_ADD_AND_UPDATE(normal, normalBounds);
+        GRID_ADD_AND_UPDATE(oversized, oversizedBounds);
 
         REQUIRE(grid.getOversizedCellPopulation() == 1);
 
@@ -451,10 +456,10 @@ namespace litl::tests
         Entity e2{ .index = 2, .version = 0 };
         Entity e3{ .index = 3, .version = 0 };
 
-        grid.add(e0, bounds::AABB::fromPointRadius(vec3{ 4.0f, 0.0f, 4.0f }, 0.5f));   // cell (0,0)
-        grid.add(e1, bounds::AABB::fromPointRadius(vec3{ 12.0f, 0.0f, 4.0f }, 0.5f));  // cell (1,0)
-        grid.add(e2, bounds::AABB::fromPointRadius(vec3{ 4.0f, 0.0f, 12.0f }, 0.5f));  // cell (0,1)
-        grid.add(e3, bounds::AABB::fromPointRadius(vec3{ 36.0f, 0.0f, 36.0f }, 0.5f)); // cell (4,4)
+        GRID_ADD_AND_UPDATE(e0, bounds::AABB::fromPointRadius(vec3{ 4.0f, 0.0f, 4.0f }, 0.5f));   // cell (0,0)
+        GRID_ADD_AND_UPDATE(e1, bounds::AABB::fromPointRadius(vec3{ 12.0f, 0.0f, 4.0f }, 0.5f));  // cell (1,0)
+        GRID_ADD_AND_UPDATE(e2, bounds::AABB::fromPointRadius(vec3{ 4.0f, 0.0f, 12.0f }, 0.5f));  // cell (0,1)
+        GRID_ADD_AND_UPDATE(e3, bounds::AABB::fromPointRadius(vec3{ 36.0f, 0.0f, 36.0f }, 0.5f)); // cell (4,4)
 
         // Query that covers cells (0,0) and (1,0) and (0,1) and (1,1)
         std::vector<Entity> found;
@@ -472,7 +477,7 @@ namespace litl::tests
         Entity v1{ .index = 0, .version = 1 };
         bounds::AABB bounds = bounds::AABB::fromPointRadius(vec3{ 4.0f, 0.0f, 4.0f }, 1.0f);
 
-        grid.add(v1, bounds);
+        GRID_ADD_AND_UPDATE(v1, bounds);
         REQUIRE(grid.getGridPopulation() == 1);
 
         // Try to remove with an older version
@@ -514,7 +519,7 @@ namespace litl::tests
         bounds::AABB original = bounds::AABB::fromPointRadius(vec3{ 4.0f, 0.0f, 4.0f }, 1.0f);
         bounds::AABB updated = bounds::AABB::fromPointRadius(vec3{ 5.0f, 0.0f, 5.0f }, 1.5f);
 
-        grid.add(entity, original);
+        GRID_ADD_AND_UPDATE(entity, original);
         grid.update(entity, updated);
 
         auto info = grid.getEntityInfo(entity.index);
@@ -533,7 +538,7 @@ namespace litl::tests
         {
             Entity entity{ .index = i, .version = 0 };
             bounds::AABB bounds = bounds::AABB::fromPointRadius(vec3{ 4.0f, 0.0f, 4.0f }, 0.1f);
-            grid.add(entity, bounds);
+            GRID_ADD_AND_UPDATE(entity, bounds);
         }
 
         REQUIRE(grid.getGridPopulation() == count);
@@ -557,7 +562,7 @@ namespace litl::tests
         Entity entity{ .index = 0, .version = 0 };
         bounds::AABB bounds = bounds::AABB::fromPointRadius(vec3{ 104.0f, 0.0f, 204.0f }, 0.5f);
 
-        grid.add(entity, bounds);
+        GRID_ADD_AND_UPDATE(entity, bounds);
 
         auto cellIndex = grid.getCellIndex(vec3{ 104.0f, 0.0f, 204.0f });
         REQUIRE(cellIndex.first == 0);

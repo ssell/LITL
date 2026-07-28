@@ -34,6 +34,11 @@ namespace litl
 
         /// <summary>
         /// Adds the entity to the grid.
+        /// 
+        /// The entity will not be available in queries or general grid information until
+        /// update has been called on it at least one time. This is to prevent entities
+        /// from appearing in queries prior to their world-space positions being calculated - 
+        /// which happens once each frame prior to the PreRender system group running.
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="aabb"></param>
@@ -44,6 +49,13 @@ namespace litl
         /// </summary>
         /// <param name="entity"></param>
         void remove(Entity entity) noexcept;
+
+        /// <summary>
+        /// Moves recently added entities (since the last update) from the new list to the main list.
+        /// This makes the eligible to be part of queries. Entities that are in the new list do not
+        /// yet have valid world-space positions calculated for them and are thus hidden from queries.
+        /// </summary>
+        void preUpdate() noexcept;
 
         /// <summary>
         /// Updates the bounds of the entity in the grid.

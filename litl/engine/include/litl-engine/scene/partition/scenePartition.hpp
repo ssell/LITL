@@ -30,6 +30,7 @@ namespace litl
     {
         { partition.add(entity, bounds) } noexcept -> std::same_as<void>;
         { partition.remove(entity) } noexcept -> std::same_as<void>;
+        { partition.preUpdate() } noexcept -> std::same_as<void>;
         { partition.update(entity, bounds) } noexcept -> std::same_as<void>;
 
         { cpartition.query(bounds, entities) } noexcept -> std::same_as<void>;
