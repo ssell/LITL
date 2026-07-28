@@ -13,7 +13,7 @@ namespace litl
     {
     public:
 
-        static constexpr float TickIntervalSec = 0.5f;
+        static constexpr float TickIntervalSec = 0.25f;
 
         void setup(ServiceProvider& services);
         void prepare();
@@ -21,7 +21,7 @@ namespace litl
 
     private:
 
-        vec3 getTargetVector(Boid& boid, vec3 selfPos, Movement const& movement);
+        vec3 getTargetPosition(vec3 selfPos);
         vec3 computeSteeringAcceleration(World& world, Entity self, vec3 selfPos, vec3 selfVelocity, vec3 targetVec);
 
         std::shared_ptr<SceneView> m_pSceneView{ nullptr };

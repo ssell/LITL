@@ -37,7 +37,22 @@ namespace litl
 
     struct Food
     {
-        // Components can be empty and serve as flags.
+        enum class FoodStatus : uint8_t
+        {
+            None = 0,
+            Alive = 1,
+            Eaten = 2
+        };
+
+        /// <summary>
+        /// Index into the simulators tracking pool for food.
+        /// </summary>
+        uint32_t index{ 0u };
+
+        /// <summary>
+        /// The last time tick was called for this food.
+        /// </summary>
+        float lastTick{ 0.0f };
     };
 
     struct Movement

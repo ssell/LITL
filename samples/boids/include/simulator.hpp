@@ -38,6 +38,8 @@ namespace litl
 
         void setup(ServiceProvider& services, SimulatorConfiguration const& config) noexcept;
         void update(float dt) noexcept;
+        void alertFoodConsumed(uint32_t index) noexcept;
+
         [[nodiscard]] SimulatorConfiguration const& getConfig() const noexcept;
     private:
 
@@ -52,6 +54,8 @@ namespace litl
         /// The configuration used to setup the simulation.
         /// </summary>
         SimulatorConfiguration m_config{};
+
+        std::vector<Food::FoodStatus> m_foodStatus;
 
         /// <summary>
         /// The global shared object pool. Could request each frame via services, but can also just keep a reference.
@@ -77,6 +81,10 @@ namespace litl
         /// The shared mesh used by all boids.
         /// </summary>
         MeshHandle m_boidMesh{};
+
+        MaterialHandle m_foodMaterial{};
+
+        MeshHandle m_foodMesh{};
 
         /// <summary>
         /// The current number of boids in the simulation.
