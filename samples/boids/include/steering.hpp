@@ -7,15 +7,15 @@ namespace litl
 {
     struct SteeringControls
     {
-        float separationRadius = 2.0f;
-        float perceptionRadius = 12.0f;
+        float separationRadius = 12.5f;
+        float perceptionRadius = 25.0f;
         float cosFov = -0.5f;
         float separationWeight = 5.0f;
-        float alignmentWeight = 1.0f;
+        float alignmentWeight = 3.0f;
         float cohesionWeight = 1.0f;
         float targetWeight = 1.0f;
-        float maxSpeed = 10.0f;
-        float maxForce = 30.0f;
+        float maxSpeed = 30.0f;
+        float maxForce = 50.0f;
     };
 
     static constexpr SteeringControls g_boidSteering = SteeringControls{};

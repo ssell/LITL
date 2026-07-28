@@ -32,10 +32,12 @@ namespace litl
         if ((data.elapsedTime - boid.lastTick) > TickIntervalSec)
         {
             boid.lastTick = data.elapsedTime;
-            boid.target = getTargetVector(boid, selfPos, movement);
+            boid.target = getTargetPosition(selfPos);
         }
 
-        vec3 steering = computeSteeringAcceleration(data.world, entity, selfPos, movement.velocity, boid.target);
+        vec3 targetDir = (boid.target - selfPos).normalized();
+        vec3 steering = computeSteeringAcceleration(data.world, entity, selfPos, movement.velocity, targetDir);
+
         boid.acceleration = steering;
         boid.maxSpeed = g_boidSteering.maxSpeed;
     }
@@ -43,42 +45,29 @@ namespace litl
     /// <summary>
     /// Determines the boids target vector. This the vector directly to food or away from a predator.
     /// </summary>
-    vec3 BoidSystem::getTargetVector(Boid& boid, vec3 selfPos, Movement const& movement)
+    vec3 BoidSystem::getTargetPosition(vec3 selfPos)
     {
-        // Each tick the boid is looking for two things: food and predators.
-        // The boid searches for predators in a small radius, and if one is found it attempts to move away from them.
-        // If there are no nearby predators, then the boid searches for the nearest food in a larger radius.
-        // Finally, if there is no food, the boid continues on its current path until it nears the edge of the simulation.
-
-        vec3 desiredVelocity = movement.velocity;       // if no food or predators found, will continue in current direction
-
         // 1. Check for predators.
         std::vector<PartitionQueryResult> findResults; findResults.reserve(8u);
         m_pSceneView->query<Predator>(bounds::Sphere::fromCenterRadius(selfPos, 50.0f), findResults, true);
 
         if (!findResults.empty())
         {
-            vec3 awayFromPredator = (selfPos - findResults[0].worldPosition);
-            if (awayFromPredator.isZeroed()) { awayFromPredator = vec3::right(); }
-
-            desiredVelocity = awayFromPredator.normalized();
+            return findResults[0].worldPosition;
         }
         else
         {
             // 2. Check for food.
             findResults.clear();
-            m_pSceneView->query<Food>(bounds::Sphere::fromCenterRadius(selfPos, 250.0f), findResults, true);
+            m_pSceneView->query<Food>(bounds::Sphere::fromCenterRadius(selfPos, 500.0f), findResults, true);
 
             if (!findResults.empty())
             {
-                vec3 toFood = (findResults[0].worldPosition - selfPos);
-                if (toFood.isZeroed()) { toFood = vec3::right(); }
-
-                desiredVelocity = toFood.normalized();
+                return findResults[0].worldPosition;
             }
         }
 
-        return desiredVelocity;
+        return vec3{ static_cast<float>(m_worldSize / 2u), 0.0f, static_cast<float>(m_worldSize / 2u) };
     }
 
     vec3 BoidSystem::computeSteeringAcceleration(World& world, Entity self, vec3 selfPos, vec3 selfVelocity, vec3 targetVector)

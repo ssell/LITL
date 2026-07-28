@@ -4,6 +4,7 @@
 
 #include "simulator.hpp"
 #include "boid.hpp"
+#include "food.hpp"
 
 namespace litl
 {
@@ -29,6 +30,26 @@ namespace litl
 
         const std::array<uint32_t, 3> s_boidIndices = { 0, 1, 2 };
 
+        constexpr std::array<Vertex, 3> s_foodVertices = {
+            Vertex {                                        // left
+                .position = { -3.0f, 0.0f, 0.0f },
+                .color = { 0.0f, 1.0f, 1.0f },
+                .uv = { 0.0f, 0.0f }
+            },
+            Vertex {                                        // top
+                .position = { 0.0f, 0.0f, 6.0f },
+                .color = { 1.0f, 1.0f, 0.0f },
+                .uv = { 0.5f, 1.0f }
+            },
+            Vertex {                                        // right
+                .position = { 3.0f, 0.0f, 0.0f },
+                .color = { 0.0f, 1.0f, 1.0f },
+                .uv = { 1.0f, 0.0f }
+            }
+        };
+
+        const std::array<uint32_t, 3> s_foodIndices = { 0, 1, 2 };
+
         vec3 getRandomSpawnPoint(RandomMT19937& rng, uint32_t worldDimensions) noexcept
         {
             return vec3(
@@ -53,9 +74,13 @@ namespace litl
         m_pObjectPool = services.get<ObjectPool>();
         m_pWorld = services.get<World>();
         m_config = config;
+        m_foodStatus.resize(m_config.maxFoodCount, Food::FoodStatus::None);
 
         m_boidMaterial = loadMaterial("assets/shaders/spirv/flat.spv", "Boid Material", "flat.spv", "vertexMain", "fragmentMain");
         m_boidMesh = loadMesh(s_boidVertices, s_boidIndices, "Boid Mesh");
+
+        m_foodMaterial = loadMaterial("assets/shaders/spirv/flat.spv", "Food Material", "flat.spv", "vertexMain", "fragmentMain");
+        m_foodMesh = loadMesh(s_foodVertices, s_foodIndices, "Food Mesh");
 
         tick();
     }
@@ -69,6 +94,11 @@ namespace litl
             tick();
             m_lastTick = now;
         }
+    }
+
+    void Simulator::alertFoodConsumed(uint32_t index) noexcept
+    {
+        m_foodStatus[index] = Food::FoodStatus::Eaten;
     }
 
     SimulatorConfiguration const& Simulator::getConfig() const noexcept
@@ -86,6 +116,16 @@ namespace litl
         while (m_predatorCount < m_config.minPredatorCount)
         {
             spawnPredator();
+        }
+
+        // Update for any eaten food since the last tick
+        for (size_t i = 0ull; i < m_foodStatus.size(); ++i)
+        {
+            if (m_foodStatus[i] == Food::FoodStatus::Eaten)
+            {
+                m_foodStatus[i] = Food::FoodStatus::None;
+                m_foodCount--;
+            }
         }
 
         while (m_foodCount < m_config.minFoodCount)
@@ -135,16 +175,33 @@ namespace litl
             return;
         }
 
-        auto& commands = m_pWorld->getCommandBuffer();
-        auto& rng = Random::shared();
-        auto foodEntity = commands.createEntity();
+        uint32_t nextIndex = Constants::uint32_null_index;
 
-        commands.addComponent<Food>(foodEntity, Food{});
-        commands.addComponent<Transform>(foodEntity, Transform::create(getRandomSpawnPoint(rng, m_config.worldDimensions)));
-        commands.addComponent<LocalBounds>(foodEntity, LocalBounds{});
-        commands.addComponent<WorldBounds>(foodEntity, WorldBounds{});
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(m_foodStatus.size()); ++i)
+        {
+            if (m_foodStatus[i] == Food::FoodStatus::None)
+            {
+                nextIndex = i;
+                m_foodStatus[i] = Food::FoodStatus::Alive;
+                break;
+            }
+        }
 
-        m_foodCount++;
+        if (nextIndex != Constants::uint32_null_index)
+        {
+            auto& commands = m_pWorld->getCommandBuffer();
+            auto& rng = Random::shared();
+            auto foodEntity = commands.createEntity();
+
+            commands.addComponent<Food>(foodEntity, Food{ .index = nextIndex, .lastTick = -rng.next01() * FoodSystem::TickIntervalSec });
+            commands.addComponent<Transform>(foodEntity, Transform::create(getRandomSpawnPoint(rng, m_config.worldDimensions)));
+            commands.addComponent<LocalBounds>(foodEntity, LocalBounds{});
+            commands.addComponent<WorldBounds>(foodEntity, WorldBounds{});
+            commands.addComponent<MaterialRef>(foodEntity, MaterialRef{ .handle = m_foodMaterial });
+            commands.addComponent<MeshRef>(foodEntity, MeshRef{ .handle = m_foodMesh });
+
+            m_foodCount++;
+        }
     }
 
     MaterialHandle Simulator::loadMaterial(std::span<char const> path, std::span<char const> name, std::span<char const> resource, std::span<char const> vertEntry, std::span<char const> fragEntry) const noexcept
