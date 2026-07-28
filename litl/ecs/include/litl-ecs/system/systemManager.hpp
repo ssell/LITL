@@ -70,21 +70,23 @@ namespace litl
         /// Runs all systems according to their group and schedule within their group.
         /// </summary>
         /// <param name="world"></param>
+        /// <param name="frameIndex"></param>
         /// <param name="elaspedTime"></param>
         /// <param name="deltaTime"></param>
         /// <param name="group"></param>
         [[deprecated("Sequential implementation of run is deprecated. Use the parallel version instead.")]]
-        void run(World& world, float elapsedTime, float deltaTime, SystemGroup group);
+        void run(World& world, uint32_t frameIndex, float elapsedTime, float deltaTime, SystemGroup group);
 
         /// <summary>
         /// Runs all systems according to their group and schedule within their group.
         /// </summary>
         /// <param name="world"></param>
+        /// <param name="frameIndex"></param>
         /// <param name="elaspedTime"></param>
         /// <param name="deltaTime"></param>
         /// <param name="group"></param>
         /// <param name="scheduler"></param>
-        void run(World& world, float elapsedTime, float deltaTime, SystemGroup group, JobScheduler& scheduler);
+        void run(World& world, uint32_t frameIndex, float elapsedTime, float deltaTime, SystemGroup group, JobScheduler& scheduler);
 
         /// <summary>
         /// Builds and returns a SystemInfoGraph which details all systems in the world and where they are "located" (group and layer).

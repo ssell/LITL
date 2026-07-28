@@ -12,7 +12,7 @@ namespace litl
     {
     public:
 
-        static constexpr float TickIntervalSec = 0.25f;
+        static constexpr float TickIntervalSec = 0.15f;
 
         void setup(ServiceProvider& services);
         void prepare();

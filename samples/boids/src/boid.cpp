@@ -10,6 +10,7 @@ namespace litl
     void BoidSystem::setup(ServiceProvider& services)
     {
         m_pSceneView = services.get<SceneView>();
+        m_pSimulator = services.get<Simulator>();
         m_worldSize = services.get<Simulator>()->getConfig().worldDimensions;
     }
 
@@ -27,6 +28,11 @@ namespace litl
     /// </summary>
     void BoidSystem::update(SystemData const& data, Entity entity, Boid& boid, Transform const& transform, Movement const& movement)
     {
+        if ((data.frameIndex % SteeringPhases) != boid.phase)
+        {
+            return;
+        }
+
         vec3 selfPos = transform.getPosition();
 
         if ((data.elapsedTime - boid.lastTick) > TickIntervalSec)
@@ -47,7 +53,6 @@ namespace litl
     /// </summary>
     vec3 BoidSystem::getTargetPosition(vec3 selfPos)
     {
-        // 1. Check for predators.
         std::vector<PartitionQueryResult> findResults; findResults.reserve(8u);
         m_pSceneView->query<Predator>(bounds::Sphere::fromCenterRadius(selfPos, 50.0f), findResults, true);
 
@@ -57,17 +62,8 @@ namespace litl
         }
         else
         {
-            // 2. Check for food.
-            findResults.clear();
-            m_pSceneView->query<Food>(bounds::Sphere::fromCenterRadius(selfPos, 500.0f), findResults, true);
-
-            if (!findResults.empty())
-            {
-                return findResults[0].worldPosition;
-            }
+            return m_pSimulator->getNearestFood(selfPos);
         }
-
-        return vec3{ static_cast<float>(m_worldSize / 2u), 0.0f, static_cast<float>(m_worldSize / 2u) };
     }
 
     vec3 BoidSystem::computeSteeringAcceleration(World& world, Entity self, vec3 selfPos, vec3 selfVelocity, vec3 targetVector)

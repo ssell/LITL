@@ -77,7 +77,7 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
             .bottom = -cameraSize,
             .top    =  cameraSize
         },
-        .clearColor = { 0.035f, 0.035f, 0.05f }
+        .clearColor = { 0.015f, 0.015f, 0.025f }
     };
 
     auto cameraHandle = objectPool->createCamera(cameraDescriptor);
@@ -89,7 +89,7 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     camera->lookAt(cameraTarget, vec3::forward());
 
     sceneView->setMainCamera(cameraHandle);
-    simulator->setup(services, { .worldDimensions = WorldDimensions, .minBoidCount = 100u, .minFoodCount = 5u });
+    simulator->setup(services, { .worldDimensions = WorldDimensions, .boidCount = 1000u });
 }
 
 /// <summary>

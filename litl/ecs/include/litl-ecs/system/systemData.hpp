@@ -22,6 +22,11 @@ namespace litl
         EntityCommands& commands;
 
         /// <summary>
+        /// Current frame index.
+        /// </summary>
+        uint32_t frameIndex = 0u;
+
+        /// <summary>
         /// Seconds since the world started running.
         /// </summary>
         float elapsedTime = 0.0f;

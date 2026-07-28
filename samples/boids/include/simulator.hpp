@@ -4,6 +4,7 @@
 #include <chrono>
 #include <cstdint>
 #include <memory>
+#include <optional>
 
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-core/math/random.hpp"
@@ -20,12 +21,9 @@ namespace litl
     {
         uint32_t worldDimensions = 1024u;
         uint32_t tickRateMs = 500u;
-        uint32_t minBoidCount = 100u;
-        uint32_t maxBoidCount = 1000u;
-        uint32_t minPredatorCount = 1u;
-        uint32_t maxPredatorCount = 100u;
-        uint32_t minFoodCount = 1u;
-        uint32_t maxFoodCount = 100u;
+        uint32_t boidCount = 100u;
+        uint32_t predatorCount = 1u;
+        uint32_t foodCount = 5u;
     };
 
     /// <summary>
@@ -39,14 +37,22 @@ namespace litl
         void setup(ServiceProvider& services, SimulatorConfiguration const& config) noexcept;
         void update(float dt) noexcept;
         void alertFoodConsumed(uint32_t index) noexcept;
-
+        [[nodiscard]] vec3 getNearestFood(vec3 pos) noexcept;
         [[nodiscard]] SimulatorConfiguration const& getConfig() const noexcept;
+
     private:
+
+        struct TrackedFood
+        {
+            vec3 position{};
+            FoodStatus foodStatus{ FoodStatus::None };
+        };
 
         void tick() noexcept;
         void spawnBoid() noexcept;
         void spawnPredator() noexcept;
         void spawnFood() noexcept;
+
         [[nodiscard]] MaterialHandle loadMaterial(std::span<char const> path, std::span<char const> name, std::span<char const> resource, std::span<char const> vertEntry, std::span<char const> fragEntry) const noexcept;
         [[nodiscard]] MeshHandle loadMesh(std::span<Vertex const> vertices, std::span<uint32_t const> indices, std::span<char const> name) const noexcept;
 
@@ -55,7 +61,7 @@ namespace litl
         /// </summary>
         SimulatorConfiguration m_config{};
 
-        std::vector<Food::FoodStatus> m_foodStatus;
+        std::vector<TrackedFood> m_trackedFood;
 
         /// <summary>
         /// The global shared object pool. Could request each frame via services, but can also just keep a reference.

@@ -512,6 +512,11 @@ namespace litl
         return v;
     }
 
+    [[nodiscard]] constexpr vec3 lerp(vec3 a, vec3 b, float f)
+    {
+        return vec3{ lerp(a.x(), b.x(), f), lerp(a.y(), b.y(), f), lerp(a.z(), b.z(), f) };
+    }
+
     static_assert(std::is_nothrow_copy_constructible_v<vec3>);
     static_assert(std::is_nothrow_move_constructible_v<vec3>);
     static_assert(std::is_nothrow_copy_assignable_v<vec3>);
