@@ -29,7 +29,7 @@ namespace litl
     /// Invoked each frame for each entity that matches the required components. 
     /// Each valid chunk of relevant entities is run at the same time in parallel as other matching chunks.
     /// </summary>
-    void BoidSystem::update(EntityCommands& commands, float dt, Entity entity, Boid& boid, Transform& transform)
+    void BoidSystem::update(SystemData const& data, Entity entity, Boid& boid, Transform& transform)
     {
         switch (boid.state)
         {
@@ -38,7 +38,7 @@ namespace litl
             break;
 
         case BoidState::Traveling:
-            onTraveling(boid, transform, dt);
+            onTraveling(boid, transform, data.deltaTime);
             break;
 
         case BoidState::Fleeing:

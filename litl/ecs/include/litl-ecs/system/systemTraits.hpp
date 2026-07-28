@@ -9,6 +9,7 @@
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/archetype/chunk.hpp"
 #include "litl-ecs/component/component.hpp"
+#include "litl-ecs/system/systemData.hpp"
 
 namespace litl
 {
@@ -20,7 +21,7 @@ namespace litl
     /// 
     /// For example: 
     /// 
-    ///     update(EntityCommands& commands, float dt, Entity entity, Foo& foo, Bar const& bar)
+    ///     update(SystemData const&, Entity entity, Foo& foo, Bar const& bar)
     /// 
     /// The following types are extracted:
     /// 
@@ -31,23 +32,23 @@ namespace litl
     /// <param name=""></param>
     /// <returns></returns>
     template<typename Tuple, std::size_t... I>
-    auto SystemTupleTailImpl(std::index_sequence<I...>) -> std::tuple<std::tuple_element_t<I + 3, Tuple>...>;
-    //                                                                                    ^ extract [3, 4, 5, ...], skipping [0, 1, 2] (EntityCommands, float, Entity)
+    auto SystemTupleTailImpl(std::index_sequence<I...>) -> std::tuple<std::tuple_element_t<I + 2, Tuple>...>;
+    //                                                                                    ^ extract [2, 3, 4, ...], skipping [0] (SystemData, Entity)
 
     /// <summary>
-    /// Works with SystemTupleTailImpl to retrieve all but the first two (mandatory EntityCommands,float) types in the update signature.
+    /// Works with SystemTupleTailImpl to retrieve all but the first two (mandatory SystemData,Entity) types in the update signature.
     /// </summary>
     /// <typeparam name="Tuple"></typeparam>
     template<typename Tuple>
-    using SystemTupleTail = decltype(SystemTupleTailImpl<Tuple>(std::make_index_sequence<std::tuple_size_v<Tuple> - 3>{})); 
-    //                                                                                    ^ reduce size by 3 so we dont go OOB in the Impl
+    using SystemTupleTail = decltype(SystemTupleTailImpl<Tuple>(std::make_index_sequence<std::tuple_size_v<Tuple> - 2>{})); 
+    //                                                                                    ^ reduce size by 2 so we dont go OOB in the Impl
 
     template<typename Tuple, std::size_t... Indices>
     consteval bool ValidSystemComponents(std::index_sequence<Indices...>)
     {
         return (
-            (std::is_lvalue_reference_v<std::tuple_element_t<Indices + 3, Tuple>> &&    // all optional ::update arguments must be reference types (either & or const&)
-             !std::is_volatile_v<std::tuple_element_t<Indices + 3, Tuple>>) &&          // volatile arguments are not allowed
+            (std::is_lvalue_reference_v<std::tuple_element_t<Indices + 2, Tuple>> &&    // all optional ::update arguments must be reference types (either & or const&)
+             !std::is_volatile_v<std::tuple_element_t<Indices + 2, Tuple>>) &&          // volatile arguments are not allowed
             ...);
     }
 
@@ -70,19 +71,17 @@ namespace litl
         using args = typename traits::argsTuple;                                // extract the argument types in the update signature
 
         constexpr std::size_t argsCount = std::tuple_size_v<args>;
-        constexpr std::size_t componentsCount = std::tuple_size_v<args> - 3;
+        constexpr std::size_t componentsCount = std::tuple_size_v<args> - 2;
 
-        static_assert(argsCount >= 3, "System::update must take atleast (EntityCommands&, float, Entity)");
+        static_assert(argsCount >= 2, "System::update must take atleast (SystemData&, Entity)");
         static_assert((componentsCount == 0) || ValidSystemComponents<args>(std::make_index_sequence<componentsCount>{}), "System::update optional component arguments must be reference or const-reference values only.");
 
         using Arg0 = std::tuple_element_t<0, args>;                             // first argument type
         using Arg1 = std::tuple_element_t<1, args>;                             // second argument type
-        using Arg2 = std::tuple_element_t<2, args>;                             // third argument type
 
         static_assert(std::same_as<typename traits::returnType, void>, "System::update return type must be void.");
-        static_assert(std::same_as<Arg0, EntityCommands&>, "System::update first argument must be 'EntityCommands&'");
-        static_assert(std::same_as<Arg1, float>, "System::update second argument must be 'float'");
-        static_assert(std::same_as<Arg2, Entity>, "System::update third argument must be 'Entity'");
+        static_assert(std::same_as<Arg0, SystemData const&>, "System::update first argument must be 'SystemData const&'");
+        static_assert(std::same_as<Arg1, Entity>, "System::update second argument must be 'Entity'");
 
         return true; 
     } ();
@@ -114,7 +113,7 @@ namespace litl
     {
         /// <summary>
         /// Returns a std::tuple of the plain component types expected by the system ::update method.
-        /// For example `update(EntityCommands&, float, Foo&, Bar const&)` would return `[Foo, Bar]`
+        /// For example `update(SystemData const&, Entity, Foo&, Bar const&)` would return `[Foo, Bar]`
         /// </summary>
         /// <returns></returns>
         static auto extractComponentIds()

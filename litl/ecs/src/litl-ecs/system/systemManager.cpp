@@ -155,14 +155,14 @@ namespace litl
         updateSystemArchetypes();
     }
 
-    void SystemManager::run(World& world, float dt, SystemGroup group)
+    void SystemManager::run(World& world, float elapsedTime, float deltaTime, SystemGroup group)
     {
-        m_pImpl->schedules[static_cast<uint32_t>(group)].run(world, dt, m_pImpl->systems);
+        m_pImpl->schedules[static_cast<uint32_t>(group)].run(world, elapsedTime, deltaTime, m_pImpl->systems);
     }
 
-    void SystemManager::run(World& world, float dt, SystemGroup group, JobScheduler& scheduler)
+    void SystemManager::run(World& world, float elapsedTime, float deltaTime, SystemGroup group, JobScheduler& scheduler)
     {
-        m_pImpl->callbacks->invokePreGroup(*m_pImpl->services, dt, group);
+        m_pImpl->callbacks->invokePreGroup(*m_pImpl->services, deltaTime, group);
 
         auto& schedule = m_pImpl->schedules[static_cast<uint32_t>(group)];
         auto& graph = schedule.getNodeGraph();
@@ -192,7 +192,7 @@ namespace litl
 
             for (auto* runningSystem : m_pImpl->runningSystems)
             {
-                runningSystem->run(world, dt, scheduler, layerFence);
+                runningSystem->run(world, elapsedTime, deltaTime, scheduler, layerFence);
             }
 
             layerFence.wait();

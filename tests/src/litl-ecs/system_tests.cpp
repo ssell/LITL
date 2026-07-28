@@ -10,7 +10,7 @@ namespace litl::tests
     {
         void setup(ServiceProvider& services) {}
         void prepare() {}
-        void update(EntityCommands& commands, float dt, Entity entity, Foo const& read, Bar& write) {}
+        void update(SystemData const& data, Entity entity, Foo const& read, Bar& write) {}
     };
 
     /// <summary>
@@ -32,10 +32,16 @@ namespace litl::tests
         auto entityRecord = world.getEntityRecord(entity0);
 
         SystemRunner<TestSystem> runner(&system);
+        const SystemData data{
+            .world = world,
+            .commands = world.getCommandBuffer(),
+            .elapsedTime = 0.0f,
+            .deltaTime = 0.0f
+        };
 
         for (auto i = 0; i < 10; ++i)
         {
-            runner.run(world.getCommandBuffer(), 0.0f, entityRecord.archetype->getChunk(entityRecord), entityRecord.archetype->chunkLayout());
+            runner.run(data, entityRecord.archetype->getChunk(entityRecord), entityRecord.archetype->chunkLayout());
         }
 
         REQUIRE(world.getComponent<Foo>(entity0)->a == 10);

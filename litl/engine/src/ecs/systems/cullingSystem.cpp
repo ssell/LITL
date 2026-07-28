@@ -108,7 +108,7 @@ namespace litl
         }
     }
 
-    void CullingSystem::update(EntityCommands& commands, float dt, Entity entity, Transform const& transform, MeshRef const& mesh, MaterialRef const& material)
+    void CullingSystem::update(SystemData const& data, Entity entity, Transform const& transform, MeshRef const& mesh, MaterialRef const& material)
     {
         if (!mesh.handle.isValid() || !material.handle.isValid())
         {
