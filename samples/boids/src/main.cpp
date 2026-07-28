@@ -19,7 +19,16 @@ int main()
     Engine engine{};
 
     engine.setup(
-        { .engineSettings {.applicationName = "LITL - Boids Sample" }, .sceneSettings {.partition = ScenePartitionType::Null } },
+        Configuration {
+            .engineSettings {.applicationName = "LITL - Boids Sample" },
+            .sceneSettings {
+                .partition = ScenePartitionType::UniformGrid,
+                .uniformGridOptions = UniformGridOptions {
+                    .cellSize = 16u,
+                    .cellCount = 64u
+                }
+            }
+        },
         configureServices,
         configureSystems,
         bootstrap,

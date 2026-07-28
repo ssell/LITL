@@ -50,9 +50,9 @@ namespace litl
             m_pRunner->prepare();
         }
 
-        void run(EntityCommands& commands, float dt, Chunk& chunk, ChunkLayout const& layout)
+        void run(SystemData const& data, Chunk& chunk, ChunkLayout const& layout)
         {
-            m_pRunner->run(commands, dt, chunk, layout);
+            m_pRunner->run(data, chunk, layout);
         }
 
     protected:

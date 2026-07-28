@@ -80,20 +80,22 @@ namespace litl
         /// This runs them sequentially on the main thread. For testing and soon to be deprecated.
         /// </summary>
         /// <param name="world"></param>
-        /// <param name="dt"></param>
+        /// <param name="elapsedTime"></param>
+        /// <param name="deltaTime"></param>
         /// <param name="systems"></param>
         /// <returns></returns>
         [[deprecated("Sequential implementation of run is deprecated. Use the parallel version instead.")]]
-        void run(World& world, float dt, std::vector<System*> const& systems);
+        void run(World& world, float elapsedTime, float deltaTime, std::vector<System*> const& systems);
 
         /// <summary>
         /// Parallelized job running.
         /// </summary>
         /// <param name="world"></param>
-        /// <param name="dt"></param>
+        /// <param name="elapsedTime"></param>
+        /// <param name="deltaTime"></param>
         /// <param name="systems"></param>
         /// <param name="scheduler"></param>
-        void run(World& world, float dt, FlatHashMap<SystemTypeId, uint32_t> const& systems, JobScheduler& scheduler);
+        void run(World& world, float elapsedTime, float deltaTime, FlatHashMap<SystemTypeId, uint32_t> const& systems, JobScheduler& scheduler);
 
         /// <summary>
         /// Retrieves the DAG.

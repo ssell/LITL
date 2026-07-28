@@ -135,11 +135,18 @@ namespace litl
         m_pImpl->functions.prepareFunc(m_pImpl->functions.storedSystemWrapper);
     }
 
-    void System::run(World& world, float dt)
+    void System::run(World& world, float elapsedTime, float deltaTime)
     {
         assert(m_pImpl->functions.runFunc != nullptr);
 
         auto& commandBuffer = world.getCommandBuffer();
+
+        const SystemData data{
+            .world = world,
+            .commands = commandBuffer,
+            .elapsedTime = elapsedTime,
+            .deltaTime = deltaTime
+        };
 
         for (auto archetype : m_pImpl->archetypes)
         {
@@ -148,12 +155,12 @@ namespace litl
 
             for (auto ci = 0; ci < chunkCount; ++ci)
             {
-                m_pImpl->functions.runFunc(m_pImpl->functions.storedSystemWrapper, commandBuffer, dt, archetype->getChunk(ci), layout);
+                m_pImpl->functions.runFunc(m_pImpl->functions.storedSystemWrapper, data, archetype->getChunk(ci), layout);
             }
         }
     }
 
-    void System::run(World& world, float dt, JobScheduler& scheduler, JobFence& fence)
+    void System::run(World& world, float elapsedTime, float deltaTime, JobScheduler& scheduler, JobFence& fence)
     {
         assert(m_pImpl->functions.runFunc != nullptr);
 
@@ -163,10 +170,18 @@ namespace litl
 
             for (auto ci = 0; ci < chunkCount; ++ci)
             {
-                scheduler.createAndSubmit([this, &world, dt, archetype, ci](Job* job)
+                scheduler.createAndSubmit([this, &world, elapsedTime, deltaTime, archetype, ci](Job* job)
                 {
                     auto& commandBuffer = world.getCommandBuffer();
-                    (*m_pImpl->functions.runFunc)(m_pImpl->functions.storedSystemWrapper, commandBuffer, dt, archetype->getChunk(ci), archetype->chunkLayout());
+
+                    const SystemData data{
+                        .world = world,
+                        .commands = commandBuffer,
+                        .elapsedTime = elapsedTime,
+                        .deltaTime = deltaTime
+                    };
+
+                    (*m_pImpl->functions.runFunc)(m_pImpl->functions.storedSystemWrapper, data, archetype->getChunk(ci), archetype->chunkLayout());
                 }, fence, nullptr);
             }
         }

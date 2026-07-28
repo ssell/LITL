@@ -14,7 +14,7 @@ namespace litl
     /// The function signature required to run the SystemRunner.
     /// </summary>
     using SystemRunFunc = void(EntityCommands&, float, Chunk&, ChunkLayout const&);
-    using ErasedSystemRunFunc = void(*)(void*, EntityCommands&, float, Chunk&, ChunkLayout const&);
+    using ErasedSystemRunFunc = void(*)(void*, SystemData const&, Chunk&, ChunkLayout const&);
 
     /// <summary>
     /// Responsible for running a system over a single archetype chunk.
@@ -43,11 +43,11 @@ namespace litl
         }
 
         // Must match SystemRunFunc
-        void run(EntityCommands& commands, float dt, Chunk& chunk, ChunkLayout const& layout)
+        void run(SystemData const& data, Chunk& chunk, ChunkLayout const& layout)
         {
             // Get the system components in tuple form. For example: std::tuple<Foo&, Bar&>
             using SystemComponentTuple = SystemComponents<S>;
-            iterate<SystemComponentTuple>(commands, dt, chunk, layout);
+            iterate<SystemComponentTuple>(data, chunk, layout);
         }
 
     protected:
@@ -55,7 +55,7 @@ namespace litl
     private:
 
         template<typename SystemComponentTuple>
-        void iterate(EntityCommands& commands, float dt, Chunk& chunk, ChunkLayout const& layout)
+        void iterate(SystemData const& data, Chunk& chunk, ChunkLayout const& layout)
         {
             // Retrieve the data ptr for each component in the tuple type.
             // For example: SystemComponentTuple -> std::tuple<Foo&, Bar&> ->
@@ -72,7 +72,7 @@ namespace litl
                 // Applies the provded lambda to each member of the tuple.
                 std::apply([&](auto&... componentArray)
                     {
-                        m_pSystem->update(commands, dt, chunkEntities[i], componentArray[i]...);
+                        m_pSystem->update(data, chunkEntities[i], componentArray[i]...);
                     }, componentArrays);
             }
         }

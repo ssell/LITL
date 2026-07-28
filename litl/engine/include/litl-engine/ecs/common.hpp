@@ -21,7 +21,8 @@ Minimal ECS System definition:
 struct System 
 {
     void setup(ServiceProvider& services) {}
-    void update(EntityCommands& commands, float dt) {}
+    void prepare() {}
+    void update(SystemData const& data, float dt) {}
 };
 
  */

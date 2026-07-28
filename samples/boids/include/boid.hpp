@@ -37,7 +37,7 @@ namespace litl
 
         void setup(ServiceProvider& services);
         void prepare();
-        void update(EntityCommands& commands, float dt, Entity entity, Boid& boid, Transform& transform);
+        void update(SystemData const& data, Entity entity, Boid& boid, Transform& transform);
 
     private:
 

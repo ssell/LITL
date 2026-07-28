@@ -71,7 +71,7 @@ namespace litl
         /// Checks each renderable entity against the pre-computed set of visible entities for each camera.
         /// If a renderable entity is visible, it is added to a thread-specific collection that is later combined.
         /// </summary>
-        void update(EntityCommands& commands, float dt, Entity entity, Transform const& transform, MeshRef const& mesh, MaterialRef const& material);
+        void update(SystemData const& data, Entity entity, Transform const& transform, MeshRef const& mesh, MaterialRef const& material);
 
         /// <summary>
         /// Retrieves all visible renderable entities for each camera.

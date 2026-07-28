@@ -17,10 +17,10 @@ namespace litl
         void setup(ServiceProvider& services) {}
         void prepare() {}
 
-        void update(EntityCommands& commands, float dt, Entity entity, Transform& transform, Spin const& spin)
+        void update(SystemData const& data, Entity entity, Transform& transform, Spin const& spin)
         {
             quat rotation = transform.getRotation();
-            rotation *= quat::fromEuler(spin.euler * spin.rate * dt);
+            rotation *= quat::fromEuler(spin.euler * spin.rate * data.deltaTime);
             transform.setRotation(rotation);
         }
     };

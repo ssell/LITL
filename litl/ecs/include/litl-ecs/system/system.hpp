@@ -74,10 +74,10 @@ namespace litl
                         auto* wrapper = std::launder(reinterpret_cast<LocalWrapper*>(storage));
                         wrapper->prepare();
                     }),
-                std::move([](void* storage, EntityCommands& commands, float dt, Chunk& chunk, ChunkLayout const& layout)
+                std::move([](void* storage, SystemData const& data, Chunk& chunk, ChunkLayout const& layout)
                     {
                         auto* wrapper = std::launder(reinterpret_cast<LocalWrapper*>(storage));
-                        wrapper->run(commands, dt, chunk, layout);
+                        wrapper->run(data, chunk, layout);
                     }),
                 std::move([](void* storage)
                     {
@@ -119,19 +119,19 @@ namespace litl
         /// at the same time on other chunks.
         /// </summary>
         /// <param name="world"></param>
-        /// <param name="dt"></param>
-        /// <param name="chunk"></param>
-        /// <param name="layout"></param>
-        void run(World& world, float dt);
+        /// <param name="elapsedTime"></param>
+        /// <param name="deltaTime"></param>
+        void run(World& world, float elapsedTime, float deltaTime);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="world"></param>
-        /// <param name="dt"></param>
+        /// <param name="elapsedTime"></param>
+        /// <param name="deltaTime"></param>
         /// <param name="scheduler"></param>
         /// <param name="fence"></param>
-        void run(World& world, float dt, JobScheduler& scheduler, JobFence& fence);
+        void run(World& world, float elapsedTime, float deltaTime, JobScheduler& scheduler, JobFence& fence);
 
     protected:
 
