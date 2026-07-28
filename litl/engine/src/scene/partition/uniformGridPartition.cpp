@@ -1,6 +1,7 @@
 #include "litl-core/assert.hpp"
 #include "litl-core/math/bounds.hpp"
 #include "litl-engine/scene/partition/uniformGridPartition.hpp"
+#include "litl-core/containers/flatHashSet.hpp"
 
 namespace litl
 {
@@ -189,6 +190,11 @@ namespace litl
         float oversizedEntityThreshold{ 1.0f };
 
         /// <summary>
+        /// Entities that have been added since the last update and do not yet have valid world-space positions.
+        /// </summary>
+        FlatHashSet<Entity> newEntities;
+
+        /// <summary>
         /// All grid cells stored in row order.
         /// For example: [x0y0, x1y0, x2y0, x3y0, x0y1, x1y1, x2y1, x3y1, ...]
         /// </summary>
@@ -282,8 +288,8 @@ namespace litl
         /// <param name="bounds"></param>
         void add(Entity entity, bounds::AABB bounds) noexcept
         {
-            LITL_ASSERT_MSG(entityToCell.find(entity.index) == entityToCell.end(), "Attempting to add Entity to UniformGridPartition whose index is already tracked.", );
-            addEntityTo(entity, bounds, getIndexForBounds(bounds));
+            LITL_ASSERT_MSG(!newEntities.contains(entity) && entityToCell.find(entity.index) == entityToCell.end(), "Attempting to add Entity to UniformGridPartition whose index is already tracked.", );
+            newEntities.insert(entity);
         }
 
         /// <summary>
@@ -292,25 +298,40 @@ namespace litl
         /// <param name="entity"></param>
         void remove(Entity entity) noexcept
         {
-            const auto findEntity = entityToCell.find(entity.index);
-
-            if (findEntity == entityToCell.end())
+            if (!newEntities.empty() && newEntities.contains(entity))
             {
-                return;
+                // Remove a new entity that hasn't even had its first update yet.
+                newEntities.erase(entity);
             }
-
-            const auto cellIndex = findEntity->second;
-            const auto cellSlot = entityToCellSlot.find(entity.index)->second;
-
-            auto& cell = cells[cellIndex];
-
-            if (cell.entities[cellSlot].version > entity.version)
+            else
             {
-                // The entity tracked is newer than the one being requested to remove.
-                return;
-            }
+                // Remove an existing entity from the cell it occupies.
+                const auto findEntity = entityToCell.find(entity.index);
 
-            removeEntityFrom(entity, cellIndex, cellSlot);
+                if (findEntity == entityToCell.end())
+                {
+                    return;
+                }
+
+                const auto cellIndex = findEntity->second;
+                const auto cellSlot = entityToCellSlot.find(entity.index)->second;
+
+                auto& cell = cells[cellIndex];
+
+                if (cell.entities[cellSlot].version > entity.version)
+                {
+                    // The entity tracked is newer than the one being requested to remove.
+                    return;
+                }
+
+                removeEntityFrom(entity, cellIndex, cellSlot);
+            };
+        }
+
+        void preUpdate() noexcept
+        {
+            // ... no action as we can not insert without a bounds ...
+            // ... the new entity will be moved into the proper cell on update ...
         }
 
         /// <summary>
@@ -321,27 +342,37 @@ namespace litl
         /// <param name="bounds"></param>
         void update(Entity entity, bounds::AABB bounds) noexcept
         {
-            const auto findEntity = entityToCell.find(entity.index);
-
-            if (findEntity == entityToCell.end())
+            if (!newEntities.empty() && newEntities.contains(entity))
             {
-                return;
-            }
-
-            const auto prevEntityIndex = findEntity->second;
-            const auto prevEntitySlot = entityToCellSlot.find(entity.index)->second;
-            const auto currEntityIndex = getIndexForBounds(bounds);
-
-            if (currEntityIndex == prevEntityIndex)
-            {
-                // The entity is in the same cell. Just update the bounds.
-                cells[prevEntityIndex].entityBounds[prevEntitySlot] = bounds;
+                // First update for a new entity
+                newEntities.erase(entity);
+                addEntityTo(entity, bounds, getIndexForBounds(bounds));
             }
             else
             {
-                // The entity has moved cells. Remove from its current cell and add to the new one.
-                removeEntityFrom(entity, prevEntityIndex, prevEntitySlot);
-                addEntityTo(entity, bounds, currEntityIndex);
+                // Update for a pre-existing entity.
+                const auto findEntity = entityToCell.find(entity.index);
+
+                if (findEntity == entityToCell.end())
+                {
+                    return;
+                }
+
+                const auto prevEntityIndex = findEntity->second;
+                const auto prevEntitySlot = entityToCellSlot.find(entity.index)->second;
+                const auto currEntityIndex = getIndexForBounds(bounds);
+
+                if (currEntityIndex == prevEntityIndex)
+                {
+                    // The entity is in the same cell. Just update the bounds.
+                    cells[prevEntityIndex].entityBounds[prevEntitySlot] = bounds;
+                }
+                else
+                {
+                    // The entity has moved cells. Remove from its current cell and add to the new one.
+                    removeEntityFrom(entity, prevEntityIndex, prevEntitySlot);
+                    addEntityTo(entity, bounds, currEntityIndex);
+                }
             }
         }
 
@@ -558,6 +589,11 @@ namespace litl
     void UniformGridPartition::remove(Entity entity) noexcept
     {
         m_impl->remove(entity);
+    }
+
+    void UniformGridPartition::preUpdate() noexcept
+    {
+        m_impl->preUpdate();
     }
 
     void UniformGridPartition::update(Entity entity, bounds::AABB bounds) noexcept

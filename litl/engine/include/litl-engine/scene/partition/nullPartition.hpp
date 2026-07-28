@@ -13,17 +13,23 @@ namespace litl
     {
     public:
 
-        NullPartition() {}
-        ~NullPartition() {}
+        NullPartition() 
+        {
+            m_newEntities.reserve(1024ull);
+            m_entities.reserve(1024ull);
+        }
+
+        ~NullPartition() = default;
 
         void add(Entity entity, bounds::AABB bounds) noexcept 
         {
-            m_entities.push_back(entity);
+            m_newEntities.push_back(entity);
         }
 
         void remove(Entity entity) noexcept
         {
-            for (auto i = 0; i < m_entities.size(); ++i)
+            // Check in m_entities first,
+            for (size_t i = 0ull; i < m_entities.size(); ++i)
             {
                 if (m_entities[i] == entity)
                 {
@@ -32,6 +38,23 @@ namespace litl
                     break;
                 }
             }
+
+            // Next, check in m_newEntities
+            for (size_t i = 0ull; i < m_newEntities.size(); ++i)
+            {
+                if (m_newEntities[i] == entity)
+                {
+                    m_newEntities[i] = m_newEntities.back();
+                    m_newEntities.pop_back();
+                    break;
+                }
+            }
+        }
+
+        void preUpdate() noexcept
+        {
+            m_entities.insert(m_entities.end(), m_newEntities.begin(), m_newEntities.end());
+            m_newEntities.clear();
         }
 
         void update(Entity entity, bounds::AABB bounds) noexcept 
@@ -91,6 +114,15 @@ namespace litl
 
     private:
 
+        /// <summary>
+        /// Entities that have been added to the partition since the last call to update.
+        /// These do not yet have world-space positions calculated for them and are so ineligible to be part of queries.
+        /// </summary>
+        std::vector<Entity> m_newEntities;
+
+        /// <summary>
+        /// Entities that have been present since the last update and have valid world-space positions.
+        /// </summary>
         std::vector<Entity> m_entities;
     };
 
