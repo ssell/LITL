@@ -12,11 +12,9 @@ namespace litl
         // ... intentionally empty ...
     }
 
-    void MovementSystem::update(SystemData const& data, Entity entity, Movement const& movement, Transform& transform)
+    void MovementSystem::update(SystemData const& data, Entity entity, Boid const& boid, Movement& movement, Transform& transform)
     {
-        if (movement.direction.isNormalized())
-        {
-            transform.translate(movement.direction * movement.speed * data.deltaTime);
-        }
+        movement.velocity = truncate(movement.velocity + (boid.acceleration * data.deltaTime), boid.maxSpeed);
+        transform.translate(movement.velocity * data.deltaTime);
     }
 }

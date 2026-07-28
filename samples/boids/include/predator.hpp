@@ -3,15 +3,11 @@
 
 #include "litl-ecs/register.hpp"
 #include "litl-engine/ecs/common.hpp"
+#include "components.hpp"
 
 namespace litl
 {
-    struct Predator
-    {
-        // ... todo ...
-    };
-}
 
-LITL_REGISTER_COMPONENT(litl::Predator);
+}
 
 #endif

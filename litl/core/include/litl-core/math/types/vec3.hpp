@@ -500,6 +500,18 @@ namespace litl
         return vec3{ glm::abs(v.data()) };
     }
 
+    [[nodiscard]] constexpr vec3 truncate(vec3 v, float maxLength) noexcept
+    {
+        const float lengthSq = v.lengthSquared();
+
+        if (lengthSq > (maxLength * maxLength))
+        {
+            v *= (maxLength / std::sqrt(lengthSq));
+        }
+
+        return v;
+    }
+
     static_assert(std::is_nothrow_copy_constructible_v<vec3>);
     static_assert(std::is_nothrow_move_constructible_v<vec3>);
     static_assert(std::is_nothrow_copy_assignable_v<vec3>);
