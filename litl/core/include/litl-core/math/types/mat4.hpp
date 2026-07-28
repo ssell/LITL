@@ -475,7 +475,7 @@ namespace litl
 
         [[nodiscard]] constexpr vec3 position() const noexcept
         {
-            return vec3{ value[0][3], value[1][3], value[2][3] };
+            return vec3{ value[3][0], value[3][1], value[3][2] };
         }
 
         // ---------------------------------------------------------------------------------

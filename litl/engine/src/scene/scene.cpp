@@ -121,6 +121,7 @@ namespace litl
     void Scene::onPreRender(Authority<SceneManager> authority) noexcept
     {
         m_graph.update();           // Update the graph to account for structural changes: create, destroy, reparent.
+        std::visit([&](auto& partition) { partition.preUpdate(); }, m_partition);
 
         // Update the world transforms for the frame.
         for (auto sortedIndex : m_graph.m_sortedNodes)
@@ -209,7 +210,10 @@ namespace litl
 
     void Scene::query(bounds::AABB aabb, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
     {
-        query(aabb, entities);
+        std::visit([&](auto& partition)
+        {
+            partition.query(aabb, *m_pWorld, componentType, entities);
+        }, m_partition);
     }
 
     void Scene::query(bounds::Sphere sphere, std::vector<Entity>& entities) const noexcept
@@ -222,7 +226,10 @@ namespace litl
 
     void Scene::query(bounds::Sphere sphere, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
     {
-        query(sphere, entities);
+        std::visit([&](auto& partition)
+        {
+            partition.query(sphere, *m_pWorld, componentType, entities);
+        }, m_partition);
     }
 
     void Scene::query(bounds::Frustum frustum, std::vector<Entity>& entities) const noexcept
@@ -235,7 +242,10 @@ namespace litl
 
     void Scene::query(bounds::Frustum frustum, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
     {
-        query(frustum, entities);
+        std::visit([&](auto& partition)
+        {
+            partition.query(frustum, *m_pWorld, componentType, entities);
+        }, m_partition);
     }
 
     void Scene::setMainCamera(CameraHandle handle) noexcept

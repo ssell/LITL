@@ -22,9 +22,9 @@ namespace litl
         uint32_t minBoidCount = 100u;
         uint32_t maxBoidCount = 1000u;
         uint32_t minPredatorCount = 1u;
-        uint32_t maxPredatorCount = 10u;
+        uint32_t maxPredatorCount = 100u;
         uint32_t minFoodCount = 1u;
-        uint32_t maxFoodCount = 1u;
+        uint32_t maxFoodCount = 100u;
     };
 
     /// <summary>

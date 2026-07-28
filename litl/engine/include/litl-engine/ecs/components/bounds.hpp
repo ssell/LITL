@@ -11,7 +11,7 @@ namespace litl
     /// </summary>
     struct LocalBounds
     {
-        bounds::AABB bounds{};
+        bounds::AABB bounds{.min = {-0.5f, -0.5f, -0.5f }, .max = {0.5f, 0.5f, 0.5}};
     };
 
     /// <summary>
@@ -19,7 +19,7 @@ namespace litl
     /// </summary>
     struct WorldBounds
     {
-        bounds::AABB bounds{};
+        bounds::AABB bounds{.min = {-0.5f, -0.5f, -0.5f }, .max = {0.5f, 0.5f, 0.5}};
 
         /// <summary>
         /// The current version of the WorldBounds.

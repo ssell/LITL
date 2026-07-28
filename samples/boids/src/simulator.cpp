@@ -94,6 +94,8 @@ namespace litl
 
         commands.addComponent<Boid>(boidEntity, Boid{});
         commands.addComponent<Transform>(boidEntity, Transform::create(getRandomSpawnPoint()));
+        commands.addComponent<LocalBounds>(boidEntity, LocalBounds{});
+        commands.addComponent<WorldBounds>(boidEntity, WorldBounds{});
         commands.addComponent<MaterialRef>(boidEntity, MaterialRef{ .handle = m_boidMaterial });
         commands.addComponent<MeshRef>(boidEntity, MeshRef{ .handle = m_boidMesh });
 
@@ -124,6 +126,8 @@ namespace litl
 
         commands.addComponent<Food>(foodEntity, Food{});
         commands.addComponent<Transform>(foodEntity, Transform::create(getRandomSpawnPoint()));
+        commands.addComponent<LocalBounds>(foodEntity, LocalBounds{});
+        commands.addComponent<WorldBounds>(foodEntity, WorldBounds{});
 
         m_foodCount++;
     }
