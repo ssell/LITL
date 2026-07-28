@@ -85,7 +85,7 @@ namespace litl
         /// <param name="systems"></param>
         /// <returns></returns>
         [[deprecated("Sequential implementation of run is deprecated. Use the parallel version instead.")]]
-        void run(World& world, float elapsedTime, float deltaTime, std::vector<System*> const& systems);
+        void run(World& world, uint32_t frameIndex, float elapsedTime, float deltaTime, std::vector<System*> const& systems);
 
         /// <summary>
         /// Parallelized job running.
@@ -95,7 +95,7 @@ namespace litl
         /// <param name="deltaTime"></param>
         /// <param name="systems"></param>
         /// <param name="scheduler"></param>
-        void run(World& world, float elapsedTime, float deltaTime, FlatHashMap<SystemTypeId, uint32_t> const& systems, JobScheduler& scheduler);
+        void run(World& world, uint32_t frameIndex, float elapsedTime, float deltaTime, FlatHashMap<SystemTypeId, uint32_t> const& systems, JobScheduler& scheduler);
 
         /// <summary>
         /// Retrieves the DAG.

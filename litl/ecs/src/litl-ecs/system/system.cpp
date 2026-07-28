@@ -135,7 +135,7 @@ namespace litl
         m_pImpl->functions.prepareFunc(m_pImpl->functions.storedSystemWrapper);
     }
 
-    void System::run(World& world, float elapsedTime, float deltaTime)
+    void System::run(World& world, uint32_t frameIndex, float elapsedTime, float deltaTime)
     {
         assert(m_pImpl->functions.runFunc != nullptr);
 
@@ -144,6 +144,7 @@ namespace litl
         const SystemData data{
             .world = world,
             .commands = commandBuffer,
+            .frameIndex = frameIndex,
             .elapsedTime = elapsedTime,
             .deltaTime = deltaTime
         };
@@ -160,7 +161,7 @@ namespace litl
         }
     }
 
-    void System::run(World& world, float elapsedTime, float deltaTime, JobScheduler& scheduler, JobFence& fence)
+    void System::run(World& world, uint32_t frameIndex, float elapsedTime, float deltaTime, JobScheduler& scheduler, JobFence& fence)
     {
         assert(m_pImpl->functions.runFunc != nullptr);
 
@@ -170,13 +171,14 @@ namespace litl
 
             for (auto ci = 0; ci < chunkCount; ++ci)
             {
-                scheduler.createAndSubmit([this, &world, elapsedTime, deltaTime, archetype, ci](Job* job)
+                scheduler.createAndSubmit([this, &world, frameIndex, elapsedTime, deltaTime, archetype, ci](Job* job)
                 {
                     auto& commandBuffer = world.getCommandBuffer();
 
                     const SystemData data{
                         .world = world,
                         .commands = commandBuffer,
+                        .frameIndex = frameIndex,
                         .elapsedTime = elapsedTime,
                         .deltaTime = deltaTime
                     };

@@ -119,19 +119,21 @@ namespace litl
         /// at the same time on other chunks.
         /// </summary>
         /// <param name="world"></param>
+        /// <param name="frameIndex"></param>
         /// <param name="elapsedTime"></param>
         /// <param name="deltaTime"></param>
-        void run(World& world, float elapsedTime, float deltaTime);
+        void run(World& world, uint32_t frameIndex, float elapsedTime, float deltaTime);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="world"></param>
+        /// <param name="frameIndex"></param>
         /// <param name="elapsedTime"></param>
         /// <param name="deltaTime"></param>
         /// <param name="scheduler"></param>
         /// <param name="fence"></param>
-        void run(World& world, float elapsedTime, float deltaTime, JobScheduler& scheduler, JobFence& fence);
+        void run(World& world, uint32_t frameIndex, float elapsedTime, float deltaTime, JobScheduler& scheduler, JobFence& fence);
 
     protected:
 

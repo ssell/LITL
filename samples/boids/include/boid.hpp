@@ -14,6 +14,7 @@ namespace litl
     public:
 
         static constexpr float TickIntervalSec = 0.25f;
+        static constexpr uint32_t SteeringPhases = 4u;
 
         void setup(ServiceProvider& services);
         void prepare();
@@ -25,6 +26,7 @@ namespace litl
         vec3 computeSteeringAcceleration(World& world, Entity self, vec3 selfPos, vec3 selfVelocity, vec3 targetVec);
 
         std::shared_ptr<SceneView> m_pSceneView{ nullptr };
+        std::shared_ptr<Simulator> m_pSimulator{ nullptr };
         uint32_t m_worldSize = 1024u;
     };
 }

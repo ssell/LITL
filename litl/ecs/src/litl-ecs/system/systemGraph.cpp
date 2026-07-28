@@ -234,14 +234,14 @@ namespace litl
         return false;
     }
 
-    void SystemGraph::run(World& world, float elapsedTime, float deltaTime, std::vector<System*> const& systems)
+    void SystemGraph::run(World& world, uint32_t frameIndex, float elapsedTime, float deltaTime, std::vector<System*> const& systems)
     {
         for (auto& sortedNode : m_nodeGraph.getSorted())
         {
             auto* system = systems[m_systemNodes[sortedNode].systemId];
 
             system->prepare();
-            system->run(world, elapsedTime, deltaTime);
+            system->run(world, frameIndex, elapsedTime, deltaTime);
         }
     }
 

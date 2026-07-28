@@ -22,6 +22,11 @@ namespace litl
         /// <summary>
         /// 
         /// </summary>
+        uint32_t phase{ 0u };
+
+        /// <summary>
+        /// 
+        /// </summary>
         float maxSpeed{};
 
         /// <summary>
@@ -35,14 +40,15 @@ namespace litl
         // ... todo ...
     };
 
+    enum class FoodStatus : uint8_t
+    {
+        None = 0,
+        Alive = 1,
+        Eaten = 2
+    };
+
     struct Food
     {
-        enum class FoodStatus : uint8_t
-        {
-            None = 0,
-            Alive = 1,
-            Eaten = 2
-        };
 
         /// <summary>
         /// Index into the simulators tracking pool for food.
