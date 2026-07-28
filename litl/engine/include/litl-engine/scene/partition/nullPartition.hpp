@@ -85,7 +85,7 @@ namespace litl
 
         void query(bounds::Sphere bounds, World& world, ComponentTypeId componentType, std::vector<Entity>& entities) const noexcept
         {
-            for (auto entity : entities)
+            for (auto entity : m_entities)
             {
                 if (world.hasComponent(entity, componentType))
                 {

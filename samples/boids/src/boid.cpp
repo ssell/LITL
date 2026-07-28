@@ -51,9 +51,7 @@ namespace litl
     {
         // Search for any nearby food.
         std::vector<Entity> foundFood; foundFood.reserve(8u);
-        m_pSceneView->query<Food>(bounds::Sphere::fromCenterRadius(transform.getPosition(), 100.0f), foundFood);
-
-        RandomFast rng{};
+        m_pSceneView->query<Food>(bounds::Sphere::fromCenterRadius(transform.getPosition(), 1000.0f), foundFood);
 
         if (!foundFood.empty())
         {
@@ -74,14 +72,14 @@ namespace litl
             }
 
             boid.target = nearestFoodPos;
+            boid.state = BoidState::Traveling;
         }
         else
         {
             // move to a random target.
-            boid.target = vec3(rng.next(m_worldSize), rng.next(m_worldSize), rng.next(m_worldSize));
+            //RandomFast rng{};
+            //boid.target = vec3(rng.next(m_worldSize), rng.next(m_worldSize), rng.next(m_worldSize));
         }
-
-        boid.state = BoidState::Traveling;
     }
 
     void BoidSystem::onTraveling(Boid& boid, Transform& transform, float dt)
