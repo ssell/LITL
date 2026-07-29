@@ -33,6 +33,11 @@ namespace litl
         /// The last time tick was called for this boid.
         /// </summary>
         float lastTick{ 0.0f };
+
+        /// <summary>
+        /// 
+        /// </summary>
+        bool movingToTarget{ true };
     };
 
     struct Predator

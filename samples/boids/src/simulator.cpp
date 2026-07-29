@@ -12,45 +12,23 @@ namespace litl
 {
     namespace
     {
-        constexpr std::array<Vertex, 3> s_boidVertices = {
-            Vertex {                                        // left
-                .position = { -4.0f, 0.0f, 0.0f },
-                .color = { 0.0f, 0.0f, 1.0f },
-                .uv = { 0.0f, 0.0f }
-            },
-            Vertex {                                        // top
-                .position = { 0.0f, 0.0f, 8.0f },
-                .color = { 1.0f, 0.0f, 0.0f },
-                .uv = { 0.5f, 1.0f }
-            },
-            Vertex {                                        // right
-                .position = { 4.0f, 0.0f, 0.0f },
-                .color = { 0.0f, 0.0f, 1.0f },
-                .uv = { 1.0f, 0.0f }
+        struct Triangle
+        {
+            std::array<Vertex, 3> vertices;
+            std::array<uint32_t, 3> indices;
+
+            static Triangle build(float scale, color bottomColor, color topColor) noexcept
+            {
+                return Triangle{
+                    .vertices = std::array<Vertex, 3>{
+                        Vertex{.position = { -scale, 0.0f, 0.0f },       .color = bottomColor.rgb(), .uv = { 0.0f, 0.0f } },
+                        Vertex{.position = { 0.0f, 0.0f, scale * 2.0f }, .color = topColor.rgb(),    .uv = { 0.5f, 1.0f } },
+                        Vertex{.position = { scale, 0.0f, 0.0f },        .color = bottomColor.rgb(), .uv = { 1.0f, 0.0f } }
+                    },
+                    .indices = std::array<uint32_t, 3>{ 0u, 1u, 2u }
+                };
             }
         };
-
-        const std::array<uint32_t, 3> s_boidIndices = { 0, 1, 2 };
-
-        constexpr std::array<Vertex, 3> s_foodVertices = {
-            Vertex {                                        // left
-                .position = { -4.0f, 0.0f, 0.0f },
-                .color = { 0.0f, 1.0f, 1.0f },
-                .uv = { 0.0f, 0.0f }
-            },
-            Vertex {                                        // top
-                .position = { 0.0f, 0.0f, 8.0f },
-                .color = { 1.0f, 1.0f, 0.0f },
-                .uv = { 0.5f, 1.0f }
-            },
-            Vertex {                                        // right
-                .position = { 4.0f, 0.0f, 0.0f },
-                .color = { 0.0f, 1.0f, 1.0f },
-                .uv = { 1.0f, 0.0f }
-            }
-        };
-
-        const std::array<uint32_t, 3> s_foodIndices = { 0, 1, 2 };
 
         vec3 getRandomSpawnPoint(RandomMT19937& rng, uint32_t worldDimensions, uint32_t padding) noexcept
         {
@@ -77,11 +55,14 @@ namespace litl
         m_config = config;
         m_trackedFood.resize(m_config.foodCount, {});
 
-        m_boidMaterial = loadMaterial("assets/shaders/spirv/flat.spv", "Boid Material", "flat.spv", "vertexMain", "fragmentMain");
-        m_boidMesh = loadMesh(s_boidVertices, s_boidIndices, "Boid Mesh");
+        auto boidTriangle = Triangle::build(4.0f, colors::Blue, colors::Red);
+        auto foodTriangle = Triangle::build(4.0f, colors::Green, colors::Green);
+        auto predatorTriangle = Triangle::build(6.0f, colors::Red, colors::Yellow);
 
-        m_foodMaterial = loadMaterial("assets/shaders/spirv/flat.spv", "Food Material", "flat.spv", "vertexMain", "fragmentMain");
-        m_foodMesh = loadMesh(s_foodVertices, s_foodIndices, "Food Mesh");
+        m_boidMesh = loadMesh(boidTriangle.vertices, boidTriangle.indices, "Boid Mesh");
+        m_foodMesh = loadMesh(foodTriangle.vertices, foodTriangle.indices, "Food Mesh");
+        m_predatorMesh = loadMesh(predatorTriangle.vertices, predatorTriangle.indices, "Predator Mesh");
+        m_sharedMaterial = loadMaterial("assets/shaders/spirv/flat.spv", "Boid Material", "flat.spv", "vertexMain", "fragmentMain");
 
         tick();
     }
@@ -168,7 +149,7 @@ namespace litl
         commands.addComponent<LocalBounds>(boidEntity, LocalBounds{});
         commands.addComponent<WorldBounds>(boidEntity, WorldBounds{});
         commands.addComponent<Movement>(boidEntity, Movement{ .velocity = getRandomSpawnDirection(rng) * g_boidSteering.maxSpeed });
-        commands.addComponent<MaterialRef>(boidEntity, MaterialRef{ .handle = m_boidMaterial });
+        commands.addComponent<MaterialRef>(boidEntity, MaterialRef{ .handle = m_sharedMaterial });
         commands.addComponent<MeshRef>(boidEntity, MeshRef{ .handle = m_boidMesh });
 
         m_boidCount++;
@@ -176,7 +157,16 @@ namespace litl
 
     void Simulator::spawnPredator() noexcept
     {
-        // ... todo ...
+        auto& commands = m_pWorld->getCommandBuffer();
+        auto& rng = Random::shared();
+        auto predatorEntity = commands.createEntity();
+
+        commands.addComponent<Predator>(predatorEntity, Predator{});
+        commands.addComponent<Transform>(predatorEntity, Transform::create(getRandomSpawnPoint(rng, m_config.worldDimensions, 0u)));
+        commands.addComponent<LocalBounds>(predatorEntity, LocalBounds{});
+        commands.addComponent<WorldBounds>(predatorEntity, WorldBounds{}); 
+        commands.addComponent<MaterialRef>(predatorEntity, MaterialRef{ .handle = m_sharedMaterial });
+        commands.addComponent<MeshRef>(predatorEntity, MeshRef{ .handle = m_predatorMesh });
 
         m_predatorCount++;
     }
@@ -205,7 +195,7 @@ namespace litl
             commands.addComponent<Transform>(foodEntity, Transform::create(position));
             commands.addComponent<LocalBounds>(foodEntity, LocalBounds{});
             commands.addComponent<WorldBounds>(foodEntity, WorldBounds{});
-            commands.addComponent<MaterialRef>(foodEntity, MaterialRef{ .handle = m_foodMaterial });
+            commands.addComponent<MaterialRef>(foodEntity, MaterialRef{ .handle = m_sharedMaterial });
             commands.addComponent<MeshRef>(foodEntity, MeshRef{ .handle = m_foodMesh });
 
             m_trackedFood[nextIndex].position = position;

@@ -6,7 +6,7 @@ namespace litl
 {
     namespace
     {
-        static thread_local std::vector<PartitionQueryResult> t_neighbors;
+        static thread_local std::vector<PartitionQueryResult> t_partitionQueryResults;
     }
 
     /// <summary>
@@ -43,10 +43,10 @@ namespace litl
         if ((data.elapsedTime - boid.lastTick) > TickIntervalSec)
         {
             boid.lastTick = data.elapsedTime;
-            boid.target = getTargetPosition(selfPos);
+            getTargetPosition(boid, selfPos);
         }
 
-        vec3 targetDir = (boid.target - selfPos).normalized();
+        vec3 targetDir = (boid.target - selfPos).normalized() * (boid.movingToTarget ? 1.0f : -1.0f);
         vec3 steering = computeSteeringAcceleration(data.world, entity, selfPos, movement.velocity, targetDir);
 
         boid.acceleration = steering;
@@ -56,25 +56,27 @@ namespace litl
     /// <summary>
     /// Determines the boids target vector. This the vector directly to food or away from a predator.
     /// </summary>
-    vec3 BoidSystem::getTargetPosition(vec3 selfPos)
+    void BoidSystem::getTargetPosition(Boid& boid, vec3 selfPos)
     {
-        std::vector<PartitionQueryResult> findResults; findResults.reserve(8u);
-        m_pSceneView->query<Predator>(bounds::Sphere::fromCenterRadius(selfPos, 50.0f), findResults, true);
+        t_partitionQueryResults.clear();
+        m_pSceneView->query<Predator>(bounds::Sphere::fromCenterRadius(selfPos, g_boidSteering.perceptionRadius), t_partitionQueryResults, true, 1u);
 
-        if (!findResults.empty())
+        if (!t_partitionQueryResults.empty())
         {
-            return findResults[0].worldPosition;
+            boid.target = t_partitionQueryResults[0].worldPosition;
+            boid.movingToTarget = false;
         }
         else
         {
-            return m_pSimulator->getNearestFood(selfPos);
+            boid.target = m_pSimulator->getNearestFood(selfPos);
+            boid.movingToTarget = true;
         }
     }
 
     vec3 BoidSystem::computeSteeringAcceleration(World& world, Entity self, vec3 selfPos, vec3 selfVelocity, vec3 targetVector)
     {
-        t_neighbors.clear();
-        m_pSceneView->query<Boid>(bounds::Sphere::fromCenterRadius(selfPos, g_boidSteering.perceptionRadius), t_neighbors, false);
+        t_partitionQueryResults.clear();
+        m_pSceneView->query<Boid>(bounds::Sphere::fromCenterRadius(selfPos, g_boidSteering.perceptionRadius), t_partitionQueryResults, false, 8u);
 
         const float separationRadiusSq = g_boidSteering.separationRadius * g_boidSteering.separationRadius;
 
@@ -83,7 +85,7 @@ namespace litl
         vec3 accumulatedPosition{};
         uint32_t flockCount = 0u;
 
-        for (auto& neighbor : t_neighbors)
+        for (auto& neighbor : t_partitionQueryResults)
         {
             if (neighbor.entity == self)
             {

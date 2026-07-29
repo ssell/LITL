@@ -79,18 +79,24 @@ namespace litl
         std::chrono::steady_clock::time_point m_lastTick;
 
         /// <summary>
-        /// The shared material used by all boids.
+        /// The shared material used by all.
         /// </summary>
-        MaterialHandle m_boidMaterial{};
+        MaterialHandle m_sharedMaterial{};
 
         /// <summary>
-        /// The shared mesh used by all boids.
+        /// The mesh used by boids.
         /// </summary>
         MeshHandle m_boidMesh{};
 
-        MaterialHandle m_foodMaterial{};
-
+        /// <summary>
+        /// The mesh used by food.
+        /// </summary>
         MeshHandle m_foodMesh{};
+
+        /// <summary>
+        /// The mesh used by predators.
+        /// </summary>
+        MeshHandle m_predatorMesh{};
 
         /// <summary>
         /// The current number of boids in the simulation.
