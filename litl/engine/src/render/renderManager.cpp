@@ -178,7 +178,7 @@ namespace litl
         {
             processDeferredDataTransfers();     // is this where this should live? ... todo ...
 
-            auto const& cullingBucket = CullingSystem::getCombinedCullingBucket();
+            auto& cullingBucket = CullingSystem::getCombinedCullingBucket();
 
             if (!renderer->beginRender(MaxRenderWaitTimeMs))
             {
@@ -188,6 +188,7 @@ namespace litl
 
             auto frameCommandBuffer = renderer->cmdBeginFrame();
 
+            sortVisibleEntities(cullingBucket);
             updatePerFrameData(frameCommandBuffer, dt);
             updateWorldMatrices(frameCommandBuffer);
 
@@ -210,7 +211,7 @@ namespace litl
                         updatePerPassData(frameCommandBuffer, *renderCamera.camera);
 
                         if (goodToGo())
-                        {
+                        { 
                             renderPass.render(frameCommandBuffer, pushConstants, *renderCamera.camera, renderCamera.entities);
                         }
 

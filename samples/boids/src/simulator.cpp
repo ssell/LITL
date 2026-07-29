@@ -82,7 +82,10 @@ namespace litl
 
     void Simulator::updateBoidsConsumed(uint32_t count) noexcept
     {
-        //m_boidCount -= count;
+        if (m_config.respawnBoids)
+        {
+            m_boidCount -= count;
+        }
     }
 
     void Simulator::updateFoodConsumed(uint32_t index) noexcept
