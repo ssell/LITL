@@ -4,6 +4,11 @@
 
 namespace litl
 {
+    namespace
+    {
+        static thread_local std::vector<PartitionQueryResult> t_neighbors;
+    }
+
     /// <summary>
     /// Invoked once at the start of the application, prior to the first frame.
     /// </summary>
@@ -68,8 +73,8 @@ namespace litl
 
     vec3 BoidSystem::computeSteeringAcceleration(World& world, Entity self, vec3 selfPos, vec3 selfVelocity, vec3 targetVector)
     {
-        std::vector<PartitionQueryResult> neighbors; neighbors.reserve(8u);
-        m_pSceneView->query<Boid>(bounds::Sphere::fromCenterRadius(selfPos, g_boidSteering.perceptionRadius), neighbors, false);
+        t_neighbors.clear();
+        m_pSceneView->query<Boid>(bounds::Sphere::fromCenterRadius(selfPos, g_boidSteering.perceptionRadius), t_neighbors, false);
 
         const float separationRadiusSq = g_boidSteering.separationRadius * g_boidSteering.separationRadius;
 
@@ -78,7 +83,7 @@ namespace litl
         vec3 accumulatedPosition{};
         uint32_t flockCount = 0u;
 
-        for (auto& neighbor : neighbors)
+        for (auto& neighbor : t_neighbors)
         {
             if (neighbor.entity == self)
             {
