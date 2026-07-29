@@ -123,6 +123,8 @@ namespace litl
     void Scene::onPreRender(Authority<SceneManager> authority) noexcept
     {
         m_graph.update();           // Update the graph to account for structural changes: create, destroy, reparent.
+        m_transforms.reserve(m_graph.count());
+
         std::visit([&](auto& partition) { partition.preUpdate(); }, m_partition);
 
         // Update the world transforms for the frame.

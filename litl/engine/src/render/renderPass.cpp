@@ -17,6 +17,20 @@ namespace litl
 
     struct RenderPass::Impl
     {
+        struct DrawListItem
+        {
+            MaterialHandle materialHandle{};
+            Material* material{};
+            GraphicsPipelineHandle graphicsPipelineHandle{};
+            MeshHandle meshHandle{};
+            Mesh* mesh{};
+            uint32_t vertexCount = 0u;
+            uint32_t indexCount = 0u;
+            uint32_t instanceCount = 0u;
+            uint32_t instanceOffset = 0u;
+        };
+
+        std::vector<DrawListItem> drawList;
         Renderer* renderer{ nullptr };
         ObjectPool* objectPool{ nullptr };
 
@@ -57,71 +71,101 @@ namespace litl
             renderer->cmdBeginRender(frameCommandBuffer, beginRenderCommand);
             renderer->cmdSetViewportAndScissor(frameCommandBuffer, setViewportScissorCommand);
 
-            // --- Render
-
             if (!entities.empty())
             {
-                // Handles are kept to speed up change in material/mesh checks. Otherwise would have to retrieve from the object pool each time.
+                // --- Compile Draw List
 
+                drawList.clear();
+
+                auto currListItem = createDrawListItem(entities[0], 0u);
+                drawList.push_back(currListItem);
+
+                for (uint32_t i = 1u; i < static_cast<uint32_t>(entities.size()); ++i)
+                {
+                    if ((entities[i].material.handle != currListItem.materialHandle) || (entities[i].mesh.handle != currListItem.meshHandle))
+                    {
+                        drawList.back().instanceCount = i - drawList.back().instanceOffset;
+                        currListItem = createDrawListItem(entities[i], i);
+                        drawList.push_back(currListItem);
+                    }
+                }
+
+                drawList.back().instanceCount = static_cast<uint32_t>(entities.size()) - drawList.back().instanceOffset;
+
+                // --- Render
                 MaterialHandle currMaterialHandle{};
                 MeshHandle currMeshHandle{};
                 uint32_t currVertexCount = 0u;
-                uint32_t currInstanceId = 0u;               // this gets passed in as SV_InstanceID (0-based per batch) and SV_VulkanInstanceID (this exact value)
 
-                for (auto& entity : entities)
+                for (auto& drawListItem : drawList)
                 {
-                    if (entity.material.handle != currMaterialHandle)
+                    if (!drawListItem.graphicsPipelineHandle.isValid())
                     {
-                        currMaterialHandle = entity.material.handle;
-                        auto* currMaterial = objectPool->getMaterial(currMaterialHandle);
-                        auto graphicsPipelineHandle = currMaterial->getGraphicsPipelineHandle();
-                        auto computePipelineHandle = currMaterial->getComputePipelineHandle();
+                        continue;
+                    }
 
-                        if (graphicsPipelineHandle.isValid())
+                    // --- Material Bind
+
+                    if (drawListItem.materialHandle != currMaterialHandle)
+                    {
+                        currMaterialHandle = drawListItem.materialHandle;
+
+                        renderer->cmdBindGraphicsPipeline(frameCommandBuffer, drawListItem.graphicsPipelineHandle);
+                        auto pushConstantStages = renderer->getGraphicsPipelinePushConstantStages(drawListItem.graphicsPipelineHandle);
+
+                        if (pushConstantStages != ShaderStage::None)
                         {
-                            renderer->cmdBindGraphicsPipeline(frameCommandBuffer, graphicsPipelineHandle);
-
-                            auto pushConstantStages = renderer->getGraphicsPipelinePushConstantStages(graphicsPipelineHandle);
-
-                            if (pushConstantStages != ShaderStage::None)
-                            {
-                                renderer->cmdPushConstants(
-                                    frameCommandBuffer,
-                                    ShaderStage::All,
-                                    generic_as_byte_span(&pushConstants, sizeof(RenderPushConstants)));
-                            }
-                        }
-
-                        if (computePipelineHandle.isValid())
-                        {
-                            // ... todo ...
-                            // renderer->cmdBindComputePipeline(frameCommandBuffer, computePipelineHandle);
+                            renderer->cmdPushConstants(
+                                frameCommandBuffer,
+                                ShaderStage::All,
+                                generic_as_byte_span(&pushConstants, sizeof(RenderPushConstants)));
                         }
                     }
 
-                    if (entity.mesh.handle != currMeshHandle)
+                    // --- Mesh Bind
+
+                    if (drawListItem.meshHandle != currMeshHandle)
                     {
-                        currMeshHandle = entity.mesh.handle;
-                        auto* currMesh = objectPool->getMesh(currMeshHandle);
-                        auto* currVertexBuffer = objectPool->getGpuBuffer(currMesh->getVertexBuffer());
-                        auto* currIndexBuffer = objectPool->getGpuBuffer(currMesh->getIndexBuffer());
-                        currVertexCount = currMesh->getDescriptor().vertexInfo.vertexCount;                                     // todo this only works for static sized buffers
+                        currMeshHandle = drawListItem.meshHandle;
+
+                        auto* currVertexBuffer = objectPool->getGpuBuffer(drawListItem.mesh->getVertexBuffer());
+                        auto* currIndexBuffer = objectPool->getGpuBuffer(drawListItem.mesh->getIndexBuffer());
 
                         renderer->cmdBindVertexBuffer(frameCommandBuffer, currVertexBuffer->getBufferHandle(), 0ull, 0u);
                         renderer->cmdBindIndexBuffer(frameCommandBuffer, currIndexBuffer->getBufferHandle(), IndexType::Uint32);  // todo support other index sizes
                     }
 
-                    renderer->cmdDraw(frameCommandBuffer, currVertexCount, 1u, 0u, currInstanceId);
-                    currInstanceId++;   // since we are just drawing one at a time for the moment ...
+                    // -- Instanced Draw
+
+                    renderer->cmdDraw(frameCommandBuffer, drawListItem.vertexCount, drawListItem.instanceCount, 0u, drawListItem.instanceOffset);
                 }
             }
-
+            
             // -- End rendering
 
             renderer->cmdEndRender(frameCommandBuffer);
             renderer->cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierColorToPresent);
             renderer->cmdEnd(frameCommandBuffer);
             renderer->submitCommands(frameCommandBuffer);
+        }
+
+        DrawListItem createDrawListItem(RenderableEntity entity, uint32_t instanceOffset) noexcept
+        {
+            auto* material = objectPool->getMaterial(entity.material.handle);
+            auto* mesh = objectPool->getMesh(entity.mesh.handle);
+            auto& meshDescriptor = mesh->getDescriptor()
+                ;
+            return DrawListItem{
+                .materialHandle = entity.material.handle,
+                .material = material,
+                .graphicsPipelineHandle = material->getGraphicsPipelineHandle(),
+                .meshHandle = entity.mesh.handle,
+                .mesh = mesh,
+                .vertexCount = meshDescriptor.vertexInfo.vertexCount,
+                .indexCount = meshDescriptor.vertexInfo.vertexCount,
+                .instanceCount = 0u,
+                .instanceOffset = instanceOffset
+            };
         }
     };
 
