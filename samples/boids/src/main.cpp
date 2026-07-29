@@ -26,8 +26,8 @@ int main()
             .sceneSettings {
                 .partition = ScenePartitionType::UniformGrid,
                 .uniformGridOptions = UniformGridOptions {
-                    .cellSize = 16u,
-                    .cellCount = 64u
+                    .cellSize = 32u,
+                    .cellCount = 32u
                 }
             }
         },
@@ -88,7 +88,7 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     camera->setWorldPosition(cameraPos);
     camera->lookAt(cameraTarget, vec3::forward()); 
     sceneView->setMainCamera(cameraHandle);
-    simulator->setup(services, { .worldDimensions = WorldDimensions, .boidCount = 1000u });
+    simulator->setup(services, { .worldDimensions = WorldDimensions, .boidCount = 2000u });
 }
 
 /// <summary>

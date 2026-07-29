@@ -110,7 +110,7 @@ namespace litl
         /// <param name="aabb"></param>
         /// <param name="entities"></param>
         /// <param name="sorted">If true, entities will be returned based on distance to the AABB center in ascending order.</param>
-        void query(bounds::AABB aabb, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept;
+        void query(bounds::AABB aabb, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit = 0u) const noexcept;
 
         /// <summary>
         /// Returns all entities that within or intersect the specified AABB and that have the specified component attached to them.
@@ -119,7 +119,7 @@ namespace litl
         /// <param name="componentType"></param>
         /// <param name="entities"></param>
         /// <param name="sorted">If true, entities will be returned based on distance to the AABB center in ascending order.</param>
-        void query(bounds::AABB aabb, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept;
+        void query(bounds::AABB aabb, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit = 0u) const noexcept;
 
         /// <summary>
         /// Returns all entities that within or intersect the specified AABB and that have the specified component attached to them.
@@ -128,9 +128,9 @@ namespace litl
         /// <param name="entities"></param>
         /// <param name="sorted">If true, entities will be returned based on distance to the AABB center in ascending order.</param>
         template<ValidComponentType T>
-        void query(bounds::AABB aabb, std::vector<PartitionQueryResult>& entities, bool sorted)
+        void query(bounds::AABB aabb, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit = 0u)
         {
-            query(aabb, ComponentDescriptor::get<T>()->id, entities, sorted);
+            query(aabb, ComponentDescriptor::get<T>()->id, entities, sorted, limit);
         }
 
         /// <summary>
@@ -139,7 +139,7 @@ namespace litl
         /// <param name="sphere"></param>
         /// <param name="entities"></param>
         /// <param name="sorted">If true, entities will be returned based on distance to the sphere center in ascending order.</param>
-        void query(bounds::Sphere sphere, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept;
+        void query(bounds::Sphere sphere, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit = 0u) const noexcept;
         
         /// <summary>
         /// Returns all entities that are within or intersects the specified Sphere and that have the specified component attached to them.
@@ -148,7 +148,7 @@ namespace litl
         /// <param name="componentType"></param>
         /// <param name="entities"></param>
         /// <param name="sorted">If true, entities will be returned based on distance to the sphere center in ascending order.</param>
-        void query(bounds::Sphere sphere, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept;
+        void query(bounds::Sphere sphere, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit = 0u) const noexcept;
 
         /// <summary>
         /// Returns all entities that are within or intersects the specified Sphere and that have the specified component attached to them.
@@ -158,9 +158,9 @@ namespace litl
         /// <param name="entities"></param>
         /// <param name="sorted">If true, entities will be returned based on distance to the sphere center in ascending order.</param>
         template<ValidComponentType T>
-        void query(bounds::Sphere sphere, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept
+        void query(bounds::Sphere sphere, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit = 0u) const noexcept
         {
-            query(sphere, ComponentDescriptor::get<T>()->id, entities, sorted);
+            query(sphere, ComponentDescriptor::get<T>()->id, entities, sorted, limit);
         }
 
         /// <summary>
@@ -169,7 +169,7 @@ namespace litl
         /// <param name="frustum"></param>
         /// <param name="entities"></param>
         /// <param name="sorted">If true, entities will be returned based on distance to the frustum near plane in ascending order.</param>
-        void query(bounds::Frustum frustum, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept;
+        void query(bounds::Frustum frustum, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit = 0u) const noexcept;
 
         /// <summary>
         /// Returns all entities that are within or intersect the specified Frustum and that have the specified component attached to them.
@@ -178,7 +178,7 @@ namespace litl
         /// <param name="componentType"></param>
         /// <param name="entities"></param>
         /// <param name="sorted">If true, entities will be returned based on distance to the frustum near plane in ascending order.</param>
-        void query(bounds::Frustum frustum, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept;
+        void query(bounds::Frustum frustum, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit = 0u) const noexcept;
 
         /// <summary>
         /// Returns all entities that are within or intersect the specified Frustum and that have the specified component attached to them.
@@ -187,9 +187,9 @@ namespace litl
         /// <param name="entities"></param>
         /// <param name="sorted">If true, entities will be returned based on distance to the frustum near plane in ascending order.</param>
         template<ValidComponentType T>
-        void query(bounds::Frustum frustum, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept
+        void query(bounds::Frustum frustum, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit = 0u) const noexcept
         {
-            query(frustum, ComponentDescriptor::get<T>()->id, entities, sorted);
+            query(frustum, ComponentDescriptor::get<T>()->id, entities, sorted, limit);
         }
 
         /// <summary>

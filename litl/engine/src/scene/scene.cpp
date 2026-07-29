@@ -204,11 +204,11 @@ namespace litl
         }
     }
 
-    void Scene::query(bounds::AABB aabb, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept
+    void Scene::query(bounds::AABB aabb, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit) const noexcept
     {
         std::visit([&](auto& partition)
         {
-            partition.query(aabb, entities);
+            partition.query(aabb, entities, limit);
         }, m_partition);
 
         if (sorted)
@@ -217,11 +217,11 @@ namespace litl
         }
     }
 
-    void Scene::query(bounds::AABB aabb, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept
+    void Scene::query(bounds::AABB aabb, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit) const noexcept
     {
         std::visit([&](auto& partition)
         {
-            partition.query(aabb, *m_pWorld, componentType, entities);
+            partition.query(aabb, *m_pWorld, componentType, entities, limit);
         }, m_partition);
 
         if (sorted)
@@ -230,11 +230,11 @@ namespace litl
         }
     }
 
-    void Scene::query(bounds::Sphere sphere, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept
+    void Scene::query(bounds::Sphere sphere, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit) const noexcept
     {
         std::visit([&](auto& partition)
         {
-            partition.query(sphere, entities);
+            partition.query(sphere, entities, limit);
         }, m_partition);
 
         if (sorted)
@@ -243,11 +243,11 @@ namespace litl
         }
     }
 
-    void Scene::query(bounds::Sphere sphere, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept
+    void Scene::query(bounds::Sphere sphere, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit) const noexcept
     {
         std::visit([&](auto& partition)
         {
-            partition.query(sphere, *m_pWorld, componentType, entities);
+            partition.query(sphere, *m_pWorld, componentType, entities, limit);
         }, m_partition);
 
         if (sorted)
@@ -256,11 +256,11 @@ namespace litl
         }
     }
 
-    void Scene::query(bounds::Frustum frustum, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept
+    void Scene::query(bounds::Frustum frustum, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit) const noexcept
     {
         std::visit([&](auto& partition)
         {
-            partition.query(frustum, entities);
+            partition.query(frustum, entities, limit);
         }, m_partition);
 
         if (sorted)
@@ -269,11 +269,11 @@ namespace litl
         }
     }
 
-    void Scene::query(bounds::Frustum frustum, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept
+    void Scene::query(bounds::Frustum frustum, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit) const noexcept
     {
         std::visit([&](auto& partition)
         {
-            partition.query(frustum, *m_pWorld, componentType, entities);
+            partition.query(frustum, *m_pWorld, componentType, entities, limit);
         }, m_partition);
 
         if (sorted)

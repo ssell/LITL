@@ -147,7 +147,7 @@ namespace litl
         /// </summary>
         /// <param name="aabb"></param>
         /// <param name="entities"></param>
-        void query(bounds::AABB aabb, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept;
+        void query(bounds::AABB aabb, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit) const noexcept;
 
         /// <summary>
         /// Returns all entities that within or intersect the specified AABB and that have the specified component attached to them.
@@ -155,14 +155,14 @@ namespace litl
         /// <param name="aabb"></param>
         /// <param name="componentType"></param>
         /// <param name="entities"></param>
-        void query(bounds::AABB aabb, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept;
+        void query(bounds::AABB aabb, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit) const noexcept;
         
         /// <summary>
         /// Returns all entities that are within or intersect the specified Sphere.
         /// </summary>
         /// <param name="sphere"></param>
         /// <param name="entities"></param>
-        void query(bounds::Sphere sphere, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept;
+        void query(bounds::Sphere sphere, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit) const noexcept;
 
         /// <summary>
         /// Returns all entities that are within or intersects the specified Sphere and that have the specified component attached to them.
@@ -170,14 +170,14 @@ namespace litl
         /// <param name="sphere"></param>
         /// <param name="componentType"></param>
         /// <param name="entities"></param>
-        void query(bounds::Sphere sphere, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept;
+        void query(bounds::Sphere sphere, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit) const noexcept;
 
         /// <summary>
         /// Returns all entities that are within or intersect the specified Frustum.
         /// </summary>
         /// <param name="frustum"></param>
         /// <param name="entities"></param>
-        void query(bounds::Frustum frustum, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept;
+        void query(bounds::Frustum frustum, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit) const noexcept;
 
         /// <summary>
         /// Returns all entities that are within or intersect the specified Frustum and that have the specified component attached to them.
@@ -185,7 +185,7 @@ namespace litl
         /// <param name="frustum"></param>
         /// <param name="componentType"></param>
         /// <param name="entity"></param>
-        void query(bounds::Frustum frustum, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entity, bool sorted) const noexcept;
+        void query(bounds::Frustum frustum, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entity, bool sorted, uint32_t limit) const noexcept;
 
         /// <summary>
         /// Sets the specified valid camera handle as the main camera.
