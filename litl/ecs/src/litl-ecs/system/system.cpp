@@ -1,9 +1,9 @@
 #include <vector>
 
+#include "litl-core/thread.hpp"
 #include "litl-ecs/system/system.hpp"
 #include "litl-ecs/archetype/archetype.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
-#include "litl-ecs/entity/entityCommands.hpp"
 #include "litl-ecs/world.hpp"
 
 namespace litl
@@ -178,6 +178,7 @@ namespace litl
                     const SystemData data{
                         .world = world,
                         .commands = commandBuffer,
+                        .threadIndex = ThreadInfo::get().index,
                         .frameIndex = frameIndex,
                         .elapsedTime = elapsedTime,
                         .deltaTime = deltaTime

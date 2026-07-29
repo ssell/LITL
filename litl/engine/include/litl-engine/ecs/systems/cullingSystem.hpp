@@ -93,7 +93,6 @@ namespace litl
         static std::array<CullingBucket, Constants::max_thread_count> s_cullingBuckets;
         static CullingBucket s_combinedBucket;
         static bool s_combined;
-        static thread_local uint32_t t_threadIndex;
     };
 }
 

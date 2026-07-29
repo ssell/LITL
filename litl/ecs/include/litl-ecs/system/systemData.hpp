@@ -22,6 +22,11 @@ namespace litl
         EntityCommands& commands;
 
         /// <summary>
+        /// The index of the thread that the update is running on.
+        /// </summary>
+        uint32_t threadIndex = 0u;
+
+        /// <summary>
         /// Current frame index.
         /// </summary>
         uint32_t frameIndex = 0u;
