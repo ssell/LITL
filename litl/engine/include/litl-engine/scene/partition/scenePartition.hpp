@@ -33,6 +33,7 @@ namespace litl
         bounds::Frustum const& frustum,
         World& world,
         ComponentTypeId componentType,
+        uint32_t limit,
         std::vector<PartitionQueryResult>& results)
     {
         { partition.add(entity, bounds) } noexcept -> std::same_as<void>;
@@ -40,12 +41,12 @@ namespace litl
         { partition.preUpdate() } noexcept -> std::same_as<void>;
         { partition.update(entity, bounds) } noexcept -> std::same_as<void>;
 
-        { cpartition.query(bounds, results) } noexcept -> std::same_as<void>;
-        { cpartition.query(bounds, world, componentType, results) } noexcept -> std::same_as<void>;
-        { cpartition.query(sphere, results) } noexcept -> std::same_as<void>;
-        { cpartition.query(sphere, world, componentType, results) } noexcept -> std::same_as<void>;
-        { cpartition.query(frustum, results) } noexcept -> std::same_as<void>;
-        { cpartition.query(frustum, world, componentType, results) } noexcept -> std::same_as<void>;
+        { cpartition.query(bounds, results, limit) } noexcept -> std::same_as<void>;
+        { cpartition.query(bounds, world, componentType, results, limit) } noexcept -> std::same_as<void>;
+        { cpartition.query(sphere, results, limit) } noexcept -> std::same_as<void>;
+        { cpartition.query(sphere, world, componentType, results, limit) } noexcept -> std::same_as<void>;
+        { cpartition.query(frustum, results, limit) } noexcept -> std::same_as<void>;
+        { cpartition.query(frustum, world, componentType, results, limit) } noexcept -> std::same_as<void>;
     };
 
     /*

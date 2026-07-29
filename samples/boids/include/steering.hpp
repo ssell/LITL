@@ -8,7 +8,7 @@ namespace litl
     struct SteeringControls
     {
         float separationRadius = 20.0f;
-        float perceptionRadius = 35.0f;
+        float perceptionRadius = 25.0f;
         float cosFov = -0.5f;
         float separationWeight = 3.0f;
         float alignmentWeight = 2.0f;

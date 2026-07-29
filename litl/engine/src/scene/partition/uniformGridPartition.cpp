@@ -32,7 +32,7 @@ namespace litl
         /// </summary>
         /// <param name="aabb"></param>
         /// <param name="outEntities"></param>
-        void query(bounds::AABB aabb, World* world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& outEntities) const noexcept
+        void query(bounds::AABB aabb, World* world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& outEntities, uint32_t limit) const noexcept
         {
             const auto intersection = bounds::classify(aabb, cellBounds);
 
@@ -40,7 +40,7 @@ namespace litl
             {
                 // The cell is completely inside the AABB, so add all
             case bounds::IntersectionType::Inside:
-                addAllTo(outEntities, world, componentType);
+                addAllTo(outEntities, world, componentType, limit);
                 break;
 
                 // The cell intersects the AABB, so add some
@@ -55,6 +55,11 @@ namespace litl
                                 .entity = entities[i],
                                 .worldPosition = entityBounds[i].center()
                             });
+
+                            if ((limit != 0u) && (static_cast<uint32_t>(outEntities.size()) == limit))
+                            {
+                                return;
+                            }
                         }
                     }
                 }
@@ -72,7 +77,7 @@ namespace litl
         /// </summary>
         /// <param name="sphere"></param>
         /// <param name="outEntities"></param>
-        void query(bounds::Sphere sphere, World* world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& outEntities) const noexcept
+        void query(bounds::Sphere sphere, World* world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& outEntities, uint32_t limit) const noexcept
         {
             const auto intersection = bounds::classify(sphere, cellBounds);
 
@@ -80,7 +85,7 @@ namespace litl
             {
                 // The cell is completely inside the Sphere, so add all
             case bounds::IntersectionType::Inside:
-                addAllTo(outEntities, world, componentType);
+                addAllTo(outEntities, world, componentType, limit);
                 break;
 
                 // The cell intersects the Sphere, so add some
@@ -95,6 +100,11 @@ namespace litl
                                 .entity = entities[i],
                                 .worldPosition = entityBounds[i].center()
                             });
+
+                            if ((limit != 0u) && (static_cast<uint32_t>(outEntities.size()) == limit))
+                            {
+                                return;
+                            }
                         }
                     }
                 }
@@ -112,7 +122,7 @@ namespace litl
         /// </summary>
         /// <param name="frustum"></param>
         /// <param name="outEntities"></param>
-        void query(bounds::Frustum const& frustum, World* world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& outEntities) const noexcept
+        void query(bounds::Frustum const& frustum, World* world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& outEntities, uint32_t limit) const noexcept
         {
             const auto classification = bounds::classify(frustum, cellBounds);
 
@@ -120,7 +130,7 @@ namespace litl
             {
                 // The cell is completely inside the Frustum, so add all
             case bounds::IntersectionType::Inside:
-                addAllTo(outEntities, world, componentType);
+                addAllTo(outEntities, world, componentType, limit);
                 break;
 
                 // The cell intersects the Frustum, so add some
@@ -135,6 +145,11 @@ namespace litl
                                 .entity = entities[i],
                                 .worldPosition = entityBounds[i].center()
                             });
+
+                            if ((limit != 0u) && (static_cast<uint32_t>(outEntities.size()) == limit))
+                            {
+                                return;
+                            }
                         }
                     }
                 }
@@ -162,7 +177,7 @@ namespace litl
         /// Adds all entities in the cell to the vector.
         /// </summary>
         /// <param name="entities"></param>
-        void addAllTo(std::vector<PartitionQueryResult>& outEntities, World* world, ComponentTypeId componentType) const noexcept
+        void addAllTo(std::vector<PartitionQueryResult>& outEntities, World* world, ComponentTypeId componentType, uint32_t limit) const noexcept
         {
             if (world == nullptr)
             {
@@ -170,7 +185,7 @@ namespace litl
             }
             else
             {
-                for (size_t i = 0ull; i < entities.size(); ++i)
+                for (size_t i = 0ull; (i < entities.size()) && ((limit == 0u) || (static_cast<uint32_t>(outEntities.size()) < limit)); ++i)
                 {
                     if (world->hasComponent(entities[i], componentType))
                     {
@@ -393,7 +408,7 @@ namespace litl
         /// </summary>
         /// <param name="aabb"></param>
         /// <param name="entities"></param>
-        void query(bounds::AABB aabb, World* world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities) const noexcept
+        void query(bounds::AABB aabb, World* world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept
         {
             const uint32_t startX = getCellIndexX(aabb.min.x());
             const uint32_t endX = getCellIndexX(aabb.max.x());
@@ -401,15 +416,21 @@ namespace litl
             const uint32_t startZ = getCellIndexZ(aabb.min.z());
             const uint32_t endZ = getCellIndexZ(aabb.max.z());
 
-            for (uint32_t z = startZ; z <= endZ; ++z)
+            bool withinLimit = true;
+
+            for (uint32_t z = startZ; z <= endZ && withinLimit; ++z)
             {
-                for (uint32_t x = startX; x <= endX; ++x)
+                for (uint32_t x = startX; x <= endX && withinLimit; ++x)
                 {
-                    cells[x + (z * options.cellCount)].query(aabb, world, componentType, entities);
+                    cells[x + (z * options.cellCount)].query(aabb, world, componentType, entities, limit);
+                    withinLimit = (limit == 0u) || (static_cast<uint32_t>(entities.size()) < limit);
                 }
             }
 
-            getOversizedCell().query(aabb, world, componentType, entities);
+            if (withinLimit)
+            {
+                getOversizedCell().query(aabb, world, componentType, entities, limit);
+            }
 
             auto queryCenter = aabb.center();
 
@@ -424,7 +445,7 @@ namespace litl
         /// </summary>
         /// <param name="sphere"></param>
         /// <param name="entities"></param>
-        void query(bounds::Sphere sphere, World* world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities) const noexcept
+        void query(bounds::Sphere sphere, World* world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept
         {
             const uint32_t startX = getCellIndexX(sphere.center.x() - sphere.radius);
             const uint32_t endX = getCellIndexX(sphere.center.x() + sphere.radius);
@@ -432,15 +453,21 @@ namespace litl
             const uint32_t startZ = getCellIndexZ(sphere.center.z() - sphere.radius);
             const uint32_t endZ = getCellIndexZ(sphere.center.z() + sphere.radius);
 
-            for (uint32_t z = startZ; z <= endZ; ++z)
+            bool withinLimit = true;
+
+            for (uint32_t z = startZ; z <= endZ && withinLimit; ++z)
             {
-                for (uint32_t x = startX; x <= endX; ++x)
+                for (uint32_t x = startX; x <= endX && withinLimit; ++x)
                 {
-                    cells[x + (z * options.cellCount)].query(sphere, world, componentType, entities);
+                    cells[x + (z * options.cellCount)].query(sphere, world, componentType, entities, limit);
+                    withinLimit = (limit == 0u) || (static_cast<uint32_t>(entities.size()) < limit);
                 }
             }
 
-            getOversizedCell().query(sphere, world, componentType, entities);
+            if (withinLimit)
+            {
+                getOversizedCell().query(sphere, world, componentType, entities, limit);
+            }
 
             auto queryCenter = sphere.center;
 
@@ -455,7 +482,7 @@ namespace litl
         /// </summary>
         /// <param name="frustum"></param>
         /// <param name="entities"></param>
-        void query(bounds::Frustum const& frustum, World* world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities) const noexcept
+        void query(bounds::Frustum const& frustum, World* world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept
         {
             const bounds::AABB frustumAABB = bounds::computeAABB(frustum);
 
@@ -466,15 +493,21 @@ namespace litl
             const uint32_t startZ = getCellIndexZ(frustumAABB.min.z());
             const uint32_t endZ = getCellIndexZ(frustumAABB.max.z());
 
-            for (uint32_t z = startZ; z <= endZ; ++z)
+            bool withinLimit = true;
+
+            for (uint32_t z = startZ; z <= endZ && withinLimit; ++z)
             {
-                for (uint32_t x = startX; x <= endX; ++x)
+                for (uint32_t x = startX; x <= endX && withinLimit; ++x)
                 {
-                    cells[x + (z * options.cellCount)].query(frustum, world, componentType, entities);
+                    cells[x + (z * options.cellCount)].query(frustum, world, componentType, entities, limit);
+                    withinLimit = (limit == 0u) || (static_cast<uint32_t>(entities.size()) < limit);
                 }
             }
 
-            getOversizedCell().query(frustum, world, componentType, entities);
+            if (withinLimit)
+            {
+                getOversizedCell().query(frustum, world, componentType, entities, limit);
+            }
 
             auto queryCenter = frustum.getOrigin();
 
@@ -634,34 +667,34 @@ namespace litl
         m_impl->update(entity, bounds);
     }
 
-    void UniformGridPartition::query(bounds::AABB aabb, std::vector<PartitionQueryResult>& entities) const noexcept
+    void UniformGridPartition::query(bounds::AABB aabb, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept
     {
-        m_impl->query(aabb, nullptr, ecs::Constants::null_component_id, entities);
+        m_impl->query(aabb, nullptr, ecs::Constants::null_component_id, entities, limit);
     }
 
-    void UniformGridPartition::query(bounds::AABB aabb, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities) const noexcept
+    void UniformGridPartition::query(bounds::AABB aabb, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept
     {
-        m_impl->query(aabb, &world, componentType, entities);
+        m_impl->query(aabb, &world, componentType, entities, limit);
     }
 
-    void UniformGridPartition::query(bounds::Sphere sphere, std::vector<PartitionQueryResult>& entities) const noexcept
+    void UniformGridPartition::query(bounds::Sphere sphere, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept
     {
-        m_impl->query(sphere, nullptr, ecs::Constants::null_component_id, entities);
+        m_impl->query(sphere, nullptr, ecs::Constants::null_component_id, entities, limit);
     }
 
-    void UniformGridPartition::query(bounds::Sphere sphere, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities) const noexcept
+    void UniformGridPartition::query(bounds::Sphere sphere, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept
     {
-        m_impl->query(sphere, &world, componentType, entities);
+        m_impl->query(sphere, &world, componentType, entities, limit);
     }
 
-    void UniformGridPartition::query(bounds::Frustum const& frustum, std::vector<PartitionQueryResult>& entities) const noexcept
+    void UniformGridPartition::query(bounds::Frustum const& frustum, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept
     {
-        m_impl->query(frustum, nullptr, ecs::Constants::null_component_id, entities);
+        m_impl->query(frustum, nullptr, ecs::Constants::null_component_id, entities, limit);
     }
 
-    void UniformGridPartition::query(bounds::Frustum const& frustum, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities) const noexcept
+    void UniformGridPartition::query(bounds::Frustum const& frustum, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept
     {
-        m_impl->query(frustum, &world, componentType, entities);
+        m_impl->query(frustum, &world, componentType, entities, limit);
     }
 
     uint32_t UniformGridPartition::getCellSize() const noexcept

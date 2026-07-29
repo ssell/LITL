@@ -70,7 +70,7 @@ namespace litl
         /// </summary>
         /// <param name="aabb"></param>
         /// <param name="entities"></param>
-        void query(bounds::AABB aabb, std::vector<PartitionQueryResult>& entities) const noexcept;
+        void query(bounds::AABB aabb, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept;
 
         /// <summary>
         /// Queries for all entities in the grid that intersect the specified AABB.
@@ -78,14 +78,14 @@ namespace litl
         /// </summary>
         /// <param name="aabb"></param>
         /// <param name="entities"></param>
-        void query(bounds::AABB aabb, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities) const noexcept;
+        void query(bounds::AABB aabb, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept;
 
         /// <summary>
         /// Queries for all entities in the grid that intersect the specified Sphere.
         /// </summary>
         /// <param name="sphere"></param>
         /// <param name="entities"></param>
-        void query(bounds::Sphere sphere, std::vector<PartitionQueryResult>& entities) const noexcept;
+        void query(bounds::Sphere sphere, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept;
 
         /// <summary>
         /// Queries for all entities in the grid that intersect the specified Sphere.
@@ -93,14 +93,14 @@ namespace litl
         /// </summary>
         /// <param name="sphere"></param>
         /// <param name="entities"></param>
-        void query(bounds::Sphere sphere, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities) const noexcept;
+        void query(bounds::Sphere sphere, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept;
 
         /// <summary>
         /// Queries for all entities in the grid that intersect the specified Frustum.
         /// </summary>
         /// <param name="frustum"></param>
         /// <param name="entities"></param>
-        void query(bounds::Frustum const& frustum, std::vector<PartitionQueryResult>& entities) const noexcept;
+        void query(bounds::Frustum const& frustum, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept;
 
         /// <summary>
         /// Queries for all entities in the grid that intersect the specified Frustum.
@@ -108,7 +108,7 @@ namespace litl
         /// </summary>
         /// <param name="frustum"></param>
         /// <param name="entities"></param>
-        void query(bounds::Frustum const& frustum, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities) const noexcept;
+        void query(bounds::Frustum const& frustum, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept;
 
         /// <summary>
         /// Returns the size along each dimensions for an individual cell.

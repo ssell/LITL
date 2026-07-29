@@ -81,40 +81,40 @@ namespace litl
         return m_pActiveScene->getWorldMatrix(entity).position();
     }
 
-    void SceneView::query(bounds::AABB aabb, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept
+    void SceneView::query(bounds::AABB aabb, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit) const noexcept
     {
         LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::query(aabb,) on a null scene.", );
-        m_pActiveScene->query(aabb, entities, sorted);
+        m_pActiveScene->query(aabb, entities, sorted, limit);
     }
 
-    void SceneView::query(bounds::AABB aabb, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept
+    void SceneView::query(bounds::AABB aabb, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit) const noexcept
     {
         LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::query(aabb,componentType) on a null scene.", );
-        m_pActiveScene->query(aabb, componentType, entities, sorted);
+        m_pActiveScene->query(aabb, componentType, entities, sorted, limit);
     }
 
-    void SceneView::query(bounds::Sphere sphere, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept
+    void SceneView::query(bounds::Sphere sphere, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit) const noexcept
     {
         LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::query(sphere,) on a null scene.", );
-        m_pActiveScene->query(sphere, entities, sorted);
+        m_pActiveScene->query(sphere, entities, sorted, limit);
     }
 
-    void SceneView::query(bounds::Sphere sphere, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept
+    void SceneView::query(bounds::Sphere sphere, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit) const noexcept
     {
         LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::query(sphere,componentType) on a null scene.", );
-        m_pActiveScene->query(sphere, componentType, entities, sorted);
+        m_pActiveScene->query(sphere, componentType, entities, sorted, limit);
     }
 
-    void SceneView::query(bounds::Frustum frustum, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept
+    void SceneView::query(bounds::Frustum frustum, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit) const noexcept
     {
         LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::query(frustum,) on a null scene.", );
-        m_pActiveScene->query(frustum, entities, sorted);
+        m_pActiveScene->query(frustum, entities, sorted, limit);
     }
 
-    void SceneView::query(bounds::Frustum frustum, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted) const noexcept
+    void SceneView::query(bounds::Frustum frustum, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, bool sorted, uint32_t limit) const noexcept
     {
         LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::query(frustum,componentType) on a null scene.", );
-        m_pActiveScene->query(frustum, componentType, entities, sorted);
+        m_pActiveScene->query(frustum, componentType, entities, sorted, limit);
     }
 
     void SceneView::setMainCamera(CameraHandle handle) const noexcept

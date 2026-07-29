@@ -78,11 +78,11 @@ namespace litl
             }
         }
 
-        void query(bounds::AABB bounds, std::vector<PartitionQueryResult>& entities) const noexcept
+        void query(bounds::AABB bounds, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept
         {
             auto queryCenter = bounds.center();
 
-            for (size_t i = 0ull; i < m_entities.size(); ++i)
+            for (size_t i = 0ull; i < m_entities.size() && (limit == 0u || i < limit); ++i)
             {
                 entities.push_back(PartitionQueryResult{
                     .entity = m_entities[i],
@@ -92,11 +92,11 @@ namespace litl
             }
         }
 
-        void query(bounds::AABB bounds, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities) const noexcept
+        void query(bounds::AABB bounds, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept
         {
             auto queryCenter = bounds.center();
 
-            for (size_t i = 0ull; i < m_entities.size(); ++i)
+            for (size_t i = 0ull; i < m_entities.size() && (limit == 0u || static_cast<uint32_t>(entities.size()) < limit); ++i)
             {
                 if (world.hasComponent(m_entities[i], componentType))
                 {
@@ -109,9 +109,9 @@ namespace litl
             }
         }
 
-        void query(bounds::Sphere bounds, std::vector<PartitionQueryResult>& entities) const noexcept
+        void query(bounds::Sphere bounds, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept
         {
-            for (size_t i = 0ull; i < m_entities.size(); ++i)
+            for (size_t i = 0ull; i < m_entities.size() && (limit == 0u || i < limit); ++i)
             {
                 entities.push_back(PartitionQueryResult{
                     .entity = m_entities[i],
@@ -121,9 +121,9 @@ namespace litl
             }
         }
 
-        void query(bounds::Sphere bounds, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities) const noexcept
+        void query(bounds::Sphere bounds, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept
         {
-            for (size_t i = 0ull; i < m_entities.size(); ++i)
+            for (size_t i = 0ull; i < m_entities.size() && (limit == 0u || static_cast<uint32_t>(entities.size()) < limit); ++i)
             {
                 if (world.hasComponent(m_entities[i], componentType))
                 {
@@ -136,11 +136,11 @@ namespace litl
             }
         }
 
-        void query(bounds::Frustum const& frustum, std::vector<PartitionQueryResult>& entities) const noexcept
+        void query(bounds::Frustum const& frustum, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept
         {
             auto queryCenter = frustum.getOrigin();
 
-            for (size_t i = 0ull; i < m_entities.size(); ++i)
+            for (size_t i = 0ull; i < m_entities.size() && (limit == 0u || i < limit); ++i)
             {
                 entities.push_back(PartitionQueryResult{
                     .entity = m_entities[i],
@@ -150,11 +150,11 @@ namespace litl
             }
         }
 
-        void query(bounds::Frustum const& frustum, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities) const noexcept
+        void query(bounds::Frustum const& frustum, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept
         {
             auto queryCenter = frustum.getOrigin();
 
-            for (size_t i = 0ull; i < m_entities.size(); ++i)
+            for (size_t i = 0ull; i < m_entities.size() && (limit == 0u || static_cast<uint32_t>(entities.size()) < limit); ++i)
             {
                 if (world.hasComponent(m_entities[i], componentType))
                 {

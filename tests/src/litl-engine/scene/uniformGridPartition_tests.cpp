@@ -246,17 +246,17 @@ namespace litl::tests
 
         std::vector<PartitionQueryResult> found;
 
-        grid.query(contains, found);
+        grid.query(contains, found, 0u);
 
         REQUIRE(found.size() == 1);
 
         found.clear();
-        grid.query(straddles, found);
+        grid.query(straddles, found, 0u);
 
         REQUIRE(found.size() == 1);
 
         found.clear();
-        grid.query(outside, found);
+        grid.query(outside, found, 0u);
 
         REQUIRE(found.size() == 0);
     } LITL_END_TEST_CASE
@@ -275,17 +275,17 @@ namespace litl::tests
 
         std::vector<PartitionQueryResult> found;
 
-        grid.query(contains, found);
+        grid.query(contains, found, 0u);
 
         REQUIRE(found.size() == 1);
 
         found.clear();
-        grid.query(straddles, found);
+        grid.query(straddles, found, 0u);
 
         REQUIRE(found.size() == 1);
 
         found.clear();
-        grid.query(outside, found);
+        grid.query(outside, found, 0u);
 
         REQUIRE(found.size() == 0);
     } LITL_END_TEST_CASE
@@ -333,17 +333,17 @@ namespace litl::tests
 
         std::vector<PartitionQueryResult> found;
 
-        grid.query(contains, found);
+        grid.query(contains, found, 0u);
 
         REQUIRE(found.size() == 1);
 
         found.clear();
-        grid.query(straddles, found);
+        grid.query(straddles, found, 0u);
 
         REQUIRE(found.size() == 1);
 
         found.clear();
-        grid.query(outside, found);
+        grid.query(outside, found, 0u);
 
         REQUIRE(found.size() == 0);
     } LITL_END_TEST_CASE
@@ -434,14 +434,14 @@ namespace litl::tests
         // AABB query should find both
         std::vector<PartitionQueryResult> found;
         bounds::AABB queryBounds = bounds::AABB::fromMinMax(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 8.0f, 8.0f, 8.0f });
-        grid.query(queryBounds, found);
+        grid.query(queryBounds, found, 0u);
 
         REQUIRE(found.size() == 2);
 
         // Sphere query should find both
         found.clear();
         bounds::Sphere querySphere = bounds::Sphere::fromCenterRadius(vec3{ 4.0f, 0.0f, 4.0f }, 5.0f);
-        grid.query(querySphere, found);
+        grid.query(querySphere, found, 0u);
 
         REQUIRE(found.size() == 2);
     } LITL_END_TEST_CASE
@@ -464,7 +464,7 @@ namespace litl::tests
         // Query that covers cells (0,0) and (1,0) and (0,1) and (1,1)
         std::vector<PartitionQueryResult> found;
         bounds::AABB queryBounds = bounds::AABB::fromMinMax(vec3{ 0.0f, -1.0f, 0.0f }, vec3{ 16.0f, 1.0f, 16.0f });
-        grid.query(queryBounds, found);
+        grid.query(queryBounds, found, 0u);
 
         // Should find e0, e1, e2 but not e3
         REQUIRE(found.size() == 3);
@@ -547,9 +547,14 @@ namespace litl::tests
         // Query should return all
         std::vector<PartitionQueryResult> found;
         bounds::AABB queryBounds = bounds::AABB::fromMinMax(vec3{ 0.0f, -1.0f, 0.0f }, vec3{ 8.0f, 1.0f, 8.0f });
-        grid.query(queryBounds, found);
+        grid.query(queryBounds, found, 0u);
 
         REQUIRE(found.size() == count);
+
+        // Quick test for limit
+        found.clear();
+        grid.query(queryBounds, found, 3u);
+        REQUIRE(found.size() == 3ull);
     } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("grid with non-zero origin", "[engine::scene::uniformGridPartition]")
@@ -575,7 +580,7 @@ namespace litl::tests
         bounds::AABB queryBounds = bounds::AABB::fromMinMax(
             vec3{ 100.0f, -1.0f, 200.0f },
             vec3{ 108.0f, 1.0f, 208.0f });
-        grid.query(queryBounds, found);
+        grid.query(queryBounds, found, 0u);
 
         REQUIRE(found.size() == 1);
     } LITL_END_TEST_CASE
@@ -593,10 +598,10 @@ namespace litl::tests
 
         std::vector<PartitionQueryResult> found;
 
-        grid.query(bounds::AABB::fromMinMax(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 64.0f, 64.0f, 64.0f }), found);
+        grid.query(bounds::AABB::fromMinMax(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 64.0f, 64.0f, 64.0f }), found, 0u);
         REQUIRE(found.empty());
 
-        grid.query(bounds::Sphere::fromCenterRadius(vec3{ 32.0f, 0.0f, 32.0f }, 100.0f), found);
+        grid.query(bounds::Sphere::fromCenterRadius(vec3{ 32.0f, 0.0f, 32.0f }, 100.0f), found, 0u);
         REQUIRE(found.empty());
     } LITL_END_TEST_CASE
 }
