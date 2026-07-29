@@ -22,7 +22,7 @@ namespace litl
 
     private:
 
-        vec3 getTargetPosition(vec3 selfPos);
+        void getTargetPosition(Boid& boid, vec3 selfPos);
         vec3 computeSteeringAcceleration(World& world, Entity self, vec3 selfPos, vec3 selfVelocity, vec3 targetVec);
 
         std::shared_ptr<SceneView> m_pSceneView{ nullptr };

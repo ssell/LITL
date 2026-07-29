@@ -88,7 +88,7 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     camera->setWorldPosition(cameraPos);
     camera->lookAt(cameraTarget, vec3::forward()); 
     sceneView->setMainCamera(cameraHandle);
-    simulator->setup(services, { .worldDimensions = WorldDimensions, .boidCount = 2000u });
+    simulator->setup(services, { .worldDimensions = WorldDimensions, .boidCount = 1000u });
 }
 
 /// <summary>

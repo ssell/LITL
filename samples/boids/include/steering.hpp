@@ -13,7 +13,7 @@ namespace litl
         float separationWeight = 3.0f;
         float alignmentWeight = 2.0f;
         float cohesionWeight = 1.0f;
-        float targetWeight = 1.5f;
+        float targetWeight = 2.0f;
         float maxSpeed = 100.0f;
         float maxForce = 100.0f;
     };
