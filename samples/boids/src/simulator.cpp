@@ -59,7 +59,7 @@ namespace litl
 
         auto boidTriangle = Triangle::build(4.0f, colors::Blue, colors::Red);
         auto foodTriangle = Triangle::build(4.0f, colors::Green, colors::Green);
-        auto predatorTriangle = Triangle::build(6.0f, colors::Red, colors::Yellow);
+        auto predatorTriangle = Triangle::build(8.0f, colors::Red, colors::Yellow);
 
         m_boidMesh = loadMesh(boidTriangle.vertices, boidTriangle.indices, "Boid Mesh");
         m_foodMesh = loadMesh(foodTriangle.vertices, foodTriangle.indices, "Food Mesh");
@@ -78,6 +78,11 @@ namespace litl
             tick();
             m_lastTick = now;
         }
+    }
+
+    void Simulator::updateBoidsConsumed(uint32_t count) noexcept
+    {
+        //m_boidCount -= count;
     }
 
     void Simulator::updateFoodConsumed(uint32_t index) noexcept

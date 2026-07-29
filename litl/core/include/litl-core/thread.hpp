@@ -12,6 +12,7 @@ namespace litl
     struct ThreadInfo
     {
         std::thread::id id;
+        uint32_t index;
         bool mainthread;
 
         /// <summary>

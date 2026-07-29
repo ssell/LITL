@@ -31,7 +31,7 @@ namespace litl
 
         if (totalConsumedBoidsLastFrame > 0u)
         {
-            // ... alert simulator to spawn more ...
+            m_pSimulator->updateBoidsConsumed(totalConsumedBoidsLastFrame);
         }
     }
 
@@ -64,7 +64,8 @@ namespace litl
         acceleration.acceleration = truncate(steering, g_predatorSteering.maxForce);
         acceleration.maxSpeed = g_predatorSteering.maxSpeed;
 
-        // Is the predator intersection any boids?
+        // Is the predator intersecting any boids?
+        consumeNearbyBoids(data, selfPos);
     }
 
     void PredatorSystem::getTargetPosition(Predator& predator, vec3 selfPos)
@@ -82,6 +83,22 @@ namespace litl
         {
             predator.target = vec3{ static_cast<float>(m_worldSize / 2u), 0.0f, static_cast<float>(m_worldSize / 2u) };
             predator.movingToTarget = false;
+        }
+    }
+
+    void PredatorSystem::consumeNearbyBoids(SystemData const& data, vec3 selfPos)
+    {
+        t_partitionQueryResults.clear();
+        m_pSceneView->query<Boid>(bounds::Sphere::fromCenterRadius(selfPos, 8.0f), t_partitionQueryResults, 1u);
+
+        if (!t_partitionQueryResults.empty())
+        {
+            t_consumedBoidCounts[data.threadIndex] += static_cast<uint32_t>(t_partitionQueryResults.size());
+
+            for (auto& result : t_partitionQueryResults)
+            {
+                data.commands.destroyEntity(result.entity);
+            }
         }
     }
 }

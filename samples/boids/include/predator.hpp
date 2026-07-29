@@ -22,7 +22,7 @@ namespace litl
     private:
 
         void getTargetPosition(Predator& predator, vec3 selfPos);
-        void consumeNearbyBoids(vec3 selfPos);
+        void consumeNearbyBoids(SystemData const& data, vec3 selfPos);
 
         std::shared_ptr<SceneView> m_pSceneView{ nullptr };
         std::shared_ptr<Simulator> m_pSimulator{ nullptr };

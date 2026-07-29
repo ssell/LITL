@@ -11,8 +11,10 @@ namespace litl
 
     ThreadInfo& ThreadInfo::get() noexcept
     {
+        static std::atomic<uint32_t> index{ 0u };
         static thread_local ThreadInfo threadInfo{
             .id = std::this_thread::get_id(),
+            .index = index++,
             .mainthread = false
         };
 

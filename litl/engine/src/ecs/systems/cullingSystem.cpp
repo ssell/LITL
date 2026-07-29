@@ -9,15 +9,9 @@
 
 namespace litl
 {
-    namespace
-    {
-        std::atomic<uint32_t> g_nextThreadIndex{ 0u };
-    }
-
     std::array<CullingBucket, Constants::max_thread_count> CullingSystem::s_cullingBuckets{};
     CullingBucket CullingSystem::s_combinedBucket{};
     bool CullingSystem::s_combined{ false };
-    thread_local uint32_t CullingSystem::t_threadIndex = g_nextThreadIndex.fetch_add(1);
 
     void CullingSystem::setup(ServiceProvider& services)
     {
@@ -126,7 +120,7 @@ namespace litl
             if (m_cameraVisibleEntities[cameraIndex].entities.contains(entity))
             {
                 // We are visible to this camera, add to our thread-specific culling bucket.
-                s_cullingBuckets[t_threadIndex].cameraRenderableEntities[cameraIndex].entities.push_back(RenderableEntity{
+                s_cullingBuckets[data.threadIndex].cameraRenderableEntities[cameraIndex].entities.push_back(RenderableEntity{
                     .entity = entity,
                     .transform = transform,
                     .mesh = mesh,

@@ -43,6 +43,7 @@ namespace litl
 
         void setup(ServiceProvider& services, SimulatorConfiguration const& config) noexcept;
         void update(float dt) noexcept;
+        void updateBoidsConsumed(uint32_t count) noexcept;
         void updateFoodConsumed(uint32_t index) noexcept;
         void updatePredatorPosition(uint32_t index, vec3 position);
 
