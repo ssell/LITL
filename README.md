@@ -32,5 +32,6 @@ Samples are provided as a demonstration and live documentation of LITL. New samp
 
 * [Renderer](samples/renderer)
 * [Triangle](samples/triangle)
+* [Boids](samples/boids)
 
 _* denotes a future release. The associated samples are not guaranteed to yet be done or stable._
