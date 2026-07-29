@@ -5,7 +5,6 @@
 
 namespace litl
 {
-
     class MovementSystem
     {
     public:

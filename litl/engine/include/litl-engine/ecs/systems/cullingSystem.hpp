@@ -79,7 +79,7 @@ namespace litl
         /// Will combine the per-thread results if they have not already been combined.
         /// </summary>
         /// <returns></returns>
-        static CullingBucket const& getCombinedCullingBucket() noexcept;
+        static CullingBucket& getCombinedCullingBucket() noexcept;
 
     private:
 

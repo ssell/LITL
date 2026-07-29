@@ -42,7 +42,12 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     auto objectPool = services.get<ObjectPool>();       // Source of common objects such as GPU buffers, meshes, materials, cameras, etc.
     auto sceneView = services.get<SceneView>();         // A view into the current active scene.
 
-    sceneView->setMainCamera(objectPool->createCamera({ .clearColor = { 0.035f, 0.035f, 0.05f } }));
+    auto cameraHandle = objectPool->createCamera({ .projection = CameraProjection::Perspective, .clearColor = { 0.035f, 0.035f, 0.05f } });
+    auto* camera = objectPool->getCamera(cameraHandle);
+
+    sceneView->setMainCamera(cameraHandle);
+    camera->setWorldPosition(vec3{ 0.0f, 0.0f, 0.0f });
+    camera->lookAt(vec3::forward(), vec3::up());
 
     auto triangleMaterial = createTriangleMaterial(*objectPool);
     auto triangleMesh = createTriangleMesh(*objectPool);
@@ -60,10 +65,12 @@ void createSpinningTriangle(EntityCommands& commands, MaterialHandle material, M
     Transform transform{};
     transform.setPosition(position);
 
-    commands.addComponent(triangleEntity, transform);
-    commands.addComponent(triangleEntity, MaterialRef{ .handle = material });
-    commands.addComponent(triangleEntity, MeshRef{ .handle = mesh });
-    commands.addComponent(triangleEntity, Spin{ .rate = spinRate });
+    commands.addComponent<Transform>(triangleEntity, transform);
+    commands.addComponent<LocalBounds>(triangleEntity, LocalBounds{});
+    commands.addComponent<WorldBounds>(triangleEntity, WorldBounds{});
+    commands.addComponent<MaterialRef>(triangleEntity, MaterialRef{ .handle = material });
+    commands.addComponent<MeshRef>(triangleEntity, MeshRef{ .handle = mesh });
+    commands.addComponent<Spin>(triangleEntity, Spin{ .rate = spinRate });
 }
 
 /// <summary>

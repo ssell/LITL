@@ -130,7 +130,7 @@ namespace litl
         }
     }
 
-    CullingBucket const& CullingSystem::getCombinedCullingBucket() noexcept
+    CullingBucket& CullingSystem::getCombinedCullingBucket() noexcept
     {
         if (!s_combined)
         {

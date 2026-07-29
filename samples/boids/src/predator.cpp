@@ -51,7 +51,7 @@ namespace litl
         }
 
         vec3 toTarget = predator.target - selfPos;
-        vec3 toTargetDir = toTarget.normalized();
+        vec3 toTargetDir = (toTarget.isZeroed() ? vec3::right() : toTarget.normalized());
 
         // Has the predator reached their target?        
         if (predator.movingToTarget && (toTarget.lengthSquared() <= 9.0f))

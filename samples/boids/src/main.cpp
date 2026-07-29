@@ -56,8 +56,8 @@ void configureServices(ServiceCollection& services)
 void configureSystems(SystemCollection& systems)
 {
     systems.addSystem<MovementSystem>(SystemGroup::Update);
-    systems.addSystem<BoidSystem>(SystemGroup::FixedUpdate);
-    systems.addSystem<PredatorSystem>(SystemGroup::FixedUpdate);
+    systems.addSystem<BoidSystem>(SystemGroup::Update);
+    systems.addSystem<PredatorSystem>(SystemGroup::Update);
     systems.addSystem<FoodSystem>(SystemGroup::Update);
 }
 
@@ -90,7 +90,7 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     camera->setWorldPosition(cameraPos);
     camera->lookAt(cameraTarget, vec3::forward()); 
     sceneView->setMainCamera(cameraHandle);
-    simulator->setup(services, { .worldDimensions = WorldDimensions, .boidCount = 1000u, .predatorCount = 4u });
+    simulator->setup(services, { .worldDimensions = WorldDimensions, .boidCount = 1500u, .predatorCount = 2u });
 }
 
 /// <summary>

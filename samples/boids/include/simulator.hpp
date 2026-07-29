@@ -25,6 +25,7 @@ namespace litl
         uint32_t predatorCount = 1u;
         uint32_t foodCount = 5u;
         float boidPredatorDetectionRadius = 50.0f;
+        bool respawnBoids = false;
     };
 
     struct NearestPoint

@@ -567,10 +567,10 @@ namespace litl::bounds
     /// </summary>
     /// <param name="frustum"></param>
     /// <returns></returns>
-    [[nodiscard]] constexpr AABB computeAABB(Frustum const& frustum) noexcept
+    [[nodiscard]] inline AABB computeAABB(Frustum const& frustum) noexcept
     {
-        auto corners = Frustum::extractCorners(frustum);
-        return AABB::fromMinMax(corners.calculateMinPoint(), corners.calculateMaxPoint());
+        auto [minPoint, maxPoint] = Frustum::extractMinMaxPoints(frustum);
+        return AABB::fromMinMax(minPoint, maxPoint);
         
     }
 }
