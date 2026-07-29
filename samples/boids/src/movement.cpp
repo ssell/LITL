@@ -12,12 +12,12 @@ namespace litl
         // ... intentionally empty ...
     }
 
-    void MovementSystem::update(SystemData const& data, Entity entity, Boid const& boid, Movement& movement, Transform& transform)
+    void MovementSystem::update(SystemData const& data, Entity entity, Movement& movement, Transform& transform, Acceleration const& acceleration)
     {
         const vec3 prevPosition = transform.getPosition();
         const vec3 prevVelocity = movement.velocity;
 
-        movement.velocity = truncate(movement.velocity + (boid.acceleration * data.deltaTime), boid.maxSpeed);
+        movement.velocity = truncate(movement.velocity + (acceleration.acceleration * data.deltaTime), acceleration.maxSpeed);
 
         if (movement.velocity.lengthSquared() > 0.0f)
         {

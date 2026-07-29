@@ -19,7 +19,12 @@ namespace litl
     };
 
     static constexpr SteeringControls g_boidSteering = SteeringControls{};
-    static constexpr SteeringControls g_predatorSteering = SteeringControls{};
+
+    static constexpr SteeringControls g_predatorSteering = SteeringControls{ 
+        .perceptionRadius = 100.0f, 
+        .maxSpeed = 200.0f,
+        .maxForce = 200.0f
+    };
 
     inline constexpr float kEpsilonSq = 1e-8f;
 

@@ -28,7 +28,7 @@ namespace litl
 
             if (!nearbyBoids.empty())
             {
-                m_pSimulator->alertFoodConsumed(food.index);
+                m_pSimulator->updateFoodConsumed(food.index);
                 data.commands.destroyEntity(entity);
             }
         }

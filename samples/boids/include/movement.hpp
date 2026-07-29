@@ -12,7 +12,7 @@ namespace litl
 
         void setup(ServiceProvider& services);
         void prepare();
-        void update(SystemData const& data, Entity entity, Boid const& boid, Movement& movement, Transform& transform);
+        void update(SystemData const& data, Entity entity, Movement& movement, Transform& transform, Acceleration const& acceleration);
 
     private:
     };

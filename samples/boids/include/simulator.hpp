@@ -24,6 +24,13 @@ namespace litl
         uint32_t boidCount = 100u;
         uint32_t predatorCount = 1u;
         uint32_t foodCount = 5u;
+        float boidPredatorDetectionRadius = 50.0f;
+    };
+
+    struct NearestPoint
+    {
+        vec3 position{};
+        float distanceSq{ 0.0f };
     };
 
     /// <summary>
@@ -36,8 +43,11 @@ namespace litl
 
         void setup(ServiceProvider& services, SimulatorConfiguration const& config) noexcept;
         void update(float dt) noexcept;
-        void alertFoodConsumed(uint32_t index) noexcept;
-        [[nodiscard]] vec3 getNearestFood(vec3 pos) noexcept;
+        void updateFoodConsumed(uint32_t index) noexcept;
+        void updatePredatorPosition(uint32_t index, vec3 position);
+
+        [[nodiscard]] NearestPoint getNearestFood(vec3 pos) noexcept;
+        [[nodiscard]] NearestPoint getNearestPredator(vec3 pos) noexcept;
         [[nodiscard]] SimulatorConfiguration const& getConfig() const noexcept;
 
     private:
@@ -61,7 +71,15 @@ namespace litl
         /// </summary>
         SimulatorConfiguration m_config{};
 
+        /// <summary>
+        /// Position and status of all food. Used to simplify the query for boids looking for food.
+        /// </summary>
         std::vector<TrackedFood> m_trackedFood;
+
+        /// <summary>
+        /// Positions of all predators. Used to simplify the query for boids looking for predators.
+        /// </summary>
+        std::vector<vec3> m_trackedPredators;
 
         /// <summary>
         /// The global shared object pool. Could request each frame via services, but can also just keep a reference.
