@@ -3,6 +3,7 @@
 #include "boid.hpp"
 #include "food.hpp"
 #include "movement.hpp"
+#include "predator.hpp"
 
 using namespace litl;
 
@@ -54,8 +55,9 @@ void configureServices(ServiceCollection& services)
 /// </summary>
 void configureSystems(SystemCollection& systems)
 {
-    systems.addSystem<BoidSystem>(SystemGroup::FixedUpdate);
     systems.addSystem<MovementSystem>(SystemGroup::Update);
+    systems.addSystem<BoidSystem>(SystemGroup::FixedUpdate);
+    systems.addSystem<PredatorSystem>(SystemGroup::FixedUpdate);
     systems.addSystem<FoodSystem>(SystemGroup::Update);
 }
 

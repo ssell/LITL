@@ -16,7 +16,8 @@ namespace litl
     {
         m_pSceneView = services.get<SceneView>();
         m_pSimulator = services.get<Simulator>();
-        m_worldSize = services.get<Simulator>()->getConfig().worldDimensions;
+        m_worldSize = m_pSimulator->getConfig().worldDimensions;
+        m_predatorRadiusSq = m_pSimulator->getConfig().boidPredatorDetectionRadius * m_pSimulator->getConfig().boidPredatorDetectionRadius;
     }
 
     /// <summary>
@@ -31,10 +32,11 @@ namespace litl
     /// Invoked each frame for each entity that matches the required components. 
     /// Each valid chunk of relevant entities is run at the same time in parallel as other matching chunks.
     /// </summary>
-    void BoidSystem::update(SystemData const& data, Entity entity, Boid& boid, Transform const& transform, Movement const& movement)
+    void BoidSystem::update(SystemData const& data, Entity entity, Boid& boid, Acceleration& acceleration, Transform const& transform, Movement const& movement)
     {
         if ((data.frameIndex % SteeringPhases) != boid.phase)
         {
+            // Due to the number of boids, we do not need to update all of them every frame. Instead we can update each one once every SteeringPhases frames.
             return;
         }
 
@@ -46,11 +48,11 @@ namespace litl
             getTargetPosition(boid, selfPos);
         }
 
-        vec3 targetDir = (boid.target - selfPos).normalized() * (boid.movingToTarget ? 1.0f : -1.0f);
-        vec3 steering = computeSteeringAcceleration(data.world, entity, selfPos, movement.velocity, targetDir);
+        vec3 targetDir = (boid.target - selfPos).normalized() * (boid.isFleeing ? -1.0f : 1.0f);
+        vec3 steering = computeSteeringAcceleration(data.world, entity, selfPos, movement.velocity, targetDir, boid.isFleeing);
 
-        boid.acceleration = steering;
-        boid.maxSpeed = g_boidSteering.maxSpeed;
+        acceleration.acceleration = steering;
+        acceleration.maxSpeed = g_boidSteering.maxSpeed;
     }
 
     /// <summary>
@@ -58,22 +60,21 @@ namespace litl
     /// </summary>
     void BoidSystem::getTargetPosition(Boid& boid, vec3 selfPos)
     {
-        t_partitionQueryResults.clear();
-        m_pSceneView->query<Predator>(bounds::Sphere::fromCenterRadius(selfPos, g_boidSteering.perceptionRadius), t_partitionQueryResults, true, 1u);
+        NearestPoint nearestTargetPoint = m_pSimulator->getNearestPredator(selfPos);
 
-        if (!t_partitionQueryResults.empty())
+        if (nearestTargetPoint.distanceSq <= m_predatorRadiusSq)
         {
-            boid.target = t_partitionQueryResults[0].worldPosition;
-            boid.movingToTarget = false;
+            boid.target = nearestTargetPoint.position;
+            boid.isFleeing = true;
         }
         else
         {
-            boid.target = m_pSimulator->getNearestFood(selfPos);
-            boid.movingToTarget = true;
+            boid.target = m_pSimulator->getNearestFood(selfPos).position;
+            boid.isFleeing = false;
         }
     }
 
-    vec3 BoidSystem::computeSteeringAcceleration(World& world, Entity self, vec3 selfPos, vec3 selfVelocity, vec3 targetVector)
+    vec3 BoidSystem::computeSteeringAcceleration(World& world, Entity self, vec3 selfPos, vec3 selfVelocity, vec3 targetVector, bool isFleeing)
     {
         t_partitionQueryResults.clear();
         m_pSceneView->query<Boid>(bounds::Sphere::fromCenterRadius(selfPos, g_boidSteering.perceptionRadius), t_partitionQueryResults, false, 8u);
@@ -112,7 +113,7 @@ namespace litl
 
         vec3 acceleration{};
 
-        acceleration += steerTowards(targetVector, selfVelocity, g_boidSteering) * g_boidSteering.targetWeight;
+        acceleration += steerTowards(targetVector, selfVelocity, g_boidSteering) * g_boidSteering.targetWeight * (isFleeing ? 16.0f : 1.0f);
 
         if (accumulatedSeparation.lengthSquared() > kEpsilonSq)
         {

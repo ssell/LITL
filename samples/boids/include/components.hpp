@@ -17,17 +17,7 @@ namespace litl
         /// <summary>
         /// 
         /// </summary>
-        vec3 acceleration{};
-
-        /// <summary>
-        /// 
-        /// </summary>
         uint32_t phase{ 0u };
-
-        /// <summary>
-        /// 
-        /// </summary>
-        float maxSpeed{};
 
         /// <summary>
         /// The last time tick was called for this boid.
@@ -37,12 +27,29 @@ namespace litl
         /// <summary>
         /// 
         /// </summary>
-        bool movingToTarget{ true };
+        bool isFleeing{ false };
     };
 
     struct Predator
     {
-        // ... todo ...
+        /// <summary>
+        /// The fixed target that the predator is currently travelling to.
+        /// </summary>
+        vec3 target{};
+
+        /// <summary>
+        /// 
+        /// </summary>
+        vec3 acceleration{};
+
+        uint32_t index{ 0u };
+
+        /// <summary>
+        /// The last time tick was called for this predator.
+        /// </summary>
+        float lastTick{ 0.0f };
+
+        bool movingToTarget{ false };
     };
 
     enum class FoodStatus : uint8_t
@@ -54,7 +61,6 @@ namespace litl
 
     struct Food
     {
-
         /// <summary>
         /// Index into the simulators tracking pool for food.
         /// </summary>
@@ -64,6 +70,12 @@ namespace litl
         /// The last time tick was called for this food.
         /// </summary>
         float lastTick{ 0.0f };
+    };
+
+    struct Acceleration
+    {
+        vec3 acceleration{};
+        float maxSpeed{ 0.0f };
     };
 
     struct Movement
@@ -76,5 +88,6 @@ LITL_REGISTER_COMPONENT(litl::Boid);
 LITL_REGISTER_COMPONENT(litl::Predator);
 LITL_REGISTER_COMPONENT(litl::Food);
 LITL_REGISTER_COMPONENT(litl::Movement);
+LITL_REGISTER_COMPONENT(litl::Acceleration);
 
 #endif

@@ -7,6 +7,7 @@
 #include "simulator.hpp"
 #include "boid.hpp"
 #include "food.hpp"
+#include "predator.hpp"
 
 namespace litl
 {
@@ -30,7 +31,7 @@ namespace litl
             }
         };
 
-        vec3 getRandomSpawnPoint(RandomMT19937& rng, uint32_t worldDimensions, uint32_t padding) noexcept
+        vec3 getRandomSpawnPoint(RandomLCG& rng, uint32_t worldDimensions, uint32_t padding) noexcept
         {
             return vec3(
                 static_cast<float>(rng.next(worldDimensions - (padding * 2u)) + padding),
@@ -38,7 +39,7 @@ namespace litl
                 static_cast<float>(rng.next(worldDimensions - (padding * 2u)) + padding));
         }
 
-        vec3 getRandomSpawnDirection(RandomMT19937& rng) noexcept
+        vec3 getRandomSpawnDirection(RandomLCG& rng) noexcept
         {
             return vec3{ rng.next01() * 2.0f - 1.0f, 0.0f, rng.next01() * 2.0f - 1.0f }.normalized();
         }
@@ -54,6 +55,7 @@ namespace litl
         m_pWorld = services.get<World>();
         m_config = config;
         m_trackedFood.resize(m_config.foodCount, {});
+        m_trackedPredators.resize(m_config.predatorCount, {});
 
         auto boidTriangle = Triangle::build(4.0f, colors::Blue, colors::Red);
         auto foodTriangle = Triangle::build(4.0f, colors::Green, colors::Green);
@@ -78,12 +80,17 @@ namespace litl
         }
     }
 
-    void Simulator::alertFoodConsumed(uint32_t index) noexcept
+    void Simulator::updateFoodConsumed(uint32_t index) noexcept
     {
         m_trackedFood[index].foodStatus = FoodStatus::Eaten;
     }
 
-    vec3 Simulator::getNearestFood(vec3 pos) noexcept
+    void Simulator::updatePredatorPosition(uint32_t index, vec3 position) noexcept
+    {
+        m_trackedPredators[index] = position;
+    }
+
+    NearestPoint Simulator::getNearestFood(vec3 pos) noexcept
     {
         float nearestSq = std::numeric_limits<float>::max();
         vec3 nearestPos{ static_cast<float>(m_config.worldDimensions / 2u), 0.0f, static_cast<float>(m_config.worldDimensions / 2u) };
@@ -102,7 +109,26 @@ namespace litl
             }
         }
 
-        return nearestPos;
+        return NearestPoint{ .position = nearestPos, .distanceSq = nearestSq };
+    }
+
+    NearestPoint Simulator::getNearestPredator(vec3 pos) noexcept
+    {
+        float nearestSq = std::numeric_limits<float>::max();
+        vec3 nearestPos{};
+
+        for (vec3 trackedPredator : m_trackedPredators)
+        {
+            float distSq = distanceSq(trackedPredator, pos);
+
+            if (distSq < nearestSq)
+            {
+                nearestSq = distSq;
+                nearestPos = trackedPredator;
+            }
+        }
+
+        return NearestPoint{ .position = nearestPos, .distanceSq = nearestSq };
     }
 
     SimulatorConfiguration const& Simulator::getConfig() const noexcept
@@ -141,13 +167,14 @@ namespace litl
     void Simulator::spawnBoid() noexcept
     {
         auto& commands = m_pWorld->getCommandBuffer();
-        auto& rng = Random::shared();
+        auto& rng = RandomFast::shared();
         auto boidEntity = commands.createEntity();
 
         commands.addComponent<Boid>(boidEntity, Boid{ .phase = m_boidCount % BoidSystem::SteeringPhases, .lastTick = -rng.next01() * BoidSystem::TickIntervalSec });                           // Boid system calculates targets at a set interval. Set random lastTick times so all the initial boids dont tick at the same time.
         commands.addComponent<Transform>(boidEntity, Transform::create(getRandomSpawnPoint(rng, m_config.worldDimensions, 0u)));
         commands.addComponent<LocalBounds>(boidEntity, LocalBounds{});
         commands.addComponent<WorldBounds>(boidEntity, WorldBounds{});
+        commands.addComponent<Acceleration>(boidEntity, Acceleration{});
         commands.addComponent<Movement>(boidEntity, Movement{ .velocity = getRandomSpawnDirection(rng) * g_boidSteering.maxSpeed });
         commands.addComponent<MaterialRef>(boidEntity, MaterialRef{ .handle = m_sharedMaterial });
         commands.addComponent<MeshRef>(boidEntity, MeshRef{ .handle = m_boidMesh });
@@ -158,16 +185,20 @@ namespace litl
     void Simulator::spawnPredator() noexcept
     {
         auto& commands = m_pWorld->getCommandBuffer();
-        auto& rng = Random::shared();
+        auto& rng = RandomFast::shared();
         auto predatorEntity = commands.createEntity();
+        auto position = getRandomSpawnPoint(rng, m_config.worldDimensions, 0u);
 
-        commands.addComponent<Predator>(predatorEntity, Predator{});
-        commands.addComponent<Transform>(predatorEntity, Transform::create(getRandomSpawnPoint(rng, m_config.worldDimensions, 0u)));
+        commands.addComponent<Predator>(predatorEntity, Predator{ .index = static_cast<uint32_t>(m_predatorCount), .lastTick = -rng.next01() * PredatorSystem::TickIntervalSec});
+        commands.addComponent<Transform>(predatorEntity, Transform::create(position));
         commands.addComponent<LocalBounds>(predatorEntity, LocalBounds{});
-        commands.addComponent<WorldBounds>(predatorEntity, WorldBounds{}); 
+        commands.addComponent<WorldBounds>(predatorEntity, WorldBounds{});
+        commands.addComponent<Acceleration>(predatorEntity, Acceleration{});
+        commands.addComponent<Movement>(predatorEntity, Movement{ .velocity = getRandomSpawnDirection(rng) * g_predatorSteering.maxSpeed });
         commands.addComponent<MaterialRef>(predatorEntity, MaterialRef{ .handle = m_sharedMaterial });
         commands.addComponent<MeshRef>(predatorEntity, MeshRef{ .handle = m_predatorMesh });
 
+        m_trackedPredators[m_predatorCount] = position;
         m_predatorCount++;
     }
 
@@ -187,7 +218,7 @@ namespace litl
         if (nextIndex != Constants::uint32_null_index)
         {
             auto& commands = m_pWorld->getCommandBuffer();
-            auto& rng = Random::shared();
+            auto& rng = RandomFast::shared();
             auto foodEntity = commands.createEntity();
             auto position = getRandomSpawnPoint(rng, m_config.worldDimensions, 20u);
 
