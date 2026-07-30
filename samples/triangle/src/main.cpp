@@ -1,5 +1,6 @@
 #include "litl-engine/startup.hpp"
 #include "spinSystem.hpp"
+#include "litl-core/task/task.hpp"
 
 using namespace litl;
 
