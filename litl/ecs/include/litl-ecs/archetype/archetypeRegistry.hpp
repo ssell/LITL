@@ -7,12 +7,12 @@
 
 #include "litl-ecs/constants.hpp"
 #include "litl-ecs/component/component.hpp"
-#include "litl-ecs/entity/entityRecord.hpp"
-#include "litl-ecs/archetype/archetype.hpp"
 #include "litl-ecs/archetype/archetypeComponents.hpp"
 
 namespace litl
 {
+    struct Archetype;
+    struct EntityRecord;
 
     /// <summary>
     /// Responsible for owning and tracking all Archetype specializations.
@@ -27,7 +27,7 @@ namespace litl
         /// Returns the empty archetype.
         /// </summary>
         /// <returns></returns>
-        static Archetype* Empty() noexcept;
+        static Archetype& Empty() noexcept;
 
         /*
         template<ValidComponentType... ComponentTypes>
@@ -48,7 +48,7 @@ namespace litl
         /// <typeparam name="...ComponentTypes"></typeparam>
         /// <returns></returns>
         template<ValidComponentType... ComponentTypes>
-        static Archetype* get() noexcept
+        static Archetype& get() noexcept
         {
             /*
             std::vector<ComponentTypeId> componentTypeIds;
@@ -68,28 +68,28 @@ namespace litl
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        static Archetype* getById(ArchetypeId id) noexcept;
+        static Archetype& getById(ArchetypeId id) noexcept;
 
         /// <summary>
         /// Retrieves the archetype by the component hash.
         /// </summary>
         /// <param name="componentHash"></param>
         /// <returns></returns>
-        static Archetype* getByComponentHash(uint64_t componentHash) noexcept;
+        static Archetype& getByComponentHash(uint64_t componentHash) noexcept;
 
         /// <summary>
         /// Retrieves the archetype by the provided list of component ids.
         /// </summary>
         /// <param name="components"></param>
         /// <returns></returns>
-        static Archetype* getByComponents(ArchetypeComponents& components) noexcept;
+        static Archetype& getByComponents(ArchetypeComponents& components) noexcept;
 
         /// <summary>
         /// Retrieves the archetype by the provided list of component ids.
         /// </summary>
         /// <param name="components"></param>
         /// <returns></returns>
-        static Archetype* getByComponents(std::initializer_list<ComponentTypeId> components) noexcept;
+        static Archetype& getByComponents(std::initializer_list<ComponentTypeId> components) noexcept;
 
         /// <summary>
         /// Retrieves all archetype ids that have the specified component.
@@ -115,7 +115,7 @@ namespace litl
         /// <param name="record"></param>
         /// <param name="from"></param>
         /// <param name="to"></param>
-        static void move(EntityRecord const& record, Archetype* from, Archetype* to) noexcept;
+        static void move(EntityRecord const& record, Archetype& from, Archetype& to) noexcept;
 
         /// <summary>
         /// Returns the number of Archetypes tracked by the registry.
@@ -133,7 +133,7 @@ namespace litl
     private:
 
         static void refineComponentMask(std::vector<ComponentTypeId>& componentTypeIds) noexcept;
-        static Archetype* buildArchetype(uint64_t const archetypeHash, ArchetypeComponents const& components) noexcept;
+        static Archetype& buildArchetype(uint64_t const archetypeHash, ArchetypeComponents const& components) noexcept;
     };
 }
 
