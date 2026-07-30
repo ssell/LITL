@@ -6,6 +6,9 @@ namespace litl::samples
 {
     namespace
     {
+        /// <summary>
+        /// Use a shared vector for each thread. Allocations will stop once a high-water mark is reached.
+        /// </summary>
         static thread_local std::vector<PartitionQueryResult> t_partitionQueryResults;
     }
 
@@ -25,7 +28,7 @@ namespace litl::samples
     /// </summary>
     void BoidSystem::prepare()
     {
-
+        // ... no action ...
     }
 
     /// <summary>
@@ -62,6 +65,7 @@ namespace litl::samples
     {
         NearestPoint nearestTargetPoint = m_pSimulator->getNearestPredator(selfPos);
 
+        // First check for predators, next for food.
         if (nearestTargetPoint.distanceSq <= m_predatorRadiusSq)
         {
             boid.target = nearestTargetPoint.position;
@@ -86,6 +90,7 @@ namespace litl::samples
         vec3 accumulatedPosition{};
         uint32_t flockCount = 0u;
 
+        // Accumulate neighbor velocities and positions
         for (auto& neighbor : t_partitionQueryResults)
         {
             if (neighbor.entity == self)
@@ -113,15 +118,18 @@ namespace litl::samples
 
         vec3 acceleration{};
 
+        // Add our "to target" acceleration
         acceleration += steerTowards(targetVector, selfVelocity, g_boidSteering) * g_boidFlocking.targetWeight * (isFleeing ? 16.0f : 1.0f);
-
-        if (accumulatedSeparation.lengthSquared() > Traits<float>::epsilon)
-        {
-            acceleration += steerTowards(accumulatedSeparation, selfVelocity, g_boidSteering) * g_boidFlocking.separationWeight;
-        }
 
         if (flockCount > 0u)
         {
+            // Add our separation force acceleration
+            if (accumulatedSeparation.lengthSquared() > Traits<float>::epsilon)
+            {
+                acceleration += steerTowards(accumulatedSeparation, selfVelocity, g_boidSteering) * g_boidFlocking.separationWeight;
+            }
+
+            // Add our cohesion and alignment force accelerations
             const float inverse = 1.0f / static_cast<float>(flockCount);
             acceleration += steerTowards(accumulatedVelocity * inverse, selfVelocity, g_boidSteering) * g_boidFlocking.alignmentWeight;
             acceleration += steerTowards((accumulatedPosition * inverse) - selfPos, selfVelocity, g_boidSteering) * g_boidFlocking.cohesionWeight;

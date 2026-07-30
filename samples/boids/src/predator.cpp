@@ -2,14 +2,21 @@
 #include "predator.hpp"
 #include "simulator.hpp"
 
-namespace
-{
-    static thread_local std::vector<litl::PartitionQueryResult> t_partitionQueryResults;
-    static thread_local std::array<uint32_t, litl::Constants::max_thread_count> t_consumedBoidCounts;
-}
-
 namespace litl::samples
 {
+    namespace
+    {
+        /// <summary>
+        /// Use a shared vector for each thread. Allocations will stop once a high-water mark is reached.
+        /// </summary>
+        static thread_local std::vector<litl::PartitionQueryResult> t_partitionQueryResults;
+
+        /// <summary>
+        /// For each thread, we accumulate the number of consumed boids. That is then flattened in the prepare method.
+        /// </summary>
+        static thread_local std::array<uint32_t, litl::Constants::max_thread_count> t_consumedBoidCounts;
+    }
+
     void PredatorSystem::setup(ServiceProvider& services)
     {
         m_pSceneView = services.get<SceneView>();
@@ -20,6 +27,11 @@ namespace litl::samples
 
     void PredatorSystem::prepare()
     {
+        // While update is called potentially on many threads in paralle, prepare is called just once per frame on the main thread.
+        // As such it is a useful spot to do a pre-update pass (or in this case post, as we handle data from last frame) during a safe sync point.
+        // Since t_consumedBoidCounts is populated in parallel, we take this chance to flatten into a total final count and feed it to the simulator.
+        // This lets us avoid any slow sync mechanisms.
+
         uint32_t totalConsumedBoidsLastFrame = 0u;
 
         for (auto consumedPerThread : t_consumedBoidCounts)
@@ -40,6 +52,7 @@ namespace litl::samples
         vec3 selfPos = transform.getPosition();
         m_pSimulator->updatePredatorPosition(predator.index, selfPos);
 
+        // Update current target
         if ((data.elapsedTime - predator.lastTick) > TickIntervalSec)
         {
             predator.lastTick = data.elapsedTime;

@@ -49,7 +49,7 @@ namespace litl::samples
         void update(float dt) noexcept;
         void updateBoidsConsumed(uint32_t count) noexcept;
         void updateFoodConsumed(uint32_t index) noexcept;
-        void updatePredatorPosition(uint32_t index, vec3 position);
+        void updatePredatorPosition(uint32_t index, vec3 position) noexcept;
 
         [[nodiscard]] NearestPoint getNearestFood(vec3 pos) noexcept;
         [[nodiscard]] NearestPoint getNearestPredator(vec3 pos) noexcept;
@@ -60,7 +60,7 @@ namespace litl::samples
         struct TrackedFood
         {
             vec3 position{};
-            FoodStatus foodStatus{ FoodStatus::None };
+            Food::Status foodStatus{ Food::Status::None };
         };
 
         void tick() noexcept;
