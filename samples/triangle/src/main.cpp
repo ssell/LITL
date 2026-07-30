@@ -15,10 +15,10 @@ int main()
 
     engine.setup(
         { .engineSettings { .applicationName = "LITL - Triangle Sample" } },
-        nullptr,    // this sample uses no custom services
+        nullptr,                // this sample uses no custom services
         configureSystems,
-        bootstrap,
-        nullptr);   // this sample uses no custom callbacks
+        nullptr,                // this sample uses no custom callbacks
+        bootstrap);
 
     engine.start();
 
@@ -30,7 +30,7 @@ int main()
 /// </summary>
 void configureSystems(SystemCollection& systems)
 {
-    systems.addSystem<SpinSystem>(SystemGroup::Update);
+    systems.addSystem<samples::SpinSystem>(SystemGroup::Update);
 }
 
 /// <summary>
@@ -70,7 +70,7 @@ void createSpinningTriangle(EntityCommands& commands, MaterialHandle material, M
     commands.addComponent<WorldBounds>(triangleEntity, WorldBounds{});
     commands.addComponent<MaterialRef>(triangleEntity, MaterialRef{ .handle = material });
     commands.addComponent<MeshRef>(triangleEntity, MeshRef{ .handle = mesh });
-    commands.addComponent<Spin>(triangleEntity, Spin{ .rate = spinRate });
+    commands.addComponent<samples::Spin>(triangleEntity, samples::Spin{ .rate = spinRate });
 }
 
 /// <summary>

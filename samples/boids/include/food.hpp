@@ -6,9 +6,16 @@
 namespace litl
 {
     class SceneView;
+}
+
+namespace litl::samples
+{
     class Simulator;
 
-    class FoodSystem
+    /// <summary>
+    /// Checks for nearby boids and marks the food consumed if any are close enough.
+    /// </summary>
+    class FoodSystem final
     {
     public:
 

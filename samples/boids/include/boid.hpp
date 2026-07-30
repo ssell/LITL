@@ -7,9 +7,16 @@
 namespace litl
 {
     class SceneView;
+}
+
+namespace litl::samples
+{
     class Simulator;
 
-    class BoidSystem
+    /// <summary>
+    /// Performs target resolution and acceleration calculations for each boid.
+    /// </summary>
+    class BoidSystem final
     {
     public:
 

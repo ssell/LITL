@@ -9,7 +9,7 @@
 #include "food.hpp"
 #include "predator.hpp"
 
-namespace litl
+namespace litl::samples
 {
     namespace
     {

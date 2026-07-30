@@ -2,14 +2,14 @@
 #include "predator.hpp"
 #include "simulator.hpp"
 
-namespace litl
+namespace
 {
-    namespace
-    {
-        static thread_local std::vector<PartitionQueryResult> t_partitionQueryResults;
-        static thread_local std::array<uint32_t, Constants::max_thread_count> t_consumedBoidCounts;
-    }
+    static thread_local std::vector<litl::PartitionQueryResult> t_partitionQueryResults;
+    static thread_local std::array<uint32_t, litl::Constants::max_thread_count> t_consumedBoidCounts;
+}
 
+namespace litl::samples
+{
     void PredatorSystem::setup(ServiceProvider& services)
     {
         m_pSceneView = services.get<SceneView>();
@@ -71,7 +71,7 @@ namespace litl
     void PredatorSystem::getTargetPosition(Predator& predator, vec3 selfPos)
     {
         t_partitionQueryResults.clear();
-        m_pSceneView->query<Boid>(bounds::Sphere::fromCenterRadius(selfPos, g_predatorSteering.perceptionRadius), t_partitionQueryResults, true, 32u);
+        m_pSceneView->query<Boid>(bounds::Sphere::fromCenterRadius(selfPos, 100.0f), t_partitionQueryResults, true, 32u);
 
         if (!t_partitionQueryResults.empty())
         {

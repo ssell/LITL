@@ -1,6 +1,6 @@
 #include "movement.hpp"
 
-namespace litl
+namespace litl::samples
 {
     void MovementSystem::setup(ServiceProvider& services)
     {
