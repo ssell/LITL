@@ -4,15 +4,15 @@
 #include "litl-ecs/register.hpp"
 #include "litl-engine/ecs/common.hpp"
 
-namespace litl
+namespace litl::samples
 {
-    struct Spin 
+    struct Spin
     {
         vec3 euler = vec3::up();
         float rate = 1.0f;
     };
 
-    struct SpinSystem
+    struct SpinSystem final
     {
         void setup(ServiceProvider& services) {}
         void prepare() {}
@@ -26,6 +26,6 @@ namespace litl
     };
 }
 
-LITL_REGISTER_COMPONENT(litl::Spin);
+LITL_REGISTER_COMPONENT(litl::samples::Spin);
 
 #endif

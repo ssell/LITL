@@ -3,9 +3,13 @@
 
 #include "components.hpp"
 
-namespace litl
+namespace litl::samples
 {
-    class MovementSystem
+    /// <summary>
+    /// Given an acceleration, performs translation and rotation on the entity.
+    /// Stores the current velocity onto the Movement component.
+    /// </summary>
+    class MovementSystem final
     {
     public:
 

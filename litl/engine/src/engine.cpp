@@ -78,8 +78,8 @@ namespace litl
         Configuration config, 
         ConfigureServicesFunc servicesFunc, 
         ConfigureSystemsFunc systemsFunc, 
-        BootstrapFunc bootstrapFunc, 
-        ConfigureCallbacksFunc callbacksFunc) noexcept
+        ConfigureCallbacksFunc callbacksFunc,
+        BootstrapFunc bootstrapFunc) noexcept
     {
         // These can be modified by the user (though it is unusual), so make sure they exist first.
         assert(m_pImpl->setup.configureServices != nullptr);

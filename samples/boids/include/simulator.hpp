@@ -16,7 +16,10 @@ namespace litl
 {
     class ObjectPool;
     class World;
+}
 
+namespace litl::samples
+{
     struct SimulatorConfiguration
     {
         uint32_t worldDimensions = 1024u;
@@ -38,7 +41,7 @@ namespace litl
     /// The simulator for the boids sample.
     /// Responsible for spawning food and additional boids if the population gets low.
     /// </summary>
-    class Simulator
+    class Simulator final
     {
     public:
 

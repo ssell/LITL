@@ -2,7 +2,7 @@
 #include "boid.hpp"
 #include "simulator.hpp"
 
-namespace litl
+namespace litl::samples
 {
     namespace
     {
@@ -77,9 +77,9 @@ namespace litl
     vec3 BoidSystem::computeSteeringAcceleration(World& world, Entity self, vec3 selfPos, vec3 selfVelocity, vec3 targetVector, bool isFleeing)
     {
         t_partitionQueryResults.clear();
-        m_pSceneView->query<Boid>(bounds::Sphere::fromCenterRadius(selfPos, g_boidSteering.perceptionRadius), t_partitionQueryResults, false, 8u);
+        m_pSceneView->query<Boid>(bounds::Sphere::fromCenterRadius(selfPos, g_boidFlocking.perceptionRadius), t_partitionQueryResults, false, 8u);
 
-        const float separationRadiusSq = g_boidSteering.separationRadius * g_boidSteering.separationRadius;
+        const float separationRadiusSq = g_boidFlocking.separationRadius * g_boidFlocking.separationRadius;
 
         vec3 accumulatedSeparation{};
         vec3 accumulatedVelocity{};
@@ -96,7 +96,7 @@ namespace litl
             const auto awayFromNeighbor = selfPos - neighbor.worldPosition;
             const auto distFromNeighborSq = awayFromNeighbor.lengthSquared();
 
-            if (distFromNeighborSq < kEpsilonSq)
+            if (distFromNeighborSq < Traits<float>::epsilon)
             {
                 continue;
             }
@@ -113,18 +113,18 @@ namespace litl
 
         vec3 acceleration{};
 
-        acceleration += steerTowards(targetVector, selfVelocity, g_boidSteering) * g_boidSteering.targetWeight * (isFleeing ? 16.0f : 1.0f);
+        acceleration += steerTowards(targetVector, selfVelocity, g_boidSteering) * g_boidFlocking.targetWeight * (isFleeing ? 16.0f : 1.0f);
 
-        if (accumulatedSeparation.lengthSquared() > kEpsilonSq)
+        if (accumulatedSeparation.lengthSquared() > Traits<float>::epsilon)
         {
-            acceleration += steerTowards(accumulatedSeparation, selfVelocity, g_boidSteering) * g_boidSteering.separationWeight;
+            acceleration += steerTowards(accumulatedSeparation, selfVelocity, g_boidSteering) * g_boidFlocking.separationWeight;
         }
 
         if (flockCount > 0u)
         {
             const float inverse = 1.0f / static_cast<float>(flockCount);
-            acceleration += steerTowards(accumulatedVelocity * inverse, selfVelocity, g_boidSteering) * g_boidSteering.alignmentWeight;
-            acceleration += steerTowards((accumulatedPosition * inverse) - selfPos, selfVelocity, g_boidSteering) * g_boidSteering.cohesionWeight;
+            acceleration += steerTowards(accumulatedVelocity * inverse, selfVelocity, g_boidSteering) * g_boidFlocking.alignmentWeight;
+            acceleration += steerTowards((accumulatedPosition * inverse) - selfPos, selfVelocity, g_boidSteering) * g_boidFlocking.cohesionWeight;
         }
 
         return truncate(acceleration, g_boidSteering.maxForce);

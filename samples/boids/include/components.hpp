@@ -3,9 +3,9 @@
 
 #include "litl-ecs/register.hpp"
 #include "litl-engine/ecs/common.hpp"
-#include "steering.hpp"
+#include "controls.hpp"
 
-namespace litl
+namespace litl::samples
 {
     struct Boid
     {
@@ -84,10 +84,10 @@ namespace litl
     };
 }
 
-LITL_REGISTER_COMPONENT(litl::Boid);
-LITL_REGISTER_COMPONENT(litl::Predator);
-LITL_REGISTER_COMPONENT(litl::Food);
-LITL_REGISTER_COMPONENT(litl::Movement);
-LITL_REGISTER_COMPONENT(litl::Acceleration);
+LITL_REGISTER_COMPONENT(litl::samples::Boid);
+LITL_REGISTER_COMPONENT(litl::samples::Predator);
+LITL_REGISTER_COMPONENT(litl::samples::Food);
+LITL_REGISTER_COMPONENT(litl::samples::Movement);
+LITL_REGISTER_COMPONENT(litl::samples::Acceleration);
 
 #endif

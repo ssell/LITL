@@ -2,7 +2,7 @@
 #include "food.hpp"
 #include "simulator.hpp"
 
-namespace litl
+namespace litl::samples
 {
     void FoodSystem::setup(ServiceProvider& services)
     {

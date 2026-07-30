@@ -7,15 +7,12 @@
 
 using namespace litl;
 
-namespace
-{
-    constexpr uint32_t WorldDimensions = 1024u;
-}
+constexpr uint32_t WorldDimensions = 1024u;
 
 void configureServices(ServiceCollection& services);
 void configureSystems(SystemCollection& systems);
-void bootstrap(ServiceProvider& services, EntityCommands& commands);
 void configureCallbacks(std::shared_ptr<FrameCallbacks> callbacks);
+void bootstrap(ServiceProvider& services, EntityCommands& commands);
 
 int main()
 {
@@ -23,8 +20,8 @@ int main()
 
     engine.setup(
         Configuration {
-            .engineSettings {.applicationName = "LITL - Boids Sample" },
-            .sceneSettings {
+            .engineSettings = EngineConfiguration { .applicationName = "LITL - Boids Sample" },
+            .sceneSettings = SceneConfiguration {
                 .partition = ScenePartitionType::UniformGrid,
                 .uniformGridOptions = UniformGridOptions {
                     .cellSize = 32u,
@@ -34,8 +31,8 @@ int main()
         },
         configureServices,
         configureSystems,
-        bootstrap,
-        configureCallbacks);
+        configureCallbacks,
+        bootstrap);
 
     engine.start();
 
@@ -43,32 +40,44 @@ int main()
 }
 
 /// <summary>
-/// Adds our custom Simulator service which runs the simulation environment for the boids.
+/// This is called once by the engine and provides the user a chance to add their custom services to the dependency injection framework.
 /// </summary>
 void configureServices(ServiceCollection& services)
 {
-    services.addSingleton<Simulator>();
+    services.addSingleton<samples::Simulator>();
 }
 
 /// <summary>
-/// 
+/// This is called once by the engine and provides the user a chance to add their custom systems.
 /// </summary>
 void configureSystems(SystemCollection& systems)
 {
-    systems.addSystem<MovementSystem>(SystemGroup::Update);
-    systems.addSystem<BoidSystem>(SystemGroup::Update);
-    systems.addSystem<PredatorSystem>(SystemGroup::Update);
-    systems.addSystem<FoodSystem>(SystemGroup::Update);
+    systems.addSystem<samples::MovementSystem>(SystemGroup::Update);
+    systems.addSystem<samples::BoidSystem>(SystemGroup::Update);
+    systems.addSystem<samples::PredatorSystem>(SystemGroup::Update);
+    systems.addSystem<samples::FoodSystem>(SystemGroup::Update);
 }
 
 /// <summary>
-/// 
+/// This is called once by the engine and provides the user a chance to hook their custom callbacks into the frame lifecycle.
+/// </summary>
+void configureCallbacks(std::shared_ptr<FrameCallbacks> callbacks)
+{
+    callbacks->onFrameStart = [](ServiceProvider& services, float dt) -> void
+        {
+            services.get<samples::Simulator>()->update(dt);
+        };
+}
+
+/// <summary>
+/// This is called once by the engine after all services and systems have been configured.
+/// It serves as a place for the user to create the initial entities in the scene and perform other setup prior to the engine starting its frame loop.
 /// </summary>
 void bootstrap(ServiceProvider& services, EntityCommands& commands)
 {
     auto objectPool = services.get<ObjectPool>();
     auto sceneView = services.get<SceneView>();
-    auto simulator = services.get<Simulator>();
+    auto simulator = services.get<samples::Simulator>();
     auto cameraSize = static_cast<float>(WorldDimensions / 2u);
 
     CameraDescriptor cameraDescriptor{
@@ -90,16 +99,10 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     camera->setWorldPosition(cameraPos);
     camera->lookAt(cameraTarget, vec3::forward()); 
     sceneView->setMainCamera(cameraHandle);
-    simulator->setup(services, { .worldDimensions = WorldDimensions, .boidCount = 1500u, .predatorCount = 2u });
-}
 
-/// <summary>
-/// Sets up a callback so that the Simulator is invoked at the start of each frame.
-/// </summary>
-void configureCallbacks(std::shared_ptr<FrameCallbacks> callbacks)
-{
-    callbacks->onFrameStart = [](ServiceProvider& services, float dt) -> void
-    {
-        services.get<Simulator>()->update(dt);
-    };
+    simulator->setup(services, samples::SimulatorConfiguration{ 
+        .worldDimensions = WorldDimensions, 
+        .boidCount = 1500u, 
+        .predatorCount = 2u 
+    });
 }

@@ -7,9 +7,17 @@
 namespace litl
 {
     class SceneView;
+}
+
+namespace litl::samples
+{
     class Simulator;
 
-    class PredatorSystem
+    /// <summary>
+    /// Searches for boid targets and moves towards them.
+    /// Any boids near enough to the predator are consumed.
+    /// </summary>
+    class PredatorSystem final
     {
     public:
 
