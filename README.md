@@ -2,7 +2,7 @@
 
 This is a learning engine and very (very) early in development. It is public merely to show that it exists, but not for it to see any use (yet).
 
-**Current Version:** v0.0 
+**Current Version:** v0.1.0
 
 ## Requirements
 
@@ -26,7 +26,7 @@ As the engine is new and still under active development this may be small, but i
 
 ## Releases
 
-### Version 0.1 on 2027-07-30
+### [Version 0.1.0 on 2026-07-30](https://github.com/ssell/LITL/releases/tag/v0.1.0)
 
 The first version of the engine that has many of the core systems operational: ECS, rendering, jobs, scene, dependency injection, etc.
 
