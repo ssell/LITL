@@ -21,51 +21,74 @@ The central idea everything else serves: **adding or removing a component is jus
 
 ## Quick start — define, register, run
 
+**Component Structure:**
+
 ```cpp
-#include "litl-ecs/world.hpp"
+// Components are plain standard-layout structs.
+struct Velocity 
+{ 
+    vec3 value; 
+};
 
-using namespace litl;
+// Required for stable id association and type validation.
+LITL_REGISTER_COMPONENT(Velocity);
+```
 
-// 1. Components are plain standard-layout structs.
-struct Position { float x, y, z; };
-struct Velocity { float dx, dy, dz; };
+**System Structure:**
 
-// 2. A system is a struct with setup(...) and update(...).
-//    update() must begin with (EntityCommands&, float); the rest is the query.
-struct MovementSystem
+```cpp
+// A system a struct (or class) with three required public methods:
+//    setup(...), prepare(), and update(...)
+struct MovementSystem final
 {
     // Called one time for the lifetime of the application.
-    void setup(ServiceProvider& services) {}
+    void setup(ServiceProvider& services) 
+    {
+        // Perform dependency injection and other once-per-lifetime setup. Example:
+        // m_pSceneView = services.get<SceneView>();
+    }
 
     // Called each frame prior to any calls to update(...)
-    void prepare() {}
+    void prepare() 
+    {
+        // Useful for single-threaded pre- or post-update broad phases.
+    }
 
     // Called each frame according to its SystemGroup and dependencies.
     // There is only a single instance of the System but it is invoked in parallel on separate chunks.
-    // The first three parameters (EntityCommands, float, Entity) are required and at least one component.
-    void update(EntityCommands& commands, float dt, Entity e, Position& p, Velocity const& v)
+    // The first two parameters (SystemData, Entity) are required and at least one component.
+    void update(SystemData const& data, Entity entity, Transform& transform, Velocity const& velocity)
     {
-        p.x += v.dx * dt;
-        p.y += v.dy * dt;
-        p.z += v.dz * dt;
+        transform.translate(velocity.value * data.deltaTime);
     }
 };
-
-World world;
-world.getSystemCollection().addSystem<MovementSystem>(SystemGroup::Update);
-
-// 3. Spawn some entities (immediate path shown; prefer command buffers in real code).
-Entity e = world.createImmediate();
-world.addComponentsImmediate(e, Position{}, Velocity{ 1, 0, 0 });
-
-// 4. Per frame.
-world.setup(services, callbacks);
-world.setupSystems(services);
-while (running)
-    world.run(dt, fixedStep);
 ```
 
-`MovementSystem::update` is invoked once per entity that has both `Position` and `Velocity`, with references straight into chunk storage. `Position&` marks a write, `Velocity const&` a read — and that distinction is what the scheduler uses to order systems. See [Systems](#systems).
+**System Registration:**
+
+```cpp
+// The engine provides a configure systems callback that is invoked at startup.
+void configureSystems(SystemCollection& systems)
+{
+    systems.addSystem<MovementSystem>(SystemGroup::Update);
+}
+```
+
+**Entity Creation:**
+
+```cpp
+// Entities can be spawned either directly via the World or via a deferred command buffer (EntityCommands).
+// Prefer the use of the command buffer both for thread-safety and automatic Scene registration of applicable entities.
+// Both the World and a thread-specific EntityCommands are provided in the SystemData payload in the system ::update(...).
+void spawnEntity(EntityCommands& commands)
+{
+    auto entity = commands.createEntity();
+    commands.addComponent<Transform>(entity, Transform{});
+    commands.addComponent<Velocity>(entity, Velocity{ .value = vec3::right() });
+}
+```
+
+`MovementSystem::update` is invoked once per entity that has both a `Transform` and `Velocity`, with references straight into chunk storage. `Transform&` marks a write, `Velocity const&` a read — and that distinction is what the scheduler uses to order systems. See [Systems](#systems).
 
 ---
 
@@ -79,7 +102,17 @@ Nullness is decided by `index` only (`Entity::null()` carries `null_entity_id`),
 
 ### EntityRecord — the entity → storage map
 
-`EntityRecord { Entity entity; Archetype* archetype; uint32_t archetypeIndex; }` is the single source of truth for where an entity's components live. `EntityRegistry` owns these records and is the one place that must stay consistent: it's updated on every create, destroy (which swap-removes), and archetype move. A null `archetype` means the entity is dead.
+```cpp
+struct EntityRecord
+{
+    Entity entity;
+    Archetype* archetype;
+    ArchetypeId archetypeId;
+    uint32_t archetypeIndex;
+}
+```
+
+The `EntityRecord` is the single source of truth for where an entity's components live. `EntityRegistry` owns these records and is the one place that must stay consistent: it's updated on every create, destroy (which swap-removes), and archetype move. A null `archetype` means the entity is dead.
 
 `EntityRegistry` is a static, single-threaded registry. Direct use is discouraged; go through `World`.
 

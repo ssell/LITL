@@ -151,7 +151,7 @@ namespace litl
         return instance().entityRecords[entity.index];
     }
 
-    void EntityRegistry::updateRecordArchetype(Entity entity, Archetype* archetype, uint32_t archetypeIndex) noexcept
+    void EntityRegistry::updateRecordArchetype(Entity entity, Archetype& archetype, uint32_t archetypeIndex) noexcept
     {
         if (isAlive(entity))
         {

@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include "litl-ecs/entity/entity.hpp"
+#include "litl-ecs/archetype/archetypeRegistry.hpp"
 
 namespace litl
 {
@@ -27,7 +28,7 @@ namespace litl
         /// The archetype to which this Entity matches.
         /// If this is null, then the Entity is currently dead.
         /// </summary>
-        Archetype* archetype = nullptr;
+        Archetype& archetype = ArchetypeRegistry::Empty();
 
         /// <summary>
         /// The id of the archetype. Used for one less pointer redirection.
@@ -43,7 +44,7 @@ namespace litl
 
         friend class EntityRegistry;
 
-        void update(Archetype* pArchetype, uint32_t index) noexcept;
+        void update(Archetype& archetype, uint32_t index) noexcept;
     };
 }
 

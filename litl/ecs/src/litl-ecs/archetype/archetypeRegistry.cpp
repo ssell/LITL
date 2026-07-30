@@ -10,7 +10,9 @@
 
 #include "litl-core/hash.hpp"
 #include "litl-core/containers/flatHashMap.hpp"
+#include "litl-ecs/archetype/archetype.hpp"
 #include "litl-ecs/archetype/archetypeRegistry.hpp"
+#include "litl-ecs/entity/entityRecord.hpp"
 
 namespace litl
 {
@@ -34,9 +36,9 @@ namespace litl
         }
     }
 
-    Archetype* ArchetypeRegistry::Empty() noexcept
+    Archetype& ArchetypeRegistry::Empty() noexcept
     {
-        static Archetype* EmptyArchetype = buildArchetype(ecs::Constants::empty_archetype_id, {});
+        static Archetype& EmptyArchetype = buildArchetype(ecs::Constants::empty_archetype_id, {});
         return EmptyArchetype;
     }
 
@@ -60,7 +62,7 @@ namespace litl
         return sstream.str();
     }
 
-    Archetype* ArchetypeRegistry::buildArchetype(uint64_t const archetypeHash, ArchetypeComponents const& components) noexcept
+    Archetype& ArchetypeRegistry::buildArchetype(uint64_t const archetypeHash, ArchetypeComponents const& components) noexcept
     {
         auto& registry = instance();
 
@@ -93,7 +95,7 @@ namespace litl
             }
         }
 
-        return registry.archetypes[newArchetypeIndex].get();
+        return *registry.archetypes[newArchetypeIndex].get();
     }
 
     void ArchetypeRegistry::refineComponentMask(std::vector<ComponentTypeId>& componentTypeIds) noexcept
@@ -103,7 +105,7 @@ namespace litl
         componentTypeIds.erase(std::unique(componentTypeIds.begin(), componentTypeIds.end()), componentTypeIds.end());
     }
 
-    Archetype* ArchetypeRegistry::getByComponents(ArchetypeComponents& components) noexcept
+    Archetype& ArchetypeRegistry::getByComponents(ArchetypeComponents& components) noexcept
     {
         const auto archetypeHash = components.hash();
         auto& registry = instance();
@@ -115,7 +117,7 @@ namespace litl
 
             if (archetypeIndex.has_value())
             {
-                return registry.archetypes[*archetypeIndex].get();
+                return *registry.archetypes[*archetypeIndex].get();
             }
             else
             {
@@ -124,7 +126,7 @@ namespace litl
         }
     }
 
-    Archetype* ArchetypeRegistry::getByComponents(std::initializer_list<ComponentTypeId> components) noexcept
+    Archetype& ArchetypeRegistry::getByComponents(std::initializer_list<ComponentTypeId> components) noexcept
     {
         ArchetypeComponents archetypeComponents{};
 
@@ -148,7 +150,7 @@ namespace litl
         return {};
     }
 
-    Archetype* ArchetypeRegistry::getById(ArchetypeId const id) noexcept
+    Archetype& ArchetypeRegistry::getById(ArchetypeId const id) noexcept
     {
         assert(id < instance().archetypes.size());
 
@@ -156,31 +158,27 @@ namespace litl
 
         if (id < archetypes.size())
         {
-            return archetypes[id].get();
+            return *archetypes[id].get();
         }
 
-        return nullptr;
+        return Empty();
     }
     
-    Archetype* ArchetypeRegistry::getByComponentHash(uint64_t const componentHash) noexcept
+    Archetype& ArchetypeRegistry::getByComponentHash(uint64_t const componentHash) noexcept
     {
         auto find = instance().archetypeMap.find(componentHash);
 
         if (find.has_value())
         {
-            return instance().archetypes[*find].get();
+            return *instance().archetypes[*find].get();
         }
 
-        return nullptr;
+        return Empty();
     }
 
-    void ArchetypeRegistry::move(EntityRecord const& record, Archetype* from, Archetype* to) noexcept
+    void ArchetypeRegistry::move(EntityRecord const& record, Archetype& from, Archetype& to) noexcept
     {
-        // Every entity should belong to an archetype. If the entity is empty (or dead) it should be in the Empty archetype (ArchetypeRegistry::Empty())
-        assert(from != nullptr);
-        assert(to != nullptr);
-
-        from->move(record, to);
+        from.move(record, to);
     }
 
     size_t ArchetypeRegistry::archetypeCount() noexcept

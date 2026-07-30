@@ -334,9 +334,9 @@ namespace litl
         // Get the current archetype and the archetype we will be moving the entity into.
         // Remember, adding/removing components is simply moving from one archetype to another.
         auto entityRecord = EntityRegistry::getRecord(entity);
-        auto* entityCurrentArchetype = entityRecord.archetype;
+        auto& entityCurrentArchetype = entityRecord.archetype;
 
-        ArchetypeComponents archetypeComponents = entityCurrentArchetype->componentTypes();
+        ArchetypeComponents archetypeComponents = entityCurrentArchetype.componentTypes();
         
         if (archetypeComponents.add(componentData.type))
         {

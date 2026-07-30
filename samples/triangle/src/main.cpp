@@ -42,7 +42,7 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     auto objectPool = services.get<ObjectPool>();       // Source of common objects such as GPU buffers, meshes, materials, cameras, etc.
     auto sceneView = services.get<SceneView>();         // A view into the current active scene.
 
-    auto cameraHandle = objectPool->createCamera({ .projection = CameraProjection::Perspective, .clearColor = { 0.035f, 0.035f, 0.05f } });
+    auto cameraHandle = objectPool->createCamera({ .projection = CameraProjection::Perspective, .clearColor = color{ 0.035f, 0.035f, 0.05f } });
     auto* camera = objectPool->getCamera(cameraHandle);
 
     sceneView->setMainCamera(cameraHandle);
@@ -52,7 +52,7 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     auto triangleMaterial = createTriangleMaterial(*objectPool);
     auto triangleMesh = createTriangleMesh(*objectPool);
 
-    createSpinningTriangle(commands, triangleMaterial, triangleMesh, { 0.0f, -0.35f, 2.0f }, 1.0f);
+    createSpinningTriangle(commands, triangleMaterial, triangleMesh, vec3{ 0.0f, -0.35f, 2.0f }, 1.0f);
 }
 
 /// <summary>
@@ -102,19 +102,19 @@ MeshHandle createTriangleMesh(ObjectPool& objectPool)
 {
     std::array<Vertex, 3> vertices = {
         Vertex {                                        // left
-            .position = { -0.5f, 0.0f, 0.0f },
-            .color = { 0.0f, 1.0f, 0.0f },
-            .uv = { 0.0f, 0.0f }
+            .position = vec3{ -0.5f, 0.0f, 0.0f },
+            .color = vec3{ 0.0f, 1.0f, 0.0f },
+            .uv = vec2{ 0.0f, 0.0f }
         },
         Vertex {                                        // top
-            .position = { 0.0f, 1.0f, 0.0f },
-            .color = { 1.0f, 0.0f, 0.0f },
-            .uv = { 0.5f, 1.0f }
+            .position = vec3{ 0.0f, 1.0f, 0.0f },
+            .color = vec3{ 1.0f, 0.0f, 0.0f },
+            .uv = vec2{ 0.5f, 1.0f }
         },
         Vertex {                                        // right
-            .position = { 0.5f, 0.0f, 0.0f },
-            .color = { 0.0f, 0.0f, 1.0f },
-            .uv = { 1.0f, 0.0f }
+            .position = vec3{ 0.5f, 0.0f, 0.0f },
+            .color = vec3{ 0.0f, 0.0f, 1.0f },
+            .uv = vec2{ 1.0f, 0.0f }
         }
     };
 

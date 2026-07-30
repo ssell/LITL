@@ -22,9 +22,9 @@ namespace litl::samples
             {
                 return Triangle{
                     .vertices = std::array<Vertex, 3>{
-                        Vertex{.position = { -scale, 0.0f, 0.0f },       .color = bottomColor.rgb(), .uv = { 0.0f, 0.0f } },
-                        Vertex{.position = { 0.0f, 0.0f, scale * 2.0f }, .color = topColor.rgb(),    .uv = { 0.5f, 1.0f } },
-                        Vertex{.position = { scale, 0.0f, 0.0f },        .color = bottomColor.rgb(), .uv = { 1.0f, 0.0f } }
+                        Vertex{.position = vec3{ -scale, 0.0f, 0.0f },       .color = bottomColor.rgb(), .uv = vec2{ 0.0f, 0.0f } },
+                        Vertex{.position = vec3{ 0.0f, 0.0f, scale * 2.0f }, .color = topColor.rgb(),    .uv = vec2{ 0.5f, 1.0f } },
+                        Vertex{.position = vec3{ scale, 0.0f, 0.0f },        .color = bottomColor.rgb(), .uv = vec2{ 1.0f, 0.0f } }
                     },
                     .indices = std::array<uint32_t, 3>{ 0u, 1u, 2u }
                 };
