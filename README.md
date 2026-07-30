@@ -24,14 +24,14 @@ As the engine is new and still under active development this may be small, but i
 * **Scene**: transform hierarchy with topologically-sorted updates and pluggable spatial partitioning for culling and queries, driven by ECS structural changes. [(read more)](docs/scene.md)
 * **Logging**: thread-safe with support for multiple sinks (console, file, custom)
 
-## Samples
+## Releases
 
-Samples are provided as a demonstration and live documentation of LITL. New samples will be added for each release to highlight new features. Below is a list of samples, ordered by their associated release version.
+### Version 0.1 on 2027-07-30
 
-**v0.1** *
+The first version of the engine that has many of the core systems operational: ECS, rendering, jobs, scene, dependency injection, etc.
+
+**Samples:**
 
 * [Renderer](samples/renderer)
 * [Triangle](samples/triangle)
 * [Boids](samples/boids)
-
-_* denotes a future release. The associated samples are not guaranteed to yet be done or stable._
