@@ -90,7 +90,7 @@ namespace litl
         /// </summary>
         /// <param name="record"></param>
         /// <param name="to"></param>
-        void move(EntityRecord const& record, Archetype& to) noexcept;
+        void move(EntityRecord const& record, Archetype* to) noexcept;
 
         const ArchetypeId m_registryId;
         const uint64_t m_componentHash;

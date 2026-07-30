@@ -34,7 +34,7 @@ namespace litl
         static void destroyMany(std::span<EntityRecord const> entityRecords) noexcept;
 
         static EntityRecord getRecord(Entity entity) noexcept;
-        static void updateRecordArchetype(Entity entity, Archetype& archetype, uint32_t archetypeIndex) noexcept;
+        static void updateRecordArchetype(Entity entity, Archetype* archetype, uint32_t archetypeIndex) noexcept;
         static void updateRecordArchetypeIndex(Entity entity, uint32_t archetypeIndex) noexcept;
         static bool isAlive(Entity entity) noexcept;
 

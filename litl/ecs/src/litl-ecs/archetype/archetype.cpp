@@ -11,7 +11,7 @@ namespace litl
     Archetype::Archetype(std::string_view name, ArchetypeId registryId, uint64_t componentHash) :
         m_registryId(registryId),
         m_componentHash(componentHash),
-        m_entityCount(0)                     
+        m_entityCount(0)
     {
         setDebugName(name);
 
@@ -117,17 +117,18 @@ namespace litl
 
     void Archetype::add(EntityRecord const& record) noexcept
     {
-       const auto archetypeIndex = getNextIndex();
-       const auto chunkIndex = archetypeIndex / m_chunkLayout.entityCapacity;
-       const auto chunkElementIndex = archetypeIndex % m_chunkLayout.entityCapacity;
+        const auto archetypeIndex = getNextIndex();
+        const auto chunkIndex = archetypeIndex / m_chunkLayout.entityCapacity;
+        const auto chunkElementIndex = archetypeIndex % m_chunkLayout.entityCapacity;
 
-       m_chunks[chunkIndex].add(m_chunkLayout, chunkElementIndex, record.entity);
+        m_chunks[chunkIndex].add(m_chunkLayout, chunkElementIndex, record.entity);
 
-       EntityRegistry::updateRecordArchetype(record.entity, this, archetypeIndex);
+        EntityRegistry::updateRecordArchetype(record.entity, this, archetypeIndex);
     }
 
     void Archetype::setComponent(EntityRecord record, ComponentDescriptor const* component, void* from)
     {
+        assert(record.archetype == this);
         assert(component != nullptr);
         assert(from != nullptr);
 
@@ -139,7 +140,7 @@ namespace litl
 
     void Archetype::remove(EntityRecord const& record) noexcept
     {
-        if (&record.archetype != this || record.archetypeIndex >= m_entityCount)
+        if (record.archetype != this || record.archetypeIndex >= m_entityCount)
         {
             return;
         }
@@ -169,9 +170,9 @@ namespace litl
         EntityRegistry::updateRecordArchetype(record.entity, nullptr, 0);
     }
 
-    void Archetype::move(EntityRecord const& record, Archetype& to) noexcept
+    void Archetype::move(EntityRecord const& record, Archetype* to) noexcept
     {
-        if (&record.archetype != this)
+        if ((record.archetype != this) || (to == this))
         {
             return;
         }
@@ -182,28 +183,28 @@ namespace litl
         const auto fromChunkElementIndex = fromArchetypeIndex % m_chunkLayout.entityCapacity;
 
         // Get the chunk and element index for where we are adding to
-        const auto toArchetypeIndex = to.getNextIndex();
-        const auto toChunkIndex = toArchetypeIndex / to.m_chunkLayout.entityCapacity;
-        const auto toChunkElementIndex = toArchetypeIndex % to.m_chunkLayout.entityCapacity;
+        const auto toArchetypeIndex = to->getNextIndex();
+        const auto toChunkIndex = toArchetypeIndex / to->m_chunkLayout.entityCapacity;
+        const auto toChunkElementIndex = toArchetypeIndex % to->m_chunkLayout.entityCapacity;
 
         auto fromChunkData = m_chunks[fromChunkIndex].data();
-        auto toChunkData = to.m_chunks[toChunkIndex].data();
+        auto toChunkData = to->m_chunks[toChunkIndex].data();
 
         // Move entity
         auto fromChunkEntityAddr = (fromChunkData + m_chunkLayout.entityArrayOffset + (fromChunkElementIndex * sizeof(Entity)));
-        auto toChunkEntityAddr = (toChunkData + to.m_chunkLayout.entityArrayOffset + (toChunkElementIndex * sizeof(Entity)));
+        auto toChunkEntityAddr = (toChunkData + to->m_chunkLayout.entityArrayOffset + (toChunkElementIndex * sizeof(Entity)));
         new (toChunkEntityAddr) Entity(std::move(*reinterpret_cast<Entity*>(fromChunkEntityAddr)));
-        
+
         // Move components into the new archetype AND instantiate any missing ones
         ComponentDescriptor const* component = nullptr;
         std::byte* componentAddress = nullptr;
         size_t componentIndex = 0;
 
-        for (auto i = 0; i < to.m_chunkLayout.componentTypeCount; ++i)
+        for (auto i = 0; i < to->m_chunkLayout.componentTypeCount; ++i)
         {
             // A component in the new archetype.
-            component = to.m_chunkLayout.componentOrder[i];
-            componentAddress = (toChunkData + to.m_chunkLayout.componentOffsets[i] + (toChunkElementIndex * component->size));
+            component = to->m_chunkLayout.componentOrder[i];
+            componentAddress = (toChunkData + to->m_chunkLayout.componentOffsets[i] + (toChunkElementIndex * component->size));
             componentIndex = static_cast<size_t>(0);
 
             // Does this entity already have this component?
@@ -219,7 +220,7 @@ namespace litl
             }
         }
 
-        to.m_chunks[toChunkIndex].incrementEntityCount();
+        to->m_chunks[toChunkIndex].incrementEntityCount();
 
         // Destroy any components not making it into the new archetype (make sure the destructors are called)
         for (auto i = 0; i < m_chunkLayout.componentTypeCount; ++i)
@@ -227,7 +228,7 @@ namespace litl
             component = m_chunkLayout.componentOrder[i];
             componentAddress = (fromChunkData + m_chunkLayout.componentOffsets[i] + (fromChunkElementIndex * component->size));
 
-            if (!to.hasComponent(component->id, componentIndex))
+            if (!to->hasComponent(component->id, componentIndex))
             {
                 component->destroy(componentAddress);
             }
