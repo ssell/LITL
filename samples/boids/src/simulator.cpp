@@ -90,7 +90,7 @@ namespace litl::samples
 
     void Simulator::updateFoodConsumed(uint32_t index) noexcept
     {
-        m_trackedFood[index].foodStatus = FoodStatus::Eaten;
+        m_trackedFood[index].foodStatus = Food::Status::Eaten;
     }
 
     void Simulator::updatePredatorPosition(uint32_t index, vec3 position) noexcept
@@ -105,7 +105,7 @@ namespace litl::samples
 
         for (auto& trackedFood : m_trackedFood)
         {
-            if (trackedFood.foodStatus == FoodStatus::Alive)
+            if (trackedFood.foodStatus == Food::Status::Alive)
             {
                 float distSq = distanceSq(trackedFood.position, pos);
 
@@ -159,9 +159,9 @@ namespace litl::samples
         // Update for any eaten food since the last tick
         for (size_t i = 0ull; i < m_trackedFood.size(); ++i)
         {
-            if (m_trackedFood[i].foodStatus == FoodStatus::Eaten)
+            if (m_trackedFood[i].foodStatus == Food::Status::Eaten)
             {
-                m_trackedFood[i].foodStatus = FoodStatus::None;
+                m_trackedFood[i].foodStatus = Food::Status::None;
                 m_foodCount--;
             }
         }
@@ -216,7 +216,7 @@ namespace litl::samples
 
         for (uint32_t i = 0u; i < static_cast<uint32_t>(m_trackedFood.size()); ++i)
         {
-            if (m_trackedFood[i].foodStatus == FoodStatus::None)
+            if (m_trackedFood[i].foodStatus == Food::Status::None)
             {
                 nextIndex = i;
                 break;
@@ -238,7 +238,7 @@ namespace litl::samples
             commands.addComponent<MeshRef>(foodEntity, MeshRef{ .handle = m_foodMesh });
 
             m_trackedFood[nextIndex].position = position;
-            m_trackedFood[nextIndex].foodStatus = FoodStatus::Alive;
+            m_trackedFood[nextIndex].foodStatus = Food::Status::Alive;
             m_foodCount++;
         }
     }

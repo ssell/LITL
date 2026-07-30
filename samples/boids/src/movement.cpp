@@ -4,19 +4,17 @@ namespace litl::samples
 {
     void MovementSystem::setup(ServiceProvider& services)
     {
-        // ... intentionally empty ...
+        // ... no action ...
     }
 
     void MovementSystem::prepare()
     {
-        // ... intentionally empty ...
+        // ... no action ...
     }
 
     void MovementSystem::update(SystemData const& data, Entity entity, Movement& movement, Transform& transform, Acceleration const& acceleration)
     {
-        const vec3 prevPosition = transform.getPosition();
         const vec3 prevVelocity = movement.velocity;
-
         movement.velocity = truncate(movement.velocity + (acceleration.acceleration * data.deltaTime), acceleration.maxSpeed);
 
         if (movement.velocity.lengthSquared() > 0.0f)
