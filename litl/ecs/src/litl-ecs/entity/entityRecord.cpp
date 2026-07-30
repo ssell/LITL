@@ -3,10 +3,10 @@
 
 namespace litl
 {
-    void EntityRecord::update(Archetype& archetype, uint32_t index) noexcept
+    void EntityRecord::update(Archetype* pArchetype, uint32_t index) noexcept
     {
-        archetype = archetype;
-        archetypeId = archetype.id();
+        archetype = pArchetype;
+        archetypeId = (archetype != nullptr ? archetype->id() : ecs::Constants::null_archetype_id);
         archetypeIndex = index;
     }
 }

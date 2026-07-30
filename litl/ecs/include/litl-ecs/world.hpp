@@ -281,12 +281,12 @@ namespace litl
 
             const auto record = getEntityRecord(entity);
             
-            if (!record.archetype.hasComponent<ComponentType>())
+            if (!record.archetype->hasComponent<ComponentType>())
             {
                 return std::nullopt;
             }
 
-            return record.archetype.getComponent<ComponentType>(record);
+            return record.archetype->getComponent<ComponentType>(record);
         }
 
         /// <summary>

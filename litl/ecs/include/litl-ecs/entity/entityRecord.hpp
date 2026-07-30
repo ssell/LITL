@@ -3,32 +3,21 @@
 
 #include <cstdint>
 #include "litl-ecs/entity/entity.hpp"
-#include "litl-ecs/archetype/archetypeRegistry.hpp"
 
 namespace litl
 {
     class Archetype;
     class EntityRegistry;
 
-    /// <summary>
-    /// big-ol' todo
-    /// 
-    /// this maintains the mapping between entity -> archetype + index.
-    /// this mapping must be maintained (updated) whenever an entity is
-    /// created, destroyed (and swapped), or moved between archetypes.
-    /// 
-    /// this relationship also should be asserted. and a test or two 
-    /// wouldn't hurt, either.
-    /// </summary>
     struct EntityRecord
     {
         Entity entity = Entity::null();
 
         /// <summary>
         /// The archetype to which this Entity matches.
-        /// If this is null, then the Entity is currently dead.
+        /// If this is null, then the Entity has never been created.
         /// </summary>
-        Archetype& archetype = ArchetypeRegistry::Empty();
+        Archetype* archetype = nullptr;
 
         /// <summary>
         /// The id of the archetype. Used for one less pointer redirection.
@@ -44,7 +33,7 @@ namespace litl
 
         friend class EntityRegistry;
 
-        void update(Archetype& archetype, uint32_t index) noexcept;
+        void update(Archetype* pArchetype, uint32_t index) noexcept;
     };
 }
 

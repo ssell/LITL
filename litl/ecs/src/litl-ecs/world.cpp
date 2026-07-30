@@ -336,7 +336,7 @@ namespace litl
         auto entityRecord = EntityRegistry::getRecord(entity);
         auto& entityCurrentArchetype = entityRecord.archetype;
 
-        ArchetypeComponents archetypeComponents = entityCurrentArchetype.componentTypes();
+        ArchetypeComponents archetypeComponents = entityCurrentArchetype->componentTypes();
         
         if (archetypeComponents.add(componentData.type))
         {

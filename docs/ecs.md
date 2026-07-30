@@ -112,7 +112,7 @@ struct EntityRecord
 }
 ```
 
-The `EntityRecord` is the single source of truth for where an entity's components live. `EntityRegistry` owns these records and is the one place that must stay consistent: it's updated on every create, destroy (which swap-removes), and archetype move. A null `archetype` means the entity is dead.
+The `EntityRecord` is the single source of truth for where an entity's components live. `EntityRegistry` owns these records and is the one place that must stay consistent: it's updated on every create, destroy (which swap-removes), and archetype move. A null `archetype` means the entity has never been created. Otherwise, it is always in an archetype - even when dead. When dead (or if there are no components) the entity is placed into aptly named Empty archetype.
 
 `EntityRegistry` is a static, single-threaded registry. Direct use is discouraged; go through `World`.
 
@@ -201,13 +201,19 @@ The immediate `*Immediate` methods on `World` (`addComponentImmediate`, `removeC
 
 ## Systems
 
+A system is defined by its ability to satisfy the `ValidSystem` concept. This enforces that a system structure (or class) has at a minimum:
+
+* `setup(ServiceProvider& services)` - called once per lifetime.
+* `prepare()` - called once per frame, immediately prior to update.
+* `update(SystemData const& data, Entity entity, ...)` - called for each entity that satisfies the systems query.
+
 ### The update signature is the query
 
-`ValidSystem` requires a `setup(ServiceProvider&)` and an `update(...)` whose first two parameters are exactly `EntityCommands&` and `float` (commands buffer + delta time). Everything after that is the component query, and each must be an lvalue reference:
+The first two parameters of `update` are exactly `SystemData const&` and `Entity`. Everything after that is the component query, and each must be an lvalue reference:
 
 ```cpp
-void update(EntityCommands& commands, float dt, Foo const& read, Bar& write);
-//                                              ^ read-only      ^ read-write
+void update(SystemData const& data, Entity entity, Foo const& read, Bar& write);
+//                                                 ^ read-only      ^ read-write
 ```
 
 `systemTraits.hpp` pulls this apart at compile time. `SystemComponents<S>` strips the leading two parameters via `SystemTupleTail`; `SystemComponentsTupleOperations` then turns the remaining types into either component ids (for archetype matching) or `SystemComponentInfo { id, readonly }` records. `const&` ⇒ `readonly = true`, `&` ⇒ `readonly = false`. That read/write classification drives implicit scheduling (see below). A `static_assert` rejects by-value or non-reference component parameters with a readable message.
@@ -258,15 +264,19 @@ At run time (`SystemManager::run(..., JobScheduler&)`), the systems in a layer a
 
 ```
 invokeFrameStart()
-prepareFrame()                       // pick up new archetypes
-run Startup, Input
-while (accumulated >= fixedStep)     // fixed step: 0..N times per frame
+prepareFrame()                          // pick up new archetypes
+run Startup
+run Input
+while (accumulated >= fixedStep)        // fixed step: 0..N times per frame
     run FixedUpdate (fixedStep); accumulated -= fixedStep
-run Update, LateUpdate, PreRender
-invokeRender()                       // render sits between PreRender and PostRender
-run PostRender, Final
+run Update
+run LateUpdate
+run PreRender                           // scene updates are performed immediately prior to PreRender
+invokeRender()                          // render sits between PreRender and PostRender
+run PostRender, 
+run Final
 invokeFrameEnd()
-incrementGlobalWorldVersion()        // stamps the next frame's modifications
+incrementGlobalWorldVersion()           // stamps the next frame's modifications
 ```
 
 `FrameCallbacks` is the engine's hook surface: `onFrameStart`, `onFrameEnd`, `onRender`, a per-group `onPreGroup`, and `onSyncPoint(group, changes)` — the last fires after each layer's command buffers are processed and carries the `EntityChange` list (see below). The fixed-update accumulator means `FixedUpdate` systems run at a rate decoupled from frame rate: zero times on a fast frame, several on a slow one.
@@ -335,15 +345,15 @@ A global version counter increments once per frame and is stamped into a chunk's
 ```cpp
 struct RenderExtractSystem
 {
-    void setup(ServiceProvider&) {}
+    void setup(ServiceProvider& services) {}
     void prepare() {}
-    void update(EntityCommands&, float, Entity e, Transform const& t, MeshRef const& m)
+    void update(SystemData const& data, Entity entity, Transform const& transform, MeshRef const& mesh)
     {
         // const& everywhere ⇒ no write conflicts ⇒ runs parallel to other readers
     }
 };
-world.getSystemCollection()
-     .addSystem<RenderExtractSystem>(SystemGroup::PreRender);
+
+world.getSystemCollection().addSystem<RenderExtractSystem>(SystemGroup::PreRender);
 ```
 
 ### Ordering systems explicitly
@@ -360,11 +370,11 @@ world.getSystemCollection()
 ### Spawning a configured entity from inside a system
 
 ```cpp
-void update(EntityCommands& commands, float dt, Spawner& s)
+void update(SystemData const& data, Entity entity, Spawner& spawner)
 {
-    DeferredEntity e = commands.createEntity();
-    commands.addComponent(e, Position{ s.x, s.y, s.z });
-    commands.addComponent(e, Velocity{ 0, -1, 0 });
+    DeferredEntity newEntity = commands.createEntity();
+    commands.addComponent<Position>(newEntity, Position{ spawner.position });
+    commands.addComponent<Velocity>(newEntity, Velocity{ 0.0f, -1.0f, 0.0f });
     // Materialized into a real Entity at the next sync point.
 }
 ```
@@ -372,9 +382,10 @@ void update(EntityCommands& commands, float dt, Spawner& s)
 ### Destroying an entity from a command buffer
 
 ```cpp
-// Entity is not an update() query parameter — destruction is typically driven
-// from gameplay code holding the entity, or from a component carrying its own id.
-commands.destroyEntity(entity);   // recorded now, applied at the next sync point
+void update(SystemData const& data, Entity entity, DestroyMe const& destroyMe)
+{
+    commands.destroyEntity(entity); // recorded now, applied at the next sync point
+}
 ```
 
 ---
@@ -415,4 +426,4 @@ When the document is no longer enough, these are the load-bearing files:
 | `litl/ecs/src/litl-ecs/world.cpp` | Frame loop and the immediate archetype-move operations |
 | `tests/src/litl-ecs/world_tests.cpp`, `system_tests.cpp` | Working examples of every path |
 
-The tests are the most accurate documentation — they're the paths through the API known to compile and pass.
+The tests and samples are the most accurate documentation — they're the paths through the API known to compile and pass.
