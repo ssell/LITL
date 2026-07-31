@@ -25,7 +25,9 @@ add_library(litl-core
 		"src/litl-core/job/jobHandle.cpp" 
 		"src/litl-core/math/dag.cpp"
 		"src/litl-core/math/types.cpp" 
-		"src/litl-core/file.cpp" "src/litl-core/task/taskThreads.cpp")
+		"src/litl-core/file.cpp" 
+		"src/litl-core/task/taskThreadPool.cpp" 
+		"src/litl-core/task/taskThreadQueue.cpp")
 		
 target_include_directories(litl-core 
 	PUBLIC 
