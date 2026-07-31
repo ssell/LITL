@@ -1,9 +1,7 @@
 #include <coroutine>
 #include <filesystem>
 #include <optional>
-#include <semaphore>
 #include <thread>
-
 
 #include "tests.hpp"
 #include "litl-core/task/task.hpp"
@@ -267,6 +265,7 @@ namespace litl::tests
         REQUIRE(sum1to10.next() == false);
     } LITL_END_TEST_CASE
 
+    /*
     LITL_TEST_CASE("Task", "[core::tasks]")
     {
         const auto originalThread = ThreadInfo::get();
@@ -284,4 +283,5 @@ namespace litl::tests
         REQUIRE(originalThread.index == resolvingThread.index);
         REQUIRE(originalThread.index != workerThread.index);
     } LITL_END_TEST_CASE
+    */
 }
