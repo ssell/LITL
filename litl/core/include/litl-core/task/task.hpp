@@ -4,39 +4,23 @@
 #include <coroutine>
 #include <optional>
 
+#include "litl-core/task/taskStatus.hpp"
+
 namespace litl
 {
-    template<typename T>
+    /// <summary>
+    /// A coroutine based async Task. Intended for async operations that span multiple frames.
+    /// This is in contrast to Jobs were are for intraframe async operations.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    template <typename T>
     struct Task
     {
+        /// <summary>
+        /// Required internal structure that makes this a valid C++ coroutine.
+        /// </summary>
         struct promise_type
         {
-            std::optional<T> result = std::nullopt;
-            std::coroutine_handle<> continuation = std::noop_coroutine();
-
-            Task get_return_object()
-            {
-                return Task
-                {
-                    std::coroutine_handle<promise_type>::from_promise(*this)
-                };
-            }
-
-            std::suspend_always initial_suspend() noexcept
-            {
-                return {};
-            }
-
-            void return_value(T value)
-            {
-                result = std::move(value);
-            }
-
-            void unhandled_exception()
-            {
-                // ... todo ...
-            }
-
             struct final_awaiter
             {
                 bool await_ready() noexcept
@@ -55,48 +39,101 @@ namespace litl
                 }
             };
 
+            /// <summary>
+            /// The stored final result of the Task.
+            /// </summary>
+            TaskStatus<T> result;
+
+            /// <summary>
+            /// 
+            /// </summary>
+            std::coroutine_handle<> continuation = std::noop_coroutine();
+
+            /// <summary>
+            /// Called first. Returns the outer coroutine object (Task or Generator).
+            /// </summary>
+            Task get_return_object()
+            {
+                return Task(std::coroutine_handle<promise_type>::from_promise(*this));
+            }
+
+            /// <summary>
+            /// Called before the coroutine body runs and returns lazy/eager on if it should be run immediately. We choose lazy.
+            /// </summary>
+            std::suspend_always initial_suspend() noexcept
+            {
+                result.status = TaskStatusType::Complete;
+                return {};
+            }
+
+            /// <summary>
+            /// Called after the coroutine finishes and must return an awaitable. We return our custom final_awaiter.
+            /// </summary>
+            /// <returns></returns>
             final_awaiter final_suspend() noexcept
             {
+                result.status = (result.status != TaskStatusType::Error ? TaskStatusType::Complete : TaskStatusType::Error);
                 return {};
+            }
+
+            /// <summary>
+            /// Required if the coroutine returns a value via co_return.
+            /// </summary>
+            void return_value(T value)
+            {
+                result.result = std::move(value);
+            }
+
+            /// <summary>
+            /// Called if an exception escapes the coroutine body.
+            /// We compile with exceptions disabled, so that is not a concern for us.
+            /// </summary>
+            void unhandled_exception()
+            {
+                result.status = TaskStatusType::Error;
             }
         };
 
-        std::coroutine_handle<promise_type> handle;
+        using coroutine_handle = std::coroutine_handle<promise_type>;
+        coroutine_handle handle;
 
-        explicit Task(std::coroutine_handle<promise_type> handle) : handle(handle)
-        {
+        explicit Task(coroutine_handle handle) : handle(handle) {}
+        ~Task() { if (handle) { handle.destroy(); } }
+        Task(Task&& other) noexcept : handle(std::exchange(other.handle, {})) {}
+        Task(Task const&) = delete;
 
-        }
-
-        ~Task()
-        {
-            if (handle)
-            {
-                handle.destroy();
-            }
-        }
-
-        Task(Task&& other) noexcept : handle(std::exchange(other.handle, {}))
-        {
-
-        }
-
-        Task(Task const& other) = delete;
-
+        /// <summary>
+        /// Required for an awaitable coroutine. Must return a bool.
+        /// If true, the coroutine does not suspend and immediately calls await_resume.
+        /// If false, the coroutine suspends and calls await_suspend.
+        /// </summary>
         bool await_ready() const noexcept
         {
             return !handle || handle.done();
         }
 
+        /// <summary>
+        /// Called when the coroutine resumes (when await_ready returns true).
+        /// The return type of this method dictates the result value of the co_await.
+        /// </summary>
+        /// <returns></returns>
+        TaskStatus<T> await_resume()
+        {
+            return std::move(handle.promise().result);
+        }
+
+        /// <summary>
+        /// Called if await_ready returns false.
+        /// This comes in three flavors based on return type:
+        /// 
+        ///     void: Suspends and returns control to the caller.
+        ///     bool: If true suspends, if false returns execution immediately.
+        ///     std::coroutine_handle: Suspends the current coroutine and immediately executes the returned coroutine handle (symmetric transfer).
+        /// </summary>
         std::coroutine_handle<> await_suspend(std::coroutine_handle<> awaiting) noexcept
         {
             handle.promise().continuation = awaiting;
             return handle;
-        }
-
-        T await_resume()
-        {
-            return std::move(*handle.promise().result);
         }
     };
 }
