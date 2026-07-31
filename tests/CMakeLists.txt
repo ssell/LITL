@@ -11,6 +11,10 @@ include (Catch)
 # litl-tests
 # ------------------------------------------------------------------------------------------
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 add_executable(litl-tests
 	"src/litl-core/containers/concurrentQueue_tests.cpp"
 	"src/litl-core/containers/concurrentSingleQueue_tests.cpp" 
