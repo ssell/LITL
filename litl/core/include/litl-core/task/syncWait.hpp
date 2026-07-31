@@ -72,8 +72,8 @@ namespace litl
     };
 
     /// <summary>
-    /// Performs a thread-block synchronous wait for the provided Task to complete.
-    /// Yes, this defeats the purpose of an asynchronous Task but sometimes is necessary for testing or debugging.
+    /// Performs a thread-blocking synchronous wait for the provided Task to complete.
+    /// Yes, this defeats the purpose of an asynchronous Task but sometimes it is necessary for testing or debugging.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="task"></param>
