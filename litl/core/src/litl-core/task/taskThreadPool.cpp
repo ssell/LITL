@@ -1,9 +1,9 @@
-#include "litl-core/task/taskThreads.hpp"
+#include "litl-core/task/taskThreadPool.hpp"
 #include "litl-core/constants.hpp"
 
 namespace litl
 {
-    TaskThreads::TaskThreads(uint32_t threadCount)
+    TaskThreadPool::TaskThreadPool(uint32_t threadCount)
     {
         for (uint32_t i = 0u; i < threadCount && i < Constants::max_thread_count; ++i)
         {
@@ -14,12 +14,12 @@ namespace litl
         }
     }
 
-    void TaskThreads::schedule(std::coroutine_handle<> handle) noexcept
+    void TaskThreadPool::schedule(std::coroutine_handle<> handle) noexcept
     {
         post([handle]() -> void { handle.resume(); });
     }
 
-    void TaskThreads::post(MoveOnlyFunc<void()> func) noexcept
+    void TaskThreadPool::post(MoveOnlyFunc<void()> func) noexcept
     {
         {
             // Guard and add the work function to the queue
@@ -31,7 +31,7 @@ namespace litl
         m_conditionVariable.notify_one();
     }
 
-    void TaskThreads::workerLoop(std::stop_token stop) noexcept
+    void TaskThreadPool::workerLoop(std::stop_token stop) noexcept
     {
         while (true)
         {

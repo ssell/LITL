@@ -1,5 +1,5 @@
-#ifndef LITL_CORE_TASK_H__
-#define LITL_CORE_TASK_H__
+#ifndef LITL_CORE_TASK_TASK_H__
+#define LITL_CORE_TASK_TASK_H__
 
 #include <coroutine>
 #include <optional>
