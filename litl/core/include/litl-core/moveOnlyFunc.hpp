@@ -16,19 +16,30 @@ namespace litl
 
     /// <summary>
     /// C++23 provides std::move_only_function. However we are currently using C++20 so we need our own implementation.
+    /// 
+    /// Implemented using two types of callable storage and virtual tables: inline and heap allocated.
+    /// Small callables get placed into the internal buffer. Larger callables get created on the heap (via new)
+    /// and their pointer is stored within the buffer.
     /// </summary>
     /// <typeparam name="R"></typeparam>
     /// <typeparam name="...Args"></typeparam>
     template<typename ReturnType, typename... Args>
     class MoveOnlyFunc<ReturnType(Args...)>
     {
-    private:
-
-        static constexpr size_t BufferSize = 32ull;
-        static constexpr size_t BufferAlignment = alignof(std::max_align_t);
+    public:
 
         /// <summary>
-        /// Virtual table for interacting with a callable.
+        /// Size of the internal buffer for small callables to placed into.
+        /// If most callables are falling into the heap-allocation path then this should be bumped up.
+        /// </summary>
+        static constexpr size_t BufferSize = 64ull;
+        static constexpr size_t BufferAlignment = alignof(std::max_align_t);
+
+    private:
+
+        /// <summary>
+        /// Shared virtual table signature for interacting with a callable.
+        /// Both the inline and heap virtual tables provide the same functions.
         /// </summary>
         struct VTable
         {
@@ -37,9 +48,10 @@ namespace litl
             void (*destroy)(void* self) noexcept;
         };
 
-        alignas(BufferAlignment) std::byte m_buffer[BufferSize];
-        VTable const* m_vtable = nullptr;
-
+        /// <summary>
+        /// Can the callable fit inside of our inline buffer?
+        /// </summary>
+        /// <typeparam name="F"></typeparam>
         template<typename F>
         static constexpr bool fitsInline = (sizeof(F) <= BufferSize) && (alignof(F) <= BufferAlignment) && std::is_nothrow_move_constructible_v<F>;
 
@@ -57,12 +69,12 @@ namespace litl
                 .move = [](void* from, void* to) noexcept -> void
                 {
                     F* src = std::launder(reinterpret_cast<F*>(from));
-                    ::new (to) F(std::move(*src));
+                    ::new (to) F(std::move(*src));                      // move the callable stored in the other buffer
                     src->~F();
                 },
                 .destroy = [](void* self) noexcept -> void
                 {
-                    std::launder(reinterpret_cast<F*>(self))->~F();
+                    std::launder(reinterpret_cast<F*>(self))->~F();     // invoke the destructor, but nothing else is needed.
                 }
             };
 
@@ -83,16 +95,16 @@ namespace litl
                 .move = [](void* from, void* to) noexcept -> void
                 {
                     F*& src = *reinterpret_cast<F**>(from);
-                    *reinterpret_cast<F**>(to) = src;
+                    *reinterpret_cast<F**>(to) = src;                   // simply steal the pointer to the heap-allocated callable
                     src = nullptr;
                 },
                 .destroy = [](void* self) noexcept -> void
                 {
-                    delete* reinterpret_cast<F**>(self);
+                    delete* reinterpret_cast<F**>(self);                // delete the heap-allocated callable
                 }
             };
 
-            return *vtable;
+            return &vtable;
         }
 
     public:
@@ -146,7 +158,7 @@ namespace litl
 
         ReturnType operator()(Args... args)
         {
-            LITL_ASSERT_MSG(m_vtable != nullptr, "Attempting to invoke a MoveOnlyFunc with an uninitialized VTable", {});
+            LITL_ASSERT_MSG(m_vtable != nullptr, "Attempting to invoke a MoveOnlyFunc with an uninitialized VTable", ReturnType{});
             return m_vtable->invoke(&m_buffer, std::forward<Args>(args)...);
         }
 
@@ -165,6 +177,9 @@ namespace litl
                 m_vtable = nullptr;
             }
         }
+
+        alignas(BufferAlignment) std::byte m_buffer[BufferSize];
+        VTable const* m_vtable = nullptr;
     };
 }
 
