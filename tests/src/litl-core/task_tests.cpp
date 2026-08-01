@@ -4,13 +4,6 @@
 #include "litl-core/task.hpp"
 #include "litl-core/thread.hpp"
 
-/**
- * I'll be honest.
- * 
- * I don't understand coroutines in C++. But I am pretty sure I want them for my implementation of multi-frame Tasks.
- * So, here is me trying to learn them.
- */
-
 namespace litl::tests
 {
     namespace
