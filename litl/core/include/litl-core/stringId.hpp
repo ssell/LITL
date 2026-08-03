@@ -15,8 +15,8 @@ namespace litl
     struct StringId
     {
         constexpr StringId() = default;
+        constexpr StringId(std::string_view str) noexcept : value(fastHashString(str)) {}
         explicit constexpr StringId(uint64_t v) noexcept : value(v) {}
-        explicit constexpr StringId(std::string_view str) noexcept : value(fastHashString(str)) {}
 
         friend constexpr bool operator==(StringId, StringId) noexcept = default;
         friend constexpr auto operator<=>(StringId, StringId) noexcept = default;

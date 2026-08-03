@@ -1,12 +1,7 @@
 #ifndef LITL_CORE_FILE_H__
 #define LITL_CORE_FILE_H__
 
-#include <cstdint>
 #include <filesystem>
-#include <optional>
-#include <span>
-#include <string>
-#include <vector>
 
 namespace litl
 {
@@ -14,7 +9,7 @@ namespace litl
     {
     public:
 
-        File(std::span<char const> path);
+        File(std::string_view path);
 
         /// <summary>
         /// Returns the path to the file local from the current directory that the application is running from.
@@ -27,6 +22,22 @@ namespace litl
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] std::string absolutePath() const noexcept;
+
+        /// <summary>
+        /// Returns the file extension. This includes the "."
+        /// For example "image.png" would return ".png" and "file.tar.gz" would return ".gz"
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] std::string extension() const noexcept;
+
+        /// <summary>
+        /// Returns the path relative to a parent directory.
+        /// For example a file "C:\\Projects\\LITL\\assets\\mesh\\triangle.fbx" relative to "assets"
+        /// would return "
+        /// </summary>
+        /// <param name="parentDir"></param>
+        /// <returns></returns>
+        [[nodiscard]] std::string relativeTo(std::string_view parentDir) const noexcept;
 
         /// <summary>
         /// Returns if the file exists or not.

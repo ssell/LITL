@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <string_view>
 
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-core/math/random.hpp"
@@ -68,8 +69,8 @@ namespace litl::samples
         void spawnPredator() noexcept;
         void spawnFood() noexcept;
 
-        [[nodiscard]] MaterialHandle loadMaterial(std::span<char const> path, std::span<char const> name, std::span<char const> resource, std::span<char const> vertEntry, std::span<char const> fragEntry) const noexcept;
-        [[nodiscard]] MeshHandle loadMesh(std::span<Vertex const> vertices, std::span<uint32_t const> indices, std::span<char const> name) const noexcept;
+        [[nodiscard]] MaterialHandle loadMaterial(std::string_view path, std::string_view name, std::string_view resource, std::string_view vertEntry, std::string_view fragEntry) const noexcept;
+        [[nodiscard]] MeshHandle loadMesh(std::span<Vertex const> vertices, std::span<uint32_t const> indices, std::string_view name) const noexcept;
 
         /// <summary>
         /// The configuration used to setup the simulation.

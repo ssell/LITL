@@ -243,7 +243,7 @@ namespace litl::samples
         }
     }
 
-    MaterialHandle Simulator::loadMaterial(std::span<char const> path, std::span<char const> name, std::span<char const> resource, std::span<char const> vertEntry, std::span<char const> fragEntry) const noexcept
+    MaterialHandle Simulator::loadMaterial(std::string_view path, std::string_view name, std::string_view resource, std::string_view vertEntry, std::string_view fragEntry) const noexcept
     {
         auto spirvBytes = File(path).readAllBytes();
 
@@ -262,7 +262,7 @@ namespace litl::samples
         });
     }
 
-    MeshHandle Simulator::loadMesh(std::span<Vertex const> vertices, std::span<uint32_t const> indices, std::span<char const> name) const noexcept
+    MeshHandle Simulator::loadMesh(std::span<Vertex const> vertices, std::span<uint32_t const> indices, std::string_view name) const noexcept
     {
         return m_pObjectPool->createMesh(MeshDescriptor{
             .objectInfo = ObjectDescriptor {.name = name.data()},
