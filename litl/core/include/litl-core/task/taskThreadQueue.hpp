@@ -16,6 +16,12 @@ namespace litl
     {
     public:
 
+        TaskThreadQueue() = default;
+        ~TaskThreadQueue() = default;
+
+        TaskThreadQueue(TaskThreadQueue const&) = delete;
+        TaskThreadQueue& operator=(TaskThreadQueue const&) = delete;
+
         /// <summary>
         /// Invoked once by whatever is the main thread.
         /// </summary>

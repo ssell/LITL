@@ -41,8 +41,6 @@ namespace litl
 
     private:
 
-        friend class Engine;
-
         struct Impl;
         ImplPtr<Impl, 256> m_impl;
     };
