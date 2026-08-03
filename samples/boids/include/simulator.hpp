@@ -17,6 +17,7 @@ namespace litl
 {
     class ObjectPool;
     class World;
+    class MeshAsset;
 }
 
 namespace litl::samples
