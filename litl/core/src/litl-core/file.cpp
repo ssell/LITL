@@ -29,6 +29,11 @@ namespace litl
         return m_file.extension().string();
     }
 
+    std::string File::relativeTo(std::string_view parentDir) const noexcept
+    {
+        return m_file.lexically_relative(parentDir).string();
+    }
+
     std::optional<bool> File::exists() const noexcept
     {
         std::error_code error;
