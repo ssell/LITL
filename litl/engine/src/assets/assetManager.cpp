@@ -1,16 +1,25 @@
 #include "litl-core/assert.hpp"
 #include "litl-core/stringId.hpp"
 #include "litl-core/logging/logging.hpp"
+#include <filesystem>
+#include <mutex>
+#include <unordered_map>
+
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/engine.hpp"
 
-#include <mutex>
-#include <unordered_map>
-
 namespace litl
 {
+    namespace
+    {
+        static const StringIdMap<AssetType> g_assetTypeMap = {
+            { ".fbx"_sid, AssetType::Mesh }
+        };
+
+        static const std::filesystem::path g_assetsPath{ "assets" };
+    }
     struct AssetManager::Impl
     {
         std::shared_ptr<ObjectPool> objectPool;
@@ -23,7 +32,24 @@ namespace litl
 
         void populateAssetMap() noexcept
         {
+            for (auto const& fileEntry : std::filesystem::recursive_directory_iterator(g_assetsPath))
+            {
+                if (fileEntry.is_regular_file())
+                {
+                    auto path = fileEntry.path();
+                    File file{path.string()};
+                    auto assetFileType = g_assetTypeMap.find(StringId(file.extension()));
 
+                    if (assetFileType != g_assetTypeMap.end())
+                    {
+                        std::filesystem::path relativePath = path.lexically_relative(g_assetsPath);     // from assets/
+                        relativePath.replace_extension();                                               // strip the extension
+                        std::string str = relativePath.generic_string();                                // "mesh\\triangle" to "mesh/triangle"
+
+                        assetMap[StringId(str)] = {};
+                    }
+                }
+            }
         }
 
         void initiateMeshAssetLoad(MeshAsset* asset) noexcept

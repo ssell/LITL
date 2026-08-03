@@ -1,12 +1,12 @@
 #ifndef LITL_ENGINE_ASSETS_MESH_ASSET_H__
 #define LITL_ENGINE_ASSETS_MESH_ASSET_H__
 
-#include "litl-engine/assets/assetStatus.hpp"
+#include "litl-engine/assets/asset.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
 
 namespace litl
 {
-    struct MeshAsset
+    struct MeshAsset final : public Asset
     {
         AssetStatus status{ AssetStatus::Unloaded };
         MeshHandle handle;

@@ -1,11 +1,15 @@
 #include <fstream>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <vector>
 
 #include "litl-core/file.hpp"
 #include "litl-core/logging/logging.hpp"
 
 namespace litl
 {
-    File::File(std::span<char const> path)
+    File::File(std::string_view path)
     {
         m_file = path.data();
     }
@@ -18,6 +22,11 @@ namespace litl
     std::string File::absolutePath() const noexcept
     {
         return std::filesystem::canonical(m_file).string();
+    }
+
+    std::string File::extension() const noexcept
+    {
+        return m_file.extension().string();
     }
 
     std::optional<bool> File::exists() const noexcept
