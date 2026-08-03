@@ -83,6 +83,10 @@ namespace litl
                                 createUnloadedMeshAsset(file, assetKey, hashedKey);
                                 break;
 
+                            case AssetType::Text:
+                                createUnloadedTextAsset(file, assetKey, hashedKey);
+                                break;
+
                             case AssetType::Texture2D:
                                 createUnloadedTexture2DAsset(file, assetKey, hashedKey);
                                 break;
@@ -92,8 +96,6 @@ namespace litl
                                 logWarning("Unknown/unhandled asset type for '", assetKey, "' with path '", relativePath.string(), "'.");
                                 break;
                             }
-
-                            assetMap[hashedKey] = {};
                         }
                     }
                 }
@@ -317,7 +319,10 @@ namespace litl
     void AssetManager::setup(Authority<Engine> auth, ServiceProvider& services) noexcept
     {
         m_impl->objectPool = services.get<ObjectPool>();
+        m_impl->taskManager = services.get<TaskManager>();
+
         LITL_FATAL_ASSERT_MSG((m_impl->objectPool != nullptr), "Failed to inject ObjectPool into AssetManager");
+        LITL_FATAL_ASSERT_MSG((m_impl->objectPool != nullptr), "Failed to inject TaskManager into AssetManager");
 
         m_impl->populateAssetMap();
     }

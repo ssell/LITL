@@ -3,6 +3,7 @@
 #include "litl-core/file.hpp"
 #include "litl-ecs/world.hpp"
 #include "litl-engine/objects/objectPool.hpp"
+#include "litl-engine/assets/assetManager.hpp"
 
 #include "simulator.hpp"
 #include "boid.hpp"
@@ -43,6 +44,9 @@ namespace litl::samples
         {
             return vec3{ rng.next01() * 2.0f - 1.0f, 0.0f, rng.next01() * 2.0f - 1.0f }.normalized();
         }
+
+        // ... test ...
+        MeshAsset* g_testMeshAsset{ nullptr };
     }
 
     void Simulator::setup(ServiceProvider& services, SimulatorConfiguration const& config) noexcept
@@ -65,6 +69,10 @@ namespace litl::samples
         m_foodMesh = loadMesh(foodTriangle.vertices, foodTriangle.indices, "Food Mesh");
         m_predatorMesh = loadMesh(predatorTriangle.vertices, predatorTriangle.indices, "Predator Mesh");
         m_sharedMaterial = loadMaterial("assets/shaders/spirv/flat.spv", "Boid Material", "flat.spv", "vertexMain", "fragmentMain");
+
+        // ... test ...
+        auto assetManager = services.get<AssetManager>();
+        g_testMeshAsset = (g_testMeshAsset == nullptr ? assetManager->getMesh("mesh/test") : g_testMeshAsset);
 
         tick();
     }

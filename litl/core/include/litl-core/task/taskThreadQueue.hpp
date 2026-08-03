@@ -53,7 +53,7 @@ namespace litl
 
     private:
 
-        std::mutex m_mutex;
+        mutable std::mutex m_mutex;
         std::vector<std::coroutine_handle<>> m_pendingHandles;
         std::vector<std::coroutine_handle<>> m_drainingHandles;
         std::thread::id m_ownerThreadId = std::this_thread::get_id();

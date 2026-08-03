@@ -2,6 +2,7 @@
 #define LITL_ENGINE_ASSETS_ASSET_H__
 
 #include "litl-core/file.hpp"
+#include "litl-core/stringId.hpp"
 #include "litl-engine/assets/assetStatus.hpp"
 #include "litl-engine/assets/assetType.hpp"
 
