@@ -6,6 +6,7 @@
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/render/renderManager.hpp"
 #include "litl-engine/scene/sceneView.hpp"
+#include "litl-engine/assets/assetManager.hpp"
 
 namespace litl
 {
@@ -31,7 +32,7 @@ namespace litl
         // ... Required since the ServiceProvider stores this in a std::shared_ptr ...
     }
 
-    void ObjectPool::setup(ServiceProvider& services) noexcept
+    void ObjectPool::setup(Authority<Engine> auth, ServiceProvider& services) noexcept
     {
         m_impl->renderManager = services.get<RenderManager>();
         m_impl->world = services.get<World>();
@@ -42,7 +43,7 @@ namespace litl
         LITL_FATAL_ASSERT_MSG((m_impl->sceneView != nullptr), "Failed to inject SceneView to ObjectPool");
     }
 
-    void ObjectPool::destroy() noexcept
+    void ObjectPool::destroy(Authority<Engine> auth) noexcept
     {
         logInfo("Destroying ObjectPool ...");
 
@@ -219,6 +220,11 @@ namespace litl
     //--------------------------------------------------------------------------------------
     // Mesh
     //--------------------------------------------------------------------------------------
+
+    MeshHandle ObjectPool::reserveMesh(Authority<AssetManager> auth) noexcept
+    {
+        return m_impl->meshPool.create({});
+    }
 
     MeshHandle ObjectPool::createMesh(MeshDescriptor const& descriptor) noexcept
     {

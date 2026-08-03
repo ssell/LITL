@@ -9,6 +9,7 @@
 #include "litl-engine/engine.hpp"
 #include "litl-engine/windowFactory.hpp"
 #include "litl-engine/frameLimiter.hpp"
+#include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/scene/sceneManager.hpp"
 #include "litl-engine/engineCallbacks.hpp"
@@ -37,6 +38,7 @@ namespace litl
         std::shared_ptr<World> pSharedECSWorld{ nullptr };
         std::shared_ptr<RenderManager> pSharedRenderManager{ nullptr };
         std::shared_ptr<ObjectPool> pSharedObjectPool{ nullptr };
+        std::shared_ptr<AssetManager> pSharedAssetManager{ nullptr };
         std::shared_ptr<SceneManager> pSharedSceneManager{ nullptr };
         
         void configureCallbacks(ConfigureCallbacksFunc userCallbacksFunc)
@@ -69,7 +71,8 @@ namespace litl
     {
         logInfo("LITL Engine Shutdown");
 
-        m_pImpl->pSharedObjectPool->destroy();
+        m_pImpl->pSharedAssetManager->destroy({});
+        m_pImpl->pSharedObjectPool->destroy({});
 
         litl::Logger::shutdown();
     }
@@ -99,11 +102,13 @@ namespace litl
         m_pImpl->pSharedJobScheduler = m_pImpl->pServiceProvider->get<JobScheduler>();
         m_pImpl->pSharedECSWorld = m_pImpl->pServiceProvider->get<World>();
         m_pImpl->pSharedObjectPool = m_pImpl->pServiceProvider->get<ObjectPool>();
+        m_pImpl->pSharedAssetManager = m_pImpl->pServiceProvider->get<AssetManager>();
         m_pImpl->pSharedSceneManager = m_pImpl->pServiceProvider->get<SceneManager>();
         m_pImpl->pSharedRenderManager = m_pImpl->pServiceProvider->get<RenderManager>();
 
-        m_pImpl->pSharedObjectPool->setup((*m_pImpl->pServiceProvider));
-        m_pImpl->pSharedSceneManager->setup(Authority<Engine>{}, (*m_pImpl->pServiceProvider));
+        m_pImpl->pSharedObjectPool->setup({}, *m_pImpl->pServiceProvider);
+        m_pImpl->pSharedAssetManager->setup({}, *m_pImpl->pServiceProvider);
+        m_pImpl->pSharedSceneManager->setup({}, (*m_pImpl->pServiceProvider));
         m_pImpl->pSharedConfig->set(config);
         m_pImpl->pSharedFrameLimiter->setTargetFps(static_cast<float>(m_pImpl->pSharedConfig->engineSettings.framesPerSecond));
 

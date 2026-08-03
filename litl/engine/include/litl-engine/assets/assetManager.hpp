@@ -3,15 +3,16 @@
 
 #include <string_view>
 
+#include "litl-core/authority.hpp"
 #include "litl-core/impl.hpp"
 #include "litl-engine/assets/assetHandle.hpp"
 #include "litl-engine/assets/meshAsset.hpp"
 
 namespace litl
 {
-    /// <summary>
-    /// 
-    /// </summary>
+    class Engine;
+    class ServiceProvider;
+
     class AssetManager final
     {
     public:
@@ -19,6 +20,13 @@ namespace litl
         AssetManager();
         ~AssetManager();
 
+        AssetManager(AssetManager const&) = delete;
+        AssetManager& operator=(AssetManager const&) = delete;
+
+        void setup(Authority<Engine> auth, ServiceProvider& services) noexcept;
+        void destroy(Authority<Engine> auth) noexcept;
+
+        [[nodiscard]] AssetHandle getAsset(std::string_view resource) noexcept;
         [[nodiscard]] MeshAssetHandle getMeshHandle(std::string_view resource) noexcept;
         [[nodiscard]] MeshAsset* getMesh(std::string_view resource) noexcept;
         [[nodiscard]] MeshAsset* getMesh(MeshAssetHandle handle) noexcept;
@@ -26,7 +34,7 @@ namespace litl
     private:
 
         struct Impl;
-        ImplPtr<Impl, 256u> m_impl;
+        ImplPtr<Impl, 512u> m_impl;
     };
 }
 
