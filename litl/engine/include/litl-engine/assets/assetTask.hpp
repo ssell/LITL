@@ -2,8 +2,7 @@
 #define LITL_ENGINE_ASSETS_ASSET_TASK_H__
 
 #include "litl-core/task.hpp"
-#include "litl-engine/assets/assetHandles.hpp"
-#include "litl-engine/assets/assetType.hpp"
+#include "litl-engine/assets/assetHandle.hpp"
 
 namespace litl
 {
@@ -17,17 +16,7 @@ namespace litl
             Error = 3
         };
 
-        union
-        {
-            MaterialAssetHandle materialHandle;
-            MeshAssetHandle meshHandle;
-            ShaderAssetHandle shaderHandle;
-            TextAssetHandle textHandle;
-            TextureAssetHandle textureHandle;
-        };
-
         Status status{ Status::None };
-        AssetType type{ AssetType::Unknown };
     };
 }
 
