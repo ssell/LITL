@@ -18,8 +18,8 @@ namespace litl
     struct TextAssetHandleTag {};
     using TextAssetHandle = Handle<TextAssetHandleTag>;
 
-    struct TextureAssetHandleTag {};
-    using TextureAssetHandle = Handle<TextureAssetHandleTag>;
+    struct Texture2DAssetHandleTag {};
+    using Texture2DAssetHandle = Handle<Texture2DAssetHandleTag>;
 
     struct AssetHandle
     {
@@ -29,7 +29,7 @@ namespace litl
             MeshAssetHandle meshHandle;
             ShaderAssetHandle shaderHandle;
             TextAssetHandle textHandle;
-            TextureAssetHandle textureHandle;
+            Texture2DAssetHandle texture2DHandle;
         };
 
         AssetType type{ AssetType::Unknown };

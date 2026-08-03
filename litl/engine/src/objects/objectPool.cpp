@@ -20,6 +20,8 @@ namespace litl
         HandlePool<GpuBuffer, GpuBufferHandleTag> gpuBufferPool;
         HandlePool<Material, MaterialHandleTag> materialPool;
         HandlePool<Mesh, MeshHandleTag> meshPool;
+        HandlePool<Text, TextHandleTag> textPool;
+        HandlePool<Texture2D, Texture2DHandleTag> texture2DPool;
     };
 
     ObjectPool::ObjectPool()
@@ -47,6 +49,18 @@ namespace litl
     {
         logInfo("Destroying ObjectPool ...");
 
+        // ---- Text
+
+        std::vector<TextHandle> textHandles;
+        getAllTextHandles(textHandles);
+
+        logTrace("... destroying ", textHandles.size(), " Text handles.");
+
+        for (auto textHandle : textHandles)
+        {
+            destroyText(textHandle);
+        }
+
         // ---- Cameras
 
         std::vector<CameraHandle> cameraHandles;
@@ -69,6 +83,18 @@ namespace litl
         for (auto materialHandle : materialHandles)
         {
             destroyMaterial(materialHandle);
+        }
+
+        // ---- Texture2D
+
+        std::vector<Texture2DHandle> texture2DHandles;
+        getAllTexture2DHandles(texture2DHandles);
+
+        logTrace("... destroying ", texture2DHandles.size(), " Texture2D handles.");
+
+        for (auto texture2DHandle : texture2DHandles)
+        {
+            destroyTexture2D(texture2DHandle);
         }
 
         // ---- Meshes
@@ -182,6 +208,11 @@ namespace litl
     // Material
     //--------------------------------------------------------------------------------------
 
+    MaterialHandle ObjectPool::reserveMaterial(Authority<AssetManager> auth) noexcept
+    {
+        return m_impl->materialPool.create({});
+    }
+
     MaterialHandle ObjectPool::createMaterial(MaterialDescriptor const& descriptor) noexcept
     {
         Material material{};
@@ -258,6 +289,94 @@ namespace litl
         {
             mesh->destroy({});
             m_impl->meshPool.destroy(handle);
+        }
+    }
+
+    //--------------------------------------------------------------------------------------
+    // Text
+    //--------------------------------------------------------------------------------------
+
+    TextHandle ObjectPool::reserveText(Authority<AssetManager> auth) noexcept
+    {
+        return m_impl->textPool.create({});
+    }
+
+    TextHandle ObjectPool::createText(TextDescriptor const& descriptor) noexcept
+    {
+        Text text{};
+
+        if (!text.create({}, descriptor))
+        {
+            logWarning("Failed to create Text '", descriptor.objectInfo.name, "'");
+            text.destroy({});      // make sure there are no lingering resources depending on when in the creation process the error occurred.
+            return {};
+        }
+
+        return m_impl->textPool.create(text);
+    }
+
+    Text* ObjectPool::getText(TextHandle handle) noexcept
+    {
+        return m_impl->textPool.get(handle);
+    }
+
+    void ObjectPool::getAllTextHandles(std::vector<TextHandle>& handles) const noexcept
+    {
+        m_impl->textPool.getAllHandles(handles);
+    }
+
+    void ObjectPool::destroyText(TextHandle handle) noexcept
+    {
+        Text* text = getText(handle);
+
+        if (text != nullptr)
+        {
+            text->destroy({});
+            m_impl->textPool.destroy(handle);
+        }
+    }
+
+    //--------------------------------------------------------------------------------------
+    // Texture2D
+    //--------------------------------------------------------------------------------------
+
+    Texture2DHandle ObjectPool::reserveTexture2D(Authority<AssetManager> auth) noexcept
+    {
+        return m_impl->texture2DPool.create({});
+    }
+
+    Texture2DHandle ObjectPool::createTexture2D(Texture2DDescriptor const& descriptor) noexcept
+    {
+        Texture2D texture2D{};
+
+        if (!texture2D.create({}, descriptor))
+        {
+            logWarning("Failed to create Texture2D '", descriptor.objectInfo.name, "'");
+            texture2D.destroy({});      // make sure there are no lingering resources depending on when in the creation process the error occurred.
+            return {};
+        }
+
+        return m_impl->texture2DPool.create(texture2D);
+    }
+
+    Texture2D* ObjectPool::getTexture2D(Texture2DHandle handle) noexcept
+    {
+        return m_impl->texture2DPool.get(handle);
+    }
+
+    void ObjectPool::getAllTexture2DHandles(std::vector<Texture2DHandle>& handles) const noexcept
+    {
+        m_impl->texture2DPool.getAllHandles(handles);
+    }
+
+    void ObjectPool::destroyTexture2D(Texture2DHandle handle) noexcept
+    {
+        Texture2D* texture2D = getTexture2D(handle);
+
+        if (texture2D != nullptr)
+        {
+            texture2D->destroy({});
+            m_impl->texture2DPool.destroy(handle);
         }
     }
 }

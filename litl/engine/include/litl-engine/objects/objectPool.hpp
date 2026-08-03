@@ -5,9 +5,11 @@
 #include "litl-core/impl.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
 #include "litl-engine/objects/camera.hpp"
+#include "litl-engine/objects/gpuBuffer.hpp"
 #include "litl-engine/objects/material.hpp"
 #include "litl-engine/objects/mesh.hpp"
-#include "litl-engine/objects/gpuBuffer.hpp"
+#include "litl-engine/objects/text.hpp"
+#include "litl-engine/objects/texture2d.hpp"
 
 namespace litl
 {
@@ -38,6 +40,7 @@ namespace litl
         void getAllGpuBufferHandles(std::vector<GpuBufferHandle>& handles) const noexcept;
         void destroyGpuBuffer(GpuBufferHandle handle) noexcept;
 
+        [[nodiscard]] MaterialHandle reserveMaterial(Authority<AssetManager> auth) noexcept;
         [[nodiscard]] MaterialHandle createMaterial(MaterialDescriptor const& descriptor) noexcept;
         [[nodiscard]] Material* getMaterial(MaterialHandle handle) noexcept;
         void getAllMaterialHandles(std::vector<MaterialHandle>& handles) const noexcept;
@@ -48,6 +51,18 @@ namespace litl
         [[nodiscard]] Mesh* getMesh(MeshHandle handle) noexcept;
         void getAllMeshHandles(std::vector<MeshHandle>& handles) const noexcept;
         void destroyMesh(MeshHandle handle) noexcept;
+
+        [[nodiscard]] TextHandle reserveText(Authority<AssetManager> auth) noexcept;
+        [[nodiscard]] TextHandle createText(TextDescriptor const& descriptor) noexcept;
+        [[nodiscard]] Text* getText(TextHandle handle) noexcept;
+        void getAllTextHandles(std::vector<TextHandle>& handles) const noexcept;
+        void destroyText(TextHandle handle) noexcept;
+
+        [[nodiscard]] Texture2DHandle reserveTexture2D(Authority<AssetManager> auth) noexcept;
+        [[nodiscard]] Texture2DHandle createTexture2D(Texture2DDescriptor const& descriptor) noexcept;
+        [[nodiscard]] Texture2D* getTexture2D(Texture2DHandle handle) noexcept;
+        void getAllTexture2DHandles(std::vector<Texture2DHandle>& handles) const noexcept;
+        void destroyTexture2D(Texture2DHandle handle) noexcept;
 
     private:
 

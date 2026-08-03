@@ -6,10 +6,9 @@
 
 namespace litl
 {
-    struct MeshAsset final : public Asset
+    struct MeshAsset : public Asset
     {
-        AssetStatus status{ AssetStatus::Unloaded };
-        MeshHandle handle;
+        MeshHandle handle{};
     };
 }
 

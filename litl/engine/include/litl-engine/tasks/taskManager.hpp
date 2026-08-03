@@ -1,8 +1,11 @@
 #ifndef LITL_ENGINE_TASKS_TASK_MANAGER_H__
 #define LITL_ENGINE_TASKS_TASK_MANAGER_H__
 
+#include <coroutine>
+
 #include "litl-core/authority.hpp"
 #include "litl-core/impl.hpp"
+#include "litl-core/task/task.hpp"
 
 namespace litl
 {
@@ -23,10 +26,18 @@ namespace litl
         TaskManager& operator=(TaskManager const&) = delete;
 
         void setup(Authority<Engine> auth, ServiceProvider& services) noexcept;
-        void destroy(Authority<Engine> auth);
+        void destroy(Authority<Engine> auth) noexcept;
         void update() noexcept;
 
+        template<typename T>
+        void schedule(Task<T> task) noexcept
+        {
+            schedule(task.handle);
+        }
+
     private:
+
+        void schedule(std::coroutine_handle<> handle) noexcept;
 
         struct Impl;
         ImplPtr<Impl, 256u> m_impl;
