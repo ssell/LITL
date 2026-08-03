@@ -16,6 +16,12 @@ namespace litl
 
     struct MeshHandleTag {};
     using MeshHandle = Handle<MeshHandleTag>;
+
+    struct TextHandleTag {};
+    using TextHandle = Handle<TextHandleTag>;
+
+    struct Texture2DHandleTag {};
+    using Texture2DHandle = Handle<Texture2DHandleTag>;
 }
 
 #endif

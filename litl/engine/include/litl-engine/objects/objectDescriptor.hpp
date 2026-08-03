@@ -2,6 +2,7 @@
 #define LITL_ENGINE_OBJECT_DESCRIPTOR_H__
 
 #include <cstdint>
+#include <string>
 
 namespace litl
 {

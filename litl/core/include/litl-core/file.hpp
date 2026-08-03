@@ -9,6 +9,7 @@ namespace litl
     {
     public:
 
+        File();
         File(std::string_view path);
 
         /// <summary>

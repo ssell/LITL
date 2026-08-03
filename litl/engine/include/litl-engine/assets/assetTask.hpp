@@ -2,6 +2,7 @@
 #define LITL_ENGINE_ASSETS_ASSET_TASK_H__
 
 #include "litl-core/task.hpp"
+#include "litl-engine/assets/asset.hpp"
 #include "litl-engine/assets/assetHandle.hpp"
 
 namespace litl
@@ -17,6 +18,7 @@ namespace litl
         };
 
         Status status{ Status::None };
+        Asset* asset{ nullptr };
     };
 }
 

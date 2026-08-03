@@ -52,4 +52,9 @@ namespace litl
     {
         m_impl->taskThreadQueue.drain();
     }
+
+    void TaskManager::schedule(std::coroutine_handle<> handle) noexcept
+    {
+        m_impl->taskThreadQueue.schedule(handle);
+    }
 }

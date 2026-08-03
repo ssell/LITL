@@ -9,6 +9,11 @@
 
 namespace litl
 {
+    File::File()
+    {
+        // ... placeholder ...
+    }
+
     File::File(std::string_view path)
     {
         m_file = path.data();
