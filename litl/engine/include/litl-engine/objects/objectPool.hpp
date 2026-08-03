@@ -1,6 +1,7 @@
 #ifndef LITL_ENGINE_OBJECT_POOLS_H__
 #define LITL_ENGINE_OBJECT_POOLS_H__
 
+#include "litl-core/authority.hpp"
 #include "litl-core/impl.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
 #include "litl-engine/objects/camera.hpp"
@@ -12,6 +13,7 @@ namespace litl
 {
     class Engine;
     class ServiceProvider;
+    class AssetManager;
 
     class ObjectPool
     {
@@ -22,6 +24,9 @@ namespace litl
 
         ObjectPool(ObjectPool const&) = delete;
         ObjectPool& operator=(ObjectPool const&) = delete;
+
+        void setup(Authority<Engine> auth, ServiceProvider& services) noexcept;
+        void destroy(Authority<Engine> auth) noexcept;
 
         [[nodiscard]] CameraHandle createCamera(CameraDescriptor const& descriptor) noexcept;
         [[nodiscard]] Camera* getCamera(CameraHandle handle) noexcept;
@@ -38,17 +43,13 @@ namespace litl
         void getAllMaterialHandles(std::vector<MaterialHandle>& handles) const noexcept;
         void destroyMaterial(MaterialHandle handle) noexcept;
 
+        [[nodiscard]] MeshHandle reserveMesh(Authority<AssetManager> auth) noexcept;
         [[nodiscard]] MeshHandle createMesh(MeshDescriptor const& descriptor) noexcept;
         [[nodiscard]] Mesh* getMesh(MeshHandle handle) noexcept;
         void getAllMeshHandles(std::vector<MeshHandle>& handles) const noexcept;
         void destroyMesh(MeshHandle handle) noexcept;
 
     private:
-
-        friend class Engine;
-
-        void setup(ServiceProvider& services) noexcept;
-        void destroy() noexcept;
 
         struct Impl;
         ImplPtr<Impl, 512> m_impl;
