@@ -12,6 +12,13 @@ namespace litl
 
     struct EngineConfiguration
     {
+        static constexpr uint32_t MinFixedFps = 1u;
+        static constexpr uint32_t MaxFixedFps = 1000u;
+        static constexpr uint32_t MinTicksPerSecond = 1u;
+        static constexpr uint32_t MaxTicksPerSecond = 1000u;
+        static constexpr uint32_t MinTaskThreadCount = 1u;
+        static constexpr uint32_t MaxTaskThreadCount = 10u;
+
         /// <summary>
         /// The name displayed in the application title bar and other areas.
         /// </summary>
@@ -30,14 +37,19 @@ namespace litl
         // ... todo windowed vs windowed borderless vs fullscreen ...
 
         /// <summary>
-        /// The maximum number of frames rendered per second. On the range [1, 1000].
+        /// The maximum number of frames rendered per second. On the range [MinFixedFps, MaxFixedFps].
         /// </summary>
         uint32_t framesPerSecond{ 120u };
 
         /// <summary>
-        /// The number of fixed update ticks per second. On the range [1, 1000].
+        /// The number of fixed update ticks per second. On the range [MinTicksPerSecond, MaxTicksPerSecond].
         /// </summary>
         uint32_t ticksPerSecond{ 50u };
+
+        /// <summary>
+        /// The number of threads available in the Task thread pool. Must be on the range [MinTaskThreadCount, MaxTaskThreadCount].
+        /// </summary>
+        uint32_t taskThreadCount{ 2u };
     };
 
     struct Configuration

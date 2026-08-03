@@ -1,3 +1,4 @@
+#include "litl-core/thread.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/job/jobScheduler.hpp"
 #include "litl-core/services/serviceCollection.hpp"
@@ -65,6 +66,7 @@ namespace litl
         logInfo("LITL Engine Startup");
 
         m_pImpl->setup = setup;
+        ThreadInfo::setMainThread();
     }
 
     Engine::~Engine()

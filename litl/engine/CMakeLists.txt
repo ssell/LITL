@@ -21,7 +21,7 @@ add_library(litl-engine STATIC
 	"src/objects/camera.cpp" 
 	"src/scene/sceneCameras.cpp" 
 	"src/ecs/systems/cullingSystem.cpp" 
-	"src/render/renderPass.cpp" "src/render/renderManager.cpp" "src/objects/material.cpp" "src/assets/assetManager.cpp")
+	"src/render/renderPass.cpp" "src/render/renderManager.cpp" "src/objects/material.cpp" "src/assets/assetManager.cpp" "src/tasks/taskManager.cpp")
 
 target_include_directories(litl-engine
 	PUBLIC
