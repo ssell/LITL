@@ -32,8 +32,7 @@ namespace litl
 
         /// <summary>
         /// Returns the path relative to a parent directory.
-        /// For example a file "C:\\Projects\\LITL\\assets\\mesh\\triangle.fbx" relative to "assets"
-        /// would return "
+        /// For example a file "C:\\Projects\\LITL\\assets\\mesh\\triangle.fbx" relative to "assets" would return "mesh\\triangle.fbx".
         /// </summary>
         /// <param name="parentDir"></param>
         /// <returns></returns>

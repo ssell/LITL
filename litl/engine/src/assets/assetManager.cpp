@@ -32,21 +32,31 @@ namespace litl
 
         void populateAssetMap() noexcept
         {
+            // In the future this would be some pre-baked binary or DB or something ...
             for (auto const& fileEntry : std::filesystem::recursive_directory_iterator(g_assetsPath))
             {
                 if (fileEntry.is_regular_file())
                 {
                     auto path = fileEntry.path();
-                    File file{path.string()};
+                    auto file = File(path.string());
                     auto assetFileType = g_assetTypeMap.find(StringId(file.extension()));
 
                     if (assetFileType != g_assetTypeMap.end())
                     {
-                        std::filesystem::path relativePath = path.lexically_relative(g_assetsPath);     // from assets/
-                        relativePath.replace_extension();                                               // strip the extension
-                        std::string str = relativePath.generic_string();                                // "mesh\\triangle" to "mesh/triangle"
+                        auto relativePath = path.lexically_relative(g_assetsPath);  // from "assets/"
+                        relativePath.replace_extension();                           // strip the extension
+                        
+                        const auto assetKey = relativePath.generic_string();        // "mesh\\triangle" to "mesh/triangle"
+                        const auto hashedKey = StringId(assetKey);
 
-                        assetMap[StringId(str)] = {};
+                        if (assetMap.find(hashedKey) != assetMap.end())
+                        {
+                            logWarning("Conflicting asset key for '", assetKey, "' with path '", relativePath.string(), "'. Assets may not have duplicate names with differing extensions.");
+                        }
+                        else
+                        {
+                            assetMap[hashedKey] = {};
+                        }
                     }
                 }
             }
