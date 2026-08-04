@@ -32,7 +32,15 @@ namespace litl
 
         void setup(Authority<Engine> auth, ServiceProvider& services) noexcept;
         void destroy(Authority<Engine> auth) noexcept;
+
+        /// <summary>
+        /// Drains the main-thread task queue and destroys and finished tasks that were created with destroyOnComplete set to true.
+        /// </summary>
         void update() noexcept;
+
+        /// <summary>
+        /// Releases the specified finished task if it was created with destroyOnComplete set to false.
+        /// </summary>
         void releaseTask(TaskId id) noexcept;
 
         /// <summary>
@@ -71,7 +79,6 @@ namespace litl
         [[nodiscard]] static uint32_t nextId() noexcept;
 
         std::vector<OwnedTask> m_ownedTasks;
-        std::vector<size_t> m_reapedTasks;
         std::unique_ptr<TaskThreadPool> m_pTaskThreadPool;
         std::mutex m_ownedTasksMutex;
     };
