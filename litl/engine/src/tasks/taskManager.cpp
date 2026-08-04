@@ -10,6 +10,13 @@
 
 namespace litl
 {
+    TaskId TaskManager::nextId() noexcept
+    {
+        // Note this is only called from schedule which is already in a lock, so no further synchronization needed.
+        static TaskId nextId = 0u;
+        return nextId++;
+    }
+
     TaskManager::TaskManager()
         : m_pTaskThreadPool(nullptr)
     {
@@ -42,23 +49,22 @@ namespace litl
         TaskThreadQueue::GetMainThreadQueue().drain();
 
         {
-            std::scoped_lock lock(m_mutex);
+            std::scoped_lock lock(m_ownedTasksMutex);
 
-            for (size_t i = 0ull; i < m_ownedTasks.size(); ++i)
+            std::erase_if(m_ownedTasks, [](OwnedTask const& task) -> bool
             {
-                if (m_ownedTasks[i].isFinished())
-                {
-                    m_reapedTasks.push_back(i);
-                }
-            }
-
-            if (!m_reapedTasks.empty())
-            {
-                std::erase_if(m_ownedTasks, [](OwnedTask const& task) -> bool
-                {
-                    return task.isFinished();
-                });
-            }
+                return task.isFinished() && task.shouldDestroyOnComplete();
+            });
         }
+    }
+
+    void TaskManager::releaseTask(TaskId id) noexcept
+    {
+        std::scoped_lock lock(m_ownedTasksMutex);
+
+        std::erase_if(m_ownedTasks, [id](OwnedTask const& task) -> bool
+        {
+            return task.isFinished() && (task.id() == id);
+        });
     }
 }
