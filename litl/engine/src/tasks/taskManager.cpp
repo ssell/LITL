@@ -33,11 +33,32 @@ namespace litl
 
     void TaskManager::destroy(Authority<Engine> auth) noexcept
     {
-
+        // m_pTaskThreadPool must be destroyed before m_ownedTasks
+        m_pTaskThreadPool = nullptr;
     }
 
     void TaskManager::update() noexcept
     {
         TaskThreadQueue::GetMainThreadQueue().drain();
+
+        {
+            std::scoped_lock lock(m_mutex);
+
+            for (size_t i = 0ull; i < m_ownedTasks.size(); ++i)
+            {
+                if (m_ownedTasks[i].isFinished())
+                {
+                    m_reapedTasks.push_back(i);
+                }
+            }
+
+            if (!m_reapedTasks.empty())
+            {
+                std::erase_if(m_ownedTasks, [](OwnedTask const& task) -> bool
+                {
+                    return task.isFinished();
+                });
+            }
+        }
     }
 }
