@@ -129,6 +129,7 @@ namespace litl
 
             result.asset = asset;
             result.status = AssetTask::Status::Complete;
+            asset->status = AssetStatus::InMemory;
 
             co_return result;
         }
