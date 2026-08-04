@@ -174,7 +174,7 @@ namespace litl
                 asset->handle = objectPool->reserveMaterial({});
             }
 
-            taskManager->schedule(loadAssetFromDisk(asset));
+            taskManager->schedule(loadAssetFromDisk(asset), true);
         }
 
         // ---------------------------------------------------------------------------------
@@ -217,7 +217,7 @@ namespace litl
                 asset->handle = objectPool->reserveMesh({});
             }
 
-            taskManager->schedule(loadAssetFromDisk(asset));
+            taskManager->schedule(loadAssetFromDisk(asset), true);
         }
 
         // ---------------------------------------------------------------------------------
@@ -260,7 +260,7 @@ namespace litl
                 asset->handle = objectPool->reserveText({});
             }
 
-            taskManager->schedule(loadAssetFromDisk(asset));
+            taskManager->schedule(loadAssetFromDisk(asset), true);
         }
 
         // ---------------------------------------------------------------------------------
@@ -303,7 +303,7 @@ namespace litl
                 asset->handle = objectPool->reserveTexture2D({});
             }
 
-            taskManager->schedule(loadAssetFromDisk(asset));
+            taskManager->schedule(loadAssetFromDisk(asset), true);
         }
     };
 
