@@ -1,6 +1,7 @@
 #ifndef LITL_CORE_TASK_TASK_H__
 #define LITL_CORE_TASK_TASK_H__
 
+#include <atomic>
 #include <coroutine>
 #include <optional>
 
@@ -30,7 +31,11 @@ namespace litl
 
                 std::coroutine_handle<> await_suspend(std::coroutine_handle<promise_type> handle) noexcept
                 {
-                    return handle.promise().continuation;
+                    auto continuation = handle.promise().continuation;
+
+                    handle.promise().finished.store(true, std::memory_order_release);
+
+                    return continuation;
                 }
 
                 void await_resume() noexcept
@@ -40,14 +45,19 @@ namespace litl
             };
 
             /// <summary>
+            /// 
+            /// </summary>
+            std::coroutine_handle<> continuation = std::noop_coroutine();
+
+            /// <summary>
             /// The stored final result of the Task.
             /// </summary>
             TaskStatus<T> result;
 
             /// <summary>
-            /// 
+            /// Is this Task finished running (regardless of result)?
             /// </summary>
-            std::coroutine_handle<> continuation = std::noop_coroutine();
+            std::atomic<bool> finished{ false };
 
             /// <summary>
             /// Called first. Returns the outer coroutine object (Task or Generator).
@@ -62,7 +72,6 @@ namespace litl
             /// </summary>
             std::suspend_always initial_suspend() noexcept
             {
-                result.status = TaskStatusType::Complete;
                 return {};
             }
 
