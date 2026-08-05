@@ -1,7 +1,6 @@
 add_library(litl-engine STATIC
 	"src/engine.cpp"
 	"src/windowFactory.cpp" 
-	 
 	"src/frameLimiter.cpp" 
 	"src/config.cpp" 
 	"src/bootstrap.cpp" 
@@ -21,7 +20,15 @@ add_library(litl-engine STATIC
 	"src/objects/camera.cpp" 
 	"src/scene/sceneCameras.cpp" 
 	"src/ecs/systems/cullingSystem.cpp" 
-	"src/render/renderPass.cpp" "src/render/renderManager.cpp" "src/objects/material.cpp" "src/assets/assetManager.cpp" "src/tasks/taskManager.cpp" "src/objects/texture2d.cpp" "src/objects/text.cpp" "src/tasks/ownedTask.cpp")
+	"src/render/renderPass.cpp" 
+	"src/render/renderManager.cpp" 
+	"src/objects/material.cpp" 
+	"src/assets/assetManager.cpp" 
+    "src/assets/assetLoadTask.cpp"
+	"src/tasks/taskManager.cpp" 
+	"src/objects/texture2d.cpp" 
+	"src/objects/text.cpp" 
+	"src/tasks/ownedTask.cpp")
 
 target_include_directories(litl-engine
 	PUBLIC

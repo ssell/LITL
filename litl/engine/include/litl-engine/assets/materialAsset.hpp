@@ -9,6 +9,11 @@ namespace litl
     struct MaterialAsset : public Asset
     {
         MaterialHandle handle{};
+
+        static bool decodeBytes(Asset* asset, std::span<std::byte const> bytes) noexcept
+        {
+            return true;
+        }
     };
 }
 
