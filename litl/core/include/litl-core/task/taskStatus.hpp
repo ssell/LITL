@@ -13,10 +13,19 @@ namespace litl
         Error       = 3u
     };
 
+    enum class TaskExecutionState : uint32_t
+    {
+        None        = 0u,
+        Yielded     = 1u,
+        Awaiting    = 2u,
+        Returned    = 3u
+    };
+
     template<typename T>
     struct TaskStatus
     {
         TaskStatusType status{ TaskStatusType::None };
+        TaskExecutionState state{ TaskExecutionState::None };
         std::optional<T> value{ std::nullopt };
     };
 }

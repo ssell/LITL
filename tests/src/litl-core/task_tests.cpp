@@ -21,14 +21,14 @@ namespace litl::tests
         /// </summary>
         Task<size_t> testLoadFileSize(std::string path)
         {
-            co_yield 1337ull;
+            co_yield 1337ull;                                               // Yield and store 1337 as the current Task value.
             co_await ResumeTaskOnWorkerThread{ GetTestTaskThreadPool() };   // Go from the main thread to the worker thread.
 
             workerThreadInfo = ThreadInfo::get();
             size_t size = static_cast<size_t>(std::filesystem::file_size(path));
 
             co_await ResumeTaskOnMainThread{};                              // Go from the worker thread back to the main thread.
-            co_return size;
+            co_return size;                                                 // Signal completion and store the file size in the current Task value.
         }
     }
 
@@ -36,9 +36,9 @@ namespace litl::tests
     // Tests
     // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("Task", "[core::tasks]")
+    LITL_TEST_CASE("Task Run", "[core::tasks]")
     {
-        TaskThreadQueue::RegisterMainThreadQueue();                 // Normally called by the engine, but need to do it ourselves in tests.
+        TaskThreadQueue::RegisterMainThreadQueue();                                     // Normally called by the engine, but need to do it ourselves in tests.
         const auto originalThread = ThreadInfo::get();
         
         {
@@ -51,11 +51,14 @@ namespace litl::tests
             // keep calling drain on the main thread queue until the Task is done.
             auto syncWaitCoroutine = SyncWaitCoroutine::run(loadFileSizeTask, taskResult);
 
-            syncWaitCoroutine.handle.resume();                                          // Start running our task via the syncWaitCoroutine.
+            syncWaitCoroutine.handle.resume();                                          // Start running our task via the syncWaitCoroutine to the first co_yield.
                                                                                         // It is still on the main thread so it will run until the co_yield and then the flow returns back here.
             REQUIRE(loadFileSizeTask.value().status == TaskStatusType::Running);        // When coroutine starts the status is set to Running.
-            REQUIRE(loadFileSizeTask.value().value == 1337ull);                         // At the first co_yield, the coroutine returns 1337u and so that value is stored.
-
+            REQUIRE(loadFileSizeTask.value().state == TaskExecutionState::Yielded);     // At the first co_yield, the coroutine returns 1337u and so that value is stored.
+            REQUIRE(loadFileSizeTask.value().value == 1337ull);
+            
+            syncWaitCoroutine.handle.resume();                                          // Run from co_yield to the co_await.
+            
             while (!syncWaitCoroutine.handle.done())                                    // The coroutine will now move to the worker thread, perform file size calculation, and then eventually move back to the main thread.
             {
                 TaskThreadQueue::GetMainThreadQueue().drain();
@@ -65,10 +68,11 @@ namespace litl::tests
 
             // Make sure the task completed successfully with a non-zero file size.
             REQUIRE(loadFileSizeTask.value().status == TaskStatusType::Complete);
+            REQUIRE(loadFileSizeTask.value().state == TaskExecutionState::Returned);
             REQUIRE(loadFileSizeTask.value().value.has_value());
-            REQUIRE(loadFileSizeTask.value().value > 0ull);
+            REQUIRE(loadFileSizeTask.value().value > 1337ull);
             REQUIRE(taskResult.value.has_value());
-            REQUIRE(taskResult.value.value() > 0ull);
+            REQUIRE(taskResult.value.value() > 1337ull);
         }
 
         // Make sure the task performed work on a separate worker thread and returned back to the main thread upon completion.
