@@ -3,6 +3,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <vector>
 
 #include "litl-core/file.hpp"
@@ -24,24 +25,30 @@ namespace litl
         // ... placeholder ...
     }
 
-    File::File(std::string_view path)
-        : m_file(path)
+    File::File(std::string_view path) : m_file(path)
     {
         refresh();
     }
 
-    File::File(std::filesystem::directory_entry const& entry) : 
-        m_file(entry.path()), 
-        m_lastWriteTime(to_time_t(entry.last_write_time())),
-        m_fileBytes(static_cast<uint32_t>(entry.file_size()))
+    File::File(std::filesystem::directory_entry const& entry) : m_file(entry.path())
     {
-
+        // Prefer refresh here instead of pulling straight from the directory_entry.
+        // The directory_entry::file_size() and directory_entry::last_write_time() can throw exceptions.
+        refresh();
     }
 
-    void File::refresh() noexcept
+    bool File::refresh() noexcept
     {
-        m_lastWriteTime = to_time_t(std::filesystem::last_write_time(m_file));
-        m_fileBytes = std::filesystem::file_size(m_file);
+        std::error_code error;
+
+        m_lastWriteTime = std::filesystem::last_write_time(m_file, error);
+
+        if (!error)
+        {
+            m_fileBytes = std::filesystem::file_size(m_file, error);
+        }
+
+        return (error.value() == 0);
     }
 
     std::string File::localPath() const noexcept
@@ -66,7 +73,23 @@ namespace litl
 
     std::time_t File::lastWriteTime() const noexcept
     {
-        return m_lastWriteTime;
+        // note we store std::filesystem::file_time_type instead of std::time_t as it is higher resolution
+        return to_time_t(m_lastWriteTime);
+    }
+
+    bool File::wasUpdated() noexcept
+    {
+        auto lastWriteTime = m_lastWriteTime;
+
+        if (refresh())
+        {
+            return (lastWriteTime < m_lastWriteTime);
+        }
+        else
+        {
+            // Return that the file was updated if we previously were not errored out. For example, if the file was deleted since the last time we checked.
+            return (lastWriteTime > std::filesystem::file_time_type::min());
+        }
     }
 
     std::string File::relativeTo(std::string_view parentDir) const noexcept

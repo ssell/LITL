@@ -17,7 +17,8 @@ namespace litl
         /// <summary>
         /// Refereshes tracked information about the file such as size and last write time.
         /// </summary>
-        void refresh() noexcept;
+        /// <returns>Can return false if the refresh failed. For instance, if the file no longer exists.</returns>
+        bool refresh() noexcept;
 
         /// <summary>
         /// Returns the path to the file local from the current directory that the application is running from.
@@ -53,6 +54,12 @@ namespace litl
         [[nodiscard]] std::time_t lastWriteTime() const noexcept;
 
         /// <summary>
+        /// Refreshes the write time of the file and returns true if it has been written to since the last write time.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] bool wasUpdated() noexcept;
+
+        /// <summary>
         /// Returns the path relative to a parent directory.
         /// For example a file "C:\\Projects\\LITL\\assets\\mesh\\triangle.fbx" relative to "assets" would return "mesh\\triangle.fbx".
         /// </summary>
@@ -78,7 +85,7 @@ namespace litl
     private:
 
         std::filesystem::path m_file;
-        std::time_t m_lastWriteTime{};
+        std::filesystem::file_time_type m_lastWriteTime{};
         uint32_t m_fileBytes{ 0u };
     };
 }
