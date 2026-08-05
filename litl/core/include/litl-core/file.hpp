@@ -82,6 +82,13 @@ namespace litl
         /// <returns></returns>
         [[nodiscard]] std::optional<std::vector<std::byte>> readAllBytes() const noexcept;
 
+        /// <summary>
+        /// Reads the contents of the file synchronously.
+        /// Returns false if there was an error reading the file.
+        /// </summary>
+        /// <param name="bytes"></param>
+        [[nodiscard]] bool readAllBytes(std::vector<std::byte>& bytes) const noexcept;
+
     private:
 
         std::filesystem::path m_file;

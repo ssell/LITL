@@ -114,10 +114,22 @@ namespace litl
 
     std::optional<std::vector<std::byte>> File::readAllBytes() const noexcept
     {
+        std::vector<std::byte> bytes;
+
+        if (readAllBytes(bytes))
+        {
+            return bytes;
+        }
+
+        return std::nullopt;
+    }
+
+    bool File::readAllBytes(std::vector<std::byte>& bytes) const noexcept
+    {
         if (!exists().has_value())
         {
             logWarning("Attempt read bytes for file at '", m_file.string(), "' failed as it does not exist.");
-            return std::nullopt;
+            return false;
         }
 
         std::ifstream instream(absolutePath(), std::ios::ate | std::ios::binary);
@@ -125,19 +137,19 @@ namespace litl
         if (!instream.is_open())
         {
             logWarning("Failed to open file at '", m_file.string(), "' to read bytes.");
-            return std::nullopt;
+            return false;
         }
 
         const auto size = static_cast<size_t>(instream.tellg());
-        std::vector<std::byte> bytes(size);
+        bytes.reserve(size);
 
         instream.seekg(0);
-        
+
         if (!instream.read(reinterpret_cast<char*>(bytes.data()), size))
         {
-            return std::nullopt;
+            return false;
         }
 
-        return bytes;
+        return true;
     }
 }

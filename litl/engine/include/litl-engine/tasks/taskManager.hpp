@@ -74,6 +74,8 @@ namespace litl
             return id;
         }
 
+        TaskThreadPool* getThreadPool() noexcept;
+
     private:
 
         [[nodiscard]] static uint32_t nextId() noexcept;

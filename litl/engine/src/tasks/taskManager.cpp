@@ -67,4 +67,9 @@ namespace litl
             return task.isFinished() && (task.id() == id);
         });
     }
+
+    TaskThreadPool* TaskManager::getThreadPool() noexcept
+    {
+        return m_pTaskThreadPool.get();
+    }
 }

@@ -8,11 +8,14 @@
 
 namespace litl
 {
+
     /// <summary>
     /// Base of all assets (MeshAsset, MaterialAsset, etc.).
     /// </summary>
     struct Asset
     {
+        using DecodeAssetBytesFunc = bool(*)(Asset*, std::span<std::byte const>);
+
         /// <summary>
         /// The file that the asset was loaded from.
         /// </summary>
@@ -42,6 +45,11 @@ namespace litl
         /// Current status of the asset in memory.
         /// </summary>
         AssetStatus status{ AssetStatus::Unloaded };
+
+        /// <summary>
+        /// The type-specific byte decoding function.
+        /// </summary>
+        DecodeAssetBytesFunc decodeFunc{ nullptr };
     };
 }
 

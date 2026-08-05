@@ -8,7 +8,7 @@
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-core/task/task.hpp"
 #include "litl-engine/assets/assetManager.hpp"
-#include "litl-engine/assets/assetTask.hpp"
+#include "litl-engine/assets/assetLoadTask.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/tasks/taskManager.hpp"
 #include "litl-engine/engine.hpp"
@@ -120,20 +120,6 @@ namespace litl
             return asset;
         }
 
-        /// <summary>
-        /// The coroutine task that loads a generic asset from disk.
-        /// </summary>
-        static Task<AssetTask> loadAssetFromDisk(Asset* asset) noexcept
-        {
-            AssetTask result{};
-
-            result.asset = asset;
-            result.status = AssetTask::Status::Complete;
-            asset->status = AssetStatus::InMemory;
-
-            co_return result;
-        }
-
         // ---------------------------------------------------------------------------------
         // --- Material Asset
         // ---------------------------------------------------------------------------------
@@ -146,6 +132,7 @@ namespace litl
         {
             MaterialAsset asset = createBaseAsset<MaterialAsset>(AssetType::Material, file, key, hashedKey);
             asset.handle = MaterialHandle{};
+            asset.decodeFunc = MaterialAsset::decodeBytes;
 
             assetMap[hashedKey] = AssetHandle{
                 .materialHandle = materialAssetPool.create(asset),
@@ -174,7 +161,7 @@ namespace litl
                 asset->handle = objectPool->reserveMaterial({});
             }
 
-            taskManager->schedule(loadAssetFromDisk(asset), true);
+            taskManager->schedule(loadAssetFromDiskAsync({}, asset, taskManager->getThreadPool()), true);
         }
 
         // ---------------------------------------------------------------------------------
@@ -189,6 +176,7 @@ namespace litl
         {
             MeshAsset asset = createBaseAsset<MeshAsset>(AssetType::Mesh, file, key, hashedKey);
             asset.handle = MeshHandle{};
+            asset.decodeFunc = MeshAsset::decodeBytes;
 
             assetMap[hashedKey] = AssetHandle{
                 .meshHandle = meshAssetPool.create(asset),
@@ -217,7 +205,7 @@ namespace litl
                 asset->handle = objectPool->reserveMesh({});
             }
 
-            taskManager->schedule(loadAssetFromDisk(asset), true);
+            taskManager->schedule(loadAssetFromDiskAsync({}, asset, taskManager->getThreadPool()), true);
         }
 
         // ---------------------------------------------------------------------------------
@@ -232,6 +220,7 @@ namespace litl
         {
             TextAsset asset = createBaseAsset<TextAsset>(AssetType::Text, file, key, hashedKey);
             asset.handle = TextHandle{};
+            asset.decodeFunc = TextAsset::decodeBytes;
 
             assetMap[hashedKey] = AssetHandle{
                 .textHandle = textAssetPool.create(asset),
@@ -260,7 +249,7 @@ namespace litl
                 asset->handle = objectPool->reserveText({});
             }
 
-            taskManager->schedule(loadAssetFromDisk(asset), true);
+            taskManager->schedule(loadAssetFromDiskAsync({}, asset, taskManager->getThreadPool()), true);
         }
 
         // ---------------------------------------------------------------------------------
@@ -275,6 +264,7 @@ namespace litl
         {
             Texture2DAsset asset = createBaseAsset<Texture2DAsset>(AssetType::Texture2D, file, key, hashedKey);
             asset.handle = Texture2DHandle{};
+            asset.decodeFunc = Texture2DAsset::decodeBytes;
 
             assetMap[hashedKey] = AssetHandle{
                 .texture2DHandle = texture2DAssetPool.create(asset),
@@ -303,7 +293,7 @@ namespace litl
                 asset->handle = objectPool->reserveTexture2D({});
             }
 
-            taskManager->schedule(loadAssetFromDisk(asset), true);
+            taskManager->schedule(loadAssetFromDiskAsync({}, asset, taskManager->getThreadPool()), true);
         }
     };
 
