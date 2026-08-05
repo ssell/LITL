@@ -7,16 +7,17 @@ namespace litl
 {
     enum class TaskStatusType : uint32_t
     {
-        None = 0u,
-        Complete = 1u,
-        Error = 2u
+        None        = 0u,
+        Running     = 1u,
+        Complete    = 2u,
+        Error       = 3u
     };
 
     template<typename T>
     struct TaskStatus
     {
         TaskStatusType status{ TaskStatusType::None };
-        std::optional<T> result{ std::nullopt };
+        std::optional<T> value{ std::nullopt };
     };
 }
 

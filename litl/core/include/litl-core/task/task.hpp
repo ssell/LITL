@@ -45,17 +45,17 @@ namespace litl
             };
 
             /// <summary>
-            /// 
+            /// State and execution pointer of the suspended outer coroutine.
             /// </summary>
             std::coroutine_handle<> continuation = std::noop_coroutine();
 
             /// <summary>
-            /// The stored final result of the Task.
+            /// The stored final value of the Task.
             /// </summary>
-            TaskStatus<T> result;
+            TaskStatus<T> value;
 
             /// <summary>
-            /// Is this Task finished running (regardless of result)?
+            /// Is this Task finished running (regardless of value)?
             /// </summary>
             std::atomic<bool> finished{ false };
 
@@ -72,6 +72,7 @@ namespace litl
             /// </summary>
             std::suspend_always initial_suspend() noexcept
             {
+                value.status = TaskStatusType::Running;
                 return {};
             }
 
@@ -81,16 +82,27 @@ namespace litl
             /// <returns></returns>
             final_awaiter final_suspend() noexcept
             {
-                result.status = (result.status != TaskStatusType::Error ? TaskStatusType::Complete : TaskStatusType::Error);
+                value.status = (value.status != TaskStatusType::Error ? TaskStatusType::Complete : TaskStatusType::Error);
+                return {};
+            }
+
+            /// <summary>
+            /// Called when the coroutine is yielded (co_yield) and stores the yielded value.
+            /// </summary>
+            /// <param name="v"></param>
+            /// <returns></returns>
+            std::suspend_always yield_value(T v) noexcept
+            {
+                value.value = std::move(v);
                 return {};
             }
 
             /// <summary>
             /// Required if the coroutine returns a value via co_return.
             /// </summary>
-            void return_value(T value)
+            void return_value(T v)
             {
-                result.result = std::move(value);
+                value.value = std::move(v);
             }
 
             /// <summary>
@@ -99,7 +111,7 @@ namespace litl
             /// </summary>
             void unhandled_exception()
             {
-                result.status = TaskStatusType::Error;
+                value.status = TaskStatusType::Error;
             }
         };
 
@@ -123,12 +135,12 @@ namespace litl
 
         /// <summary>
         /// Called when the coroutine resumes (when await_ready returns true).
-        /// The return type of this method dictates the result value of the co_await.
+        /// The return type of this method dictates the value value of the co_await.
         /// </summary>
         /// <returns></returns>
         TaskStatus<T> await_resume()
         {
-            return std::move(handle.promise().result);
+            return std::move(handle.promise().value);
         }
 
         /// <summary>
@@ -143,6 +155,15 @@ namespace litl
         {
             handle.promise().continuation = awaiting;
             return handle;
+        }
+
+        /// <summary>
+        /// The current value of the task, including its status.
+        /// </summary>
+        /// <returns></returns>
+        TaskStatus<T> value() const noexcept
+        {
+            return handle.promise().value;
         }
     };
 }
