@@ -56,7 +56,7 @@ namespace litl
                 if (fileEntry.is_regular_file())
                 {
                     auto path = fileEntry.path();
-                    auto file = File(path.string());
+                    auto file = File(fileEntry);
                     auto assetFileType = g_assetTypeMap.find(StringId(file.extension()));
 
                     if (assetFileType != g_assetTypeMap.end())
