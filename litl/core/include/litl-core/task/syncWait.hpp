@@ -67,7 +67,10 @@ namespace litl
         template <class T>
         static SyncWaitCoroutine run(Task<T>& t, TaskStatus<T>& result)
         {
-            result = co_await t;
+            while (t.value().state != TaskExecutionState::Returned)
+            {
+                result = co_await t;
+            }
         }
     };
 

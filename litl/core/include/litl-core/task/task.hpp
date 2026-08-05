@@ -73,6 +73,7 @@ namespace litl
             std::suspend_always initial_suspend() noexcept
             {
                 value.status = TaskStatusType::Running;
+                value.state = TaskExecutionState::None;
                 return {};
             }
 
@@ -83,6 +84,7 @@ namespace litl
             final_awaiter final_suspend() noexcept
             {
                 value.status = (value.status != TaskStatusType::Error ? TaskStatusType::Complete : TaskStatusType::Error);
+                value.state = TaskExecutionState::Returned;
                 return {};
             }
 
@@ -94,6 +96,7 @@ namespace litl
             std::suspend_always yield_value(T v) noexcept
             {
                 value.value = std::move(v);
+                value.state = TaskExecutionState::Yielded;
                 return {};
             }
 
