@@ -1,6 +1,7 @@
 #ifndef LITL_CORE_FILE_H__
 #define LITL_CORE_FILE_H__
 
+#include <ctime>
 #include <filesystem>
 
 namespace litl
@@ -11,6 +12,12 @@ namespace litl
 
         File();
         File(std::string_view path);
+        File(std::filesystem::directory_entry const& entry);
+
+        /// <summary>
+        /// Refereshes tracked information about the file such as size and last write time.
+        /// </summary>
+        void refresh() noexcept;
 
         /// <summary>
         /// Returns the path to the file local from the current directory that the application is running from.
@@ -30,6 +37,20 @@ namespace litl
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] std::string extension() const noexcept;
+
+        /// <summary>
+        /// Size of the file in bytes.
+        /// This value can be refreshed if out-of-date using refresh().
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] uint32_t size() const noexcept;
+
+        /// <summary>
+        /// Last time the file was written to.
+        /// This value can be refreshed if out-of-date using refresh().
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] std::time_t lastWriteTime() const noexcept;
 
         /// <summary>
         /// Returns the path relative to a parent directory.
@@ -57,6 +78,8 @@ namespace litl
     private:
 
         std::filesystem::path m_file;
+        std::time_t m_lastWriteTime{};
+        uint32_t m_fileBytes{ 0u };
     };
 }
 

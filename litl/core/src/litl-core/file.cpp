@@ -1,3 +1,4 @@
+#include <chrono>
 #include <fstream>
 #include <optional>
 #include <string>
@@ -9,14 +10,38 @@
 
 namespace litl
 {
+    namespace
+    {
+        std::time_t to_time_t(std::filesystem::file_time_type const& fileTime) noexcept
+        {
+            // love the brevity of C++
+            return std::chrono::system_clock::to_time_t(std::chrono::clock_cast<std::chrono::system_clock>(fileTime));
+        }
+    }
+
     File::File()
     {
         // ... placeholder ...
     }
 
     File::File(std::string_view path)
+        : m_file(path)
     {
-        m_file = path.data();
+        refresh();
+    }
+
+    File::File(std::filesystem::directory_entry const& entry) : 
+        m_file(entry.path()), 
+        m_lastWriteTime(to_time_t(entry.last_write_time())),
+        m_fileBytes(static_cast<uint32_t>(entry.file_size()))
+    {
+
+    }
+
+    void File::refresh() noexcept
+    {
+        m_lastWriteTime = to_time_t(std::filesystem::last_write_time(m_file));
+        m_fileBytes = std::filesystem::file_size(m_file);
     }
 
     std::string File::localPath() const noexcept
@@ -32,6 +57,16 @@ namespace litl
     std::string File::extension() const noexcept
     {
         return m_file.extension().string();
+    }
+
+    uint32_t File::size() const noexcept
+    {
+        return m_fileBytes;
+    }
+
+    std::time_t File::lastWriteTime() const noexcept
+    {
+        return m_lastWriteTime;
     }
 
     std::string File::relativeTo(std::string_view parentDir) const noexcept
