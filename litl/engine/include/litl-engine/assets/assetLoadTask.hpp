@@ -7,10 +7,11 @@
 namespace litl
 {
     class TaskThreadPool;
+    class ObjectPool;
     class AssetManager;
     class Asset;
 
-    Task<bool> loadAssetFromDiskAsync(Authority<AssetManager> auth, Asset* asset, TaskThreadPool* threadPool) noexcept;
+    Task<bool> loadAssetFromDiskAsync(Authority<AssetManager> auth, Asset* asset, TaskThreadPool& threadPool, ObjectPool& objectPool) noexcept;
 }
 
 #endif

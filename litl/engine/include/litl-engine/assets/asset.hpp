@@ -8,13 +8,19 @@
 
 namespace litl
 {
+    class ObjectPool;
+
 
     /// <summary>
     /// Base of all assets (MeshAsset, MaterialAsset, etc.).
     /// </summary>
     struct Asset
     {
-        using DecodeAssetBytesFunc = bool(*)(Asset*, std::span<std::byte const>);
+        struct AssetOps
+        {
+            bool (*fetchAssetObject)(Asset*, ObjectPool&);
+            bool (*decodeAssetBytes)(Asset*, std::span<std::byte const>);
+        };
 
         /// <summary>
         /// The file that the asset was loaded from.
@@ -47,9 +53,9 @@ namespace litl
         AssetStatus status{ AssetStatus::Unloaded };
 
         /// <summary>
-        /// The type-specific byte decoding function.
+        /// Asset-specific function operations table.
         /// </summary>
-        DecodeAssetBytesFunc decodeFunc{ nullptr };
+        AssetOps const* assetOps{ nullptr };
     };
 }
 

@@ -2,17 +2,24 @@
 #include "litl-engine/assets/assetLoadTask.hpp"
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/assets/asset.hpp"
+#include "litl-engine/objects/objectPool.hpp"
 
 namespace litl
 {
-    Task<bool> loadAssetFromDiskAsync(Authority<AssetManager> auth, Asset* asset, TaskThreadPool* threadPool) noexcept
+    Task<bool> loadAssetFromDiskAsync(Authority<AssetManager> auth, Asset* asset, TaskThreadPool& threadPool, ObjectPool& objectPool) noexcept
     {
         asset->status = AssetStatus::Loading;
         std::vector<std::byte> bytes;
 
-        if (asset->decodeFunc == nullptr)
+        if (asset->assetOps == nullptr)
         {
             asset->status = AssetStatus::Error;
+            co_return false;
+        }
+
+        if (!asset->assetOps->fetchAssetObject(asset, objectPool))
+        {
+            // Failed to retrieve the underlying object. Odd.
             co_return false;
         }
 
@@ -20,7 +27,7 @@ namespace litl
         // --- Switch execution context to a worker thread
         // ---------------------------------------------------------------------------------
 
-        co_await ResumeTaskOnWorkerThread{ *threadPool };
+        co_await ResumeTaskOnWorkerThread{ threadPool };
         {
             // Read in all file bytes
             if (asset->file.refresh())
@@ -40,7 +47,7 @@ namespace litl
             // Decode raw bytes into asset-specific data representation
             if (asset->status != AssetStatus::Error)
             {
-                if (!asset->decodeFunc(asset, bytes))
+                if (!asset->assetOps->decodeAssetBytes(asset, bytes))
                 {
                     // Failed to decode
                     asset->status = AssetStatus::Error;
