@@ -6,14 +6,20 @@
 
 namespace litl
 {
+    class Mesh;
+
     struct MeshAsset : public Asset
     {
         MeshHandle handle{};
+        Mesh* mesh{ nullptr };
 
-        static bool decodeBytes(Asset* asset, std::span<std::byte const> bytes) noexcept
-        {
-            return true;
-        }
+        static bool fetchAssetObject(Asset* asset, ObjectPool& objectPool) noexcept;
+        static bool decodeBytes(Asset* asset, std::span<std::byte const> bytes) noexcept;
+    };
+
+    inline constexpr Asset::AssetOps MeshAssetOps = {
+        &MeshAsset::fetchAssetObject,
+        &MeshAsset::decodeBytes
     };
 }
 
