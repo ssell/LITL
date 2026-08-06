@@ -141,9 +141,8 @@ namespace litl
         }
 
         const auto size = static_cast<size_t>(instream.tellg());
-        bytes.reserve(size);
-
         instream.seekg(0);
+        bytes.resize(size);
 
         if (!instream.read(reinterpret_cast<char*>(bytes.data()), size))
         {
