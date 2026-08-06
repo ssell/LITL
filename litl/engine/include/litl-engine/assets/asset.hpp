@@ -19,7 +19,7 @@ namespace litl
         struct AssetOps
         {
             bool (*fetchAssetObject)(Asset*, ObjectPool&);
-            bool (*decodeAssetBytes)(Asset*, std::span<std::byte const>);
+            bool (*decodeAssetBytes)(Asset*, std::span<std::byte const>, AssetErrorCode&);
         };
 
         /// <summary>
@@ -53,9 +53,20 @@ namespace litl
         AssetStatus status{ AssetStatus::Unloaded };
 
         /// <summary>
+        /// If the status is error, this is the error.
+        /// </summary>
+        AssetErrorCode error{ AssetErrorCode::None };
+
+        /// <summary>
         /// Asset-specific function operations table.
         /// </summary>
         AssetOps const* assetOps{ nullptr };
+
+        void setError(AssetErrorCode err) noexcept
+        {
+            status = AssetStatus::Error;
+            error = err;
+        }
     };
 }
 

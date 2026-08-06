@@ -14,14 +14,14 @@ namespace litl
         if (asset->assetOps == nullptr)
         {
             // No defined function table. Definitely shouldn't get here ...
-            asset->status = AssetStatus::Error;
+            asset->setError(AssetErrorCode::InvalidFunctionTable);
             co_return false;
         }
 
         if (!asset->assetOps->fetchAssetObject(asset, objectPool))
         {
             // Failed to retrieve the underlying object. Odd.
-            asset->status = AssetStatus::Error;
+            asset->setError(AssetErrorCode::InvalidObject);
             co_return false;
         }
 
@@ -36,23 +36,23 @@ namespace litl
             {
                 if (!asset->file.readAllBytes(bytes))
                 {
-                    // Failed to read in bytes.
-                    asset->status = AssetStatus::Error;
+                    asset->setError(AssetErrorCode::SourceReadFail);
                 }
             }
             else
             {
-                // Failed to refresh the file info. Likely has been deleted.
-                asset->status = AssetStatus::Error;
+                asset->setError(AssetErrorCode::FileRefreshFail);
             }
 
             // Decode raw bytes into asset-specific data representation
             if (asset->status != AssetStatus::Error)
             {
-                if (!asset->assetOps->decodeAssetBytes(asset, bytes))
+                AssetErrorCode error{ AssetErrorCode::None };
+
+                if (!asset->assetOps->decodeAssetBytes(asset, bytes, error))
                 {
-                    // Failed to decode
-                    asset->status = AssetStatus::Error;
+                    error = (error == AssetErrorCode::None ? AssetErrorCode::DecodeFail : error);
+                    asset->setError(error);
                 }
             }
         }

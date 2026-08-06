@@ -11,7 +11,7 @@ namespace litl
         return (material->material != nullptr);
     }
 
-    bool MaterialAsset::decodeBytes(Asset* asset, std::span<std::byte const> bytes) noexcept
+    bool MaterialAsset::decodeBytes(Asset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
     {
         if (bytes.empty())
         {
