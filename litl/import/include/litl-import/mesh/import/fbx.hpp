@@ -13,6 +13,9 @@ namespace litl::import
     {
     public:
 
+        static constexpr std::string_view ImporterName = "FBX";
+        static constexpr std::array SupportedExtensions = { std::string_view{".fbx"} };
+
         FbxImporter();
         ~FbxImporter();
 

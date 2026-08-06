@@ -33,6 +33,12 @@ namespace litl
         [[nodiscard]] std::string absolutePath() const noexcept;
 
         /// <summary>
+        /// Returns the path of the parent folder for this file.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] std::string parentFolderPath() const noexcept;
+
+        /// <summary>
         /// Returns the file extension. This includes the "."
         /// For example "image.png" would return ".png" and "file.tar.gz" would return ".gz"
         /// </summary>

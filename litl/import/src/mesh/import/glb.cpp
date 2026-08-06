@@ -14,14 +14,7 @@ namespace litl::import
 
     Result GlbImporter::import(File const& file, std::span<std::byte const> bytes) noexcept
     {
-        Result result{
-            .success = false,
-            .error = ErrorType::ImporterNotImplemented,
-            .message = "The Mesh Importer for .glb is not yet implemented."
-        };
-
         // ... todo ...
-
-        return result;
+        return Result::Error(ErrorType::ImporterNotImplemented);
     }
 }

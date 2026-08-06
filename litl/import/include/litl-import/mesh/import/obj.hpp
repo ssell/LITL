@@ -12,6 +12,9 @@ namespace litl::import
     {
     public:
 
+        static constexpr std::string_view ImporterName = "Wavefront OBJ";
+        static constexpr std::array SupportedExtensions = { std::string_view{".obj"} };
+
         ObjImporter();
         ~ObjImporter();
 

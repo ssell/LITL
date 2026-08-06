@@ -10,6 +10,7 @@ namespace litl::import
     {
     public:
 
+        virtual Result import(File const& file, std::span<std::byte const> bytes) noexcept override = 0;
         [[nodiscard]] Mesh& mesh() noexcept;
 
     protected:

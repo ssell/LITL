@@ -13,6 +13,9 @@ namespace litl::import
     {
     public:
 
+        static constexpr std::string_view ImporterName = "GLB";
+        static constexpr std::array SupportedExtensions = { std::string_view{".glb"} };
+
         GlbImporter();
         ~GlbImporter();
 

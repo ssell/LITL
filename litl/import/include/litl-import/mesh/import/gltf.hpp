@@ -14,6 +14,9 @@ namespace litl::import
     {
     public:
 
+        static constexpr std::string_view ImporterName = "glTF";
+        static constexpr std::array SupportedExtensions = { std::string_view{".glTF"} };
+
         GltfImporter();
         ~GltfImporter();
 
