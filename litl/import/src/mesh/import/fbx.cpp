@@ -12,7 +12,7 @@ namespace litl::import
 
     }
 
-    Result FbxImporter::import(std::span<std::byte const> bytes) noexcept
+    Result FbxImporter::import(File const& file, std::span<std::byte const> bytes) noexcept
     {
         Result result{
             .success = false,
