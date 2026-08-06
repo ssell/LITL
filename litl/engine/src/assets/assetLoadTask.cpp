@@ -13,6 +13,7 @@ namespace litl
 
         if (asset->assetOps == nullptr)
         {
+            // No defined function table. Definitely shouldn't get here ...
             asset->status = AssetStatus::Error;
             co_return false;
         }
@@ -20,6 +21,7 @@ namespace litl
         if (!asset->assetOps->fetchAssetObject(asset, objectPool))
         {
             // Failed to retrieve the underlying object. Odd.
+            asset->status = AssetStatus::Error;
             co_return false;
         }
 

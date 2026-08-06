@@ -305,7 +305,7 @@ namespace litl
     {
         Text text{};
 
-        if (!text.create({}, descriptor))
+        if (!text.create(Authority<ObjectPool>{}, descriptor))
         {
             logWarning("Failed to create Text '", descriptor.objectInfo.name, "'");
             text.destroy({});      // make sure there are no lingering resources depending on when in the creation process the error occurred.

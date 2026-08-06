@@ -47,6 +47,8 @@ namespace litl::samples
 
         // ... test ...
         MeshAsset* g_testMeshAsset{ nullptr };
+        TextAsset* g_testPlainTextAsset{ nullptr };
+        TextAsset* g_testJsonTextAsset{ nullptr };
     }
 
     void Simulator::setup(ServiceProvider& services, SimulatorConfiguration const& config) noexcept
@@ -72,7 +74,9 @@ namespace litl::samples
 
         // ... test ...
         auto assetManager = services.get<AssetManager>();
-        g_testMeshAsset = (g_testMeshAsset == nullptr ? assetManager->getMesh("mesh/test") : g_testMeshAsset);
+        g_testMeshAsset = assetManager->getMesh("mesh/test");
+        g_testPlainTextAsset = assetManager->getText("text/hello-plain");
+        g_testJsonTextAsset = assetManager->getText("text/hello-json");
 
         tick();
     }
@@ -83,6 +87,10 @@ namespace litl::samples
 
         if (std::chrono::duration_cast<std::chrono::milliseconds>(now - m_lastTick).count() >= m_config.tickRateMs)
         {
+            auto* meshAsset = g_testMeshAsset;
+            auto* plainTextAsset = g_testPlainTextAsset;
+            auto* jsonTextAsset = g_testJsonTextAsset;
+
             tick();
             m_lastTick = now;
         }

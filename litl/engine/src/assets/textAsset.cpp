@@ -18,14 +18,32 @@ namespace litl
             { ".json"_sid, TextFileExtension::Json }
         };
 
-        static bool decodeBytesTxt(Asset* asset, std::span<std::byte const> bytes) noexcept
+        static bool decodeBytesTxt(Authority<TextAsset> auth, TextAsset* asset, std::span<std::byte const> bytes) noexcept
         {
-            return true;
+            std::string str(reinterpret_cast<char const*>(bytes.data()), bytes.size());
+
+            return asset->text->create(auth, TextDescriptor{
+                .objectInfo = ObjectDescriptor{
+                    .name = asset->key,
+                    .lifetime = ObjectLifetime::Application     // ... todo ...
+                },
+                .string = std::string(reinterpret_cast<char const*>(bytes.data()), bytes.size()),
+                .type = TextType::Plain
+            });
         }
 
-        static bool decodeBytesJson(Asset* asset, std::span<std::byte const> bytes) noexcept
+        static bool decodeBytesJson(Authority<TextAsset> auth, TextAsset* asset, std::span<std::byte const> bytes) noexcept
         {
-            return true;
+            std::string str(reinterpret_cast<char const*>(bytes.data()), bytes.size());
+
+            return asset->text->create(auth, TextDescriptor{
+                .objectInfo = ObjectDescriptor{
+                    .name = asset->key,
+                    .lifetime = ObjectLifetime::Application     // ... todo ...
+                },
+                .string = std::string(reinterpret_cast<char const*>(bytes.data()), bytes.size()),
+                .type = TextType::Json
+            });
         }
     }
 
@@ -43,7 +61,14 @@ namespace litl
             return false;
         }
 
-        auto findExtensionType = g_textFileExtensionMap.find(asset->file.extension());
+        auto* textAsset = static_cast<TextAsset*>(asset);
+
+        if ((textAsset == nullptr) || (textAsset->text == nullptr))
+        {
+            return false;
+        }
+
+        auto findExtensionType = g_textFileExtensionMap.find(textAsset->file.extension());
 
         if (findExtensionType == g_textFileExtensionMap.end())
         {
@@ -54,10 +79,10 @@ namespace litl
         switch (findExtensionType->second)
         {
         case TextFileExtension::Txt:
-            return decodeBytesTxt(asset, bytes);
+            return decodeBytesTxt({}, textAsset, bytes);
 
         case TextFileExtension::Json:
-            return decodeBytesJson(asset, bytes);
+            return decodeBytesJson({}, textAsset, bytes);
 
         // Somehow still an unsupported extension type.
         case TextFileExtension::Unknown:
