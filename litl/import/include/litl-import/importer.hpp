@@ -1,7 +1,9 @@
 #ifndef LITL_IMPORT_IMPORTER_H__
 #define LITL_IMPORT_IMPORTER_H__
 
-#include <string_view>
+#include <cstdint>
+#include <span>
+
 #include "litl-import/result.hpp"
 
 namespace litl::import
@@ -10,7 +12,7 @@ namespace litl::import
     {
     public:
 
-        virtual Result import(std::string_view path) noexcept = 0;
+        virtual Result import(std::span<std::byte const> bytes) noexcept = 0;
     };
 }
 

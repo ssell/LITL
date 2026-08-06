@@ -15,7 +15,7 @@ namespace litl::import
         FbxImporter(FbxImporter const&) = delete;
         FbxImporter& operator=(FbxImporter const&) = delete;
 
-        [[nodiscard]] Result import(std::string_view path) noexcept override;
+        [[nodiscard]] Result import(std::span<std::byte const> bytes) noexcept override;
 
     private:
     };
