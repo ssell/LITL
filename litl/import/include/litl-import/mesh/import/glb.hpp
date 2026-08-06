@@ -5,6 +5,10 @@
 
 namespace litl::import
 {
+    /// <summary>
+    /// GLB is the binary representation of the glTF format.
+    /// It stores all of the same data as a glTF but packed into a single file.
+    /// </summary>
     class GlbImporter final : public MeshImporter
     {
     public:
@@ -15,7 +19,7 @@ namespace litl::import
         GlbImporter(GlbImporter const&) = delete;
         GlbImporter& operator=(GlbImporter const&) = delete;
 
-        [[nodiscard]] Result import(std::span<std::byte const> bytes) noexcept override;
+        [[nodiscard]] Result import(File const& file, std::span<std::byte const> bytes) noexcept override;
 
     private:
     };

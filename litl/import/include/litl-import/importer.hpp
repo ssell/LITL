@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <span>
 
+#include "litl-core/file.hpp"
 #include "litl-import/result.hpp"
 
 namespace litl::import
@@ -12,7 +13,7 @@ namespace litl::import
     {
     public:
 
-        virtual Result import(std::span<std::byte const> bytes) noexcept = 0;
+        virtual Result import(File const& file, std::span<std::byte const> bytes) noexcept = 0;
     };
 }
 

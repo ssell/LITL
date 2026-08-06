@@ -5,6 +5,10 @@
 
 namespace litl::import
 {
+    /// <summary>
+    /// Importer for the FBX mesh file format.
+    /// FBX is a proprietary format that supports advanced features such as rigging, joints, animations, etc.
+    /// </summary>
     class FbxImporter final : public MeshImporter
     {
     public:
@@ -15,7 +19,7 @@ namespace litl::import
         FbxImporter(FbxImporter const&) = delete;
         FbxImporter& operator=(FbxImporter const&) = delete;
 
-        [[nodiscard]] Result import(std::span<std::byte const> bytes) noexcept override;
+        [[nodiscard]] Result import(File const& file, std::span<std::byte const> bytes) noexcept override;
 
     private:
     };
