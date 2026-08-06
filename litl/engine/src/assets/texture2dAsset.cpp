@@ -11,7 +11,7 @@ namespace litl
         return (texture2D->texture2D != nullptr);
     }
 
-    bool Texture2DAsset::decodeBytes(Asset* asset, std::span<std::byte const> bytes) noexcept
+    bool Texture2DAsset::decodeBytes(Asset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
     {
         if (bytes.empty())
         {

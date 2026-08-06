@@ -14,7 +14,7 @@ namespace litl
         Texture2D* texture2D{ nullptr };
 
         static bool fetchAssetObject(Asset* asset, ObjectPool& objectPool) noexcept;
-        static bool decodeBytes(Asset* asset, std::span<std::byte const> bytes) noexcept;
+        static bool decodeBytes(Asset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept;
     };
 
     inline constexpr Asset::AssetOps Texture2DAssetOps = {

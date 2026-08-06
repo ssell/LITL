@@ -18,11 +18,11 @@ namespace litl
             { ".json"_sid, TextFileExtension::Json }
         };
 
-        static bool decodeBytesTxt(Authority<TextAsset> auth, TextAsset* asset, std::span<std::byte const> bytes) noexcept
+        static bool decodeBytesTxt(Authority<TextAsset> auth, TextAsset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
         {
             std::string str(reinterpret_cast<char const*>(bytes.data()), bytes.size());
 
-            return asset->text->create(auth, TextDescriptor{
+            const bool result = asset->text->create(auth, TextDescriptor{
                 .objectInfo = ObjectDescriptor{
                     .name = asset->key,
                     .lifetime = ObjectLifetime::Application     // ... todo ...
@@ -30,13 +30,20 @@ namespace litl
                 .string = std::string(reinterpret_cast<char const*>(bytes.data()), bytes.size()),
                 .type = TextType::Plain
             });
+
+            if (!result)
+            {
+                error = AssetErrorCode::CreationFailed;
+            }
+
+            return result;
         }
 
-        static bool decodeBytesJson(Authority<TextAsset> auth, TextAsset* asset, std::span<std::byte const> bytes) noexcept
+        static bool decodeBytesJson(Authority<TextAsset> auth, TextAsset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
         {
             std::string str(reinterpret_cast<char const*>(bytes.data()), bytes.size());
 
-            return asset->text->create(auth, TextDescriptor{
+            const bool result = asset->text->create(auth, TextDescriptor{
                 .objectInfo = ObjectDescriptor{
                     .name = asset->key,
                     .lifetime = ObjectLifetime::Application     // ... todo ...
@@ -44,6 +51,13 @@ namespace litl
                 .string = std::string(reinterpret_cast<char const*>(bytes.data()), bytes.size()),
                 .type = TextType::Json
             });
+
+            if (!result)
+            {
+                error = AssetErrorCode::CreationFailed;
+            }
+
+            return result;
         }
     }
 
@@ -54,10 +68,11 @@ namespace litl
         return (text->text != nullptr);
     }
 
-    bool TextAsset::decodeBytes(Asset* asset, std::span<std::byte const> bytes) noexcept
+    bool TextAsset::decodeBytes(Asset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
     {
         if (bytes.empty())
         {
+            error = AssetErrorCode::DecodeBytesEmpty;
             return false;
         }
 
@@ -65,6 +80,7 @@ namespace litl
 
         if ((textAsset == nullptr) || (textAsset->text == nullptr))
         {
+            error = AssetErrorCode::DecodeAssetNull;
             return false;
         }
 
@@ -73,20 +89,22 @@ namespace litl
         if (findExtensionType == g_textFileExtensionMap.end())
         {
             // Unsupported extension type.
+            error = AssetErrorCode::UnsupportedType;
             return false;
         }
 
         switch (findExtensionType->second)
         {
         case TextFileExtension::Txt:
-            return decodeBytesTxt({}, textAsset, bytes);
+            return decodeBytesTxt({}, textAsset, bytes, error);
 
         case TextFileExtension::Json:
-            return decodeBytesJson({}, textAsset, bytes);
+            return decodeBytesJson({}, textAsset, bytes, error);
 
         // Somehow still an unsupported extension type.
         case TextFileExtension::Unknown:
         default:
+            error = AssetErrorCode::UnsupportedType;
             return false;
         }
     }

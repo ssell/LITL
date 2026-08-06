@@ -11,7 +11,7 @@ namespace litl
         return (mesh->mesh != nullptr);
     }
 
-    bool MeshAsset::decodeBytes(Asset* asset, std::span<std::byte const> bytes) noexcept
+    bool MeshAsset::decodeBytes(Asset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
     {
         if (bytes.empty())
         {
