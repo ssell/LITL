@@ -33,11 +33,6 @@ namespace litl
         std::string key{};
 
         /// <summary>
-        /// The size of the source bytes that this asset was loaded from.
-        /// </summary>
-        uint32_t sourceSize{ 0u };
-
-        /// <summary>
         /// The hashed asset key. For use with the internal asset maps.
         /// </summary>
         StringId hashedKey{};
