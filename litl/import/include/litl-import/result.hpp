@@ -8,7 +8,8 @@ namespace litl::import
 {
     enum class ErrorType
     {
-        Unknown = 0u
+        Unknown = 0u,
+        ImporterNotImplemented = 1u
     };
 
     struct Result

@@ -12,9 +12,13 @@ namespace litl::import
 
     }
 
-    Result FbxImporter::import(std::string_view path) noexcept
+    Result FbxImporter::import(std::span<std::byte const> bytes) noexcept
     {
-        Result result{};
+        Result result{
+            .success = false,
+            .error = ErrorType::ImporterNotImplemented,
+            .message = "The Mesh Importer for .fbx is not yet implemented."
+        };
 
         // ... todo ...
 
