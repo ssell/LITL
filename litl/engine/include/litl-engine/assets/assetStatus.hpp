@@ -28,6 +28,13 @@ namespace litl
         /// </summary>
         Error = 3u
     };
+
+    enum class AssetErrorCode : uint32_t
+    {
+        None = 0u,
+        InvalidFunctionTable = 1u,
+        InvalidObject = 2u,
+    };
 }
 
 #endif

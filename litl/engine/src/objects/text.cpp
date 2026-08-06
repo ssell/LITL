@@ -3,7 +3,7 @@
 
 namespace litl
 {
-    bool Text::create(Authority<ObjectPool> auth, TextDescriptor const& descriptor) noexcept
+    bool Text::create(TextDescriptor const& descriptor) noexcept
     {
         m_descriptor = descriptor;
         return true;
@@ -12,5 +12,15 @@ namespace litl
     void Text::destroy(Authority<ObjectPool> auth) noexcept
     {
 
+    }
+
+    std::string_view Text::string() const noexcept
+    {
+        return m_descriptor.string;
+    }
+
+    TextType Text::type() const noexcept
+    {
+        return m_descriptor.type;
     }
 }

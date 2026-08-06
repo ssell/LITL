@@ -13,6 +13,7 @@
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/scene/sceneManager.hpp"
+#include "litl-engine/tasks/taskManager.hpp"
 #include "litl-engine/engineCallbacks.hpp"
 #include "litl-engine/render/renderManager.hpp"
 
@@ -38,6 +39,7 @@ namespace litl
         std::shared_ptr<JobScheduler> pSharedJobScheduler{ nullptr };
         std::shared_ptr<World> pSharedECSWorld{ nullptr };
         std::shared_ptr<RenderManager> pSharedRenderManager{ nullptr };
+        std::shared_ptr<TaskManager> pSharedTaskManager{ nullptr };
         std::shared_ptr<ObjectPool> pSharedObjectPool{ nullptr };
         std::shared_ptr<AssetManager> pSharedAssetManager{ nullptr };
         std::shared_ptr<SceneManager> pSharedSceneManager{ nullptr };
@@ -103,11 +105,13 @@ namespace litl
         m_pImpl->pSharedFrameLimiter = m_pImpl->pServiceProvider->get<FrameLimiter>();
         m_pImpl->pSharedJobScheduler = m_pImpl->pServiceProvider->get<JobScheduler>();
         m_pImpl->pSharedECSWorld = m_pImpl->pServiceProvider->get<World>();
+        m_pImpl->pSharedTaskManager = m_pImpl->pServiceProvider->get<TaskManager>();
         m_pImpl->pSharedObjectPool = m_pImpl->pServiceProvider->get<ObjectPool>();
         m_pImpl->pSharedAssetManager = m_pImpl->pServiceProvider->get<AssetManager>();
         m_pImpl->pSharedSceneManager = m_pImpl->pServiceProvider->get<SceneManager>();
         m_pImpl->pSharedRenderManager = m_pImpl->pServiceProvider->get<RenderManager>();
 
+        m_pImpl->pSharedTaskManager->setup({}, *m_pImpl->pServiceProvider);
         m_pImpl->pSharedObjectPool->setup({}, *m_pImpl->pServiceProvider);
         m_pImpl->pSharedAssetManager->setup({}, *m_pImpl->pServiceProvider);
         m_pImpl->pSharedSceneManager->setup({}, (*m_pImpl->pServiceProvider));
