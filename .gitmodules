@@ -4,3 +4,6 @@
 [submodule "deps/SPIRV-Reflect"]
 	path = deps/SPIRV-Reflect
 	url = https://github.com/KhronosGroup/SPIRV-Reflect.git
+[submodule "deps/rapidobj"]
+	path = deps/rapidobj
+	url = git@github.com:guybrush77/rapidobj.git
