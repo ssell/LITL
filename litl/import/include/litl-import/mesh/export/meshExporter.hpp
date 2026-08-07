@@ -9,7 +9,8 @@ namespace litl::import
     {
     public:
 
-        static MeshExporter* GlobalMeshExporter() noexcept;
+        static constexpr std::string_view ExporterName = "Mesh";
+        static constexpr ImportedDataType OperatesOnImportedDataType = ImportedDataType::Mesh;
 
         MeshExporter();
         ~MeshExporter();
@@ -17,7 +18,7 @@ namespace litl::import
         MeshExporter(MeshExporter const&) = delete;
         MeshExporter& operator=(MeshExporter const&) = delete;
 
-        [[nodiscard]] Result write(File const& soruceFile, File const& destFolderPath) noexcept;
+        [[nodiscard]] Result write(File const& sourceFile, File const& destFolderPath, ImportedData const& data) noexcept;
     };
 }
 
