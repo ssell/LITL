@@ -32,6 +32,14 @@ Used for general math structures and operations.
 * Source: https://github.com/g-truc/glm
 * Included via: CMake `FetchContent`
 
+## rapidobj
+
+Used for offline importing of OBJ files which are converted to our intermediate representation.
+
+* License: MIT
+* Source: https://github.com/guybrush77/rapidobj
+* Included via: Submodule
+
 ## SPIRV-Reflect
 
 Used for SPIRV bytecode reflection.

@@ -39,6 +39,9 @@ namespace litl::import
 
     Result ImportService::convert(std::string_view sourcePath, std::string_view destFolderPath) noexcept
     {
+        // ---------------------------------------------------------------------------------
+        // Sanity Check
+
         // .. todo add timestamp/performance tracking ...
 
         File sourceFile = sourcePath;
@@ -52,6 +55,9 @@ namespace litl::import
         {
             return Result::Error(ErrorType::EmptySourceFile);
         }
+
+        // ---------------------------------------------------------------------------------
+        // Import
 
         auto importer = m_importerRegistry.create(sourceFile);
         auto fileBytes = sourceFile.readAllBytes();
@@ -73,6 +79,9 @@ namespace litl::import
         {
             return importResult;
         }
+
+        // ---------------------------------------------------------------------------------
+        // Export
 
         auto exporter = m_exporterRegistry.create(importedData.type);
 
