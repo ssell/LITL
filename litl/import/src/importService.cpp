@@ -2,10 +2,7 @@
 
 #include "litl-core/file.hpp"
 #include "litl-core/string.hpp"
-#include "litl-core/stringId.hpp"
 #include "litl-import/importService.hpp"
-#include "litl-import/importer.hpp"
-#include "litl-import/exporter.hpp"
 
 #include "litl-import/mesh/export/meshExporter.hpp"
 #include "litl-import/mesh/import/fbx.hpp"
@@ -17,7 +14,7 @@ namespace litl::import
 {
     ImportService::ImportService()
     {
-        registerImporters();
+        registerProcessors();
     }
 
     ImportService::~ImportService()
@@ -25,12 +22,14 @@ namespace litl::import
         // ... required as this is an injectable service and can live in a std::shared_ptr ...
     }
 
-    void ImportService::registerImporters() noexcept
+    void ImportService::registerProcessors() noexcept
     {
         m_importerRegistry.add<FbxImporter>();
         m_importerRegistry.add<GlbImporter>();
         m_importerRegistry.add<GltfImporter>();
         m_importerRegistry.add<ObjImporter>();
+
+        m_exporterRegistry.add<MeshExporter>();
     }
 
     Result ImportService::convert(std::string_view sourcePath) noexcept
@@ -55,7 +54,6 @@ namespace litl::import
         }
 
         auto importer = m_importerRegistry.create(sourceFile);
-        auto exporter = nullptr;        // ... todo ...
         auto fileBytes = sourceFile.readAllBytes();
 
         if (importer == nullptr)
@@ -63,32 +61,32 @@ namespace litl::import
             return Result::Error(ErrorType::NoImporterForSourceExtension);
         }
 
-        if (exporter == nullptr)
-        {
-            return Result::Error(ErrorType::NoExporterForSourceExtension);
-        }
-
         if (!fileBytes.has_value())
         {
             return Result::Error(ErrorType::FailedToReadSourceFile);
         }
 
-        auto importResult = importer->import(sourceFile, *fileBytes);
+        ImportedData importedData;
+        auto importResult = importer->import(sourceFile, *fileBytes, importedData);
 
         if (!importResult.success)
         {
             return importResult;
         }
 
-        // todo
-        /*
-        auto exportResult = exporter->write(importer, sourceFile, destFolderPath);
+        auto exporter = m_exporterRegistry.create(importedData.type);
+
+        if (exporter == nullptr)
+        {
+            return Result::Error(ErrorType::NoExporterForImportedDataType);
+        }
+
+        auto exportResult = exporter->write(sourceFile, destFolderPath, importedData);
 
         if (!exportResult.success)
         {
             return exportResult;
         }
-        */
 
         return Result::Success();
     }

@@ -5,6 +5,7 @@
 
 #include "litl-import/result.hpp"
 #include "litl-import/importerRegistry.hpp"
+#include "litl-import/exporterRegistry.hpp"
 
 namespace litl::import
 {
@@ -32,9 +33,10 @@ namespace litl::import
 
     private:
 
-        void registerImporters() noexcept;
+        void registerProcessors() noexcept;
 
         ImporterRegistry m_importerRegistry{};
+        ExporterRegistry m_exporterRegistry{};
     };
 }
 

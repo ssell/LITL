@@ -8,13 +8,18 @@
 
 namespace litl::import
 {
+    /// <summary>
+    /// Registry mapping file extensions to importer implementations.
+    /// Entries are added manually via add, which is done by the ImportService.
+    /// </summary>
     class ImporterRegistry final
     {
     public:
 
         using FactoryFunc = std::unique_ptr<Importer>(*)();
 
-        struct Entry {
+        struct Entry 
+        {
             std::string_view name;
             std::span<std::string_view const> extensions;
             FactoryFunc createFunc;
@@ -27,7 +32,7 @@ namespace litl::import
         ImporterRegistry& operator=(ImporterRegistry const&) = delete;
 
         template<ValidImporter T>
-        void add()
+        void add() noexcept
         {
             const auto index = m_entries.size();
 
@@ -39,8 +44,7 @@ namespace litl::import
 
             for (auto extension : T::SupportedExtensions)
             {
-                auto extensionKey = StringId(normalizeExtension(extension));
-                m_entryExtensionMap[extensionKey] = index;
+                m_entryExtensionMap[StringId(normalizeExtension(extension))] = index;
             }
         }
 

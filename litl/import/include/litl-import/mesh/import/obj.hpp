@@ -21,7 +21,7 @@ namespace litl::import
         ObjImporter(ObjImporter const&) = delete;
         ObjImporter& operator=(ObjImporter const&) = delete;
 
-        [[nodiscard]] Result import(File const& file, std::span<std::byte const> bytes) noexcept override;
+        [[nodiscard]] Result import(File const& file, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept override;
     };
 }
 

@@ -13,10 +13,12 @@ namespace litl::import
         ImporterNotImplemented = 1u,
         ExporterNotImplemented = 2u,
         NoImporterForSourceExtension = 3u,
-        NoExporterForSourceExtension = 4u,
+        NoExporterForImportedDataType = 4u,
         SourceFileDoesNotExist = 5u,
         FailedToReadSourceFile = 6u,
-        EmptySourceFile = 7u
+        EmptySourceFile = 7u,
+        ImportedDataTypeMismatch = 8u,
+        ImportedDataNull = 9u
     };
 
     struct Result

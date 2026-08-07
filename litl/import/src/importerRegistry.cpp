@@ -15,8 +15,7 @@ namespace litl::import
 
     ImporterRegistry::Entry const* ImporterRegistry::find(std::string_view extension) const noexcept
     {
-        const auto normalized = normalizeExtension(extension);
-        const auto iter = m_entryExtensionMap.find(normalized);
+        const auto iter = m_entryExtensionMap.find(StringId(normalizeExtension(extension)));
 
         if (iter == m_entryExtensionMap.end())
         {

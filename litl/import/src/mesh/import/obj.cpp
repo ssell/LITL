@@ -12,7 +12,7 @@ namespace litl::import
 
     }
 
-    Result ObjImporter::import(File const& file, std::span<std::byte const> bytes) noexcept
+    Result ObjImporter::import(File const& file, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
     {
         // ... todo ...
         return Result::Error(ErrorType::ImporterNotImplemented);

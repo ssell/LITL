@@ -8,18 +8,16 @@
 
 #include "litl-core/file.hpp"
 #include "litl-import/result.hpp"
+#include "litl-import/importedData.hpp"
 
 namespace litl::import
 {
-    /// <summary>
-    /// Base class for all file importers.
-    /// </summary>
     class Importer
     {
     public:
 
         virtual ~Importer() = default;
-        virtual Result import(File const& file, std::span<std::byte const> bytes) noexcept = 0;
+        virtual Result import(File const& file, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept = 0;
     };
 
     template <typename T>

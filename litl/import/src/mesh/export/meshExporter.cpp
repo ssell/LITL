@@ -2,12 +2,6 @@
 
 namespace litl::import
 {
-    MeshExporter* MeshExporter::GlobalMeshExporter() noexcept
-    {
-        static std::unique_ptr<MeshExporter> exporter = std::make_unique<MeshExporter>();
-        return exporter.get();
-    }
-
     MeshExporter::MeshExporter()
     {
 
@@ -15,12 +9,20 @@ namespace litl::import
 
     MeshExporter::~MeshExporter()
     {
-        // ... this lives in an unique_ptr so needs a destructor ...
+
     }
 
-    Result MeshExporter::write(File const& soruceFile, File const& destFolderPath) noexcept
+    Result MeshExporter::write(File const& sourceFile, File const& destFolderPath, ImportedData const& data) noexcept
     {
-        // ... todo ...
+        if (data.type != ImportedDataType::Mesh)
+        {
+            return Result::Error(ErrorType::ImportedDataTypeMismatch);
+        }
+
+        if (data.importedMesh == nullptr)
+        {
+            return Result::Error(ErrorType::ImportedDataNull);
+        }
 
         return Result::Error(ErrorType::ExporterNotImplemented);
     }
