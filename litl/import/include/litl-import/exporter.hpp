@@ -15,8 +15,7 @@ namespace litl::import
     {
     public:
 
-        virtual ~Exporter() = default;
-        virtual Result write(Importer const* importer, File const& soruceFile, File const& destFolderPath) noexcept = 0;
+        virtual Result write(File const& soruceFile, File const& destFolderPath) noexcept = 0;
     };
 }
 

@@ -26,10 +26,22 @@ namespace litl::import
         ImporterRegistry(ImporterRegistry const&) = delete;
         ImporterRegistry& operator=(ImporterRegistry const&) = delete;
 
-        template<ImporterType T>
+        template<ValidImporter T>
         void add()
         {
-            // ... todo ...
+            const auto index = m_entries.size();
+
+            m_entries.push_back(Entry{
+                .name = T::ImporterName,
+                .extensions = T::SupportedExtensions,
+                .createFunc = +[]() -> std::unique_ptr<Importer> { return std::make_unique<T>(); }
+            });
+
+            for (auto extension : T::SupportedExtensions)
+            {
+                auto extensionKey = StringId(normalizeExtension(extension));
+                m_entryExtensionMap[extensionKey] = index;
+            }
         }
 
         [[nodiscard]] Entry const* find(std::string_view extension) const noexcept;

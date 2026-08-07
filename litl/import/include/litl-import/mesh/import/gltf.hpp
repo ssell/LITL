@@ -1,7 +1,7 @@
 #ifndef LITL_IMPORT_MESH_GLTF_H__
 #define LITL_IMPORT_MESH_GLTF_H__
 
-#include "litl-import/mesh/import/meshImporter.hpp"
+#include "litl-import/importer.hpp"
 
 namespace litl::import
 {
@@ -10,7 +10,7 @@ namespace litl::import
     /// node hierarchy, materials, animations paths, etc. with the actual mesh
     /// data stored in a binary (.bin) sidecar file.
     /// </summary>
-    class GltfImporter final : public MeshImporter
+    class GltfImporter final : public Importer
     {
     public:
 

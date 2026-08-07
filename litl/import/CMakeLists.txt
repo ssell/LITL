@@ -1,5 +1,5 @@
 add_library(litl-import STATIC 
-	"src/mesh/import/fbx.cpp" "src/mesh/import/meshImporter.cpp" "src/mesh/import/obj.cpp" "src/mesh/import/gltf.cpp" "src/mesh/import/glb.cpp" "src/importService.cpp" "src/mesh/export/meshExporter.cpp" "src/importerRegistry.cpp")
+	"src/mesh/import/fbx.cpp"  "src/mesh/import/obj.cpp" "src/mesh/import/gltf.cpp" "src/mesh/import/glb.cpp" "src/importService.cpp" "src/mesh/export/meshExporter.cpp" "src/importerRegistry.cpp")
 
 target_include_directories(litl-import
 	PUBLIC
