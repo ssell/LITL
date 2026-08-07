@@ -1,9 +1,22 @@
+# ------------------------------------------------------------------------------------------
+# litl-import
+# ------------------------------------------------------------------------------------------
+
 add_library(litl-import STATIC 
-	"src/mesh/import/fbx.cpp"  "src/mesh/import/obj.cpp" "src/mesh/import/gltf.cpp" "src/mesh/import/glb.cpp" "src/importService.cpp" "src/mesh/export/meshExporter.cpp" "src/importerRegistry.cpp" "src/exporterRegistry.cpp")
+	"src/mesh/import/fbx.cpp"  
+	"src/mesh/import/obj.cpp" 
+	"src/mesh/import/gltf.cpp" 
+	"src/mesh/import/glb.cpp" 
+	"src/importService.cpp" 
+	"src/mesh/export/meshExporter.cpp" 
+	"src/importerRegistry.cpp" 
+	"src/exporterRegistry.cpp")
 
 target_include_directories(litl-import
 	PUBLIC
 		"${CMAKE_CURRENT_SOURCE_DIR}/include"
+	PRIVATE
+		"${CMAKE_SOURCE_DIR}/deps/rapidobj/include"
 )
 
 target_link_libraries(litl-import PRIVATE litl-core)
