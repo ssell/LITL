@@ -15,16 +15,27 @@ namespace litl::import
 
     ImporterRegistry::Entry const* ImporterRegistry::find(std::string_view extension) const noexcept
     {
-        // ... todo ...
+        const auto normalized = normalizeExtension(extension);
+        const auto iter = m_entryExtensionMap.find(normalized);
 
-        return nullptr;
+        if (iter == m_entryExtensionMap.end())
+        {
+            return nullptr;
+        }
+
+        return &m_entries[iter->second];
     }
 
     std::unique_ptr<Importer> ImporterRegistry::create(File const& file) const noexcept
     {
-        // ... todo ...
+        const auto* entry = find(file.extension());
 
-        return nullptr;
+        if (entry == nullptr)
+        {
+            return nullptr;
+        }
+
+        return entry->createFunc();
     }
 
     std::string ImporterRegistry::normalizeExtension(std::string_view extension) noexcept

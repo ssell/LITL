@@ -1,7 +1,7 @@
 #ifndef LITL_IMPORT_MESH_GLB_H__
 #define LITL_IMPORT_MESH_GLB_H__
 
-#include "litl-import/mesh/import/meshImporter.hpp"
+#include "litl-import/importer.hpp"
 
 namespace litl::import
 {
@@ -9,7 +9,7 @@ namespace litl::import
     /// GLB is the binary representation of the glTF format.
     /// It stores all of the same data as a glTF but packed into a single file.
     /// </summary>
-    class GlbImporter final : public MeshImporter
+    class GlbImporter final : public Importer
     {
     public:
 

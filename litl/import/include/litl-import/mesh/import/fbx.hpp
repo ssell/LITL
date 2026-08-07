@@ -1,7 +1,7 @@
 #ifndef LITL_IMPORT_MESH_FBX_H__
 #define LITL_IMPORT_MESH_FBX_H__
 
-#include "litl-import/mesh/import/meshImporter.hpp"
+#include "litl-import/importer.hpp"
 
 namespace litl::import
 {
@@ -9,7 +9,7 @@ namespace litl::import
     /// Importer for the FBX mesh file format.
     /// FBX is a proprietary format that supports advanced features such as rigging, joints, animations, etc.
     /// </summary>
-    class FbxImporter final : public MeshImporter
+    class FbxImporter final : public Importer
     {
     public:
 

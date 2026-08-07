@@ -23,12 +23,10 @@ namespace litl::import
     };
 
     template <typename T>
-    concept ImporterType =
-        std::derived_from<T, Importer>&&
-        std::default_initializable<T>&&
-        requires {
-            { T::ImporterName }       -> std::convertible_to<std::string_view>;
-            { T::SupportedExtensions } -> std::convertible_to<std::span<const std::string_view>>;
+    concept ValidImporter = std::derived_from<T, Importer>&& std::default_initializable<T> && requires 
+    {
+        { T::ImporterName }                       -> std::convertible_to<std::string_view>;
+        { T::SupportedExtensions }                -> std::convertible_to<std::span<const std::string_view>>;
     };
 }
 

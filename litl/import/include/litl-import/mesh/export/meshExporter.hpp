@@ -17,7 +17,7 @@ namespace litl::import
         MeshExporter(MeshExporter const&) = delete;
         MeshExporter& operator=(MeshExporter const&) = delete;
 
-        [[nodiscard]] Result write(Importer const* importer, File const& soruceFile, File const& destFolderPath) noexcept;
+        [[nodiscard]] Result write(File const& soruceFile, File const& destFolderPath) noexcept;
     };
 }
 
