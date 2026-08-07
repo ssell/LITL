@@ -1,3 +1,4 @@
+#include <rapidobj/rapidobj.hpp>
 #include "litl-import/mesh/import/obj.hpp"
 
 namespace litl::import
