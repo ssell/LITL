@@ -5,6 +5,7 @@
 #include <string>
 
 #include "litl-core/authority.hpp"
+#include "litl-core/math/geometry/vertex.hpp"
 #include "litl-engine/objects/objectDescriptor.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
 #include "litl-renderer/resources/graphicsPipeline.hpp"
@@ -14,6 +15,26 @@ namespace litl
 {
     class ObjectPool;
     class Renderer;
+
+    struct VertexInputDescriptor
+    {
+        static constexpr uint32_t MaxVertexAttributes = 8u;
+
+        /// <summary>
+        /// Size of the vertex structure.
+        /// </summary>
+        uint32_t vertexSize = sizeof(Vertex);
+
+        /// <summary>
+        /// The data format of each field of the vertex structure.
+        /// </summary>
+        std::array<DataFormat, MaxVertexAttributes> attributes = {
+            DataFormat::RGB32_SFloat,                   // position
+            DataFormat::RG32_SFloat,                    // texcoord
+            DataFormat::RGB32_SFloat,                   // normal
+            DataFormat::RGBA32_SFloat                   // tangent
+        };
+    };
 
     struct ShaderResourceDescriptor
     {
@@ -25,6 +46,7 @@ namespace litl
     struct MaterialDescriptor
     {
         ObjectDescriptor objectInfo{};
+        VertexInputDescriptor inputDescriptor{};
         ShaderResourceDescriptor vertexShader{};
         ShaderResourceDescriptor fragmentShader{};
         ShaderResourceDescriptor geometryShader{};

@@ -45,6 +45,10 @@ namespace litl::samples
 
             return objectPool.createMaterial(MaterialDescriptor{
                 .objectInfo = ObjectDescriptor {.name = name.data()},
+                .inputDescriptor = VertexInputDescriptor {
+                    .vertexSize = sizeof(SampleVertex),
+                    .attributes = { DataFormat::RGB32_SFloat, DataFormat::RGB32_SFloat, DataFormat::RG32_SFloat }       // pos, color, uv
+                },
                 .vertexShader = ShaderResourceDescriptor {
                     .resource = resource.data(),
                     .entryPoint = vertEntry.data(),
