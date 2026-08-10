@@ -47,12 +47,31 @@ add_executable(litl-tests
 	"src/litl-core/containers/fixedSortedArray_tests.cpp" 
 	"src/litl-ecs/archetypeComponents_tests.cpp" 
 	"src/litl-core/math/vec3_tests.cpp" 
-	 
-	"src/litl-core/containers/memoryArena_tests.cpp" "src/litl-core/containers/ringBuffer_tests.cpp" "src/litl-core/math/mat4_tests.cpp" "src/litl-core/math/vec4_tests.cpp" "src/litl-core/math/mat3_tests.cpp" "src/litl-core/math/quat_tests.cpp" "src/litl-core/math/types_tests.cpp" "src/litl-engine/scene/scenegraph_tests.cpp" "src/litl-core/assert_tests.cpp" "src/litl-engine/scene/scene_tests.cpp" "src/litl-core/math/bounds_tests.cpp"  "src/litl-engine/scene/uniformGridPartition_tests.cpp" "src/litl-core/handles_tests.cpp" "src/litl-core/containers/alignedByteBuffer_tests.cpp" "src/litl-core/containers/flatHashSet_tests.cpp" "src/litl-engine/scene/sceneChangeProcessor_tests.cpp" "src/litl-core/task_tests.cpp" "src/litl-core/moveOnlyFunc_tests.cpp" "src/litl-engine/asset_tests.cpp")
+	"src/litl-core/containers/memoryArena_tests.cpp" 
+	"src/litl-core/containers/ringBuffer_tests.cpp" 
+	"src/litl-core/math/mat4_tests.cpp" 
+	"src/litl-core/math/vec4_tests.cpp" 
+	"src/litl-core/math/mat3_tests.cpp" 
+	"src/litl-core/math/quat_tests.cpp" 
+	"src/litl-core/math/types_tests.cpp" 
+	"src/litl-engine/scene/scenegraph_tests.cpp" 
+	"src/litl-core/assert_tests.cpp" 
+	"src/litl-engine/scene/scene_tests.cpp" 
+	"src/litl-core/math/bounds_tests.cpp"  
+	"src/litl-engine/scene/uniformGridPartition_tests.cpp" 
+	"src/litl-core/handles_tests.cpp" 
+	"src/litl-core/containers/alignedByteBuffer_tests.cpp" 
+	"src/litl-core/containers/flatHashSet_tests.cpp" 
+	"src/litl-engine/scene/sceneChangeProcessor_tests.cpp" 
+	"src/litl-core/task_tests.cpp" 
+	"src/litl-core/moveOnlyFunc_tests.cpp" 
+	"src/litl-engine/asset_tests.cpp" 
+	"src/litl-import/importObj_tests.cpp")
 
 target_link_libraries(litl-tests
 	PRIVATE
 		litl-engine
+		litl-import
 		Catch2::Catch2WithMain
 )
 
