@@ -7,7 +7,7 @@
 
 namespace litl
 {
-    std::string toLowercase(std::string_view str) noexcept
+    inline std::string toLowercase(std::string_view str) noexcept
     {
         std::string lowered(str);
 

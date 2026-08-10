@@ -25,17 +25,13 @@ namespace litl::import
     struct Mesh
     {
         /// <summary>
-        /// Adds the indices for a single triangle;
+        /// Recalculates the mesh such that the "faceIndexCount" for every face is 3.
         /// </summary>
-        void addTriangle(uint32_t index0, uint32_t index1, uint32_t index2) noexcept;
-
-        /// <summary>
-        /// Adds the indices for a single quad.
-        /// </summary>
-        void addQuad(uint32_t index0, uint32_t index1, uint32_t index2, uint32_t index3) noexcept;
+        void triangulate() noexcept;
 
         std::vector<Vertex> vertices;
         std::vector<uint32_t> indices;
+        std::vector<uint32_t> faceIndexCount;
     };
 }
 

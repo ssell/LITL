@@ -62,6 +62,17 @@ namespace litl
         // Utility
         // ---------------------------------------------------------------------------------
 
+        constexpr void setZero() noexcept
+        {
+            value.x = 0.0f;
+            value.y = 0.0f;
+        }
+
+        [[nodiscard]] constexpr bool isZeroed() const noexcept
+        {
+            return isZero(value.x) && isZero(value.y);
+        }
+
         std::string toString() const noexcept
         {
             return std::format("({:.3f},{:.3f})", value.x, value.y);

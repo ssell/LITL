@@ -5,10 +5,10 @@
 #include <span>
 
 #include "litl-core/authority.hpp"
+#include "litl-core/math/geometry/vertex.hpp"
 #include "litl-engine/objects/objectDescriptor.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
 #include "litl-engine/objects/mesh.hpp"
-#include "litl-engine/types/vertex.hpp"
 #include "litl-core/containers/common.hpp"      // not needed directly, but contains as_byte_span which is typically used to provide vertex/index byte data
 
 namespace litl

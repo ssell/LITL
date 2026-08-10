@@ -9,8 +9,8 @@
 
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-core/math/random.hpp"
+#include "litl-core/math/geometry/vertex.hpp"
 #include "litl-engine/ecs/common.hpp"
-#include "litl-engine/types/vertex.hpp"
 #include "components.hpp"
 
 namespace litl
@@ -69,9 +69,6 @@ namespace litl::samples
         void spawnBoid() noexcept;
         void spawnPredator() noexcept;
         void spawnFood() noexcept;
-
-        [[nodiscard]] MaterialHandle loadMaterial(std::string_view path, std::string_view name, std::string_view resource, std::string_view vertEntry, std::string_view fragEntry) const noexcept;
-        [[nodiscard]] MeshHandle loadMesh(std::span<Vertex const> vertices, std::span<uint32_t const> indices, std::string_view name) const noexcept;
 
         /// <summary>
         /// The configuration used to setup the simulation.
