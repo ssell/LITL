@@ -18,7 +18,9 @@ namespace litl::import
         FailedToReadSourceFile = 6u,
         EmptySourceFile = 7u,
         ImportedDataTypeMismatch = 8u,
-        ImportedDataNull = 9u
+        ImportedDataNull = 9u,
+        ImporterFailed = 10u,
+        ImporterEmptyResult = 11u
     };
 
     struct Result
