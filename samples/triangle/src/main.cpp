@@ -73,6 +73,16 @@ void createSpinningTriangle(EntityCommands& commands, MaterialHandle material, M
     commands.addComponent<samples::Spin>(triangleEntity, samples::Spin{ .rate = spinRate });
 }
 
+namespace
+{
+    struct SampleVertex
+    {
+        vec3 position;
+        vec3 color;
+        vec2 uv;
+    };
+}
+
 /// <summary>
 /// Loads the common flat shader and creates a material using it.
 /// </summary>
@@ -82,6 +92,10 @@ MaterialHandle createTriangleMaterial(ObjectPool& objectPool)
 
     return objectPool.createMaterial(MaterialDescriptor{
         .objectInfo = ObjectDescriptor {.name = "Flat" },
+        .inputDescriptor = VertexInputDescriptor {
+            .vertexSize = sizeof(SampleVertex),
+            .attributes = { DataFormat::RGB32_SFloat, DataFormat::RGB32_SFloat, DataFormat::RG32_SFloat }       // pos, color, uv
+        },
         .vertexShader = ShaderResourceDescriptor {
             .resource = "flat.spv",
             .entryPoint = "vertexMain",
@@ -93,16 +107,6 @@ MaterialHandle createTriangleMaterial(ObjectPool& objectPool)
             .bytes = spirvBytes.value()
         }
     });
-}
-
-namespace
-{
-    struct SampleVertex
-    {
-        vec3 position;
-        vec3 color;
-        vec2 uv;
-    };
 }
 
 /// <summary>

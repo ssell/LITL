@@ -90,32 +90,29 @@ namespace litl
 
             // --- Vertex Input
 
-            // ... todo expand this functionality to support alternative/custom vertex input layouts ...
             graphicsPipelineDescriptor.vertexInput.addBinding(VertexBinding{
                 .binding = 0u,
-                .stride = sizeof(Vertex),
+                .stride = descriptor.inputDescriptor.vertexSize,
                 .rate = VertexInputRate::PerVertex
             });
 
             uint32_t runningAttributeOffset = 0u;
 
-            graphicsPipelineDescriptor.vertexInput.addAttribute<vec3>(VertexAttribute{      // position
-                .location = 0u,
-                .binding = 0u,
-                .format = DataFormat::RGB32_SFloat
-            }, runningAttributeOffset);
+            for (uint32_t i = 0u; i < VertexInputDescriptor::MaxVertexAttributes; ++i)
+            {
+                DataFormat format = descriptor.inputDescriptor.attributes[i];
 
-            graphicsPipelineDescriptor.vertexInput.addAttribute<vec3>(VertexAttribute{      // color
-                .location = 1u,
-                .binding = 0u,
-                .format = DataFormat::RGB32_SFloat
-            }, runningAttributeOffset);
+                if (format == DataFormat::Undefined)
+                {
+                    break;
+                }
 
-            graphicsPipelineDescriptor.vertexInput.addAttribute<vec3>(VertexAttribute{      // uv
-                .location = 2u,
-                .binding = 0u,
-                .format = DataFormat::RG32_SFloat
-            }, runningAttributeOffset);
+                graphicsPipelineDescriptor.vertexInput.addAttribute<vec3>(VertexAttribute{
+                    .location = i,
+                    .binding = 0u,
+                    .format = format
+                }, runningAttributeOffset);
+            }
 
             // --- Create the Pipeline
 
