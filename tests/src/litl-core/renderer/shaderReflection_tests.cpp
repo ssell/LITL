@@ -9,7 +9,7 @@ namespace litl::tests
 {
     LITL_TEST_CASE("Basic Reflection", "[renderer::shaderReflection]")
     {
-        std::ifstream file("data/test.spv", std::ios::ate | std::ios::binary);
+        std::ifstream file("data/shaders/test.spv", std::ios::ate | std::ios::binary);
 
         REQUIRE(file.is_open());
 
