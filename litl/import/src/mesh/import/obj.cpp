@@ -69,6 +69,8 @@ namespace litl::import
                     objAttributes.normals[index.normal_index * 3 + 2]
                 };
             }
+
+            return vertex;
         }
 
         void convertToLitlMesh(Mesh* litlMesh, rapidobj::Mesh const& objMesh, rapidobj::Attributes const& objAttributes) noexcept
@@ -77,9 +79,14 @@ namespace litl::import
             uint32_t index = 0u;
             uint32_t face = 0u;
 
+            litlMesh->vertices.reserve(objAttributes.positions.size());
+            litlMesh->indices.reserve(objMesh.indices.size());
+            litlMesh->faceIndexCount.reserve(litlMesh->indices.size() / 3ull);
+
             while (index < static_cast<uint32_t>(objMesh.indices.size()))
             {
-                uint32_t faceIndexCount = objMesh.num_face_vertices[face++];
+                uint32_t const faceIndexCount = objMesh.num_face_vertices[face++];
+                litlMesh->faceIndexCount.push_back(faceIndexCount);
 
                 for (uint32_t faceIndex = 0u; faceIndex < faceIndexCount; ++faceIndex)
                 {

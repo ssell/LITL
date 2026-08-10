@@ -14,23 +14,66 @@ namespace litl::samples
 {
     namespace
     {
+        struct SampleVertex
+        {
+            vec3 position;
+            vec3 color;
+            vec2 uv;
+        };
+
         struct Triangle
         {
-            std::array<Vertex, 3> vertices;
+            std::array<SampleVertex, 3> vertices;
             std::array<uint32_t, 3> indices;
 
             static Triangle build(float scale, color bottomColor, color topColor) noexcept
             {
                 return Triangle{
-                    .vertices = std::array<Vertex, 3>{
-                        Vertex{.position = vec3{ -scale, 0.0f, 0.0f },       .color = bottomColor.rgb(), .uv = vec2{ 0.0f, 0.0f } },
-                        Vertex{.position = vec3{ 0.0f, 0.0f, scale * 2.0f }, .color = topColor.rgb(),    .uv = vec2{ 0.5f, 1.0f } },
-                        Vertex{.position = vec3{ scale, 0.0f, 0.0f },        .color = bottomColor.rgb(), .uv = vec2{ 1.0f, 0.0f } }
+                    .vertices = std::array<SampleVertex, 3>{
+                        SampleVertex{.position = vec3{ -scale, 0.0f, 0.0f },       .color = bottomColor.rgb(), .uv = vec2{ 0.0f, 0.0f } },
+                        SampleVertex{.position = vec3{ 0.0f, 0.0f, scale * 2.0f }, .color = topColor.rgb(),    .uv = vec2{ 0.5f, 1.0f } },
+                        SampleVertex{.position = vec3{ scale, 0.0f, 0.0f },        .color = bottomColor.rgb(), .uv = vec2{ 1.0f, 0.0f } }
                     },
                     .indices = std::array<uint32_t, 3>{ 0u, 1u, 2u }
                 };
             }
         };
+
+        MaterialHandle loadMaterial(ObjectPool& objectPool, std::string_view path, std::string_view name, std::string_view resource, std::string_view vertEntry, std::string_view fragEntry) noexcept
+        {
+            auto spirvBytes = File(path).readAllBytes();
+
+            return objectPool.createMaterial(MaterialDescriptor{
+                .objectInfo = ObjectDescriptor {.name = name.data()},
+                .vertexShader = ShaderResourceDescriptor {
+                    .resource = resource.data(),
+                    .entryPoint = vertEntry.data(),
+                    .bytes = spirvBytes.value()
+                },
+                .fragmentShader = ShaderResourceDescriptor {
+                    .resource = resource.data(),
+                    .entryPoint = fragEntry.data(),
+                    .bytes = spirvBytes.value()
+                }
+                });
+        }
+
+        MeshHandle loadMesh(ObjectPool& objectPool, std::span<SampleVertex const> vertices, std::span<uint32_t const> indices, std::string_view name) noexcept
+        {
+            return objectPool.createMesh(MeshDescriptor{
+                .objectInfo = ObjectDescriptor {.name = name.data()},
+                .vertexInfo = MeshVertexDescriptor {
+                    .vertexCount = static_cast<uint32_t>(vertices.size()),
+                    .vertexByteSize = sizeof(SampleVertex),
+                    .vertexData = as_byte_span(vertices)
+                },
+                .indexInfo = MeshIndexDescriptor {
+                    .indexCount = static_cast<uint32_t>(indices.size()),
+                    .indexByteSize = sizeof(uint32_t),
+                    .indexData = as_byte_span(indices)
+                }
+                });
+        }
 
         vec3 getRandomSpawnPoint(RandomLCG& rng, uint32_t worldDimensions, uint32_t padding) noexcept
         {
@@ -67,10 +110,10 @@ namespace litl::samples
         auto foodTriangle = Triangle::build(4.0f, colors::Green, colors::Green);
         auto predatorTriangle = Triangle::build(8.0f, colors::Red, colors::Yellow);
 
-        m_boidMesh = loadMesh(boidTriangle.vertices, boidTriangle.indices, "Boid Mesh");
-        m_foodMesh = loadMesh(foodTriangle.vertices, foodTriangle.indices, "Food Mesh");
-        m_predatorMesh = loadMesh(predatorTriangle.vertices, predatorTriangle.indices, "Predator Mesh");
-        m_sharedMaterial = loadMaterial("assets/shaders/spirv/flat.spv", "Boid Material", "flat.spv", "vertexMain", "fragmentMain");
+        m_boidMesh = loadMesh(*m_pObjectPool, boidTriangle.vertices, boidTriangle.indices, "Boid Mesh");
+        m_foodMesh = loadMesh(*m_pObjectPool, foodTriangle.vertices, foodTriangle.indices, "Food Mesh");
+        m_predatorMesh = loadMesh(*m_pObjectPool, predatorTriangle.vertices, predatorTriangle.indices, "Predator Mesh");
+        m_sharedMaterial = loadMaterial(*m_pObjectPool, "assets/shaders/spirv/flat.spv", "Boid Material", "flat.spv", "vertexMain", "fragmentMain");
 
         // ... test ...
         auto assetManager = services.get<AssetManager>();
@@ -87,10 +130,6 @@ namespace litl::samples
 
         if (std::chrono::duration_cast<std::chrono::milliseconds>(now - m_lastTick).count() >= m_config.tickRateMs)
         {
-            auto* meshAsset = g_testMeshAsset;
-            auto* plainTextAsset = g_testPlainTextAsset;
-            auto* jsonTextAsset = g_testJsonTextAsset;
-
             tick();
             m_lastTick = now;
         }
@@ -257,41 +296,5 @@ namespace litl::samples
             m_trackedFood[nextIndex].foodStatus = Food::Status::Alive;
             m_foodCount++;
         }
-    }
-
-    MaterialHandle Simulator::loadMaterial(std::string_view path, std::string_view name, std::string_view resource, std::string_view vertEntry, std::string_view fragEntry) const noexcept
-    {
-        auto spirvBytes = File(path).readAllBytes();
-
-        return m_pObjectPool->createMaterial(MaterialDescriptor{
-            .objectInfo = ObjectDescriptor {.name = name.data()},
-            .vertexShader = ShaderResourceDescriptor {
-                .resource = resource.data(),
-                .entryPoint = vertEntry.data(),
-                .bytes = spirvBytes.value()
-            },
-            .fragmentShader = ShaderResourceDescriptor {
-                .resource = resource.data(),
-                .entryPoint = fragEntry.data(),
-                .bytes = spirvBytes.value()
-            }
-        });
-    }
-
-    MeshHandle Simulator::loadMesh(std::span<Vertex const> vertices, std::span<uint32_t const> indices, std::string_view name) const noexcept
-    {
-        return m_pObjectPool->createMesh(MeshDescriptor{
-            .objectInfo = ObjectDescriptor {.name = name.data()},
-            .vertexInfo = MeshVertexDescriptor {
-                .vertexCount = static_cast<uint32_t>(vertices.size()),
-                .vertexByteSize = sizeof(Vertex),
-                .vertexData = as_byte_span(vertices)
-            },
-            .indexInfo = MeshIndexDescriptor {
-                .indexCount = static_cast<uint32_t>(indices.size()),
-                .indexByteSize = sizeof(uint32_t),
-                .indexData = as_byte_span(indices)
-            }
-        });
     }
 }

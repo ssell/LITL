@@ -71,7 +71,6 @@ add_executable(litl-tests
 target_link_libraries(litl-tests
 	PRIVATE
 		litl-engine
-		litl-import
 		Catch2::Catch2WithMain
 )
 
@@ -100,6 +99,28 @@ add_custom_target(copy-tests-data
 	COMMENT "Copying test data ...")
 
 add_dependencies(litl-tests copy-tests-data)
+
+# ------------------------------------------------------------------------------------------
+# individual asset copy
+# ------------------------------------------------------------------------------------------
+
+set (LITL_TESTS_ASSETS
+	"${LITL_ASSETS_DIR}/mesh/bunny.obj"
+)
+
+foreach(TEST_ASSET_PATH IN LISTS LITL_TESTS_ASSETS)
+	# Get just the sub-path (ie "mesh/bunny.obj")
+	string(REPLACE ${LITL_ASSETS_DIR} "" RELATIVE_ASSET "${TEST_ASSET_PATH}")
+
+	add_custom_command(
+		TARGET litl-tests POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different
+			${TEST_ASSET_PATH}
+			"$<TARGET_FILE_DIR:litl-tests>/assets/${RELATIVE_ASSET}"
+		COMMENT "Updating asset: ${RELATIVE_ASSET}"
+		VERBATIM
+	)
+endforeach()
 
 # ------------------------------------------------------------------------------------------
 # test discovery

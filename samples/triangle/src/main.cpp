@@ -1,6 +1,5 @@
 #include "litl-engine/startup.hpp"
 #include "spinSystem.hpp"
-#include "litl-core/task/task.hpp"
 
 using namespace litl;
 
@@ -96,23 +95,33 @@ MaterialHandle createTriangleMaterial(ObjectPool& objectPool)
     });
 }
 
+namespace
+{
+    struct SampleVertex
+    {
+        vec3 position;
+        vec3 color;
+        vec2 uv;
+    };
+}
+
 /// <summary>
 /// Creates a basic triangle mesh with colored vertices.
 /// </summary>
 MeshHandle createTriangleMesh(ObjectPool& objectPool)
 {
-    std::array<Vertex, 3> vertices = {
-        Vertex {                                        // left
+    std::array<SampleVertex, 3> vertices = {
+        SampleVertex {                                        // left
             .position = vec3{ -0.5f, 0.0f, 0.0f },
             .color = vec3{ 0.0f, 1.0f, 0.0f },
             .uv = vec2{ 0.0f, 0.0f }
         },
-        Vertex {                                        // top
+        SampleVertex {                                        // top
             .position = vec3{ 0.0f, 1.0f, 0.0f },
             .color = vec3{ 1.0f, 0.0f, 0.0f },
             .uv = vec2{ 0.5f, 1.0f }
         },
-        Vertex {                                        // right
+        SampleVertex {                                        // right
             .position = vec3{ 0.5f, 0.0f, 0.0f },
             .color = vec3{ 0.0f, 0.0f, 1.0f },
             .uv = vec2{ 1.0f, 0.0f }
@@ -125,7 +134,7 @@ MeshHandle createTriangleMesh(ObjectPool& objectPool)
         .objectInfo = ObjectDescriptor { .name = "Triangle" },
         .vertexInfo = MeshVertexDescriptor{
             .vertexCount = 3u,
-            .vertexByteSize = sizeof(Vertex),
+            .vertexByteSize = sizeof(SampleVertex),
             .vertexData = as_byte_span(vertices)
         },
         .indexInfo = MeshIndexDescriptor{
