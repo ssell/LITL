@@ -4,15 +4,15 @@
 #include <memory>
 #include <vector>
 
+#include "litl-core/math/geometry/mesh.hpp"
 #include "litl-import/mesh/import/summary.hpp"
-#include "litl-import/mesh/intermediate/mesh.hpp"
 
 namespace litl::import
 {
     struct MeshImportResult
     {
         MeshImportSummary summary{};
-        std::vector<std::unique_ptr<Mesh>> meshes;
+        std::vector<std::unique_ptr<GeoMesh>> meshes;
     };
 }
 

@@ -3,8 +3,8 @@
 
 #include "litl-core/byteStream.hpp"
 #include "litl-core/hash.hpp"
+#include "litl-core/math/geometry/mesh.hpp"
 #include "litl-import/mesh/import/obj.hpp"
-#include "litl-import/mesh/intermediate/mesh.hpp"
 
 namespace
 {
@@ -73,7 +73,7 @@ namespace litl::import
             return vertex;
         }
 
-        void convertToLitlMesh(Mesh* litlMesh, rapidobj::Mesh const& objMesh, rapidobj::Attributes const& objAttributes) noexcept
+        void convertToLitlMesh(GeoMesh* litlMesh, rapidobj::Mesh const& objMesh, rapidobj::Attributes const& objAttributes) noexcept
         {
             std::unordered_map<ObjVertexKey, uint32_t> mappedVertices;
             uint32_t index = 0u;
@@ -153,7 +153,7 @@ namespace litl::import
                 continue;
             }
 
-            importedData.mesh->meshes.push_back(std::make_unique<Mesh>());
+            importedData.mesh->meshes.push_back(std::make_unique<GeoMesh>());
             auto* litlMesh = importedData.mesh->meshes.back().get();
             auto& objMesh = objResult.shapes[i].mesh;
 
