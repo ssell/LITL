@@ -7,8 +7,8 @@ namespace litl::import
 {
     struct MeshImportSummary
     {
+        uint32_t meshCount{ 0u };
         uint32_t vertexCount{ 0u };
-        uint32_t triangleCount{ 0u };
         uint32_t indexCount{ 0u };
     };
 }

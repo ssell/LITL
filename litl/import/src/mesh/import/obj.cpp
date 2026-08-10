@@ -1,11 +1,113 @@
 #include <rapidobj/rapidobj.hpp>
+#include <unordered_map>
 
 #include "litl-core/byteStream.hpp"
+#include "litl-core/hash.hpp"
 #include "litl-import/mesh/import/obj.hpp"
 #include "litl-import/mesh/intermediate/mesh.hpp"
 
+namespace
+{
+    /// <summary>
+    /// rapidobj stores mesh indices split - separate indices for position, texture, and normal.
+    /// Additionally, it uses the index value of -1 to indicate that the specified attribute is not present for that vertex.
+    /// This key is used to deduplicate and combine the split indices into a single index.
+    /// </summary>
+    struct ObjVertexKey
+    {
+        int positionIndex{ 0 };
+        int texcoordIndex{ -1 };
+        int normalIndex{ -1 };
+
+        bool operator==(ObjVertexKey const&) const = default;
+    };
+}
+
+namespace std
+{
+    template<>
+    struct hash<ObjVertexKey>
+    {
+        std::size_t operator()(ObjVertexKey const& key) const noexcept
+        {
+            return litl::hashPOD(key);
+        }
+    };
+}
+
 namespace litl::import
 {
+    namespace
+    {
+
+        Vertex convertToLitlVertex(rapidobj::Index const index, rapidobj::Attributes const& objAttributes) noexcept
+        {
+            Vertex vertex{};
+
+            // According to the docs, position index is mandatory. The rest are optional.
+            vertex.position = vec3{
+                objAttributes.positions[index.position_index * 3 + 0], 
+                objAttributes.positions[index.position_index * 3 + 1],
+                objAttributes.positions[index.position_index * 3 + 2]
+            };
+
+            // Texcoord is optional
+            if (index.texcoord_index >= 0)
+            {
+                vertex.texcoord = vec2{
+                    objAttributes.texcoords[index.texcoord_index * 2 + 0],
+                    objAttributes.texcoords[index.texcoord_index * 2 + 1]
+                };
+            }
+
+            // Normal is optional
+            if (index.normal_index >= 0)
+            {
+                vertex.normal = vec3{
+                    objAttributes.normals[index.normal_index * 3 + 0],
+                    objAttributes.normals[index.normal_index * 3 + 1],
+                    objAttributes.normals[index.normal_index * 3 + 2]
+                };
+            }
+        }
+
+        void convertToLitlMesh(Mesh* litlMesh, rapidobj::Mesh const& objMesh, rapidobj::Attributes const& objAttributes) noexcept
+        {
+            std::unordered_map<ObjVertexKey, uint32_t> mappedVertices;
+            uint32_t index = 0u;
+            uint32_t face = 0u;
+
+            while (index < static_cast<uint32_t>(objMesh.indices.size()))
+            {
+                uint32_t faceIndexCount = objMesh.num_face_vertices[face++];
+
+                for (uint32_t faceIndex = 0u; faceIndex < faceIndexCount; ++faceIndex)
+                {
+                    const auto objIndex = objMesh.indices[index + faceIndex];
+                    const auto objVertexKey = ObjVertexKey{
+                        .positionIndex = objIndex.position_index,
+                        .texcoordIndex = objIndex.texcoord_index,
+                        .normalIndex = objIndex.normal_index
+                    };
+
+                    // Use unordered_map to dedupe split vertex indices
+                    auto [iter, added] = mappedVertices.try_emplace(objVertexKey, static_cast<uint32_t>(litlMesh->vertices.size()));
+
+                    // If a new vertex, add it.
+                    if (added)
+                    {
+                        litlMesh->vertices.push_back(convertToLitlVertex(objIndex, objAttributes));
+                    }
+
+                    // Add the matched index
+                    litlMesh->indices.push_back(iter->second);
+                }
+
+                index += faceIndexCount;
+            }
+        }
+    }
+
     ObjImporter::ObjImporter()
     {
 
@@ -14,26 +116,6 @@ namespace litl::import
     ObjImporter::~ObjImporter()
     {
 
-    }
-
-    void convertToLitlMesh(Mesh* litlMesh, rapidobj::Mesh const& objMesh, rapidobj::Attributes const& objAttributes) noexcept
-    {
-        uint32_t index = 0u;                                                // The current index into objAttributes
-        uint32_t face = 0u;                                                 // The current face, which is the index into num_face_vertices
-        uint32_t faceVertexCount = objMesh.num_face_vertices[face];         // The number of vertices remaining in the current face
-
-        for (; index < static_cast<uint32_t>(objMesh.indices.size()); ++index)
-        {
-            if (faceVertexCount == 0u)
-            {
-                face++;
-                faceVertexCount = objMesh.num_face_vertices[face];
-            }
-
-
-
-            faceVertexCount--;
-        }
     }
 
     Result ObjImporter::import(File const& file, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
@@ -69,6 +151,10 @@ namespace litl::import
             auto& objMesh = objResult.shapes[i].mesh;
 
             convertToLitlMesh(litlMesh, objMesh, objResult.attributes);
+
+            importedData.mesh->summary.meshCount += 1u;
+            importedData.mesh->summary.vertexCount += static_cast<uint32_t>(litlMesh->vertices.size());
+            importedData.mesh->summary.indexCount += static_cast<uint32_t>(litlMesh->indices.size());
         }
 
         return Result::Success();
