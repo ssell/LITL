@@ -3,6 +3,7 @@
 
 #include <string_view>
 
+#include "litl-core/file.hpp"
 #include "litl-import/result.hpp"
 #include "litl-import/importerRegistry.hpp"
 #include "litl-import/exporterRegistry.hpp"
@@ -18,6 +19,11 @@ namespace litl::import
 
         ImportService(ImportService const&) = delete;
         ImportService& operator=(ImportService const&) = delete;
+
+        /// <summary>
+        /// Given a source file, attempts to convert it to an internal representation format.
+        /// </summary>
+        [[nodiscard]] Result import(File const& sourceFile, ImportedData& importedData) noexcept;
 
         /// <summary>
         /// Given an external format source file, attempts to convert it to an internal representation format.

@@ -32,20 +32,8 @@ namespace litl::import
         m_exporterRegistry.add<MeshExporter>();
     }
 
-    Result ImportService::convert(std::string_view sourcePath) noexcept
+    Result ImportService::import(File const& sourceFile, ImportedData& importedData) noexcept
     {
-        return convert(sourcePath, File(sourcePath).parentFolderPath());
-    }
-
-    Result ImportService::convert(std::string_view sourcePath, std::string_view destFolderPath) noexcept
-    {
-        // ---------------------------------------------------------------------------------
-        // Sanity Check
-
-        // .. todo add timestamp/performance tracking ...
-
-        File sourceFile = sourcePath;
-
         if (!sourceFile.exists())
         {
             return Result::Error(ErrorType::SourceFileDoesNotExist);
@@ -55,9 +43,6 @@ namespace litl::import
         {
             return Result::Error(ErrorType::EmptySourceFile);
         }
-
-        // ---------------------------------------------------------------------------------
-        // Import
 
         auto importer = m_importerRegistry.create(sourceFile);
         auto fileBytes = sourceFile.readAllBytes();
@@ -72,17 +57,29 @@ namespace litl::import
             return Result::Error(ErrorType::FailedToReadSourceFile);
         }
 
-        ImportedData importedData;
-        auto importResult = importer->import(sourceFile, *fileBytes, importedData);
+        Result const result = importer->import(sourceFile, *fileBytes, importedData);
+
+        return result;
+    }
+
+    Result ImportService::convert(std::string_view sourcePath) noexcept
+    {
+        return convert(sourcePath, File(sourcePath).parentFolderPath());
+    }
+
+    Result ImportService::convert(std::string_view sourcePath, std::string_view destFolderPath) noexcept
+    {
+        // Import
+        File const sourceFile = sourcePath;
+        ImportedData importedData{};
+        Result const importResult = import(sourcePath, importedData);
 
         if (!importResult.success)
         {
             return importResult;
         }
 
-        // ---------------------------------------------------------------------------------
         // Export
-
         auto exporter = m_exporterRegistry.create(importedData.type);
 
         if (exporter == nullptr)
