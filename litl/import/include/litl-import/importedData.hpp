@@ -3,10 +3,10 @@
 
 #include <memory>
 
+#include "litl-import/mesh/import/result.hpp"
+
 namespace litl::import
 {
-    class Mesh;
-
     enum class ImportedDataType : uint32_t
     {
         Unknown = 0u,
@@ -23,7 +23,7 @@ namespace litl::import
         ImportedDataType type{ ImportedDataType::Unknown };
 
         union {
-            std::unique_ptr<Mesh> importedMesh;
+            std::unique_ptr<MeshImportResult> mesh;
         };
     };
 }

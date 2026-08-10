@@ -19,7 +19,7 @@ namespace litl::import
             return Result::Error(ErrorType::ImportedDataTypeMismatch);
         }
 
-        if (data.importedMesh == nullptr)
+        if (data.mesh == nullptr)
         {
             return Result::Error(ErrorType::ImportedDataNull);
         }

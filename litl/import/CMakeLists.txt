@@ -10,7 +10,7 @@ add_library(litl-import STATIC
 	"src/importService.cpp" 
 	"src/mesh/export/meshExporter.cpp" 
 	"src/importerRegistry.cpp" 
-	"src/exporterRegistry.cpp")
+	"src/exporterRegistry.cpp" "src/mesh/intermediate/mesh.cpp")
 
 target_include_directories(litl-import
 	PUBLIC
