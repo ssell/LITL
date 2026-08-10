@@ -5,6 +5,12 @@
 
 namespace litl
 {
+    /// <summary>
+    /// The core LITL vertex representation.
+    /// 
+    /// Other vertex layouts may be used, but this is the structure that is defaulted to
+    /// and that imported meshes are built upon.
+    /// </summary>
     struct Vertex
     {
         vec3 position{};
