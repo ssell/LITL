@@ -1,9 +1,7 @@
 #ifndef LITL_MATH_GEOMETRY_MESH_H__
 #define LITL_MATH_GEOMETRY_MESH_H__
 
-#include <array>
 #include <vector>
-
 #include "litl-core/math/geometry/vertex.hpp"
 
 namespace litl
@@ -13,51 +11,6 @@ namespace litl
     /// </summary>
     struct GeoMesh
     {
-        /// <summary>
-        /// Binary file representation of a GeoMesh.
-        /// </summary>
-        struct File
-        {
-            struct Header
-            {
-                uint32_t faceBlockStart{ 0u };
-                uint32_t vertexBlockStart{ 0u };
-                uint32_t indexBlockStart{ 0u };
-            };
-
-            struct FaceBlock
-            {
-                uint32_t blockSize{ sizeof(FaceBlock) };
-                uint32_t faceSize{ static_cast<uint32_t>(sizeof(uint32_t)) };
-                uint32_t faceCount{ 0u };
-
-                // ... faces counts ...
-            };
-
-            struct VertexBlock
-            {
-                uint32_t blockSize{ sizeof(VertexBlock) };
-                uint32_t vertexSize{ static_cast<uint32_t>(sizeof(Vertex)) };
-                uint32_t vertexCount{ 0u };
-
-                // ... vertices ...
-            };
-
-            struct IndexBlock
-            {
-                uint32_t blockSize{ sizeof(IndexBlock) };
-                uint32_t indexSize{ static_cast<uint32_t>(sizeof(uint32_t)) };
-                uint32_t indexCount{ 0u };
-
-                // ... indices ...
-            };
-
-            Header header{};
-            FaceBlock faces{};
-            VertexBlock vertices{};
-            IndexBlock indices{};
-        };
-
         /// <summary>
         /// Recalculates and modifies the mesh in-place such that the "faceIndexCount" for every face is 3.
         /// </summary>

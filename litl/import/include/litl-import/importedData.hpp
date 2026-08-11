@@ -23,7 +23,7 @@ namespace litl::import
         ImportedDataType type{ ImportedDataType::Unknown };
 
         union {
-            std::unique_ptr<MeshImportResult> mesh;
+            std::unique_ptr<MeshImportResult> mesh = nullptr;
         };
     };
 }
