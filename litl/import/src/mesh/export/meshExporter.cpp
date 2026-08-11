@@ -32,8 +32,9 @@ namespace litl::import
             return Result::Error(ErrorType::ExportDestinationDoesNotExist);
         }
 
-        std::string_view destFilePath = std::format("{}/{}{}", destFolderPath, sourceFile.name(), MeshExporter::ExportedExtension);
+        auto destFilePath = std::format("{}/{}{}", destFolderPath, sourceFile.name(), MeshExporter::ExportedExtension);
 
+        // ... todo ...
 
 
         return Result::Success();

@@ -5,6 +5,7 @@
 #include <concepts>
 #include <cstdint>
 #include <span>
+#include <string_view>
 
 #include "litl-core/file.hpp"
 #include "litl-import/result.hpp"
@@ -17,7 +18,7 @@ namespace litl::import
     public:
 
         virtual ~Exporter() = default;
-        virtual Result write(File const& sourceFile, File const& destFolderPath, ImportedData const& data) noexcept = 0;
+        virtual Result write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data) noexcept = 0;
     };
 
     template <typename T>
