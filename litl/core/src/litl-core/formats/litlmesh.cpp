@@ -3,7 +3,7 @@
 
 namespace litl
 {
-    bool LitlMesh::Header::validate(ErrorCode& error) noexcept
+    bool LitlMesh::Header::validate(ErrorCode& error) const noexcept
     {
         if (magic != Ids::Magic)
         {
@@ -23,27 +23,27 @@ namespace litl
             return false;
         }
 
-        if (headerBytes != sizeof(Header))
-        {
-            error = ErrorCode::HeaderStructureMismatch;
-            return false;
-        }
-
-        if (totalBytes < sizeof(LitlMesh))
+        if (totalBytes < sizeof(Header))
         {
             error = ErrorCode::FileTooSmall;
-            return false;
-        }
-
-        if (blockCount == 0u)
-        {
-            error = ErrorCode::MissingBlocks;
             return false;
         }
 
         if (blockCount > MaxBlocks)
         {
             error = ErrorCode::TooManyBlocks;
+            return false;
+        }
+
+        if (blocksOffset != (sizeof(Header) + (blockCount * sizeof(BlockDescriptor))))
+        {
+            error = ErrorCode::InvalidFirstBlockOffset;
+            return false;
+        }
+
+        if ((blocksOffset % 16u) != 0u)
+        {
+            error = ErrorCode::InvalidFirstBlockOffset;
             return false;
         }
 
@@ -55,7 +55,7 @@ namespace litl
         LitlMesh parsed{};
         error = ErrorCode::None;
 
-        if (data.size() < sizeof(LitlMesh))
+        if (data.size() < sizeof(Header))
         {
             error = ErrorCode::InvalidFileSize;
             return false;
@@ -68,19 +68,31 @@ namespace litl
             return false;
         }
 
-        if (static_cast<uint32_t>(data.size()) != parsed.header.totalBytes)
+        if (data.size() != static_cast<size_t>(parsed.header.totalBytes))
         {
             error = ErrorCode::FileSizeMismatch;
             return false;
         }
 
-        BinaryBlobReader reader({ data.data() + sizeof(Header), sizeof(BlockDescriptor) * MaxBlocks });
-        BlockDescriptor currDescriptor{};
-        uint32_t descriptorIndex = 0u;
+        auto const descriptorBytes = size_t{ parsed.header.blockCount } * sizeof(BlockDescriptor);
 
-        while (reader.read(currDescriptor) && (descriptorIndex++ < parsed.header.blockCount))
+        if (data.size() < (sizeof(Header) + descriptorBytes))
         {
-            if ((currDescriptor.offset < parsed.header.headerBytes) || (currDescriptor.offset > parsed.header.totalBytes))
+            error = ErrorCode::InvalidFileSize;
+            return false;
+        }
+
+        BinaryBlobReader reader({ data.data() + sizeof(Header), descriptorBytes });
+        BlockDescriptor currDescriptor{};
+
+        for (uint32_t i = 0u; i < parsed.header.blockCount; ++i)
+        {
+            if (!reader.read(currDescriptor))
+            {
+                error = ErrorCode::MissingBlockDescriptor;
+            }
+
+            if((currDescriptor.offset < parsed.header.blocksOffset) || (currDescriptor.offset > parsed.header.totalBytes))
             {
                 error = ErrorCode::DescriptorBlockOutOfBounds;
                 return false;
@@ -98,9 +110,10 @@ namespace litl
                 return false;
             }
 
-            memcpy(&currDescriptor, &parsed.descriptors[descriptorIndex], sizeof(BlockDescriptor));
+            parsed.descriptors[i] = currDescriptor;
         }
 
+        parsed.descriptorCount = parsed.header.blockCount;
         parsed.data = data;
         file = parsed;
         return true;
@@ -109,17 +122,20 @@ namespace litl
     bool LitlMesh::serialize(GeoMesh const& mesh, std::vector<std::byte>& data, ErrorCode& error) noexcept
     {
         error = ErrorCode::None;
+        // ... todo ...
         return false;
     }
 
-    bool LitlMesh::deserialize(GeoMesh& mesh, ErrorCode& error) noexcept
+    bool LitlMesh::deserialize(GeoMesh& mesh, ErrorCode& error) const noexcept
     {
         error = ErrorCode::None;
+        // ... todo ...
         return false;
     }
 
     std::optional<LitlMesh::Block> LitlMesh::find(std::array<char, 4> id) const noexcept
     {
+        // ... todo ...
         return std::nullopt;
     }
 }
