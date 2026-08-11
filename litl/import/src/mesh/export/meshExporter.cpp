@@ -1,3 +1,6 @@
+#include <format>
+
+#include "litl-core/directory.hpp"
 #include "litl-import/mesh/export/meshExporter.hpp"
 
 namespace litl::import
@@ -12,7 +15,7 @@ namespace litl::import
 
     }
 
-    Result MeshExporter::write(File const& sourceFile, File const& destFolderPath, ImportedData const& data) noexcept
+    Result MeshExporter::write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data) noexcept
     {
         if (data.type != ImportedDataType::Mesh)
         {
@@ -24,6 +27,15 @@ namespace litl::import
             return Result::Error(ErrorType::ImportedDataNull);
         }
 
-        return Result::Error(ErrorType::ExporterNotImplemented);
+        if (!Directory::ensureExists(destFolderPath))
+        {
+            return Result::Error(ErrorType::ExportDestinationDoesNotExist);
+        }
+
+        std::string_view destFilePath = std::format("{}/{}{}", destFolderPath, sourceFile.name(), MeshExporter::ExportedExtension);
+
+
+
+        return Result::Success();
     }
 }
