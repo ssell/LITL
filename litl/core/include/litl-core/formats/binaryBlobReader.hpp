@@ -2,6 +2,7 @@
 #define LITL_CORE_FORMATS_BINARY_BLOB_READER_H__
 
 #include <cstdint>
+#include <cstring>
 #include <span>
 #include <type_traits>
 
