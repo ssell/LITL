@@ -67,6 +67,11 @@ namespace litl
         return std::filesystem::canonical(m_file.parent_path()).string();
     }
 
+    std::string File::name() const noexcept
+    {
+        return m_file.stem().string();
+    }
+
     std::string File::extension() const noexcept
     {
         return m_file.extension().string();

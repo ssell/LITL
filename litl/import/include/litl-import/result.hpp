@@ -20,7 +20,8 @@ namespace litl::import
         ImportedDataTypeMismatch = 8u,
         ImportedDataNull = 9u,
         ImporterFailed = 10u,
-        ImporterEmptyResult = 11u
+        ImporterEmptyResult = 11u,
+        ExportDestinationDoesNotExist = 12u
     };
 
     struct Result
