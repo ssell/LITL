@@ -91,7 +91,12 @@ namespace litl
             /// <summary>
             /// The calculated total bytes of the file exceed 2^32-1 (4GB).
             /// </summary>
-            ContentTooLarge = 13u
+            ContentTooLarge = 13u,
+
+            /// <summary>
+            /// The source mesh is missing either vertices, indices, face index counts, or a combination thereof.
+            /// </summary>
+            SourceMeshEmpty = 14u
         };
 
         struct Ids
@@ -110,6 +115,11 @@ namespace litl
             /// Id for a block of index data - INDX
             /// </summary>
             static constexpr BlockIdType Indices{ 'I', 'N', 'D', 'X' };
+
+            /// <summary>
+            /// Id for a block of face index count data - FACE
+            /// </summary>
+            static constexpr BlockIdType Faces{ 'F', 'A', 'C', 'E' };
         };
 
         static constexpr uint32_t MaxBlocks = 8u;
@@ -300,7 +310,7 @@ namespace litl
         /// Retrieves the block with the corresponding id.
         /// </summary>
         /// <returns>std::nullopt if no such block was found.</returns>
-        [[nodiscard]] std::optional<Block> find(std::array<char, 4> id) const noexcept;
+        [[nodiscard]] std::optional<Block> find(BlockIdType id) const noexcept;
 
         /// <summary>
         /// The file header with the magic number, version, bounds, and expected sizes.
