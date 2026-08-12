@@ -111,7 +111,22 @@ namespace litl
             /// <summary>
             /// The alignment of the provided type is not a multiple of 16, which is required.
             /// </summary>
-            ElementOffsetAlignmentMismatch = 17u
+            ElementOffsetAlignmentMismatch = 17u,
+
+            /// <summary>
+            /// One or more elements have a size of zero.
+            /// </summary>
+            ElementSizeOfZero = 18u,
+
+            /// <summary>
+            /// The size of the block of elements is not evenly divisible by the size of an individual element.
+            /// </summary>
+            ElementBlockIsNotWhole = 19u,
+
+            /// <summary>
+            /// One (or more) of the blocks have an invalid offset which is not evenly divisible by 16.
+            /// </summary>
+            InvalidBlockOffset = 20u
         };
 
         struct Ids
@@ -352,11 +367,6 @@ namespace litl
         /// They describe the starting offset of the block and the size and count of its elements.
         /// </summary>
         std::array<BlockDescriptor, MaxBlocks> descriptors{};
-
-        /// <summary>
-        /// The number of actual descriptor blocks in the file.
-        /// </summary>
-        uint32_t descriptorCount{ 0u };
 
         /// <summary>
         /// Non-owning view of the entire file binary blob (including the header, etc.).
