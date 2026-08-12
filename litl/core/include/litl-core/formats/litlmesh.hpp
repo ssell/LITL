@@ -23,26 +23,81 @@ namespace litl
     {
         enum class ErrorCode : uint32_t
         {
-            None                       = 0u,
-            InvalidFileSize            = 1u,
-            InvalidFileType            = 2u,
-            MajorVersionMismatch       = 3u,
-            MinorVersionMismatch       = 4u,
-            InvalidFirstBlockOffset    = 5u,
-            FileTooSmall               = 6u,
-            TooManyBlocks              = 7u,
-            MissingBlockDescriptor     = 8u,
-            FileSizeMismatch           = 9u,
-            DescriptorBlockOutOfBounds = 10u,
-            BlockSizeOutOfBounds       = 11u,
-            BlockSizeMismatch          = 12u
+            None = 0u,
+
+            /// <summary>
+            /// The size of the file data does not match the declared file size.
+            /// </summary>
+            InvalidFileSize = 1u,
+
+            /// <summary>
+            /// The file header is missing the expected magic bytes.
+            /// </summary>
+            InvalidFileType = 2u,
+
+            /// <summary>
+            /// The file was created using a different major version than what is supported.
+            /// </summary>
+            MajorVersionMismatch = 3u,
+
+            /// <summary>
+            /// The file was created using a different (greater) minor version than what is supported.
+            /// </summary>
+            MinorVersionMismatch = 4u,
+
+            /// <summary>
+            /// The hash of the file blocks does not match the recorded hash in the file.
+            /// </summary>
+            ContentHashMismatch = 5u,
+
+            /// <summary>
+            /// The offset of the first data block is invalid. It is either too small and intersects
+            /// with the header, or the offset is not a multiple of 16 as expected.
+            /// </summary>
+            InvalidFirstBlockOffset = 6u,
+
+            /// <summary>
+            /// The declared number of data blocks exceeds the maximum number of supported blocks.
+            /// </summary>
+            TooManyBlocks = 7u,
+
+            /// <summary>
+            /// There are fewer block descriptors than the declared number of data blocks.
+            /// </summary>
+            MissingBlockDescriptor = 8u,
+
+            /// <summary>
+            /// The start or end of the descriptor block is out-of-bounds of the file.
+            /// </summary>
+            DescriptorBlockOutOfBounds = 9u,
+
+            /// <summary>
+            /// The start or end of the data block is out-of-bounds of the file.
+            /// </summary>
+            BlockSizeOutOfBounds = 10u,
+
+            /// <summary>
+            /// The declared size of the block in the descriptor does not match the actual size of the block.
+            /// </summary>
+            BlockSizeMismatch = 11u
         };
 
         struct Ids
         {
+            /// <summary>
+            /// Magic bytes for the .litlmesh file - LMSH.
+            /// </summary>
             static constexpr std::array<char, 4> Magic{ 'L', 'M', 'S', 'H' };
-            static constexpr std::array<char, 4> Vertices{ 'V', 'T', 'X', 'B' };
-            static constexpr std::array<char, 4> Indices{ 'I', 'D', 'X', 'B' };
+
+            /// <summary>
+            /// Id for a block of vertex data - VRTX
+            /// </summary>
+            static constexpr std::array<char, 4> Vertices{ 'V', 'R', 'T', 'X' };
+
+            /// <summary>
+            /// Id for a block of index data - INDX
+            /// </summary>
+            static constexpr std::array<char, 4> Indices{ 'I', 'N', 'D', 'X' };
         };
 
         static constexpr uint32_t MaxBlocks = 8u;

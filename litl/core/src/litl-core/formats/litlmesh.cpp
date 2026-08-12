@@ -1,3 +1,6 @@
+#include <cstring>
+
+#include "litl-core/hash.hpp"
 #include "litl-core/formats/litlmesh.hpp"
 #include "litl-core/formats/binaryBlobReader.hpp"
 
@@ -25,7 +28,7 @@ namespace litl
 
         if (totalBytes < sizeof(Header))
         {
-            error = ErrorCode::FileTooSmall;
+            error = ErrorCode::InvalidFileSize;
             return false;
         }
 
@@ -70,7 +73,15 @@ namespace litl
 
         if (data.size() != static_cast<size_t>(parsed.header.totalBytes))
         {
-            error = ErrorCode::FileSizeMismatch;
+            error = ErrorCode::InvalidFileSize;
+            return false;
+        }
+
+        auto const contentHash = hashSubarray(data, parsed.header.blocksOffset, (parsed.header.totalBytes - parsed.header.blocksOffset));
+
+        if (contentHash != parsed.header.contentHash)
+        {
+            error = ErrorCode::ContentHashMismatch;
             return false;
         }
 
