@@ -5,6 +5,7 @@
 #include <format>
 #include <span>
 #include <string>
+#include <type_traits>
 
 #include "litl-core/math/glm.hpp"
 #include <glm/gtc/type_ptr.hpp>
@@ -38,7 +39,6 @@ namespace litl
     struct mat4
     {
         constexpr mat4() noexcept {}
-        constexpr mat4(mat4 const& other) noexcept : value(other.value) {}
         constexpr explicit mat4(glm::mat4 const& other) noexcept : value(other) {}
         explicit mat4(mat3 const& other) noexcept;
         explicit mat4(quat const& quaternion) noexcept;
@@ -623,6 +623,7 @@ namespace litl
     static_assert(std::is_nothrow_move_constructible_v<mat4>);
     static_assert(std::is_nothrow_copy_assignable_v<mat4>);
     static_assert(std::is_nothrow_move_assignable_v<mat4>);
+    static_assert(std::is_trivially_copyable_v<mat4>);
 }
 
 LITL_REGISTER_TYPE_NAME(litl::mat4)

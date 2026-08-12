@@ -6,6 +6,7 @@
 #include <format>
 #include <limits>
 #include <string>
+#include <type_traits>
 
 #include "litl-core/math/glm.hpp"
 #include <glm/gtc/type_ptr.hpp>
@@ -19,8 +20,7 @@ namespace litl
 
     struct vec3
     {
-        constexpr vec3() noexcept {}
-        constexpr vec3(vec3 const& other) noexcept : value{ other.value } {}
+        constexpr vec3() noexcept : value{ 0.0f, 0.0f, 0.0f } {}
         constexpr explicit vec3(float xyz) noexcept : value{ xyz, xyz, xyz } {}
         constexpr explicit vec3(glm::vec3 const& other) noexcept : value{other} {}
         constexpr explicit vec3(std::array<float, 3u> const& arr) : value{ arr[0], arr[1], arr[2] } {}
@@ -528,6 +528,7 @@ namespace litl
     static_assert(std::is_nothrow_move_constructible_v<vec3>);
     static_assert(std::is_nothrow_copy_assignable_v<vec3>);
     static_assert(std::is_nothrow_move_assignable_v<vec3>);
+    static_assert(std::is_trivially_copyable_v<vec3>);
 }
 
 LITL_REGISTER_TYPE_NAME(litl::vec3)

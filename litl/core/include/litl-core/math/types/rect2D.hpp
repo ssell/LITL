@@ -1,6 +1,8 @@
 #ifndef LITL_MATH_RECT2D_H__
 #define LITL_MATH_RECT2D_H__
 
+#include <type_traits>
+
 #include "litl-core/types.hpp"
 #include "litl-core/math/types/vec2.hpp"
 
@@ -16,6 +18,7 @@ namespace litl
     static_assert(std::is_nothrow_move_constructible_v<rect2D>);
     static_assert(std::is_nothrow_copy_assignable_v<rect2D>);
     static_assert(std::is_nothrow_move_assignable_v<rect2D>);
+    static_assert(std::is_trivially_copyable_v<rect2D>);
 }
 
 LITL_REGISTER_TYPE_NAME(litl::rect2D)

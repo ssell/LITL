@@ -1,6 +1,8 @@
 #ifndef LITL_CORE_MATH_GEOMETRY_VERTEX_H__
 #define LITL_CORE_MATH_GEOMETRY_VERTEX_H__
 
+#include <type_traits>
+
 #include "litl-core/math/types.hpp"
 
 namespace litl
@@ -18,6 +20,8 @@ namespace litl
         vec3 normal{};
         vec4 tangent{};
     };
+
+    static_assert(std::is_trivially_copyable_v<Vertex>);
 }
 
 #endif
