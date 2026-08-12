@@ -86,7 +86,12 @@ namespace litl
             /// <summary>
             /// The final bytes of the serialized data do not match the expected pre-calculated size.
             /// </summary>
-            SerializationSizeMismatch = 12u
+            SerializationSizeMismatch = 12u,
+
+            /// <summary>
+            /// The calculated total bytes of the file exceed 2^32-1 (4GB).
+            /// </summary>
+            ContentTooLarge = 13u
         };
 
         struct Ids
@@ -252,8 +257,17 @@ namespace litl
             template<typename T> requires std::is_trivially_copyable_v<T>
             [[nodiscard]] std::optional<std::span<T const>> as() const noexcept
             {
-                LITL_ASSERT_MSG(sizeof(T) == elementBytes, "Size mismatch between expected block element size and provided type.", std::nullopt);
-                LITL_ASSERT_MSG(bytes.size() == static_cast<uint64_t>(elementBytes * elementCount), "Block data not large enough to hold required number of elements of type.", std::nullopt);
+                if (sizeof(T) != static_cast<size_t>(elementBytes))
+                {
+                    // Size mismatch between expected block element size and provided type.
+                    return std::nullopt;
+                }
+
+                if (bytes.size() != static_cast<size_t>(elementBytes * elementCount))
+                {
+                    // Block data not large enough to hold required number of elements of type.
+                    return std::nullopt;
+                }
 
                 return std::span<T const>(
                     reinterpret_cast<T const*>(bytes.data()),
