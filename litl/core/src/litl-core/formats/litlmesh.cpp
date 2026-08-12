@@ -106,6 +106,7 @@ namespace litl
             if (!reader.read(currDescriptor))
             {
                 error = ErrorCode::MissingBlockDescriptor;
+                return false;
             }
 
             if((currDescriptor.blockOffset < parsed.header.blocksOffset) || (currDescriptor.blockOffset > parsed.header.totalBytes))
@@ -151,19 +152,14 @@ namespace litl
     }
 
     template<typename T>
-    void serializeBlock(LitlMesh::BlockDescriptor& descriptor, LitlMesh::Block& block, size_t& runningBlockOffset, LitlMesh::BlockIdType const& id, std::span<T const> elements, uint32_t flags) noexcept
+    void serializeBlock(LitlMesh::BlockDescriptor& descriptor, size_t& runningBlockOffset, LitlMesh::BlockIdType const& id, std::span<T const> elements, uint32_t flags) noexcept
     {
         descriptor.blockId = id;
         descriptor.elementBytes = static_cast<uint32_t>(sizeof(T));
         descriptor.elementCount = static_cast<uint32_t>(elements.size());
         descriptor.blockOffset = static_cast<uint32_t>(runningBlockOffset);
-        descriptor.blockBytes = static_cast<uint32_t>(sizeof(LitlMesh::Block) + (descriptor.elementBytes * descriptor.elementCount));
+        descriptor.blockBytes = static_cast<uint32_t>(sizeof(LitlMesh::Block) + static_cast<size_t>(descriptor.elementBytes * descriptor.elementCount));
         descriptor.flags = flags;
-
-        block.blockId = descriptor.blockId;
-        block.elementBytes = descriptor.elementBytes;
-        block.elementCount = descriptor.elementCount;
-        block.bytes = as_byte_span(elements);
 
         runningBlockOffset += descriptor.blockBytes;
     }
@@ -198,59 +194,44 @@ namespace litl
         // ---------------------------------------------------------------------------------
         // Populate BlockDescriptors and Blocks
 
-        std::array<Block, MaxBlocks> blocks{};
-
         BlockDescriptor& vertexBlockDescriptor = litlMesh.descriptors[0];
         BlockDescriptor& indexBlockDescriptor = litlMesh.descriptors[1];
-
-        Block& vertexBlock = blocks[0];
-        Block& indexBlock = blocks[1];
-
         size_t runningOffset = litlMesh.header.blocksOffset;
 
-        serializeBlock<Vertex>(vertexBlockDescriptor, vertexBlock, runningOffset, Ids::Vertices, mesh.vertices, 0u);
-        serializeBlock<uint32_t>(indexBlockDescriptor, indexBlock, runningOffset, Ids::Indices, mesh.indices, 0u);
+        serializeBlock<Vertex>(vertexBlockDescriptor, runningOffset, Ids::Vertices, mesh.vertices, 0u);
+        serializeBlock<uint32_t>(indexBlockDescriptor, runningOffset, Ids::Indices, mesh.indices, 0u);
 
-        litlMesh.header.totalBytes = runningOffset;
+        if (runningOffset > static_cast<size_t>(std::numeric_limits<uint32_t>::max()))
+        {
+            error = ErrorCode::ContentTooLarge;
+            return false;
+        }
+
+        litlMesh.header.totalBytes = static_cast<uint32_t>(runningOffset);
 
         // ---------------------------------------------------------------------------------
         // Copy Content to Temporary Buffer
 
-        std::vector<std::byte> contentBytes(static_cast<size_t>(litlMesh.header.totalBytes - sizeof(Header)));
-        std::fill(contentBytes.begin(), contentBytes.end(), std::byte(0));
-
-        runningOffset = 0;
-
-        for (auto i = 0u; i < litlMesh.header.blockCount; ++i)
-        {
-            runningCopy(&litlMesh.descriptors[i], contentBytes.data(), sizeof(BlockDescriptor), runningOffset);
-        }
-
-        for (auto i = 0u; i < litlMesh.header.blockCount; ++i)
-        {
-            runningCopy(&blocks[i], contentBytes.data(), sizeof(Block), runningOffset);
-            runningCopy(blocks[i].bytes.data(), contentBytes.data(), blocks[i].bytes.size(), runningOffset);
-        }
-
-        // ---------------------------------------------------------------------------------
-        // Calculate Content Hash
-
-        litlMesh.header.contentHash = hashArray(std::span<std::byte const>(contentBytes));
-
-        // ---------------------------------------------------------------------------------
-        // Copy to Final Destination
-
-        if (litlMesh.header.totalBytes != static_cast<uint32_t>(sizeof(Header) + contentBytes.size()))
-        {
-            error = ErrorCode::SerializationSizeMismatch;
-            return false;
-        }
-
         data.resize(litlMesh.header.totalBytes);
         std::fill(data.begin(), data.end(), std::byte(0));
 
+        runningOffset = sizeof(Header);
+
+        runningCopy(&vertexBlockDescriptor, data.data(), sizeof(BlockDescriptor), runningOffset);
+        runningCopy(&indexBlockDescriptor, data.data(), sizeof(BlockDescriptor), runningOffset);
+        runningCopy(mesh.vertices.data(), data.data(), vertexBlockDescriptor.blockBytes, runningOffset);
+        runningCopy(mesh.indices.data(), data.data(), indexBlockDescriptor.blockBytes, runningOffset);
+
+        litlMesh.header.contentHash = hashSubarray(std::span<std::byte const>(data), sizeof(Header), data.size() - sizeof(Header));
+
         std::memcpy(data.data(), &litlMesh.header, sizeof(Header));
-        std::memcpy(data.data() + sizeof(Header), contentBytes.data(), contentBytes.size());
+
+        if (static_cast<size_t>(litlMesh.header.totalBytes) != data.size())
+        {
+            data.clear();
+            error = ErrorCode::SerializationSizeMismatch;
+            return false;
+        }
 
         return true;
     }
@@ -278,9 +259,12 @@ namespace litl
             {
                 if (static_cast<size_t>(descriptor.blockOffset + descriptor.blockBytes) < data.size())
                 {
-                    LitlMesh::Block dataBlock{};
-                    std::memcpy(&dataBlock, data.data(), descriptor.blockBytes);
-                    return dataBlock;
+                    return Block {
+                        .blockId = descriptor.blockId,
+                        .elementBytes = descriptor.elementBytes,
+                        .elementCount = descriptor.elementCount,
+                        .bytes = std::span<std::byte const>{ data.data() + descriptor.blockOffset, descriptor.blockBytes }
+                    };
                 }
             }
         }
