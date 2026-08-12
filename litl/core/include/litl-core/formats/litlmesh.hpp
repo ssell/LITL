@@ -84,14 +84,34 @@ namespace litl
             BlockSizeMismatch = 11u,
 
             /// <summary>
+            /// Two or more blocks overlap their declared memory ranges.
+            /// </summary>
+            BlockOverlap = 12u,
+
+            /// <summary>
             /// The calculated total bytes of the file exceed 2^32-1 (4GB).
             /// </summary>
-            ContentTooLarge = 12u,
+            ContentTooLarge = 13u,
 
             /// <summary>
             /// The source mesh is missing either vertices, indices, face index counts, or a combination thereof.
             /// </summary>
-            SourceMeshEmpty = 13u
+            SourceMeshEmpty = 14u,
+
+            /// <summary>
+            /// The size of the provided type does not match the expected element size.
+            /// </summary>
+            ElementSizeMismatch = 15u,
+
+            /// <summary>
+            /// The total size of the element block does not match the expected element block size.
+            /// </summary>
+            ElementBlockSizeMismatch = 16u,
+
+            /// <summary>
+            /// The alignment of the provided type is not a multiple of 16, which is required.
+            /// </summary>
+            ElementOffsetAlignmentMismatch = 17u
         };
 
         struct Ids
@@ -265,17 +285,27 @@ namespace litl
             /// <typeparam name="T"></typeparam>
             /// <returns></returns>
             template<typename T> requires std::is_trivially_copyable_v<T>
-            [[nodiscard]] std::optional<std::span<T const>> as() const noexcept
+            [[nodiscard]] std::optional<std::span<T const>> as(ErrorCode& error) const noexcept
             {
+                error = ErrorCode::None;
+
                 if (sizeof(T) != static_cast<size_t>(elementBytes))
                 {
                     // Size mismatch between expected block element size and provided type.
+                    error = ErrorCode::ElementSizeMismatch;
                     return std::nullopt;
                 }
 
-                if (bytes.size() != static_cast<size_t>(elementBytes * elementCount))
+                if (bytes.size() != (static_cast<size_t>(elementBytes) * elementCount))
                 {
                     // Block data not large enough to hold required number of elements of type.
+                    error = ErrorCode::ElementBlockSizeMismatch;
+                    return std::nullopt;
+                }
+
+                if (reinterpret_cast<uintptr_t>(bytes.data()) % alignof(T) != 0)
+                {
+                    error = ErrorCode::ElementOffsetAlignmentMismatch;
                     return std::nullopt;
                 }
 

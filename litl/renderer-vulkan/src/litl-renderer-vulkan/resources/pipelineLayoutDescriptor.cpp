@@ -108,8 +108,7 @@ namespace litl::vulkan
         if (!index.has_value())
         {
             // Check if the range is already occupied
-            bool overlap = std::ranges::any_of(pushConstants,
-                [&](MergedPushConstantRange const& mpc)
+            bool overlap = std::ranges::any_of(pushConstants, [&](MergedPushConstantRange const& mpc) -> bool
                 {
                     uint32_t aStart = pushConstant.offset;
                     uint32_t aEnd = aStart + pushConstant.sizeBytes;
