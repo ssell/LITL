@@ -1,6 +1,7 @@
 #ifndef LITL_MATH_VEC2_H__
 #define LITL_MATH_VEC2_H__
 
+#include <array>
 #include <cassert>
 #include <format>
 #include <string>
@@ -18,6 +19,7 @@ namespace litl
         constexpr vec2(vec2 const& other) noexcept : value(other.value) {}
         constexpr explicit vec2(float xy) noexcept : value{ xy, xy } {}
         constexpr explicit vec2(glm::vec2 const& other) noexcept : value(other) {}
+        constexpr explicit vec2(std::array<float, 2u> const& arr) : value{ arr[0], arr[1] } {}
         constexpr vec2(float x, float y) noexcept : value{ x, y } {}
 
         // ---------------------------------------------------------------------------------
@@ -100,6 +102,11 @@ namespace litl
         [[nodiscard]] constexpr float const* dataPtr() const noexcept
         {
             return glm::value_ptr(value);
+        }
+
+        [[nodiscard]] std::array<float, 2u> toArray() const noexcept
+        {
+            return { value.x, value.y };
         }
 
     private:

@@ -2,6 +2,25 @@
 
 namespace litl
 {
+    void GeoMesh::getMinMaxPoints(vec3& minPoint, vec3& maxPoint) const noexcept
+    {
+        if (vertices.empty())
+        {
+            minPoint.setZero();
+            maxPoint.setZero();
+            return;
+        }
+
+        minPoint = vec3::max();
+        maxPoint = vec3::min();
+
+        for (auto& vertex : vertices)
+        {
+            minPoint = min(minPoint, vertex.position);
+            maxPoint = max(maxPoint, vertex.position);
+        }
+    }
+
     void GeoMesh::triangulate() noexcept
     {
         if (vertices.empty() || indices.empty() || faceIndexCount.empty())

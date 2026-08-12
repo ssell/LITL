@@ -21,6 +21,8 @@ namespace litl
     /// </summary>
     struct LitlMesh final
     {
+        using BlockIdType = std::array<char, 4>;
+
         enum class ErrorCode : uint32_t
         {
             None = 0u,
@@ -79,25 +81,30 @@ namespace litl
             /// <summary>
             /// The declared size of the block in the descriptor does not match the actual size of the block.
             /// </summary>
-            BlockSizeMismatch = 11u
+            BlockSizeMismatch = 11u,
+
+            /// <summary>
+            /// The final bytes of the serialized data do not match the expected pre-calculated size.
+            /// </summary>
+            SerializationSizeMismatch = 12u
         };
 
         struct Ids
         {
             /// <summary>
-            /// Magic bytes for the .litlmesh file - LMSH.
+            /// Magic bytes for the .litlmesh file - LMSH
             /// </summary>
-            static constexpr std::array<char, 4> Magic{ 'L', 'M', 'S', 'H' };
+            static constexpr BlockIdType Magic{ 'L', 'M', 'S', 'H' };
 
             /// <summary>
             /// Id for a block of vertex data - VRTX
             /// </summary>
-            static constexpr std::array<char, 4> Vertices{ 'V', 'R', 'T', 'X' };
+            static constexpr BlockIdType Vertices{ 'V', 'R', 'T', 'X' };
 
             /// <summary>
             /// Id for a block of index data - INDX
             /// </summary>
-            static constexpr std::array<char, 4> Indices{ 'I', 'N', 'D', 'X' };
+            static constexpr BlockIdType Indices{ 'I', 'N', 'D', 'X' };
         };
 
         static constexpr uint32_t MaxBlocks = 8u;
@@ -114,19 +121,19 @@ namespace litl
             /// <summary>
             /// Identifies the file as a .litlmesh
             /// </summary>
-            std::array<char, 4> magic = Ids::Magic;
+            BlockIdType magic{};
 
             /// <summary>
             /// The major version of the file.
             /// Differences in major versions indicate breaking changes.
             /// </summary>
-            uint16_t versionMajor{ MajorVersion };
+            uint16_t versionMajor{ 0u };
 
             /// <summary>
             /// The minor version of the file.
             /// Differences in minor versions indicate changes that do not break from previous versions.
             /// </summary>
-            uint16_t versionMinor{ MinorVersion };
+            uint16_t versionMinor{ 0u };
 
             /// <summary>
             /// Hash of the entire file. Used to check for corruption or truncation.
@@ -185,12 +192,12 @@ namespace litl
             /// <summary>
             /// Unique id of the block. Must match one of the predefined block ids (see Ids) or it will be skipped over during deserialization.
             /// </summary>
-            std::array<char, 4> blockId{};
+            BlockIdType blockId{};
 
             /// <summary>
             /// The offset from the start of the file to where the block (not the descriptor) lives.
             /// </summary>
-            uint32_t offset{ 0u };
+            uint32_t blockOffset{ 0u };
 
             /// <summary>
             /// The size of the block.
@@ -220,7 +227,7 @@ namespace litl
             /// <summary>
             /// Unique id of the block. Must match one of the predefined block ids (see Ids) or it will be skipped over during deserialization.
             /// </summary>
-            std::array<char, 4> blockId{};
+            BlockIdType blockId{};
 
             /// <summary>
             /// The size of an individual element in the block.
@@ -267,7 +274,7 @@ namespace litl
         /// Given a GeoMesh, converts its contents into a binary blob represented by the LitlMesh layout.
         /// </summary>
         /// <returns>False if serialization failed. See the supplied error code for more information.</returns>
-        [[nodiscard]] bool serialize(GeoMesh const& mesh, std::vector<std::byte>& data, ErrorCode& error) noexcept;
+        [[nodiscard]] static bool serialize(GeoMesh const& mesh, std::vector<std::byte>& data, ErrorCode& error) noexcept;
 
         /// <summary>
         /// Populates the provided GeoMesh with the data that this view is over.
@@ -304,6 +311,8 @@ namespace litl
     };
 
     static_assert(std::is_trivially_copyable_v<LitlMesh>);
+    static_assert(std::is_trivially_copyable_v<LitlMesh::BlockDescriptor>);
+    static_assert(std::is_trivially_copyable_v<LitlMesh::Block>);
 }
 
 #endif

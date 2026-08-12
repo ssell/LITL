@@ -12,6 +12,12 @@ namespace litl
     struct GeoMesh
     {
         /// <summary>
+        /// Traverses all vertices and discovers the min/max points for construction of an AABB.
+        /// Note that this result is not stored internally and is recalculated on each invocation.
+        /// </summary>
+        void getMinMaxPoints(vec3& minPoint, vec3& maxPoint) const noexcept;
+
+        /// <summary>
         /// Recalculates and modifies the mesh in-place such that the "faceIndexCount" for every face is 3.
         /// </summary>
         void triangulate() noexcept;

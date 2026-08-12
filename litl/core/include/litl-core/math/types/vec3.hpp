@@ -1,6 +1,7 @@
 #ifndef LITL_MATH_VEC3_H__
 #define LITL_MATH_VEC3_H__
 
+#include <array>
 #include <cassert>
 #include <format>
 #include <limits>
@@ -22,6 +23,7 @@ namespace litl
         constexpr vec3(vec3 const& other) noexcept : value{ other.value } {}
         constexpr explicit vec3(float xyz) noexcept : value{ xyz, xyz, xyz } {}
         constexpr explicit vec3(glm::vec3 const& other) noexcept : value{other} {}
+        constexpr explicit vec3(std::array<float, 3u> const& arr) : value{ arr[0], arr[1], arr[2] } {}
         constexpr vec3(float x, float y, float z) noexcept : value{ x, y, z } {}
         explicit vec3(vec4 const& other) noexcept;
 
@@ -421,6 +423,11 @@ namespace litl
             return glm::value_ptr(value);
         }
 
+        [[nodiscard]] std::array<float, 3u> toArray() const noexcept
+        {
+            return { value.x, value.y, value.z };
+        }
+
     private:
 
         glm::vec3 value{ 0.0f };
@@ -514,7 +521,7 @@ namespace litl
 
     [[nodiscard]] constexpr vec3 lerp(vec3 a, vec3 b, float f)
     {
-        return vec3{ lerp(a.x(), b.x(), f), lerp(a.y(), b.y(), f), lerp(a.z(), b.z(), f) };
+        return vec3(lerp(a.x(), b.x(), f), lerp(a.y(), b.y(), f), lerp(a.z(), b.z(), f));
     }
 
     static_assert(std::is_nothrow_copy_constructible_v<vec3>);

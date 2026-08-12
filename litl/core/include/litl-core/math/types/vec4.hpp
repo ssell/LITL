@@ -1,6 +1,7 @@
 #ifndef LITL_MATH_VEC4_H__
 #define LITL_MATH_VEC4_H__
 
+#include <array>
 #include <cassert>
 #include <format>
 #include <string>
@@ -21,6 +22,7 @@ namespace litl
         constexpr vec4(vec4 const& other) noexcept : value(other.value) {}
         constexpr explicit vec4(float xyzw) noexcept : value{ xyzw, xyzw, xyzw, xyzw } {}
         constexpr explicit vec4(glm::vec4 const& other) noexcept : value(other) {}
+        constexpr explicit vec4(std::array<float, 4u> const& arr) : value{ arr[0], arr[1], arr[2], arr[3] } {}
         constexpr vec4(float x, float y, float z, float w) noexcept : value{ x, y, z, w } {}
         explicit vec4(vec3 const& other) noexcept;
 
@@ -336,6 +338,11 @@ namespace litl
         [[nodiscard]] constexpr float const* dataPtr() const noexcept
         {
             return glm::value_ptr(value);
+        }
+
+        [[nodiscard]] std::array<float, 4u> toArray() const noexcept
+        {
+            return { value.x, value.y, value.z, value.w };
         }
 
     private:
