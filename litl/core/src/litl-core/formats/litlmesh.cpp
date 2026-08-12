@@ -7,6 +7,39 @@
 
 namespace litl
 {
+    namespace
+    {
+        void serializeHeaderBounds(GeoMesh const& mesh, LitlMesh::Header& header) noexcept
+        {
+            vec3 meshMinPoint{};
+            vec3 meshMaxPoint{};
+
+            mesh.getMinMaxPoints(meshMinPoint, meshMaxPoint);
+
+            header.boundsMin = meshMinPoint.toArray();
+            header.boundsMax = meshMaxPoint.toArray();
+        }
+
+        template<typename T>
+        void serializeBlock(LitlMesh::BlockDescriptor& descriptor, size_t& runningBlockOffset, LitlMesh::BlockIdType const& id, std::span<T const> elements, uint32_t flags) noexcept
+        {
+            descriptor.blockId = id;
+            descriptor.elementBytes = static_cast<uint32_t>(sizeof(T));
+            descriptor.elementCount = static_cast<uint32_t>(elements.size());
+            descriptor.blockOffset = static_cast<uint32_t>(runningBlockOffset);
+            descriptor.blockBytes = static_cast<uint32_t>(sizeof(LitlMesh::Block) + static_cast<size_t>(descriptor.elementBytes * descriptor.elementCount));
+            descriptor.flags = flags;
+
+            runningBlockOffset += descriptor.blockBytes;
+        }
+
+        void runningCopy(void const* from, std::byte* to, size_t size, size_t& runningOffset) noexcept
+        {
+            std::memcpy(to + runningOffset, from, size);
+            runningOffset += size;
+        }
+    }
+
     // -------------------------------------------------------------------------------------
     // Parsing
     // -------------------------------------------------------------------------------------
@@ -140,39 +173,15 @@ namespace litl
     // Serialization
     // -------------------------------------------------------------------------------------
 
-    void serializeHeaderBounds(GeoMesh const& mesh, LitlMesh::Header& header) noexcept
-    {
-        vec3 meshMinPoint{};
-        vec3 meshMaxPoint{};
-
-        mesh.getMinMaxPoints(meshMinPoint, meshMaxPoint);
-
-        header.boundsMin = meshMinPoint.toArray();
-        header.boundsMax = meshMaxPoint.toArray();
-    }
-
-    template<typename T>
-    void serializeBlock(LitlMesh::BlockDescriptor& descriptor, size_t& runningBlockOffset, LitlMesh::BlockIdType const& id, std::span<T const> elements, uint32_t flags) noexcept
-    {
-        descriptor.blockId = id;
-        descriptor.elementBytes = static_cast<uint32_t>(sizeof(T));
-        descriptor.elementCount = static_cast<uint32_t>(elements.size());
-        descriptor.blockOffset = static_cast<uint32_t>(runningBlockOffset);
-        descriptor.blockBytes = static_cast<uint32_t>(sizeof(LitlMesh::Block) + static_cast<size_t>(descriptor.elementBytes * descriptor.elementCount));
-        descriptor.flags = flags;
-
-        runningBlockOffset += descriptor.blockBytes;
-    }
-
-    void runningCopy(void const* from, std::byte* to, size_t size, size_t& runningOffset) noexcept
-    {
-        std::memcpy(to + runningOffset, from, size);
-        runningOffset += size;
-    }
-
     bool LitlMesh::serialize(GeoMesh const& mesh, std::vector<std::byte>& data, ErrorCode& error) noexcept
     {
         error = ErrorCode::None;
+
+        if (mesh.vertices.empty() || mesh.indices.empty() || mesh.faceIndexCount.empty())
+        {
+            error = ErrorCode::SourceMeshEmpty;
+            return false;
+        }
 
         LitlMesh litlMesh{};
 
@@ -184,7 +193,7 @@ namespace litl
         litlMesh.header.versionMinor = Header::MinorVersion;
         litlMesh.header.contentHash = 0ull;        // to be computed later  (TODO)
         litlMesh.header.totalBytes = 0ull;         // to be computed later  (TODO)
-        litlMesh.header.blockCount = 2u;
+        litlMesh.header.blockCount = 3u;
         litlMesh.header.blocksOffset = static_cast<uint32_t>(sizeof(Header) + (sizeof(BlockDescriptor) * litlMesh.header.blockCount));
         litlMesh.header.flags = 0u;
         litlMesh.header.reserved = 0u;
@@ -196,10 +205,13 @@ namespace litl
 
         BlockDescriptor& vertexBlockDescriptor = litlMesh.descriptors[0];
         BlockDescriptor& indexBlockDescriptor = litlMesh.descriptors[1];
+        BlockDescriptor& faceBlockDescriptor = litlMesh.descriptors[2];
+
         size_t runningOffset = litlMesh.header.blocksOffset;
 
         serializeBlock<Vertex>(vertexBlockDescriptor, runningOffset, Ids::Vertices, mesh.vertices, 0u);
         serializeBlock<uint32_t>(indexBlockDescriptor, runningOffset, Ids::Indices, mesh.indices, 0u);
+        serializeBlock<uint32_t>(indexBlockDescriptor, runningOffset, Ids::Faces, mesh.faceIndexCount, 0u);
 
         if (runningOffset > static_cast<size_t>(std::numeric_limits<uint32_t>::max()))
         {
@@ -219,8 +231,11 @@ namespace litl
 
         runningCopy(&vertexBlockDescriptor, data.data(), sizeof(BlockDescriptor), runningOffset);
         runningCopy(&indexBlockDescriptor, data.data(), sizeof(BlockDescriptor), runningOffset);
+        runningCopy(&faceBlockDescriptor, data.data(), sizeof(BlockDescriptor), runningOffset);
+
         runningCopy(mesh.vertices.data(), data.data(), vertexBlockDescriptor.blockBytes, runningOffset);
         runningCopy(mesh.indices.data(), data.data(), indexBlockDescriptor.blockBytes, runningOffset);
+        runningCopy(mesh.faceIndexCount.data(), data.data(), indexBlockDescriptor.blockBytes, runningOffset);
 
         litlMesh.header.contentHash = hashSubarray(std::span<std::byte const>(data), sizeof(Header), data.size() - sizeof(Header));
 
@@ -251,7 +266,7 @@ namespace litl
     // Utility
     // -------------------------------------------------------------------------------------
 
-    std::optional<LitlMesh::Block> LitlMesh::find(std::array<char, 4> id) const noexcept
+    std::optional<LitlMesh::Block> LitlMesh::find(BlockIdType id) const noexcept
     {
         for (auto& descriptor : descriptors)
         {

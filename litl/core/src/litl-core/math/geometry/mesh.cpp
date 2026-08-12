@@ -2,6 +2,14 @@
 
 namespace litl
 {
+    void GeoMesh::setAllFaceIndexCounts(uint32_t count) noexcept
+    {
+        uint32_t const faceCount = static_cast<uint32_t>(indices.size()) / count;
+
+        faceIndexCount.clear();
+        faceIndexCount.resize(faceCount, count);
+    }
+
     void GeoMesh::getMinMaxPoints(vec3& minPoint, vec3& maxPoint) const noexcept
     {
         if (vertices.empty())
