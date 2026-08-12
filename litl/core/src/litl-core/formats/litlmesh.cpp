@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <cstring>
 #include <limits>
-#include <ranges>
 
 #include "litl-core/hash.hpp"
 #include "litl-core/math/common.hpp"
@@ -15,7 +14,7 @@ namespace litl
     {
         struct BlockData
         {
-            LitlMesh::BlockDescriptor& descriptor;
+            LitlMesh::BlockDescriptor* descriptor;
             LitlMesh::BlockIdType id;
             size_t elementSize;
             std::span<std::byte const> data;
@@ -32,25 +31,19 @@ namespace litl
             header.boundsMax = meshMaxPoint.toArray();
         }
 
-        void serializeBlock(BlockData& data, size_t runningBlockOffset) noexcept
+        void serializeBlock(BlockData& data, size_t& runningBlockOffset) noexcept
         {
             // Ensure our offsets remain a multiple of 16
             runningBlockOffset = alignMemoryOffsetUp(runningBlockOffset, 16);
 
-            data.descriptor.blockId = data.id;
-            data.descriptor.elementBytes = data.elementSize;
-            data.descriptor.elementCount = data.data.size() / data.elementSize;
-            data.descriptor.blockOffset = static_cast<uint32_t>(runningBlockOffset);
-            data.descriptor.blockBytes = data.data.size();
-            data.descriptor.flags = 0u;
+            data.descriptor->blockId = data.id;
+            data.descriptor->elementBytes = static_cast<uint32_t>(data.elementSize);
+            data.descriptor->elementCount = static_cast<uint32_t>(data.data.size() / data.elementSize);
+            data.descriptor->blockOffset = static_cast<uint32_t>(runningBlockOffset);
+            data.descriptor->blockBytes = static_cast<uint32_t>(data.data.size());
+            data.descriptor->flags = 0u;
 
-            runningBlockOffset += data.descriptor.blockBytes;
-        }
-
-        void runningCopy(void const* from, std::byte* to, size_t size, size_t& runningOffset) noexcept
-        {
-            std::memcpy(to + runningOffset, from, size);
-            runningOffset += size;
+            runningBlockOffset += data.descriptor->blockBytes;
         }
     }
 
@@ -147,6 +140,7 @@ namespace litl
 
         BinaryBlobReader reader({ data.data() + sizeof(Header), descriptorBytes });
         BlockDescriptor currDescriptor{};
+        uint32_t prevBlockEnd = 0u;
 
         for (uint32_t i = 0u; i < parsed.header.blockCount; ++i)
         {
@@ -168,6 +162,12 @@ namespace litl
                 return false;
             }
 
+            if (currDescriptor.elementBytes == 0u)
+            {
+                error = ErrorCode::ElementSizeOfZero;
+                return false;
+            }
+
             if ((uint64_t{ currDescriptor.elementBytes } * currDescriptor.elementCount) != currDescriptor.blockBytes)
             {
                 error = ErrorCode::BlockSizeMismatch;
@@ -175,9 +175,22 @@ namespace litl
             }
 
             parsed.descriptors[i] = currDescriptor;
+
+            if ((currDescriptor.blockOffset % 16) != 0)
+            {
+                error = ErrorCode::InvalidBlockOffset;
+                return false;
+            }
+
+            if (currDescriptor.blockOffset < prevBlockEnd)
+            {
+                error = ErrorCode::BlockOverlap;
+                return false;
+            }
+
+            prevBlockEnd = currDescriptor.blockOffset + currDescriptor.blockBytes;
         }
 
-        parsed.descriptorCount = parsed.header.blockCount;
         parsed.data = data;
         file = parsed;
         return true;
@@ -200,10 +213,25 @@ namespace litl
         LitlMesh litlMesh{};
 
         std::array<BlockData, 3> blockDataTable {
-            BlockData { litlMesh.descriptors[0], Ids::Vertices, sizeof(Vertex), as_byte_span(mesh.vertices) },
-            BlockData { litlMesh.descriptors[1], Ids::Indices, sizeof(uint32_t), as_byte_span(mesh.indices) },
-            BlockData { litlMesh.descriptors[2], Ids::Faces, sizeof(uint32_t), as_byte_span(mesh.faceIndexCount) }
+            BlockData { &litlMesh.descriptors[0], Ids::Vertices, sizeof(Vertex), as_byte_span(mesh.vertices) },
+            BlockData { &litlMesh.descriptors[1], Ids::Indices, sizeof(uint32_t), as_byte_span(mesh.indices) },
+            BlockData { &litlMesh.descriptors[2], Ids::Faces, sizeof(uint32_t), as_byte_span(mesh.faceIndexCount) }
         };
+
+        for (auto& blockData : blockDataTable)
+        {
+            if (blockData.elementSize == 0ull)
+            {
+                error = ErrorCode::ElementSizeOfZero;
+                return false;
+            }
+
+            if (blockData.data.size() % blockData.elementSize != 0)
+            {
+                error = ErrorCode::ElementBlockIsNotWhole;
+                return false;
+            }
+        }
 
         // ---------------------------------------------------------------------------------
         // Populate Header (most of it)
@@ -213,7 +241,7 @@ namespace litl
         litlMesh.header.versionMinor = Header::MinorVersion;
         litlMesh.header.contentHash = 0ull;         // calculated further on
         litlMesh.header.totalBytes = 0u;            // calculated further on
-        litlMesh.header.blockCount = uint32_t{ blockDataTable.size() };
+        litlMesh.header.blockCount = static_cast<uint32_t>(blockDataTable.size());
         litlMesh.header.blocksOffset = static_cast<uint32_t>(sizeof(Header) + (sizeof(BlockDescriptor) * litlMesh.header.blockCount));
         litlMesh.header.flags = 0u;                 // currently unused
         litlMesh.header.reserved = 0u;              // intentional padding
@@ -227,22 +255,7 @@ namespace litl
 
         for (uint32_t i = 0; i < litlMesh.header.blockCount; ++i)
         {
-            const size_t blockOffsetStart = runningOffset;
             serializeBlock(blockDataTable[i], runningOffset);
-            const size_t blockOffsetEnd = runningOffset;
-
-            for (uint32_t j = 0; j < i; ++j)
-            {
-                const size_t otherBlockOffsetStart = blockDataTable[j].descriptor.blockOffset;
-                const size_t otherBlockOffsetEnd = otherBlockOffsetStart + blockDataTable[j].descriptor.blockBytes;
-
-                if (between(blockOffsetStart, otherBlockOffsetStart, otherBlockOffsetEnd) || 
-                    between(blockOffsetEnd, otherBlockOffsetStart, otherBlockOffsetEnd))
-                {
-                    error = ErrorCode::BlockOverlap;
-                    return false;
-                }
-            }
         }
 
         if (runningOffset > size_t{ std::numeric_limits<uint32_t>::max() })
@@ -259,16 +272,14 @@ namespace litl
         data.resize(litlMesh.header.totalBytes);
         std::fill(data.begin(), data.end(), std::byte(0));
 
-        runningOffset = sizeof(Header);
-
-        for (auto& blockData : blockDataTable)
+        for (size_t i = 0ull; i < blockDataTable.size(); ++i)
         {
-            runningCopy(&blockData.descriptor, data.data(), sizeof(BlockDescriptor), runningOffset);
+            std::memcpy(data.data() + sizeof(Header) + (sizeof(BlockDescriptor) * i), blockDataTable[i].descriptor, sizeof(BlockDescriptor));
         }
 
         for (auto& blockData : blockDataTable)
         {
-            runningCopy(blockData.data.data(), data.data(), blockData.data.size(), runningOffset);
+            std::memcpy(data.data() + blockData.descriptor->blockOffset, blockData.data.data(), blockData.data.size());
         }
 
         litlMesh.header.contentHash = hashSubarray(std::span<std::byte const>(data), sizeof(Header), data.size() - sizeof(Header));
