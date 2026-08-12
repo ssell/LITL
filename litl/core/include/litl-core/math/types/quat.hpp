@@ -4,6 +4,7 @@
 #include <cassert>
 #include <format>
 #include <string>
+#include <type_traits>
 
 #include "litl-core/math/glm.hpp"
 #include <glm/gtc/type_ptr.hpp>
@@ -22,7 +23,6 @@ namespace litl
     struct quat
     {
         constexpr quat() noexcept {}
-        constexpr quat(quat const& other) noexcept : value(other.value) {}
         constexpr explicit quat(glm::quat const& other) noexcept : value(other) {}
         constexpr quat(float w, float x, float y, float z) noexcept : value(w, x, y, z) {}
         explicit quat(mat3 const& matrix) noexcept;
@@ -336,6 +336,7 @@ namespace litl
     static_assert(std::is_nothrow_move_constructible_v<quat>);
     static_assert(std::is_nothrow_copy_assignable_v<quat>);
     static_assert(std::is_nothrow_move_assignable_v<quat>);
+    static_assert(std::is_trivially_copyable_v<quat>);
 }
 
 LITL_REGISTER_TYPE_NAME(litl::quat)

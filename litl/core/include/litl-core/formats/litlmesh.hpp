@@ -84,19 +84,14 @@ namespace litl
             BlockSizeMismatch = 11u,
 
             /// <summary>
-            /// The final bytes of the serialized data do not match the expected pre-calculated size.
-            /// </summary>
-            SerializationSizeMismatch = 12u,
-
-            /// <summary>
             /// The calculated total bytes of the file exceed 2^32-1 (4GB).
             /// </summary>
-            ContentTooLarge = 13u,
+            ContentTooLarge = 12u,
 
             /// <summary>
             /// The source mesh is missing either vertices, indices, face index counts, or a combination thereof.
             /// </summary>
-            SourceMeshEmpty = 14u
+            SourceMeshEmpty = 13u
         };
 
         struct Ids
@@ -188,7 +183,7 @@ namespace litl
             /// <summary>
             /// Currently unused padding.
             /// </summary>
-            uint32_t reserved{ 0u };
+            uint64_t reserved{ 0u };
 
             /// <summary>
             /// Returns if the contents of the header are valid.
@@ -233,9 +228,14 @@ namespace litl
             /// Optional block-specific flags.
             /// </summary>
             uint32_t flags{ 0u };
+
+            /// <summary>
+            /// Currently unused padding.
+            /// </summary>
+            uint64_t reserved{ 0ull };
         };
 
-        static_assert(sizeof(BlockDescriptor) == 24u);
+        static_assert(sizeof(BlockDescriptor) == 32u);
 
         struct Block
         {

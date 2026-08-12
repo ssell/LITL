@@ -5,6 +5,7 @@
 #include <cassert>
 #include <format>
 #include <string>
+#include <type_traits>
 
 #include "litl-core/math/glm.hpp"
 #include <glm/gtc/type_ptr.hpp>
@@ -18,8 +19,7 @@ namespace litl
 
     struct vec4
     {
-        constexpr vec4() noexcept {}
-        constexpr vec4(vec4 const& other) noexcept : value(other.value) {}
+        constexpr vec4() noexcept : value{ 0.0f, 0.0f, 0.0f, 1.0f } {}
         constexpr explicit vec4(float xyzw) noexcept : value{ xyzw, xyzw, xyzw, xyzw } {}
         constexpr explicit vec4(glm::vec4 const& other) noexcept : value(other) {}
         constexpr explicit vec4(std::array<float, 4u> const& arr) : value{ arr[0], arr[1], arr[2], arr[3] } {}
@@ -354,6 +354,7 @@ namespace litl
     static_assert(std::is_nothrow_move_constructible_v<vec4>);
     static_assert(std::is_nothrow_copy_assignable_v<vec4>);
     static_assert(std::is_nothrow_move_assignable_v<vec4>);
+    static_assert(std::is_trivially_copyable_v<vec4>);
 }
 
 LITL_REGISTER_TYPE_NAME(litl::vec4)

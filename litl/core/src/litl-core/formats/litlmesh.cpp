@@ -1,7 +1,8 @@
+#include <algorithm>
 #include <cstring>
+#include <limits>
 
 #include "litl-core/hash.hpp"
-#include "litl-core/containers/common.hpp"
 #include "litl-core/formats/litlmesh.hpp"
 #include "litl-core/formats/binaryBlobReader.hpp"
 
@@ -27,7 +28,7 @@ namespace litl
             descriptor.elementBytes = static_cast<uint32_t>(sizeof(T));
             descriptor.elementCount = static_cast<uint32_t>(elements.size());
             descriptor.blockOffset = static_cast<uint32_t>(runningBlockOffset);
-            descriptor.blockBytes = static_cast<uint32_t>(sizeof(LitlMesh::Block) + static_cast<size_t>(descriptor.elementBytes * descriptor.elementCount));
+            descriptor.blockBytes = static_cast<size_t>(descriptor.elementBytes) * descriptor.elementCount;
             descriptor.flags = flags;
 
             runningBlockOffset += descriptor.blockBytes;
@@ -213,7 +214,7 @@ namespace litl
         serializeBlock<uint32_t>(indexBlockDescriptor, runningOffset, Ids::Indices, mesh.indices, 0u);
         serializeBlock<uint32_t>(indexBlockDescriptor, runningOffset, Ids::Faces, mesh.faceIndexCount, 0u);
 
-        if (runningOffset > static_cast<size_t>(std::numeric_limits<uint32_t>::max()))
+        if (runningOffset > size_t{ std::numeric_limits<uint32_t>::max() })
         {
             error = ErrorCode::ContentTooLarge;
             return false;
@@ -235,18 +236,11 @@ namespace litl
 
         runningCopy(mesh.vertices.data(), data.data(), vertexBlockDescriptor.blockBytes, runningOffset);
         runningCopy(mesh.indices.data(), data.data(), indexBlockDescriptor.blockBytes, runningOffset);
-        runningCopy(mesh.faceIndexCount.data(), data.data(), indexBlockDescriptor.blockBytes, runningOffset);
+        runningCopy(mesh.faceIndexCount.data(), data.data(), faceBlockDescriptor.blockBytes, runningOffset);
 
         litlMesh.header.contentHash = hashSubarray(std::span<std::byte const>(data), sizeof(Header), data.size() - sizeof(Header));
 
         std::memcpy(data.data(), &litlMesh.header, sizeof(Header));
-
-        if (static_cast<size_t>(litlMesh.header.totalBytes) != data.size())
-        {
-            data.clear();
-            error = ErrorCode::SerializationSizeMismatch;
-            return false;
-        }
 
         return true;
     }
@@ -268,21 +262,21 @@ namespace litl
 
     std::optional<LitlMesh::Block> LitlMesh::find(BlockIdType id) const noexcept
     {
-        for (auto& descriptor : descriptors)
+        for (uint32_t i = 0u; i < header.blockCount; ++i)
         {
+            auto& descriptor = descriptors[i];
+
             if (descriptor.blockId == id)
             {
-                if (static_cast<size_t>(descriptor.blockOffset + descriptor.blockBytes) < data.size())
-                {
-                    return Block {
-                        .blockId = descriptor.blockId,
-                        .elementBytes = descriptor.elementBytes,
-                        .elementCount = descriptor.elementCount,
-                        .bytes = std::span<std::byte const>{ data.data() + descriptor.blockOffset, descriptor.blockBytes }
-                    };
-                }
+                return Block{
+                    .blockId = descriptor.blockId,
+                    .elementBytes = descriptor.elementBytes,
+                    .elementCount = descriptor.elementCount,
+                    .bytes = std::span<std::byte const>{ data.data() + descriptor.blockOffset, descriptor.blockBytes }
+                };
             }
         }
+
         return std::nullopt;
     }
 }
