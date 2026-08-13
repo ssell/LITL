@@ -52,81 +52,100 @@ namespace litl
             /// </summary>
             ContentHashMismatch = 5u,
 
+            InvalidFirstDescriptorOffset = 6u,
+
             /// <summary>
             /// The offset of the first data block is invalid. It is either too small and intersects
             /// with the header, or the offset is not a multiple of 16 as expected.
             /// </summary>
-            InvalidFirstBlockOffset = 6u,
+            InvalidFirstBlockOffset = 7u,
 
             /// <summary>
             /// The declared number of data blocks exceeds the maximum number of supported blocks.
             /// </summary>
-            TooManyBlocks = 7u,
+            TooManyBlocks = 8u,
+
+            /// <summary>
+            /// This file, which should have blocks, has none. Where are they?
+            /// </summary>
+            WhereTheBlocksAt = 9u,
 
             /// <summary>
             /// There are fewer block descriptors than the declared number of data blocks.
             /// </summary>
-            MissingBlockDescriptor = 8u,
+            MissingBlockDescriptor = 10u,
 
             /// <summary>
             /// The start or end of the descriptor block is out-of-bounds of the file.
             /// </summary>
-            DescriptorBlockOutOfBounds = 9u,
+            DescriptorBlockOutOfBounds = 11u,
 
             /// <summary>
             /// The start or end of the data block is out-of-bounds of the file.
             /// </summary>
-            BlockSizeOutOfBounds = 10u,
+            BlockSizeOutOfBounds = 12u,
 
             /// <summary>
             /// The declared size of the block in the descriptor does not match the actual size of the block.
             /// </summary>
-            BlockSizeMismatch = 11u,
+            BlockSizeMismatch = 13u,
 
             /// <summary>
             /// Two or more blocks overlap their declared memory ranges.
             /// </summary>
-            BlockOverlap = 12u,
-
-            /// <summary>
-            /// The calculated total bytes of the file exceed 2^32-1 (4GB).
-            /// </summary>
-            ContentTooLarge = 13u,
+            BlockOverlap = 14u,
 
             /// <summary>
             /// The source mesh is missing either vertices, indices, face index counts, or a combination thereof.
             /// </summary>
-            SourceMeshEmpty = 14u,
+            SourceMeshEmpty = 15u,
 
             /// <summary>
             /// The size of the provided type does not match the expected element size.
             /// </summary>
-            ElementSizeMismatch = 15u,
+            ElementSizeMismatch = 16u,
 
             /// <summary>
             /// The total size of the element block does not match the expected element block size.
             /// </summary>
-            ElementBlockSizeMismatch = 16u,
+            ElementBlockSizeMismatch = 17u,
 
             /// <summary>
             /// The alignment of the provided type is not a multiple of 16, which is required.
             /// </summary>
-            ElementOffsetAlignmentMismatch = 17u,
+            ElementOffsetAlignmentMismatch = 18u,
 
             /// <summary>
             /// One or more elements have a size of zero.
             /// </summary>
-            ElementSizeOfZero = 18u,
+            ElementSizeOfZero = 19u,
 
             /// <summary>
             /// The size of the block of elements is not evenly divisible by the size of an individual element.
             /// </summary>
-            ElementBlockIsNotWhole = 19u,
+            ElementBlockIsNotWhole = 20u,
 
             /// <summary>
             /// One (or more) of the blocks have an invalid offset which is not evenly divisible by 16.
             /// </summary>
-            InvalidBlockOffset = 20u
+            InvalidBlockOffset = 21u,
+
+            /// <summary>
+            /// Input file is missing a vertex data block.
+            /// </summary>
+            MissingVertexBlock = 22u,
+
+            /// <summary>
+            /// Input file is missing an index data block.
+            /// </summary>
+            MissingIndexBlock = 23u,
+
+            /// <summary>
+            /// Input file is missing a face data block.
+            /// </summary>
+            MissingFaceBlock = 24u,
+
+            InvalidIndexFound = 25u
         };
 
         struct Ids
@@ -223,21 +242,20 @@ namespace litl
             std::array<float, 3> boundsMax = { 0.0f, 0.0f, 0.0f };
 
             /// <summary>
+            /// Padding to ensure the Header size is equal to a multiple of 32.
+            /// </summary>
+            std::array<uint64_t, 3> padding{};
+
+            /// <summary>
             /// Returns if the contents of the header are valid.
             /// </summary>
             /// <param name="error"></param>
             [[nodiscard]] bool validate(ErrorCode& error) const noexcept;
-
-        private:
-
-            /// <summary>
-            /// Padding to ensure the Header size is equal to a multiple of 32.
-            /// </summary>
-            std::array<uint64_t, 3> padding{};
         };
 
-        static_assert((sizeof(Header) % 32) == 0);
-        static_assert(alignof(Header) == 8u);
+        static_assert(sizeof(Header) == 96);
+        static_assert(alignof(Header) == 8);
+        static_assert(std::is_standard_layout_v<Header>);
 
         /// <summary>
         /// Describes the contents of a single block in the file.
@@ -248,6 +266,11 @@ namespace litl
             /// Unique id of the block. Must match one of the predefined block ids (see Ids) or it will be skipped over during deserialization.
             /// </summary>
             BlockIdType blockId{};
+
+            /// <summary>
+            /// Optional block-specific flags.
+            /// </summary>
+            uint32_t flags{ 0u };
 
             /// <summary>
             /// The offset from the start of the file to where the block (not the descriptor) lives.
@@ -270,20 +293,14 @@ namespace litl
             uint64_t elementCount{ 0ull };
 
             /// <summary>
-            /// Optional block-specific flags.
-            /// </summary>
-            uint32_t flags{ 0u };
-
-        private:
-
-            /// <summary>
             /// Padding to ensure the BlockDescriptor size is equal to a multiple of 32.
             /// </summary>
-            std::array<uint64_t, 2> padding{};
+            std::array<uint64_t, 3> padding{};
         };
 
-        static_assert((sizeof(BlockDescriptor) % 32) == 0);
-        static_assert(alignof(BlockDescriptor) == 8u);
+        static_assert(sizeof(BlockDescriptor) == 64);
+        static_assert(alignof(BlockDescriptor) == 8);
+        static_assert(std::is_standard_layout_v<BlockDescriptor>);
 
         /// <summary>
         /// View and metadata for a contiguous block of memory within the file.

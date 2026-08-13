@@ -18,6 +18,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
+# ^ this would be nice, but multiple dependencies (VMA, rapidobj, etc.) currently have warnings that break compilation ...
+
 # ------------------------------------------------------------------------------------------
 # -- Shared Common and Deps
 # ------------------------------------------------------------------------------------------
