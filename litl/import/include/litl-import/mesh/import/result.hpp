@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include "litl-core/math/geometry/mesh.hpp"
+#include "litl-core/math/geometry/geoMesh.hpp"
 #include "litl-import/mesh/import/summary.hpp"
 
 namespace litl::import

@@ -8,7 +8,7 @@
 #include <span>
 #include <vector>
 
-#include "litl-core/math/geometry/mesh.hpp"
+#include "litl-core/math/geometry/geoMesh.hpp"
 #include "litl-core/formats/binaryBlockFile.hpp"
 
 static_assert(std::endian::native == std::endian::little);
