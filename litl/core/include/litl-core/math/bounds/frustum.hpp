@@ -2,6 +2,7 @@
 #define LITL_MATH_BOUNDS_FRUSTUM_H__
 
 #include <array>
+#include <type_traits>
 #include <utility>
 
 #include "litl-core/math/types/mat4.hpp"
@@ -313,6 +314,8 @@ namespace litl::bounds
         vec3 m_origin{};
         uint32_t m_sideCount{ 6 };
     };
+
+    static_assert(std::is_trivially_copyable_v<Frustum>);
 }
 
 #endif

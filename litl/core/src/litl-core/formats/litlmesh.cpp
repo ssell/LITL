@@ -25,17 +25,24 @@ namespace litl
             /// Id for a block of face index count data - FACE
             /// </summary>
             static constexpr BinaryBlockFile::BlockIdType Faces{ 'F', 'A', 'C', 'E' };
+
+            /// <summary>
+            /// Id for a block that describes the min/max points of a mesh AABB bounds - BNDS.
+            /// </summary>
+            static constexpr BinaryBlockFile::BlockIdType Bounds{ 'B', 'N', 'D', 'S' };
         };
 
-        void serializeHeaderBounds(GeoMesh const& mesh, LitlMesh::Header& header) noexcept
+        void serializeHeaderBounds(GeoMesh const& mesh, std::array<float, 6>& boundsMinMaxPoints) noexcept
         {
-            vec3 meshMinPoint{};
-            vec3 meshMaxPoint{};
+            const auto& bounds = mesh.getBounds();
 
-            mesh.getMinMaxPoints(meshMinPoint, meshMaxPoint);
+            boundsMinMaxPoints[0] = bounds.min.x();
+            boundsMinMaxPoints[1] = bounds.min.y();
+            boundsMinMaxPoints[2] = bounds.min.z();
 
-            header.boundsMin = meshMinPoint.toArray();
-            header.boundsMax = meshMaxPoint.toArray();
+            boundsMinMaxPoints[3] = bounds.max.x();
+            boundsMinMaxPoints[4] = bounds.max.y();
+            boundsMinMaxPoints[5] = bounds.max.z();
         }
     }
 
@@ -57,7 +64,7 @@ namespace litl
 
         error = ErrorCode::None;
 
-        if (mesh.vertices.empty() || mesh.indices.empty() || mesh.faceIndexCount.empty())
+        if (mesh.vertexCount() == 0 || mesh.indexCount() == 0 || mesh.faceCount() == 0)
         {
             error = ErrorCode::SourceMeshEmpty;
             return false;
@@ -65,10 +72,14 @@ namespace litl
 
         LitlMesh litlMesh{};
 
-        std::array<BlockDataDescriptor, 3> blockDataTable {
-            BlockDataDescriptor { &litlMesh.descriptors[0], LitlMeshIds::Vertices, sizeof(Vertex), as_byte_span(mesh.vertices) },
-            BlockDataDescriptor { &litlMesh.descriptors[1], LitlMeshIds::Indices, sizeof(uint32_t), as_byte_span(mesh.indices) },
-            BlockDataDescriptor { &litlMesh.descriptors[2], LitlMeshIds::Faces, sizeof(uint32_t), as_byte_span(mesh.faceIndexCount) }
+        std::array<float, 6> boundsMinMaxPoints{};
+        serializeHeaderBounds(mesh, boundsMinMaxPoints);
+
+        std::array<BlockDataDescriptor, 4> blockDataTable {
+            BlockDataDescriptor { &litlMesh.descriptors[0], LitlMeshIds::Bounds, sizeof(float), as_byte_span(boundsMinMaxPoints) },
+            BlockDataDescriptor { &litlMesh.descriptors[1], LitlMeshIds::Vertices, sizeof(Vertex), as_byte_span(mesh.getVertices()) },
+            BlockDataDescriptor { &litlMesh.descriptors[2], LitlMeshIds::Indices, sizeof(uint32_t), as_byte_span(mesh.getIndices()) },
+            BlockDataDescriptor { &litlMesh.descriptors[3], LitlMeshIds::Faces, sizeof(uint32_t), as_byte_span(mesh.getFaceIndexCounts()) },
         };
 
         static_assert(std::tuple_size_v<decltype(blockDataTable)> <= MaxBlocks);
@@ -100,8 +111,6 @@ namespace litl
         litlMesh.header.descriptorsOffset = sizeof(Header);
         litlMesh.header.blocksOffset = litlMesh.header.descriptorsOffset + (sizeof(BlockDescriptor) * litlMesh.header.blockCount);
         litlMesh.header.flags = 0u;                 // currently unused
-
-        serializeHeaderBounds(mesh, litlMesh.header);
 
         // ---------------------------------------------------------------------------------
         // Populate BlockDescriptors
@@ -149,6 +158,7 @@ namespace litl
         auto vertexBlock = find(LitlMeshIds::Vertices);
         auto indexBlock = find(LitlMeshIds::Indices);
         auto faceBlock = find(LitlMeshIds::Faces);
+        auto boundsBlock = find(LitlMeshIds::Bounds);
 
         if (!vertexBlock.has_value())
         {
@@ -165,6 +175,12 @@ namespace litl
         if (!faceBlock.has_value())
         {
             error = ErrorCode::MissingFaceBlock;
+            return false;
+        }
+
+        if (!boundsBlock.has_value())
+        {
+            error = ErrorCode::MissingBoundsBlock;
             return false;
         }
 
@@ -185,6 +201,13 @@ namespace litl
         auto faces = faceBlock.value().as<uint32_t>(error);
 
         if (!faces.has_value())
+        {
+            return false;
+        }
+
+        auto bounds = boundsBlock.value().as<float>(error);
+
+        if (!bounds.has_value())
         {
             return false;
         }
@@ -223,9 +246,16 @@ namespace litl
             return false;
         }
 
-        mesh.vertices.assign(vertices->begin(), vertices->end());
-        mesh.indices.assign(indices->begin(), indices->end());
-        mesh.faceIndexCount.assign(faces->begin(), faces->end());
+        if (bounds->size() != 6ull)
+        {
+            error = ErrorCode::InvalidBoundsValues;
+            return false;
+        }
+
+        mesh.setVertices(vertices.value());
+        mesh.setIndices(indices.value());
+        mesh.setFaceIndexCounts(faces.value());
+        mesh.setBoundsMinMax(vec3{ bounds.value()[0], bounds.value()[1], bounds.value()[2] }, vec3{ bounds.value()[3], bounds.value()[4], bounds.value()[5] });
 
         return true;
     }

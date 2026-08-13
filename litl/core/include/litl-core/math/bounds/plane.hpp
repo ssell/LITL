@@ -1,6 +1,8 @@
 #ifndef LITL_MATH_BOUNDS_PLANE_H__
 #define LITL_MATH_BOUNDS_PLANE_H__
 
+#include <type_traits>
+
 #include "litl-core/math/bounds/intersectionResult.hpp"
 #include "litl-core/math/traits.hpp"
 #include "litl-core/math/types/vec3.hpp"
@@ -174,6 +176,8 @@ namespace litl::bounds
 
         return result;
     }
+
+    static_assert(std::is_trivially_copyable_v<Plane>);
 }
 
 #endif
