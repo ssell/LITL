@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <cstring>
-#include <limits>
 
 #include "litl-core/hash.hpp"
 #include "litl-core/math/common.hpp"
@@ -82,13 +81,25 @@ namespace litl
             return false;
         }
 
+        if (blockCount == 0u)
+        {
+            error = ErrorCode::WhereTheBlocksAt;
+            return false;
+        }
+
         if (blockCount > MaxBlocks)
         {
             error = ErrorCode::TooManyBlocks;
             return false;
         }
 
-        if (blocksOffset != (sizeof(Header) + (blockCount * sizeof(BlockDescriptor))))
+        if ((descriptorsOffset < sizeof(Header)) || (descriptorsOffset > totalBytes))
+        {
+            error = ErrorCode::InvalidFirstDescriptorOffset;
+            return false;
+        }
+
+        if (blocksOffset != (descriptorsOffset + (blockCount * sizeof(BlockDescriptor))))
         {
             error = ErrorCode::InvalidFirstBlockOffset;
             return false;
@@ -137,7 +148,7 @@ namespace litl
 
         auto const descriptorBytes = uint64_t{ parsed.header.blockCount } * sizeof(BlockDescriptor);
 
-        if (data.size() < (parsed.header.descriptorsOffset + descriptorBytes))
+        if (descriptorBytes > (parsed.header.totalBytes - parsed.header.descriptorsOffset))
         {
             error = ErrorCode::InvalidFileSize;
             return false;
@@ -145,7 +156,7 @@ namespace litl
 
         BinaryBlobReader reader({ data.data() + parsed.header.descriptorsOffset, descriptorBytes });
         BlockDescriptor currDescriptor{};
-        uint32_t prevBlockEnd = 0u;
+        uint64_t prevBlockEnd = 0u;
 
         for (uint32_t i = 0u; i < parsed.header.blockCount; ++i)
         {
@@ -179,8 +190,6 @@ namespace litl
                 return false;
             }
 
-            parsed.descriptors[i] = currDescriptor;
-
             if ((currDescriptor.blockOffset % 16) != 0)
             {
                 error = ErrorCode::InvalidBlockOffset;
@@ -193,6 +202,7 @@ namespace litl
                 return false;
             }
 
+            parsed.descriptors[i] = currDescriptor;
             prevBlockEnd = currDescriptor.blockOffset + currDescriptor.blockBytes;
         }
 
@@ -223,6 +233,8 @@ namespace litl
             BlockData { &litlMesh.descriptors[2], Ids::Faces, sizeof(uint32_t), as_byte_span(mesh.faceIndexCount) }
         };
 
+        static_assert(std::tuple_size_v<decltype(blockDataTable)> <= MaxBlocks);
+
         for (auto& blockData : blockDataTable)
         {
             if (blockData.elementSize == 0ull)
@@ -246,7 +258,7 @@ namespace litl
         litlMesh.header.versionMinor = Header::MinorVersion;
         litlMesh.header.contentHash = 0ull;         // calculated further on
         litlMesh.header.totalBytes = 0u;            // calculated further on
-        litlMesh.header.blockCount = blockDataTable.size();
+        litlMesh.header.blockCount = static_cast<uint32_t>(blockDataTable.size());
         litlMesh.header.descriptorsOffset = sizeof(Header);
         litlMesh.header.blocksOffset = litlMesh.header.descriptorsOffset + (sizeof(BlockDescriptor) * litlMesh.header.blockCount);
         litlMesh.header.flags = 0u;                 // currently unused
@@ -295,8 +307,77 @@ namespace litl
     bool LitlMesh::deserialize(GeoMesh& mesh, ErrorCode& error) const noexcept
     {
         error = ErrorCode::None;
-        // ... todo ...
-        return false;
+
+        auto vertexBlock = find(Ids::Vertices);
+        auto indexBlock = find(Ids::Indices);
+        auto faceBlock = find(Ids::Faces);
+
+        if (!vertexBlock.has_value())
+        {
+            error = ErrorCode::MissingVertexBlock;
+            return false;
+        }
+
+        if (!indexBlock.has_value())
+        {
+            error = ErrorCode::MissingIndexBlock;
+            return false;
+        }
+
+        if (!faceBlock.has_value())
+        {
+            error = ErrorCode::MissingFaceBlock;
+            return false;
+        }
+
+        auto vertices = vertexBlock.value().as<Vertex>(error);
+
+        if (!vertices.has_value())
+        {
+            return false;
+        }
+
+        auto indices = indexBlock.value().as<uint32_t>(error);
+
+        if (!indices.has_value())
+        {
+            return false;
+        }
+
+        auto faces = faceBlock.value().as<uint32_t>(error);
+
+        if (!faces.has_value())
+        {
+            return false;
+        }
+
+        for (auto index : indices.value())
+        {
+            if (index >= vertexBlock.value().elementCount)
+            {
+                error = ErrorCode::InvalidIndexFound;
+                return false;
+            }
+        }
+
+        uint32_t sumFaceIndexCount = 0u;
+
+        for (auto faceCount : faces.value())
+        {
+            sumFaceIndexCount += faceCount;
+        }
+
+        if (sumFaceIndexCount != indexBlock.value().elementCount)
+        {
+            error = ErrorCode::InvalidFaceSum;
+            return false;
+        }
+
+        mesh.vertices.assign(vertices->begin(), vertices->end());
+        mesh.indices.assign(indices->begin(), indices->end());
+        mesh.faceIndexCount.assign(faces->begin(), faces->end());
+
+        return true;
     }
 
     // -------------------------------------------------------------------------------------
