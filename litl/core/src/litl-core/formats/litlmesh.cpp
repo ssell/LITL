@@ -353,21 +353,33 @@ namespace litl
 
         for (auto index : indices.value())
         {
-            if (index >= vertexBlock.value().elementCount)
+            if (index >= vertices->size())
             {
                 error = ErrorCode::InvalidIndexFound;
                 return false;
             }
         }
 
-        uint32_t sumFaceIndexCount = 0u;
+        uint64_t sumFaceIndexCount = 0u;
 
         for (auto faceCount : faces.value())
         {
+            if (faceCount == 0u)
+            {
+                error = ErrorCode::ZeroFaceFound;
+                return false;
+            }
+
             sumFaceIndexCount += faceCount;
+
+            if (sumFaceIndexCount > indices->size())
+            {
+                error = ErrorCode::InvalidFaceSum;
+                return false;
+            }
         }
 
-        if (sumFaceIndexCount != indexBlock.value().elementCount)
+        if (sumFaceIndexCount != indices->size())
         {
             error = ErrorCode::InvalidFaceSum;
             return false;
