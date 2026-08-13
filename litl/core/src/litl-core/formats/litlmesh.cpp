@@ -2,21 +2,29 @@
 #include <cstring>
 
 #include "litl-core/hash.hpp"
-#include "litl-core/math/common.hpp"
 #include "litl-core/containers/common.hpp"
 #include "litl-core/formats/litlmesh.hpp"
-#include "litl-core/formats/binaryBlobReader.hpp"
 
 namespace litl
 {
     namespace
     {
-        struct BlockData
+        struct LitlMeshIds
         {
-            LitlMesh::BlockDescriptor* descriptor;
-            LitlMesh::BlockIdType id;
-            uint64_t elementSize;
-            std::span<std::byte const> data;
+            /// <summary>
+            /// Id for a block of vertex data - VRTX
+            /// </summary>
+            static constexpr BinaryBlockFile::BlockIdType Vertices{ 'V', 'R', 'T', 'X' };
+
+            /// <summary>
+            /// Id for a block of index data - INDX
+            /// </summary>
+            static constexpr BinaryBlockFile::BlockIdType Indices{ 'I', 'N', 'D', 'X' };
+
+            /// <summary>
+            /// Id for a block of face index count data - FACE
+            /// </summary>
+            static constexpr BinaryBlockFile::BlockIdType Faces{ 'F', 'A', 'C', 'E' };
         };
 
         void serializeHeaderBounds(GeoMesh const& mesh, LitlMesh::Header& header) noexcept
@@ -29,186 +37,6 @@ namespace litl
             header.boundsMin = meshMinPoint.toArray();
             header.boundsMax = meshMaxPoint.toArray();
         }
-
-        void serializeBlock(BlockData& data, uint64_t& runningBlockOffset) noexcept
-        {
-            // Ensure our offsets remain a multiple of 16
-            runningBlockOffset = alignMemoryOffsetUp(runningBlockOffset, 16);
-
-            data.descriptor->blockId = data.id;
-            data.descriptor->elementBytes = data.elementSize;
-            data.descriptor->elementCount = data.data.size() / data.elementSize;
-            data.descriptor->blockOffset = runningBlockOffset;
-            data.descriptor->blockBytes = data.data.size();
-            data.descriptor->flags = 0u;
-
-            runningBlockOffset += data.descriptor->blockBytes;
-        }
-
-        uint64_t calculateContentHash(std::span<std::byte const> data, LitlMesh::Header const& header) noexcept
-        {
-            return hashSubarray(data, sizeof(LitlMesh::Header), (header.totalBytes - sizeof(LitlMesh::Header)));
-        }
-    }
-
-    // -------------------------------------------------------------------------------------
-    // Parsing
-    // -------------------------------------------------------------------------------------
-
-    bool LitlMesh::Header::validate(ErrorCode& error) const noexcept
-    {
-        if (magic != Ids::Magic)
-        {
-            error = ErrorCode::InvalidFileType;
-            return false;
-        }
-
-        if (versionMajor != Header::MajorVersion)
-        {
-            error = ErrorCode::MajorVersionMismatch;
-            return false;
-        }
-
-        if (versionMinor > Header::MinorVersion)
-        {
-            error = ErrorCode::MinorVersionMismatch;
-            return false;
-        }
-
-        if (totalBytes < sizeof(Header))
-        {
-            error = ErrorCode::InvalidFileSize;
-            return false;
-        }
-
-        if (blockCount == 0u)
-        {
-            error = ErrorCode::WhereTheBlocksAt;
-            return false;
-        }
-
-        if (blockCount > MaxBlocks)
-        {
-            error = ErrorCode::TooManyBlocks;
-            return false;
-        }
-
-        if ((descriptorsOffset < sizeof(Header)) || (descriptorsOffset > totalBytes))
-        {
-            error = ErrorCode::InvalidFirstDescriptorOffset;
-            return false;
-        }
-
-        if (blocksOffset != (descriptorsOffset + (blockCount * sizeof(BlockDescriptor))))
-        {
-            error = ErrorCode::InvalidFirstBlockOffset;
-            return false;
-        }
-
-        if ((blocksOffset % 16u) != 0u)
-        {
-            error = ErrorCode::InvalidFirstBlockOffset;
-            return false;
-        }
-
-        return true;
-    }
-
-    bool LitlMesh::parse(std::span<std::byte const> data, LitlMesh& file, ErrorCode& error) noexcept
-    {
-        LitlMesh parsed{};
-        error = ErrorCode::None;
-
-        if (data.size() < sizeof(Header))
-        {
-            error = ErrorCode::InvalidFileSize;
-            return false;
-        }
-
-        std::memcpy(&parsed.header, data.data(), sizeof(Header));
-
-        if (!parsed.header.validate(error))
-        {
-            return false;
-        }
-
-        if (data.size() != parsed.header.totalBytes)
-        {
-            error = ErrorCode::InvalidFileSize;
-            return false;
-        }
-
-        auto const contentHash = calculateContentHash(data, parsed.header);
-
-        if (contentHash != parsed.header.contentHash)
-        {
-            error = ErrorCode::ContentHashMismatch;
-            return false;
-        }
-
-        auto const descriptorBytes = uint64_t{ parsed.header.blockCount } * sizeof(BlockDescriptor);
-
-        if (descriptorBytes > (parsed.header.totalBytes - parsed.header.descriptorsOffset))
-        {
-            error = ErrorCode::InvalidFileSize;
-            return false;
-        }
-
-        BinaryBlobReader reader({ data.data() + parsed.header.descriptorsOffset, descriptorBytes });
-        BlockDescriptor currDescriptor{};
-        uint64_t prevBlockEnd = 0u;
-
-        for (uint32_t i = 0u; i < parsed.header.blockCount; ++i)
-        {
-            if (!reader.read(currDescriptor))
-            {
-                error = ErrorCode::MissingBlockDescriptor;
-                return false;
-            }
-
-            if((currDescriptor.blockOffset < parsed.header.blocksOffset) || (currDescriptor.blockOffset > parsed.header.totalBytes))
-            {
-                error = ErrorCode::DescriptorBlockOutOfBounds;
-                return false;
-            }
-
-            if (currDescriptor.blockBytes > (parsed.header.totalBytes - currDescriptor.blockOffset))
-            {
-                error = ErrorCode::BlockSizeOutOfBounds;
-                return false;
-            }
-
-            if (currDescriptor.elementBytes == 0u)
-            {
-                error = ErrorCode::ElementSizeOfZero;
-                return false;
-            }
-
-            if ((uint64_t{ currDescriptor.elementBytes } * currDescriptor.elementCount) != currDescriptor.blockBytes)
-            {
-                error = ErrorCode::BlockSizeMismatch;
-                return false;
-            }
-
-            if ((currDescriptor.blockOffset % 16) != 0)
-            {
-                error = ErrorCode::InvalidBlockOffset;
-                return false;
-            }
-
-            if (currDescriptor.blockOffset < prevBlockEnd)
-            {
-                error = ErrorCode::BlockOverlap;
-                return false;
-            }
-
-            parsed.descriptors[i] = currDescriptor;
-            prevBlockEnd = currDescriptor.blockOffset + currDescriptor.blockBytes;
-        }
-
-        parsed.data = data;
-        file = parsed;
-        return true;
     }
 
     // -------------------------------------------------------------------------------------
@@ -217,6 +45,16 @@ namespace litl
 
     bool LitlMesh::serialize(GeoMesh const& mesh, std::vector<std::byte>& data, ErrorCode& error) noexcept
     {
+        /*
+         * TODO: In the future, serialize can likely be abstracted out a lot more.
+         * It can potentially be condensed to the expected blockDataTable and fed to a common serialize in BinaryBlockFile.
+         * But it is best to do that after we have another file format (such as a potential texture format) that is built on BinaryBlockFile.
+         * A potential abstraction would be a block builder:
+         * 
+         *     addBlock(...);
+         *     finalize(...);
+         */
+
         error = ErrorCode::None;
 
         if (mesh.vertices.empty() || mesh.indices.empty() || mesh.faceIndexCount.empty())
@@ -227,10 +65,10 @@ namespace litl
 
         LitlMesh litlMesh{};
 
-        std::array<BlockData, 3> blockDataTable {
-            BlockData { &litlMesh.descriptors[0], Ids::Vertices, sizeof(Vertex), as_byte_span(mesh.vertices) },
-            BlockData { &litlMesh.descriptors[1], Ids::Indices, sizeof(uint32_t), as_byte_span(mesh.indices) },
-            BlockData { &litlMesh.descriptors[2], Ids::Faces, sizeof(uint32_t), as_byte_span(mesh.faceIndexCount) }
+        std::array<BlockDataDescriptor, 3> blockDataTable {
+            BlockDataDescriptor { &litlMesh.descriptors[0], LitlMeshIds::Vertices, sizeof(Vertex), as_byte_span(mesh.vertices) },
+            BlockDataDescriptor { &litlMesh.descriptors[1], LitlMeshIds::Indices, sizeof(uint32_t), as_byte_span(mesh.indices) },
+            BlockDataDescriptor { &litlMesh.descriptors[2], LitlMeshIds::Faces, sizeof(uint32_t), as_byte_span(mesh.faceIndexCount) }
         };
 
         static_assert(std::tuple_size_v<decltype(blockDataTable)> <= MaxBlocks);
@@ -253,7 +91,7 @@ namespace litl
         // ---------------------------------------------------------------------------------
         // Populate Header (most of it)
 
-        litlMesh.header.magic = Ids::Magic;
+        litlMesh.header.magic = Magic;
         litlMesh.header.versionMajor = Header::MajorVersion;
         litlMesh.header.versionMinor = Header::MinorVersion;
         litlMesh.header.contentHash = 0ull;         // calculated further on
@@ -308,9 +146,9 @@ namespace litl
     {
         error = ErrorCode::None;
 
-        auto vertexBlock = find(Ids::Vertices);
-        auto indexBlock = find(Ids::Indices);
-        auto faceBlock = find(Ids::Faces);
+        auto vertexBlock = find(LitlMeshIds::Vertices);
+        auto indexBlock = find(LitlMeshIds::Indices);
+        auto faceBlock = find(LitlMeshIds::Faces);
 
         if (!vertexBlock.has_value())
         {
@@ -390,29 +228,5 @@ namespace litl
         mesh.faceIndexCount.assign(faces->begin(), faces->end());
 
         return true;
-    }
-
-    // -------------------------------------------------------------------------------------
-    // Utility
-    // -------------------------------------------------------------------------------------
-
-    std::optional<LitlMesh::Block> LitlMesh::find(BlockIdType id) const noexcept
-    {
-        for (uint32_t i = 0u; i < header.blockCount; ++i)
-        {
-            auto& descriptor = descriptors[i];
-
-            if (descriptor.blockId == id)
-            {
-                return Block{
-                    .blockId = descriptor.blockId,
-                    .elementBytes = descriptor.elementBytes,
-                    .elementCount = descriptor.elementCount,
-                    .bytes = std::span<std::byte const>{ data.data() + descriptor.blockOffset, descriptor.blockBytes }
-                };
-            }
-        }
-
-        return std::nullopt;
     }
 }
