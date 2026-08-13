@@ -79,14 +79,18 @@ namespace litl::import
             uint32_t index = 0u;
             uint32_t face = 0u;
 
-            litlMesh->vertices.reserve(objAttributes.positions.size());
-            litlMesh->indices.reserve(objMesh.indices.size());
-            litlMesh->faceIndexCount.reserve(litlMesh->indices.size() / 3ull);
+            auto& vertices = litlMesh->getVertices();
+            auto& indices = litlMesh->getIndices();
+            auto& faceIndexCounts = litlMesh->getFaceIndexCounts();
+
+            vertices.reserve(objAttributes.positions.size());
+            indices.reserve(objMesh.indices.size());
+            faceIndexCounts.reserve(indices.size() / 3ull);
 
             while (index < static_cast<uint32_t>(objMesh.indices.size()))
             {
                 uint32_t const faceIndexCount = objMesh.num_face_vertices[face++];
-                litlMesh->faceIndexCount.push_back(faceIndexCount);
+                faceIndexCounts.push_back(faceIndexCount);
 
                 for (uint32_t faceIndex = 0u; faceIndex < faceIndexCount; ++faceIndex)
                 {
@@ -98,20 +102,22 @@ namespace litl::import
                     };
 
                     // Use unordered_map to dedupe split vertex indices
-                    auto [iter, added] = mappedVertices.try_emplace(objVertexKey, static_cast<uint32_t>(litlMesh->vertices.size()));
+                    auto [iter, added] = mappedVertices.try_emplace(objVertexKey, static_cast<uint32_t>(vertices.size()));
 
                     // If a new vertex, add it.
                     if (added)
                     {
-                        litlMesh->vertices.push_back(convertToLitlVertex(objIndex, objAttributes));
+                        vertices.push_back(convertToLitlVertex(objIndex, objAttributes));
                     }
 
                     // Add the matched index
-                    litlMesh->indices.push_back(iter->second);
+                    indices.push_back(iter->second);
                 }
 
                 index += faceIndexCount;
             }
+
+            litlMesh->recalculateBounds();
         }
     }
 
@@ -160,8 +166,8 @@ namespace litl::import
             convertToLitlMesh(litlMesh, objMesh, objResult.attributes);
 
             importedData.mesh->summary.meshCount += 1u;
-            importedData.mesh->summary.vertexCount += static_cast<uint32_t>(litlMesh->vertices.size());
-            importedData.mesh->summary.indexCount += static_cast<uint32_t>(litlMesh->indices.size());
+            importedData.mesh->summary.vertexCount += static_cast<uint32_t>(litlMesh->vertexCount());
+            importedData.mesh->summary.indexCount += static_cast<uint32_t>(litlMesh->indexCount());
         }
 
         return Result::Success();

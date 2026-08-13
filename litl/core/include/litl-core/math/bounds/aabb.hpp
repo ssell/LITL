@@ -2,6 +2,7 @@
 #define LITL_MATH_BOUNDS_AABB_H__
 
 #include <span>
+#include <type_traits>
 
 #include "litl-core/assert.hpp"
 #include "litl-core/math/types/vec3.hpp"
@@ -146,6 +147,8 @@ namespace litl::bounds
             return AABB{ .min = minPoint, .max = maxPoint };
         }
     };
+
+    static_assert(std::is_trivially_copyable_v<AABB>);
 }
 
 #endif

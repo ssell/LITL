@@ -24,11 +24,11 @@ namespace litl::tests
         REQUIRE(data.mesh->summary.indexCount == 178992u);
         REQUIRE(data.mesh->meshes.size() == 1ull);
         REQUIRE(data.mesh->meshes[0] != nullptr);
-        REQUIRE(data.mesh->meshes[0]->vertices.size() == 29834ull);
-        REQUIRE(data.mesh->meshes[0]->indices.size() == 178992ull);
-        REQUIRE(data.mesh->meshes[0]->vertices[0].position.isZeroed() == false);        // a valid non-zero position
-        REQUIRE(data.mesh->meshes[0]->vertices[0].texcoord.isZeroed() == true);         // the rest of the attributes are not present in the original OBJ model.
-        REQUIRE(data.mesh->meshes[0]->vertices[0].normal.isZeroed() == true);
-        REQUIRE(data.mesh->meshes[0]->vertices[0].tangent.isIdentity() == true);
+        REQUIRE(data.mesh->meshes[0]->getVertices().size() == 29834ull);
+        REQUIRE(data.mesh->meshes[0]->getIndices().size() == 178992ull);
+        REQUIRE(data.mesh->meshes[0]->getVertices()[0].position.isZeroed() == false);        // a valid non-zero position
+        REQUIRE(data.mesh->meshes[0]->getVertices()[0].texcoord.isZeroed() == true);         // the rest of the attributes are not present in the original OBJ model.
+        REQUIRE(data.mesh->meshes[0]->getVertices()[0].normal.isZeroed() == true);
+        REQUIRE(data.mesh->meshes[0]->getVertices()[0].tangent.isIdentity() == true);
     } LITL_END_TEST_CASE
 }

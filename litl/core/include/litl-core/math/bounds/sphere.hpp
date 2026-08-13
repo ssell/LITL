@@ -1,6 +1,8 @@
 #ifndef LITL_MATH_BOUNDS_SPHERE_H__
 #define LITL_MATH_BOUNDS_SPHERE_H__
 
+#include <type_traits>
+
 #include "litl-core/assert.hpp"
 #include "litl-core/math/types/vec3.hpp"
 
@@ -38,6 +40,8 @@ namespace litl::bounds
             return Sphere{ .center = (minPoint + radius), .radius = radius };
         }
     };
+
+    static_assert(std::is_trivially_copyable_v<Sphere>);
 }
 
 #endif

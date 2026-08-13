@@ -163,19 +163,29 @@ namespace litl
             MissingFaceBlock = 1003u,
 
             /// <summary>
+            /// Input file is missing a bounds data block.
+            /// </summary>
+            MissingBoundsBlock = 1004u,
+
+            /// <summary>
             /// Deserialization found an index that exceeded the vertex count.
             /// </summary>
-            InvalidIndexFound = 1004u,
+            InvalidIndexFound = 1005u,
 
             /// <summary>
             /// Deserialization found that the total sum of all face index counts does not match the index count.
             /// </summary>
-            InvalidFaceSum = 1005u,
+            InvalidFaceSum = 1006u,
 
             /// <summary>
             /// Deserialization found a face that was declared to have zero indices.
             /// </summary>
-            ZeroFaceFound = 1006u
+            ZeroFaceFound = 1007u,
+
+            /// <summary>
+            /// Mesh bounds block should have exactly 6 elements: [min.x, min.y, min.z, max.x, max.y, max.z].
+            /// </summary>
+            InvalidBoundsValues = 1008u
         };
 
         static constexpr uint32_t MaxBlocks = 8u;
@@ -239,19 +249,9 @@ namespace litl
             uint32_t flags{ 0u };
 
             /// <summary>
-            /// The minimum point of the AABB that encapsulates the mesh.
-            /// </summary>
-            std::array<float, 3> boundsMin = { 0.0f, 0.0f, 0.0f };
-
-            /// <summary>
-            /// The maximum point of the AABB that encapsulates the mesh.
-            /// </summary>
-            std::array<float, 3> boundsMax = { 0.0f, 0.0f, 0.0f };
-
-            /// <summary>
             /// Padding to ensure the Header size is equal to a multiple of 32.
             /// </summary>
-            std::array<uint64_t, 3> padding{};
+            std::array<uint64_t, 2> padding{};
 
             /// <summary>
             /// Returns if the contents of the header are valid.
@@ -260,7 +260,7 @@ namespace litl
             [[nodiscard]] bool validate(ErrorCode& error, BlockIdType expectedType) const noexcept;
         };
 
-        static_assert(sizeof(Header) == 96);
+        static_assert(sizeof(Header) == 64);
         static_assert(alignof(Header) == 8);
         static_assert(std::is_standard_layout_v<Header>);
 
