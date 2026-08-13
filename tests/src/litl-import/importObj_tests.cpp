@@ -54,7 +54,7 @@ namespace litl::tests
         REQUIRE(result.error == import::ErrorType::None);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("OBJ to LitlMesh to disk and back", "[ecs::import::obj]")
+    LITL_TEST_CASE("OBJ -> GeoMesh -> LitlMesh -> GeoMesh", "[ecs::import::obj]")
     {
         File source("assets/mesh/bunny.obj");
         File dest("assets/mesh/bunny.litlmesh");
@@ -67,21 +67,21 @@ namespace litl::tests
             REQUIRE(dest.exists() == false);
         }
 
-        // Test full conversion (obj -> GeoMesh -> LitlMesh)
+        // Test full conversion (obj -> GeoMesh -> LitlMesh) so we have a .litlmesh to load later.
         import::ImportService importer{};
         import::Result result = importer.convert(source.absolutePath());
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
 
-        // Next just hold onto the (obj -> GeoMesh) conversion ...
+        // Reimport so we can get the intermediate GeoMesh.
         import::ImportedData data{};
-        result = importer.import(source, data);
+        import::Result result = importer.import(source, data);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
 
-        // Import the previous LitlMesh
+        // Load the LitlMesh from the .litlmesh we previously exported to.
         auto litlMeshBytes = dest.readAllBytes();
 
         REQUIRE(litlMeshBytes.has_value() == true);
@@ -92,15 +92,15 @@ namespace litl::tests
         REQUIRE(LitlMesh::parse(litlMeshBytes.value(), LitlMesh::Magic, litlMesh, error) == true);
         REQUIRE(error == BinaryBlockFile::ErrorCode::None);
 
-        // Compare importer LitlMesh GeoMesh to the GeoMesh made during conversion
+        // Deserialize the LitlMesh to a second GeoMesh.
         GeoMesh& objGeoMesh = *data.mesh->meshes[0].get();
         GeoMesh litlGeoMesh{};
 
         REQUIRE(litlMesh.deserialize(litlGeoMesh, error) == true);
         REQUIRE(error == BinaryBlockFile::ErrorCode::None);
 
+        // Compare our intermediate GeoMesh made from the OBJ to the second GeoMesh loaded from the .litlmesh.
         // Now these checks may not stay valid when the export pipeline is built up (triangulation, mikktspace, etc.)
-
         REQUIRE(litlGeoMesh.vertexCount() == objGeoMesh.vertexCount());
         REQUIRE(litlGeoMesh.indexCount() == objGeoMesh.indexCount());
         REQUIRE(litlGeoMesh.faceCount() == objGeoMesh.faceCount());
