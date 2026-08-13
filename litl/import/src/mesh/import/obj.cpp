@@ -3,7 +3,7 @@
 
 #include "litl-core/byteStream.hpp"
 #include "litl-core/hash.hpp"
-#include "litl-core/math/geometry/mesh.hpp"
+#include "litl-core/math/geometry/geoMesh.hpp"
 #include "litl-import/mesh/import/obj.hpp"
 
 namespace

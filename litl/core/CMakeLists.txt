@@ -28,7 +28,7 @@ add_library(litl-core
 		"src/litl-core/file.cpp" 
 		"src/litl-core/task/taskThreadPool.cpp" 
 		"src/litl-core/task/taskThreadQueue.cpp" 
-		"src/litl-core/math/geometry/mesh.cpp" 
+		"src/litl-core/math/geometry/geoMesh.cpp" 
 		"src/litl-core/directory.cpp" 
 		"src/litl-core/formats/litlmesh.cpp" "src/litl-core/formats/binaryBlockFile.cpp")
 		
