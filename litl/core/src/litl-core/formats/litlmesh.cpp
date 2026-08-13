@@ -16,7 +16,7 @@ namespace litl
         {
             LitlMesh::BlockDescriptor* descriptor;
             LitlMesh::BlockIdType id;
-            size_t elementSize;
+            uint64_t elementSize;
             std::span<std::byte const> data;
         };
 
@@ -31,19 +31,24 @@ namespace litl
             header.boundsMax = meshMaxPoint.toArray();
         }
 
-        void serializeBlock(BlockData& data, size_t& runningBlockOffset) noexcept
+        void serializeBlock(BlockData& data, uint64_t& runningBlockOffset) noexcept
         {
             // Ensure our offsets remain a multiple of 16
             runningBlockOffset = alignMemoryOffsetUp(runningBlockOffset, 16);
 
             data.descriptor->blockId = data.id;
-            data.descriptor->elementBytes = static_cast<uint32_t>(data.elementSize);
-            data.descriptor->elementCount = static_cast<uint32_t>(data.data.size() / data.elementSize);
-            data.descriptor->blockOffset = static_cast<uint32_t>(runningBlockOffset);
-            data.descriptor->blockBytes = static_cast<uint32_t>(data.data.size());
+            data.descriptor->elementBytes = data.elementSize;
+            data.descriptor->elementCount = data.data.size() / data.elementSize;
+            data.descriptor->blockOffset = runningBlockOffset;
+            data.descriptor->blockBytes = data.data.size();
             data.descriptor->flags = 0u;
 
             runningBlockOffset += data.descriptor->blockBytes;
+        }
+
+        uint64_t calculateContentHash(std::span<std::byte const> data, LitlMesh::Header const& header) noexcept
+        {
+            return hashSubarray(data, sizeof(LitlMesh::Header), (header.totalBytes - sizeof(LitlMesh::Header)));
         }
     }
 
@@ -116,13 +121,13 @@ namespace litl
             return false;
         }
 
-        if (data.size() != static_cast<size_t>(parsed.header.totalBytes))
+        if (data.size() != parsed.header.totalBytes)
         {
             error = ErrorCode::InvalidFileSize;
             return false;
         }
 
-        auto const contentHash = hashSubarray(data, sizeof(Header), (parsed.header.totalBytes - sizeof(Header)));
+        auto const contentHash = calculateContentHash(data, parsed.header);
 
         if (contentHash != parsed.header.contentHash)
         {
@@ -130,15 +135,15 @@ namespace litl
             return false;
         }
 
-        auto const descriptorBytes = size_t{ parsed.header.blockCount } * sizeof(BlockDescriptor);
+        auto const descriptorBytes = uint64_t{ parsed.header.blockCount } * sizeof(BlockDescriptor);
 
-        if (data.size() < (sizeof(Header) + descriptorBytes))
+        if (data.size() < (parsed.header.descriptorsOffset + descriptorBytes))
         {
             error = ErrorCode::InvalidFileSize;
             return false;
         }
 
-        BinaryBlobReader reader({ data.data() + sizeof(Header), descriptorBytes });
+        BinaryBlobReader reader({ data.data() + parsed.header.descriptorsOffset, descriptorBytes });
         BlockDescriptor currDescriptor{};
         uint32_t prevBlockEnd = 0u;
 
@@ -241,30 +246,24 @@ namespace litl
         litlMesh.header.versionMinor = Header::MinorVersion;
         litlMesh.header.contentHash = 0ull;         // calculated further on
         litlMesh.header.totalBytes = 0u;            // calculated further on
-        litlMesh.header.blockCount = static_cast<uint32_t>(blockDataTable.size());
-        litlMesh.header.blocksOffset = static_cast<uint32_t>(sizeof(Header) + (sizeof(BlockDescriptor) * litlMesh.header.blockCount));
+        litlMesh.header.blockCount = blockDataTable.size();
+        litlMesh.header.descriptorsOffset = sizeof(Header);
+        litlMesh.header.blocksOffset = litlMesh.header.descriptorsOffset + (sizeof(BlockDescriptor) * litlMesh.header.blockCount);
         litlMesh.header.flags = 0u;                 // currently unused
-        litlMesh.header.reserved = 0u;              // intentional padding
 
         serializeHeaderBounds(mesh, litlMesh.header);
 
         // ---------------------------------------------------------------------------------
         // Populate BlockDescriptors
 
-        size_t runningOffset = litlMesh.header.blocksOffset;
+        uint64_t runningOffset = litlMesh.header.blocksOffset;
 
         for (uint32_t i = 0; i < litlMesh.header.blockCount; ++i)
         {
             serializeBlock(blockDataTable[i], runningOffset);
         }
 
-        if (runningOffset > size_t{ std::numeric_limits<uint32_t>::max() })
-        {
-            error = ErrorCode::ContentTooLarge;
-            return false;
-        }
-
-        litlMesh.header.totalBytes = static_cast<uint32_t>(runningOffset);
+        litlMesh.header.totalBytes = runningOffset;
 
         // ---------------------------------------------------------------------------------
         // Copy content to the provided data buffer
@@ -274,7 +273,7 @@ namespace litl
 
         for (size_t i = 0ull; i < blockDataTable.size(); ++i)
         {
-            std::memcpy(data.data() + sizeof(Header) + (sizeof(BlockDescriptor) * i), blockDataTable[i].descriptor, sizeof(BlockDescriptor));
+            std::memcpy(data.data() + litlMesh.header.descriptorsOffset + (sizeof(BlockDescriptor) * i), blockDataTable[i].descriptor, sizeof(BlockDescriptor));
         }
 
         for (auto& blockData : blockDataTable)
@@ -282,7 +281,7 @@ namespace litl
             std::memcpy(data.data() + blockData.descriptor->blockOffset, blockData.data.data(), blockData.data.size());
         }
 
-        litlMesh.header.contentHash = hashSubarray(std::span<std::byte const>(data), sizeof(Header), data.size() - sizeof(Header));
+        litlMesh.header.contentHash = calculateContentHash(std::span<std::byte const>(data), litlMesh.header);
 
         std::memcpy(data.data(), &litlMesh.header, sizeof(Header));
 

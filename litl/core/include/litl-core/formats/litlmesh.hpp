@@ -188,17 +188,24 @@ namespace litl
             /// <summary>
             /// Total size of the file in bytes.
             /// </summary>
-            uint32_t totalBytes{ 0u };
+            uint64_t totalBytes{ 0ull };
+
+            /// <summary>
+            /// The offset in the file of the first block descriptor.
+            /// This typically immediately follows the header, but this field allows for the header to grow in the future and
+            /// for something to be inserted between the header and the block descriptors without being a breaking change.
+            /// </summary>
+            uint64_t descriptorsOffset{ 0ull };
+
+            /// <summary>
+            /// The offset in the file to the first data block (header + descriptors).
+            /// </summary>
+            uint64_t blocksOffset{ 0ull };
 
             /// <summary>
             /// The number of data blocks in the file.
             /// </summary>
             uint32_t blockCount{ 0u };
-
-            /// <summary>
-            /// The offset in the file to the first data block (header + descriptors).
-            /// </summary>
-            uint32_t blocksOffset{ 0u };
 
             /// <summary>
             /// Currently unused.
@@ -216,18 +223,21 @@ namespace litl
             std::array<float, 3> boundsMax = { 0.0f, 0.0f, 0.0f };
 
             /// <summary>
-            /// Currently unused padding.
-            /// </summary>
-            uint64_t reserved{ 0u };
-
-            /// <summary>
             /// Returns if the contents of the header are valid.
             /// </summary>
             /// <param name="error"></param>
             [[nodiscard]] bool validate(ErrorCode& error) const noexcept;
+
+        private:
+
+            /// <summary>
+            /// Padding to ensure the Header size is equal to a multiple of 32.
+            /// </summary>
+            std::array<uint64_t, 3> padding{};
         };
 
-        static_assert(sizeof(Header) == 64u);
+        static_assert((sizeof(Header) % 32) == 0);
+        static_assert(alignof(Header) == 8u);
 
         /// <summary>
         /// Describes the contents of a single block in the file.
@@ -242,36 +252,44 @@ namespace litl
             /// <summary>
             /// The offset from the start of the file to where the block (not the descriptor) lives.
             /// </summary>
-            uint32_t blockOffset{ 0u };
+            uint64_t blockOffset{ 0ull };
 
             /// <summary>
             /// The size of the block.
             /// </summary>
-            uint32_t blockBytes{ 0u };
+            uint64_t blockBytes{ 0ull };
 
             /// <summary>
             /// The size of an individual element in the block.
             /// </summary>
-            uint32_t elementBytes{ 0u };
+            uint64_t elementBytes{ 0ull };
 
             /// <summary>
             /// The number of elements in the block.
             /// </summary>
-            uint32_t elementCount{ 0u };
+            uint64_t elementCount{ 0ull };
 
             /// <summary>
             /// Optional block-specific flags.
             /// </summary>
             uint32_t flags{ 0u };
 
+        private:
+
             /// <summary>
-            /// Currently unused padding.
+            /// Padding to ensure the BlockDescriptor size is equal to a multiple of 32.
             /// </summary>
-            uint64_t reserved{ 0ull };
+            std::array<uint64_t, 2> padding{};
         };
 
-        static_assert(sizeof(BlockDescriptor) == 32u);
+        static_assert((sizeof(BlockDescriptor) % 32) == 0);
+        static_assert(alignof(BlockDescriptor) == 8u);
 
+        /// <summary>
+        /// View and metadata for a contiguous block of memory within the file.
+        /// The block is composed of a number of all of the same elements.
+        /// The Block struct itself is not part of the on-disk file format and is a read-only view.
+        /// </summary>
         struct Block
         {
             /// <summary>
@@ -282,12 +300,12 @@ namespace litl
             /// <summary>
             /// The size of an individual element in the block.
             /// </summary>
-            uint32_t elementBytes{ 0u };
+            uint64_t elementBytes{ 0u };
 
             /// <summary>
             /// The number of elements in the block.
             /// </summary>
-            uint32_t elementCount{ 0u };
+            uint64_t elementCount{ 0u };
 
             /// <summary>
             /// Non-owning view of the data blob of the block.
@@ -329,8 +347,6 @@ namespace litl
                     bytes.size() / sizeof(T));
             }
         };
-
-        static_assert(sizeof(Block) == 32u);
 
         /// <summary>
         /// Populates a LitlMesh file view from a supplied blob of data.
