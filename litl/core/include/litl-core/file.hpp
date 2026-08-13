@@ -3,6 +3,7 @@
 
 #include <ctime>
 #include <filesystem>
+#include <span>
 
 namespace litl
 {
@@ -13,6 +14,19 @@ namespace litl
         File();
         File(std::string_view path);
         File(std::filesystem::directory_entry const& entry);
+
+        /// <summary>
+        /// Erases the file. Returns true if successfully erased, otherwise will return false.
+        /// </summary>
+        /// <returns></returns>
+        bool erase() noexcept;
+
+        /// <summary>
+        /// Erases the file at the specified path if it exists. Returns true if successfully erased, otherwise will return false.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        static bool erase(std::string_view path) noexcept;
 
         /// <summary>
         /// Refereshes tracked information about the file such as size and last write time.
@@ -76,12 +90,21 @@ namespace litl
         /// </summary>
         [[nodiscard]] std::optional<bool> exists() const noexcept;
 
+        [[nodiscard]] static std::optional<bool> exists(std::string_view path) noexcept;
+
         /// <summary>
         /// Reads the contents of the file synchronously.
         /// If there was an error reading the file then std::nullopt will be returned instead.
         /// </summary>
         /// <param name="alignment"></param>
         [[nodiscard]] std::optional<std::vector<std::byte>> readAllBytes() const noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        bool writeAllBytes(std::span<std::byte const> bytes) const noexcept;
 
         /// <summary>
         /// Reads the contents of the file synchronously.

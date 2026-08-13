@@ -37,6 +37,25 @@ namespace litl
         refresh();
     }
 
+    bool File::erase() noexcept
+    {
+        if (exists())
+        {
+            std::error_code error{};
+
+            if (std::filesystem::remove(m_file, error))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
     bool File::refresh() noexcept
     {
         std::error_code error;
@@ -123,6 +142,12 @@ namespace litl
         return std::nullopt;
     }
 
+    std::optional<bool> File::exists(std::string_view path) noexcept
+    {
+        File file(path);
+        return file.exists();
+    }
+
     std::optional<std::vector<std::byte>> File::readAllBytes() const noexcept
     {
         std::vector<std::byte> bytes;
@@ -133,6 +158,21 @@ namespace litl
         }
 
         return std::nullopt;
+    }
+
+    bool File::writeAllBytes(std::span<std::byte const> bytes) const noexcept
+    {
+        std::ofstream outStream(m_file.string(), std::ios::out | std::ios::binary);
+
+        if (!outStream)
+        {
+            return false;
+        }
+
+        outStream.write(reinterpret_cast<char const*>(bytes.data()), bytes.size());
+        outStream.close();
+
+        return true;
     }
 
     bool File::readAllBytes(std::vector<std::byte>& bytes) const noexcept

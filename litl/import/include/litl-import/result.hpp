@@ -21,7 +21,10 @@ namespace litl::import
         ImportedDataNull = 9u,
         ImporterFailed = 10u,
         ImporterEmptyResult = 11u,
-        ExportDestinationDoesNotExist = 12u
+        ExportDestinationDoesNotExist = 12u,
+        SerializationFailed = 13u,
+        SerializedResultEmpty = 14u,
+        FileWriteFailed = 15u
     };
 
     struct Result

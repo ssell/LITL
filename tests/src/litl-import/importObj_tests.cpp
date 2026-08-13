@@ -1,5 +1,6 @@
 #include "tests.hpp"
 #include "litl-import/importService.hpp"
+#include "litl-core/formats/litlmesh.hpp"
 
 namespace litl::tests
 {
@@ -30,5 +31,89 @@ namespace litl::tests
         REQUIRE(data.mesh->meshes[0]->getVertices()[0].texcoord.isZeroed() == true);         // the rest of the attributes are not present in the original OBJ model.
         REQUIRE(data.mesh->meshes[0]->getVertices()[0].normal.isZeroed() == true);
         REQUIRE(data.mesh->meshes[0]->getVertices()[0].tangent.isIdentity() == true);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("Convert OBJ to litlmesh", "[ecs::import::obj]")
+    {
+        File source("assets/mesh/bunny.obj");
+        File dest("assets/mesh/bunny.litlmesh");
+
+        REQUIRE(source.exists() == true);
+
+        if (dest.exists() == true)
+        {
+            dest.erase();
+            REQUIRE(dest.exists() == false);
+        }
+
+        // Test full conversion (obj -> GeoMesh -> LitlMesh)
+        import::ImportService importer{};
+        import::Result result = importer.convert(source.absolutePath());
+
+        REQUIRE(result.success == true);
+        REQUIRE(result.error == import::ErrorType::None);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("OBJ to LitlMesh to disk and back", "[ecs::import::obj]")
+    {
+        File source("assets/mesh/bunny.obj");
+        File dest("assets/mesh/bunny.litlmesh");
+
+        REQUIRE(source.exists() == true);
+
+        if (dest.exists() == true)
+        {
+            dest.erase();
+            REQUIRE(dest.exists() == false);
+        }
+
+        // Test full conversion (obj -> GeoMesh -> LitlMesh)
+        import::ImportService importer{};
+        import::Result result = importer.convert(source.absolutePath());
+
+        REQUIRE(result.success == true);
+        REQUIRE(result.error == import::ErrorType::None);
+
+        // Next just hold onto the (obj -> GeoMesh) conversion ...
+        import::ImportedData data{};
+        result = importer.import(source, data);
+
+        REQUIRE(result.success == true);
+        REQUIRE(result.error == import::ErrorType::None);
+
+        // Import the previous LitlMesh
+        auto litlMeshBytes = dest.readAllBytes();
+
+        REQUIRE(litlMeshBytes.has_value() == true);
+
+        LitlMesh litlMesh{};
+        BinaryBlockFile::ErrorCode error = BinaryBlockFile::ErrorCode::None;
+
+        REQUIRE(LitlMesh::parse(litlMeshBytes.value(), LitlMesh::Magic, litlMesh, error) == true);
+        REQUIRE(error == BinaryBlockFile::ErrorCode::None);
+
+        // Compare importer LitlMesh GeoMesh to the GeoMesh made during conversion
+        GeoMesh& objGeoMesh = *data.mesh->meshes[0].get();
+        GeoMesh litlGeoMesh{};
+
+        REQUIRE(litlMesh.deserialize(litlGeoMesh, error) == true);
+        REQUIRE(error == BinaryBlockFile::ErrorCode::None);
+
+        // Now these checks may not stay valid when the export pipeline is built up (triangulation, mikktspace, etc.)
+
+        REQUIRE(litlGeoMesh.vertexCount() == objGeoMesh.vertexCount());
+        REQUIRE(litlGeoMesh.indexCount() == objGeoMesh.indexCount());
+        REQUIRE(litlGeoMesh.faceCount() == objGeoMesh.faceCount());
+        
+        auto const& objGeoMeshBounds = objGeoMesh.getBounds();
+        auto const& litlGeoMeshBounds = litlGeoMesh.getBounds();
+
+        REQUIRE(litlGeoMeshBounds.min == objGeoMeshBounds.min);
+        REQUIRE(litlGeoMeshBounds.max == objGeoMeshBounds.max);
+
+        REQUIRE(litlGeoMesh.getVertices()[0].position == objGeoMesh.getVertices()[0].position);
+        REQUIRE(litlGeoMesh.getIndices()[0] == objGeoMesh.getIndices()[0]);
+        REQUIRE(litlGeoMesh.getFaceIndexCounts()[0] == objGeoMesh.getFaceIndexCounts()[0]);
+
     } LITL_END_TEST_CASE
 }
