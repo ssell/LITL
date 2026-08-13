@@ -145,7 +145,20 @@ namespace litl
             /// </summary>
             MissingFaceBlock = 24u,
 
-            InvalidIndexFound = 25u
+            /// <summary>
+            /// Deserialization found an index that exceeded the vertex count.
+            /// </summary>
+            InvalidIndexFound = 25u,
+
+            /// <summary>
+            /// Deserialization found that the total sum of all face index counts does not match the index count.
+            /// </summary>
+            InvalidFaceSum = 26u,
+
+            /// <summary>
+            /// Deserialization found a face that was declared to have zero indices.
+            /// </summary>
+            ZeroFaceFound = 27u
         };
 
         struct Ids
