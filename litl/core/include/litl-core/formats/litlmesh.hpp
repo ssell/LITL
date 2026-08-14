@@ -18,13 +18,44 @@ namespace litl
     /// <summary>
     /// Binary file representation of a GeoMesh that is stored on disk as a ".litlmesh".
     /// This is effectively a non-owning view over the raw data blob.
+    /// 
+    /// To convert a GeoMesh to a binary blob simply use the serialize method.
+    /// To deserialize a binary blob to a GeoMesh you must first call parse and then deserialize.
     /// </summary>
     struct LitlMesh final : public BinaryBlockFile
     {
-        /// <summary>
-        /// Magic bytes for the .litlmesh file - LMSH
-        /// </summary>
-        static constexpr BlockIdType Magic{ 'L', 'M', 'S', 'H' };
+        static constexpr BinaryBlockFileFormatIdentity Identity{
+            .magic = { 'L', 'M', 'S', 'H' },
+            .versionMajor = 1,
+            .versionMinor = 0
+        };
+
+        struct BlockIds
+        {
+            /// <summary>
+            /// Id for a block of vertex data - VRTX.
+            /// The vertices block is composed of Vertex elements.
+            /// </summary>
+            static constexpr BinaryBlockIdType Vertices{ 'V', 'R', 'T', 'X' };
+
+            /// <summary>
+            /// Id for a block of index data - INDX.
+            /// The indices block is composed of uint32_t elements.
+            /// </summary>
+            static constexpr BinaryBlockIdType Indices{ 'I', 'N', 'D', 'X' };
+
+            /// <summary>
+            /// Id for a block of face index count data - FACE
+            /// The faces block is composed of uint32_t elements.
+            /// </summary>
+            static constexpr BinaryBlockIdType Faces{ 'F', 'A', 'C', 'E' };
+
+            /// <summary>
+            /// Id for a block that describes the min/max points of a mesh AABB bounds - BNDS.
+            /// The bounds block is composed of float elements.
+            /// </summary>
+            static constexpr BinaryBlockIdType Bounds{ 'B', 'N', 'D', 'S' };
+        };
 
         /// <summary>
         /// Given a GeoMesh, converts its contents into a binary blob represented by the LitlMesh layout.

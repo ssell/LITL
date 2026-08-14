@@ -76,7 +76,7 @@ namespace litl::tests
 
         // Reimport so we can get the intermediate GeoMesh.
         import::ImportedData data{};
-        import::Result result = importer.import(source, data);
+        result = importer.import(source, data);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
@@ -89,7 +89,7 @@ namespace litl::tests
         LitlMesh litlMesh{};
         BinaryBlockFile::ErrorCode error = BinaryBlockFile::ErrorCode::None;
 
-        REQUIRE(LitlMesh::parse(litlMeshBytes.value(), LitlMesh::Magic, litlMesh, error) == true);
+        REQUIRE(LitlMesh::parse(litlMeshBytes.value(), litlMesh, error) == true);
         REQUIRE(error == BinaryBlockFile::ErrorCode::None);
 
         // Deserialize the LitlMesh to a second GeoMesh.
