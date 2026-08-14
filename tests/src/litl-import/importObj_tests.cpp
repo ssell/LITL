@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "tests.hpp"
 #include "litl-import/importService.hpp"
 #include "litl-core/formats/litlmesh.hpp"
@@ -111,9 +113,10 @@ namespace litl::tests
         REQUIRE(litlGeoMeshBounds.min == objGeoMeshBounds.min);
         REQUIRE(litlGeoMeshBounds.max == objGeoMeshBounds.max);
 
-        REQUIRE(litlGeoMesh.getVertices()[0].position == objGeoMesh.getVertices()[0].position);
-        REQUIRE(litlGeoMesh.getIndices()[0] == objGeoMesh.getIndices()[0]);
-        REQUIRE(litlGeoMesh.getFaceIndexCounts()[0] == objGeoMesh.getFaceIndexCounts()[0]);
+        // Compare the complete memory blocks
+        REQUIRE(std::memcmp(litlGeoMesh.getVertices().data(), objGeoMesh.getVertices().data(), objGeoMesh.getVertices().size() * sizeof(Vertex)) == 0);
+        REQUIRE(std::memcmp(litlGeoMesh.getIndices().data(), objGeoMesh.getIndices().data(), objGeoMesh.getIndices().size() * sizeof(uint32_t)) == 0);
+        REQUIRE(std::memcmp(litlGeoMesh.getFaceIndexCounts().data(), objGeoMesh.getFaceIndexCounts().data(), objGeoMesh.getFaceIndexCounts().size() * sizeof(uint32_t)) == 0);
 
     } LITL_END_TEST_CASE
 }
