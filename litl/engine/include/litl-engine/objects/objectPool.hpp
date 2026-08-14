@@ -46,7 +46,7 @@ namespace litl
         void getAllMaterialHandles(std::vector<MaterialHandle>& handles) const noexcept;
         void destroyMaterial(MaterialHandle handle) noexcept;
 
-        [[nodiscard]] MeshHandle reserveMesh(Authority<AssetManager> auth) noexcept;
+        [[nodiscard]] MeshHandle reserveMesh(Authority<AssetManager> auth, ObjectDescriptor const& descriptor) noexcept;
         [[nodiscard]] MeshHandle createMesh(MeshDescriptor const& descriptor) noexcept;
         [[nodiscard]] Mesh* getMesh(MeshHandle handle) noexcept;
         void getAllMeshHandles(std::vector<MeshHandle>& handles) const noexcept;

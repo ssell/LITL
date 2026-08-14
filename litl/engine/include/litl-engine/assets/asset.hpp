@@ -20,6 +20,8 @@ namespace litl
         {
             bool (*fetchAssetObject)(Asset*, ObjectPool&);
             bool (*decodeAssetBytes)(Asset*, std::span<std::byte const>, AssetErrorCode&);
+            bool (*processOnWorker)(Asset*, AssetErrorCode&);
+            bool (*processOnMain)(Asset*, ObjectPool&, AssetErrorCode&);
         };
 
         /// <summary>
@@ -61,6 +63,12 @@ namespace litl
         {
             status = AssetStatus::Error;
             error = err;
+        }
+
+        void setError(AssetErrorCode err, AssetErrorCode def) noexcept
+        {
+            status = AssetStatus::Error;
+            error = (err != AssetErrorCode::None ? err : def);
         }
     };
 }

@@ -252,9 +252,18 @@ namespace litl
     // Mesh
     //--------------------------------------------------------------------------------------
 
-    MeshHandle ObjectPool::reserveMesh(Authority<AssetManager> auth) noexcept
+    MeshHandle ObjectPool::reserveMesh(Authority<AssetManager> auth, ObjectDescriptor const& descriptor) noexcept
     {
-        return m_impl->meshPool.create({});
+        Mesh mesh{};
+
+        if (!mesh.create({}, descriptor))
+        {
+            logWarning("Failed to reserve Mesh '", descriptor.name, "'");
+            mesh.destroy({});
+            return {};
+        }
+
+        return m_impl->meshPool.create(mesh);
     }
 
     MeshHandle ObjectPool::createMesh(MeshDescriptor const& descriptor) noexcept

@@ -1,6 +1,5 @@
 #include "litl-engine/assets/texture2dAsset.hpp"
 #include "litl-engine/objects/objectPool.hpp"
-#include "litl-core/stringId.hpp"
 
 namespace litl
 {
@@ -20,6 +19,18 @@ namespace litl
 
         // ... todo ...
 
+        return true;
+    }
+
+    bool Texture2DAsset::processOnWorker(Asset* asset, AssetErrorCode& error) noexcept
+    {
+        // ... todo ...
+        return true;
+    }
+
+    bool Texture2DAsset::processOnMain(Asset* asset, ObjectPool& objectPool, AssetErrorCode& error) noexcept
+    {
+        // ... todo ...
         return true;
     }
 }

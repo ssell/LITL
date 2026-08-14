@@ -11,6 +11,9 @@ namespace litl
         m_pObjectPool = &pool;
         m_descriptor = descriptor;
 
+        setVertices(descriptor.vertexInfo.vertexData, descriptor.vertexInfo.vertexByteSize, false, true);
+        setIndices(descriptor.indexInfo.indexData, descriptor.indexInfo.indexByteSize, false, true);
+
         // ---------------------------------------------------------------------------------
         // --- Create Vertex Buffer
 
@@ -60,6 +63,12 @@ namespace litl
         return true;
     }
 
+    bool Mesh::create(Authority<ObjectPool> auth, ObjectDescriptor const& descriptor) noexcept
+    {
+        m_descriptor.objectInfo = descriptor;
+        return true;
+    }
+
     void Mesh::destroy(Authority<ObjectPool> auth) noexcept
     {
         m_mesh.clear();
@@ -82,8 +91,25 @@ namespace litl
         return m_indexBufferHandle;
     }
 
-    bool Mesh::setVertices(std::span<std::byte const> data) noexcept
+    bool Mesh::setVertices(std::span<std::byte const> data, size_t vertexElementSize, bool toCpu, bool toGpu) noexcept
     {
+        if (data.empty())
+        {
+            return false;
+        }
+
+        if (toCpu && (vertexElementSize == sizeof(Vertex)))
+        {
+            m_mesh.setVertices(data);
+        }
+        else
+        {
+            return false;
+        }
+
+        // ... todo ...
+
+
         LITL_ASSERT_MSG((m_pObjectPool != nullptr), "Mesh::setVertices called with a null object pool.", false);
 
         GpuBuffer* vertexBuffer = m_pObjectPool->getGpuBuffer(m_vertexBufferHandle);
@@ -95,8 +121,30 @@ namespace litl
         return true;
     }
 
-    bool Mesh::setIndices(std::span<std::byte const> data) noexcept
+    bool Mesh::setIndices(std::span<std::byte const> data, size_t indexElementSize, bool toCpu, bool toGpu) noexcept
     {
+        if (data.empty())
+        {
+            return false;
+        }
+
+        if (toCpu && (indexElementSize == sizeof(uint32_t)))
+        {
+            m_mesh.setIndices(data);
+        }
+        else
+        {
+            return false;
+        }
+
+        if (toGpu)
+        {
+
+        }
+
+        /*
+        // ... todo ...
+
         LITL_ASSERT_MSG((m_pObjectPool != nullptr), "Mesh::setIndices called with a null object pool.", false);
 
         GpuBuffer* indexBuffer = m_pObjectPool->getGpuBuffer(m_indexBufferHandle);
@@ -104,8 +152,15 @@ namespace litl
         LITL_ASSERT_MSG((indexBuffer != nullptr), "Mesh::setIndices called with a null underlying index buffer.", false);
 
         indexBuffer->setData(data);
+        */
 
         return true;
+    }
+
+    bool Mesh::uploadCpuMeshToGpu() noexcept
+    {
+        return setVertices<Vertex>(m_mesh.getVertices(), false, true) && 
+               setIndices<uint32_t>(m_mesh.getIndices(), false, true);
     }
 
     GeoMesh& Mesh::getGeoMesh() noexcept
