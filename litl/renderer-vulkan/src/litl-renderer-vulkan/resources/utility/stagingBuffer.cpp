@@ -145,6 +145,8 @@ namespace litl::vulkan
         {
             m_pContext->resources.destroyBuffer(bufferHandle);
         }
+
+        m_overflowBuffers.clear();
     }
 
     BufferHandle StagingBuffer::createStagingBuffer(uint64_t size) noexcept
