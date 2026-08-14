@@ -37,22 +37,15 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
 
     // ... in progress ...
 
-    auto bunnyMesh = assets->getMesh("mesh/bunny");     // maps to "assets/mesh/bunny.litlmesh"
+    auto bunnyMesh = assets->getMesh("mesh/bunny");                     // maps to "assets/mesh/bunny.litlmesh"
     auto bunnyMaterial = createPlaceholderMaterial(*objectPool);
-
-    // ... todo below is dependent on finishing the mesh asset pipeline (gpu buffer upload) ...
-    
     auto bunnyEntity = commands.createEntity();
 
-    Transform transform{};
-    transform.setPosition(vec3{ 0.0f, 0.0f, 5.0f });
-
-    commands.addComponent<Transform>(bunnyEntity, transform);
+    commands.addComponent<Transform>(bunnyEntity, Transform::create(vec3{ 0.0f, 0.0f, 3.0f }));
     commands.addComponent<LocalBounds>(bunnyEntity, LocalBounds{});     // todo these need to come from the mesh ...
     commands.addComponent<WorldBounds>(bunnyEntity, WorldBounds{});
     commands.addComponent<MaterialRef>(bunnyEntity, MaterialRef{ .handle = bunnyMaterial });
     commands.addComponent<MeshRef>(bunnyEntity, MeshRef{ .handle = bunnyMesh->handle });
-    
 }
 
 MaterialHandle createPlaceholderMaterial(ObjectPool& objectPool)
@@ -61,7 +54,7 @@ MaterialHandle createPlaceholderMaterial(ObjectPool& objectPool)
     auto spirvBytes = File("assets/shaders/spirv/test.spv").readAllBytes();
 
     return objectPool.createMaterial(MaterialDescriptor{
-        .objectInfo = ObjectDescriptor {.name = "Test" },
+        .objectInfo = ObjectDescriptor { .name = "Test" },
         .vertexShader = ShaderResourceDescriptor {
             .resource = "test.spv",
             .entryPoint = "vertexMain",
@@ -72,5 +65,5 @@ MaterialHandle createPlaceholderMaterial(ObjectPool& objectPool)
             .entryPoint = "fragmentMain",
             .bytes = spirvBytes.value()
         }
-        });
+    });
 }

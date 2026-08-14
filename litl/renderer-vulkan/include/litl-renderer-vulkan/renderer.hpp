@@ -55,6 +55,7 @@ namespace litl::vulkan
     void cmdBindGraphicsPipeline(litl::RendererContext* context, CommandBufferHandle handle, GraphicsPipelineHandle graphicsPipelineHandle) noexcept;
     [[nodiscard]] RendererResult cmdPushConstants(litl::RendererContext* context, CommandBufferHandle handle, ShaderStage shaderStage, std::span<std::byte const> data) noexcept;
     void cmdDraw(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) noexcept;
+    void cmdDrawIndexed(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance) noexcept;
     [[nodiscard]] RendererResult cmdBindVertexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, uint64_t offset, uint32_t firstBinding) noexcept;
     [[nodiscard]] RendererResult cmdBindVertexBuffers(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle* bufferHandles, uint64_t* bufferOffsets, uint32_t count, uint32_t firstBinding) noexcept;
     [[nodiscard]] RendererResult cmdBindIndexBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, IndexType indexType) noexcept;
@@ -127,6 +128,7 @@ namespace litl::vulkan
         &cmdBindGraphicsPipeline,
         &cmdPushConstants,
         &cmdDraw,
+        &cmdDrawIndexed,
         &cmdBindVertexBuffer,
         &cmdBindVertexBuffers,
         &cmdBindIndexBuffer,

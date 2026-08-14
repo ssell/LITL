@@ -850,4 +850,33 @@ namespace litl::vulkan
             firstVertex,
             firstInstance);
     }
+
+    void cmdDrawIndexed(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+        auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
+
+        if (!isValid(commandBuffer))
+        {
+            return;
+        }
+
+        GraphicsPipelineResource* graphicsPipeline = vulkanContext->resources.getGraphicsPipeline(commandBuffer->boundGraphicsPipeline);
+
+        LITL_ASSERT_MSG((graphicsPipeline != nullptr), "cmdDraw called without a bound Graphics Pipeline", );
+
+        commandBuffer->descriptorSetChanges.flushChanges(
+            *vulkanContext,
+            commandBuffer->vkCommandBuffer,
+            graphicsPipeline->pipeline,
+            true);
+
+        vkCmdDrawIndexed(
+            commandBuffer->vkCommandBuffer,
+            indexCount,
+            instanceCount,
+            firstIndex,
+            vertexOffset,
+            firstInstance);
+    }
 }

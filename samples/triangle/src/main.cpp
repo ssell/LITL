@@ -62,10 +62,7 @@ void createSpinningTriangle(EntityCommands& commands, MaterialHandle material, M
 {
     auto triangleEntity = commands.createEntity();      // Note that this is a DeferredEntity. It will be materialized into a true Entity when the commands are processed.
 
-    Transform transform{};
-    transform.setPosition(position);
-
-    commands.addComponent<Transform>(triangleEntity, transform);
+    commands.addComponent<Transform>(triangleEntity, Transform::create(position));
     commands.addComponent<LocalBounds>(triangleEntity, LocalBounds{});
     commands.addComponent<WorldBounds>(triangleEntity, WorldBounds{});
     commands.addComponent<MaterialRef>(triangleEntity, MaterialRef{ .handle = material });

@@ -125,12 +125,11 @@ namespace litl
         /// <param name="attribute"></param>
         /// <param name="rollingOffset"></param>
         /// <returns></returns>
-        template<typename T>
         void addAttribute(VertexAttribute attribute, uint32_t& rollingOffset) noexcept
         {
             attribute.offset = rollingOffset;
             attributes.push_back(attribute);
-            rollingOffset += sizeof(T);
+            rollingOffset += dataFormatSize(attribute.format);
         }
     };
 

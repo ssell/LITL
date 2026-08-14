@@ -192,6 +192,11 @@ namespace litl
         m_pOps->cmdDraw(m_pContext, commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
     }
 
+    void Renderer::cmdDrawIndexed(CommandBufferHandle commandBuffer, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance) const noexcept
+    {
+        m_pOps->cmdDrawIndexed(m_pContext, commandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
+    }
+
     RendererResult Renderer::cmdBindVertexBuffer(CommandBufferHandle commandBuffer, BufferHandle buffer, uint64_t offset, uint32_t firstBinding) const noexcept
     {
         return m_pOps->cmdBindVertexBuffer(m_pContext, commandBuffer, buffer, offset, firstBinding);
