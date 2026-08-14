@@ -17,11 +17,9 @@ namespace litl
     namespace
     {
         static const StringIdMap<AssetType> g_assetTypeMap = {
-            { ".fbx"_sid, AssetType::Mesh },
-            { ".obj"_sid, AssetType::Mesh },
+            { ".litlmesh"_sid, AssetType::Mesh },
             { ".txt"_sid, AssetType::Text },
-            { ".json"_sid, AssetType::Text },
-            { ".png"_sid, AssetType::Texture2D }
+            { ".json"_sid, AssetType::Text }
         };
 
         static const std::filesystem::path g_assetsPath{ "assets" };

@@ -62,6 +62,7 @@ namespace litl
 
     void Mesh::destroy(Authority<ObjectPool> auth) noexcept
     {
+        m_mesh.clear();
         m_pObjectPool->destroyGpuBuffer(m_vertexBufferHandle);
         m_pObjectPool->destroyGpuBuffer(m_indexBufferHandle);
     }
@@ -105,5 +106,15 @@ namespace litl
         indexBuffer->setData(data);
 
         return true;
+    }
+
+    GeoMesh& Mesh::getGeoMesh() noexcept
+    {
+        return m_mesh;
+    }
+
+    GeoMesh const& Mesh::getGeoMesh() const noexcept
+    {
+        return m_mesh;
     }
 }

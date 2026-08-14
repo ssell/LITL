@@ -15,6 +15,10 @@ namespace litl
     /// </summary>
     struct GeoMesh
     {
+        /// <summary>
+        /// Clears all of the buffers.
+        /// </summary>
+        void clear() noexcept;
 
         /// <summary>
         /// Returns the number of vertices in the mesh.

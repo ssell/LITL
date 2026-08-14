@@ -31,16 +31,18 @@ namespace litl
 
     enum class AssetErrorCode : uint32_t
     {
-        None                 = 0u,
-        InvalidFunctionTable = 1u,
-        InvalidObject        = 2u,
-        FileRefreshFail      = 3u,
-        SourceReadFail       = 4u,
-        DecodeFail           = 5u,
-        DecodeBytesEmpty     = 6u,
-        DecodeAssetNull      = 7u,
-        UnsupportedType      = 8u,
-        CreationFailed       = 9u
+        None                  = 0u,
+        InvalidFunctionTable  = 1u,
+        InvalidObject         = 2u,
+        FileRefreshFail       = 3u,
+        SourceReadFail        = 4u,
+        DecodeFail            = 5u,
+        DecodeBytesEmpty      = 6u,
+        DecodeAssetNull       = 7u,
+        UnsupportedType       = 8u,
+        CreationFailed        = 9u,
+        ParseFailed           = 10u,
+        DeserializationFailed = 11u
     };
 }
 

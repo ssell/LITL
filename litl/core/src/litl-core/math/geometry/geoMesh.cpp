@@ -2,6 +2,13 @@
 
 namespace litl
 {
+    void GeoMesh::clear() noexcept
+    {
+        m_vertices.clear();
+        m_indices.clear();
+        m_faceIndexCounts.clear();
+    }
+
     size_t GeoMesh::vertexCount() const noexcept
     {
         return m_vertices.size();
