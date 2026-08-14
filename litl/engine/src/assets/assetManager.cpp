@@ -199,7 +199,7 @@ namespace litl
             if (!asset->handle.isValid())
             {
                 // Ensure there is a valid handle to return to the caller, even if the mesh itself is not yet ready
-                asset->handle = objectPool->reserveMesh({});
+                asset->handle = objectPool->reserveMesh({}, ObjectDescriptor{ .name = asset->key, .lifetime = ObjectLifetime::Application });
             }
 
             taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool), true);

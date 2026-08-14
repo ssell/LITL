@@ -75,11 +75,15 @@ namespace litl
         /// </summary>
         void setVertices(std::span<Vertex const> vertices) noexcept;
 
+        void setVertices(std::span<std::byte const> bytes) noexcept;
+
         /// <summary>
         /// Sets the indices in the mesh.
         /// If the indices are modified, it is up to the caller to ensure that vertices and face counts also remain valid.
         /// </summary>
         void setIndices(std::span<uint32_t const> indices) noexcept;
+
+        void setIndices(std::span<std::byte const> bytes) noexcept;
 
         /// <summary>
         /// Sets the "indices-per-face" values for the mesh.

@@ -42,7 +42,9 @@ namespace litl
         UnsupportedType       = 8u,
         CreationFailed        = 9u,
         ParseFailed           = 10u,
-        DeserializationFailed = 11u
+        DeserializationFailed = 11u,
+        WorkerProcessFailed   = 12u,
+        MainProcessFailed     = 13u
     };
 }
 

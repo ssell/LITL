@@ -22,4 +22,16 @@ namespace litl
 
         return true;
     }
+
+    bool MaterialAsset::processOnWorker(Asset* asset, AssetErrorCode& error) noexcept
+    {
+        // ... todo ...
+        return true;
+    }
+
+    bool MaterialAsset::processOnMain(Asset* asset, ObjectPool& objectPool, AssetErrorCode& error) noexcept
+    {
+        // ... todo ...
+        return true;
+    }
 }

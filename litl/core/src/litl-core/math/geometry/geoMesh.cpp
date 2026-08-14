@@ -59,9 +59,21 @@ namespace litl
         m_vertices.assign(vertices.begin(), vertices.end());
     }
 
+    void GeoMesh::setVertices(std::span<std::byte const> bytes) noexcept
+    {
+        std::span<Vertex const> vertices = { reinterpret_cast<Vertex const*>(bytes.data()), sizeof(Vertex) };
+        setVertices(vertices);
+    }
+
     void GeoMesh::setIndices(std::span<uint32_t const> indices) noexcept
     {
         m_indices.assign(indices.begin(), indices.end());
+    }
+
+    void GeoMesh::setIndices(std::span<std::byte const> bytes) noexcept
+    {
+        std::span<uint32_t const> indices = { reinterpret_cast<uint32_t const*>(bytes.data()), sizeof(uint32_t) };
+        setIndices(indices);
     }
 
     void GeoMesh::setFaceIndexCounts(std::span<uint32_t const> faceIndexCounts) noexcept

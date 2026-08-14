@@ -108,4 +108,16 @@ namespace litl
             return false;
         }
     }
+
+    bool TextAsset::processOnWorker(Asset* asset, AssetErrorCode& error) noexcept
+    {
+        // ... no action ...
+        return true;
+    }
+
+    bool TextAsset::processOnMain(Asset* asset, ObjectPool& objectPool, AssetErrorCode& error) noexcept
+    {
+        // ... no action ...
+        return true;
+    }
 }

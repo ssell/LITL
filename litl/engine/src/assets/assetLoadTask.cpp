@@ -31,7 +31,7 @@ namespace litl
 
         co_await ResumeTaskOnWorkerThread{ threadPool };
         {
-            // Read in all file bytes
+            // Read in all file bytes.
             if (asset->file.refresh())
             {
                 if (!asset->file.readAllBytes(bytes))
@@ -44,15 +44,21 @@ namespace litl
                 asset->setError(AssetErrorCode::FileRefreshFail);
             }
 
-            // Decode raw bytes into asset-specific data representation
+            // Decode raw bytes into asset-specific data representation.
             if (asset->status != AssetStatus::Error)
             {
-                AssetErrorCode error{ AssetErrorCode::None };
-
-                if (!asset->assetOps->decodeAssetBytes(asset, bytes, error))
+                if (!asset->assetOps->decodeAssetBytes(asset, bytes, asset->error))
                 {
-                    error = (error == AssetErrorCode::None ? AssetErrorCode::DecodeFail : error);
-                    asset->setError(error);
+                    asset->setError(asset->error, AssetErrorCode::DecodeFail);
+                }
+            }
+
+            // Perform any additional processing of the asset on the worker thread.
+            if (asset->status != AssetStatus::Error)
+            {
+                if (!asset->assetOps->processOnWorker(asset, asset->error))
+                {
+                    asset->setError(asset->error, AssetErrorCode::WorkerProcessFailed);
                 }
             }
         }
@@ -68,8 +74,21 @@ namespace litl
                 co_return false;
             }
 
-            asset->status = AssetStatus::InMemory;
-            co_return true;
+            // Perform any additional processing on the main thread.
+            if (!asset->assetOps->processOnMain(asset, objectPool, asset->error))
+            {
+                asset->setError(asset->error, AssetErrorCode::MainProcessFailed);
+            }
+
+            if (asset->status != AssetStatus::Error)
+            {
+                asset->status = AssetStatus::InMemory;
+                co_return true;
+            }
+            else
+            {
+                co_return false;
+            }
         }
     }
 }
