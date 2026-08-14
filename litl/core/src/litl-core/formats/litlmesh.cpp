@@ -9,28 +9,6 @@ namespace litl
 {
     namespace
     {
-        struct LitlMeshIds
-        {
-            /// <summary>
-            /// Id for a block of vertex data - VRTX
-            /// </summary>
-            static constexpr BinaryBlockFile::BlockIdType Vertices{ 'V', 'R', 'T', 'X' };
-
-            /// <summary>
-            /// Id for a block of index data - INDX
-            /// </summary>
-            static constexpr BinaryBlockFile::BlockIdType Indices{ 'I', 'N', 'D', 'X' };
-
-            /// <summary>
-            /// Id for a block of face index count data - FACE
-            /// </summary>
-            static constexpr BinaryBlockFile::BlockIdType Faces{ 'F', 'A', 'C', 'E' };
-
-            /// <summary>
-            /// Id for a block that describes the min/max points of a mesh AABB bounds - BNDS.
-            /// </summary>
-            static constexpr BinaryBlockFile::BlockIdType Bounds{ 'B', 'N', 'D', 'S' };
-        };
 
         void serializeHeaderBounds(GeoMesh const& mesh, std::array<float, 6>& boundsMinMaxPoints) noexcept
         {
@@ -76,10 +54,10 @@ namespace litl
         serializeHeaderBounds(mesh, boundsMinMaxPoints);
 
         std::array<BlockDataDescriptor, 4> blockDataTable {
-            BlockDataDescriptor { &litlMesh.descriptors[0], LitlMeshIds::Bounds, sizeof(float), as_byte_span(boundsMinMaxPoints) },
-            BlockDataDescriptor { &litlMesh.descriptors[1], LitlMeshIds::Vertices, sizeof(Vertex), as_byte_span(mesh.getVertices()) },
-            BlockDataDescriptor { &litlMesh.descriptors[2], LitlMeshIds::Indices, sizeof(uint32_t), as_byte_span(mesh.getIndices()) },
-            BlockDataDescriptor { &litlMesh.descriptors[3], LitlMeshIds::Faces, sizeof(uint32_t), as_byte_span(mesh.getFaceIndexCounts()) },
+            BlockDataDescriptor { &litlMesh.descriptors[0], BlockIds::Bounds, sizeof(float), as_byte_span(boundsMinMaxPoints) },
+            BlockDataDescriptor { &litlMesh.descriptors[1], BlockIds::Vertices, sizeof(Vertex), as_byte_span(mesh.getVertices()) },
+            BlockDataDescriptor { &litlMesh.descriptors[2], BlockIds::Indices, sizeof(uint32_t), as_byte_span(mesh.getIndices()) },
+            BlockDataDescriptor { &litlMesh.descriptors[3], BlockIds::Faces, sizeof(uint32_t), as_byte_span(mesh.getFaceIndexCounts()) },
         };
 
         static_assert(std::tuple_size_v<decltype(blockDataTable)> <= MaxBlocks);
@@ -102,9 +80,9 @@ namespace litl
         // ---------------------------------------------------------------------------------
         // Populate Header (most of it)
 
-        litlMesh.header.magic = Magic;
-        litlMesh.header.versionMajor = Header::MajorVersion;
-        litlMesh.header.versionMinor = Header::MinorVersion;
+        litlMesh.header.magic = Identity.magic;
+        litlMesh.header.versionMajor = Identity.versionMajor;
+        litlMesh.header.versionMinor = Identity.versionMinor;
         litlMesh.header.contentHash = 0ull;         // calculated further on
         litlMesh.header.totalBytes = 0u;            // calculated further on
         litlMesh.header.blockCount = static_cast<uint32_t>(blockDataTable.size());
@@ -155,10 +133,10 @@ namespace litl
     {
         error = ErrorCode::None;
 
-        auto vertexBlock = find(LitlMeshIds::Vertices);
-        auto indexBlock = find(LitlMeshIds::Indices);
-        auto faceBlock = find(LitlMeshIds::Faces);
-        auto boundsBlock = find(LitlMeshIds::Bounds);
+        auto vertexBlock = find(BlockIds::Vertices);
+        auto indexBlock = find(BlockIds::Indices);
+        auto faceBlock = find(BlockIds::Faces);
+        auto boundsBlock = find(BlockIds::Bounds);
 
         if (!vertexBlock.has_value())
         {

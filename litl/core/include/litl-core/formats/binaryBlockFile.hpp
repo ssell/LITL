@@ -3,6 +3,7 @@
 
 #include <array>
 #include <bit>
+#include <concepts>
 #include <cstdint>
 #include <optional>
 #include <span>
@@ -13,21 +14,46 @@ static_assert(std::endian::native == std::endian::little);
 namespace litl
 {
     /// <summary>
+    /// A four character block/file identifier. For example: 'LMSH', 'VRTX', etc.
+    /// These are used instead of an enum type as they are clearly visible when viewing hex dumps of the binary file.
+    /// </summary>
+    using BinaryBlockIdType = std::array<char, 4>;
+
+    /// <summary>
+    /// Each implementation of BinaryBlockFile must provide a FileFormatIdentity.
+    /// See the BinaryBlockFileFormat concept.
+    /// </summary>
+    struct BinaryBlockFileFormatIdentity
+    {
+        BinaryBlockIdType magic{};
+        uint16_t versionMajor{ 0u };
+        uint16_t versionMinor{ 0u };
+    };
+
+    struct BinaryBlockFile;
+
+    /// <summary>
+    /// Enforces that any implementation of BinaryBlockFile provides an Identity const that specifies the magic bytes and current version of the file.
+    /// </summary>
+    template<typename T>
+    concept BinaryBlockFileFormat = std::derived_from<T, BinaryBlockFile> && requires { 
+            { T::Identity } -> std::convertible_to<BinaryBlockFileFormatIdentity const&>;
+    };
+
+    /// <summary>
     /// Shared base structure for all internal binary files that use a block layout structure.
     /// 
     /// The layout of a BinaryBlockFile is:
     /// 
     ///     [Header]
-    ///     [Descriptors 0..N]
+    ///     [BlockDescriptors 0..N]
     ///     [Blocks 0..N]
     /// 
-    /// Note that Descriptors is not BlockDescriptor on disk, and Blocks are not Blocks on disk.
-    /// A BlockDescriptor is both the block metadata (element size, element count, etc.) plus a read-only view of the block data.
-    /// Block likewise is a read-only view on the actual block data, which is used internally.
+    /// Note that "Blocks" on disk is not the same as the internal Block struct.
+    /// The "Block" on disk is the binary blob composed of N number of elements, while "Block" struct is an internal read-only view of that blob.
     /// </summary>
     struct BinaryBlockFile
     {
-        using BlockIdType = std::array<char, 4>;
 
         enum class ErrorCode : uint32_t
         {
@@ -196,13 +222,10 @@ namespace litl
         /// </summary>
         struct Header
         {
-            static constexpr uint16_t MajorVersion = 1u;
-            static constexpr uint16_t MinorVersion = 0u;
-
             /// <summary>
             /// Identifies the file as a .litlmesh
             /// </summary>
-            BlockIdType magic{};
+            BinaryBlockIdType magic{};
 
             /// <summary>
             /// The major version of the file.
@@ -256,8 +279,7 @@ namespace litl
             /// <summary>
             /// Returns if the contents of the header are valid.
             /// </summary>
-            /// <param name="error"></param>
-            [[nodiscard]] bool validate(ErrorCode& error, BlockIdType expectedType) const noexcept;
+            [[nodiscard]] bool validate(ErrorCode& error, BinaryBlockFileFormatIdentity const& identity) const noexcept;
         };
 
         static_assert(sizeof(Header) == 64);
@@ -272,7 +294,7 @@ namespace litl
             /// <summary>
             /// Unique id of the block. Must match one of the predefined block ids (see Ids) or it will be skipped over during deserialization.
             /// </summary>
-            BlockIdType blockId{};
+            BinaryBlockIdType blockId{};
 
             /// <summary>
             /// Optional block-specific flags.
@@ -320,7 +342,7 @@ namespace litl
             /// <summary>
             /// Unique id of the block. Must match one of the predefined block ids (see Ids) or it will be skipped over during deserialization.
             /// </summary>
-            BlockIdType blockId{};
+            BinaryBlockIdType blockId{};
 
             /// <summary>
             /// The size of an individual element in the block.
@@ -373,25 +395,24 @@ namespace litl
             }
         };
 
+        static_assert(std::is_trivially_copyable_v<Block>);
+
         /// <summary>
         /// Defines the expected data layout for a block.
         /// </summary>
         struct BlockDataDescriptor
         {
             BlockDescriptor* descriptor;
-            BlockIdType id;
+            BinaryBlockIdType id;
             uint64_t elementSize;
             std::span<std::byte const> data;
         };
 
-        static_assert(std::is_trivially_copyable_v<Block>);
-
-        /// <summary>
-        /// Populates a LitlMesh file view from a supplied blob of data.
-        /// Performs various validations on the header and descriptor blocks.
-        /// </summary>
-        /// <returns>False if the supplied blob is invalid. See the supplied error code for more information.</returns>
-        [[nodiscard]] static bool parse(std::span<std::byte const> data, BlockIdType expectedType, BinaryBlockFile& file, ErrorCode& error) noexcept;
+        template<typename TFormat>
+        [[nodiscard]] static bool parse(std::span<std::byte const> data, TFormat& file, ErrorCode& error) noexcept requires BinaryBlockFileFormat<TFormat>
+        {
+            return parseImpl(data, TFormat::Identity, static_cast<BinaryBlockFile&>(file), error);
+        }
 
         /// <summary>
         /// Calculates the hash value of all file bytes following the header.
@@ -409,7 +430,7 @@ namespace litl
         /// Retrieves the block with the corresponding id.
         /// </summary>
         /// <returns>std::nullopt if no such block was found.</returns>
-        [[nodiscard]] std::optional<Block> find(BlockIdType id) const noexcept;
+        [[nodiscard]] std::optional<Block> find(BinaryBlockIdType id) const noexcept;
 
         /// <summary>
         /// The file header with the magic number, version, bounds, and expected sizes.
@@ -426,6 +447,16 @@ namespace litl
         /// Non-owning view of the entire file binary blob (including the header, etc.).
         /// </summary>
         std::span<std::byte const> data;
+
+    private:
+
+        /// <summary>
+        /// Populates a BinaryBlockFile file view from a supplied blob of data.
+        /// Performs various validations on the header and descriptor blocks.
+        /// </summary>
+        /// <returns>False if the supplied blob is invalid. See the supplied error code for more information.</returns>
+        [[nodiscard]] static bool parseImpl(std::span<std::byte const> data, BinaryBlockFileFormatIdentity const& identity, BinaryBlockFile& file, ErrorCode& error) noexcept;
+
     };
 
     static_assert(std::is_trivially_copyable_v<BinaryBlockFile>);

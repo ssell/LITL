@@ -17,21 +17,21 @@ namespace litl
     // Parsing
     // -------------------------------------------------------------------------------------
 
-    bool BinaryBlockFile::Header::validate(ErrorCode& error, BlockIdType expectedType) const noexcept
+    bool BinaryBlockFile::Header::validate(ErrorCode& error, BinaryBlockFileFormatIdentity const& identity) const noexcept
     {
-        if (magic != expectedType)
+        if (magic != identity.magic)
         {
             error = ErrorCode::InvalidFileType;
             return false;
         }
 
-        if (versionMajor != Header::MajorVersion)
+        if (versionMajor != identity.versionMajor)
         {
             error = ErrorCode::MajorVersionMismatch;
             return false;
         }
 
-        if (versionMinor > Header::MinorVersion)
+        if (versionMinor > identity.versionMinor)
         {
             error = ErrorCode::MinorVersionMismatch;
             return false;
@@ -76,7 +76,7 @@ namespace litl
         return true;
     }
 
-    bool BinaryBlockFile::parse(std::span<std::byte const> data, BlockIdType expectedType, BinaryBlockFile& file, ErrorCode& error) noexcept
+    bool BinaryBlockFile::parseImpl(std::span<std::byte const> data, BinaryBlockFileFormatIdentity const& identity, BinaryBlockFile& file, ErrorCode& error) noexcept
     {
         BinaryBlockFile parsed{};
         error = ErrorCode::None;
@@ -89,7 +89,7 @@ namespace litl
 
         std::memcpy(&parsed.header, data.data(), sizeof(Header));
 
-        if (!parsed.header.validate(error, expectedType))
+        if (!parsed.header.validate(error, identity))
         {
             return false;
         }
@@ -196,7 +196,7 @@ namespace litl
     // Utility
     // -------------------------------------------------------------------------------------
 
-    std::optional<BinaryBlockFile::Block> BinaryBlockFile::find(BlockIdType id) const noexcept
+    std::optional<BinaryBlockFile::Block> BinaryBlockFile::find(BinaryBlockIdType id) const noexcept
     {
         for (uint32_t i = 0u; i < header.blockCount; ++i)
         {
