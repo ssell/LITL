@@ -242,8 +242,10 @@ namespace litl
             // todo: update this to use jobs in the future. doing single-threaded for the moment just to get it working.
             logTrace("Processing ", dirtyBuffers.size(), " deferred data transfers ...");
 
+            auto scopedCommandBuffer = renderer->createScopedCommandBuffer();
+
             {
-                auto scopedCommandBuffer = renderer->createScopedCommandBuffer();
+                auto scopedBufferUpload = renderer->cmdBeginBufferUpload(scopedCommandBuffer.get());
 
                 while (!dirtyBuffers.empty())
                 {
