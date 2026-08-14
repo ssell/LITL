@@ -146,7 +146,7 @@ namespace litl
 
                     // -- Instanced Draw
 
-                    renderer->cmdDrawIndexed(frameCommandBuffer, drawListItem.indexCount, drawListItem.instanceCount, 0u, 0, 0u);
+                    renderer->cmdDrawIndexed(frameCommandBuffer, drawListItem.indexCount, drawListItem.instanceCount, 0u, 0, drawListItem.instanceOffset);
                 }
             }
             

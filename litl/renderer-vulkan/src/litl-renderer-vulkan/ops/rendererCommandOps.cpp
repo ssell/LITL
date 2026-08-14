@@ -863,7 +863,7 @@ namespace litl::vulkan
 
         GraphicsPipelineResource* graphicsPipeline = vulkanContext->resources.getGraphicsPipeline(commandBuffer->boundGraphicsPipeline);
 
-        LITL_ASSERT_MSG((graphicsPipeline != nullptr), "cmdDraw called without a bound Graphics Pipeline", );
+        LITL_ASSERT_MSG((graphicsPipeline != nullptr), "cmdDrawIndexed called without a bound Graphics Pipeline", );
 
         commandBuffer->descriptorSetChanges.flushChanges(
             *vulkanContext,

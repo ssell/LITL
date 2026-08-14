@@ -214,9 +214,9 @@ namespace litl
         case DataFormat::R8_UNorm: return 1u;
         case DataFormat::R16_SFloat: return 2u;
         case DataFormat::R32_SFloat: return 4u;
-        case DataFormat::RG8_UNorm: return 1u;
-        case DataFormat::RG16_SFloat: return 2u;
-        case DataFormat::RG32_SFloat: return 4u;
+        case DataFormat::RG8_UNorm: return 2u;
+        case DataFormat::RG16_SFloat: return 4u;
+        case DataFormat::RG32_SFloat: return 8u;
         case DataFormat::D32_SFloat: return 4u;
         case DataFormat::D24_UNorm_S8_UInt: return 4u;
         case DataFormat::D24_SFloat_S8_Uint: return 4u;
@@ -225,7 +225,6 @@ namespace litl
         case DataFormat::BC4_UNorm: return 8u;
         case DataFormat::BC5_UNorm: return 16u;
         case DataFormat::BC6H_UFloat: return 16u;
-        default: return 0u;
         }
     }
 
