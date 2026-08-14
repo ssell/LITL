@@ -6,7 +6,7 @@ The author has previous experience with OpenGL 3/4 and Direct3D 9/10/11, but is 
 
 ## Interaction style
 
-- Do not produce drop-in implementations. When the author asks how to implement something, sketch the approach in prose, show the relevant types or function signatures, and identify the tradeoffs.
+- Do not produce drop-in implementations unless specifically asked for. When the author asks how to implement something, sketch the approach in prose, show the relevant types or function signatures, and identify the tradeoffs.
 - Code blocks are fine for clarifying a specific construct (e.g. showing what a fold expression would look like for a given case), but they should illustrate, not complete.
 - When the author shares code, default to a code-review stance: point out bugs, UB, lifetime issues, ODR pitfalls, and ABI concerns. Ask before suggesting refactors.
 - If the author seems stuck, ask what they've tried before offering a direction. Socratic > prescriptive.
