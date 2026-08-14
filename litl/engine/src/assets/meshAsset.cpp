@@ -1,6 +1,7 @@
+#include "litl-core/formats/litlmesh.hpp"
+#include "litl-core/logging/logging.hpp"
 #include "litl-engine/assets/meshAsset.hpp"
 #include "litl-engine/objects/objectPool.hpp"
-#include "litl-core/stringId.hpp"
 
 namespace litl
 {
@@ -15,10 +16,27 @@ namespace litl
     {
         if (bytes.empty())
         {
+            error = AssetErrorCode::DecodeBytesEmpty;
             return false;
         }
 
-        // ... todo ...
+        MeshAsset* meshAsset = static_cast<MeshAsset*>(asset);
+        LitlMesh litlmesh;
+        BinaryBlockFile::ErrorCode litlmeshError = BinaryBlockFile::ErrorCode::None;
+
+        if (!LitlMesh::parse(bytes, litlmesh, litlmeshError))
+        {
+            logError("Failed to parse mesh asset with error code ", static_cast<uint32_t>(litlmeshError));
+            error = AssetErrorCode::ParseFailed;
+            return false;
+        }
+
+        if (!litlmesh.deserialize(meshAsset->mesh->getGeoMesh(), litlmeshError))
+        {
+            logError("Failed to decode mesh asset with error code ", static_cast<uint32_t>(litlmeshError));
+            error = AssetErrorCode::DeserializationFailed;
+            return false;
+        }
 
         return true;
     }

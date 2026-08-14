@@ -408,6 +408,10 @@ namespace litl
             std::span<std::byte const> data;
         };
 
+        /// <summary>
+        /// Given a binary blob, attempts to parse it into the provided file format implementation.
+        /// This will validate and populate the header and descriptors which is needed for deserialiation.
+        /// </summary>
         template<typename TFormat>
         [[nodiscard]] static bool parse(std::span<std::byte const> data, TFormat& file, ErrorCode& error) noexcept requires BinaryBlockFileFormat<TFormat>
         {

@@ -5,7 +5,7 @@
 #include <span>
 
 #include "litl-core/authority.hpp"
-#include "litl-core/math/geometry/vertex.hpp"
+#include "litl-core/math/geometry/geoMesh.hpp"
 #include "litl-engine/objects/objectDescriptor.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
 #include "litl-engine/objects/mesh.hpp"
@@ -111,6 +111,16 @@ namespace litl
         /// <returns></returns>
         bool setIndices(std::span<std::byte const> data) noexcept;
 
+        /// <summary>
+        /// Retrieves the underlying CPU-side GeoMesh which may or may not be in memory still.
+        /// </summary>
+        [[nodiscard]] GeoMesh& getGeoMesh() noexcept;
+
+        /// <summary>
+        /// Retrieves the underlying CPU-side GeoMesh which may or may not be in memory still.
+        /// </summary>
+        GeoMesh const& getGeoMesh() const noexcept;
+
     private:
         
         /// <summary>
@@ -132,6 +142,12 @@ namespace litl
         /// The underlying index buffer.
         /// </summary>
         GpuBufferHandle m_indexBufferHandle{};
+
+        /// <summary>
+        /// The CPU copy of the mesh data.
+        /// Typically this is only held temporarily until it is uploaded to the GPU.
+        /// </summary>
+        GeoMesh m_mesh;
     };
 }
 
