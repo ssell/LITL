@@ -55,6 +55,11 @@ namespace litl
         return (std::min)(a, b);
     }
 
+    [[nodiscard]] constexpr uint64_t(min)(uint64_t a, uint64_t b) noexcept
+    {
+        return (std::min)(a, b);
+    }
+
     [[nodiscard]] constexpr float (max)(float a, float b) noexcept
     {
         return (std::max)(a, b);
@@ -71,6 +76,11 @@ namespace litl
     }
 
     [[nodiscard]] constexpr uint32_t(max)(uint32_t a, uint32_t b) noexcept
+    {
+        return (std::max)(a, b);
+    }
+
+    [[nodiscard]] constexpr uint64_t(max)(uint64_t a, uint64_t b) noexcept
     {
         return (std::max)(a, b);
     }

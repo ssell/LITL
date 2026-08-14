@@ -265,10 +265,11 @@ namespace litl
     MeshHandle ObjectPool::reserveMesh(Authority<AssetManager> auth, ObjectDescriptor const& descriptor) noexcept
     {
         Mesh mesh{};
+        Mesh::ErrorCode errorCode{ Mesh::ErrorCode::None };
 
-        if (!mesh.create({}, *this, descriptor))
+        if (!mesh.create({}, *this, descriptor, errorCode))
         {
-            logWarning("Failed to reserve Mesh '", descriptor.name, "'");
+            logWarning("Failed to reserve Mesh '", descriptor.name, "' with error '", Mesh::ErrorStrings[static_cast<uint32_t>(errorCode)], "' (", static_cast<uint32_t>(errorCode), ")");
             mesh.destroy({});
             return {};
         }
@@ -279,10 +280,11 @@ namespace litl
     MeshHandle ObjectPool::createMesh(MeshDescriptor const& descriptor) noexcept
     {
         Mesh mesh{};
+        Mesh::ErrorCode errorCode{ Mesh::ErrorCode::None };
         
-        if (!mesh.create({}, *this, descriptor))
+        if (!mesh.create({}, *this, descriptor, errorCode))
         {
-            logWarning("Failed to create Mesh '", descriptor.objectInfo.name, "'");
+            logWarning("Failed to create Mesh '", descriptor.objectInfo.name, "' with error '", Mesh::ErrorStrings[static_cast<uint32_t>(errorCode)], "' (", static_cast<uint32_t>(errorCode), ")");
             mesh.destroy({});       // make sure there are no lingering resources depending on when in the creation process the error occurred.
             return {};
         }

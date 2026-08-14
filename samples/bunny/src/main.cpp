@@ -58,17 +58,17 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
 MaterialHandle createPlaceholderMaterial(ObjectPool& objectPool)
 {
     // ... todo this will eventually be defined by a material asset ...
-    auto spirvBytes = File("assets/shaders/spirv/flat.spv").readAllBytes();
+    auto spirvBytes = File("assets/shaders/spirv/test.spv").readAllBytes();
 
     return objectPool.createMaterial(MaterialDescriptor{
-        .objectInfo = ObjectDescriptor {.name = "Flat" },
+        .objectInfo = ObjectDescriptor {.name = "Test" },
         .vertexShader = ShaderResourceDescriptor {
-            .resource = "flat.spv",
+            .resource = "test.spv",
             .entryPoint = "vertexMain",
             .bytes = spirvBytes.value()
         },
         .fragmentShader = ShaderResourceDescriptor {
-            .resource = "flat.spv",
+            .resource = "test.spv",
             .entryPoint = "fragmentMain",
             .bytes = spirvBytes.value()
         }

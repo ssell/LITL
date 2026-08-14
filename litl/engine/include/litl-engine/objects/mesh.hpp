@@ -10,7 +10,7 @@
 #include "litl-engine/objects/objectDescriptor.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
 #include "litl-engine/objects/mesh.hpp"
-#include "litl-core/containers/common.hpp"      // not needed directly, but contains as_byte_span which is typically used to provide vertex/index byte data
+#include "litl-renderer/enums.hpp"
 
 namespace litl
 {
@@ -67,15 +67,40 @@ namespace litl
     {
     public:
 
+        enum class ErrorCode : uint32_t
+        {
+            None = 0u,
+            VertexBufferCreationFailed = 1u,
+            IndexBufferCreationFailed = 2u,
+            InvalidVertexElementSize = 3u,
+            InvalidVertexElementSizeForCpu = 4u,
+            InvalidIndexElementSize = 5u,
+            InvalidIndexElementSizeForCpu = 6u,
+            EmptyVertexDataSource = 7u,
+            EmptyIndexDataSource = 8u
+        };
+
+        static constexpr std::array<std::string_view, 9> ErrorStrings{
+            "None",
+            "Vertex Buffer Creation Failed",
+            "Index Buffer Creation Failed",
+            "Invalid Vertex Element Size",
+            "Invalid Vertex Element Size For Cpu",
+            "Invalid Index Element Size",
+            "Invalid Index Element Size For Cpu",
+            "Empty Vertex Data Source",
+            "Empty Index Data Source"
+        };
+
         /// <summary>
         /// Path when being created all at once.
         /// </summary>
-        [[nodiscard]] bool create(Authority<ObjectPool> auth, ObjectPool& pool, MeshDescriptor const& descriptor) noexcept;
+        [[nodiscard]] bool create(Authority<ObjectPool> auth, ObjectPool& pool, MeshDescriptor const& descriptor, ErrorCode& error) noexcept;
 
         /// <summary>
         /// Path when being created incrementally by the asset system.
         /// </summary>
-        [[nodiscard]] bool create(Authority<ObjectPool> auth, ObjectPool& pool, ObjectDescriptor const& descriptor) noexcept;
+        [[nodiscard]] bool create(Authority<ObjectPool> auth, ObjectPool& pool, ObjectDescriptor const& descriptor, ErrorCode& error) noexcept;
 
         /// <summary>
         /// Destroys both the CPU and GPU copies of the underlying buffers.
@@ -103,9 +128,9 @@ namespace litl
         /// <param name="toCpu">If true, the data is copied into the internal GeoMesh.</param>
         /// <param name="toGpu">If true, the data is copied into the internal GpuBuffer.</param>
         template<typename T> requires std::is_trivially_copyable_v<T>
-        bool setVertices(std::span<T const> data, bool toCpu, bool toGpu) noexcept
+        [[nodiscard]] bool setVertices(std::span<T const> data, bool toCpu, bool toGpu, ErrorCode& error) noexcept
         {
-            return setVertices(as_byte_span(data), sizeof(T), toCpu, toGpu);
+            return setVertices(as_byte_span(data), sizeof(T), toCpu, toGpu, error);
         }
 
         /// <summary>
@@ -113,7 +138,7 @@ namespace litl
         /// </summary>
         /// <param name="toCpu">If true, the data is copied into the internal GeoMesh.</param>
         /// <param name="toGpu">If true, the data is copied into the internal GpuBuffer.</param>
-        bool setVertices(std::span<std::byte const> data, size_t vertexElementSize, bool toCpu, bool toGpu) noexcept;
+        [[nodiscard]] bool setVertices(std::span<std::byte const> data, size_t vertexElementSize, bool toCpu, bool toGpu, ErrorCode& error) noexcept;
 
         /// <summary>
         /// Sets the indices for the mesh.
@@ -121,9 +146,9 @@ namespace litl
         /// <param name="toCpu">If true, the data is copied into the internal GeoMesh.</param>
         /// <param name="toGpu">If true, the data is copied into the internal GpuBuffer.</param>
         template<typename T> requires std::is_trivially_copyable_v<T>
-        bool setIndices(std::span<T const> data, bool toCpu, bool toGpu) noexcept
+        [[nodiscard]] bool setIndices(std::span<T const> data, bool toCpu, bool toGpu, ErrorCode& error) noexcept
         {
-            return setIndices(as_byte_span(data), sizeof(T), toCpu, toGpu);
+            return setIndices(as_byte_span(data), sizeof(T), toCpu, toGpu, error);
         }
 
         /// <summary>
@@ -131,12 +156,12 @@ namespace litl
         /// </summary>
         /// <param name="toCpu">If true, the data is copied into the internal GeoMesh.</param>
         /// <param name="toGpu">If true, the data is copied into the internal GpuBuffer.</param>
-        bool setIndices(std::span<std::byte const> data, size_t indexElementSize, bool toCpu, bool toGpu) noexcept;
+        [[nodiscard]] bool setIndices(std::span<std::byte const> data, size_t indexElementSize, bool toCpu, bool toGpu, ErrorCode& error) noexcept;
 
         /// <summary>
         /// Attempts to upload any changes to the underlying GeoMesh to the GPU.
         /// </summary>
-        [[nodiscard]] bool uploadCpuMeshToGpu() noexcept;
+        [[nodiscard]] bool uploadCpuMeshToGpu(ErrorCode& error) noexcept;
 
         /// <summary>
         /// Retrieves the underlying CPU-side GeoMesh which may or may not be in memory still.
@@ -149,6 +174,8 @@ namespace litl
         GeoMesh const& getGeoMesh() const noexcept;
 
     private:
+
+        [[nodiscard]] bool setGpuData(BufferTypeFlag bufferType, std::span<std::byte const> data, size_t elementSize, GpuBufferHandle& handle) noexcept;
         
         /// <summary>
         /// The object pool that owns the mesh.
@@ -175,17 +202,6 @@ namespace litl
         /// Typically this is only held temporarily until it is uploaded to the GPU.
         /// </summary>
         GeoMesh m_mesh;
-
-        /// <summary>
-        /// The current version of the mesh.
-        /// Calling setVertices, setIndices, or the non-const geoGeoMesh increment the version.
-        /// </summary>
-        uint32_t m_version{ 0u };
-
-        /// <summary>
-        /// The last version of the mesh that was uploaded to the GPU.
-        /// </summary>
-        uint32_t m_lastUploadedVersion{ 0u };
     };
 }
 

@@ -50,10 +50,11 @@ namespace litl
     bool MeshAsset::processOnMain(Asset* asset, ObjectPool& objectPool, AssetErrorCode& error) noexcept
     {
         MeshAsset* meshAsset = static_cast<MeshAsset*>(asset);
-        
-        if (!meshAsset->mesh->uploadCpuMeshToGpu())
+        Mesh::ErrorCode meshError = Mesh::ErrorCode::None;
+
+        if (!meshAsset->mesh->uploadCpuMeshToGpu(meshError))
         {
-            logError("Failed to upload CPU mesh buffers to GPU");
+            logError("Failed to upload CPU mesh buffers to GPU with with error '", Mesh::ErrorStrings[static_cast<uint32_t>(meshError)], "' (", static_cast<uint32_t>(meshError), ")");
             return false;
         }
         
