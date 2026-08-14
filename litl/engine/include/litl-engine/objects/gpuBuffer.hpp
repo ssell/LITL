@@ -59,7 +59,7 @@ namespace litl
         /// <summary>
         /// The size of this buffer in bytes.
         /// </summary>
-        uint32_t bytes{ 0u };
+        size_t bytes{ 0ull };
 
         /// <summary>
         /// The size of an individual item in the buffer in bytes.

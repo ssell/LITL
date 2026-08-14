@@ -39,30 +39,35 @@ namespace litl
         [[nodiscard]] GpuBuffer* getGpuBuffer(GpuBufferHandle handle) noexcept;
         void getAllGpuBufferHandles(std::vector<GpuBufferHandle>& handles) const noexcept;
         void destroyGpuBuffer(GpuBufferHandle handle) noexcept;
+        void deferDestroyGpuBuffer(GpuBufferHandle handle) noexcept;
 
         [[nodiscard]] MaterialHandle reserveMaterial(Authority<AssetManager> auth) noexcept;
         [[nodiscard]] MaterialHandle createMaterial(MaterialDescriptor const& descriptor) noexcept;
         [[nodiscard]] Material* getMaterial(MaterialHandle handle) noexcept;
         void getAllMaterialHandles(std::vector<MaterialHandle>& handles) const noexcept;
         void destroyMaterial(MaterialHandle handle) noexcept;
+        void deferDestroyMaterial(MaterialHandle handle) noexcept;
 
         [[nodiscard]] MeshHandle reserveMesh(Authority<AssetManager> auth, ObjectDescriptor const& descriptor) noexcept;
         [[nodiscard]] MeshHandle createMesh(MeshDescriptor const& descriptor) noexcept;
         [[nodiscard]] Mesh* getMesh(MeshHandle handle) noexcept;
         void getAllMeshHandles(std::vector<MeshHandle>& handles) const noexcept;
         void destroyMesh(MeshHandle handle) noexcept;
+        void deferDestroyMesh(MeshHandle handle) noexcept;
 
         [[nodiscard]] TextHandle reserveText(Authority<AssetManager> auth) noexcept;
         [[nodiscard]] TextHandle createText(TextDescriptor const& descriptor) noexcept;
         [[nodiscard]] Text* getText(TextHandle handle) noexcept;
         void getAllTextHandles(std::vector<TextHandle>& handles) const noexcept;
         void destroyText(TextHandle handle) noexcept;
+        void deferDestroyText(TextHandle handle) noexcept;
 
         [[nodiscard]] Texture2DHandle reserveTexture2D(Authority<AssetManager> auth) noexcept;
         [[nodiscard]] Texture2DHandle createTexture2D(Texture2DDescriptor const& descriptor) noexcept;
         [[nodiscard]] Texture2D* getTexture2D(Texture2DHandle handle) noexcept;
         void getAllTexture2DHandles(std::vector<Texture2DHandle>& handles) const noexcept;
         void destroyTexture2D(Texture2DHandle handle) noexcept;
+        void deferDestroyTexture2D(Texture2DHandle handle) noexcept;
 
     private:
 

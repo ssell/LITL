@@ -75,7 +75,7 @@ namespace litl
         /// <summary>
         /// Path when being created incrementally by the asset system.
         /// </summary>
-        [[nodiscard]] bool create(Authority<ObjectPool> auth, ObjectDescriptor const& descriptor) noexcept;
+        [[nodiscard]] bool create(Authority<ObjectPool> auth, ObjectPool& pool, ObjectDescriptor const& descriptor) noexcept;
 
         /// <summary>
         /// Destroys both the CPU and GPU copies of the underlying buffers.

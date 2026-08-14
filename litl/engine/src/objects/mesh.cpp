@@ -63,8 +63,9 @@ namespace litl
         return true;
     }
 
-    bool Mesh::create(Authority<ObjectPool> auth, ObjectDescriptor const& descriptor) noexcept
+    bool Mesh::create(Authority<ObjectPool> auth, ObjectPool& pool, ObjectDescriptor const& descriptor) noexcept
     {
+        m_pObjectPool = &pool;
         m_descriptor.objectInfo = descriptor;
         return true;
     }
@@ -107,16 +108,30 @@ namespace litl
             return false;
         }
 
-        // ... todo ...
+        if (toGpu)
+        {
+            GpuBuffer* vertexBuffer = m_pObjectPool->getGpuBuffer(m_vertexBufferHandle);
 
+            if (vertexBuffer != nullptr)
+            {
+                // Need to make sure the vertex buffer is still valid for the incoming payload.
+                GpuBufferDescriptor const& vertexBufferDescriptor = vertexBuffer->getDescriptor();
 
-        LITL_ASSERT_MSG((m_pObjectPool != nullptr), "Mesh::setVertices called with a null object pool.", false);
+                if ((vertexBufferDescriptor.itemBytes != vertexElementSize) || (vertexBufferDescriptor.bytes < data.size_bytes()))
+                {
+                    // The current buffer is incompatible with the new payload. Need to recreate.
+                    m_pObjectPool->deferDestroyGpuBuffer(m_vertexBufferHandle);
+                    vertexBuffer = nullptr;
+                }
+            }
 
-        GpuBuffer* vertexBuffer = m_pObjectPool->getGpuBuffer(m_vertexBufferHandle);
+            if (vertexBuffer == nullptr)
+            {
+                // ... todo create the vertex buffer ...
+            }
 
-        LITL_ASSERT_MSG((vertexBuffer != nullptr), "Mesh::setVertices called with a null underlying vertex buffer.", false);
-
-        vertexBuffer->setData(data);
+            vertexBuffer->setData(data);
+        }
 
         return true;
     }
@@ -139,20 +154,28 @@ namespace litl
 
         if (toGpu)
         {
+            GpuBuffer* indexBuffer = m_pObjectPool->getGpuBuffer(m_indexBufferHandle);
 
+            if (indexBuffer != nullptr)
+            {
+                // Need to make sure the index buffer is still valid for the incoming payload.
+                GpuBufferDescriptor const& indexBufferDescriptor = indexBuffer->getDescriptor();
+
+                if ((indexBufferDescriptor.itemBytes != indexElementSize) || (indexBufferDescriptor.bytes < data.size_bytes()))
+                {
+                    // The current buffer is incompatible with the new payload. Need to recreate.
+                    m_pObjectPool->deferDestroyGpuBuffer(m_indexBufferHandle);
+                    indexBuffer = nullptr;
+                }
+            }
+
+            if (indexBuffer == nullptr)
+            {
+                // ... todo create the index buffer ...
+            }
+
+            indexBuffer->setData(data);
         }
-
-        /*
-        // ... todo ...
-
-        LITL_ASSERT_MSG((m_pObjectPool != nullptr), "Mesh::setIndices called with a null object pool.", false);
-
-        GpuBuffer* indexBuffer = m_pObjectPool->getGpuBuffer(m_indexBufferHandle);
-
-        LITL_ASSERT_MSG((indexBuffer != nullptr), "Mesh::setIndices called with a null underlying index buffer.", false);
-
-        indexBuffer->setData(data);
-        */
 
         return true;
     }

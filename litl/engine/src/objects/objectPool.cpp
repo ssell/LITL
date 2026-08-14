@@ -204,6 +204,11 @@ namespace litl
         }
     }
 
+    void ObjectPool::deferDestroyGpuBuffer(GpuBufferHandle handle) noexcept
+    {
+        // ... todo add to a defer destruction queue that is ticked and destroy on a later frame to ensure the resource is not in use by the GPU ...
+    }
+
     //--------------------------------------------------------------------------------------
     // Material
     //--------------------------------------------------------------------------------------
@@ -248,6 +253,11 @@ namespace litl
         }
     }
 
+    void ObjectPool::deferDestroyMaterial(MaterialHandle handle) noexcept
+    {
+        // ... todo add to a defer destruction queue that is ticked and destroy on a later frame to ensure the resource is not in use by the GPU ...
+    }
+
     //--------------------------------------------------------------------------------------
     // Mesh
     //--------------------------------------------------------------------------------------
@@ -256,7 +266,7 @@ namespace litl
     {
         Mesh mesh{};
 
-        if (!mesh.create({}, descriptor))
+        if (!mesh.create({}, *this, descriptor))
         {
             logWarning("Failed to reserve Mesh '", descriptor.name, "'");
             mesh.destroy({});
@@ -299,6 +309,11 @@ namespace litl
             mesh->destroy({});
             m_impl->meshPool.destroy(handle);
         }
+    }
+
+    void ObjectPool::deferDestroyMesh(MeshHandle handle) noexcept
+    {
+        // ... todo add to a defer destruction queue that is ticked and destroy on a later frame to ensure the resource is not in use by the GPU ...
     }
 
     //--------------------------------------------------------------------------------------
@@ -345,6 +360,12 @@ namespace litl
         }
     }
 
+    void ObjectPool::deferDestroyText(TextHandle handle) noexcept
+    {
+        // ... todo add to a defer destruction queue that is ticked and destroy on a later frame to ensure the resource is not in use ...
+        // ... is this even needed for text? ...
+    }
+
     //--------------------------------------------------------------------------------------
     // Texture2D
     //--------------------------------------------------------------------------------------
@@ -387,5 +408,10 @@ namespace litl
             texture2D->destroy({});
             m_impl->texture2DPool.destroy(handle);
         }
+    }
+
+    void ObjectPool::deferDestroyTexture2D(Texture2DHandle handle) noexcept
+    {
+        // ... todo add to a defer destruction queue that is ticked and destroy on a later frame to ensure the resource is not in use by the GPU ...
     }
 }
