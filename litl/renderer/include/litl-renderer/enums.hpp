@@ -195,6 +195,40 @@ namespace litl
         BC6H_UFloat             // A  three-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned floating-point RGB texel data.
     };
 
+    /// <summary>
+    /// Returns the size, in bytes, represented by each data format.
+    /// </summary>
+    [[nodiscard]] inline uint32_t dataFormatSize(DataFormat format) noexcept
+    {
+        switch (format)
+        {
+        case DataFormat::RGBA8_UNorm: return 4u;
+        case DataFormat::RGBA8_SRGB: return 4u;
+        case DataFormat::BGRA8_Unorm: return 4u;
+        case DataFormat::BGRA8_SRGB: return 4u;
+        case DataFormat::ABGR10_UNorm_Pack32: return 4u;
+        case DataFormat::RGBA16_SFloat: return 8u;
+        case DataFormat::RGB32_SFloat: return 12u;
+        case DataFormat::RGBA32_SFloat: return 16u;
+        case DataFormat::R11G11B10_UFloat: return 4u;
+        case DataFormat::R8_UNorm: return 1u;
+        case DataFormat::R16_SFloat: return 2u;
+        case DataFormat::R32_SFloat: return 4u;
+        case DataFormat::RG8_UNorm: return 1u;
+        case DataFormat::RG16_SFloat: return 2u;
+        case DataFormat::RG32_SFloat: return 4u;
+        case DataFormat::D32_SFloat: return 4u;
+        case DataFormat::D24_UNorm_S8_UInt: return 4u;
+        case DataFormat::D24_SFloat_S8_Uint: return 4u;
+        case DataFormat::BC7_UNorm: return 16u;
+        case DataFormat::BC7_SRGB: return 16u;
+        case DataFormat::BC4_UNorm: return 8u;
+        case DataFormat::BC5_UNorm: return 16u;
+        case DataFormat::BC6H_UFloat: return 16u;
+        default: return 0u;
+        }
+    }
+
     enum class PrimitiveTopology : uint32_t
     {
         PointList = 0,

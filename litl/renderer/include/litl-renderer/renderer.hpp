@@ -65,6 +65,7 @@ namespace litl
         void (*cmdBindGraphicsPipeline)(RendererContext*, CommandBufferHandle, GraphicsPipelineHandle);
         RendererResult (*cmdPushConstants)(RendererContext*, CommandBufferHandle, ShaderStage, std::span<std::byte const>);
         void (*cmdDraw)(RendererContext*, CommandBufferHandle, uint32_t, uint32_t, uint32_t, uint32_t);
+        void (*cmdDrawIndexed)(RendererContext*, CommandBufferHandle, uint32_t, uint32_t, uint32_t, int32_t, uint32_t);
 
         // buffer commands and operations
         RendererResult (*cmdBindVertexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, uint64_t, uint32_t);
@@ -324,6 +325,17 @@ namespace litl
         /// <param name="firstVertex"></param>
         /// <param name="firstInstance"></param>
         void cmdDraw(CommandBufferHandle commandBuffer, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) const noexcept;
+
+        /// <summary>
+        /// Issues a command to draw indexed primitives.
+        /// </summary>
+        /// <param name="commandBuffer"></param>
+        /// <param name="indexCount"></param>
+        /// <param name="instanceCount"></param>
+        /// <param name="firstIndex"></param>
+        /// <param name="vertexOffset"></param>
+        /// <param name="firstInstance"></param>
+        void cmdDrawIndexed(CommandBufferHandle commandBuffer, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance) const noexcept;
         
         /// <summary>
         /// Binds the vertex buffer as the current vertex input vertex source.
