@@ -41,7 +41,7 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     auto bunnyMaterial = createPlaceholderMaterial(*objectPool);
 
     // ... todo below is dependent on finishing the mesh asset pipeline (gpu buffer upload) ...
-    /*
+    
     auto bunnyEntity = commands.createEntity();
 
     Transform transform{};
@@ -52,7 +52,7 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     commands.addComponent<WorldBounds>(bunnyEntity, WorldBounds{});
     commands.addComponent<MaterialRef>(bunnyEntity, MaterialRef{ .handle = bunnyMaterial });
     commands.addComponent<MeshRef>(bunnyEntity, MeshRef{ .handle = bunnyMesh->handle });
-    */
+    
 }
 
 MaterialHandle createPlaceholderMaterial(ObjectPool& objectPool)

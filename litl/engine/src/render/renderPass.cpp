@@ -126,13 +126,20 @@ namespace litl
 
                     if (drawListItem.meshHandle != currMeshHandle)
                     {
-                        currMeshHandle = drawListItem.meshHandle;
-
                         auto* currVertexBuffer = objectPool->getGpuBuffer(drawListItem.mesh->getVertexBuffer());
                         auto* currIndexBuffer = objectPool->getGpuBuffer(drawListItem.mesh->getIndexBuffer());
 
+                        if ((currVertexBuffer == nullptr) || (currIndexBuffer == nullptr))
+                        {
+                            // This may be an asset that is still in the process of being loaded in.
+                            // Continue here (move to next drawListItem) to skip both the bind and draw.
+                            continue;
+                        }
+
                         renderer->cmdBindVertexBuffer(frameCommandBuffer, currVertexBuffer->getBufferHandle(), 0ull, 0u);
                         renderer->cmdBindIndexBuffer(frameCommandBuffer, currIndexBuffer->getBufferHandle(), IndexType::Uint32);  // todo support other index sizes
+
+                        currMeshHandle = drawListItem.meshHandle;
                     }
 
                     // -- Instanced Draw
