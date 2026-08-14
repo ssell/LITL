@@ -99,7 +99,9 @@ namespace litl
 
                 for (auto& drawListItem : drawList)
                 {
-                    if (!drawListItem.graphicsPipelineHandle.isValid())
+                    if (!drawListItem.graphicsPipelineHandle.isValid() ||
+                         drawListItem.vertexCount == 0u ||
+                         drawListItem.indexCount == 0u)
                     {
                         continue;
                     }
@@ -144,7 +146,7 @@ namespace litl
 
                     // -- Instanced Draw
 
-                    renderer->cmdDraw(frameCommandBuffer, drawListItem.vertexCount, drawListItem.instanceCount, 0u, drawListItem.instanceOffset);
+                    renderer->cmdDraw(frameCommandBuffer, drawListItem.indexCount, drawListItem.instanceCount, 0u, drawListItem.instanceOffset);
                 }
             }
             
@@ -160,8 +162,8 @@ namespace litl
         {
             auto* material = objectPool->getMaterial(entity.material.handle);
             auto* mesh = objectPool->getMesh(entity.mesh.handle);
-            auto& meshDescriptor = mesh->getDescriptor()
-                ;
+            auto& meshDescriptor = mesh->getDescriptor();
+
             return DrawListItem{
                 .materialHandle = entity.material.handle,
                 .material = material,
@@ -169,7 +171,7 @@ namespace litl
                 .meshHandle = entity.mesh.handle,
                 .mesh = mesh,
                 .vertexCount = meshDescriptor.vertexInfo.vertexCount,
-                .indexCount = meshDescriptor.vertexInfo.vertexCount,
+                .indexCount = meshDescriptor.indexInfo.indexCount,
                 .instanceCount = 0u,
                 .instanceOffset = instanceOffset
             };
