@@ -27,7 +27,12 @@ namespace litl::import
 
     std::unique_ptr<Importer> ImporterRegistry::create(File const& file) const noexcept
     {
-        const auto* entry = find(file.extension());
+        return create(file.extension());
+    }
+
+    std::unique_ptr<Importer> ImporterRegistry::create(std::string_view extension) const noexcept
+    {
+        const auto* entry = find(extension);
 
         if (entry == nullptr)
         {

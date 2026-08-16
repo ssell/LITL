@@ -2,6 +2,58 @@
 
 namespace litl
 {
+    GeoMesh::GeoMesh()
+    {
+
+    }
+
+    GeoMesh::~GeoMesh()
+    {
+        clear();
+    }
+
+    GeoMesh::GeoMesh(GeoMesh const& other)
+    {
+        m_bounds = other.m_bounds;
+        m_vertices.assign(other.m_vertices.begin(), other.m_vertices.end());
+        m_indices.assign(other.m_indices.begin(), other.m_indices.end());
+        m_faceIndexCounts.assign(other.m_faceIndexCounts.begin(), other.m_faceIndexCounts.end());
+    }
+
+    GeoMesh& GeoMesh::operator=(GeoMesh const& other)
+    {
+        if (this != &other)
+        {
+            m_bounds = other.m_bounds;
+            m_vertices.assign(other.m_vertices.begin(), other.m_vertices.end());
+            m_indices.assign(other.m_indices.begin(), other.m_indices.end());
+            m_faceIndexCounts.assign(other.m_faceIndexCounts.begin(), other.m_faceIndexCounts.end());
+        }
+
+        return *this;
+    }
+
+    GeoMesh::GeoMesh(GeoMesh&& other)
+    {
+        m_bounds = other.m_bounds; other.m_bounds = {};
+        m_vertices = std::move(other.m_vertices);
+        m_indices = std::move(other.m_indices);
+        m_faceIndexCounts = std::move(other.m_faceIndexCounts);
+    }
+
+    GeoMesh& GeoMesh::operator=(GeoMesh&& other)
+    {
+        if (this != &other)
+        {
+            m_bounds = other.m_bounds; other.m_bounds = {};
+            m_vertices = std::move(other.m_vertices);
+            m_indices = std::move(other.m_indices);
+            m_faceIndexCounts = std::move(other.m_faceIndexCounts);
+        }
+
+        return *this;
+    }
+
     void GeoMesh::clear() noexcept
     {
         m_vertices.clear();

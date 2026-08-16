@@ -44,20 +44,26 @@ namespace litl::import
             return Result::Error(ErrorType::EmptySourceFile);
         }
 
-        auto importer = m_importerRegistry.create(sourceFile);
         auto fileBytes = sourceFile.readAllBytes();
-
-        if (importer == nullptr)
-        {
-            return Result::Error(ErrorType::NoImporterForSourceExtension);
-        }
 
         if (!fileBytes.has_value())
         {
             return Result::Error(ErrorType::FailedToReadSourceFile);
         }
 
-        Result const result = importer->import(sourceFile, *fileBytes, importedData);
+        return import(sourceFile, *fileBytes, importedData);
+    }
+
+    Result ImportService::import(File const& sourceFile, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
+    {
+        auto importer = m_importerRegistry.create(sourceFile.extension());
+
+        if (importer == nullptr)
+        {
+            return Result::Error(ErrorType::NoImporterForSourceExtension);
+        }
+
+        Result const result = importer->import(sourceFile, sourceBytes, importedData);
 
         return result;
     }
