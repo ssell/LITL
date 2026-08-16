@@ -430,9 +430,9 @@ bool createGraphicsPipeline(SampleRenderState& sample) noexcept
     graphicsPipelineDescriptor.vertexInput.addBinding(VertexBinding{ 0, sizeof(Vertex), VertexInputRate::PerVertex });
 
     uint32_t offset = 0u;
-    graphicsPipelineDescriptor.vertexInput.addAttribute<vec3>(VertexAttribute{ 0, 0, DataFormat::RGB32_SFloat }, offset);  // position
-    graphicsPipelineDescriptor.vertexInput.addAttribute<vec3>(VertexAttribute{ 1, 0, DataFormat::RGB32_SFloat }, offset);  // color
-    graphicsPipelineDescriptor.vertexInput.addAttribute<vec2>(VertexAttribute{ 2, 0, DataFormat::RG32_SFloat }, offset);   // uv
+    graphicsPipelineDescriptor.vertexInput.addAttribute(VertexAttribute{ 0, 0, DataFormat::RGB32_SFloat }, offset);  // position
+    graphicsPipelineDescriptor.vertexInput.addAttribute(VertexAttribute{ 1, 0, DataFormat::RGB32_SFloat }, offset);  // color
+    graphicsPipelineDescriptor.vertexInput.addAttribute(VertexAttribute{ 2, 0, DataFormat::RG32_SFloat }, offset);   // uv
 
     sample.graphicsPipeline = sample.renderer->createGraphicsPipeline(graphicsPipelineDescriptor);
 

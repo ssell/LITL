@@ -225,6 +225,7 @@ namespace litl
         case DataFormat::BC4_UNorm: return 8u;
         case DataFormat::BC5_UNorm: return 16u;
         case DataFormat::BC6H_UFloat: return 16u;
+        case DataFormat::Undefined: return 4u;
         }
     }
 
