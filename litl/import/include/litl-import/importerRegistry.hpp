@@ -50,6 +50,7 @@ namespace litl::import
 
         [[nodiscard]] Entry const* find(std::string_view extension) const noexcept;
         [[nodiscard]] std::unique_ptr<Importer> create(File const& file) const noexcept;
+        [[nodiscard]] std::unique_ptr<Importer> create(std::string_view extension) const noexcept;
 
     private:
 

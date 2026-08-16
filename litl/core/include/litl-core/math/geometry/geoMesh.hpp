@@ -15,6 +15,15 @@ namespace litl
     /// </summary>
     struct GeoMesh
     {
+        GeoMesh();
+        ~GeoMesh();
+
+        GeoMesh(GeoMesh const& other);
+        GeoMesh& operator=(GeoMesh const&);
+
+        GeoMesh(GeoMesh&& other);
+        GeoMesh& operator=(GeoMesh&& other);
+
         /// <summary>
         /// Clears all of the buffers.
         /// </summary>
