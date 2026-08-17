@@ -81,8 +81,8 @@ namespace litl
 
                     if (assetFileType != g_assetTypeMap.end())
                     {
-                        const auto relativePath = path.lexically_relative(g_assetsPath).generic_string();  // from "assets/"
-                        const auto assetKey = path.lexically_relative(g_assetsPath).replace_extension().generic_string();        // "mesh\\triangle" to "mesh/triangle"
+                        const auto relativePath = path.lexically_relative(g_assetsPath).generic_string();
+                        const auto assetKey = path.lexically_relative(g_assetsPath).replace_extension().generic_string();
                         const auto hashedKey = StringId(assetKey);
                         const auto find = assetMap.find(hashedKey);
 
