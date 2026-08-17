@@ -35,7 +35,7 @@ namespace litl
         return true;
     }
 
-    bool decodeNonLitlMeshBytes(MeshAsset* meshAsset, std::span<std::byte const> otherBytes, std::vector<std::byte>& litlMeshBytes, AssetErrorCode& error) noexcept
+    bool decodeNonLitlMeshBytes(MeshAsset* meshAsset, std::span<std::byte const> otherBytes, AssetErrorCode& error) noexcept
     {
         const auto extension = meshAsset->file.extension();
 
@@ -49,6 +49,7 @@ namespace litl
             if (importedData.type == import::ImportedDataType::Mesh)
             {
                 meshAsset->mesh->getGeoMesh() = std::move(*importedData.mesh->meshes[0].get());
+                return true;
             }
             else
             {
@@ -82,19 +83,8 @@ namespace litl
         }
         else
         {
-            // An external, third-party mesh format. We need to convert the mesh to a litlmesh first.
-            // Typically you want to convert all meshes to a .litlmesh outside of the engine, but sometimes during 
-            // development it is just easier to take the performance impact and load straight from a different format.
-            std::vector<std::byte> litlMeshBytes;
-
-            if (decodeNonLitlMeshBytes(meshAsset, bytes, litlMeshBytes, error))
-            {
-                return decodeLitlMeshBytes(meshAsset, litlMeshBytes, error);
-            }
-            else
-            {
-                return false;
-            }
+            logWarning("Decoding mesh asset with key '", asset->key, "' directly from external format. It is recommended to first convert the mesh to the internal .litlmesh format to improve loading performance.");
+            return decodeNonLitlMeshBytes(meshAsset, bytes, error);
         }
 
         return false;
