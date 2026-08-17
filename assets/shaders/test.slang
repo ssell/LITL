@@ -66,6 +66,7 @@ struct VertexOutput
 {
     float4 position : SV_Position;
     float2 uv       : UV;
+    float3 color    : COLOR;
 };
 
 [shader("vertex")]
@@ -82,7 +83,8 @@ VertexOutput vertexMain(
 
     output.position = mul(mvpMatrix, float4(input.position.xyz, 1.0));
     output.uv = input.uv;
-    
+    output.color = input.normal;
+
     return output;
 }
 
@@ -99,6 +101,6 @@ struct FragmentOutput
 FragmentOutput fragmentMain(VertexOutput input)
 {
     FragmentOutput output = (FragmentOutput)0;
-    output.color = float4(0.0f, 1.0f, 0.0f, 1.0f);
+    output.color = float4(input.color, 1.0f);
     return output;
 }

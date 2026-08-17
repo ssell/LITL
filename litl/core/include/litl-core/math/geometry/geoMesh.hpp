@@ -84,14 +84,22 @@ namespace litl
         /// </summary>
         void setVertices(std::span<Vertex const> vertices) noexcept;
 
+        /// <summary>
+        /// Sets the vertices in the mesh.
+        /// If the vertices are modified, it is up to the caller to ensure indices and bounds also remain valid.
+        /// </summary>
         void setVertices(std::span<std::byte const> bytes) noexcept;
 
         /// <summary>
-        /// Sets the indices in the mesh.
+        /// Sets the indices in the mesh from a raw byte blob.
         /// If the indices are modified, it is up to the caller to ensure that vertices and face counts also remain valid.
         /// </summary>
         void setIndices(std::span<uint32_t const> indices) noexcept;
 
+        /// <summary>
+        /// Sets the indices in the mesh from a raw byte blob.
+        /// If the indices are modified, it is up to the caller to ensure that vertices and face counts also remain valid.
+        /// </summary>
         void setIndices(std::span<std::byte const> bytes) noexcept;
 
         /// <summary>
@@ -125,6 +133,17 @@ namespace litl
         /// Recalculates and modifies the mesh in-place such that the "faceIndexCount" for every face is 3.
         /// </summary>
         void triangulate() noexcept;
+
+        /// <summary>
+        /// Do all vertices have non-zero normals?
+        /// Note that this potentially has to check all vertices, so either save the result or refrain from using.
+        /// </summary>
+        [[nodiscard]] bool hasNormals() const noexcept;
+
+        /// <summary>
+        /// Recalculates all vertex normals.
+        /// </summary>
+        void recalulateNormals() noexcept;
 
     private:
 

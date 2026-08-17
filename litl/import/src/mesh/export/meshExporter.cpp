@@ -16,7 +16,7 @@ namespace litl::import
 
     }
 
-    Result MeshExporter::write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data) noexcept
+    Result MeshExporter::prepare(ImportedData const& data) noexcept
     {
         if (data.type != ImportedDataType::Mesh)
         {
@@ -33,6 +33,21 @@ namespace litl::import
             return Result::Error(ErrorType::ImportedDataNull);
         }
 
+        GeoMesh* mesh = data.mesh->meshes[0].get();         // todo handle submeshes;
+
+        // ... todo triangulate ...
+        // ... todo meshoptimize ...
+        
+        if (!mesh->hasNormals())
+        {
+            mesh->recalulateNormals();
+        }
+
+        return Result::Success();
+    }
+
+    Result MeshExporter::write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data) noexcept
+    {
         if (!Directory::ensureExists(destFolderPath))
         {
             return Result::Error(ErrorType::ExportDestinationDoesNotExist);
@@ -44,7 +59,9 @@ namespace litl::import
         auto errorCode = BinaryBlockFile::ErrorCode::None;
         auto serialized = std::vector<std::byte>();
 
-        if (!litlmesh.serialize(*(data.mesh->meshes[0].get()), serialized, errorCode))
+        GeoMesh* mesh = data.mesh->meshes[0].get();         // todo handle submeshes;
+
+        if (!litlmesh.serialize(*mesh, serialized, errorCode))
         {
             std::string message = std::format("Serialization of GeoMesh to LitlMesh failed with error code {}", static_cast<uint32_t>(errorCode));
             return Result::Error(ErrorType::SerializationFailed, message);

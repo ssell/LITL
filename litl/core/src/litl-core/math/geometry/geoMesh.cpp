@@ -197,4 +197,27 @@ namespace litl
         // ... todo not yet needed for current test models but will need in the future ...
         // ... use ear-clipping as i did long ago, but need to project to a 2D plane based on face normal ...
     }
+
+    bool GeoMesh::hasNormals() const noexcept
+    {
+        for (auto& v : m_vertices)
+        {
+            if (v.normal.isZeroed())
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    void GeoMesh::recalulateNormals() noexcept
+    {
+        // ... todo ..
+
+        for (auto& v : m_vertices)
+        {
+            v.normal = vec3::up();
+        }
+    }
 }
