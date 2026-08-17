@@ -143,7 +143,22 @@ namespace litl
         /// <summary>
         /// Recalculates all vertex normals.
         /// </summary>
-        void recalulateNormals() noexcept;
+        /// <param name="fast">If true, normals are weighted based on face size. If false, normals are weighted based on face angles which is more accurate.</param>
+        void recalulateNormals(bool fast) noexcept;
+
+        /// <summary>
+        /// Calculates if the indices in the mesh are clockwise or counter-clockwise winding order.
+        /// CCW is nearly universal across interchange/authoring formats (glTF, fbx, obj, etc.) and tools (blender, maya, 3ds max, etc.).
+        /// CW is what is used internally by LITL and how meshes are stored inside of .litlmesh files.
+        /// LITL uses CW as it uses a left-handed (y-up, +z forward) coordinate system.
+        /// </summary>
+        bool isClockwiseWinding() const noexcept;
+
+        /// <summary>
+        /// Modifies the mesh so that its indices are stored in a counter-clockwise manner.
+        /// If they are already are counter-clockwise then no further action is taken.
+        /// </summary>
+        void ensureCounterClockwiseWinding() noexcept;
 
     private:
 
