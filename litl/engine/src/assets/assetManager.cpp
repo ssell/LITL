@@ -81,10 +81,8 @@ namespace litl
 
                     if (assetFileType != g_assetTypeMap.end())
                     {
-                        auto relativePath = path.lexically_relative(g_assetsPath);  // from "assets/"
-                        relativePath.replace_extension();                           // strip the extension
-                        
-                        const auto assetKey = relativePath.generic_string();        // "mesh\\triangle" to "mesh/triangle"
+                        const auto relativePath = path.lexically_relative(g_assetsPath).generic_string();  // from "assets/"
+                        const auto assetKey = path.lexically_relative(g_assetsPath).replace_extension().generic_string();        // "mesh\\triangle" to "mesh/triangle"
                         const auto hashedKey = StringId(assetKey);
                         const auto find = assetMap.find(hashedKey);
 
@@ -92,11 +90,11 @@ namespace litl
                         {
                             if (static_cast<uint32_t>(assetFileType->second.priority) > static_cast<uint32_t>(find->second.priority))
                             {
-                                logWarning("Conflicting asset key for '", assetKey, "' with path '", relativePath.string(), "' has higher priority than preexisting mapped asset and is replacing it.");
+                                logWarning("Conflicting asset key for '", assetKey, "' with path '", relativePath, "' has higher priority than preexisting mapped asset and is replacing it.");
                             }
                             else
                             {
-                                logWarning("Conflicted asset key for '", assetKey, "'with path '", relativePath.string(), "' skipped due to equal or lower priority than preexisting mapped asset.");
+                                logWarning("Conflicted asset key for '", assetKey, "' with path '", relativePath, "' skipped due to equal or lower priority than preexisting mapped asset.");
                                 return;
                             }
                         }
@@ -121,7 +119,7 @@ namespace litl
 
                         case AssetType::Unknown:
                         default:
-                            logWarning("Unknown/unhandled asset type for '", assetKey, "' with path '", relativePath.string(), "'.");
+                            logWarning("Unknown/unhandled asset type for '", assetKey, "' with path '", relativePath, "'.");
                             break;
                         }
                     }
