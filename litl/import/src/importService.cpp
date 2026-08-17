@@ -63,9 +63,21 @@ namespace litl::import
             return Result::Error(ErrorType::NoImporterForSourceExtension);
         }
 
-        Result const result = importer->import(sourceFile, sourceBytes, importedData);
+        Result const importResult = importer->import(sourceFile, sourceBytes, importedData);
 
-        return result;
+        if (!importResult.success)
+        {
+            return importResult;
+        }
+
+        auto exporter = m_exporterRegistry.create(importedData.type);
+
+        if (exporter == nullptr)
+        {
+            return Result::Error(ErrorType::NoExporterForImportedDataType);
+        }
+
+        return exporter->prepare(importedData);
     }
 
     Result ImportService::convert(std::string_view sourcePath) noexcept
@@ -93,7 +105,14 @@ namespace litl::import
             return Result::Error(ErrorType::NoExporterForImportedDataType);
         }
 
-        auto exportResult = exporter->write(sourceFile, destFolderPath, importedData);
+        Result const prepareResult = exporter->prepare(importedData);
+
+        if (!prepareResult.success)
+        {
+            return prepareResult;
+        }
+
+        Result const exportResult = exporter->write(sourceFile, destFolderPath, importedData);
 
         if (!exportResult.success)
         {

@@ -22,6 +22,7 @@ namespace litl::import
         MeshExporter(MeshExporter const&) = delete;
         MeshExporter& operator=(MeshExporter const&) = delete;
 
+        [[nodiscard]] Result prepare(ImportedData const& data) noexcept override;
         [[nodiscard]] Result write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data) noexcept override;
     };
 }
