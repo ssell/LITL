@@ -16,10 +16,33 @@ namespace litl
 {
     namespace
     {
-        static const StringIdMap<AssetType> g_assetTypeMap = {
-            { ".litlmesh"_sid, AssetType::Mesh },
-            { ".txt"_sid, AssetType::Text },
-            { ".json"_sid, AssetType::Text }
+        enum class MappingPriority : uint32_t
+        {
+            Low = 0u,
+            Medium = 1u,
+            High = 2u
+        };
+
+        struct AssetTypeMapping
+        {
+            MappingPriority priority{ MappingPriority::Low };
+            AssetType type{ AssetType::Unknown };
+        };
+
+        struct AssetMapping
+        {
+            MappingPriority priority{ MappingPriority::Low };
+            AssetHandle handle{};
+        };
+
+        static const StringIdMap<AssetTypeMapping> g_assetTypeMap = {
+            { ".litlmesh"_sid, { MappingPriority::High, AssetType::Mesh } },
+            { ".glb"_sid, { MappingPriority::Medium, AssetType::Mesh } },
+            { ".txt"_sid, { MappingPriority::Medium, AssetType::Text } },
+            { ".json"_sid, { MappingPriority::Medium, AssetType::Text } },
+            { ".obj"_sid, { MappingPriority::Low, AssetType::Mesh } },
+            { ".fbx"_sid, { MappingPriority::Low, AssetType::Mesh } },
+            { ".gltf"_sid, { MappingPriority::Low, AssetType::Mesh } }
         };
 
         static const std::filesystem::path g_assetsPath{ "assets" };
@@ -31,7 +54,7 @@ namespace litl
 
         std::shared_ptr<ObjectPool> objectPool;
         std::shared_ptr<TaskManager> taskManager;
-        StringIdMap<AssetHandle> assetMap;
+        StringIdMap<AssetMapping> assetMap;
 
         std::mutex assetMapMutex;
         std::mutex assetLoadMutex;
@@ -63,36 +86,43 @@ namespace litl
                         
                         const auto assetKey = relativePath.generic_string();        // "mesh\\triangle" to "mesh/triangle"
                         const auto hashedKey = StringId(assetKey);
+                        const auto find = assetMap.find(hashedKey);
 
                         if (assetMap.find(hashedKey) != assetMap.end())
                         {
-                            logWarning("Conflicting asset key for '", assetKey, "' with path '", relativePath.string(), "'. Assets may not have duplicate names with differing extensions.");
-                        }
-                        else
-                        {
-                            switch (assetFileType->second)
+                            if (static_cast<uint32_t>(assetFileType->second.priority) > static_cast<uint32_t>(find->second.priority))
                             {
-                            case AssetType::Material:
-                                createUnloadedMaterialAsset(file, assetKey, hashedKey);
-                                break;
-
-                            case AssetType::Mesh:
-                                createUnloadedMeshAsset(file, assetKey, hashedKey);
-                                break;
-
-                            case AssetType::Text:
-                                createUnloadedTextAsset(file, assetKey, hashedKey);
-                                break;
-
-                            case AssetType::Texture2D:
-                                createUnloadedTexture2DAsset(file, assetKey, hashedKey);
-                                break;
-
-                            case AssetType::Unknown:
-                            default:
-                                logWarning("Unknown/unhandled asset type for '", assetKey, "' with path '", relativePath.string(), "'.");
-                                break;
+                                logWarning("Conflicting asset key for '", assetKey, "' with path '", relativePath.string(), "' has higher priority than preexisting mapped asset and is replacing it.");
                             }
+                            else
+                            {
+                                logWarning("Conflicted asset key for '", assetKey, "'with path '", relativePath.string(), "' skipped due to equal or lower priority than preexisting mapped asset.");
+                                return;
+                            }
+                        }
+
+                        switch (assetFileType->second.type)
+                        {
+                        case AssetType::Material:
+                            createUnloadedMaterialAsset(file, assetKey, hashedKey, assetFileType->second.priority);
+                            break;
+
+                        case AssetType::Mesh:
+                            createUnloadedMeshAsset(file, assetKey, hashedKey, assetFileType->second.priority);
+                            break;
+
+                        case AssetType::Text:
+                            createUnloadedTextAsset(file, assetKey, hashedKey, assetFileType->second.priority);
+                            break;
+
+                        case AssetType::Texture2D:
+                            createUnloadedTexture2DAsset(file, assetKey, hashedKey, assetFileType->second.priority);
+                            break;
+
+                        case AssetType::Unknown:
+                        default:
+                            logWarning("Unknown/unhandled asset type for '", assetKey, "' with path '", relativePath.string(), "'.");
+                            break;
                         }
                     }
                 }
@@ -125,15 +155,18 @@ namespace litl
         /// Invoked during asset map population.
         /// This creates an unloaded material asset reference in the asset map that can be loaded via initiateMaterialAssetLoad.
         /// </summary>
-        void createUnloadedMaterialAsset(File const& file, std::string const& key, StringId hashedKey) noexcept
+        void createUnloadedMaterialAsset(File const& file, std::string const& key, StringId hashedKey, MappingPriority priority) noexcept
         {
             MaterialAsset asset = createBaseAsset<MaterialAsset>(AssetType::Material, file, key, hashedKey);
             asset.handle = MaterialHandle{};
             asset.assetOps = &MaterialAssetOps;
 
-            assetMap[hashedKey] = AssetHandle{
-                .materialHandle = materialAssetPool.create(asset),
-                .type = asset.type
+            assetMap[hashedKey] = AssetMapping{
+                .priority = priority,
+                .handle = AssetHandle{
+                    .materialHandle = materialAssetPool.create(asset),
+                    .type = asset.type
+                }
             };
         }
 
@@ -169,15 +202,18 @@ namespace litl
         /// Invoked during asset map population.
         /// This creates an unloaded mesh asset reference in the asset map that can be loaded via initiateMeshAssetLoad.
         /// </summary>
-        void createUnloadedMeshAsset(File const& file, std::string const& key, StringId hashedKey) noexcept
+        void createUnloadedMeshAsset(File const& file, std::string const& key, StringId hashedKey, MappingPriority priority) noexcept
         {
             MeshAsset asset = createBaseAsset<MeshAsset>(AssetType::Mesh, file, key, hashedKey);
             asset.handle = MeshHandle{};
             asset.assetOps = &MeshAssetOps;
 
-            assetMap[hashedKey] = AssetHandle{
-                .meshHandle = meshAssetPool.create(asset),
-                .type = asset.type
+            assetMap[hashedKey] = AssetMapping{
+                .priority = priority,
+                .handle = AssetHandle{
+                    .meshHandle = meshAssetPool.create(asset),
+                    .type = asset.type
+                }
             };
         }
 
@@ -213,15 +249,18 @@ namespace litl
         /// Invoked during asset map population.
         /// This creates an unloaded text asset reference in the asset map that can be loaded via initiateTextAssetLoad.
         /// </summary>
-        void createUnloadedTextAsset(File const& file, std::string const& key, StringId hashedKey) noexcept
+        void createUnloadedTextAsset(File const& file, std::string const& key, StringId hashedKey, MappingPriority priority) noexcept
         {
             TextAsset asset = createBaseAsset<TextAsset>(AssetType::Text, file, key, hashedKey);
             asset.handle = TextHandle{};
             asset.assetOps = &TextAssetOps;
 
-            assetMap[hashedKey] = AssetHandle{
-                .textHandle = textAssetPool.create(asset),
-                .type = asset.type
+            assetMap[hashedKey] = AssetMapping{
+                .priority = priority,
+                .handle = AssetHandle{
+                    .textHandle = textAssetPool.create(asset),
+                    .type = asset.type
+                }
             };
         }
 
@@ -257,15 +296,18 @@ namespace litl
         /// Invoked during asset map population.
         /// This creates an unloaded texture asset reference in the asset map that can be loaded via initiateTexture2DAssetLoad.
         /// </summary>
-        void createUnloadedTexture2DAsset(File const& file, std::string const& key, StringId hashedKey) noexcept
+        void createUnloadedTexture2DAsset(File const& file, std::string const& key, StringId hashedKey, MappingPriority priority) noexcept
         {
             Texture2DAsset asset = createBaseAsset<Texture2DAsset>(AssetType::Texture2D, file, key, hashedKey);
             asset.handle = Texture2DHandle{};
             asset.assetOps = &Texture2DAssetOps;
 
-            assetMap[hashedKey] = AssetHandle{
-                .texture2DHandle = texture2DAssetPool.create(asset),
-                .type = asset.type
+            assetMap[hashedKey] = AssetMapping{
+                .priority = priority,
+                .handle = AssetHandle{
+                    .texture2DHandle = texture2DAssetPool.create(asset),
+                    .type = asset.type
+                }
             };
         }
 
@@ -328,7 +370,7 @@ namespace litl
 
         if (find != m_impl->assetMap.end())
         {
-            return find->second;
+            return find->second.handle;
         }
         
         return {};
