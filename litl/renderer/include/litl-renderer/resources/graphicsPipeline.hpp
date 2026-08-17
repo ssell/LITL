@@ -181,6 +181,7 @@ namespace litl
 
         /// <summary>
         /// The winding order the interprets a polygon front-facing orientation.
+        /// Clockwise by default since LITL is left-handed.
         /// </summary>
         FrontFace frontFace = FrontFace::Clockwise;
 

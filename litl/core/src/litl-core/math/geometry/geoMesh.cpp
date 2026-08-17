@@ -211,13 +211,50 @@ namespace litl
         return true;
     }
 
-    void GeoMesh::recalulateNormals() noexcept
+    void GeoMesh::recalulateNormals(bool fast) noexcept
     {
-        // ... todo ..
+        /**
+         * To calculate normals for a mesh we must first calculate the normal for each face.
+         * Then each individual vertex calculates its own normal as a weighted average of the normals
+         * of the faces that it is part of. There are two primary weighting strategies:
+         * 
+         *     A) Weight based on triangle size. The non-normalized normals of the faces are used,
+         *        and the larger the triangle then the larger this normal. The logic here is that
+         *        triangles that cover more of the surface have a greater contribution to the normal.
+         *        This approach is faster, but is less accurate (but typically "good enough").
+         * 
+         *     B) Weight based on vertex face angle size. The greater the angle, the more the vertex
+         *        contributes to the overall shape of the face, and thus the contribution of the face
+         *        on the vertex's normal. This is slower than (A) but provides better results.
+         */
 
-        for (auto& v : m_vertices)
+        // ... todo calculate normal of all faces. needed for both paths ...
+
+        if (fast)
         {
-            v.normal = vec3::up();
+            // Calculate vertex normal based on face sizes.
+            // ... todo ...
         }
+        else
+        {
+            // Calculate vertex normal based on face angle at vertex.
+            // ... todo ...
+        }
+    }
+
+    bool GeoMesh::isClockwiseWinding() const noexcept
+    {
+        // ... todo ...
+        return true;
+    }
+
+    void GeoMesh::ensureCounterClockwiseWinding() noexcept
+    {
+        if (!isClockwiseWinding())
+        {
+            return;
+        }
+
+        // ... todo ...
     }
 }
