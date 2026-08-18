@@ -519,7 +519,7 @@ namespace litl
         return v;
     }
 
-    [[nodiscard]] constexpr vec3 lerp(vec3 a, vec3 b, float f)
+    [[nodiscard]] constexpr vec3 lerp(vec3 a, vec3 b, float f) noexcept
     {
         return vec3(lerp(a.x(), b.x(), f), lerp(a.y(), b.y(), f), lerp(a.z(), b.z(), f));
     }
