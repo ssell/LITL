@@ -144,6 +144,51 @@ namespace litl::core
         }
     }
 
+    /// <summary>
+    /// A mesh can be composed of multiple independent components/shells. For example a head + separate eye balls.
+    /// This builds the list of which component each face belongs to and also if each face wants to be flipped.
+    /// </summary>
+    void buildComponentsAndFlipCheck(std::span<FaceAdj const> adjacentFaces, std::vector<std::uint32_t>& components, std::vector<std::uint8_t>& shouldFlip, uint32_t faceCount, MeshOrientationResult& report) noexcept
+    {
+        std::vector<std::uint32_t> frontier;
+
+        for (uint32_t i = 0u; i < faceCount; ++i)
+        {
+            if (components[i] != Constants::uint32_null_index)
+            {
+                continue;
+            }
+
+            const uint32_t component = report.componentCount++;
+
+            components[i] = component;
+            shouldFlip[i] = 0;
+            frontier.push_back(i);
+
+            while (!frontier.empty())
+            {
+                const uint32_t face = frontier.back(); frontier.pop_back();
+
+                for (uint8_t j = 0; j < adjacentFaces[face].neighborCount; ++j)
+                {
+                    const uint32_t neighbor = adjacentFaces[face].neighbor[j];
+                    const uint8_t want = shouldFlip[face] ^ (adjacentFaces[face].agrees[j] ? 0u : 1u);
+
+                    if (components[neighbor] == Constants::uint32_null_index)
+                    {
+                        components[neighbor] = component;
+                        shouldFlip[neighbor] = want;
+                        frontier.push_back(neighbor);
+                    }
+                    else if (shouldFlip[neighbor] != want)
+                    {
+                        report.nonOrientable = true;    // Mobius-like. First assignment wins.
+                    }
+                }
+            }
+        }
+    }
+
     MeshOrientationResult orientateMesh(std::span<Vertex const> vertices, std::span<uint32_t> indices) noexcept
     {
         MeshOrientationResult report{};
@@ -157,12 +202,13 @@ namespace litl::core
 
         std::vector<HalfEdge> edges;
         std::vector<FaceAdj> adjacentFaces(faceCount);
+        std::vector<std::uint32_t> components(faceCount, Constants::uint32_null_index);
+        std::vector<std::uint8_t> shouldFlip(faceCount, 0);
 
         buildAndSortHalfEdges(edges, faceCount, indices);
         buildFaceEdgeAdjaceny(adjacentFaces, edges, report);
-
-        // ... todo ...
-
+        buildComponentsAndFlipCheck(adjacentFaces, components, shouldFlip, faceCount, report);
+        
         return report;
     }
 }
