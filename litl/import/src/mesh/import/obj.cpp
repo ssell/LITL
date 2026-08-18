@@ -165,6 +165,8 @@ namespace litl::import
 
             convertToLitlMesh(litlMesh, objMesh, objResult.attributes);
 
+            litlMesh->setWindingOrder(MeshWinding::CounterClockwise);
+
             importedData.mesh->summary.meshCount += 1u;
             importedData.mesh->summary.vertexCount += static_cast<uint32_t>(litlMesh->vertexCount());
             importedData.mesh->summary.indexCount += static_cast<uint32_t>(litlMesh->indexCount());

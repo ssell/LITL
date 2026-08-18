@@ -27,10 +27,13 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     auto sceneView = services.get<SceneView>();         // A view into the current active scene.
     auto assets = services.get<AssetManager>();
 
+    const vec3 cameraPos = vec3{ 0.0f, 0.5f, 0.0f };
+    const vec3 bunnyPos = vec3{ 0.0f, 0.0f, 10.0f };
+
     createMainCamera(
         CameraDescriptor{ .projection = CameraProjection::Perspective, .clearColor = color{ 0.035f, 0.035f, 0.05f } }, 
-        vec3{}, 
-        vec3::forward(), 
+        cameraPos, 
+        (bunnyPos - cameraPos).normalized(),
         vec3::up(), 
         *objectPool, 
         *sceneView);
@@ -41,7 +44,7 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     auto bunnyMaterial = createPlaceholderMaterial(*objectPool);
     auto bunnyEntity = commands.createEntity();
 
-    commands.addComponent<Transform>(bunnyEntity, Transform::create(vec3{ 0.0f, 0.0f, 3.0f }));
+    commands.addComponent<Transform>(bunnyEntity, Transform::create(bunnyPos));
     commands.addComponent<LocalBounds>(bunnyEntity, LocalBounds{});     // todo these need to come from the mesh ...
     commands.addComponent<WorldBounds>(bunnyEntity, WorldBounds{});
     commands.addComponent<MaterialRef>(bunnyEntity, MaterialRef{ .handle = bunnyMaterial });
