@@ -248,7 +248,7 @@ namespace litl
         return true;
     }
 
-    void GeoMesh::ensureCounterClockwiseWinding() noexcept
+    void GeoMesh::ensureClockwiseWinding() noexcept
     {
         if (!isClockwiseWinding())
         {
@@ -256,5 +256,10 @@ namespace litl
         }
 
         // ... todo ...
+    }
+
+    void GeoMesh::setWindingOrder(bool clockwise) noexcept
+    {
+        m_isClockwiseWinding = clockwise;
     }
 }

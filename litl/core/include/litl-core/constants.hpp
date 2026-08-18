@@ -50,7 +50,7 @@ namespace litl
         /// <summary>
         /// Used as a null index value for various items.
         /// </summary>
-        static constexpr uint32_t uint32_null_index = 4294967295u;
+        static constexpr uint32_t uint32_null_index = ~0u;
     };
 }
 
