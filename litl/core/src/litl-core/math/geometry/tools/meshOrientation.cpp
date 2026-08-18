@@ -57,6 +57,50 @@ namespace litl::core
         };
 
         /// <summary>
+        /// The state of a single component of the mesh.
+        /// A mesh can be composed of multiple independent components/shells. For example a head + separate eye balls.
+        /// </summary>
+        struct ComponentState
+        {
+            /// <summary>
+            /// The sum of all vertex positions that make up the component.
+            /// </summary>
+            vec3 centroidSum{};
+
+            /// <summary>
+            /// Number of vertices that make up the componnet.
+            /// </summary>
+            uint32_t vertCount = 0u;
+
+            /// <summary>
+            /// The index of the vertex that lies the furthest along the randomized extrema direction vector.
+            /// </summary>
+            uint32_t extremalVert = Constants::uint32_null_index;
+
+            /// <summary>
+            /// The normal of the
+            /// </summary>
+            vec3 extremalNormal{};
+
+            /// <summary>
+            /// The dot-product value of the vertex that lies the furthest along the randomized extrema direction vector.
+            /// Used during component state construction to determine which vertex is bestVert.
+            /// </summary>
+            float extremaBestProjection = -std::numeric_limits<float>::infinity();
+
+            /// <summary>
+            /// The number of edges that do not have a neighbor.
+            /// </summary>
+            uint32_t boundary = 0u;
+
+            /// <summary>
+            /// The sum of dot(position, outwardNormal) for the component.
+            /// If vol6 > 0, then the face is outwards for a CW LHS system.
+            /// </summary>
+            double vol6 = 0.0;
+        };
+
+        /// <summary>
         /// Given a face index, returns the indices of the vertices that compose it.
         /// </summary>
         [[nodiscard]] std::array<uint32_t, 3> getTriangle(std::span<uint32_t const> indices, uint32_t faceIndex, bool flipped) noexcept
@@ -209,6 +253,74 @@ namespace litl::core
         buildFaceEdgeAdjaceny(adjacentFaces, edges, report);
         buildComponentsAndFlipCheck(adjacentFaces, components, shouldFlip, faceCount, report);
         
+        std::vector<ComponentState> componentStates(report.componentCount);
+        const vec3 extremaDir = normalize(vec3(0.4362f, 0.7891f, 0.4321f));     // "random" direction to find the extrema (manifold) point
+
+        // Pass A: ventroid, extremal vertex, boundary count.
+        for (uint32_t face = 0u; face < faceCount; ++face)
+        {
+            ComponentState& componentState = componentStates[components[face]];
+            componentState.boundary += (3u - adjacentFaces[face].neighborCount);
+
+            for (uint32_t i = 0u; i < 3u; ++i)
+            {
+                const uint32_t vi = indices[(face * 3) + i];
+
+                componentState.centroidSum += vertices[vi].position;
+                componentState.vertCount++;
+
+                const float p = dot(vertices[vi].position, extremaDir);
+
+                if (p > componentState.extremaBestProjection)
+                {
+                    componentState.extremaBestProjection = p;
+                    componentState.extremalVert = vi;
+                }
+            }
+        }
+
+        // Pass B: signed volume about the component centroid + extremal-vertex normal.
+        for (uint32_t face = 0u; face < faceCount; ++face)
+        {
+            ComponentState& componentState = componentStates[components[face]];
+            const auto [a, b, c] = getTriangle(indices, face, shouldFlip[face] != 0u);
+
+            const vec3 centroid = componentState.centroidSum / static_cast<float>(componentState.vertCount);
+            const vec3 pa = vertices[a].position - centroid;
+            const vec3 pb = vertices[b].position - centroid;
+            const vec3 pc = vertices[c].position - centroid;
+
+            componentState.vol6 = dot(pa, cross(pb, pc));
+
+            if ((a == componentState.extremalVert) || (b == componentState.extremalVert) || (c == componentState.extremalVert))
+            {
+                componentState.extremalNormal += cross(pb - pa, pc - pa);       // area-weighted
+            }
+        }
+
+        std::vector<uint8_t> componentShouldFlip(report.componentCount, 0u);
+
+        for (uint32_t i = 0; i < report.componentCount; ++i)
+        {
+            const ComponentState& componentState = componentStates[i];
+            const bool isClosed = (componentState.boundary == 0u);
+            const bool facesOutward = (isClosed ? (componentState.vol6 > 0.0) : (dot(componentState.extremalNormal, extremaDir) > 0.0));
+            // ^ LH + CW-outward  =>  vol6 > 0, and the hull vertex normal faces +d.
+
+            componentShouldFlip[i] = facesOutward ? 0u : 1u;
+        }
+
+        for (uint32_t face = 0; face < faceCount; ++face)
+        {
+            if ((shouldFlip[face] ^ componentShouldFlip[components[face]]) == 0u)
+            {
+                continue;
+            }
+
+            std::swap(indices[(face * 3) + 1], indices[(face * 3) + 2]);        // swap (a, b, c) -> (a, c, b)
+            report.flippedFaces++;
+        }
+
         return report;
     }
 }
