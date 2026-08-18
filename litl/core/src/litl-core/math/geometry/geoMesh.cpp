@@ -230,15 +230,30 @@ namespace litl
             return;
         }
 
-        MeshOrientationReport orientationReport = orientateMesh(m_vertices, m_indices);
-
-        if (orientationReport.nonOrientable)
+        if (m_winding == MeshWinding::Unknown)
         {
-            logWarning("Called to ensure winding on a non-orientable mesh.");
+            MeshOrientationReport orientationReport = orientateMesh(m_vertices, m_indices);
+
+            if (orientationReport.nonOrientable)
+            {
+                logWarning("Called to ensure winding on a non-orientable mesh.");
+            }
+            else
+            {
+                setWindingOrder(MeshWinding::Clockwise);
+            }
         }
         else
         {
-            setWindingOrder(MeshWinding::Clockwise);
+            const uint32_t faceCount = m_indices.size() / 3u;
+
+            if (faceCount > 0u)
+            {
+                for (uint32_t face = 0u; face < faceCount; ++face)
+                {
+                    std::swap(m_indices[(face * 3) + 1], m_indices[(face * 3) + 2]);
+                }
+            }
         }
     }
 

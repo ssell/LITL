@@ -25,7 +25,7 @@ namespace litl
     /// </summary>
     [[nodiscard]] constexpr vec3 faceNormalScaled(vec3 a, vec3 b, vec3 c) noexcept
     {
-        return cross(c - a, b - a);
+        return cross(c - a, b - a);    // face area = (length / 2)
     }
 
     /// <summary>
@@ -42,7 +42,7 @@ namespace litl
     /// </summary>
     [[nodiscard]] constexpr vec3 faceNormalScaledCCW(vec3 a, vec3 b, vec3 c) noexcept
     {
-        return cross(b - a, c - a);
+        return cross(b - a, c - a);    // face area = (length / 2)
     }
 
     /// <summary>

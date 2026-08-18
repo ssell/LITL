@@ -83,7 +83,7 @@ VertexOutput vertexMain(
 
     output.position = mul(mvpMatrix, float4(input.position.xyz, 1.0));
     output.uv = input.uv;
-    output.color = input.normal;
+    output.color = (input.normal + 1.0) * 0.5;      // [-1, 1] to [0, 1]
 
     return output;
 }

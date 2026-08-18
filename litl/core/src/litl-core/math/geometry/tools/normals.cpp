@@ -16,35 +16,6 @@ namespace litl
         /// The minimum length of a scaled normal for it to be considered a valid, non-degenerate normal.
         /// </summary>
         static constexpr float NormalEpsilon = 0.00000001f;
-
-        struct Face
-        {
-            std::array<uint32_t, 3> indices;
-            vec3 normal{};
-        };
-
-        [[nodiscard]] constexpr std::array<uint32_t, 3> getTriangle(std::span<uint32_t const> indices, uint32_t faceIndex) noexcept
-        {
-            return std::array<uint32_t, 3> {
-                indices[(faceIndex * 3) + 0],
-                indices[(faceIndex * 3) + 1],
-                indices[(faceIndex * 3) + 2]
-            };
-        }
-
-        constexpr void setFaceNormal(std::span<uint32_t const> indices, std::span<Vertex const> vertices, Face& face) noexcept
-        {
-            face.normal = faceNormalScaled(
-                vertices[indices[face.indices[0]]].position,
-                vertices[indices[face.indices[1]]].position,
-                vertices[indices[face.indices[2]]].position
-            );
-        }
-
-        [[nodiscard]] constexpr vec3 getPosition(Face const& face, uint32_t index, std::span<Vertex const> vertices, std::span<uint32_t const> indices) noexcept
-        {
-            return vertices[indices[face.indices[index]]].position;
-        }
     }
 
     void calculateMeshNormals(std::span<Vertex> vertices, std::span<uint32_t> indices) noexcept
@@ -61,34 +32,42 @@ namespace litl
          * So first we must calculate the normal for each face, and then we can perform a second pass to calculate vertex normals.
          */
 
-        std::vector<Face> faces(faceCount);
+        std::vector<std::array<uint32_t, 3>> faces(faceCount);
         std::vector<vec3> accumulatedNormals(vertices.size());
 
         // Calculate the scaled weighted normal for each individual face
-        for (uint32_t i = 0u; i < faceCount; ++i)
+        for (uint32_t face = 0u; face < faceCount; ++face)
         {
-            Face& face = faces[i];
+            const uint32_t faceIndices[3] = {
+                (face * 3) + 0, 
+                (face * 3) + 1, 
+                (face * 3) + 2 
+            };
 
-            face.indices = getTriangle(indices, i);
-            setFaceNormal(indices, vertices, face);
+            const vec3 scaledFaceNormal = faceNormalScaled(
+                vertices[indices[faceIndices[0]]].position,
+                vertices[indices[faceIndices[1]]].position,
+                vertices[indices[faceIndices[2]]].position);
 
-            if (face.normal.lengthSquared() < FaceAreaEpsilon)
+            const float faceNormalLength = scaledFaceNormal.length();
+
+            if (faceNormalLength < FaceAreaEpsilon)
             {
                 continue;
             }
 
-            const auto normal = face.normal.normalized();
+            const vec3 faceNormal = scaledFaceNormal / faceNormalLength;
 
             for (uint32_t j = 0u; j < 3u; ++j)
             {
-                const auto p0 = getPosition(face, (j + 0) % 3, vertices, indices);
-                const auto p1 = getPosition(face, (j + 1) % 3, vertices, indices);
-                const auto p2 = getPosition(face, (j + 2) % 3, vertices, indices);
+                const auto p0 = vertices[indices[faceIndices[(j + 0) % 3]]].position;
+                const auto p1 = vertices[indices[faceIndices[(j + 1) % 3]]].position;
+                const auto p2 = vertices[indices[faceIndices[(j + 2) % 3]]].position;
                 const auto e1 = p1 - p0;
                 const auto e2 = p2 - p0;
                 const auto theta = std::atan2(cross(e1, e2).length(), dot(e1, e2));
 
-                accumulatedNormals[indices[face.indices[j]]] += (normal * theta);
+                accumulatedNormals[indices[faceIndices[j]]] += (faceNormal * theta);
             }
         }
 

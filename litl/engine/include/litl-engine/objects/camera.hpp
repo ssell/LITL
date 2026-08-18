@@ -114,7 +114,7 @@ namespace litl
         /// <summary>
         /// The near clip-plane of the frustum in world units.
         /// </summary>
-        float zNear = 0.1f;
+        float zNear = 0.01f;
 
         /// <summary>
         /// The far clip-plane of the frustum in world units.
