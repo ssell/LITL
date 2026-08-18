@@ -3,10 +3,31 @@
 
 #include "litl-core/math/geometry/tools/meshOrientation.hpp"
 
-namespace litl::core
+namespace litl
 {
+    /**
+     * TODO (?):
+     * 
+     * Imbedded within the logic below is the concept of a Mesh component.
+     * 
+     * Each component is a standalone shell within a single mesh. For example a head and two eyeballs would result in 3 components.
+     * Each face is assigned to a component, and in the future that component could be used for other use-cases such as calculating
+     * per-shell bounding volumes, deciding whether a mesh should actually be several draw calls, etc.
+     * 
+     * It should potentially be something that is carried into the LitlMesh and GeoMesh properly. For example:
+     * 
+     *     std::vector<uint32_t> m_faceComponents;
+     * 
+     * Where each the index/key is the face index and the value is the component it belongs to (0...n).
+     */
+
     namespace
     {
+        /// <summary>
+        /// "random" direction to find an extremal vertex (one that sits on the manifold).
+        /// </summary>
+        static const vec3 g_extremaDir = normalize(vec3(0.4362f, 0.7891f, 0.4321f));
+
         /// <summary>
         /// Directed segment along a face edge.
         /// Each edge is composed of two vertices: U and V.
@@ -149,7 +170,7 @@ namespace litl::core
     /// <summary>
     /// Scans all faces edges and discovers the faces that it is adjacent to.
     /// </summary>
-    void buildFaceEdgeAdjaceny(std::vector<FaceAdj>& adjacentFaces, std::span<HalfEdge const> edges, MeshOrientationResult& report) noexcept
+    void buildFaceEdgeAdjaceny(std::vector<FaceAdj>& adjacentFaces, std::span<HalfEdge const> edges, MeshOrientationReport& report) noexcept
     {
         for (size_t i = 0; i < edges.size(); /* intentionally empty */)
         {
@@ -192,7 +213,7 @@ namespace litl::core
     /// A mesh can be composed of multiple independent components/shells. For example a head + separate eye balls.
     /// This builds the list of which component each face belongs to and also if each face wants to be flipped.
     /// </summary>
-    void buildComponentsAndFlipCheck(std::span<FaceAdj const> adjacentFaces, std::vector<std::uint32_t>& components, std::vector<std::uint8_t>& shouldFlip, uint32_t faceCount, MeshOrientationResult& report) noexcept
+    void buildComponentsAndFlipCheck(std::span<FaceAdj const> adjacentFaces, std::vector<std::uint32_t>& components, std::vector<std::uint8_t>& shouldFlip, uint32_t faceCount, MeshOrientationReport& report) noexcept
     {
         std::vector<std::uint32_t> frontier;
 
@@ -233,29 +254,8 @@ namespace litl::core
         }
     }
 
-    MeshOrientationResult orientateMesh(std::span<Vertex const> vertices, std::span<uint32_t> indices) noexcept
+    void buildComponentStates(std::vector<ComponentState>& componentStates, std::span<Vertex const> vertices, std::span<uint32_t> indices, std::span<uint32_t const> components, std::span<FaceAdj const> adjacentFaces, std::span<uint8_t const> shouldFlip, uint32_t faceCount) noexcept
     {
-        MeshOrientationResult report{};
-
-        const uint32_t faceCount = static_cast<uint32_t>(indices.size() / 3);
-
-        if (faceCount == 0)
-        {
-            return report;
-        }
-
-        std::vector<HalfEdge> edges;
-        std::vector<FaceAdj> adjacentFaces(faceCount);
-        std::vector<std::uint32_t> components(faceCount, Constants::uint32_null_index);
-        std::vector<std::uint8_t> shouldFlip(faceCount, 0);
-
-        buildAndSortHalfEdges(edges, faceCount, indices);
-        buildFaceEdgeAdjaceny(adjacentFaces, edges, report);
-        buildComponentsAndFlipCheck(adjacentFaces, components, shouldFlip, faceCount, report);
-        
-        std::vector<ComponentState> componentStates(report.componentCount);
-        const vec3 extremaDir = normalize(vec3(0.4362f, 0.7891f, 0.4321f));     // "random" direction to find the extrema (manifold) point
-
         // Pass A: ventroid, extremal vertex, boundary count.
         for (uint32_t face = 0u; face < faceCount; ++face)
         {
@@ -269,7 +269,7 @@ namespace litl::core
                 componentState.centroidSum += vertices[vi].position;
                 componentState.vertCount++;
 
-                const float p = dot(vertices[vi].position, extremaDir);
+                const float p = dot(vertices[vi].position, g_extremaDir);
 
                 if (p > componentState.extremaBestProjection)
                 {
@@ -297,14 +297,39 @@ namespace litl::core
                 componentState.extremalNormal += cross(pb - pa, pc - pa);       // area-weighted
             }
         }
+    }
 
+    MeshOrientationReport orientateMesh(std::span<Vertex const> vertices, std::span<uint32_t> indices) noexcept
+    {
+        MeshOrientationReport report{};
+
+        const uint32_t faceCount = static_cast<uint32_t>(indices.size() / 3);
+
+        if (faceCount == 0)
+        {
+            return report;
+        }
+
+        std::vector<HalfEdge> edges;
+        std::vector<FaceAdj> adjacentFaces(faceCount);
+        std::vector<std::uint32_t> components(faceCount, Constants::uint32_null_index);
+        std::vector<std::uint8_t> shouldFlip(faceCount, 0);
+
+        buildAndSortHalfEdges(edges, faceCount, indices);
+        buildFaceEdgeAdjaceny(adjacentFaces, edges, report);
+        buildComponentsAndFlipCheck(adjacentFaces, components, shouldFlip, faceCount, report);
+        
+        std::vector<ComponentState> componentStates(report.componentCount);
+
+        buildComponentStates(componentStates, vertices, indices, components, adjacentFaces, shouldFlip, faceCount);
+        
         std::vector<uint8_t> componentShouldFlip(report.componentCount, 0u);
 
         for (uint32_t i = 0; i < report.componentCount; ++i)
         {
             const ComponentState& componentState = componentStates[i];
             const bool isClosed = (componentState.boundary == 0u);
-            const bool facesOutward = (isClosed ? (componentState.vol6 > 0.0) : (dot(componentState.extremalNormal, extremaDir) > 0.0));
+            const bool facesOutward = (isClosed ? (componentState.vol6 > 0.0) : (dot(componentState.extremalNormal, g_extremaDir) > 0.0));
             // ^ LH + CW-outward  =>  vol6 > 0, and the hull vertex normal faces +d.
 
             componentShouldFlip[i] = facesOutward ? 0u : 1u;

@@ -1,4 +1,5 @@
 #include "litl-core/math/geometry/geoMesh.hpp"
+#include "litl-core/math/geometry/tools/meshOrientation.hpp"
 
 namespace litl
 {
@@ -242,24 +243,32 @@ namespace litl
         }
     }
 
-    bool GeoMesh::isClockwiseWinding() const noexcept
+    MeshWinding GeoMesh::getWinding() const noexcept
     {
-        // ... todo ...
-        return true;
+        return m_winding;
     }
 
     void GeoMesh::ensureClockwiseWinding() noexcept
     {
-        if (!isClockwiseWinding())
+        if (m_winding == MeshWinding::Clockwise)
         {
             return;
         }
 
-        // ... todo ...
+        MeshOrientationReport orientationReport = orientateMesh(m_vertices, m_indices);
+
+        if (orientationReport.nonOrientable)
+        {
+            logWarning("Called to ensure winding on a non-orientable mesh.");
+        }
+        else
+        {
+            setWindingOrder(MeshWinding::Clockwise);
+        }
     }
 
-    void GeoMesh::setWindingOrder(bool clockwise) noexcept
+    void GeoMesh::setWindingOrder(MeshWinding winding) noexcept
     {
-        m_isClockwiseWinding = clockwise;
+        m_winding = winding;
     }
 }
