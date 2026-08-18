@@ -7,6 +7,7 @@
 
 #include "litl-core/math/bounds/aabb.hpp"
 #include "litl-core/math/geometry/vertex.hpp"
+#include "litl-core/math/geometry/meshWinding.hpp"
 
 namespace litl
 {
@@ -147,12 +148,10 @@ namespace litl
         void recalulateNormals(bool fast) noexcept;
 
         /// <summary>
-        /// Calculates if the indices in the mesh are clockwise or counter-clockwise winding order.
-        /// CCW is nearly universal across interchange/authoring formats (glTF, fbx, obj, etc.) and tools (blender, maya, 3ds max, etc.).
-        /// CW is what is used internally by LITL and how meshes are stored inside of .litlmesh files.
-        /// LITL uses CW as it uses a left-handed (y-up, +z forward) coordinate system.
+        /// Returns the current set/known winding of the indices.
         /// </summary>
-        bool isClockwiseWinding() const noexcept;
+        /// <returns></returns>
+        MeshWinding getWinding() const noexcept;
 
         /// <summary>
         /// Modifies the mesh so that its indices are stored in a clockwise manner.
@@ -161,10 +160,9 @@ namespace litl
         void ensureClockwiseWinding() noexcept;
 
         /// <summary>
-        /// Sets whether this mesh is clockwise or counter-clockwise winding.
+        /// Directly sets the winding flag but does not modify any indices.
         /// </summary>
-        /// <param name="clockwise"></param>
-        void setWindingOrder(bool clockwise) noexcept;
+        void setWindingOrder(MeshWinding winding) noexcept;
 
     private:
 
@@ -187,10 +185,9 @@ namespace litl
         std::vector<uint32_t> m_faceIndexCounts;
 
         /// <summary>
-        /// Is the index winding clockwise or counter-clockwise?
-        /// Default to clockwise (though most external meshes are counter) as that is what we use internally for our left-hand coordinate system.
+        /// The winding of the indices in the mesh.
         /// </summary>
-        bool m_isClockwiseWinding{ true };
+        MeshWinding m_winding { MeshWinding::Unknown };
     };
 }
 

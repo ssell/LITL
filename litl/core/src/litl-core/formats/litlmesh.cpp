@@ -234,6 +234,7 @@ namespace litl
         mesh.setIndices(indices.value());
         mesh.setFaceIndexCounts(faces.value());
         mesh.setBoundsMinMax(vec3{ bounds.value()[0], bounds.value()[1], bounds.value()[2] }, vec3{ bounds.value()[3], bounds.value()[4], bounds.value()[5] });
+        mesh.setWindingOrder(MeshWinding::Clockwise);       // ImportService ensures mesh orientation during import/export of a litlmesh
 
         return true;
     }

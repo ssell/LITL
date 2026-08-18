@@ -39,7 +39,7 @@ namespace litl::import
         // ... todo remove degenerates (zero-area trianges, repeated indices, etc.) ...
         // ... todo weld ...
         
-        mesh->ensureCounterClockwiseWinding();
+        mesh->ensureClockwiseWinding();
         
         if (!mesh->hasNormals())
         {
