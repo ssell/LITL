@@ -30,7 +30,7 @@ add_library(litl-core
 		"src/litl-core/task/taskThreadQueue.cpp" 
 		"src/litl-core/math/geometry/geoMesh.cpp" 
 		"src/litl-core/directory.cpp" 
-		"src/litl-core/formats/litlmesh.cpp" "src/litl-core/formats/binaryBlockFile.cpp" "src/litl-core/math/geometry/tools/meshOrientation.cpp")
+		"src/litl-core/formats/litlmesh.cpp" "src/litl-core/formats/binaryBlockFile.cpp" "src/litl-core/math/geometry/tools/orientation.cpp" "src/litl-core/math/geometry/tools/normals.cpp")
 		
 target_include_directories(litl-core 
 	PUBLIC 

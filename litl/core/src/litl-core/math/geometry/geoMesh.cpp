@@ -1,5 +1,6 @@
 #include "litl-core/math/geometry/geoMesh.hpp"
-#include "litl-core/math/geometry/tools/meshOrientation.hpp"
+#include "litl-core/math/geometry/tools/normals.hpp"
+#include "litl-core/math/geometry/tools/orientation.hpp"
 
 namespace litl
 {

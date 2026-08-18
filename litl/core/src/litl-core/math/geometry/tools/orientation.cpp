@@ -1,7 +1,7 @@
 #include <array>
 #include <ranges>
 
-#include "litl-core/math/geometry/tools/meshOrientation.hpp"
+#include "litl-core/math/geometry/tools/orientation.hpp"
 
 namespace litl
 {
@@ -95,11 +95,12 @@ namespace litl
 
             /// <summary>
             /// The index of the vertex that lies the furthest along the randomized extrema direction vector.
+            /// The extremal vertex lies on the mesh manifold and thus its vertex should always be pointing outwards (if well formed).
             /// </summary>
             uint32_t extremalVert = Constants::uint32_null_index;
 
             /// <summary>
-            /// The normal of the
+            /// The normal of the extremal vertex.
             /// </summary>
             vec3 extremalNormal{};
 
@@ -162,9 +163,9 @@ namespace litl
                     .forward = (u == min ? 1u : 0u)
                     });
             }
-
-            std::ranges::sort(edges, {}, &HalfEdge::key);
         }
+
+        std::ranges::sort(edges, {}, & HalfEdge::key);
     }
 
     /// <summary>
@@ -305,10 +306,37 @@ namespace litl
 
         const uint32_t faceCount = static_cast<uint32_t>(indices.size() / 3);
 
-        if (faceCount == 0)
+        if ((indices.size() % 3 != 0) || (faceCount == 0))
         {
             return report;
         }
+
+        /**
+         * To orientate a mesh such that all indices are in clockwise order, we perform the following steps:
+         * 
+         *     1. Compile a list of half edges (1 per edge) across the mesh and then sort them by low index value.
+         *     2. With the half edges we can then calculate which faces are adjacent to each other.
+         *     3. Once adjacency is known, we can then discover the individual components comprising the mesh.
+         *        A component can be thought of as a distinct shell: a model of a head with two independent eyeballs has three components.
+         *        As we traverse the faces and build the list of components we also check if each individual face needs to be flipped.
+         *     4. We then calculate the state of each component: its centroid, extremal point, etc.
+         * 
+         * We now have split the mesh in terms of faces, edges, and components.
+         * 
+         *     5. For each component as a whole, we check if it is a closed shape and also use the extremal point
+         *        to calculate if the component in general is wound in a way that it faces outwards.
+         * 
+         * At this point we have two separate categories of face winding consistency: local and global.
+         * Generally, all faces within a component should share the same winding. However there are times where there
+         * is local inconsistency within a component. One face could be wound one way and its neighbor the other.
+         * 
+         * The local consistency (per face) is tracked in 'shouldFlip' and the global (per component) consistency is in 'componentShouldFlip'.
+         * 
+         *     6. We perform a final pass along all faces. We XOR the local and global consistency values.
+         *        If they are consistent in that both the individual face and the component as a whole agree that it does not
+         *        need to be flipped, then no action is taken. If either the face and/or the component are flagged as needing
+         *        to be flipped then the face is flipped via an index swap: (a, b, c) -> (a, c, b)
+         */
 
         std::vector<HalfEdge> edges;
         std::vector<FaceAdj> adjacentFaces(faceCount);
