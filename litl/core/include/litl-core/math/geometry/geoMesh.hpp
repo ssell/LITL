@@ -155,10 +155,16 @@ namespace litl
         bool isClockwiseWinding() const noexcept;
 
         /// <summary>
-        /// Modifies the mesh so that its indices are stored in a counter-clockwise manner.
-        /// If they are already are counter-clockwise then no further action is taken.
+        /// Modifies the mesh so that its indices are stored in a clockwise manner.
+        /// If they are already are clockwise then no further action is taken.
         /// </summary>
-        void ensureCounterClockwiseWinding() noexcept;
+        void ensureClockwiseWinding() noexcept;
+
+        /// <summary>
+        /// Sets whether this mesh is clockwise or counter-clockwise winding.
+        /// </summary>
+        /// <param name="clockwise"></param>
+        void setWindingOrder(bool clockwise) noexcept;
 
     private:
 
@@ -179,6 +185,12 @@ namespace litl
         /// For example, a mesh composed of 3 triangles and 1 quad may look like [3,3,3,4].
         /// </summary>
         std::vector<uint32_t> m_faceIndexCounts;
+
+        /// <summary>
+        /// Is the index winding clockwise or counter-clockwise?
+        /// Default to clockwise (though most external meshes are counter) as that is what we use internally for our left-hand coordinate system.
+        /// </summary>
+        bool m_isClockwiseWinding{ true };
     };
 }
 
