@@ -38,12 +38,27 @@ namespace litl::import
         // ... todo triangulate ...
         // ... todo remove degenerates (zero-area trianges, repeated indices, etc.) ...
         // ... todo weld ...
-        
-        mesh->ensureClockwiseWinding();
-        
+
+        if (data.mesh->importConvention.sourceIsCcwFront)
+        {
+            mesh->setWindingOrder(MeshWinding::CounterClockwise);
+            mesh->ensureClockwiseWinding();
+
+        }
+
         if (!mesh->hasNormals())
         {
             mesh->recalulateNormals(false);
+        }
+
+        if (data.mesh->importConvention.sourceIsRightHanded)
+        {
+            mesh->negateZValues();
+        }
+
+        if (data.mesh->importConvention.flipTexcoordV)
+        {
+            mesh->flipTexcoordV();
         }
 
         // ... todo crease split ...

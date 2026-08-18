@@ -39,7 +39,6 @@ namespace litl::import
 {
     namespace
     {
-
         Vertex convertToLitlVertex(rapidobj::Index const index, rapidobj::Attributes const& objAttributes) noexcept
         {
             Vertex vertex{};
@@ -165,12 +164,15 @@ namespace litl::import
 
             convertToLitlMesh(litlMesh, objMesh, objResult.attributes);
 
-            litlMesh->setWindingOrder(MeshWinding::CounterClockwise);
-
             importedData.mesh->summary.meshCount += 1u;
             importedData.mesh->summary.vertexCount += static_cast<uint32_t>(litlMesh->vertexCount());
             importedData.mesh->summary.indexCount += static_cast<uint32_t>(litlMesh->indexCount());
         }
+
+        // OBJ itself does not enforce these, but it is a widely adopted convention that is (likely) safe to assume.
+        importedData.mesh->importConvention.sourceIsRightHanded = true;
+        importedData.mesh->importConvention.sourceIsCcwFront = true;
+        importedData.mesh->importConvention.flipTexcoordV = true;
 
         return Result::Success();
     }

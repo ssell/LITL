@@ -27,8 +27,8 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     auto sceneView = services.get<SceneView>();         // A view into the current active scene.
     auto assets = services.get<AssetManager>();
 
-    const vec3 cameraPos = vec3{ 0.0f, 0.5f, 0.0f };
-    const vec3 bunnyPos = vec3{ 0.0f, 0.0f, 10.0f };
+    const vec3 cameraPos = vec3{ 0.0f, 0.0f, 0.0f };
+    const vec3 bunnyPos = vec3{ 0.0f, 0.0f, 3.0f };
 
     createMainCamera(
         CameraDescriptor{ .projection = CameraProjection::Perspective, .clearColor = color{ 0.035f, 0.035f, 0.05f } }, 

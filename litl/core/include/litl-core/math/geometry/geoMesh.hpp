@@ -164,6 +164,19 @@ namespace litl
         /// </summary>
         void setWindingOrder(MeshWinding winding) noexcept;
 
+        /// <summary>
+        /// Negates the z-values in the vertex positions and normals.
+        /// Used for meshes that were authored for a right-handed system and are being converted to our internal left-handed system.
+        /// </summary>
+        void negateZValues() noexcept;
+
+        /// <summary>
+        /// Flips the texcoord .v component.
+        /// Some mesh formats author such that the texcoord origin is bottom-left, while others use a top-left origin.
+        /// This assumes all .v coordinate values are on the range [0, 1].
+        /// </summary>
+        void flipTexcoordV() noexcept;
+
     private:
 
         bounds::AABB m_bounds{};

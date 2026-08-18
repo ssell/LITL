@@ -261,4 +261,21 @@ namespace litl
     {
         m_winding = winding;
     }
+
+    void GeoMesh::negateZValues() noexcept
+    {
+        for (auto& vertex : m_vertices)
+        {
+            vertex.position.z() = -vertex.position.z();
+            vertex.normal.z() = -vertex.normal.z();
+        }
+    }
+
+    void GeoMesh::flipTexcoordV() noexcept
+    {
+        for (auto& vertex : m_vertices)
+        {
+            vertex.texcoord.y() = 1.0f - clamp(vertex.texcoord.y(), 0.0f, 1.0f);
+        }
+    }
 }
