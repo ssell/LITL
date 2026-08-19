@@ -141,11 +141,6 @@ namespace litl
             /// The views into the swap chain images.
             /// </summary>
             std::vector<VkImageView> vkSwapChainImageViews;
-
-            /// <summary>
-            /// The swapchain depth textures.
-            /// </summary>
-            std::vector<TextureHandle> depthTextures;
         };
 
         /// <summary>
@@ -195,6 +190,11 @@ namespace litl
             /// Note: this is stored in an unique_ptr since PerFrameSyncInfo is itself stored in a vector.
             /// </summary>
             std::unique_ptr<DescriptorSetAllocator> descriptorSetAllocator;
+
+            /// <summary>
+            /// The swapchain depth texture for each frame.
+            /// </summary>
+            TextureHandle depthTexture;
         };
 
         /// <summary>
@@ -261,6 +261,16 @@ namespace litl
             [[nodiscard]] PerImageSyncInfo& getCurrImageSyncInfo() noexcept
             {
                 return renderInfo.imageSyncInfo[swapChain.swapChainImageIndex];
+            }
+
+            [[nodiscard]] TextureHandle getCurrFrameDepthTexture() noexcept
+            {
+                return getCurrFrameSyncInfo().depthTexture;
+            }
+
+            [[nodiscard]] TextureHandle getPrevFrameDepthTexture() noexcept
+            {
+                return getPrevFrameSyncInfo().depthTexture;
             }
         };
 
