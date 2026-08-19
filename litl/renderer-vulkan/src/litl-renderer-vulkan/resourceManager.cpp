@@ -1084,6 +1084,15 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
 
         resource.descriptor.name = name;
 
+        const VkImageAspectFlags aspectMask = deriveAspectMaskFromFormat(resource.vkFormat);
+
+        if (aspectMask == VkImageAspectFlagBits::VK_IMAGE_ASPECT_NONE)
+        {
+            // Invalid aspect mask. Early exit.
+            logError("Invalid aspect mask for texture ", name);
+            return {};
+        }
+
         VkImageCreateInfo createImageInfo{
             .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
             .imageType = toVkImageType(descriptor.dimensions),
@@ -1142,7 +1151,7 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
         }
 
         resource.vkImageSubresourceRange = VkImageSubresourceRange {
-            .aspectMask = deriveAspectMaskFromFormat(resource.vkFormat),
+            .aspectMask = aspectMask,
             .baseMipLevel = 0u,
             .levelCount = descriptor.mipLevels,
             .baseArrayLayer = 0u,
