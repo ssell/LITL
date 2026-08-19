@@ -8,6 +8,12 @@ namespace litl::vulkan
         auto* vulkanContext = unwrap(context);
         return fromVkFormat(vulkanContext->swapChain.vkSwapChainImageFormat);
     }
+    
+    DataFormat getSwapchainDepthFormat(litl::RendererContext* context) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+        return fromVkFormat(vulkanContext->device.vkDepthStencilFormat);
+    }
 
     SwapChainDimensions getSwapchainDimensions(litl::RendererContext* context) noexcept
     {

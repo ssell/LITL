@@ -96,6 +96,7 @@ namespace litl
 
         // misc
         DataFormat (*getSwapchainImageFormat)(RendererContext*);
+        DataFormat (*getSwapchainDepthFormat)(RendererContext*);
         SwapChainDimensions (*getSwapchainDimensions)(RendererContext*);
         FrameData (*getFrameData)(RendererContext*);
         uint32_t (*getMaxPushConstantSize)(RendererContext*);
@@ -523,10 +524,16 @@ namespace litl
         // ---------------------------------------------------------------------------------
 
         /// <summary>
-        /// Returns the format of  the current swapchain target.
+        /// Returns the format of the swapchain color target.
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] DataFormat getSwapchainImageFormat() const noexcept;
+
+        /// <summary>
+        /// Returns the format of the swapchain depth target.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] DataFormat getSwapchainDepthFormat() const noexcept;
 
         /// <summary>
         /// Retrieves the swap chain width and height and aspect ratio.

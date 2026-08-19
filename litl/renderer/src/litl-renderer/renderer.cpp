@@ -321,6 +321,11 @@ namespace litl
         return m_pOps->getSwapchainImageFormat(m_pContext);
     }
 
+    DataFormat Renderer::getSwapchainDepthFormat() const noexcept
+    {
+        return m_pOps->getSwapchainDepthFormat(m_pContext);
+    }
+
     SwapChainDimensions Renderer::getSwapchainDimensions() const noexcept
     {
         return m_pOps->getSwapchainDimensions(m_pContext);
