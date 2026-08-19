@@ -57,8 +57,9 @@ namespace litl
 
         /// <summary>
         /// The depth value to clear to.
+        /// Note we use a reversed depth buffer for the main camera, so the far plane sits at 0.
         /// </summary>
-        float clearDepth = 1.0f;
+        float clearDepth = 0.0f;
 
         /// <summary>
         /// The stencil value to clear to.

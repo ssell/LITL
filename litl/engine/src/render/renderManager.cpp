@@ -287,7 +287,7 @@ namespace litl
                     }
                     else
                     {
-                        return (a.mesh.handle.index < b.material.handle.index);
+                        return (a.mesh.handle.index < b.mesh.handle.index);
                     }
                 });
             }

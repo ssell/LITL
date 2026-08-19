@@ -306,6 +306,10 @@ namespace litl::vulkan
             {
                 vkImage = texture->vkImage;
             }
+            else
+            {
+                return;
+            }
         }
         else
         {

@@ -195,7 +195,7 @@ namespace litl::vulkan
         case DataFormat::D24_UNorm_S8_UInt:
             return VkFormat::VK_FORMAT_D24_UNORM_S8_UINT;
 
-        case DataFormat::D24_SFloat_S8_Uint:
+        case DataFormat::D32_SFloat_S8_Uint:
             return VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT;
 
             // Compressed
@@ -285,7 +285,7 @@ namespace litl::vulkan
             return DataFormat::D24_UNorm_S8_UInt;
 
         case VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT:
-            return DataFormat::D24_SFloat_S8_Uint;
+            return DataFormat::D32_SFloat_S8_Uint;
 
             // Compressed
         case VkFormat::VK_FORMAT_BC7_UNORM_BLOCK:

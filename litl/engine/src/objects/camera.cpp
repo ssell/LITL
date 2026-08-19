@@ -117,6 +117,7 @@ namespace litl
         m_descriptor.orthographic.right = right;
         m_descriptor.orthographic.bottom = bottom;
         m_descriptor.orthographic.top = top;
+        rebuildProjectionMatrix();
     }
 
     vec4 Camera::getOrthographicBounds() const noexcept
