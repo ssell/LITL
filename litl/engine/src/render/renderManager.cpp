@@ -281,14 +281,12 @@ namespace litl
                     // This sort will group all entities of the same material and mesh together. Example result:
                     //     [(mat0, mesh0), (mat0, mesh0), (mat0, mesh3), (mat1, mesh2), (mat1, mesh2), (mat1, mesh4), (mat2, mesh5)]
 
-                    if (a.material.handle.index < b.material.handle.index)
+                    if (a.material.handle.index != b.material.handle.index)
                     {
-                        return true;
+                        return (a.material.handle.index < b.material.handle.index);
                     }
-                    else
-                    {
-                        return (a.mesh.handle.index < b.mesh.handle.index);
-                    }
+
+                    return (a.mesh.handle.index < b.mesh.handle.index);
                 });
             }
         }

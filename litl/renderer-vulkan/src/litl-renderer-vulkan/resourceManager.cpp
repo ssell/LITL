@@ -1057,7 +1057,8 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
 
     TextureHandle ResourceManager::createTexture(TextureDescriptor const& descriptor) noexcept
     {
-        auto nameId = StringId(descriptor.name);
+        auto name = generateResourceId<TextureResource>(descriptor.name, "Texture");
+        auto nameId = StringId(name);
 
         if (descriptor.name.length() > 0)
         {
@@ -1077,11 +1078,11 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
                 .height = descriptor.height,
                 .depth = descriptor.depth
             },
+            .id = nameId,
             .descriptor = descriptor
         };
 
-        resource.descriptor.name = generateResourceId<TextureResource>(descriptor.name, "Texture");
-        resource.id = StringId(resource.descriptor.name);
+        resource.descriptor.name = name;
 
         VkImageCreateInfo createImageInfo{
             .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
@@ -1152,7 +1153,7 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
             .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
             .image = resource.vkImage,
             .viewType = toVkImageViewType(descriptor.dimensions, isArray, descriptor.isCubeMap),
-            .format = toVkFormat(descriptor.format),
+            .format = resource.vkFormat,
             .components = { VK_COMPONENT_SWIZZLE_IDENTITY },
             .subresourceRange = resource.vkImageSubresourceRange
         };
