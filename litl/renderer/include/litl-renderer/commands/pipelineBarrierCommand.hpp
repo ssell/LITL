@@ -23,39 +23,48 @@ namespace litl
     };
 
     static constexpr PipelineBarrierCommand PipelineBarrierUndefinedToColor{
-        .fromLayout = ImageLayoutType::Undefined,
-        .toLayout = ImageLayoutType::Color,
-        .sourceAccess = static_cast<ImageAccessFlag>(ImageAccessFlagBits::None),
-        .destAccess = static_cast<ImageAccessFlag>(ImageAccessFlagBits::ColorWrite),
-        .sourceStage = static_cast<PipelineStageFlag>(PipelineStageFlagBits::ColorAttachmentOutput),
-        .destStage = static_cast<PipelineStageFlag>(PipelineStageFlagBits::ColorAttachmentOutput)
+        .fromLayout   = ImageLayoutType::Undefined,
+        .toLayout     = ImageLayoutType::Color,
+        .sourceAccess = ImageAccessFlagBits::None,
+        .destAccess   = ImageAccessFlagBits::ColorWrite,
+        .sourceStage  = PipelineStageFlagBits::ColorAttachmentOutput,
+        .destStage    = PipelineStageFlagBits::ColorAttachmentOutput
     };
 
     static constexpr PipelineBarrierCommand PipelineBarrierColorToPresent{
-        .fromLayout = ImageLayoutType::Color,
-        .toLayout = ImageLayoutType::Present,
-        .sourceAccess = static_cast<ImageAccessFlag>(ImageAccessFlagBits::ColorWrite),
-        .destAccess = static_cast<ImageAccessFlag>(ImageAccessFlagBits::None),
-        .sourceStage = static_cast<PipelineStageFlag>(PipelineStageFlagBits::ColorAttachmentOutput),
-        .destStage = static_cast<PipelineStageFlag>(PipelineStageFlagBits::BottomOfPipe)
+        .fromLayout   = ImageLayoutType::Color,
+        .toLayout     = ImageLayoutType::Present,
+        .sourceAccess = ImageAccessFlagBits::ColorWrite,
+        .destAccess   = ImageAccessFlagBits::None,
+        .sourceStage  = PipelineStageFlagBits::ColorAttachmentOutput,
+        .destStage    = PipelineStageFlagBits::BottomOfPipe
+    };
+
+    static constexpr PipelineBarrierCommand PipelineBarrierUndefinedToDepthStencil{
+        .fromLayout   = ImageLayoutType::Undefined,
+        .toLayout     = ImageLayoutType::Color,
+        .sourceAccess = ImageAccessFlagBits::None,
+        .destAccess   = ImageAccessFlagBits::DepthStencilWrite,
+        .sourceStage  = PipelineStageFlagBits::EarlyFragmentTests,
+        .destStage    = PipelineStageFlagBits::BottomOfPipe
     };
 
     static constexpr PipelineBarrierCommand PipelineBarrierUndefinedToTransferDst{
-        .fromLayout = ImageLayoutType::Undefined,
-        .toLayout = ImageLayoutType::TransferDst,
-        .sourceAccess = static_cast<ImageAccessFlag>(ImageAccessFlagBits::None),
-        .destAccess = static_cast<ImageAccessFlag>(ImageAccessFlagBits::TransferWrite),
-        .sourceStage = static_cast<PipelineStageFlag>(PipelineStageFlagBits::None),
-        .destStage = static_cast<PipelineStageFlag>(PipelineStageFlagBits::Copy)
+        .fromLayout   = ImageLayoutType::Undefined,
+        .toLayout     = ImageLayoutType::TransferDst,
+        .sourceAccess = ImageAccessFlagBits::None,
+        .destAccess   = ImageAccessFlagBits::TransferWrite,
+        .sourceStage  = PipelineStageFlagBits::None,
+        .destStage    = PipelineStageFlagBits::Copy
     };
 
     static constexpr PipelineBarrierCommand PipelineBarrierTransferDstToShaderRead{
-        .fromLayout = ImageLayoutType::TransferDst,
-        .toLayout = ImageLayoutType::ShaderReadOnly,
-        .sourceAccess = static_cast<ImageAccessFlag>(ImageAccessFlagBits::TransferWrite),
-        .destAccess = static_cast<ImageAccessFlag>(ImageAccessFlagBits::ShaderSampledRead),
-        .sourceStage = static_cast<PipelineStageFlag>(PipelineStageFlagBits::Copy),
-        .destStage = static_cast<PipelineStageFlag>(PipelineStageFlagBits::VertexShader)
+        .fromLayout   = ImageLayoutType::TransferDst,
+        .toLayout     = ImageLayoutType::ShaderReadOnly,
+        .sourceAccess = ImageAccessFlagBits::TransferWrite,
+        .destAccess   = ImageAccessFlagBits::ShaderSampledRead,
+        .sourceStage  = PipelineStageFlagBits::Copy,
+        .destStage    = PipelineStageFlagBits::VertexShader
     };
 }
 

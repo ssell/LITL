@@ -217,7 +217,7 @@ namespace litl::vulkan
 
             depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
             depthAttachment.imageView = depthTextureView;
-            depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+            depthAttachment.imageLayout = toVkImageLayout(ImageLayoutType::DepthStencil);
             depthAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
             depthAttachment.loadOp = toVkAttachmentLoadOp((*command.depth).loadOp);
             depthAttachment.storeOp = toVkAttachmentStoreOp((*command.depth).storeOp);
@@ -291,24 +291,31 @@ namespace litl::vulkan
         }
 
         VkImage vkImage = VK_NULL_HANDLE;
+        VkImageSubresourceRange subresourceRange{};
 
         if (command.texture.isValid())
         {
             auto* texture = vulkanContext->resources.getTexture(command.texture);
 
-            if (texture != nullptr)
-            {
-                vkImage = texture->vkImage;
-            }
-            else
+            if (texture == nullptr)
             {
                 return;
             }
+
+            vkImage = texture->vkImage;
+            subresourceRange = texture->vkImageSubresourceRange;
         }
         else
         {
-            // Default to the swapchain if no texture is specified.
+            // Default to the swapchain color texture if no texture is specified.
             vkImage = vulkanContext->swapChain.vkSwapChainImages[vulkanContext->swapChain.swapChainImageIndex];
+            subresourceRange = VkImageSubresourceRange{
+                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                .baseMipLevel = 0,
+                .levelCount = 1,
+                .baseArrayLayer = 0,
+                .layerCount = 1
+            };
         }
 
         const VkImageMemoryBarrier2 barrier{
@@ -322,13 +329,7 @@ namespace litl::vulkan
             .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
             .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
             .image = vkImage,
-            .subresourceRange = VkImageSubresourceRange {
-                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                .baseMipLevel = 0,
-                .levelCount = 1,
-                .baseArrayLayer = 0,
-                .layerCount = 1
-            }
+            .subresourceRange = subresourceRange
         };
 
         const VkDependencyInfo info{

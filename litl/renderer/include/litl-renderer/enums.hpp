@@ -49,10 +49,12 @@ namespace litl
         ShaderStorageWrite  = 1 << 19
     };
 
+    LITL_ENABLE_BITMASK(ImageAccessFlagBits);
+
     /// <summary>
     /// Composed of ImageAccessFlagBits
     /// </summary>
-    using ImageAccessFlag = uint64_t;
+    using ImageAccessFlag = ImageAccessFlagBits;
 
     enum class BufferTypeFlagBits : uint64_t
     {
