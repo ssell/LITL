@@ -103,6 +103,11 @@ namespace litl
             /// Pipeline cache objects allow the result of pipeline construction to be reused between pipelines and between runs of an application.
             /// </summary>
             VkPipelineCache vkPipelineCache = VK_NULL_HANDLE;
+
+            /// <summary>
+            /// The support depth-stencil format.
+            /// </summary>
+            VkFormat vkDepthStencilFormat;
         };
 
         struct SwapChainInfo

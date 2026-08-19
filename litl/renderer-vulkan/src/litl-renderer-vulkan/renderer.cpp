@@ -1,5 +1,7 @@
+#include <array>
 #include <cstring>
 #include <set>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -242,6 +244,45 @@ namespace litl::vulkan
     }
 
     /// <summary>
+    /// Checks the physical device for the first format in the provided candidates that supports the requested tiling + features.
+    /// </summary>
+    std::optional<VkFormat> findSupportedFormat(VkPhysicalDevice device, std::span<VkFormat const> candidateFormats, VkImageTiling tiling, VkFormatFeatureFlags features) noexcept
+    {
+        for (VkFormat vkFormat : candidateFormats)
+        {
+            VkFormatProperties formatProps;
+            vkGetPhysicalDeviceFormatProperties(device, vkFormat, &formatProps);
+
+            if (tiling == VK_IMAGE_TILING_LINEAR && (formatProps.linearTilingFeatures & features) == features)
+            {
+                return vkFormat;
+            }
+            else if (tiling == VK_IMAGE_TILING_OPTIMAL && (formatProps.optimalTilingFeatures & features) == features)
+            {
+                return vkFormat;
+            }
+        }
+
+        return std::nullopt;
+    }
+
+    /// <summary>
+    /// Checks the physical device for a support depth-stencil format.
+    /// </summary>
+    std::optional<VkFormat> findSupportedDepthStencilFormat(VkPhysicalDevice device) noexcept
+    {
+        // Our support depth formats that we want to check are supported by the physical device.
+        // Note that order here matters are we select the first match. So save the non-stencil format(s) for last.
+        const std::array<VkFormat, 3> candidateFormats{
+            toVkFormat(DataFormat::D32_SFloat_S8_UInt),
+            toVkFormat(DataFormat::D24_UNorm_S8_UInt),
+            toVkFormat(DataFormat::D32_SFloat)
+        };
+
+        return findSupportedFormat(device, candidateFormats, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+    }
+
+    /// <summary>
     /// Checks if the physical device has all of our required extensions.
     /// </summary>
     /// <param name="device"></param>
@@ -263,11 +304,11 @@ namespace litl::vulkan
 
         if (!requiredExtensions.empty())
         {
-            logError("One or more required Vulkan extensions are not available on the physical device:");
+            logWarning("One or more required Vulkan extensions are not available on the physical device:");
 
             for (const auto& extension : requiredExtensions)
             {
-                logError("Missing required extensions: ", extension);
+                logWarning("Missing required extensions: ", extension);
             }
 
             return false;
@@ -290,12 +331,34 @@ namespace litl::vulkan
         vkGetPhysicalDeviceProperties(device, &deviceProperties);
         vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
-        return
-            ((deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) || (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)) &&
-            checkPhysicalDeviceExtensionSupport(device) &&
-            deviceFeatures.geometryShader &&
-            deviceFeatures.tessellationShader;
-            // TODO the full feature set will need to be specified by the engine/user/game/whatever
+        if ((deviceProperties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) && (deviceProperties.deviceType != VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU))
+        {
+            logWarning("Candidate Vulkan Physical device is has neither a discrete or integrated GPU.");
+            return false;
+        }
+
+        if (!checkPhysicalDeviceExtensionSupport(device))
+        {
+            logWarning("Candidate Vulkan Physical device is missing extension support.");
+            return false;
+        }
+
+        if (findSupportedDepthStencilFormat(device).has_value() == false)
+        {
+            logWarning("Candidate Vulkan Physical device does not provide a suitable depth-stencil format.");
+            return false;
+        }
+
+        if ((deviceFeatures.geometryShader == VK_FALSE) ||
+            (deviceFeatures.tessellationShader == VK_FALSE))
+        {
+            logWarning("Candidate Vulkan Physical device does not provide proper shader support.");
+            return false;
+        }
+
+        // ... todo others ...
+
+        return true;
     }
 
     /// <summary>
@@ -384,7 +447,15 @@ namespace litl::vulkan
             }
         }
 
-        return (context.device.vkPhysicalDevice != VK_NULL_HANDLE);
+        if (context.device.vkPhysicalDevice == VK_NULL_HANDLE)
+        {
+            logError("Failed to find a suitable Vulkan Physical Device");
+            return false;
+        }
+        
+        context.device.vkDepthStencilFormat = findSupportedDepthStencilFormat(context.device.vkPhysicalDevice).value();     // confirmed present by isPhysicalDeviceSuitable
+
+        return true;
     }
 
     /// <summary>
