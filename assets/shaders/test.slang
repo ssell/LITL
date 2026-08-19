@@ -101,6 +101,6 @@ struct FragmentOutput
 FragmentOutput fragmentMain(VertexOutput input)
 {
     FragmentOutput output = (FragmentOutput)0;
-    output.color = float4(input.color, 1.0f);
+    output.color = float4(input.color.yyy, 1.0f);
     return output;
 }
