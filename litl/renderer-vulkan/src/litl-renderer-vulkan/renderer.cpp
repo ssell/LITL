@@ -1,5 +1,6 @@
 #include <array>
 #include <cstring>
+#include <optional>
 #include <set>
 #include <span>
 #include <string>
@@ -28,6 +29,12 @@ namespace litl
         LITL_FATAL_ASSERT_MSG(pWindow != nullptr, "Attempting to create Vulkan Renderer with a null Window");
 
         vulkan::RendererContext* vulkanContext = new(std::nothrow) vulkan::RendererContext();
+
+        if (vulkanContext == nullptr)
+        {
+            logError("Failed to allocate Vulkan Renderer Context");
+            return nullptr;
+        }
 
         vulkanContext->config = rendererDescriptor;
         vulkanContext->window.window = pWindow;
@@ -333,7 +340,7 @@ namespace litl::vulkan
 
         if ((deviceProperties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) && (deviceProperties.deviceType != VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU))
         {
-            logWarning("Candidate Vulkan Physical device is has neither a discrete or integrated GPU.");
+            logWarning("Candidate Vulkan Physical device has neither a discrete nor integrated GPU.");
             return false;
         }
 
@@ -447,15 +454,17 @@ namespace litl::vulkan
             }
         }
 
-        if (context.device.vkPhysicalDevice == VK_NULL_HANDLE)
+        if (context.device.vkPhysicalDevice != VK_NULL_HANDLE)
+        {
+            logInfo("Selected Vulkan Physical Device");
+            context.device.vkDepthStencilFormat = findSupportedDepthStencilFormat(context.device.vkPhysicalDevice).value();     // confirmed present by isPhysicalDeviceSuitable
+            return true;
+        }
+        else
         {
             logError("Failed to find a suitable Vulkan Physical Device");
             return false;
         }
-        
-        context.device.vkDepthStencilFormat = findSupportedDepthStencilFormat(context.device.vkPhysicalDevice).value();     // confirmed present by isPhysicalDeviceSuitable
-
-        return true;
     }
 
     /// <summary>
@@ -660,7 +669,8 @@ namespace litl::vulkan
         context.swapChain.vkSwapChainImageViews.resize(imageCount);
         vkGetSwapchainImagesKHR(context.device.vkDevice, context.swapChain.vkSwapChain, &imageCount, context.swapChain.vkSwapChainImages.data());
 
-        for (uint32_t i = 0; i < imageCount; ++i)
+        // Create color images
+        for (uint32_t i = 0u; i < imageCount; ++i)
         {
             const VkImageViewCreateInfo createImageViewInfo{
                 .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
@@ -689,6 +699,31 @@ namespace litl::vulkan
                 logError("Failed to create Vulkan Swap Chain Image View with result ", result);
                 return false;
             }
+        }
+
+        // Create depth images
+        context.swapChain.depthTextures.resize(imageCount, {});
+
+        TextureDescriptor depthDescriptor{
+            .dimensions = TextureDimensions::Texture2D,
+            .width = imageExtent.width,
+            .height = imageExtent.height,
+            .depth = 1u,
+            .format = fromVkFormat(context.device.vkDepthStencilFormat),
+            .usage = TextureUsageFlagBits::DepthStencilAttachment | TextureUsageFlagBits::Sampled,
+            .memory = BufferMemoryType::Auto,
+            .memoryUsage = BufferMemoryUsage::GpuOnly,
+            .sharing = SharingMode::Exclusive,
+            .mipLevels = 1u,
+            .arrayLayers = 1u,
+            .sampleCount = MultisampleCount::Count1,
+            .isCubeMap = false
+        };
+
+        for (uint32_t i = 0u; i < imageCount; ++i)
+        {
+            depthDescriptor.name = std::format("Internal_DepthTexture_{}", i);
+            context.swapChain.depthTextures[i] = context.resources.createTexture(depthDescriptor);
         }
 
         return true;
@@ -950,6 +985,16 @@ namespace litl::vulkan
             {
                 vkDestroyImageView(context.device.vkDevice, imageView, nullptr);
             }
+        }
+
+        if (!context.swapChain.depthTextures.empty())
+        {
+            for (auto depthHandle : context.swapChain.depthTextures)
+            {
+                context.resources.destroyTexture(depthHandle);
+            }
+
+            context.swapChain.depthTextures.clear();
         }
     }
 

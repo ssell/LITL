@@ -107,7 +107,7 @@ namespace litl
             /// <summary>
             /// The optimum physical device supported depth-stencil format.
             /// </summary>
-            VkFormat vkDepthStencilFormat;
+            VkFormat vkDepthStencilFormat = VK_FORMAT_UNDEFINED;
         };
 
         struct SwapChainInfo
@@ -120,7 +120,7 @@ namespace litl
             /// <summary>
             /// The format of the swap chain color images.
             /// </summary>
-            VkFormat vkSwapChainImageFormat;
+            VkFormat vkSwapChainImageFormat = VK_FORMAT_UNDEFINED;
 
             /// <summary>
             /// The size of the swap chain images.
@@ -133,7 +133,7 @@ namespace litl
             uint32_t swapChainImageIndex = 0u;
 
             /// <summary>
-            /// The images in the swap chain.
+            /// The color images in the swap chain.
             /// </summary>
             std::vector<VkImage> vkSwapChainImages;
 
@@ -141,6 +141,11 @@ namespace litl
             /// The views into the swap chain images.
             /// </summary>
             std::vector<VkImageView> vkSwapChainImageViews;
+
+            /// <summary>
+            /// The swapchain depth textures.
+            /// </summary>
+            std::vector<TextureHandle> depthTextures;
         };
 
         /// <summary>

@@ -261,6 +261,8 @@ namespace litl
         case DataFormat::Undefined:
             return false;
         }
+
+        return false;
     }
 
     [[nodiscard]] constexpr bool dataFormatHasStencil(DataFormat format) noexcept
@@ -295,6 +297,8 @@ namespace litl
         case DataFormat::Undefined:
             return false;
         }
+
+        return false;
     }
 
     enum class PrimitiveTopology : uint32_t

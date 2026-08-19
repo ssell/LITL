@@ -135,7 +135,7 @@ namespace litl::vulkan
     // ImageFormat <-> VkFormat
     // -------------------------------------------------------------------------------------
 
-    static_assert(static_cast<uint32_t>(DataFormat::BC6H_UFloat) == 23u, "DataFormat has changed! Update deriveAspectMaskFromFormat!");
+    static_assert(static_cast<uint32_t>(DataFormat::BC6H_UFloat) == 23u, "DataFormat has changed! Update toVkFormat, fromVkFormat, and deriveAspectMaskFromFormat!");
 
     VkFormat toVkFormat(DataFormat format) noexcept
     {
