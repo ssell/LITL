@@ -105,7 +105,7 @@ namespace litl
             VkPipelineCache vkPipelineCache = VK_NULL_HANDLE;
 
             /// <summary>
-            /// The support depth-stencil format.
+            /// The optimum physical device supported depth-stencil format.
             /// </summary>
             VkFormat vkDepthStencilFormat;
         };
@@ -118,7 +118,7 @@ namespace litl
             VkSwapchainKHR vkSwapChain = VK_NULL_HANDLE;
 
             /// <summary>
-            /// The format of the swap chain images.
+            /// The format of the swap chain color images.
             /// </summary>
             VkFormat vkSwapChainImageFormat;
 
