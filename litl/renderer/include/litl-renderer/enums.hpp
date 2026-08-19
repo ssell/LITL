@@ -185,7 +185,7 @@ namespace litl
         // Depth
         D32_SFloat,             // 32-bit depth floating point value.
         D24_UNorm_S8_UInt,      // 32-bit format with a 24-bit linear depth value on the range [0,1] and 8-bit unsigned integer stencil.
-        D32_SFloat_S8_Uint,     // 32-bit format with a 32-bit floating point depth value and 8-bit unsigned integer stencil.
+        D32_SFloat_S8_UInt,     // 32-bit format with a 32-bit floating point depth value and 8-bit unsigned integer stencil.
 
         // Compressed
         BC7_UNorm,              // A four-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned normalized RGBA texel data.
@@ -198,7 +198,7 @@ namespace litl
     /// <summary>
     /// Returns the size, in bytes, represented by each data format.
     /// </summary>
-    [[nodiscard]] inline uint32_t dataFormatSize(DataFormat format) noexcept
+    [[nodiscard]] constexpr uint32_t dataFormatSize(DataFormat format) noexcept
     {
         switch (format)
         {
@@ -219,13 +219,81 @@ namespace litl
         case DataFormat::RG32_SFloat: return 8u;
         case DataFormat::D32_SFloat: return 4u;
         case DataFormat::D24_UNorm_S8_UInt: return 4u;
-        case DataFormat::D32_SFloat_S8_Uint: return 8u;
+        case DataFormat::D32_SFloat_S8_UInt: return 8u;
         case DataFormat::BC7_UNorm: return 16u;
         case DataFormat::BC7_SRGB: return 16u;
         case DataFormat::BC4_UNorm: return 8u;
         case DataFormat::BC5_UNorm: return 16u;
         case DataFormat::BC6H_UFloat: return 16u;
         case DataFormat::Undefined: return 4u;
+        }
+    }
+
+    [[nodiscard]] constexpr bool dataFormatHasDepth(DataFormat format) noexcept
+    {
+        switch (format)
+        {
+        case DataFormat::D32_SFloat:
+        case DataFormat::D24_UNorm_S8_UInt:
+        case DataFormat::D32_SFloat_S8_UInt:
+            return true;
+
+        case DataFormat::RGBA8_UNorm:
+        case DataFormat::RGBA8_SRGB:
+        case DataFormat::BGRA8_Unorm:
+        case DataFormat::BGRA8_SRGB:
+        case DataFormat::ABGR10_UNorm_Pack32:
+        case DataFormat::RGBA16_SFloat:
+        case DataFormat::RGB32_SFloat:
+        case DataFormat::RGBA32_SFloat:
+        case DataFormat::R11G11B10_UFloat:
+        case DataFormat::R8_UNorm:
+        case DataFormat::R16_SFloat:
+        case DataFormat::R32_SFloat:
+        case DataFormat::RG8_UNorm:
+        case DataFormat::RG16_SFloat:
+        case DataFormat::RG32_SFloat:
+        case DataFormat::BC7_UNorm:
+        case DataFormat::BC7_SRGB:
+        case DataFormat::BC4_UNorm:
+        case DataFormat::BC5_UNorm:
+        case DataFormat::BC6H_UFloat:
+        case DataFormat::Undefined:
+            return false;
+        }
+    }
+
+    [[nodiscard]] constexpr bool dataFormatHasStencil(DataFormat format) noexcept
+    {
+        switch (format)
+        {
+        case DataFormat::D24_UNorm_S8_UInt:
+        case DataFormat::D32_SFloat_S8_UInt:
+            return true;
+
+        case DataFormat::RGBA8_UNorm:
+        case DataFormat::RGBA8_SRGB:
+        case DataFormat::BGRA8_Unorm:
+        case DataFormat::BGRA8_SRGB:
+        case DataFormat::ABGR10_UNorm_Pack32:
+        case DataFormat::RGBA16_SFloat:
+        case DataFormat::RGB32_SFloat:
+        case DataFormat::RGBA32_SFloat:
+        case DataFormat::R11G11B10_UFloat:
+        case DataFormat::R8_UNorm:
+        case DataFormat::R16_SFloat:
+        case DataFormat::R32_SFloat:
+        case DataFormat::RG8_UNorm:
+        case DataFormat::RG16_SFloat:
+        case DataFormat::RG32_SFloat:
+        case DataFormat::D32_SFloat:
+        case DataFormat::BC7_UNorm:
+        case DataFormat::BC7_SRGB:
+        case DataFormat::BC4_UNorm:
+        case DataFormat::BC5_UNorm:
+        case DataFormat::BC6H_UFloat:
+        case DataFormat::Undefined:
+            return false;
         }
     }
 
