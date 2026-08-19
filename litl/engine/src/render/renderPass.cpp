@@ -42,7 +42,7 @@ namespace litl
 
         void render(CommandBufferHandle frameCommandBuffer, RenderPushConstants const& pushConstants, Camera& camera, std::vector<RenderableEntity> const& entities) noexcept
         {
-            // --- Begin rendering
+            // --- Begin renderin
 
             const BeginRenderCommand beginRenderCommand{
                 .color = ColorAttachmentDescriptor { 
