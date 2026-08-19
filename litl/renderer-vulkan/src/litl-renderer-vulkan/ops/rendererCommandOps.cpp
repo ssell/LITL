@@ -211,7 +211,7 @@ namespace litl::vulkan
         if (command.depth.has_value())
         {
             TextureResource* depthTexture = !(*command.depth).depthTexture.isValid() ?
-                vulkanContext->resources.getTexture(vulkanContext->swapChain.depthTextures[vulkanContext->swapChain.swapChainImageIndex]) :     // No depth texture supplied, use  the swapchain.
+                vulkanContext->resources.getTexture(vulkanContext->getCurrFrameSyncInfo().depthTexture) :     // No depth texture supplied, use  the swapchain.
                 vulkanContext->resources.getTexture((*command.depth).depthTexture);                                                             // Use provided depth texture.
                 
             if (depthTexture != nullptr)
@@ -323,7 +323,7 @@ namespace litl::vulkan
             // Default to the swapchain texture if no texture is specified.
             if ((command.toLayout == ImageLayoutType::DepthStencil) || (command.toLayout == ImageLayoutType::DepthStencilReadOnly))
             {
-                auto* depthTexture = vulkanContext->resources.getTexture(vulkanContext->swapChain.depthTextures[vulkanContext->swapChain.swapChainImageIndex]);
+                auto* depthTexture = vulkanContext->resources.getTexture(vulkanContext->getCurrFrameSyncInfo().depthTexture);
 
                 if (depthTexture == nullptr)
                 {

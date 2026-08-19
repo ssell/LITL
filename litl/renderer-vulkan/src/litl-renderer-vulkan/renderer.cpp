@@ -93,6 +93,7 @@ namespace litl::vulkan
     bool createSwapChain(RendererContext& context, VkSwapchainKHR oldSwapchain) noexcept;
     bool createCommandPool(RendererContext& context) noexcept;
     bool createFrameSyncObjects(RendererContext& context) noexcept;
+    bool createFrameDepthTextures(RendererContext& context) noexcept;
     bool createImageSyncObjects(RendererContext& context) noexcept;
 
     bool build(litl::RendererContext* context) noexcept
@@ -114,6 +115,7 @@ namespace litl::vulkan
             createSwapChain(*vulkanContext, VK_NULL_HANDLE) &&
             createCommandPool(*vulkanContext) &&
             createFrameSyncObjects(*vulkanContext) &&
+            createFrameDepthTextures(*vulkanContext) &&
             createImageSyncObjects(*vulkanContext);
     }
 
@@ -704,38 +706,6 @@ namespace litl::vulkan
             }
         }
 
-        // Create depth images
-        context.swapChain.depthTextures.resize(imageCount, {});
-
-        TextureDescriptor depthDescriptor{
-            .dimensions = TextureDimensions::Texture2D,
-            .width = imageExtent.width,
-            .height = imageExtent.height,
-            .depth = 1u,
-            .format = fromVkFormat(context.device.vkDepthStencilFormat),
-            .usage = TextureUsageFlagBits::DepthStencilAttachment | TextureUsageFlagBits::Sampled,
-            .memory = BufferMemoryType::Auto,
-            .memoryUsage = BufferMemoryUsage::GpuOnly,
-            .sharing = SharingMode::Exclusive,
-            .mipLevels = 1u,
-            .arrayLayers = 1u,
-            .sampleCount = MultisampleCount::Count1,
-            .isCubeMap = false
-        };
-
-        for (uint32_t i = 0u; i < imageCount; ++i)
-        {
-            depthDescriptor.name = std::format("Internal_DepthTexture_{}", i);
-            context.swapChain.depthTextures[i] = context.resources.createTexture(depthDescriptor);
-            auto* depthTexture = context.resources.getTexture(context.swapChain.depthTextures[i]);
-
-            if (depthTexture == nullptr)
-            {
-                logError("Failed to create Vulkan Swap Chain Depth Texture");
-                return false;
-            }
-        }
-
         return true;
     }
 
@@ -851,6 +821,40 @@ namespace litl::vulkan
         return true;
     }
 
+    bool createFrameDepthTextures(RendererContext& context) noexcept
+    {
+        TextureDescriptor depthDescriptor{
+            .dimensions = TextureDimensions::Texture2D,
+            .width = context.swapChain.vkSwapChainExtent.width,
+            .height = context.swapChain.vkSwapChainExtent.height,
+            .depth = 1u,
+            .format = fromVkFormat(context.device.vkDepthStencilFormat),
+            .usage = TextureUsageFlagBits::DepthStencilAttachment | TextureUsageFlagBits::Sampled,
+            .memory = BufferMemoryType::Auto,
+            .memoryUsage = BufferMemoryUsage::GpuOnly,
+            .sharing = SharingMode::Exclusive,
+            .mipLevels = 1u,
+            .arrayLayers = 1u,
+            .sampleCount = MultisampleCount::Count1,
+            .isCubeMap = false
+        };
+
+        for (uint32_t i = 0u; i < context.renderInfo.frame.framesInFlight; ++i)
+        {
+            depthDescriptor.name = std::format("Internal_DepthTexture_{}", i);
+            context.renderInfo.frameSyncInfo[i].depthTexture = context.resources.createTexture(depthDescriptor);
+            auto* depthTexture = context.resources.getTexture(context.renderInfo.frameSyncInfo[i].depthTexture);
+
+            if (depthTexture == nullptr)
+            {
+                logError("Failed to create Vulkan Swap Chain Depth Texture");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     bool createImageSyncObjects(RendererContext& context) noexcept
     {
         const VkSemaphoreCreateInfo renderSemaphoreInfo{
@@ -909,6 +913,7 @@ namespace litl::vulkan
 
     void cleanupResources(RendererContext& context) noexcept;
     void cleanupPipelineCache(RendererContext& context) noexcept;
+    void cleanupFrameDepthTextures(RendererContext& context) noexcept;
     void cleanupFrameSync(RendererContext& context) noexcept;
     void cleanupImageSync(RendererContext& context) noexcept;
     void cleanupSwapChainImages(RendererContext& context) noexcept;
@@ -923,6 +928,7 @@ namespace litl::vulkan
         vkDeviceWaitIdle(vulkanContext->device.vkDevice);
 
         cleanupPipelineCache(*vulkanContext);
+        cleanupFrameDepthTextures(*vulkanContext);
         cleanupFrameSync(*vulkanContext);
         cleanupImageSync(*vulkanContext);
         cleanupSwapChainImages(*vulkanContext);
@@ -944,6 +950,15 @@ namespace litl::vulkan
         {
             vkDestroyPipelineCache(context.device.vkDevice, context.device.vkPipelineCache, nullptr);
             context.device.vkPipelineCache = VK_NULL_HANDLE;
+        }
+    }
+
+    void cleanupFrameDepthTextures(RendererContext& context) noexcept
+    {
+        for (auto& frameInfo : context.renderInfo.frameSyncInfo)
+        {
+            context.resources.destroyTexture(frameInfo.depthTexture);
+            frameInfo.depthTexture = {};
         }
     }
 
@@ -997,16 +1012,6 @@ namespace litl::vulkan
             }
 
             context.swapChain.vkSwapChainImageViews.clear();
-        }
-
-        if (!context.swapChain.depthTextures.empty())
-        {
-            for (auto depthHandle : context.swapChain.depthTextures)
-            {
-                context.resources.destroyTexture(depthHandle);
-            }
-
-            context.swapChain.depthTextures.clear();
         }
     }
 
@@ -1065,6 +1070,9 @@ namespace litl::vulkan
         cleanupSwapChainImages(context);
         createSwapChain(context, oldSwapchain);         // pass in the old swapchain to make creating the new one
         cleanupSwapChain(context, oldSwapchain);        // destroy the old one
+
+        cleanupFrameDepthTextures(context);
+        createFrameDepthTextures(context);
 
         // Swapchain image count _can_ change. So must recreate the image sync objects.
         cleanupImageSync(context);
