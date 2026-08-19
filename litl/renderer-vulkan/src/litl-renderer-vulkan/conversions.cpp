@@ -405,54 +405,54 @@ namespace litl::vulkan
     {
         VkAccessFlags2 vkFlag = 0;
 
-        if ((flag & static_cast<uint64_t>(ImageAccessFlagBits::IndirectCommandRead)) != 0) { vkFlag |= VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT; }
-        if ((flag & static_cast<uint64_t>(ImageAccessFlagBits::IndexRead)) != 0) { vkFlag |= VK_ACCESS_2_INDEX_READ_BIT; }
-        if ((flag & static_cast<uint64_t>(ImageAccessFlagBits::VertexAttributeRead)) != 0) { vkFlag |= VK_ACCESS_2_VERTEX_ATTRIBUTE_READ_BIT; }
-        if ((flag & static_cast<uint64_t>(ImageAccessFlagBits::UniformRead)) != 0) { vkFlag |= VK_ACCESS_2_UNIFORM_READ_BIT; }
-        if ((flag & static_cast<uint64_t>(ImageAccessFlagBits::InputAttachmentRead)) != 0) { vkFlag |= VK_ACCESS_2_INPUT_ATTACHMENT_READ_BIT; }
-        if ((flag & static_cast<uint64_t>(ImageAccessFlagBits::ShaderRead)) != 0) { vkFlag |= VK_ACCESS_2_SHADER_READ_BIT; }
-        if ((flag & static_cast<uint64_t>(ImageAccessFlagBits::ShaderWrite)) != 0) { vkFlag |= VK_ACCESS_2_SHADER_WRITE_BIT; }
-        if ((flag & static_cast<uint64_t>(ImageAccessFlagBits::ColorRead)) != 0) { vkFlag |= VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT; }
-        if ((flag & static_cast<uint64_t>(ImageAccessFlagBits::ColorWrite)) != 0) { vkFlag |= VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT; }
-        if ((flag & static_cast<uint64_t>(ImageAccessFlagBits::DepthStencilRead)) != 0) { vkFlag |= VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT; }
-        if ((flag & static_cast<uint64_t>(ImageAccessFlagBits::DepthStencilWrite)) != 0) { vkFlag |= VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT; }
-        if ((flag & static_cast<uint64_t>(ImageAccessFlagBits::TransferRead)) != 0) { vkFlag |= VK_ACCESS_2_TRANSFER_READ_BIT; }
-        if ((flag & static_cast<uint64_t>(ImageAccessFlagBits::TransferWrite)) != 0) { vkFlag |= VK_ACCESS_2_TRANSFER_WRITE_BIT; }
-        if ((flag & static_cast<uint64_t>(ImageAccessFlagBits::HostRead)) != 0) { vkFlag |= VK_ACCESS_2_HOST_READ_BIT; }
-        if ((flag & static_cast<uint64_t>(ImageAccessFlagBits::HostWrite)) != 0) { vkFlag |= VK_ACCESS_2_HOST_WRITE_BIT; }
-        if ((flag & static_cast<uint64_t>(ImageAccessFlagBits::MemoryRead)) != 0) { vkFlag |= VK_ACCESS_2_MEMORY_READ_BIT; }
-        if ((flag & static_cast<uint64_t>(ImageAccessFlagBits::MemoryWrite)) != 0) { vkFlag |= VK_ACCESS_2_MEMORY_WRITE_BIT; }
-        if ((flag & static_cast<uint64_t>(ImageAccessFlagBits::ShaderSampledRead)) != 0) { vkFlag |= VK_ACCESS_2_SHADER_SAMPLED_READ_BIT; }
-        if ((flag & static_cast<uint64_t>(ImageAccessFlagBits::ShaderStorageRead)) != 0) { vkFlag |= VK_ACCESS_2_SHADER_STORAGE_READ_BIT; }
-        if ((flag & static_cast<uint64_t>(ImageAccessFlagBits::ShaderStorageWrite)) != 0) { vkFlag |= VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT; }
+        if (has_any(flag, ImageAccessFlagBits::IndirectCommandRead)) { vkFlag |= VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT; }
+        if (has_any(flag, ImageAccessFlagBits::IndexRead)) { vkFlag |= VK_ACCESS_2_INDEX_READ_BIT; }
+        if (has_any(flag, ImageAccessFlagBits::VertexAttributeRead)) { vkFlag |= VK_ACCESS_2_VERTEX_ATTRIBUTE_READ_BIT; }
+        if (has_any(flag, ImageAccessFlagBits::UniformRead)) { vkFlag |= VK_ACCESS_2_UNIFORM_READ_BIT; }
+        if (has_any(flag, ImageAccessFlagBits::InputAttachmentRead)) { vkFlag |= VK_ACCESS_2_INPUT_ATTACHMENT_READ_BIT; }
+        if (has_any(flag, ImageAccessFlagBits::ShaderRead)) { vkFlag |= VK_ACCESS_2_SHADER_READ_BIT; }
+        if (has_any(flag, ImageAccessFlagBits::ShaderWrite)) { vkFlag |= VK_ACCESS_2_SHADER_WRITE_BIT; }
+        if (has_any(flag, ImageAccessFlagBits::ColorRead)) { vkFlag |= VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT; }
+        if (has_any(flag, ImageAccessFlagBits::ColorWrite)) { vkFlag |= VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT; }
+        if (has_any(flag, ImageAccessFlagBits::DepthStencilRead)) { vkFlag |= VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT; }
+        if (has_any(flag, ImageAccessFlagBits::DepthStencilWrite)) { vkFlag |= VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT; }
+        if (has_any(flag, ImageAccessFlagBits::TransferRead)) { vkFlag |= VK_ACCESS_2_TRANSFER_READ_BIT; }
+        if (has_any(flag, ImageAccessFlagBits::TransferWrite)) { vkFlag |= VK_ACCESS_2_TRANSFER_WRITE_BIT; }
+        if (has_any(flag, ImageAccessFlagBits::HostRead)) { vkFlag |= VK_ACCESS_2_HOST_READ_BIT; }
+        if (has_any(flag, ImageAccessFlagBits::HostWrite)) { vkFlag |= VK_ACCESS_2_HOST_WRITE_BIT; }
+        if (has_any(flag, ImageAccessFlagBits::MemoryRead)) { vkFlag |= VK_ACCESS_2_MEMORY_READ_BIT; }
+        if (has_any(flag, ImageAccessFlagBits::MemoryWrite)) { vkFlag |= VK_ACCESS_2_MEMORY_WRITE_BIT; }
+        if (has_any(flag, ImageAccessFlagBits::ShaderSampledRead)) { vkFlag |= VK_ACCESS_2_SHADER_SAMPLED_READ_BIT; }
+        if (has_any(flag, ImageAccessFlagBits::ShaderStorageRead)) { vkFlag |= VK_ACCESS_2_SHADER_STORAGE_READ_BIT; }
+        if (has_any(flag, ImageAccessFlagBits::ShaderStorageWrite)) { vkFlag |= VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT; }
 
         return vkFlag;
     }
 
     ImageAccessFlag fromVkAccessFlag(VkAccessFlags2 flag) noexcept
     {
-        ImageAccessFlag litlFlag = 0;
+        ImageAccessFlag litlFlag = ImageAccessFlagBits::None;
 
-        if ((flag & VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::IndirectCommandRead); }
-        if ((flag & VK_ACCESS_2_INDEX_READ_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::IndexRead); }
-        if ((flag & VK_ACCESS_2_VERTEX_ATTRIBUTE_READ_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::VertexAttributeRead); }
-        if ((flag & VK_ACCESS_2_UNIFORM_READ_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::UniformRead); }
-        if ((flag & VK_ACCESS_2_INPUT_ATTACHMENT_READ_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::InputAttachmentRead); }
-        if ((flag & VK_ACCESS_2_SHADER_READ_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::ShaderRead); }
-        if ((flag & VK_ACCESS_2_SHADER_WRITE_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::ShaderWrite); }
-        if ((flag & VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::ColorRead); }
-        if ((flag & VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::ColorWrite); }
-        if ((flag & VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::DepthStencilRead); }
-        if ((flag & VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::DepthStencilWrite); }
-        if ((flag & VK_ACCESS_2_TRANSFER_READ_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::TransferRead); }
-        if ((flag & VK_ACCESS_2_TRANSFER_WRITE_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::TransferWrite); }
-        if ((flag & VK_ACCESS_2_HOST_READ_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::HostRead); }
-        if ((flag & VK_ACCESS_2_HOST_WRITE_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::HostWrite); }
-        if ((flag & VK_ACCESS_2_MEMORY_READ_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::MemoryRead); }
-        if ((flag & VK_ACCESS_2_MEMORY_WRITE_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::MemoryWrite); }
-        if ((flag & VK_ACCESS_2_SHADER_SAMPLED_READ_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::ShaderSampledRead); }
-        if ((flag & VK_ACCESS_2_SHADER_STORAGE_READ_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::ShaderStorageRead); }
-        if ((flag & VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT) != 0) { litlFlag |= static_cast<uint64_t>(ImageAccessFlagBits::ShaderStorageWrite); }
+        if ((flag & VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT) != 0) { litlFlag |= ImageAccessFlagBits::IndirectCommandRead; }
+        if ((flag & VK_ACCESS_2_INDEX_READ_BIT) != 0) { litlFlag |= ImageAccessFlagBits::IndexRead; }
+        if ((flag & VK_ACCESS_2_VERTEX_ATTRIBUTE_READ_BIT) != 0) { litlFlag |= ImageAccessFlagBits::VertexAttributeRead; }
+        if ((flag & VK_ACCESS_2_UNIFORM_READ_BIT) != 0) { litlFlag |= ImageAccessFlagBits::UniformRead; }
+        if ((flag & VK_ACCESS_2_INPUT_ATTACHMENT_READ_BIT) != 0) { litlFlag |= ImageAccessFlagBits::InputAttachmentRead; }
+        if ((flag & VK_ACCESS_2_SHADER_READ_BIT) != 0) { litlFlag |= ImageAccessFlagBits::ShaderRead; }
+        if ((flag & VK_ACCESS_2_SHADER_WRITE_BIT) != 0) { litlFlag |= ImageAccessFlagBits::ShaderWrite; }
+        if ((flag & VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT) != 0) { litlFlag |= ImageAccessFlagBits::ColorRead; }
+        if ((flag & VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT) != 0) { litlFlag |= ImageAccessFlagBits::ColorWrite; }
+        if ((flag & VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT) != 0) { litlFlag |= ImageAccessFlagBits::DepthStencilRead; }
+        if ((flag & VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT) != 0) { litlFlag |= ImageAccessFlagBits::DepthStencilWrite; }
+        if ((flag & VK_ACCESS_2_TRANSFER_READ_BIT) != 0) { litlFlag |= ImageAccessFlagBits::TransferRead; }
+        if ((flag & VK_ACCESS_2_TRANSFER_WRITE_BIT) != 0) { litlFlag |= ImageAccessFlagBits::TransferWrite; }
+        if ((flag & VK_ACCESS_2_HOST_READ_BIT) != 0) { litlFlag |= ImageAccessFlagBits::HostRead; }
+        if ((flag & VK_ACCESS_2_HOST_WRITE_BIT) != 0) { litlFlag |= ImageAccessFlagBits::HostWrite; }
+        if ((flag & VK_ACCESS_2_MEMORY_READ_BIT) != 0) { litlFlag |= ImageAccessFlagBits::MemoryRead; }
+        if ((flag & VK_ACCESS_2_MEMORY_WRITE_BIT) != 0) { litlFlag |= ImageAccessFlagBits::MemoryWrite; }
+        if ((flag & VK_ACCESS_2_SHADER_SAMPLED_READ_BIT) != 0) { litlFlag |= ImageAccessFlagBits::ShaderSampledRead; }
+        if ((flag & VK_ACCESS_2_SHADER_STORAGE_READ_BIT) != 0) { litlFlag |= ImageAccessFlagBits::ShaderStorageRead; }
+        if ((flag & VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT) != 0) { litlFlag |= ImageAccessFlagBits::ShaderStorageWrite; }
 
         return litlFlag;
     }
