@@ -226,6 +226,7 @@ namespace litl::vulkan
 
     DataFormat fromVkFormat(VkFormat format) noexcept
     {
+        // Note any added format support must also be propagated to deriveAspectMaskFromFormat
         switch (format)
         {
             // Color
@@ -1755,6 +1756,51 @@ namespace litl::vulkan
         if ((flag & VkImageUsageFlagBits::VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT) != 0) { usageFlag |= TextureUsageFlagBits::InputAttachment; }
 
         return usageFlag;
+    }
+
+    // -------------------------------------------------------------------------------------
+    // VkFormat -> VkImageAspectFlags
+    // -------------------------------------------------------------------------------------
+
+    VkImageAspectFlags deriveAspectMaskFromFormat(VkFormat format) noexcept
+    {
+        // Note: the available cases here must match what is present in our to/fromVkFormat.
+        switch (format)
+        {
+        case VkFormat::VK_FORMAT_R8G8B8A8_UNORM:
+        case VkFormat::VK_FORMAT_R8G8B8A8_SRGB:
+        case VkFormat::VK_FORMAT_B8G8R8A8_UNORM:
+        case VkFormat::VK_FORMAT_B8G8R8A8_SRGB:
+        case VkFormat::VK_FORMAT_A2B10G10R10_UNORM_PACK32:
+        case VkFormat::VK_FORMAT_R16G16B16A16_SFLOAT:
+        case VkFormat::VK_FORMAT_R32G32B32_SFLOAT:
+        case VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT:
+        case VkFormat::VK_FORMAT_B10G11R11_UFLOAT_PACK32:
+        case VkFormat::VK_FORMAT_R8_UNORM:
+        case VkFormat::VK_FORMAT_R16_SFLOAT:
+        case VkFormat::VK_FORMAT_R32_SFLOAT:
+        case VkFormat::VK_FORMAT_R8G8_UNORM:
+        case VkFormat::VK_FORMAT_R16G16_SFLOAT:
+        case VkFormat::VK_FORMAT_R32G32_SFLOAT:
+        case VkFormat::VK_FORMAT_BC7_UNORM_BLOCK:
+        case VkFormat::VK_FORMAT_BC7_SRGB_BLOCK:
+        case VkFormat::VK_FORMAT_BC4_UNORM_BLOCK:
+        case VkFormat::VK_FORMAT_BC5_UNORM_BLOCK:
+        case VkFormat::VK_FORMAT_BC6H_UFLOAT_BLOCK:
+            return VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT;
+
+        case VkFormat::VK_FORMAT_D32_SFLOAT:
+            return VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT;
+
+        case VkFormat::VK_FORMAT_D24_UNORM_S8_UINT:
+        case VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT:
+            return VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT | VkImageAspectFlagBits::VK_IMAGE_ASPECT_STENCIL_BIT;
+
+        case VkFormat::VK_FORMAT_UNDEFINED:
+        default:
+            logError("Unsupported VkFormat of '", static_cast<uint32_t>(format), "' provided to deriveAspectMaskFromFormat. Defaulting to VK_IMAGE_ASPECT_NONE");
+            return VkImageAspectFlagBits::VK_IMAGE_ASPECT_NONE;
+        }
     }
 
     // -------------------------------------------------------------------------------------
