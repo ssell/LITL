@@ -205,8 +205,8 @@ namespace litl::vulkan
         // ---------------------------------------------------------------------------------
 
         VkRenderingAttachmentInfo depthStencilAttachment{};
-        bool hasDepthAttachment = false;
-        bool hasStencilAttachment = false;
+        vulkanContext->drawInfo.depthFormat = VK_FORMAT_UNDEFINED;
+        vulkanContext->drawInfo.stencilFormat = VK_FORMAT_UNDEFINED;
 
         if (command.depth.has_value())
         {
@@ -217,12 +217,15 @@ namespace litl::vulkan
             if (depthTexture != nullptr)
             {
                 const auto dataFormat = fromVkFormat(depthTexture->vkFormat);
-                hasDepthAttachment = dataFormatHasDepth(dataFormat);                // validate it is actually a depth texture
-                hasStencilAttachment = dataFormatHasStencil(dataFormat);
 
-                if (hasDepthAttachment)
+                if (dataFormatHasDepth(dataFormat))
                 {
                     vulkanContext->drawInfo.depthFormat = depthTexture->vkFormat;
+
+                    if (dataFormatHasStencil(dataFormat))
+                    {
+                        vulkanContext->drawInfo.stencilFormat = depthTexture->vkFormat;
+                    }
 
                     depthStencilAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
                     depthStencilAttachment.imageView = depthTexture->vkImageView;
@@ -237,6 +240,10 @@ namespace litl::vulkan
                         }
                     };
                 }
+            }
+            else
+            {
+                logWarning("Stale depth texture handle passed to cmdBeginRender");
             }
         }
 
@@ -261,8 +268,8 @@ namespace litl::vulkan
             .viewMask = command.viewMask,           // the graphics pipeline view mask must match this
             .colorAttachmentCount = 1u,
             .pColorAttachments = &colorAttachment,
-            .pDepthAttachment = hasDepthAttachment  ? &depthStencilAttachment : nullptr,
-            .pStencilAttachment = hasStencilAttachment ? &depthStencilAttachment : nullptr
+            .pDepthAttachment = (vulkanContext->drawInfo.depthFormat != VK_FORMAT_UNDEFINED) ? &depthStencilAttachment : nullptr,
+            .pStencilAttachment = (vulkanContext->drawInfo.stencilFormat != VK_FORMAT_UNDEFINED) ? &depthStencilAttachment : nullptr
         };
 
         if (isSwapChain)
