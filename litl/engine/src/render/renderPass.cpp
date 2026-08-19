@@ -45,8 +45,15 @@ namespace litl
             // --- Begin rendering
 
             const BeginRenderCommand beginRenderCommand{
-                .color = ColorAttachmentDescriptor {
-                    .clearColor = camera.getClearColor()
+                .color = ColorAttachmentDescriptor { 
+                    .colorTexture = {},                     // use the swapchain color texture
+                    .clearColor = camera.getClearColor() 
+                },
+                .depth = DepthAttachmentDescriptor {
+                    .depthTexture = {},                     // use the swapchain depth texture
+                    .loadOp = LoadOperationType::Clear,
+                    .storeOp = StoreOperationType::DontCare,
+                    .clearDepth = 0.0f
                 }
             };
 
@@ -68,6 +75,7 @@ namespace litl
             };
 
             renderer->cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierUndefinedToColor);
+            renderer->cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierUndefinedToDepthStencil);
             renderer->cmdBeginRender(frameCommandBuffer, beginRenderCommand);
             renderer->cmdSetViewportAndScissor(frameCommandBuffer, setViewportScissorCommand);
 
