@@ -185,7 +185,7 @@ namespace litl
         // Depth
         D32_SFloat,             // 32-bit depth floating point value.
         D24_UNorm_S8_UInt,      // 32-bit format with a 24-bit linear depth value on the range [0,1] and 8-bit unsigned integer stencil.
-        D32_SFloat_S8_Uint,     // 32-bit format with a 24-bit floating point depth value and 8-bit unsigned integer stencil.
+        D32_SFloat_S8_Uint,     // 32-bit format with a 32-bit floating point depth value and 8-bit unsigned integer stencil.
 
         // Compressed
         BC7_UNorm,              // A four-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned normalized RGBA texel data.
