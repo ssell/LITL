@@ -1,13 +1,32 @@
 #include <array>
 
+#include "litl-core/hash.hpp"
+#include "litl-core/id.hpp"
+#include "litl-core/logging/logging.hpp"
 #include "litl-renderer-vulkan/renderer.hpp"
 #include "litl-renderer-vulkan/conversions.hpp"
 #include "litl-renderer/reflection.hpp"
-#include "litl-core/logging/logging.hpp"
-#include "litl-core/hash.hpp"
 
 namespace litl::vulkan
 {
+    namespace
+    {
+        /// <summary>
+        /// Generates an unique name/id for the resource if one was not provided by the user.
+        /// </summary>
+        template<typename T>
+        std::string generateResourceId(std::string const& userProvidedName, std::string_view prefix)
+        {
+            if (!userProvidedName.empty())
+            {
+                return userProvidedName;
+            }
+            else
+            {
+                return generateId<T>(prefix);
+            }
+        }
+    }
     void ResourceManager::build(RendererContext& context) noexcept
     {
         m_pContext = &context;
@@ -1052,6 +1071,7 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
         }
 
         TextureResource resource{
+            .vkFormat = toVkFormat(descriptor.format),
             .vkExtent = VkExtent3D {
                 .width = descriptor.width,
                 .height = descriptor.height,
@@ -1060,10 +1080,13 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
             .descriptor = descriptor
         };
 
+        resource.descriptor.name = generateResourceId<TextureResource>(descriptor.name, "Texture");
+        resource.id = StringId(resource.descriptor.name);
+
         VkImageCreateInfo createImageInfo{
             .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
             .imageType = toVkImageType(descriptor.dimensions),
-            .format = toVkFormat(descriptor.format),
+            .format = resource.vkFormat,
             .extent = resource.vkExtent,
             .mipLevels = descriptor.mipLevels,
             .arrayLayers = descriptor.arrayLayers,
