@@ -99,6 +99,8 @@ namespace litl::vulkan
     [[nodiscard]] VkImageUsageFlags toVkImageUsageFlags(TextureUsageFlag flag) noexcept;
     [[nodiscard]] TextureUsageFlag fromVkImageUsageFlags(VkImageUsageFlags flag) noexcept;
 
+    [[nodiscard]] VkImageAspectFlags deriveAspectMaskFromFormat(VkFormat format) noexcept;
+
     [[nodiscard]] VkFilter toVkFilter(SamplerFilter filter) noexcept;
     [[nodiscard]] SamplerFilter fromVkFilter(VkFilter filter) noexcept;
 

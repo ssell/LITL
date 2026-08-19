@@ -1141,12 +1141,12 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
             return {};
         }
 
-        resource.vkImageSubresourceRange = VkImageSubresourceRange{
-                .aspectMask = VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT,     // todo depth
-                .baseMipLevel = 0u,
-                .levelCount = descriptor.mipLevels,
-                .baseArrayLayer = 0u,
-                .layerCount = descriptor.arrayLayers,
+        resource.vkImageSubresourceRange = VkImageSubresourceRange {
+            .aspectMask = deriveAspectMaskFromFormat(resource.vkFormat),
+            .baseMipLevel = 0u,
+            .levelCount = descriptor.mipLevels,
+            .baseArrayLayer = 0u,
+            .layerCount = descriptor.arrayLayers,
         };
 
         const VkImageViewCreateInfo createImageViewInfo{
