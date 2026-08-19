@@ -1,5 +1,6 @@
 #include <array>
 #include <cstring>
+#include <format>
 #include <optional>
 #include <set>
 #include <span>
@@ -622,6 +623,7 @@ namespace litl::vulkan
             imageCount = (min)(imageCount, swapChainSupport.capabilities.maxImageCount);
         }
 
+        // Create the swapchain
         VkSwapchainCreateInfoKHR createSwapChainInfo{};
         createSwapChainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         createSwapChainInfo.surface = context.device.vkSurface;
@@ -661,15 +663,16 @@ namespace litl::vulkan
             return false;
         }
 
+        // Retrieve the physical device swapchain images
         context.swapChain.vkSwapChainImageFormat = surfaceFormat.format;
         context.swapChain.vkSwapChainExtent = imageExtent;
 
         vkGetSwapchainImagesKHR(context.device.vkDevice, context.swapChain.vkSwapChain, &imageCount, nullptr);
-        context.swapChain.vkSwapChainImages.resize(imageCount);
-        context.swapChain.vkSwapChainImageViews.resize(imageCount);
+        context.swapChain.vkSwapChainImages.resize(imageCount, VK_NULL_HANDLE);
+        context.swapChain.vkSwapChainImageViews.resize(imageCount, VK_NULL_HANDLE);
         vkGetSwapchainImagesKHR(context.device.vkDevice, context.swapChain.vkSwapChain, &imageCount, context.swapChain.vkSwapChainImages.data());
 
-        // Create color images
+        // Create color image views
         for (uint32_t i = 0u; i < imageCount; ++i)
         {
             const VkImageViewCreateInfo createImageViewInfo{
@@ -724,6 +727,13 @@ namespace litl::vulkan
         {
             depthDescriptor.name = std::format("Internal_DepthTexture_{}", i);
             context.swapChain.depthTextures[i] = context.resources.createTexture(depthDescriptor);
+            auto* depthTexture = context.resources.getTexture(context.swapChain.depthTextures[i]);
+
+            if (depthTexture == nullptr)
+            {
+                logError("Failed to create Vulkan Swap Chain Depth Texture");
+                return false;
+            }
         }
 
         return true;
@@ -985,6 +995,8 @@ namespace litl::vulkan
             {
                 vkDestroyImageView(context.device.vkDevice, imageView, nullptr);
             }
+
+            context.swapChain.vkSwapChainImageViews.clear();
         }
 
         if (!context.swapChain.depthTextures.empty())

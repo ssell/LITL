@@ -42,11 +42,11 @@ namespace litl
 
     static constexpr PipelineBarrierCommand PipelineBarrierUndefinedToDepthStencil{
         .fromLayout   = ImageLayoutType::Undefined,
-        .toLayout     = ImageLayoutType::Color,
+        .toLayout     = ImageLayoutType::DepthStencil,
         .sourceAccess = ImageAccessFlagBits::None,
-        .destAccess   = ImageAccessFlagBits::DepthStencilWrite,
-        .sourceStage  = PipelineStageFlagBits::EarlyFragmentTests,
-        .destStage    = PipelineStageFlagBits::BottomOfPipe
+        .destAccess   = ImageAccessFlagBits::DepthStencilRead | ImageAccessFlagBits::DepthStencilWrite,
+        .sourceStage  = PipelineStageFlagBits::EarlyFragmentTests | PipelineStageFlagBits::LateFragmentTests,
+        .destStage    = PipelineStageFlagBits::EarlyFragmentTests | PipelineStageFlagBits::LateFragmentTests
     };
 
     static constexpr PipelineBarrierCommand PipelineBarrierUndefinedToTransferDst{
