@@ -1180,7 +1180,9 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
             return {};
         }
 
-        if (dataFormatHasStencil(descriptor.format) && has_any(descriptor.usage, TextureUsageFlagBits::Sampled))
+        if (dataFormatHasDepth(descriptor.format) && 
+            dataFormatHasStencil(descriptor.format) && 
+            has_any(descriptor.usage, TextureUsageFlagBits::Sampled))
         {
             // A depth-stencil can not sample from both depth and stencil together. 
             // It needs a separate view that targets one or the other. So create one that targets the depth.
