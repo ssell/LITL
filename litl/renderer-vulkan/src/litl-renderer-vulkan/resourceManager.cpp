@@ -1169,7 +1169,8 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
 
         const VkResult createImageViewResult = vkCreateImageView(
             m_pContext->device.vkDevice,
-            &createImageViewInfo, nullptr,
+            &createImageViewInfo, 
+            nullptr,
             &resource.vkImageView);
 
         if (createImageViewResult != VK_SUCCESS)
@@ -1177,6 +1178,37 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
             logError("Failed to create Vulkan image view with result ", createImageViewResult);
             vmaDestroyImage(m_pContext->device.vmaAllocator, resource.vkImage, resource.allocation);
             return {};
+        }
+
+        if (dataFormatHasStencil(descriptor.format) && has_any(descriptor.usage, TextureUsageFlagBits::Sampled))
+        {
+            // A depth-stencil can not sample from both depth and stencil together. 
+            // It needs a separate view that targets one or the other. So create one that targets the depth.
+            VkImageSubresourceRange depthOnlySubresourceRange = resource.vkImageSubresourceRange;
+            depthOnlySubresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+
+            const VkImageViewCreateInfo createDepthOnlySampleViewInfo{
+                .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+                .image = resource.vkImage,
+                .viewType = VK_IMAGE_VIEW_TYPE_2D,
+                .format = resource.vkFormat,
+                .components = { VK_COMPONENT_SWIZZLE_IDENTITY },
+                .subresourceRange = depthOnlySubresourceRange
+            };
+
+            const VkResult createDepthOnlySampleViewResult = vkCreateImageView(
+                m_pContext->device.vkDevice,
+                &createDepthOnlySampleViewInfo,
+                nullptr,
+                &resource.vkSampledImageView);
+
+            if (createDepthOnlySampleViewResult != VK_SUCCESS)
+            {
+                logError("Failed to create Vulkan depth-only sample view with result ", createDepthOnlySampleViewResult);
+                vkDestroyImageView(m_pContext->device.vkDevice, resource.vkImageView, nullptr);
+                vmaDestroyImage(m_pContext->device.vmaAllocator, resource.vkImage, resource.allocation);
+                return {};
+            }
         }
 
         resource.memoryMap.persistent = resource.allocationInfo.pMappedData;
@@ -1207,6 +1239,11 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
             if (resource->vkImageView != VK_NULL_HANDLE)
             {
                 vkDestroyImageView(m_pContext->device.vkDevice, resource->vkImageView, nullptr);
+            }
+
+            if (resource->vkSampledImageView != VK_NULL_HANDLE)
+            {
+                vkDestroyImageView(m_pContext->device.vkDevice, resource->vkSampledImageView, nullptr);
             }
 
             m_textureMap.erase(resource->id);

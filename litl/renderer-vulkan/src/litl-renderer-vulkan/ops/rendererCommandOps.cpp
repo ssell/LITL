@@ -204,7 +204,9 @@ namespace litl::vulkan
         // Depth-Stencil Texture Attachment
         // ---------------------------------------------------------------------------------
 
-        VkRenderingAttachmentInfo depthAttachment{};
+        VkRenderingAttachmentInfo depthStencilAttachment{};
+        bool hasDepthAttachment = false;
+        bool hasStencilAttachment = false;
 
         if (command.depth.has_value())
         {
@@ -212,28 +214,31 @@ namespace litl::vulkan
                 vulkanContext->resources.getTexture(vulkanContext->swapChain.depthTextures[vulkanContext->swapChain.swapChainImageIndex]) :     // No depth texture supplied, use  the swapchain.
                 vulkanContext->resources.getTexture((*command.depth).depthTexture);                                                             // Use provided depth texture.
                 
-            VkImageView depthTextureView = (depthTexture != nullptr ? depthTexture->vkImageView : VK_NULL_HANDLE);
-            vulkanContext->drawInfo.depthFormat = (depthTexture != nullptr ? depthTexture->vkFormat : VkFormat::VK_FORMAT_UNDEFINED);
+            if (depthTexture != nullptr)
+            {
+                const auto dataFormat = fromVkFormat(depthTexture->vkFormat);
+                hasDepthAttachment = dataFormatHasDepth(dataFormat);                // validate it is actually a depth texture
+                hasStencilAttachment = dataFormatHasStencil(dataFormat);
 
-            depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-            depthAttachment.imageView = depthTextureView;
-            depthAttachment.imageLayout = toVkImageLayout(ImageLayoutType::DepthStencil);
-            depthAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
-            depthAttachment.loadOp = toVkAttachmentLoadOp((*command.depth).loadOp);
-            depthAttachment.storeOp = toVkAttachmentStoreOp((*command.depth).storeOp);
-            depthAttachment.clearValue = VkClearValue {
-                .depthStencil = VkClearDepthStencilValue{
-                    .depth = (*command.depth).clearDepth,
-                    .stencil = (*command.depth).clearStencil
+                if (hasDepthAttachment)
+                {
+                    vulkanContext->drawInfo.depthFormat = depthTexture->vkFormat;
+
+                    depthStencilAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+                    depthStencilAttachment.imageView = depthTexture->vkImageView;
+                    depthStencilAttachment.imageLayout = toVkImageLayout(ImageLayoutType::DepthStencil);
+                    depthStencilAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
+                    depthStencilAttachment.loadOp = toVkAttachmentLoadOp((*command.depth).loadOp);
+                    depthStencilAttachment.storeOp = toVkAttachmentStoreOp((*command.depth).storeOp);
+                    depthStencilAttachment.clearValue = VkClearValue{
+                        .depthStencil = VkClearDepthStencilValue{
+                            .depth = (*command.depth).clearDepth,
+                            .stencil = (*command.depth).clearStencil
+                        }
+                    };
                 }
-            };
+            }
         }
-
-        // ---------------------------------------------------------------------------------
-        // Stencil Texture Attachment
-        // ---------------------------------------------------------------------------------
-
-        // ... todo ...
 
         // ---------------------------------------------------------------------------------
         // Begin Render
@@ -256,8 +261,8 @@ namespace litl::vulkan
             .viewMask = command.viewMask,           // the graphics pipeline view mask must match this
             .colorAttachmentCount = 1u,
             .pColorAttachments = &colorAttachment,
-            .pDepthAttachment = command.depth.has_value() ? &depthAttachment : nullptr,
-            .pStencilAttachment = nullptr
+            .pDepthAttachment = hasDepthAttachment  ? &depthStencilAttachment : nullptr,
+            .pStencilAttachment = hasStencilAttachment ? &depthStencilAttachment : nullptr
         };
 
         if (isSwapChain)
@@ -299,6 +304,7 @@ namespace litl::vulkan
 
             if (texture == nullptr)
             {
+                logError("Failed to issue cmdPipelineBarrier - failed to retrieve texture specified in command.");
                 return;
             }
 
@@ -307,15 +313,31 @@ namespace litl::vulkan
         }
         else
         {
-            // Default to the swapchain color texture if no texture is specified.
-            vkImage = vulkanContext->swapChain.vkSwapChainImages[vulkanContext->swapChain.swapChainImageIndex];
-            subresourceRange = VkImageSubresourceRange{
-                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                .baseMipLevel = 0,
-                .levelCount = 1,
-                .baseArrayLayer = 0,
-                .layerCount = 1
-            };
+            // Default to the swapchain texture if no texture is specified.
+            if ((command.toLayout == ImageLayoutType::DepthStencil) || (command.toLayout == ImageLayoutType::DepthStencilReadOnly))
+            {
+                auto* depthTexture = vulkanContext->resources.getTexture(vulkanContext->swapChain.depthTextures[vulkanContext->swapChain.swapChainImageIndex]);
+
+                if (depthTexture == nullptr)
+                {
+                    logError("Failed to issue cmdPipelineBarrier - failed to retrieve swapchain depth texture.");
+                    return;
+                }
+
+                vkImage = depthTexture->vkImage;
+                subresourceRange = depthTexture->vkImageSubresourceRange;
+            }
+            else
+            {
+                vkImage = vulkanContext->swapChain.vkSwapChainImages[vulkanContext->swapChain.swapChainImageIndex];
+                subresourceRange = VkImageSubresourceRange{
+                    .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                    .baseMipLevel = 0,
+                    .levelCount = 1,
+                    .baseArrayLayer = 0,
+                    .layerCount = 1
+                };
+            }
         }
 
         const VkImageMemoryBarrier2 barrier{
@@ -727,7 +749,7 @@ namespace litl::vulkan
             toVkDescriptorType(bindingResource->type),
             VkDescriptorImageInfo{
                 .sampler = VK_NULL_HANDLE,
-                .imageView = textureResource->vkImageView,
+                .imageView = (textureResource->vkSampledImageView != VK_NULL_HANDLE) ? textureResource->vkSampledImageView : textureResource->vkImageView,
                 .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             });
 

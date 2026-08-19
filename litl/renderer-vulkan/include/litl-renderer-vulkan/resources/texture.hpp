@@ -37,6 +37,11 @@ namespace litl::vulkan
         /// Format + Aspect + Mip Range + Array Range
         /// </summary>
         VkImageView vkImageView = VK_NULL_HANDLE;
+        
+        /// <summary>
+        /// For use with textures that require a separate view for sampling (such as depth-stencil).
+        /// </summary>
+        VkImageView vkSampledImageView = VK_NULL_HANDLE;
 
         /// <summary>
         /// 
