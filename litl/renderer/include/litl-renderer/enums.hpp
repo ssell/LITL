@@ -445,6 +445,22 @@ namespace litl
         X8 = 3,
         X16 = 4
     };
+
+    enum class TextureUsageFlagBits : uint32_t
+    {
+        None                   = 0u,
+        TransferSource         = 1u << 0u,
+        TransferDest           = 1u << 1u,
+        Sampled                = 1u << 2u,
+        Storage                = 1u << 3u,
+        ColorAttachment        = 1u << 4u,
+        DepthStencilAttachment = 1u << 5u,
+        TransientAttachment    = 1u << 6u,
+        InputAttachment        = 1u << 7u
+    };
+
+    LITL_ENABLE_BITMASK(TextureUsageFlagBits);
+    using TextureUsageFlag = TextureUsageFlagBits;
 }
 
 #endif

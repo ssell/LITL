@@ -1093,7 +1093,7 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
             .arrayLayers = descriptor.arrayLayers,
             .samples = static_cast<VkSampleCountFlagBits>(toVkSampleCountFlag(descriptor.sampleCount)),
             .tiling = VK_IMAGE_TILING_OPTIMAL,
-            .usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+            .usage = toVkImageUsageFlags(descriptor.usage),
             .sharingMode = toVkSharingMode(descriptor.sharing),
             .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
         };

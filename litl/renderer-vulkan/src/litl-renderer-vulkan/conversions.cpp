@@ -1722,6 +1722,42 @@ namespace litl::vulkan
     }
 
     // -------------------------------------------------------------------------------------
+    // TextureUsageFlag <-> VkImageUsageFlags
+    // -------------------------------------------------------------------------------------
+
+    VkImageUsageFlags toVkImageUsageFlags(TextureUsageFlag flag) noexcept
+    {
+        VkImageUsageFlags vkFlags = 0u;
+
+        if (has_any(flag, TextureUsageFlagBits::TransferSource)) { vkFlags |= VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT; }
+        if (has_any(flag, TextureUsageFlagBits::TransferDest)) { vkFlags |= VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT; }
+        if (has_any(flag, TextureUsageFlagBits::Sampled)) { vkFlags |= VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT; }
+        if (has_any(flag, TextureUsageFlagBits::Storage)) { vkFlags |= VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT; }
+        if (has_any(flag, TextureUsageFlagBits::ColorAttachment)) { vkFlags |= VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT; }
+        if (has_any(flag, TextureUsageFlagBits::DepthStencilAttachment)) { vkFlags |= VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT; }
+        if (has_any(flag, TextureUsageFlagBits::TransientAttachment)) { vkFlags |= VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT; }
+        if (has_any(flag, TextureUsageFlagBits::InputAttachment)) { vkFlags |= VkImageUsageFlagBits::VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT; }
+
+        return vkFlags;
+    }
+
+    TextureUsageFlag fromVkImageUsageFlags(VkImageUsageFlags flag) noexcept
+    {
+        TextureUsageFlag usageFlag = TextureUsageFlagBits::None;
+
+        if ((flag & VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT) != 0) { usageFlag |= TextureUsageFlagBits::TransferSource; }
+        if ((flag & VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT) != 0) { usageFlag |= TextureUsageFlagBits::TransferDest; }
+        if ((flag & VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT) != 0) { usageFlag |= TextureUsageFlagBits::Sampled; }
+        if ((flag & VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT) != 0) { usageFlag |= TextureUsageFlagBits::Storage; }
+        if ((flag & VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) != 0) { usageFlag |= TextureUsageFlagBits::ColorAttachment; }
+        if ((flag & VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) != 0) { usageFlag |= TextureUsageFlagBits::DepthStencilAttachment; }
+        if ((flag & VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT) != 0) { usageFlag |= TextureUsageFlagBits::TransientAttachment; }
+        if ((flag & VkImageUsageFlagBits::VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT) != 0) { usageFlag |= TextureUsageFlagBits::InputAttachment; }
+
+        return usageFlag;
+    }
+
+    // -------------------------------------------------------------------------------------
     // SamplerFilter <-> VkFilter
     // -------------------------------------------------------------------------------------
 

@@ -37,6 +37,11 @@ namespace litl
         DataFormat format = DataFormat::Undefined;
 
         /// <summary>
+        /// How the texture will be used.
+        /// </summary>
+        TextureUsageFlag usage = TextureUsageFlagBits::TransferDest | TextureUsageFlagBits::Sampled;
+
+        /// <summary>
         /// Where the memory for the buffer resides.
         /// </summary>
         BufferMemoryType memory = BufferMemoryType::Auto;
