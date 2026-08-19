@@ -185,7 +185,7 @@ namespace litl
         // Depth
         D32_SFloat,             // 32-bit depth floating point value.
         D24_UNorm_S8_UInt,      // 32-bit format with a 24-bit linear depth value on the range [0,1] and 8-bit unsigned integer stencil.
-        D24_SFloat_S8_Uint,     // 32-bit format with a 24-bit floating point depth value and 8-bit unsigned integer stencil.
+        D32_SFloat_S8_Uint,     // 32-bit format with a 24-bit floating point depth value and 8-bit unsigned integer stencil.
 
         // Compressed
         BC7_UNorm,              // A four-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned normalized RGBA texel data.
@@ -219,7 +219,7 @@ namespace litl
         case DataFormat::RG32_SFloat: return 8u;
         case DataFormat::D32_SFloat: return 4u;
         case DataFormat::D24_UNorm_S8_UInt: return 4u;
-        case DataFormat::D24_SFloat_S8_Uint: return 4u;
+        case DataFormat::D32_SFloat_S8_Uint: return 8u;
         case DataFormat::BC7_UNorm: return 16u;
         case DataFormat::BC7_SRGB: return 16u;
         case DataFormat::BC4_UNorm: return 8u;
