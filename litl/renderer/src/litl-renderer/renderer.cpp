@@ -1,4 +1,5 @@
 #include "litl-renderer/renderer.hpp"
+
 namespace litl
 {
     Renderer::Renderer(RendererOps const* ops, RendererContext* context)

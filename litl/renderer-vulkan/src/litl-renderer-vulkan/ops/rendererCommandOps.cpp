@@ -179,7 +179,7 @@ namespace litl::vulkan
 
         if (isSwapChain)
         {
-            // Swapchain color attachment
+            // Use swapchain color attachment as an override was not provided.
             colorAttachment.imageView = vulkanContext->swapChain.vkSwapChainImageViews[vulkanContext->swapChain.swapChainImageIndex];
             colorAttachment.loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
             colorAttachment.storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
@@ -187,7 +187,7 @@ namespace litl::vulkan
         }
         else
         {
-            // Custom color attachment info
+            // Use a custom color attachment.
             TextureResource* colorTexture = vulkanContext->resources.getTexture(command.color.colorTexture);
 
             if (colorTexture != nullptr)
@@ -201,25 +201,19 @@ namespace litl::vulkan
         }
 
         // ---------------------------------------------------------------------------------
-        // Depth Texture Attachment
+        // Depth-Stencil Texture Attachment
         // ---------------------------------------------------------------------------------
 
         VkRenderingAttachmentInfo depthAttachment{};
 
         if (command.depth.has_value())
         {
-            VkImageView depthTextureView = VK_NULL_HANDLE;
-            TextureResource* depthTexture = vulkanContext->resources.getTexture((*command.depth).depthTexture);
-
-            if (depthTexture != nullptr)
-            {
-                depthTextureView = depthTexture->vkImageView;
-                vulkanContext->drawInfo.depthFormat = depthTexture->vkFormat;
-            }
-            else
-            {
-                vulkanContext->drawInfo.depthFormat = VkFormat::VK_FORMAT_UNDEFINED;
-            }
+            TextureResource* depthTexture = !(*command.depth).depthTexture.isValid() ?
+                vulkanContext->resources.getTexture(vulkanContext->swapChain.depthTextures[vulkanContext->swapChain.swapChainImageIndex]) :     // No depth texture supplied, use  the swapchain.
+                vulkanContext->resources.getTexture((*command.depth).depthTexture);                                                             // Use provided depth texture.
+                
+            VkImageView depthTextureView = (depthTexture != nullptr ? depthTexture->vkImageView : VK_NULL_HANDLE);
+            vulkanContext->drawInfo.depthFormat = (depthTexture != nullptr ? depthTexture->vkFormat : VkFormat::VK_FORMAT_UNDEFINED);
 
             depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
             depthAttachment.imageView = depthTextureView;
@@ -227,7 +221,7 @@ namespace litl::vulkan
             depthAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
             depthAttachment.loadOp = toVkAttachmentLoadOp((*command.depth).loadOp);
             depthAttachment.storeOp = toVkAttachmentStoreOp((*command.depth).storeOp);
-            depthAttachment.clearValue = VkClearValue{
+            depthAttachment.clearValue = VkClearValue {
                 .depthStencil = VkClearDepthStencilValue{
                     .depth = (*command.depth).clearDepth,
                     .stencil = (*command.depth).clearStencil

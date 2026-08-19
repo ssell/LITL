@@ -41,7 +41,7 @@ namespace litl
     struct DepthAttachmentDescriptor
     {
         /// <summary>
-        /// The depth texture.
+        /// The depth texture. If not specified (left at default value), then the current swapchain depth texture will be used.
         /// </summary>
         TextureHandle depthTexture{};
 
