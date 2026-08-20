@@ -1,6 +1,7 @@
 #include "litl-core/math/geometry/geoMesh.hpp"
 #include "litl-core/math/geometry/tools/normals.hpp"
 #include "litl-core/math/geometry/tools/orientation.hpp"
+#include "litl-core/math/geometry/tools/triangulate.hpp"
 
 namespace litl
 {

@@ -82,4 +82,45 @@ namespace litl::tests
         REQUIRE(ngonNormalCW == vec3::up());
         REQUIRE(ngonNormalCCW == -ngonNormalCW);
     } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("ngon normal up vertices", "[math::normals]")
+    {
+        std::array<Vertex, 5> positions{
+            Vertex{.position = vec3{ 0.0f, 0.0f, 0.0f }},
+            Vertex{.position = vec3{ 10.0f, 0.0f, -10.0f }},
+            Vertex{.position = vec3{ 20.0f, 0.0f, 0.0f }},
+            Vertex{.position = vec3{ 15.0f, 0.0f, 5.0f }},
+            Vertex{.position = vec3{ 5.0f, 0.0f, 10.0f }}
+        };
+
+        const vec3 pointNormalCW = ngonFaceNormal({ positions.begin(), 1 });
+        const vec3 pointNormalCCW = ngonFaceNormalCCW({ positions.begin(), 1 });
+
+        REQUIRE(pointNormalCW == vec3{});
+        REQUIRE(pointNormalCCW == vec3{});
+
+        const vec3 lineNormalCW = ngonFaceNormal({ positions.begin(), 2 });
+        const vec3 lineNormalCCW = ngonFaceNormalCCW({ positions.begin(), 2 });
+
+        REQUIRE(lineNormalCW == vec3{});
+        REQUIRE(lineNormalCCW == vec3{});
+
+        const vec3 triNormalCW = ngonFaceNormal({ positions.begin(), 3 });
+        const vec3 triNormalCCW = ngonFaceNormalCCW({ positions.begin(), 3 });
+
+        REQUIRE(triNormalCW == vec3::up());
+        REQUIRE(triNormalCCW == -triNormalCW);
+
+        const vec3 quadNormalCW = ngonFaceNormal({ positions.begin(), 4 });
+        const vec3 quadNormalCCW = ngonFaceNormalCCW({ positions.begin(), 4 });
+
+        REQUIRE(quadNormalCW == vec3::up());
+        REQUIRE(quadNormalCCW == -quadNormalCW);
+
+        const vec3 ngonNormalCW = ngonFaceNormal(positions);
+        const vec3 ngonNormalCCW = ngonFaceNormalCCW(positions);
+
+        REQUIRE(ngonNormalCW == vec3::up());
+        REQUIRE(ngonNormalCCW == -ngonNormalCW);
+    } LITL_END_TEST_CASE
 }
