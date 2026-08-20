@@ -32,7 +32,7 @@ namespace litl::import
         m_exporterRegistry.add<MeshExporter>();
     }
 
-    Result ImportService::import(File const& sourceFile, ImportedData& importedData) noexcept
+    Result ImportService::import(File const& sourceFile, ImportedData& importedData, bool shouldPrepare) noexcept
     {
         if (!sourceFile.exists())
         {
@@ -51,10 +51,10 @@ namespace litl::import
             return Result::Error(ErrorType::FailedToReadSourceFile);
         }
 
-        return import(sourceFile, *fileBytes, importedData);
+        return import(sourceFile, *fileBytes, importedData, shouldPrepare);
     }
 
-    Result ImportService::import(File const& sourceFile, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
+    Result ImportService::import(File const& sourceFile, std::span<std::byte const> sourceBytes, ImportedData& importedData, bool shouldPrepare) noexcept
     {
         auto importer = m_importerRegistry.create(sourceFile.extension());
 
@@ -70,14 +70,21 @@ namespace litl::import
             return importResult;
         }
 
-        auto exporter = m_exporterRegistry.create(importedData.type);
-
-        if (exporter == nullptr)
+        if (shouldPrepare)
         {
-            return Result::Error(ErrorType::NoExporterForImportedDataType);
-        }
+            auto exporter = m_exporterRegistry.create(importedData.type);
 
-        return exporter->prepare(importedData);
+            if (exporter == nullptr)
+            {
+                return Result::Error(ErrorType::NoExporterForImportedDataType);
+            }
+
+            return exporter->prepare(importedData);
+        }
+        else
+        {
+            return importResult;
+        }
     }
 
     Result ImportService::convert(std::string_view sourcePath) noexcept
@@ -90,7 +97,7 @@ namespace litl::import
         // Import
         File const sourceFile = sourcePath;
         ImportedData importedData{};
-        Result const importResult = import(sourcePath, importedData);
+        Result const importResult = import(sourcePath, importedData, false);
 
         if (!importResult.success)
         {

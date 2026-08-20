@@ -16,7 +16,7 @@ namespace litl::tests
 
         import::ImportService importer{};
         import::ImportedData data{};
-        import::Result const result = importer.import(source, data);
+        import::Result const result = importer.import(source, data, true);
         
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
@@ -78,7 +78,7 @@ namespace litl::tests
 
         // Reimport so we can get the intermediate GeoMesh.
         import::ImportedData data{};
-        result = importer.import(source, data);
+        result = importer.import(source, data, true);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
@@ -135,7 +135,8 @@ namespace litl::tests
 
             correctlyTransformedVerts =
                 (litlVert.position == (objVert.position * negatePosZ)) &&
-                (litlVert.texcoord == (flipTexcoordY - objVert.texcoord));
+                (litlVert.texcoord == (flipTexcoordY - objVert.texcoord)) &&
+                !litlVert.normal.isZeroed();
         }
 
         REQUIRE(correctlyTransformedVerts == true);
@@ -157,7 +158,7 @@ namespace litl::tests
 
         REQUIRE(correctlyTransformedIndices == true);
 
-        // --- Compare face counts
+        // --- Compare face counts. Bunny is already triangulated (all faces triangles) so should be no change.
         REQUIRE(std::memcmp(litlGeoMesh.getFaceIndexCounts().data(), objGeoMesh.getFaceIndexCounts().data(), objGeoMesh.getFaceIndexCounts().size() * sizeof(uint32_t)) == 0);
 
     } LITL_END_TEST_CASE

@@ -218,6 +218,20 @@ namespace litl
         calculateMeshNormals(m_vertices, m_indices);
     }
 
+    bool GeoMesh::hasTexcoords() const noexcept
+    {
+        for (auto& v : m_vertices)
+        {
+            // Consider both external origin points (0,0) and vulkan origin points (0,1) 
+            if (!isZero(v.texcoord.x()) || (between(v.texcoord.y(), Traits<float>::epsilon, 1.0f - Traits<float>::epsilon)))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     MeshWinding GeoMesh::getWinding() const noexcept
     {
         return m_winding;

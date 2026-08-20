@@ -27,12 +27,14 @@ namespace litl::import
         /// <summary>
         /// Given a source file, attempts to convert it to an internal representation format.
         /// </summary>
-        [[nodiscard]] Result import(File const& sourceFile, ImportedData& importedData) noexcept;
+        /// <param name="shouldPrepare">If true, the relevant Exporter::prepare will be run on the data to perform any necessary internal conversions. Otherwise the data will be returned untransformed.</param>
+        [[nodiscard]] Result import(File const& sourceFile, ImportedData& importedData, bool shouldPrepare) noexcept;
 
         /// <summary>
         /// Given a source block of bytes and the the file it originates from, attempts to convert it to an internal representation format.
         /// </summary>
-        [[nodiscard]] Result import(File const& sourceFile, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept;
+        /// <param name="shouldPrepare">If true, the relevant Exporter::prepare will be run on the data to perform any necessary internal conversions. Otherwise the data will be returned untransformed.</param>
+        [[nodiscard]] Result import(File const& sourceFile, std::span<std::byte const> sourceBytes, ImportedData& importedData, bool shouldPrepare) noexcept;
 
         /// <summary>
         /// Given an external format source file, attempts to convert it to an internal representation format.
