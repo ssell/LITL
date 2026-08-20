@@ -18,6 +18,10 @@ namespace litl
         static constexpr float NormalEpsilon = 0.00000001f;
     }
 
+    // -------------------------------------------------------------------------------------
+    // Mesh Normals
+    // -------------------------------------------------------------------------------------
+
     void calculateMeshNormals(std::span<Vertex> vertices, std::span<uint32_t> indices) noexcept
     {
         const uint32_t faceCount = static_cast<uint32_t>(indices.size() / 3);
