@@ -147,7 +147,14 @@ namespace litl
     /// </summary>
     [[nodiscard]] constexpr vec3 ngonFaceNormalCCW(std::span<Vertex const> face) noexcept
     {
-        return ngonFaceNormalScaledCCW(face).normalized();
+        vec3 scaledNormal = ngonFaceNormalScaledCCW(face);
+
+        if (scaledNormal.lengthSquared() > Traits<float>::epsilon)
+        {
+            scaledNormal.normalize();
+        }
+
+        return scaledNormal;
     }
 
     /// <summary>
@@ -165,7 +172,7 @@ namespace litl
     /// </summary>
     [[nodiscard]] constexpr vec3 ngonFaceNormal(std::span<Vertex const> face) noexcept
     {
-        return ngonFaceNormalScaled(face).normalized();
+        return -ngonFaceNormalCCW(face);
     }
 
     /// <summary>

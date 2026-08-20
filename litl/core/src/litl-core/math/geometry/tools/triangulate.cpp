@@ -1,25 +1,61 @@
 #include "litl-core/logging/logging.hpp"
+#include "litl-core/math/geometry/tools/normals.hpp"
 #include "litl-core/math/geometry/tools/triangulate.hpp"
 
 namespace litl
 {
     namespace
     {
-        void triangulateNgon(uint32_t faceIndexCount, uint32_t firstIndexIndex, std::span<Vertex const> vertices, std::span<uint32_t const> sourceIndices, std::vector<uint32_t>& triangulatedIndices, MeshTriangulationReport& report) noexcept
+        void triangulateNgon(std::span<uint32_t const> face, std::span<Vertex const> vertices,  std::span<uint32_t const> indices, std::vector<uint32_t>& triangulatedIndices, std::vector<vec3>& positions3d, std::vector<vec2>& positions2d, MeshTriangulationReport& report) noexcept
         {
-             report.sourceFaceCount++;
-             report.sourceNgonFaceCount++;
+            report.sourceFaceCount++;
+            report.sourceNgonFaceCount++;
 
-             // ... todo 
+            positions2d.clear();
+            positions3d.clear();
 
-             report.resultTriangleFaceCount += (faceIndexCount - 2u);
+            // ----------------------------------------------------------------------------
+            // Recenter each point around the face origin to regain maximum precision
+            // ----------------------------------------------------------------------------
+
+            const vec3 faceOrigin = vertices[indices[face[0]]].position;
+
+            for (uint32_t i = 0u; i < static_cast<uint32_t>(face.size()); ++i)
+            {
+                positions3d.push_back(vertices[indices[face[i]]].position - faceOrigin);
+            }
+
+            // ----------------------------------------------------------------------------
+            // Project each 3d point onto a 2d plane defined by the face normal
+            // ----------------------------------------------------------------------------
+
+            const vec3 scaledNormal = ngonFaceNormalScaled(positions3d);
+
+            if (scaledNormal.lengthSquared() < Traits<float>::epsilon)
+            {
+                // Degenerate triangle with area of ~0
+                report.degenerateCount++;
+                return;
+            }
+
+            const vec3 normal = scaledNormal.normalized();
+
+            for (auto& pos3d : positions3d)
+            {
+                positions2d.push_back(project2d(normal, pos3d, vec3::zero()));
+            }
+
+            // ----------------------------------------------------------------------------
+            // Traverse the 2d polygon and perform ear-clipping
+            // ----------------------------------------------------------------------------
+
+            // ... todo ...
+
+            report.resultTriangleFaceCount += (static_cast<uint32_t>(face.size()) - 2u);
         }
 
         void triangulateQuad(uint32_t faceIndexCount, uint32_t firstIndexIndex, std::span<Vertex const> vertices, std::span<uint32_t const> sourceIndices, std::vector<uint32_t>& triangulatedIndices, MeshTriangulationReport& report) noexcept
         {
-            report.sourceFaceCount++;
-            report.sourceQuadFaceCount++;
-
             /**
              * A quad can be split into triangles along two separate diagonals:
              * 
@@ -64,18 +100,20 @@ namespace litl
                 triangulatedIndices.push_back(index3);
             }
 
+            report.sourceFaceCount++;
+            report.sourceQuadFaceCount++;
             report.resultTriangleFaceCount += 2u;
         }
 
         void triangulateTriangle(uint32_t faceIndexCount, uint32_t firstIndexIndex, std::span<Vertex const> vertices, std::span<uint32_t const> sourceIndices, std::vector<uint32_t>& triangulatedIndices, MeshTriangulationReport& report) noexcept
         {
-            report.sourceFaceCount++;
-            report.sourceTriangleFaceCount++;
 
             triangulatedIndices.push_back(sourceIndices[firstIndexIndex + 0]);
             triangulatedIndices.push_back(sourceIndices[firstIndexIndex + 1]);
             triangulatedIndices.push_back(sourceIndices[firstIndexIndex + 2]);
 
+            report.sourceFaceCount++;
+            report.sourceTriangleFaceCount++;
             report.resultTriangleFaceCount++;
         }
     }
@@ -90,6 +128,9 @@ namespace litl
 
         triangulatedIndices.clear();
         triangulatedIndices.reserve(sourceIndices.size());
+
+        std::vector<vec2> ngonScratchVec2d; ngonScratchVec2d.reserve(8u);
+        std::vector<vec3> ngonScratchVec3d; ngonScratchVec3d.reserve(8u);
 
         uint32_t firstIndexIndex = 0u;
 
@@ -113,7 +154,7 @@ namespace litl
                 break;
 
             default:
-                triangulateNgon(faceIndexCount, firstIndexIndex, vertices, sourceIndices, triangulatedIndices, report);
+                triangulateNgon({ sourceIndices.data(), faceIndexCount }, vertices, sourceIndices, triangulatedIndices, ngonScratchVec3d, ngonScratchVec2d, report);
                 break;
             }
 

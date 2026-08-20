@@ -243,9 +243,16 @@ namespace litl
         // ---------------------------------------------------------------------------------
 
         /// <summary>
+        /// (0, 0, 0)
+        /// </summary>
+        [[nodiscard]] static constexpr vec3 zero() noexcept
+        {
+            return vec3(0.0f, 0.0f, 0.0f);
+        }
+
+        /// <summary>
         /// (1, 0, 0)
         /// </summary>
-        /// <returns></returns>
         [[nodiscard]] static constexpr vec3 right() noexcept
         {
             return vec3(1.0f, 0.0f, 0.0f);
@@ -254,7 +261,6 @@ namespace litl
         /// <summary>
         /// (0, 1, 0)
         /// </summary>
-        /// <returns></returns>
         [[nodiscard]] static constexpr vec3 up() noexcept
         {
             return vec3(0.0f, 1.0f, 0.0f);
@@ -263,7 +269,6 @@ namespace litl
         /// <summary>
         /// (0, 0, 1)
         /// </summary>
-        /// <returns></returns>
         [[nodiscard]] static constexpr vec3 forward() noexcept
         {
             return vec3(0.0f, 0.0f, 1.0f);
@@ -520,6 +525,16 @@ namespace litl
     [[nodiscard]] constexpr vec3 normalize(vec3 a) noexcept
     {
         return a.normalized();
+    }
+
+    /// <summary>
+    /// Given a normalized vector, returns another vector tangent to it.
+    /// </summary>
+    [[nodiscard]] constexpr vec3 tangent(vec3 normal) noexcept
+    {
+        // Simply find a vector that is not parallel to the normal and return (normal x other)
+        const vec3 notParallel = (abs(normal.x()) > 0.9f ? vec3::up() : vec3::right());
+        return cross(normal, notParallel).normalized();
     }
 
     [[nodiscard]] constexpr vec3 clamp(vec3 v, vec3 min, vec3 max) noexcept
