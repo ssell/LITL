@@ -7,6 +7,7 @@
 #include <string>
 #include <type_traits>
 
+#include "litl-core/assert.hpp"
 #include "litl-core/types.hpp"
 #include "litl-core/math/glm.hpp"
 #include <glm/gtc/type_ptr.hpp>
@@ -34,6 +35,169 @@ namespace litl
         [[nodiscard]] constexpr bool operator==(glm::vec2 const& other) const noexcept
         {
             return fequals(value.x, other.x) && fequals(value.y, other.y);
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Negation
+        // ---------------------------------------------------------------------------------
+
+        [[nodiscard]] constexpr vec2 operator-() const noexcept
+        {
+            return vec2{ -value };
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Addition
+        // ---------------------------------------------------------------------------------
+
+        [[nodiscard]] constexpr vec2 operator+(float scalar) const noexcept
+        {
+            return vec2{ value + scalar };
+        }
+
+        [[nodiscard]] constexpr vec2 operator+(vec2 const& other) const noexcept
+        {
+            return vec2{ value + other.value };
+        }
+
+        [[nodiscard]] constexpr vec2 operator+(glm::vec2 const& other) const noexcept
+        {
+            return vec2{ value + other };
+        }
+
+        constexpr vec2& operator+=(float scalar) noexcept
+        {
+            value += scalar;
+            return *this;
+        }
+
+        constexpr vec2& operator+=(vec2 const& other) noexcept
+        {
+            value += other.value;
+            return *this;
+        }
+
+        constexpr vec2& operator+=(glm::vec2 const& other) noexcept
+        {
+            value += other;
+            return *this;
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Subtraction
+        // ---------------------------------------------------------------------------------
+
+        [[nodiscard]] constexpr vec2 operator-(float scalar) const noexcept
+        {
+            return vec2{ value - scalar };
+        }
+
+        [[nodiscard]] constexpr vec2 operator-(vec2 const& other) const noexcept
+        {
+            return vec2{ value - other.value };
+        }
+
+        [[nodiscard]] constexpr vec2 operator-(glm::vec2 const& other) const noexcept
+        {
+            return vec2{ value - other };
+        }
+
+        constexpr vec2& operator-=(float scalar) noexcept
+        {
+            value -= scalar;
+            return *this;
+        }
+
+        constexpr vec2& operator-=(vec2 const& other) noexcept
+        {
+            value -= other.value;
+            return *this;
+        }
+
+        constexpr vec2& operator-=(glm::vec2 const& other) noexcept
+        {
+            value -= other;
+            return *this;
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Multiplication
+        // ---------------------------------------------------------------------------------
+
+        [[nodiscard]] constexpr vec2 operator*(float scalar) const noexcept
+        {
+            return vec2{ value * scalar };
+        }
+
+        [[nodiscard]] constexpr vec2 operator*(vec2 const& other) const noexcept
+        {
+            return vec2{ value * other.value };
+        }
+
+        [[nodiscard]] constexpr vec2 operator*(glm::vec2 const& other) const noexcept
+        {
+            return vec2{ value * other };
+        }
+
+        constexpr vec2& operator*=(float scalar) noexcept
+        {
+            value *= scalar;
+            return *this;
+        }
+
+        constexpr vec2& operator*=(vec2 const& other) noexcept
+        {
+            value *= other.value;
+            return *this;
+        }
+
+        constexpr vec2& operator*=(glm::vec2 const& other) noexcept
+        {
+            value *= other;
+            return *this;
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Division
+        // ---------------------------------------------------------------------------------
+
+        [[nodiscard]] constexpr vec2 operator/(float scalar) const noexcept
+        {
+            LITL_FATAL_ASSERT(!isZero(scalar));
+            return vec2{ value / scalar };
+        }
+
+        [[nodiscard]] constexpr vec2 operator/(vec2 const& other) const noexcept
+        {
+            LITL_FATAL_ASSERT(!isZero(other.value.x) && !isZero(other.value.y));
+            return vec2{ value / other.value };
+        }
+
+        [[nodiscard]] constexpr vec2 operator/(glm::vec2 const& other) const noexcept
+        {
+            LITL_FATAL_ASSERT(!isZero(other.x) && !isZero(other.y));
+            return vec2{ value / other };
+        }
+
+        constexpr vec2& operator/=(float scalar) noexcept
+        {
+            LITL_FATAL_ASSERT(!isZero(scalar));
+            value /= scalar;
+            return *this;
+        }
+
+        constexpr vec2& operator/=(vec2 const& other) noexcept
+        {
+            LITL_FATAL_ASSERT(!other.isZeroed());
+            value /= other.value;
+            return *this;
+        }
+
+        constexpr vec2& operator/=(glm::vec2 const& other) noexcept
+        {
+            LITL_FATAL_ASSERT(!isZero(other.x) && !isZero(other.y));
+            value /= other;
+            return *this;
         }
 
         // ---------------------------------------------------------------------------------

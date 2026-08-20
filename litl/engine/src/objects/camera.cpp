@@ -169,12 +169,17 @@ namespace litl
 
     void Camera::lookAt(vec3 target, vec3 up) noexcept
     {
+        // lookToward performs a "just-to-be-safe" normalize, so no need to do so here.
+        lookToward((target - m_worldPosition), up);
+    }
+
+    void Camera::lookToward(vec3 forward, vec3 up) noexcept
+    {
         auto transform = m_pWorld->getComponent<Transform>(m_entity);
 
         if (transform.has_value())
         {
-            vec3 forward = (target - m_worldPosition).normalized();
-            transform->setRotation(quat::lookRotation(forward, up));
+            transform->setRotation(quat::lookRotation(forward.normalizedSafe(), up));
             m_pWorld->setComponent<Transform>(m_entity, transform.value());
         }
     }
