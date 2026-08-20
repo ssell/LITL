@@ -42,7 +42,7 @@ namespace litl
         import::ImportService importer{};
         import::ImportedData importedData{};
 
-        const auto importResult = importer.import(meshAsset->file, otherBytes, importedData);
+        const auto importResult = importer.import(meshAsset->file, otherBytes, importedData, true);
 
         if (importResult.success)
         {

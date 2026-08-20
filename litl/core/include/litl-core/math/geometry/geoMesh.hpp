@@ -148,6 +148,12 @@ namespace litl
         void recalulateNormals(bool fast) noexcept;
 
         /// <summary>
+        /// Are there any texcoords not at the origin?
+        /// Note that this potentially has to check all vertices, so either save the result or refrain from using.
+        /// </summary>
+        [[nodiscard]] bool hasTexcoords() const noexcept;
+
+        /// <summary>
         /// Returns the current set/known winding of the indices.
         /// </summary>
         /// <returns></returns>
