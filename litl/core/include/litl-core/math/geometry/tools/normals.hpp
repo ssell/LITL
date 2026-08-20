@@ -9,12 +9,27 @@
 namespace litl
 {
     /// <summary>
-    /// Given the three positions comprising a face (in clockwise order), returns the face normal.
-    /// Internally, LITL defaults to clockwise winding due to its left-handed coordinate system.
+    /// Given the three positions comprising a face (in counter-clockwise order), returns the scaled face normal.
+    /// The scaled, unnormalized, value is typically used for area weighting, degeneracy tests, etc.
     /// </summary>
-    [[nodiscard]] constexpr vec3 faceNormal(vec3 a, vec3 b, vec3 c) noexcept
+    [[nodiscard]] constexpr vec3 faceNormalScaledCCW(vec3 a, vec3 b, vec3 c) noexcept
     {
-        return cross(c - a, b - a).normalized();
+        return cross(b - a, c - a);    // face area = (length / 2); area near 0 = degenerate triangle
+    }
+
+    /// <summary>
+    /// Given the three positions comprising a face (in counter-clockwise order), returns the face normal.
+    /// </summary>
+    [[nodiscard]] constexpr vec3 faceNormalCCW(vec3 a, vec3 b, vec3 c) noexcept
+    {
+        vec3 scaledNormal = faceNormalScaledCCW(a, b, c);
+
+        if (scaledNormal.lengthSquared() > Traits<float>::epsilon)
+        {
+            scaledNormal.normalize();
+        }
+
+        return scaledNormal;
     }
 
     /// <summary>
@@ -29,20 +44,19 @@ namespace litl
     }
 
     /// <summary>
-    /// Given the three positions comprising a face (in counter-clockwise order), returns the face normal.
+    /// Given the three positions comprising a face (in clockwise order), returns the face normal.
+    /// Internally, LITL defaults to clockwise winding due to its left-handed coordinate system.
     /// </summary>
-    [[nodiscard]] constexpr vec3 faceNormalCCW(vec3 a, vec3 b, vec3 c) noexcept
+    [[nodiscard]] constexpr vec3 faceNormal(vec3 a, vec3 b, vec3 c) noexcept
     {
-        return cross(b - a, c - a).normalized();
-    }
+        vec3 scaledNormal = faceNormalScaled(a, b, c);
 
-    /// <summary>
-    /// Given the three positions comprising a face (in counter-clockwise order), returns the scaled face normal.
-    /// The scaled, unnormalized, value is typically used for area weighting, degeneracy tests, etc.
-    /// </summary>
-    [[nodiscard]] constexpr vec3 faceNormalScaledCCW(vec3 a, vec3 b, vec3 c) noexcept
-    {
-        return cross(b - a, c - a);    // face area = (length / 2); area near 0 = degenerate triangle
+        if (scaledNormal.lengthSquared() > Traits<float>::epsilon)
+        {
+            scaledNormal.normalize();
+        }
+
+        return scaledNormal;
     }
     
     /// <summary>
@@ -75,7 +89,14 @@ namespace litl
     /// </summary>
     [[nodiscard]] constexpr vec3 ngonFaceNormalCCW(std::span<vec3 const> face) noexcept
     {
-        return ngonFaceNormalScaledCCW(face).normalized();
+        vec3 scaledNormal = ngonFaceNormalScaledCCW(face);
+
+        if (scaledNormal.lengthSquared() > Traits<float>::epsilon)
+        {
+            scaledNormal.normalize();
+        }
+
+        return scaledNormal;
     }
 
     /// <summary>
@@ -93,7 +114,7 @@ namespace litl
     /// </summary>
     [[nodiscard]] constexpr vec3 ngonFaceNormal(std::span<vec3 const> face) noexcept
     {
-        return ngonFaceNormalScaled(face).normalized();
+        return -ngonFaceNormalCCW(face);
     }
 
     /// <summary>
