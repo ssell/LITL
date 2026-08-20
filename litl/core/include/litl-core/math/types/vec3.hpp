@@ -2,12 +2,12 @@
 #define LITL_MATH_VEC3_H__
 
 #include <array>
-#include <cassert>
 #include <format>
 #include <limits>
 #include <string>
 #include <type_traits>
 
+#include "litl-core/assert.hpp"
 #include "litl-core/math/glm.hpp"
 #include <glm/gtc/type_ptr.hpp>
 
@@ -167,39 +167,39 @@ namespace litl
 
         [[nodiscard]] constexpr vec3 operator/(float scalar) const noexcept
         {
-            assert(!isZero(scalar));
+            LITL_FATAL_ASSERT(!isZero(scalar));
             return vec3{ value / scalar };
         }
 
         [[nodiscard]] constexpr vec3 operator/(vec3 const& other) const noexcept
         {
-            assert(!isZero(other.value.x) && !isZero(other.value.y) && !isZero(other.value.z));
+            LITL_FATAL_ASSERT(!other.isZeroed());
             return vec3{ value / other.value };
         }
 
         [[nodiscard]] constexpr vec3 operator/(glm::vec3 const& other) const noexcept
         {
-            assert(!isZero(other.x) && !isZero(other.y) && !isZero(other.z));
+            LITL_FATAL_ASSERT(!isZero(other.x) && !isZero(other.y) && !isZero(other.z));
             return vec3{ value / other };
         }
 
         constexpr vec3& operator/=(float scalar) noexcept
         {
-            assert(!isZero(scalar));
+            LITL_FATAL_ASSERT(!isZero(scalar));
             value /= scalar;
             return *this;
         }
 
         constexpr vec3& operator/=(vec3 const& other) noexcept
         {
-            assert(!isZero(other.value.x) && !isZero(other.value.y) && !isZero(other.value.z));
+            LITL_FATAL_ASSERT(!other.isZeroed());
             value /= other.value;
             return *this;
         }
 
         constexpr vec3& operator/=(glm::vec3 const& other) noexcept
         {
-            assert(!isZero(other.x) && !isZero(other.y) && !isZero(other.z));
+            LITL_FATAL_ASSERT(!isZero(other.x) && !isZero(other.y) && !isZero(other.z));
             value /= other;
             return *this;
         }
@@ -300,22 +300,57 @@ namespace litl
 
         [[nodiscard]] constexpr float distanceSqTo(vec3 other) const noexcept
         {
-            glm::vec3 diff = value - other.value;
+            const glm::vec3 diff = value - other.value;
             return glm::dot(diff, diff);
         }
 
         constexpr void normalize() noexcept
         {
-            float length = glm::length(value);
-            assert(!isZero(length));
+            const float length = glm::length(value);
             value = value / length;
         }
 
         [[nodiscard]] constexpr vec3 normalized() const noexcept
         {
-            float length = glm::length(value);
-            assert(!isZero(length));
+            const float length = glm::length(value);
             return vec3(value / length);
+        }
+
+        /// <summary>
+        /// Variant of normalize that checks if the length is zero before dividing.
+        /// Sets the internal value to a zero-vector (0, 0, 0) if the length is zero.
+        /// </summary>
+        constexpr void normalizeSafe() noexcept
+        {
+            const float length = glm::length(value);
+
+            if (isZero(length))
+            {
+                value = { 0.0f, 0.0f, 0.0f };
+            }
+            else
+            {
+                value = value / length;
+            }
+        }
+
+        /// <summary>
+        /// Variant of normalized that checks if the length is zero before dividing.
+        /// Returns a zero-vector (0, 0, 0) if the length is zero.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] constexpr vec3 normalizedSafe() const noexcept
+        {
+            const float length = glm::length(value);
+
+            if (isZero(length))
+            {
+                return {};
+            }
+            else
+            {
+                return vec3(value / length);
+            }
         }
 
         [[nodiscard]] constexpr bool isNormalized() const noexcept

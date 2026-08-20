@@ -29,10 +29,10 @@ namespace litl::tests
         REQUIRE(data.mesh->meshes[0] != nullptr);
         REQUIRE(data.mesh->meshes[0]->getVertices().size() == 29834ull);
         REQUIRE(data.mesh->meshes[0]->getIndices().size() == 178992ull);
-        REQUIRE(data.mesh->meshes[0]->getVertices()[0].position.isZeroed() == false);        // a valid non-zero position
-        REQUIRE(data.mesh->meshes[0]->getVertices()[0].texcoord.isZeroed() == true);         // the rest of the attributes are not present in the original OBJ model.
-        REQUIRE(data.mesh->meshes[0]->getVertices()[0].normal.isZeroed() == true);
-        REQUIRE(data.mesh->meshes[0]->getVertices()[0].tangent.isIdentity() == true);
+        REQUIRE(data.mesh->meshes[0]->getVertices()[0].position.isZeroed() == false);       // a valid non-zero position provided by the model
+        REQUIRE(data.mesh->meshes[0]->getVertices()[0].texcoord == vec2{ 0.0f, 1.0f });     // obj has an origin in the lower-left while vulkan has an upper-left origin. so our importer flips (0,0) -> (0,1)
+        REQUIRE(data.mesh->meshes[0]->getVertices()[0].normal.isZeroed() == false);         // missing normals generated
+        REQUIRE(data.mesh->meshes[0]->getVertices()[0].tangent.isIdentity() == true);       // (todo generate missing tangents)
     } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Convert OBJ to litlmesh", "[ecs::import::obj]")
@@ -113,9 +113,51 @@ namespace litl::tests
         REQUIRE(litlGeoMeshBounds.min == objGeoMeshBounds.min);
         REQUIRE(litlGeoMeshBounds.max == objGeoMeshBounds.max);
 
-        // Compare the complete memory blocks
-        REQUIRE(std::memcmp(litlGeoMesh.getVertices().data(), objGeoMesh.getVertices().data(), objGeoMesh.getVertices().size() * sizeof(Vertex)) == 0);
-        REQUIRE(std::memcmp(litlGeoMesh.getIndices().data(), objGeoMesh.getIndices().data(), objGeoMesh.getIndices().size() * sizeof(uint32_t)) == 0);
+        // --- Compare vertices
+        bool correctlyTransformedVerts = true;
+
+        const auto& litlGeoMeshVertices = litlGeoMesh.getVertices();
+        const auto& objGeoMeshVertices = objGeoMesh.getVertices();
+
+        const vec3 negatePosZ{ 1.0f, 1.0f, -1.0f };
+        const vec2 flipTexcoordY{ 0.0f, 1.0f };
+
+        for (size_t i = 0; i < litlGeoMeshVertices.size() && correctlyTransformedVerts; ++i)
+        {
+            // When comparing vertices we can expect the following:
+            //     * position .z value is negated in the conversion from right-hand to left-hand coordinate system
+            //     * texcoord .y is flipped converting from obj lower-left origin to vulkan upper-left origin
+            //     * normal is generated and is non-zero compared to the unprovided normal
+            //     * tangent is generated and is non-zero compared to the unprovided tangent (todo)
+
+            const auto& litlVert = litlGeoMeshVertices[i];
+            const auto& objVert = objGeoMeshVertices[i];
+
+            correctlyTransformedVerts =
+                (litlVert.position == (objVert.position * negatePosZ)) &&
+                (litlVert.texcoord == (flipTexcoordY - objVert.texcoord));
+        }
+
+        REQUIRE(correctlyTransformedVerts == true);
+
+        // --- Compare indices
+        bool correctlyTransformedIndices = true;
+
+        const auto& litlGeoMeshIndices = litlGeoMesh.getIndices();
+        const auto& objGeoMeshIndices = objGeoMesh.getIndices();
+
+        for (size_t i = 0; i < litlGeoMeshIndices.size() && correctlyTransformedIndices; i += 3)
+        {
+            // OBJ uses counter-clockwise winding, we use clockwise (for our left-handed coordinate system).
+            correctlyTransformedIndices =
+                (litlGeoMeshIndices[i + 0] == objGeoMeshIndices[i + 0]) &&
+                (litlGeoMeshIndices[i + 1] == objGeoMeshIndices[i + 2]) &&      // indices 1,2 flipped such that (0, 1, 2) -> (0, 2, 1)
+                (litlGeoMeshIndices[i + 2] == objGeoMeshIndices[i + 1]);
+        }
+
+        REQUIRE(correctlyTransformedIndices == true);
+
+        // --- Compare face counts
         REQUIRE(std::memcmp(litlGeoMesh.getFaceIndexCounts().data(), objGeoMesh.getFaceIndexCounts().data(), objGeoMesh.getFaceIndexCounts().size() * sizeof(uint32_t)) == 0);
 
     } LITL_END_TEST_CASE

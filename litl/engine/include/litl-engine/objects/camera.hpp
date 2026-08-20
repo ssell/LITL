@@ -265,6 +265,13 @@ namespace litl
         void lookAt(vec3 target, vec3 up) noexcept;
 
         /// <summary>
+        /// Rotates the camera so it is looking along the specified forward vector.
+        /// </summary>
+        /// <param name="forward"></param>
+        /// <param name="up"></param>
+        void lookToward(vec3 forward, vec3 up) noexcept;
+
+        /// <summary>
         /// Retrieves the viewing frustum of the camera.
         /// This may be up to one frame old as it is updated only once during PreRender.
         /// </summary>

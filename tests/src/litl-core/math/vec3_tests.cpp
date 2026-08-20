@@ -332,6 +332,28 @@ namespace litl::tests
         REQUIRE(isOne(v.normalized().length()));
     } LITL_END_TEST_CASE
 
+    LITL_TEST_CASE("vec3 safe normalize of valid value", "[math::vec3]")
+    {
+        vec3 v(0.0f, 5.0f, 0.0f);
+        vec3 vnorm = v.normalizedSafe();
+        v.normalizeSafe();
+
+        REQUIRE(vnorm == v);
+        REQUIRE(vnorm.isNormalized());
+        REQUIRE(vnorm == vec3::up());
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("vec3 safe normalize of zero-length value", "[math::vec3]")
+    {
+        vec3 v(0.0f, 0.0f, 0.0f);
+        vec3 vnorm = v.normalizedSafe();
+        v.normalizeSafe();
+
+        REQUIRE(vnorm == v);
+        REQUIRE(!vnorm.isNormalized());
+        REQUIRE(vnorm.isZeroed());
+    } LITL_END_TEST_CASE
+
     LITL_TEST_CASE("vec3 setZero() clears all components", "[math::vec3]")
     {
         vec3 v(99.0f, -42.0f, 7.0f);
