@@ -20,6 +20,7 @@ namespace litl
         m_vertices.assign(other.m_vertices.begin(), other.m_vertices.end());
         m_indices.assign(other.m_indices.begin(), other.m_indices.end());
         m_faceIndexCounts.assign(other.m_faceIndexCounts.begin(), other.m_faceIndexCounts.end());
+        m_winding = other.m_winding;
     }
 
     GeoMesh& GeoMesh::operator=(GeoMesh const& other)
@@ -30,6 +31,7 @@ namespace litl
             m_vertices.assign(other.m_vertices.begin(), other.m_vertices.end());
             m_indices.assign(other.m_indices.begin(), other.m_indices.end());
             m_faceIndexCounts.assign(other.m_faceIndexCounts.begin(), other.m_faceIndexCounts.end());
+            m_winding = other.m_winding;
         }
 
         return *this;
@@ -41,6 +43,7 @@ namespace litl
         m_vertices = std::move(other.m_vertices);
         m_indices = std::move(other.m_indices);
         m_faceIndexCounts = std::move(other.m_faceIndexCounts);
+        m_winding = other.m_winding; other.m_winding = MeshWinding::Unknown;
     }
 
     GeoMesh& GeoMesh::operator=(GeoMesh&& other)
@@ -51,6 +54,7 @@ namespace litl
             m_vertices = std::move(other.m_vertices);
             m_indices = std::move(other.m_indices);
             m_faceIndexCounts = std::move(other.m_faceIndexCounts);
+            m_winding = other.m_winding; other.m_winding = MeshWinding::Unknown;
         }
 
         return *this;
@@ -115,7 +119,7 @@ namespace litl
 
     void GeoMesh::setVertices(std::span<std::byte const> bytes) noexcept
     {
-        std::span<Vertex const> vertices = { reinterpret_cast<Vertex const*>(bytes.data()), sizeof(Vertex) };
+        std::span<Vertex const> vertices = { reinterpret_cast<Vertex const*>(bytes.data()), bytes.size() / sizeof(Vertex) };
         setVertices(vertices);
     }
 
@@ -126,7 +130,7 @@ namespace litl
 
     void GeoMesh::setIndices(std::span<std::byte const> bytes) noexcept
     {
-        std::span<uint32_t const> indices = { reinterpret_cast<uint32_t const*>(bytes.data()), sizeof(uint32_t) };
+        std::span<uint32_t const> indices = { reinterpret_cast<uint32_t const*>(bytes.data()), bytes.size() / sizeof(uint32_t) };
         setIndices(indices);
     }
 
