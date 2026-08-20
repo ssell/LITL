@@ -211,9 +211,9 @@ namespace litl::vulkan
         if (command.depth.has_value())
         {
             TextureResource* depthTexture = !(*command.depth).depthTexture.isValid() ?
-                vulkanContext->resources.getTexture(vulkanContext->getCurrFrameSyncInfo().depthTexture) :     // No depth texture supplied, use  the swapchain.
-                vulkanContext->resources.getTexture((*command.depth).depthTexture);                                                             // Use provided depth texture.
-                
+                vulkanContext->resources.getTexture(vulkanContext->getCurrFrameDepthTexture()) :        // No depth texture supplied, use current frame depth texture
+                vulkanContext->resources.getTexture((*command.depth).depthTexture);                     // Use provided depth texture.
+                 
             if (depthTexture != nullptr)
             {
                 const auto dataFormat = fromVkFormat(depthTexture->vkFormat);

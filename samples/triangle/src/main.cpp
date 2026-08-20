@@ -47,7 +47,7 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
 
     sceneView->setMainCamera(cameraHandle);
     camera->setWorldPosition(vec3{ 0.0f, 0.0f, 0.0f });
-    camera->lookAt(vec3::forward(), vec3::up());
+    camera->lookAt(vec3{ 0.0f, 0.0f, 5.0f }, vec3::up());
 
     auto triangleMaterial = createTriangleMaterial(*objectPool);
     auto triangleMesh = createTriangleMesh(*objectPool);
