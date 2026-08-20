@@ -12,14 +12,14 @@
 
 namespace litl
 {
-    inline void createMainCamera(CameraDescriptor const& descriptor, vec3 position, vec3 forward, vec3 up, ObjectPool& objectPool, SceneView& sceneView) noexcept
+    inline void createMainCamera(CameraDescriptor const& descriptor, vec3 position, vec3 target, vec3 up, ObjectPool& objectPool, SceneView& sceneView) noexcept
     {
         auto cameraHandle = objectPool.createCamera(descriptor);
         auto* camera = objectPool.getCamera(cameraHandle);
 
         sceneView.setMainCamera(cameraHandle);
         camera->setWorldPosition(position);
-        camera->lookAt(forward, up);
+        camera->lookAt(target, up);
     }
 }
 

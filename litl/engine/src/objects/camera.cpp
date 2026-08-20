@@ -34,7 +34,7 @@ namespace litl
     void Camera::update(Authority<Scene> authority, mat4 worldMatrix) noexcept
     {
         m_worldMatrix = worldMatrix;
-        m_viewMatrix = worldMatrix.inverse();
+        m_viewMatrix = worldMatrix.inverted();
         m_viewProjMatrix = m_projMatrix * m_viewMatrix;
         m_worldPosition = worldMatrix.position();
         m_frustum = bounds::Frustum::fromViewProjection(
