@@ -178,31 +178,23 @@ namespace litl
         m_bounds = bounds::AABB::fromMinMax(minPoint, maxPoint);
     }
 
-    void GeoMesh::triangulate() noexcept
+    MeshTriangulationReport GeoMesh::triangulate() noexcept
     {
         if (m_vertices.empty() || m_indices.empty() || m_faceIndexCounts.empty())
         {
-            return;
+            return {};
         }
 
-        std::vector<uint32_t> ngonFaces;
-        ngonFaces.reserve(m_faceIndexCounts.size());
+        std::vector<uint32_t> triangulatedIndices;
+        const auto report = triangulateMesh(m_vertices, m_indices, triangulatedIndices, m_faceIndexCounts);
 
-        for (uint32_t i = 0u; i < static_cast<uint32_t>(m_faceIndexCounts.size()); ++i)
+        if (report.success)
         {
-            if (m_faceIndexCounts[i] > 3u)
-            {
-                ngonFaces.push_back(i);
-            }
+            m_indices = std::move(triangulatedIndices);
+            setAllFaceIndexCounts(3u);
         }
 
-        if (ngonFaces.empty())
-        {
-            return;
-        }
-
-        // ... todo not yet needed for current test models but will need in the future ...
-        // ... use ear-clipping as i did long ago, but need to project to a 2D plane based on face normal ...
+        return report;
     }
 
     bool GeoMesh::hasNormals() const noexcept

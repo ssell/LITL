@@ -35,7 +35,8 @@ namespace litl::import
 
         GeoMesh* mesh = data.mesh->meshes[0].get();         // todo handle submeshes;
 
-        // ... todo triangulate ...
+        mesh->triangulate();
+
         // ... todo weld ...
         // ... todo remove degenerates (zero-area triangles, repeated indices, etc.) ...
 

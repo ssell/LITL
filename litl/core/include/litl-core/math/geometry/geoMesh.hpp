@@ -8,6 +8,7 @@
 #include "litl-core/math/bounds/aabb.hpp"
 #include "litl-core/math/geometry/vertex.hpp"
 #include "litl-core/math/geometry/meshWinding.hpp"
+#include "litl-core/math/geometry/tools/triangulate.hpp"
 
 namespace litl
 {
@@ -132,8 +133,9 @@ namespace litl
 
         /// <summary>
         /// Recalculates and modifies the mesh in-place such that the "faceIndexCount" for every face is 3.
+        /// Note this will attempt to re-triangulate on each call and does not store any "already triangulated" flags.
         /// </summary>
-        void triangulate() noexcept;
+        MeshTriangulationReport triangulate() noexcept;
 
         /// <summary>
         /// Do all vertices have non-zero normals?
@@ -142,7 +144,7 @@ namespace litl
         [[nodiscard]] bool hasNormals() const noexcept;
 
         /// <summary>
-        /// Recalculates all vertex normals.
+        /// Recalculates all vertex normals. This assumes the indices are in our internal clockwise winding order.
         /// </summary>
         /// <param name="fast">If true, normals are weighted based on face size. If false, normals are weighted based on face angles which is more accurate.</param>
         void recalulateNormals(bool fast) noexcept;
