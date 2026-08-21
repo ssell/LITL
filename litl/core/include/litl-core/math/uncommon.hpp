@@ -7,23 +7,6 @@
 namespace litl
 {
     /// <summary>
-    /// Projects the 3D point onto a 2D plane defined by its normal.
-    /// </summary>
-    [[nodiscard]] constexpr vec2 project2d(vec3 planeNormal, vec3 point, vec3 origin) noexcept
-    {
-        if (point.isZeroed())
-        {
-            return vec2::zero();
-        }
-
-        const vec3 po = point - origin;
-        const vec3 t = tangent(planeNormal);
-        const vec3 b = cross(planeNormal, t);
-
-        return vec2{ dot(po, t), dot(po, b) };
-    }
-
-    /// <summary>
     /// Duff et al., "Building an Orthonormal Basis, Revisited" (JCGT 2017).
     /// Branchless, no precision cliff at n.z == -1.
     /// 
@@ -60,6 +43,22 @@ namespace litl
     {
         orthonormalBasisRH(normal, tangent, bitangent);
         bitangent = -bitangent;
+    }
+
+    /// <summary>
+    /// Projects the 3D point onto a 2D plane defined by its normal.
+    /// </summary>
+    [[nodiscard]] constexpr vec2 project2d(vec3 planeNormal, vec3 point, vec3 origin) noexcept
+    {
+        if (point.isZeroed())
+        {
+            return vec2::zero();
+        }
+
+        const vec3 po = point - origin;
+        vec3 t, b; orthonormalBasis(planeNormal, t, b);
+
+        return vec2{ dot(po, t), dot(po, b) };
     }
 }
 
