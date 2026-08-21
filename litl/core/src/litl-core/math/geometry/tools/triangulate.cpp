@@ -9,6 +9,17 @@ namespace litl
 {
     namespace
     {
+        struct TriangulatorContext
+        {
+            std::span<uint32_t const> face;
+            std::span<Vertex const> vertices;
+            std::span<uint32_t const> indices;
+            std::vector<vec3> positions3d;
+            std::vector<vec2> positions2d;
+            std::vector<uint32_t> prevLocalFaceIndices;
+            std::vector<uint32_t> nextLocalFaceIndices;
+            std::vector<uint8_t> reflex;
+        };
 
         /// <summary>
         /// Recenter the positions around the first vertex in the face in order to regain maximum precision.
@@ -37,8 +48,8 @@ namespace litl
 
             for (uint32_t i = 1u; i < static_cast<uint32_t>(positions3d.size()); ++i)
             {
-                minPoint = min(minPoint, positions3d[0]);
-                maxPoint = max(maxPoint, positions3d[1]);
+                minPoint = min(minPoint, positions3d[i]);
+                maxPoint = max(maxPoint, positions3d[i]);
             }
 
             const vec3 min2max = (maxPoint - minPoint);
@@ -49,7 +60,7 @@ namespace litl
             // ratio between (2*area) and the squared aabb diagonal.
             // this makes the test dimensionless as degeneracy is a test of an invalid shape and not just size.
             // an absolute area threshold by itself can not distinguish between a valid 0.1mm quad and a 100m needle as they have the same area.
-            if ((diagonal2 < 0.0) || (normalLength < earEpsilon))
+            if ((diagonal2 < Traits<float>::epsilon) || (normalLength < earEpsilon))
             {
                 return true;
             }
@@ -78,54 +89,122 @@ namespace litl
             return (cross(positions2d[currLocalIndex] - positions2d[prevLocalIndex], positions2d[nextLocalIndex] - positions2d[currLocalIndex]) * windingSign) > 0.0f;
         }
 
-        void triangulateNgon(std::span<uint32_t const> face, std::span<Vertex const> vertices, std::vector<uint32_t>& triangulatedIndices, std::vector<vec3>& positions3d, std::vector<vec2>& positions2d, MeshTriangulationReport& report) noexcept
+        /// <summary>
+        /// Quads are the most common form of the ngon and it can boiled down to a binary choice.
+        /// So we do that here so that the actual ear-clip machinery can be skipped.
+        /// </summary>
+        void emitQuad(std::vector<uint32_t>& triangulatedIndices, std::span<uint32_t const> face, std::span<vec3 const> positions3d, std::span<vec2 const> positions2d, float windingSign) noexcept
+        {
+            bool useDiagonal2 = true;
+            int32_t reflex = -1;
+
+            for (uint32_t i = 0u; i < 4u; ++i)
+            {
+                const vec2 vin = positions2d[i] - positions2d[(i + 3) & 3];
+                const vec2 vout = positions2d[(i + 1) & 3] - positions2d[i];
+
+                if ((cross(vin, vout) * windingSign) < 0.0f)
+                {
+                    reflex = i;
+                    break;
+                }
+            }
+
+            if (reflex > 0)
+            {
+                // We must use the diagonal emenating from the reflex point if one was found.
+                useDiagonal2 = ((reflex & 1) == 0);
+            }
+            else
+            {
+                // Otherwise, choose the shorter diagonal measured in 3d space.
+                const vec3 d02 = positions3d[0] - positions3d[2];
+                const vec3 d13 = positions3d[1] - positions3d[3];
+
+                useDiagonal2 = dot(d02, d02) <= dot(d13, d13);
+            }
+
+            if (useDiagonal2)
+            {
+                triangulatedIndices.push_back(face[0]);
+                triangulatedIndices.push_back(face[1]);
+                triangulatedIndices.push_back(face[2]);
+
+                triangulatedIndices.push_back(face[0]);
+                triangulatedIndices.push_back(face[2]);
+                triangulatedIndices.push_back(face[3]);
+            }
+            else
+            {
+                triangulatedIndices.push_back(face[0]);
+                triangulatedIndices.push_back(face[1]);
+                triangulatedIndices.push_back(face[3]);
+
+                triangulatedIndices.push_back(face[1]);
+                triangulatedIndices.push_back(face[2]);
+                triangulatedIndices.push_back(face[3]);
+            }
+        }
+
+        void triangulateNgon(TriangulatorContext& context, std::vector<uint32_t>& triangulatedIndices, MeshTriangulationReport& report) noexcept
         {
             // Based on: https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
 
-            const uint32_t faceSize = static_cast<uint32_t>(face.size());
+            const uint32_t faceIndexCount = static_cast<uint32_t>(context.face.size());
 
             report.sourceFaceCount++;
-            report.sourceNgonFaceCount++;
 
-            positions2d.clear();
-            positions3d.clear();
+            context.positions2d.clear();
+            context.positions3d.clear();
 
             // -----------------------------------------------------------------------------
             // Project the 3D positions to 2D as ear-clipping works only in 2D
             // -----------------------------------------------------------------------------
 
-            extractAndRecenterPositions(face, vertices, positions3d);
+            extractAndRecenterPositions(context.face, context.vertices, context.positions3d);
 
-            const vec3 scaledNormal = ngonFaceNormalScaled(positions3d);
+            const vec3 scaledNormal = ngonFaceNormalScaled(context.positions3d);
             float earEpsilon;
 
-            if (isDegeneratePolygon(scaledNormal, positions3d, earEpsilon))
+            if (isDegeneratePolygon(scaledNormal, context.positions3d, earEpsilon))
             {
                 report.degenerateCount++;
                 return;
             }
 
-            project3dTo2d(scaledNormal, positions3d, positions2d);
-            const float winding = isFaceCCW(positions2d) ? 1.0f : -1.0f;
+            project3dTo2d(scaledNormal, context.positions3d, context.positions2d);
+            const float winding = isFaceCCW(context.positions2d) ? 1.0f : -1.0f;
+
+            if (faceIndexCount == 4u)
+            {
+                emitQuad(triangulatedIndices, context.face, context.positions3d, context.positions2d, winding);
+                report.sourceQuadFaceCount += 1;
+                report.resultTriangleFaceCount += 2;
+                return;
+            }
+            else
+            {
+                report.sourceNgonFaceCount++;
+            }
 
             // -----------------------------------------------------------------------------
             // Gather our indices and initial convexity
             // -----------------------------------------------------------------------------
 
-            std::vector<uint32_t> prevLocalFaceIndices(face.size());        // [7,0,1,2,3,4,5,6]
-            std::vector<uint32_t> nextLocalFaceIndices(face.size());        // [1,2,3,4,5,6,7,0]
-            std::vector<bool> reflex(face.size());
+            context.prevLocalFaceIndices.clear(); context.prevLocalFaceIndices.resize(context.face.size());
+            context.nextLocalFaceIndices.clear(); context.nextLocalFaceIndices.resize(context.face.size());
+            context.reflex.clear(); context.reflex.resize(context.face.size());
 
-            for (uint32_t i = 0u; i < faceSize; ++i)
+            for (uint32_t i = 0u; i < faceIndexCount; ++i)
             {
-                prevLocalFaceIndices[i] = (i + faceSize - 1) % faceSize;
-                nextLocalFaceIndices[i] = (i + 1) % faceSize;
+                context.prevLocalFaceIndices[i] = (i + faceIndexCount - 1) % faceIndexCount;
+                context.nextLocalFaceIndices[i] = (i + 1) % faceIndexCount;
             }
 
-            for (uint32_t i = 0u; i < faceSize; ++i)
+            for (uint32_t i = 0u; i < faceIndexCount; ++i)
             {
                 // A reflex vertex is one for which the interior angle formed by the two edges sharing it is larger than π radians
-                reflex[i] = !isConvex(i, prevLocalFaceIndices[i], nextLocalFaceIndices[i], positions2d, winding);
+                context.reflex[i] = !isConvex(i, context.prevLocalFaceIndices[i], context.nextLocalFaceIndices[i], context.positions2d, winding);
             }
 
             // -----------------------------------------------------------------------------
@@ -135,27 +214,27 @@ namespace litl
             // Returns true if the triangle formed by (prevLocalIndex, currLocalIndex, nextLocalIndex) is a valid ear candidate to be clipped.
             auto isEar = [&](uint32_t currLocalIndex) noexcept -> bool {
                 // Early check for a reflex index, which can't be clipped.
-                if (reflex[currLocalIndex])
+                if (context.reflex[currLocalIndex])
                 {
                     return false;
                 }
 
-                const uint32_t prevLocalIndex = prevLocalFaceIndices[currLocalIndex];
-                const uint32_t nextLocalIndex = nextLocalFaceIndices[currLocalIndex];
+                const uint32_t prevLocalIndex = context.prevLocalFaceIndices[currLocalIndex];
+                const uint32_t nextLocalIndex = context.nextLocalFaceIndices[currLocalIndex];
 
-                const vec2 a = positions2d[prevLocalIndex];
-                const vec2 b = positions2d[currLocalIndex];
-                const vec2 c = positions2d[nextLocalIndex];
+                const vec2 a = context.positions2d[prevLocalIndex];
+                const vec2 b = context.positions2d[currLocalIndex];
+                const vec2 c = context.positions2d[nextLocalIndex];
 
                 if ((cross(b - a, c - a) * winding) < earEpsilon)
                 {
                     return false;       // sliver of a polygon
                 }
 
-                for (uint32_t r = nextLocalFaceIndices[nextLocalIndex]; r != prevLocalIndex; r = nextLocalFaceIndices[r])
+                for (uint32_t r = context.nextLocalFaceIndices[nextLocalIndex]; r != prevLocalIndex; r = context.nextLocalFaceIndices[r])
                 {
                     // Only reflex triangles (those with interior angle > π radians) can invalidate an ear.
-                    if (reflex[r] && pointInTriangle(positions2d[r], a, b, c))
+                    if (context.reflex[r] && pointInTriangle(context.positions2d[r], a, b, c))
                     {
                         return false;
                     }
@@ -166,21 +245,21 @@ namespace litl
 
             // Outputs the ear formed at the current index, removes the index, and updates the leftover neighbor reflex flags.
             auto earClip = [&](uint32_t currLocalIndex) noexcept -> uint32_t {
-                const uint32_t prevLocalIndex = prevLocalFaceIndices[currLocalIndex];
-                const uint32_t nextLocalIndex = nextLocalFaceIndices[currLocalIndex];
+                const uint32_t prevLocalIndex = context.prevLocalFaceIndices[currLocalIndex];
+                const uint32_t nextLocalIndex = context.nextLocalFaceIndices[currLocalIndex];
 
                 // output the triangle
-                triangulatedIndices.push_back(face[prevLocalIndex]);
-                triangulatedIndices.push_back(face[currLocalIndex]);
-                triangulatedIndices.push_back(face[nextLocalIndex]);
+                triangulatedIndices.push_back(context.face[prevLocalIndex]);
+                triangulatedIndices.push_back(context.face[currLocalIndex]);
+                triangulatedIndices.push_back(context.face[nextLocalIndex]);
 
                 // clip the current index by adjusting to the links of the curr/prev indices
-                nextLocalFaceIndices[prevLocalIndex] = nextLocalIndex;
-                prevLocalFaceIndices[nextLocalIndex] = prevLocalIndex;
+                context.nextLocalFaceIndices[prevLocalIndex] = nextLocalIndex;
+                context.prevLocalFaceIndices[nextLocalIndex] = prevLocalIndex;
 
                 // recalculate the "is reflex" value for the remaining vertices
-                reflex[prevLocalIndex] = !isConvex(prevLocalIndex, prevLocalFaceIndices[prevLocalIndex], nextLocalFaceIndices[prevLocalIndex], positions2d, winding);
-                reflex[nextLocalIndex] = !isConvex(nextLocalIndex, prevLocalFaceIndices[nextLocalIndex], nextLocalFaceIndices[nextLocalIndex], positions2d, winding);
+                context.reflex[prevLocalIndex] = !isConvex(prevLocalIndex, context.prevLocalFaceIndices[prevLocalIndex], context.nextLocalFaceIndices[prevLocalIndex], context.positions2d, winding);
+                context.reflex[nextLocalIndex] = !isConvex(nextLocalIndex, context.prevLocalFaceIndices[nextLocalIndex], context.nextLocalFaceIndices[nextLocalIndex], context.positions2d, winding);
 
                 return nextLocalIndex;
             };
@@ -192,9 +271,9 @@ namespace litl
                 auto bestTurn = -std::numeric_limits<float>::infinity();
                 auto v = currLocalIndex;
 
-                for (uint32_t i = 0u; i < remainingCount; ++i)
+                for (uint32_t i = 0u; i < remainingCount; ++i, v = context.nextLocalFaceIndices[v])
                 {
-                    const float turn = cross(positions2d[v] - positions2d[prevLocalFaceIndices[v]], positions2d[nextLocalFaceIndices[v]] - positions2d[v]) * winding;
+                    const float turn = cross(context.positions2d[v] - context.positions2d[context.prevLocalFaceIndices[v]], context.positions2d[context.nextLocalFaceIndices[v]] - context.positions2d[v]) * winding;
 
                     if (turn > bestTurn)
                     {
@@ -212,7 +291,7 @@ namespace litl
 
             uint32_t currIndex = 0u;
             uint32_t stallCount = 0u;
-            uint32_t remainingCount = faceSize;
+            uint32_t remainingCount = faceIndexCount;
 
             while (remainingCount > 3u)
             {
@@ -238,69 +317,18 @@ namespace litl
                 else
                 {
                     // Not a valid ear candidate, and currently not stalled, so continue to the next index.
-                    currIndex = nextLocalFaceIndices[currIndex];
+                    currIndex = context.nextLocalFaceIndices[currIndex];
                 }
             }
 
             // Output the final remaining triangle.
-            triangulatedIndices.push_back(face[prevLocalFaceIndices[currIndex]]);
-            triangulatedIndices.push_back(face[currIndex]);
-            triangulatedIndices.push_back(face[nextLocalFaceIndices[currIndex]]);
+            triangulatedIndices.push_back(context.face[context.prevLocalFaceIndices[currIndex]]);
+            triangulatedIndices.push_back(context.face[currIndex]);
+            triangulatedIndices.push_back(context.face[context.nextLocalFaceIndices[currIndex]]);
             report.resultTriangleFaceCount++;
         }
 
-        void triangulateQuad(uint32_t faceIndexCount, uint32_t firstIndexIndex, std::span<Vertex const> vertices, std::span<uint32_t const> sourceIndices, std::vector<uint32_t>& triangulatedIndices, MeshTriangulationReport& report) noexcept
-        {
-            /**
-             * A quad can be split into triangles along two separate diagonals:
-             * 
-             *     1─────────2            1─────────2
-             *     │       ╱ │            │ ╲       │
-             *     │     ╱   │     or     │   ╲     │
-             *     │   ╱     │            │     ╲   │
-             *     │ ╱       │            │       ╲ │
-             *     0─────────3            0─────────3
-             *     split on v0-v2        split on v1-v3
-             * 
-             * We simply find the length of the two diagonals (|v0-v2| vs |v1-v3|)
-             * and then split on the shorter of the two to avoid long, narrow slivers.
-             */
-
-            const uint32_t index0 = sourceIndices[firstIndexIndex + 0];
-            const uint32_t index1 = sourceIndices[firstIndexIndex + 1];
-            const uint32_t index2 = sourceIndices[firstIndexIndex + 2];
-            const uint32_t index3 = sourceIndices[firstIndexIndex + 3];
-
-            const float v0v2 = distanceSq(vertices[index0].position, vertices[index2].position);
-            const float v1v3 = distanceSq(vertices[index1].position, vertices[index3].position);
-
-            if (v0v2 <= v1v3)
-            {
-                triangulatedIndices.push_back(index0);
-                triangulatedIndices.push_back(index1);
-                triangulatedIndices.push_back(index2);
-
-                triangulatedIndices.push_back(index2);
-                triangulatedIndices.push_back(index3);
-                triangulatedIndices.push_back(index0);
-            }
-            else
-            {
-                triangulatedIndices.push_back(index1);
-                triangulatedIndices.push_back(index3);
-                triangulatedIndices.push_back(index0);
-
-                triangulatedIndices.push_back(index1);
-                triangulatedIndices.push_back(index2);
-                triangulatedIndices.push_back(index3);
-            }
-
-            report.sourceFaceCount++;
-            report.sourceQuadFaceCount++;
-            report.resultTriangleFaceCount += 2u;
-        }
-
-        void triangulateTriangle(uint32_t faceIndexCount, uint32_t firstIndexIndex, std::span<Vertex const> vertices, std::span<uint32_t const> sourceIndices, std::vector<uint32_t>& triangulatedIndices, MeshTriangulationReport& report) noexcept
+        void triangulateTriangle(uint32_t firstIndexIndex, std::span<uint32_t const> sourceIndices, std::vector<uint32_t>& triangulatedIndices, MeshTriangulationReport& report) noexcept
         {
 
             triangulatedIndices.push_back(sourceIndices[firstIndexIndex + 0]);
@@ -313,7 +341,28 @@ namespace litl
         }
     }
 
-    MeshTriangulationReport triangulateMesh(std::span<Vertex const> vertices, std::span<uint32_t const> sourceIndices, std::vector<uint32_t>& triangulatedIndices, std::vector<uint32_t>& faceIndexCounts) noexcept
+    bool isValidInput(std::span<Vertex const> vertices, std::span<uint32_t const> sourceIndices, std::span<uint32_t const> faceIndexCounts) noexcept
+    {
+        uint32_t sumFaceIndexCounts = 0u;
+        for (auto faceIndexCount : faceIndexCounts) { sumFaceIndexCounts += faceIndexCount; }
+
+        if (sumFaceIndexCounts != static_cast<uint32_t>(sourceIndices.size()))
+        {
+            return false;
+        }
+
+        for (auto index : sourceIndices)
+        {
+            if (index >= static_cast<uint32_t>(vertices.size()))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    MeshTriangulationReport triangulateMesh(std::span<Vertex const> vertices, std::span<uint32_t const> sourceIndices, std::vector<uint32_t>& triangulatedIndices, std::span<uint32_t const> faceIndexCounts) noexcept
     {
         // Rudimentary single-threaded triangulation. It is expected that most incoming meshes are already triangulated and that very few faces will need to be modified.
         // Rewrite as a jobs-based triangulation if this assumption is proved wrong in the future (or offer overloaded variant that takes in the JobScheduler)
@@ -321,6 +370,12 @@ namespace litl
         MeshTriangulationReport report{
             .success = true
         };
+
+        if (!isValidInput(vertices, sourceIndices, faceIndexCounts))
+        {
+            report.success = false;
+            return report;
+        }
 
         triangulatedIndices.clear();
         triangulatedIndices.reserve(sourceIndices.size());
@@ -330,6 +385,17 @@ namespace litl
 
         uint32_t firstIndexIndex = 0u;
 
+        TriangulatorContext context{
+            .vertices = vertices,
+            .indices = sourceIndices
+        };
+
+        context.positions3d.reserve(8u);
+        context.positions2d.reserve(8u);
+        context.prevLocalFaceIndices.reserve(8u);
+        context.nextLocalFaceIndices.reserve(8u);
+        context.reflex.reserve(8u);
+
         for (auto faceIndexCount : faceIndexCounts)
         {
             switch (faceIndexCount)
@@ -337,21 +403,16 @@ namespace litl
             case 0:
             case 1:
             case 2:
-                logError("Encountered invalid face index count of ", faceIndexCount, " during triangulation. Aborting.");
                 report.degenerateCount++;
-                report.success = false;
                 break;
 
             case 3:
-                triangulateTriangle(faceIndexCount, firstIndexIndex, vertices, sourceIndices, triangulatedIndices, report);
-                break;
-
-            case 4:
-                triangulateQuad(faceIndexCount, firstIndexIndex, vertices, sourceIndices, triangulatedIndices, report);
+                triangulateTriangle(firstIndexIndex, sourceIndices, triangulatedIndices, report);
                 break;
 
             default:
-                triangulateNgon({ sourceIndices.data(), faceIndexCount }, vertices, triangulatedIndices, ngonScratchVec3d, ngonScratchVec2d, report);
+                context.face = { sourceIndices.data() + firstIndexIndex, faceIndexCount };
+                triangulateNgon(context, triangulatedIndices, report);
                 break;
             }
 
