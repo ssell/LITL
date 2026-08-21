@@ -11,13 +11,13 @@ namespace litl
         /// <summary>
         /// Recenter the positions around the first vertex in the face in order to regain maximum precision.
         /// </summary>
-        void extractAndRecenterPositions(std::span<uint32_t const> face, std::span<Vertex const> vertices, std::span<uint32_t const> indices, std::vector<vec3>& positions3d) noexcept
+        void extractAndRecenterPositions(std::span<uint32_t const> face, std::span<Vertex const> vertices, std::vector<vec3>& positions3d) noexcept
         {
-            const vec3 faceOrigin = vertices[indices[face[0]]].position;
+            const vec3 faceOrigin = vertices[face[0]].position;
 
             for (uint32_t i = 0u; i < static_cast<uint32_t>(face.size()); ++i)
             {
-                positions3d.push_back(vertices[indices[face[i]]].position - faceOrigin);
+                positions3d.push_back(vertices[face[i]].position - faceOrigin);
             }
         }
 
@@ -76,8 +76,10 @@ namespace litl
             return (cross(positions2d[currLocalIndex] - positions2d[prevLocalIndex], positions2d[nextLocalIndex] - positions2d[currLocalIndex]) * windingSign) > 0.0f;
         }
 
-        void triangulateNgon(std::span<uint32_t const> face, std::span<Vertex const> vertices,  std::span<uint32_t const> indices, std::vector<uint32_t>& triangulatedIndices, std::vector<vec3>& positions3d, std::vector<vec2>& positions2d, MeshTriangulationReport& report) noexcept
+        void triangulateNgon(std::span<uint32_t const> face, std::span<Vertex const> vertices, std::vector<uint32_t>& triangulatedIndices, std::vector<vec3>& positions3d, std::vector<vec2>& positions2d, MeshTriangulationReport& report) noexcept
         {
+            // Based on: https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
+
             const uint32_t faceSize = static_cast<uint32_t>(face.size());
 
             report.sourceFaceCount++;
@@ -86,7 +88,11 @@ namespace litl
             positions2d.clear();
             positions3d.clear();
 
-            extractAndRecenterPositions(face, vertices, indices, positions3d);
+            // -----------------------------------------------------------------------------
+            // Project the 3D positions to 2D as ear-clipping works only in 2D
+            // -----------------------------------------------------------------------------
+
+            extractAndRecenterPositions(face, vertices, positions3d);
 
             const vec3 scaledNormal = ngonFaceNormalScaled(positions3d);
             float earEpsilon;
@@ -100,9 +106,13 @@ namespace litl
             project3dTo2d(scaledNormal, positions3d, positions2d);
             const float winding = isFaceCCW(positions2d) ? 1.0f : -1.0f;
 
-            std::vector<uint32_t> prevLocalFaceIndices(face.size());
-            std::vector<uint32_t> nextLocalFaceIndices(face.size());
-            std::vector<uint32_t> reflex(face.size());
+            // -----------------------------------------------------------------------------
+            // Gather our indices and initial convexity
+            // -----------------------------------------------------------------------------
+
+            std::vector<uint32_t> prevLocalFaceIndices(face.size());        // [7,0,1,2,3,4,5,6]
+            std::vector<uint32_t> nextLocalFaceIndices(face.size());        // [1,2,3,4,5,6,7,0]
+            std::vector<bool> reflex(face.size());
 
             for (uint32_t i = 0u; i < faceSize; ++i)
             {
@@ -110,7 +120,62 @@ namespace litl
                 nextLocalFaceIndices[i] = (i + 1) % faceSize;
             }
 
-            // ... todo ...
+            for (uint32_t i = 0u; i < faceSize; ++i)
+            {
+                // A reflex vertex is one for which the interior angle formed by the two edges sharing it is larger than π radians
+                reflex[i] = !isConvex(i, prevLocalFaceIndices[i], nextLocalFaceIndices[i], positions2d, winding);
+            }
+
+            // -----------------------------------------------------------------------------
+            // Ear-Clipping
+            // -----------------------------------------------------------------------------
+
+            auto isEar = [&](uint32_t currLocalIndex) noexcept -> bool {
+                const uint32_t prevLocalIndex = prevLocalFaceIndices[currLocalIndex];
+                const uint32_t nextLocalIndex = nextLocalFaceIndices[currLocalIndex];
+
+                const vec2 a = positions2d[prevLocalIndex];
+                const vec2 b = positions2d[currLocalIndex];
+                const vec2 c = positions2d[nextLocalIndex];
+
+                if ((cross(b - a, c - a) * winding) < earEpsilon)
+                {
+                    return false;       // sliver of a polygon
+                }
+
+                for (uint32_t r = nextLocalFaceIndices[nextLocalIndex]; r != prevLocalIndex; r = nextLocalFaceIndices[r])
+                {
+                    if (!reflex[r])
+                    {
+                        continue;
+                    }
+
+                    // is point in triangle check
+                }
+
+                return true;
+            };
+
+            auto earClip = [&](uint32_t currLocalIndex) noexcept -> uint32_t {
+                const uint32_t prevLocalIndex = prevLocalFaceIndices[currLocalIndex];
+                const uint32_t nextLocalIndex = nextLocalFaceIndices[currLocalIndex];
+
+                // output the triangle
+                triangulatedIndices.push_back(face[prevLocalIndex]);
+                triangulatedIndices.push_back(face[currLocalIndex]);
+                triangulatedIndices.push_back(face[nextLocalIndex]);
+
+                // clip the current index by adjusting to the links of the curr/prev indices
+                nextLocalFaceIndices[prevLocalIndex] = nextLocalIndex;
+                prevLocalFaceIndices[nextLocalIndex] = prevLocalIndex;
+
+                // recalculate the "is reflex" value for the remaining vertices
+                reflex[prevLocalIndex] = !isConvex(prevLocalIndex, prevLocalFaceIndices[prevLocalIndex], nextLocalFaceIndices[prevLocalIndex], positions2d, winding);
+                reflex[nextLocalIndex] = !isConvex(nextLocalIndex, prevLocalFaceIndices[nextLocalIndex], nextLocalFaceIndices[nextLocalIndex], positions2d, winding);
+
+                return nextLocalIndex;
+            };
+
 
             report.resultTriangleFaceCount += (static_cast<uint32_t>(face.size()) - 2u);
         }
@@ -216,7 +281,7 @@ namespace litl
                 break;
 
             default:
-                triangulateNgon({ sourceIndices.data(), faceIndexCount }, vertices, sourceIndices, triangulatedIndices, ngonScratchVec3d, ngonScratchVec2d, report);
+                triangulateNgon({ sourceIndices.data(), faceIndexCount }, vertices, triangulatedIndices, ngonScratchVec3d, ngonScratchVec2d, report);
                 break;
             }
 
