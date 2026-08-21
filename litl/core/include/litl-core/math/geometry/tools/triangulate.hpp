@@ -32,7 +32,7 @@ namespace litl
         uint32_t sourceNgonFaceCount = 0u;
 
         /// <summary>
-        /// Number of discovered degenerate triangles (area ~= 0) that we discarded.
+        /// Number of discovered faces that either have < 3 vertices or are degenerate triangles (area ~= 0) that were discarded.
         /// </summary>
         uint32_t degenerateCount = 0u;
 
