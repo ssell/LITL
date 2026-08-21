@@ -318,6 +318,72 @@ namespace litl
         const vec3 faceNormal = ngonFaceNormalCCW(face);
         return dot(faceNormal, referenceNormal) >= 0.0f;
     }
+
+    /// <summary>
+    /// Returns the centroid of the 3D triangle.
+    /// </summary>
+    [[nodiscard]] constexpr vec3 centroid(vec3 a, vec3 b, vec3 c) noexcept
+    {
+        return ((a + b + c) * 0.3333333f);
+    }
+
+    /// <summary>
+    /// Returns the centroid of the 2D triangle
+    /// </summary>
+    [[nodiscard]] constexpr vec2 centroid(vec2 a, vec2 b, vec2 c) noexcept
+    {
+        return ((a + b + c) * 0.3333333f);
+    }
+
+    /// <summary>
+    /// Returns true if the specified point is on or in the triangle (A, B, C).
+    /// </summary>
+    [[nodiscard]] constexpr bool pointInTriangle(vec3 p, vec3 a, vec3 b, vec3 c) noexcept
+    {
+        // From: https://github.com/ssell/Ear-Clipping/blob/master/src/earClipping_Triangulation.cpp#L34 and http://www.blackpawn.com/texts/pointinpoly/default.html
+
+        const vec3 v0 = (b - a);
+        const vec3 v1 = (c - a);
+        const vec3 v2 = (p - a);
+
+        const float d = ((dot(v0, v0) * dot(v1, v1)) - (dot(v0, v1) * dot(v1, v0)));
+        const float u = ((dot(v1, v1) * dot(v2, v0)) - (dot(v1, v0) * dot(v2, v1))) / d;
+        const float v = ((dot(v0, v0) * dot(v2, v1)) - (dot(v0, v1) * dot(v2, v0))) / d;
+
+        if ((u < 0.0f) || (v < 0.0f) ||         // u OR v < 0 = wrong direction from triangle and thus outside
+            (u > 1.0f) || (v > 1.0f) ||         // u OR v > 1 = went past the triange and thus outside
+            ((u + v) > 1.0f))                   // crossed diagonal of b and c and thus outside
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Returns true if the specified point is on or in the triangle (A, B, C).
+    /// </summary>
+    [[nodiscard]] constexpr bool pointInTriangle(vec2 p, vec2 a, vec2 b, vec2 c) noexcept
+    {
+        // From: https://github.com/ssell/Ear-Clipping/blob/master/src/earClipping_Triangulation.cpp#L34 and http://www.blackpawn.com/texts/pointinpoly/default.html
+
+        const vec2 v0 = (b - a);
+        const vec2 v1 = (c - a);
+        const vec2 v2 = (p - a);
+
+        const float d = ((dot(v0, v0) * dot(v1, v1)) - (dot(v0, v1) * dot(v1, v0)));
+        const float u = ((dot(v1, v1) * dot(v2, v0)) - (dot(v1, v0) * dot(v2, v1))) / d;
+        const float v = ((dot(v0, v0) * dot(v2, v1)) - (dot(v0, v1) * dot(v2, v0))) / d;
+
+        if ((u < 0.0f) || (v < 0.0f) ||         // u OR v < 0 = wrong direction from triangle and thus outside
+            (u > 1.0f) || (v > 1.0f) ||         // u OR v > 1 = went past the triange and thus outside
+            ((u + v) > 1.0f))                   // crossed diagonal of b and c and thus outside
+        {
+            return false;
+        }
+
+        return true;
+    }
 }
 
 #endif
