@@ -92,6 +92,8 @@ namespace litl
         /// </summary>
         void emitQuad(std::vector<uint32_t>& triangulatedIndices, std::span<uint32_t const> face, std::span<vec3 const> positions3d, std::span<vec2 const> positions2d, float windingSign) noexcept
         {
+            // Note: this uses only a single reflex test and can't catch bowtie quads at the moment.
+
             bool useDiagonal2 = true;
             int32_t reflex = -1;
 
@@ -100,7 +102,7 @@ namespace litl
                 const vec2 vin = positions2d[i] - positions2d[(i + 3) & 3];
                 const vec2 vout = positions2d[(i + 1) & 3] - positions2d[i];
 
-                if ((cross(vin, vout) * windingSign) < 0.0f)
+                if ((cross(vin, vout) * windingSign) <= 0.0f)       // note <= 0.0f to classify concave. this matches our isConvex which classifies convex as > 0.0f
                 {
                     reflex = i;
                     break;
