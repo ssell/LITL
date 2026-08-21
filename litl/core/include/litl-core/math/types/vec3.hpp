@@ -350,7 +350,7 @@ namespace litl
 
             if (isZero(length))
             {
-                return {};
+                return zero();
             }
             else
             {

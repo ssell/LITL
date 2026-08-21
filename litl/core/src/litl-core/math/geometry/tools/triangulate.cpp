@@ -7,32 +7,29 @@ namespace litl
 {
     namespace
     {
-        void triangulateNgon(std::span<uint32_t const> face, std::span<Vertex const> vertices,  std::span<uint32_t const> indices, std::vector<uint32_t>& triangulatedIndices, std::vector<vec3>& positions3d, std::vector<vec2>& positions2d, MeshTriangulationReport& report) noexcept
+
+        /// <summary>
+        /// Recenter the positions around the first vertex in the face in order to regain maximum precision.
+        /// </summary>
+        void extractAndRecenterPositions(std::span<uint32_t const> face, std::span<Vertex const> vertices, std::span<uint32_t const> indices, std::vector<vec3>& positions3d) noexcept
         {
-            report.sourceFaceCount++;
-            report.sourceNgonFaceCount++;
-
-            positions2d.clear();
-            positions3d.clear();
-
-            // ----------------------------------------------------------------------------
-            // Recenter each point around the face origin to regain maximum precision
-            // ----------------------------------------------------------------------------
-
             const vec3 faceOrigin = vertices[indices[face[0]]].position;
 
-            for (uint32_t i = 0u; i < static_cast<uint32_t>(face.size()); ++i) 
+            for (uint32_t i = 0u; i < static_cast<uint32_t>(face.size()); ++i)
             {
                 positions3d.push_back(vertices[indices[face[i]]].position - faceOrigin);
             }
+        }
 
-            // ----------------------------------------------------------------------------
-            // Get the face normal and check for triangle degeneracy
-            // ----------------------------------------------------------------------------
+        /// <summary>
+        /// Performs a scale-relative degeneracy test.
+        /// </summary>
+        [[nodiscard]] bool isDegeneratePolygon(vec3 scaledNormal, std::span<vec3 const> positions3d, float& earEpsilon) noexcept
+        {
+            // newell normal length = 2 * polygon area
+            const float normalLength = scaledNormal.length();
 
-            const vec3 scaledNormal = ngonFaceNormalScaled(positions3d);
-            const float normalLength2 = scaledNormal.lengthSquared();
-
+            // build an aabb encapsulating the face and the get its diagonal (min to max)
             vec3 minPoint = positions3d[0];
             vec3 maxPoint = positions3d[0];
 
@@ -45,27 +42,73 @@ namespace litl
             const vec3 min2max = (maxPoint - minPoint);
             const float diagonal2 = dot(min2max, min2max);
 
-            if ((normalLength2 < Traits<float>::epsilon) || (diagonal2 < Traits<float>::epsilon))
+            earEpsilon = Traits<float>::epsilon * diagonal2;
+
+            // ratio between (2*area) and the squared aabb diagonal.
+            // this makes the test dimensionless as degeneracy is a test of an invalid shape and not just size.
+            // an absolute area threshold by itself can not distinguish between a valid 0.1mm quad and a 100m needle as they have the same area.
+            if ((diagonal2 < 0.0) || (normalLength < earEpsilon))
             {
-                // Degenerate triangle with area of ~0
-                report.degenerateCount++;
-                return;
+                return true;
             }
 
-            // ----------------------------------------------------------------------------
-            // Project each 3d point onto a 2d plane defined by the face normal
-            // ----------------------------------------------------------------------------
+            return false;
+        }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        void project3dTo2d(vec3 scaledNormal, std::span<vec3 const> positions3d, std::vector<vec2>& positions2d) noexcept
+        {
             const vec3 normal = scaledNormal.normalized();
 
             for (auto& pos3d : positions3d)
             {
                 positions2d.push_back(project2d(normal, pos3d, vec3::zero()));
             }
+        }
 
-            // ----------------------------------------------------------------------------
-            // Traverse the 2d polygon and perform ear-clipping
-            // ----------------------------------------------------------------------------
+        /// <summary>
+        /// Returns true if the triangle formed by the points (prev, curr, next) is convex.
+        /// </summary>
+        [[nodiscard]] bool isConvex(uint32_t currLocalIndex, uint32_t prevLocalIndex, uint32_t nextLocalIndex, std::span<vec2 const> positions2d, float windingSign) noexcept
+        {
+            return (cross(positions2d[currLocalIndex] - positions2d[prevLocalIndex], positions2d[nextLocalIndex] - positions2d[currLocalIndex]) * windingSign) > 0.0f;
+        }
+
+        void triangulateNgon(std::span<uint32_t const> face, std::span<Vertex const> vertices,  std::span<uint32_t const> indices, std::vector<uint32_t>& triangulatedIndices, std::vector<vec3>& positions3d, std::vector<vec2>& positions2d, MeshTriangulationReport& report) noexcept
+        {
+            const uint32_t faceSize = static_cast<uint32_t>(face.size());
+
+            report.sourceFaceCount++;
+            report.sourceNgonFaceCount++;
+
+            positions2d.clear();
+            positions3d.clear();
+
+            extractAndRecenterPositions(face, vertices, indices, positions3d);
+
+            const vec3 scaledNormal = ngonFaceNormalScaled(positions3d);
+            float earEpsilon;
+
+            if (isDegeneratePolygon(scaledNormal, positions3d, earEpsilon))
+            {
+                report.degenerateCount++;
+                return;
+            }
+
+            project3dTo2d(scaledNormal, positions3d, positions2d);
+            const float winding = isFaceCCW(positions2d) ? 1.0f : -1.0f;
+
+            std::vector<uint32_t> prevLocalFaceIndices(face.size());
+            std::vector<uint32_t> nextLocalFaceIndices(face.size());
+            std::vector<uint32_t> reflex(face.size());
+
+            for (uint32_t i = 0u; i < faceSize; ++i)
+            {
+                prevLocalFaceIndices[i] = (i + faceSize - 1) % faceSize;
+                nextLocalFaceIndices[i] = (i + 1) % faceSize;
+            }
 
             // ... todo ...
 

@@ -237,6 +237,50 @@ namespace litl
         // Utility
         // ---------------------------------------------------------------------------------
 
+        [[nodiscard]] constexpr float dot(vec2 other) const noexcept
+        {
+            return glm::dot(value, other.value);
+        }
+
+        [[nodiscard]] constexpr float cross(vec2 other) const noexcept
+        {
+            return (value.x * other.value.y) - (value.y * other.value.x);
+        }
+
+        constexpr void normalize() noexcept
+        {
+            const float length = glm::length(value);
+            value = value / length;
+        }
+
+        constexpr void normalizeSafe() noexcept
+        {
+            const float length = glm::length(value);
+
+            if (!isZero(length))
+            {
+                value = value / length;
+            }
+        }
+
+        [[nodiscard]] constexpr vec2 normalized() const noexcept
+        {
+            const float length = glm::length(value);
+            return vec2(value / length);
+        }
+
+        [[nodiscard]] constexpr vec2 normalizedSafe() const noexcept
+        {
+            const float length = glm::length(value);
+
+            if (!isZero(length))
+            {
+                return vec2(value / length);
+            }
+
+            return zero();
+        }
+
         constexpr void setZero() noexcept
         {
             value.x = 0.0f;
@@ -286,6 +330,36 @@ namespace litl
 
         glm::vec2 value{ 0.0f, 0.0f };
     };
+
+    [[nodiscard]] constexpr vec2 min(vec2 a, vec2 b) noexcept
+    {
+        return vec2{ min(a.x(), b.x()), min(a.y(), b.y()) };
+    }
+
+    [[nodiscard]] constexpr vec2 max(vec2 a, vec2 b) noexcept
+    {
+        return vec2{ max(a.x(), b.x()), max(a.y(), b.y()) };
+    }
+
+    [[nodiscard]] constexpr float dot(vec2 a, vec2 b) noexcept
+    {
+        return a.dot(b);
+    }
+
+    [[nodiscard]] constexpr float cross(vec2 a, vec2 b) noexcept
+    {
+        return a.cross(b);
+    }
+
+    [[nodiscard]] constexpr vec2 midpoint(vec2 a, vec2 b) noexcept
+    {
+        return (a + (b - a) * 0.5f);
+    }
+
+    [[nodiscard]] constexpr vec2 normalize(vec2 a) noexcept
+    {
+        return a.normalized();
+    }
 
     static_assert(std::is_nothrow_copy_constructible_v<vec2>);
     static_assert(std::is_nothrow_move_constructible_v<vec2>);

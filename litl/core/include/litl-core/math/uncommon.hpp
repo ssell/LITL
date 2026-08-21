@@ -39,6 +39,8 @@ namespace litl
     /// The scaled, unnormalized, value is typically used for area weighting, degeneracy tests, etc.
     /// 
     /// Internally, LITL defaults to clockwise winding due to its left-handed coordinate system.
+    /// 
+    /// The magnitude of the resulting normal vector is equals to 2 * area of the polygon.
     /// </summary>
     [[nodiscard]] constexpr vec3 faceNormalScaled(vec3 a, vec3 b, vec3 c) noexcept
     {
@@ -64,6 +66,8 @@ namespace litl
     /// <summary>
     /// Calculates the scaled normal for a set of vertex positions defining an n-gon in counter-clockwise order.
     /// The scaled, unnormalized, value is typically used for area weighting, degeneracy tests, etc.
+    /// 
+    /// The magnitude of the resulting normal vector is equals to 2 * area of the polygon.
     /// </summary>
     [[nodiscard]] constexpr vec3 ngonFaceNormalScaledCCW(std::span<vec3 const> face) noexcept
     {
@@ -104,6 +108,8 @@ namespace litl
     /// <summary>
     /// Calculates the scaled normal for a set of vertex positions defining an n-gon in clockwise order.
     /// The scaled, unnormalized, value is typically used for area weighting, degeneracy tests, etc.
+    /// 
+    /// The magnitude of the resulting normal vector is equals to 2 * area of the polygon.
     /// </summary>
     [[nodiscard]] constexpr vec3 ngonFaceNormalScaled(std::span<vec3 const> face) noexcept
     {
@@ -122,6 +128,8 @@ namespace litl
     /// <summary>
     /// Calculates the scaled normal for a set of vertices defining an n-gon in counter-clockwise order.
     /// The scaled, unnormalized, value is typically used for area weighting, degeneracy tests, etc.
+    /// 
+    /// The magnitude of the resulting normal vector is equals to 2 * area of the polygon.
     /// </summary>
     [[nodiscard]] constexpr vec3 ngonFaceNormalScaledCCW(std::span<Vertex const> face) noexcept
     {
@@ -162,6 +170,8 @@ namespace litl
     /// <summary>
     /// Calculates the scaled normal for a set of vertices defining an n-gon in clockwise order.
     /// The scaled, unnormalized, value is typically used for area weighting, degeneracy tests, etc.
+    /// 
+    /// The magnitude of the resulting normal vector is equals to 2 * area of the polygon.
     /// </summary>
     [[nodiscard]] constexpr vec3 ngonFaceNormalScaled(std::span<Vertex const> face) noexcept
     {
