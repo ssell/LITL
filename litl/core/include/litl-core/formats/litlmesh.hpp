@@ -8,6 +8,7 @@
 #include <span>
 #include <vector>
 
+#include "litl-core/enumBitFlags.hpp"
 #include "litl-core/math/geometry/geoMesh.hpp"
 #include "litl-core/formats/binaryBlockFile.hpp"
 
@@ -15,6 +16,26 @@ static_assert(std::endian::native == std::endian::little);
 
 namespace litl
 {
+    /// <summary>
+    /// All valid flag values that could be specified in the header of a LitlMesh binary file.
+    /// </summary>
+    enum class LitlMeshFlagBits : uint32_t
+    {
+        /// <summary>
+        /// No flags set.
+        /// </summary>
+        None = 0u,
+
+        /// <summary>
+        /// Every face in the mesh is a triangle. As such, no FACE block is present.
+        /// </summary>
+        AllTriangles = 1u << 1u
+    };
+
+    static_assert(sizeof(LitlMeshFlagBits) == sizeof(uint32_t));
+    LITL_ENABLE_BITMASK(LitlMeshFlagBits);
+    using LitlMeshFlag = LitlMeshFlagBits;
+
     /// <summary>
     /// Binary file representation of a GeoMesh that is stored on disk as a ".litlmesh".
     /// This is effectively a non-owning view over the raw data blob.
@@ -68,6 +89,10 @@ namespace litl
         /// </summary>
         /// <returns>False if deserialization failed. See the supplied error code for more information.</returns>
         [[nodiscard]] bool deserialize(GeoMesh& mesh, ErrorCode& error) const noexcept;
+
+    private:
+
+        [[nodiscard]] bool deserializeFaceBlock(GeoMesh& mesh, std::optional<Block>& faceBlock, std::span<uint32_t const> indices, LitlMeshFlag flags, ErrorCode& error) const noexcept;
     };
 
     static_assert(std::is_trivially_copyable_v<LitlMesh>);

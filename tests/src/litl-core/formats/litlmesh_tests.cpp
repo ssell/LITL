@@ -107,6 +107,15 @@ namespace litl::tests
             std::memcpy(blob.data() + offset, &value, sizeof(T));
         }
 
+        void clearHeaderFlags(std::vector<std::byte>& blob) noexcept
+        {
+            constexpr size_t flagOffset = 44u;
+            constexpr size_t flagEnd = flagOffset + sizeof(uint32_t);
+
+            REQUIRE(blob.size() >= flagEnd);
+            std::memset(blob.data() + flagOffset, 0u, sizeof(uint32_t));
+        }
+
         /// <summary>
         /// Re-stamps contentHash. Only required for mutations at or past the descriptor table,
         /// since Header::validate runs before parse checks the hash.
@@ -479,6 +488,7 @@ namespace litl::tests
     {
         GeoMesh mesh{};
         makeQuadMesh(mesh);
+        mesh.setAllFaceIndexCounts(1u);     // change from triangle faces or else the AllTriangles flag will be set and the face block omitted.
 
         std::vector<std::byte> const good = serializeOrFail(mesh);
         BlockDescriptor const faces = readDescriptor(good, LitlMesh::BlockIds::Faces);
@@ -487,6 +497,7 @@ namespace litl::tests
         {
             std::vector<std::byte> blob = good;
             patch<uint32_t>(blob, firstFace, 0u);
+            clearHeaderFlags(blob);
             rehash(blob);
             requireDeserializeFails(blob, ErrorCode::ZeroFaceFound);
         }
@@ -495,6 +506,7 @@ namespace litl::tests
         {
             std::vector<std::byte> blob = good;
             patch<uint32_t>(blob, firstFace, static_cast<uint32_t>(mesh.indexCount()) + 1u);
+            clearHeaderFlags(blob);
             rehash(blob);
             requireDeserializeFails(blob, ErrorCode::InvalidFaceSum);
         }
@@ -503,6 +515,7 @@ namespace litl::tests
         {
             std::vector<std::byte> blob = good;
             patch<uint32_t>(blob, firstFace, 2u);
+            clearHeaderFlags(blob);
             rehash(blob);
             requireDeserializeFails(blob, ErrorCode::InvalidFaceSum);
         }
@@ -530,6 +543,7 @@ namespace litl::tests
     {
         GeoMesh mesh{};
         makeTriangleMesh(mesh);
+        mesh.setAllFaceIndexCounts(1u);     // Need this, otherwise when we serialize it will opt out of a FACE block anyways to just supply the AllTriangles flag.
 
         std::vector<std::byte> const good = serializeOrFail(mesh);
 
