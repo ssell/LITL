@@ -28,11 +28,13 @@ namespace litl::tests
             {
                 const std::array<uint32_t, 3u> indices{  0, 1, 2 };
                 mesh.setIndices(indices);
+                mesh.setWindingOrder(MeshWinding::Clockwise);
             }
             else
             {
                 const std::array<uint32_t, 3u> indices{ 0, 2, 1 };
                 mesh.setIndices(indices);
+                mesh.setWindingOrder(MeshWinding::CounterClockwise);
             }
 
             const std::array<uint32_t, 1u> faceIndexCounts{ 3 };
@@ -106,7 +108,7 @@ namespace litl::tests
         REQUIRE(vertices[2].normal == vec3::forward());
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("recalculateNormals fase", "[math::geomesh]")
+    LITL_TEST_CASE("recalculateNormals fast", "[math::geomesh]")
     {
         GeoMesh mesh{};
         createTriangle(mesh, true, false);
@@ -122,6 +124,59 @@ namespace litl::tests
         REQUIRE(vertices[0].normal == vec3::forward());
         REQUIRE(vertices[1].normal == vec3::forward());
         REQUIRE(vertices[2].normal == vec3::forward());
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("getWinding", "[math::geomesh]")
+    {
+        GeoMesh meshCW{};
+        GeoMesh meshCCW{};
+
+        createTriangle(meshCW, true, false);
+        createTriangle(meshCCW, false, false);
+
+        REQUIRE(meshCW.getWinding() == MeshWinding::Clockwise);
+        REQUIRE(meshCCW.getWinding() == MeshWinding::CounterClockwise);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("ensureClockwiseWinding from CCW", "[math::geomesh]")
+    {
+        GeoMesh mesh{};
+
+        createTriangle(mesh, false, false);
+        auto& indices = mesh.getIndices();
+
+        REQUIRE(mesh.getWinding() == MeshWinding::CounterClockwise);
+        REQUIRE(indices[0] == 0);
+        REQUIRE(indices[1] == 2);
+        REQUIRE(indices[2] == 1);
+
+        mesh.ensureClockwiseWinding();
+
+        REQUIRE(mesh.getWinding() == MeshWinding::Clockwise);
+        REQUIRE(indices[0] == 0);
+        REQUIRE(indices[1] == 1);
+        REQUIRE(indices[2] == 2);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("ensureClockwiseWinding from Unknown CCW", "[math::geomesh]")
+    {
+        GeoMesh mesh{};
+
+        createTriangle(mesh, false, false);
+        auto& indices = mesh.getIndices();
+        mesh.setWindingOrder(MeshWinding::Unknown);     // override to Unknown to hit the manual calculations
+
+        REQUIRE(mesh.getWinding() == MeshWinding::Unknown);
+        REQUIRE(indices[0] == 0);                       // still a CCW winding
+        REQUIRE(indices[1] == 2);
+        REQUIRE(indices[2] == 1);
+
+        mesh.ensureClockwiseWinding();
+
+        REQUIRE(mesh.getWinding() == MeshWinding::Clockwise);
+        REQUIRE(indices[0] == 0);
+        REQUIRE(indices[1] == 1);
+        REQUIRE(indices[2] == 2);
     } LITL_END_TEST_CASE
 
     /*

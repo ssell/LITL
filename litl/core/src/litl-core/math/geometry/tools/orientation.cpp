@@ -294,7 +294,7 @@ namespace litl
 
                 if ((a == componentState.extremalVert) || (b == componentState.extremalVert) || (c == componentState.extremalVert))
                 {
-                    componentState.extremalNormal += cross(pb - pa, pc - pa);       // area-weighted
+                    componentState.extremalNormal += cross(pc - pa, pb - pa);       // area-weighted
                 }
             }
         }

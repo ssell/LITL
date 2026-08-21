@@ -264,6 +264,8 @@ namespace litl
                 {
                     std::swap(m_indices[(face * 3) + 1], m_indices[(face * 3) + 2]);
                 }
+
+                setWindingOrder(MeshWinding::Clockwise);
             }
         }
     }
