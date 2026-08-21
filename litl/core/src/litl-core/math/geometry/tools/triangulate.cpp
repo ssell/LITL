@@ -1,6 +1,7 @@
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/math/geometry/tools/normals.hpp"
 #include "litl-core/math/geometry/tools/triangulate.hpp"
+#include "litl-core/math/uncommon.hpp"
 
 namespace litl
 {
@@ -20,7 +21,7 @@ namespace litl
 
             const vec3 faceOrigin = vertices[indices[face[0]]].position;
 
-            for (uint32_t i = 0u; i < static_cast<uint32_t>(face.size()); ++i)
+            for (uint32_t i = 0u; i < static_cast<uint32_t>(face.size()); ++i) 
             {
                 positions3d.push_back(vertices[indices[face[i]]].position - faceOrigin);
             }
@@ -142,6 +143,7 @@ namespace litl
             case 1:
             case 2:
                 logError("Encountered invalid face index count of ", faceIndexCount, " during triangulation. Aborting.");
+                report.degenerateCount++;
                 report.success = false;
                 break;
 
