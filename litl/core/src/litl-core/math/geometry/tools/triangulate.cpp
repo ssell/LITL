@@ -1,3 +1,5 @@
+#include <limits>
+
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/math/geometry/tools/normals.hpp"
 #include "litl-core/math/geometry/tools/triangulate.hpp"
@@ -127,10 +129,17 @@ namespace litl
             }
 
             // -----------------------------------------------------------------------------
-            // Ear-Clipping
+            // Ear-Clipping Lambdas
             // -----------------------------------------------------------------------------
 
+            // Returns true if the triangle formed by (prevLocalIndex, currLocalIndex, nextLocalIndex) is a valid ear candidate to be clipped.
             auto isEar = [&](uint32_t currLocalIndex) noexcept -> bool {
+                // Early check for a reflex index, which can't be clipped.
+                if (reflex[currLocalIndex])
+                {
+                    return false;
+                }
+
                 const uint32_t prevLocalIndex = prevLocalFaceIndices[currLocalIndex];
                 const uint32_t nextLocalIndex = nextLocalFaceIndices[currLocalIndex];
 
@@ -145,17 +154,17 @@ namespace litl
 
                 for (uint32_t r = nextLocalFaceIndices[nextLocalIndex]; r != prevLocalIndex; r = nextLocalFaceIndices[r])
                 {
-                    if (!reflex[r])
+                    // Only reflex triangles (those with interior angle > π radians) can invalidate an ear.
+                    if (reflex[r] && pointInTriangle(positions2d[r], a, b, c))
                     {
-                        continue;
+                        return false;
                     }
-
-                    // is point in triangle check
                 }
 
                 return true;
             };
 
+            // Outputs the ear formed at the current index, removes the index, and updates the leftover neighbor reflex flags.
             auto earClip = [&](uint32_t currLocalIndex) noexcept -> uint32_t {
                 const uint32_t prevLocalIndex = prevLocalFaceIndices[currLocalIndex];
                 const uint32_t nextLocalIndex = nextLocalFaceIndices[currLocalIndex];
@@ -176,8 +185,66 @@ namespace litl
                 return nextLocalIndex;
             };
 
+            // Used when no valid ear was found. Finds the most convex vertex so we can keep going.
+            // A slighltly wrong triangle is better than hanging and being unable to complete triangulation.
+            auto findBestOfTheWorst = [&](uint32_t currLocalIndex, uint32_t remainingCount) noexcept -> uint32_t {
+                auto best = currLocalIndex;
+                auto bestTurn = -std::numeric_limits<float>::infinity();
+                auto v = currLocalIndex;
 
-            report.resultTriangleFaceCount += (static_cast<uint32_t>(face.size()) - 2u);
+                for (uint32_t i = 0u; i < remainingCount; ++i)
+                {
+                    const float turn = cross(positions2d[v] - positions2d[prevLocalFaceIndices[v]], positions2d[nextLocalFaceIndices[v]] - positions2d[v]) * winding;
+
+                    if (turn > bestTurn)
+                    {
+                        bestTurn = turn;
+                        best = v;
+                    }
+                }
+
+                return best;
+            };
+
+            // -----------------------------------------------------------------------------
+            // Perform Ear-Clipping
+            // -----------------------------------------------------------------------------
+
+            uint32_t currIndex = 0u;
+            uint32_t stallCount = 0u;
+            uint32_t remainingCount = faceSize;
+
+            while (remainingCount > 3u)
+            {
+                if (isEar(currIndex))
+                {
+                    // Valid ear to clip, so do so.
+                    currIndex = earClip(currIndex);
+                    remainingCount--;
+                    stallCount = 0u;
+                    report.resultTriangleFaceCount++;
+                }
+                else if (++stallCount > remainingCount)
+                {
+                    // We have stalled for a full lap around the polygon with no ear found.
+                    currIndex = earClip(findBestOfTheWorst(currIndex, remainingCount));
+                    remainingCount--;
+                    stallCount = 0u;
+                    report.resultTriangleFaceCount++;
+                    report.forcedClips++;
+                }
+                else
+                {
+                    // Not a valid ear candidate, and currently not stalled, so continue to the next index.
+                    currIndex = nextLocalFaceIndices[currIndex];
+                }
+            }
+
+            // Output the final remaining triangle.
+            triangulatedIndices.push_back(face[prevLocalFaceIndices[currIndex]]);
+            triangulatedIndices.push_back(face[currIndex]);
+            triangulatedIndices.push_back(face[nextLocalFaceIndices[currIndex]]);
+            report.resultTriangleFaceCount++;
         }
 
         void triangulateQuad(uint32_t faceIndexCount, uint32_t firstIndexIndex, std::span<Vertex const> vertices, std::span<uint32_t const> sourceIndices, std::vector<uint32_t>& triangulatedIndices, MeshTriangulationReport& report) noexcept

@@ -37,6 +37,11 @@ namespace litl
         uint32_t degenerateCount = 0u;
 
         /// <summary>
+        /// Number of times that we stalled finding a valid ear to clip and so forcibly clipped an ear to keep going.
+        /// </summary>
+        uint32_t forcedClips = 0u;
+
+        /// <summary>
         /// The number of triangle faces after triangulation finished.
         /// </summary>
         uint32_t resultTriangleFaceCount = 0u;

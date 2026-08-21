@@ -198,9 +198,9 @@ namespace litl::tests
 
     LITL_TEST_CASE("centroid 3D", "[math::uncommon]")
     {
-        const vec3 a = vec3(0.0f, 0.0f, 0.0f);
-        const vec3 b = vec3(10.0f, 30.0f, 0.0f);
-        const vec3 c = vec3(20.0f, 0.0f, 0.0f);
+        const vec3 a(0.0f, 0.0f, 0.0f);
+        const vec3 b(10.0f, 30.0f, 0.0f);
+        const vec3 c(20.0f, 0.0f, 0.0f);
 
         const vec3 expectedCentroid = vec3(10.0f, 10.0f, 0.0f);
         const vec3 calculatedCentroid = centroid(a, b, c);
@@ -210,9 +210,9 @@ namespace litl::tests
 
     LITL_TEST_CASE("centroid 2D", "[math::uncommon]")
     {
-        const vec2 a = vec2(0.0f, 0.0f);
-        const vec2 b = vec2(10.0f, 30.0f);
-        const vec2 c = vec2(20.0f, 0.0f);
+        const vec2 a(0.0f, 0.0f);
+        const vec2 b(10.0f, 30.0f);
+        const vec2 c(20.0f, 0.0f);
 
         const vec2 expectedCentroid = vec2(10.0f, 10.0f);
         const vec2 calculatedCentroid = centroid(a, b, c);
@@ -222,9 +222,9 @@ namespace litl::tests
 
     LITL_TEST_CASE("pointInTriangle 3D", "[math::uncommon]")
     {
-        const vec3 a = vec3(0.0f, 0.0f, 0.0f);
-        const vec3 b = vec3(10.0f, 20.0f, 0.0f);
-        const vec3 c = vec3(20.0f, 0.0f, 0.0f);
+        const vec3 a(0.0f, 0.0f, 0.0f);
+        const vec3 b(10.0f, 20.0f, 0.0f);
+        const vec3 c(20.0f, 0.0f, 0.0f);
 
         REQUIRE(pointInTriangle(a, a, b, c) == true);
         REQUIRE(pointInTriangle(b, a, b, c) == true);
@@ -240,9 +240,9 @@ namespace litl::tests
 
     LITL_TEST_CASE("pointInTriangle 2D", "[math::uncommon]")
     {
-        const vec2 a = vec2(0.0f, 0.0f);
-        const vec2 b = vec2(10.0f, 20.0f);
-        const vec2 c = vec2(20.0f, 0.0f);
+        const vec2 a(0.0f, 0.0f);
+        const vec2 b(10.0f, 20.0f);
+        const vec2 c(20.0f, 0.0f);
 
         REQUIRE(pointInTriangle(a, a, b, c) == true);
         REQUIRE(pointInTriangle(b, a, b, c) == true);
