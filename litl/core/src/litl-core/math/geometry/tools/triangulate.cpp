@@ -58,7 +58,7 @@ namespace litl
         }
 
         /// <summary>
-        /// 
+        /// Projects each 3D point of the face onto the 2D plane defined by the face normal.
         /// </summary>
         void project3dTo2d(vec3 scaledNormal, std::span<vec3 const> positions3d, std::vector<vec2>& positions2d) noexcept
         {
@@ -310,6 +310,7 @@ namespace litl
             report.resultTriangleFaceCount++;
         }
     }
+
     MeshTriangulationReport triangulateMesh(std::span<Vertex const> vertices, std::span<uint32_t const> sourceIndices, std::vector<uint32_t>& triangulatedIndices, std::vector<uint32_t>& faceIndexCounts) noexcept
     {
         // Rudimentary single-threaded triangulation. It is expected that most incoming meshes are already triangulated and that very few faces will need to be modified.
