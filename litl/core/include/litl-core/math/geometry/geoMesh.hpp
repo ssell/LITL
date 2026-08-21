@@ -133,6 +133,7 @@ namespace litl
 
         /// <summary>
         /// Recalculates and modifies the mesh in-place such that the "faceIndexCount" for every face is 3.
+        /// This triangulation implementation is winding independent in such that it uses the winding of the first face.
         /// Note this will attempt to re-triangulate on each call and does not store any "already triangulated" flags.
         /// </summary>
         MeshTriangulationReport triangulate() noexcept;
