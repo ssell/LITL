@@ -44,11 +44,15 @@ namespace litl::tests
 
         void createQuad(GeoMesh& mesh, bool clockwise, bool withNormals) noexcept
         {
+            // this is a fun concave quad, not a boring plain ol square convex quad.
+            // it looks like an arrow head, and so it can't be naively split on either diagonal: only one diagonal is valid.
+            // we start on the lower-left, so that triangulated it is not just [(0, 1, 2), (2, 3, 0)] like a square would be.
+            // instead the target triangulation is [(0, 1, 3), (1, 2, 3)] or thereabouts.
             std::array<Vertex, 4u> vertices{
-                Vertex{.position = vec3(0.0f, 0.0f, 0.0f) },
-                Vertex{.position = vec3(0.0f, 20.0f, 0.0f) },
-                Vertex{.position = vec3(20.0f, 20.0f, 0.0f) },
-                Vertex{.position = vec3(20.0f, 0.0f, 0.0f) }
+                Vertex{.position = vec3(-3.0f, 0.0f, 0.0f) },
+                Vertex{.position = vec3(0.0f, 6.0f, 0.0f) },
+                Vertex{.position = vec3(3.0f, 0.0f, 0.0f) },
+                Vertex{.position = vec3(0.0f, 4.0f, 0.0f) }
             };
 
             if (withNormals)
@@ -339,11 +343,11 @@ namespace litl::tests
 
         REQUIRE(indices[0] == 0);
         REQUIRE(indices[1] == 1);
-        REQUIRE(indices[2] == 2);
+        REQUIRE(indices[2] == 3);
 
-        REQUIRE(indices[3] == 2);
-        REQUIRE(indices[4] == 3);
-        REQUIRE(indices[5] == 0);
+        REQUIRE(indices[3] == 1);
+        REQUIRE(indices[4] == 2);
+        REQUIRE(indices[5] == 3);
 
         REQUIRE(faces[0] == 3u);
         REQUIRE(faces[1] == 3u);
@@ -381,9 +385,9 @@ namespace litl::tests
         REQUIRE(indices[1] == 2);
         REQUIRE(indices[2] == 1);
 
-        REQUIRE(indices[3] == 1);
-        REQUIRE(indices[4] == 0);
-        REQUIRE(indices[5] == 3);
+        REQUIRE(indices[3] == 3);
+        REQUIRE(indices[4] == 1);
+        REQUIRE(indices[5] == 0);
 
         REQUIRE(faces[0] == 3u);
         REQUIRE(faces[1] == 3u);
