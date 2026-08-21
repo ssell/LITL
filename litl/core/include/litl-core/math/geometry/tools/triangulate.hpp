@@ -42,6 +42,11 @@ namespace litl
         uint32_t forcedClips = 0u;
 
         /// <summary>
+        /// How many polygon ears were clipped?
+        /// </summary>
+        uint32_t earsClipped = 0u;
+
+        /// <summary>
         /// The number of triangle faces after triangulation finished.
         /// </summary>
         uint32_t resultTriangleFaceCount = 0u;

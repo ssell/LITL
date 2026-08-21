@@ -223,6 +223,7 @@ namespace litl
                     remainingCount--;
                     stallCount = 0u;
                     report.resultTriangleFaceCount++;
+                    report.earsClipped++;
                 }
                 else if (++stallCount > remainingCount)
                 {
@@ -231,6 +232,7 @@ namespace litl
                     remainingCount--;
                     stallCount = 0u;
                     report.resultTriangleFaceCount++;
+                    report.earsClipped++;
                     report.forcedClips++;
                 }
                 else
@@ -272,7 +274,7 @@ namespace litl
             const float v0v2 = distanceSq(vertices[index0].position, vertices[index2].position);
             const float v1v3 = distanceSq(vertices[index1].position, vertices[index3].position);
 
-            if (v0v2 < v1v3)
+            if (v0v2 <= v1v3)
             {
                 triangulatedIndices.push_back(index0);
                 triangulatedIndices.push_back(index1);
