@@ -17,6 +17,21 @@ namespace litl
         uint32_t sourceFaceCount = 0u;
 
         /// <summary>
+        /// The number of faces in the original source data that had zero indices.
+        /// </summary>
+        uint32_t sourceEmptyFaceCount = 0u;
+
+        /// <summary>
+        /// The number of faces in the original source data that had one index.
+        /// </summary>
+        uint32_t sourcePointFaceCount = 0u;
+
+        /// <summary>
+        /// The number of faces in the original source data that had two indices.
+        /// </summary>
+        uint32_t sourceLineFaceCount = 0u;
+
+        /// <summary>
         /// The number of triangles in the original source data.
         /// </summary>
         uint32_t sourceTriangleFaceCount = 0u;

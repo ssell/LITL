@@ -1,7 +1,5 @@
 #include <limits>
 
-#include "litl-core/logging/logging.hpp"
-#include "litl-core/math/geometry/tools/normals.hpp"
 #include "litl-core/math/geometry/tools/triangulate.hpp"
 #include "litl-core/math/uncommon.hpp"
 
@@ -13,7 +11,6 @@ namespace litl
         {
             std::span<uint32_t const> face;
             std::span<Vertex const> vertices;
-            std::span<uint32_t const> indices;
             std::vector<vec3> positions3d;
             std::vector<vec2> positions2d;
             std::vector<uint32_t> prevLocalFaceIndices;
@@ -110,7 +107,7 @@ namespace litl
                 }
             }
 
-            if (reflex > 0)
+            if (reflex >= 0)
             {
                 // We must use the diagonal emenating from the reflex point if one was found.
                 useDiagonal2 = ((reflex & 1) == 0);
@@ -152,8 +149,6 @@ namespace litl
 
             const uint32_t faceIndexCount = static_cast<uint32_t>(context.face.size());
 
-            report.sourceFaceCount++;
-
             context.positions2d.clear();
             context.positions3d.clear();
 
@@ -178,13 +173,8 @@ namespace litl
             if (faceIndexCount == 4u)
             {
                 emitQuad(triangulatedIndices, context.face, context.positions3d, context.positions2d, winding);
-                report.sourceQuadFaceCount += 1;
                 report.resultTriangleFaceCount += 2;
                 return;
-            }
-            else
-            {
-                report.sourceNgonFaceCount++;
             }
 
             // -----------------------------------------------------------------------------
@@ -325,6 +315,7 @@ namespace litl
             triangulatedIndices.push_back(context.face[context.prevLocalFaceIndices[currIndex]]);
             triangulatedIndices.push_back(context.face[currIndex]);
             triangulatedIndices.push_back(context.face[context.nextLocalFaceIndices[currIndex]]);
+
             report.resultTriangleFaceCount++;
         }
 
@@ -335,31 +326,29 @@ namespace litl
             triangulatedIndices.push_back(sourceIndices[firstIndexIndex + 1]);
             triangulatedIndices.push_back(sourceIndices[firstIndexIndex + 2]);
 
-            report.sourceFaceCount++;
-            report.sourceTriangleFaceCount++;
             report.resultTriangleFaceCount++;
         }
-    }
 
-    bool isValidInput(std::span<Vertex const> vertices, std::span<uint32_t const> sourceIndices, std::span<uint32_t const> faceIndexCounts) noexcept
-    {
-        uint32_t sumFaceIndexCounts = 0u;
-        for (auto faceIndexCount : faceIndexCounts) { sumFaceIndexCounts += faceIndexCount; }
-
-        if (sumFaceIndexCounts != static_cast<uint32_t>(sourceIndices.size()))
+        bool isValidInput(std::span<Vertex const> vertices, std::span<uint32_t const> sourceIndices, std::span<uint32_t const> faceIndexCounts) noexcept
         {
-            return false;
-        }
+            uint32_t sumFaceIndexCounts = 0u;
+            for (auto faceIndexCount : faceIndexCounts) { sumFaceIndexCounts += faceIndexCount; }
 
-        for (auto index : sourceIndices)
-        {
-            if (index >= static_cast<uint32_t>(vertices.size()))
+            if (sumFaceIndexCounts != static_cast<uint32_t>(sourceIndices.size()))
             {
                 return false;
             }
-        }
 
-        return true;
+            for (auto index : sourceIndices)
+            {
+                if (index >= static_cast<uint32_t>(vertices.size()))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 
     MeshTriangulationReport triangulateMesh(std::span<Vertex const> vertices, std::span<uint32_t const> sourceIndices, std::vector<uint32_t>& triangulatedIndices, std::span<uint32_t const> faceIndexCounts) noexcept
@@ -380,48 +369,51 @@ namespace litl
         triangulatedIndices.clear();
         triangulatedIndices.reserve(sourceIndices.size());
 
-        std::vector<vec2> ngonScratchVec2d; ngonScratchVec2d.reserve(8u);
-        std::vector<vec3> ngonScratchVec3d; ngonScratchVec3d.reserve(8u);
-
-        uint32_t firstIndexIndex = 0u;
-
-        TriangulatorContext context{
-            .vertices = vertices,
-            .indices = sourceIndices
-        };
-
+        TriangulatorContext context{ .vertices = vertices };
         context.positions3d.reserve(8u);
         context.positions2d.reserve(8u);
         context.prevLocalFaceIndices.reserve(8u);
         context.nextLocalFaceIndices.reserve(8u);
         context.reflex.reserve(8u);
 
+        uint32_t firstIndexIndex = 0u;
+
         for (auto faceIndexCount : faceIndexCounts)
         {
+            report.sourceFaceCount++;
+
             switch (faceIndexCount)
             {
             case 0:
+                report.sourceEmptyFaceCount++;
+                break;
             case 1:
+                report.sourcePointFaceCount++;
+                break;
+
             case 2:
-                report.degenerateCount++;
+                report.sourceLineFaceCount++;
                 break;
 
             case 3:
+                report.sourceTriangleFaceCount++;
                 triangulateTriangle(firstIndexIndex, sourceIndices, triangulatedIndices, report);
                 break;
 
+            case 4:
+                report.sourceQuadFaceCount++;
+                context.face = { sourceIndices.data() + firstIndexIndex, faceIndexCount };
+                triangulateNgon(context, triangulatedIndices, report);
+                break;
+
             default:
+                report.sourceNgonFaceCount++;
                 context.face = { sourceIndices.data() + firstIndexIndex, faceIndexCount };
                 triangulateNgon(context, triangulatedIndices, report);
                 break;
             }
 
             firstIndexIndex += faceIndexCount;
-
-            if (!report.success)
-            {
-                break;
-            }
         }
 
         return report;
