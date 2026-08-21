@@ -2,6 +2,7 @@
 #include <vector>
 
 #include "litl-core/math/geometry/tools/normals.hpp"
+#include "litl-core/math/uncommon.hpp"
 
 namespace litl
 {

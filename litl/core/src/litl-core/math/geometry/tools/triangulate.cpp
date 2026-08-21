@@ -27,17 +27,34 @@ namespace litl
             }
 
             // ----------------------------------------------------------------------------
-            // Project each 3d point onto a 2d plane defined by the face normal
+            // Get the face normal and check for triangle degeneracy
             // ----------------------------------------------------------------------------
 
             const vec3 scaledNormal = ngonFaceNormalScaled(positions3d);
+            const float normalLength2 = scaledNormal.lengthSquared();
 
-            if (scaledNormal.lengthSquared() < Traits<float>::epsilon)
+            vec3 minPoint = positions3d[0];
+            vec3 maxPoint = positions3d[0];
+
+            for (uint32_t i = 1u; i < static_cast<uint32_t>(positions3d.size()); ++i)
+            {
+                minPoint = min(minPoint, positions3d[0]);
+                maxPoint = max(maxPoint, positions3d[1]);
+            }
+
+            const vec3 min2max = (maxPoint - minPoint);
+            const float diagonal2 = dot(min2max, min2max);
+
+            if ((normalLength2 < Traits<float>::epsilon) || (diagonal2 < Traits<float>::epsilon))
             {
                 // Degenerate triangle with area of ~0
                 report.degenerateCount++;
                 return;
             }
+
+            // ----------------------------------------------------------------------------
+            // Project each 3d point onto a 2d plane defined by the face normal
+            // ----------------------------------------------------------------------------
 
             const vec3 normal = scaledNormal.normalized();
 

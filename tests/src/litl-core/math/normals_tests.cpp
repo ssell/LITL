@@ -1,5 +1,5 @@
 #include "tests.hpp"
-#include "litl-core/math/geometry/tools/normals.hpp"
+#include "litl-core/math/uncommon.hpp"
 
 namespace litl::tests
 {

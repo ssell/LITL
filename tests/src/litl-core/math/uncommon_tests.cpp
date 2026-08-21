@@ -1,3 +1,5 @@
+#include <array>
+
 #include "tests.hpp"
 #include "litl-core/math/uncommon.hpp"
 
@@ -31,5 +33,166 @@ namespace litl::tests
         const vec2 point2d = project2d(normal, point, origin);
 
         REQUIRE(point2d == vec2{ 50.0f, 150.0f });
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("polygonSignedArea", "[math::uncommon]")
+    {
+        const std::array<vec2, 4> faceCCW{
+            vec2{ 0.0f, 0.0f },
+            vec2{ 5.0f, 0.0f },
+            vec2{ 5.0f, 5.0f },
+            vec2{ 0.0f, 5.0f }
+        };
+
+        const std::array<vec2, 4> faceCW{
+            vec2{ 0.0f, 0.0f },
+            vec2{ 0.0f, 5.0f },
+            vec2{ 5.0f, 5.0f },
+            vec2{ 5.0f, 0.0f }
+        };
+
+        const float accw = polygonSignedArea(faceCCW);
+        const float acw = polygonSignedArea(faceCW);
+
+        REQUIRE(fequals(accw, 25.0f) == true);
+        REQUIRE(fequals(acw, -25.0f) == true);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("polygonArea 2D", "[math::uncommon]")
+    {
+        const std::array<vec2, 4> faceCCW{
+            vec2{ 0.0f, 0.0f },
+            vec2{ 5.0f, 0.0f },
+            vec2{ 5.0f, 5.0f },
+            vec2{ 0.0f, 5.0f }
+        };
+
+        const std::array<vec2, 4> faceCW{
+            vec2{ 0.0f, 0.0f },
+            vec2{ 0.0f, 5.0f },
+            vec2{ 5.0f, 5.0f },
+            vec2{ 5.0f, 0.0f }
+        };
+
+        const float accw = polygonArea(faceCCW);
+        const float acw = polygonArea(faceCW);
+
+        REQUIRE(fequals(accw, 25.0f) == true);
+        REQUIRE(fequals(acw, 25.0f) == true);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("polygonArea 3D", "[math::uncommon]")
+    {
+        const std::array<vec3, 4> faceCCW{
+            vec3{ 0.0f, 0.0f, 0.0f },
+            vec3{ 5.0f, 0.0f, 0.0f },
+            vec3{ 5.0f, 0.0f, 5.0f },
+            vec3{ 0.0f, 0.0f, 5.0f }
+        };
+
+        const std::array<vec3, 4> faceCW{
+            vec3{ 0.0f, 0.0f, 0.0f },
+            vec3{ 0.0f, 0.0f, 5.0f },
+            vec3{ 5.0f, 0.0f, 5.0f },
+            vec3{ 5.0f, 0.0f, 0.0f }
+        };
+
+        const float accw = polygonArea(faceCCW);
+        const float acw = polygonArea(faceCW);
+
+        REQUIRE(fequals(accw, 25.0f) == true);
+        REQUIRE(fequals(acw, 25.0f) == true);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("isFaceCW 2D", "[math::uncommon]")
+    {
+        const std::array<vec2, 4> faceCCW{
+            vec2{ 0.0f, 0.0f },
+            vec2{ 5.0f, 0.0f },
+            vec2{ 5.0f, 5.0f },
+            vec2{ 0.0f, 5.0f }
+        };
+
+        const std::array<vec2, 4> faceCW{
+            vec2{ 0.0f, 0.0f },
+            vec2{ 0.0f, 5.0f },
+            vec2{ 5.0f, 5.0f },
+            vec2{ 5.0f, 0.0f }
+        };
+
+        const bool ccwCheck = isFaceCW(faceCCW);
+        const bool cwCheck = isFaceCW(faceCW);
+
+        REQUIRE(ccwCheck == false);
+        REQUIRE(cwCheck == true);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("isFaceCCW 2D", "[math::uncommon]")
+    {
+        const std::array<vec2, 4> faceCCW{
+            vec2{ 0.0f, 0.0f },
+            vec2{ 5.0f, 0.0f },
+            vec2{ 5.0f, 5.0f },
+            vec2{ 0.0f, 5.0f }
+        };
+
+        const std::array<vec2, 4> faceCW{
+            vec2{ 0.0f, 0.0f },
+            vec2{ 0.0f, 5.0f },
+            vec2{ 5.0f, 5.0f },
+            vec2{ 5.0f, 0.0f }
+        };
+
+        const bool ccwCheck = isFaceCCW(faceCCW);
+        const bool cwCheck = isFaceCCW(faceCW);
+
+        REQUIRE(ccwCheck == true);
+        REQUIRE(cwCheck == false);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("isFaceCW 3D", "[math::uncommon]")
+    {
+        const std::array<vec3, 4> faceCW{
+            vec3{ 0.0f, 0.0f, 0.0f },
+            vec3{ 0.0f, 5.0f, 0.0f },
+            vec3{ 5.0f, 5.0f, 0.0f },
+            vec3{ 5.0f, 0.0f, 0.0f }
+        };
+
+        const std::array<vec3, 4> faceCCW{
+            vec3{ 0.0f, 0.0f, 0.0f },
+            vec3{ 5.0f, 0.0f, 0.0f },
+            vec3{ 5.0f, 5.0f, 0.0f },
+            vec3{ 0.0f, 5.0f, 0.0f }
+        };
+
+        const bool cwCheck = isFaceCW(faceCW, vec3::forward());
+        const bool ccwCheck = isFaceCW(faceCCW, vec3::forward());
+
+        REQUIRE(cwCheck == true);
+        REQUIRE(ccwCheck == false);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("isFaceCCW 3D", "[math::uncommon]")
+    {
+        const std::array<vec3, 4> faceCW{
+            vec3{ 0.0f, 0.0f, 0.0f },
+            vec3{ 0.0f, 5.0f, 0.0f },
+            vec3{ 5.0f, 5.0f, 0.0f },
+            vec3{ 5.0f, 0.0f, 0.0f }
+        };
+
+        const std::array<vec3, 4> faceCCW{
+            vec3{ 0.0f, 0.0f, 0.0f },
+            vec3{ 5.0f, 0.0f, 0.0f },
+            vec3{ 5.0f, 5.0f, 0.0f },
+            vec3{ 0.0f, 5.0f, 0.0f }
+        };
+
+        const bool cwCheck = isFaceCCW(faceCW, vec3::forward());
+        const bool ccwCheck = isFaceCCW(faceCCW, vec3::forward());
+
+        REQUIRE(cwCheck == false);
+        REQUIRE(ccwCheck == true);
     } LITL_END_TEST_CASE
 }
