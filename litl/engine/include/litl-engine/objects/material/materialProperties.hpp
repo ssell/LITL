@@ -13,7 +13,7 @@ namespace litl
     struct MaterialPropertySlot
     {
         uint32_t lastActiveFrame = 0u;
-        bool active = false;
+        bool occupied = false;
     };
 
     struct MaterialPropertyBlock
@@ -67,6 +67,11 @@ namespace litl
         /// If slot allocation somehow fails, then the uint32 null index will be returned.
         /// </summary>
         [[nodiscard]] uint32_t allocateSlot() noexcept;
+
+        /// <summary>
+        /// Marks the slot active for the frame.
+        /// </summary>
+        void markSlotActive(uint32_t slot, uint32_t frame) noexcept;
 
         /// <summary>
         /// Frees all slots found to be inactive.

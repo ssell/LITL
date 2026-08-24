@@ -7,11 +7,47 @@
 #include <string>
 #include <vector>
 
+#include "litl-core/enumBitFlags.hpp"
 #include "litl-core/stringId.hpp"
 #include "litl-renderer/resources/shaderModule.hpp"
 
 namespace litl
 {
+
+    struct ResourceProperty
+    {
+        /// <summary>
+        /// The underlying variable (int, uint, float, float3, etc.)
+        /// </summary>
+        ShaderVariable variable;
+
+        /// <summary>
+        /// The offset into the resource block to this individual property.
+        /// </summary>
+        uint32_t offset;
+
+        /// <summary>
+        /// The unpadded raw size of the data. If this is a `float` then the size would be 4, if `vec3` then 12, etc.
+        /// </summary>
+        uint32_t size;
+
+        /// <summary>
+        /// The padded size of the data. This depends on the underlying memory layout (std140 vs std430) and neighboring properties.
+        /// For example, a `vec3` could either be 12 or 16 depending on usage.
+        /// </summary>
+        uint32_t sizePadded;
+
+        /// <summary>
+        /// Hashed property name used for indexing.
+        /// </summary>
+        StringId hashedName;
+
+        /// <summary>
+        /// Human readible name used for debugging and diagonostics.
+        /// </summary>
+        std::string name;
+    };
+
     /// <summary>
     /// Describes a single resource bound to one or more shader stages.
     /// In Vulkan these are descriptor bindings.
@@ -44,9 +80,19 @@ namespace litl
         uint32_t sizeBytes;
 
         /// <summary>
+        /// 
+        /// </summary>
+        StringId hashedName;
+
+        /// <summary>
         /// "Camera", "AlbedoTexture", etc.
         /// </summary>
         std::string name;
+
+        /// <summary>
+        /// The individual properties of the resource if it is a typed structure.
+        /// </summary>
+        std::vector<ResourceProperty> properties;
     };
 
     /// <summary>
@@ -56,6 +102,11 @@ namespace litl
     {
         uint32_t offset;
         uint32_t sizeBytes;
+
+        /// <summary>
+        /// The individual properties of the push constant if it is a typed structure.
+        /// </summary>
+        std::vector<ResourceProperty> properties;
     };
 
     /// <summary>
@@ -69,9 +120,9 @@ namespace litl
         uint32_t location;
 
         /// <summary>
-        /// The scalar type (float, uint, etc.)
+        /// The underlying variable (int, uint, float, float3, etc.)
         /// </summary>
-        ShaderScalarType scalarType;
+        ShaderVariable variable;
 
         /// <summary>
         /// Number of scalars in the attribute. For example float vs vec2 vs vec3 vs vec4.
@@ -90,7 +141,15 @@ namespace litl
     struct SpecializationConstant
     {
         uint32_t id;
-        ShaderScalarType scalarType;
+
+        /// <summary>
+        /// The underlying variable (int, uint, float, float3, etc.)
+        /// </summary>
+        ShaderVariable variable;
+
+        /// <summary>
+        /// The plain-text name of the constant.
+        /// </summary>
         std::string name;
     };
 

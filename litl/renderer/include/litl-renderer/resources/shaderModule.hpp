@@ -51,11 +51,87 @@ namespace litl
     /// </summary>
     enum class ShaderScalarType : uint32_t
     {
-        Unknown = 0,
-        Float = 1,
-        Int = 2,
-        Uint = 3,
-        Bool = 4
+        Unknown = 0u,
+        Bool = 1u,
+        Integer = 2u,
+        Float = 3u
+    };
+
+    enum class ShaderVariableFlagBits : uint32_t
+    {
+        Undefined    = 0u,
+        Void         = 1 << 0,
+        Bool         = 1 << 1,
+        Int          = 1 << 2,
+        Float        = 1 << 3,
+        Vector       = 1 << 4,
+        Matrix       = 1 << 5,
+        Image        = 1 << 6,
+        Sampler      = 1 << 7,
+        SampledImage = 1 << 8,
+        Block        = 1 << 9,
+        Acceleration = 1 << 10,
+        Struct       = 1 << 11,
+        Array        = 1 << 12,
+        Ref          = 1 << 13,
+        Unsigned     = 1 << 14
+    };
+
+    LITL_ENABLE_BITMASK(ShaderVariableFlagBits);
+    using ShaderVariableFlag = ShaderVariableFlagBits;
+
+    struct ShaderVariable
+    {
+        static constexpr uint32_t MaxArrayDimensions = 32u;
+
+        /// <summary>
+        /// The base scalar type of the variable.
+        /// For both `float` and `float3` this would be `Float`.
+        /// </summary>
+        ShaderScalarType scalarType = ShaderScalarType::Unknown;
+
+        /// <summary>
+        /// Flags defining the variable.
+        /// For example:
+        /// 
+        ///     Float                  = float
+        ///     Float | Vector         = floatN (float2, float3, float4, etc.)
+        ///     Float | Array          = float[]
+        ///     Float | Vector | Array = floatN[] (float2[], float3[], float4[])
+        /// </summary>
+        ShaderVariableFlag flag = ShaderVariableFlagBits::Undefined;
+
+        /// <summary>
+        /// The byte size of an individual component of the variable type.
+        /// For both `float` and `float3` this would be 4.
+        /// </summary>
+        uint32_t size = 0u;
+
+        /// <summary>
+        /// The number of individual components that make up the variable type.
+        /// For `float` this would be 1, for `float3` this would be 3.
+        /// </summary>
+        uint32_t componentCount = 0u;
+
+        /// <summary>
+        /// The physical byte distance between the start of one matrix column and the next.
+        /// </summary>
+        uint32_t matrixStride = 0u;
+
+        /// <summary>
+        /// The physical byte distance between the start of one array element and the start of the next element.
+        /// </summary>
+        uint32_t arrayStride = 0u;
+
+        /// <summary>
+        /// The number of array dimensions.
+        /// </summary>
+        uint32_t arrayDimensionsCount = 0u;
+
+        /// <summary>
+        /// The logical element count (length) of each dimension in an array.
+        /// </summary>
+        uint32_t arrayDimensions[MaxArrayDimensions];
     };
 
     /// <summary>
