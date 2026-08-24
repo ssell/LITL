@@ -5,8 +5,8 @@ using namespace litl;
 
 void configureSystems(SystemCollection& systems);
 void bootstrap(ServiceProvider& services, EntityCommands& commands);
-void createSpinningTriangle(EntityCommands& commands, MaterialHandle material, MeshHandle mesh, vec3 position, float spinRate);
-MaterialHandle createTriangleMaterial(ObjectPool& objectPool);
+void createSpinningTriangle(EntityCommands& commands, MaterialRef material, MeshHandle mesh, vec3 position, float spinRate);
+MaterialRef createTriangleMaterial(ObjectPool& objectPool);
 MeshHandle createTriangleMesh(ObjectPool& objectPool);
 
 int main()
@@ -58,14 +58,14 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
 /// <summary>
 /// Creates a single spinning triangle at the specified position with the given spin rate.
 /// </summary>
-void createSpinningTriangle(EntityCommands& commands, MaterialHandle material, MeshHandle mesh, vec3 position, float spinRate)
+void createSpinningTriangle(EntityCommands& commands, MaterialRef material, MeshHandle mesh, vec3 position, float spinRate)
 {
     auto triangleEntity = commands.createEntity();      // Note that this is a DeferredEntity. It will be materialized into a true Entity when the commands are processed.
 
     commands.addComponent<Transform>(triangleEntity, Transform::create(position));
     commands.addComponent<LocalBounds>(triangleEntity, LocalBounds{});
     commands.addComponent<WorldBounds>(triangleEntity, WorldBounds{});
-    commands.addComponent<MaterialRef>(triangleEntity, MaterialRef{ .handle = material });
+    commands.addComponent<MaterialRef>(triangleEntity, material);
     commands.addComponent<MeshRef>(triangleEntity, MeshRef{ .handle = mesh });
     commands.addComponent<samples::Spin>(triangleEntity, samples::Spin{ .rate = spinRate });
 }
@@ -83,27 +83,34 @@ namespace
 /// <summary>
 /// Loads the common flat shader and creates a material using it.
 /// </summary>
-MaterialHandle createTriangleMaterial(ObjectPool& objectPool)
+MaterialRef createTriangleMaterial(ObjectPool& objectPool)
 {
     auto spirvBytes = File("assets/shaders/spirv/flat.spv").readAllBytes();
-
-    return objectPool.createMaterial(MaterialDescriptor{
-        .objectInfo = ObjectDescriptor {.name = "Flat" },
-        .inputDescriptor = VertexInputDescriptor {
-            .vertexSize = sizeof(SampleVertex),
-            .attributes = { DataFormat::RGB32_SFloat, DataFormat::RGB32_SFloat, DataFormat::RG32_SFloat }       // pos, color, uv
-        },
-        .vertexShader = ShaderResourceDescriptor {
-            .resource = "flat.spv",
-            .entryPoint = "vertexMain",
-            .bytes = spirvBytes.value()
-        },
-        .fragmentShader = ShaderResourceDescriptor {
-            .resource = "flat.spv",
-            .entryPoint = "fragmentMain",
-            .bytes = spirvBytes.value()
+    auto materialHandle = objectPool.createMaterial(MaterialDescriptor{
+        .objectInfo = ObjectDescriptor {.name = "Flat Material" },
+        .pipelineDescriptor = MaterialPipelineDescriptor {
+            .objectInfo = ObjectDescriptor { .name = "Flat Material Pipeline" },
+            .inputDescriptor = VertexInputDescriptor {
+                .vertexSize = sizeof(SampleVertex),
+                .attributes = { DataFormat::RGB32_SFloat, DataFormat::RGB32_SFloat, DataFormat::RG32_SFloat }       // pos, color, uv
+            },
+            .vertexShader = ShaderResourceDescriptor {
+                .resource = "flat.spv",
+                .entryPoint = "vertexMain",
+                .bytes = spirvBytes.value()
+            },
+            .fragmentShader = ShaderResourceDescriptor {
+                .resource = "flat.spv",
+                .entryPoint = "fragmentMain",
+                .bytes = spirvBytes.value()
+            }
         }
     });
+
+    return MaterialRef{
+        .materialHandle = materialHandle,
+        .pipelineHandle = objectPool.getMaterialPipelineHandle(materialHandle)
+    };
 }
 
 /// <summary>

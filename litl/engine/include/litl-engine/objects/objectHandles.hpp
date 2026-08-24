@@ -14,6 +14,9 @@ namespace litl
     struct MaterialHandleTag {};
     using MaterialHandle = Handle<MaterialHandleTag>;
 
+    struct MaterialPipelineHandleTag {};
+    using MaterialPipelineHandle = Handle<MaterialPipelineHandleTag>;
+
     struct MeshHandleTag {};
     using MeshHandle = Handle<MeshHandleTag>;
 

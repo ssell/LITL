@@ -39,27 +39,35 @@ namespace litl::samples
             }
         };
 
-        MaterialHandle loadMaterial(ObjectPool& objectPool, std::string_view path, std::string_view name, std::string_view resource, std::string_view vertEntry, std::string_view fragEntry) noexcept
+        MaterialRef loadMaterial(ObjectPool& objectPool, std::string_view path, std::string_view name, std::string_view resource, std::string_view vertEntry, std::string_view fragEntry) noexcept
         {
             auto spirvBytes = File(path).readAllBytes();
-
-            return objectPool.createMaterial(MaterialDescriptor{
+            auto materialHandle = objectPool.createMaterial(MaterialDescriptor{
                 .objectInfo = ObjectDescriptor {.name = name.data()},
-                .inputDescriptor = VertexInputDescriptor {
-                    .vertexSize = sizeof(SampleVertex),
-                    .attributes = { DataFormat::RGB32_SFloat, DataFormat::RGB32_SFloat, DataFormat::RG32_SFloat }       // pos, color, uv
-                },
-                .vertexShader = ShaderResourceDescriptor {
-                    .resource = resource.data(),
-                    .entryPoint = vertEntry.data(),
-                    .bytes = spirvBytes.value()
-                },
-                .fragmentShader = ShaderResourceDescriptor {
-                    .resource = resource.data(),
-                    .entryPoint = fragEntry.data(),
-                    .bytes = spirvBytes.value()
+                .pipelineDescriptor = MaterialPipelineDescriptor {
+                    .objectInfo = ObjectDescriptor {.name = name.data()},
+                    .rasterizerState = RasterizationState { .cullMode = CullMode::None },
+                    .inputDescriptor = VertexInputDescriptor {
+                        .vertexSize = sizeof(SampleVertex),
+                        .attributes = { DataFormat::RGB32_SFloat, DataFormat::RGB32_SFloat, DataFormat::RG32_SFloat }       // pos, color, uv
+                    },
+                    .vertexShader = ShaderResourceDescriptor {
+                        .resource = resource.data(),
+                        .entryPoint = vertEntry.data(),
+                        .bytes = spirvBytes.value()
+                    },
+                    .fragmentShader = ShaderResourceDescriptor {
+                        .resource = resource.data(),
+                        .entryPoint = fragEntry.data(),
+                        .bytes = spirvBytes.value()
+                    }
                 }
-                });
+            });
+
+            return MaterialRef{
+                .materialHandle = materialHandle,
+                .pipelineHandle = objectPool.getMaterialPipelineHandle(materialHandle)
+            };
         }
 
         MeshHandle loadMesh(ObjectPool& objectPool, std::span<SampleVertex const> vertices, std::span<uint32_t const> indices, std::string_view name) noexcept
@@ -243,7 +251,7 @@ namespace litl::samples
         commands.addComponent<WorldBounds>(boidEntity, WorldBounds{});
         commands.addComponent<Acceleration>(boidEntity, Acceleration{});
         commands.addComponent<Movement>(boidEntity, Movement{ .velocity = getRandomSpawnDirection(rng) * g_boidSteering.maxSpeed });
-        commands.addComponent<MaterialRef>(boidEntity, MaterialRef{ .handle = m_sharedMaterial });
+        commands.addComponent<MaterialRef>(boidEntity, m_sharedMaterial);
         commands.addComponent<MeshRef>(boidEntity, MeshRef{ .handle = m_boidMesh });
 
         m_boidCount++;
@@ -262,7 +270,7 @@ namespace litl::samples
         commands.addComponent<WorldBounds>(predatorEntity, WorldBounds{});
         commands.addComponent<Acceleration>(predatorEntity, Acceleration{});
         commands.addComponent<Movement>(predatorEntity, Movement{ .velocity = getRandomSpawnDirection(rng) * g_predatorSteering.maxSpeed });
-        commands.addComponent<MaterialRef>(predatorEntity, MaterialRef{ .handle = m_sharedMaterial });
+        commands.addComponent<MaterialRef>(predatorEntity, m_sharedMaterial);
         commands.addComponent<MeshRef>(predatorEntity, MeshRef{ .handle = m_predatorMesh });
 
         m_trackedPredators[m_predatorCount] = position;
@@ -293,7 +301,7 @@ namespace litl::samples
             commands.addComponent<Transform>(foodEntity, Transform::create(position));
             commands.addComponent<LocalBounds>(foodEntity, LocalBounds{});
             commands.addComponent<WorldBounds>(foodEntity, WorldBounds{});
-            commands.addComponent<MaterialRef>(foodEntity, MaterialRef{ .handle = m_sharedMaterial });
+            commands.addComponent<MaterialRef>(foodEntity, m_sharedMaterial);
             commands.addComponent<MeshRef>(foodEntity, MeshRef{ .handle = m_foodMesh });
 
             m_trackedFood[nextIndex].position = position;
