@@ -22,7 +22,7 @@ add_library(litl-engine STATIC
 	"src/ecs/systems/cullingSystem.cpp" 
 	"src/render/renderPass.cpp" 
 	"src/render/renderManager.cpp" 
-	"src/objects/material.cpp" 
+	"src/objects/material/material.cpp" 
 	"src/assets/assetManager.cpp" 
     "src/assets/assetLoadTask.cpp"
 	"src/tasks/taskManager.cpp" 
@@ -32,7 +32,7 @@ add_library(litl-engine STATIC
 	"src/assets/textAsset.cpp" 
 	"src/assets/texture2dAsset.cpp" 
 	"src/assets/meshAsset.cpp" 
-	"src/assets/materialAsset.cpp" "src/objects/materialPipeline.cpp")
+	"src/assets/materialAsset.cpp" "src/objects/material/materialPipeline.cpp")
 
 target_include_directories(litl-engine
 	PUBLIC

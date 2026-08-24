@@ -8,7 +8,7 @@
 #include "litl-core/math/geometry/vertex.hpp"
 #include "litl-engine/objects/objectDescriptor.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
-#include "litl-engine/objects/materialPipeline.hpp"
+#include "litl-engine/objects/material/materialPipeline.hpp"
 #include "litl-renderer/resources/graphicsPipeline.hpp"
 #include "litl-renderer/resources/computePipeline.hpp"
 

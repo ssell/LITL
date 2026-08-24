@@ -1,4 +1,4 @@
-#include "litl-engine/objects/material.hpp"
+#include "litl-engine/objects/material/material.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-renderer/renderer.hpp"
 
@@ -7,6 +7,8 @@ namespace litl
     bool Material::create(Authority<ObjectPool> auth, MaterialDescriptor const& descriptor, Renderer const& renderer, ObjectPool& objectPool) noexcept
     {
         m_pRenderer = &renderer;
+
+        // ... todo try to get materialPipelineHandle first ...
         m_materialPipelineHandle = objectPool.createMaterialPipeline(descriptor.pipelineDescriptor);
 
         return true;
