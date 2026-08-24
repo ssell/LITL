@@ -13,7 +13,6 @@
 
 namespace litl
 {
-
     struct ResourceProperty
     {
         /// <summary>
@@ -96,17 +95,62 @@ namespace litl
     };
 
     /// <summary>
+    /// For push constant properties that are pointers (which our PC properties typically are).
+    /// </summary>
+    struct PushConstantReferenceProperty
+    {
+        /// <summary>
+        /// Offset in bytes in the parent push constant block.
+        /// </summary>
+        uint32_t offset = 0u;
+
+        /// <summary>
+        /// Size in bytes of the reference pointer.
+        /// </summary>
+        uint32_t sizeBytes = 0u;
+
+        /// <summary>
+        /// If the referenced property is an array, this is the stride of an individual element in the array.
+        /// </summary>
+        uint32_t stride = 0u;
+
+        /// <summary>
+        /// Hashed property name used for indexing.
+        /// </summary>
+        StringId hashedName;
+
+        /// <summary>
+        /// Human readible name used for debugging and diagonostics.
+        /// </summary>
+        std::string name;
+
+        std::vector<ResourceProperty> properties;
+    };
+
+    /// <summary>
     /// Used with push constants to send small amounts of data directly to one or more stages.
     /// </summary>
     struct PushConstantRange
     {
+        /// <summary>
+        /// 
+        /// </summary>
         uint32_t offset;
+
+        /// <summary>
+        /// 
+        /// </summary>
         uint32_t sizeBytes;
 
         /// <summary>
-        /// The individual properties of the push constant if it is a typed structure.
+        /// The individual properties of the push constant itself if it is a typed structure.
         /// </summary>
         std::vector<ResourceProperty> properties;
+
+        /// <summary>
+        /// Resource binding information for any reference resources (BDA buffers, etc.)
+        /// </summary>
+        std::vector<PushConstantReferenceProperty> referenceProperties;
     };
 
     /// <summary>

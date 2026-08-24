@@ -4,6 +4,7 @@
 #include <span>
 #include <spirv_reflect.h>
 
+#include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/math/common.hpp"
 #include "litl-renderer/reflection.hpp"
@@ -13,16 +14,198 @@
  * The results of said reflection are then transposed into our common litl::ShaderReflection data structure.
  */
 
+namespace
+{
+    struct SpirvTypeInfo
+    {
+        /// <summary>
+        /// SPIR-V result <id> of the type.
+        /// </summary>
+        uint32_t typeId = 0u;
+
+        /// <summary>
+        /// Byte distance between consecutive elements. 0 = no ArrayStride decoration.
+        /// </summary>
+        uint32_t arrayStride = 0u;
+
+        /// <summary>
+        /// For OpTypePointer, the <id> of the pointee. 0 = not a pointer type.
+        /// </summary>
+        uint32_t pointeeTypeId = 0u;
+    };
+
+    /// <summary>
+    /// Used for SPIR-V ArrayStride recovery.
+    /// 
+    /// SPIRV-Reflect does not surface the ArrayStride decoration for PhysicalStorageBuffer pointer types (traits.array.stride reports 0) so it is read from the module directly.
+    /// 
+    /// The stride is authoritative: it is the exact value the shader uses for `ptr[i]` address arithmetic, so it cannot disagree with what the GPU does. Computing it CPU-side would mean
+    /// reimplementing whichever layout rules the producer applied (Slang names its BDA pointee types `*_natural`, which is neither std140 nor std430).
+    /// </summary>
+    struct SpirvTypeTable
+    {
+        /// <summary>
+        /// Retrieves the SpirvTypeInfo with the given id. Returns null if no match found.
+        /// </summary>
+        [[nodiscard]] SpirvTypeInfo const* find(uint32_t typeId) const noexcept
+        {
+            for (auto const& info : types)
+            {
+                if (info.typeId == typeId)
+                {
+                    return &info;
+                }
+            }
+
+            return nullptr;
+        }
+
+        /// <summary>
+        /// Returns the stride for the type, or 0 if the module does not declare one.
+        /// </summary>
+        [[nodiscard]] uint32_t getArrayStride(uint32_t typeId) const noexcept
+        {
+            auto const* info = find(typeId);
+
+            if (info == nullptr)
+            {
+                return 0u;
+            }
+
+            if (info->arrayStride != 0u)
+            {
+                return info->arrayStride;
+            }
+
+            // In the event the pointee was decorated with the array stride instead of the pointer ...
+            if (info->pointeeTypeId != 0u)
+            {
+                auto const* pointee = find(info->pointeeTypeId);
+
+                if (pointee != nullptr)
+                {
+                    return pointee->arrayStride;
+                }
+            }
+
+            return 0u;
+        }
+
+        [[nodiscard]] static bool buildSpirvTypeTable(std::span<std::byte const> spirvBytes, SpirvTypeTable& table) noexcept
+        {
+            // Opcode / decoration / storage-class constants come from the SPIRV-Headers that SPIRV-Reflect already vendors; spirv_reflect.h pulls in spirv.h transitively.
+            static constexpr size_t HeaderWordCount = 5u;   // magic, version, generator, bound, schema
+
+            if ((spirvBytes.size_bytes() % sizeof(uint32_t)) != 0u)
+            {
+                litl::logError("SPIR-V byte code length is not a multiple of 4.");
+                return false;
+            }
+
+            const size_t moduleWordCount = spirvBytes.size_bytes() / sizeof(uint32_t);
+
+            if (moduleWordCount < HeaderWordCount)
+            {
+                litl::logError("SPIR-V byte code is shorter than the 5-word header.");
+                return false;
+            }
+
+            // The span carries no alignment guarantee, so words are read through memcpy rather than a reinterpret_cast. Clang folds this to a plain load.
+            auto readWord = [spirvBytes](size_t index) noexcept -> uint32_t 
+            {
+                uint32_t value = 0u;
+                std::memcpy(&value, spirvBytes.data() + (index * sizeof(uint32_t)), sizeof(uint32_t));
+                return value;
+            };
+
+            if (readWord(0u) != SpvMagicNumber)
+            {
+                // 0x03022307 would indicate a module of opposing endianness, which is not supported.
+                litl::logError("SPIR-V magic number mismatch.");
+                return false;
+            }
+
+            table.types.reserve(32u);
+            size_t wordIndex = HeaderWordCount;
+
+            while (wordIndex < moduleWordCount)
+            {
+                const uint32_t instruction = readWord(wordIndex);
+                const uint16_t opCode = static_cast<uint16_t>(instruction & 0xFFFFu);
+                const uint16_t instructionWordCount = static_cast<uint16_t>(instruction >> 16u);
+
+                // A zero word count would loop forever; a run-off means the tail is truncated. Everything gathered before this point is still valid, so keep it.
+                if ((instructionWordCount == 0u) || ((wordIndex + instructionWordCount) > moduleWordCount))
+                {
+                    litl::logWarning("SPIR-V instruction stream is malformed at word ", wordIndex);
+                    break;
+                }
+
+                switch (opCode)
+                {
+                case SpvOpDecorate:
+                    // OpDecorate <target-id> <decoration> [literals...]
+                    if ((instructionWordCount >= 4u) && (readWord(wordIndex + 2u) == SpvDecorationArrayStride))
+                    {
+                        spirvTypeEntry(table, readWord(wordIndex + 1u)).arrayStride = readWord(wordIndex + 3u);
+                    }
+                    break;
+
+                case SpvOpTypePointer:
+                    // OpTypePointer <result-id> <storage-class> <pointee-type-id>
+                    // Only PhysicalStorageBuffer pointers are recorded as capturing every pointer type would bloat the table (and the linear scan) for no benefit.
+                    // OpTypeForwardPointer is deliberately ignored: it declares the <id> without a pointee, and the matching OpTypePointer always appears later in the module.
+                    if ((instructionWordCount >= 4u) && (readWord(wordIndex + 2u) == SpvStorageClassPhysicalStorageBuffer))
+                    {
+                        spirvTypeEntry(table, readWord(wordIndex + 1u)).pointeeTypeId = readWord(wordIndex + 3u);
+                    }
+                    break;
+
+                default:
+                    break;
+                }
+
+                wordIndex += instructionWordCount;
+            }
+
+            return true;
+        }
+
+        std::vector<SpirvTypeInfo> types;
+
+    private:
+
+        /// <summary>
+        /// Returns the entry for `typeId`, creating it if absent. 
+        /// Note: the reference is invalidated by the next call, so use it immediately.
+        /// </summary>
+        [[nodiscard]] static SpirvTypeInfo& spirvTypeEntry(SpirvTypeTable& table, uint32_t typeId) noexcept
+        {
+            for (auto& info : table.types)
+            {
+                if (info.typeId == typeId)
+                {
+                    return info;
+                }
+            }
+
+            table.types.push_back(SpirvTypeInfo{ .typeId = typeId });
+
+            return table.types.back();
+        }
+    };
+}
+
 namespace litl
 {
     ShaderResourceType fromSpvReflectResourceType(SpvReflectDescriptorType descriptorType);
     [[nodiscard]] ShaderVariable shaderVariableFromSpvReflectTypeDescription(SpvReflectTypeDescription* type) noexcept;
-    [[nodiscard]] ResourceProperty resourcePropertyFromSpvReflectBlockVariable(SpvReflectBlockVariable& block) noexcept;
+    [[nodiscard]] ResourceProperty resourcePropertyFromSpvReflectBlockVariable(SpvReflectBlockVariable const& block) noexcept;
 
     SpvReflectEntryPoint* selectEntryPoint(const char* entryPoint, SpvReflectShaderModule const* reflectedModule);
     bool reflectShaderStage(EntryPointReflection& litlReflection, SpvReflectEntryPoint const* entryPoint);
     bool reflectResourceBindings(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint);
-    bool reflectPushConstants(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint);
+    bool reflectPushConstants(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint, SpirvTypeTable& spirvTypeTable);
     bool reflectVertexInputs(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint);
     bool reflectFragmentOutputs(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint);
     bool reflectSpecializationConstants(ShaderReflection& litlReflection, SpvReflectShaderModule const* reflectedModule);
@@ -35,7 +218,15 @@ namespace litl
 
         if (reflectionResult != SPV_REFLECT_RESULT_SUCCESS)
         {
-            logError("SPIRV reflection failed with result ", reflectionResult);
+            logError("SPIR-V reflection failed with result ", reflectionResult);
+            return std::nullopt;
+        }
+
+        SpirvTypeTable spirvTypeTable{};
+
+        if (!SpirvTypeTable::buildSpirvTypeTable(spirvByteCode, spirvTypeTable))
+        {
+            logError("SPIR-V type table parse failed.");
             return std::nullopt;
         }
 
@@ -51,16 +242,16 @@ namespace litl
 
             if (reflectShaderStage(entryPointReflection, reflectedSpvEntryPoint) &&
                 reflectResourceBindings(entryPointReflection, &reflectedSpvModule, reflectedSpvEntryPoint) &&
-                reflectPushConstants(entryPointReflection, &reflectedSpvModule, reflectedSpvEntryPoint) &&
+                reflectPushConstants(entryPointReflection, &reflectedSpvModule, reflectedSpvEntryPoint, spirvTypeTable) &&
                 reflectVertexInputs(entryPointReflection, &reflectedSpvModule, reflectedSpvEntryPoint) &&
                 reflectFragmentOutputs(entryPointReflection, &reflectedSpvModule, reflectedSpvEntryPoint) &&
                 reflectComputeInfo(entryPointReflection, &reflectedSpvModule, reflectedSpvEntryPoint))
             {
-                shaderReflection.entryPoints.push_back(entryPointReflection);
+                shaderReflection.entryPoints.push_back(std::move(entryPointReflection));
             }
             else
             {
-                logError("SPIRV reflection failed to find desired entry point ", entryPointReflection.entryPoint);
+                logError("SPIR-V reflection failed to find desired entry point ", entryPointReflection.entryPoint);
             }
         }
 
@@ -69,7 +260,7 @@ namespace litl
 
         if (shaderReflection.entryPoints.size() == 0)
         {
-            logWarning("SPIRV reflection of shader resulted in 0 entry points.");
+            logWarning("SPIR-V reflection of shader resulted in 0 entry points.");
             return std::nullopt;
         }
 
@@ -127,7 +318,7 @@ namespace litl
 
         default:
             litlReflection.stage = ShaderStage::None;
-            logError("SPIRV reflection of unsupported shader stage ", entryPoint->shader_stage);
+            logError("SPIR-V reflection of unsupported shader stage ", entryPoint->shader_stage);
             return false;
         }
 
@@ -136,13 +327,18 @@ namespace litl
 
     bool reflectResourceBindings(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint)
     {
-        uint32_t resourceBindingsCount = 0;
+        uint32_t resourceBindingsCount = 0u;
         auto result = spvReflectEnumerateEntryPointDescriptorBindings(reflectedModule, entryPoint->name, &resourceBindingsCount, nullptr);
 
         if (result != SPV_REFLECT_RESULT_SUCCESS)
         {
-            logError("SPIRV reflection failed to enumerate resource binding count with result ", result);
+            logError("SPIR-V reflection failed to enumerate resource binding count with result ", result);
             return false;
+        }
+
+        if (resourceBindingsCount == 0u)
+        {
+            return true;
         }
 
         // we piggy-back off of vector here to ensure the memory storing the pointers is freed at the end of scope (failure or success)
@@ -151,7 +347,7 @@ namespace litl
 
         if (result != SPV_REFLECT_RESULT_SUCCESS)
         {
-            logError("SPIRV reflection failed to enumerate resource bindings with result ", result);
+            logError("SPIR-V reflection failed to enumerate resource bindings with result ", result);
             return false;
         }
 
@@ -159,7 +355,7 @@ namespace litl
 
         for (uint32_t i = 0; i < resourceBindingsCount; ++i)
         {
-            auto binding = *resourceBindings[i];
+            auto const& binding = *resourceBindings[i];
 
             if (binding.set >= 32u)
             {
@@ -199,15 +395,20 @@ namespace litl
         return true;
     }
 
-    bool reflectPushConstants(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint)
+    bool reflectPushConstants(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint, SpirvTypeTable& spirvTypeTable)
     {
-        uint32_t pushConstantBlocksCount = 0;
+        uint32_t pushConstantBlocksCount = 0u;
         auto result = spvReflectEnumerateEntryPointPushConstantBlocks(reflectedModule, entryPoint->name, &pushConstantBlocksCount, nullptr);
 
         if (result != SPV_REFLECT_RESULT_SUCCESS)
         {
-            logError("SPIRV reflection failed to enumerate push constants block count with result ", result);
+            logError("SPIR-V reflection failed to enumerate push constants block count with result ", result);
             return false;
+        }
+
+        if (pushConstantBlocksCount == 0u)
+        {
+            return true;
         }
 
         std::vector<SpvReflectBlockVariable*> pushConstantBlocks(pushConstantBlocksCount);
@@ -215,7 +416,7 @@ namespace litl
 
         if (result != SPV_REFLECT_RESULT_SUCCESS)
         {
-            logError("SPIRV reflection failed to enumerate push constant blocks with result ", result);
+            logError("SPIR-V reflection failed to enumerate push constant blocks with result ", result);
             return false;
         }
 
@@ -234,9 +435,46 @@ namespace litl
 
             if (pushConstantBlock.member_count > 0)
             {
+                pushConstant.properties.reserve(pushConstantBlock.member_count);
+                pushConstant.referenceProperties.reserve(pushConstantBlock.member_count);
+
                 for (uint32_t j = 0u; j < pushConstantBlock.member_count; ++j)
                 {
-                    pushConstant.properties.push_back(resourcePropertyFromSpvReflectBlockVariable(pushConstantBlock.members[j]));
+                    auto const& pushConstantMember = pushConstantBlock.members[j];
+                    auto pushConstantResource = resourcePropertyFromSpvReflectBlockVariable(pushConstantMember);
+
+                    if (has_any(pushConstantResource.variable.flag, ShaderVariableFlagBits::Ref))
+                    {
+                        const uint32_t stride = (pushConstantMember.type_description != nullptr) ? spirvTypeTable.getArrayStride(pushConstantMember.type_description->id) : 0u;
+
+                        PushConstantReferenceProperty refProperty{
+                            .offset = pushConstantResource.offset,
+                            .sizeBytes = pushConstantResource.sizePadded,
+                            .stride = stride,
+                            .hashedName = pushConstantResource.hashedName,
+                            .name = pushConstantResource.name
+                        };
+
+                        refProperty.properties.reserve(pushConstantMember.member_count);
+
+                        for (uint32_t k = 0u; k < pushConstantMember.member_count; ++k)
+                        {
+                            refProperty.properties.push_back(resourcePropertyFromSpvReflectBlockVariable(pushConstantMember.members[k]));
+                        }
+
+                        uint32_t refPropertiesEnd = 0u;
+
+                        for (auto const& property : refProperty.properties)
+                        {
+                            refPropertiesEnd = litl::max((property.offset + property.size), refPropertiesEnd);
+                        }
+
+                        LITL_ASSERT_MSG(((stride == 0u) || (stride >= refPropertiesEnd)), "Reflected SPIR-V ArrayStride is smaller than the property block that it describes.", false);
+
+                        pushConstant.referenceProperties.push_back(std::move(refProperty));
+                    }
+
+                    pushConstant.properties.push_back(std::move(pushConstantResource));
                 }
             }
         }
@@ -256,7 +494,7 @@ namespace litl
 
         if (result != SPV_REFLECT_RESULT_SUCCESS)
         {
-            logError("SPIRV reflection failed to enumerate input variable count with result ", result);
+            logError("SPIR-V reflection failed to enumerate input variable count with result ", result);
             return false;
         }
 
@@ -265,7 +503,7 @@ namespace litl
 
         if (result != SPV_REFLECT_RESULT_SUCCESS)
         {
-            logError("SPIRV reflection failed to enumerate input variables with result ", result);
+            logError("SPIR-V reflection failed to enumerate input variables with result ", result);
             return false;
         }
 
@@ -273,7 +511,7 @@ namespace litl
 
         for (uint32_t i = 0; i < vertexInputsCount; ++i)
         {
-            auto inputVariable = *inputVariables[i];
+            auto const& inputVariable = *inputVariables[i];
 
             if (inputVariable.built_in != -1)
             {
@@ -305,7 +543,7 @@ namespace litl
 
         if (result != SPV_REFLECT_RESULT_SUCCESS)
         {
-            logError("SPIRV reflection failed to enumerate fragment output variable count with result ", result);
+            logError("SPIR-V reflection failed to enumerate fragment output variable count with result ", result);
             return false;
         }
 
@@ -314,7 +552,7 @@ namespace litl
 
         if (result != SPV_REFLECT_RESULT_SUCCESS)
         {
-            logError("SPIRV reflection failed to enumerate fragment output variables with result ", result);
+            logError("SPIR-V reflection failed to enumerate fragment output variables with result ", result);
             return false;
         }
 
@@ -343,7 +581,7 @@ namespace litl
 
         if (result != SPV_REFLECT_RESULT_SUCCESS)
         {
-            logError("SPIRV reflection failed to enumerate specialization cosntants count with result ", result);
+            logError("SPIR-V reflection failed to enumerate specialization cosntants count with result ", result);
             return false;
         }
 
@@ -352,7 +590,7 @@ namespace litl
 
         if (result != SPV_REFLECT_RESULT_SUCCESS)
         {
-            logError("SPIRV reflection failed to enumerate specialization constants with result ", result);
+            logError("SPIR-V reflection failed to enumerate specialization constants with result ", result);
             return false;
         }
 
@@ -479,7 +717,7 @@ namespace litl
         {
             variable.flag |= ShaderVariableFlagBits::Array;
             variable.arrayStride = type->traits.array.stride;
-            variable.arrayDimensionsCount = min(type->traits.array.dims_count, ShaderVariable::MaxArrayDimensions);
+            variable.arrayDimensionsCount = litl::min(type->traits.array.dims_count, ShaderVariable::MaxArrayDimensions);
 
             for (uint32_t i = 0u; i < variable.arrayDimensionsCount; ++i)
             {
@@ -504,7 +742,7 @@ namespace litl
         return variable;
     }
 
-    ResourceProperty resourcePropertyFromSpvReflectBlockVariable(SpvReflectBlockVariable& block) noexcept
+    ResourceProperty resourcePropertyFromSpvReflectBlockVariable(SpvReflectBlockVariable const& block) noexcept
     {
         auto* name = block.name ? block.name
             : (block.type_description && block.type_description->struct_member_name) ? block.type_description->struct_member_name

@@ -38,6 +38,12 @@ struct RenderInstanceData
     uint materialSlot;
 }
 
+struct MaterialProperties
+{
+    float3 tint;
+    float fade;
+}
+
 // Maps to RenderPushConstants in litl-engine/render/renderStructs.hpp
 struct PushConstants
 {
@@ -45,6 +51,7 @@ struct PushConstants
     PerPassData *passData;
     RenderInstanceData* instanceData;
     float4x4* worldMatrices;
+    MaterialProperties* materialProperties;
 };
 
 [[vk::push_constant]] PushConstants _pc;
@@ -78,12 +85,15 @@ VertexOutput vertexMain(
     VertexOutput output = (VertexOutput)0;
 
     uint gpuIndex = _pc->instanceData[globalInstanceId].gpuIndex;
+    uint matIndex = _pc->instanceData[globalInstanceId].materialSlot;
+    
     float4x4 worldMatrix = _pc->worldMatrices[gpuIndex];
     float4x4 mvpMatrix = mul(_pc->passData->viewProjection, worldMatrix);
+    MaterialProperties matProps = _pc->materialProperties[matIndex];
 
     output.position = mul(mvpMatrix, float4(input.position.xyz, 1.0));
     output.uv = input.uv;
-    output.color = (input.normal + 1.0) * 0.5;      // [-1, 1] to [0, 1]
+    output.color = matProps.fade * (input.normal + 1.0) * 0.5;      // [-1, 1] to [0, 1]
 
     return output;
 }
