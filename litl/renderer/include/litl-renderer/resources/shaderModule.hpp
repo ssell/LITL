@@ -82,7 +82,7 @@ namespace litl
 
     struct ShaderVariable
     {
-        static constexpr uint32_t MaxArrayDimensions = 32u;
+        static constexpr uint32_t MaxArrayDimensions = 4u;
 
         /// <summary>
         /// The base scalar type of the variable.
@@ -130,8 +130,9 @@ namespace litl
 
         /// <summary>
         /// The logical element count (length) of each dimension in an array.
+        /// A value of 0 in a valid index indicates a runtime-sized array.
         /// </summary>
-        uint32_t arrayDimensions[MaxArrayDimensions];
+        uint32_t arrayDimensions[MaxArrayDimensions] = {};
     };
 
     /// <summary>
