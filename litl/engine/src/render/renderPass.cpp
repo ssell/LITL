@@ -5,7 +5,7 @@
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/objects/camera.hpp"
 #include "litl-engine/objects/gpuBuffer.hpp"
-#include "litl-engine/objects/material.hpp"
+#include "litl-engine/objects/material/material.hpp"
 #include "litl-engine/objects/mesh.hpp"
 
 namespace litl
