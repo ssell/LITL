@@ -1,3 +1,5 @@
+#include <array>
+
 #include "litl-core/constants.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-engine/objects/material/materialProperties.hpp"
@@ -17,7 +19,7 @@ namespace litl
 
     void MaterialProperties::allocateBlock() noexcept
     {
-        m_propertyBlocks.emplace_back();
+        m_propertyBlocks.push_back(std::make_unique<MaterialPropertyBlock>());
         auto& newBlock = m_propertyBlocks.back();
 
         newBlock->data.resize(m_slotBytes * SlotsPerBlock, std::byte{ 0 });
@@ -38,7 +40,7 @@ namespace litl
 
         for (localSlotIndex = 0u; localSlotIndex < MaterialProperties::SlotsPerBlock; ++localSlotIndex)
         {
-            if (!slots[localSlotIndex].active)
+            if (!slots[localSlotIndex].occupied)
             {
                 break;
             }
@@ -50,7 +52,7 @@ namespace litl
             return false;
         }
 
-        slots[localSlotIndex].active = true;
+        slots[localSlotIndex].occupied = true;
         vacantSlotCount = (vacantSlotCount == 0u ? 0u : (vacantSlotCount - 1u));
 
         return true;
@@ -74,13 +76,23 @@ namespace litl
         if (m_propertyBlocks.back()->acquireSlot(localSlotIndex))
         {
             m_vacantSlotCount = (m_vacantSlotCount == 0u ? 0u : m_vacantSlotCount - 1u);
-            return ((SlotsPerBlock * static_cast<uint32_t>(m_propertyBlocks.size())) + localSlotIndex);
+            return ((SlotsPerBlock * static_cast<uint32_t>(m_propertyBlocks.size() - 1)) + localSlotIndex);
         }
         else
         {
             // This shouldn't be possible, but log just in case ...
             logWarning("Failed to acquire new material slot.");
             return Constants::uint32_null_index;
+        }
+    }
+
+    void MaterialProperties::markSlotActive(uint32_t slot, uint32_t frame) noexcept
+    {
+        uint32_t blockIndex, localSlotIndex;
+        
+        if (getBlockLocalSlot(slot, blockIndex, localSlotIndex))
+        {
+            m_propertyBlocks[blockIndex]->slots[localSlotIndex].lastActiveFrame = frame;
         }
     }
 
@@ -96,9 +108,9 @@ namespace litl
                 for (auto& slot : block->slots)
                 {
                     // If the slot is labelled active but hasn't been used, then mark it as vacant so it can be reused.
-                    if (slot.active && (slot.lastActiveFrame < frame))
+                    if (slot.occupied && (slot.lastActiveFrame < frame))
                     {
-                        slot.active = false;
+                        slot.occupied = false;
                         block->vacantSlotCount++;
                         m_vacantSlotCount++;
                     }
@@ -154,7 +166,10 @@ namespace litl
 
     bool MaterialProperties::setBool(StringId property, bool value, uint32_t slot) noexcept
     {
-        return setData(property, static_cast<uint32_t>(sizeof(bool)), &value, slot);
+        // bool on the cpu is 1 byte, but on the gpu it is 4 bytes.
+        std::array<uint8_t, 4> fullsize{ uint8_t{ 0 }, uint8_t{ 0 }, uint8_t{ 0 }, uint8_t{ 0 } };
+        fullsize[0] = (value ? uint8_t{ 1 } : uint8_t{ 0 });
+        return setData(property, 4u, fullsize.data(), slot);
     }
 
     bool MaterialProperties::setInt32(StringId property, int32_t value, uint32_t slot) noexcept

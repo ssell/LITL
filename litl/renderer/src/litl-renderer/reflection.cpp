@@ -4,8 +4,8 @@
 #include <span>
 #include <spirv_reflect.h>
 
-#include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
+#include "litl-core/math/common.hpp"
 #include "litl-renderer/reflection.hpp"
 
 /**
@@ -16,8 +16,8 @@
 namespace litl
 {
     ShaderResourceType fromSpvReflectResourceType(SpvReflectDescriptorType descriptorType);
-    void reflectIntoInputOutputVariable(ShaderInputOutputVariable* inputOutputVariable, SpvReflectInterfaceVariable* interfaceVariable);
-    ShaderScalarType fromSpvReflectTypeFlagBits(uint32_t typeFlag);
+    [[nodiscard]] ShaderVariable shaderVariableFromSpvReflectTypeDescription(SpvReflectTypeDescription* type) noexcept;
+    [[nodiscard]] ResourceProperty resourcePropertyFromSpvReflectBlockVariable(SpvReflectBlockVariable& block) noexcept;
 
     SpvReflectEntryPoint* selectEntryPoint(const char* entryPoint, SpvReflectShaderModule const* reflectedModule);
     bool reflectShaderStage(EntryPointReflection& litlReflection, SpvReflectEntryPoint const* entryPoint);
@@ -169,14 +169,31 @@ namespace litl
                 return false;
             }
 
-            litlReflection.resources.push_back(ResourceBinding{
-                    .type = fromSpvReflectResourceType(binding.descriptor_type),
-                    .set = binding.set,
-                    .binding = binding.binding,
-                    .arraySize = binding.count,
-                    .sizeBytes = binding.block.size,
-                    .name = binding.name
-                });
+            ResourceBinding newResourceBinding{
+                .type = fromSpvReflectResourceType(binding.descriptor_type),
+                .set = binding.set,
+                .binding = binding.binding,
+                .arraySize = binding.count,
+                .sizeBytes = binding.block.size,
+                .name = (binding.name != nullptr ? binding.name : "")
+            };
+
+            if (!newResourceBinding.name.empty())
+            {
+                newResourceBinding.hashedName = StringId(newResourceBinding.name);
+            }
+
+            litlReflection.resources.push_back(newResourceBinding);
+
+            auto& resourceBinding = litlReflection.resources.back();
+
+            if (binding.block.member_count > 0)
+            {
+                for (uint32_t j = 0u; j < binding.block.member_count; ++j)
+                {
+                    resourceBinding.properties.push_back(resourcePropertyFromSpvReflectBlockVariable(binding.block.members[j]));
+                }
+            }
         }
 
         return true;
@@ -209,9 +226,19 @@ namespace litl
             auto pushConstantBlock = *pushConstantBlocks[i];
 
             litlReflection.pushConstants.push_back(PushConstantRange{
-                    .offset = pushConstantBlock.offset,
-                    .sizeBytes = pushConstantBlock.size
-                });
+                .offset = pushConstantBlock.offset,
+                .sizeBytes = pushConstantBlock.size
+            });
+
+            auto& pushConstant = litlReflection.pushConstants.back();
+
+            if (pushConstantBlock.member_count > 0)
+            {
+                for (uint32_t j = 0u; j < pushConstantBlock.member_count; ++j)
+                {
+                    pushConstant.properties.push_back(resourcePropertyFromSpvReflectBlockVariable(pushConstantBlock.members[j]));
+                }
+            }
         }
 
         return true;
@@ -248,12 +275,19 @@ namespace litl
         {
             auto inputVariable = *inputVariables[i];
 
-            litlReflection.vertexInputs.push_back(ShaderInputOutputVariable{
-                    .location = inputVariable.location,
-                    .name = (inputVariable.name != nullptr ? inputVariable.name : "")
-                });
+            if (inputVariable.built_in != -1)
+            {
+                // Skip built-in attributes (SV_Position, etc.)
+                continue;
+            }
 
-            reflectIntoInputOutputVariable(&litlReflection.vertexInputs[i], &inputVariable);
+            ShaderInputOutputVariable inoutVariable{
+                .location = inputVariable.location,
+                .variable = shaderVariableFromSpvReflectTypeDescription(inputVariable.type_description),
+                .name = (inputVariable.name != nullptr ? inputVariable.name : "")
+            };
+
+            litlReflection.vertexInputs.push_back(inoutVariable);
         }
 
         return true;
@@ -290,12 +324,13 @@ namespace litl
         {
             auto outputVariable = *outputVariables[i];
 
-            litlReflection.fragmentOutputs.push_back(ShaderInputOutputVariable{
-                    .location = outputVariable.location,
-                    .name = (outputVariable.name != nullptr ? outputVariable.name : "")
-                });
+            ShaderInputOutputVariable inoutVariable{
+                .location = outputVariable.location,
+                .variable = shaderVariableFromSpvReflectTypeDescription(outputVariable.type_description),
+                .name = (outputVariable.name != nullptr ? outputVariable.name : "")
+            };
 
-            reflectIntoInputOutputVariable(&litlReflection.fragmentOutputs[i], &outputVariable);
+            litlReflection.fragmentOutputs.push_back(inoutVariable);
         }
 
         return true;
@@ -327,11 +362,13 @@ namespace litl
         {
             auto constant = *constants[i];
 
-            litlReflection.specializationConstants.push_back(SpecializationConstant{
-                    .id = constant.constant_id,
-                    .scalarType = fromSpvReflectTypeFlagBits(constant.type_description->type_flags),
-                    .name = (constant.name != nullptr ? constant.name : "")
-                });
+            SpecializationConstant specConstant{ 
+                .id = constant.constant_id,
+                .variable = shaderVariableFromSpvReflectTypeDescription(constant.type_description),
+                .name = (constant.name != nullptr ? constant.name : "") 
+            };
+
+            litlReflection.specializationConstants.push_back(specConstant);
         }
 
         return true;
@@ -388,180 +425,104 @@ namespace litl
         }
     }
 
-    void reflectIntoInputOutputVariable(ShaderInputOutputVariable* inputOutputVariable, SpvReflectInterfaceVariable* interfaceVariable)
+    ShaderVariable shaderVariableFromSpvReflectTypeDescription(SpvReflectTypeDescription* type) noexcept
     {
-        switch (interfaceVariable->format)
-        {
-        case SPV_REFLECT_FORMAT_UNDEFINED:
-            inputOutputVariable->scalarType = ShaderScalarType::Unknown;
-            inputOutputVariable->componentCount = 1;
-            break;
-        case SPV_REFLECT_FORMAT_R16_UINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Uint;
-            inputOutputVariable->componentCount = 1;
-            break;
-        case SPV_REFLECT_FORMAT_R16_SINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Int;
-            inputOutputVariable->componentCount = 1;
-            break;
-        case SPV_REFLECT_FORMAT_R16_SFLOAT:
-            inputOutputVariable->scalarType = ShaderScalarType::Float;
-            inputOutputVariable->componentCount = 1;
-            break;
-        case SPV_REFLECT_FORMAT_R16G16_UINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Uint;
-            inputOutputVariable->componentCount = 2;
-            break;
-        case SPV_REFLECT_FORMAT_R16G16_SINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Int;
-            inputOutputVariable->componentCount = 2;
-            break;
-        case SPV_REFLECT_FORMAT_R16G16_SFLOAT:
-            inputOutputVariable->scalarType = ShaderScalarType::Float;
-            inputOutputVariable->componentCount = 2;
-            break;
-        case SPV_REFLECT_FORMAT_R16G16B16_UINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Uint;
-            inputOutputVariable->componentCount = 3;
-            break;
-        case SPV_REFLECT_FORMAT_R16G16B16_SINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Int;
-            inputOutputVariable->componentCount = 3;
-            break;
-        case SPV_REFLECT_FORMAT_R16G16B16_SFLOAT:
-            inputOutputVariable->scalarType = ShaderScalarType::Float;
-            inputOutputVariable->componentCount = 3;
-            break;
-        case SPV_REFLECT_FORMAT_R16G16B16A16_UINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Uint;
-            inputOutputVariable->componentCount = 4;
-            break;
-        case SPV_REFLECT_FORMAT_R16G16B16A16_SINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Int;
-            inputOutputVariable->componentCount = 4;
-            break;
-        case SPV_REFLECT_FORMAT_R16G16B16A16_SFLOAT:
-            inputOutputVariable->scalarType = ShaderScalarType::Float;
-            inputOutputVariable->componentCount = 4;
-            break;
-        case SPV_REFLECT_FORMAT_R32_UINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Uint;
-            inputOutputVariable->componentCount = 1;
-            break;
-        case SPV_REFLECT_FORMAT_R32_SINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Int;
-            inputOutputVariable->componentCount = 1;
-            break;
-        case SPV_REFLECT_FORMAT_R32_SFLOAT:
-            inputOutputVariable->scalarType = ShaderScalarType::Float;
-            inputOutputVariable->componentCount = 1;
-            break;
-        case SPV_REFLECT_FORMAT_R32G32_UINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Uint;
-            inputOutputVariable->componentCount = 2;
-            break;
-        case SPV_REFLECT_FORMAT_R32G32_SINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Int;
-            inputOutputVariable->componentCount = 2;
-            break;
-        case SPV_REFLECT_FORMAT_R32G32_SFLOAT:
-            inputOutputVariable->scalarType = ShaderScalarType::Float;
-            inputOutputVariable->componentCount = 2;
-            break;
-        case SPV_REFLECT_FORMAT_R32G32B32_UINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Uint;
-            inputOutputVariable->componentCount = 3;
-            break;
-        case SPV_REFLECT_FORMAT_R32G32B32_SINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Int;
-            inputOutputVariable->componentCount = 3;
-            break;
-        case SPV_REFLECT_FORMAT_R32G32B32_SFLOAT:
-            inputOutputVariable->scalarType = ShaderScalarType::Float;
-            inputOutputVariable->componentCount = 3;
-            break;
-        case SPV_REFLECT_FORMAT_R32G32B32A32_UINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Uint;
-            inputOutputVariable->componentCount = 4;
-            break;
-        case SPV_REFLECT_FORMAT_R32G32B32A32_SINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Int;
-            inputOutputVariable->componentCount = 4;
-            break;
-        case SPV_REFLECT_FORMAT_R32G32B32A32_SFLOAT:
-            inputOutputVariable->scalarType = ShaderScalarType::Float;
-            inputOutputVariable->componentCount = 4;
-            break;
-        case SPV_REFLECT_FORMAT_R64_UINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Uint;
-            inputOutputVariable->componentCount = 1;
-            break;
-        case SPV_REFLECT_FORMAT_R64_SINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Int;
-            inputOutputVariable->componentCount = 1;
-            break;
-        case SPV_REFLECT_FORMAT_R64_SFLOAT:
-            inputOutputVariable->scalarType = ShaderScalarType::Float;
-            inputOutputVariable->componentCount = 1;
-            break;
-        case SPV_REFLECT_FORMAT_R64G64_UINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Uint;
-            inputOutputVariable->componentCount = 2;
-            break;
-        case SPV_REFLECT_FORMAT_R64G64_SINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Int;
-            inputOutputVariable->componentCount = 2;
-            break;
-        case SPV_REFLECT_FORMAT_R64G64_SFLOAT:
-            inputOutputVariable->scalarType = ShaderScalarType::Float;
-            inputOutputVariable->componentCount = 2;
-            break;
-        case SPV_REFLECT_FORMAT_R64G64B64_UINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Uint;
-            inputOutputVariable->componentCount = 3;
-            break;
-        case SPV_REFLECT_FORMAT_R64G64B64_SINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Int;
-            inputOutputVariable->componentCount = 3;
-            break;
-        case SPV_REFLECT_FORMAT_R64G64B64_SFLOAT:
-            inputOutputVariable->scalarType = ShaderScalarType::Float;
-            inputOutputVariable->componentCount = 3;
-            break;
-        case SPV_REFLECT_FORMAT_R64G64B64A64_UINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Uint;
-            inputOutputVariable->componentCount = 4;
-            break;
-        case SPV_REFLECT_FORMAT_R64G64B64A64_SINT:
-            inputOutputVariable->scalarType = ShaderScalarType::Int;
-            inputOutputVariable->componentCount = 4;
-            break;
-        case SPV_REFLECT_FORMAT_R64G64B64A64_SFLOAT:
-            inputOutputVariable->scalarType = ShaderScalarType::Float;
-            inputOutputVariable->componentCount = 4;
-            break;
+        ShaderVariable variable{};
 
-        default:
-            logWarning("Unhandled SPIR-V input/output variable format: ", static_cast<uint32_t>(interfaceVariable->format));
-            break;
+        if (type == nullptr)
+        {
+            return variable;
         }
+
+        if (type->type_flags & SPV_REFLECT_TYPE_FLAG_BOOL)
+        {
+            variable.scalarType = ShaderScalarType::Bool;
+            variable.componentCount = 1u;
+            variable.flag |= ShaderVariableFlagBits::Bool;
+            variable.size = (type->traits.numeric.scalar.width == 0u ? 32u : type->traits.numeric.scalar.width);
+        }
+        else if (type->type_flags & SPV_REFLECT_TYPE_FLAG_INT)
+        {
+            variable.scalarType = ShaderScalarType::Integer;
+            variable.componentCount = 1u;
+            variable.flag |= ShaderVariableFlagBits::Int;
+            variable.size = type->traits.numeric.scalar.width;
+
+            if (type->traits.numeric.scalar.signedness == 0u)
+            {
+                variable.flag |= ShaderVariableFlagBits::Unsigned;
+            }
+
+        }
+        else if (type->type_flags & SPV_REFLECT_TYPE_FLAG_FLOAT)
+        {
+            variable.scalarType = ShaderScalarType::Float;
+            variable.componentCount = 1u;
+            variable.flag |= ShaderVariableFlagBits::Float;
+            variable.size = type->traits.numeric.scalar.width;
+        }
+
+        if (type->type_flags & SPV_REFLECT_TYPE_FLAG_VECTOR)
+        {
+            variable.flag |= ShaderVariableFlagBits::Vector;
+            variable.componentCount = type->traits.numeric.vector.component_count;
+        }
+        
+        if (type->type_flags & SPV_REFLECT_TYPE_FLAG_MATRIX)
+        {
+            variable.flag |= ShaderVariableFlagBits::Matrix;
+            variable.componentCount = type->traits.numeric.matrix.column_count * type->traits.numeric.matrix.row_count;
+            variable.matrixStride = type->traits.numeric.matrix.stride;
+        }
+
+        if (type->type_flags & SPV_REFLECT_TYPE_FLAG_ARRAY)
+        {
+            variable.flag |= ShaderVariableFlagBits::Array;
+            variable.arrayStride = type->traits.array.stride;
+            variable.arrayDimensionsCount = min(type->traits.array.dims_count, ShaderVariable::MaxArrayDimensions);
+
+            for (uint32_t i = 0u; i < variable.arrayDimensionsCount; ++i)
+            {
+                variable.arrayDimensions[i] = type->traits.array.dims[i];
+            }
+        }
+
+        if (type->type_flags & SPV_REFLECT_TYPE_FLAG_VOID) { variable.flag |= ShaderVariableFlagBits::Void; }
+        if (type->type_flags & SPV_REFLECT_TYPE_FLAG_EXTERNAL_IMAGE) { variable.flag |= ShaderVariableFlagBits::Image; }
+        if (type->type_flags & SPV_REFLECT_TYPE_FLAG_EXTERNAL_SAMPLER) { variable.flag |= ShaderVariableFlagBits::Sampler; }
+        if (type->type_flags & SPV_REFLECT_TYPE_FLAG_EXTERNAL_SAMPLED_IMAGE) { variable.flag |= ShaderVariableFlagBits::SampledImage; }
+        if (type->type_flags & SPV_REFLECT_TYPE_FLAG_EXTERNAL_BLOCK) { variable.flag |= ShaderVariableFlagBits::Block; }
+        if (type->type_flags & SPV_REFLECT_TYPE_FLAG_EXTERNAL_ACCELERATION_STRUCTURE) { variable.flag |= ShaderVariableFlagBits::Acceleration; }
+        if (type->type_flags & SPV_REFLECT_TYPE_FLAG_STRUCT) { variable.flag |= ShaderVariableFlagBits::Struct; }
+        if (type->type_flags & SPV_REFLECT_TYPE_FLAG_REF) { variable.flag |= ShaderVariableFlagBits::Ref; }
+
+        if (variable.size > 0u)
+        {
+            variable.size /= 8u;        // .width is given in bits not bytes
+        }
+
+        return variable;
     }
 
-    ShaderScalarType fromSpvReflectTypeFlagBits(uint32_t typeFlag)
+    ResourceProperty resourcePropertyFromSpvReflectBlockVariable(SpvReflectBlockVariable& block) noexcept
     {
-        if (typeFlag & SPV_REFLECT_TYPE_FLAG_BOOL)
+        auto* name = block.name ? block.name
+            : (block.type_description && block.type_description->struct_member_name) ? block.type_description->struct_member_name
+            : nullptr;
+
+        ResourceProperty property{
+            .variable = shaderVariableFromSpvReflectTypeDescription(block.type_description),
+            .offset = block.absolute_offset,
+            .size = block.size,
+            .sizePadded = block.padded_size,
+            .name = (name != nullptr ? name : "")
+        };
+
+        if (!property.name.empty())
         {
-            return ShaderScalarType::Bool;
-        }
-        else if (typeFlag & SPV_REFLECT_TYPE_FLAG_INT)
-        {
-            return ShaderScalarType::Int;
-        }
-        else if (typeFlag & SPV_REFLECT_TYPE_FLAG_FLOAT)
-        {
-            return ShaderScalarType::Float;
+            property.hashedName = StringId(property.name);
         }
 
-        return ShaderScalarType::Unknown;
+        return property;
     }
 }
