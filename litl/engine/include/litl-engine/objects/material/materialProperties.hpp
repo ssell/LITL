@@ -1,6 +1,9 @@
 #ifndef LITL_ENGINE_OBJECTS_MATERIAL_PROPERTIES_H__
 #define LITL_ENGINE_OBJECTS_MATERIAL_PROPERTIES_H__
 
+#include "litl-core/stringId.hpp"
+#include "litl-core/math/types.hpp"
+
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -25,12 +28,17 @@ namespace litl
         /// The frame each slot was last active during.
         /// Used to detect inactive slots that can be cleared.
         /// </summary>
-        std::vector<MaterialPropertySlot> slotLastActive;
+        std::vector<MaterialPropertySlot> slots;
 
         /// <summary>
         /// The number of vacant slots in the block.
         /// </summary>
         uint32_t vacantSlotCount = 0u;
+
+        /// <summary>
+        /// The number of slots marked active this past frame.
+        /// </summary>
+        uint32_t activeSlotCount = 0u;
 
         /// <summary>
         /// Set to true if there has been a data chance to the block and its contents need to copied to the GPU.
@@ -61,10 +69,25 @@ namespace litl
         [[nodiscard]] uint32_t allocateSlot() noexcept;
 
         /// <summary>
+        /// Frees all slots found to be inactive.
+        /// </summary>
+        void freeSlots(uint32_t frame) noexcept;
+
+        /// <summary>
         /// Total bytes required to store all slots across all blocks. Used to determine if the GPU buffer needs to be resized.
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] size_t totalMemoryRequirements() const noexcept;
+
+        bool setBool(StringId property, bool value, uint32_t slot) noexcept;
+        bool setInt32(StringId property, int32_t value, uint32_t slot) noexcept;
+        bool setUint32(StringId property, uint32_t value, uint32_t slot) noexcept;
+        bool setFloat(StringId property, float value, uint32_t slot) noexcept;
+        bool setVec2(StringId property, vec2 value, uint32_t slot) noexcept;
+        bool setVec3(StringId property, vec3 value, uint32_t slot) noexcept;
+        bool setVec4(StringId property, vec4 const& value, uint32_t slot) noexcept;
+        bool setMat3(StringId property, mat3 const& value, uint32_t slot) noexcept;
+        bool setMat4(StringId property, mat4 const& value, uint32_t slot) noexcept;
 
     private:
 
@@ -73,6 +96,15 @@ namespace litl
         /// </summary>
         void allocateBlock() noexcept;
 
+        /// <summary>
+        /// Given a global slot index, resolves it to a block index and local slot index into the block.
+        /// May return false if the global index is out-of-bounds.
+        /// </summary>
+        [[nodiscard]] bool getBlockLocalSlot(uint32_t slot, uint32_t& blockIndex, uint32_t& localSlot) const noexcept;
+
+        bool setData(StringId property, uint32_t propertyBytes, void* propertyData, uint32_t slot) noexcept;
+
+        StringIdMap<uint32_t> m_propertyOffsets;
         std::vector<std::unique_ptr<MaterialPropertyBlock>> m_propertyBlocks;
         uint32_t m_slotBytes = 0u;
         uint32_t m_vacantSlotCount = 0u;
