@@ -101,9 +101,9 @@ namespace litl::samples
         std::chrono::steady_clock::time_point m_lastTick;
 
         /// <summary>
-        /// The shared material used by all.
+        /// The shared material pipeline used by all.
         /// </summary>
-        MaterialHandle m_sharedMaterial{};
+        MaterialRef m_sharedMaterial{};
 
         /// <summary>
         /// The mesh used by boids.

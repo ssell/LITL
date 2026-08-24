@@ -8,7 +8,8 @@ namespace litl
 {
     struct MaterialRef
     {
-        MaterialHandle handle;
+        MaterialHandle materialHandle;
+        MaterialPipelineHandle pipelineHandle;
     };
 }
 

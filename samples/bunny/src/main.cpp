@@ -3,7 +3,7 @@
 using namespace litl;
 
 void bootstrap(ServiceProvider& services, EntityCommands& commands);
-MaterialHandle createPlaceholderMaterial(ObjectPool& objectPool);
+MaterialRef createPlaceholderMaterial(ObjectPool& objectPool);
 
 int main()
 {
@@ -47,26 +47,34 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     commands.addComponent<Transform>(bunnyEntity, Transform::create(bunnyPos));
     commands.addComponent<LocalBounds>(bunnyEntity, LocalBounds{});     // todo these need to come from the mesh ...
     commands.addComponent<WorldBounds>(bunnyEntity, WorldBounds{});
-    commands.addComponent<MaterialRef>(bunnyEntity, MaterialRef{ .handle = bunnyMaterial });
+    commands.addComponent<MaterialRef>(bunnyEntity, bunnyMaterial);
     commands.addComponent<MeshRef>(bunnyEntity, MeshRef{ .handle = bunnyMesh->handle });
 }
 
-MaterialHandle createPlaceholderMaterial(ObjectPool& objectPool)
+MaterialRef createPlaceholderMaterial(ObjectPool& objectPool)
 {
     // ... todo this will eventually be defined by a material asset ...
     auto spirvBytes = File("assets/shaders/spirv/test.spv").readAllBytes();
 
-    return objectPool.createMaterial(MaterialDescriptor{
-        .objectInfo = ObjectDescriptor { .name = "Test" },
-        .vertexShader = ShaderResourceDescriptor {
-            .resource = "test.spv",
-            .entryPoint = "vertexMain",
-            .bytes = spirvBytes.value()
-        },
-        .fragmentShader = ShaderResourceDescriptor {
-            .resource = "test.spv",
-            .entryPoint = "fragmentMain",
-            .bytes = spirvBytes.value()
+    auto materialHandle = objectPool.createMaterial(MaterialDescriptor{
+        .objectInfo = ObjectDescriptor {.name = "Test Material" },
+        .pipelineDescriptor = MaterialPipelineDescriptor {
+            .objectInfo = ObjectDescriptor {.name = "Test Material Pipeline" },
+            .vertexShader = ShaderResourceDescriptor {
+                .resource = "test.spv",
+                .entryPoint = "vertexMain",
+                .bytes = spirvBytes.value()
+            },
+            .fragmentShader = ShaderResourceDescriptor {
+                .resource = "test.spv",
+                .entryPoint = "fragmentMain",
+                .bytes = spirvBytes.value()
+            }
         }
     });
+
+    return MaterialRef{
+        .materialHandle = materialHandle,
+        .pipelineHandle = objectPool.getMaterialPipelineHandle(materialHandle)
+    };
 }

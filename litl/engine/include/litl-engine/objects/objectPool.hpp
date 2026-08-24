@@ -7,6 +7,7 @@
 #include "litl-engine/objects/camera.hpp"
 #include "litl-engine/objects/gpuBuffer.hpp"
 #include "litl-engine/objects/material.hpp"
+#include "litl-engine/objects/materialPipeline.hpp"
 #include "litl-engine/objects/mesh.hpp"
 #include "litl-engine/objects/text.hpp"
 #include "litl-engine/objects/texture2d.hpp"
@@ -48,6 +49,13 @@ namespace litl
         void destroyMaterial(MaterialHandle handle) noexcept;
         void deferDestroyMaterial(MaterialHandle handle) noexcept;
 
+        [[nodiscard]] MaterialPipelineHandle createMaterialPipeline(MaterialPipelineDescriptor const& descriptor) noexcept;
+        [[nodiscard]] MaterialPipeline* getMaterialPipeline(MaterialPipelineHandle handle) noexcept;
+        [[nodiscard]] MaterialPipelineHandle getMaterialPipelineHandle(MaterialHandle handle) noexcept;
+        void getAllMaterialPipelineHandles(std::vector<MaterialPipelineHandle>& handles) const noexcept;
+        void destroyMaterialPipeline(MaterialPipelineHandle handle) noexcept;
+        void deferDestroyMaterialPipeline(MaterialPipelineHandle handle) noexcept;
+
         [[nodiscard]] MeshHandle reserveMesh(Authority<AssetManager> auth, ObjectDescriptor const& descriptor) noexcept;
         [[nodiscard]] MeshHandle createMesh(MeshDescriptor const& descriptor) noexcept;
         [[nodiscard]] Mesh* getMesh(MeshHandle handle) noexcept;
@@ -72,7 +80,7 @@ namespace litl
     private:
 
         struct Impl;
-        ImplPtr<Impl, 512> m_impl;
+        ImplPtr<Impl, 768> m_impl;
     };
 }
 
