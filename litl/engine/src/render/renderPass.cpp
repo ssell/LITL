@@ -20,6 +20,7 @@ namespace litl
         struct DrawListItem
         {
             MaterialHandle materialHandle{};
+            Material* material{ nullptr };
             GraphicsPipelineHandle graphicsPipelineHandle{};
             MeshHandle meshHandle{};
             Mesh* mesh{};
@@ -39,7 +40,7 @@ namespace litl
             this->objectPool = &objectPool;
         }
 
-        void render(CommandBufferHandle frameCommandBuffer, RenderPushConstants const& pushConstants, Camera& camera, std::vector<RenderableEntity> const& entities) noexcept
+        void render(CommandBufferHandle frameCommandBuffer, RenderPushConstants pushConstants, Camera& camera, std::vector<RenderableEntity> const& entities) noexcept
         {
             // --- Begin renderin
 
@@ -124,6 +125,12 @@ namespace litl
 
                         if (pushConstantStages != ShaderStage::None)
                         {
+                            if (drawListItem.material != nullptr)
+                            {
+                                const auto materialPropsBda = drawListItem.material->getGraphicsBufferDeviceAddress();
+                                pushConstants.materialPropertiesAddr = materialPropsBda.has_value() ? materialPropsBda.value() : 0ull;
+                            }
+
                             renderer->cmdPushConstants(
                                 frameCommandBuffer,
                                 ShaderStage::All,
@@ -173,6 +180,7 @@ namespace litl
 
             return DrawListItem{
                 .materialHandle = entity.material.handle,
+                .material = material,
                 .graphicsPipelineHandle = material->getGraphicsPipelineHandle(),
                 .meshHandle = entity.mesh.handle,
                 .mesh = mesh,
@@ -202,6 +210,8 @@ namespace litl
 
     void RenderPass::render(CommandBufferHandle frameCommandBuffer, RenderPushConstants const& pushConstants, Camera& camera, std::vector<RenderableEntity> const& entities) noexcept
     {
+        // Note that the conversion from 'RenderPushConstants const&' to 'RendererPushConstants' is intentional so that the pass may mutate the push constants.
+        // We keep the 'const&' for this non-pimpl implementation to avoid redundant copies.
         m_pImpl->render(frameCommandBuffer, pushConstants, camera, entities);
     }
 }
