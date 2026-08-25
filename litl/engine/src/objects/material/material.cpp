@@ -30,6 +30,8 @@ namespace litl
 
         std::vector<MaterialPropertyBlockPointer> dirtyPropertyBlocks;
 
+        uint32_t frameInFlightIndex{ 0u };
+
         bool create(MaterialDescriptor const& materialDescriptor, Renderer const& pRenderer, ObjectPool& pObjectPool) noexcept
         {
             descriptor = materialDescriptor;
@@ -342,13 +344,19 @@ namespace litl
             }
         }
 
-        void syncFrameStart(uint32_t frame) noexcept
+        void syncFrameStart(uint32_t frame, uint32_t frameIndex) noexcept
         {
             properties.setCurrentFrame(frame);
+            frameInFlightIndex = frameInFlightIndex;
         }
 
         void syncPreRender() noexcept
         {
+            if (objectPool == nullptr)
+            {
+                return;
+            }
+
             properties.calculateActiveSlotCounts();
             properties.freeSlots();
 
@@ -356,12 +364,14 @@ namespace litl
 
             if (gpuBuffer != nullptr)
             {
+                gpuBuffer->swapBuffers(frameInFlightIndex);
+                currGraphicsGpuBufferDeviceAddress = gpuBuffer->getBufferDeviceAddress();
+
                 properties.gatherDirtyBlocks(dirtyPropertyBlocks);
 
-                if (!dirtyPropertyBlocks.empty() && (objectPool != nullptr))
+                if (!dirtyPropertyBlocks.empty())
                 {
                     gpuBuffer->resizeBytes(properties.totalMemoryRequirements());   // No action if the memory needs have not grown sufficiently
-                    gpuBuffer->swapBuffers();
 
                     const auto slotSizeBytes = properties.individualSlotMemoryRequirements();
 
@@ -374,7 +384,6 @@ namespace litl
                     }
 
                     properties.clearDirtyBlocks();
-                    currGraphicsGpuBufferDeviceAddress = gpuBuffer->getBufferDeviceAddress();
                 }
             }
         }
@@ -430,9 +439,9 @@ namespace litl
         return m_pImpl->properties.allocateSlot();
     }
     
-    void Material::syncFrameStart(uint32_t frame) noexcept
+    void Material::syncFrameStart(uint32_t frame, uint32_t frameInFlightIndex) noexcept
     {
-        m_pImpl->syncFrameStart(frame);
+        m_pImpl->syncFrameStart(frame, frameInFlightIndex);
     }
 
     void Material::syncPreRender() noexcept
