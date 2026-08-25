@@ -1,17 +1,19 @@
 #ifndef LITL_ENGINE_OBJECTS_MATERIAL_PROPERTIES_H__
 #define LITL_ENGINE_OBJECTS_MATERIAL_PROPERTIES_H__
 
-#include "litl-core/stringId.hpp"
-#include "litl-core/math/types.hpp"
-
 #include <cstdint>
 #include <memory>
 #include <vector>
+
+#include "litl-core/stringId.hpp"
+#include "litl-core/math/types.hpp"
+#include "litl-renderer/reflection.hpp"
 
 namespace litl
 {
     struct MaterialPropertySlot
     {
+        uint32_t version = 0u;
         uint32_t lastActiveFrame = 0u;
         bool occupied = false;
     };
@@ -41,11 +43,29 @@ namespace litl
         uint32_t activeSlotCount = 0u;
 
         /// <summary>
+        /// The last frame the block was updated.
+        /// </summary>
+        uint32_t lastActiveFrame = 0u;
+
+        /// <summary>
         /// Set to true if there has been a data chance to the block and its contents need to copied to the GPU.
         /// </summary>
         bool isDirty = false;
 
         [[nodiscard]] bool acquireSlot(uint32_t& localSlotIndex) noexcept;
+    };
+
+    struct MaterialPropertyReflection
+    {
+        /// <summary>
+        /// The size in bytes of an individual material property structure.
+        /// </summary>
+        uint32_t sizeBytes = 0u;
+
+        /// <summary>
+        /// The individual properties of the material structure.
+        /// </summary>
+        std::vector<ResourceProperty> properties;
     };
 
     /// <summary>
@@ -60,7 +80,12 @@ namespace litl
         /// <summary>
         /// Configures the underlying property blocks to accomodate slots of the specified byte size.
         /// </summary>
-        void configure(uint32_t slotSize) noexcept;
+        void configure(MaterialPropertyReflection const& reflectedProperties) noexcept;
+
+        /// <summary>
+        /// ... todo be called by something that ticks each frame ...
+        /// </summary>
+        void setCurrentFrame(uint32_t currFrame) noexcept;
 
         /// <summary>
         /// Allocates a slot in the underlying material property blocks for a new material instance to use.
@@ -69,14 +94,26 @@ namespace litl
         [[nodiscard]] uint32_t allocateSlot() noexcept;
 
         /// <summary>
-        /// Marks the slot active for the frame.
+        /// ... todo be called by something that ticks each frame ...
         /// </summary>
-        void markSlotActive(uint32_t slot, uint32_t frame) noexcept;
+        void resetActiveSlotCounts() noexcept;
+
+        /// <summary>
+        /// Marks the slot active for the frame.
+        /// ... todo be called by a system or something ....
+        /// </summary>
+        void markSlotActive(uint32_t slot) noexcept;
+
+        /// <summary>
+        /// ... todo be called by something that ticks each frame ...
+        /// </summary>
+        void calculateActiveSlotCounts() noexcept;
 
         /// <summary>
         /// Frees all slots found to be inactive.
+        /// ... todo be called by something that ticks each frame ...
         /// </summary>
-        void freeSlots(uint32_t frame) noexcept;
+        void freeSlots() noexcept;
 
         /// <summary>
         /// Total bytes required to store all slots across all blocks. Used to determine if the GPU buffer needs to be resized.
@@ -84,14 +121,64 @@ namespace litl
         /// <returns></returns>
         [[nodiscard]] size_t totalMemoryRequirements() const noexcept;
 
+        /// <summary>
+        /// Sets the boolean value at with the specified property name at the provided slot index.
+        /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
+        /// </summary>
         bool setBool(StringId property, bool value, uint32_t slot) noexcept;
+
+        /// <summary>
+        /// Sets the 32-bit signed integer value at with the specified property name at the provided slot index.
+        /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
+        /// </summary>
         bool setInt32(StringId property, int32_t value, uint32_t slot) noexcept;
+
+        /// <summary>
+        /// Sets the 32-bit unsigned integer value at with the specified property name at the provided slot index.
+        /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
+        /// </summary>
         bool setUint32(StringId property, uint32_t value, uint32_t slot) noexcept;
+
+        /// <summary>
+        /// Sets the 32-bit float value at with the specified property name at the provided slot index.
+        /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
+        /// </summary>
         bool setFloat(StringId property, float value, uint32_t slot) noexcept;
+
+        /// <summary>
+        /// Sets the 64-bit float value at with the specified property name at the provided slot index.
+        /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
+        /// </summary>
+        bool setDouble(StringId property, double value, uint32_t slot) noexcept;
+
+        /// <summary>
+        /// Sets the two-component 32-bit float vector value at with the specified property name at the provided slot index.
+        /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
+        /// </summary>
         bool setVec2(StringId property, vec2 value, uint32_t slot) noexcept;
+
+        /// <summary>
+        /// Sets the three-component 32-bit float vector value at with the specified property name at the provided slot index.
+        /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
+        /// </summary>
         bool setVec3(StringId property, vec3 value, uint32_t slot) noexcept;
+
+        /// <summary>
+        /// Sets the four-component 32-bit float vector value at with the specified property name at the provided slot index.
+        /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
+        /// </summary>
         bool setVec4(StringId property, vec4 const& value, uint32_t slot) noexcept;
+
+        /// <summary>
+        /// Sets the 3x3 32-bit float matrix value at with the specified property name at the provided slot index.
+        /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
+        /// </summary>
         bool setMat3(StringId property, mat3 const& value, uint32_t slot) noexcept;
+
+        /// <summary>
+        /// Sets the 4x4 32-bit float matrix value at with the specified property name at the provided slot index.
+        /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
+        /// </summary>
         bool setMat4(StringId property, mat4 const& value, uint32_t slot) noexcept;
 
     private:
@@ -107,11 +194,21 @@ namespace litl
         /// </summary>
         [[nodiscard]] bool getBlockLocalSlot(uint32_t slot, uint32_t& blockIndex, uint32_t& localSlot) const noexcept;
 
-        bool setData(StringId property, uint32_t propertyBytes, void* propertyData, uint32_t slot) noexcept;
+        /// <summary>
+        /// Given a property string id, returns the associated ResourceProperty. If no match was found, returns null.
+        /// </summary>
+        ResourceProperty const* getReflectedProperty(StringId property) const noexcept;
 
-        StringIdMap<uint32_t> m_propertyOffsets;
+        /// <summary>
+        /// 
+        /// </summary>
+        bool setData(StringId property, uint32_t propertyOffset, uint32_t propertySize, void const* propertyData, uint32_t slot) noexcept;
+
+        MaterialPropertyReflection m_reflectedProperties;
+        StringIdMap<uint32_t> m_propertyMap;
         std::vector<std::unique_ptr<MaterialPropertyBlock>> m_propertyBlocks;
-        uint32_t m_slotBytes = 0u;
+
+        uint32_t m_currFrame = 0u;
         uint32_t m_vacantSlotCount = 0u;
     };
 }

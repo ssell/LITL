@@ -6,15 +6,26 @@
 
 namespace litl
 {
-    void MaterialProperties::configure(uint32_t slotSize) noexcept
+    void MaterialProperties::configure(MaterialPropertyReflection const& reflectedProperties) noexcept
     {
         if (!m_propertyBlocks.empty())
         {
             return;
         }
 
-        m_slotBytes = slotSize;
+        m_reflectedProperties = reflectedProperties;
+
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(m_reflectedProperties.properties.size()); ++i)
+        {
+            m_propertyMap[m_reflectedProperties.properties[i].hashedName] = i;
+        }
+
         allocateBlock();
+    }
+
+    void MaterialProperties::setCurrentFrame(uint32_t currFrame) noexcept
+    {
+        m_currFrame = currFrame;
     }
 
     void MaterialProperties::allocateBlock() noexcept
@@ -22,7 +33,7 @@ namespace litl
         m_propertyBlocks.push_back(std::make_unique<MaterialPropertyBlock>());
         auto& newBlock = m_propertyBlocks.back();
 
-        newBlock->data.resize(m_slotBytes * SlotsPerBlock, std::byte{ 0 });
+        newBlock->data.resize(m_reflectedProperties.sizeBytes * SlotsPerBlock, std::byte{ 0 });
         newBlock->slots.resize(SlotsPerBlock);
         newBlock->vacantSlotCount = SlotsPerBlock;
         newBlock->activeSlotCount = 0u;
@@ -86,17 +97,17 @@ namespace litl
         }
     }
 
-    void MaterialProperties::markSlotActive(uint32_t slot, uint32_t frame) noexcept
+    void MaterialProperties::markSlotActive(uint32_t slot) noexcept
     {
         uint32_t blockIndex, localSlotIndex;
         
         if (getBlockLocalSlot(slot, blockIndex, localSlotIndex))
         {
-            m_propertyBlocks[blockIndex]->slots[localSlotIndex].lastActiveFrame = frame;
+            m_propertyBlocks[blockIndex]->slots[localSlotIndex].lastActiveFrame = m_currFrame;
         }
     }
 
-    void MaterialProperties::freeSlots(uint32_t frame) noexcept
+    void MaterialProperties::freeSlots() noexcept
     {
         for (auto& block : m_propertyBlocks)
         {
@@ -108,7 +119,7 @@ namespace litl
                 for (auto& slot : block->slots)
                 {
                     // If the slot is labelled active but hasn't been used, then mark it as vacant so it can be reused.
-                    if (slot.occupied && (slot.lastActiveFrame < frame))
+                    if (slot.occupied && (slot.lastActiveFrame < m_currFrame))
                     {
                         slot.occupied = false;
                         block->vacantSlotCount++;
@@ -121,7 +132,7 @@ namespace litl
 
     size_t MaterialProperties::totalMemoryRequirements() const noexcept
     {
-        return (m_slotBytes * SlotsPerBlock * m_propertyBlocks.size());
+        return (m_reflectedProperties.sizeBytes * SlotsPerBlock * m_propertyBlocks.size());
     }
 
     bool MaterialProperties::getBlockLocalSlot(uint32_t slot, uint32_t& blockIndex, uint32_t& localSlot) const noexcept
@@ -137,7 +148,19 @@ namespace litl
         return true;
     }
 
-    bool MaterialProperties::setData(StringId property, uint32_t propertyBytes, void* propertyData, uint32_t slot) noexcept
+    ResourceProperty const* MaterialProperties::getReflectedProperty(StringId property) const noexcept
+    {
+        auto find = m_propertyMap.find(property);
+
+        if (find == m_propertyMap.end())
+        {
+            return nullptr;
+        }
+
+        return &m_reflectedProperties.properties[find->second];
+    }
+
+    bool MaterialProperties::setData(StringId property, uint32_t propertyOffset, uint32_t propertySize, void const* propertyData, uint32_t slot) noexcept
     {
         uint32_t blockIndex, localSlotIndex;
 
@@ -145,19 +168,11 @@ namespace litl
         {
             return false;
         }
-
-        auto findPropertyOffset = m_propertyOffsets.find(property);
-
-        if (findPropertyOffset == m_propertyOffsets.end())
-        {
-            return false;
-        }
-
         auto& block = m_propertyBlocks[blockIndex];
         auto* blockData = block->data.data();
-        auto blockSlotPropertyOffset = (localSlotIndex * m_slotBytes) + findPropertyOffset->second;
+        const auto blockSlotPropertyOffset = (localSlotIndex * m_reflectedProperties.sizeBytes) + propertyOffset;
 
-        memcpy(blockData + blockSlotPropertyOffset, propertyData, static_cast<size_t>(propertyBytes));
+        memcpy(blockData + blockSlotPropertyOffset, propertyData, static_cast<size_t>(propertySize));
 
         block->isDirty = true;
 
@@ -166,50 +181,279 @@ namespace litl
 
     bool MaterialProperties::setBool(StringId property, bool value, uint32_t slot) noexcept
     {
+        auto* reflectedProperty = getReflectedProperty(property);
+
+        if (reflectedProperty == nullptr)
+        {
+            return false;
+        }
+
+        if (reflectedProperty->variable.scalarType != ShaderScalarType::Bool)
+        {
+            return false;
+        }
+
+        if (reflectedProperty->variable.size != sizeof(uint32_t))
+        {
+            return false;
+        }
+
         // bool on the cpu is 1 byte, but on the gpu it is 4 bytes.
-        std::array<uint8_t, 4> fullsize{ uint8_t{ 0 }, uint8_t{ 0 }, uint8_t{ 0 }, uint8_t{ 0 } };
-        fullsize[0] = (value ? uint8_t{ 1 } : uint8_t{ 0 });
-        return setData(property, 4u, fullsize.data(), slot);
+        const uint32_t value32 = (value ? 1u : 0u);
+        return setData(property, reflectedProperty->offset, reflectedProperty->size, &value32, slot);
     }
 
     bool MaterialProperties::setInt32(StringId property, int32_t value, uint32_t slot) noexcept
     {
-        return setData(property, static_cast<uint32_t>(sizeof(int32_t)), &value, slot);
+        auto* reflectedProperty = getReflectedProperty(property);
+
+        if (reflectedProperty == nullptr)
+        {
+            return false;
+        }
+
+        if (reflectedProperty->variable.scalarType != ShaderScalarType::Integer)
+        {
+            return false;
+        }
+
+        if (has_any(reflectedProperty->variable.flag, ShaderVariableFlagBits::Unsigned))
+        {
+            // It is actually an unsigned integer.
+            return false;
+        }
+
+        if (reflectedProperty->size != sizeof(int32_t))
+        {
+            return false;
+        }
+
+        return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
     }
 
     bool MaterialProperties::setUint32(StringId property, uint32_t value, uint32_t slot) noexcept
     {
-        return setData(property, static_cast<uint32_t>(sizeof(uint32_t)), &value, slot);
+        auto* reflectedProperty = getReflectedProperty(property);
+
+        if (reflectedProperty == nullptr)
+        {
+            return false;
+        }
+
+        if (reflectedProperty->variable.scalarType != ShaderScalarType::Integer)
+        {
+            return false;
+        }
+
+        if (!has_any(reflectedProperty->variable.flag, ShaderVariableFlagBits::Unsigned))
+        {
+            // It is actually a signed integer.
+            return false;
+        }
+
+        if (reflectedProperty->size != sizeof(uint32_t))
+        {
+            return false;
+        }
+
+        return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
     }
 
     bool MaterialProperties::setFloat(StringId property, float value, uint32_t slot) noexcept
     {
-        return setData(property, static_cast<uint32_t>(sizeof(float)), &value, slot);
+        auto* reflectedProperty = getReflectedProperty(property);
+
+        if (reflectedProperty == nullptr)
+        {
+            return false;
+        }
+
+        if (reflectedProperty->variable.scalarType != ShaderScalarType::Float)
+        {
+            return false;
+        } 
+
+        if (reflectedProperty->size != sizeof(float))
+        {
+            return false;
+        }
+
+        return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
+    }
+
+    bool MaterialProperties::setDouble(StringId property, double value, uint32_t slot) noexcept
+    {
+        auto* reflectedProperty = getReflectedProperty(property);
+
+        if (reflectedProperty == nullptr)
+        {
+            return false;
+        }
+
+        if (reflectedProperty->variable.scalarType != ShaderScalarType::Float)
+        {
+            return false;
+        }
+
+        if (reflectedProperty->size != sizeof(double))
+        {
+            return false;
+        }
+
+        return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
     }
 
     bool MaterialProperties::setVec2(StringId property, vec2 value, uint32_t slot) noexcept
     {
-        return setData(property, static_cast<uint32_t>(sizeof(vec2)), &value, slot);
+        auto* reflectedProperty = getReflectedProperty(property);
+
+        if (reflectedProperty == nullptr)
+        {
+            return false;
+        }
+
+        if (reflectedProperty->variable.scalarType != ShaderScalarType::Float)
+        {
+            return false;
+        }
+
+        if (reflectedProperty->size != sizeof(float))
+        {
+            return false;
+        }
+
+        if (reflectedProperty->variable.componentCount != 2u)
+        {
+            return false;
+        }
+
+        return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
     }
 
     bool MaterialProperties::setVec3(StringId property, vec3 value, uint32_t slot) noexcept
     {
-        return setData(property, static_cast<uint32_t>(sizeof(vec3)), &value, slot);
+        auto* reflectedProperty = getReflectedProperty(property);
+
+        if (reflectedProperty == nullptr)
+        {
+            return false;
+        }
+
+        if (reflectedProperty->variable.scalarType != ShaderScalarType::Float)
+        {
+            return false;
+        }
+
+        if (reflectedProperty->size != sizeof(float))
+        {
+            return false;
+        }
+
+        if (reflectedProperty->variable.componentCount != 3u)
+        {
+            return false;
+        }
+
+        return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
     }
 
     bool MaterialProperties::setVec4(StringId property, vec4 const& value, uint32_t slot) noexcept
     {
-        return setData(property, static_cast<uint32_t>(sizeof(vec4)), static_cast<void*>(const_cast<vec4*>(&value)), slot);
+        auto* reflectedProperty = getReflectedProperty(property);
+
+        if (reflectedProperty == nullptr)
+        {
+            return false;
+        }
+
+        if (reflectedProperty->variable.scalarType != ShaderScalarType::Float)
+        {
+            return false;
+        }
+
+        if (reflectedProperty->size != sizeof(float))
+        {
+            return false;
+        }
+
+        if (reflectedProperty->variable.componentCount != 4u)
+        {
+            return false;
+        }
+
+        return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
     }
 
     bool MaterialProperties::setMat3(StringId property, mat3 const& value, uint32_t slot) noexcept
     {
-        return setData(property, static_cast<uint32_t>(sizeof(mat3)), static_cast<void*>(const_cast<mat3*>(&value)), slot);
+        auto* reflectedProperty = getReflectedProperty(property);
+
+        if (reflectedProperty == nullptr)
+        {
+            return false;
+        }
+
+        if (reflectedProperty->variable.scalarType != ShaderScalarType::Float)
+        {
+            return false;
+        }
+
+        if (reflectedProperty->size != sizeof(float))
+        {
+            return false;
+        }
+
+        if (reflectedProperty->variable.componentCount != 9u)
+        {
+            return false;
+        }
+
+        const uint32_t matStride = reflectedProperty->variable.matrixStride;
+
+        if (matStride == 12u)
+        {
+            return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
+        }
+        else if (matStride == 16u)      // 4 bytes padding at the end of each column
+        {
+            const uint32_t colSize = static_cast<uint32_t>(sizeof(float) * 3);
+
+            return
+                setData(property, reflectedProperty->offset + (matStride * 0u), colSize, value[0], slot) &&
+                setData(property, reflectedProperty->offset + (matStride * 1u), colSize, value[1], slot) &&
+                setData(property, reflectedProperty->offset + (matStride * 2u), colSize, value[2], slot);
+        }
+        else
+        {
+            return false;
+        }
     }
 
     bool MaterialProperties::setMat4(StringId property, mat4 const& value, uint32_t slot) noexcept
     {
-        return setData(property, static_cast<uint32_t>(sizeof(mat4)), static_cast<void*>(const_cast<mat4*>(&value)), slot);
+        auto* reflectedProperty = getReflectedProperty(property);
+
+        if (reflectedProperty == nullptr)
+        {
+            return false;
+        }
+
+        if (reflectedProperty->variable.scalarType != ShaderScalarType::Float)
+        {
+            return false;
+        }
+
+        if (reflectedProperty->size != sizeof(float))
+        {
+            return false;
+        }
+
+        if (reflectedProperty->variable.componentCount != 16u)
+        {
+            return false;
+        }
+
+        return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
     }
 
 }
