@@ -83,7 +83,7 @@ namespace litl
         /// <summary>
         /// Configures the underlying property blocks to accomodate slots of the specified byte size.
         /// </summary>
-        void configure(MaterialPropertyReflection const& reflectedProperties) noexcept;
+        bool configure(MaterialPropertyReflection const& reflectedProperties) noexcept;
 
         /// <summary>
         /// ... todo be called by something that ticks each frame ...

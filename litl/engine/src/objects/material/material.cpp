@@ -13,6 +13,15 @@ namespace litl
         GraphicsPipelineHandle graphicsPipelineHandle{};
         ComputePipelineHandle computePipelineHandle{};
 
+        ShaderModuleHandle vertexHandle{};
+        ShaderModuleHandle fragmentHandle{};
+        ShaderModuleHandle geometryHandle{};
+        ShaderModuleHandle tessellationControlHandle{};
+        ShaderModuleHandle tessellationEvaluationHandle{};
+        ShaderModuleHandle meshHandle{};
+        ShaderModuleHandle taskHandle{};
+        ShaderModuleHandle computeHandle{};
+
         bool create(MaterialDescriptor const& materialDescriptor, Renderer const& pRenderer, ObjectPool& objectPool) noexcept
         {
             descriptor = materialDescriptor;
@@ -21,27 +30,27 @@ namespace litl
             // ---------------------------------------------------------------------------------
             // --- Shader Module Handles
 
-            auto createShaderModuleHandle = [&](ShaderResourceDescriptor& descriptor) noexcept -> ShaderModuleHandle
+            auto createShaderModuleHandle = [&](ShaderResourceDescriptor& shaderDescriptor) noexcept -> ShaderModuleHandle
                 {
-                    if (descriptor.resource.empty() || descriptor.bytes.empty())
+                    if (shaderDescriptor.resource.empty() || shaderDescriptor.bytes.empty())
                     {
                         return {};
                     }
 
                     return renderer->createShaderModule(ShaderModuleDescriptor{
-                        .resource = descriptor.resource,
-                        .bytes = descriptor.bytes
+                        .resource = shaderDescriptor.resource,
+                        .bytes = shaderDescriptor.bytes
                     });
                 };
 
-            auto vertexHandle = createShaderModuleHandle(descriptor.vertexShader);
-            auto fragmentHandle = createShaderModuleHandle(descriptor.fragmentShader);
-            auto geometryHandle = createShaderModuleHandle(descriptor.geometryShader);
-            auto tessellationControlHandle = createShaderModuleHandle(descriptor.tessellationControlShader);
-            auto tessellationEvaluationHandle = createShaderModuleHandle(descriptor.tessellationEvaluationShader);
-            auto meshHandle = createShaderModuleHandle(descriptor.meshShader);
-            auto taskHandle = createShaderModuleHandle(descriptor.taskShader);
-            auto computeHandle = createShaderModuleHandle(descriptor.computeShader);
+            vertexHandle = createShaderModuleHandle(descriptor.vertexShader);
+            fragmentHandle = createShaderModuleHandle(descriptor.fragmentShader);
+            geometryHandle = createShaderModuleHandle(descriptor.geometryShader);
+            tessellationControlHandle = createShaderModuleHandle(descriptor.tessellationControlShader);
+            tessellationEvaluationHandle = createShaderModuleHandle(descriptor.tessellationEvaluationShader);
+            meshHandle = createShaderModuleHandle(descriptor.meshShader);
+            taskHandle = createShaderModuleHandle(descriptor.taskShader);
+            computeHandle = createShaderModuleHandle(descriptor.computeShader);
 
             // Clear the temporary span viewing the shader bytes
             descriptor.vertexShader.bytes = {};
@@ -144,28 +153,17 @@ namespace litl
 
                 // --- Configure Material Properties
 
-                uint32_t propertyStructSizeBytes = 0u;
-                std::vector<ResourceProperty> reflectedProperties;
-
-                compileReflectedProperties(vertexHandle, descriptor.vertexShader.entryPoint, propertyStructSizeBytes, reflectedProperties);
-                compileReflectedProperties(fragmentHandle, descriptor.fragmentShader.entryPoint, propertyStructSizeBytes, reflectedProperties);
-                compileReflectedProperties(geometryHandle, descriptor.geometryShader.entryPoint, propertyStructSizeBytes, reflectedProperties);
-                compileReflectedProperties(tessellationControlHandle, descriptor.tessellationControlShader.entryPoint, propertyStructSizeBytes, reflectedProperties);
-                compileReflectedProperties(tessellationEvaluationHandle, descriptor.tessellationEvaluationShader.entryPoint, propertyStructSizeBytes, reflectedProperties);
-
-                if (!reflectedProperties.empty())
+                if (!configureGraphicsPropertiesFromReflection())
                 {
-                    properties.configure(MaterialPropertyReflection{            // Note that configure performs dedupe, so no need to do so here
-                        .sizeBytes = propertyStructSizeBytes,
-                        .properties = std::move(reflectedProperties)
-                    });
+                    logWarning("Material '", descriptor.objectInfo.name, "' failed to reflect properties.");
+                    return false;
                 }
             }
 
             // ---------------------------------------------------------------------------------
             // --- Alternate Graphics Pipeline (mesh + task)
 
-            else if (meshHandle.isValid() && taskHandle.isValid())
+            else if (meshHandle.isValid())      // task handle is optional
             {
                 // ... todo ...
             }
@@ -178,14 +176,54 @@ namespace litl
                 // ... todo ...
             }
 
+            return (graphicsPipelineHandle.isValid() || computePipelineHandle.isValid());
+        }
+
+        bool configureGraphicsPropertiesFromReflection() noexcept
+        {
+            uint32_t propertyStructSizeBytes = 0u;
+            std::vector<ResourceProperty> reflectedProperties;
+
+            if (!compileReflectedProperties(vertexHandle, descriptor.vertexShader.entryPoint, propertyStructSizeBytes, reflectedProperties) ||
+                !compileReflectedProperties(fragmentHandle, descriptor.fragmentShader.entryPoint, propertyStructSizeBytes, reflectedProperties) ||
+                !compileReflectedProperties(geometryHandle, descriptor.geometryShader.entryPoint, propertyStructSizeBytes, reflectedProperties) ||
+                !compileReflectedProperties(tessellationControlHandle, descriptor.tessellationControlShader.entryPoint, propertyStructSizeBytes, reflectedProperties) ||
+                !compileReflectedProperties(tessellationEvaluationHandle, descriptor.tessellationEvaluationShader.entryPoint, propertyStructSizeBytes, reflectedProperties))
+            {
+                return false;
+            }
+
+            if (!reflectedProperties.empty())
+            {
+                if (propertyStructSizeBytes == 0u)
+                {
+                    logWarning("Material '", descriptor.objectInfo.name, "' reflection discovered properties, but struct has zero size. Rejecting.");
+                    return false;
+                }
+
+                if (!properties.configure(MaterialPropertyReflection{ .sizeBytes = propertyStructSizeBytes, .properties = std::move(reflectedProperties) }))
+                {
+                    logWarning("Material '", descriptor.objectInfo.name, "' failed to populate properties. Rejecting.");
+                    return false;
+                }
+            }
+            else
+            {
+                if (propertyStructSizeBytes != 0u)
+                {
+                    logWarning("Material '", descriptor.objectInfo.name, "' reflection failed to discover properties for struct with non-zero size. Rejecting.");
+                    return false;
+                }
+            }
+
             return true;
         }
 
-        void compileReflectedProperties(ShaderModuleHandle handle, std::string_view entryPointName, uint32_t& propertyStructSizeBytes, std::vector<ResourceProperty>& properties) noexcept
+        bool compileReflectedProperties(ShaderModuleHandle handle, std::string_view entryPointName, uint32_t& propertyStructSizeBytes, std::vector<ResourceProperty>& reflectedProperties) noexcept
         {
             if (!handle.isValid())
             {
-                return;
+                return true; // skip
             }
 
             auto* reflection = renderer->getShaderReflection(handle);
@@ -193,7 +231,7 @@ namespace litl
             if (reflection == nullptr)
             {
                 logWarning("Failed to retrieve shader reflection data for material '", descriptor.objectInfo.name, "' for entry point '", entryPointName, "'");
-                return;
+                return false;
             }
 
             auto entryPoint = reflection->getEntryPoint(entryPointName);
@@ -201,7 +239,7 @@ namespace litl
             if (!entryPoint.has_value() || (*entryPoint == nullptr))
             {
                 logWarning("Failed to retrieve shader entry point '", entryPointName, "' for material '", descriptor.objectInfo.name, "'");
-                return;
+                return false;
             }
 
             for (uint32_t i = 0u; i < static_cast<uint32_t>((*entryPoint)->pushConstants.size()); ++i)
@@ -214,20 +252,51 @@ namespace litl
 
                     if (reflectedStruct.hashedName == MaterialPropertiesStructHashedName)
                     {
-                        propertyStructSizeBytes = litl::max(propertyStructSizeBytes, reflectedStruct.stride);
-                        properties.insert(properties.end(), reflectedStruct.properties.begin(), reflectedStruct.properties.end());
-                        return;
+                        if (propertyStructSizeBytes == 0u)
+                        {
+                            propertyStructSizeBytes = reflectedStruct.stride;
+                        }
+                        else if ((propertyStructSizeBytes != reflectedStruct.stride))
+                        {
+                            logWarning("Material properties reflected struct size mismatch detected. Rejecting.");
+                            return false;
+                        }
+
+                        reflectedProperties.insert(reflectedProperties.end(), reflectedStruct.properties.begin(), reflectedStruct.properties.end());
+
+                        return true;
                     }
                 }
             }
+
+            return true;    // No reflected properties is OK - the shader stage isn't using any.
         }
 
         void destroy() noexcept
         {
             if (renderer != nullptr)
             {
-                renderer->destroyGraphicsPipeline(graphicsPipelineHandle);
-                renderer->destroyComputePipeline(computePipelineHandle);
+                renderer->destroyGraphicsPipeline(graphicsPipelineHandle); 
+                renderer->destroyComputePipeline(computePipelineHandle); 
+                renderer->destroyShaderModule(vertexHandle); 
+                renderer->destroyShaderModule(fragmentHandle); 
+                renderer->destroyShaderModule(geometryHandle); 
+                renderer->destroyShaderModule(tessellationControlHandle); 
+                renderer->destroyShaderModule(tessellationEvaluationHandle); 
+                renderer->destroyShaderModule(meshHandle); 
+                renderer->destroyShaderModule(taskHandle); 
+                renderer->destroyShaderModule(computeHandle); 
+
+                graphicsPipelineHandle = {};
+                computePipelineHandle = {};
+                vertexHandle = {};
+                fragmentHandle = {};
+                geometryHandle = {};
+                tessellationControlHandle = {};
+                tessellationEvaluationHandle = {};
+                meshHandle = {};
+                taskHandle = {};
+                computeHandle = {};
             }
         }
     };
@@ -238,8 +307,8 @@ namespace litl
 
     }
 
-    Material::Material(Material&& other) = default;
-    Material& Material::operator=(Material&& other) = default;
+    Material::Material(Material&& other) noexcept = default;
+    Material& Material::operator=(Material&& other) noexcept = default;
 
     Material::~Material()
     {
