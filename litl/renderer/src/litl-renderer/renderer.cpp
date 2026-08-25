@@ -1,4 +1,5 @@
 #include "litl-renderer/renderer.hpp"
+#include "litl-renderer/reflection.hpp"
 
 namespace litl
 {
@@ -105,6 +106,11 @@ namespace litl
     ShaderModuleHandle Renderer::getShaderModule(std::string const& resource) const noexcept
     {
         return m_pOps->getShaderModule(m_pContext, resource);
+    }
+
+    ShaderReflection* Renderer::getShaderReflection(ShaderModuleHandle handle) const noexcept
+    {
+        return m_pOps->getShaderReflection(m_pContext, handle);
     }
 
     void Renderer::reloadShaderModule(ShaderModuleDescriptor const& descriptor) const noexcept

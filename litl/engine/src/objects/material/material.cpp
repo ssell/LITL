@@ -31,7 +31,7 @@ namespace litl
                     return renderer->createShaderModule(ShaderModuleDescriptor{
                         .resource = descriptor.resource,
                         .bytes = descriptor.bytes
-                        });
+                    });
                 };
 
             auto vertexHandle = createShaderModuleHandle(descriptor.vertexShader);
@@ -141,6 +141,10 @@ namespace litl
                 // --- Create the Pipeline
 
                 graphicsPipelineHandle = renderer->createGraphicsPipeline(graphicsPipelineDescriptor);
+
+                // --- Configure Material Properties
+
+                configurePropertiesFromReflection(vertexHandle);
             }
 
             // ---------------------------------------------------------------------------------
@@ -160,6 +164,57 @@ namespace litl
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Attempts to retrieve the shader reflection data and extract the Push Constant .materialProperties field.
+        /// With this field, we iterate its contents and populate the MaterialProperties.
+        /// </summary>
+        void configurePropertiesFromReflection(ShaderModuleHandle handle) noexcept
+        {
+            auto* reflection = renderer->getShaderReflection(handle);
+            bool configuredProperties = false;
+
+            if (reflection != nullptr)
+            {
+                auto entryPoint = reflection->getEntryPoint(descriptor.vertexShader.entryPoint);
+
+                if (entryPoint.has_value() && (*entryPoint != nullptr))
+                {
+                    for (uint32_t i = 0u; (i < static_cast<uint32_t>((*entryPoint)->pushConstants.size())) && !configuredProperties; ++i)
+                    {
+                        auto& pushConstant = (*entryPoint)->pushConstants[i];
+
+                        for (uint32_t j = 0u; (j < static_cast<uint32_t>(pushConstant.referenceProperties.size())) && !configuredProperties; ++j)
+                        {
+                            auto& reflectedStruct = pushConstant.referenceProperties[j];
+
+                            if (reflectedStruct.hashedName == MaterialPropertiesStructHashedName)
+                            {
+                                properties.configure(MaterialPropertyReflection{
+                                    .sizeBytes = reflectedStruct.stride,
+                                    .properties = reflectedStruct.properties
+                                    });
+
+                                configuredProperties = true;
+                            }
+                        }
+                    }
+
+                    if (!configuredProperties)
+                    {
+                        logWarning("Failed to find material properties structure '", MaterialPropertiesStructName, "' in the Vertex Shader entry point '", descriptor.vertexShader.entryPoint, "' for material '", descriptor.objectInfo.name, "'");
+                    }
+                }
+                else
+                {
+                    logWarning("Failed to retrieve Vertex Shader entry point '", descriptor.vertexShader.entryPoint, "' for material '", descriptor.objectInfo.name, "'");
+                }
+            }
+            else
+            {
+                logWarning("Failed to retrieve Vertex Shader reflection data for material '", descriptor.objectInfo.name, "' from vertex shader '", descriptor.vertexShader.resource, "'");
+            }
         }
 
         void destroy() noexcept

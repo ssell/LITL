@@ -4,8 +4,10 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 
 #include "litl-core/authority.hpp"
+#include "litl-core/stringId.hpp"
 #include "litl-core/math/geometry/vertex.hpp"
 #include "litl-engine/objects/objectDescriptor.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
@@ -63,6 +65,12 @@ namespace litl
     class Material
     {
     public:
+
+        /// <summary>
+        /// The required name of the material properties variable in the PushConstant struct.
+        /// </summary>
+        static constexpr std::string_view MaterialPropertiesStructName = "materialProperties";
+        static constexpr StringId MaterialPropertiesStructHashedName = StringId(MaterialPropertiesStructName);
 
         Material();
         Material(Material&& other);
