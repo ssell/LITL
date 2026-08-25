@@ -24,7 +24,7 @@ namespace litl
 
         void setup(Authority<Engine> auth, ServiceProvider& services) noexcept;
         void onFrameStart(Authority<EngineCallbacks> auth, uint32_t frame, uint32_t frameIndex) noexcept;
-        void onPreRender(Authority<EngineCallbacks> auth) const noexcept;
+        void onPreRender(Authority<EngineCallbacks> auth) noexcept;
 
     private:
 
