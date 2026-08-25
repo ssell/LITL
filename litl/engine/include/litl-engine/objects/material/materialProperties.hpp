@@ -92,7 +92,7 @@ namespace litl
         /// <summary>
         /// Configures the underlying property blocks to accomodate slots of the specified byte size.
         /// </summary>
-        bool configure(MaterialPropertyReflection const& reflectedProperties) noexcept;
+        bool configure(MaterialPropertyReflection const& reflectedProperties, uint32_t framesInFlight) noexcept;
 
         /// <summary>
         /// ... todo be called by something that ticks each frame ...
@@ -142,10 +142,19 @@ namespace litl
         [[nodiscard]] size_t totalMemoryRequirements() const noexcept;
 
         /// <summary>
-        /// Retrieves the indices of all blocks marked dirty.
-        /// This will also mark all returned blocks as no longer dirty.
+        /// Returns the number of properties.
         /// </summary>
-        void gatherDirtyBlocks(std::vector<MaterialPropertyBlockPointer>& dirtyBlocks) const noexcept;
+        [[nodiscard]] uint32_t propertyCount() const noexcept;
+
+        /// <summary>
+        /// Retrieves the indices of all blocks marked dirty.
+        /// </summary>
+        void gatherDirtyBlocks(std::vector<MaterialPropertyBlockPointer>& dirtyBlocks) noexcept;
+
+        /// <summary>
+        /// Marks all blocks as no longer dirty.
+        /// </summary>
+        void clearDirtyBlocks() noexcept;
 
         /// <summary>
         /// Sets the boolean value at with the specified property name at the provided slot index.
@@ -232,6 +241,9 @@ namespace litl
 
         uint32_t m_currFrame = 0u;
         uint32_t m_elementSizeBytes = 0u;
+        uint32_t m_framesInFlight = 0u;
+        uint32_t m_dirtyFrameCount = 0u;
+
         std::vector<ResourceProperty> m_properties;
         StringIdMap<uint32_t> m_propertyMap;
         std::vector<std::unique_ptr<MaterialPropertyBlock>> m_propertyBlocks;

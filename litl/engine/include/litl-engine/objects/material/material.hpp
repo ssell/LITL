@@ -82,6 +82,8 @@ namespace litl
 
         [[nodiscard]] GraphicsPipelineHandle getGraphicsPipelineHandle() const noexcept;
         [[nodiscard]] ComputePipelineHandle getComputePipelineHandle() const noexcept;
+        [[nodiscard]] GpuBufferHandle getGraphicsGpuBufferHandle() const noexcept;
+        [[nodiscard]] std::optional<uint64_t> getGraphicsBufferDeviceAddress() const noexcept;
         [[nodiscard]] MaterialPropertySlotId allocateSlot() noexcept;
 
         void syncFrameStart(uint32_t frame) noexcept;       // ... todo add Authority<> parameter ...

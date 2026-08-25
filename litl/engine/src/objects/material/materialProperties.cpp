@@ -41,7 +41,7 @@ namespace litl
             return true;
         }
     }
-    bool MaterialProperties::configure(MaterialPropertyReflection const& reflectedProperties) noexcept
+    bool MaterialProperties::configure(MaterialPropertyReflection const& reflectedProperties, uint32_t framesInFlight) noexcept
     {
         if (!m_propertyBlocks.empty())
         {
@@ -63,6 +63,8 @@ namespace litl
         }
 
         m_elementSizeBytes = reflectedProperties.sizeBytes;
+        m_framesInFlight = framesInFlight;
+        m_dirtyFrameCount = 0u;
 
         allocateBlock();
 
@@ -135,6 +137,7 @@ namespace litl
         {
             if (m_propertyBlocks[i]->acquireSlot(m_elementSizeBytes, m_currFrame, localSlotIndex, localSlotVersion))
             {
+                m_dirtyFrameCount = m_framesInFlight;
                 return MaterialPropertySlotId{
                     .slot = ((SlotsPerBlock * i) + localSlotIndex),
                     .version = localSlotVersion
@@ -146,6 +149,7 @@ namespace litl
 
         if (m_propertyBlocks.back()->acquireSlot(m_elementSizeBytes, m_currFrame, localSlotIndex, localSlotVersion))
         {
+            m_dirtyFrameCount = m_framesInFlight;
             return MaterialPropertySlotId{
                 .slot = ((SlotsPerBlock * static_cast<uint32_t>(m_propertyBlocks.size() - 1)) + localSlotIndex),
                 .version = localSlotVersion
@@ -220,8 +224,14 @@ namespace litl
         return (m_elementSizeBytes * SlotsPerBlock * m_propertyBlocks.size());
     }
 
-    void MaterialProperties::gatherDirtyBlocks(std::vector<MaterialPropertyBlockPointer>& dirtyBlocks) const noexcept
+    uint32_t MaterialProperties::propertyCount() const noexcept
     {
+        return static_cast<uint32_t>(m_properties.size());
+    }
+
+    void MaterialProperties::gatherDirtyBlocks(std::vector<MaterialPropertyBlockPointer>& dirtyBlocks) noexcept
+    {
+        dirtyBlocks.clear();
         dirtyBlocks.reserve(m_propertyBlocks.size());
 
         for (uint32_t i = 0u; i < static_cast<uint32_t>(m_propertyBlocks.size()); ++i)
@@ -232,8 +242,20 @@ namespace litl
                     .sourcePtr = m_propertyBlocks[i]->data,
                     .blockIndex = i
                 });
+            }
+        }
+    }
 
-                m_propertyBlocks[i]->isDirty = false;
+    void MaterialProperties::clearDirtyBlocks() noexcept
+    {
+        // Delay clearing the dirty flag so all N copies of the GPU buffer can get an up-to-date copy.
+        m_dirtyFrameCount = (m_dirtyFrameCount == 0u ? 0u : m_dirtyFrameCount - 1u);
+
+        if (m_dirtyFrameCount == 0u)
+        {
+            for (auto& propertyBlock : m_propertyBlocks)
+            {
+                propertyBlock->isDirty = false;
             }
         }
     }
@@ -293,6 +315,7 @@ namespace litl
         memcpy(blockData + blockSlotPropertyOffset, propertyData, static_cast<size_t>(propertySize));
 
         block->isDirty = true;
+        m_dirtyFrameCount = m_framesInFlight;
 
         return true;
     }
