@@ -17,6 +17,7 @@ namespace litl
         GraphicsPipelineHandle graphicsPipelineHandle{};
         ComputePipelineHandle computePipelineHandle{};
         GpuBufferHandle gpuBufferHandle{};
+        std::optional<uint64_t> currGraphicsGpuBufferDeviceAddress{};
 
         ShaderModuleHandle vertexHandle{};
         ShaderModuleHandle fragmentHandle{};
@@ -169,23 +170,26 @@ namespace litl
 
                 // --- Create the GPU Buffer
 
-                gpuBufferHandle = objectPool->createGpuBuffer(GpuBufferDescriptor{
-                    .objectInfo = ObjectDescriptor {
-                        .name = std::format("Material Property Buffer ({})", descriptor.objectInfo.name),
-                        .lifetime = descriptor.objectInfo.lifetime
-                    },
-                    .type = BufferTypeFlagBits::BufferDeviceAddress,
-                    .memoryUsage = BufferMemoryUsage::PersistentMap,
-                    .bufferStrategy = GpuBufferingStrategy::Frame,
-                    .bytes = properties.totalMemoryRequirements() * 2,
-                    .itemBytes = properties.individualSlotMemoryRequirements(),
-                    .canResize = true
-                });
-
-                if (!gpuBufferHandle.isValid())
+                if (properties.propertyCount() > 0u)
                 {
-                    logWarning("Material '", descriptor.objectInfo.name, "' failed to create properties GPU buffer.");
-                    return false;
+                    gpuBufferHandle = objectPool->createGpuBuffer(GpuBufferDescriptor{
+                        .objectInfo = ObjectDescriptor {
+                            .name = std::format("Material Property Buffer ({})", descriptor.objectInfo.name),
+                            .lifetime = descriptor.objectInfo.lifetime
+                        },
+                        .type = BufferTypeFlagBits::BufferDeviceAddress,
+                        .memoryUsage = BufferMemoryUsage::PersistentMap,
+                        .bufferStrategy = GpuBufferingStrategy::Frame,
+                        .bytes = properties.totalMemoryRequirements() * 2,
+                        .itemBytes = properties.individualSlotMemoryRequirements(),
+                        .canResize = true
+                    });
+
+                    if (!gpuBufferHandle.isValid())
+                    {
+                        logWarning("Material '", descriptor.objectInfo.name, "' failed to create properties GPU buffer.");
+                        return false;
+                    }
                 }
             }
 
@@ -230,7 +234,10 @@ namespace litl
                     return false;
                 }
 
-                if (!properties.configure(MaterialPropertyReflection{ .sizeBytes = propertyStructSizeBytes, .properties = std::move(reflectedProperties) }))
+                // Our GPU Buffer is buffered based on frames-in-flight, so we need to inform the MaterialProperties on the frame count so that all N buffers can be updated on changes.
+                const uint32_t framesInFlight = renderer->getFrameData().framesInFlight;
+
+                if (!properties.configure(MaterialPropertyReflection{ .sizeBytes = propertyStructSizeBytes, .properties = std::move(reflectedProperties) }, framesInFlight))
                 {
                     logWarning("Material '", descriptor.objectInfo.name, "' failed to populate properties. Rejecting.");
                     return false;
@@ -344,22 +351,30 @@ namespace litl
         {
             properties.calculateActiveSlotCounts();
             properties.freeSlots();
-            properties.gatherDirtyBlocks(dirtyPropertyBlocks);
 
-            if (!dirtyPropertyBlocks.empty() && (objectPool != nullptr))
+            auto* gpuBuffer = objectPool->getGpuBuffer(gpuBufferHandle);
+
+            if (gpuBuffer != nullptr)
             {
-                const auto slotSizeBytes = properties.individualSlotMemoryRequirements();
-                auto* gpuBuffer = objectPool->getGpuBuffer(gpuBufferHandle);
+                properties.gatherDirtyBlocks(dirtyPropertyBlocks);
 
-                if (gpuBuffer != nullptr)
+                if (!dirtyPropertyBlocks.empty() && (objectPool != nullptr))
                 {
+                    gpuBuffer->resizeBytes(properties.totalMemoryRequirements());   // No action if the memory needs have not grown sufficiently
+                    gpuBuffer->swapBuffers();
+
+                    const auto slotSizeBytes = properties.individualSlotMemoryRequirements();
+
                     for (auto& dirtyBlock : dirtyPropertyBlocks)
                     {
                         gpuBuffer->recordChunkDataWrite(GpuBufferChunk{
                             .sourcePtr = dirtyBlock.sourcePtr,
-                            .offset = static_cast<size_t>(dirtyBlock.blockIndex) * slotSizeBytes
-                        });
+                            .offset = static_cast<size_t>(dirtyBlock.blockIndex) * slotSizeBytes * MaterialProperties::SlotsPerBlock
+                            });
                     }
+
+                    properties.clearDirtyBlocks();
+                    currGraphicsGpuBufferDeviceAddress = gpuBuffer->getBufferDeviceAddress();
                 }
             }
         }
@@ -398,6 +413,16 @@ namespace litl
     ComputePipelineHandle Material::getComputePipelineHandle() const noexcept
     {
         return m_pImpl->computePipelineHandle;
+    }
+
+    GpuBufferHandle Material::getGraphicsGpuBufferHandle() const noexcept
+    {
+        return m_pImpl->gpuBufferHandle;
+    }
+
+    std::optional<uint64_t> Material::getGraphicsBufferDeviceAddress() const noexcept
+    {
+        return m_pImpl->currGraphicsGpuBufferDeviceAddress;
     }
 
     MaterialPropertySlotId Material::allocateSlot() noexcept
