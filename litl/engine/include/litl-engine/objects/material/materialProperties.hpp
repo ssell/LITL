@@ -123,9 +123,13 @@ namespace litl
         void freeSlots() noexcept;
 
         /// <summary>
+        /// Retrieves the number of bytes needed to store an individual slot.
+        /// </summary>
+        [[nodiscard]] uint32_t individualSlotMemoryRequirements() const noexcept;
+
+        /// <summary>
         /// Total bytes required to store all slots across all blocks. Used to determine if the GPU buffer needs to be resized.
         /// </summary>
-        /// <returns></returns>
         [[nodiscard]] size_t totalMemoryRequirements() const noexcept;
 
         /// <summary>

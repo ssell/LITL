@@ -1,3 +1,5 @@
+#include <format>
+
 #include "litl-engine/objects/material/material.hpp"
 #include "litl-engine/objects/material/materialProperties.hpp"
 #include "litl-engine/objects/objectPool.hpp"
@@ -12,6 +14,7 @@ namespace litl
         MaterialProperties properties;
         GraphicsPipelineHandle graphicsPipelineHandle{};
         ComputePipelineHandle computePipelineHandle{};
+        GpuBufferHandle gpuBufferHandle{};
 
         ShaderModuleHandle vertexHandle{};
         ShaderModuleHandle fragmentHandle{};
@@ -158,6 +161,27 @@ namespace litl
                     logWarning("Material '", descriptor.objectInfo.name, "' failed to reflect properties.");
                     return false;
                 }
+
+                // --- Create the GPU Buffer
+
+                gpuBufferHandle = objectPool.createGpuBuffer(GpuBufferDescriptor{
+                    .objectInfo = ObjectDescriptor {
+                        .name = std::format("Material Property Buffer ({})", descriptor.objectInfo.name),
+                        .lifetime = descriptor.objectInfo.lifetime
+                    },
+                    .type = BufferTypeFlagBits::BufferDeviceAddress,
+                    .memoryUsage = BufferMemoryUsage::PersistentMap,
+                    .bufferStrategy = GpuBufferingStrategy::Frame,
+                    .bytes = properties.totalMemoryRequirements() * 2,
+                    .itemBytes = properties.individualSlotMemoryRequirements(),
+                    .canResize = true
+                });
+
+                if (!gpuBufferHandle.isValid())
+                {
+                    logWarning("Material '", descriptor.objectInfo.name, "' failed to create properties GPU buffer.");
+                    return false;
+                }
             }
 
             // ---------------------------------------------------------------------------------
@@ -272,7 +296,7 @@ namespace litl
             return true;    // No reflected properties is OK - the shader stage isn't using any.
         }
 
-        void destroy() noexcept
+        void destroy(ObjectPool& objectPool) noexcept
         {
             if (renderer != nullptr)
             {
@@ -286,6 +310,7 @@ namespace litl
                 renderer->destroyShaderModule(meshHandle); 
                 renderer->destroyShaderModule(taskHandle); 
                 renderer->destroyShaderModule(computeHandle); 
+                objectPool.destroyGpuBuffer(gpuBufferHandle);
 
                 graphicsPipelineHandle = {};
                 computePipelineHandle = {};
@@ -297,6 +322,7 @@ namespace litl
                 meshHandle = {};
                 taskHandle = {};
                 computeHandle = {};
+                gpuBufferHandle = {};
             }
         }
     };
@@ -321,9 +347,9 @@ namespace litl
     }
     
 
-    void Material::destroy(Authority<ObjectPool> auth) noexcept
+    void Material::destroy(Authority<ObjectPool> auth, ObjectPool& objectPool) noexcept
     {
-        m_pImpl->destroy();
+        m_pImpl->destroy(objectPool);
     }
 
     GraphicsPipelineHandle Material::getGraphicsPipelineHandle() const noexcept

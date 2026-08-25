@@ -78,7 +78,7 @@ namespace litl
         ~Material();
 
         bool create(Authority<ObjectPool> auth, MaterialDescriptor const& descriptor, Renderer const& renderer, ObjectPool& objectPool) noexcept;
-        void destroy(Authority<ObjectPool> auth) noexcept;
+        void destroy(Authority<ObjectPool> auth, ObjectPool& objectPool) noexcept;
 
         [[nodiscard]] GraphicsPipelineHandle getGraphicsPipelineHandle() const noexcept;
         [[nodiscard]] ComputePipelineHandle getComputePipelineHandle() const noexcept;

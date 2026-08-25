@@ -210,6 +210,11 @@ namespace litl
         }
     }
 
+    uint32_t MaterialProperties::individualSlotMemoryRequirements() const noexcept
+    {
+        return m_elementSizeBytes;
+    }
+
     size_t MaterialProperties::totalMemoryRequirements() const noexcept
     {
         return (m_elementSizeBytes * SlotsPerBlock * m_propertyBlocks.size());
