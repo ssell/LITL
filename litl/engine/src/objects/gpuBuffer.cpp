@@ -198,6 +198,20 @@ namespace litl
         m_pRenderManager->trackDirtyBuffer({}, m_selfHandle);
     }
 
+    bool GpuBuffer::recordChunkDataWrite(GpuBufferChunk chunk) noexcept
+    {
+        if (m_descriptor.memoryUsage != BufferMemoryUsage::PersistentMap)
+        {
+            return false;
+        }
+
+        m_pendingChunkWrites.push_back(chunk);
+        m_isDirty = true;
+        m_pRenderManager->trackDirtyBuffer({}, m_selfHandle);
+
+        return true;
+    }
+
     std::span<std::byte const> GpuBuffer::getData() const noexcept
     {
         return m_data;
@@ -245,6 +259,22 @@ namespace litl
             }
         }
 
+        if (!m_pendingChunkWrites.empty() && (m_descriptor.memoryUsage == BufferMemoryUsage::PersistentMap))
+        {
+            MappedBuffer mappedBuffer{};
+
+            if (m_pRenderer->mapBuffer(currHandle, mappedBuffer) == RendererResult::Success)
+            {
+                for (auto& chunk : m_pendingChunkWrites)
+                {
+                    if (static_cast<size_t>(chunk.offset + chunk.sourcePtr.size_bytes()) <= m_descriptor.bytes)
+                    {
+                        std::memcpy(reinterpret_cast<std::byte*>(mappedBuffer.mappedPtr) + chunk.offset, chunk.sourcePtr.data(), chunk.sourcePtr.size_bytes());
+                    }
+                }
+            }
+        }
+
         reset();
     }
 
@@ -253,6 +283,7 @@ namespace litl
         m_isDirty = false;
         m_data.clear();             // todo buffer option to maintain CPU data
         m_dataPtr = {};
+        m_pendingChunkWrites.clear();
     }
 
     uint32_t GpuBuffer::getSizeBytes() const noexcept
@@ -274,12 +305,18 @@ namespace litl
     {
         LITL_ASSERT_MSG((m_descriptor.canResize && (size > 0u)), "Invalid buffer resize requested.", );
 
+        if (size == m_descriptor.bytes)
+        {
+            return;
+        }
+
         if ((size < m_descriptor.bytes) && !canShrink)
         {
             // Requested a smaller buffer, but did not provide permission to shrink.
             return;
         }
 
+        m_descriptor.bytes = size;
         m_version++;
 
         if (immediate)

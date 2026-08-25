@@ -220,6 +220,24 @@ namespace litl
         return (m_elementSizeBytes * SlotsPerBlock * m_propertyBlocks.size());
     }
 
+    void MaterialProperties::gatherDirtyBlocks(std::vector<MaterialPropertyBlockPointer>& dirtyBlocks) const noexcept
+    {
+        dirtyBlocks.reserve(m_propertyBlocks.size());
+
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(m_propertyBlocks.size()); ++i)
+        {
+            if (m_propertyBlocks[i]->isDirty)
+            {
+                dirtyBlocks.push_back(MaterialPropertyBlockPointer{
+                    .sourcePtr = m_propertyBlocks[i]->data,
+                    .blockIndex = i
+                });
+
+                m_propertyBlocks[i]->isDirty = false;
+            }
+        }
+    }
+
     bool MaterialProperties::getBlockLocalSlot(uint32_t slot, uint32_t& blockIndex, uint32_t& localSlot, uint32_t& localSlotVersion) const noexcept
     {
         if (static_cast<size_t>(slot) >= (m_propertyBlocks.size() * SlotsPerBlock))

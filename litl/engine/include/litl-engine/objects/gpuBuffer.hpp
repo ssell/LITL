@@ -73,6 +73,15 @@ namespace litl
         bool canResize = false;
     };
 
+    /// <summary>
+    /// 
+    /// </summary>
+    struct GpuBufferChunk
+    {
+        std::span<std::byte> sourcePtr;
+        size_t offset{ 0ull };
+    };
+
     class GpuBuffer
     {
     public:
@@ -165,6 +174,14 @@ namespace litl
         /// </summary>
         /// <param name="data"></param>
         void setDataPtr(std::span<std::byte const> data) noexcept;
+
+        /// <summary>
+        /// Records a pending write of data to a specified offset in the GPU buffer.
+        /// The write is deferred and requires that the chunk source pointer remains valid until the transfer is complete.
+        /// Note that this is only available to persistently mapped buffers.
+        /// </summary>
+        /// <param name="chunk"></param>
+        bool recordChunkDataWrite(GpuBufferChunk chunk) noexcept;
 
         /// <summary>
         /// Retrieves the data in the buffer if it has not been disposed.
@@ -291,6 +308,11 @@ namespace litl
         /// Pointer to user provided data that is to be copied.
         /// </summary>
         std::span<std::byte const> m_dataPtr;
+
+        /// <summary>
+        /// List of pending writes to individual offsets in the GPU buffer.
+        /// </summary>
+        std::vector<GpuBufferChunk> m_pendingChunkWrites;
 
         /// <summary>
         /// If applicable, the Buffer Device Addresses (BDA) for this buffer.

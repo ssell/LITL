@@ -78,11 +78,14 @@ namespace litl
         ~Material();
 
         bool create(Authority<ObjectPool> auth, MaterialDescriptor const& descriptor, Renderer const& renderer, ObjectPool& objectPool) noexcept;
-        void destroy(Authority<ObjectPool> auth, ObjectPool& objectPool) noexcept;
+        void destroy(Authority<ObjectPool> auth) noexcept;
 
         [[nodiscard]] GraphicsPipelineHandle getGraphicsPipelineHandle() const noexcept;
         [[nodiscard]] ComputePipelineHandle getComputePipelineHandle() const noexcept;
         [[nodiscard]] MaterialPropertySlotId allocateSlot() noexcept;
+
+        void syncFrameStart(uint32_t frame) noexcept;       // ... todo add Authority<> parameter ...
+        void syncPreRender() noexcept;                      // ... todo add Authority<> parameter ...
 
     private:
 
