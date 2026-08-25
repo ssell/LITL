@@ -233,6 +233,12 @@ namespace litl
         return (inclusive ? (x >= a) && (x <= b) : (x > a) && (x < b));
     }
 
+    [[nodiscard]] constexpr bool overlap(uint32_t astart, uint32_t aend, uint32_t bstart, uint32_t bend) noexcept
+    {
+        return between(astart, bstart, bend) || between(aend, bstart, bend);
+    }
+
+
     [[nodiscard]] constexpr float abs(float x) noexcept
     {
         return std::fabs(x);

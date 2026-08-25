@@ -73,8 +73,8 @@ namespace litl
         static constexpr StringId MaterialPropertiesStructHashedName = StringId(MaterialPropertiesStructName);
 
         Material();
-        Material(Material&& other);
-        Material& operator=(Material&& other);
+        Material(Material&& other) noexcept;
+        Material& operator=(Material&& other) noexcept;
         ~Material();
 
         bool create(Authority<ObjectPool> auth, MaterialDescriptor const& descriptor, Renderer const& renderer, ObjectPool& objectPool) noexcept;

@@ -1,44 +1,72 @@
 #include <cstring>
 
 #include "litl-core/logging/logging.hpp"
+#include "litl-core/math/common.hpp"
 #include "litl-engine/objects/material/materialProperties.hpp"
 
 namespace litl
 {
-    void MaterialProperties::configure(MaterialPropertyReflection const& reflectedProperties) noexcept
+    namespace
+    {
+        [[nodiscard]] bool insertUniqueNonOverlappingProperties(std::vector<ResourceProperty> const& reflectedProperties, std::vector<ResourceProperty>& properties, StringIdMap<uint32_t>& propertyMap) noexcept
+        {
+            for (auto& reflectedProperty : reflectedProperties)
+            {
+                // Valid name
+                if (reflectedProperty.hashedName == StringId{})
+                {
+                    continue;
+                }
+
+                // Dedupe
+                if (propertyMap.find(reflectedProperty.hashedName) != propertyMap.end())
+                {
+                    continue;
+                }
+
+                // Range is open
+                for (auto& preexistingProperty : properties)
+                {
+                    if (overlap(reflectedProperty.offset, (reflectedProperty.offset + reflectedProperty.sizePadded), preexistingProperty.offset, (preexistingProperty.offset + preexistingProperty.sizePadded)))
+                    {
+                        logWarning("MaterialProperties::configure encountered property block overlap between properties '", preexistingProperty.name, "' and '", reflectedProperty.name, "'");
+                        return false;
+                    }
+                }
+
+                propertyMap[reflectedProperty.hashedName] = static_cast<uint32_t>(properties.size());
+                properties.push_back(reflectedProperty);
+            }
+
+            return true;
+        }
+    }
+    bool MaterialProperties::configure(MaterialPropertyReflection const& reflectedProperties) noexcept
     {
         if (!m_propertyBlocks.empty())
         {
             // TODO update for shader hot reload
-            return;
+            return true;    // no action for now
         }
 
         if (reflectedProperties.sizeBytes == 0u)
         {
             logWarning("MaterialProperties::configure provided with reflected properties with element size of 0. Rejecting.");
-            return;
+            return false;
+        }
+
+        if (!insertUniqueNonOverlappingProperties(reflectedProperties.properties, m_properties, m_propertyMap))
+        {
+            m_properties.clear();
+            m_propertyMap.clear();
+            return false;
         }
 
         m_elementSizeBytes = reflectedProperties.sizeBytes;
-        m_properties.reserve(reflectedProperties.properties.size());
-
-        for (auto& reflectedProperty : reflectedProperties.properties)
-        {
-            if (reflectedProperty.hashedName == StringId{})
-            {
-                continue;
-            }
-
-            if (m_propertyMap.find(reflectedProperty.hashedName) != m_propertyMap.end())
-            {
-                continue;
-            }
-
-            m_propertyMap[reflectedProperty.hashedName] = static_cast<uint32_t>(m_properties.size());
-            m_properties.push_back(reflectedProperty);
-        }
 
         allocateBlock();
+
+        return true;
     }
 
     void MaterialProperties::setCurrentFrame(uint32_t currFrame) noexcept
@@ -94,6 +122,12 @@ namespace litl
 
     MaterialPropertySlotId MaterialProperties::allocateSlot() noexcept
     {
+        if (m_elementSizeBytes == 0u)
+        {
+            // A material with no property block is legitimate but we can't allocate a slot for it.
+            return {};
+        }
+
         uint32_t localSlotIndex = 0u;
         uint32_t localSlotVersion = 0u;
 
@@ -231,7 +265,7 @@ namespace litl
         const auto blockSlotPropertyOffset = (localSlotIndex * m_elementSizeBytes) + propertyOffset;
 
         LITL_ASSERT_MSG(((propertyOffset + propertySize) <= m_elementSizeBytes), "Material setData out-of-bounds of property", false);
-        LITL_ASSERT_MSG(static_cast<size_t>((blockSlotPropertyOffset + propertySize) <= block->data.size()), "Material setData out-of-bounds of block", false);
+        LITL_ASSERT_MSG((static_cast<size_t>(blockSlotPropertyOffset + propertySize) <= block->data.size()), "Material setData out-of-bounds of block", false);
 
         memcpy(blockData + blockSlotPropertyOffset, propertyData, static_cast<size_t>(propertySize));
 
