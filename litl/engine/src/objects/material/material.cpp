@@ -10,6 +10,8 @@ namespace litl
     struct Material::Impl
     {
         Renderer const* renderer = nullptr;
+        ObjectPool* objectPool = nullptr;
+
         MaterialDescriptor descriptor;
         MaterialProperties properties;
         GraphicsPipelineHandle graphicsPipelineHandle{};
@@ -25,10 +27,13 @@ namespace litl
         ShaderModuleHandle taskHandle{};
         ShaderModuleHandle computeHandle{};
 
-        bool create(MaterialDescriptor const& materialDescriptor, Renderer const& pRenderer, ObjectPool& objectPool) noexcept
+        std::vector<MaterialPropertyBlockPointer> dirtyPropertyBlocks;
+
+        bool create(MaterialDescriptor const& materialDescriptor, Renderer const& pRenderer, ObjectPool& pObjectPool) noexcept
         {
             descriptor = materialDescriptor;
             renderer = &pRenderer;
+            objectPool = &pObjectPool;
 
             // ---------------------------------------------------------------------------------
             // --- Shader Module Handles
@@ -164,7 +169,7 @@ namespace litl
 
                 // --- Create the GPU Buffer
 
-                gpuBufferHandle = objectPool.createGpuBuffer(GpuBufferDescriptor{
+                gpuBufferHandle = objectPool->createGpuBuffer(GpuBufferDescriptor{
                     .objectInfo = ObjectDescriptor {
                         .name = std::format("Material Property Buffer ({})", descriptor.objectInfo.name),
                         .lifetime = descriptor.objectInfo.lifetime
@@ -296,7 +301,7 @@ namespace litl
             return true;    // No reflected properties is OK - the shader stage isn't using any.
         }
 
-        void destroy(ObjectPool& objectPool) noexcept
+        void destroy() noexcept
         {
             if (renderer != nullptr)
             {
@@ -310,7 +315,6 @@ namespace litl
                 renderer->destroyShaderModule(meshHandle); 
                 renderer->destroyShaderModule(taskHandle); 
                 renderer->destroyShaderModule(computeHandle); 
-                objectPool.destroyGpuBuffer(gpuBufferHandle);
 
                 graphicsPipelineHandle = {};
                 computePipelineHandle = {};
@@ -322,7 +326,41 @@ namespace litl
                 meshHandle = {};
                 taskHandle = {};
                 computeHandle = {};
+            }
+
+            if (objectPool != nullptr)
+            {
+                objectPool->destroyGpuBuffer(gpuBufferHandle);
                 gpuBufferHandle = {};
+            }
+        }
+
+        void syncFrameStart(uint32_t frame) noexcept
+        {
+            properties.setCurrentFrame(frame);
+        }
+
+        void syncPreRender() noexcept
+        {
+            properties.calculateActiveSlotCounts();
+            properties.freeSlots();
+            properties.gatherDirtyBlocks(dirtyPropertyBlocks);
+
+            if (!dirtyPropertyBlocks.empty() && (objectPool != nullptr))
+            {
+                const auto slotSizeBytes = properties.individualSlotMemoryRequirements();
+                auto* gpuBuffer = objectPool->getGpuBuffer(gpuBufferHandle);
+
+                if (gpuBuffer != nullptr)
+                {
+                    for (auto& dirtyBlock : dirtyPropertyBlocks)
+                    {
+                        gpuBuffer->recordChunkDataWrite(GpuBufferChunk{
+                            .sourcePtr = dirtyBlock.sourcePtr,
+                            .offset = static_cast<size_t>(dirtyBlock.blockIndex) * slotSizeBytes
+                        });
+                    }
+                }
             }
         }
     };
@@ -347,9 +385,9 @@ namespace litl
     }
     
 
-    void Material::destroy(Authority<ObjectPool> auth, ObjectPool& objectPool) noexcept
+    void Material::destroy(Authority<ObjectPool> auth) noexcept
     {
-        m_pImpl->destroy(objectPool);
+        m_pImpl->destroy();
     }
 
     GraphicsPipelineHandle Material::getGraphicsPipelineHandle() const noexcept
@@ -365,5 +403,15 @@ namespace litl
     MaterialPropertySlotId Material::allocateSlot() noexcept
     {
         return m_pImpl->properties.allocateSlot();
+    }
+    
+    void Material::syncFrameStart(uint32_t frame) noexcept
+    {
+        m_pImpl->syncFrameStart(frame);
+    }
+
+    void Material::syncPreRender() noexcept
+    {
+        m_pImpl->syncPreRender();
     }
 }

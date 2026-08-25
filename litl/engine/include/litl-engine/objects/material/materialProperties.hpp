@@ -71,6 +71,15 @@ namespace litl
     };
 
     /// <summary>
+    /// Offset and data pointer for a dirty property block.
+    /// </summary>
+    struct MaterialPropertyBlockPointer
+    {
+        std::span<std::byte> sourcePtr{};
+        uint32_t blockIndex{ 0u };
+    };
+
+    /// <summary>
     /// 
     /// </summary>
     class MaterialProperties
@@ -131,6 +140,12 @@ namespace litl
         /// Total bytes required to store all slots across all blocks. Used to determine if the GPU buffer needs to be resized.
         /// </summary>
         [[nodiscard]] size_t totalMemoryRequirements() const noexcept;
+
+        /// <summary>
+        /// Retrieves the indices of all blocks marked dirty.
+        /// This will also mark all returned blocks as no longer dirty.
+        /// </summary>
+        void gatherDirtyBlocks(std::vector<MaterialPropertyBlockPointer>& dirtyBlocks) const noexcept;
 
         /// <summary>
         /// Sets the boolean value at with the specified property name at the provided slot index.
