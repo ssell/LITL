@@ -9,27 +9,10 @@
 #include "litl-core/stringId.hpp"
 #include "litl-core/math/types.hpp"
 #include "litl-renderer/reflection.hpp"
+#include "litl-engine/objects/material/materialPropertySlotId.hpp"
 
 namespace litl
 {
-    struct MaterialPropertySlotId
-    {
-        /// <summary>
-        /// The global slot index.
-        /// </summary>
-        uint32_t slot = Constants::uint32_null_index;
-
-        /// <summary>
-        /// The version/generation of the slot that this is valid for.
-        /// </summary>
-        uint32_t version = 0u;
-
-        [[nodiscard]] constexpr bool isValid() const noexcept
-        {
-            return (slot != Constants::uint32_null_index) && (version != 0u);
-        }
-    };
-
     struct MaterialPropertySlot
     {
         uint32_t version = 0u;

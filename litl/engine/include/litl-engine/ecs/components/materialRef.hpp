@@ -1,15 +1,16 @@
 #ifndef LITL_ENGINE_ECS_COMPONENTS_MATERIAL_REF_H__
 #define LITL_ENGINE_ECS_COMPONENTS_MATERIAL_REF_H__
 
-#include "litl-engine/objects/objectHandles.hpp"
 #include "litl-ecs/register.hpp"
+#include "litl-engine/objects/objectHandles.hpp"
+#include "litl-engine/objects/material/materialPropertySlotId.hpp"
 
 namespace litl
 {
     struct MaterialRef
     {
-        MaterialHandle materialHandle;
-        MaterialPipelineHandle pipelineHandle;
+        MaterialHandle handle;
+        MaterialPropertySlotId slot;
     };
 }
 
