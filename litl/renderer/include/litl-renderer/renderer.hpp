@@ -21,6 +21,7 @@ namespace litl
     /// Intentionally incomplete. Do not not define anywhere.
     /// </summary>
     struct RendererContext;
+    struct ShaderReflection;
 
     struct SwapChainDimensions
     {
@@ -47,7 +48,8 @@ namespace litl
         SamplerHandle (*createSampler)(RendererContext*, SamplerDescriptor const&);
         void (*destroySampler)(RendererContext*, SamplerHandle);
         ShaderModuleHandle (*createShaderModule)(RendererContext*, ShaderModuleDescriptor const&);
-        ShaderModuleHandle(*getShaderModule)(RendererContext*, std::string const&);
+        ShaderModuleHandle (*getShaderModule)(RendererContext*, std::string const&);
+        ShaderReflection* (*getShaderReflection)(RendererContext*, ShaderModuleHandle);
         void (*reloadShaderModule)(RendererContext*, ShaderModuleDescriptor const&);
         void (*destroyShaderModule)(RendererContext*, ShaderModuleHandle);
         TextureHandle (*createTexture)(RendererContext*, TextureDescriptor const&);
@@ -131,7 +133,6 @@ namespace litl
         /// 
         /// </summary>
         /// <param name="descriptor"></param>
-        /// <returns></returns>
         [[nodiscard]] BufferHandle createBuffer(BufferDescriptor const& descriptor) const noexcept;
         
         /// <summary>
@@ -144,14 +145,12 @@ namespace litl
         /// 
         /// </summary>
         /// <param name="descriptor"></param>
-        /// <returns></returns>
         [[nodiscard]] CommandBufferHandle createCommandBuffer(CommandBufferDescriptor const& descriptor) const noexcept;
         
         /// <summary>
         /// Creates a transient scoped command buffer that submits its commands and cleans up the command buffer when it leaves scope.
         /// The transient buffer submits via submitCommandsAndWait and thus blocks until the commands have processed.
         /// </summary>
-        /// <returns></returns>
         [[nodiscard]] ScopedCommandBuffer createScopedCommandBuffer() const noexcept;
 
         /// <summary>
@@ -164,7 +163,6 @@ namespace litl
         /// Destroys the underlying compute pipeline resource pointed to by the provided handle.
         /// </summary>
         /// <param name="descriptor"></param>
-        /// <returns></returns>
         [[nodiscard]] ComputePipelineHandle createComputePipeline(ComputePipelineDescriptor const& descriptor) const noexcept;
         
         /// <summary>
@@ -177,7 +175,6 @@ namespace litl
         /// 
         /// </summary>
         /// <param name="descriptor"></param>
-        /// <returns></returns>
         [[nodiscard]] GraphicsPipelineHandle createGraphicsPipeline(GraphicsPipelineDescriptor const& descriptor) const noexcept;
         
         /// <summary>
@@ -190,7 +187,6 @@ namespace litl
         /// 
         /// </summary>
         /// <param name="descriptor"></param>
-        /// <returns></returns>
         [[nodiscard]] SamplerHandle createSampler(SamplerDescriptor const& descriptor) const noexcept;
         
         /// <summary>
@@ -203,16 +199,19 @@ namespace litl
         /// 
         /// </summary>
         /// <param name="descriptor"></param>
-        /// <returns></returns>
         [[nodiscard]] ShaderModuleHandle createShaderModule(ShaderModuleDescriptor const& descriptor) const noexcept;
         
         /// <summary>
         /// 
         /// </summary>
         /// <param name="resource"></param>
-        /// <returns></returns>
         [[nodiscard]] ShaderModuleHandle getShaderModule(std::string const& resource) const noexcept;
         
+        /// <summary>
+        /// Retrieves the reflected shader structure. May return null if no matching reflection datais found.
+        /// </summary>
+        [[nodiscard]] ShaderReflection* getShaderReflection(ShaderModuleHandle handle) const noexcept;
+
         /// <summary>
         /// 
         /// </summary>
@@ -229,7 +228,6 @@ namespace litl
         /// 
         /// </summary>
         /// <param name="descriptor"></param>
-        /// <returns></returns>
         [[nodiscard]] TextureHandle createTexture(TextureDescriptor const& descriptor) const noexcept;
         
         /// <summary>
@@ -245,21 +243,18 @@ namespace litl
         /// <summary>
         /// Retrieves the command buffer for the current frame and instructs it to start recording commands.
         /// </summary>
-        /// <returns></returns>
         CommandBufferHandle cmdBeginFrame() const noexcept;
         
         /// <summary>
         /// Instructs the provided command buffer to start recording commands.
         /// </summary>
         /// <param name="handle"></param>
-        /// <returns></returns>
         bool cmdBegin(CommandBufferHandle handle) const noexcept;
         
         /// <summary>
         /// Instructs the provided command buffer to stop recording commands.
         /// </summary>
         /// <param name="handle"></param>
-        /// <returns></returns>
         bool cmdEnd(CommandBufferHandle handle) const noexcept;
         
         /// <summary>
@@ -344,7 +339,6 @@ namespace litl
         /// <param name="commandBuffer"></param>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
-        /// <returns></returns>
         RendererResult cmdBindVertexBuffer(CommandBufferHandle commandBuffer, BufferHandle buffer, uint64_t offset = 0u, uint32_t firstBinding = 0u) const noexcept;
         
         /// <summary>
@@ -354,7 +348,6 @@ namespace litl
         /// <param name="buffers"></param>
         /// <param name="offsets"></param>
         /// <param name="count"></param>
-        /// <returns></returns>
         RendererResult cmdBindVertexBuffers(CommandBufferHandle commandBuffer, BufferHandle* buffers, uint64_t* offsets, uint32_t count, uint32_t firstBinding = 0u) const noexcept;
         
         /// <summary>
@@ -363,7 +356,6 @@ namespace litl
         /// <param name="commandBuffer"></param>
         /// <param name="buffer"></param>
         /// <param name="indexType"></param>
-        /// <returns></returns>
         RendererResult cmdBindIndexBuffer(CommandBufferHandle commandBuffer, BufferHandle buffer, IndexType indexType = IndexType::Uint32) const noexcept;
         
         /// <summary>
@@ -378,7 +370,6 @@ namespace litl
         /// <param name="handle"></param>
         /// <param name="buffer"></param>
         /// <param name="key"></param>
-        /// <returns></returns>
         RendererResult cmdBindBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key, bool isGraphics) const noexcept;
         
         /// <summary>
@@ -386,7 +377,6 @@ namespace litl
         /// When the returned ScopedBufferUpload goes out of scope it automatically calls cmdBufferFlush.
         /// </summary>
         /// <param name="commandBuffer"></param>
-        /// <returns></returns>
         ScopedBufferUpload cmdBeginBufferUpload(CommandBufferHandle commandBuffer) const noexcept;
         
         /// <summary>
@@ -399,14 +389,12 @@ namespace litl
         /// <param name="destBufferHandle"></param>
         /// <param name="sourceOffset"></param>
         /// <param name="destOffset"></param>
-        /// <returns></returns>
         RendererResult cmdBufferUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, BufferHandle destBufferHandle, uint64_t sourceOffset = 0ull, uint64_t destOffset = 0ull) const noexcept;
         
         /// <summary>
         /// Ensures that all buffer uploads are complete.
         /// </summary>
         /// <param name="commandBuffer"></param>
-        /// <returns></returns>
         RendererResult cmdBufferFlush(CommandBufferHandle commandBuffer) const noexcept;
         
         /// <summary>
@@ -414,7 +402,6 @@ namespace litl
         /// </summary>
         /// <param name="buffer"></param>
         /// <param name="mapped"></param>
-        /// <returns></returns>
         RendererResult mapBuffer(BufferHandle buffer, MappedBuffer& mapped) const noexcept;
         
         /// <summary>
@@ -427,7 +414,6 @@ namespace litl
         /// If the buffer was created with the BufferDeviceAddress flag, this will return the 64-bit address.
         /// </summary>
         /// <param name="buffer"></param>
-        /// <returns></returns>
         [[nodiscard]] std::optional<uint64_t> getBufferDeviceAddress(BufferHandle buffer) const noexcept;
 
         /// <summary>
@@ -437,7 +423,6 @@ namespace litl
         /// <param name="texture"></param>
         /// <param name="textureId"></param>
         /// <param name="isGraphics"></param>
-        /// <returns></returns>
         RendererResult cmdBindTexture(CommandBufferHandle commandBuffer, TextureHandle texture, StringId textureId, bool isGraphics) const noexcept;
 
         /// <summary>
@@ -447,7 +432,6 @@ namespace litl
         /// <param name="sampler"></param>
         /// <param name="samplerId"></param>
         /// <param name="isGraphics"></param>
-        /// <returns></returns>
         RendererResult cmdBindSampler(CommandBufferHandle commandBuffer, SamplerHandle sampler, StringId samplerId, bool isGraphics) const noexcept;
 
         /// <summary>
@@ -457,7 +441,6 @@ namespace litl
         /// <param name="commandBuffer"></param>
         /// <param name="source"></param>
         /// <param name="destTextureHandle"></param>
-        /// <returns></returns>
         RendererResult cmdTextureUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, TextureHandle destTextureHandle) const noexcept;
         
         /// <summary>
@@ -465,14 +448,12 @@ namespace litl
         /// </summary>
         /// <param name="texture"></param>
         /// <param name="mapped"></param>
-        /// <returns></returns>
         RendererResult mapTexture(TextureHandle texture, MappedTexture& mapped);
         
         /// <summary>
         /// Unmaps the texture memory address to conclude any writes.
         /// </summary>
         /// <param name="texture"></param>
-        /// <returns></returns>
         RendererResult unmapTexture(TextureHandle texture);
 
         // ---------------------------------------------------------------------------------
@@ -483,7 +464,6 @@ namespace litl
         /// Checks if the previous frame is done rendering and if we can begin rendering the next frame.
         /// </summary>
         /// <param name="maxWaitMs">If 0, then there will be no waiting for the frame to be ready.</param>
-        /// <returns></returns>
         [[nodiscard]] bool beginRender(uint32_t maxWaitMs) const noexcept;
 
         /// <summary>
@@ -504,7 +484,6 @@ namespace litl
         /// The commands are waited on and can be considered complete when this function returns.
         /// </summary>
         /// <param name="commands"></param>
-        /// <returns></returns>
         RendererResult submitCommandsAndWait(CommandBufferHandle commands) const noexcept;
 
         /// <summary>
@@ -526,32 +505,27 @@ namespace litl
         /// <summary>
         /// Returns the format of the swapchain color target.
         /// </summary>
-        /// <returns></returns>
         [[nodiscard]] DataFormat getSwapchainImageFormat() const noexcept;
 
         /// <summary>
         /// Returns the format of the swapchain depth target.
         /// </summary>
-        /// <returns></returns>
         [[nodiscard]] DataFormat getSwapchainDepthFormat() const noexcept;
 
         /// <summary>
         /// Retrieves the swap chain width and height and aspect ratio.
         /// </summary>
-        /// <returns></returns>
         [[nodiscard]] SwapChainDimensions getSwapchainDimensions() const noexcept;
         
         /// <summary>
         /// Returns information about the current frame such as count and index.
         /// </summary>
-        /// <returns></returns>
         [[nodiscard]] FrameData getFrameData() const noexcept;
 
         /// <summary>
         /// Returns the shader stages that use push constants for the specified graphics pipeline.
         /// </summary>
         /// <param name="handle"></param>
-        /// <returns></returns>
         [[nodiscard]] ShaderStage getGraphicsPipelinePushConstantStages(GraphicsPipelineHandle handle) const noexcept;
 
     private:

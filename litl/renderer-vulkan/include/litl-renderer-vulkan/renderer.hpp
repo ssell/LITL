@@ -32,6 +32,7 @@ namespace litl::vulkan
     void destroySampler(litl::RendererContext* context, SamplerHandle handle) noexcept;
     [[nodiscard]] ShaderModuleHandle createShaderModule(litl::RendererContext* context, ShaderModuleDescriptor const& descriptor) noexcept;
     [[nodiscard]] ShaderModuleHandle getShaderModule(litl::RendererContext* context, std::string const& resource) noexcept;
+    [[nodiscard]] ShaderReflection* getShaderReflection(litl::RendererContext* context, ShaderModuleHandle handle) noexcept;
     void reloadShaderModule(litl::RendererContext* context, ShaderModuleDescriptor const& descriptor) noexcept;
     void destroyShaderModule(litl::RendererContext* context, ShaderModuleHandle handle) noexcept;
     [[nodiscard]] TextureHandle createTexture(litl::RendererContext* context, TextureDescriptor const& descriptor) noexcept;
@@ -112,6 +113,7 @@ namespace litl::vulkan
         .destroySampler = &destroySampler,
         .createShaderModule = &createShaderModule,
         .getShaderModule = &getShaderModule,
+        .getShaderReflection = &getShaderReflection,
         .reloadShaderModule = &reloadShaderModule,
         .destroyShaderModule = &destroyShaderModule,
         .createTexture = &createTexture,

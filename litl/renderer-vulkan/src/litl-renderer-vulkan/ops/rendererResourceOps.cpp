@@ -164,6 +164,19 @@ namespace litl::vulkan
         return vulkanContext->resources.getShaderModuleHandle(StringId(resource));
     }
 
+    ShaderReflection* getShaderReflection(litl::RendererContext* context, ShaderModuleHandle handle) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+        auto* shaderResource = vulkanContext->resources.getShaderModule(handle);
+
+        if (shaderResource != nullptr)
+        {
+            return &shaderResource->reflection;
+        }
+
+        return nullptr;
+    }
+
     void reloadShaderModule(litl::RendererContext* context, ShaderModuleDescriptor const& descriptor) noexcept
     {
         auto* vulkanContext = unwrap(context);
