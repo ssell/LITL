@@ -4,6 +4,7 @@
 #include "litl-engine/render/renderManager.hpp"
 #include "litl-engine/scene/sceneManager.hpp"
 #include "litl-engine/tasks/taskManager.hpp"
+#include "litl-engine/objects/material/materialManager.hpp"
 
 namespace litl
 {
@@ -13,6 +14,7 @@ namespace litl
         std::shared_ptr<RenderManager> renderManager{ nullptr };
         std::shared_ptr<SceneManager> sceneManager{ nullptr };
         std::shared_ptr<TaskManager> taskManager{ nullptr };
+        std::shared_ptr<MaterialManager> materialManager{ nullptr };
         std::shared_ptr<FrameCallbacks> engineFrameCallbacks{ std::make_shared<FrameCallbacks>() };
         std::shared_ptr<FrameCallbacks> userFrameCallbacks{ nullptr };
     };
@@ -33,12 +35,14 @@ namespace litl
         m_impl->renderManager = services.get<RenderManager>();
         m_impl->sceneManager = services.get<SceneManager>();
         m_impl->taskManager = services.get<TaskManager>();
+        m_impl->materialManager = services.get<MaterialManager>();
         m_impl->userFrameCallbacks = (userCallbacks != nullptr) ? userCallbacks : std::make_shared<FrameCallbacks>();
 
         LITL_FATAL_ASSERT_MSG((m_impl->world != nullptr), "Failed to inject World into EngineCallbacks");
         LITL_FATAL_ASSERT_MSG((m_impl->renderManager != nullptr), "Failed to inject RenderManager into EngineCallbacks");
         LITL_FATAL_ASSERT_MSG((m_impl->sceneManager != nullptr), "Failed to inject SceneManager into EngineCallbacks");
         LITL_FATAL_ASSERT_MSG((m_impl->sceneManager != nullptr), "Failed to inject TaskManager into EngineCallbacks");
+        LITL_FATAL_ASSERT_MSG((m_impl->materialManager != nullptr), "Failed to inject MaterialManager into EngineCallbacks");
 
         // ---------------------------------------------------------------------------------
         // Intraframe Sync Points
@@ -57,6 +61,15 @@ namespace litl
         m_impl->engineFrameCallbacks->onFrameStart = [this](ServiceProvider& services, float dt)
             {
                 m_impl->taskManager->update();
+
+                auto* renderer = m_impl->renderManager->getRenderer();
+
+                if (renderer != nullptr)
+                {
+                    auto frameData = renderer->getFrameData();
+                    m_impl->materialManager->onFrameStart({}, frameData.frameCount, frameData.frameInFlightIndex);
+                }
+
                 m_impl->userFrameCallbacks->invokeFrameStart(services, dt);
             };
 
@@ -112,6 +125,7 @@ namespace litl
         m_impl->engineFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::PreRender)] = [this](ServiceProvider& services, float dt, SystemGroup group)
             {
                 m_impl->sceneManager->onPreRender({}, * m_impl->world);
+                m_impl->materialManager->onPreRender({});
                 m_impl->userFrameCallbacks->invokePreGroup(services, dt, group);
             };
 

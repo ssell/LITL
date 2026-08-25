@@ -3,6 +3,7 @@
 #include "litl-engine/frameLimiter.hpp"
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/objects/objectPool.hpp"
+#include "litl-engine/objects/material/materialManager.hpp"
 #include "litl-engine/render/renderManager.hpp"
 #include "litl-engine/scene/sceneManager.hpp"
 #include "litl-engine/scene/sceneView.hpp"
@@ -22,6 +23,7 @@ namespace litl::Internal
         services.addSingleton<Window>();
         services.addSingleton<RenderManager>();
         services.addSingleton<ObjectPool>();
+        services.addSingleton<MaterialManager>();
         services.addSingleton<TaskManager>();
         services.addSingleton<AssetManager>();
         services.addSingleton<SceneManager>();

@@ -1,6 +1,7 @@
 #include <format>
 
 #include "litl-engine/objects/material/material.hpp"
+#include "litl-engine/objects/material/materialManager.hpp"
 #include "litl-engine/objects/material/materialProperties.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-renderer/renderer.hpp"
@@ -344,13 +345,13 @@ namespace litl
             }
         }
 
-        void syncFrameStart(uint32_t frame, uint32_t frameIndex) noexcept
+        void onFrameStart(uint32_t frame, uint32_t frameIndex) noexcept
         {
             properties.setCurrentFrame(frame);
             frameInFlightIndex = frameInFlightIndex;
         }
 
-        void syncPreRender() noexcept
+        void onPreRender() noexcept
         {
             if (objectPool == nullptr)
             {
@@ -371,7 +372,7 @@ namespace litl
 
                 if (!dirtyPropertyBlocks.empty())
                 {
-                    gpuBuffer->resizeBytes(properties.totalMemoryRequirements());   // No action if the memory needs have not grown sufficiently
+                    gpuBuffer->resizeBytes(properties.totalMemoryRequirements() * 2);   // No action if the memory needs have not grown sufficiently
 
                     const auto slotSizeBytes = properties.individualSlotMemoryRequirements();
 
@@ -439,13 +440,13 @@ namespace litl
         return m_pImpl->properties.allocateSlot();
     }
     
-    void Material::syncFrameStart(uint32_t frame, uint32_t frameInFlightIndex) noexcept
+    void Material::onFrameStart(Authority<MaterialManager> auth, uint32_t frame, uint32_t frameInFlightIndex) noexcept
     {
-        m_pImpl->syncFrameStart(frame, frameInFlightIndex);
+        m_pImpl->onFrameStart(frame, frameInFlightIndex);
     }
 
-    void Material::syncPreRender() noexcept
+    void Material::onPreRender(Authority<MaterialManager> auth) noexcept
     {
-        m_pImpl->syncPreRender();
+        m_pImpl->onPreRender();
     }
 }
