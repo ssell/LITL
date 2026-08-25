@@ -38,7 +38,7 @@ namespace litl
             auto fragmentHandle = createShaderModuleHandle(descriptor.fragmentShader);
             auto geometryHandle = createShaderModuleHandle(descriptor.geometryShader);
             auto tessellationControlHandle = createShaderModuleHandle(descriptor.tessellationControlShader);
-            auto tessellationEvaluationHandle = createShaderModuleHandle(descriptor.tessellationControlShader);
+            auto tessellationEvaluationHandle = createShaderModuleHandle(descriptor.tessellationEvaluationShader);
             auto meshHandle = createShaderModuleHandle(descriptor.meshShader);
             auto taskHandle = createShaderModuleHandle(descriptor.taskShader);
             auto computeHandle = createShaderModuleHandle(descriptor.computeShader);
@@ -144,7 +144,22 @@ namespace litl
 
                 // --- Configure Material Properties
 
-                configurePropertiesFromReflection(vertexHandle);
+                uint32_t propertyStructSizeBytes = 0u;
+                std::vector<ResourceProperty> reflectedProperties;
+
+                compileReflectedProperties(vertexHandle, descriptor.vertexShader.entryPoint, propertyStructSizeBytes, reflectedProperties);
+                compileReflectedProperties(fragmentHandle, descriptor.fragmentShader.entryPoint, propertyStructSizeBytes, reflectedProperties);
+                compileReflectedProperties(geometryHandle, descriptor.geometryShader.entryPoint, propertyStructSizeBytes, reflectedProperties);
+                compileReflectedProperties(tessellationControlHandle, descriptor.tessellationControlShader.entryPoint, propertyStructSizeBytes, reflectedProperties);
+                compileReflectedProperties(tessellationEvaluationHandle, descriptor.tessellationEvaluationShader.entryPoint, propertyStructSizeBytes, reflectedProperties);
+
+                if (!reflectedProperties.empty())
+                {
+                    properties.configure(MaterialPropertyReflection{            // Note that configure performs dedupe, so no need to do so here
+                        .sizeBytes = propertyStructSizeBytes,
+                        .properties = std::move(reflectedProperties)
+                    });
+                }
             }
 
             // ---------------------------------------------------------------------------------
@@ -166,61 +181,54 @@ namespace litl
             return true;
         }
 
-        /// <summary>
-        /// Attempts to retrieve the shader reflection data and extract the Push Constant .materialProperties field.
-        /// With this field, we iterate its contents and populate the MaterialProperties.
-        /// </summary>
-        void configurePropertiesFromReflection(ShaderModuleHandle handle) noexcept
+        void compileReflectedProperties(ShaderModuleHandle handle, std::string_view entryPointName, uint32_t& propertyStructSizeBytes, std::vector<ResourceProperty>& properties) noexcept
         {
-            auto* reflection = renderer->getShaderReflection(handle);
-            bool configuredProperties = false;
-
-            if (reflection != nullptr)
+            if (!handle.isValid())
             {
-                auto entryPoint = reflection->getEntryPoint(descriptor.vertexShader.entryPoint);
-
-                if (entryPoint.has_value() && (*entryPoint != nullptr))
-                {
-                    for (uint32_t i = 0u; (i < static_cast<uint32_t>((*entryPoint)->pushConstants.size())) && !configuredProperties; ++i)
-                    {
-                        auto& pushConstant = (*entryPoint)->pushConstants[i];
-
-                        for (uint32_t j = 0u; (j < static_cast<uint32_t>(pushConstant.referenceProperties.size())) && !configuredProperties; ++j)
-                        {
-                            auto& reflectedStruct = pushConstant.referenceProperties[j];
-
-                            if (reflectedStruct.hashedName == MaterialPropertiesStructHashedName)
-                            {
-                                properties.configure(MaterialPropertyReflection{
-                                    .sizeBytes = reflectedStruct.stride,
-                                    .properties = reflectedStruct.properties
-                                    });
-
-                                configuredProperties = true;
-                            }
-                        }
-                    }
-
-                    if (!configuredProperties)
-                    {
-                        logWarning("Failed to find material properties structure '", MaterialPropertiesStructName, "' in the Vertex Shader entry point '", descriptor.vertexShader.entryPoint, "' for material '", descriptor.objectInfo.name, "'");
-                    }
-                }
-                else
-                {
-                    logWarning("Failed to retrieve Vertex Shader entry point '", descriptor.vertexShader.entryPoint, "' for material '", descriptor.objectInfo.name, "'");
-                }
+                return;
             }
-            else
+
+            auto* reflection = renderer->getShaderReflection(handle);
+
+            if (reflection == nullptr)
             {
-                logWarning("Failed to retrieve Vertex Shader reflection data for material '", descriptor.objectInfo.name, "' from vertex shader '", descriptor.vertexShader.resource, "'");
+                logWarning("Failed to retrieve shader reflection data for material '", descriptor.objectInfo.name, "' for entry point '", entryPointName, "'");
+                return;
+            }
+
+            auto entryPoint = reflection->getEntryPoint(entryPointName);
+
+            if (!entryPoint.has_value() || (*entryPoint == nullptr))
+            {
+                logWarning("Failed to retrieve shader entry point '", entryPointName, "' for material '", descriptor.objectInfo.name, "'");
+                return;
+            }
+
+            for (uint32_t i = 0u; i < static_cast<uint32_t>((*entryPoint)->pushConstants.size()); ++i)
+            {
+                auto& pushConstant = (*entryPoint)->pushConstants[i];
+
+                for (uint32_t j = 0u; j < static_cast<uint32_t>(pushConstant.referenceProperties.size()); ++j)
+                {
+                    auto& reflectedStruct = pushConstant.referenceProperties[j];
+
+                    if (reflectedStruct.hashedName == MaterialPropertiesStructHashedName)
+                    {
+                        propertyStructSizeBytes = litl::max(propertyStructSizeBytes, reflectedStruct.stride);
+                        properties.insert(properties.end(), reflectedStruct.properties.begin(), reflectedStruct.properties.end());
+                        return;
+                    }
+                }
             }
         }
 
         void destroy() noexcept
         {
-            renderer->destroyGraphicsPipeline(graphicsPipelineHandle);
-            renderer->destroyComputePipeline(computePipelineHandle);
+            if (renderer != nullptr)
+            {
+                renderer->destroyGraphicsPipeline(graphicsPipelineHandle);
+                renderer->destroyComputePipeline(computePipelineHandle);
+            }
         }
     };
 

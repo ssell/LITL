@@ -19,19 +19,23 @@ namespace litl
             return;
         }
 
-        m_reflectedProperties = reflectedProperties;
+        m_elementSizeBytes = reflectedProperties.sizeBytes;
+        m_properties.reserve(reflectedProperties.properties.size());
 
-        for (uint32_t i = 0u; i < static_cast<uint32_t>(m_reflectedProperties.properties.size()); ++i)
+        for (auto& reflectedProperty : reflectedProperties.properties)
         {
-            auto hashedName = m_reflectedProperties.properties[i].hashedName;
-
-            if (hashedName == StringId{})
+            if (reflectedProperty.hashedName == StringId{})
             {
-                logWarning("MaterialProperties::configure provided reflected property with no name. Rejecting.");
                 continue;
             }
 
-            m_propertyMap[m_reflectedProperties.properties[i].hashedName] = i;
+            if (m_propertyMap.find(reflectedProperty.hashedName) != m_propertyMap.end())
+            {
+                continue;
+            }
+
+            m_propertyMap[reflectedProperty.hashedName] = static_cast<uint32_t>(m_properties.size());
+            m_properties.push_back(reflectedProperty);
         }
 
         allocateBlock();
@@ -47,7 +51,7 @@ namespace litl
         m_propertyBlocks.push_back(std::make_unique<MaterialPropertyBlock>());
         auto& newBlock = m_propertyBlocks.back();
 
-        newBlock->data.resize(m_reflectedProperties.sizeBytes * SlotsPerBlock, std::byte{ 0 });
+        newBlock->data.resize(m_elementSizeBytes * SlotsPerBlock, std::byte{ 0 });
         newBlock->slots.resize(SlotsPerBlock);
         newBlock->vacantSlotCount = SlotsPerBlock;
         newBlock->activeSlotCount = 0u;
@@ -95,7 +99,7 @@ namespace litl
 
         for (uint32_t i = 0u; i < static_cast<uint32_t>(m_propertyBlocks.size()); ++i)
         {
-            if (m_propertyBlocks[i]->acquireSlot(m_reflectedProperties.sizeBytes, m_currFrame, localSlotIndex, localSlotVersion))
+            if (m_propertyBlocks[i]->acquireSlot(m_elementSizeBytes, m_currFrame, localSlotIndex, localSlotVersion))
             {
                 return MaterialPropertySlotId{
                     .slot = ((SlotsPerBlock * i) + localSlotIndex),
@@ -106,7 +110,7 @@ namespace litl
 
         allocateBlock();
 
-        if (m_propertyBlocks.back()->acquireSlot(m_reflectedProperties.sizeBytes, m_currFrame, localSlotIndex, localSlotVersion))
+        if (m_propertyBlocks.back()->acquireSlot(m_elementSizeBytes, m_currFrame, localSlotIndex, localSlotVersion))
         {
             return MaterialPropertySlotId{
                 .slot = ((SlotsPerBlock * static_cast<uint32_t>(m_propertyBlocks.size() - 1)) + localSlotIndex),
@@ -174,7 +178,7 @@ namespace litl
 
     size_t MaterialProperties::totalMemoryRequirements() const noexcept
     {
-        return (m_reflectedProperties.sizeBytes * SlotsPerBlock * m_propertyBlocks.size());
+        return (m_elementSizeBytes * SlotsPerBlock * m_propertyBlocks.size());
     }
 
     bool MaterialProperties::getBlockLocalSlot(uint32_t slot, uint32_t& blockIndex, uint32_t& localSlot, uint32_t& localSlotVersion) const noexcept
@@ -200,7 +204,7 @@ namespace litl
             return nullptr;
         }
 
-        return &m_reflectedProperties.properties[find->second];
+        return &m_properties[find->second];
     }
 
     bool MaterialProperties::setData(uint32_t propertyOffset, uint32_t propertySize, void const* propertyData, MaterialPropertySlotId slot) noexcept
@@ -224,9 +228,9 @@ namespace litl
 
         auto& block = m_propertyBlocks[blockIndex];
         auto* blockData = block->data.data();
-        const auto blockSlotPropertyOffset = (localSlotIndex * m_reflectedProperties.sizeBytes) + propertyOffset;
+        const auto blockSlotPropertyOffset = (localSlotIndex * m_elementSizeBytes) + propertyOffset;
 
-        LITL_ASSERT_MSG(((propertyOffset + propertySize) <= m_reflectedProperties.sizeBytes), "Material setData out-of-bounds of property", false);
+        LITL_ASSERT_MSG(((propertyOffset + propertySize) <= m_elementSizeBytes), "Material setData out-of-bounds of property", false);
         LITL_ASSERT_MSG(static_cast<size_t>((blockSlotPropertyOffset + propertySize) <= block->data.size()), "Material setData out-of-bounds of block", false);
 
         memcpy(blockData + blockSlotPropertyOffset, propertyData, static_cast<size_t>(propertySize));

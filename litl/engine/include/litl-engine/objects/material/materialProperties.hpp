@@ -211,10 +211,11 @@ namespace litl
         /// </summary>
         bool setData(uint32_t propertyOffset, uint32_t propertySize, void const* propertyData, MaterialPropertySlotId slot) noexcept;
 
-        MaterialPropertyReflection m_reflectedProperties;
+        uint32_t m_currFrame = 0u;
+        uint32_t m_elementSizeBytes = 0u;
+        std::vector<ResourceProperty> m_properties;
         StringIdMap<uint32_t> m_propertyMap;
         std::vector<std::unique_ptr<MaterialPropertyBlock>> m_propertyBlocks;
-        uint32_t m_currFrame = 0u;
     };
 }
 
