@@ -110,7 +110,7 @@ namespace litl
         uint32_t sizeBytes = 0u;
 
         /// <summary>
-        /// If the referenced property is an array, this is the stride of an individual element in the array.
+        /// Ther byte distance between consecutive elements when the pointer is indexed; for a property block this is the block stride.
         /// </summary>
         uint32_t stride = 0u;
 

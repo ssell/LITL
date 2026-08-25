@@ -93,6 +93,8 @@ namespace
 
         [[nodiscard]] static bool buildSpirvTypeTable(std::span<std::byte const> spirvBytes, SpirvTypeTable& table) noexcept
         {
+            table.types.clear();
+
             // Opcode / decoration / storage-class constants come from the SPIRV-Headers that SPIRV-Reflect already vendors; spirv_reflect.h pulls in spirv.h transitively.
             static constexpr size_t HeaderWordCount = 5u;   // magic, version, generator, bound, schema
 
@@ -205,7 +207,7 @@ namespace litl
     SpvReflectEntryPoint* selectEntryPoint(const char* entryPoint, SpvReflectShaderModule const* reflectedModule);
     bool reflectShaderStage(EntryPointReflection& litlReflection, SpvReflectEntryPoint const* entryPoint);
     bool reflectResourceBindings(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint);
-    bool reflectPushConstants(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint, SpirvTypeTable& spirvTypeTable);
+    bool reflectPushConstants(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint, SpirvTypeTable const& spirvTypeTable);
     bool reflectVertexInputs(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint);
     bool reflectFragmentOutputs(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint);
     bool reflectSpecializationConstants(ShaderReflection& litlReflection, SpvReflectShaderModule const* reflectedModule);
@@ -395,7 +397,7 @@ namespace litl
         return true;
     }
 
-    bool reflectPushConstants(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint, SpirvTypeTable& spirvTypeTable)
+    bool reflectPushConstants(EntryPointReflection& litlReflection, SpvReflectShaderModule const* reflectedModule, SpvReflectEntryPoint const* entryPoint, SpirvTypeTable const& spirvTypeTable)
     {
         uint32_t pushConstantBlocksCount = 0u;
         auto result = spvReflectEnumerateEntryPointPushConstantBlocks(reflectedModule, entryPoint->name, &pushConstantBlocksCount, nullptr);
@@ -445,6 +447,7 @@ namespace litl
 
                     if (has_any(pushConstantResource.variable.flag, ShaderVariableFlagBits::Ref))
                     {
+                        // Get the stride/array element size
                         const uint32_t stride = (pushConstantMember.type_description != nullptr) ? spirvTypeTable.getArrayStride(pushConstantMember.type_description->id) : 0u;
 
                         PushConstantReferenceProperty refProperty{
@@ -462,11 +465,17 @@ namespace litl
                             refProperty.properties.push_back(resourcePropertyFromSpvReflectBlockVariable(pushConstantMember.members[k]));
                         }
 
+                        // Sanity checks
                         uint32_t refPropertiesEnd = 0u;
 
                         for (auto const& property : refProperty.properties)
                         {
                             refPropertiesEnd = litl::max((property.offset + property.size), refPropertiesEnd);
+                        }
+
+                        if ((stride == 0u) && !refProperty.properties.empty())
+                        {
+                            logWarning("Reflected SPIR-V has reference properties but no calculated stride.");
                         }
 
                         LITL_ASSERT_MSG(((stride == 0u) || (stride >= refPropertiesEnd)), "Reflected SPIR-V ArrayStride is smaller than the property block that it describes.", false);
