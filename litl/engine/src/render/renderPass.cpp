@@ -120,6 +120,13 @@ namespace litl
                     {
                         currMaterialHandle = drawListItem.materialHandle;
 
+                        if (!drawListItem.material->ready())
+                        {
+                            // This material has properties, but the property buffer is not yet ready.
+                            // Likely a material created mid-frame. Skip rendering it for now.
+                            continue;
+                        }
+
                         renderer->cmdBindGraphicsPipeline(frameCommandBuffer, drawListItem.graphicsPipelineHandle);
                         auto pushConstantStages = renderer->getGraphicsPipelinePushConstantStages(drawListItem.graphicsPipelineHandle);
 

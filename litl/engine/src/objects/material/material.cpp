@@ -348,7 +348,7 @@ namespace litl
         void onFrameStart(uint32_t frame, uint32_t frameIndex) noexcept
         {
             properties.setCurrentFrame(frame);
-            frameInFlightIndex = frameInFlightIndex;
+            frameInFlightIndex = frameIndex;
         }
 
         void onPreRender() noexcept
@@ -366,7 +366,6 @@ namespace litl
             if (gpuBuffer != nullptr)
             {
                 gpuBuffer->swapBuffers(frameInFlightIndex);
-                currGraphicsGpuBufferDeviceAddress = gpuBuffer->getBufferDeviceAddress();
 
                 properties.gatherDirtyBlocks(dirtyPropertyBlocks);
 
@@ -386,6 +385,8 @@ namespace litl
 
                     properties.clearDirtyBlocks();
                 }
+
+                currGraphicsGpuBufferDeviceAddress = gpuBuffer->getBufferDeviceAddress();
             }
         }
     };
@@ -448,5 +449,15 @@ namespace litl
     void Material::onPreRender(Authority<MaterialManager> auth) noexcept
     {
         m_pImpl->onPreRender();
+    }
+
+    bool Material::ready() const noexcept
+    {
+        if (m_pImpl->properties.propertyCount() > 0u)
+        {
+            return m_pImpl->currGraphicsGpuBufferDeviceAddress.has_value();
+        }
+
+        return true;
     }
 }

@@ -28,8 +28,10 @@ namespace litl
         }
     }
 
-    void MaterialManager::onPreRender(Authority<EngineCallbacks> auth) const noexcept
+    void MaterialManager::onPreRender(Authority<EngineCallbacks> auth) noexcept
     {
+        m_pObjectPool->getAllMaterialHandles(m_materialHandles);
+
         for (auto& materialHandle : m_materialHandles)
         {
             auto* material = m_pObjectPool->getMaterial(materialHandle);

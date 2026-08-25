@@ -89,6 +89,8 @@ namespace litl
 
         void onFrameStart(Authority<MaterialManager> auth, uint32_t frame, uint32_t frameInFlightIndex) noexcept;
         void onPreRender(Authority<MaterialManager> auth) noexcept;
+
+        [[nodiscard]] bool ready() const noexcept;
     private:
 
         struct Impl;
