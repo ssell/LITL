@@ -19,8 +19,7 @@ namespace litl
     {
         struct DrawListItem
         {
-            MaterialPipelineHandle materialPipelineHandle{};
-            MaterialPipeline* materialPipeline{};
+            MaterialHandle materialHandle{};
             GraphicsPipelineHandle graphicsPipelineHandle{};
             MeshHandle meshHandle{};
             Mesh* mesh{};
@@ -90,7 +89,7 @@ namespace litl
 
                 for (uint32_t i = 1u; i < static_cast<uint32_t>(entities.size()); ++i)
                 {
-                    if ((entities[i].material.pipelineHandle != currListItem.materialPipelineHandle) || (entities[i].mesh.handle != currListItem.meshHandle))
+                    if ((entities[i].material.handle != currListItem.materialHandle) || (entities[i].mesh.handle != currListItem.meshHandle))
                     {
                         drawList.back().instanceCount = i - drawList.back().instanceOffset;
                         currListItem = createDrawListItem(entities[i], i);
@@ -101,7 +100,7 @@ namespace litl
                 drawList.back().instanceCount = static_cast<uint32_t>(entities.size()) - drawList.back().instanceOffset;
 
                 // --- Render
-                MaterialPipelineHandle currMaterialPipelineHandle{};
+                MaterialHandle currMaterialHandle{};
                 MeshHandle currMeshHandle{};
                 uint32_t currVertexCount = 0u;
 
@@ -116,9 +115,9 @@ namespace litl
 
                     // --- Material Bind
 
-                    if (drawListItem.materialPipelineHandle != currMaterialPipelineHandle)
+                    if (drawListItem.materialHandle != currMaterialHandle)
                     {
-                        currMaterialPipelineHandle = drawListItem.materialPipelineHandle;
+                        currMaterialHandle = drawListItem.materialHandle;
 
                         renderer->cmdBindGraphicsPipeline(frameCommandBuffer, drawListItem.graphicsPipelineHandle);
                         auto pushConstantStages = renderer->getGraphicsPipelinePushConstantStages(drawListItem.graphicsPipelineHandle);
@@ -168,14 +167,13 @@ namespace litl
 
         DrawListItem createDrawListItem(RenderableEntity entity, uint32_t instanceOffset) noexcept
         {
-            auto* materialPipeline = objectPool->getMaterialPipeline(entity.material.pipelineHandle);
+            auto* material = objectPool->getMaterial(entity.material.handle);
             auto* mesh = objectPool->getMesh(entity.mesh.handle);
             auto& meshDescriptor = mesh->getDescriptor();
 
             return DrawListItem{
-                .materialPipelineHandle = entity.material.pipelineHandle,
-                .materialPipeline = materialPipeline,
-                .graphicsPipelineHandle = materialPipeline->getGraphicsPipelineHandle(),
+                .materialHandle = entity.material.handle,
+                .graphicsPipelineHandle = material->getGraphicsPipelineHandle(),
                 .meshHandle = entity.mesh.handle,
                 .mesh = mesh,
                 .vertexCount = meshDescriptor.vertexInfo.vertexCount,

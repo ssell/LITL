@@ -58,23 +58,20 @@ MaterialRef createPlaceholderMaterial(ObjectPool& objectPool)
 
     auto materialHandle = objectPool.createMaterial(MaterialDescriptor{
         .objectInfo = ObjectDescriptor {.name = "Test Material" },
-        .pipelineDescriptor = MaterialPipelineDescriptor {
-            .objectInfo = ObjectDescriptor {.name = "Test Material Pipeline" },
-            .vertexShader = ShaderResourceDescriptor {
-                .resource = "test.spv",
-                .entryPoint = "vertexMain",
-                .bytes = spirvBytes.value()
-            },
-            .fragmentShader = ShaderResourceDescriptor {
-                .resource = "test.spv",
-                .entryPoint = "fragmentMain",
-                .bytes = spirvBytes.value()
-            }
+        .vertexShader = ShaderResourceDescriptor {
+            .resource = "test.spv",
+            .entryPoint = "vertexMain",
+            .bytes = spirvBytes.value()
+        },
+        .fragmentShader = ShaderResourceDescriptor {
+            .resource = "test.spv",
+            .entryPoint = "fragmentMain",
+            .bytes = spirvBytes.value()
         }
     });
 
     return MaterialRef{
-        .materialHandle = materialHandle,
-        .pipelineHandle = objectPool.getMaterialPipelineHandle(materialHandle)
+        .handle = materialHandle,
+        .slot = objectPool.getMaterial(materialHandle)->allocateSlot()
     };
 }

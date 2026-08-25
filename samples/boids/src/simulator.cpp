@@ -44,29 +44,26 @@ namespace litl::samples
             auto spirvBytes = File(path).readAllBytes();
             auto materialHandle = objectPool.createMaterial(MaterialDescriptor{
                 .objectInfo = ObjectDescriptor {.name = name.data()},
-                .pipelineDescriptor = MaterialPipelineDescriptor {
-                    .objectInfo = ObjectDescriptor {.name = name.data()},
-                    .rasterizerState = RasterizationState { .cullMode = CullMode::None },
-                    .inputDescriptor = VertexInputDescriptor {
-                        .vertexSize = sizeof(SampleVertex),
-                        .attributes = { DataFormat::RGB32_SFloat, DataFormat::RGB32_SFloat, DataFormat::RG32_SFloat }       // pos, color, uv
-                    },
-                    .vertexShader = ShaderResourceDescriptor {
-                        .resource = resource.data(),
-                        .entryPoint = vertEntry.data(),
-                        .bytes = spirvBytes.value()
-                    },
-                    .fragmentShader = ShaderResourceDescriptor {
-                        .resource = resource.data(),
-                        .entryPoint = fragEntry.data(),
-                        .bytes = spirvBytes.value()
-                    }
+                .rasterizerState = RasterizationState { .cullMode = CullMode::None },
+                .inputDescriptor = VertexInputDescriptor {
+                    .vertexSize = sizeof(SampleVertex),
+                    .attributes = { DataFormat::RGB32_SFloat, DataFormat::RGB32_SFloat, DataFormat::RG32_SFloat }       // pos, color, uv
+                },
+                .vertexShader = ShaderResourceDescriptor {
+                    .resource = resource.data(),
+                    .entryPoint = vertEntry.data(),
+                    .bytes = spirvBytes.value()
+                },
+                .fragmentShader = ShaderResourceDescriptor {
+                    .resource = resource.data(),
+                    .entryPoint = fragEntry.data(),
+                    .bytes = spirvBytes.value()
                 }
             });
 
             return MaterialRef{
-                .materialHandle = materialHandle,
-                .pipelineHandle = objectPool.getMaterialPipelineHandle(materialHandle)
+                .handle = materialHandle,
+                .slot = objectPool.getMaterial(materialHandle)->allocateSlot()
             };
         }
 

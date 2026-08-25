@@ -37,7 +37,7 @@ namespace litl
         /// </summary>
         /// <param name="payload"></param>
         /// <returns></returns>
-        [[nodiscard]] Handle<Tag> create(T payload) noexcept
+        [[nodiscard]] Handle<Tag> create(T& payload) noexcept
         {
             uint32_t index = 0;
 

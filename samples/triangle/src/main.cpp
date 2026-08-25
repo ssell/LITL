@@ -88,28 +88,25 @@ MaterialRef createTriangleMaterial(ObjectPool& objectPool)
     auto spirvBytes = File("assets/shaders/spirv/flat.spv").readAllBytes();
     auto materialHandle = objectPool.createMaterial(MaterialDescriptor{
         .objectInfo = ObjectDescriptor {.name = "Flat Material" },
-        .pipelineDescriptor = MaterialPipelineDescriptor {
-            .objectInfo = ObjectDescriptor { .name = "Flat Material Pipeline" },
-            .inputDescriptor = VertexInputDescriptor {
-                .vertexSize = sizeof(SampleVertex),
-                .attributes = { DataFormat::RGB32_SFloat, DataFormat::RGB32_SFloat, DataFormat::RG32_SFloat }       // pos, color, uv
-            },
-            .vertexShader = ShaderResourceDescriptor {
-                .resource = "flat.spv",
-                .entryPoint = "vertexMain",
-                .bytes = spirvBytes.value()
-            },
-            .fragmentShader = ShaderResourceDescriptor {
-                .resource = "flat.spv",
-                .entryPoint = "fragmentMain",
-                .bytes = spirvBytes.value()
-            }
+        .inputDescriptor = VertexInputDescriptor {
+            .vertexSize = sizeof(SampleVertex),
+            .attributes = { DataFormat::RGB32_SFloat, DataFormat::RGB32_SFloat, DataFormat::RG32_SFloat }       // pos, color, uv
+        },
+        .vertexShader = ShaderResourceDescriptor {
+            .resource = "flat.spv",
+            .entryPoint = "vertexMain",
+            .bytes = spirvBytes.value()
+        },
+        .fragmentShader = ShaderResourceDescriptor {
+            .resource = "flat.spv",
+            .entryPoint = "fragmentMain",
+            .bytes = spirvBytes.value()
         }
     });
 
     return MaterialRef{
-        .materialHandle = materialHandle,
-        .pipelineHandle = objectPool.getMaterialPipelineHandle(materialHandle)
+        .handle = materialHandle,
+        .slot = objectPool.getMaterial(materialHandle)->allocateSlot()
     };
 }
 

@@ -19,7 +19,6 @@ namespace litl
         HandlePool<Camera, CameraHandleTag> cameraPool;
         HandlePool<GpuBuffer, GpuBufferHandleTag> gpuBufferPool;
         HandlePool<Material, MaterialHandleTag> materialPool;
-        HandlePool<MaterialPipeline, MaterialPipelineHandleTag> materialPipelinePool;
         HandlePool<Mesh, MeshHandleTag> meshPool;
         HandlePool<Text, TextHandleTag> textPool;
         HandlePool<Texture2D, Texture2DHandleTag> texture2DPool;
@@ -86,18 +85,6 @@ namespace litl
             destroyMaterial(materialHandle);
         }
 
-        // ---- Material Pipelines
-
-        std::vector<MaterialPipelineHandle> materialPipelineHandles;
-        getAllMaterialPipelineHandles(materialPipelineHandles);
-
-        logTrace("... destroying ", materialPipelineHandles.size(), " Material Pipeline handles.");
-
-        for (auto materialPipelineHandle : materialPipelineHandles)
-        {
-            destroyMaterialPipeline(materialPipelineHandle);
-        }
-
         // ---- Texture2D
 
         std::vector<Texture2DHandle> texture2DHandles;
@@ -141,7 +128,9 @@ namespace litl
 
     CameraHandle ObjectPool::createCamera(CameraDescriptor const& descriptor) noexcept
     {
-        auto handle = m_impl->cameraPool.create({});
+        Camera camera{};
+
+        auto handle = m_impl->cameraPool.create(camera);
         auto* cameraRef = m_impl->cameraPool.get(handle);
 
         cameraRef->create({}, descriptor, *m_impl->world, *m_impl->sceneView, handle);
@@ -228,7 +217,8 @@ namespace litl
 
     MaterialHandle ObjectPool::reserveMaterial(Authority<AssetManager> auth) noexcept
     {
-        return m_impl->materialPool.create({});
+        Material material{};
+        return m_impl->materialPool.create(material);
     }
 
     MaterialHandle ObjectPool::createMaterial(MaterialDescriptor const& descriptor) noexcept
@@ -269,64 +259,6 @@ namespace litl
     void ObjectPool::deferDestroyMaterial(MaterialHandle handle) noexcept
     {
         // ... todo add to a defer destruction queue that is ticked and destroy on a later frame to ensure the resource is not in use by the GPU ...
-    }
-
-    //--------------------------------------------------------------------------------------
-    // Material Pipeline
-    //--------------------------------------------------------------------------------------
-
-    MaterialPipelineHandle ObjectPool::createMaterialPipeline(MaterialPipelineDescriptor const& descriptor) noexcept
-    {
-        // ... todo need a map/cache ...
-
-        MaterialPipeline materialPipeline{};
-
-        if (!materialPipeline.create({}, descriptor, *(m_impl->renderManager->getRenderer())))
-        {
-            logWarning("Failed to create Material Pipeline '", descriptor.objectInfo.name, "'");
-            materialPipeline.destroy({});
-            return {};
-        }
-
-        return m_impl->materialPipelinePool.create(materialPipeline);
-    }
-
-    MaterialPipeline* ObjectPool::getMaterialPipeline(MaterialPipelineHandle handle) noexcept
-    {
-        return m_impl->materialPipelinePool.get(handle);
-    }
-
-    MaterialPipelineHandle ObjectPool::getMaterialPipelineHandle(MaterialHandle handle) noexcept
-    {
-        Material* material = getMaterial(handle);
-
-        if (material == nullptr)
-        {
-            return {};
-        }
-
-        return material->getMaterialPipelineHandle();
-    }
-
-    void ObjectPool::getAllMaterialPipelineHandles(std::vector<MaterialPipelineHandle>& handles) const noexcept
-    {
-        m_impl->materialPipelinePool.getAllHandles(handles);
-    }
-
-    void ObjectPool::destroyMaterialPipeline(MaterialPipelineHandle handle) noexcept
-    {
-        MaterialPipeline* materialPipeline = getMaterialPipeline(handle);
-
-        if (materialPipeline != nullptr)
-        {
-            materialPipeline->destroy({});
-            m_impl->materialPipelinePool.destroy(handle);
-        }
-    }
-
-    void ObjectPool::deferDestroyMaterialPipeline(MaterialPipelineHandle handle) noexcept
-    {
-        // ... todo ...
     }
 
     //--------------------------------------------------------------------------------------
@@ -395,7 +327,8 @@ namespace litl
 
     TextHandle ObjectPool::reserveText(Authority<AssetManager> auth) noexcept
     {
-        return m_impl->textPool.create({});
+        Text text{};
+        return m_impl->textPool.create(text);
     }
 
     TextHandle ObjectPool::createText(TextDescriptor const& descriptor) noexcept
@@ -445,7 +378,8 @@ namespace litl
 
     Texture2DHandle ObjectPool::reserveTexture2D(Authority<AssetManager> auth) noexcept
     {
-        return m_impl->texture2DPool.create({});
+        Texture2D texture{};
+        return m_impl->texture2DPool.create(texture);
     }
 
     Texture2DHandle ObjectPool::createTexture2D(Texture2DDescriptor const& descriptor) noexcept

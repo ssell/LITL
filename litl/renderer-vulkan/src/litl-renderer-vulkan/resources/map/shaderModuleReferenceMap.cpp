@@ -1,6 +1,5 @@
 #include "litl-core/assert.hpp"
 #include "litl-core/debug.hpp"
-
 #include "litl-renderer-vulkan/resources/map/shaderModuleReferenceMap.hpp"
 #include "litl-renderer-vulkan/resources/shaderModule.hpp"
 #include "litl-renderer-vulkan/resourceManager.hpp"
@@ -12,8 +11,8 @@ namespace litl::vulkan
         LITL_ASSERT_MSG(shader != nullptr, "ShaderModuleReferenceMap::onShaderModuleAdded provided NULL shader module resource", );
         LITL_ASSERT_MSG((m_shaderToGraphicsPipelineMap.find(shader->resourceId) == m_shaderToGraphicsPipelineMap.end()) || m_shaderToComputePipelineMap.find(shader->resourceId) == m_shaderToComputePipelineMap.end(), "ShaderModuleReferenceMap::onShaderModuleAdded provided duplicate shader module resource", );
 
-        auto [_, graphicsSuccess] = m_shaderToGraphicsPipelineMap.try_emplace(shader->resourceId);
-        auto [_, computeSuccess] = m_shaderToComputePipelineMap.try_emplace(shader->resourceId);
+        auto [ignore0, graphicsSuccess] = m_shaderToGraphicsPipelineMap.try_emplace(shader->resourceId);
+        auto [ignore1, computeSuccess] = m_shaderToComputePipelineMap.try_emplace(shader->resourceId);
 
         LITL_ASSERT_MSG(graphicsSuccess && computeSuccess, "ShaderModuleReferenceMap::onShaderModuleAdded failed to emplace. Resource path already in use or collision.", )
     }
