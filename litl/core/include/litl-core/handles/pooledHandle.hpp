@@ -104,6 +104,7 @@ namespace litl
 
         void getAllHandles(std::vector<Handle<Tag>>& handles) const noexcept
         {
+            handles.clear();
             handles.reserve(m_slots.size());
 
             for (auto i = 0u; i < static_cast<uint32_t>(m_slots.size()); ++i)

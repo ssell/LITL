@@ -17,6 +17,7 @@
 
 namespace litl
 {
+    class MaterialManager;
     class ObjectPool;
     class Renderer;
 
@@ -86,9 +87,8 @@ namespace litl
         [[nodiscard]] std::optional<uint64_t> getGraphicsBufferDeviceAddress() const noexcept;
         [[nodiscard]] MaterialPropertySlotId allocateSlot() noexcept;
 
-        void syncFrameStart(uint32_t frame, uint32_t frameInFlightIndex) noexcept;  // ... todo add Authority<> parameter ...
-        void syncPreRender() noexcept;                                              // ... todo add Authority<> parameter ...
-
+        void onFrameStart(Authority<MaterialManager> auth, uint32_t frame, uint32_t frameInFlightIndex) noexcept;
+        void onPreRender(Authority<MaterialManager> auth) noexcept;
     private:
 
         struct Impl;
