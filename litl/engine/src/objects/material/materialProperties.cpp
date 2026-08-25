@@ -1,6 +1,5 @@
 #include <array>
 
-#include "litl-core/constants.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-engine/objects/material/materialProperties.hpp"
 
@@ -42,7 +41,7 @@ namespace litl
         m_vacantSlotCount += SlotsPerBlock;
     }
 
-    bool MaterialPropertyBlock::acquireSlot(uint32_t& localSlotIndex) noexcept
+    bool MaterialPropertyBlock::acquireSlot(uint32_t& localSlotIndex, uint32_t& localSlotVersion) noexcept
     {
         if (vacantSlotCount == 0u)
         {
@@ -64,44 +63,56 @@ namespace litl
         }
 
         slots[localSlotIndex].occupied = true;
+        localSlotVersion = ++slots[localSlotIndex].version;
         vacantSlotCount = (vacantSlotCount == 0u ? 0u : (vacantSlotCount - 1u));
 
         return true;
     }
 
-    uint32_t MaterialProperties::allocateSlot() noexcept
+    MaterialPropertySlotId MaterialProperties::allocateSlot() noexcept
     {
         uint32_t localSlotIndex = 0u;
+        uint32_t localSlotVersion = 0u;
 
         for (uint32_t i = 0u; i < static_cast<uint32_t>(m_propertyBlocks.size()); ++i)
         {
-            if (m_propertyBlocks[i]->acquireSlot(localSlotIndex))
+            if (m_propertyBlocks[i]->acquireSlot(localSlotIndex, localSlotVersion))
             {
                 m_vacantSlotCount = (m_vacantSlotCount == 0u ? 0u : m_vacantSlotCount - 1u);
-                return ((SlotsPerBlock * i) + localSlotIndex);
+
+                return MaterialPropertySlotId{
+                    .slot = ((SlotsPerBlock * i) + localSlotIndex),
+                    .version = localSlotVersion
+                };
             }
         }
 
         allocateBlock();
 
-        if (m_propertyBlocks.back()->acquireSlot(localSlotIndex))
+        if (m_propertyBlocks.back()->acquireSlot(localSlotIndex, localSlotVersion))
         {
             m_vacantSlotCount = (m_vacantSlotCount == 0u ? 0u : m_vacantSlotCount - 1u);
-            return ((SlotsPerBlock * static_cast<uint32_t>(m_propertyBlocks.size() - 1)) + localSlotIndex);
+
+            return MaterialPropertySlotId{
+                .slot = ((SlotsPerBlock * static_cast<uint32_t>(m_propertyBlocks.size() - 1)) + localSlotIndex),
+                .version = localSlotVersion
+            };
         }
         else
         {
             // This shouldn't be possible, but log just in case ...
             logWarning("Failed to acquire new material slot.");
-            return Constants::uint32_null_index;
+            return {};
         }
     }
 
-    void MaterialProperties::markSlotActive(uint32_t slot) noexcept
+    void MaterialProperties::markSlotActive(MaterialPropertySlotId slot) noexcept
     {
-        uint32_t blockIndex, localSlotIndex;
+        uint32_t blockIndex, localSlotIndex, localSlotVersion;
         
-        if (getBlockLocalSlot(slot, blockIndex, localSlotIndex))
+        if (slot.isValid() &&            
+            getBlockLocalSlot(slot.slot, blockIndex, localSlotIndex, localSlotVersion) && 
+            (slot.version == localSlotVersion))
         {
             m_propertyBlocks[blockIndex]->slots[localSlotIndex].lastActiveFrame = m_currFrame;
         }
@@ -135,7 +146,7 @@ namespace litl
         return (m_reflectedProperties.sizeBytes * SlotsPerBlock * m_propertyBlocks.size());
     }
 
-    bool MaterialProperties::getBlockLocalSlot(uint32_t slot, uint32_t& blockIndex, uint32_t& localSlot) const noexcept
+    bool MaterialProperties::getBlockLocalSlot(uint32_t slot, uint32_t& blockIndex, uint32_t& localSlot, uint32_t& localSlotVersion) const noexcept
     {
         if (static_cast<size_t>(slot) >= (m_propertyBlocks.size() * SlotsPerBlock))
         {
@@ -144,6 +155,7 @@ namespace litl
 
         blockIndex = slot / SlotsPerBlock;
         localSlot = slot % SlotsPerBlock;
+        localSlotVersion = m_propertyBlocks[blockIndex]->slots[localSlot].version;
 
         return true;
     }
@@ -160,14 +172,25 @@ namespace litl
         return &m_reflectedProperties.properties[find->second];
     }
 
-    bool MaterialProperties::setData(StringId property, uint32_t propertyOffset, uint32_t propertySize, void const* propertyData, uint32_t slot) noexcept
+    bool MaterialProperties::setData(StringId property, uint32_t propertyOffset, uint32_t propertySize, void const* propertyData, MaterialPropertySlotId slot) noexcept
     {
-        uint32_t blockIndex, localSlotIndex;
-
-        if (!getBlockLocalSlot(slot, blockIndex, localSlotIndex))
+        if (!slot.isValid())
         {
             return false;
         }
+
+        uint32_t blockIndex, localSlotIndex, localSlotVersion;
+
+        if (!getBlockLocalSlot(slot.slot, blockIndex, localSlotIndex, localSlotVersion))
+        {
+            return false;
+        }
+
+        if ((slot.version != localSlotVersion))
+        {
+            return false;
+        }
+
         auto& block = m_propertyBlocks[blockIndex];
         auto* blockData = block->data.data();
         const auto blockSlotPropertyOffset = (localSlotIndex * m_reflectedProperties.sizeBytes) + propertyOffset;
@@ -179,7 +202,7 @@ namespace litl
         return true;
     }
 
-    bool MaterialProperties::setBool(StringId property, bool value, uint32_t slot) noexcept
+    bool MaterialProperties::setBool(StringId property, bool value, MaterialPropertySlotId slot) noexcept
     {
         auto* reflectedProperty = getReflectedProperty(property);
 
@@ -203,7 +226,7 @@ namespace litl
         return setData(property, reflectedProperty->offset, reflectedProperty->size, &value32, slot);
     }
 
-    bool MaterialProperties::setInt32(StringId property, int32_t value, uint32_t slot) noexcept
+    bool MaterialProperties::setInt32(StringId property, int32_t value, MaterialPropertySlotId slot) noexcept
     {
         auto* reflectedProperty = getReflectedProperty(property);
 
@@ -231,7 +254,7 @@ namespace litl
         return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
     }
 
-    bool MaterialProperties::setUint32(StringId property, uint32_t value, uint32_t slot) noexcept
+    bool MaterialProperties::setUint32(StringId property, uint32_t value, MaterialPropertySlotId slot) noexcept
     {
         auto* reflectedProperty = getReflectedProperty(property);
 
@@ -259,7 +282,7 @@ namespace litl
         return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
     }
 
-    bool MaterialProperties::setFloat(StringId property, float value, uint32_t slot) noexcept
+    bool MaterialProperties::setFloat(StringId property, float value, MaterialPropertySlotId slot) noexcept
     {
         auto* reflectedProperty = getReflectedProperty(property);
 
@@ -271,7 +294,7 @@ namespace litl
         if (reflectedProperty->variable.scalarType != ShaderScalarType::Float)
         {
             return false;
-        } 
+        }
 
         if (reflectedProperty->size != sizeof(float))
         {
@@ -281,7 +304,7 @@ namespace litl
         return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
     }
 
-    bool MaterialProperties::setDouble(StringId property, double value, uint32_t slot) noexcept
+    bool MaterialProperties::setDouble(StringId property, double value, MaterialPropertySlotId slot) noexcept
     {
         auto* reflectedProperty = getReflectedProperty(property);
 
@@ -303,7 +326,7 @@ namespace litl
         return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
     }
 
-    bool MaterialProperties::setVec2(StringId property, vec2 value, uint32_t slot) noexcept
+    bool MaterialProperties::setVec2(StringId property, vec2 value, MaterialPropertySlotId slot) noexcept
     {
         auto* reflectedProperty = getReflectedProperty(property);
 
@@ -330,7 +353,7 @@ namespace litl
         return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
     }
 
-    bool MaterialProperties::setVec3(StringId property, vec3 value, uint32_t slot) noexcept
+    bool MaterialProperties::setVec3(StringId property, vec3 value, MaterialPropertySlotId slot) noexcept
     {
         auto* reflectedProperty = getReflectedProperty(property);
 
@@ -357,7 +380,7 @@ namespace litl
         return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
     }
 
-    bool MaterialProperties::setVec4(StringId property, vec4 const& value, uint32_t slot) noexcept
+    bool MaterialProperties::setVec4(StringId property, vec4 const& value, MaterialPropertySlotId slot) noexcept
     {
         auto* reflectedProperty = getReflectedProperty(property);
 
@@ -384,7 +407,7 @@ namespace litl
         return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
     }
 
-    bool MaterialProperties::setMat3(StringId property, mat3 const& value, uint32_t slot) noexcept
+    bool MaterialProperties::setMat3(StringId property, mat3 const& value, MaterialPropertySlotId slot) noexcept
     {
         auto* reflectedProperty = getReflectedProperty(property);
 
@@ -429,7 +452,7 @@ namespace litl
         }
     }
 
-    bool MaterialProperties::setMat4(StringId property, mat4 const& value, uint32_t slot) noexcept
+    bool MaterialProperties::setMat4(StringId property, mat4 const& value, MaterialPropertySlotId slot) noexcept
     {
         auto* reflectedProperty = getReflectedProperty(property);
 

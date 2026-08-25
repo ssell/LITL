@@ -5,12 +5,31 @@
 #include <memory>
 #include <vector>
 
+#include "litl-core/constants.hpp"
 #include "litl-core/stringId.hpp"
 #include "litl-core/math/types.hpp"
 #include "litl-renderer/reflection.hpp"
 
 namespace litl
 {
+    struct MaterialPropertySlotId
+    {
+        /// <summary>
+        /// The global slot index.
+        /// </summary>
+        uint32_t slot = Constants::uint32_null_index;
+
+        /// <summary>
+        /// The version/generation of the slot that this is valid for.
+        /// </summary>
+        uint32_t version = 0u;
+
+        [[nodiscard]] constexpr bool isValid() noexcept
+        {
+            return (slot != Constants::uint32_null_index) && (version != 0u);
+        }
+    };
+
     struct MaterialPropertySlot
     {
         uint32_t version = 0u;
@@ -52,7 +71,7 @@ namespace litl
         /// </summary>
         bool isDirty = false;
 
-        [[nodiscard]] bool acquireSlot(uint32_t& localSlotIndex) noexcept;
+        [[nodiscard]] bool acquireSlot(uint32_t& localSlotIndex, uint32_t& localSlotVersion) noexcept;
     };
 
     struct MaterialPropertyReflection
@@ -91,7 +110,7 @@ namespace litl
         /// Allocates a slot in the underlying material property blocks for a new material instance to use.
         /// If slot allocation somehow fails, then the uint32 null index will be returned.
         /// </summary>
-        [[nodiscard]] uint32_t allocateSlot() noexcept;
+        [[nodiscard]] MaterialPropertySlotId allocateSlot() noexcept;
 
         /// <summary>
         /// ... todo be called by something that ticks each frame ...
@@ -102,7 +121,7 @@ namespace litl
         /// Marks the slot active for the frame.
         /// ... todo be called by a system or something ....
         /// </summary>
-        void markSlotActive(uint32_t slot) noexcept;
+        void markSlotActive(MaterialPropertySlotId slot) noexcept;
 
         /// <summary>
         /// ... todo be called by something that ticks each frame ...
@@ -125,61 +144,61 @@ namespace litl
         /// Sets the boolean value at with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
-        bool setBool(StringId property, bool value, uint32_t slot) noexcept;
+        bool setBool(StringId property, bool value, MaterialPropertySlotId slot) noexcept;
 
         /// <summary>
         /// Sets the 32-bit signed integer value at with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
-        bool setInt32(StringId property, int32_t value, uint32_t slot) noexcept;
+        bool setInt32(StringId property, int32_t value, MaterialPropertySlotId slot) noexcept;
 
         /// <summary>
         /// Sets the 32-bit unsigned integer value at with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
-        bool setUint32(StringId property, uint32_t value, uint32_t slot) noexcept;
+        bool setUint32(StringId property, uint32_t value, MaterialPropertySlotId slot) noexcept;
 
         /// <summary>
         /// Sets the 32-bit float value at with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
-        bool setFloat(StringId property, float value, uint32_t slot) noexcept;
+        bool setFloat(StringId property, float value, MaterialPropertySlotId slot) noexcept;
 
         /// <summary>
         /// Sets the 64-bit float value at with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
-        bool setDouble(StringId property, double value, uint32_t slot) noexcept;
+        bool setDouble(StringId property, double value, MaterialPropertySlotId slot) noexcept;
 
         /// <summary>
         /// Sets the two-component 32-bit float vector value at with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
-        bool setVec2(StringId property, vec2 value, uint32_t slot) noexcept;
+        bool setVec2(StringId property, vec2 value, MaterialPropertySlotId slot) noexcept;
 
         /// <summary>
         /// Sets the three-component 32-bit float vector value at with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
-        bool setVec3(StringId property, vec3 value, uint32_t slot) noexcept;
+        bool setVec3(StringId property, vec3 value, MaterialPropertySlotId slot) noexcept;
 
         /// <summary>
         /// Sets the four-component 32-bit float vector value at with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
-        bool setVec4(StringId property, vec4 const& value, uint32_t slot) noexcept;
+        bool setVec4(StringId property, vec4 const& value, MaterialPropertySlotId slot) noexcept;
 
         /// <summary>
         /// Sets the 3x3 32-bit float matrix value at with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
-        bool setMat3(StringId property, mat3 const& value, uint32_t slot) noexcept;
+        bool setMat3(StringId property, mat3 const& value, MaterialPropertySlotId slot) noexcept;
 
         /// <summary>
         /// Sets the 4x4 32-bit float matrix value at with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
-        bool setMat4(StringId property, mat4 const& value, uint32_t slot) noexcept;
+        bool setMat4(StringId property, mat4 const& value, MaterialPropertySlotId slot) noexcept;
 
     private:
 
@@ -192,7 +211,7 @@ namespace litl
         /// Given a global slot index, resolves it to a block index and local slot index into the block.
         /// May return false if the global index is out-of-bounds.
         /// </summary>
-        [[nodiscard]] bool getBlockLocalSlot(uint32_t slot, uint32_t& blockIndex, uint32_t& localSlot) const noexcept;
+        [[nodiscard]] bool getBlockLocalSlot(uint32_t slot, uint32_t& blockIndex, uint32_t& localSlot, uint32_t& localSlotVersion) const noexcept;
 
         /// <summary>
         /// Given a property string id, returns the associated ResourceProperty. If no match was found, returns null.
@@ -202,7 +221,7 @@ namespace litl
         /// <summary>
         /// 
         /// </summary>
-        bool setData(StringId property, uint32_t propertyOffset, uint32_t propertySize, void const* propertyData, uint32_t slot) noexcept;
+        bool setData(StringId property, uint32_t propertyOffset, uint32_t propertySize, void const* propertyData, MaterialPropertySlotId slot) noexcept;
 
         MaterialPropertyReflection m_reflectedProperties;
         StringIdMap<uint32_t> m_propertyMap;
