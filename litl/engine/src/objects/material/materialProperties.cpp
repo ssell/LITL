@@ -1,4 +1,4 @@
-#include <array>
+#include <cstring>
 
 #include "litl-core/logging/logging.hpp"
 #include "litl-engine/objects/material/materialProperties.hpp"
@@ -9,6 +9,13 @@ namespace litl
     {
         if (!m_propertyBlocks.empty())
         {
+            // TODO update for shader hot reload
+            return;
+        }
+
+        if (reflectedProperties.sizeBytes == 0u)
+        {
+            logWarning("MaterialProperties::configure provided with reflected properties with element size of 0. Rejecting.");
             return;
         }
 
@@ -16,6 +23,14 @@ namespace litl
 
         for (uint32_t i = 0u; i < static_cast<uint32_t>(m_reflectedProperties.properties.size()); ++i)
         {
+            auto hashedName = m_reflectedProperties.properties[i].hashedName;
+
+            if (hashedName == StringId{})
+            {
+                logWarning("MaterialProperties::configure provided reflected property with no name. Rejecting.");
+                continue;
+            }
+
             m_propertyMap[m_reflectedProperties.properties[i].hashedName] = i;
         }
 
@@ -37,11 +52,9 @@ namespace litl
         newBlock->vacantSlotCount = SlotsPerBlock;
         newBlock->activeSlotCount = 0u;
         newBlock->isDirty = false;
-
-        m_vacantSlotCount += SlotsPerBlock;
     }
 
-    bool MaterialPropertyBlock::acquireSlot(uint32_t& localSlotIndex, uint32_t& localSlotVersion) noexcept
+    bool MaterialPropertyBlock::acquireSlot(uint32_t slotSize, uint32_t frame, uint32_t& localSlotIndex, uint32_t& localSlotVersion) noexcept
     {
         if (vacantSlotCount == 0u)
         {
@@ -63,8 +76,14 @@ namespace litl
         }
 
         slots[localSlotIndex].occupied = true;
+        slots[localSlotIndex].lastActiveFrame = frame;
+
         localSlotVersion = ++slots[localSlotIndex].version;
         vacantSlotCount = (vacantSlotCount == 0u ? 0u : (vacantSlotCount - 1u));
+
+        // Make sure the memory is cleared. TODO in the future use the material default values ...
+        std::memset(data.data() + (slotSize * localSlotIndex), 0, slotSize);
+        isDirty = true;
 
         return true;
     }
@@ -76,10 +95,8 @@ namespace litl
 
         for (uint32_t i = 0u; i < static_cast<uint32_t>(m_propertyBlocks.size()); ++i)
         {
-            if (m_propertyBlocks[i]->acquireSlot(localSlotIndex, localSlotVersion))
+            if (m_propertyBlocks[i]->acquireSlot(m_reflectedProperties.sizeBytes, m_currFrame, localSlotIndex, localSlotVersion))
             {
-                m_vacantSlotCount = (m_vacantSlotCount == 0u ? 0u : m_vacantSlotCount - 1u);
-
                 return MaterialPropertySlotId{
                     .slot = ((SlotsPerBlock * i) + localSlotIndex),
                     .version = localSlotVersion
@@ -89,10 +106,8 @@ namespace litl
 
         allocateBlock();
 
-        if (m_propertyBlocks.back()->acquireSlot(localSlotIndex, localSlotVersion))
+        if (m_propertyBlocks.back()->acquireSlot(m_reflectedProperties.sizeBytes, m_currFrame, localSlotIndex, localSlotVersion))
         {
-            m_vacantSlotCount = (m_vacantSlotCount == 0u ? 0u : m_vacantSlotCount - 1u);
-
             return MaterialPropertySlotId{
                 .slot = ((SlotsPerBlock * static_cast<uint32_t>(m_propertyBlocks.size() - 1)) + localSlotIndex),
                 .version = localSlotVersion
@@ -118,6 +133,19 @@ namespace litl
         }
     }
 
+    void MaterialProperties::calculateActiveSlotCounts() noexcept
+    {
+        for (auto& block : m_propertyBlocks)
+        {
+            block->activeSlotCount = 0u;
+
+            for (auto& slot : block->slots)
+            {
+                block->activeSlotCount += (slot.occupied && (slot.lastActiveFrame == m_currFrame)) ? 1u : 0u;
+            }
+        }
+    }
+
     void MaterialProperties::freeSlots() noexcept
     {
         for (auto& block : m_propertyBlocks)
@@ -127,14 +155,17 @@ namespace litl
             // Are there inactive slots?
             if (block->activeSlotCount < occupiedSlots)
             {
-                for (auto& slot : block->slots)
+                for (uint32_t i = 0u; i < SlotsPerBlock; ++i)
                 {
+                    auto& slot = block->slots[i];
+
                     // If the slot is labelled active but hasn't been used, then mark it as vacant so it can be reused.
-                    if (slot.occupied && (slot.lastActiveFrame < m_currFrame))
+                    if (slot.occupied && ((slot.lastActiveFrame + SlotExpirationFrames) < m_currFrame))
                     {
+                        // Reset the slot tracking
                         slot.occupied = false;
+                        slot.version++;
                         block->vacantSlotCount++;
-                        m_vacantSlotCount++;
                     }
                 }
             }
@@ -172,7 +203,7 @@ namespace litl
         return &m_reflectedProperties.properties[find->second];
     }
 
-    bool MaterialProperties::setData(StringId property, uint32_t propertyOffset, uint32_t propertySize, void const* propertyData, MaterialPropertySlotId slot) noexcept
+    bool MaterialProperties::setData(uint32_t propertyOffset, uint32_t propertySize, void const* propertyData, MaterialPropertySlotId slot) noexcept
     {
         if (!slot.isValid())
         {
@@ -195,6 +226,9 @@ namespace litl
         auto* blockData = block->data.data();
         const auto blockSlotPropertyOffset = (localSlotIndex * m_reflectedProperties.sizeBytes) + propertyOffset;
 
+        LITL_ASSERT_MSG(((propertyOffset + propertySize) <= m_reflectedProperties.sizeBytes), "Material setData out-of-bounds of property", false);
+        LITL_ASSERT_MSG(static_cast<size_t>((blockSlotPropertyOffset + propertySize) <= block->data.size()), "Material setData out-of-bounds of block", false);
+
         memcpy(blockData + blockSlotPropertyOffset, propertyData, static_cast<size_t>(propertySize));
 
         block->isDirty = true;
@@ -211,19 +245,16 @@ namespace litl
             return false;
         }
 
-        if (reflectedProperty->variable.scalarType != ShaderScalarType::Bool)
-        {
-            return false;
-        }
-
-        if (reflectedProperty->variable.size != sizeof(uint32_t))
+        if ((reflectedProperty->variable.scalarType != ShaderScalarType::Bool) ||
+            (reflectedProperty->variable.scalarSize != sizeof(uint32_t)) ||
+            (reflectedProperty->variable.componentCount != 1u))
         {
             return false;
         }
 
         // bool on the cpu is 1 byte, but on the gpu it is 4 bytes.
         const uint32_t value32 = (value ? 1u : 0u);
-        return setData(property, reflectedProperty->offset, reflectedProperty->size, &value32, slot);
+        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value32, slot);
     }
 
     bool MaterialProperties::setInt32(StringId property, int32_t value, MaterialPropertySlotId slot) noexcept
@@ -235,7 +266,9 @@ namespace litl
             return false;
         }
 
-        if (reflectedProperty->variable.scalarType != ShaderScalarType::Integer)
+        if ((reflectedProperty->variable.scalarType != ShaderScalarType::Integer) ||
+            (reflectedProperty->variable.scalarSize != sizeof(int32_t)) ||
+            (reflectedProperty->variable.componentCount != 1u))
         {
             return false;
         }
@@ -246,12 +279,7 @@ namespace litl
             return false;
         }
 
-        if (reflectedProperty->size != sizeof(int32_t))
-        {
-            return false;
-        }
-
-        return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
+        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot);
     }
 
     bool MaterialProperties::setUint32(StringId property, uint32_t value, MaterialPropertySlotId slot) noexcept
@@ -263,7 +291,9 @@ namespace litl
             return false;
         }
 
-        if (reflectedProperty->variable.scalarType != ShaderScalarType::Integer)
+        if ((reflectedProperty->variable.scalarType != ShaderScalarType::Integer) || 
+            (reflectedProperty->variable.scalarSize != sizeof(uint32_t)) ||
+            (reflectedProperty->variable.componentCount != 1u))
         {
             return false;
         }
@@ -274,12 +304,7 @@ namespace litl
             return false;
         }
 
-        if (reflectedProperty->size != sizeof(uint32_t))
-        {
-            return false;
-        }
-
-        return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
+        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot);
     }
 
     bool MaterialProperties::setFloat(StringId property, float value, MaterialPropertySlotId slot) noexcept
@@ -291,17 +316,14 @@ namespace litl
             return false;
         }
 
-        if (reflectedProperty->variable.scalarType != ShaderScalarType::Float)
+        if ((reflectedProperty->variable.scalarType != ShaderScalarType::Float) ||
+            (reflectedProperty->variable.scalarSize != sizeof(float)) ||
+            (reflectedProperty->variable.componentCount != 1u))
         {
             return false;
         }
 
-        if (reflectedProperty->size != sizeof(float))
-        {
-            return false;
-        }
-
-        return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
+        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot);
     }
 
     bool MaterialProperties::setDouble(StringId property, double value, MaterialPropertySlotId slot) noexcept
@@ -313,17 +335,14 @@ namespace litl
             return false;
         }
 
-        if (reflectedProperty->variable.scalarType != ShaderScalarType::Float)
+        if ((reflectedProperty->variable.scalarType != ShaderScalarType::Float) ||
+            (reflectedProperty->variable.scalarSize != sizeof(double)) ||
+            (reflectedProperty->variable.componentCount != 1u))
         {
             return false;
         }
 
-        if (reflectedProperty->size != sizeof(double))
-        {
-            return false;
-        }
-
-        return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
+        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot);
     }
 
     bool MaterialProperties::setVec2(StringId property, vec2 value, MaterialPropertySlotId slot) noexcept
@@ -335,22 +354,16 @@ namespace litl
             return false;
         }
 
-        if (reflectedProperty->variable.scalarType != ShaderScalarType::Float)
+        static_assert(sizeof(vec2) == (sizeof(float) * 2));
+
+        if ((reflectedProperty->variable.scalarType != ShaderScalarType::Float) ||
+            (reflectedProperty->variable.scalarSize != sizeof(float)) ||
+            (reflectedProperty->variable.componentCount != 2u))
         {
             return false;
         }
 
-        if (reflectedProperty->size != sizeof(float))
-        {
-            return false;
-        }
-
-        if (reflectedProperty->variable.componentCount != 2u)
-        {
-            return false;
-        }
-
-        return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
+        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot);
     }
 
     bool MaterialProperties::setVec3(StringId property, vec3 value, MaterialPropertySlotId slot) noexcept
@@ -362,22 +375,16 @@ namespace litl
             return false;
         }
 
-        if (reflectedProperty->variable.scalarType != ShaderScalarType::Float)
+        static_assert(sizeof(vec3) == (sizeof(float) * 3));
+
+        if ((reflectedProperty->variable.scalarType != ShaderScalarType::Float) ||
+            (reflectedProperty->variable.scalarSize != sizeof(float)) ||
+            (reflectedProperty->variable.componentCount != 3u))
         {
             return false;
         }
 
-        if (reflectedProperty->size != sizeof(float))
-        {
-            return false;
-        }
-
-        if (reflectedProperty->variable.componentCount != 3u)
-        {
-            return false;
-        }
-
-        return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
+        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot);
     }
 
     bool MaterialProperties::setVec4(StringId property, vec4 const& value, MaterialPropertySlotId slot) noexcept
@@ -389,22 +396,16 @@ namespace litl
             return false;
         }
 
-        if (reflectedProperty->variable.scalarType != ShaderScalarType::Float)
+        static_assert(sizeof(vec4) == (sizeof(float) * 4));
+
+        if ((reflectedProperty->variable.scalarType != ShaderScalarType::Float) ||
+            (reflectedProperty->variable.scalarSize != sizeof(float)) ||
+            (reflectedProperty->variable.componentCount != 4u))
         {
             return false;
         }
 
-        if (reflectedProperty->size != sizeof(float))
-        {
-            return false;
-        }
-
-        if (reflectedProperty->variable.componentCount != 4u)
-        {
-            return false;
-        }
-
-        return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
+        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot);
     }
 
     bool MaterialProperties::setMat3(StringId property, mat3 const& value, MaterialPropertySlotId slot) noexcept
@@ -416,17 +417,11 @@ namespace litl
             return false;
         }
 
-        if (reflectedProperty->variable.scalarType != ShaderScalarType::Float)
-        {
-            return false;
-        }
+        static_assert(sizeof(mat3) == (sizeof(float) * 9));
 
-        if (reflectedProperty->size != sizeof(float))
-        {
-            return false;
-        }
-
-        if (reflectedProperty->variable.componentCount != 9u)
+        if ((reflectedProperty->variable.scalarType != ShaderScalarType::Float) ||
+            (reflectedProperty->variable.scalarSize != sizeof(float)) ||
+            (reflectedProperty->variable.componentCount != 9u))
         {
             return false;
         }
@@ -435,16 +430,16 @@ namespace litl
 
         if (matStride == 12u)
         {
-            return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
+            return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot);
         }
         else if (matStride == 16u)      // 4 bytes padding at the end of each column
         {
             const uint32_t colSize = static_cast<uint32_t>(sizeof(float) * 3);
 
             return
-                setData(property, reflectedProperty->offset + (matStride * 0u), colSize, value[0], slot) &&
-                setData(property, reflectedProperty->offset + (matStride * 1u), colSize, value[1], slot) &&
-                setData(property, reflectedProperty->offset + (matStride * 2u), colSize, value[2], slot);
+                setData(reflectedProperty->offset + (matStride * 0u), colSize, value[0], slot) &&
+                setData(reflectedProperty->offset + (matStride * 1u), colSize, value[1], slot) &&
+                setData(reflectedProperty->offset + (matStride * 2u), colSize, value[2], slot);
         }
         else
         {
@@ -461,22 +456,17 @@ namespace litl
             return false;
         }
 
-        if (reflectedProperty->variable.scalarType != ShaderScalarType::Float)
+        static_assert(sizeof(mat4) == (sizeof(float) * 16));
+
+        if ((reflectedProperty->variable.scalarType != ShaderScalarType::Float) ||
+            (reflectedProperty->variable.scalarSize != sizeof(float)) ||
+            (reflectedProperty->variable.componentCount != 16u) ||
+            (reflectedProperty->variable.matrixStride != 16u))
         {
             return false;
         }
 
-        if (reflectedProperty->size != sizeof(float))
-        {
-            return false;
-        }
-
-        if (reflectedProperty->variable.componentCount != 16u)
-        {
-            return false;
-        }
-
-        return setData(property, reflectedProperty->offset, reflectedProperty->size, &value, slot);
+        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot);
     }
 
 }

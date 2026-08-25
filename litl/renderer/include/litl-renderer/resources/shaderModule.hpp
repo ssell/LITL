@@ -105,7 +105,7 @@ namespace litl
         /// The byte size of an individual component of the variable type.
         /// For both `float` and `float3` this would be 4.
         /// </summary>
-        uint32_t size = 0u;
+        uint32_t scalarSize = 0u;
 
         /// <summary>
         /// The number of individual components that make up the variable type.
