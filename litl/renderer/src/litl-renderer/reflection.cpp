@@ -150,6 +150,11 @@ namespace
                     if ((instructionWordCount >= 4u) && (readWord(wordIndex + 2u) == SpvDecorationArrayStride))
                     {
                         spirvTypeEntry(table, readWord(wordIndex + 1u)).arrayStride = readWord(wordIndex + 3u);
+
+                        /**
+                         * TODO handle RowMajor (SpvDecorationRowMajor) and make a shader variable flag.
+                         * Then in MaterialProperties::setMat3/setMat4 we would need to swizzle.
+                         */
                     }
                     break;
 
@@ -686,14 +691,14 @@ namespace litl
             variable.scalarType = ShaderScalarType::Bool;
             variable.componentCount = 1u;
             variable.flag |= ShaderVariableFlagBits::Bool;
-            variable.size = (type->traits.numeric.scalar.width == 0u ? 32u : type->traits.numeric.scalar.width);
+            variable.scalarSize = (type->traits.numeric.scalar.width == 0u ? 32u : type->traits.numeric.scalar.width);
         }
         else if (type->type_flags & SPV_REFLECT_TYPE_FLAG_INT)
         {
             variable.scalarType = ShaderScalarType::Integer;
             variable.componentCount = 1u;
             variable.flag |= ShaderVariableFlagBits::Int;
-            variable.size = type->traits.numeric.scalar.width;
+            variable.scalarSize = type->traits.numeric.scalar.width;
 
             if (type->traits.numeric.scalar.signedness == 0u)
             {
@@ -706,7 +711,7 @@ namespace litl
             variable.scalarType = ShaderScalarType::Float;
             variable.componentCount = 1u;
             variable.flag |= ShaderVariableFlagBits::Float;
-            variable.size = type->traits.numeric.scalar.width;
+            variable.scalarSize = type->traits.numeric.scalar.width;
         }
 
         if (type->type_flags & SPV_REFLECT_TYPE_FLAG_VECTOR)
@@ -743,9 +748,9 @@ namespace litl
         if (type->type_flags & SPV_REFLECT_TYPE_FLAG_STRUCT) { variable.flag |= ShaderVariableFlagBits::Struct; }
         if (type->type_flags & SPV_REFLECT_TYPE_FLAG_REF) { variable.flag |= ShaderVariableFlagBits::Ref; }
 
-        if (variable.size > 0u)
+        if (variable.scalarSize > 0u)
         {
-            variable.size /= 8u;        // .width is given in bits not bytes
+            variable.scalarSize /= 8u;        // .width is given in bits not bytes
         }
 
         return variable;

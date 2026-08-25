@@ -24,7 +24,7 @@ namespace litl
         /// </summary>
         uint32_t version = 0u;
 
-        [[nodiscard]] constexpr bool isValid() noexcept
+        [[nodiscard]] constexpr bool isValid() const noexcept
         {
             return (slot != Constants::uint32_null_index) && (version != 0u);
         }
@@ -71,13 +71,13 @@ namespace litl
         /// </summary>
         bool isDirty = false;
 
-        [[nodiscard]] bool acquireSlot(uint32_t& localSlotIndex, uint32_t& localSlotVersion) noexcept;
+        [[nodiscard]] bool acquireSlot(uint32_t slotSize, uint32_t frame, uint32_t& localSlotIndex, uint32_t& localSlotVersion) noexcept;
     };
 
     struct MaterialPropertyReflection
     {
         /// <summary>
-        /// The size in bytes of an individual material property structure.
+        /// The size in bytes of an individual material property slot.
         /// </summary>
         uint32_t sizeBytes = 0u;
 
@@ -95,6 +95,7 @@ namespace litl
     public:
 
         static constexpr uint32_t SlotsPerBlock = 64u;
+        static constexpr uint32_t SlotExpirationFrames = 8u;
 
         /// <summary>
         /// Configures the underlying property blocks to accomodate slots of the specified byte size.
@@ -113,17 +114,21 @@ namespace litl
         [[nodiscard]] MaterialPropertySlotId allocateSlot() noexcept;
 
         /// <summary>
-        /// ... todo be called by something that ticks each frame ...
-        /// </summary>
-        void resetActiveSlotCounts() noexcept;
-
-        /// <summary>
         /// Marks the slot active for the frame.
+        /// 
+        /// Note this does not update the block active count as this method is intended be called from 
+        /// a parallel ECS system run, and so we split out the active slot count calculation to avoid thread syncing mechanisms.
+        /// 
         /// ... todo be called by a system or something ....
         /// </summary>
         void markSlotActive(MaterialPropertySlotId slot) noexcept;
 
         /// <summary>
+        /// Calculates the total number of active slots in each block.
+        /// 
+        /// Note that this is a separate step from marking the individual slots active so that we can avoid
+        /// having to introduce thread syncing mechanisms.
+        /// 
         /// ... todo be called by something that ticks each frame ...
         /// </summary>
         void calculateActiveSlotCounts() noexcept;
@@ -221,14 +226,12 @@ namespace litl
         /// <summary>
         /// 
         /// </summary>
-        bool setData(StringId property, uint32_t propertyOffset, uint32_t propertySize, void const* propertyData, MaterialPropertySlotId slot) noexcept;
+        bool setData(uint32_t propertyOffset, uint32_t propertySize, void const* propertyData, MaterialPropertySlotId slot) noexcept;
 
         MaterialPropertyReflection m_reflectedProperties;
         StringIdMap<uint32_t> m_propertyMap;
         std::vector<std::unique_ptr<MaterialPropertyBlock>> m_propertyBlocks;
-
         uint32_t m_currFrame = 0u;
-        uint32_t m_vacantSlotCount = 0u;
     };
 }
 
