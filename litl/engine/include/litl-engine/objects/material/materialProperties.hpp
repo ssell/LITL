@@ -50,11 +50,11 @@ namespace litl
         uint32_t lastActiveFrame = 0u;
 
         /// <summary>
-        /// Set to true if there has been a data chance to the block and its contents need to copied to the GPU.
+        /// Set to the number of frames-in-flight if there has been a data chance to the block and its contents need to copied to the GPU.
         /// </summary>
-        bool isDirty = false;
+        uint32_t dirtyFrameCount = 0u;
 
-        [[nodiscard]] bool acquireSlot(uint32_t slotSize, uint32_t frame, uint32_t& localSlotIndex, uint32_t& localSlotVersion) noexcept;
+        [[nodiscard]] bool acquireSlot(uint32_t slotSize, uint32_t frame, uint32_t framesInFlight, uint32_t& localSlotIndex, uint32_t& localSlotVersion) noexcept;
     };
 
     struct MaterialPropertyReflection
@@ -242,7 +242,6 @@ namespace litl
         uint32_t m_currFrame = 0u;
         uint32_t m_elementSizeBytes = 0u;
         uint32_t m_framesInFlight = 0u;
-        uint32_t m_dirtyFrameCount = 0u;
 
         std::vector<ResourceProperty> m_properties;
         StringIdMap<uint32_t> m_propertyMap;
