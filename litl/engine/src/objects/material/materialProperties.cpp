@@ -27,7 +27,7 @@ namespace litl
                 // Range is open
                 for (auto& preexistingProperty : properties)
                 {
-                    if (overlap(reflectedProperty.offset, (reflectedProperty.offset + reflectedProperty.sizePadded), preexistingProperty.offset, (preexistingProperty.offset + preexistingProperty.sizePadded)))
+                    if (overlap(reflectedProperty.offset, (reflectedProperty.offset + reflectedProperty.sizePadded - 1u), preexistingProperty.offset, (preexistingProperty.offset + preexistingProperty.sizePadded - 1u)))
                     {
                         logWarning("MaterialProperties::configure encountered property block overlap between properties '", preexistingProperty.name, "' and '", reflectedProperty.name, "'");
                         return false;
@@ -83,7 +83,6 @@ namespace litl
         newBlock->data.resize(m_elementSizeBytes * SlotsPerBlock, std::byte{ 0 });
         newBlock->slots.resize(SlotsPerBlock);
         newBlock->vacantSlotCount = SlotsPerBlock;
-        newBlock->activeSlotCount = 0u;
         newBlock->dirtyFrameCount = m_framesInFlight;
     }
 
@@ -172,40 +171,23 @@ namespace litl
         }
     }
 
-    void MaterialProperties::calculateActiveSlotCounts() noexcept
-    {
-        for (auto& block : m_propertyBlocks)
-        {
-            block->activeSlotCount = 0u;
-
-            for (auto& slot : block->slots)
-            {
-                block->activeSlotCount += (slot.occupied && (slot.lastActiveFrame == m_currFrame)) ? 1u : 0u;
-            }
-        }
-    }
-
     void MaterialProperties::freeSlots() noexcept
     {
         for (auto& block : m_propertyBlocks)
         {
             auto occupiedSlots = SlotsPerBlock - block->vacantSlotCount;
 
-            // Are there inactive slots?
-            if (block->activeSlotCount < occupiedSlots)
+            for (uint32_t i = (m_currFrame % SlotExpirationFrames); i < SlotsPerBlock; i += SlotExpirationFrames)       // Stagger only check 1/8 slots per frame
             {
-                for (uint32_t i = 0u; i < SlotsPerBlock; ++i)
-                {
-                    auto& slot = block->slots[i];
+                auto& slot = block->slots[i];
 
-                    // If the slot is labelled active but hasn't been used, then mark it as vacant so it can be reused.
-                    if (slot.occupied && ((slot.lastActiveFrame + SlotExpirationFrames) < m_currFrame))
-                    {
-                        // Reset the slot tracking
-                        slot.occupied = false;
-                        slot.version++;
-                        block->vacantSlotCount++;
-                    }
+                // If the slot is labelled active but hasn't been used, then mark it as vacant so it can be reused.
+                if (slot.occupied && ((slot.lastActiveFrame + SlotExpirationFrames) < m_currFrame))
+                {
+                    // Reset the slot tracking
+                    slot.occupied = false;
+                    slot.version++;
+                    block->vacantSlotCount++;
                 }
             }
         }
@@ -475,6 +457,27 @@ namespace litl
         if ((reflectedProperty->variable.scalarType != ShaderScalarType::Float) ||
             (reflectedProperty->variable.scalarSize != sizeof(float)) ||
             (reflectedProperty->variable.componentCount != 4u))
+        {
+            return false;
+        }
+
+        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot);
+    }
+
+    bool MaterialProperties::setColor(StringId property, color const& value, MaterialPropertySlotId slot) noexcept
+    {
+        auto* reflectedProperty = getReflectedProperty(property);
+
+        if (reflectedProperty == nullptr)
+        {
+            return false;
+        }
+
+        static_assert(sizeof(color) == (sizeof(float) * 4));
+
+        if ((reflectedProperty->variable.scalarType != ShaderScalarType::Float) ||
+            (reflectedProperty->variable.scalarSize != sizeof(float)) ||
+            ((reflectedProperty->variable.componentCount != 3u) && (reflectedProperty->variable.componentCount != 4u)))      // accept both RGB and RBA (float3 and float4)
         {
             return false;
         }

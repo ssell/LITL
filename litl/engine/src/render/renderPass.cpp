@@ -118,14 +118,8 @@ namespace litl
 
                     if (drawListItem.materialHandle != currMaterialHandle)
                     {
+                        pushConstants.materialPropertiesAddr = 0ull;
                         currMaterialHandle = drawListItem.materialHandle;
-
-                        if (!drawListItem.material->ready())
-                        {
-                            // This material has properties, but the property buffer is not yet ready.
-                            // Likely a material created mid-frame. Skip rendering it for now.
-                            continue;
-                        }
 
                         renderer->cmdBindGraphicsPipeline(frameCommandBuffer, drawListItem.graphicsPipelineHandle);
                         auto pushConstantStages = renderer->getGraphicsPipelinePushConstantStages(drawListItem.graphicsPipelineHandle);
@@ -134,6 +128,13 @@ namespace litl
                         {
                             if (drawListItem.material != nullptr)
                             {
+                                if (!drawListItem.material->ready())
+                                {
+                                    // This material has properties, but the property buffer is not yet ready.
+                                    // Likely a material created mid-frame. Skip rendering it for now.
+                                    continue;
+                                }
+
                                 const auto materialPropsBda = drawListItem.material->getGraphicsBufferDeviceAddress();
                                 pushConstants.materialPropertiesAddr = materialPropsBda.has_value() ? materialPropsBda.value() : 0ull;
                             }
