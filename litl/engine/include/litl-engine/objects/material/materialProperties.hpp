@@ -109,6 +109,12 @@ namespace litl
         /// ... todo be called by a system or something ....
         /// </summary>
         void markSlotActive(MaterialPropertySlotId slot) noexcept;
+        
+        /// <summary>
+        /// Marks all blocks dirty and that they need to be reuploaded to the GPU.
+        /// Typically used when the underlying GPU buffers were resized and need to be updated.
+        /// </summary>
+        void markAllBlocksDirty() noexcept;
 
         /// <summary>
         /// Frees all slots found to be inactive.

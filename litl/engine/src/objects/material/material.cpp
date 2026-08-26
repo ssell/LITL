@@ -364,14 +364,16 @@ namespace litl
 
             if (gpuBuffer != nullptr)
             {
-                gpuBuffer->swapBuffers(frameInFlightIndex);
+                if (gpuBuffer->resizeBytes(properties.totalMemoryRequirements(), 2u))
+                {
+                    properties.markAllBlocksDirty();
+                }
 
+                gpuBuffer->swapBuffers(frameInFlightIndex);
                 properties.gatherDirtyBlocks(dirtyPropertyBlocks);
 
                 if (!dirtyPropertyBlocks.empty())
                 {
-                    gpuBuffer->resizeBytes(properties.totalMemoryRequirements(), 2u);   // No action if the memory needs have not grown sufficiently
-
                     const auto slotSizeBytes = properties.individualSlotMemoryRequirements();
 
                     for (auto& dirtyBlock : dirtyPropertyBlocks)
