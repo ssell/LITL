@@ -41,14 +41,19 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     // ... in progress ...
 
     auto bunnyMesh = assets->getMesh("mesh/bunny");                     // maps to "assets/mesh/bunny.litlmesh"
-    auto bunnyMaterial = createPlaceholderMaterial(*objectPool);
+    auto bunnyMaterialRef = createPlaceholderMaterial(*objectPool);
     auto bunnyEntity = commands.createEntity();
 
     commands.addComponent<Transform>(bunnyEntity, Transform::create(bunnyPos));
     commands.addComponent<LocalBounds>(bunnyEntity, LocalBounds{});     // todo these need to come from the mesh ...
     commands.addComponent<WorldBounds>(bunnyEntity, WorldBounds{});
-    commands.addComponent<MaterialRef>(bunnyEntity, bunnyMaterial);
+    commands.addComponent<MaterialRef>(bunnyEntity, bunnyMaterialRef);
     commands.addComponent<MeshRef>(bunnyEntity, MeshRef{ .handle = bunnyMesh->handle });
+
+    auto* material = objectPool->getMaterial(bunnyMaterialRef.handle);
+
+    material->setColor("tint"_sid, colors::Orange, bunnyMaterialRef.slot);
+    material->setFloat("fade"_sid, 1.0f, bunnyMaterialRef.slot);
 }
 
 MaterialRef createPlaceholderMaterial(ObjectPool& objectPool)

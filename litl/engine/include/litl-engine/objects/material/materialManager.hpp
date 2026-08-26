@@ -2,6 +2,7 @@
 #define LITL_ENGINE_OBJECTS_MATERIAL_MANAGER_H__
 
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 #include "litl-core/authority.hpp"
@@ -28,7 +29,7 @@ namespace litl
 
     private:
 
-        ObjectPool* m_pObjectPool{ nullptr };
+        std::shared_ptr<ObjectPool> m_pObjectPool{ nullptr };
         std::vector<MaterialHandle> m_materialHandles;
     };
 }

@@ -9,7 +9,7 @@ namespace litl
 {
     void MaterialManager::setup(Authority<Engine> auth, ServiceProvider& services) noexcept
     {
-        m_pObjectPool = services.get<ObjectPool>().get();
+        m_pObjectPool = services.get<ObjectPool>();
         LITL_FATAL_ASSERT_MSG((m_pObjectPool != nullptr), "Failed to inject ObjectPool into MaterialManager");
     }
 

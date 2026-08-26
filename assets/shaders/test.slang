@@ -93,7 +93,7 @@ VertexOutput vertexMain(
 
     output.position = mul(mvpMatrix, float4(input.position.xyz, 1.0));
     output.uv = input.uv;
-    output.color = matProps.fade * (input.normal + 1.0) * 0.5;      // [-1, 1] to [0, 1]
+    output.color = (matProps.tint * matProps.fade) * ((input.normal.y + 1.0) * 0.5);      // [-1, 1] to [0, 1]
 
     return output;
 }
@@ -111,6 +111,6 @@ struct FragmentOutput
 FragmentOutput fragmentMain(VertexOutput input)
 {
     FragmentOutput output = (FragmentOutput)0;
-    output.color = float4(input.color.yyy, 1.0f);
+    output.color = float4(input.color, 1.0f);
     return output;
 }

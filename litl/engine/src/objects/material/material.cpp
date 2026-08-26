@@ -358,7 +358,6 @@ namespace litl
                 return;
             }
 
-            properties.calculateActiveSlotCounts();
             properties.freeSlots();
 
             auto* gpuBuffer = objectPool->getGpuBuffer(gpuBufferHandle);
@@ -460,4 +459,115 @@ namespace litl
 
         return true;
     }
+
+    bool Material::setBool(StringId property, bool value, MaterialPropertySlotId slot) noexcept
+    {
+        if (!slot.isValid())
+        {
+            return false;
+        }
+
+        return m_pImpl->properties.setBool(property, value, slot);
+    }
+
+    bool Material::setInt32(StringId property, int32_t value, MaterialPropertySlotId slot) noexcept
+    {
+        if (!slot.isValid())
+        {
+            return false;
+        }
+
+        return m_pImpl->properties.setInt32(property, value, slot);
+    }
+
+    bool Material::setUint32(StringId property, uint32_t value, MaterialPropertySlotId slot) noexcept
+    {
+        if (!slot.isValid())
+        {
+            return false;
+        }
+
+        return m_pImpl->properties.setUint32(property, value, slot);
+    }
+
+    bool Material::setFloat(StringId property, float value, MaterialPropertySlotId slot) noexcept
+    {
+        if (!slot.isValid())
+        {
+            return false;
+        }
+
+        return m_pImpl->properties.setFloat(property, value, slot);
+    }
+
+    bool Material::setDouble(StringId property, double value, MaterialPropertySlotId slot) noexcept
+    {
+        if (!slot.isValid())
+        {
+            return false;
+        }
+
+        return m_pImpl->properties.setDouble(property, value, slot);
+    }
+
+    bool Material::setVec2(StringId property, vec2 value, MaterialPropertySlotId slot) noexcept
+    {
+        if (!slot.isValid())
+        {
+            return false;
+        }
+
+        return m_pImpl->properties.setVec2(property, value, slot);
+    }
+
+    bool Material::setVec3(StringId property, vec3 value, MaterialPropertySlotId slot) noexcept
+    {
+        if (!slot.isValid())
+        {
+            return false;
+        }
+
+        return m_pImpl->properties.setVec3(property, value, slot);
+    }
+
+    bool Material::setVec4(StringId property, vec4 const& value, MaterialPropertySlotId slot) noexcept
+    {
+        if (!slot.isValid())
+        {
+            return false;
+        }
+
+        return m_pImpl->properties.setVec4(property, value, slot);
+    }
+
+    bool Material::setColor(StringId property, color const& value, MaterialPropertySlotId slot) noexcept
+    {
+        if (!slot.isValid())
+        {
+            return false;
+        }
+
+        return m_pImpl->properties.setColor(property, value, slot);
+    }
+
+    bool Material::setMat3(StringId property, mat3 const& value, MaterialPropertySlotId slot) noexcept
+    {
+        if (!slot.isValid())
+        {
+            return false;
+        }
+
+        return m_pImpl->properties.setMat3(property, value, slot);
+    }
+
+    bool Material::setMat4(StringId property, mat4 const& value, MaterialPropertySlotId slot) noexcept
+    {
+        if (!slot.isValid())
+        {
+            return false;
+        }
+
+        return m_pImpl->properties.setMat4(property, value, slot);
+    }
+
 }
