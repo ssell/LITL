@@ -157,67 +157,67 @@ namespace litl
         /// Sets the boolean value with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
-        bool setBool(StringId property, bool value, MaterialPropertySlotId slot) noexcept;
+        bool setBool(StringId property, bool value, MaterialPropertySlotId slot, bool defaultValue) noexcept;
 
         /// <summary>
         /// Sets the 32-bit signed integer value with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
-        bool setInt32(StringId property, int32_t value, MaterialPropertySlotId slot) noexcept;
+        bool setInt32(StringId property, int32_t value, MaterialPropertySlotId slot, bool defaultValue) noexcept;
 
         /// <summary>
         /// Sets the 32-bit unsigned integer value with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
-        bool setUint32(StringId property, uint32_t value, MaterialPropertySlotId slot) noexcept;
+        bool setUint32(StringId property, uint32_t value, MaterialPropertySlotId slot, bool defaultValue) noexcept;
 
         /// <summary>
         /// Sets the 32-bit float value with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
-        bool setFloat(StringId property, float value, MaterialPropertySlotId slot) noexcept;
+        bool setFloat(StringId property, float value, MaterialPropertySlotId slot, bool defaultValue) noexcept;
 
         /// <summary>
         /// Sets the 64-bit float value with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
-        bool setDouble(StringId property, double value, MaterialPropertySlotId slot) noexcept;
+        bool setDouble(StringId property, double value, MaterialPropertySlotId slot, bool defaultValue) noexcept;
 
         /// <summary>
         /// Sets the two-component 32-bit float vector value with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
-        bool setVec2(StringId property, vec2 value, MaterialPropertySlotId slot) noexcept;
+        bool setVec2(StringId property, vec2 value, MaterialPropertySlotId slot, bool defaultValue) noexcept;
 
         /// <summary>
         /// Sets the three-component 32-bit float vector value with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
-        bool setVec3(StringId property, vec3 value, MaterialPropertySlotId slot) noexcept;
+        bool setVec3(StringId property, vec3 value, MaterialPropertySlotId slot, bool defaultValue) noexcept;
 
         /// <summary>
         /// Sets the four-component 32-bit float vector value with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
-        bool setVec4(StringId property, vec4 const& value, MaterialPropertySlotId slot) noexcept;
+        bool setVec4(StringId property, vec4 const& value, MaterialPropertySlotId slot, bool defaultValue) noexcept;
 
         /// <summary>
         /// Sets the three- or four-component 32-bit float vector value with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
-        bool setColor(StringId property, color const& value, MaterialPropertySlotId slot) noexcept;
+        bool setColor(StringId property, color const& value, MaterialPropertySlotId slot, bool defaultValue) noexcept;
 
         /// <summary>
         /// Sets the 3x3 32-bit float matrix value with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
-        bool setMat3(StringId property, mat3 const& value, MaterialPropertySlotId slot) noexcept;
+        bool setMat3(StringId property, mat3 const& value, MaterialPropertySlotId slot, bool defaultValue) noexcept;
 
         /// <summary>
         /// Sets the 4x4 32-bit float matrix value with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
-        bool setMat4(StringId property, mat4 const& value, MaterialPropertySlotId slot) noexcept;
+        bool setMat4(StringId property, mat4 const& value, MaterialPropertySlotId slot, bool defaultValue) noexcept;
 
     private:
 
@@ -240,7 +240,7 @@ namespace litl
         /// <summary>
         /// Generic data set for a single property in a block. All other set methods (setBool, setFloat, setColor, etc.) all flow into here.
         /// </summary>
-        bool setData(uint32_t propertyOffset, uint32_t propertySize, void const* propertyData, MaterialPropertySlotId slot) noexcept;
+        bool setData(uint32_t propertyOffset, uint32_t propertySize, void const* propertyData, MaterialPropertySlotId slot, bool defaultValue) noexcept;
 
         /// <summary>
         /// Size of an individual slot in a block.

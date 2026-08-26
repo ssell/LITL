@@ -159,6 +159,72 @@ namespace litl
         /// </summary>
         bool setMat4(StringId property, mat4 const& value, MaterialPropertySlotId slot) noexcept;
 
+        /// <summary>
+        /// Sets the default bool value for the specified property.
+        /// This value will be applied to all slots that have do have a custom value set.
+        /// </summary>
+        bool setDefaultBool(StringId property, bool value) noexcept;
+
+        /// <summary>
+        /// Sets the default 32-bit signed integer value for the specified property.
+        /// This value will be applied to all slots that have do have a custom value set.
+        /// </summary>
+        bool setDefaultInt32(StringId property, int32_t value) noexcept;
+
+        /// <summary>
+        /// Sets the default 32-bit unsigned integer value for the specified property.
+        /// This value will be applied to all slots that have do have a custom value set.
+        /// </summary>
+        bool setDefaultUint32(StringId property, uint32_t value) noexcept;
+
+        /// <summary>
+        /// Sets the default 32-bit float value for the specified property.
+        /// This value will be applied to all slots that have do have a custom value set.
+        /// </summary>
+        bool setDefaultFloat(StringId property, float value) noexcept;
+
+        /// <summary>
+        /// Sets the default 64-bit float value for the specified property.
+        /// This value will be applied to all slots that have do have a custom value set.
+        /// </summary>
+        bool setDefaultDouble(StringId property, double value) noexcept;
+
+        /// <summary>
+        /// Sets the default vec2 value for the specified property.
+        /// This value will be applied to all slots that have do have a custom value set.
+        /// </summary>
+        bool setDefaultVec2(StringId property, vec2 value) noexcept;
+
+        /// <summary>
+        /// Sets the default vec3 value for the specified property.
+        /// This value will be applied to all slots that have do have a custom value set.
+        /// </summary>
+        bool setDefaultVec3(StringId property, vec3 value) noexcept;
+
+        /// <summary>
+        /// Sets the default vec4 value for the specified property.
+        /// This value will be applied to all slots that have do have a custom value set.
+        /// </summary>
+        bool setDefaultVec4(StringId property, vec4 const& value) noexcept;
+
+        /// <summary>
+        /// Sets the default color value for the specified property.
+        /// This value will be applied to all slots that have do have a custom value set.
+        /// </summary>
+        bool setDefaultColor(StringId property, color const& value) noexcept;
+
+        /// <summary>
+        /// Sets the default mat3 value for the specified property.
+        /// This value will be applied to all slots that have do have a custom value set.
+        /// </summary>
+        bool setDefaultMat3(StringId property, mat3 const& value) noexcept;
+
+        /// <summary>
+        /// Sets the default mat4 value for the specified property.
+        /// This value will be applied to all slots that have do have a custom value set.
+        /// </summary>
+        bool setDefaultMat4(StringId property, mat4 const& value) noexcept;
+
     private:
 
         struct Impl;

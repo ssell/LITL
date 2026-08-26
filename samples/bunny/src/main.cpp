@@ -44,6 +44,9 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
 
     if (bunnyMesh->handle.isValid() && bunnyMaterialHandle.isValid() && (bunnyMaterial != nullptr))
     {
+        bunnyMaterial->setDefaultColor("tint"_sid, colors::White);
+        bunnyMaterial->setDefaultFloat("fade"_sid, 1.0f);
+
         for (int32_t x = -10; x <= 10; ++x)
         {
             for (int32_t y = -10; y <= 10; ++y)
@@ -98,5 +101,4 @@ void createBunny(EntityCommands& commands, MeshHandle meshHandle, MaterialHandle
     commands.addComponent<MeshRef>(entity, MeshRef{ .handle = meshHandle });
 
     material->setColor("tint"_sid, color, materialRef.slot);
-    material->setFloat("fade"_sid, 1.0f, materialRef.slot);
 }
