@@ -171,6 +171,14 @@ namespace litl
         }
     }
 
+    void MaterialProperties::markAllBlocksDirty() noexcept
+    {
+        for (auto& propertyBlock : m_propertyBlocks)
+        {
+            propertyBlock->dirtyFrameCount = m_framesInFlight;
+        }
+    }
+
     void MaterialProperties::freeSlots() noexcept
     {
         for (auto& block : m_propertyBlocks)
