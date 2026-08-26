@@ -1,8 +1,8 @@
 #ifndef LITL_ENGINE_ECS_ENTITY_H__
 #define LITL_ENGINE_ECS_ENTITY_H__
 
-#include <cstdint>
 #include <compare>
+#include <cstdint>
 
 #include "litl-core/hash.hpp"
 #include "litl-ecs/constants.hpp"

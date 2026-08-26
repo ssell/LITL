@@ -240,8 +240,6 @@ namespace litl
             }
 
             // todo: update this to use jobs in the future. doing single-threaded for the moment just to get it working.
-            logTrace("Processing ", dirtyBuffers.size(), " deferred data transfers ...");
-
             auto scopedCommandBuffer = renderer->createScopedCommandBuffer();
 
             {
@@ -344,9 +342,26 @@ namespace litl
 
             for (auto& renderableEntity : renderableEntities)
             {
+                uint32_t materialIndex = renderableEntity.material.slot.index;
+
+                if (renderableEntity.material.frequentUpdates)
+                {
+                    auto* material = objectPool->getMaterial(renderableEntity.material.handle);
+
+                    if (material != nullptr)
+                    {
+                        materialIndex = material->getFrequentUpdateSlot(renderableEntity.material.slot);
+
+                        if (materialIndex == Constants::uint32_null_index)
+                        {
+                            materialIndex = renderableEntity.material.slot.index;
+                        }
+                    }
+                }
+
                 instanceData.data.emplace_back(
                     sceneView->getGpuBufferIndex(renderableEntity.entity), 
-                    renderableEntity.material.slot.index);
+                    materialIndex);
             }
 
             // --- Swap, resize, and update the GPU buffer

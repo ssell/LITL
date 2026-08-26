@@ -344,6 +344,25 @@ namespace litl
 
         return (offset + alignment - 1) & ~(alignment - 1);
     }
+
+    /// <summary>
+    /// Returns the fractional part of a floating point value.
+    /// </summary>
+    [[nodiscard]] constexpr float fract(float x) noexcept
+    {
+        float intPart;
+        return std::modf(x, &intPart);
+    }
+
+    [[nodiscard]] constexpr float (sin)(float x) noexcept
+    {
+        return std::sin(x);
+    }
+
+    [[nodiscard]] constexpr float (cos)(float x) noexcept
+    {
+        return std::cos(x);
+    }
 }
 
 #endif

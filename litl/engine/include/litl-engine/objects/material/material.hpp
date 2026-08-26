@@ -20,6 +20,7 @@ namespace litl
     class MaterialManager;
     class ObjectPool;
     class Renderer;
+    struct ActiveMaterialSystem;
 
     struct VertexInputDescriptor
     {
@@ -79,19 +80,90 @@ namespace litl
         ~Material();
 
         bool create(Authority<ObjectPool> auth, MaterialDescriptor const& descriptor, Renderer const& renderer, ObjectPool& objectPool) noexcept;
+        void setSelfHandle(Authority<ObjectPool> author, MaterialHandle handle) noexcept;
         void destroy(Authority<ObjectPool> auth) noexcept;
 
+        /// <summary>
+        /// Retrieves the Graphics Pipeline associated with this material.
+        /// </summary>
         [[nodiscard]] GraphicsPipelineHandle getGraphicsPipelineHandle() const noexcept;
-        [[nodiscard]] ComputePipelineHandle getComputePipelineHandle() const noexcept;
-        [[nodiscard]] GpuBufferHandle getGraphicsGpuBufferHandle() const noexcept;
-        [[nodiscard]] std::optional<uint64_t> getGraphicsBufferDeviceAddress() const noexcept;
-        [[nodiscard]] MaterialPropertySlotId allocateSlot() noexcept;
 
+        /// <summary>
+        /// Retrieves the Compute Pipeline associated with this material.
+        /// </summary>
+        [[nodiscard]] ComputePipelineHandle getComputePipelineHandle() const noexcept;
+
+        /// <summary>
+        /// Retrieves the handle of the underlying GPU Buffer which stores graphics property data.
+        /// </summary>
+        [[nodiscard]] GpuBufferHandle getGraphicsGpuBufferHandle() const noexcept;
+
+        /// <summary>
+        /// Retrieves the BDA of the underlying GPU Buffer for the current frame.
+        /// </summary>
+        [[nodiscard]] std::optional<uint64_t> getGraphicsBufferDeviceAddress() const noexcept;
+
+        /// <summary>
+        /// Allocates a slot in the material buffer. This slot may be a reclaimed or new slot.
+        /// 
+        /// The slot may be marked as "frequently updated" if it is expected to be updated at a much
+        /// higher frequency than what is standard for instances of the material. The use-case is for 
+        /// material properties that are typically static but an event causes it to start updating on a per-frame basis.
+        /// In these cases, it is then more performant to mark the slot as frequently updated. 
+        /// 
+        /// A real-world example would be a bomb material that is typically static but then starts flashing before exploding.
+        /// 
+        /// Slots marked as frequent updaters do not flag their entire block when they get modified.
+        /// Instead their data is copied over to a specialized block at the end of the buffer which is copied each frame by default.
+        /// This avoids a few sparsely placed, but rapidly updating, material instances from marking all of their blocks dirty causing excessive data copies.
+        /// Frequently updated slots also do not have a stable (up-to-date) material slot and one must be requested each frame via getFrequentUpdateSlot.
+        /// 
+        /// If it is normal for instances of the material to be frequently updated, then individual slots should not
+        /// be marked as such and can instead be detrimental to performance.
+        /// 
+        /// The caller assumes the responsibility for updating any associated MaterialRef or similar.
+        /// </summary>
+        /// <param name="frequentUpdates"></param>
+        /// <returns></returns>
+        [[nodiscard]] MaterialPropertySlotId allocateSlot(bool frequentUpdates = false) noexcept;
+
+        /// <summary>
+        /// Invoked once-per-frame to provide the material with the current frame count and index.
+        /// These are used in part to help track inactive slots, dirty blocks, etc.
+        /// </summary>
         void onFrameStart(Authority<MaterialManager> auth, uint32_t frame, uint32_t frameInFlightIndex) noexcept;
+
+        /// <summary>
+        /// Invoked once-per-frame to ensure the frame-current underlying GPU buffer is up-to-date.
+        /// </summary>
         void onPreRender(Authority<MaterialManager> auth) noexcept;
-        void markActive(MaterialPropertySlotId slot) noexcept;
-        void markAsFrequentUpdate(MaterialPropertySlotId slot) noexcept;
-        void markAsInfrequentUpdate(MaterialPropertySlotId slot) noexcept;
+
+        /// <summary>
+        /// Invoked once-per-frame for all entities who have a MaterialRef component.
+        /// This is used to determine which material slots are no longer in use. Any slot that is deemed
+        /// inactive over a given number of frames will be automatically freed.
+        /// </summary>
+        void markActive(Authority<ActiveMaterialSystem> auth, MaterialPropertySlotId slot) noexcept;
+
+        /// <summary>
+        /// Updates the slot to be flagged as frequently updated. 
+        /// The caller assumes the responsibility for updating any associated MaterialRef or similar.
+        /// 
+        /// Note that this action is NOT thread-safe if immediate is true.
+        /// </summary>
+        /// <param name="immediate">If true, the change will be immediate. Otherwise it will be added to the deffered material command queue and performed on the next onPreRender.</param>
+        /// <returns>Always returns true. Used to simply pass into MaterialRef::frequentUpdates</returns>
+        bool markAsFrequentUpdate(MaterialPropertySlotId slot, bool immediate = false) noexcept;
+
+        /// <summary>
+        /// Updates the slot to no longer be flagged as frequently updated. 
+        /// The caller assumes the responsibility for updating any associated MaterialRef or similar.
+        /// 
+        /// Note that this action is NOT thread-safe if immediate is true.
+        /// </summary>
+        /// <param name="immediate">If true, the change will be immediate. Otherwise it will be added to the deffered material command queue and performed on the next onPreRender.</param>
+        /// <returns>Always returns false. Used to simply pass into MaterialRef::frequentUpdates</returns>
+        bool markAsInfrequentUpdate(MaterialPropertySlotId slot, bool immediate = false) noexcept;
 
         /// <summary>
         /// Given a material slot, returns the global slot index into its frequent block data.

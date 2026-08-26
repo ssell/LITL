@@ -4,6 +4,7 @@
 #include "litl-engine/engineCallbacks.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/objects/material/materialManager.hpp"
+#include "litl-engine/objects/material/deferredMaterialCommands.hpp"
 
 namespace litl
 {
@@ -30,6 +31,10 @@ namespace litl
 
     void MaterialManager::onPreRender(Authority<EngineCallbacks> auth) noexcept
     {
+        // Apply any waiting deferred material commands
+        DeferredMaterialCommands::onPreRender({}, *m_pObjectPool);
+
+        // Instruct each material to perform their onPreRender actions.
         m_pObjectPool->getAllMaterialHandles(m_materialHandles);
 
         for (auto& materialHandle : m_materialHandles)

@@ -4,6 +4,7 @@
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/world.hpp"
 #include "litl-engine/objects/objectPool.hpp"
+#include "litl-engine/objects/material/material.hpp"
 #include "litl-engine/render/renderManager.hpp"
 #include "litl-engine/scene/sceneView.hpp"
 #include "litl-engine/assets/assetManager.hpp"
@@ -232,7 +233,15 @@ namespace litl
             return {};
         }
 
-        return m_impl->materialPool.create(material);
+        MaterialHandle handle = m_impl->materialPool.create(material);
+        Material* materialPtr = m_impl->materialPool.get(handle);
+
+        if (materialPtr != nullptr)
+        {
+            materialPtr->setSelfHandle({}, handle);
+        }
+
+        return handle;
     }
 
     Material* ObjectPool::getMaterial(MaterialHandle handle) noexcept

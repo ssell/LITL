@@ -21,7 +21,7 @@ namespace litl
 
         if (material != nullptr)
         {
-            material->markActive(materialRef.slot);
+            material->markActive({}, materialRef.slot);
         }
     }
 }

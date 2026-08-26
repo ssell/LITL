@@ -1,10 +1,12 @@
 #include "litl-engine/startup.hpp"
+#include "flashSystem.hpp"
 
 using namespace litl;
 
+void configureSystems(SystemCollection& systems);
 void bootstrap(ServiceProvider& services, EntityCommands& commands);
 MaterialHandle createPlaceholderMaterial(ObjectPool& objectPool);
-void createBunny(EntityCommands& commands, MeshHandle meshHandle, MaterialHandle materialHandle, Material* material, vec3 position, color color);
+void createBunny(EntityCommands& commands, MeshHandle meshHandle, MaterialHandle materialHandle, Material* material, vec3 position, color color, bool flashing);
 
 int main()
 {
@@ -13,13 +15,18 @@ int main()
     engine.setup(
         { .engineSettings { .applicationName = "LITL - Bunny Sample" } },
         nullptr,
-        nullptr,
+        configureSystems,
         nullptr,
         bootstrap);
 
     engine.start();
 
     return 0;
+}
+
+void configureSystems(SystemCollection& systems)
+{
+    systems.addSystem<samples::FlashSystem>(SystemGroup::Update);
 }
 
 void bootstrap(ServiceProvider& services, EntityCommands& commands)
@@ -57,7 +64,8 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
                     bunnyMaterialHandle, 
                     bunnyMaterial, 
                     vec3{static_cast<float>(x) * 1.5f, static_cast<float>(y) * 1.5f, 28.0f },
-                    color{ static_cast<float>(x + 10) * 0.05f, static_cast<float>(y + 10) * 0.05f, 0.0f });
+                    color{ static_cast<float>(x + 10) * 0.05f, static_cast<float>(y + 10) * 0.05f, 0.0f },
+                    ((x == 0u) && (y == 0u)));
             }
         }
     }
@@ -85,13 +93,13 @@ MaterialHandle createPlaceholderMaterial(ObjectPool& objectPool)
     return materialHandle;
 }
 
-void createBunny(EntityCommands& commands, MeshHandle meshHandle, MaterialHandle materialHandle, Material* material, vec3 position, color color)
+void createBunny(EntityCommands& commands, MeshHandle meshHandle, MaterialHandle materialHandle, Material* material, vec3 position, color color, bool flashing)
 {
-    auto entity = commands.createEntity();
+    const DeferredEntity entity = commands.createEntity();
 
     const MaterialRef materialRef{
         .handle = materialHandle,
-        .slot = material->allocateSlot()
+        .slot = material->allocateSlot(flashing),
     };
 
     commands.addComponent<Transform>(entity, Transform::create(position));
@@ -100,5 +108,11 @@ void createBunny(EntityCommands& commands, MeshHandle meshHandle, MaterialHandle
     commands.addComponent<MaterialRef>(entity, materialRef);
     commands.addComponent<MeshRef>(entity, MeshRef{ .handle = meshHandle });
 
-    material->setColor("tint"_sid, color, materialRef.slot);
+    if (flashing)
+    {
+        commands.addComponent<samples::Flash>(entity, {});
+    }
+
+
+    material->setColor("tint"_sid, (flashing ? colors::White : color), materialRef.slot);
 }
