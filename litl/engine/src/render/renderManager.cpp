@@ -344,7 +344,9 @@ namespace litl
 
             for (auto& renderableEntity : renderableEntities)
             {
-                instanceData.data.emplace_back(sceneView->getGpuBufferIndex(renderableEntity.entity), 0u);
+                instanceData.data.emplace_back(
+                    sceneView->getGpuBufferIndex(renderableEntity.entity), 
+                    renderableEntity.material.slot.index);
             }
 
             // --- Swap, resize, and update the GPU buffer

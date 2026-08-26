@@ -136,7 +136,7 @@ namespace litl
             if (m_propertyBlocks[i]->acquireSlot(m_elementSizeBytes, m_currFrame, m_framesInFlight, localSlotIndex, localSlotVersion))
             {
                 return MaterialPropertySlotId{
-                    .slot = ((SlotsPerBlock * i) + localSlotIndex),
+                    .index = ((SlotsPerBlock * i) + localSlotIndex),
                     .version = localSlotVersion
                 };
             }
@@ -147,7 +147,7 @@ namespace litl
         if (m_propertyBlocks.back()->acquireSlot(m_elementSizeBytes, m_currFrame, m_framesInFlight, localSlotIndex, localSlotVersion))
         {
             return MaterialPropertySlotId{
-                .slot = ((SlotsPerBlock * static_cast<uint32_t>(m_propertyBlocks.size() - 1)) + localSlotIndex),
+                .index = ((SlotsPerBlock * static_cast<uint32_t>(m_propertyBlocks.size() - 1)) + localSlotIndex),
                 .version = localSlotVersion
             };
         }
@@ -164,7 +164,7 @@ namespace litl
         uint32_t blockIndex, localSlotIndex, localSlotVersion;
         
         if (slot.isValid() &&            
-            getBlockLocalSlot(slot.slot, blockIndex, localSlotIndex, localSlotVersion) && 
+            getBlockLocalSlot(slot.index, blockIndex, localSlotIndex, localSlotVersion) &&
             (slot.version == localSlotVersion))
         {
             m_propertyBlocks[blockIndex]->slots[localSlotIndex].lastActiveFrame = m_currFrame;
@@ -268,7 +268,7 @@ namespace litl
 
         uint32_t blockIndex, localSlotIndex, localSlotVersion;
 
-        if (!getBlockLocalSlot(slot.slot, blockIndex, localSlotIndex, localSlotVersion))
+        if (!getBlockLocalSlot(slot.index, blockIndex, localSlotIndex, localSlotVersion))
         {
             return false;
         }

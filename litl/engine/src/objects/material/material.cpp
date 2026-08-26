@@ -450,6 +450,11 @@ namespace litl
         m_pImpl->onPreRender();
     }
 
+    void Material::markActive(MaterialPropertySlotId slot) noexcept
+    {
+        m_pImpl->properties.markSlotActive(slot);
+    }
+
     bool Material::ready() const noexcept
     {
         if (m_pImpl->properties.propertyCount() > 0u)

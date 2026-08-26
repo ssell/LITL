@@ -89,6 +89,7 @@ namespace litl
 
         void onFrameStart(Authority<MaterialManager> auth, uint32_t frame, uint32_t frameInFlightIndex) noexcept;
         void onPreRender(Authority<MaterialManager> auth) noexcept;
+        void markActive(MaterialPropertySlotId slot) noexcept;
 
         [[nodiscard]] bool ready() const noexcept;
 
@@ -157,6 +158,7 @@ namespace litl
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
         bool setMat4(StringId property, mat4 const& value, MaterialPropertySlotId slot) noexcept;
+
     private:
 
         struct Impl;
