@@ -785,7 +785,7 @@ namespace litl::vulkan
 
             // Destruction Queue
             frameSyncInfo.destructionQueue = std::make_unique<DestructionQueue>();
-            frameSyncInfo.destructionQueue->build(context.device.vkDevice);
+            frameSyncInfo.destructionQueue->build(context.device.vkDevice, context.device.vmaAllocator);
 
             // Per-Frame Staging Arenas
             frameSyncInfo.stagingBufferArena = std::make_unique<StagingBuffer>();

@@ -35,6 +35,7 @@ namespace litl::vulkan
         [[nodiscard]] BufferHandle createBuffer(BufferDescriptor const& descriptor) noexcept;
         [[nodiscard]] BufferResource* getBuffer(BufferHandle handle) noexcept;
         void destroyBuffer(BufferHandle handle) noexcept;
+        void deferDestroyBuffer(BufferHandle handle) noexcept;
 
         [[nodiscard]] CommandBufferHandle createCommandBuffer(CommandBufferDescriptor const& descriptor) noexcept;
         [[nodiscard]] CommandBufferResource* getCommandBuffer(CommandBufferHandle handle) noexcept;

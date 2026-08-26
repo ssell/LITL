@@ -48,9 +48,9 @@ namespace litl
         return m_pOps->createBuffer(m_pContext, descriptor);
     }
 
-    void Renderer::destroyBuffer(BufferHandle handle) const noexcept
+    void Renderer::destroyBuffer(BufferHandle handle, bool immediate) const noexcept
     {
-        m_pOps->destroyBuffer(m_pContext, handle);
+        m_pOps->destroyBuffer(m_pContext, handle, immediate);
     }
 
     CommandBufferHandle Renderer::createCommandBuffer(CommandBufferDescriptor const& descriptor) const noexcept

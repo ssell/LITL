@@ -38,7 +38,7 @@ namespace litl
 
         // resource life-cycle
         BufferHandle (*createBuffer)(RendererContext*, BufferDescriptor const&);
-        void (*destroyBuffer)(RendererContext*, BufferHandle);
+        void (*destroyBuffer)(RendererContext*, BufferHandle, bool);
         CommandBufferHandle (*createCommandBuffer)(RendererContext*, CommandBufferDescriptor const&);
         void (*destroyCommandBuffer)(RendererContext*, CommandBufferHandle);
         ComputePipelineHandle (*createComputePipeline)(RendererContext*, ComputePipelineDescriptor const&);
@@ -137,9 +137,9 @@ namespace litl
         
         /// <summary>
         /// Destroys the underlying buffer resource pointed to by the provided handle.
+        /// The buffer can either be destroyed immediately or deferred.
         /// </summary>
-        /// <param name="handle"></param>
-        void destroyBuffer(BufferHandle handle) const noexcept;
+        void destroyBuffer(BufferHandle handle, bool immediate) const noexcept;
         
         /// <summary>
         /// 

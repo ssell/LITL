@@ -4,9 +4,10 @@
 
 namespace litl::vulkan
 {
-    void DestructionQueue::build(VkDevice vkDevice) noexcept
+    void DestructionQueue::build(VkDevice vkDevice, VmaAllocator vmaAllocator) noexcept
     {
         m_vkDevice = vkDevice;
+        m_vmaAllocator = vmaAllocator;
     }
 
     void DestructionQueue::process() noexcept
@@ -27,6 +28,10 @@ namespace litl::vulkan
                 vkDestroyShaderModule(m_vkDevice, item.vkShaderModule, nullptr);
                 break;
 
+            case DestructionResourceType::Buffer:
+                vmaDestroyBuffer(m_vmaAllocator, item.destructionBuffer.vkBuffer, item.destructionBuffer.vmaAllocation);
+                break;
+
             default:
                 LITL_LOG_WARNING_CAPTURE("DestructionQueue process skipping unhandled type of ", static_cast<uint32_t>(item.type));
                 break;
@@ -36,11 +41,28 @@ namespace litl::vulkan
 
     void DestructionQueue::enqueue(VkPipeline vkPipeline) noexcept
     {
-        m_toDestroy.push(DestructionItem{ .type = DestructionResourceType::Pipeline, .vkPipeline = vkPipeline });
+        m_toDestroy.push(DestructionItem{ 
+            .type = DestructionResourceType::Pipeline, 
+            .vkPipeline = vkPipeline 
+        });
     }
 
     void DestructionQueue::enqueue(VkShaderModule vkShaderModule) noexcept
     {
-        m_toDestroy.push(DestructionItem{ .type = DestructionResourceType::ShaderModule, .vkShaderModule = vkShaderModule });
+        m_toDestroy.push(DestructionItem{ 
+            .type = DestructionResourceType::ShaderModule, 
+            .vkShaderModule = vkShaderModule 
+        });
+    }
+
+    void DestructionQueue::enqueue(VkBuffer vkBuffer, VmaAllocation vmaAllocation) noexcept
+    {
+        m_toDestroy.push(DestructionItem{ 
+            .type = DestructionResourceType::Buffer, 
+            .destructionBuffer = DestructionBuffer {
+                .vkBuffer = vkBuffer,
+                .vmaAllocation = vmaAllocation
+            }
+        });
     }
 }
