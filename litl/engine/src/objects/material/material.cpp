@@ -359,6 +359,7 @@ namespace litl
             }
 
             properties.freeSlots();
+            properties.rebuildFrequentUpdateBlock();
 
             auto* gpuBuffer = objectPool->getGpuBuffer(gpuBufferHandle);
 
@@ -380,11 +381,21 @@ namespace litl
                     {
                         gpuBuffer->recordChunkDataWrite(GpuBufferChunk{
                             .sourcePtr = dirtyBlock.sourcePtr,
-                            .offset = static_cast<size_t>(dirtyBlock.blockIndex) * slotSizeBytes * MaterialProperties::SlotsPerBlock
-                            });
+                            .offset = dirtyBlock.blockOffset
+                        });
                     }
 
                     properties.clearDirtyBlocks();
+                }
+
+                MaterialPropertyBlockPointer frequentUpdateBlockPointer{};
+
+                if (properties.gatherFrequentUpdateBlockPointer(frequentUpdateBlockPointer))
+                {
+                    gpuBuffer->recordChunkDataWrite(GpuBufferChunk{
+                        .sourcePtr = frequentUpdateBlockPointer.sourcePtr,
+                        .offset = frequentUpdateBlockPointer.blockOffset
+                    });
                 }
 
                 currGraphicsGpuBufferDeviceAddress = gpuBuffer->getBufferDeviceAddress();
@@ -455,6 +466,21 @@ namespace litl
     void Material::markActive(MaterialPropertySlotId slot) noexcept
     {
         m_pImpl->properties.markSlotActive(slot);
+    }
+
+    void Material::markAsFrequentUpdate(MaterialPropertySlotId slot) noexcept
+    {
+        m_pImpl->properties.markSlotAsFrequentUpdate(slot, true);
+    }
+
+    void Material::markAsInfrequentUpdate(MaterialPropertySlotId slot) noexcept
+    {
+        m_pImpl->properties.markSlotAsFrequentUpdate(slot, false);
+    }
+
+    uint32_t Material::getFrequentUpdateSlot(MaterialPropertySlotId slot) noexcept
+    {
+        return m_pImpl->properties.getFrequentUpdateSlot(slot);
     }
 
     bool Material::ready() const noexcept

@@ -78,7 +78,7 @@ namespace litl
     /// </summary>
     struct GpuBufferChunk
     {
-        std::span<std::byte> sourcePtr;
+        std::span<std::byte const> sourcePtr;
         size_t offset{ 0ull };
     };
 
