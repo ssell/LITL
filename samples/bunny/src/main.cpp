@@ -46,7 +46,7 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     {
         for (int32_t x = -10; x <= 10; ++x)
         {
-            for (int32_t y = -10; y < 10; ++y)
+            for (int32_t y = -10; y <= 10; ++y)
             {
                 createBunny(
                     commands, 

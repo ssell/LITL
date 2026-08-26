@@ -370,7 +370,7 @@ namespace litl
 
                 if (!dirtyPropertyBlocks.empty())
                 {
-                    gpuBuffer->resizeBytes(properties.totalMemoryRequirements() * 2);   // No action if the memory needs have not grown sufficiently
+                    gpuBuffer->resizeBytes(properties.totalMemoryRequirements(), 2u);   // No action if the memory needs have not grown sufficiently
 
                     const auto slotSizeBytes = properties.individualSlotMemoryRequirements();
 

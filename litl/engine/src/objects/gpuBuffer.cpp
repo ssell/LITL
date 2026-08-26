@@ -301,22 +301,22 @@ namespace litl
         return (m_descriptor.bytes / m_descriptor.itemBytes);
     }
 
-    void GpuBuffer::resizeBytes(uint32_t size, bool canShrink, bool immediate) noexcept
+    bool GpuBuffer::resizeBytes(uint32_t size, uint32_t modifier, bool canShrink, bool immediate) noexcept
     {
-        LITL_ASSERT_MSG((m_descriptor.canResize && (size > 0u)), "Invalid buffer resize requested.", );
+        LITL_ASSERT_MSG((m_descriptor.canResize && (size > 0u)), "Invalid buffer resize requested.", false);
 
         if (size == m_descriptor.bytes)
         {
-            return;
+            return false;
         }
 
         if ((size < m_descriptor.bytes) && !canShrink)
         {
             // Requested a smaller buffer, but did not provide permission to shrink.
-            return;
+            return false;
         }
 
-        m_descriptor.bytes = size;
+        m_descriptor.bytes = size * modifier;
         m_version++;
 
         if (immediate)
@@ -324,10 +324,12 @@ namespace litl
             // Update the current buffer. Other buffers will be updated when they are swapped to.
             createBuffer(m_currHandleIndex);
         }
+
+        return true;
     }
 
-    void GpuBuffer::resizeItems(uint32_t items, bool canShrink, bool immediate) noexcept
+    bool GpuBuffer::resizeItems(uint32_t items, uint32_t modifier, bool canShrink, bool immediate) noexcept
     {
-        resizeBytes(items * m_descriptor.itemBytes);
+        return resizeBytes(items * m_descriptor.itemBytes, modifier);
     }
 }
