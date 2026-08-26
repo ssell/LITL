@@ -11,6 +11,7 @@ namespace litl
     {
         MaterialHandle handle;
         MaterialPropertySlotId slot;
+        bool frequentUpdates{ false };
     };
 }
 

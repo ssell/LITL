@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstring>
 
 #include "litl-core/logging/logging.hpp"
@@ -41,6 +42,7 @@ namespace litl
             return true;
         }
     }
+
     bool MaterialProperties::configure(MaterialPropertyReflection const& reflectedProperties, uint32_t framesInFlight) noexcept
     {
         if (!m_propertyBlocks.empty())
@@ -177,9 +179,7 @@ namespace litl
     {
         uint32_t blockIndex, localSlotIndex, localSlotVersion;
 
-        if (slot.isValid() &&
-            getBlockLocalSlot(slot.index, blockIndex, localSlotIndex, localSlotVersion) &&
-            (slot.version == localSlotVersion))
+        if (slot.isValid() && getBlockLocalSlot(slot, blockIndex, localSlotIndex, localSlotVersion, true))
         {
             m_propertyBlocks[blockIndex]->slots[localSlotIndex].lastActiveFrame = m_currFrame;
         }
@@ -193,15 +193,100 @@ namespace litl
         }
     }
 
+    void MaterialProperties::markSlotAsFrequentUpdate(MaterialPropertySlotId slot, bool isFrequent) noexcept
+    {
+        if (!slot.isValid())
+        {
+            return;
+        }
+
+        uint32_t blockIndex, localSlot, localSlotVersion;
+
+        if (getBlockLocalSlot(slot, blockIndex, localSlot, localSlotVersion, true))
+        {
+            if (localSlotVersion != slot.version)
+            {
+                return;
+            }
+
+            auto& slotRef = m_propertyBlocks[blockIndex]->slots[localSlot];
+
+            if (slotRef.isFrequent == isFrequent)
+            {
+                return;
+            }
+
+            if (isFrequent)
+            {
+                slotRef.isFrequent = true;
+                m_frequentUpdateBlock.residents.push_back(slot.index);
+            }
+            else
+            {
+                slotRef.isFrequent = false;
+                m_frequentUpdateBlock.removeResident(slot.index);
+            }
+        }
+    }
+
+    uint32_t MaterialProperties::getFrequentUpdateSlot(MaterialPropertySlotId slot) noexcept
+    {
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(m_frequentUpdateBlock.residents.size()); ++i)
+        {
+            if (m_frequentUpdateBlock.residents[i] == slot.index)
+            {
+                return static_cast<uint32_t>(m_propertyBlocks.size() * SlotsPerBlock) + i;
+            }
+        }
+
+        return Constants::uint32_null_index;
+    }
+
+    void MaterialProperties::rebuildFrequentUpdateBlock() noexcept
+    {
+        if (m_frequentUpdateBlock.residents.empty())
+        {
+            return;
+        }
+
+        uint32_t blockIndex, localSlot;
+        m_frequentUpdateBlock.data.resize(m_frequentUpdateBlock.residents.size()* m_slotSizeBytes, std::byte{ 0 });
+
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(m_frequentUpdateBlock.residents.size()); ++i)
+        {
+            const auto resident = m_frequentUpdateBlock.residents[i];
+            auto* residentDataPtr = getSlotDataPtr({ resident }, blockIndex, localSlot, false);
+
+            if (residentDataPtr != nullptr)
+            {
+                memcpy(m_frequentUpdateBlock.data.data() + (i * m_slotSizeBytes), residentDataPtr, m_slotSizeBytes);
+            }
+        }
+    }
+
+    bool MaterialProperties::gatherFrequentUpdateBlockPointer(MaterialPropertyBlockPointer& blockPointer) noexcept
+    {
+        if (m_frequentUpdateBlock.residents.empty())
+        {
+            return false;
+        }
+
+        blockPointer.sourcePtr = m_frequentUpdateBlock.data;
+        blockPointer.blockOffset = static_cast<uint32_t>(m_propertyBlocks.size()) * SlotsPerBlock * m_slotSizeBytes;
+
+        return true;
+    }
+
     void MaterialProperties::freeSlots() noexcept
     {
-        for (auto& block : m_propertyBlocks)
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(m_propertyBlocks.size()); ++i)
         {
+            auto& block = m_propertyBlocks[i];
             auto occupiedSlots = SlotsPerBlock - block->vacantSlotCount;
 
-            for (uint32_t i = (m_currFrame % SlotExpirationFrames); i < SlotsPerBlock; i += SlotExpirationFrames)       // Stagger only check 1/8 slots per frame
+            for (uint32_t j = (m_currFrame % SlotExpirationFrames); j < SlotsPerBlock; j += SlotExpirationFrames)       // Stagger only check 1/8 slots per frame
             {
-                auto& slot = block->slots[i];
+                auto& slot = block->slots[j];
 
                 // If the slot is labelled active but hasn't been used, then mark it as vacant so it can be reused.
                 if (slot.occupied && ((slot.lastActiveFrame + SlotExpirationFrames) < m_currFrame))
@@ -210,6 +295,12 @@ namespace litl
                     slot.occupied = false;
                     slot.version++;
                     block->vacantSlotCount++;
+
+                    if (slot.isFrequent)
+                    {
+                        m_frequentUpdateBlock.removeResident((SlotsPerBlock * i) + j);
+                        slot.isFrequent = false;
+                    }
                 }
             }
         }
@@ -222,7 +313,7 @@ namespace litl
 
     size_t MaterialProperties::totalMemoryRequirements() const noexcept
     {
-        return (m_slotSizeBytes * SlotsPerBlock * m_propertyBlocks.size());
+        return (m_slotSizeBytes * SlotsPerBlock * m_propertyBlocks.size()) + (m_slotSizeBytes * m_frequentUpdateBlock.residents.size());
     }
 
     uint32_t MaterialProperties::propertyCount() const noexcept
@@ -241,8 +332,8 @@ namespace litl
             {
                 dirtyBlocks.push_back(MaterialPropertyBlockPointer{
                     .sourcePtr = m_propertyBlocks[i]->data,
-                    .blockIndex = i
-                    });
+                    .blockOffset = i * SlotsPerBlock * m_slotSizeBytes
+                });
             }
         }
     }
@@ -255,18 +346,30 @@ namespace litl
         }
     }
 
-    bool MaterialProperties::getBlockLocalSlot(uint32_t slot, uint32_t& blockIndex, uint32_t& localSlot, uint32_t& localSlotVersion) const noexcept
+    bool MaterialProperties::getBlockLocalSlot(MaterialPropertySlotId slotId, uint32_t& blockIndex, uint32_t& localSlot, uint32_t& localSlotVersion, bool validateVersion) const noexcept
     {
-        if (static_cast<size_t>(slot) >= (m_propertyBlocks.size() * SlotsPerBlock))
+        if (static_cast<size_t>(slotId.index) >= (m_propertyBlocks.size() * SlotsPerBlock))
         {
             return false;
         }
 
-        blockIndex = slot / SlotsPerBlock;
-        localSlot = slot % SlotsPerBlock;
+        blockIndex = slotId.index / SlotsPerBlock;
+        localSlot = slotId.index % SlotsPerBlock;
         localSlotVersion = m_propertyBlocks[blockIndex]->slots[localSlot].version;
 
-        return true;
+        return !validateVersion || (slotId.version == localSlotVersion);
+    }
+
+    void* MaterialProperties::getSlotDataPtr(MaterialPropertySlotId slotId, uint32_t& blockIndex, uint32_t& localSlot, bool validateVersion) const noexcept
+    {
+        uint32_t localSlotVersion;
+
+        if (getBlockLocalSlot(slotId, blockIndex, localSlot, localSlotVersion, validateVersion))
+        {
+            return (m_propertyBlocks[blockIndex]->data.data() + (localSlot * m_slotSizeBytes));
+        }
+
+        return nullptr;
     }
 
     ResourceProperty const* MaterialProperties::getReflectedProperty(StringId property) const noexcept
@@ -301,28 +404,22 @@ namespace litl
                 return false;       // invalid slot
             }
 
-            uint32_t blockIndex, localSlotIndex, localSlotVersion;
+            uint32_t blockIndex, localSlot;
+            void* slotDataPtr = getSlotDataPtr(slot, blockIndex, localSlot, true);
 
-            if (!getBlockLocalSlot(slot.index, blockIndex, localSlotIndex, localSlotVersion))
+            if (slotDataPtr == nullptr)
             {
-                return false;       // failed to retrieve slot
+                return false;
             }
 
-            if ((slot.version != localSlotVersion))
+            std::memcpy(slotDataPtr, propertyData, static_cast<size_t>(propertySize));
+            auto& slotRef = m_propertyBlocks[blockIndex]->slots[localSlot];
+
+            if (!slotRef.isFrequent)
             {
-                return false;       // provided slot is out-of-date
+                // Mark the whole block dirty if this is not a slot that is getting copied in the FrequentUpdateBlock.
+                m_propertyBlocks[blockIndex]->dirtyFrameCount = m_framesInFlight;
             }
-
-            auto& block = m_propertyBlocks[blockIndex];
-            auto* blockData = block->data.data();
-            const auto blockSlotPropertyOffset = (localSlotIndex * m_slotSizeBytes) + propertyOffset;
-
-            LITL_ASSERT_MSG(((propertyOffset + propertySize) <= m_slotSizeBytes), "Material setData out-of-bounds of property", false);
-            LITL_ASSERT_MSG((static_cast<size_t>(blockSlotPropertyOffset + propertySize) <= block->data.size()), "Material setData out-of-bounds of block", false);
-
-            std::memcpy(blockData + blockSlotPropertyOffset, propertyData, static_cast<size_t>(propertySize));
-
-            block->dirtyFrameCount = m_framesInFlight;
 
             return true;
         }
@@ -582,4 +679,8 @@ namespace litl
         return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot, defaultValue);
     }
 
+    void FrequentUpdateBlock::removeResident(uint32_t slot) noexcept
+    {
+        std::ignore = std::remove_if(residents.begin(), residents.end(), [&slot](uint32_t resident) -> bool { return (resident == slot); });
+    }
 }

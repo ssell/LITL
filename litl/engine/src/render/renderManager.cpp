@@ -358,7 +358,10 @@ namespace litl
 
             if (instanceDataGpuBuffer->getItemCapacity() < renderableEntities.size())
             {
-                instanceDataGpuBuffer->resizeItems(renderableEntities.size() * 2u, false, true);
+                if (!instanceDataGpuBuffer->resizeItems(renderableEntities.size() * 2u, false, true))
+                {
+                    logWarning("Failed to resize internal InstanceData GPU Buffer.");
+                }
             }
 
             instanceDataGpuBuffer->setDataImmediate(generic_as_byte_span(instanceData.data.data(), sizeof(RenderInstanceData) * instanceData.data.size()), commandBuffer);
@@ -379,7 +382,10 @@ namespace litl
 
             if (worldMatrixBuffer->getItemCapacity() < currWorldMatrices.size())
             {
-                worldMatrixBuffer->resizeItems(currWorldMatrices.size() * 2u, false, true);
+                if (!worldMatrixBuffer->resizeItems(currWorldMatrices.size() * 2u, false, true))
+                {
+                    logWarning("Failed to resize internal WorldMatrix GPU Buffer.");
+                }
             }
 
             worldMatrixBuffer->setDataImmediate(generic_as_byte_span(currWorldMatrices.data(), currWorldMatrices.size_bytes()), commandBuffer);

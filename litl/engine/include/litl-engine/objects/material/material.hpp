@@ -90,7 +90,18 @@ namespace litl
         void onFrameStart(Authority<MaterialManager> auth, uint32_t frame, uint32_t frameInFlightIndex) noexcept;
         void onPreRender(Authority<MaterialManager> auth) noexcept;
         void markActive(MaterialPropertySlotId slot) noexcept;
+        void markAsFrequentUpdate(MaterialPropertySlotId slot) noexcept;
+        void markAsInfrequentUpdate(MaterialPropertySlotId slot) noexcept;
 
+        /// <summary>
+        /// Given a material slot, returns the global slot index into its frequent block data.
+        /// If the slot is not a resident of the frequent update block, then Constants::uint32_null_index is returned instead.
+        /// </summary>
+        uint32_t getFrequentUpdateSlot(MaterialPropertySlotId slot) noexcept;
+
+        /// <summary>
+        /// Returns true if the material is ready to be bound for rendering.
+        /// </summary>
         [[nodiscard]] bool ready() const noexcept;
 
         /// <summary>

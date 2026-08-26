@@ -19,6 +19,7 @@ namespace litl
         uint32_t version = 0u;
         uint32_t lastActiveFrame = 0u;
         bool occupied = false;
+        bool isFrequent = false;
     };
 
     struct MaterialPropertyBlock
@@ -71,8 +72,26 @@ namespace litl
     /// </summary>
     struct MaterialPropertyBlockPointer
     {
-        std::span<std::byte> sourcePtr{};
-        uint32_t blockIndex{ 0u };
+        std::span<std::byte const> sourcePtr{};
+        uint32_t blockOffset{ 0u };
+    };
+
+    /// <summary>
+    /// A block at the end of all other blocks that stores the data for those material instances which label themselves as frequent (per-frame) updaters.
+    /// </summary>
+    struct FrequentUpdateBlock
+    {
+        /// <summary>
+        /// The data blob for the frequently updated instances.
+        /// </summary>
+        std::vector<std::byte> data;
+
+        /// <summary>
+        /// The standard block index for those instances that are also in the frequent update block.
+        /// </summary>
+        std::vector<uint32_t> residents;
+
+        void removeResident(uint32_t resident) noexcept;
     };
 
     /// <summary>
@@ -122,6 +141,27 @@ namespace litl
         /// Typically used when the underlying GPU buffers were resized and need to be updated.
         /// </summary>
         void markAllBlocksDirty() noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        void markSlotAsFrequentUpdate(MaterialPropertySlotId slot, bool isFrequent) noexcept;
+
+        /// <summary>
+        /// Given a material slot, returns the global slot index into its frequent block data.
+        /// If the slot is not a resident of the frequent update block, then Constants::uint32_null_index is returned instead.
+        /// </summary>
+        [[nodiscard]] uint32_t getFrequentUpdateSlot(MaterialPropertySlotId slot) noexcept;
+
+        /// <summary>
+        /// Called each frame to rebuild the frequent update block.
+        /// </summary>
+        void rebuildFrequentUpdateBlock() noexcept;
+
+        /// <summary>
+        /// Retrieves the pointer information for the frequent update block. Returns false if the update block has no active residents.
+        /// </summary>
+        [[nodiscard]] bool gatherFrequentUpdateBlockPointer(MaterialPropertyBlockPointer& blockPointer) noexcept;
 
         /// <summary>
         /// Frees all slots found to be inactive.
@@ -230,7 +270,12 @@ namespace litl
         /// Given a global slot index, resolves it to a block index and local slot index into the block.
         /// May return false if the global index is out-of-bounds.
         /// </summary>
-        [[nodiscard]] bool getBlockLocalSlot(uint32_t slot, uint32_t& blockIndex, uint32_t& localSlot, uint32_t& localSlotVersion) const noexcept;
+        [[nodiscard]] bool getBlockLocalSlot(MaterialPropertySlotId slotId , uint32_t& blockIndex, uint32_t& localSlot, uint32_t& localSlotVersion, bool validateVersion) const noexcept;
+
+        /// <summary>
+        /// Retrieves the direct pointer to the specified slot data. Returns null if the provided slot id is out-of-bounds, stale, or otherwise invalid.
+        /// </summary>
+        [[nodiscard]] void* getSlotDataPtr(MaterialPropertySlotId slotId, uint32_t& blockIndex, uint32_t& localSlot, bool validateVersion) const noexcept;
 
         /// <summary>
         /// Given a property string id, returns the associated ResourceProperty. If no match was found, returns null.
@@ -280,6 +325,11 @@ namespace litl
         /// Provided by the material, the default values of a new slot.
         /// </summary>
         std::vector<std::byte> m_defaultPropertyBlob;
+
+        /// <summary>
+        /// Provided by the material, the default values of a new slot.
+        /// </summary>
+        FrequentUpdateBlock m_frequentUpdateBlock;
     };
 }
 
