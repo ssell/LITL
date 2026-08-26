@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <span>
 #include <vector>
 
 #include "litl-core/constants.hpp"
@@ -49,7 +50,7 @@ namespace litl
         /// </summary>
         uint32_t dirtyFrameCount = 0u;
 
-        [[nodiscard]] bool acquireSlot(uint32_t slotSize, uint32_t frame, uint32_t framesInFlight, uint32_t& localSlotIndex, uint32_t& localSlotVersion) noexcept;
+        [[nodiscard]] bool acquireSlot(uint32_t slotSize, uint32_t frame, uint32_t framesInFlight, uint32_t& localSlotIndex, uint32_t& localSlotVersion, std::span<std::byte const> defaultBlob) noexcept;
     };
 
     struct MaterialPropertyReflection
@@ -75,7 +76,9 @@ namespace litl
     };
 
     /// <summary>
-    /// 
+    /// Manages the CPU-side memory for material properties.
+    /// Composed of individual blocks of SlotsPerBlock slots. Each slot correlates to a material instance and contains the complete property data.
+    /// All data is stored generically as byte blobs and are uploaded to the GPU buffer by the owning Material.
     /// </summary>
     class MaterialProperties
     {
@@ -90,7 +93,13 @@ namespace litl
         bool configure(MaterialPropertyReflection const& reflectedProperties, uint32_t framesInFlight) noexcept;
 
         /// <summary>
-        /// ... todo be called by something that ticks each frame ...
+        /// Sets the default property values assigned when a new slot is allocated.
+        /// May return false if the new blob does not equal the size of the current blob.
+        /// </summary>
+        [[nodiscard]] bool setDefaultPropertyBlob(std::span<std::byte const> defaultBlob) noexcept;
+
+        /// <summary>
+        /// Sets the current frame that is being rendered. This is used to track which slots are actively being used.
         /// </summary>
         void setCurrentFrame(uint32_t currFrame) noexcept;
 
@@ -105,8 +114,6 @@ namespace litl
         /// 
         /// Note this does not update the block active count as this method is intended be called from 
         /// a parallel ECS system run, and so we split out the active slot count calculation to avoid thread syncing mechanisms.
-        /// 
-        /// ... todo be called by a system or something ....
         /// </summary>
         void markSlotActive(MaterialPropertySlotId slot) noexcept;
         
@@ -231,17 +238,48 @@ namespace litl
         ResourceProperty const* getReflectedProperty(StringId property) const noexcept;
 
         /// <summary>
-        /// 
+        /// Generic data set for a single property in a block. All other set methods (setBool, setFloat, setColor, etc.) all flow into here.
         /// </summary>
         bool setData(uint32_t propertyOffset, uint32_t propertySize, void const* propertyData, MaterialPropertySlotId slot) noexcept;
 
+        /// <summary>
+        /// Size of an individual slot in a block.
+        /// </summary>
+        uint32_t m_slotSizeBytes = 0u;
+
+        /// <summary>
+        /// The current frame render frame. 
+        /// Used to track which slots are active.
+        /// </summary>
         uint32_t m_currFrame = 0u;
-        uint32_t m_elementSizeBytes = 0u;
+
+        /// <summary>
+        /// Number of frames-in-flight managed by the renderer. 
+        /// When a block is marked dirty, it is dirty for this number of frames so that all 
+        /// frame-specific copies of the underlying buffer can be updated with the new data.
+        /// </summary>
         uint32_t m_framesInFlight = 0u;
 
+        /// <summary>
+        /// The reflected layout of all properties in an individual slot.
+        /// </summary>
         std::vector<ResourceProperty> m_properties;
+
+        /// <summary>
+        /// Maps from a property name id to the local offset within an individual slot.
+        /// </summary>
         StringIdMap<uint32_t> m_propertyMap;
+
+        /// <summary>
+        /// All property blocks. Each block holds SlotsPerBlock number of slots.
+        /// When a slot is updated, the entire block is marked dirty and will be uploaded to the GPU at the next update.
+        /// </summary>
         std::vector<std::unique_ptr<MaterialPropertyBlock>> m_propertyBlocks;
+
+        /// <summary>
+        /// Provided by the material, the default values of a new slot.
+        /// </summary>
+        std::vector<std::byte> m_defaultPropertyBlob;
     };
 }
 

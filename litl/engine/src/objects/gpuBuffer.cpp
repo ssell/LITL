@@ -90,11 +90,14 @@ namespace litl
         }
         else if (m_descriptor.canResize)
         {
+            // Create a new, resized buffer and discard of the old one.
+            // No data copy is performed here. If one is added in the future then there  are two different paths:
+            //    1. Persistent buffers would be mapped and then memcpy from the old to the new.
+            //    2. GpuOnly buffers would need a command buffer reference so that cmdCopyBuffer (which does not yet
+            //       exist and would be implemented via vkCmdCopyBuffer) could be used to transfer the data.
+
             auto oldBufferHandle = m_buffers[index].handle;
             auto newBufferHandle = m_pRenderer->createBuffer(bufferDescriptor);
-
-            // ... todo copy data from old to new ...
-            // ... not yet implemented because (a) i dont know how i want to do this yet and (b) its not needed as the resizable buffers currently get completely rewritten ...
 
             m_buffers[index].handle = newBufferHandle;
             m_pRenderer->destroyBuffer(oldBufferHandle, false);
@@ -318,6 +321,11 @@ namespace litl
 
         m_descriptor.bytes = size * modifier;
         m_version++;
+
+        if (!m_data.empty())
+        {
+            m_data.resize(size, std::byte{ 0 });
+        }
 
         if (immediate)
         {

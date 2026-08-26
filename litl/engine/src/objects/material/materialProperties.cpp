@@ -62,10 +62,25 @@ namespace litl
             return false;
         }
 
-        m_elementSizeBytes = reflectedProperties.sizeBytes;
+        m_slotSizeBytes = reflectedProperties.sizeBytes;
         m_framesInFlight = framesInFlight;
+        m_defaultPropertyBlob.resize(m_slotSizeBytes, std::byte{ 0 });
 
         allocateBlock();
+
+        return true;
+    }
+
+    bool MaterialProperties::setDefaultPropertyBlob(std::span<std::byte const> defaultBlob) noexcept
+    {
+        if (defaultBlob.size() != m_defaultPropertyBlob.size())
+        {
+            logWarning("Attempting to set new default property blob for Material that does not match existing blob size.");
+            return false;
+        }
+
+        m_defaultPropertyBlob.clear();
+        m_defaultPropertyBlob.insert(m_defaultPropertyBlob.begin(), defaultBlob.begin(), defaultBlob.end());
 
         return true;
     }
@@ -80,13 +95,13 @@ namespace litl
         m_propertyBlocks.push_back(std::make_unique<MaterialPropertyBlock>());
         auto& newBlock = m_propertyBlocks.back();
 
-        newBlock->data.resize(m_elementSizeBytes * SlotsPerBlock, std::byte{ 0 });
+        newBlock->data.resize(m_slotSizeBytes * SlotsPerBlock, std::byte{ 0 });
         newBlock->slots.resize(SlotsPerBlock);
         newBlock->vacantSlotCount = SlotsPerBlock;
         newBlock->dirtyFrameCount = m_framesInFlight;
     }
 
-    bool MaterialPropertyBlock::acquireSlot(uint32_t slotSize, uint32_t frame, uint32_t framesInFlight, uint32_t& localSlotIndex, uint32_t& localSlotVersion) noexcept
+    bool MaterialPropertyBlock::acquireSlot(uint32_t slotSize, uint32_t frame, uint32_t framesInFlight, uint32_t& localSlotIndex, uint32_t& localSlotVersion, std::span<std::byte const> defaultBlob) noexcept
     {
         if (vacantSlotCount == 0u)
         {
@@ -113,8 +128,7 @@ namespace litl
         localSlotVersion = ++slots[localSlotIndex].version;
         vacantSlotCount = (vacantSlotCount == 0u ? 0u : (vacantSlotCount - 1u));
 
-        // Make sure the memory is cleared. TODO in the future use the material default values ...
-        std::memset(data.data() + (slotSize * localSlotIndex), 0, slotSize);
+        std::memcpy(data.data() + (slotSize * localSlotIndex), defaultBlob.data(), defaultBlob.size_bytes());
         dirtyFrameCount = framesInFlight;
 
         return true;
@@ -122,7 +136,7 @@ namespace litl
 
     MaterialPropertySlotId MaterialProperties::allocateSlot() noexcept
     {
-        if (m_elementSizeBytes == 0u)
+        if (m_slotSizeBytes == 0u)
         {
             // A material with no property block is legitimate but we can't allocate a slot for it.
             return {};
@@ -133,7 +147,7 @@ namespace litl
 
         for (uint32_t i = 0u; i < static_cast<uint32_t>(m_propertyBlocks.size()); ++i)
         {
-            if (m_propertyBlocks[i]->acquireSlot(m_elementSizeBytes, m_currFrame, m_framesInFlight, localSlotIndex, localSlotVersion))
+            if (m_propertyBlocks[i]->acquireSlot(m_slotSizeBytes, m_currFrame, m_framesInFlight, localSlotIndex, localSlotVersion, m_defaultPropertyBlob))
             {
                 return MaterialPropertySlotId{
                     .index = ((SlotsPerBlock * i) + localSlotIndex),
@@ -144,7 +158,7 @@ namespace litl
 
         allocateBlock();
 
-        if (m_propertyBlocks.back()->acquireSlot(m_elementSizeBytes, m_currFrame, m_framesInFlight, localSlotIndex, localSlotVersion))
+        if (m_propertyBlocks.back()->acquireSlot(m_slotSizeBytes, m_currFrame, m_framesInFlight, localSlotIndex, localSlotVersion, m_defaultPropertyBlob))
         {
             return MaterialPropertySlotId{
                 .index = ((SlotsPerBlock * static_cast<uint32_t>(m_propertyBlocks.size() - 1)) + localSlotIndex),
@@ -162,8 +176,8 @@ namespace litl
     void MaterialProperties::markSlotActive(MaterialPropertySlotId slot) noexcept
     {
         uint32_t blockIndex, localSlotIndex, localSlotVersion;
-        
-        if (slot.isValid() &&            
+
+        if (slot.isValid() &&
             getBlockLocalSlot(slot.index, blockIndex, localSlotIndex, localSlotVersion) &&
             (slot.version == localSlotVersion))
         {
@@ -203,12 +217,12 @@ namespace litl
 
     uint32_t MaterialProperties::individualSlotMemoryRequirements() const noexcept
     {
-        return m_elementSizeBytes;
+        return m_slotSizeBytes;
     }
 
     size_t MaterialProperties::totalMemoryRequirements() const noexcept
     {
-        return (m_elementSizeBytes * SlotsPerBlock * m_propertyBlocks.size());
+        return (m_slotSizeBytes * SlotsPerBlock * m_propertyBlocks.size());
     }
 
     uint32_t MaterialProperties::propertyCount() const noexcept
@@ -228,7 +242,7 @@ namespace litl
                 dirtyBlocks.push_back(MaterialPropertyBlockPointer{
                     .sourcePtr = m_propertyBlocks[i]->data,
                     .blockIndex = i
-                });
+                    });
             }
         }
     }
@@ -288,9 +302,9 @@ namespace litl
 
         auto& block = m_propertyBlocks[blockIndex];
         auto* blockData = block->data.data();
-        const auto blockSlotPropertyOffset = (localSlotIndex * m_elementSizeBytes) + propertyOffset;
+        const auto blockSlotPropertyOffset = (localSlotIndex * m_slotSizeBytes) + propertyOffset;
 
-        LITL_ASSERT_MSG(((propertyOffset + propertySize) <= m_elementSizeBytes), "Material setData out-of-bounds of property", false);
+        LITL_ASSERT_MSG(((propertyOffset + propertySize) <= m_slotSizeBytes), "Material setData out-of-bounds of property", false);
         LITL_ASSERT_MSG((static_cast<size_t>(blockSlotPropertyOffset + propertySize) <= block->data.size()), "Material setData out-of-bounds of block", false);
 
         memcpy(blockData + blockSlotPropertyOffset, propertyData, static_cast<size_t>(propertySize));
