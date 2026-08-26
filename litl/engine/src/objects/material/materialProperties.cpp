@@ -281,40 +281,54 @@ namespace litl
         return &m_properties[find->second];
     }
 
-    bool MaterialProperties::setData(uint32_t propertyOffset, uint32_t propertySize, void const* propertyData, MaterialPropertySlotId slot) noexcept
+    bool MaterialProperties::setData(uint32_t propertyOffset, uint32_t propertySize, void const* propertyData, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
-        if (!slot.isValid())
+        if (defaultValue)
         {
-            return false;
+            if ((propertyOffset + propertySize) > static_cast<uint32_t>(m_defaultPropertyBlob.size()))
+            {
+                return false;       // out-of-bounds
+            }
+
+            std::memcpy(m_defaultPropertyBlob.data() + propertyOffset, propertyData, propertySize);
+
+            return true;
         }
-
-        uint32_t blockIndex, localSlotIndex, localSlotVersion;
-
-        if (!getBlockLocalSlot(slot.index, blockIndex, localSlotIndex, localSlotVersion))
+        else
         {
-            return false;
+            if (!slot.isValid())
+            {
+                return false;       // invalid slot
+            }
+
+            uint32_t blockIndex, localSlotIndex, localSlotVersion;
+
+            if (!getBlockLocalSlot(slot.index, blockIndex, localSlotIndex, localSlotVersion))
+            {
+                return false;       // failed to retrieve slot
+            }
+
+            if ((slot.version != localSlotVersion))
+            {
+                return false;       // provided slot is out-of-date
+            }
+
+            auto& block = m_propertyBlocks[blockIndex];
+            auto* blockData = block->data.data();
+            const auto blockSlotPropertyOffset = (localSlotIndex * m_slotSizeBytes) + propertyOffset;
+
+            LITL_ASSERT_MSG(((propertyOffset + propertySize) <= m_slotSizeBytes), "Material setData out-of-bounds of property", false);
+            LITL_ASSERT_MSG((static_cast<size_t>(blockSlotPropertyOffset + propertySize) <= block->data.size()), "Material setData out-of-bounds of block", false);
+
+            std::memcpy(blockData + blockSlotPropertyOffset, propertyData, static_cast<size_t>(propertySize));
+
+            block->dirtyFrameCount = m_framesInFlight;
+
+            return true;
         }
-
-        if ((slot.version != localSlotVersion))
-        {
-            return false;
-        }
-
-        auto& block = m_propertyBlocks[blockIndex];
-        auto* blockData = block->data.data();
-        const auto blockSlotPropertyOffset = (localSlotIndex * m_slotSizeBytes) + propertyOffset;
-
-        LITL_ASSERT_MSG(((propertyOffset + propertySize) <= m_slotSizeBytes), "Material setData out-of-bounds of property", false);
-        LITL_ASSERT_MSG((static_cast<size_t>(blockSlotPropertyOffset + propertySize) <= block->data.size()), "Material setData out-of-bounds of block", false);
-
-        memcpy(blockData + blockSlotPropertyOffset, propertyData, static_cast<size_t>(propertySize));
-
-        block->dirtyFrameCount = m_framesInFlight;
-
-        return true;
     }
 
-    bool MaterialProperties::setBool(StringId property, bool value, MaterialPropertySlotId slot) noexcept
+    bool MaterialProperties::setBool(StringId property, bool value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
         auto* reflectedProperty = getReflectedProperty(property);
 
@@ -332,10 +346,10 @@ namespace litl
 
         // bool on the cpu is 1 byte, but on the gpu it is 4 bytes.
         const uint32_t value32 = (value ? 1u : 0u);
-        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value32, slot);
+        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value32, slot, defaultValue);
     }
 
-    bool MaterialProperties::setInt32(StringId property, int32_t value, MaterialPropertySlotId slot) noexcept
+    bool MaterialProperties::setInt32(StringId property, int32_t value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
         auto* reflectedProperty = getReflectedProperty(property);
 
@@ -357,10 +371,10 @@ namespace litl
             return false;
         }
 
-        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot);
+        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot, defaultValue);
     }
 
-    bool MaterialProperties::setUint32(StringId property, uint32_t value, MaterialPropertySlotId slot) noexcept
+    bool MaterialProperties::setUint32(StringId property, uint32_t value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
         auto* reflectedProperty = getReflectedProperty(property);
 
@@ -382,10 +396,10 @@ namespace litl
             return false;
         }
 
-        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot);
+        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot, defaultValue);
     }
 
-    bool MaterialProperties::setFloat(StringId property, float value, MaterialPropertySlotId slot) noexcept
+    bool MaterialProperties::setFloat(StringId property, float value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
         auto* reflectedProperty = getReflectedProperty(property);
 
@@ -401,10 +415,10 @@ namespace litl
             return false;
         }
 
-        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot);
+        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot, defaultValue);
     }
 
-    bool MaterialProperties::setDouble(StringId property, double value, MaterialPropertySlotId slot) noexcept
+    bool MaterialProperties::setDouble(StringId property, double value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
         auto* reflectedProperty = getReflectedProperty(property);
 
@@ -420,10 +434,10 @@ namespace litl
             return false;
         }
 
-        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot);
+        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot, defaultValue);
     }
 
-    bool MaterialProperties::setVec2(StringId property, vec2 value, MaterialPropertySlotId slot) noexcept
+    bool MaterialProperties::setVec2(StringId property, vec2 value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
         auto* reflectedProperty = getReflectedProperty(property);
 
@@ -441,10 +455,10 @@ namespace litl
             return false;
         }
 
-        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot);
+        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot, defaultValue);
     }
 
-    bool MaterialProperties::setVec3(StringId property, vec3 value, MaterialPropertySlotId slot) noexcept
+    bool MaterialProperties::setVec3(StringId property, vec3 value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
         auto* reflectedProperty = getReflectedProperty(property);
 
@@ -462,10 +476,10 @@ namespace litl
             return false;
         }
 
-        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot);
+        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot, defaultValue);
     }
 
-    bool MaterialProperties::setVec4(StringId property, vec4 const& value, MaterialPropertySlotId slot) noexcept
+    bool MaterialProperties::setVec4(StringId property, vec4 const& value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
         auto* reflectedProperty = getReflectedProperty(property);
 
@@ -483,10 +497,10 @@ namespace litl
             return false;
         }
 
-        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot);
+        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot, defaultValue);
     }
 
-    bool MaterialProperties::setColor(StringId property, color const& value, MaterialPropertySlotId slot) noexcept
+    bool MaterialProperties::setColor(StringId property, color const& value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
         auto* reflectedProperty = getReflectedProperty(property);
 
@@ -504,10 +518,10 @@ namespace litl
             return false;
         }
 
-        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot);
+        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot, defaultValue);
     }
 
-    bool MaterialProperties::setMat3(StringId property, mat3 const& value, MaterialPropertySlotId slot) noexcept
+    bool MaterialProperties::setMat3(StringId property, mat3 const& value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
         auto* reflectedProperty = getReflectedProperty(property);
 
@@ -529,16 +543,16 @@ namespace litl
 
         if (matStride == 12u)
         {
-            return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot);
+            return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot, defaultValue);
         }
         else if (matStride == 16u)      // 4 bytes padding at the end of each column
         {
             const uint32_t colSize = static_cast<uint32_t>(sizeof(float) * 3);
 
             return
-                setData(reflectedProperty->offset + (matStride * 0u), colSize, value[0], slot) &&
-                setData(reflectedProperty->offset + (matStride * 1u), colSize, value[1], slot) &&
-                setData(reflectedProperty->offset + (matStride * 2u), colSize, value[2], slot);
+                setData(reflectedProperty->offset + (matStride * 0u), colSize, value[0], slot, defaultValue) &&
+                setData(reflectedProperty->offset + (matStride * 1u), colSize, value[1], slot, defaultValue) &&
+                setData(reflectedProperty->offset + (matStride * 2u), colSize, value[2], slot, defaultValue);
         }
         else
         {
@@ -546,7 +560,7 @@ namespace litl
         }
     }
 
-    bool MaterialProperties::setMat4(StringId property, mat4 const& value, MaterialPropertySlotId slot) noexcept
+    bool MaterialProperties::setMat4(StringId property, mat4 const& value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
         auto* reflectedProperty = getReflectedProperty(property);
 
@@ -565,7 +579,7 @@ namespace litl
             return false;
         }
 
-        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot);
+        return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot, defaultValue);
     }
 
 }

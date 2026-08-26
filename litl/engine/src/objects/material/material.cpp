@@ -474,7 +474,7 @@ namespace litl
             return false;
         }
 
-        return m_pImpl->properties.setBool(property, value, slot);
+        return m_pImpl->properties.setBool(property, value, slot, false);
     }
 
     bool Material::setInt32(StringId property, int32_t value, MaterialPropertySlotId slot) noexcept
@@ -484,7 +484,7 @@ namespace litl
             return false;
         }
 
-        return m_pImpl->properties.setInt32(property, value, slot);
+        return m_pImpl->properties.setInt32(property, value, slot, false);
     }
 
     bool Material::setUint32(StringId property, uint32_t value, MaterialPropertySlotId slot) noexcept
@@ -494,7 +494,7 @@ namespace litl
             return false;
         }
 
-        return m_pImpl->properties.setUint32(property, value, slot);
+        return m_pImpl->properties.setUint32(property, value, slot, false);
     }
 
     bool Material::setFloat(StringId property, float value, MaterialPropertySlotId slot) noexcept
@@ -504,7 +504,7 @@ namespace litl
             return false;
         }
 
-        return m_pImpl->properties.setFloat(property, value, slot);
+        return m_pImpl->properties.setFloat(property, value, slot, false);
     }
 
     bool Material::setDouble(StringId property, double value, MaterialPropertySlotId slot) noexcept
@@ -514,7 +514,7 @@ namespace litl
             return false;
         }
 
-        return m_pImpl->properties.setDouble(property, value, slot);
+        return m_pImpl->properties.setDouble(property, value, slot, false);
     }
 
     bool Material::setVec2(StringId property, vec2 value, MaterialPropertySlotId slot) noexcept
@@ -524,7 +524,7 @@ namespace litl
             return false;
         }
 
-        return m_pImpl->properties.setVec2(property, value, slot);
+        return m_pImpl->properties.setVec2(property, value, slot, false);
     }
 
     bool Material::setVec3(StringId property, vec3 value, MaterialPropertySlotId slot) noexcept
@@ -534,7 +534,7 @@ namespace litl
             return false;
         }
 
-        return m_pImpl->properties.setVec3(property, value, slot);
+        return m_pImpl->properties.setVec3(property, value, slot, false);
     }
 
     bool Material::setVec4(StringId property, vec4 const& value, MaterialPropertySlotId slot) noexcept
@@ -544,7 +544,7 @@ namespace litl
             return false;
         }
 
-        return m_pImpl->properties.setVec4(property, value, slot);
+        return m_pImpl->properties.setVec4(property, value, slot, false);
     }
 
     bool Material::setColor(StringId property, color const& value, MaterialPropertySlotId slot) noexcept
@@ -554,7 +554,7 @@ namespace litl
             return false;
         }
 
-        return m_pImpl->properties.setColor(property, value, slot);
+        return m_pImpl->properties.setColor(property, value, slot, false);
     }
 
     bool Material::setMat3(StringId property, mat3 const& value, MaterialPropertySlotId slot) noexcept
@@ -564,7 +564,7 @@ namespace litl
             return false;
         }
 
-        return m_pImpl->properties.setMat3(property, value, slot);
+        return m_pImpl->properties.setMat3(property, value, slot, false);
     }
 
     bool Material::setMat4(StringId property, mat4 const& value, MaterialPropertySlotId slot) noexcept
@@ -574,7 +574,63 @@ namespace litl
             return false;
         }
 
-        return m_pImpl->properties.setMat4(property, value, slot);
+        return m_pImpl->properties.setMat4(property, value, slot, false);
     }
+
+    bool Material::setDefaultBool(StringId property, bool value) noexcept
+    {
+        return m_pImpl->properties.setBool(property, value, {}, true);
+    }
+
+    bool Material::setDefaultInt32(StringId property, int32_t value) noexcept
+    {
+        return m_pImpl->properties.setInt32(property, value, {}, true);
+    }
+
+    bool Material::setDefaultUint32(StringId property, uint32_t value) noexcept
+    {
+        return m_pImpl->properties.setUint32(property, value, {}, true);
+    }
+
+    bool Material::setDefaultFloat(StringId property, float value) noexcept
+    {
+        return m_pImpl->properties.setFloat(property, value, {}, true);
+    }
+
+    bool Material::setDefaultDouble(StringId property, double value) noexcept
+    {
+        return m_pImpl->properties.setDouble(property, value, {}, true);
+    }
+
+    bool Material::setDefaultVec2(StringId property, vec2 value) noexcept
+    {
+        return m_pImpl->properties.setVec2(property, value, {}, true);
+    }
+
+    bool Material::setDefaultVec3(StringId property, vec3 value) noexcept
+    {
+        return m_pImpl->properties.setVec3(property, value, {}, true);
+    }
+
+    bool Material::setDefaultVec4(StringId property, vec4 const& value) noexcept
+    {
+        return m_pImpl->properties.setVec4(property, value, {}, true);
+    }
+
+    bool Material::setDefaultColor(StringId property, color const& value) noexcept
+    {
+        return m_pImpl->properties.setColor(property, value, {}, true);
+    }
+
+    bool Material::setDefaultMat3(StringId property, mat3 const& value) noexcept
+    {
+        return m_pImpl->properties.setMat3(property, value, {}, true);
+    }
+
+    bool Material::setDefaultMat4(StringId property, mat4 const& value) noexcept
+    {
+        return m_pImpl->properties.setMat4(property, value, {}, true);
+    }
+
 
 }
