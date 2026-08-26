@@ -102,9 +102,9 @@ namespace litl
         }
     }
 
-    void CullingSystem::update(SystemData const& data, Entity entity, Transform const& transform, MeshRef const& mesh, MaterialRef const& material)
+    void CullingSystem::update(SystemData const& data, Entity entity, Transform const& transform, MeshRef const& mesh, MaterialRef const& materialRef)
     {
-        if (!mesh.handle.isValid() || !material.handle.isValid())
+        if (!mesh.handle.isValid() || !materialRef.handle.isValid())
         {
             return;
         }
@@ -124,7 +124,7 @@ namespace litl
                     .entity = entity,
                     .transform = transform,
                     .mesh = mesh,
-                    .material = material
+                    .material = materialRef
                 });
             }
         }

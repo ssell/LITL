@@ -44,7 +44,7 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     auto bunnyMaterialRef = createPlaceholderMaterial(*objectPool);
     auto bunnyEntity = commands.createEntity();
 
-    commands.addComponent<Transform>(bunnyEntity, Transform::create(bunnyPos));
+    commands.addComponent<Transform>(bunnyEntity, Transform::create(bunnyPos - vec3::right() * 0.75f));
     commands.addComponent<LocalBounds>(bunnyEntity, LocalBounds{});     // todo these need to come from the mesh ...
     commands.addComponent<WorldBounds>(bunnyEntity, WorldBounds{});
     commands.addComponent<MaterialRef>(bunnyEntity, bunnyMaterialRef);
@@ -54,6 +54,21 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
 
     material->setColor("tint"_sid, colors::Orange, bunnyMaterialRef.slot);
     material->setFloat("fade"_sid, 1.0f, bunnyMaterialRef.slot);
+
+    // --- test second bunny
+
+    auto bunnyEntity2 = commands.createEntity();
+    auto bunnyEntity2MaterialRef = bunnyMaterialRef;
+    bunnyEntity2MaterialRef.slot = material->allocateSlot();
+
+    commands.addComponent<Transform>(bunnyEntity2, Transform::create(bunnyPos + vec3::right() * 0.75f));
+    commands.addComponent<LocalBounds>(bunnyEntity2, LocalBounds{});     // todo these need to come from the mesh ...
+    commands.addComponent<WorldBounds>(bunnyEntity2, WorldBounds{});
+    commands.addComponent<MaterialRef>(bunnyEntity2, bunnyEntity2MaterialRef);
+    commands.addComponent<MeshRef>(bunnyEntity2, MeshRef{ .handle = bunnyMesh->handle });
+
+    material->setColor("tint"_sid, colors::Green, bunnyEntity2MaterialRef.slot);
+    material->setFloat("fade"_sid, 1.0f, bunnyEntity2MaterialRef.slot);
 }
 
 MaterialRef createPlaceholderMaterial(ObjectPool& objectPool)

@@ -11,7 +11,7 @@ namespace litl
         /// <summary>
         /// The global slot index.
         /// </summary>
-        uint32_t slot = Constants::uint32_null_index;
+        uint32_t index = Constants::uint32_null_index;
 
         /// <summary>
         /// The version/generation of the slot that this is valid for.
@@ -20,7 +20,7 @@ namespace litl
 
         [[nodiscard]] constexpr bool isValid() const noexcept
         {
-            return (slot != Constants::uint32_null_index) && (version != 0u);
+            return (index != Constants::uint32_null_index) && (version != 0u);
         }
     };
 }

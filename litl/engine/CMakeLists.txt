@@ -32,7 +32,7 @@ add_library(litl-engine STATIC
 	"src/assets/textAsset.cpp" 
 	"src/assets/texture2dAsset.cpp" 
 	"src/assets/meshAsset.cpp" 
-	"src/assets/materialAsset.cpp"  "src/objects/material/materialProperties.cpp" "src/objects/material/materialManager.cpp")
+	"src/assets/materialAsset.cpp"  "src/objects/material/materialProperties.cpp" "src/objects/material/materialManager.cpp" "src/ecs/systems/activeMaterialSystem.cpp")
 
 target_include_directories(litl-engine
 	PUBLIC

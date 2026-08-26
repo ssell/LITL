@@ -5,6 +5,7 @@ namespace litl
 {
     class World;
     class EntityCommands;
+    class ObjectPool;
 
     /// <summary>
     /// Data payload provided to the update method of each system.
