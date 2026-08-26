@@ -220,13 +220,17 @@ namespace litl
         /// The resize by default is also deferred until the next call to swap. This
         /// can be overridden if the resize needs to be immediate or if this is a 
         /// single-buffered buffer.
+        /// 
+        /// Additionally, the contents of every internal buffer copy are DISCARDED and
+        /// each copy is reallocated on its next swap with undefined contents. The buffer
+        /// owner is responsible for rewriting the data.
         /// </summary>
         /// <param name="size"></param>
         /// <param name="modifier">If a resize is needed, we resize to the number of (size * modifier)</param>
         /// <param name="canShrink"></param>
         /// <param name="immediate"></param>
         /// <returns>True if the buffer was resized.</returns>
-        bool resizeBytes(uint32_t size, uint32_t modifier, bool canShrink = false, bool immediate = false) noexcept;
+        [[nodiscard]] bool resizeBytes(uint32_t size, uint32_t modifier, bool canShrink = false, bool immediate = false) noexcept;
 
         /// <summary>
         /// Resizes the internal buffers to the specified size in terms of item count.
@@ -238,13 +242,17 @@ namespace litl
         /// The resize by default is also deferred until the next call to swap. This
         /// can be overridden if the resize needs to be immediate or if this is a 
         /// single-buffered buffer.
+        /// 
+        /// Additionally, the contents of every internal buffer copy are DISCARDED and
+        /// each copy is reallocated on its next swap with undefined contents. The buffer
+        /// owner is responsible for rewriting the data.
         /// </summary>
         /// <param name="items"></param>
         /// <param name="modifier">If a resize is needed, we resize to the number of (items * modifier)</param>
         /// <param name="canShrink"></param>
         /// <param name="immediate"></param>
         /// <returns>True if the buffer was resized.</returns>
-        bool resizeItems(uint32_t items, uint32_t modifier, bool canShrink = false, bool immediate = false) noexcept;
+        [[nodiscard]] bool resizeItems(uint32_t items, uint32_t modifier, bool canShrink = false, bool immediate = false) noexcept;
 
     private:
 
