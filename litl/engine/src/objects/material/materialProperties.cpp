@@ -67,6 +67,7 @@ namespace litl
         m_slotSizeBytes = reflectedProperties.sizeBytes;
         m_framesInFlight = framesInFlight;
         m_defaultPropertyBlob.resize(m_slotSizeBytes, std::byte{ 0 });
+        m_frequentUpdateBlock.residents.reserve(SlotsPerBlock);
 
         allocateBlock();
 
@@ -255,7 +256,7 @@ namespace litl
         for (uint32_t i = 0u; i < static_cast<uint32_t>(m_frequentUpdateBlock.residents.size()); ++i)
         {
             const auto resident = m_frequentUpdateBlock.residents[i];
-            auto* residentDataPtr = getSlotDataPtr({ resident }, blockIndex, localSlot, false);
+            std::byte* residentDataPtr = getSlotDataPtr({ resident }, blockIndex, localSlot, false);
 
             if (residentDataPtr != nullptr)
             {
@@ -360,7 +361,7 @@ namespace litl
         return !validateVersion || (slotId.version == localSlotVersion);
     }
 
-    void* MaterialProperties::getSlotDataPtr(MaterialPropertySlotId slotId, uint32_t& blockIndex, uint32_t& localSlot, bool validateVersion) const noexcept
+    std::byte* MaterialProperties::getSlotDataPtr(MaterialPropertySlotId slotId, uint32_t& blockIndex, uint32_t& localSlot, bool validateVersion) const noexcept
     {
         uint32_t localSlotVersion;
 
@@ -405,14 +406,14 @@ namespace litl
             }
 
             uint32_t blockIndex, localSlot;
-            void* slotDataPtr = getSlotDataPtr(slot, blockIndex, localSlot, true);
+            std::byte* slotDataPtr = getSlotDataPtr(slot, blockIndex, localSlot, true);
 
             if (slotDataPtr == nullptr)
             {
                 return false;
             }
 
-            std::memcpy(slotDataPtr, propertyData, static_cast<size_t>(propertySize));
+            std::memcpy(slotDataPtr + propertyOffset, propertyData, static_cast<size_t>(propertySize));
             auto& slotRef = m_propertyBlocks[blockIndex]->slots[localSlot];
 
             if (!slotRef.isFrequent)

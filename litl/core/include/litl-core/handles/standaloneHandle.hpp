@@ -1,6 +1,11 @@
 #ifndef LITL_CORE_STANDALONE_HANDLE_H__
 #define LITL_CORE_STANDALONE_HANDLE_H__
 
+#include <compare>
+#include <cstdint>
+
+#include "litl-core/hash.hpp"
+
 /// <summary>
 /// A basic standalone handle. Used when a singular opaque handle is needed without a related pool.
 /// </summary>
@@ -14,5 +19,6 @@ namespace litl
 #define LITL_UNPACK_HANDLE_PTR(HandleType, HandlePtr) static_cast<HandleType*>(HandlePtr->handle)
 }
 
+#define LITL_STD_HASH_HANDLE(handle) namespace std { template<> struct hash<handle> { std::size_t operator()(handle const& h) const noexcept { return static_cast<size_t>(litl::hashPOD(h)); } }; }
 
 #endif

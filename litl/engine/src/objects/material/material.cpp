@@ -1,9 +1,13 @@
 #include <format>
 
+#include "litl-core/assert.hpp"
+#include "litl-core/thread.hpp"
 #include "litl-engine/objects/material/material.hpp"
 #include "litl-engine/objects/material/materialManager.hpp"
 #include "litl-engine/objects/material/materialProperties.hpp"
+#include "litl-engine/objects/material/deferredMaterialCommands.hpp"
 #include "litl-engine/objects/objectPool.hpp"
+#include "litl-engine/ecs/systems/activeMaterialSystem.hpp"
 #include "litl-renderer/renderer.hpp"
 
 namespace litl
@@ -12,6 +16,7 @@ namespace litl
     {
         Renderer const* renderer = nullptr;
         ObjectPool* objectPool = nullptr;
+        MaterialHandle selfHandle{};
 
         MaterialDescriptor descriptor;
         MaterialProperties properties;
@@ -422,6 +427,11 @@ namespace litl
         return m_pImpl->create(descriptor, renderer, objectPool);
     }
     
+    void Material::setSelfHandle(Authority<ObjectPool> auth, MaterialHandle selfHandle) noexcept
+    {
+        LITL_ASSERT_MSG(selfHandle.isValid(), "Material provided with invalid self handle.", );
+        m_pImpl->selfHandle = selfHandle;
+    }
 
     void Material::destroy(Authority<ObjectPool> auth) noexcept
     {
@@ -448,9 +458,16 @@ namespace litl
         return m_pImpl->currGraphicsGpuBufferDeviceAddress;
     }
 
-    MaterialPropertySlotId Material::allocateSlot() noexcept
+    MaterialPropertySlotId Material::allocateSlot(bool frequentUpdates) noexcept
     {
-        return m_pImpl->properties.allocateSlot();
+        const auto slot = m_pImpl->properties.allocateSlot();
+
+        if (frequentUpdates)
+        {
+            markAsFrequentUpdate(slot);
+        }
+
+        return slot;
     }
     
     void Material::onFrameStart(Authority<MaterialManager> auth, uint32_t frame, uint32_t frameInFlightIndex) noexcept
@@ -463,19 +480,47 @@ namespace litl
         m_pImpl->onPreRender();
     }
 
-    void Material::markActive(MaterialPropertySlotId slot) noexcept
+    void Material::markActive(Authority<ActiveMaterialSystem> auth, MaterialPropertySlotId slot) noexcept
     {
         m_pImpl->properties.markSlotActive(slot);
     }
 
-    void Material::markAsFrequentUpdate(MaterialPropertySlotId slot) noexcept
+    bool Material::markAsFrequentUpdate(MaterialPropertySlotId slot, bool immediate) noexcept
     {
-        m_pImpl->properties.markSlotAsFrequentUpdate(slot, true);
+        if (immediate)
+        {
+            if (!ThreadInfo::isMainThread())
+            {
+                logWarning("Invoking Material::markAsFrequentUpdate from worker thread. This action is not thread-safe. Suggested to set 'immediate' to false.");
+            }
+
+            m_pImpl->properties.markSlotAsFrequentUpdate(slot, true);
+        }
+        else
+        {
+            DeferredMaterialCommands::enqueue(DeferredMaterialCommands::CommandType::MarkFrequentUpdates, slot, m_pImpl->selfHandle);
+        }
+
+        return true;
     }
 
-    void Material::markAsInfrequentUpdate(MaterialPropertySlotId slot) noexcept
+    bool Material::markAsInfrequentUpdate(MaterialPropertySlotId slot, bool immediate) noexcept
     {
-        m_pImpl->properties.markSlotAsFrequentUpdate(slot, false);
+        if (immediate)
+        {
+            if (!ThreadInfo::isMainThread())
+            {
+                logWarning("Invoking Material::markAsInfrequentUpdate from worker thread. This action is not thread-safe. Suggested to set 'immediate' to false.");
+            }
+
+            m_pImpl->properties.markSlotAsFrequentUpdate(slot, false);
+        }
+        else
+        {
+            DeferredMaterialCommands::enqueue(DeferredMaterialCommands::CommandType::MarkFrequentUpdates, slot, m_pImpl->selfHandle);
+        }
+
+        return false;
     }
 
     uint32_t Material::getFrequentUpdateSlot(MaterialPropertySlotId slot) noexcept

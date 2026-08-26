@@ -275,7 +275,7 @@ namespace litl
         /// <summary>
         /// Retrieves the direct pointer to the specified slot data. Returns null if the provided slot id is out-of-bounds, stale, or otherwise invalid.
         /// </summary>
-        [[nodiscard]] void* getSlotDataPtr(MaterialPropertySlotId slotId, uint32_t& blockIndex, uint32_t& localSlot, bool validateVersion) const noexcept;
+        [[nodiscard]] std::byte* getSlotDataPtr(MaterialPropertySlotId slotId, uint32_t& blockIndex, uint32_t& localSlot, bool validateVersion) const noexcept;
 
         /// <summary>
         /// Given a property string id, returns the associated ResourceProperty. If no match was found, returns null.
