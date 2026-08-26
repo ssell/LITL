@@ -97,7 +97,7 @@ namespace litl
             // ... not yet implemented because (a) i dont know how i want to do this yet and (b) its not needed as the resizable buffers currently get completely rewritten ...
 
             m_buffers[index].handle = newBufferHandle;
-            m_pRenderer->destroyBuffer(oldBufferHandle);
+            m_pRenderer->destroyBuffer(oldBufferHandle, false);
             bufferUpdated = true;
         }
 
@@ -120,7 +120,7 @@ namespace litl
     {
         for (auto& versionedBuffer : m_buffers)
         {
-            m_pRenderer->destroyBuffer(versionedBuffer.handle);
+            m_pRenderer->destroyBuffer(versionedBuffer.handle, false);
         }
     }
 
@@ -132,18 +132,18 @@ namespace litl
     void GpuBuffer::swapBuffers() noexcept
     {
         // Works for double, triple, etc. incremental buffering.
-        m_currHandleIndex = (m_currHandleIndex + 1) % m_buffers.size();
-
-        if (m_buffers[m_currHandleIndex].version < m_version)
-        {
-            createBuffer(m_currHandleIndex);
-        }
+        swapBuffers((m_currHandleIndex + 1) % m_buffers.size());
     }
 
     void GpuBuffer::swapBuffers(uint32_t frameIndex) noexcept
     {
         LITL_ASSERT_MSG((frameIndex < m_buffers.size()), "Requested swap GPU Buffer internal handle to invalid index.", );
         m_currHandleIndex = frameIndex;
+
+        if (m_buffers[m_currHandleIndex].version < m_version)
+        {
+            createBuffer(m_currHandleIndex);
+        }
     }
 
     GpuBufferDescriptor const& GpuBuffer::getDescriptor() const noexcept

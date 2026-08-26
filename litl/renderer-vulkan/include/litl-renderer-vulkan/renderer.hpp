@@ -18,7 +18,7 @@ namespace litl::vulkan
     // -------------------------------------------------------------------------------------
 
     [[nodiscard]] BufferHandle createBuffer(litl::RendererContext* context, BufferDescriptor const& descriptor) noexcept;
-    void destroyBuffer(litl::RendererContext* context, BufferHandle handle) noexcept;
+    void destroyBuffer(litl::RendererContext* context, BufferHandle handle, bool immediate) noexcept;
     [[nodiscard]] RendererResult mapBuffer(litl::RendererContext* context, BufferHandle handle, MappedBuffer& mapped) noexcept;
     [[nodiscard]] RendererResult unmapBuffer(litl::RendererContext* context, BufferHandle handle) noexcept;
     [[nodiscard]] std::optional<uint64_t> getBufferDeviceAddress(litl::RendererContext* context, BufferHandle handle) noexcept;

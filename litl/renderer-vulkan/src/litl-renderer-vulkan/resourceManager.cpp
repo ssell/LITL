@@ -242,6 +242,25 @@ namespace litl::vulkan
         }
     }
 
+    void ResourceManager::deferDestroyBuffer(BufferHandle handle) noexcept
+    {
+        BufferResource* resource = m_bufferPool.get(handle);
+
+        if (resource != nullptr)
+        {
+            if (resource->stagingBuffer.isValid())
+            {
+                deferDestroyBuffer(resource->stagingBuffer);
+            }
+
+            if (resource->vkBuffer != VK_NULL_HANDLE)
+            {
+                auto* destructionQueue = m_pContext->getCurrFrameSyncInfo().destructionQueue.get();
+                destructionQueue->enqueue(resource->vkBuffer, resource->allocation);
+            }
+        }
+    }
+
     //--------------------------------------------------------------------------------------
     // CommandBuffer
     //--------------------------------------------------------------------------------------

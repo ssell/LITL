@@ -10,9 +10,16 @@ namespace litl::vulkan
     {
         enum class DestructionResourceType : uint32_t
         {
-            Pipeline = 0,
-            ShaderModule,
+            Pipeline     = 0u,
+            ShaderModule = 1u,
+            Buffer       = 2u
             // ... add others as needed ...
+        };
+
+        struct DestructionBuffer
+        {
+            VkBuffer vkBuffer;
+            VmaAllocation vmaAllocation;
         };
 
         struct DestructionItem
@@ -23,6 +30,7 @@ namespace litl::vulkan
             {
                 VkPipeline vkPipeline;
                 VkShaderModule vkShaderModule;
+                DestructionBuffer destructionBuffer;
             };
         };
     public:
@@ -33,14 +41,16 @@ namespace litl::vulkan
         DestructionQueue(DestructionQueue const&) = delete;
         DestructionQueue& operator=(DestructionQueue const&) = delete;
 
-        void build(VkDevice vkDevice) noexcept;
+        void build(VkDevice vkDevice, VmaAllocator vmaAllocator) noexcept;
         void process() noexcept;
         void enqueue(VkPipeline vkPipeline) noexcept;
         void enqueue(VkShaderModule vkShaderModule) noexcept;
+        void enqueue(VkBuffer vkBuffer, VmaAllocation vmaAllocation) noexcept;
 
     private:
 
         VkDevice m_vkDevice = VK_NULL_HANDLE;
+        VmaAllocator m_vmaAllocator = VK_NULL_HANDLE;
         std::queue<DestructionItem> m_toDestroy;
     };
 }

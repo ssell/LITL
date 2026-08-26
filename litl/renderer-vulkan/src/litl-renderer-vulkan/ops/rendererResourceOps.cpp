@@ -16,10 +16,18 @@ namespace litl::vulkan
         return vulkanContext->resources.createBuffer(descriptor);
     }
 
-    void destroyBuffer(litl::RendererContext* context, BufferHandle handle) noexcept
+    void destroyBuffer(litl::RendererContext* context, BufferHandle handle, bool immediate) noexcept
     {
         auto* vulkanContext = unwrap(context);
-        vulkanContext->resources.destroyBuffer(handle);
+
+        if (immediate)
+        {
+            vulkanContext->resources.destroyBuffer(handle);
+        }
+        else
+        {
+            vulkanContext->resources.deferDestroyBuffer(handle);
+        }
     }
 
     RendererResult mapBuffer(litl::RendererContext* context, BufferHandle handle, MappedBuffer& mapped) noexcept
