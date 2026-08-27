@@ -16,6 +16,14 @@ Used for Unit testing.
 * Source: https://github.com/catchorg/Catch2
 * Included via: CMake `FetchContent`
 
+## glaze
+
+Used for various text file support including: `.json`, `.toml`, and `.beve` (binary JSON).
+
+* License: MIT
+* Source: https://github.com/stephenberry/glaze
+* Included via: CMake `FetchContent`
+
 ## GLFW
 
 Used for cross-platform window creation and window event processing.
