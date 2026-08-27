@@ -439,7 +439,7 @@ namespace litl
         m_pImpl->destroy();
     }
 
-    void Material::toggleTier3DataSeparation(bool enabled) noexcept
+    void Material::toggleFrequentDataUpdateSeparation(bool enabled) noexcept
     {
         m_pImpl->properties.toggleTier3DataSeparation(enabled);
     }

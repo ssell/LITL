@@ -55,10 +55,10 @@ namespace litl
         /// </summary>
         bool occupied = false;
 
-        [[nodiscard]] constexpr bool isInFrequentUpdateBlock() const noexcept
-        {
-            return frequentGlobalSlot != Constants::uint32_null_index;
-        }
+        /// <summary>
+        /// Is this slot also represented in the frequent update block?
+        /// </summary>
+        bool isInFrequentUpdateBlock = false;
     };
 
     struct MaterialPropertyBlock
@@ -158,7 +158,7 @@ namespace litl
     /// That is a difference of up to 189 slots of data (when SlotsPerBlock == 64).
     /// 
     /// However Tier 3 should be avoided if it is expected that a majority of instances of the material will be frequently updating.
-    /// This can be controlled in the 
+    /// This can be controlled in the parent Material::toggleFrequentDataUpdateSeparation.
     /// </summary>
     class MaterialProperties
     {
@@ -167,6 +167,7 @@ namespace litl
         static constexpr uint32_t SlotsPerBlock = 64u;
         static constexpr uint32_t SlotExpirationFrames = 8u;
         static constexpr uint32_t SlotUpgradeToFrequentFrames = 8u;
+        static constexpr uint32_t SlotDowngradeFromFrequntFrames = 30u;
 
         /// <summary>
         /// Configures the underlying property blocks to accomodate slots of the specified byte size.
