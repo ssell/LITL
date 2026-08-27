@@ -75,6 +75,33 @@ namespace litl
         return true;
     }
 
+    void MaterialProperties::toggleTier3DataSeparation(bool enabled) noexcept
+    {
+        if (enabled == m_enabledTier3DataSeparation)
+        {
+            return;
+        }
+
+        m_enabledTier3DataSeparation = enabled;
+
+        if (!m_enabledTier3DataSeparation)
+        {
+            // Downgrade any current Tier 3 residents
+            for (auto resident : m_frequentUpdateBlock.residents)
+            {
+                uint32_t block = resident / SlotsPerBlock;
+                uint32_t localSlot = resident % SlotsPerBlock;
+
+                auto& slot = m_propertyBlocks[block]->slots[localSlot];
+
+                slot.lastWriteFrame = 0u;
+                slot.consecutiveWriteFrames = 0u;
+
+                // The next call to freeSlots will handle actually removing them m_frequentUpdateBlocks.
+            }
+        }
+    }
+
     void MaterialProperties::setMaterialHandle(MaterialHandle handle) noexcept
     {
         m_materialHandle = handle;
@@ -447,7 +474,7 @@ namespace litl
 
             if (!slotRef.isInFrequentUpdateBlock())
             {
-                if (slotRef.consecutiveWriteFrames >= SlotUpgradeToFrequentFrames)
+                if (m_enabledTier3DataSeparation && (slotRef.consecutiveWriteFrames >= SlotUpgradeToFrequentFrames))
                 {
                     DeferredMaterialCommands::enqueue(DeferredMaterialCommands::CommandType::UpgradeSlotToFrequentBlock, slotId, m_materialHandle);
                 }

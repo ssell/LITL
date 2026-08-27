@@ -439,6 +439,11 @@ namespace litl
         m_pImpl->destroy();
     }
 
+    void Material::toggleTier3DataSeparation(bool enabled) noexcept
+    {
+        m_pImpl->properties.toggleTier3DataSeparation(enabled);
+    }
+
     GraphicsPipelineHandle Material::getGraphicsPipelineHandle() const noexcept
     {
         return m_pImpl->graphicsPipelineHandle;

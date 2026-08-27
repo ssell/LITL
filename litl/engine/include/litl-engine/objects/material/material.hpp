@@ -85,6 +85,17 @@ namespace litl
         void destroy(Authority<ObjectPool> auth) noexcept;
 
         /// <summary>
+        /// Enables/disables the split of Tier 3 data into its own separate GPU buffer space.
+        /// This should be enabled (and is by default) for materials that as a whole are infrequently updated
+        /// but may sporadically have instances that need to update frequently on a near per-frame basis.
+        /// 
+        /// For example, a bomb material that is normally static but can be triggered to start flashing.
+        /// 
+        /// This is enabled by default.
+        /// </summary>
+        void toggleTier3DataSeparation(bool enabled) noexcept;
+
+        /// <summary>
         /// Retrieves the Graphics Pipeline associated with this material.
         /// </summary>
         [[nodiscard]] GraphicsPipelineHandle getGraphicsPipelineHandle() const noexcept;
