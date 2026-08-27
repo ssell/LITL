@@ -93,7 +93,7 @@ namespace litl
         /// 
         /// This is enabled by default.
         /// </summary>
-        void toggleTier3DataSeparation(bool enabled) noexcept;
+        void toggleFrequentDataUpdateSeparation(bool enabled) noexcept;
 
         /// <summary>
         /// Retrieves the Graphics Pipeline associated with this material.

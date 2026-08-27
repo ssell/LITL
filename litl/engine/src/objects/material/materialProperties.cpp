@@ -248,7 +248,7 @@ namespace litl
         {
             auto& slot = m_propertyBlocks[blockIndex]->slots[localSlot];
 
-            if (slot.isInFrequentUpdateBlock())
+            if (slot.isInFrequentUpdateBlock)
             {
                 return slot.frequentGlobalSlot;
             }
@@ -267,8 +267,9 @@ namespace litl
         const uint32_t frequentUpdateBlockFirstIndex = static_cast<uint32_t>(m_propertyBlocks.size()) * SlotsPerBlock;
         uint32_t blockIndex, localSlot;
 
-        m_frequentUpdateBlock.data.resize(m_frequentUpdateBlock.residents.size()* m_slotSizeBytes, std::byte{ 0 });
+        m_frequentUpdateBlock.data.resize(m_frequentUpdateBlock.residents.size() * m_slotSizeBytes, std::byte{ 0 });
 
+        // For each resident, copy its slot into the frequentUpdatBlock data buffer.
         for (uint32_t i = 0u; i < static_cast<uint32_t>(m_frequentUpdateBlock.residents.size()); ++i)
         {
             const auto resident = m_frequentUpdateBlock.residents[i];
@@ -290,8 +291,9 @@ namespace litl
         {
             auto& slot = m_propertyBlocks[blockIndex]->slots[localSlot];
 
-            if (!slot.isInFrequentUpdateBlock())
+            if (!slot.isInFrequentUpdateBlock)
             {
+                slot.isInFrequentUpdateBlock = true;
                 m_frequentUpdateBlock.residents.push_back(slotId.index);
             }
         }
@@ -318,6 +320,7 @@ namespace litl
 
             slot.consecutiveWriteFrames = 0u;
             slot.frequentGlobalSlot = Constants::uint32_null_index;
+            slot.isInFrequentUpdateBlock = false;
             block.dirtyFrameCount = m_framesInFlight;                   // Data in the non-frequent slot on the GPU may be stale. Force a refresh.
         };
 
@@ -343,12 +346,12 @@ namespace litl
                         slot.version++;
                         block->vacantSlotCount++;
 
-                        if (slot.isInFrequentUpdateBlock())
+                        if (slot.isInFrequentUpdateBlock)
                         {
                             downgradeSlotFromFrequentUpdateBlock(globalSlotIndex, *block, slot);
                         }
                     }
-                    else if (slot.isInFrequentUpdateBlock() && ((m_currFrame - slot.lastWriteFrame) >= SlotExpirationFrames))
+                    else if (slot.isInFrequentUpdateBlock && ((m_currFrame - slot.lastWriteFrame) >= SlotDowngradeFromFrequntFrames))
                     {
                         downgradeSlotFromFrequentUpdateBlock(globalSlotIndex, *block, slot);
                     }
@@ -465,23 +468,20 @@ namespace litl
             {
                 slotRef.consecutiveWriteFrames++;
             }
-            else
+            else if (slotRef.lastWriteFrame != m_currFrame)
             {
                 slotRef.consecutiveWriteFrames = 0u;
             }
 
             slotRef.lastWriteFrame = m_currFrame;
 
-            if (!slotRef.isInFrequentUpdateBlock())
+            if (!slotRef.isInFrequentUpdateBlock)
             {
+                m_propertyBlocks[blockIndex]->dirtyFrameCount = m_framesInFlight;
+
                 if (m_enabledTier3DataSeparation && (slotRef.consecutiveWriteFrames >= SlotUpgradeToFrequentFrames))
                 {
                     DeferredMaterialCommands::enqueue(DeferredMaterialCommands::CommandType::UpgradeSlotToFrequentBlock, slotId, m_materialHandle);
-                }
-                else
-                {
-                    // Mark the whole block dirty if this is not a slot that is getting copied in the FrequentUpdateBlock.
-                    m_propertyBlocks[blockIndex]->dirtyFrameCount = m_framesInFlight;
                 }
             }
 
