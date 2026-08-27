@@ -9,8 +9,9 @@ cullMode = "Back"
 frontFace = "Clockwise"
 
 [properties]
-tint = [1.0, 1.0, 1.0, 1.0]
-fade = 1.0
+tint   = { type = "vec4", value = [1.0, 1.0, 1.0, 1.0] }
+fade   = { type = "float", value = 1.0 }
+albedo = { type = "tex2D", value = "textures/white" }
 
 [hints]
 frequentUpdates = false

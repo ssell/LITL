@@ -3,6 +3,7 @@
 
 #include <memory>
 
+#include "litl-import/material/import/result.hpp"
 #include "litl-import/mesh/import/result.hpp"
 
 namespace litl::import
@@ -24,7 +25,8 @@ namespace litl::import
         ImportedDataType type{ ImportedDataType::Unknown };
 
         union {
-            std::unique_ptr<MeshImportResult> mesh = nullptr;
+            std::unique_ptr<MaterialImportResult> material = nullptr;
+            std::unique_ptr<MeshImportResult> mesh;
         };
     };
 }

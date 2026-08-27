@@ -31,6 +31,7 @@ namespace litl::import
         /// </summary>
         bool flipTexcoordV = false;
     };
+
     struct MeshImportResult
     {
         MeshImportSummary summary{};
