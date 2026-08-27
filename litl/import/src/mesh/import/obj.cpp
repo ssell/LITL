@@ -1,7 +1,7 @@
 #include <rapidobj/rapidobj.hpp>
 #include <unordered_map>
+#include <spanstream>
 
-#include "litl-core/byteStream.hpp"
 #include "litl-core/hash.hpp"
 #include "litl-core/math/geometry/geoMesh.hpp"
 #include "litl-import/mesh/import/obj.hpp"
@@ -132,10 +132,10 @@ namespace litl::import
 
     Result ObjImporter::import(File const& file, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
     {
-        ByteSpanToStreamMediator buffer(sourceBytes);
-        std::istream instream(&buffer);
+        std::span<char const> sourceBytesChar{ reinterpret_cast<char const*>(sourceBytes.data()), sourceBytes.size_bytes() };
+        std::ispanstream stream{ sourceBytesChar };
 
-        rapidobj::Result objResult = rapidobj::ParseStream(instream);
+        rapidobj::Result objResult = rapidobj::ParseStream(stream);
 
         if (objResult.error.code)
         {
