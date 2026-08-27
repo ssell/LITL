@@ -99,7 +99,7 @@ void createBunny(EntityCommands& commands, MeshHandle meshHandle, MaterialHandle
 
     const MaterialRef materialRef{
         .handle = materialHandle,
-        .slot = material->allocateSlot(flashing),
+        .slot = material->allocateSlot(),
     };
 
     commands.addComponent<Transform>(entity, Transform::create(position));

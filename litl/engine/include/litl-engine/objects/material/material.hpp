@@ -18,6 +18,7 @@
 namespace litl
 {
     class MaterialManager;
+    class DeferredMaterialCommands;
     class ObjectPool;
     class Renderer;
     struct ActiveMaterialSystem;
@@ -105,27 +106,14 @@ namespace litl
 
         /// <summary>
         /// Allocates a slot in the material buffer. This slot may be a reclaimed or new slot.
-        /// 
-        /// The slot may be marked as "frequently updated" if it is expected to be updated at a much
-        /// higher frequency than what is standard for instances of the material. The use-case is for 
-        /// material properties that are typically static but an event causes it to start updating on a per-frame basis.
-        /// In these cases, it is then more performant to mark the slot as frequently updated. 
-        /// 
-        /// A real-world example would be a bomb material that is typically static but then starts flashing before exploding.
-        /// 
-        /// Slots marked as frequent updaters do not flag their entire block when they get modified.
-        /// Instead their data is copied over to a specialized block at the end of the buffer which is copied each frame by default.
-        /// This avoids a few sparsely placed, but rapidly updating, material instances from marking all of their blocks dirty causing excessive data copies.
-        /// Frequently updated slots also do not have a stable (up-to-date) material slot and one must be requested each frame via getFrequentUpdateSlot.
-        /// 
-        /// If it is normal for instances of the material to be frequently updated, then individual slots should not
-        /// be marked as such and can instead be detrimental to performance.
-        /// 
-        /// The caller assumes the responsibility for updating any associated MaterialRef or similar.
         /// </summary>
-        /// <param name="frequentUpdates"></param>
-        /// <returns></returns>
-        [[nodiscard]] MaterialPropertySlotId allocateSlot(bool frequentUpdates = false) noexcept;
+        [[nodiscard]] MaterialPropertySlotId allocateSlot() noexcept;
+
+        /// <summary>
+        /// Returns the index into the GPU buffer that the provided slot resides in.
+        /// This value can not be considered stable as it may reside in the frequent write block which gets recreated each frame.
+        /// </summary>
+        [[nodiscard]] uint32_t getSlotIndex(MaterialPropertySlotId slotId) const noexcept;
 
         /// <summary>
         /// Invoked once-per-frame to provide the material with the current frame count and index.
@@ -146,30 +134,9 @@ namespace litl
         void markActive(Authority<ActiveMaterialSystem> auth, MaterialPropertySlotId slot) noexcept;
 
         /// <summary>
-        /// Updates the slot to be flagged as frequently updated. 
-        /// The caller assumes the responsibility for updating any associated MaterialRef or similar.
         /// 
-        /// Note that this action is NOT thread-safe if immediate is true.
         /// </summary>
-        /// <param name="immediate">If true, the change will be immediate. Otherwise it will be added to the deffered material command queue and performed on the next onPreRender.</param>
-        /// <returns>Always returns true. Used to simply pass into MaterialRef::frequentUpdates</returns>
-        bool markAsFrequentUpdate(MaterialPropertySlotId slot, bool immediate = false) noexcept;
-
-        /// <summary>
-        /// Updates the slot to no longer be flagged as frequently updated. 
-        /// The caller assumes the responsibility for updating any associated MaterialRef or similar.
-        /// 
-        /// Note that this action is NOT thread-safe if immediate is true.
-        /// </summary>
-        /// <param name="immediate">If true, the change will be immediate. Otherwise it will be added to the deffered material command queue and performed on the next onPreRender.</param>
-        /// <returns>Always returns false. Used to simply pass into MaterialRef::frequentUpdates</returns>
-        bool markAsInfrequentUpdate(MaterialPropertySlotId slot, bool immediate = false) noexcept;
-
-        /// <summary>
-        /// Given a material slot, returns the global slot index into its frequent block data.
-        /// If the slot is not a resident of the frequent update block, then Constants::uint32_null_index is returned instead.
-        /// </summary>
-        uint32_t getFrequentUpdateSlot(MaterialPropertySlotId slot) noexcept;
+        void upgradeSlotToFrequentBlock(Authority<DeferredMaterialCommands> auth, MaterialPropertySlotId slotId) noexcept;
 
         /// <summary>
         /// Returns true if the material is ready to be bound for rendering.
