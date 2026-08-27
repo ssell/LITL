@@ -36,6 +36,8 @@ namespace litl
         };
 
         static const StringIdMap<AssetTypeMapping> g_assetTypeMap = {
+            { ".litlmatb"_sid, { MappingPriority::High, AssetType::Material } },
+            { ".litlmat"_sid, { MappingPriority::Medium, AssetType::Material } },
             { ".litlmesh"_sid, { MappingPriority::High, AssetType::Mesh } },
             { ".glb"_sid, { MappingPriority::Medium, AssetType::Mesh } },
             { ".txt"_sid, { MappingPriority::Medium, AssetType::Text } },

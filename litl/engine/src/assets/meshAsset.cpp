@@ -86,8 +86,6 @@ namespace litl
             logWarning("Decoding mesh asset with key '", asset->key, "' directly from external format. It is recommended to first convert the mesh to the internal .litlmesh format to improve loading performance.");
             return decodeNonLitlMeshBytes(meshAsset, bytes, error);
         }
-
-        return false;
     }
 
     bool MeshAsset::processOnWorker(Asset* asset, AssetErrorCode& error) noexcept

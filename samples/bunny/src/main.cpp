@@ -46,6 +46,7 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     // ... in progress ...
 
     auto* bunnyMesh = assets->getMesh("mesh/bunny");                             // maps to "assets/mesh/bunny.litlmesh"
+    auto* bunnyMaterialTest = assets->getMaterial("materials/flat");
     auto bunnyMaterialHandle = createPlaceholderMaterial(*objectPool);
     auto* bunnyMaterial = objectPool->getMaterial(bunnyMaterialHandle);
 
