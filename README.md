@@ -6,7 +6,7 @@ This is a learning engine and very (very) early in development. It is public mer
 
 ## Requirements
 
-* C++20
+* C++23
 * [Vulkan SDK](https://vulkan.lunarg.com/) with Slang
 * [clang-cl](https://github.com/llvm/llvm-project/releases/tag/llvmorg-21.1.8) (select _Add LLVM to PATH_)
 
