@@ -16,9 +16,36 @@ namespace litl
 {
     struct MaterialPropertySlot
     {
+        /// <summary>
+        /// Current version/generation of the slot.
+        /// This is incremented everytime the slot is returned in an allocation and when it is freed.
+        /// </summary>
         uint32_t version = 0u;
+
+        /// <summary>
+        /// The last frame that this slot was marked active.
+        /// </summary>
         uint32_t lastActiveFrame = 0u;
+
+        /// <summary>
+        /// If the instance tied to this slot is marked as a being frequently updated, this is the
+        /// global slot index into the frequent update scratch buffer. So if isFrequent is true,
+        /// then frequentGlobalSlot should be used instead of the MaterialPropertySlotId::index for
+        /// properly indexing into the GPU buffer.
+        /// 
+        /// It should be noted also that this slot index is not stable and can change every frame.
+        /// </summary>
+        uint32_t frequentGlobalSlot = Constants::uint32_null_index;
+
+        /// <summary>
+        /// Is there an active material instance associated with this slot?
+        /// </summary>
         bool occupied = false;
+
+        /// <summary>
+        /// Is this slot flagged as being updated at a much higher frequency than what is relatively
+        /// normal across all instances of this material?
+        /// </summary>
         bool isFrequent = false;
     };
 

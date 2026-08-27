@@ -14,6 +14,11 @@ namespace litl
         uint32_t index = Constants::uint32_null_index;
 
         /// <summary>
+        /// If this slot is stored in a frequent update index, this is the global index into it.
+        /// </summary>
+        uint32_t frequentIndex = Constants::uint32_null_index;
+
+        /// <summary>
         /// The version/generation of the slot that this is valid for.
         /// </summary>
         uint32_t version = 0u;
