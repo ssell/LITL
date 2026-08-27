@@ -40,12 +40,8 @@ namespace litl
                 {
                     switch (command.type)
                     {
-                    case CommandType::MarkFrequentUpdates:
-                        material->markAsFrequentUpdate(command.slot, true);
-                        break;
-
-                    case CommandType::MarkInfrequentUpdates:
-                        material->markAsInfrequentUpdate(command.slot, true);
+                    case CommandType::UpgradeSlotToFrequentBlock:
+                        material->upgradeSlotToFrequentBlock({}, command.slot);
                         break;
 
                     case CommandType::Unknown:

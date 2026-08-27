@@ -10,6 +10,7 @@
 #include "litl-core/stringId.hpp"
 #include "litl-core/math/types.hpp"
 #include "litl-renderer/reflection.hpp"
+#include "litl-engine/objects/objectHandles.hpp"
 #include "litl-engine/objects/material/materialPropertySlotId.hpp"
 
 namespace litl
@@ -28,6 +29,18 @@ namespace litl
         uint32_t lastActiveFrame = 0u;
 
         /// <summary>
+        /// The last frame that this slot was written to.
+        /// Used for demotion from the frequent block.
+        /// </summary>
+        uint32_t lastWriteFrame = 0u;
+
+        /// <summary>
+        /// The number of frames in a row that this slot was written to.
+        /// Used for promotion to the frequent block.
+        /// </summary>
+        uint32_t consecutiveWriteFrames = 0u;
+
+        /// <summary>
         /// If the instance tied to this slot is marked as a being frequently updated, this is the
         /// global slot index into the frequent update scratch buffer. So if isFrequent is true,
         /// then frequentGlobalSlot should be used instead of the MaterialPropertySlotId::index for
@@ -42,11 +55,10 @@ namespace litl
         /// </summary>
         bool occupied = false;
 
-        /// <summary>
-        /// Is this slot flagged as being updated at a much higher frequency than what is relatively
-        /// normal across all instances of this material?
-        /// </summary>
-        bool isFrequent = false;
+        [[nodiscard]] constexpr bool isInFrequentUpdateBlock() const noexcept
+        {
+            return frequentGlobalSlot != Constants::uint32_null_index;
+        }
     };
 
     struct MaterialPropertyBlock
@@ -132,11 +144,17 @@ namespace litl
 
         static constexpr uint32_t SlotsPerBlock = 64u;
         static constexpr uint32_t SlotExpirationFrames = 8u;
+        static constexpr uint32_t SlotUpgradeToFrequentFrames = 8u;
 
         /// <summary>
         /// Configures the underlying property blocks to accomodate slots of the specified byte size.
         /// </summary>
         bool configure(MaterialPropertyReflection const& reflectedProperties, uint32_t framesInFlight) noexcept;
+
+        /// <summary>
+        /// Sets the handle of the owning material.
+        /// </summary>
+        void setMaterialHandle(MaterialHandle handle) noexcept;
 
         /// <summary>
         /// Sets the default property values assigned when a new slot is allocated.
@@ -156,6 +174,12 @@ namespace litl
         [[nodiscard]] MaterialPropertySlotId allocateSlot() noexcept;
 
         /// <summary>
+        /// Returns the index into the GPU buffer that the provided slot resides in.
+        /// This value can not be considered stable as it may reside in the frequent write block which gets recreated each frame.
+        /// </summary>
+        [[nodiscard]] uint32_t getSlotIndex(MaterialPropertySlotId slotId) const noexcept;
+
+        /// <summary>
         /// Marks the slot active for the frame.
         /// 
         /// Note this does not update the block active count as this method is intended be called from 
@@ -170,11 +194,6 @@ namespace litl
         void markAllBlocksDirty() noexcept;
 
         /// <summary>
-        /// 
-        /// </summary>
-        void markSlotAsFrequentUpdate(MaterialPropertySlotId slot, bool isFrequent) noexcept;
-
-        /// <summary>
         /// Given a material slot, returns the global slot index into its frequent block data.
         /// If the slot is not a resident of the frequent update block, then Constants::uint32_null_index is returned instead.
         /// </summary>
@@ -184,6 +203,11 @@ namespace litl
         /// Called each frame to rebuild the frequent update block.
         /// </summary>
         void rebuildFrequentUpdateBlock() noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        void upgradeSlotToFrequentBlock(MaterialPropertySlotId slotId) noexcept;
 
         /// <summary>
         /// Retrieves the pointer information for the frequent update block. Returns false if the update block has no active residents.
@@ -297,7 +321,7 @@ namespace litl
         /// Given a global slot index, resolves it to a block index and local slot index into the block.
         /// May return false if the global index is out-of-bounds.
         /// </summary>
-        [[nodiscard]] bool getBlockLocalSlot(MaterialPropertySlotId slotId , uint32_t& blockIndex, uint32_t& localSlot, uint32_t& localSlotVersion, bool validateVersion) const noexcept;
+        [[nodiscard]] bool getBlockLocalSlot(MaterialPropertySlotId slotId , uint32_t& blockIndex, uint32_t& localSlot, uint32_t& slotVersion, bool validateVersion) const noexcept;
 
         /// <summary>
         /// Retrieves the direct pointer to the specified slot data. Returns null if the provided slot id is out-of-bounds, stale, or otherwise invalid.
@@ -357,6 +381,11 @@ namespace litl
         /// Provided by the material, the default values of a new slot.
         /// </summary>
         FrequentUpdateBlock m_frequentUpdateBlock;
+
+        /// <summary>
+        /// Handle of the owning material.
+        /// </summary>
+        MaterialHandle m_materialHandle{};
     };
 }
 

@@ -662,7 +662,7 @@ void updatePerCameraDataBuffer(SampleRenderState& sample) noexcept
     if (sample.renderer->mapBuffer(cameraBuffer, mappedBuffer) == RendererResult::Success)
     {
         vec3 cameraPos{ 0.0f, 0.5f, -2.5f };
-        cameraPos.z() += cos(sample.elapsedTime);
+        cameraPos.z() += litl::cos(sample.elapsedTime);
         
 
         sample.perCameraData.projMatrix = mat4::perspective(degreesToRadians(60.0f), sample.window->getAspectRatio(), 0.0f, 10.0f);

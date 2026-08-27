@@ -28,22 +28,12 @@ namespace litl::samples
         {
             auto* material = m_pObjectPool->getMaterial(materialRef.handle);
 
-            if (!materialRef.frequentUpdates)
+            if (material == nullptr)
             {
-                // This could be set at material slot allocation, which may be practical for some use cases but not for others.
-                // For example, if you have a bomb entity and they only need to start flashing at a certain time then it is a waste to
-                // have them marked as frequently updating before they need to start flashing.
-                materialRef.frequentUpdates = material->markAsFrequentUpdate(materialRef.slot, false);
-                // todo: a way to know when to set a material slot as no longer needing frequent updates.
-                // perhaps an expiration frame count in markAsFrequentUpdate that needs to be refreshed,
-                // or detection within MaterialProperties itself if a "frequently updating" slot hasn't actually
-                // had new data set in a number of frames and having the designation fall off.
+                return;
             }
 
-            if (material != nullptr)
-            {
-                material->setFloat("fade"_sid, (sin(data.elapsedTime * flash.rate) + 1.0f) * 0.5f, materialRef.slot);
-            }
+            material->setFloat("fade"_sid, (sin(data.elapsedTime * flash.rate) + 1.0f) * 0.5f, materialRef.slot);
         }
 
     private:

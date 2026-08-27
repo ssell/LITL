@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "litl-core/authority.hpp"
 #include "litl-core/constants.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
 #include "litl-engine/objects/material/materialPropertySlotId.hpp"
@@ -21,8 +22,7 @@ namespace litl
         enum class CommandType : uint32_t
         {
             Unknown = 0u,
-            MarkFrequentUpdates = 1u,
-            MarkInfrequentUpdates = 2u
+            UpgradeSlotToFrequentBlock = 1u
         };
 
         static void onPreRender(Authority<MaterialManager> auth, ObjectPool& objectPool) noexcept;

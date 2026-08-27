@@ -342,26 +342,21 @@ namespace litl
 
             for (auto& renderableEntity : renderableEntities)
             {
-                uint32_t materialIndex = renderableEntity.material.slot.index;
+                auto* material = objectPool->getMaterial(renderableEntity.material.handle);
 
-                if (renderableEntity.material.frequentUpdates)
+                if (material == nullptr)
                 {
-                    auto* material = objectPool->getMaterial(renderableEntity.material.handle);
-
-                    if (material != nullptr)
-                    {
-                        materialIndex = material->getFrequentUpdateSlot(renderableEntity.material.slot);
-
-                        if (materialIndex == Constants::uint32_null_index)
-                        {
-                            materialIndex = renderableEntity.material.slot.index;
-                        }
-                    }
+                    continue;
                 }
 
-                instanceData.data.emplace_back(
-                    sceneView->getGpuBufferIndex(renderableEntity.entity), 
-                    materialIndex);
+                const uint32_t materialIndex = material->getSlotIndex(renderableEntity.material.slot);
+
+                if (materialIndex != Constants::uint32_null_index)
+                {
+                    instanceData.data.emplace_back(
+                        sceneView->getGpuBufferIndex(renderableEntity.entity),
+                        materialIndex);
+                }
             }
 
             // --- Swap, resize, and update the GPU buffer
