@@ -137,6 +137,28 @@ namespace litl
     /// Manages the CPU-side memory for material properties.
     /// Composed of individual blocks of SlotsPerBlock slots. Each slot correlates to a material instance and contains the complete property data.
     /// All data is stored generically as byte blobs and are uploaded to the GPU buffer by the owning Material.
+    /// 
+    /// There are three tiers of data within MaterialProperties, with the first two tiers being stored differently than the third.
+    /// 
+    /// Tier 1: Property data that is static. It uses either the material defaults or values that are set only one time.
+    /// Tier 2: Property data that is updated infrequently with at minimum SlotUpgradeToFrequentFrames frames between.
+    /// Tier 3: Property data that is updated frequently, effectively every frame.
+    /// 
+    /// Data in the underlying GPU buffer, which is owned by Material and not MaterialProperties, is split into two parts.
+    /// All slots have an entry into the first part of the buffer. Within MaterialProperties this is modelled as the m_propertyBlocks.
+    /// This first part is written in blocks/chunks and only when one or more slots in the block is dirty.
+    /// 
+    /// The second part of the GPU buffer is for the frequently updated (Tier 3) properties and is rewritten each frame.
+    /// This serves as a way to split frequently updated, but sparsely populated, data into its own section of the buffer
+    /// and avoids over-copying of data to the GPU.
+    /// 
+    /// For example, if a game has 1000 entities all using the same material but only 3 of those have properties changing each
+    /// frame (such as a bomb flashing before it explodes), then if the slots were in Tier 1/Tier 2 we would be uploaded up to
+    /// three blocks of data each frame. But if the slots are instead marked for Tier 3, then we are only uploading those 3 slots.
+    /// That is a difference of up to 189 slots of data (when SlotsPerBlock == 64).
+    /// 
+    /// However Tier 3 should be avoided if it is expected that a majority of instances of the material will be frequently updating.
+    /// This can be controlled in the 
     /// </summary>
     class MaterialProperties
     {
@@ -150,6 +172,16 @@ namespace litl
         /// Configures the underlying property blocks to accomodate slots of the specified byte size.
         /// </summary>
         bool configure(MaterialPropertyReflection const& reflectedProperties, uint32_t framesInFlight) noexcept;
+
+        /// <summary>
+        /// Enables/disables the split of Tier 3 data into its own separate GPU buffer space.
+        /// This should be enabled (and is by default) for materials that as a whole are infrequently updated
+        /// but may sporadically have instances that need to update frequently on a near per-frame basis.
+        /// 
+        /// For example, a bomb material that is normally static but can be triggered to start flashing.
+        /// </summary>
+        /// <param name="enabled"></param>
+        void toggleTier3DataSeparation(bool enabled) noexcept;
 
         /// <summary>
         /// Sets the handle of the owning material.
@@ -386,6 +418,11 @@ namespace litl
         /// Handle of the owning material.
         /// </summary>
         MaterialHandle m_materialHandle{};
+
+        /// <summary>
+        /// Separate Tier 3 data in the GPU buffer.
+        /// </summary>
+        bool m_enabledTier3DataSeparation{ true };
     };
 }
 
