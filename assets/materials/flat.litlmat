@@ -1,0 +1,16 @@
+name = "Flat"
+
+[shaders]
+vertex   = { resource = "shaders/flat", entry = "vertexMain" }
+fragment = { resource = "shaders/flat", entry = "fragmentMain" }
+
+[raster]
+cullMode = "Back"
+frontFace = "Clockwise"
+
+[properties]
+tint = [1.0, 1.0, 1.0, 1.0]
+fade = 1.0
+
+[hints]
+frequentUpdates = false
