@@ -517,7 +517,7 @@ namespace litl
         }
         else
         {
-            DeferredMaterialCommands::enqueue(DeferredMaterialCommands::CommandType::MarkFrequentUpdates, slot, m_pImpl->selfHandle);
+            DeferredMaterialCommands::enqueue(DeferredMaterialCommands::CommandType::MarkInfrequentUpdates, slot, m_pImpl->selfHandle);
         }
 
         return false;

@@ -220,23 +220,30 @@ namespace litl
             if (isFrequent)
             {
                 slotRef.isFrequent = true;
+                slotRef.frequentGlobalSlot = static_cast<uint32_t>((m_propertyBlocks.size() * SlotsPerBlock) + m_frequentUpdateBlock.residents.size());
                 m_frequentUpdateBlock.residents.push_back(slot.index);
             }
             else
             {
                 slotRef.isFrequent = false;
+                slotRef.frequentGlobalSlot = Constants::uint32_null_index;
                 m_frequentUpdateBlock.removeResident(slot.index);
+                m_propertyBlocks[blockIndex]->dirtyFrameCount = m_framesInFlight;       // The main block data on the GPU may be stale now. Mark dirty so it can be refreshed.
             }
         }
     }
 
-    uint32_t MaterialProperties::getFrequentUpdateSlot(MaterialPropertySlotId slot) noexcept
+    uint32_t MaterialProperties::getFrequentUpdateSlot(MaterialPropertySlotId slotId) noexcept
     {
-        for (uint32_t i = 0u; i < static_cast<uint32_t>(m_frequentUpdateBlock.residents.size()); ++i)
+        uint32_t blockIndex, localSlot, slotVersion;
+
+        if (getBlockLocalSlot(slotId, blockIndex, localSlot, slotVersion, true))
         {
-            if (m_frequentUpdateBlock.residents[i] == slot.index)
+            auto& slot = m_propertyBlocks[blockIndex]->slots[localSlot];
+
+            if (slot.isFrequent && slot.frequentGlobalSlot != Constants::uint32_null_index)
             {
-                return static_cast<uint32_t>(m_propertyBlocks.size() * SlotsPerBlock) + i;
+                return slot.frequentGlobalSlot;
             }
         }
 
@@ -250,7 +257,9 @@ namespace litl
             return;
         }
 
+        const uint32_t frequentUpdateBlockFirstIndex = static_cast<uint32_t>(m_propertyBlocks.size()) * SlotsPerBlock;
         uint32_t blockIndex, localSlot;
+
         m_frequentUpdateBlock.data.resize(m_frequentUpdateBlock.residents.size()* m_slotSizeBytes, std::byte{ 0 });
 
         for (uint32_t i = 0u; i < static_cast<uint32_t>(m_frequentUpdateBlock.residents.size()); ++i)
@@ -260,6 +269,7 @@ namespace litl
 
             if (residentDataPtr != nullptr)
             {
+                m_propertyBlocks[blockIndex]->slots[localSlot].frequentGlobalSlot = frequentUpdateBlockFirstIndex + i;
                 memcpy(m_frequentUpdateBlock.data.data() + (i * m_slotSizeBytes), residentDataPtr, m_slotSizeBytes);
             }
         }
@@ -283,7 +293,6 @@ namespace litl
         for (uint32_t i = 0u; i < static_cast<uint32_t>(m_propertyBlocks.size()); ++i)
         {
             auto& block = m_propertyBlocks[i];
-            auto occupiedSlots = SlotsPerBlock - block->vacantSlotCount;
 
             for (uint32_t j = (m_currFrame % SlotExpirationFrames); j < SlotsPerBlock; j += SlotExpirationFrames)       // Stagger only check 1/8 slots per frame
             {
@@ -682,6 +691,6 @@ namespace litl
 
     void FrequentUpdateBlock::removeResident(uint32_t slot) noexcept
     {
-        std::ignore = std::remove_if(residents.begin(), residents.end(), [&slot](uint32_t resident) -> bool { return (resident == slot); });
+        std::erase(residents, slot);
     }
 }
