@@ -10,7 +10,8 @@ namespace litl::import
     enum class ImportedDataType : uint32_t
     {
         Unknown = 0u,
-        Mesh = 1u
+        Material = 1u,
+        Mesh = 2u
     };
 
     struct ImportedData final

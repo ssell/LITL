@@ -4,6 +4,11 @@
 #include "litl-core/string.hpp"
 #include "litl-import/importService.hpp"
 
+// Material
+#include "litl-import/material/export/materialExporter.hpp"
+#include "litl-import/material/import/litlmat.hpp"
+
+// Mesh
 #include "litl-import/mesh/export/meshExporter.hpp"
 #include "litl-import/mesh/import/fbx.hpp"
 #include "litl-import/mesh/import/glb.hpp"
@@ -24,12 +29,16 @@ namespace litl::import
 
     void ImportService::registerProcessors() noexcept
     {
+        // Material
+        m_exporterRegistry.add<MaterialExporter>();
+        m_importerRegistry.add<LitlMatImporter>();
+
+        // Mesh
+        m_exporterRegistry.add<MeshExporter>();
         m_importerRegistry.add<FbxImporter>();
         m_importerRegistry.add<GlbImporter>();
         m_importerRegistry.add<GltfImporter>();
         m_importerRegistry.add<ObjImporter>();
-
-        m_exporterRegistry.add<MeshExporter>();
     }
 
     Result ImportService::import(File const& sourceFile, ImportedData& importedData, bool shouldPrepare) noexcept

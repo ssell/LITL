@@ -37,6 +37,7 @@ namespace litl::import
     {
         { T::ExporterName }                 -> std::convertible_to<std::string_view>;
         { T::OperatesOnImportedDataType }   -> std::convertible_to<ImportedDataType>;
+        { T::ExportedExtension }            -> std::convertible_to<std::string_view>;
     };
 }
 
