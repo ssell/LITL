@@ -107,7 +107,7 @@ namespace litl::import
         ExpectedMaterialStructure inputMaterial{};
         const auto readTomlResult = glz::read_toml(inputMaterial, sourceBytesString);
 
-        if (!readTomlResult)
+        if (readTomlResult != glz::error_code::none)
         {
             return Result::Error(ErrorType::ImporterFailed, readTomlResult.custom_error_message);
         }
@@ -136,7 +136,7 @@ namespace litl::import
 
             if (type.empty())
             {
-                logWarning(".litlmat import: property '", propertyKvp.first, "' missing type specifier. Skipping.");
+                logWarning(".litlmat import of ", file.name(), ": property '", propertyKvp.first, "' missing type specifier.Skipping.");
                 continue;
             }
 
@@ -144,7 +144,7 @@ namespace litl::import
 
             if (mappedType == s_propertyTypeMap.end())
             {
-                logWarning(".litlmat import: property '", propertyKvp.first, "' invalid type '", type, "' specified. Skipping.");
+                logWarning(".litlmat import of ", file.name(), ": property '", propertyKvp.first, "' invalid type '", type, "' specified. Skipping.");
                 continue;
             }
 
@@ -186,32 +186,74 @@ namespace litl::import
                     break;
 
                 case LitlMatPropertyType::Vec2:
-                    // ... todo ...
+                    if (const auto* propertyValue = std::get_if<std::vector<float>>(&propertyKvp.second.value))
+                    {
+                        if (propertyValue->size() != 2)
+                        {
+                            logWarning(".litlmat import of ", file.name(), ": property '", propertyKvp.first, "' is labelled as a vec2 but has ", propertyValue->size(), " values. Expected 2. Skpping.");
+                            continue;
+                        }
+
+                        material->setVec2(propertyKvp.first, vec2{ propertyValue->at(0), propertyValue->at(1) });
+                    }
                     break;
 
                 case LitlMatPropertyType::Vec3:
-                    // ... todo ...
+                    if (const auto* propertyValue = std::get_if<std::vector<float>>(&propertyKvp.second.value))
+                    {
+                        if (propertyValue->size() != 3)
+                        {
+                            logWarning(".litlmat import of ", file.name(), ": property '", propertyKvp.first, "' is labelled as a vec3 but has ", propertyValue->size(), " values. Expected 3. Skpping.");
+                            continue;
+                        }
+
+                        material->setVec3(propertyKvp.first, vec3{ propertyValue->at(0), propertyValue->at(1), propertyValue->at(2) });
+                    }
                     break;
 
                 case LitlMatPropertyType::Vec4:
-                    // ... todo ...
+                    if (const auto* propertyValue = std::get_if<std::vector<float>>(&propertyKvp.second.value))
+                    {
+                        if (propertyValue->size() != 4)
+                        {
+                            logWarning(".litlmat import of ", file.name(), ": property '", propertyKvp.first, "' is labelled as a vec4 but has ", propertyValue->size(), " values. Expected 4. Skpping.");
+                            continue;
+                        }
+
+                        material->setVec4(propertyKvp.first, vec4{ propertyValue->at(0), propertyValue->at(1), propertyValue->at(2), propertyValue->at(3) });
+                    }
                     break;
 
                 case LitlMatPropertyType::Color:
-                    // ... todo ...
+                    if (const auto* propertyValue = std::get_if<std::vector<float>>(&propertyKvp.second.value))
+                    {
+                        if ((propertyValue->size() != 3) && (propertyValue->size() != 4))
+                        {
+                            logWarning(".litlmat import of ", file.name(), ": property '", propertyKvp.first, "' is labelled as a vec3 but has ", propertyValue->size(), " values. Expected 3 or 4. Skpping.");
+                            continue;
+                        }
+
+                        material->setColor(propertyKvp.first, color{ propertyValue->at(0), propertyValue->at(1), propertyValue->at(2), ((propertyValue->size() == 4) ? propertyValue->at(3) : 1.0f) });
+                    }
                     break;
 
                 case LitlMatPropertyType::Texture2D:
-                    // ... todo ...
+                    if (const auto* propertyValue = std::get_if<std::string>(&propertyKvp.second.value))
+                    {
+                        material->setTexture2D(propertyKvp.first, *propertyValue);
+                    }
                     break;
 
                 case LitlMatPropertyType::Texture3D:
-                    // ... todo ...
+                    if (const auto* propertyValue = std::get_if<std::string>(&propertyKvp.second.value))
+                    {
+                        material->setTexture3D(propertyKvp.first, *propertyValue);
+                    }
                     break;
 
                 case LitlMatPropertyType::Unknown:
                 default:
-                    logWarning(".litlmat import: property '", propertyKvp.first, "' has unhandled  type of '", mappedType->first, "'. Skipping.");
+                    logWarning(".litlmat import of ", file.name(), ": property '", propertyKvp.first, "' has unhandled  type of '", mappedType->first, "'. Skipping.");
                     continue;
             }
         }
