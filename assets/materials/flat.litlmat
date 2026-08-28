@@ -4,14 +4,14 @@ name = "Flat"
 vertex   = { resource = "shaders/flat", entry = "vertexMain" }
 fragment = { resource = "shaders/flat", entry = "fragmentMain" }
 
-[raster]
-cullMode = "Back"
-frontFace = "Clockwise"
-
 [properties]
 tint   = { type = "vec4", value = [1.0, 1.0, 1.0, 1.0] }
 fade   = { type = "float", value = 1.0 }
 albedo = { type = "tex2D", value = "textures/white" }
+
+[raster]
+cullMode  = "Back"
+frontFace = "Clockwise"
 
 [hints]
 frequentUpdates = false

@@ -24,6 +24,27 @@ namespace litl::import
         Texture3D = 11u
     };
 
+    enum class LitlMatShaderStage : uint32_t
+    {
+        Unknown = 0u,
+        Vertex = 1u,
+        Fragment = 2u,
+        Geometry = 3u,
+        TessellationControl = 4u,
+        TessellationEvaluation = 5u,
+        Compute = 6u,
+        Mesh = 7u,
+        Task = 8u
+    };
+    
+    enum class LitlMatCullMode : uint32_t
+    {
+        Front = 0u,
+        Back = 1u,
+        None = 2u,
+        Both = 3u
+    };
+
     struct LitlMatProperty
     {
 
@@ -34,6 +55,16 @@ namespace litl::import
     public:
 
         void setName(std::string_view name) noexcept;
+
+        void setShaderVertex(std::string_view resource, std::string_view entry) noexcept;
+        void setShaderFragment(std::string_view resource, std::string_view entry) noexcept;
+        void setShaderGeometry(std::string_view resource, std::string_view entry) noexcept;
+        void setShaderTessellationControl(std::string_view resource, std::string_view entry) noexcept;
+        void setShaderTessellationEvaluation(std::string_view resource, std::string_view entry) noexcept;
+        void setShaderCompute(std::string_view resource, std::string_view entry) noexcept;
+        void setShaderMesh(std::string_view resource, std::string_view entry) noexcept;
+        void setShaderTask(std::string_view resource, std::string_view entry) noexcept;
+
         void setBool(std::string_view property, bool value) noexcept;
         void setInt(std::string_view property, int32_t value) noexcept;
         void setUint(std::string_view property, uint32_t value) noexcept;
@@ -45,6 +76,11 @@ namespace litl::import
         void setColor(std::string_view property, color value) noexcept;
         void setTexture2D(std::string_view property, std::string_view resource) noexcept;
         void setTexture3D(std::string_view property, std::string_view resource) noexcept;
+
+        void setRasterCullMode(LitlMatCullMode cullMode) noexcept;
+        void setRasterWinding(bool clockwise) noexcept;
+
+        void setHintFrequentUpdates(bool frequentUpdates) noexcept;
 
     private:
     };
