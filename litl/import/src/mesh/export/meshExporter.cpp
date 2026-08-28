@@ -78,18 +78,16 @@ namespace litl::import
             return Result::Error(ErrorType::ExportDestinationDoesNotExist);
         }
 
-        auto destFilePath = std::format("{}/{}{}", destFolderPath, sourceFile.name(), MeshExporter::ExportedExtension);
+        auto destFilePath = std::format("{}/{}{}", destFolderPath, sourceFile.name(), ExportedExtension);
         auto destFile = File(destFilePath);
-        auto litlmesh = LitlMesh{};
         auto errorCode = BinaryBlockFile::ErrorCode::None;
         auto serialized = std::vector<std::byte>();
 
         GeoMesh* mesh = data.mesh->meshes[0].get();         // todo handle submeshes;
 
-        if (!litlmesh.serialize(*mesh, serialized, errorCode))
+        if (!LitlMesh::serialize(*mesh, serialized, errorCode))
         {
-            std::string message = std::format("Serialization of GeoMesh to LitlMesh failed with error code {}", static_cast<uint32_t>(errorCode));
-            return Result::Error(ErrorType::SerializationFailed, message);
+            return Result::Error(ErrorType::SerializationFailed, std::format("Serialization of GeoMesh to LitlMesh failed with error code {}", static_cast<uint32_t>(errorCode)));
         }
 
         if (serialized.empty())

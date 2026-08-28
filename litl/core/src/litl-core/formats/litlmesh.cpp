@@ -9,7 +9,7 @@ namespace litl
 {
     namespace
     {
-        void serializeHeaderBounds(GeoMesh const& mesh, std::array<float, 6>& boundsMinMaxPoints) noexcept
+        void serializeBounds(GeoMesh const& mesh, std::array<float, 6>& boundsMinMaxPoints) noexcept
         {
             const auto& bounds = mesh.getBounds();
 
@@ -73,9 +73,9 @@ namespace litl
         LitlMesh litlMesh{};
         const LitlMeshFlag flags = determineFlags(mesh);
         StringMap stringMap{};
-        std::array<float, 6> boundsMinMaxPoints{};
 
-        serializeHeaderBounds(mesh, boundsMinMaxPoints);
+        std::array<float, 6> boundsMinMaxPoints{};
+        serializeBounds(mesh, boundsMinMaxPoints);
 
         std::vector<BlockDataDescriptor> blockDataTable; blockDataTable.reserve(MaxBlocks);
         litlMesh.addDefaultBlockDescriptors(blockDataTable);

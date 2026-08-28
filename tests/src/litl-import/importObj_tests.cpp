@@ -6,7 +6,7 @@
 
 namespace litl::tests
 {
-    LITL_TEST_CASE("Import OBJ", "[ecs::import::obj]")
+    LITL_TEST_CASE("Import OBJ", "[import::obj]")
     {
         // The high-res Stanford Bunny OBJ has 29k vertices and 179k indices.
         // Each vertex only has a position attribute - no texcoord or normal.
@@ -35,7 +35,7 @@ namespace litl::tests
         REQUIRE(data.mesh->meshes[0]->getVertices()[0].tangent.isIdentity() == true);       // (todo generate missing tangents)
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("Convert OBJ to litlmesh", "[ecs::import::obj]")
+    LITL_TEST_CASE("Convert OBJ to litlmesh", "[import::obj]")
     {
         File source("assets/mesh/bunny.obj");
         File dest("assets/mesh/bunny.litlmesh");
@@ -56,7 +56,7 @@ namespace litl::tests
         REQUIRE(result.error == import::ErrorType::None);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("OBJ -> GeoMesh -> LitlMesh -> GeoMesh", "[ecs::import::obj]")
+    LITL_TEST_CASE("OBJ -> GeoMesh -> LitlMesh -> GeoMesh", "[import::obj]")
     {
         File source("assets/mesh/bunny.obj");
         File dest("assets/mesh/bunny.litlmesh");

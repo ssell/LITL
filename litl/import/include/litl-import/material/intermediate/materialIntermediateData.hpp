@@ -2,6 +2,7 @@
 #define LITL_IMPORT_MATERIAL_INTERMEDIATE_DATA_H__
 
 #include <cstdint>
+#include <span>
 #include <string_view>
 
 #include "litl-core/math/types.hpp"
@@ -45,15 +46,31 @@ namespace litl::import
         Both = 3u
     };
 
-    struct LitlMatProperty
+    struct LitlMatShaderRecord
     {
-
+        LitlMatShaderStage stage{ LitlMatShaderStage::Unknown };
+        std::string resource;
+        std::string entry;
     };
 
-    class MaterialIntermediateData
+    struct LitlMatPropertyRecord
     {
-    public:
+        // ... todo ...
+    };
 
+    struct LitlMatRasterSettings
+    {
+        LitlMatCullMode cullMode{ LitlMatCullMode::Back };
+        bool clockwise{ true };
+    };
+
+    struct LitlMatHintSettings
+    {
+        bool frequentUpdates{ false };
+    };
+
+    struct MaterialIntermediateData
+    {
         void setName(std::string_view name) noexcept;
         void setShaderVertex(std::string_view resource, std::string_view entry) noexcept;
         void setShaderFragment(std::string_view resource, std::string_view entry) noexcept;
@@ -78,7 +95,10 @@ namespace litl::import
         void setRasterWinding(bool clockwise) noexcept;
         void setHintFrequentUpdates(bool frequentUpdates) noexcept;
 
-    private:
+        std::vector<LitlMatShaderRecord> shaders;
+        std::vector<LitlMatPropertyRecord> properties;
+        LitlMatRasterSettings rasterSettings;
+        LitlMatHintSettings hintSettings;
     };
 }
 

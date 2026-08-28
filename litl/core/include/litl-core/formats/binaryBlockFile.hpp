@@ -441,6 +441,7 @@ namespace litl
         {
             std::vector<StringRef> strings;
             StringIdMap<uint32_t> map;
+            uint64_t runningOffset{ 0ull };
         };
 
         static_assert(sizeof(StringRef) == 16);
@@ -471,9 +472,16 @@ namespace litl
         /// <summary>
         /// 
         /// </summary>
-        [[nodiscard]] static uint64_t serializeString(std::string_view string, StringMap& stringOffsetMap, uint64_t& runningStringOffset) noexcept;
+        [[nodiscard]] static StringRef serializeString(std::string_view string, StringMap& stringOffsetMap) noexcept;
 
+        /// <summary>
+        /// 
+        /// </summary>
         void addDefaultBlockDescriptors(std::vector<BlockDataDescriptor>& blockDataTable) noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
         void serializeDefaultBlocks(std::vector<BlockDataDescriptor>& blockDataTable, StringMap& stringOffsetMap) noexcept;
 
         /// <summary>

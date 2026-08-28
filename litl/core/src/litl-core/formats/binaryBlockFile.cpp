@@ -203,17 +203,17 @@ namespace litl
         runningBlockOffset += data.descriptor->blockBytes;
     }
 
-    uint64_t BinaryBlockFile::serializeString(std::string_view string, StringMap& stringMap, uint64_t& runningStringOffset) noexcept
+    BinaryBlockFile::StringRef BinaryBlockFile::serializeString(std::string_view string, StringMap& stringMap) noexcept
     {
         const auto stringId = StringId(string);
         const auto find = stringMap.map.find(stringId);
 
         if (find != stringMap.map.end())
         {
-            return stringMap.strings[find->second].offset;
+            return stringMap.strings[stringMap.strings[find->second].offset];
         }
 
-        const auto offset = runningStringOffset;
+        const auto offset = stringMap.runningOffset;
 
         stringMap.map[stringId] = stringMap.strings.size();
 
@@ -222,9 +222,9 @@ namespace litl
             .length = static_cast<uint32_t>(string.size())
         });
 
-        runningStringOffset = alignMemoryOffsetUp(runningStringOffset + sizeof(StringRef::offset) + string.size(), 16);
+        stringMap.runningOffset = alignMemoryOffsetUp(stringMap.runningOffset + sizeof(StringRef::offset) + string.size(), 16);
 
-        return offset;
+        return stringMap.strings.back();
     }
 
     // -------------------------------------------------------------------------------------

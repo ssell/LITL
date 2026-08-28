@@ -66,7 +66,12 @@ add_executable(litl-tests
 	"src/litl-core/task_tests.cpp" 
 	"src/litl-core/moveOnlyFunc_tests.cpp" 
 	"src/litl-engine/asset_tests.cpp" 
-	"src/litl-import/importObj_tests.cpp" "src/litl-core/formats/litlmesh_tests.cpp" "src/litl-core/math/normals_tests.cpp" "src/litl-core/math/uncommon_tests.cpp" "src/litl-core/math/geomesh_tests.cpp")
+	"src/litl-import/importObj_tests.cpp" 
+	"src/litl-core/formats/litlmesh_tests.cpp" 
+	"src/litl-core/math/normals_tests.cpp" 
+	"src/litl-core/math/uncommon_tests.cpp" 
+	"src/litl-core/math/geomesh_tests.cpp" 
+	"src/litl-import/importLitlMat_tests.cpp")
 
 target_link_libraries(litl-tests
 	PRIVATE
@@ -106,6 +111,7 @@ add_dependencies(litl-tests copy-tests-data)
 
 set (LITL_TESTS_ASSETS
 	"${LITL_ASSETS_DIR}/mesh/bunny.obj"
+	"${LITL_ASSETS_DIR}/materials/flat.litlmat"
 )
 
 foreach(TEST_ASSET_PATH IN LISTS LITL_TESTS_ASSETS)
