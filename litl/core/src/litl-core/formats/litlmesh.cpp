@@ -72,18 +72,20 @@ namespace litl
 
         LitlMesh litlMesh{};
         const LitlMeshFlag flags = determineFlags(mesh);
-
+        StringMap stringMap{};
         std::array<float, 6> boundsMinMaxPoints{};
+
         serializeHeaderBounds(mesh, boundsMinMaxPoints);
 
-        std::vector<BlockDataDescriptor> blockDataTable; blockDataTable.reserve(4u);
-        blockDataTable.push_back(BlockDataDescriptor{ &litlMesh.descriptors[0], BlockIds::Bounds, sizeof(float), as_byte_span(boundsMinMaxPoints) });
-        blockDataTable.push_back(BlockDataDescriptor{ &litlMesh.descriptors[1], BlockIds::Vertices, sizeof(Vertex), as_byte_span(mesh.getVertices()) });
-        blockDataTable.push_back(BlockDataDescriptor{ &litlMesh.descriptors[2], BlockIds::Indices, sizeof(uint32_t), as_byte_span(mesh.getIndices()) });
+        std::vector<BlockDataDescriptor> blockDataTable; blockDataTable.reserve(MaxBlocks);
+        litlMesh.addDefaultBlockDescriptors(blockDataTable);
+        blockDataTable.push_back(BlockDataDescriptor{ &litlMesh.descriptors[blockDataTable.size()], BlockIds::Bounds, sizeof(float), as_byte_span(boundsMinMaxPoints)});
+        blockDataTable.push_back(BlockDataDescriptor{ &litlMesh.descriptors[blockDataTable.size()], BlockIds::Vertices, sizeof(Vertex), as_byte_span(mesh.getVertices()) });
+        blockDataTable.push_back(BlockDataDescriptor{ &litlMesh.descriptors[blockDataTable.size()], BlockIds::Indices, sizeof(uint32_t), as_byte_span(mesh.getIndices()) });
 
         if (has_any(flags, LitlMeshFlagBits::AllTriangles) == false)
         {
-            blockDataTable.push_back(BlockDataDescriptor{ &litlMesh.descriptors[3], BlockIds::Faces, sizeof(uint32_t), as_byte_span(mesh.getFaceIndexCounts()) });
+            blockDataTable.push_back(BlockDataDescriptor{ &litlMesh.descriptors[blockDataTable.size()], BlockIds::Faces, sizeof(uint32_t), as_byte_span(mesh.getFaceIndexCounts()) });
         }
 
         for (auto& blockData : blockDataTable)
@@ -116,6 +118,8 @@ namespace litl
 
         // ---------------------------------------------------------------------------------
         // Populate BlockDescriptors
+
+        litlMesh.serializeDefaultBlocks(blockDataTable, stringMap);
 
         uint64_t runningOffset = litlMesh.header.blocksOffset;
 
@@ -150,7 +154,10 @@ namespace litl
 
         for (auto& blockData : blockDataTable)
         {
-            std::memcpy(data.data() + blockData.descriptor->blockOffset, blockData.data.data(), blockData.data.size());
+            if (blockData.data.size() > 0)
+            {
+                std::memcpy(data.data() + blockData.descriptor->blockOffset, blockData.data.data(), blockData.data.size());
+            }
         }
 
         litlMesh.header.contentHash = calculateContentHash(std::span<std::byte const>(data), litlMesh.header);
@@ -223,6 +230,7 @@ namespace litl
         error = ErrorCode::None;
 
         const LitlMeshFlag flags = static_cast<LitlMeshFlag>(header.flags);
+        auto stringsBlock = find(DefaultBlocks::Strings);
         auto vertexBlock = find(BlockIds::Vertices);
         auto indexBlock = find(BlockIds::Indices);
         auto faceBlock = find(BlockIds::Faces);

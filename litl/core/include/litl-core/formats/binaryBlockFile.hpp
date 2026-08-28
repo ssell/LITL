@@ -7,7 +7,12 @@
 #include <cstdint>
 #include <optional>
 #include <span>
+#include <string>
+#include <string_view>
+#include <unordered_map>
 #include <vector>
+
+#include "litl-core/stringId.hpp"
 
 static_assert(std::endian::native == std::endian::little);
 
@@ -54,6 +59,12 @@ namespace litl
     /// </summary>
     struct BinaryBlockFile
     {
+        struct DefaultBlocks
+        {
+            static constexpr BinaryBlockIdType Strings{ 'S', 'T', 'R', 'S' };
+            static constexpr uint32_t StringsBlockIndex = 0u;
+            static constexpr uint32_t FirstCustomBlockIndex = 1u;
+        };
 
         enum class ErrorCode : uint32_t
         {
@@ -408,6 +419,33 @@ namespace litl
             std::span<std::byte const> data;
         };
 
+        struct StringRef
+        {
+            /// <summary>
+            /// Byte offset into the 'STRS' block.
+            /// </summary>
+            uint64_t offset{ 0u };
+
+            /// <summary>
+            /// Length of the string, in bytes.
+            /// </summary>
+            uint32_t length{ 0u };
+
+            /// <summary>
+            /// Unused padding.
+            /// </summary>
+            uint32_t padding{ 0u };
+        };
+
+        struct StringMap
+        {
+            std::vector<StringRef> strings;
+            StringIdMap<uint32_t> map;
+        };
+
+        static_assert(sizeof(StringRef) == 16);
+        static_assert(std::is_trivially_copyable_v<StringRef>);
+
         /// <summary>
         /// Given a binary blob, attempts to parse it into the provided file format implementation.
         /// This will validate and populate the header and descriptors which is needed for deserialiation.
@@ -431,10 +469,19 @@ namespace litl
         static void serializeBlock(BlockDataDescriptor& data, uint64_t& runningBlockOffset) noexcept;
 
         /// <summary>
+        /// 
+        /// </summary>
+        [[nodiscard]] static uint64_t serializeString(std::string_view string, StringMap& stringOffsetMap, uint64_t& runningStringOffset) noexcept;
+
+        void addDefaultBlockDescriptors(std::vector<BlockDataDescriptor>& blockDataTable) noexcept;
+        void serializeDefaultBlocks(std::vector<BlockDataDescriptor>& blockDataTable, StringMap& stringOffsetMap) noexcept;
+
+        /// <summary>
         /// Retrieves the block with the corresponding id.
         /// </summary>
         /// <returns>std::nullopt if no such block was found.</returns>
         [[nodiscard]] std::optional<Block> find(BinaryBlockIdType id) const noexcept;
+
 
         /// <summary>
         /// The file header with the magic number, version, bounds, and expected sizes.
@@ -460,7 +507,6 @@ namespace litl
         /// </summary>
         /// <returns>False if the supplied blob is invalid. See the supplied error code for more information.</returns>
         [[nodiscard]] static bool parseImpl(std::span<std::byte const> data, BinaryBlockFileFormatIdentity const& identity, BinaryBlockFile& file, ErrorCode& error) noexcept;
-
     };
 
     static_assert(std::is_trivially_copyable_v<BinaryBlockFile>);

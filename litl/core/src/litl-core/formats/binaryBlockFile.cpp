@@ -2,6 +2,7 @@
 #include <cstring>
 
 #include "litl-core/hash.hpp"
+#include "litl-core/containers/common.hpp"
 #include "litl-core/math/common.hpp"
 #include "litl-core/formats/binaryBlockFile.hpp"
 #include "litl-core/formats/binaryBlobReader.hpp"
@@ -148,8 +149,12 @@ namespace litl
 
             if ((uint64_t{ currDescriptor.elementBytes } * currDescriptor.elementCount) != currDescriptor.blockBytes)
             {
-                error = ErrorCode::BlockSizeMismatch;
-                return false;
+                // The one exception is an empty block which has 0 elements and a size of 16 to enforce space between blocks to avoid overlap.
+                if ((currDescriptor.blockBytes != 16) || (currDescriptor.elementCount != 0))
+                {
+                    error = ErrorCode::BlockSizeMismatch;
+                    return false;
+                }
             }
 
             if ((currDescriptor.blockOffset % 16) != 0)
@@ -189,12 +194,60 @@ namespace litl
         data.descriptor->blockBytes = data.data.size();
         data.descriptor->flags = 0u;
 
+        if (data.data.size() == 0)
+        {
+            // An empty block still needs space between it and the next block to avoid overlaps.
+            data.descriptor->blockBytes = 16u;
+        }
+
         runningBlockOffset += data.descriptor->blockBytes;
+    }
+
+    uint64_t BinaryBlockFile::serializeString(std::string_view string, StringMap& stringMap, uint64_t& runningStringOffset) noexcept
+    {
+        const auto stringId = StringId(string);
+        const auto find = stringMap.map.find(stringId);
+
+        if (find != stringMap.map.end())
+        {
+            return stringMap.strings[find->second].offset;
+        }
+
+        const auto offset = runningStringOffset;
+
+        stringMap.map[stringId] = stringMap.strings.size();
+
+        stringMap.strings.push_back(StringRef{
+            .offset = offset,
+            .length = static_cast<uint32_t>(string.size())
+        });
+
+        runningStringOffset = alignMemoryOffsetUp(runningStringOffset + sizeof(StringRef::offset) + string.size(), 16);
+
+        return offset;
     }
 
     // -------------------------------------------------------------------------------------
     // Utility
     // -------------------------------------------------------------------------------------
+
+    void BinaryBlockFile::addDefaultBlockDescriptors(std::vector<BlockDataDescriptor>& blockDataTable) noexcept
+    {
+        blockDataTable.push_back(BlockDataDescriptor{
+            .descriptor = &descriptors[DefaultBlocks::StringsBlockIndex],
+            .id = DefaultBlocks::Strings,
+            .elementSize = sizeof(char),
+            .data = {}
+        });
+    }
+
+    void BinaryBlockFile::serializeDefaultBlocks(std::vector<BlockDataDescriptor>& blockDataTable, StringMap& stringMap) noexcept
+    {
+        if (!stringMap.map.empty())
+        {
+            blockDataTable[DefaultBlocks::StringsBlockIndex].data = as_byte_span(stringMap.strings.data());
+        }
+    }
 
     std::optional<BinaryBlockFile::Block> BinaryBlockFile::find(BinaryBlockIdType id) const noexcept
     {
