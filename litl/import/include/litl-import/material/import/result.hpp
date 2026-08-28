@@ -2,13 +2,13 @@
 #define LITL_IMPORT_MATERIAL_RESULT_H__
 
 #include <memory>
-#include "litl-import/material/intermediate/litlmatb.hpp"
+#include "litl-import/material/intermediate/materialIntermediateData.hpp"
 
 namespace litl::import
 {
     struct MaterialImportResult
     {
-        std::unique_ptr<LitlMatBinary> material;
+        std::unique_ptr<MaterialIntermediateData> material;
     };
 }
 

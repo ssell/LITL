@@ -9,7 +9,7 @@
 #include "litl-core/string.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-import/material/import/litlmat.hpp"
-#include "litl-import/material/intermediate/litlmatb.hpp"
+#include "litl-import/material/intermediate/materialIntermediateData.hpp"
 
 namespace litl::import
 {
@@ -125,7 +125,7 @@ namespace litl::import
 
     }
 
-    bool importShadersTable(ExpectedMaterialStructure const& inputMaterial, LitlMatBinary* material, File const& file) noexcept
+    bool importShadersTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* material, File const& file) noexcept
     {
         for (auto& shaderKvp : inputMaterial.shaders)
         {
@@ -196,7 +196,7 @@ namespace litl::import
         return true;
     }
 
-    bool importRasterStateTable(ExpectedMaterialStructure const& inputMaterial, LitlMatBinary* material, File const& file) noexcept
+    bool importRasterStateTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* material, File const& file) noexcept
     {
         const auto cullMode = toLowercase(inputMaterial.raster.cullMode);
 
@@ -241,7 +241,7 @@ namespace litl::import
         return true;
     }
 
-    bool importPropertiesTable(ExpectedMaterialStructure const& inputMaterial, LitlMatBinary* material, File const& file) noexcept
+    bool importPropertiesTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* material, File const& file) noexcept
     {
         for (auto& propertyKvp : inputMaterial.properties)
         {
@@ -375,7 +375,7 @@ namespace litl::import
         return true;
     }
 
-    bool importHintsTable(ExpectedMaterialStructure const& inputMaterial, LitlMatBinary* material, File const& file) noexcept
+    bool importHintsTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* material, File const& file) noexcept
     {
         material->setHintFrequentUpdates(inputMaterial.hints.frequentUpdates);
 
@@ -398,7 +398,7 @@ namespace litl::import
 
         importedData.type = ImportedDataType::Material;
         importedData.material = std::make_unique<MaterialImportResult>();
-        importedData.material->material = std::make_unique<LitlMatBinary>();
+        importedData.material->material = std::make_unique<MaterialIntermediateData>();
         auto* material = importedData.material->material.get();
 
         if (!inputMaterial.name.empty())
