@@ -10,7 +10,6 @@ namespace litl
     struct color
     {
         constexpr color() noexcept {}
-        constexpr color(color const& other) noexcept : value(other.value) {}
         constexpr explicit color(glm::vec4 const& other) noexcept : value(other) {}
         constexpr color(float r, float g, float b) noexcept : value{ r, g, b, 1.0f } {}
         constexpr color(float r, float g, float b, float a) noexcept : value{ r, g, b, a } {}
@@ -58,6 +57,7 @@ namespace litl
     static_assert(std::is_nothrow_move_constructible_v<color>);
     static_assert(std::is_nothrow_copy_assignable_v<color>);
     static_assert(std::is_nothrow_move_assignable_v<color>);
+    static_assert(std::is_trivially_copyable_v<color>);
 
     namespace colors
     {

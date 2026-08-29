@@ -49,8 +49,12 @@ namespace litl::import
         Both = 3u
     };
 
+    /// <summary>
+    /// Supported types to come over directly from an external file.
+    /// </summary>
     using LitlMatSupportedRawPropertyTypes = std::variant<
         bool,
+        uint8_t,        // bool alternative (and what it is stored as in the binary file)
         int32_t,
         uint32_t,
         float,
@@ -63,8 +67,12 @@ namespace litl::import
         color
     >;
 
+    /// <summary>
+    /// Supported types allowed to be stored directly in the intermediate data.
+    /// The difference between LitlMatSupportedRawPropertyTypes is the lack of generic vector support.
+    /// </summary>
     using LitlMatSupportedPropertyTypes = std::variant<
-        bool,
+        uint8_t,
         int32_t,
         uint32_t,
         float,
@@ -85,6 +93,7 @@ namespace litl::import
 
     struct LitlMatPropertyRecord
     {
+        std::string name;
         LitlMatPropertyType type{ LitlMatPropertyType::Unknown };
         LitlMatSupportedPropertyTypes value;
     };
@@ -106,7 +115,7 @@ namespace litl::import
 
         void setName(std::string_view name) noexcept;
         [[nodiscard]] bool setShader(LitlMatShaderStage stage, std::string const& resource, std::string const& entry) noexcept;
-        [[nodiscard]] bool addProperty(LitlMatPropertyType type, LitlMatSupportedRawPropertyTypes const& value) noexcept;
+        [[nodiscard]] bool addProperty(std::string const& name, LitlMatPropertyType type, LitlMatSupportedRawPropertyTypes const& value) noexcept;
         void setRasterCullMode(LitlMatCullMode cullMode) noexcept;
         void setRasterWinding(bool clockwise) noexcept;
         void setHintFrequentUpdates(bool frequentUpdates) noexcept;

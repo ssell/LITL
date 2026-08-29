@@ -226,7 +226,7 @@ namespace litl::import
                 return false;
             }
 
-            if (!material->addProperty(mappedType->second, propertyKvp.second.value))
+            if (!material->addProperty(propertyKvp.first, mappedType->second, propertyKvp.second.value))
             {
                 logWarning(".litlmat import of ", file.name(), ": property '", propertyKvp.first, "' invalid data. Rejecting.");
                 return false;

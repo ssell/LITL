@@ -3,7 +3,6 @@
 
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/containers/common.hpp"
-#include "litl-core/containers/flatHashSet.hpp"
 #include "litl-import/material/intermediate/litlmatb.hpp"
 
 namespace litl::import
@@ -23,7 +22,9 @@ namespace litl::import
 
         struct LitlMatBinaryPropertyRecord
         {
-
+            BinaryBlockFile::StringRef name;
+            LitlMatPropertyType type;
+            std::span<std::byte const> value;
         };
 
         struct LitlMatBinaryRasterSettings
@@ -47,18 +48,9 @@ namespace litl::import
 
         void compileShaderRecords(MaterialIntermediateData const& material, std::vector<LitlMatBinaryShaderRecord>& shaderRecords, BinaryBlockFile::StringMap& stringMap) noexcept
         {
-            FlatHashSet<uint32_t> shaderSet;
-
+            // Note MaterialIntermediateData guarantees 1 shader entry per stage. If that ever changes, then dedupe checking will need to be done.
             for (auto& shader : material.getShaders())
             {
-                if (shaderSet.contains(static_cast<uint32_t>(shader.stage)))
-                {
-                    logWarning("Serialization of material found duplicate entries for shader stage ", static_cast<uint32_t>(shader.stage), ". Skipping.");
-                    continue;
-                }
-
-                shaderSet.insert(static_cast<uint32_t>(shader.stage));
-
                 shaderRecords.push_back(LitlMatBinaryShaderRecord{
                     .stage = shader.stage,
                     .resource = BinaryBlockFile::serializeString(shader.resource, stringMap),
@@ -69,7 +61,62 @@ namespace litl::import
 
         void compilePropertyRecords(MaterialIntermediateData const& material, std::vector<LitlMatBinaryPropertyRecord>& propertyRecords, BinaryBlockFile::StringMap& stringMap) noexcept
         {
-            // ... todo ...
+            for (auto& property : material.getProperties())
+            {
+                auto binaryPropertyRecord = LitlMatBinaryPropertyRecord{
+                    .name = BinaryBlockFile::serializeString(property.name, stringMap),
+                    .type = property.type
+                };
+
+                switch (property.type)
+                {
+                case LitlMatPropertyType::Bool:
+                    binaryPropertyRecord.value = as_byte_span(std::get<uint8_t>(property.value));
+                    break;
+
+                case LitlMatPropertyType::Integer:
+                    binaryPropertyRecord.value = as_byte_span(std::get<int32_t>(property.value));
+                    break;
+
+                case LitlMatPropertyType::UnsignedInteger:
+                    binaryPropertyRecord.value = as_byte_span(std::get<uint32_t>(property.value));
+                    break;
+
+                case LitlMatPropertyType::Float:
+                    binaryPropertyRecord.value = as_byte_span(std::get<float>(property.value));
+                    break;
+
+                case LitlMatPropertyType::Double:
+                    binaryPropertyRecord.value = as_byte_span(std::get<double>(property.value));
+                    break;
+
+                case LitlMatPropertyType::Vec2:
+                    binaryPropertyRecord.value = as_byte_span(std::get<vec2>(property.value));
+                    break;
+
+                case LitlMatPropertyType::Vec3:
+                    binaryPropertyRecord.value = as_byte_span(std::get<vec3>(property.value));
+                    break;
+
+                case LitlMatPropertyType::Vec4:
+                    binaryPropertyRecord.value = as_byte_span(std::get<vec4>(property.value));
+                    break;
+
+                case LitlMatPropertyType::Color:
+                    binaryPropertyRecord.value = as_byte_span(std::get<color>(property.value));
+                    break;
+
+                case LitlMatPropertyType::Texture2D:
+                    binaryPropertyRecord.value = as_byte_span(std::get<std::string>(property.value));
+                    break;
+
+                case LitlMatPropertyType::Texture3D:
+                    binaryPropertyRecord.value = as_byte_span(std::get<std::string>(property.value));
+                    break;
+                }
+
+                propertyRecords.push_back(binaryPropertyRecord);
+            }
         }
 
         void compileRasterSettings(MaterialIntermediateData const& material, LitlMatBinaryRasterSettings& rasterSettings) noexcept

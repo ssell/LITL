@@ -222,7 +222,7 @@ namespace litl
             .length = static_cast<uint32_t>(string.size())
         });
 
-        stringMap.runningOffset = alignMemoryOffsetUp(stringMap.runningOffset + sizeof(StringRef::offset) + string.size(), 16);
+        stringMap.runningOffset = stringMap.runningOffset + sizeof(StringRef::offset) + string.size();
 
         return stringMap.strings.back();
     }
