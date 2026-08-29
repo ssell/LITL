@@ -7,114 +7,176 @@ namespace litl::import
         // ... todo ...
     }
 
-    void MaterialIntermediateData::setShaderVertex(std::string_view resource, std::string_view entry) noexcept
+    bool MaterialIntermediateData::setShader(LitlMatShaderStage stage, std::string const& resource, std::string const& entry) noexcept
     {
-        // ... todo ...
+        if (stage == LitlMatShaderStage::Unknown)
+        {
+            return false;
+        }
+
+        if (resource.empty())
+        {
+            return false;
+        }
+
+        if (entry.empty())
+        {
+            return false;
+        }
+
+        m_shaders[static_cast<uint32_t>(stage) - 1] = LitlMatShaderRecord{
+            .stage = stage,
+            .resource = resource,
+            .entry = entry
+        };
+
+        return true;
     }
 
-    void MaterialIntermediateData::setShaderFragment(std::string_view resource, std::string_view entry) noexcept
+    bool MaterialIntermediateData::addProperty(LitlMatPropertyType type, LitlMatSupportedRawPropertyTypes const& value) noexcept
     {
-        // ... todo ...
-    }
+        switch (type)
+        {
+        case LitlMatPropertyType::Bool:
+            if (std::holds_alternative<bool>(value)) { m_properties.push_back(LitlMatPropertyRecord{ type, std::get<bool>(value) }); return true; }
+            break;
 
-    void MaterialIntermediateData::setShaderGeometry(std::string_view resource, std::string_view entry) noexcept
-    {
-        // ... todo ...
-    }
+        case LitlMatPropertyType::Integer:
+            if (std::holds_alternative<int32_t>(value)) { m_properties.push_back(LitlMatPropertyRecord{ type, std::get<int32_t>(value) }); return true; }
+            break;
 
-    void MaterialIntermediateData::setShaderTessellationControl(std::string_view resource, std::string_view entry) noexcept
-    {
-        // ... todo ...
-    }
+        case LitlMatPropertyType::UnsignedInteger:
+            if (std::holds_alternative<uint32_t>(value)) { m_properties.push_back(LitlMatPropertyRecord{ type, std::get<uint32_t>(value) }); return true; }
+            break;
 
-    void MaterialIntermediateData::setShaderTessellationEvaluation(std::string_view resource, std::string_view entry) noexcept
-    {
-        // ... todo ...
-    }
+        case LitlMatPropertyType::Float:
+            if (std::holds_alternative<float>(value)) { m_properties.push_back(LitlMatPropertyRecord{ type, std::get<float>(value) }); return true; }
+            break;
 
-    void MaterialIntermediateData::setShaderCompute(std::string_view resource, std::string_view entry) noexcept
-    {
-        // ... todo ...
-    }
+        case LitlMatPropertyType::Double:
+            if (std::holds_alternative<double>(value)) { m_properties.push_back(LitlMatPropertyRecord{ type, std::get<double>(value) }); return true; }
+            break;
 
-    void MaterialIntermediateData::setShaderMesh(std::string_view resource, std::string_view entry) noexcept
-    {
-        // ... todo ...
-    }
+        case LitlMatPropertyType::Vec2:
+            if (!std::holds_alternative<vec2>(value))
+            {
+                if (auto* vec = std::get_if<std::vector<float>>(&value))
+                {
+                    if (vec->size() >= 2)
+                    {
+                        m_properties.push_back(LitlMatPropertyRecord{ type, vec2(vec->at(0), vec->at(1)) });
+                        return true;
+                    }
+                }
+            }
+            else
+            {
+                m_properties.push_back(LitlMatPropertyRecord{ type, std::get<vec2>(value) });
+                return true;
+            }
+            break;
 
-    void MaterialIntermediateData::setShaderTask(std::string_view resource, std::string_view entry) noexcept
-    {
-        // ... todo ...
-    }
+        case LitlMatPropertyType::Vec3:
+            if (!std::holds_alternative<vec3>(value))
+            {
+                if (auto* vec = std::get_if<std::vector<float>>(&value))
+                {
+                    if (vec->size() >= 3)
+                    {
+                        m_properties.push_back(LitlMatPropertyRecord{ type, vec3(vec->at(0), vec->at(1), vec->at(2)) });
+                        return true;
+                    }
+                }
+            }
+            else
+            {
+                m_properties.push_back(LitlMatPropertyRecord{ type, std::get<vec3>(value) });
+                return true;
+            }
+            break;
 
-    void MaterialIntermediateData::setBool(std::string_view property, bool value) noexcept
-    {
-        // ... todo ...
-    }
+        case LitlMatPropertyType::Vec4:
+            if (!std::holds_alternative<vec4>(value))
+            {
+                if (auto* vec = std::get_if<std::vector<float>>(&value))
+                {
+                    if (vec->size() >= 4)
+                    {
+                        m_properties.push_back(LitlMatPropertyRecord{ type, vec4(vec->at(0), vec->at(1), vec->at(2), vec->at(3)) });
+                        return true;
+                    }
+                }
+            }
+            else
+            {
+                m_properties.push_back(LitlMatPropertyRecord{ type, std::get<vec4>(value) });
+                return true;
+            }
+            break;
 
-    void MaterialIntermediateData::setInt(std::string_view property, int32_t value) noexcept
-    {
-        // ... todo ...
-    }
+        case LitlMatPropertyType::Color:
+            if (!std::holds_alternative<color>(value))
+            {
+                if (auto* vec = std::get_if<std::vector<float>>(&value))
+                {
+                    if (vec->size() >= 3)
+                    {
+                        m_properties.push_back(LitlMatPropertyRecord{ type, color(vec->at(0), vec->at(1), vec->at(2), (vec->size() >= 4 ? vec->at(3) : 1.0f)) });
+                        return true;
+                    }
+                }
+            }
+            else
+            {
+                m_properties.push_back(LitlMatPropertyRecord{ type, std::get<color>(value) });
+                return true;
+            }
+            break;
 
-    void MaterialIntermediateData::setUint(std::string_view property, uint32_t value) noexcept
-    {
-        // ... todo ...
-    }
+        case LitlMatPropertyType::Texture2D:
+        case LitlMatPropertyType::Texture3D:
+            if (std::holds_alternative<std::string>(value)) { m_properties.push_back(LitlMatPropertyRecord{ type, std::get<std::string>(value) }); return true; }
+            break;
 
-    void MaterialIntermediateData::setFloat(std::string_view property, float value) noexcept
-    {
-        // ... todo ...
-    }
+        case LitlMatPropertyType::Unknown:
+            break;
+        }
 
-    void MaterialIntermediateData::setDouble(std::string_view property, double value) noexcept
-    {
-        // ... todo ...
-    }
-
-    void MaterialIntermediateData::setVec2(std::string_view property, vec2 value) noexcept
-    {
-        // ... todo ...
-    }
-
-    void MaterialIntermediateData::setVec3(std::string_view property, vec3 value) noexcept
-    {
-        // ... todo ...
-    }
-
-    void MaterialIntermediateData::setVec4(std::string_view property, vec4 value) noexcept
-    {
-        // ... todo ...
-    }
-
-    void MaterialIntermediateData::setColor(std::string_view property, color value) noexcept
-    {
-        // ... todo ...
-    }
-
-    void MaterialIntermediateData::setTexture2D(std::string_view property, std::string_view resource) noexcept
-    {
-        // ... todo ...
-    }
-
-    void MaterialIntermediateData::setTexture3D(std::string_view property, std::string_view resource) noexcept
-    {
-        // ... todo ...
+        return false;
     }
 
     void MaterialIntermediateData::setRasterCullMode(LitlMatCullMode cullMode) noexcept
     {
-        // ... todo ...
+        m_rasterSettings.cullMode = cullMode;
     }
 
     void MaterialIntermediateData::setRasterWinding(bool clockwise) noexcept
     {
-        // ... todo ...
+        m_rasterSettings.clockwise = clockwise;
     }
 
     void MaterialIntermediateData::setHintFrequentUpdates(bool frequentUpdates) noexcept
     {
-        // ... todo ...
+        m_hintSettings.frequentUpdates = frequentUpdates;
     }
 
+    std::array<LitlMatShaderRecord, 7> const& MaterialIntermediateData::getShaders() const noexcept
+    {
+        return m_shaders;
+    }
+
+    std::vector<LitlMatPropertyRecord> const& MaterialIntermediateData::getProperties() const noexcept
+    {
+        return m_properties;
+    }
+
+    LitlMatRasterSettings const& MaterialIntermediateData::getRasterSettings() const noexcept
+    {
+        return m_rasterSettings;
+    }
+
+    LitlMatHintSettings const& MaterialIntermediateData::getHintSettings() const noexcept
+    {
+        return m_hintSettings;
+    }
 }

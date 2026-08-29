@@ -49,7 +49,7 @@ namespace litl::import
         {
             FlatHashSet<uint32_t> shaderSet;
 
-            for (auto& shader : material.shaders)
+            for (auto& shader : material.getShaders())
             {
                 if (shaderSet.contains(static_cast<uint32_t>(shader.stage)))
                 {
@@ -74,13 +74,17 @@ namespace litl::import
 
         void compileRasterSettings(MaterialIntermediateData const& material, LitlMatBinaryRasterSettings& rasterSettings) noexcept
         {
-            rasterSettings.cullMode = material.rasterSettings.cullMode;
-            rasterSettings.clockwise = material.rasterSettings.clockwise;
+            auto const& settings = material.getRasterSettings();
+
+            rasterSettings.cullMode = settings.cullMode;
+            rasterSettings.clockwise = settings.clockwise;
         }
 
         void compileHintSettings(MaterialIntermediateData const& material, LitlMatBinaryHintSettings& hintSettings) noexcept
         {
-            hintSettings.frequentUpdates = material.hintSettings.frequentUpdates;
+            auto const& settings = material.getHintSettings();
+
+            hintSettings.frequentUpdates = settings.frequentUpdates;
         }
     }
 

@@ -66,16 +66,6 @@ namespace litl::import
     // Material File Structure
     // -------------------------------------------------------------------------------------
     
-    // The below structures can not be in the empty namespace or else they are not visible to glaze during deserialziation.
-    using SupportedPropertyTypes = std::variant<
-        bool,
-        int32_t,
-        uint32_t,
-        float,
-        std::string,
-        std::vector<float>
-    >;
-
     struct ShaderResourceStruct
     {
         std::string resource;
@@ -96,7 +86,7 @@ namespace litl::import
     struct Property
     {
         std::string type;
-        SupportedPropertyTypes value;
+        LitlMatSupportedRawPropertyTypes value;
     };
 
     using ShaderMap = std::unordered_map<std::string, ShaderResourceStruct>;
@@ -152,43 +142,17 @@ namespace litl::import
                 return false;
             }
 
-            switch (mappedType->second)
+            if (mappedType->second != LitlMatShaderStage::Unknown)
             {
-            case LitlMatShaderStage::Vertex:
-                material->setShaderVertex(shader.resource, shader.entry);
-                break;
-
-            case LitlMatShaderStage::Fragment:
-                material->setShaderFragment(shader.resource, shader.entry);
-                break;
-
-            case LitlMatShaderStage::Geometry:
-                material->setShaderGeometry(shader.resource, shader.entry);
-                break;
-
-            case LitlMatShaderStage::TessellationControl:
-                material->setShaderTessellationControl(shader.resource, shader.entry);
-                break;
-
-            case LitlMatShaderStage::TessellationEvaluation:
-                material->setShaderTessellationEvaluation(shader.resource, shader.entry);
-                break;
-
-            case LitlMatShaderStage::Compute:
-                material->setShaderCompute(shader.resource, shader.entry);
-                break;
-
-            case LitlMatShaderStage::Mesh:
-                material->setShaderMesh(shader.resource, shader.entry);
-                break;
-
-            case LitlMatShaderStage::Task:
-                material->setShaderTask(shader.resource, shader.entry);
-                break;
-
-            case LitlMatShaderStage::Unknown:
-            default:
-                logWarning(".litlmat import of ", file.name(), ": shader '", type, "' has unhandled  type of '", mappedType->first, "'. Rejecting.");
+                if (!material->setShader(mappedType->second, shader.resource, shader.entry))
+                {
+                    logWarning(".litlmat import of ", file.name(), ": shader '", type, "' failed to be set. Rejecting.");
+                    return false;
+                }
+            }
+            else
+            {
+                logWarning(".litlmat import of ", file.name(), ": shader '", type, "' has unhandled type of '", mappedType->first, "'. Rejecting.");
                 return false;
             }
         }
@@ -262,112 +226,9 @@ namespace litl::import
                 return false;
             }
 
-            switch (mappedType->second)
+            if (!material->addProperty(mappedType->second, propertyKvp.second.value))
             {
-            case LitlMatPropertyType::Bool:
-                if (const auto* propertyValue = std::get_if<bool>(&propertyKvp.second.value))
-                {
-                    material->setBool(propertyKvp.first, *propertyValue);
-                }
-                break;
-
-            case LitlMatPropertyType::Integer:
-                if (const auto* propertyValue = std::get_if<int32_t>(&propertyKvp.second.value))
-                {
-                    material->setInt(propertyKvp.first, *propertyValue);
-                }
-                break;
-
-            case LitlMatPropertyType::UnsignedInteger:
-                if (const auto* propertyValue = std::get_if<uint32_t>(&propertyKvp.second.value))
-                {
-                    material->setUint(propertyKvp.first, *propertyValue);
-                }
-                break;
-
-            case LitlMatPropertyType::Float:
-                if (const auto* propertyValue = std::get_if<float>(&propertyKvp.second.value))
-                {
-                    material->setFloat(propertyKvp.first, *propertyValue);
-                }
-                break;
-
-            case LitlMatPropertyType::Double:
-                if (const auto* propertyValue = std::get_if<float>(&propertyKvp.second.value))
-                {
-                    material->setDouble(propertyKvp.first, *propertyValue);
-                }
-                break;
-
-            case LitlMatPropertyType::Vec2:
-                if (const auto* propertyValue = std::get_if<std::vector<float>>(&propertyKvp.second.value))
-                {
-                    if (propertyValue->size() != 2)
-                    {
-                        logWarning(".litlmat import of ", file.name(), ": property '", propertyKvp.first, "' is labelled as a vec2 but has ", propertyValue->size(), " values. Expected 2. Rejecting.");
-                        return false;
-                    }
-
-                    material->setVec2(propertyKvp.first, vec2{ propertyValue->at(0), propertyValue->at(1) });
-                }
-                break;
-
-            case LitlMatPropertyType::Vec3:
-                if (const auto* propertyValue = std::get_if<std::vector<float>>(&propertyKvp.second.value))
-                {
-                    if (propertyValue->size() != 3)
-                    {
-                        logWarning(".litlmat import of ", file.name(), ": property '", propertyKvp.first, "' is labelled as a vec3 but has ", propertyValue->size(), " values. Expected 3. Rejecting.");
-                        return false;
-                    }
-
-                    material->setVec3(propertyKvp.first, vec3{ propertyValue->at(0), propertyValue->at(1), propertyValue->at(2) });
-                }
-                break;
-
-            case LitlMatPropertyType::Vec4:
-                if (const auto* propertyValue = std::get_if<std::vector<float>>(&propertyKvp.second.value))
-                {
-                    if (propertyValue->size() != 4)
-                    {
-                        logWarning(".litlmat import of ", file.name(), ": property '", propertyKvp.first, "' is labelled as a vec4 but has ", propertyValue->size(), " values. Expected 4. Rejecting.");
-                        return false;
-                    }
-
-                    material->setVec4(propertyKvp.first, vec4{ propertyValue->at(0), propertyValue->at(1), propertyValue->at(2), propertyValue->at(3) });
-                }
-                break;
-
-            case LitlMatPropertyType::Color:
-                if (const auto* propertyValue = std::get_if<std::vector<float>>(&propertyKvp.second.value))
-                {
-                    if ((propertyValue->size() != 3) && (propertyValue->size() != 4))
-                    {
-                        logWarning(".litlmat import of ", file.name(), ": property '", propertyKvp.first, "' is labelled as a vec3 but has ", propertyValue->size(), " values. Expected 3 or 4. Rejecting.");
-                        return false;
-                    }
-
-                    material->setColor(propertyKvp.first, color{ propertyValue->at(0), propertyValue->at(1), propertyValue->at(2), ((propertyValue->size() == 4) ? propertyValue->at(3) : 1.0f) });
-                }
-                break;
-
-            case LitlMatPropertyType::Texture2D:
-                if (const auto* propertyValue = std::get_if<std::string>(&propertyKvp.second.value))
-                {
-                    material->setTexture2D(propertyKvp.first, *propertyValue);
-                }
-                break;
-
-            case LitlMatPropertyType::Texture3D:
-                if (const auto* propertyValue = std::get_if<std::string>(&propertyKvp.second.value))
-                {
-                    material->setTexture3D(propertyKvp.first, *propertyValue);
-                }
-                break;
-
-            case LitlMatPropertyType::Unknown:
-            default:
-                logWarning(".litlmat import of ", file.name(), ": property '", propertyKvp.first, "' has unhandled  type of '", mappedType->first, "'. Rejecting.");
+                logWarning(".litlmat import of ", file.name(), ": property '", propertyKvp.first, "' invalid data. Rejecting.");
                 return false;
             }
         }
