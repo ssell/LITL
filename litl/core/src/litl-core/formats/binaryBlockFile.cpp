@@ -250,7 +250,7 @@ namespace litl
                 offset += string.size();
             }
 
-            blockDataTable[DefaultBlocks::StringsBlockIndex].data = as_byte_span(stringMap.stringBlob.data());
+            blockDataTable[DefaultBlocks::StringsBlockIndex].data = { stringMap.stringBlob.data(), stringMap.stringBlob.size() };
         }
     }
 

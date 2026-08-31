@@ -24,9 +24,11 @@ namespace litl::import
         {
             BinaryBlockFile::StringRef name;
             LitlMatPropertyType type;
-            uint32_t length{ 0u };
-            std::span<std::byte const> value;
+            std::array<std::byte, 24> value;        // size of the largest property (mat4 or string ref) sized up to nearest multiple of 16. wasteful for small property types, but theres only so many properties a material will have.
         };
+
+        static_assert(sizeof(LitlMatBinaryPropertyRecord) == 48);
+        static_assert(std::is_trivially_copyable_v<LitlMatBinaryPropertyRecord>);
 
         struct LitlMatBinaryRasterSettings
         {
@@ -74,62 +76,72 @@ namespace litl::import
                     .type = property.type
                 };
 
+                binaryPropertyRecord.value.fill(std::byte{ 0 });
+
                 switch (property.type)
                 {
                 case LitlMatPropertyType::Bool:
-                    binaryPropertyRecord.length = 1u;
-                    binaryPropertyRecord.value = as_byte_span(std::get<uint8_t>(property.value));
+                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<uint8_t>(property.value), sizeof(uint8_t));
                     break;
 
                 case LitlMatPropertyType::Integer:
-                    binaryPropertyRecord.length = 4u;
-                    binaryPropertyRecord.value = as_byte_span(std::get<int32_t>(property.value));
+                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<int32_t>(property.value), sizeof(uint8_t));
                     break;
 
                 case LitlMatPropertyType::UnsignedInteger:
-                    binaryPropertyRecord.length = 4u;
-                    binaryPropertyRecord.value = as_byte_span(std::get<uint32_t>(property.value));
+                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<uint32_t>(property.value), sizeof(uint8_t));
                     break;
 
                 case LitlMatPropertyType::Float:
-                    binaryPropertyRecord.length = 4u;
-                    binaryPropertyRecord.value = as_byte_span(std::get<float>(property.value));
+                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<float>(property.value), sizeof(uint8_t));
                     break;
 
                 case LitlMatPropertyType::Double:
-                    binaryPropertyRecord.length = 8u;
-                    binaryPropertyRecord.value = as_byte_span(std::get<double>(property.value));
+                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<double>(property.value), sizeof(uint8_t));
                     break;
 
                 case LitlMatPropertyType::Vec2:
-                    binaryPropertyRecord.length = 8u;
-                    binaryPropertyRecord.value = as_byte_span(std::get<vec2>(property.value));
+                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<vec2>(property.value), sizeof(uint8_t));
                     break;
 
                 case LitlMatPropertyType::Vec3:
-                    binaryPropertyRecord.length = 12u;
-                    binaryPropertyRecord.value = as_byte_span(std::get<vec3>(property.value));
+                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<vec3>(property.value), sizeof(uint8_t));
                     break;
 
                 case LitlMatPropertyType::Vec4:
-                    binaryPropertyRecord.length = 16u;
-                    binaryPropertyRecord.value = as_byte_span(std::get<vec4>(property.value));
+                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<vec4>(property.value), sizeof(uint8_t));
                     break;
 
                 case LitlMatPropertyType::Color:
-                    binaryPropertyRecord.length = 16u;
-                    binaryPropertyRecord.value = as_byte_span(std::get<color>(property.value));
+                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<color>(property.value), sizeof(uint8_t));
                     break;
 
                 case LitlMatPropertyType::Texture2D:
                 case LitlMatPropertyType::Texture3D:
-                    binaryPropertyRecord.length = sizeof(BinaryBlockFile::StringRef);
-                    binaryPropertyRecord.value = as_byte_span(std::get<std::string>(property.value));
+                    {
+                        auto stringRef = BinaryBlockFile::serializeString(std::get<std::string>(property.value), stringMap);
+                        std::memcpy(binaryPropertyRecord.value.data(), &stringRef, sizeof(BinaryBlockFile::StringRef));
+                    }
                     break;
+
+                case LitlMatPropertyType::Unknown:
+                    continue;
                 }
 
                 propertyRecords.push_back(binaryPropertyRecord);
             }
+        }
+
+        void serializePropertiesBlock(void* dest, BinaryBlockFile::BlockDataDescriptor const& blockData, std::vector<LitlMatBinaryPropertyRecord>& propertyRecords) noexcept
+        {
+            size_t propertiesTotalSize = 0;
+
+            for (auto& property : propertyRecords)
+            {
+                propertiesTotalSize += sizeof(LitlMatBinaryPropertyRecord);
+            }
+
+            std::vector<std::byte> propertiesBlock;
         }
 
         void compileRasterSettings(MaterialIntermediateData const& material, LitlMatBinaryRasterSettings& rasterSettings) noexcept
@@ -143,7 +155,6 @@ namespace litl::import
         void compileHintSettings(MaterialIntermediateData const& material, LitlMatBinaryHintSettings& hintSettings) noexcept
         {
             auto const& settings = material.getHintSettings();
-
             hintSettings.frequentUpdates = settings.frequentUpdates;
         }
     }
@@ -160,19 +171,19 @@ namespace litl::import
 
         std::vector<LitlMatBinaryShaderRecord> shaderRecords;
         compileShaderRecords(material, shaderRecords, stringMap);
-        blockDataTable.push_back(BlockDataDescriptor{ &litlMatBinary.descriptors[blockDataTable.size()], BlockIds::Shaders, sizeof(LitlMatShaderRecord), as_byte_span(shaderRecords) });
+        blockDataTable.push_back(BlockDataDescriptor{ &litlMatBinary.descriptors[blockDataTable.size()], BlockIds::Shaders, sizeof(LitlMatBinaryShaderRecord), as_byte_span(shaderRecords) });
 
         std::vector<LitlMatBinaryPropertyRecord> propertyRecords;
         compilePropertyRecords(material, propertyRecords, stringMap);
-        blockDataTable.push_back(BlockDataDescriptor{ &litlMatBinary.descriptors[blockDataTable.size()], BlockIds::Properties, sizeof(LitlMatPropertyRecord), as_byte_span(propertyRecords) });
+        blockDataTable.push_back(BlockDataDescriptor{ &litlMatBinary.descriptors[blockDataTable.size()], BlockIds::Properties, sizeof(LitlMatBinaryPropertyRecord), as_byte_span(propertyRecords) });
 
         LitlMatBinaryRasterSettings rasterSettings{};
         compileRasterSettings(material, rasterSettings);
-        blockDataTable.push_back(BlockDataDescriptor{ &litlMatBinary.descriptors[blockDataTable.size()], BlockIds::Raster, sizeof(LitlMatRasterSettings), as_byte_span(rasterSettings) });
+        blockDataTable.push_back(BlockDataDescriptor{ &litlMatBinary.descriptors[blockDataTable.size()], BlockIds::Raster, sizeof(LitlMatBinaryRasterSettings), as_byte_span(rasterSettings) });
 
         LitlMatBinaryHintSettings hintSettings{};
         compileHintSettings(material, hintSettings);
-        blockDataTable.push_back(BlockDataDescriptor{ &litlMatBinary.descriptors[blockDataTable.size()], BlockIds::Hints, sizeof(LitlMatHintSettings), as_byte_span(hintSettings) });
+        blockDataTable.push_back(BlockDataDescriptor{ &litlMatBinary.descriptors[blockDataTable.size()], BlockIds::Hints, sizeof(LitlMatBinaryHintSettings), as_byte_span(hintSettings) });
 
         for (auto& blockData : blockDataTable)
         {
@@ -223,11 +234,13 @@ namespace litl::import
         data.resize(litlMatBinary.header.totalBytes);
         std::fill(data.begin(), data.end(), std::byte(0));
 
+        // Copy the descriptors
         for (size_t i = 0ull; i < blockDataTable.size(); ++i)
         {
             std::memcpy(data.data() + litlMatBinary.header.descriptorsOffset + (sizeof(BlockDescriptor) * i), blockDataTable[i].descriptor, sizeof(BlockDescriptor));
         }
 
+        // Copy the data
         for (auto& blockData : blockDataTable)
         {
             if (blockData.data.size() > 0)
@@ -236,8 +249,8 @@ namespace litl::import
             }
         }
 
+        // Calculate hash and then copy the header
         litlMatBinary.header.contentHash = calculateContentHash(std::span<std::byte const>(data), litlMatBinary.header);
-
         std::memcpy(data.data(), &litlMatBinary.header, sizeof(Header));
 
         return true;
