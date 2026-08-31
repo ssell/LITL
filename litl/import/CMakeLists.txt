@@ -10,7 +10,7 @@ add_library(litl-import STATIC
 	"src/importService.cpp" 
 	"src/mesh/export/meshExporter.cpp" 
 	"src/importerRegistry.cpp" 
-	"src/exporterRegistry.cpp" "src/material/import/litlmat.cpp" "src/material/export/materialExporter.cpp" "src/material/intermediate/litlmatb.cpp" "src/material/intermediate/materialIntermediateData.cpp")
+	"src/exporterRegistry.cpp" "src/material/import/litlmat.cpp" "src/material/export/materialExporter.cpp" "src/material/intermediate/litlmatb.cpp" "src/material/intermediate/materialIntermediateData.cpp" "src/shader/export/shaderExporter.cpp" "src/shader/import/spirv.cpp" "src/shader/import/slang.cpp" "src/shader/intermediate/litlshader.cpp" "src/shader/intermediate/shaderIntermediateData.cpp")
 
 target_include_directories(litl-import
 	PUBLIC
