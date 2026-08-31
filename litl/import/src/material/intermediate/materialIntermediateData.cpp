@@ -38,24 +38,24 @@ namespace litl::import
         switch (type)
         {
         case LitlMatPropertyType::Bool:
-            if (std::holds_alternative<uint8_t>(value)) { m_properties.push_back(LitlMatPropertyRecord{ .name = name, type, std::get<uint8_t>(value) }); return true; }
-            else if (std::holds_alternative<bool>(value)) { m_properties.push_back(LitlMatPropertyRecord{ .name = name, type, static_cast<uint8_t>(std::get<bool>(value)) }); return true; }
+            if (std::holds_alternative<uint8_t>(value)) { m_properties.push_back(LitlMatPropertyRecord{ name, type, std::get<uint8_t>(value) }); return true; }
+            else if (std::holds_alternative<bool>(value)) { m_properties.push_back(LitlMatPropertyRecord{ name, type, static_cast<uint8_t>(std::get<bool>(value)) }); return true; }
             break;
 
         case LitlMatPropertyType::Integer:
-            if (std::holds_alternative<int32_t>(value)) { m_properties.push_back(LitlMatPropertyRecord{ .name = name, type, std::get<int32_t>(value) }); return true; }
+            if (std::holds_alternative<int32_t>(value)) { m_properties.push_back(LitlMatPropertyRecord{ name, type, std::get<int32_t>(value) }); return true; }
             break;
 
         case LitlMatPropertyType::UnsignedInteger:
-            if (std::holds_alternative<uint32_t>(value)) { m_properties.push_back(LitlMatPropertyRecord{ .name = name, type, std::get<uint32_t>(value) }); return true; }
+            if (std::holds_alternative<uint32_t>(value)) { m_properties.push_back(LitlMatPropertyRecord{ name, type, std::get<uint32_t>(value) }); return true; }
             break;
 
         case LitlMatPropertyType::Float:
-            if (std::holds_alternative<float>(value)) { m_properties.push_back(LitlMatPropertyRecord{ .name = name, type, std::get<float>(value) }); return true; }
+            if (std::holds_alternative<float>(value)) { m_properties.push_back(LitlMatPropertyRecord{ name, type, std::get<float>(value) }); return true; }
             break;
 
         case LitlMatPropertyType::Double:
-            if (std::holds_alternative<double>(value)) { m_properties.push_back(LitlMatPropertyRecord{ .name = name, type, std::get<double>(value) }); return true; }
+            if (std::holds_alternative<double>(value)) { m_properties.push_back(LitlMatPropertyRecord{ name, type, std::get<double>(value) }); return true; }
             break;
 
         case LitlMatPropertyType::Vec2:
@@ -65,14 +65,14 @@ namespace litl::import
                 {
                     if (vec->size() >= 2)
                     {
-                        m_properties.push_back(LitlMatPropertyRecord{ .name = name, type, vec2(vec->at(0), vec->at(1)) });
+                        m_properties.push_back(LitlMatPropertyRecord{ name, type, vec2(vec->at(0), vec->at(1)) });
                         return true;
                     }
                 }
             }
             else
             {
-                m_properties.push_back(LitlMatPropertyRecord{ .name = name, type, std::get<vec2>(value) });
+                m_properties.push_back(LitlMatPropertyRecord{ name, type, std::get<vec2>(value) });
                 return true;
             }
             break;
@@ -84,14 +84,14 @@ namespace litl::import
                 {
                     if (vec->size() >= 3)
                     {
-                        m_properties.push_back(LitlMatPropertyRecord{ .name = name, type, vec3(vec->at(0), vec->at(1), vec->at(2)) });
+                        m_properties.push_back(LitlMatPropertyRecord{ name, type, vec3(vec->at(0), vec->at(1), vec->at(2)) });
                         return true;
                     }
                 }
             }
             else
             {
-                m_properties.push_back(LitlMatPropertyRecord{ .name = name, type, std::get<vec3>(value) });
+                m_properties.push_back(LitlMatPropertyRecord{ name, type, std::get<vec3>(value) });
                 return true;
             }
             break;
@@ -103,14 +103,14 @@ namespace litl::import
                 {
                     if (vec->size() >= 4)
                     {
-                        m_properties.push_back(LitlMatPropertyRecord{ .name = name, type, vec4(vec->at(0), vec->at(1), vec->at(2), vec->at(3)) });
+                        m_properties.push_back(LitlMatPropertyRecord{ name, type, vec4(vec->at(0), vec->at(1), vec->at(2), vec->at(3)) });
                         return true;
                     }
                 }
             }
             else
             {
-                m_properties.push_back(LitlMatPropertyRecord{ .name = name, type, std::get<vec4>(value) });
+                m_properties.push_back(LitlMatPropertyRecord{ name, type, std::get<vec4>(value) });
                 return true;
             }
             break;
@@ -122,21 +122,21 @@ namespace litl::import
                 {
                     if (vec->size() >= 3)
                     {
-                        m_properties.push_back(LitlMatPropertyRecord{ .name = name, type, color(vec->at(0), vec->at(1), vec->at(2), (vec->size() >= 4 ? vec->at(3) : 1.0f)) });
+                        m_properties.push_back(LitlMatPropertyRecord{ name, type, color(vec->at(0), vec->at(1), vec->at(2), (vec->size() >= 4 ? vec->at(3) : 1.0f)) });
                         return true;
                     }
                 }
             }
             else
             {
-                m_properties.push_back(LitlMatPropertyRecord{ .name = name, type, std::get<color>(value) });
+                m_properties.push_back(LitlMatPropertyRecord{ name, type, std::get<color>(value) });
                 return true;
             }
             break;
 
         case LitlMatPropertyType::Texture2D:
         case LitlMatPropertyType::Texture3D:
-            if (std::holds_alternative<std::string>(value)) { m_properties.push_back(LitlMatPropertyRecord{ .name = name, type, std::get<std::string>(value) }); return true; }
+            if (std::holds_alternative<std::string>(value)) { m_properties.push_back(LitlMatPropertyRecord{ name, type, std::get<std::string>(value) }); return true; }
             break;
 
         case LitlMatPropertyType::Unknown:

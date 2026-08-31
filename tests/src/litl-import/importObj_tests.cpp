@@ -85,7 +85,6 @@ namespace litl::tests
 
         // Load the LitlMesh from the .litlmesh we previously exported to.
         auto litlMeshBytes = dest.readAllBytes();
-
         REQUIRE(litlMeshBytes.has_value() == true);
 
         LitlMesh litlMesh{};

@@ -237,7 +237,9 @@ namespace litl
             MissingShadersBlock = 2000u,
             MissingPropertiesBlock = 2001u,
             MissingRasterSettingsBlock = 2002u,
-            MissingHintSettingsBlock = 2003u
+            MissingHintSettingsBlock = 2003u,
+            MaterialPropertyDeserializationFailed = 2004u,
+            UnknownMaterialPropertyType = 2005u
         };
 
         static constexpr uint32_t MaxBlocks = 8u;

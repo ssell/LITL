@@ -15,6 +15,15 @@ namespace litl
         constexpr color(float r, float g, float b, float a) noexcept : value{ r, g, b, a } {}
 
         // ---------------------------------------------------------------------------------
+        // Equality
+        // ---------------------------------------------------------------------------------
+
+        [[nodiscard]] constexpr bool operator==(color const& other) const noexcept
+        {
+            return fequals(value.x, other.value.x) && fequals(value.y, other.value.y) && fequals(value.z, other.value.z) && fequals(value.w, other.value.w);
+        }
+
+        // ---------------------------------------------------------------------------------
         // Accessors
         // ---------------------------------------------------------------------------------
 

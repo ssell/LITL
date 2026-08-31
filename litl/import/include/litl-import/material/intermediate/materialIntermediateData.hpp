@@ -113,6 +113,8 @@ namespace litl::import
     {
     public:
 
+        static constexpr uint32_t ShaderStageCount = 8u;
+
         void setName(std::string_view name) noexcept;
         [[nodiscard]] bool setShader(LitlMatShaderStage stage, std::string const& resource, std::string const& entry) noexcept;
         [[nodiscard]] bool addProperty(std::string const& name, LitlMatPropertyType type, LitlMatSupportedRawPropertyTypes const& value) noexcept;
@@ -127,7 +129,7 @@ namespace litl::import
 
     private:
 
-        std::array<LitlMatShaderRecord, 8> m_shaders;
+        std::array<LitlMatShaderRecord, ShaderStageCount> m_shaders;
         std::vector<LitlMatPropertyRecord> m_properties;
         LitlMatRasterSettings m_rasterSettings;
         LitlMatHintSettings m_hintSettings;

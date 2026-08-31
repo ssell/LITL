@@ -1,4 +1,5 @@
 #include <array>
+#include <bit>
 #include <cstring>
 
 #include "litl-core/logging/logging.hpp"
@@ -89,35 +90,35 @@ namespace litl::import
                     break;
 
                 case LitlMatPropertyType::Integer:
-                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<int32_t>(property.value), sizeof(uint8_t));
+                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<int32_t>(property.value), sizeof(int32_t));
                     break;
 
                 case LitlMatPropertyType::UnsignedInteger:
-                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<uint32_t>(property.value), sizeof(uint8_t));
+                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<uint32_t>(property.value), sizeof(uint32_t));
                     break;
 
                 case LitlMatPropertyType::Float:
-                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<float>(property.value), sizeof(uint8_t));
+                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<float>(property.value), sizeof(float));
                     break;
 
                 case LitlMatPropertyType::Double:
-                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<double>(property.value), sizeof(uint8_t));
+                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<double>(property.value), sizeof(double));
                     break;
 
                 case LitlMatPropertyType::Vec2:
-                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<vec2>(property.value), sizeof(uint8_t));
+                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<vec2>(property.value), sizeof(vec2));
                     break;
 
                 case LitlMatPropertyType::Vec3:
-                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<vec3>(property.value), sizeof(uint8_t));
+                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<vec3>(property.value), sizeof(vec3));
                     break;
 
                 case LitlMatPropertyType::Vec4:
-                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<vec4>(property.value), sizeof(uint8_t));
+                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<vec4>(property.value), sizeof(vec4));
                     break;
 
                 case LitlMatPropertyType::Color:
-                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<color>(property.value), sizeof(uint8_t));
+                    std::memcpy(binaryPropertyRecord.value.data(), &std::get<color>(property.value), sizeof(color));
                     break;
 
                 case LitlMatPropertyType::Texture2D:
@@ -297,10 +298,57 @@ namespace litl::import
                     return false;
                 }
 
-                material.setShader(shaderRecord.stage, std::string(resource), std::string(entry));
+                if (!material.setShader(shaderRecord.stage, std::string(resource), std::string(entry)))
+                {
+                    error = BinaryBlockFile::ErrorCode::MaterialPropertyDeserializationFailed;
+                    return false;
+                }
             }
 
             return true;
+        }
+
+        template<typename T> requires std::is_trivially_copyable_v<T>
+        void deserializeTrivialPropertyType(MaterialIntermediateData& material, std::span<char const> strings, LitlMatBinaryPropertyRecord const& propertyRecord, BinaryBlockFile::ErrorCode& error) noexcept
+        {
+            const std::string propertyName = std::string(BinaryBlockFile::deserializeString(strings, propertyRecord.name, error));
+
+            if (error != BinaryBlockFile::ErrorCode::None)
+            {
+                return;
+            }
+
+            const std::optional<T> value = from_generic_byte_span<T>(propertyRecord.value, 0);
+
+            if (!value.has_value() || !material.addProperty(propertyName, propertyRecord.type, value.value()))
+            {
+                error = BinaryBlockFile::ErrorCode::MaterialPropertyDeserializationFailed;
+            }
+        }
+
+        void deserializeStringPropertyType(MaterialIntermediateData& material, std::span<char const> strings, LitlMatBinaryPropertyRecord const& propertyRecord, BinaryBlockFile::ErrorCode& error) noexcept
+        {
+            const std::string propertyName = std::string(BinaryBlockFile::deserializeString(strings, propertyRecord.name, error));
+
+            if (error != BinaryBlockFile::ErrorCode::None)
+            {
+                return;
+            }
+
+            const std::optional<BinaryBlockFile::StringRef> valueRef = from_generic_byte_span<BinaryBlockFile::StringRef>(propertyRecord.value, 0);
+
+            if (!valueRef.has_value())
+            {
+                error = BinaryBlockFile::ErrorCode::MaterialPropertyDeserializationFailed;
+                return;
+            }
+
+            const std::string value = std::string(BinaryBlockFile::deserializeString(strings, valueRef.value(), error));
+
+            if (value.empty() || !material.addProperty(propertyName, propertyRecord.type, value))
+            {
+                error = BinaryBlockFile::ErrorCode::MaterialPropertyDeserializationFailed;
+            }
         }
 
         [[nodiscard]] bool deserializePropertiesBlock(MaterialIntermediateData& material, BinaryBlockFile::Block& propertiesBlock, std::span<char const> strings, BinaryBlockFile::ErrorCode& error) noexcept
@@ -314,7 +362,66 @@ namespace litl::import
 
             for (auto& propertyRecord : (*propertyRecords))
             {
+                const auto propertyName = std::string(BinaryBlockFile::deserializeString(strings, propertyRecord.name, error));
 
+                if (error != BinaryBlockFile::ErrorCode::None)
+                {
+                    return false;
+                }
+
+                switch (propertyRecord.type)
+                {
+                case LitlMatPropertyType::Bool:
+                    deserializeTrivialPropertyType<uint8_t>(material, strings, propertyRecord, error);
+                    break;
+
+                case LitlMatPropertyType::Integer:
+                    deserializeTrivialPropertyType<int32_t>(material, strings, propertyRecord, error);
+                    break;
+
+                case LitlMatPropertyType::UnsignedInteger:
+                    deserializeTrivialPropertyType<uint32_t>(material, strings, propertyRecord, error);
+                    break;
+
+                case LitlMatPropertyType::Float:
+                    deserializeTrivialPropertyType<float>(material, strings, propertyRecord, error);
+                    break;
+
+                case LitlMatPropertyType::Double:
+                    deserializeTrivialPropertyType<double>(material, strings, propertyRecord, error);
+                    break;
+
+                case LitlMatPropertyType::Vec2:
+                    deserializeTrivialPropertyType<vec2>(material, strings, propertyRecord, error);
+                    break;
+
+                case LitlMatPropertyType::Vec3:
+                    deserializeTrivialPropertyType<vec3>(material, strings, propertyRecord, error);
+                    break;
+
+                case LitlMatPropertyType::Vec4:
+                    deserializeTrivialPropertyType<vec4>(material, strings, propertyRecord, error);
+                    break;
+
+                case LitlMatPropertyType::Color:
+                    deserializeTrivialPropertyType<color>(material, strings, propertyRecord, error);
+                    break;
+
+                case LitlMatPropertyType::Texture2D:
+                case LitlMatPropertyType::Texture3D:
+                    deserializeStringPropertyType(material, strings, propertyRecord, error);
+                    break;
+
+                case LitlMatPropertyType::Unknown:
+                default:
+                    error = BinaryBlockFile::ErrorCode::UnknownMaterialPropertyType;
+                    break;
+                }
+
+                if (error != BinaryBlockFile::ErrorCode::None)
+                {
+                    return false;
+                }
             }
 
             return true;

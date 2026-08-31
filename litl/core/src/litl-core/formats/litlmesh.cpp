@@ -240,7 +240,7 @@ namespace litl
             return false;
         }
 
-        if (stringsBlock.has_value())
+        if (!stringsBlock.has_value())
         {
             error = ErrorCode::MissingStringsBlock;
             return false;

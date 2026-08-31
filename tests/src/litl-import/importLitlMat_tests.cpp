@@ -1,8 +1,10 @@
+#include <cstring>
 #include <variant>
 
 #include "tests.hpp"
 #include "litl-core/math/common.hpp"
 #include "litl-import/importService.hpp"
+#include "litl-import/material/intermediate/litlmatb.hpp"
 #include "litl-import/material/intermediate/materialIntermediateData.hpp"
 
 namespace litl::tests
@@ -94,5 +96,76 @@ namespace litl::tests
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("litlmat -> MaterialIntermediateData -> litlmatb -> MaterialIntermediateData", "[import::litlmat]")
+    {
+        File source("assets/materials/flat.litlmat");
+        File dest("assets/materials/flat.litlmatb");
+
+        REQUIRE(source.exists() == true);
+
+        if (dest.exists() == true)
+        {
+            dest.erase();
+            REQUIRE(dest.exists() == false);
+        }
+
+        // .litlmat -> .litlmatb
+        import::ImportService importer{};
+        import::Result result = importer.convert(source.absolutePath());
+
+        REQUIRE(result.success == true);
+        REQUIRE(result.error == import::ErrorType::None);
+
+        // .litlmat -> MaterialIntermediateData
+        import::ImportedData data{};
+        result = importer.import(source, data, true);
+
+        REQUIRE(result.success == true);
+        REQUIRE(result.error == import::ErrorType::None);
+
+        import::MaterialIntermediateData& litlmatIntermediateData = *data.material->intermediateMaterial;
+
+        // .litlmatb -> MaterialIntermediateData
+        auto litlmatbBytes = dest.readAllBytes();
+        REQUIRE(litlmatbBytes.has_value() == true);
+
+        import::LitlMatBinary litlmatb{};
+        BinaryBlockFile::ErrorCode error = BinaryBlockFile::ErrorCode::None;
+
+        REQUIRE(import::LitlMatBinary::parse(litlmatbBytes.value(), litlmatb, error) == true);
+        REQUIRE(error == BinaryBlockFile::ErrorCode::None);
+
+        import::MaterialIntermediateData litlmatbIntermediateData{};
+
+        REQUIRE(litlmatb.deserialize(litlmatbIntermediateData, error) == true);
+        REQUIRE(error == BinaryBlockFile::ErrorCode::None);
+
+        // The intermediate data from the two sources (.litlmat and .litlmatb) should be identical.
+        for (uint32_t i = 0; i < import::MaterialIntermediateData::ShaderStageCount; ++i)
+        {
+            auto& litlmatShader = litlmatIntermediateData.getShaders()[i];
+            auto& litlmatbShader = litlmatbIntermediateData.getShaders()[i];
+
+            REQUIRE(litlmatShader.stage == litlmatbShader.stage);
+            REQUIRE(litlmatShader.resource == litlmatbShader.resource);
+            REQUIRE(litlmatShader.entry == litlmatbShader.entry);
+        }
+
+        REQUIRE(litlmatIntermediateData.getProperties().size() == litlmatbIntermediateData.getProperties().size());
+
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(litlmatIntermediateData.getProperties().size()); ++i)
+        {
+            auto& litlmatProperty = litlmatIntermediateData.getProperties()[i];
+            auto& litlmatbProperty = litlmatbIntermediateData.getProperties()[i];
+
+            REQUIRE(litlmatProperty.name == litlmatbProperty.name);
+            REQUIRE(litlmatProperty.type == litlmatbProperty.type);
+            REQUIRE(litlmatProperty.value == litlmatbProperty.value);
+        }
+
+        REQUIRE(std::memcmp(&litlmatIntermediateData.getRasterSettings(), &litlmatbIntermediateData.getRasterSettings(), sizeof(import::LitlMatRasterSettings)) == 0);
+        REQUIRE(std::memcmp(&litlmatIntermediateData.getHintSettings(), &litlmatbIntermediateData.getHintSettings(), sizeof(import::LitlMatHintSettings)) == 0);
     } LITL_END_TEST_CASE
 }

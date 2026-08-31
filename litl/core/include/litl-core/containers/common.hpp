@@ -1,9 +1,11 @@
 #ifndef LITL_CORE_CONTAINERS_COMMON_H__
 #define LITL_CORE_CONTAINERS_COMMON_H__
 
-#include <span>
-#include <ranges>
 #include <cstddef>
+#include <cstring>
+#include <optional>
+#include <ranges>
+#include <span>
 #include <type_traits>
 
 namespace litl
@@ -47,6 +49,20 @@ namespace litl
     [[nodiscard]] static std::span<std::byte const> generic_as_byte_span(void const* data, size_t size)
     {
         return std::span<std::byte const>{ reinterpret_cast<const std::byte*>(data), size };
+    }
+
+    template<typename T> requires std::is_trivially_copyable_v<T>
+    [[nodiscard]] std::optional<T> from_generic_byte_span(std::span<std::byte const> bytes, size_t offset) noexcept
+    {
+        if ((offset + sizeof(T)) > bytes.size_bytes())
+        {
+            return std::nullopt;
+        }
+
+        T obj;
+        std::memcpy(&obj, bytes.data() + offset, sizeof(T));
+
+        return obj;
     }
 }
 
