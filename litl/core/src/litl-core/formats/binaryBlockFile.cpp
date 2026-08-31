@@ -210,7 +210,7 @@ namespace litl
 
         if (find != stringMap.map.end())
         {
-            return stringMap.stringRefs[stringMap.stringRefs[find->second].offset];
+            return stringMap.stringRefs[find->second];
         }
 
         const auto offset = stringMap.runningOffset;

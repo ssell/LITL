@@ -61,6 +61,8 @@ namespace litl
     {
         struct DefaultBlocks
         {
+            static constexpr uint32_t DefaultBlocksCount = 1u;
+
             static constexpr BinaryBlockIdType Strings{ 'S', 'T', 'R', 'S' };
             static constexpr uint32_t StringsBlockIndex = 0u;
             static constexpr uint32_t FirstCustomBlockIndex = 1u;
@@ -236,10 +238,10 @@ namespace litl
 
             MissingShadersBlock = 2000u,
             MissingPropertiesBlock = 2001u,
-            MissingRasterSettingsBlock = 2002u,
-            MissingHintSettingsBlock = 2003u,
-            MaterialPropertyDeserializationFailed = 2004u,
-            UnknownMaterialPropertyType = 2005u
+            MissingSettingsBlock = 2002u,
+            MaterialPropertyDeserializationFailed = 2003u,
+            UnknownMaterialPropertyType = 2004u,
+            MissingMaterialNameSetting = 2005u
         };
 
         static constexpr uint32_t MaxBlocks = 8u;

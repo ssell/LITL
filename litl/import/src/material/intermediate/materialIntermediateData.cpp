@@ -2,11 +2,6 @@
 
 namespace litl::import
 {
-    void MaterialIntermediateData::setName(std::string_view name) noexcept
-    {
-        // ... todo ...
-    }
-
     bool MaterialIntermediateData::setShader(LitlMatShaderStage stage, std::string const& resource, std::string const& entry) noexcept
     {
         if (stage == LitlMatShaderStage::Unknown)
@@ -146,19 +141,24 @@ namespace litl::import
         return false;
     }
 
+    void MaterialIntermediateData::setName(std::string_view name) noexcept
+    {
+        m_settings.materialName = name;
+    }
+
     void MaterialIntermediateData::setRasterCullMode(LitlMatCullMode cullMode) noexcept
     {
-        m_rasterSettings.cullMode = cullMode;
+        m_settings.cullMode = cullMode;
     }
 
     void MaterialIntermediateData::setRasterWinding(bool clockwise) noexcept
     {
-        m_rasterSettings.clockwise = clockwise;
+        m_settings.clockwise = clockwise;
     }
 
     void MaterialIntermediateData::setHintFrequentUpdates(bool frequentUpdates) noexcept
     {
-        m_hintSettings.frequentUpdates = frequentUpdates;
+        m_settings.frequentUpdates = frequentUpdates;
     }
 
     std::array<LitlMatShaderRecord, 8> const& MaterialIntermediateData::getShaders() const noexcept
@@ -171,13 +171,8 @@ namespace litl::import
         return m_properties;
     }
 
-    LitlMatRasterSettings const& MaterialIntermediateData::getRasterSettings() const noexcept
+    LitlMatSettings const& MaterialIntermediateData::getSettings() const noexcept
     {
-        return m_rasterSettings;
-    }
-
-    LitlMatHintSettings const& MaterialIntermediateData::getHintSettings() const noexcept
-    {
-        return m_hintSettings;
+        return m_settings;
     }
 }

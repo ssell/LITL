@@ -19,8 +19,7 @@ namespace litl::import
         {
             static constexpr BinaryBlockIdType Shaders{ 'S', 'H', 'D', 'R' };
             static constexpr BinaryBlockIdType Properties{ 'P', 'R', 'O', 'P' };
-            static constexpr BinaryBlockIdType Raster{ 'R', 'S', 'T', 'R' };
-            static constexpr BinaryBlockIdType Hints{ 'H', 'I', 'N', 'T' };
+            static constexpr BinaryBlockIdType Settings{ 'S', 'E', 'T', 'T' };
         };
 
         [[nodiscard]] static bool serialize(MaterialIntermediateData const& material, std::vector<std::byte>& data, ErrorCode& error) noexcept;

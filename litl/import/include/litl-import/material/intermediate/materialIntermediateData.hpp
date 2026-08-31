@@ -98,14 +98,16 @@ namespace litl::import
         LitlMatSupportedPropertyTypes value;
     };
 
-    struct LitlMatRasterSettings
+    struct LitlMatSettings
     {
+        // General
+        std::string materialName;
+
+        // Raster
         LitlMatCullMode cullMode{ LitlMatCullMode::Back };
         bool clockwise{ true };
-    };
 
-    struct LitlMatHintSettings
-    {
+        // Hints
         bool frequentUpdates{ false };
     };
 
@@ -115,24 +117,23 @@ namespace litl::import
 
         static constexpr uint32_t ShaderStageCount = 8u;
 
-        void setName(std::string_view name) noexcept;
         [[nodiscard]] bool setShader(LitlMatShaderStage stage, std::string const& resource, std::string const& entry) noexcept;
         [[nodiscard]] bool addProperty(std::string const& name, LitlMatPropertyType type, LitlMatSupportedRawPropertyTypes const& value) noexcept;
+
+        void setName(std::string_view name) noexcept;
         void setRasterCullMode(LitlMatCullMode cullMode) noexcept;
         void setRasterWinding(bool clockwise) noexcept;
         void setHintFrequentUpdates(bool frequentUpdates) noexcept;
 
         std::array<LitlMatShaderRecord, 8> const& getShaders() const noexcept;
         std::vector<LitlMatPropertyRecord> const& getProperties() const noexcept;
-        LitlMatRasterSettings const& getRasterSettings() const noexcept;
-        LitlMatHintSettings const& getHintSettings() const noexcept;
+        LitlMatSettings const& getSettings() const noexcept;
 
     private:
 
         std::array<LitlMatShaderRecord, ShaderStageCount> m_shaders;
         std::vector<LitlMatPropertyRecord> m_properties;
-        LitlMatRasterSettings m_rasterSettings;
-        LitlMatHintSettings m_hintSettings;
+        LitlMatSettings m_settings;;
     };
 }
 

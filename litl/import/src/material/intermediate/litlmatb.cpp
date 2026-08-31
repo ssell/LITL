@@ -1,7 +1,7 @@
 #include <array>
-#include <bit>
 #include <cstring>
 
+#include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/containers/common.hpp"
 #include "litl-import/material/intermediate/litlmatb.hpp"
@@ -25,30 +25,29 @@ namespace litl::import
         {
             BinaryBlockFile::StringRef name;
             LitlMatPropertyType type;
-            std::array<std::byte, 24> value;        // size of the largest property (mat4 or string ref) sized up to nearest multiple of 16. wasteful for small property types, but theres only so many properties a material will have.
+            std::array<std::byte, 24> value;        // size of the largest property (vec4 or string ref) sized up to nearest multiple of 16. wasteful for small property types, but theres only so many properties a material will have.
         };
 
         static_assert(sizeof(LitlMatBinaryPropertyRecord) == 48);
         static_assert(std::is_trivially_copyable_v<LitlMatBinaryPropertyRecord>);
 
-        struct LitlMatBinaryRasterSettings
+        struct LitlMatBinarySettings
         {
+            // General
+            BinaryBlockFile::StringRef materialName{};
+
+            // Raster
             LitlMatCullMode cullMode{ LitlMatCullMode::Back };
             bool clockwise{ true };
-            std::array<uint8_t, 3> padding{};
-        };
 
-        static_assert(sizeof(LitlMatBinaryRasterSettings) == 8);
-        static_assert(std::is_trivially_copyable_v<LitlMatBinaryRasterSettings>);
-
-        struct LitlMatBinaryHintSettings
-        {
+            // Hints
             bool frequentUpdates{ false };
-            std::array<uint8_t, 3> padding{};
+
+            std::array<uint8_t, 10> padding{};
         };
 
-        static_assert(sizeof(LitlMatBinaryHintSettings) == 4);
-        static_assert(std::is_trivially_copyable_v<LitlMatBinaryHintSettings>);
+        static_assert(sizeof(LitlMatBinarySettings) == 32);
+        static_assert(std::is_trivially_copyable_v<LitlMatBinarySettings>);
 
         // -------------------------------------------------------------------------------------
         // Serialization
@@ -137,33 +136,34 @@ namespace litl::import
             }
         }
 
-        void serializePropertiesBlock(void* dest, BinaryBlockFile::BlockDataDescriptor const& blockData, std::vector<LitlMatBinaryPropertyRecord>& propertyRecords) noexcept
+        void compileSettings(MaterialIntermediateData const& material, LitlMatBinarySettings& settings, BinaryBlockFile::StringMap& stringMap) noexcept
         {
-            size_t propertiesTotalSize = 0;
+            auto const& matSettings = material.getSettings();
 
-            for (auto& property : propertyRecords)
+            settings.materialName = BinaryBlockFile::serializeString(matSettings.materialName, stringMap);
+            settings.cullMode = matSettings.cullMode;
+            settings.clockwise = matSettings.clockwise;
+            settings.frequentUpdates = matSettings.frequentUpdates;
+        }
+
+        [[nodiscard]] bool addDataBlockDescriptor(std::vector<BinaryBlockFile::BlockDataDescriptor>& blockDataTable, BinaryBlockFile::BlockDescriptor* descriptor, BinaryBlockIdType const& id, size_t elementSize, std::span<std::byte const> data, BinaryBlockFile::ErrorCode& error)
+        {
+            if (blockDataTable.size() == BinaryBlockFile::MaxBlocks)
             {
-                propertiesTotalSize += sizeof(LitlMatBinaryPropertyRecord);
+                error = BinaryBlockFile::ErrorCode::TooManyBlocks;
+                return false;
             }
 
-            std::vector<std::byte> propertiesBlock;
-        }
+            blockDataTable.push_back(BinaryBlockFile::BlockDataDescriptor{
+                .descriptor = descriptor,
+                .id = id,
+                .elementSize = elementSize,
+                .data = data
+            });
 
-        void compileRasterSettings(MaterialIntermediateData const& material, LitlMatBinaryRasterSettings& rasterSettings) noexcept
-        {
-            auto const& settings = material.getRasterSettings();
-
-            rasterSettings.cullMode = settings.cullMode;
-            rasterSettings.clockwise = settings.clockwise;
-        }
-
-        void compileHintSettings(MaterialIntermediateData const& material, LitlMatBinaryHintSettings& hintSettings) noexcept
-        {
-            auto const& settings = material.getHintSettings();
-            hintSettings.frequentUpdates = settings.frequentUpdates;
+            return true;
         }
     }
-
     bool LitlMatBinary::serialize(MaterialIntermediateData const& material, std::vector<std::byte>& data, ErrorCode& error) noexcept
     {
         error = ErrorCode::None;
@@ -176,19 +176,19 @@ namespace litl::import
 
         std::vector<LitlMatBinaryShaderRecord> shaderRecords;
         compileShaderRecords(material, shaderRecords, stringMap);
-        blockDataTable.push_back(BlockDataDescriptor{ &litlMatBinary.descriptors[blockDataTable.size()], BlockIds::Shaders, sizeof(LitlMatBinaryShaderRecord), as_byte_span(shaderRecords) });
 
         std::vector<LitlMatBinaryPropertyRecord> propertyRecords;
         compilePropertyRecords(material, propertyRecords, stringMap);
-        blockDataTable.push_back(BlockDataDescriptor{ &litlMatBinary.descriptors[blockDataTable.size()], BlockIds::Properties, sizeof(LitlMatBinaryPropertyRecord), as_byte_span(propertyRecords) });
 
-        LitlMatBinaryRasterSettings rasterSettings{};
-        compileRasterSettings(material, rasterSettings);
-        blockDataTable.push_back(BlockDataDescriptor{ &litlMatBinary.descriptors[blockDataTable.size()], BlockIds::Raster, sizeof(LitlMatBinaryRasterSettings), as_byte_span(rasterSettings) });
+        LitlMatBinarySettings settings{};
+        compileSettings(material, settings, stringMap);
 
-        LitlMatBinaryHintSettings hintSettings{};
-        compileHintSettings(material, hintSettings);
-        blockDataTable.push_back(BlockDataDescriptor{ &litlMatBinary.descriptors[blockDataTable.size()], BlockIds::Hints, sizeof(LitlMatBinaryHintSettings), as_byte_span(hintSettings) });
+        if (!addDataBlockDescriptor(blockDataTable, &litlMatBinary.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 0], BlockIds::Shaders, sizeof(LitlMatBinaryShaderRecord), as_byte_span(shaderRecords), error) ||
+            !addDataBlockDescriptor(blockDataTable, &litlMatBinary.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 1], BlockIds::Properties, sizeof(LitlMatBinaryPropertyRecord), as_byte_span(propertyRecords), error) ||
+            !addDataBlockDescriptor(blockDataTable, &litlMatBinary.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 2], BlockIds::Settings, sizeof(LitlMatBinarySettings), as_byte_span(settings), error))
+        {
+            return false;
+        }
 
         for (auto& blockData : blockDataTable)
         {
@@ -362,13 +362,6 @@ namespace litl::import
 
             for (auto& propertyRecord : (*propertyRecords))
             {
-                const auto propertyName = std::string(BinaryBlockFile::deserializeString(strings, propertyRecord.name, error));
-
-                if (error != BinaryBlockFile::ErrorCode::None)
-                {
-                    return false;
-                }
-
                 switch (propertyRecord.type)
                 {
                 case LitlMatPropertyType::Bool:
@@ -427,49 +420,35 @@ namespace litl::import
             return true;
         }
 
-        [[nodiscard]] bool deserializeRasterSettingsBlock(MaterialIntermediateData& material, BinaryBlockFile::Block& rasterSettingsBlock, BinaryBlockFile::ErrorCode& error) noexcept
+        [[nodiscard]] bool deserializeSettingsBlock(MaterialIntermediateData& material, BinaryBlockFile::Block& settingsBlock, std::span<char const> strings, BinaryBlockFile::ErrorCode& error) noexcept
         {
-            auto rasterSettingsElements = rasterSettingsBlock.as<LitlMatBinaryRasterSettings>(error);
+            auto settingsElements = settingsBlock.as<LitlMatBinarySettings>(error);
 
             if (error != BinaryBlockFile::ErrorCode::None)
             {
                 return false;
             }
 
-            if (rasterSettingsElements->empty())
+            if (settingsElements->empty())
             {
-                // None specified, will use the defaults.
-                return true;
-            }
-
-            auto& rasterSettings = (*rasterSettingsElements)[0];
-
-            material.setRasterCullMode(rasterSettings.cullMode);
-            material.setRasterWinding(rasterSettings.clockwise);
-            // ... add others as needed ...
-
-            return true;
-        }
-
-        [[nodiscard]] bool deserializeHintSettingsBlock(MaterialIntermediateData& material, BinaryBlockFile::Block& hintSettingsBlock, BinaryBlockFile::ErrorCode& error) noexcept
-        {
-            auto hintSettingsElements = hintSettingsBlock.as<LitlMatBinaryHintSettings>(error);
-
-            if (error != BinaryBlockFile::ErrorCode::None)
-            {
+                error = BinaryBlockFile::ErrorCode::MissingMaterialNameSetting;
                 return false;
             }
 
-            if (hintSettingsElements->empty())
+            auto& settings = (*settingsElements)[0]; 
+            
+            const std::string materialName = std::string(BinaryBlockFile::deserializeString(strings, settings.materialName, error));
+
+            if (error != BinaryBlockFile::ErrorCode::None)
             {
-                // None specified, will use the defaults.
-                return true;
+                error = BinaryBlockFile::ErrorCode::MissingMaterialNameSetting;     // override with more specific error.
+                return false;
             }
 
-            auto& hintSettings = (*hintSettingsElements)[0];
-
-            material.setHintFrequentUpdates(hintSettings.frequentUpdates);
-            // ... add others as needed ...
+            material.setName(materialName);
+            material.setRasterCullMode(settings.cullMode);
+            material.setRasterWinding(settings.clockwise);
+            material.setHintFrequentUpdates(settings.frequentUpdates);
 
             return true;
         }
@@ -480,8 +459,7 @@ namespace litl::import
         auto stringsBlock = find(DefaultBlocks::Strings);
         auto shadersBlock = find(BlockIds::Shaders);
         auto propertiesBlock = find(BlockIds::Properties);
-        auto rasterSettingsBlock = find(BlockIds::Raster);
-        auto hintSettingsBlock = find(BlockIds::Hints);
+        auto settingsBlock = find(BlockIds::Settings);
 
         if (!stringsBlock.has_value())
         {
@@ -501,15 +479,9 @@ namespace litl::import
             return false;
         }
 
-        if (!rasterSettingsBlock.has_value())
+        if (!settingsBlock.has_value())
         {
-            error = ErrorCode::MissingRasterSettingsBlock;
-            return false;
-        }
-
-        if (!hintSettingsBlock.has_value())
-        {
-            error = ErrorCode::MissingHintSettingsBlock;
+            error = ErrorCode::MissingSettingsBlock;
             return false;
         }
 
@@ -522,7 +494,6 @@ namespace litl::import
 
         return deserializeShadersBlock(material, (*shadersBlock), (*strings), error) &&
                deserializePropertiesBlock(material, (*propertiesBlock), (*strings), error) &&
-               deserializeRasterSettingsBlock(material, (*rasterSettingsBlock), error) &&
-               deserializeHintSettingsBlock(material, (*hintSettingsBlock), error);
+               deserializeSettingsBlock(material, (*settingsBlock), (*strings), error);
     }
 }

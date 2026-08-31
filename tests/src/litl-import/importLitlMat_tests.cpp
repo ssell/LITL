@@ -165,7 +165,12 @@ namespace litl::tests
             REQUIRE(litlmatProperty.value == litlmatbProperty.value);
         }
 
-        REQUIRE(std::memcmp(&litlmatIntermediateData.getRasterSettings(), &litlmatbIntermediateData.getRasterSettings(), sizeof(import::LitlMatRasterSettings)) == 0);
-        REQUIRE(std::memcmp(&litlmatIntermediateData.getHintSettings(), &litlmatbIntermediateData.getHintSettings(), sizeof(import::LitlMatHintSettings)) == 0);
+        const auto& litlmatSettings = litlmatIntermediateData.getSettings();
+        const auto& litlmatbSettings = litlmatbIntermediateData.getSettings();
+
+        REQUIRE(litlmatSettings.materialName == litlmatbSettings.materialName);
+        REQUIRE(litlmatSettings.cullMode == litlmatbSettings.cullMode);
+        REQUIRE(litlmatSettings.clockwise == litlmatbSettings.clockwise);
+        REQUIRE(litlmatSettings.frequentUpdates == litlmatbSettings.frequentUpdates);
     } LITL_END_TEST_CASE
 }
