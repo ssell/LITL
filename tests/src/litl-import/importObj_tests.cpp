@@ -118,27 +118,7 @@ namespace litl::tests
         const auto& litlGeoMeshVertices = litlGeoMesh.getVertices();
         const auto& objGeoMeshVertices = objGeoMesh.getVertices();
 
-        const vec3 negatePosZ{ 1.0f, 1.0f, -1.0f };
-        const vec2 flipTexcoordY{ 0.0f, 1.0f };
-
-        for (size_t i = 0; i < litlGeoMeshVertices.size() && correctlyTransformedVerts; ++i)
-        {
-            // When comparing vertices we can expect the following:
-            //     * position .z value is negated in the conversion from right-hand to left-hand coordinate system
-            //     * texcoord .y is flipped converting from obj lower-left origin to vulkan upper-left origin
-            //     * normal is generated and is non-zero compared to the unprovided normal
-            //     * tangent is generated and is non-zero compared to the unprovided tangent (todo)
-
-            const auto& litlVert = litlGeoMeshVertices[i];
-            const auto& objVert = objGeoMeshVertices[i];
-
-            correctlyTransformedVerts =
-                (litlVert.position == (objVert.position * negatePosZ)) &&
-                (litlVert.texcoord == (flipTexcoordY - objVert.texcoord)) &&
-                !litlVert.normal.isZeroed();
-        }
-
-        REQUIRE(correctlyTransformedVerts == true);
+        REQUIRE(std::memcmp(litlGeoMeshVertices.data(), objGeoMeshVertices.data(), sizeof(Vertex) * litlGeoMeshVertices.size()) == 0);
 
         // --- Compare indices
         bool correctlyTransformedIndices = true;
@@ -146,16 +126,7 @@ namespace litl::tests
         const auto& litlGeoMeshIndices = litlGeoMesh.getIndices();
         const auto& objGeoMeshIndices = objGeoMesh.getIndices();
 
-        for (size_t i = 0; i < litlGeoMeshIndices.size() && correctlyTransformedIndices; i += 3)
-        {
-            // OBJ uses counter-clockwise winding, we use clockwise (for our left-handed coordinate system).
-            correctlyTransformedIndices =
-                (litlGeoMeshIndices[i + 0] == objGeoMeshIndices[i + 0]) &&
-                (litlGeoMeshIndices[i + 1] == objGeoMeshIndices[i + 2]) &&      // indices 1,2 flipped such that (0, 1, 2) -> (0, 2, 1)
-                (litlGeoMeshIndices[i + 2] == objGeoMeshIndices[i + 1]);
-        }
-
-        REQUIRE(correctlyTransformedIndices == true);
+        REQUIRE(std::memcmp(litlGeoMeshIndices.data(), objGeoMeshIndices.data(), sizeof(uint32_t) * litlGeoMeshIndices.size()) == 0);
 
         // --- Compare face counts. Bunny is already triangulated (all faces triangles) so should be no change.
         REQUIRE(std::memcmp(litlGeoMesh.getFaceIndexCounts().data(), objGeoMesh.getFaceIndexCounts().data(), objGeoMesh.getFaceIndexCounts().size() * sizeof(uint32_t)) == 0);
