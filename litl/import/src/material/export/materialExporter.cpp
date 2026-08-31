@@ -28,7 +28,7 @@ namespace litl::import
             return Result::Error(ErrorType::ImportedDataNull);
         }
 
-        if (data.material->material == nullptr)
+        if (data.material->intermediateMaterial == nullptr)
         {
             return Result::Error(ErrorType::ImportedDataNull);
         }
@@ -48,9 +48,9 @@ namespace litl::import
         auto errorCode = BinaryBlockFile::ErrorCode::None;
         auto serialized = std::vector<std::byte>();
 
-        MaterialIntermediateData* material = data.material->material.get();
+        MaterialIntermediateData* intermediateMaterial = data.material->intermediateMaterial.get();
 
-        if (!LitlMatBinary::serialize(*material, serialized, errorCode))
+        if (!LitlMatBinary::serialize(*intermediateMaterial, serialized, errorCode))
         {
             return Result::Error(ErrorType::SerializationFailed, std::format("Serialization of Material to litlmatb failed with error code {}", static_cast<uint32_t>(errorCode)));
         }

@@ -115,7 +115,7 @@ namespace litl::import
 
     }
 
-    bool importShadersTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* material, File const& file) noexcept
+    bool importShadersTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* intermediateMaterial, File const& file) noexcept
     {
         for (auto& shaderKvp : inputMaterial.shaders)
         {
@@ -144,7 +144,7 @@ namespace litl::import
 
             if (mappedType->second != LitlMatShaderStage::Unknown)
             {
-                if (!material->setShader(mappedType->second, shader.resource, shader.entry))
+                if (!intermediateMaterial->setShader(mappedType->second, shader.resource, shader.entry))
                 {
                     logWarning(".litlmat import of ", file.name(), ": shader '", type, "' failed to be set. Rejecting.");
                     return false;
@@ -160,25 +160,25 @@ namespace litl::import
         return true;
     }
 
-    bool importRasterStateTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* material, File const& file) noexcept
+    bool importRasterStateTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* intermediateMaterial, File const& file) noexcept
     {
         const auto cullMode = toLowercase(inputMaterial.raster.cullMode);
 
         if (cullMode.empty() || cullMode == "back")
         {
-            material->setRasterCullMode(LitlMatCullMode::Back);
+            intermediateMaterial->setRasterCullMode(LitlMatCullMode::Back);
         }
         else if (cullMode == "front")
         {
-            material->setRasterCullMode(LitlMatCullMode::Front);
+            intermediateMaterial->setRasterCullMode(LitlMatCullMode::Front);
         }
         else if (cullMode == "none")
         {
-            material->setRasterCullMode(LitlMatCullMode::None);
+            intermediateMaterial->setRasterCullMode(LitlMatCullMode::None);
         }
         else if (cullMode == "both")
         {
-            material->setRasterCullMode(LitlMatCullMode::Both);
+            intermediateMaterial->setRasterCullMode(LitlMatCullMode::Both);
         }
         else
         {
@@ -190,11 +190,11 @@ namespace litl::import
 
         if (frontFace.empty() || frontFace == "clockwise" || frontFace == "cw")
         {
-            material->setRasterWinding(true);
+            intermediateMaterial->setRasterWinding(true);
         }
         else if (frontFace == "counterclockwise" || frontFace == "counter-clockwise" || frontFace == "ccw")
         {
-            material->setRasterWinding(false);
+            intermediateMaterial->setRasterWinding(false);
         }
         else
         {
@@ -205,7 +205,7 @@ namespace litl::import
         return true;
     }
 
-    bool importPropertiesTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* material, File const& file) noexcept
+    bool importPropertiesTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* intermediateMaterial, File const& file) noexcept
     {
         for (auto& propertyKvp : inputMaterial.properties)
         {
@@ -226,7 +226,7 @@ namespace litl::import
                 return false;
             }
 
-            if (!material->addProperty(propertyKvp.first, mappedType->second, propertyKvp.second.value))
+            if (!intermediateMaterial->addProperty(propertyKvp.first, mappedType->second, propertyKvp.second.value))
             {
                 logWarning(".litlmat import of ", file.name(), ": property '", propertyKvp.first, "' invalid data. Rejecting.");
                 return false;
@@ -236,9 +236,9 @@ namespace litl::import
         return true;
     }
 
-    bool importHintsTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* material, File const& file) noexcept
+    bool importHintsTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* intermediateMaterial, File const& file) noexcept
     {
-        material->setHintFrequentUpdates(inputMaterial.hints.frequentUpdates);
+        intermediateMaterial->setHintFrequentUpdates(inputMaterial.hints.frequentUpdates);
 
         // ... add other hint types in the future ...
 
@@ -259,34 +259,34 @@ namespace litl::import
 
         importedData.type = ImportedDataType::Material;
         importedData.material = std::make_unique<MaterialImportResult>();
-        importedData.material->material = std::make_unique<MaterialIntermediateData>();
-        auto* material = importedData.material->material.get();
+        importedData.material->intermediateMaterial = std::make_unique<MaterialIntermediateData>();
+        auto* intermediateMaterial = importedData.material->intermediateMaterial.get();
 
         if (!inputMaterial.name.empty())
         {
-            material->setName(inputMaterial.name);
+            intermediateMaterial->setName(inputMaterial.name);
         }
         else
         {
-            material->setName(file.name());
+            intermediateMaterial->setName(file.name());
         }
 
-        if (!importShadersTable(inputMaterial, material, file))
+        if (!importShadersTable(inputMaterial, intermediateMaterial, file))
         {
             return Result::Error(ErrorType::ImporterFailed, std::format(".litlmat import of {}: Error encountered importing [properties] table.", file.name()));
         }
 
-        if (!importRasterStateTable(inputMaterial, material, file))
+        if (!importRasterStateTable(inputMaterial, intermediateMaterial, file))
         {
             return Result::Error(ErrorType::ImporterFailed, std::format(".litlmat import of {}: Error encountered importing [raster] table.", file.name()));
         }
 
-        if (!importPropertiesTable(inputMaterial, material, file))
+        if (!importPropertiesTable(inputMaterial, intermediateMaterial, file))
         {
             return Result::Error(ErrorType::ImporterFailed, std::format(".litlmat import of {}: Error encountered importing [properties] table.", file.name()));
         }
 
-        if (!importHintsTable(inputMaterial, material, file))
+        if (!importHintsTable(inputMaterial, intermediateMaterial, file))
         {
             return Result::Error(ErrorType::ImporterFailed, std::format(".litlmat import of {}: Error encountered importing [hints] table.", file.name()));
         }

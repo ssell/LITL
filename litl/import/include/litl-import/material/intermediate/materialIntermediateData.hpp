@@ -120,14 +120,14 @@ namespace litl::import
         void setRasterWinding(bool clockwise) noexcept;
         void setHintFrequentUpdates(bool frequentUpdates) noexcept;
 
-        std::array<LitlMatShaderRecord, 7> const& getShaders() const noexcept;
+        std::array<LitlMatShaderRecord, 8> const& getShaders() const noexcept;
         std::vector<LitlMatPropertyRecord> const& getProperties() const noexcept;
         LitlMatRasterSettings const& getRasterSettings() const noexcept;
         LitlMatHintSettings const& getHintSettings() const noexcept;
 
     private:
 
-        std::array<LitlMatShaderRecord, 7> m_shaders;
+        std::array<LitlMatShaderRecord, 8> m_shaders;
         std::vector<LitlMatPropertyRecord> m_properties;
         LitlMatRasterSettings m_rasterSettings;
         LitlMatHintSettings m_hintSettings;

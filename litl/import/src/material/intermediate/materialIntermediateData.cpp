@@ -161,7 +161,7 @@ namespace litl::import
         m_hintSettings.frequentUpdates = frequentUpdates;
     }
 
-    std::array<LitlMatShaderRecord, 7> const& MaterialIntermediateData::getShaders() const noexcept
+    std::array<LitlMatShaderRecord, 8> const& MaterialIntermediateData::getShaders() const noexcept
     {
         return m_shaders;
     }

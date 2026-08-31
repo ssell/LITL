@@ -109,14 +109,16 @@ add_dependencies(litl-tests copy-tests-data)
 # individual asset copy
 # ------------------------------------------------------------------------------------------
 
+set (LITL_TEST_ASSETS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/data/assets")
+
 set (LITL_TESTS_ASSETS
-	"${LITL_ASSETS_DIR}/mesh/bunny.obj"
-	"${LITL_ASSETS_DIR}/materials/flat.litlmat"
+	"${LITL_TEST_ASSETS_DIR}/mesh/bunny.obj"
+	"${LITL_TEST_ASSETS_DIR}/materials/flat.litlmat"
 )
 
 foreach(TEST_ASSET_PATH IN LISTS LITL_TESTS_ASSETS)
 	# Get just the sub-path (ie "mesh/bunny.obj")
-	string(REPLACE ${LITL_ASSETS_DIR} "" RELATIVE_ASSET "${TEST_ASSET_PATH}")
+	string(REPLACE ${LITL_TEST_ASSETS_DIR} "" RELATIVE_ASSET "${TEST_ASSET_PATH}")
 
 	add_custom_command(
 		TARGET litl-tests POST_BUILD
