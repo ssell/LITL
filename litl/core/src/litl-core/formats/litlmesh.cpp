@@ -227,8 +227,6 @@ namespace litl
 
     bool LitlMesh::deserialize(GeoMesh& mesh, ErrorCode& error) const noexcept
     {
-        error = ErrorCode::None;
-
         const LitlMeshFlag flags = static_cast<LitlMeshFlag>(header.flags);
         auto stringsBlock = find(DefaultBlocks::Strings);
         auto vertexBlock = find(BlockIds::Vertices);
@@ -239,6 +237,12 @@ namespace litl
         if (!vertexBlock.has_value())
         {
             error = ErrorCode::MissingVertexBlock;
+            return false;
+        }
+
+        if (stringsBlock.has_value())
+        {
+            error = ErrorCode::MissingStringsBlock;
             return false;
         }
 

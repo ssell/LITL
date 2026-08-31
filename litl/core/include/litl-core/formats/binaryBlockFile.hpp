@@ -175,6 +175,12 @@ namespace litl
             /// </summary>
             InvalidBlockOffset = 20u,
 
+            MissingStringsBlock = 21u,
+
+            StringRefEmpty = 22u,
+
+            StringRefOutOfBounds = 23u,
+
             // -----------------------------------------------------------------------------
             // LitlMesh Error Codes
             // -----------------------------------------------------------------------------
@@ -222,7 +228,16 @@ namespace litl
             /// <summary>
             /// Mesh bounds block should have exactly 6 elements: [min.x, min.y, min.z, max.x, max.y, max.z].
             /// </summary>
-            InvalidBoundsValues = 1008u
+            InvalidBoundsValues = 1008u,
+
+            // -----------------------------------------------------------------------------
+            // LitlMaterial Error Codes
+            // -----------------------------------------------------------------------------
+
+            MissingShadersBlock = 2000u,
+            MissingPropertiesBlock = 2001u,
+            MissingRasterSettingsBlock = 2002u,
+            MissingHintSettingsBlock = 2003u
         };
 
         static constexpr uint32_t MaxBlocks = 8u;
@@ -475,6 +490,11 @@ namespace litl
         /// 
         /// </summary>
         [[nodiscard]] static StringRef serializeString(std::string_view string, StringMap& stringOffsetMap) noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [[nodiscard]] static std::string_view deserializeString(std::span<char const> strings, StringRef ref, ErrorCode& error) noexcept;
 
         /// <summary>
         /// 

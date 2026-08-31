@@ -49,6 +49,10 @@ namespace litl::import
         static_assert(sizeof(LitlMatBinaryHintSettings) == 4);
         static_assert(std::is_trivially_copyable_v<LitlMatBinaryHintSettings>);
 
+        // -------------------------------------------------------------------------------------
+        // Serialization
+        // -------------------------------------------------------------------------------------
+
         void compileShaderRecords(MaterialIntermediateData const& material, std::vector<LitlMatBinaryShaderRecord>& shaderRecords, BinaryBlockFile::StringMap& stringMap) noexcept
         {
             // Note MaterialIntermediateData guarantees 1 shader entry per stage. If that ever changes, then dedupe checking will need to be done.
@@ -256,9 +260,162 @@ namespace litl::import
         return true;
     }
 
+    // -------------------------------------------------------------------------------------
+    // Deserialization
+    // -------------------------------------------------------------------------------------
+
+    namespace
+    {
+        [[nodiscard]] bool deserializeShadersBlock(MaterialIntermediateData& material, BinaryBlockFile::Block& shadersBlock, std::span<char const> strings, BinaryBlockFile::ErrorCode& error) noexcept
+        {
+            auto shaderRecords = shadersBlock.as<LitlMatBinaryShaderRecord>(error);
+
+            if (error != BinaryBlockFile::ErrorCode::None)
+            {
+                return false;
+            }
+
+            if (!shaderRecords.has_value())
+            {
+                // Not a deserialization error, though it may be a validation error. But that is up to the Material to decide.
+                return true;
+            }
+
+            for (auto& shaderRecord : shaderRecords.value())
+            {
+                const auto resource = BinaryBlockFile::deserializeString(strings, shaderRecord.resource, error);
+
+                if (error != BinaryBlockFile::ErrorCode::None)
+                {
+                    return false;
+                }
+
+                const auto entry = BinaryBlockFile::deserializeString(strings, shaderRecord.entry, error);
+
+                if (error != BinaryBlockFile::ErrorCode::None)
+                {
+                    return false;
+                }
+
+                material.setShader(shaderRecord.stage, std::string(resource), std::string(entry));
+            }
+
+            return true;
+        }
+
+        [[nodiscard]] bool deserializePropertiesBlock(MaterialIntermediateData& material, BinaryBlockFile::Block& propertiesBlock, std::span<char const> strings, BinaryBlockFile::ErrorCode& error) noexcept
+        {
+            auto propertyRecords = propertiesBlock.as<LitlMatBinaryPropertyRecord>(error);
+
+            if (error != BinaryBlockFile::ErrorCode::None)
+            {
+                return false;
+            }
+
+            for (auto& propertyRecord : (*propertyRecords))
+            {
+
+            }
+
+            return true;
+        }
+
+        [[nodiscard]] bool deserializeRasterSettingsBlock(MaterialIntermediateData& material, BinaryBlockFile::Block& rasterSettingsBlock, BinaryBlockFile::ErrorCode& error) noexcept
+        {
+            auto rasterSettingsElements = rasterSettingsBlock.as<LitlMatBinaryRasterSettings>(error);
+
+            if (error != BinaryBlockFile::ErrorCode::None)
+            {
+                return false;
+            }
+
+            if (rasterSettingsElements->empty())
+            {
+                // None specified, will use the defaults.
+                return true;
+            }
+
+            auto& rasterSettings = (*rasterSettingsElements)[0];
+
+            material.setRasterCullMode(rasterSettings.cullMode);
+            material.setRasterWinding(rasterSettings.clockwise);
+            // ... add others as needed ...
+
+            return true;
+        }
+
+        [[nodiscard]] bool deserializeHintSettingsBlock(MaterialIntermediateData& material, BinaryBlockFile::Block& hintSettingsBlock, BinaryBlockFile::ErrorCode& error) noexcept
+        {
+            auto hintSettingsElements = hintSettingsBlock.as<LitlMatBinaryHintSettings>(error);
+
+            if (error != BinaryBlockFile::ErrorCode::None)
+            {
+                return false;
+            }
+
+            if (hintSettingsElements->empty())
+            {
+                // None specified, will use the defaults.
+                return true;
+            }
+
+            auto& hintSettings = (*hintSettingsElements)[0];
+
+            material.setHintFrequentUpdates(hintSettings.frequentUpdates);
+            // ... add others as needed ...
+
+            return true;
+        }
+    }
+
     bool LitlMatBinary::deserialize(MaterialIntermediateData& material, ErrorCode& error) const noexcept
     {
-        // ... todo ...
-        return true;
+        auto stringsBlock = find(DefaultBlocks::Strings);
+        auto shadersBlock = find(BlockIds::Shaders);
+        auto propertiesBlock = find(BlockIds::Properties);
+        auto rasterSettingsBlock = find(BlockIds::Raster);
+        auto hintSettingsBlock = find(BlockIds::Hints);
+
+        if (!stringsBlock.has_value())
+        {
+            error = ErrorCode::MissingStringsBlock;
+            return false;
+        }
+
+        if (!shadersBlock.has_value())
+        {
+            error = ErrorCode::MissingShadersBlock;
+            return false;
+        }
+
+        if (!propertiesBlock.has_value())
+        {
+            error = ErrorCode::MissingPropertiesBlock;
+            return false;
+        }
+
+        if (!rasterSettingsBlock.has_value())
+        {
+            error = ErrorCode::MissingRasterSettingsBlock;
+            return false;
+        }
+
+        if (!hintSettingsBlock.has_value())
+        {
+            error = ErrorCode::MissingHintSettingsBlock;
+            return false;
+        }
+
+        auto strings = stringsBlock->as<char const>(error);
+
+        if (error != ErrorCode::None)
+        {
+            return false;
+        }
+
+        return deserializeShadersBlock(material, (*shadersBlock), (*strings), error) &&
+               deserializePropertiesBlock(material, (*propertiesBlock), (*strings), error) &&
+               deserializeRasterSettingsBlock(material, (*rasterSettingsBlock), error) &&
+               deserializeHintSettingsBlock(material, (*hintSettingsBlock), error);
     }
 }

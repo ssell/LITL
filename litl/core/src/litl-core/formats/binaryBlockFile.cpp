@@ -223,6 +223,23 @@ namespace litl
         return stringMap.stringRefs.back();
     }
 
+    std::string_view BinaryBlockFile::deserializeString(std::span<char const> strings, BinaryBlockFile::StringRef ref, ErrorCode& error) noexcept
+    {
+        if (ref.length == 0u)
+        {
+            error = ErrorCode::StringRefEmpty;
+            return {};
+        }
+
+        if ((ref.offset + ref.length) > strings.size_bytes())
+        {
+            error = ErrorCode::StringRefOutOfBounds;
+            return {};
+        }
+
+        return std::string_view{ strings.data() + ref.offset, ref.length };
+    }
+
     // -------------------------------------------------------------------------------------
     // Utility
     // -------------------------------------------------------------------------------------
