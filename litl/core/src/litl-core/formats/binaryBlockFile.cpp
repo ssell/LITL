@@ -210,21 +210,17 @@ namespace litl
 
         if (find != stringMap.map.end())
         {
-            return stringMap.strings[stringMap.strings[find->second].offset];
+            return stringMap.stringRefs[stringMap.stringRefs[find->second].offset];
         }
 
         const auto offset = stringMap.runningOffset;
 
-        stringMap.map[stringId] = stringMap.strings.size();
+        stringMap.map[stringId] = stringMap.stringRefs.size();
+        stringMap.strings.push_back(std::string(string));
+        stringMap.stringRefs.push_back(StringRef{ .offset = offset, .length = static_cast<uint32_t>(string.size()) });
+        stringMap.runningOffset = stringMap.runningOffset + string.size();
 
-        stringMap.strings.push_back(StringRef{
-            .offset = offset,
-            .length = static_cast<uint32_t>(string.size())
-        });
-
-        stringMap.runningOffset = stringMap.runningOffset + sizeof(StringRef::offset) + string.size();
-
-        return stringMap.strings.back();
+        return stringMap.stringRefs.back();
     }
 
     // -------------------------------------------------------------------------------------
@@ -245,7 +241,16 @@ namespace litl
     {
         if (!stringMap.map.empty())
         {
-            blockDataTable[DefaultBlocks::StringsBlockIndex].data = as_byte_span(stringMap.strings.data());
+            stringMap.stringBlob.resize(stringMap.runningOffset, std::byte{ 0 });
+            size_t offset = 0;
+
+            for (auto& string : stringMap.strings)
+            {
+                std::memcpy(stringMap.stringBlob.data() + offset, string.data(), string.size());
+                offset += string.size();
+            }
+
+            blockDataTable[DefaultBlocks::StringsBlockIndex].data = as_byte_span(stringMap.stringBlob.data());
         }
     }
 

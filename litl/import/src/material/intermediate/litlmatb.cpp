@@ -24,6 +24,7 @@ namespace litl::import
         {
             BinaryBlockFile::StringRef name;
             LitlMatPropertyType type;
+            uint32_t length{ 0u };
             std::span<std::byte const> value;
         };
 
@@ -51,6 +52,11 @@ namespace litl::import
             // Note MaterialIntermediateData guarantees 1 shader entry per stage. If that ever changes, then dedupe checking will need to be done.
             for (auto& shader : material.getShaders())
             {
+                if ((shader.stage == LitlMatShaderStage::Unknown) || shader.resource.empty() || shader.entry.empty())
+                {
+                    continue;
+                }
+
                 shaderRecords.push_back(LitlMatBinaryShaderRecord{
                     .stage = shader.stage,
                     .resource = BinaryBlockFile::serializeString(shader.resource, stringMap),
@@ -71,46 +77,53 @@ namespace litl::import
                 switch (property.type)
                 {
                 case LitlMatPropertyType::Bool:
+                    binaryPropertyRecord.length = 1u;
                     binaryPropertyRecord.value = as_byte_span(std::get<uint8_t>(property.value));
                     break;
 
                 case LitlMatPropertyType::Integer:
+                    binaryPropertyRecord.length = 4u;
                     binaryPropertyRecord.value = as_byte_span(std::get<int32_t>(property.value));
                     break;
 
                 case LitlMatPropertyType::UnsignedInteger:
+                    binaryPropertyRecord.length = 4u;
                     binaryPropertyRecord.value = as_byte_span(std::get<uint32_t>(property.value));
                     break;
 
                 case LitlMatPropertyType::Float:
+                    binaryPropertyRecord.length = 4u;
                     binaryPropertyRecord.value = as_byte_span(std::get<float>(property.value));
                     break;
 
                 case LitlMatPropertyType::Double:
+                    binaryPropertyRecord.length = 8u;
                     binaryPropertyRecord.value = as_byte_span(std::get<double>(property.value));
                     break;
 
                 case LitlMatPropertyType::Vec2:
+                    binaryPropertyRecord.length = 8u;
                     binaryPropertyRecord.value = as_byte_span(std::get<vec2>(property.value));
                     break;
 
                 case LitlMatPropertyType::Vec3:
+                    binaryPropertyRecord.length = 12u;
                     binaryPropertyRecord.value = as_byte_span(std::get<vec3>(property.value));
                     break;
 
                 case LitlMatPropertyType::Vec4:
+                    binaryPropertyRecord.length = 16u;
                     binaryPropertyRecord.value = as_byte_span(std::get<vec4>(property.value));
                     break;
 
                 case LitlMatPropertyType::Color:
+                    binaryPropertyRecord.length = 16u;
                     binaryPropertyRecord.value = as_byte_span(std::get<color>(property.value));
                     break;
 
                 case LitlMatPropertyType::Texture2D:
-                    binaryPropertyRecord.value = as_byte_span(std::get<std::string>(property.value));
-                    break;
-
                 case LitlMatPropertyType::Texture3D:
+                    binaryPropertyRecord.length = sizeof(BinaryBlockFile::StringRef);
                     binaryPropertyRecord.value = as_byte_span(std::get<std::string>(property.value));
                     break;
                 }

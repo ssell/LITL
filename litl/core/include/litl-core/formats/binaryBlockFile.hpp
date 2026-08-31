@@ -437,15 +437,17 @@ namespace litl
             uint32_t padding{ 0u };
         };
 
+        static_assert(sizeof(StringRef) == 16);
+        static_assert(std::is_trivially_copyable_v<StringRef>);
+
         struct StringMap
         {
-            std::vector<StringRef> strings;
+            std::vector<StringRef> stringRefs;
+            std::vector<std::string> strings;
+            std::vector<std::byte> stringBlob;
             StringIdMap<uint32_t> map;
             uint64_t runningOffset{ 0ull };
         };
-
-        static_assert(sizeof(StringRef) == 16);
-        static_assert(std::is_trivially_copyable_v<StringRef>);
 
         /// <summary>
         /// Given a binary blob, attempts to parse it into the provided file format implementation.
