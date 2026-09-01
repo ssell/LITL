@@ -5,6 +5,7 @@
 
 #include "litl-import/material/import/result.hpp"
 #include "litl-import/mesh/import/result.hpp"
+#include "litl-import/shader/import/result.hpp"
 
 namespace litl::import
 {
@@ -12,7 +13,9 @@ namespace litl::import
     {
         Unknown = 0u,
         Material = 1u,
-        Mesh = 2u
+        Mesh = 2u,
+        Shader = 3u,
+        Texture = 4u
     };
 
     struct ImportedData final
@@ -27,6 +30,7 @@ namespace litl::import
         union {
             std::unique_ptr<MaterialImportResult> material = nullptr;
             std::unique_ptr<MeshImportResult> mesh;
+            std::unique_ptr<ShaderImportResult> shader;
         };
     };
 }

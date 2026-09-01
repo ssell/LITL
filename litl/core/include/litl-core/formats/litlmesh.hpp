@@ -79,15 +79,13 @@ namespace litl
         };
 
         /// <summary>
-        /// Given a GeoMesh, converts its contents into a binary blob represented by the LitlMesh layout.
+        /// Given a GeoMesh object, populates the byte blob that will be recorded to disk as a .litlmesh file.
         /// </summary>
-        /// <returns>False if serialization failed. See the supplied error code for more information.</returns>
         [[nodiscard]] static bool serialize(GeoMesh const& mesh, std::vector<std::byte>& data, ErrorCode& error) noexcept;
 
         /// <summary>
-        /// Populates the provided GeoMesh with the data that this view is over.
+        /// Populates the provided GeoMesh object from the BinaryBlockFile::data byte array from a .litlmesh that was processed via BinaryBlockFile::parse.
         /// </summary>
-        /// <returns>False if deserialization failed. See the supplied error code for more information.</returns>
         [[nodiscard]] bool deserialize(GeoMesh& mesh, ErrorCode& error) const noexcept;
 
     private:

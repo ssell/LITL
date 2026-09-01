@@ -15,6 +15,11 @@
 #include "litl-import/mesh/import/gltf.hpp"
 #include "litl-import/mesh/import/obj.hpp"
 
+// Shader
+#include "litl-import/shader/export/shaderExporter.hpp"
+#include "litl-import/shader/import/slang.hpp"
+#include "litl-import/shader/import/spirv.hpp"
+
 namespace litl::import
 {
     ImportService::ImportService()
@@ -39,6 +44,11 @@ namespace litl::import
         m_importerRegistry.add<GlbImporter>();
         m_importerRegistry.add<GltfImporter>();
         m_importerRegistry.add<ObjImporter>();
+
+        // Shader
+        m_exporterRegistry.add<ShaderExporter>();
+        m_importerRegistry.add<SlangImporter>();
+        m_importerRegistry.add<SpirvImporter>();
     }
 
     Result ImportService::import(File const& sourceFile, ImportedData& importedData, bool shouldPrepare) noexcept

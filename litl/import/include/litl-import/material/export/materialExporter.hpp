@@ -5,6 +5,9 @@
 
 namespace litl::import
 {
+    /// <summary>
+    /// Given a MaterialIntermediateData (via ImportedData), writes it to disk using LitlMatBinary.
+    /// </summary>
     class MaterialExporter final : public Exporter
     {
     public:

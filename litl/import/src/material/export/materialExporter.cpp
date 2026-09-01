@@ -43,8 +43,8 @@ namespace litl::import
             return Result::Error(ErrorType::ExportDestinationDoesNotExist);
         }
 
-        auto destFilePath = std::format("{}/{}{}", destFolderPath, sourceFile.name(), ExportedExtension);
-        auto destFile = File(destFilePath);
+        const auto destFilePath = std::format("{}/{}{}", destFolderPath, sourceFile.name(), ExportedExtension);
+        const auto destFile = File(destFilePath);
         auto errorCode = BinaryBlockFile::ErrorCode::None;
         auto serialized = std::vector<std::byte>();
 
