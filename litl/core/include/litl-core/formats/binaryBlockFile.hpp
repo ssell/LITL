@@ -241,7 +241,19 @@ namespace litl
             MissingSettingsBlock = 2002u,
             MaterialPropertyDeserializationFailed = 2003u,
             UnknownMaterialPropertyType = 2004u,
-            MissingMaterialNameSetting = 2005u
+            MissingMaterialNameSetting = 2005u,
+                
+            // -----------------------------------------------------------------------------
+            // LitlShader Error Codes
+            // -----------------------------------------------------------------------------
+
+            MissingEntryPointsBlock = 3000u,
+            MissingResourceBindingsBlock = 3001u,
+            MissingPushConstantsBlock = 3002u,
+            MissingPushConstantReferencePropertiesBlock = 3003u,
+            MissingVertexFragmentInputOutputBlock = 3004u,
+            MissingResourcePropertiesBlock = 3005u,
+            MissingSpirvBlock = 3006u
         };
 
         static constexpr uint32_t MaxBlocks = 8u;

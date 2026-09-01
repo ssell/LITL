@@ -202,7 +202,14 @@ namespace litl::import
             uint64_t runningPushConstantReferencePropertyOffset = 0ull;
             uint64_t runningVertexFragmentInputOutputOffset = 0ull;
         };
+    }
 
+    // -------------------------------------------------------------------------------------
+    // Serialization
+    // -------------------------------------------------------------------------------------
+
+    namespace
+    {
         [[nodiscard]] BinaryRecordGrouping nextBinaryRecordGrouping(size_t elementSize, size_t elementCount, uint64_t& runningOffset) noexcept
         {
             const BinaryRecordGrouping grouping{ .count = elementCount, .firstOffset = runningOffset };
@@ -403,9 +410,10 @@ namespace litl::import
             !addDataBlockDescriptor(blockDataTable, &litlShader.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 2], BlockIds::PushConstants, sizeof(BinaryPushConstantRange), as_byte_span(blocksData.pushConstants), error) ||
             !addDataBlockDescriptor(blockDataTable, &litlShader.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 3], BlockIds::PushConstantReferenceProperties, sizeof(BinaryPushConstantReferenceProperty), as_byte_span(blocksData.pushConstantReferenceProperties), error) ||
             !addDataBlockDescriptor(blockDataTable, &litlShader.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 4], BlockIds::VertexFragmentInputOutput, sizeof(BinaryShaderInputOutputVariable), as_byte_span(blocksData.shaderInputOutput), error) ||
-            !addDataBlockDescriptor(blockDataTable, &litlShader.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 5], BlockIds::ResourceProperties, sizeof(BinaryResourceProperty), as_byte_span(blocksData.resourceProperties), error))
+            !addDataBlockDescriptor(blockDataTable, &litlShader.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 5], BlockIds::ResourceProperties, sizeof(BinaryResourceProperty), as_byte_span(blocksData.resourceProperties), error) ||
+            !addDataBlockDescriptor(blockDataTable, &litlShader.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 6], BlockIds::Spirv, sizeof(uint32_t), as_byte_span(shader.getSpirvWords()), error))
         {
-            // ... too many blocks set by addDataBlockDescriptor ...
+            // ... ErrorCode::TooManyBlocks set by addDataBlockDescriptor ...
             return false;
         }
 
@@ -460,9 +468,41 @@ namespace litl::import
         return true;
     }
 
+    // -------------------------------------------------------------------------------------
+    // Deserialization
+    // -------------------------------------------------------------------------------------
+
+    namespace
+    {
+
+    }
+
     bool LitlShader::deserialize(ShaderIntermediateData& shader, ErrorCode& error) const noexcept
     {
-        // ... todo ...
+        auto stringsBlock = find(DefaultBlocks::Strings);
+        auto entryPointsBlock = find(BlockIds::EntryPoints);
+        auto resourceBindingsBlock = find(BlockIds::ResourceBindings);
+        auto pushConstantsBlock = find(BlockIds::PushConstants);
+        auto pushConstantReferencePropertiesBlock = find(BlockIds::PushConstantReferenceProperties);
+        auto vertexFragmentInputOutputBlock = find(BlockIds::VertexFragmentInputOutput);
+        auto resourcePropertiesBlock = find(BlockIds::ResourceProperties);
+        auto spirvBlock = find(BlockIds::Spirv);
+
+        if (!stringsBlock.has_value()) { error = ErrorCode::MissingStringsBlock; return false; }
+        if (!entryPointsBlock.has_value()) { error = ErrorCode::MissingEntryPointsBlock; return false; }
+        if (!resourceBindingsBlock.has_value()) { error = ErrorCode::MissingResourceBindingsBlock; return false; }
+        if (!pushConstantsBlock.has_value()) { error = ErrorCode::MissingPushConstantsBlock; return false; }
+        if (!pushConstantReferencePropertiesBlock.has_value()) { error = ErrorCode::MissingPushConstantReferencePropertiesBlock; return false; }
+        if (!vertexFragmentInputOutputBlock.has_value()) { error = ErrorCode::MissingVertexFragmentInputOutputBlock; return false; }
+        if (!resourcePropertiesBlock.has_value()) { error = ErrorCode::MissingResourcePropertiesBlock; return false; }
+        if (!spirvBlock.has_value()) { error = ErrorCode::MissingSpirvBlock; return false; }
+
+        auto strings = stringsBlock->as<char const>(error);
+
+        if (error != ErrorCode::None)
+        {
+            return false;
+        }
 
         return true;
     }

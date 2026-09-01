@@ -167,7 +167,7 @@ namespace litl::import
             !addDataBlockDescriptor(blockDataTable, &litlMatBinary.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 1], BlockIds::Properties, sizeof(LitlMatBinaryPropertyRecord), as_byte_span(propertyRecords), error) ||
             !addDataBlockDescriptor(blockDataTable, &litlMatBinary.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 2], BlockIds::Settings, sizeof(LitlMatBinarySettings), as_byte_span(settings), error))
         {
-            // ... too many blocks set by addDataBlockDescriptor ...
+            // ... ErrorCode::TooManyBlocks set by addDataBlockDescriptor ...
             return false;
         }
 
@@ -422,29 +422,10 @@ namespace litl::import
         auto propertiesBlock = find(BlockIds::Properties);
         auto settingsBlock = find(BlockIds::Settings);
 
-        if (!stringsBlock.has_value())
-        {
-            error = ErrorCode::MissingStringsBlock;
-            return false;
-        }
-
-        if (!shadersBlock.has_value())
-        {
-            error = ErrorCode::MissingShadersBlock;
-            return false;
-        }
-
-        if (!propertiesBlock.has_value())
-        {
-            error = ErrorCode::MissingPropertiesBlock;
-            return false;
-        }
-
-        if (!settingsBlock.has_value())
-        {
-            error = ErrorCode::MissingSettingsBlock;
-            return false;
-        }
+        if (!stringsBlock.has_value()) { error = ErrorCode::MissingStringsBlock; return false; }
+        if (!shadersBlock.has_value()) { error = ErrorCode::MissingShadersBlock; return false; }
+        if (!propertiesBlock.has_value()) { error = ErrorCode::MissingPropertiesBlock; return false; }
+        if (!settingsBlock.has_value()) { error = ErrorCode::MissingSettingsBlock; return false; }
 
         auto strings = stringsBlock->as<char const>(error);
 
