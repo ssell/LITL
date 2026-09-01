@@ -11,12 +11,12 @@ namespace litl::import
     {
     public:
 
-        void setSpirvBytes(std::span<std::byte const> spirvBytes) noexcept;
-        std::span<std::byte const> getSpirvBytes() const noexcept;
+        void setSpirvWords(std::span<uint32_t const> spirvWords) noexcept;
+        std::span<uint32_t const> getSpirvWords() const noexcept;
 
     private:
 
-        std::vector<std::byte> m_spirvBytes;
+        std::vector<uint32_t> m_spirvWords;
     };
 }
 

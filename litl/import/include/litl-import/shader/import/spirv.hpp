@@ -10,7 +10,7 @@ namespace litl::import
     public:
 
         static constexpr std::string_view ImporterName = "SPIR-V Shader";
-        static constexpr std::array SupportedExtensions = { std::string_view{".spirv"} };
+        static constexpr std::array SupportedExtensions = { std::string_view{".spv"} };
 
         SpirvImporter();
         ~SpirvImporter();

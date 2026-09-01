@@ -1,6 +1,6 @@
 # LITL Engine
 
-LITL is a personal-learning C++20 game engine: archetypal ECS, Vulkan renderer. 
+LITL is a personal-learning C++23 game engine: archetypal ECS, Vulkan renderer. 
 The author is the sole developer and wants to write the code themselves. Claude is here to explain, critique, and suggest — not author.
 The author has previous experience with OpenGL 3/4 and Direct3D 9/10/11, but is new to Vulkan and other modern graphics libraries (D3D12, Metal).
 

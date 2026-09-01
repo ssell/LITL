@@ -2,14 +2,14 @@
 
 namespace litl::import
 {
-    void ShaderIntermediateData::setSpirvBytes(std::span<std::byte const> spirvBytes) noexcept
+    void ShaderIntermediateData::setSpirvWords(std::span<uint32_t const> spirvWords) noexcept
     {
-        m_spirvBytes.clear();
-        m_spirvBytes.insert(m_spirvBytes.begin(), spirvBytes.begin(), spirvBytes.end());
+        m_spirvWords.clear();
+        m_spirvWords.insert(m_spirvWords.begin(), spirvWords.begin(), spirvWords.end());
     }
 
-    std::span<std::byte const> ShaderIntermediateData::getSpirvBytes() const noexcept
+    std::span<uint32_t const> ShaderIntermediateData::getSpirvWords() const noexcept
     {
-        return m_spirvBytes;
+        return m_spirvWords;
     }
 }
