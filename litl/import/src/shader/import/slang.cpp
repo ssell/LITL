@@ -85,7 +85,12 @@ namespace litl::import
                 return std::unexpected(std::format("Slang module '{}' error during loadModuleFromSourceString: {}", fileName, slangDiagnosticsText(diagnostics)));
             }
 
-            const std::string warnings = std::format("Slang module '{}' warnings during loadModuleFromSourceString: {}", fileName, slangDiagnosticsText(diagnostics));
+            std::string warnings = slangDiagnosticsText(diagnostics);
+            
+            if (!warnings.empty())
+            {
+                warnings = std::format("Slang module '{}' warnings during loadModuleFromSourceString: {}", fileName, warnings);
+            }
 
             // Collect the various shader entry points. For example: [shader("vertexMain")]
             std::vector<slang::IComponentType*> components{ imodule };

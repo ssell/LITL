@@ -1,4 +1,3 @@
-#include <cstring>
 #include <variant>
 
 #include "tests.hpp"
@@ -11,13 +10,13 @@ namespace litl::tests
 {
     LITL_TEST_CASE("litlmat -> MaterialIntermediateData", "[import::litlmat]")
     {
-        File source("assets/materials/flat.litlmat");
+        const File source("assets/materials/flat.litlmat");
 
         REQUIRE(source.exists() == true);
 
         import::ImportService importer{};
         import::ImportedData data{};
-        import::Result const result = importer.import(source, data, true);
+        const import::Result result = importer.import(source, data, true);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);

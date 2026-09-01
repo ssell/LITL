@@ -71,7 +71,8 @@ add_executable(litl-tests
 	"src/litl-core/math/normals_tests.cpp" 
 	"src/litl-core/math/uncommon_tests.cpp" 
 	"src/litl-core/math/geomesh_tests.cpp" 
-	"src/litl-import/importLitlMat_tests.cpp")
+	"src/litl-import/importLitlMat_tests.cpp" 
+	"src/litl-import/importSlang_tests.cpp")
 
 target_link_libraries(litl-tests
 	PRIVATE
@@ -114,6 +115,7 @@ set (LITL_TEST_ASSETS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/data/assets")
 set (LITL_TESTS_ASSETS
 	"${LITL_TEST_ASSETS_DIR}/mesh/bunny.obj"
 	"${LITL_TEST_ASSETS_DIR}/materials/flat.litlmat"
+	"${LITL_TEST_ASSETS_DIR}/shaders/test.slang"
 )
 
 foreach(TEST_ASSET_PATH IN LISTS LITL_TESTS_ASSETS)

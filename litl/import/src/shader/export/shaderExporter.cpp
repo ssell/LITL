@@ -1,8 +1,10 @@
 #include <format>
 
 #include "litl-core/directory.hpp"
+#include "litl-core/containers/common.hpp"
 #include "litl-import/shader/export/shaderExporter.hpp"
 #include "litl-import/shader/intermediate/litlshader.hpp"
+#include "litl-renderer/reflection.hpp"
 
 namespace litl::import
 {
@@ -32,6 +34,15 @@ namespace litl::import
         {
             return Result::Error(ErrorType::ImportedDataNull);
         }
+
+        auto reflection = reflectSPIRV(as_byte_span(data.shader->intermediateShader->getSpirvWords()));
+
+        if (!reflection.has_value())
+        {
+            return Result::Error(ErrorType::ExportPrepareFailed, "Reflection of SPIR-V words failed.");
+        }
+
+        data.shader->intermediateShader->setReflection(reflection.value());
 
         return Result::Success();
     }

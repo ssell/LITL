@@ -12,4 +12,14 @@ namespace litl::import
     {
         return m_spirvWords;
     }
+
+    void ShaderIntermediateData::setReflection(ShaderReflection const& reflection) noexcept
+    {
+        m_reflection = reflection;
+    }
+
+    ShaderReflection const& ShaderIntermediateData::getReflection() const noexcept
+    {
+        return m_reflection;
+    }
 }

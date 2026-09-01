@@ -10,7 +10,16 @@ add_library(litl-import STATIC
 	"src/importService.cpp" 
 	"src/mesh/export/meshExporter.cpp" 
 	"src/importerRegistry.cpp" 
-	"src/exporterRegistry.cpp" "src/material/import/litlmat.cpp" "src/material/export/materialExporter.cpp" "src/material/intermediate/litlmatb.cpp" "src/material/intermediate/materialIntermediateData.cpp" "src/shader/export/shaderExporter.cpp" "src/shader/import/spirv.cpp" "src/shader/import/slang.cpp" "src/shader/intermediate/litlshader.cpp" "src/shader/intermediate/shaderIntermediateData.cpp")
+	"src/exporterRegistry.cpp" 
+	"src/material/import/litlmat.cpp" 
+	"src/material/export/materialExporter.cpp" 
+	"src/material/intermediate/litlmatb.cpp" 
+	"src/material/intermediate/materialIntermediateData.cpp" 
+	"src/shader/export/shaderExporter.cpp" 
+	"src/shader/import/spirv.cpp" 
+	"src/shader/import/slang.cpp" 
+	"src/shader/intermediate/litlshader.cpp" 
+	"src/shader/intermediate/shaderIntermediateData.cpp")
 
 target_include_directories(litl-import
 	PUBLIC
@@ -19,7 +28,7 @@ target_include_directories(litl-import
 		"${CMAKE_SOURCE_DIR}/deps/rapidobj/include"
 )
 
-target_link_libraries(litl-import PRIVATE litl-core)
+target_link_libraries(litl-import PRIVATE litl-core litl-renderer)
 
 target_compile_features(litl-import
 	PUBLIC
