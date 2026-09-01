@@ -22,4 +22,9 @@ namespace litl::import
     {
         return m_reflection;
     }
+
+    ShaderReflection& ShaderIntermediateData::getReflectionWriteRef() noexcept
+    {
+        return m_reflection;
+    }
 }

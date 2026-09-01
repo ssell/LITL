@@ -18,10 +18,11 @@ namespace litl::import
 
         void setReflection(ShaderReflection const& reflection) noexcept;
         ShaderReflection const& getReflection() const noexcept;
+        ShaderReflection& getReflectionWriteRef() noexcept;
     private:
 
         std::vector<uint32_t> m_spirvWords;
-        ShaderReflection m_reflection;
+        ShaderReflection m_reflection{};
     };
 }
 

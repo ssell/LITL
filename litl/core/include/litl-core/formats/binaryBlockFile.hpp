@@ -253,7 +253,9 @@ namespace litl
             MissingPushConstantReferencePropertiesBlock = 3003u,
             MissingVertexFragmentInputOutputBlock = 3004u,
             MissingResourcePropertiesBlock = 3005u,
-            MissingSpirvBlock = 3006u
+            MissingSpirvBlock = 3006u,
+            ShaderBinarySubspanOutOfBounds = 3007u,
+            ShaderBinarySubspanInvalidInput = 3008u
         };
 
         static constexpr uint32_t MaxBlocks = 8u;
@@ -409,7 +411,10 @@ namespace litl
             template<typename T> requires std::is_trivially_copyable_v<T>
             [[nodiscard]] std::optional<std::span<T const>> as(ErrorCode& error) const noexcept
             {
-                error = ErrorCode::None;
+                if (error != ErrorCode::None)   // error carryover from likely chain-calling 
+                {
+                    return std::nullopt;
+                }
 
                 if (sizeof(T) != static_cast<size_t>(elementBytes))
                 {
