@@ -166,21 +166,18 @@ namespace litl::import
     }
     bool LitlMatBinary::serialize(MaterialIntermediateData const& material, std::vector<std::byte>& data, ErrorCode& error) noexcept
     {
-        error = ErrorCode::None;
-
         LitlMatBinary litlMatBinary{};
         StringMap stringMap{};
 
         std::vector<BlockDataDescriptor> blockDataTable; blockDataTable.reserve(MaxBlocks);
         litlMatBinary.addDefaultBlockDescriptors(blockDataTable);
 
-        std::vector<LitlMatBinaryShaderRecord> shaderRecords;
+        std::vector<LitlMatBinaryShaderRecord> shaderRecords;       // 'SHDR'
+        std::vector<LitlMatBinaryPropertyRecord> propertyRecords;   // 'PROP'
+        LitlMatBinarySettings settings{};                           // 'SETT'
+
         compileShaderRecords(material, shaderRecords, stringMap);
-
-        std::vector<LitlMatBinaryPropertyRecord> propertyRecords;
         compilePropertyRecords(material, propertyRecords, stringMap);
-
-        LitlMatBinarySettings settings{};
         compileSettings(material, settings, stringMap);
 
         if (!addDataBlockDescriptor(blockDataTable, &litlMatBinary.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 0], BlockIds::Shaders, sizeof(LitlMatBinaryShaderRecord), as_byte_span(shaderRecords), error) ||
