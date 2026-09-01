@@ -244,6 +244,24 @@ namespace litl
     // Utility
     // -------------------------------------------------------------------------------------
 
+    bool BinaryBlockFile::addDataBlockDescriptor(std::vector<BinaryBlockFile::BlockDataDescriptor>& blockDataTable, BinaryBlockFile::BlockDescriptor* descriptor, BinaryBlockIdType const& id, size_t elementSize, std::span<std::byte const> data, BinaryBlockFile::ErrorCode& error) noexcept
+    {
+        if (blockDataTable.size() == BinaryBlockFile::MaxBlocks)
+        {
+            error = BinaryBlockFile::ErrorCode::TooManyBlocks;
+            return false;
+        }
+
+        blockDataTable.push_back(BinaryBlockFile::BlockDataDescriptor{
+            .descriptor = descriptor,
+            .id = id,
+            .elementSize = elementSize,
+            .data = data
+        });
+
+        return true;
+    }
+
     void BinaryBlockFile::addDefaultBlockDescriptors(std::vector<BlockDataDescriptor>& blockDataTable) noexcept
     {
         blockDataTable.push_back(BlockDataDescriptor{
@@ -289,5 +307,30 @@ namespace litl
         }
 
         return std::nullopt;
+    }
+
+    void BinaryBlockFile::serializeDataBuffer(BinaryBlockFile& blockFile, std::vector<BlockDataDescriptor>& blockDataTable, std::vector<std::byte>& data) noexcept
+    {
+        data.resize(blockFile.header.totalBytes);
+        std::fill(data.begin(), data.end(), std::byte(0));
+
+        // Copy the descriptors
+        for (size_t i = 0ull; i < blockDataTable.size(); ++i)
+        {
+            std::memcpy(data.data() + blockFile.header.descriptorsOffset + (sizeof(BlockDescriptor) * i), blockDataTable[i].descriptor, sizeof(BlockDescriptor));
+        }
+
+        // Copy the data
+        for (auto& blockData : blockDataTable)
+        {
+            if (blockData.data.size() > 0)
+            {
+                std::memcpy(data.data() + blockData.descriptor->blockOffset, blockData.data.data(), blockData.data.size());
+            }
+        }
+
+        // Calculate hash and then copy the header
+        blockFile.header.contentHash = calculateContentHash(std::span<std::byte const>(data), blockFile.header);
+        std::memcpy(data.data(), &blockFile.header, sizeof(Header));
     }
 }

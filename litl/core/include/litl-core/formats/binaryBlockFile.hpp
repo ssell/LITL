@@ -503,6 +503,11 @@ namespace litl
         /// <summary>
         /// 
         /// </summary>
+        [[nodiscard]] static bool addDataBlockDescriptor(std::vector<BinaryBlockFile::BlockDataDescriptor>& blockDataTable, BinaryBlockFile::BlockDescriptor* descriptor, BinaryBlockIdType const& id, size_t elementSize, std::span<std::byte const> data, BinaryBlockFile::ErrorCode& error) noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
         void addDefaultBlockDescriptors(std::vector<BlockDataDescriptor>& blockDataTable) noexcept;
 
         /// <summary>
@@ -532,6 +537,10 @@ namespace litl
         /// Non-owning view of the entire file binary blob (including the header, etc.).
         /// </summary>
         std::span<std::byte const> data;
+
+    protected:
+
+        static void serializeDataBuffer(BinaryBlockFile& blockFile, std::vector<BlockDataDescriptor>& blockDataTable, std::vector<std::byte>& data) noexcept;
 
     private:
 

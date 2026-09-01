@@ -27,12 +27,15 @@ namespace litl::import
             .versionMinor = 0
         };
 
-        struct Blockids
+        struct BlockIds
         {
+            static constexpr BinaryBlockIdType EntryPoints{ 'E', 'N', 'T', 'R' };
+            static constexpr BinaryBlockIdType ResourceBindings{ 'R', 'E', 'S', 'B' };
+            static constexpr BinaryBlockIdType PushConstants{ 'P', 'U', 'S', 'H' };
+            static constexpr BinaryBlockIdType PushConstantReferenceProperties{ 'P', 'U', 'R', 'P' };
+            static constexpr BinaryBlockIdType VertexFragmentInputOutput{ 'V', 'F', 'I', 'O' };
+            static constexpr BinaryBlockIdType ResourceProperties{ 'R', 'E', 'S', 'P' };
             static constexpr BinaryBlockIdType Spirv{ 'S', 'P', 'R', 'V' };
-            static constexpr BinaryBlockIdType Reflected{ 'R', 'F', 'L', 'C' };
-            static constexpr BinaryBlockIdType MaterialProperty{ 'M', 'P', 'R', 'P' };
-            static constexpr BinaryBlockIdType ResourceProperty{ 'R', 'P', 'R', 'P' };
             static constexpr BinaryBlockIdType Metadata{ 'M', 'E', 'T', 'A' };
         };
 

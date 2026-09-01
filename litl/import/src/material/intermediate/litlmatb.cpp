@@ -145,25 +145,8 @@ namespace litl::import
             settings.clockwise = matSettings.clockwise;
             settings.frequentUpdates = matSettings.frequentUpdates;
         }
-
-        [[nodiscard]] bool addDataBlockDescriptor(std::vector<BinaryBlockFile::BlockDataDescriptor>& blockDataTable, BinaryBlockFile::BlockDescriptor* descriptor, BinaryBlockIdType const& id, size_t elementSize, std::span<std::byte const> data, BinaryBlockFile::ErrorCode& error)
-        {
-            if (blockDataTable.size() == BinaryBlockFile::MaxBlocks)
-            {
-                error = BinaryBlockFile::ErrorCode::TooManyBlocks;
-                return false;
-            }
-
-            blockDataTable.push_back(BinaryBlockFile::BlockDataDescriptor{
-                .descriptor = descriptor,
-                .id = id,
-                .elementSize = elementSize,
-                .data = data
-            });
-
-            return true;
-        }
     }
+
     bool LitlMatBinary::serialize(MaterialIntermediateData const& material, std::vector<std::byte>& data, ErrorCode& error) noexcept
     {
         LitlMatBinary litlMatBinary{};
@@ -184,6 +167,7 @@ namespace litl::import
             !addDataBlockDescriptor(blockDataTable, &litlMatBinary.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 1], BlockIds::Properties, sizeof(LitlMatBinaryPropertyRecord), as_byte_span(propertyRecords), error) ||
             !addDataBlockDescriptor(blockDataTable, &litlMatBinary.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 2], BlockIds::Settings, sizeof(LitlMatBinarySettings), as_byte_span(settings), error))
         {
+            // ... too many blocks set by addDataBlockDescriptor ...
             return false;
         }
 
@@ -233,27 +217,7 @@ namespace litl::import
         // ---------------------------------------------------------------------------------
         // Copy content to the provided data buffer
 
-        data.resize(litlMatBinary.header.totalBytes);
-        std::fill(data.begin(), data.end(), std::byte(0));
-
-        // Copy the descriptors
-        for (size_t i = 0ull; i < blockDataTable.size(); ++i)
-        {
-            std::memcpy(data.data() + litlMatBinary.header.descriptorsOffset + (sizeof(BlockDescriptor) * i), blockDataTable[i].descriptor, sizeof(BlockDescriptor));
-        }
-
-        // Copy the data
-        for (auto& blockData : blockDataTable)
-        {
-            if (blockData.data.size() > 0)
-            {
-                std::memcpy(data.data() + blockData.descriptor->blockOffset, blockData.data.data(), blockData.data.size());
-            }
-        }
-
-        // Calculate hash and then copy the header
-        litlMatBinary.header.contentHash = calculateContentHash(std::span<std::byte const>(data), litlMatBinary.header);
-        std::memcpy(data.data(), &litlMatBinary.header, sizeof(Header));
+        serializeDataBuffer(litlMatBinary, blockDataTable, data);
 
         return true;
     }

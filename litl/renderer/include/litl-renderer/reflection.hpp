@@ -74,6 +74,11 @@ namespace litl
         uint32_t arraySize;
 
         /// <summary>
+        /// For buffer validation.
+        /// </summary>
+        uint32_t sizeBytes;
+
+        /// <summary>
         /// 
         /// </summary>
         StringId hashedName;

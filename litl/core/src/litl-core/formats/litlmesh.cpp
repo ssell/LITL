@@ -144,25 +144,7 @@ namespace litl
         // ---------------------------------------------------------------------------------
         // Copy content to the provided data buffer
 
-        data.resize(litlMesh.header.totalBytes);
-        std::fill(data.begin(), data.end(), std::byte(0));
-
-        for (size_t i = 0ull; i < blockDataTable.size(); ++i)
-        {
-            std::memcpy(data.data() + litlMesh.header.descriptorsOffset + (sizeof(BlockDescriptor) * i), blockDataTable[i].descriptor, sizeof(BlockDescriptor));
-        }
-
-        for (auto& blockData : blockDataTable)
-        {
-            if (blockData.data.size() > 0)
-            {
-                std::memcpy(data.data() + blockData.descriptor->blockOffset, blockData.data.data(), blockData.data.size());
-            }
-        }
-
-        litlMesh.header.contentHash = calculateContentHash(std::span<std::byte const>(data), litlMesh.header);
-
-        std::memcpy(data.data(), &litlMesh.header, sizeof(Header));
+        serializeDataBuffer(litlMesh, blockDataTable, data);
 
         return true;
     }
