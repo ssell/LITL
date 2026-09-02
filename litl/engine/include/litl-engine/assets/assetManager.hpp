@@ -8,6 +8,7 @@
 #include "litl-engine/assets/assetHandle.hpp"
 #include "litl-engine/assets/materialAsset.hpp"
 #include "litl-engine/assets/meshAsset.hpp"
+#include "litl-engine/assets/shaderAsset.hpp"
 #include "litl-engine/assets/textAsset.hpp"
 #include "litl-engine/assets/texture2dAsset.hpp"
 
@@ -38,6 +39,10 @@ namespace litl
         [[nodiscard]] MeshAssetHandle getMeshHandle(std::string_view resource) noexcept;
         [[nodiscard]] MeshAsset* getMesh(std::string_view resource) noexcept;
         [[nodiscard]] MeshAsset* getMesh(MeshAssetHandle handle) noexcept;
+
+        [[nodiscard]] ShaderAssetHandle getShaderModuleHandle(std::string_view resource) noexcept;
+        [[nodiscard]] ShaderAsset* getShaderModule(std::string_view resource) noexcept;
+        [[nodiscard]] ShaderAsset* getShaderModule(ShaderAssetHandle handle) noexcept;
 
         [[nodiscard]] TextAssetHandle getTextHandle(std::string_view resource) noexcept;
         [[nodiscard]] TextAsset* getText(std::string_view resource) noexcept;

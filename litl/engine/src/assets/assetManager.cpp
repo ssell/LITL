@@ -36,15 +36,25 @@ namespace litl
         };
 
         static const StringIdMap<AssetTypeMapping> g_assetTypeMap = {
+            // Material
             { ".litlmatb"_sid, { MappingPriority::High, AssetType::Material } },
             { ".litlmat"_sid, { MappingPriority::Medium, AssetType::Material } },
+
+            // Mesh
             { ".litlmesh"_sid, { MappingPriority::High, AssetType::Mesh } },
             { ".glb"_sid, { MappingPriority::Medium, AssetType::Mesh } },
-            { ".txt"_sid, { MappingPriority::Medium, AssetType::Text } },
-            { ".json"_sid, { MappingPriority::Medium, AssetType::Text } },
             { ".obj"_sid, { MappingPriority::Low, AssetType::Mesh } },
             { ".fbx"_sid, { MappingPriority::Low, AssetType::Mesh } },
-            { ".gltf"_sid, { MappingPriority::Low, AssetType::Mesh } }
+            { ".gltf"_sid, { MappingPriority::Low, AssetType::Mesh } },
+
+            // Shader Module
+            { ".litlshader"_sid, { MappingPriority::High, AssetType::Shader } },
+            { ".spv"_sid, { MappingPriority::Medium, AssetType::Shader } },
+            { ".slang"_sid, { MappingPriority::Low, AssetType::Shader } },
+
+            // Text
+            { ".txt"_sid, { MappingPriority::Medium, AssetType::Text } },
+            { ".json"_sid, { MappingPriority::Medium, AssetType::Text } }
         };
 
         static const std::filesystem::path g_assetsPath{ "assets" };
@@ -64,6 +74,7 @@ namespace litl
         HandlePool<MaterialAsset, MaterialAssetHandleTag> materialAssetPool;
         HandlePool<MeshAsset, MeshAssetHandleTag> meshAssetPool;
         HandlePool<TextAsset, TextAssetHandleTag> textAssetPool;
+        HandlePool<ShaderAsset, ShaderAssetHandleTag> shaderAssetPool;
         HandlePool<Texture2DAsset, Texture2DAssetHandleTag> texture2DAssetPool;
 
         /// <summary>
@@ -109,6 +120,10 @@ namespace litl
 
                         case AssetType::Mesh:
                             createUnloadedMeshAsset(file, assetKey, hashedKey, assetFileType->second.priority);
+                            break;
+
+                        case AssetType::Shader:
+                            createUnloadedShaderAsset(file, assetKey, hashedKey, assetFileType->second.priority);
                             break;
 
                         case AssetType::Text:
@@ -236,6 +251,53 @@ namespace litl
             {
                 // Ensure there is a valid handle to return to the caller, even if the mesh itself is not yet ready
                 asset->handle = objectPool->reserveMesh({}, ObjectDescriptor{ .name = asset->key, .lifetime = ObjectLifetime::Application });
+            }
+
+            taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool), true);
+        }
+
+        // ---------------------------------------------------------------------------------
+        // --- Shader Asset
+        // ---------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Invoked during asset map population.
+        /// This creates an unloaded shader asset reference in the asset map that can be loaded via initiateShaderAssetLoad.
+        /// </summary>
+        void createUnloadedShaderAsset(File const& file, std::string const& key, StringId hashedKey, MappingPriority priority) noexcept
+        {
+            ShaderAsset asset = createBaseAsset<ShaderAsset>(AssetType::Shader, file, key, hashedKey);
+            asset.handle = ShaderHandle{};
+            asset.assetOps = &ShaderAssetOps;
+
+            assetMap[hashedKey] = AssetMapping{
+                .priority = priority,
+                .handle = AssetHandle{
+                    .shaderHandle = shaderAssetPool.create(asset),
+                    .type = asset.type
+                }
+            };
+        }
+
+        /// <summary>
+        /// Invoked at runtime when the shader is first requested (or requested after it has been unloaded).
+        /// Enqueues a Task to load the shader in from disk.
+        /// </summary>
+        void initiateShaderAssetLoad(ShaderAsset* asset) noexcept
+        {
+            std::scoped_lock lock{ assetLoadMutex };
+
+            if (asset->status != AssetStatus::Unloaded)
+            {
+                return;
+            }
+
+            asset->status = AssetStatus::Loading;
+
+            if (!asset->handle.isValid())
+            {
+                // Ensure there is a valid handle to return to the caller, even if the shader module itself is not yet ready
+                asset->handle = objectPool->reserveShader({}, ObjectDescriptor{ .name = asset->key, .lifetime = ObjectLifetime::Application });
             }
 
             taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool), true);
@@ -452,6 +514,45 @@ namespace litl
         }
 
         return mesh;
+    }
+
+    // -------------------------------------------------------------------------------------
+    // --- Get Shader Module
+    // -------------------------------------------------------------------------------------
+
+    ShaderAssetHandle AssetManager::getShaderModuleHandle(std::string_view resource) noexcept
+    {
+        auto assetHandle = getAsset(resource);
+
+        if (assetHandle.type == AssetType::Shader)
+        {
+            return assetHandle.shaderHandle;
+        }
+
+        return {};
+    }
+
+    ShaderAsset* AssetManager::getShaderModule(std::string_view resource) noexcept
+    {
+        auto handle = getShaderModuleHandle(resource);
+        return getShaderModule(handle);
+    }
+
+    ShaderAsset* AssetManager::getShaderModule(ShaderAssetHandle handle) noexcept
+    {
+        ShaderAsset* shaderModule = m_impl->shaderAssetPool.get(handle);
+
+        if (shaderModule == nullptr)
+        {
+            return nullptr;
+        }
+
+        if (shaderModule->status == AssetStatus::Unloaded)
+        {
+            m_impl->initiateShaderAssetLoad(shaderModule);
+        }
+
+        return shaderModule;
     }
 
     // -------------------------------------------------------------------------------------

@@ -8,6 +8,7 @@
 #include "litl-engine/objects/gpuBuffer.hpp"
 #include "litl-engine/objects/material/material.hpp"
 #include "litl-engine/objects/mesh.hpp"
+#include "litl-engine/objects/shader.hpp"
 #include "litl-engine/objects/text.hpp"
 #include "litl-engine/objects/texture2d.hpp"
 
@@ -54,6 +55,13 @@ namespace litl
         void getAllMeshHandles(std::vector<MeshHandle>& handles) const noexcept;
         void destroyMesh(MeshHandle handle) noexcept;
         void deferDestroyMesh(MeshHandle handle) noexcept;
+
+        [[nodiscard]] ShaderHandle reserveShader(Authority<AssetManager> auth, ObjectDescriptor const& descriptor) noexcept;
+        [[nodiscard]] ShaderHandle createShader(ShaderDescriptor const& descriptor) noexcept;
+        [[nodiscard]] Shader* getShader(ShaderHandle handle) noexcept;
+        void getAllShaderHandles(std::vector<ShaderHandle>& handles) const noexcept;
+        void destroyShader(ShaderHandle handle) noexcept;
+        void deferDestroyShader(ShaderHandle handle) noexcept;
 
         [[nodiscard]] TextHandle reserveText(Authority<AssetManager> auth) noexcept;
         [[nodiscard]] TextHandle createText(TextDescriptor const& descriptor) noexcept;

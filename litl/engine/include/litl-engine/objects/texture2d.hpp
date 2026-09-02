@@ -17,7 +17,7 @@ namespace litl
     {
     public:
 
-        bool create(Authority<ObjectPool> auth, Texture2DDescriptor const& descriptor) noexcept;
+        [[nodiscard]] bool create(Authority<ObjectPool> auth, Texture2DDescriptor const& descriptor) noexcept;
         void destroy(Authority<ObjectPool> auth) noexcept;
 
     private:

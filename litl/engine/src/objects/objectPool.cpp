@@ -21,6 +21,7 @@ namespace litl
         HandlePool<GpuBuffer, GpuBufferHandleTag> gpuBufferPool;
         HandlePool<Material, MaterialHandleTag> materialPool;
         HandlePool<Mesh, MeshHandleTag> meshPool;
+        HandlePool<Shader, ShaderHandleTag> shaderPool;
         HandlePool<Text, TextHandleTag> textPool;
         HandlePool<Texture2D, Texture2DHandleTag> texture2DPool;
     };
@@ -84,6 +85,18 @@ namespace litl
         for (auto materialHandle : materialHandles)
         {
             destroyMaterial(materialHandle);
+        }
+
+        // ---- Shaders
+
+        std::vector<ShaderHandle> shaderHandles;
+        getAllShaderHandles(shaderHandles);
+
+        logTrace("... destroying ", shaderHandles.size(), " Shader handles.");
+
+        for (auto shaderHandle : shaderHandles)
+        {
+            destroyShader(shaderHandle);
         }
 
         // ---- Texture2D
@@ -326,6 +339,65 @@ namespace litl
     }
 
     void ObjectPool::deferDestroyMesh(MeshHandle handle) noexcept
+    {
+        // ... todo add to a defer destruction queue that is ticked and destroy on a later frame to ensure the resource is not in use by the GPU ...
+    }
+
+    //--------------------------------------------------------------------------------------
+    // Shader
+    //--------------------------------------------------------------------------------------
+
+
+    ShaderHandle ObjectPool::reserveShader(Authority<AssetManager> auth, ObjectDescriptor const& descriptor) noexcept
+    {
+        Shader shader{};
+
+        if (!shader.create({}, descriptor))
+        {
+            logWarning("Failed to reserve Shader '", descriptor.name, "'");
+            shader.destroy({});
+            return {};
+        }
+
+        return m_impl->shaderPool.create(shader);
+    }
+
+    ShaderHandle ObjectPool::createShader(ShaderDescriptor const& descriptor) noexcept
+    {
+        Shader shader{};
+
+        if (!shader.create({}, descriptor))
+        {
+            logWarning("Failed to create Shader '", descriptor.objectInfo.name, "'");
+            shader.destroy({});
+            return {};
+        }
+
+        return m_impl->shaderPool.create(shader);
+    }
+
+    Shader* ObjectPool::getShader(ShaderHandle handle) noexcept
+    {
+        return m_impl->shaderPool.get(handle);
+    }
+
+    void ObjectPool::getAllShaderHandles(std::vector<ShaderHandle>& handles) const noexcept
+    {
+        m_impl->shaderPool.getAllHandles(handles);
+    }
+
+    void ObjectPool::destroyShader(ShaderHandle handle) noexcept
+    {
+        Shader* shader = getShader(handle);
+
+        if (shader != nullptr)
+        {
+            shader->destroy({});
+            m_impl->shaderPool.destroy(handle);
+        }
+    }
+
+    void ObjectPool::deferDestroyShader(ShaderHandle handle) noexcept
     {
         // ... todo add to a defer destruction queue that is ticked and destroy on a later frame to ensure the resource is not in use by the GPU ...
     }

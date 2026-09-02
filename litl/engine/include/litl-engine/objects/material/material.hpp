@@ -80,7 +80,7 @@ namespace litl
         Material& operator=(Material&& other) noexcept;
         ~Material();
 
-        bool create(Authority<ObjectPool> auth, MaterialDescriptor const& descriptor, Renderer const& renderer, ObjectPool& objectPool) noexcept;
+        [[nodiscard]] bool create(Authority<ObjectPool> auth, MaterialDescriptor const& descriptor, Renderer const& renderer, ObjectPool& objectPool) noexcept;
         void setSelfHandle(Authority<ObjectPool> author, MaterialHandle handle) noexcept;
         void destroy(Authority<ObjectPool> auth) noexcept;
 

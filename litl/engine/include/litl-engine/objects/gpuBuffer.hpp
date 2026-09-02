@@ -91,7 +91,7 @@ namespace litl
         /// </summary>
         /// <param name="auth"></param>
         /// <param name="descriptor"></param>
-        bool create(Authority<ObjectPool> auth, GpuBufferDescriptor const& descriptor, RenderManager& renderManager) noexcept;
+        [[nodiscard]] bool create(Authority<ObjectPool> auth, GpuBufferDescriptor const& descriptor, RenderManager& renderManager) noexcept;
 
         /// <summary>
         /// 

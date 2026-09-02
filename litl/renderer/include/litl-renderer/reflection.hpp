@@ -9,7 +9,7 @@
 
 #include "litl-core/enumBitFlags.hpp"
 #include "litl-core/stringId.hpp"
-#include "litl-renderer/resources/shaderModule.hpp"
+#include "litl-renderer/resources/shaderModuleTypes.hpp"
 
 namespace litl
 {

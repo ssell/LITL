@@ -897,7 +897,6 @@ namespace litl::vulkan
             .pCode = reinterpret_cast<uint32_t const*>(descriptor.bytes.data())
         };
 
-        // Compile the shader module
         const VkResult result = vkCreateShaderModule(context->device.vkDevice, &shaderModuleInfo, nullptr, &resource.vkShaderModule);
 
         if (result != VK_SUCCESS)
@@ -906,23 +905,10 @@ namespace litl::vulkan
             return false;
         }
 
-        // Reflect the SPIR-V for future pipeline binds
-        auto reflection = reflectSPIRV(descriptor.bytes);
-
-        if (reflection.has_value() && reflection->entryPoints.size() > 0)
-        {
-            resource.reflection = *reflection;
-        }
-        else
-        {
-            logError("Failed to reflect Vulkan Shader at '", descriptor.resource, "'");
-            return false;
-        }
-
-        // Finish building the resource and then create the handle
-        resource.spirvHash = hashArray(descriptor.bytes);
         resource.resource = descriptor.resource;
         resource.resourceId = StringId(descriptor.resource);
+        resource.reflection = descriptor.reflection;
+        resource.spirvHash = hashArray(descriptor.bytes);
 
         return true;
     }
