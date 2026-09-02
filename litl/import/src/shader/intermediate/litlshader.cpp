@@ -478,13 +478,8 @@ namespace litl::import
         };
 
         template<typename T> 
-        [[nodiscard]] std::expected<std::span<T const>, BinaryBlockFile::ErrorCode> getSafeSubspan(std::span<T const> sourceSpan, BinaryRecordGrouping const& grouping, BinaryBlockFile::ErrorCode& error) noexcept
+        [[nodiscard]] std::expected<std::span<T const>, BinaryBlockFile::ErrorCode> getSafeSubspan(std::span<T const> sourceSpan, BinaryRecordGrouping const& grouping) noexcept
         {
-            if (error != BinaryBlockFile::ErrorCode::None)
-            {
-                return std::unexpected(error);
-            }
-
             if (grouping.count == 0)
             {
                 return {};
@@ -510,13 +505,13 @@ namespace litl::import
             return shaderVariable;
         }
 
-        [[nodiscard]] bool deserializeBinaryResource(
+        [[nodiscard]] bool deserializeBinaryResourceProperty(
             LitlShaderDeserializationData const& binaryShaderData,
             std::vector<ResourceProperty>& resourceProperties,
             BinaryResourceProperty const& binaryResourceProperty,
             BinaryBlockFile::ErrorCode& error) noexcept
         {
-            ResourceProperty resourceProperty{
+            const ResourceProperty resourceProperty{
                 .variable = deserializeBinaryShaderVariable(binaryResourceProperty.variable),
                 .offset = binaryResourceProperty.offset,
                 .size= binaryResourceProperty.size,
@@ -555,22 +550,65 @@ namespace litl::import
                 return false;
             }
 
-            auto binaryResourceProperties = getSafeSubspan(binaryShaderData.resourceProperties, binaryResourceBinding.resourceProperties, error);
+            auto binaryResourceProperties = getSafeSubspan(binaryShaderData.resourceProperties, binaryResourceBinding.resourceProperties);
+
+            if (binaryResourceProperties)
+            {
+                for (auto& binaryResourceProperty : binaryResourceProperties.value())
+                {
+                    if (!deserializeBinaryResourceProperty(binaryShaderData, resourceBinding.properties, binaryResourceProperty, error))
+                    {
+                        return false;
+                    }
+                }
+            }
+            else 
+            {
+                error = binaryResourceProperties.error();
+                return false;
+            }
+
+            entryPointReflection.resources.push_back(resourceBinding);
+
+            return true;
+        }
+
+        [[nodiscard]] bool deserializeBinaryPushConstantReferenceProperty(
+            LitlShaderDeserializationData const& binaryShaderData,
+            std::vector<PushConstantReferenceProperty>& referenceProperties,
+            BinaryPushConstantReferenceProperty const& binaryReferenceProperty,
+            BinaryBlockFile::ErrorCode& error) noexcept
+        {
+            PushConstantReferenceProperty referenceProperty{
+                .offset = binaryReferenceProperty.offset,
+                .sizeBytes = binaryReferenceProperty.size,
+                .stride = binaryReferenceProperty.stride,
+                .hashedName = StringId(binaryReferenceProperty.hashedName),
+                .name = std::string(BinaryBlockFile::deserializeString(binaryShaderData.strings, binaryReferenceProperty.name, error))
+            };
 
             if (error != BinaryBlockFile::ErrorCode::None)
             {
                 return false;
             }
 
-            for (auto& binaryResourceProperty : binaryResourceProperties.value())
+            auto binaryResourceProperties = getSafeSubspan(binaryShaderData.resourceProperties, binaryReferenceProperty.resourceProperties);
+
+            if (binaryResourceProperties)
             {
-                if (!deserializeBinaryResource(binaryShaderData, resourceBinding.properties, binaryResourceProperty, error))
+                for (auto binaryResourceProperty : binaryResourceProperties.value())
                 {
-                    return false;
+                    if (!deserializeBinaryResourceProperty(binaryShaderData, referenceProperty.properties, binaryResourceProperty, error))
+                    {
+                        return false;
+                    }
                 }
             }
-
-            entryPointReflection.resources.push_back(resourceBinding);
+            else
+            {
+                error = binaryResourceProperties.error();
+                return false;
+            }
 
             return true;
         }
@@ -581,7 +619,46 @@ namespace litl::import
             BinaryPushConstantRange const& binaryPushConstant,
             BinaryBlockFile::ErrorCode& error) noexcept
         {
-            // ... todo ...
+            PushConstantRange pushConstant{
+                .offset = binaryPushConstant.offset,
+                .sizeBytes = binaryPushConstant.size
+            };
+
+            auto binaryPushConstantResourceProperties = getSafeSubspan(binaryShaderData.resourceProperties, binaryPushConstant.resourceProperties);
+
+            if (binaryPushConstantResourceProperties)
+            {
+                for (auto& binaryPushConstantResourceProperty : binaryPushConstantResourceProperties.value())
+                {
+                    if (!deserializeBinaryResourceProperty(binaryShaderData, pushConstant.properties, binaryPushConstantResourceProperty, error))
+                    {
+                        return false;
+                    }
+                }
+            }
+            else
+            {
+                error = binaryPushConstantResourceProperties.error();
+                return false;
+            }
+
+            auto binaryPushConstantReferenceProperties = getSafeSubspan(binaryShaderData.pushConstantReferenceProperties, binaryPushConstant.referenceProperties);
+
+            if (binaryPushConstantReferenceProperties)
+            {
+                for (auto& binaryPushConstantReferenceProperty : binaryPushConstantReferenceProperties.value())
+                {
+                    if (!deserializeBinaryPushConstantReferenceProperty(binaryShaderData, pushConstant.referenceProperties, binaryPushConstantReferenceProperty, error))
+                    {
+                        return false;
+                    }
+                }
+            }
+            else
+            {
+                error = binaryPushConstantReferenceProperties.error();
+                return false;
+            }
             
             return true;
         }
@@ -589,20 +666,46 @@ namespace litl::import
         [[nodiscard]] bool deserializeBinaryVertexInput(
             LitlShaderDeserializationData const& binaryShaderData,
             EntryPointReflection& entryPointReflection,
-            BinaryShaderInputOutputVariable const& vertexInput,
+            BinaryShaderInputOutputVariable const& binaryVertexInput,
             BinaryBlockFile::ErrorCode& error) noexcept
         {
-            // ... todo ...
+            const ShaderInputOutputVariable inputOutputVariable{
+                .location = binaryVertexInput.location,
+                .variable = deserializeBinaryShaderVariable(binaryVertexInput.variable),
+                .componentCount = binaryVertexInput.componentCount,
+                .name = std::string(BinaryBlockFile::deserializeString(binaryShaderData.strings, binaryVertexInput.name, error))
+            };
+
+            if (error != BinaryBlockFile::ErrorCode::None)
+            {
+                return false;
+            }
+
+            entryPointReflection.vertexInputs.push_back(inputOutputVariable);
+
             return true;
         }
 
         [[nodiscard]] bool deserializeBinaryFragmentOutput(
             LitlShaderDeserializationData const& binaryShaderData,
             EntryPointReflection& entryPointReflection,
-            BinaryShaderInputOutputVariable const& fragmentOutput,
+            BinaryShaderInputOutputVariable const& binaryFragmentOutput,
             BinaryBlockFile::ErrorCode& error) noexcept
         {
-            // ... todo ...
+            const ShaderInputOutputVariable inputOutputVariable{
+                .location = binaryFragmentOutput.location,
+                .variable = deserializeBinaryShaderVariable(binaryFragmentOutput.variable),
+                .componentCount = binaryFragmentOutput.componentCount,
+                .name = std::string(BinaryBlockFile::deserializeString(binaryShaderData.strings, binaryFragmentOutput.name, error))
+            };
+
+            if (error != BinaryBlockFile::ErrorCode::None)
+            {
+                return false;
+            }
+
+            entryPointReflection.fragmentOutputs.push_back(inputOutputVariable);
+
             return true;
         }
 
@@ -618,13 +721,32 @@ namespace litl::import
             entryPoint.entryPoint = BinaryBlockFile::deserializeString(binaryShaderData.strings, binaryEntryPoint.entryPoint, error);
             entryPoint.stage = static_cast<ShaderStage>(binaryEntryPoint.stage);
 
-            auto binaryResourceBindings = getSafeSubspan(binaryShaderData.resourceBindings, binaryEntryPoint.resources, error);
-            auto binaryPushConstants = getSafeSubspan(binaryShaderData.pushConstants, binaryEntryPoint.pushConstants, error);
-            auto binaryVertexInputs = getSafeSubspan(binaryShaderData.shaderInputOutput, binaryEntryPoint.vertexInputs, error);
-            auto binaryFragmentOutputs = getSafeSubspan(binaryShaderData.shaderInputOutput, binaryEntryPoint.fragmentOutputs, error);
+            auto binaryResourceBindings = getSafeSubspan(binaryShaderData.resourceBindings, binaryEntryPoint.resources);
 
-            if (error != BinaryBlockFile::ErrorCode::None)
+            if (!binaryResourceBindings)
             {
+                error = binaryResourceBindings.error();
+                return false;
+            }
+            auto binaryPushConstants = getSafeSubspan(binaryShaderData.pushConstants, binaryEntryPoint.pushConstants);
+
+            if (!binaryPushConstants)
+            {
+                error = binaryPushConstants.error();
+                return false;
+            }
+            auto binaryVertexInputs = getSafeSubspan(binaryShaderData.shaderInputOutput, binaryEntryPoint.vertexInputs);
+
+            if (!binaryVertexInputs)
+            {
+                error = binaryVertexInputs.error();
+                return false;
+            }
+            auto binaryFragmentOutputs = getSafeSubspan(binaryShaderData.shaderInputOutput, binaryEntryPoint.fragmentOutputs);
+
+            if (!binaryFragmentOutputs)
+            {
+                error = binaryFragmentOutputs.error();
                 return false;
             }
 
