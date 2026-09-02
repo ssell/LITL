@@ -249,7 +249,6 @@ namespace litl::tests
         GeoMesh mesh{};
         makeQuadMesh(mesh);
         mesh.setBoundsMinMax(vec3{ -13.25f, -0.5f, 400.125f }, vec3{ -1.0f, 99.75f, 1024.0f });
-
         requireRoundTrip(mesh);
     } LITL_END_TEST_CASE
 
@@ -647,6 +646,8 @@ namespace litl::tests
         REQUIRE(vertices.has_value() == true);
         REQUIRE(vertices.value().as<uint32_t>(error).has_value() == false);
         REQUIRE(error == ErrorCode::ElementSizeMismatch);
+
+        error = ErrorCode::None; // clear error as .as() uses it for short-circuiting
 
         REQUIRE(vertices.value().as<Vertex>(error).has_value() == true);
         REQUIRE(error == ErrorCode::None);

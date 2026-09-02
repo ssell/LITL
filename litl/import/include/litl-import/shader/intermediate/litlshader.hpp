@@ -8,14 +8,6 @@ namespace litl::import
 {
     /// <summary>
     /// The binary file format for ShaderIntermediateData.
-    /// Composed of the following blocks:
-    /// 
-    ///     * SPIR-V (SPRV): The original SPIR-V bytecode.
-    ///     * Reflected Bindings (RFLC): Merged reflection and names.
-    ///     * Material Property Layout (MPRP): Stride and property counts.
-    ///     * Resource Property Record (RPRP): Offset / size / scalarSize / componentCount
-    ///     * Metadata (META): Source .slang /.spirv path, slangc version, flags
-    /// 
     /// To convert a ShaderIntermediateData to a binary blob simply use the serialize method.
     /// To deserialize a binary blob to a ShaderIntermediateData you must first call parse and then deserialize.
     /// </summary>
@@ -35,6 +27,7 @@ namespace litl::import
             static constexpr BinaryBlockIdType PushConstantReferenceProperties{ 'P', 'U', 'R', 'P' };
             static constexpr BinaryBlockIdType VertexFragmentInputOutput{ 'V', 'F', 'I', 'O' };
             static constexpr BinaryBlockIdType ResourceProperties{ 'R', 'E', 'S', 'P' };
+            static constexpr BinaryBlockIdType SpecializationConstants{ 'S', 'P', 'E', 'C' };
             static constexpr BinaryBlockIdType Spirv{ 'S', 'P', 'R', 'V' };
             static constexpr BinaryBlockIdType Metadata{ 'M', 'E', 'T', 'A' };
         };

@@ -87,10 +87,6 @@ namespace litl
         /// Populates the provided GeoMesh object from the BinaryBlockFile::data byte array from a .litlmesh that was processed via BinaryBlockFile::parse.
         /// </summary>
         [[nodiscard]] bool deserialize(GeoMesh& mesh, ErrorCode& error) const noexcept;
-
-    private:
-
-        [[nodiscard]] bool deserializeFaceBlock(GeoMesh& mesh, std::optional<Block>& faceBlock, std::span<uint32_t const> indices, LitlMeshFlag flags, ErrorCode& error) const noexcept;
     };
 
     static_assert(std::is_trivially_copyable_v<LitlMesh>);

@@ -183,6 +183,8 @@ namespace litl
 
             StringRefOutOfBounds = 23u,
 
+            EmptyBlockMissingRequiredPadding = 24u,
+
             // -----------------------------------------------------------------------------
             // LitlMesh Error Codes
             // -----------------------------------------------------------------------------
@@ -253,12 +255,13 @@ namespace litl
             MissingPushConstantReferencePropertiesBlock = 3003u,
             MissingVertexFragmentInputOutputBlock = 3004u,
             MissingResourcePropertiesBlock = 3005u,
-            MissingSpirvBlock = 3006u,
-            ShaderBinarySubspanOutOfBounds = 3007u,
-            ShaderBinarySubspanInvalidInput = 3008u
+            MissingSpecializationsConstantBlock = 3006u,
+            MissingSpirvBlock = 3007u,
+            ShaderBinarySubspanOutOfBounds = 3008u,
+            ShaderBinarySubspanInvalidInput = 3009u
         };
 
-        static constexpr uint32_t MaxBlocks = 8u;
+        static constexpr uint32_t MaxBlocks = 16u;
 
         /// <summary>
         /// The first segment of the file.
@@ -423,10 +426,16 @@ namespace litl
                     return std::nullopt;
                 }
 
-                if (bytes.size() != (static_cast<size_t>(elementBytes) * elementCount))
+                if ((elementCount > 0u) && (bytes.size() != (static_cast<size_t>(elementBytes) * elementCount)))
                 {
                     // Block data not large enough to hold required number of elements of type.
                     error = ErrorCode::ElementBlockSizeMismatch;
+                    return std::nullopt;
+                }
+                else if ((elementCount == 0u) && (bytes.size() != 16u))
+                {
+                    // Even with 0 elements, still expect the block to have 16 bytes of padding to avoid overlap with neighboring blocks.
+                    error = ErrorCode::EmptyBlockMissingRequiredPadding;
                     return std::nullopt;
                 }
 
@@ -520,7 +529,7 @@ namespace litl
         /// <summary>
         /// 
         /// </summary>
-        [[nodiscard]] static bool addDataBlockDescriptor(std::vector<BinaryBlockFile::BlockDataDescriptor>& blockDataTable, BinaryBlockFile::BlockDescriptor* descriptor, BinaryBlockIdType const& id, size_t elementSize, std::span<std::byte const> data, BinaryBlockFile::ErrorCode& error) noexcept;
+        [[nodiscard]] bool addDataBlockDescriptor(std::vector<BinaryBlockFile::BlockDataDescriptor>& blockDataTable, uint32_t descriptorIndex, BinaryBlockIdType const& id, size_t elementSize, std::span<std::byte const> data, BinaryBlockFile::ErrorCode& error) noexcept;
 
         /// <summary>
         /// 

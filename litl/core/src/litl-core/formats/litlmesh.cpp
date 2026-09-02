@@ -74,18 +74,23 @@ namespace litl
         const LitlMeshFlag flags = determineFlags(mesh);
         StringMap stringMap{};
 
+        // Even if AllTriangles is set, the appearance of the block is required. This leads to 16 bytes of bloat, but consistent binary structure regardless of flags.
+        std::array<uint32_t, 0> decoyFaces{};
+        auto faceByteSpan = has_any(flags, LitlMeshFlagBits::AllTriangles) ? as_byte_span(decoyFaces) : as_byte_span(mesh.getFaceIndexCounts());
+
         std::array<float, 6> boundsMinMaxPoints{};
         serializeBounds(mesh, boundsMinMaxPoints);
 
         std::vector<BlockDataDescriptor> blockDataTable; blockDataTable.reserve(MaxBlocks);
         litlMesh.addDefaultBlockDescriptors(blockDataTable);
-        blockDataTable.push_back(BlockDataDescriptor{ &litlMesh.descriptors[blockDataTable.size()], BlockIds::Bounds, sizeof(float), as_byte_span(boundsMinMaxPoints)});
-        blockDataTable.push_back(BlockDataDescriptor{ &litlMesh.descriptors[blockDataTable.size()], BlockIds::Vertices, sizeof(Vertex), as_byte_span(mesh.getVertices()) });
-        blockDataTable.push_back(BlockDataDescriptor{ &litlMesh.descriptors[blockDataTable.size()], BlockIds::Indices, sizeof(uint32_t), as_byte_span(mesh.getIndices()) });
 
-        if (has_any(flags, LitlMeshFlagBits::AllTriangles) == false)
+        if (!litlMesh.addDataBlockDescriptor(blockDataTable, BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 0, BlockIds::Bounds, sizeof(float), as_byte_span(boundsMinMaxPoints), error) ||
+            !litlMesh.addDataBlockDescriptor(blockDataTable, BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 1, BlockIds::Vertices, sizeof(Vertex), as_byte_span(mesh.getVertices()), error) ||
+            !litlMesh.addDataBlockDescriptor(blockDataTable, BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 2, BlockIds::Indices, sizeof(uint32_t), as_byte_span(mesh.getIndices()), error) ||
+            !litlMesh.addDataBlockDescriptor(blockDataTable, BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 3, BlockIds::Faces, sizeof(uint32_t), faceByteSpan, error))
         {
-            blockDataTable.push_back(BlockDataDescriptor{ &litlMesh.descriptors[blockDataTable.size()], BlockIds::Faces, sizeof(uint32_t), as_byte_span(mesh.getFaceIndexCounts()) });
+            // ... ErrorCode::TooManyBlocks set by addDataBlockDescriptor ...
+            return false;
         }
 
         for (auto& blockData : blockDataTable)
@@ -126,16 +131,6 @@ namespace litl
         for (uint32_t i = 0; i < litlMesh.header.blockCount; ++i)
         {
             auto& blockData = blockDataTable[i];
-
-            if (blockData.descriptor->blockId == BlockIds::Faces)
-            {
-                // Skip the FACE block if all faces are triangles (which typically they should be)
-                if (has_any(flags, LitlMeshFlagBits::AllTriangles))
-                {
-                    continue;
-                }
-            }
-
             serializeBlock(blockData, runningOffset);
         }
 
@@ -153,58 +148,54 @@ namespace litl
     // Deserialization
     // -------------------------------------------------------------------------------------
 
-    bool LitlMesh::deserializeFaceBlock(GeoMesh& mesh, std::optional<Block>& faceBlock, std::span<uint32_t const> indices, LitlMeshFlag flags, ErrorCode& error) const noexcept
+    namespace
     {
-        const bool allTriangles = has_any(flags, LitlMeshFlagBits::AllTriangles);
-
-        if (!faceBlock.has_value() && !allTriangles)
+        [[nodiscard]] bool deserializeFaceBlock(GeoMesh& mesh, std::span<uint32_t const> faces, std::span<uint32_t const> indices, LitlMeshFlag flags, BinaryBlockFile::ErrorCode& error) noexcept
         {
-            error = BinaryBlockFile::ErrorCode::MissingFaceBlock;
-            return false;
-        }
+            const bool allTriangles = has_any(flags, LitlMeshFlagBits::AllTriangles);
 
-        if (allTriangles)
-        {
-            mesh.setAllFaceIndexCounts(3u);
-        }
-        else
-        {
-            auto faces = faceBlock.value().as<uint32_t>(error);
-
-            if (!faces.has_value())
+            if (faces.empty() && !allTriangles)
             {
+                error = BinaryBlockFile::ErrorCode::MissingFaceBlock;
                 return false;
             }
 
-            uint64_t sumFaceIndexCount = 0u;
-
-            for (auto faceCount : faces.value())
+            if (allTriangles)
             {
-                if (faceCount == 0u)
+                mesh.setAllFaceIndexCounts(3u);
+            }
+            else
+            {
+                uint64_t sumFaceIndexCount = 0u;
+
+                for (auto faceCount : faces)
                 {
-                    error = ErrorCode::ZeroFaceFound;
+                    if (faceCount == 0u)
+                    {
+                        error = BinaryBlockFile::ErrorCode::ZeroFaceFound;
+                        return false;
+                    }
+
+                    sumFaceIndexCount += faceCount;
+
+                    if (sumFaceIndexCount > indices.size())
+                    {
+                        error = BinaryBlockFile::ErrorCode::InvalidFaceSum;
+                        return false;
+                    }
+                }
+
+                if (sumFaceIndexCount != indices.size())
+                {
+                    error = BinaryBlockFile::ErrorCode::InvalidFaceSum;
                     return false;
                 }
 
-                sumFaceIndexCount += faceCount;
-
-                if (sumFaceIndexCount > indices.size())
-                {
-                    error = ErrorCode::InvalidFaceSum;
-                    return false;
-                }
+                mesh.setFaceIndexCounts(faces);
             }
 
-            if (sumFaceIndexCount != indices.size())
-            {
-                error = ErrorCode::InvalidFaceSum;
-                return false;
-            }
-
-            mesh.setFaceIndexCounts(faces.value());
+            return true;
         }
-
-        return true;
     }
 
     bool LitlMesh::deserialize(GeoMesh& mesh, ErrorCode& error) const noexcept
@@ -216,76 +207,48 @@ namespace litl
         auto faceBlock = find(BlockIds::Faces);
         auto boundsBlock = find(BlockIds::Bounds);
 
-        if (!vertexBlock.has_value())
-        {
-            error = ErrorCode::MissingVertexBlock;
-            return false;
-        }
+        if (!stringsBlock.has_value()) { error = ErrorCode::MissingStringsBlock; return false; }
+        if (!vertexBlock.has_value()) { error = ErrorCode::MissingVertexBlock; return false; }
+        if (!indexBlock.has_value()) { error = ErrorCode::MissingIndexBlock; return false; }
+        if (!faceBlock.has_value()) { error = ErrorCode::MissingFaceBlock; return false; }
+        if (!boundsBlock.has_value()) { error = ErrorCode::MissingBoundsBlock; return false; }
 
-        if (!stringsBlock.has_value())
-        {
-            error = ErrorCode::MissingStringsBlock;
-            return false;
-        }
+        auto strings = stringsBlock.value().as<char const>(error).value_or({});
+        auto vertices = vertexBlock.value().as<Vertex>(error).value_or({});
+        auto indices = indexBlock.value().as<uint32_t>(error).value_or({});
+        auto faces = faceBlock.value().as<uint32_t>(error).value_or({});
+        auto bounds = boundsBlock.value().as<float>(error).value_or({});
 
-        if (!indexBlock.has_value())
-        {
-            error = ErrorCode::MissingIndexBlock;
-            return false;
-        }
-
-        if (!boundsBlock.has_value())
-        {
-            error = ErrorCode::MissingBoundsBlock;
-            return false;
-        }
-
-        auto vertices = vertexBlock.value().as<Vertex>(error);
-
-        if (!vertices.has_value())
+        if (error != ErrorCode::None)
         {
             return false;
         }
 
-        auto indices = indexBlock.value().as<uint32_t>(error);
-
-        if (!indices.has_value())
+        for (auto index : indices)
         {
-            return false;
-        }
-
-        auto bounds = boundsBlock.value().as<float>(error);
-
-        if (!bounds.has_value())
-        {
-            return false;
-        }
-
-        for (auto index : indices.value())
-        {
-            if (index >= vertices->size())
+            if (index >= vertices.size())
             {
                 error = ErrorCode::InvalidIndexFound;
                 return false;
             }
         }
 
-        if (bounds->size() != 6ull)
+        if (bounds.size() != 6ull)
         {
             error = ErrorCode::InvalidBoundsValues;
             return false;
         }
 
-        mesh.setVertices(vertices.value());
-        mesh.setIndices(indices.value());
+        mesh.setVertices(vertices);
+        mesh.setIndices(indices);
 
-        if (!deserializeFaceBlock(mesh, faceBlock, *indices, flags, error))
+        if (!deserializeFaceBlock(mesh, faces, indices, flags, error))
         {
             mesh.clear();
             return false;
         }
 
-        mesh.setBoundsMinMax(vec3{ bounds.value()[0], bounds.value()[1], bounds.value()[2] }, vec3{ bounds.value()[3], bounds.value()[4], bounds.value()[5] });
+        mesh.setBoundsMinMax(vec3{ bounds[0], bounds[1], bounds[2] }, vec3{ bounds[3], bounds[4], bounds[5] });
         mesh.setWindingOrder(MeshWinding::Clockwise);       // ImportService ensures mesh orientation during import/export of a litlmesh
 
         return true;

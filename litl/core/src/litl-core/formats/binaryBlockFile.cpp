@@ -244,16 +244,16 @@ namespace litl
     // Utility
     // -------------------------------------------------------------------------------------
 
-    bool BinaryBlockFile::addDataBlockDescriptor(std::vector<BinaryBlockFile::BlockDataDescriptor>& blockDataTable, BinaryBlockFile::BlockDescriptor* descriptor, BinaryBlockIdType const& id, size_t elementSize, std::span<std::byte const> data, BinaryBlockFile::ErrorCode& error) noexcept
+    bool BinaryBlockFile::addDataBlockDescriptor(std::vector<BinaryBlockFile::BlockDataDescriptor>& blockDataTable, uint32_t descriptorIndex, BinaryBlockIdType const& id, size_t elementSize, std::span<std::byte const> data, BinaryBlockFile::ErrorCode& error) noexcept
     {
-        if (blockDataTable.size() == BinaryBlockFile::MaxBlocks)
+        if ((descriptorIndex == BinaryBlockFile::MaxBlocks) || (blockDataTable.size() == BinaryBlockFile::MaxBlocks))
         {
             error = BinaryBlockFile::ErrorCode::TooManyBlocks;
             return false;
         }
 
         blockDataTable.push_back(BinaryBlockFile::BlockDataDescriptor{
-            .descriptor = descriptor,
+            .descriptor = &descriptors[descriptorIndex],
             .id = id,
             .elementSize = elementSize,
             .data = data

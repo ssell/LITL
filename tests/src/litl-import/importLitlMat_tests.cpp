@@ -110,23 +110,23 @@ namespace litl::tests
             REQUIRE(dest.exists() == false);
         }
 
-        // .litlmat -> .litlmatb
+        // flat.litlmat -> MaterialIntermediateData
         import::ImportService importer{};
-        import::Result result = importer.convert(source.absolutePath());
-
-        REQUIRE(result.success == true);
-        REQUIRE(result.error == import::ErrorType::None);
-
-        // .litlmat -> MaterialIntermediateData
         import::ImportedData data{};
-        result = importer.import(source, data, true);
+        import::Result result = importer.import(source, data, true);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
 
         import::MaterialIntermediateData& litlmatIntermediateData = *data.material->intermediateMaterial;
 
-        // .litlmatb -> MaterialIntermediateData
+        // flat.litlmat -> flat.litlmatb
+        result = importer.convert(source.absolutePath());
+
+        REQUIRE(result.success == true);
+        REQUIRE(result.error == import::ErrorType::None);
+
+        // flat.litlmatb -> MaterialIntermediateData
         auto litlmatbBytes = dest.readAllBytes();
         REQUIRE(litlmatbBytes.has_value() == true);
 
@@ -141,7 +141,7 @@ namespace litl::tests
         REQUIRE(litlmatb.deserialize(litlmatbIntermediateData, error) == true);
         REQUIRE(error == BinaryBlockFile::ErrorCode::None);
 
-        // The intermediate data from the two sources (.litlmat and .litlmatb) should be identical.
+        // The intermediate data from the two sources (flat.litlmat and flat.litlmatb) should be identical.
         for (uint32_t i = 0; i < import::MaterialIntermediateData::ShaderStageCount; ++i)
         {
             auto& litlmatShader = litlmatIntermediateData.getShaders()[i];

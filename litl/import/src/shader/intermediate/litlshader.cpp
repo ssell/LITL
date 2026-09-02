@@ -139,21 +139,6 @@ namespace litl::import
         static_assert(std::is_trivially_copyable_v<BinaryShaderInputOutputVariable>);
 
         /// <summary>
-        /// Maps to: SpecializationConstant
-        /// </summary>
-        struct BinarySpecializationConstant
-        {
-            BinaryBlockFile::StringRef name;
-            uint32_t id{ 0u };
-            uint32_t variable{ 0u };
-            uint64_t padding{ 0ull };
-        };
-
-        static_assert(sizeof(BinarySpecializationConstant) == 32);
-        static_assert(sizeof(BinarySpecializationConstant) % 16 == 0);
-        static_assert(std::is_trivially_copyable_v<BinarySpecializationConstant>);
-
-        /// <summary>
         /// Maps to: ComputeInfo
         /// </summary>
         struct BinaryComputeInfo
@@ -187,6 +172,21 @@ namespace litl::import
         static_assert(sizeof(BinaryEntryPointReflection) == 112);
         static_assert(sizeof(BinaryEntryPointReflection) % 16 == 0);
         static_assert(std::is_trivially_copyable_v<BinaryEntryPointReflection>);
+
+        /// <summary>
+        /// Maps to: SpecializationConstant
+        /// </summary>
+        struct BinarySpecializationConstant
+        {
+            BinaryBlockFile::StringRef name;
+            BinaryShaderVariable variable{};
+            uint32_t id{ 0u };
+            uint64_t padding{ 0u };
+        };
+
+        static_assert(sizeof(BinarySpecializationConstant) == 80);
+        static_assert(sizeof(BinarySpecializationConstant) % 16 == 0);
+        static_assert(std::is_trivially_copyable_v<BinarySpecializationConstant>);
     }
 
     // -------------------------------------------------------------------------------------
@@ -205,6 +205,7 @@ namespace litl::import
             std::vector<BinaryPushConstantReferenceProperty> pushConstantReferenceProperties;   // 'PURP' (PUsh constant Reference Properties)
             std::vector<BinaryShaderInputOutputVariable> shaderInputOutput;                     // 'VFIO' (Vertex Fragment Input/Output)
             std::vector<BinaryResourceProperty> resourceProperties;                             // 'RESP' (RESource Properties)
+            std::vector<BinarySpecializationConstant> specializationConstants;                  // 'SPEC' (SPECialization constants)
 
             uint64_t runningResourcePropertyOffset = 0ull;
             uint64_t runningResourceBindingOffset = 0ull;
@@ -327,7 +328,7 @@ namespace litl::import
             };
         }
 
-        void serializeBinaryEntryPoint(EntryPointReflection const& entryPoint, BinaryEntryPointReflection& binaryEntryPoint, LitlShaderBlocksData& blocksData) noexcept
+        void serializeEntryPoint(EntryPointReflection const& entryPoint, BinaryEntryPointReflection& binaryEntryPoint, LitlShaderBlocksData& blocksData) noexcept
         {
             binaryEntryPoint.entryPoint = BinaryBlockFile::serializeString(entryPoint.entryPoint, blocksData.stringMap);
             binaryEntryPoint.stage = static_cast<uint32_t>(entryPoint.stage);
@@ -379,6 +380,15 @@ namespace litl::import
                 binaryEntryPoint.computeInfo.localSizeZ = entryPoint.computeInfo.value().localSizeZ;
             }
         }
+
+        [[nodiscard]] BinarySpecializationConstant serializeSpecializationConstant(SpecializationConstant const& specializationConstant, LitlShaderBlocksData& blocksData) noexcept
+        {
+            return BinarySpecializationConstant{
+                .name = BinaryBlockFile::serializeString(specializationConstant.name, blocksData.stringMap),
+                .variable = serializeShaderVariable(specializationConstant.variable),
+                .id = specializationConstant.id
+            };
+        }
     }
 
     bool LitlShader::serialize(ShaderIntermediateData const& shader, std::vector<std::byte>& data, ErrorCode& error) noexcept
@@ -393,16 +403,22 @@ namespace litl::import
         for (auto& entryPoint : reflection.entryPoints)
         {
             blocksData.entryPoints.emplace_back();
-            serializeBinaryEntryPoint(entryPoint, blocksData.entryPoints.back(), blocksData);
+            serializeEntryPoint(entryPoint, blocksData.entryPoints.back(), blocksData);
         }
 
-        if (!addDataBlockDescriptor(blockDataTable, &litlShader.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 0], BlockIds::EntryPoints, sizeof(BinaryEntryPointReflection), as_byte_span(blocksData.entryPoints), error) ||
-            !addDataBlockDescriptor(blockDataTable, &litlShader.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 1], BlockIds::ResourceBindings, sizeof(BinaryResourceBinding), as_byte_span(blocksData.resourceBindings), error) ||
-            !addDataBlockDescriptor(blockDataTable, &litlShader.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 2], BlockIds::PushConstants, sizeof(BinaryPushConstantRange), as_byte_span(blocksData.pushConstants), error) ||
-            !addDataBlockDescriptor(blockDataTable, &litlShader.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 3], BlockIds::PushConstantReferenceProperties, sizeof(BinaryPushConstantReferenceProperty), as_byte_span(blocksData.pushConstantReferenceProperties), error) ||
-            !addDataBlockDescriptor(blockDataTable, &litlShader.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 4], BlockIds::VertexFragmentInputOutput, sizeof(BinaryShaderInputOutputVariable), as_byte_span(blocksData.shaderInputOutput), error) ||
-            !addDataBlockDescriptor(blockDataTable, &litlShader.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 5], BlockIds::ResourceProperties, sizeof(BinaryResourceProperty), as_byte_span(blocksData.resourceProperties), error) ||
-            !addDataBlockDescriptor(blockDataTable, &litlShader.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 6], BlockIds::Spirv, sizeof(uint32_t), as_byte_span(shader.getSpirvWords()), error))
+        for (auto& specializationConstant : reflection.specializationConstants)
+        {
+            blocksData.specializationConstants.push_back(serializeSpecializationConstant(specializationConstant, blocksData));
+        }
+
+        if (!litlShader.addDataBlockDescriptor(blockDataTable, BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 0, BlockIds::EntryPoints, sizeof(BinaryEntryPointReflection), as_byte_span(blocksData.entryPoints), error) ||
+            !litlShader.addDataBlockDescriptor(blockDataTable, BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 1, BlockIds::ResourceBindings, sizeof(BinaryResourceBinding), as_byte_span(blocksData.resourceBindings), error) ||
+            !litlShader.addDataBlockDescriptor(blockDataTable, BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 2, BlockIds::PushConstants, sizeof(BinaryPushConstantRange), as_byte_span(blocksData.pushConstants), error) ||
+            !litlShader.addDataBlockDescriptor(blockDataTable, BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 3, BlockIds::PushConstantReferenceProperties, sizeof(BinaryPushConstantReferenceProperty), as_byte_span(blocksData.pushConstantReferenceProperties), error) ||
+            !litlShader.addDataBlockDescriptor(blockDataTable, BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 4, BlockIds::VertexFragmentInputOutput, sizeof(BinaryShaderInputOutputVariable), as_byte_span(blocksData.shaderInputOutput), error) ||
+            !litlShader.addDataBlockDescriptor(blockDataTable, BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 5, BlockIds::ResourceProperties, sizeof(BinaryResourceProperty), as_byte_span(blocksData.resourceProperties), error) ||
+            !litlShader.addDataBlockDescriptor(blockDataTable, BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 6, BlockIds::SpecializationConstants, sizeof(BinarySpecializationConstant), as_byte_span(blocksData.specializationConstants), error) ||
+            !litlShader.addDataBlockDescriptor(blockDataTable, BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 7, BlockIds::Spirv, sizeof(uint32_t), as_byte_span(shader.getSpirvWords()), error))
         {
             // ... ErrorCode::TooManyBlocks set by addDataBlockDescriptor ...
             return false;
@@ -474,6 +490,7 @@ namespace litl::import
             std::span<BinaryPushConstantReferenceProperty const> pushConstantReferenceProperties;
             std::span<BinaryShaderInputOutputVariable const> shaderInputOutput;
             std::span<BinaryResourceProperty const> resourceProperties;
+            std::span<BinarySpecializationConstant const> specializationConstants;
             std::span<uint32_t const> spirvWords;
         };
 
@@ -721,28 +738,31 @@ namespace litl::import
             entryPoint.entryPoint = BinaryBlockFile::deserializeString(binaryShaderData.strings, binaryEntryPoint.entryPoint, error);
             entryPoint.stage = static_cast<ShaderStage>(binaryEntryPoint.stage);
 
-            auto binaryResourceBindings = getSafeSubspan(binaryShaderData.resourceBindings, binaryEntryPoint.resources);
+            const auto binaryResourceBindings = getSafeSubspan(binaryShaderData.resourceBindings, binaryEntryPoint.resources);
 
             if (!binaryResourceBindings)
             {
                 error = binaryResourceBindings.error();
                 return false;
             }
-            auto binaryPushConstants = getSafeSubspan(binaryShaderData.pushConstants, binaryEntryPoint.pushConstants);
+
+            const auto binaryPushConstants = getSafeSubspan(binaryShaderData.pushConstants, binaryEntryPoint.pushConstants);
 
             if (!binaryPushConstants)
             {
                 error = binaryPushConstants.error();
                 return false;
             }
-            auto binaryVertexInputs = getSafeSubspan(binaryShaderData.shaderInputOutput, binaryEntryPoint.vertexInputs);
+
+            const auto binaryVertexInputs = getSafeSubspan(binaryShaderData.shaderInputOutput, binaryEntryPoint.vertexInputs);
 
             if (!binaryVertexInputs)
             {
                 error = binaryVertexInputs.error();
                 return false;
             }
-            auto binaryFragmentOutputs = getSafeSubspan(binaryShaderData.shaderInputOutput, binaryEntryPoint.fragmentOutputs);
+
+            const auto binaryFragmentOutputs = getSafeSubspan(binaryShaderData.shaderInputOutput, binaryEntryPoint.fragmentOutputs);
 
             if (!binaryFragmentOutputs)
             {
@@ -794,6 +814,28 @@ namespace litl::import
             return true;
         }
 
+        [[nodiscard]] bool deserializeBinarySpecializationConstant(
+            LitlShaderDeserializationData const& binaryShaderData,
+            ShaderReflection& shaderReflection,
+            BinarySpecializationConstant const& binarySpecializationConstant,
+            BinaryBlockFile::ErrorCode& error) noexcept
+        {
+            SpecializationConstant specializationConstant{
+                .id = binarySpecializationConstant.id,
+                .variable = deserializeBinaryShaderVariable(binarySpecializationConstant.variable),
+                .name = std::string(BinaryBlockFile::deserializeString(binaryShaderData.strings, binarySpecializationConstant.name, error))
+            };
+
+            if (error != BinaryBlockFile::ErrorCode::None)
+            {
+                return false;
+            }
+
+            shaderReflection.specializationConstants.push_back(specializationConstant);
+
+            return true;
+        }
+
         [[nodiscard]] bool deserializeBinaryShaderData(
             ShaderIntermediateData& shader, 
             LitlShaderDeserializationData const& binaryShaderData, 
@@ -805,6 +847,14 @@ namespace litl::import
             for (auto const& entryPoint : binaryShaderData.entryPoints)
             {
                 if (!deserializeBinaryEntryPoint(binaryShaderData, shaderReflection, entryPoint, error))
+                {
+                    return false;
+                }
+            }
+
+            for (auto const& binarySpecializationConstant : binaryShaderData.specializationConstants)
+            {
+                if (!deserializeBinarySpecializationConstant(binaryShaderData, shaderReflection, binarySpecializationConstant, error))
                 {
                     return false;
                 }
@@ -823,6 +873,7 @@ namespace litl::import
         auto pushConstantReferencePropertiesBlock = find(BlockIds::PushConstantReferenceProperties);
         auto vertexFragmentInputOutputBlock = find(BlockIds::VertexFragmentInputOutput);
         auto resourcePropertiesBlock = find(BlockIds::ResourceProperties);
+        auto specializationConstantsBlock = find(BlockIds::SpecializationConstants);
         auto spirvBlock = find(BlockIds::Spirv);
 
         if (!stringsBlock.has_value()) { error = ErrorCode::MissingStringsBlock; return false; }
@@ -832,6 +883,7 @@ namespace litl::import
         if (!pushConstantReferencePropertiesBlock.has_value()) { error = ErrorCode::MissingPushConstantReferencePropertiesBlock; return false; }
         if (!vertexFragmentInputOutputBlock.has_value()) { error = ErrorCode::MissingVertexFragmentInputOutputBlock; return false; }
         if (!resourcePropertiesBlock.has_value()) { error = ErrorCode::MissingResourcePropertiesBlock; return false; }
+        if (!specializationConstantsBlock.has_value()) { error = ErrorCode::MissingSpecializationsConstantBlock; return false; }
         if (!spirvBlock.has_value()) { error = ErrorCode::MissingSpirvBlock; return false; }
 
         LitlShaderDeserializationData binaryShaderData{};
@@ -843,6 +895,7 @@ namespace litl::import
         binaryShaderData.pushConstantReferenceProperties = pushConstantReferencePropertiesBlock->as<BinaryPushConstantReferenceProperty const>(error).value_or({});
         binaryShaderData.shaderInputOutput = vertexFragmentInputOutputBlock->as<BinaryShaderInputOutputVariable const>(error).value_or({});
         binaryShaderData.resourceProperties = resourcePropertiesBlock->as<BinaryResourceProperty const>(error).value_or({});
+        binaryShaderData.specializationConstants = specializationConstantsBlock->as<BinarySpecializationConstant const>(error).value_or({});
         binaryShaderData.spirvWords = spirvBlock->as<uint32_t const>(error).value_or({});
 
         if (error != ErrorCode::None) 

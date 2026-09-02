@@ -163,9 +163,9 @@ namespace litl::import
         compilePropertyRecords(material, propertyRecords, stringMap);
         compileSettings(material, settings, stringMap);
 
-        if (!addDataBlockDescriptor(blockDataTable, &litlMatBinary.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 0], BlockIds::Shaders, sizeof(LitlMatBinaryShaderRecord), as_byte_span(shaderRecords), error) ||
-            !addDataBlockDescriptor(blockDataTable, &litlMatBinary.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 1], BlockIds::Properties, sizeof(LitlMatBinaryPropertyRecord), as_byte_span(propertyRecords), error) ||
-            !addDataBlockDescriptor(blockDataTable, &litlMatBinary.descriptors[BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 2], BlockIds::Settings, sizeof(LitlMatBinarySettings), as_byte_span(settings), error))
+        if (!litlMatBinary.addDataBlockDescriptor(blockDataTable, BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 0, BlockIds::Shaders, sizeof(LitlMatBinaryShaderRecord), as_byte_span(shaderRecords), error) ||
+            !litlMatBinary.addDataBlockDescriptor(blockDataTable, BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 1, BlockIds::Properties, sizeof(LitlMatBinaryPropertyRecord), as_byte_span(propertyRecords), error) ||
+            !litlMatBinary.addDataBlockDescriptor(blockDataTable, BinaryBlockFile::DefaultBlocks::DefaultBlocksCount + 2, BlockIds::Settings, sizeof(LitlMatBinarySettings), as_byte_span(settings), error))
         {
             // ... ErrorCode::TooManyBlocks set by addDataBlockDescriptor ...
             return false;
