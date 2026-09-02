@@ -627,6 +627,8 @@ namespace litl::import
                 return false;
             }
 
+            referenceProperties.push_back(referenceProperty);
+
             return true;
         }
 
@@ -676,6 +678,8 @@ namespace litl::import
                 error = binaryPushConstantReferenceProperties.error();
                 return false;
             }
+
+            entryPointReflection.pushConstants.push_back(pushConstant);
             
             return true;
         }

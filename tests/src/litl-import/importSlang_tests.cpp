@@ -10,6 +10,7 @@ namespace litl::tests
     void validateShaderReflectionForTestSlang(ShaderReflection const& reflection) noexcept
     {
         REQUIRE(reflection.entryPoints.size() == 2);
+        REQUIRE(reflection.specializationConstants.size() == 0);
 
         const auto& vertexShader = reflection.entryPoints[0];
 
@@ -193,7 +194,7 @@ namespace litl::tests
         REQUIRE(fragmentShader.fragmentOutputs[0].variable.componentCount == 4);
         REQUIRE(fragmentShader.computeInfo == std::nullopt);
     }
-    /*
+
     LITL_TEST_CASE("slang -> ShaderIntermediateData", "[import::slang]")
     {
         const File source("assets/shaders/test.slang");
@@ -217,11 +218,6 @@ namespace litl::tests
         const auto& reflection = data.shader->intermediateShader->getReflection();
 
         validateShaderReflectionForTestSlang(reflection);
-    } LITL_END_TEST_CASE
-
-    LITL_TEST_CASE("slang -> ShaderIntermediateData -> litlshader", "[import::slang]")
-    {
-
     } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("slang -> ShaderIntermediateData -> litlshader -> ShaderIntermediateData", "[import::slang]")
@@ -270,5 +266,4 @@ namespace litl::tests
         REQUIRE(std::memcmp(slangIntermediateData.getSpirvWords().data(), litlshaderIntermediateData.getSpirvWords().data(), slangIntermediateData.getSpirvWords().size_bytes()) == 0);
 
     } LITL_END_TEST_CASE
-    */
 }
