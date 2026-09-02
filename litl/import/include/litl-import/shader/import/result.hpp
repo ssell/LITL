@@ -8,7 +8,7 @@ namespace litl::import
 {
     struct ShaderImportResult
     {
-        std::unique_ptr<ShaderIntermediateData> intermediateShader;
+        std::shared_ptr<ShaderIntermediateData> intermediateShader;
     };
 }
 

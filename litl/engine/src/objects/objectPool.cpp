@@ -352,7 +352,7 @@ namespace litl
     {
         Shader shader{};
 
-        if (!shader.create({}, descriptor))
+        if (!shader.create({}, *(m_impl->renderManager->getRenderer()), descriptor))
         {
             logWarning("Failed to reserve Shader '", descriptor.name, "'");
             shader.destroy({});
@@ -366,7 +366,7 @@ namespace litl
     {
         Shader shader{};
 
-        if (!shader.create({}, descriptor))
+        if (!shader.create({}, *(m_impl->renderManager->getRenderer()), descriptor))
         {
             logWarning("Failed to create Shader '", descriptor.objectInfo.name, "'");
             shader.destroy({});

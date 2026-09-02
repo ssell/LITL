@@ -90,6 +90,7 @@ namespace litl
                 {
                     auto path = fileEntry.path();
                     auto file = File(fileEntry);
+                    auto absPath = file.absolutePath();
                     auto assetFileType = g_assetTypeMap.find(StringId(file.extension()));
 
                     if (assetFileType != g_assetTypeMap.end())
@@ -108,7 +109,7 @@ namespace litl
                             else
                             {
                                 logWarning("Conflicted asset key for '", assetKey, "' with path '", relativePath, "' skipped due to equal or lower priority than preexisting mapped asset.");
-                                return;
+                                continue;
                             }
                         }
 
@@ -520,7 +521,7 @@ namespace litl
     // --- Get Shader Module
     // -------------------------------------------------------------------------------------
 
-    ShaderAssetHandle AssetManager::getShaderModuleHandle(std::string_view resource) noexcept
+    ShaderAssetHandle AssetManager::getShaderHandle(std::string_view resource) noexcept
     {
         auto assetHandle = getAsset(resource);
 
@@ -532,13 +533,13 @@ namespace litl
         return {};
     }
 
-    ShaderAsset* AssetManager::getShaderModule(std::string_view resource) noexcept
+    ShaderAsset* AssetManager::getShader(std::string_view resource) noexcept
     {
-        auto handle = getShaderModuleHandle(resource);
-        return getShaderModule(handle);
+        auto handle = getShaderHandle(resource);
+        return getShader(handle);
     }
 
-    ShaderAsset* AssetManager::getShaderModule(ShaderAssetHandle handle) noexcept
+    ShaderAsset* AssetManager::getShader(ShaderAssetHandle handle) noexcept
     {
         ShaderAsset* shaderModule = m_impl->shaderAssetPool.get(handle);
 

@@ -40,9 +40,9 @@ namespace litl
         [[nodiscard]] MeshAsset* getMesh(std::string_view resource) noexcept;
         [[nodiscard]] MeshAsset* getMesh(MeshAssetHandle handle) noexcept;
 
-        [[nodiscard]] ShaderAssetHandle getShaderModuleHandle(std::string_view resource) noexcept;
-        [[nodiscard]] ShaderAsset* getShaderModule(std::string_view resource) noexcept;
-        [[nodiscard]] ShaderAsset* getShaderModule(ShaderAssetHandle handle) noexcept;
+        [[nodiscard]] ShaderAssetHandle getShaderHandle(std::string_view resource) noexcept;
+        [[nodiscard]] ShaderAsset* getShader(std::string_view resource) noexcept;
+        [[nodiscard]] ShaderAsset* getShader(ShaderAssetHandle handle) noexcept;
 
         [[nodiscard]] TextAssetHandle getTextHandle(std::string_view resource) noexcept;
         [[nodiscard]] TextAsset* getText(std::string_view resource) noexcept;
