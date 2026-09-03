@@ -195,4 +195,9 @@ namespace litl
     {
         return m_mesh;
     }
+
+    bounds::AABB const& Mesh::getBounds() const noexcept
+    {
+        return m_mesh.getBounds();
+    }
 }

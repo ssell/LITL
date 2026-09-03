@@ -1,0 +1,15 @@
+name = "Samples/Triangle"
+
+[shaders]
+vertex   = { resource = "shaders/sampleTriangle", entry = "vertexMain" }
+fragment = { resource = "shaders/sampleTriangle", entry = "fragmentMain" }
+
+[properties]
+tint   = { type = "color", value = [1.0, 1.0, 1.0, 1.0] }
+fade   = { type = "float", value = 1.0 }
+
+[raster]
+cullMode  = "None"
+
+[hints]
+frequentUpdates = true

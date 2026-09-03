@@ -6,7 +6,6 @@ using namespace litl;
 void configureSystems(SystemCollection& systems);
 void bootstrap(ServiceProvider& services, EntityCommands& commands);
 void createSpinningTriangle(EntityCommands& commands, MaterialRef material, MeshHandle mesh, vec3 position, float spinRate);
-MaterialRef createTriangleMaterial(ObjectPool& objectPool);
 MeshHandle createTriangleMesh(ObjectPool& objectPool);
 
 int main()
@@ -15,9 +14,9 @@ int main()
 
     engine.setup(
         { .engineSettings { .applicationName = "LITL - Triangle Sample" } },
-        nullptr,                // this sample uses no custom services
+        nullptr,
         configureSystems,
-        nullptr,                // this sample uses no custom callbacks
+        nullptr,
         bootstrap);
 
     engine.start();
@@ -41,6 +40,7 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
 {
     auto objectPool = services.get<ObjectPool>();       // Source of common objects such as GPU buffers, meshes, materials, cameras, etc.
     auto sceneView = services.get<SceneView>();         // A view into the current active scene.
+    auto assets = services.get<AssetManager>();
 
     auto cameraHandle = objectPool->createCamera({ .projection = CameraProjection::Perspective, .clearColor = color{ 0.035f, 0.035f, 0.05f } });
     auto* camera = objectPool->getCamera(cameraHandle);
@@ -49,7 +49,7 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     camera->setWorldPosition(vec3{ 0.0f, 0.0f, 0.0f });
     camera->lookAt(vec3{ 0.0f, 0.0f, 5.0f }, vec3::up());
 
-    auto triangleMaterial = createTriangleMaterial(*objectPool);
+    auto triangleMaterial = assets->getMaterialRef("materials/sampleTriangle");
     auto triangleMesh = createTriangleMesh(*objectPool);
 
     createSpinningTriangle(commands, triangleMaterial, triangleMesh, vec3{ 0.0f, -0.35f, 2.0f }, 1.0f);
@@ -70,67 +70,15 @@ void createSpinningTriangle(EntityCommands& commands, MaterialRef material, Mesh
     commands.addComponent<samples::Spin>(triangleEntity, samples::Spin{ .rate = spinRate });
 }
 
-namespace
-{
-    struct SampleVertex
-    {
-        vec3 position;
-        vec3 color;
-        vec2 uv;
-    };
-}
-
-/// <summary>
-/// Loads the common flat shader and creates a material using it.
-/// </summary>
-MaterialRef createTriangleMaterial(ObjectPool& objectPool)
-{
-    auto spirvBytes = File("assets/shaders/spirv/flat.spv").readAllBytes();
-    auto materialHandle = objectPool.createMaterial(MaterialDescriptor{
-        .objectInfo = ObjectDescriptor {.name = "Flat Material" },
-        .inputDescriptor = VertexInputDescriptor {
-            .vertexSize = sizeof(SampleVertex),
-            .attributes = { DataFormat::RGB32_SFloat, DataFormat::RGB32_SFloat, DataFormat::RG32_SFloat }       // pos, color, uv
-        },
-        .vertexShader = ShaderResourceDescriptor {
-            .resource = "flat.spv",
-            .entryPoint = "vertexMain",
-            .bytes = spirvBytes.value()
-        },
-        .fragmentShader = ShaderResourceDescriptor {
-            .resource = "flat.spv",
-            .entryPoint = "fragmentMain",
-            .bytes = spirvBytes.value()
-        }
-    });
-
-    return MaterialRef{
-        .handle = materialHandle,
-        .slot = objectPool.getMaterial(materialHandle)->allocateSlot()
-    };
-}
-
 /// <summary>
 /// Creates a basic triangle mesh with colored vertices.
 /// </summary>
 MeshHandle createTriangleMesh(ObjectPool& objectPool)
 {
-    std::array<SampleVertex, 3> vertices = {
-        SampleVertex {                                        // left
-            .position = vec3{ -0.5f, 0.0f, 0.0f },
-            .color = vec3{ 0.0f, 1.0f, 0.0f },
-            .uv = vec2{ 0.0f, 0.0f }
-        },
-        SampleVertex {                                        // top
-            .position = vec3{ 0.0f, 1.0f, 0.0f },
-            .color = vec3{ 1.0f, 0.0f, 0.0f },
-            .uv = vec2{ 0.5f, 1.0f }
-        },
-        SampleVertex {                                        // right
-            .position = vec3{ 0.5f, 0.0f, 0.0f },
-            .color = vec3{ 0.0f, 0.0f, 1.0f },
-            .uv = vec2{ 1.0f, 0.0f }
-        }
+    std::array<Vertex, 3> vertices = {
+        Vertex { .position = vec3{ -0.5f, 0.0f, 0.0f } },
+        Vertex { .position = vec3{ 0.0f, 1.0f, 0.0f } },
+        Vertex { .position = vec3{ 0.5f, 0.0f, 0.0f } }
     };
 
     std::array<uint32_t, 3> indices = { 0, 1, 2 };
@@ -139,7 +87,7 @@ MeshHandle createTriangleMesh(ObjectPool& objectPool)
         .objectInfo = ObjectDescriptor { .name = "Triangle" },
         .vertexInfo = MeshVertexDescriptor{
             .vertexCount = 3u,
-            .vertexByteSize = sizeof(SampleVertex),
+            .vertexByteSize = sizeof(Vertex),
             .vertexData = as_byte_span(vertices)
         },
         .indexInfo = MeshIndexDescriptor{

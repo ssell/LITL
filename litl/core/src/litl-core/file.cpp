@@ -127,22 +127,20 @@ namespace litl
         return m_file.lexically_relative(parentDir).string();
     }
 
-    std::optional<bool> File::exists() const noexcept
+    bool File::exists() const noexcept
     {
         std::error_code error;
         bool exists = std::filesystem::exists(m_file, error);
 
-        if (!error)
+        if (error)
         {
-            return exists;
+            logWarning("Attempt to check if the file at '", m_file.string(), "' exists failed with error code ", error.value());
         }
 
-        logWarning("Attempt to check if the file at '", m_file.string(), "' exists failed with error code ", error.value());
-
-        return std::nullopt;
+        return exists;
     }
 
-    std::optional<bool> File::exists(std::string_view path) noexcept
+    bool File::exists(std::string_view path) noexcept
     {
         File file(path);
         return file.exists();
@@ -177,9 +175,9 @@ namespace litl
 
     bool File::readAllBytes(std::vector<std::byte>& bytes) const noexcept
     {
-        if (!exists().has_value())
+        if (!exists())
         {
-            logWarning("Attempt read bytes for file at '", m_file.string(), "' failed as it does not exist.");
+            logWarning("Attempt to read bytes for file at '", m_file.string(), "' failed as it does not exist.");
             return false;
         }
 

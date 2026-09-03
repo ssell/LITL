@@ -227,7 +227,11 @@ namespace litl
             {
                 // Ensure there is a valid handle to return to the caller, even if the material itself is not yet ready
                 asset->handle = objectPool->reserveMaterial({}, ObjectDescriptor{ .name = asset->key, .lifetime = ObjectLifetime::Application });
-                fetchAssetObject(asset);
+
+                if (!fetchAssetObject(asset))
+                {
+                    logError("Failed to fetch Material Asset underlying object for '", asset->key, "'");
+                }
             }
 
             taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
@@ -275,7 +279,11 @@ namespace litl
             {
                 // Ensure there is a valid handle to return to the caller, even if the mesh itself is not yet ready
                 asset->handle = objectPool->reserveMesh({}, ObjectDescriptor{ .name = asset->key, .lifetime = ObjectLifetime::Application });
-                fetchAssetObject(asset);
+                
+                if (!fetchAssetObject(asset))
+                {
+                    logError("Failed to fetch Mesh Asset underlying object for '", asset->key, "'");
+                }
             }
 
             taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
@@ -323,7 +331,11 @@ namespace litl
             {
                 // Ensure there is a valid handle to return to the caller, even if the shader module itself is not yet ready
                 asset->handle = objectPool->reserveShader({}, ObjectDescriptor{ .name = asset->key, .lifetime = ObjectLifetime::Application });
-                fetchAssetObject(asset);
+
+                if (!fetchAssetObject(asset))
+                {
+                    logError("Failed to fetch Shader Asset underlying object for '", asset->key, "'");
+                }
             }
 
             taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
@@ -371,7 +383,11 @@ namespace litl
             {
                 // Ensure there is a valid handle to return to the caller, even if the text itself is not yet ready
                 asset->handle = objectPool->reserveText({});
-                fetchAssetObject(asset);
+
+                if (!fetchAssetObject(asset))
+                {
+                    logError("Failed to fetch Text Asset underlying object for '", asset->key, "'");
+                }
             }
 
             taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
@@ -419,7 +435,11 @@ namespace litl
             {
                 // Ensure there is a valid handle to return to the caller, even if the texture itself is not yet ready
                 asset->handle = objectPool->reserveTexture2D({});
-                fetchAssetObject(asset);
+
+                if (!fetchAssetObject(asset))
+                {
+                    logError("Failed to fetch Texture2D Asset underlying object for '", asset->key, "'");
+                }
             }
 
             taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
@@ -520,25 +540,30 @@ namespace litl
         }
     }
 
-    AssetHandle AssetManager::getAsset(std::string_view resource) noexcept
+    AssetHandle AssetManager::getAsset(StringId resource) noexcept
     {
         std::scoped_lock lock{ m_impl->assetMapMutex };
 
-        auto find = m_impl->assetMap.find(StringId{ resource });
+        auto find = m_impl->assetMap.find(resource);
 
         if (find != m_impl->assetMap.end())
         {
             return find->second.handle;
         }
-        
+
         return {};
+    }
+
+    AssetHandle AssetManager::getAsset(std::string_view resource) noexcept
+    {
+        return getAsset(StringId(resource));
     }
 
     // -------------------------------------------------------------------------------------
     // --- Get Material
     // -------------------------------------------------------------------------------------
 
-    MaterialAssetHandle AssetManager::getMaterialHandle(std::string_view resource) noexcept
+    MaterialAssetHandle AssetManager::getMaterialHandle(StringId resource) noexcept
     {
         auto assetHandle = getAsset(resource);
 
@@ -550,10 +575,20 @@ namespace litl
         return {};
     }
 
-    MaterialAsset* AssetManager::getMaterial(std::string_view resource) noexcept
+    MaterialAssetHandle AssetManager::getMaterialHandle(std::string_view resource) noexcept
+    {
+        return getMaterialHandle(StringId(resource));
+    }
+
+    MaterialAsset* AssetManager::getMaterial(StringId resource) noexcept
     {
         auto handle = getMaterialHandle(resource);
         return getMaterial(handle);
+    }
+
+    MaterialAsset* AssetManager::getMaterial(std::string_view resource) noexcept
+    {
+        return getMaterial(StringId(resource));
     }
 
     MaterialAsset* AssetManager::getMaterial(MaterialAssetHandle handle) noexcept
@@ -573,11 +608,28 @@ namespace litl
         return material;
     }
 
+    MaterialRef AssetManager::getMaterialRef(StringId resource) noexcept
+    {
+        MaterialAsset* materialAsset = getMaterial(resource);
+
+        if ((materialAsset == nullptr) || (materialAsset->material == nullptr))
+        {
+            return {};
+        }
+
+        return materialAsset->allocate();
+    }
+
+    MaterialRef AssetManager::getMaterialRef(std::string_view resource) noexcept
+    {
+        return getMaterialRef(StringId(resource));
+    }
+
     // -------------------------------------------------------------------------------------
     // --- Get Mesh
     // -------------------------------------------------------------------------------------
 
-    MeshAssetHandle AssetManager::getMeshHandle(std::string_view resource) noexcept
+    MeshAssetHandle AssetManager::getMeshHandle(StringId resource) noexcept
     {
         auto assetHandle = getAsset(resource);
 
@@ -589,10 +641,20 @@ namespace litl
         return {};
     }
 
-    MeshAsset* AssetManager::getMesh(std::string_view resource) noexcept
+    MeshAssetHandle AssetManager::getMeshHandle(std::string_view resource) noexcept
+    {
+        return getMeshHandle(StringId(resource));
+    }
+
+    MeshAsset* AssetManager::getMesh(StringId resource) noexcept
     {
         auto handle = getMeshHandle(resource);
         return getMesh(handle);
+    }
+
+    MeshAsset* AssetManager::getMesh(std::string_view resource) noexcept
+    {
+        return getMesh(StringId(resource));
     }
 
     MeshAsset* AssetManager::getMesh(MeshAssetHandle handle) noexcept
@@ -612,11 +674,28 @@ namespace litl
         return mesh;
     }
 
+    MeshRef AssetManager::getMeshRef(StringId resource) noexcept
+    {
+        MeshAsset* meshAsset = getMesh(resource);
+
+        if ((meshAsset == nullptr) || (meshAsset->mesh == nullptr))
+        {
+            return {};
+        }
+
+        return MeshRef{ .handle = meshAsset->handle };
+    }
+
+    MeshRef AssetManager::getMeshRef(std::string_view resource) noexcept
+    {
+        return getMeshRef(StringId(resource));
+    }
+
     // -------------------------------------------------------------------------------------
     // --- Get Shader Module
     // -------------------------------------------------------------------------------------
 
-    ShaderAssetHandle AssetManager::getShaderHandle(std::string_view resource) noexcept
+    ShaderAssetHandle AssetManager::getShaderHandle(StringId resource) noexcept
     {
         auto assetHandle = getAsset(resource);
 
@@ -628,10 +707,20 @@ namespace litl
         return {};
     }
 
-    ShaderAsset* AssetManager::getShader(std::string_view resource) noexcept
+    ShaderAssetHandle AssetManager::getShaderHandle(std::string_view resource) noexcept
+    {
+        return getShaderHandle(StringId(resource));
+    }
+
+    ShaderAsset* AssetManager::getShader(StringId resource) noexcept
     {
         auto handle = getShaderHandle(resource);
         return getShader(handle);
+    }
+
+    ShaderAsset* AssetManager::getShader(std::string_view resource) noexcept
+    {
+        return getShader(StringId(resource));
     }
 
     ShaderAsset* AssetManager::getShader(ShaderAssetHandle handle) noexcept
@@ -655,7 +744,7 @@ namespace litl
     // --- Get Text
     // -------------------------------------------------------------------------------------
 
-    TextAssetHandle AssetManager::getTextHandle(std::string_view resource) noexcept
+    TextAssetHandle AssetManager::getTextHandle(StringId resource) noexcept
     {
         auto assetHandle = getAsset(resource);
 
@@ -667,10 +756,20 @@ namespace litl
         return {};
     }
 
-    TextAsset* AssetManager::getText(std::string_view resource) noexcept
+    TextAssetHandle AssetManager::getTextHandle(std::string_view resource) noexcept
+    {
+        return getTextHandle(StringId(resource));
+    }
+
+    TextAsset* AssetManager::getText(StringId resource) noexcept
     {
         auto handle = getTextHandle(resource);
         return getText(handle);
+    }
+
+    TextAsset* AssetManager::getText(std::string_view resource) noexcept
+    {
+        return getText(StringId(resource));
     }
 
     TextAsset* AssetManager::getText(TextAssetHandle handle) noexcept
@@ -690,13 +789,11 @@ namespace litl
         return text;
     }
 
-
-
     // -------------------------------------------------------------------------------------
     // --- Get Texture2D
     // -------------------------------------------------------------------------------------
 
-    Texture2DAssetHandle AssetManager::getTexture2DHandle(std::string_view resource) noexcept
+    Texture2DAssetHandle AssetManager::getTexture2DHandle(StringId resource) noexcept
     {
         auto assetHandle = getAsset(resource);
 
@@ -708,10 +805,20 @@ namespace litl
         return {};
     }
 
-    Texture2DAsset* AssetManager::getTexture2D(std::string_view resource) noexcept
+    Texture2DAssetHandle AssetManager::getTexture2DHandle(std::string_view resource) noexcept
+    {
+        return getTexture2DHandle(StringId(resource));
+    }
+
+    Texture2DAsset* AssetManager::getTexture2D(StringId resource) noexcept
     {
         auto handle = getTexture2DHandle(resource);
         return getTexture2D(handle);
+    }
+
+    Texture2DAsset* AssetManager::getTexture2D(std::string_view resource) noexcept
+    {
+        return getTexture2D(StringId(resource));
     }
 
     Texture2DAsset* AssetManager::getTexture2D(Texture2DAssetHandle handle) noexcept

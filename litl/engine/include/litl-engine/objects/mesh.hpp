@@ -173,6 +173,11 @@ namespace litl
         /// </summary>
         GeoMesh const& getGeoMesh() const noexcept;
 
+        /// <summary>
+        /// Retrieves the bounds of the underlying GeoMesh.
+        /// </summary>
+        [[nodiscard]] bounds::AABB const& getBounds() const noexcept;
+
     private:
 
         [[nodiscard]] bool setGpuData(BufferTypeFlag bufferType, std::span<std::byte const> data, size_t elementSize, GpuBufferHandle& handle) noexcept;

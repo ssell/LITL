@@ -88,9 +88,9 @@ namespace litl
         /// Returns if the file exists or not.
         /// If there was an error checking the file then std::nullopt will be returned instead.
         /// </summary>
-        [[nodiscard]] std::optional<bool> exists() const noexcept;
+        [[nodiscard]] bool exists() const noexcept;
 
-        [[nodiscard]] static std::optional<bool> exists(std::string_view path) noexcept;
+        [[nodiscard]] static bool exists(std::string_view path) noexcept;
 
         /// <summary>
         /// Reads the contents of the file synchronously.
