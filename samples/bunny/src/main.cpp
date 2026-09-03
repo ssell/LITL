@@ -50,13 +50,15 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     {
         for (int32_t x = -10; x <= 10; ++x)
         {
+            if (x != 0) continue;
             for (int32_t y = -10; y <= 10; ++y)
             {
+                if (y != 0) continue;
                 createBunny(
                     commands, 
                     bunnyMesh->handle, 
                     bunnyMaterial->allocate(),
-                    vec3{static_cast<float>(x) * 1.5f, static_cast<float>(y) * 1.5f, 28.0f },
+                    vec3{static_cast<float>(x) * 1.5f, static_cast<float>(y) * 1.5f, 5.0f },
                     color{ static_cast<float>(x + 10) * 0.05f, static_cast<float>(y + 10) * 0.05f, 0.0f },
                     ((x == 0u) && (y == 0u)));
             }

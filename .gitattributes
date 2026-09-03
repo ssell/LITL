@@ -1,10 +1,10 @@
 # ------------------------------------------------------------------------------------------
 # Internal Asset Formats
 
-*.ltlbmsh filter=lfs diff=lfs merge=lfs -text
-*.ltlbmat filter=lfs diff=lfs merge=lfs -text
-*.ltlbshd filter=lfs diff=lfs merge=lfs -text
-*.ltlbtex filter=lfs diff=lfs merge=lfs -text
+*.litlbmsh filter=lfs diff=lfs merge=lfs -text
+*.litlbmat filter=lfs diff=lfs merge=lfs -text
+*.litlbshd filter=lfs diff=lfs merge=lfs -text
+*.litlbtex filter=lfs diff=lfs merge=lfs -text
 # Binaries and Archives
 *.dll filter=lfs diff=lfs merge=lfs -text
 *.lib filter=lfs diff=lfs merge=lfs -text
@@ -75,7 +75,3 @@
 *.pur filter=lfs diff=lfs merge=lfs -text
 # Shader
 *.spv filter=lfs diff=lfs merge=lfs -text
-*.litlbmsh filter=lfs diff=lfs merge=lfs -text
-*.litlbmat filter=lfs diff=lfs merge=lfs -text
-*.litlbshd filter=lfs diff=lfs merge=lfs -text
-*.litlbtex filter=lfs diff=lfs merge=lfs -text

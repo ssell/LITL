@@ -275,6 +275,7 @@ namespace litl
             {
                 // Ensure there is a valid handle to return to the caller, even if the mesh itself is not yet ready
                 asset->handle = objectPool->reserveMesh({}, ObjectDescriptor{ .name = asset->key, .lifetime = ObjectLifetime::Application });
+                fetchAssetObject(asset);
             }
 
             taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
@@ -322,6 +323,7 @@ namespace litl
             {
                 // Ensure there is a valid handle to return to the caller, even if the shader module itself is not yet ready
                 asset->handle = objectPool->reserveShader({}, ObjectDescriptor{ .name = asset->key, .lifetime = ObjectLifetime::Application });
+                fetchAssetObject(asset);
             }
 
             taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
@@ -369,6 +371,7 @@ namespace litl
             {
                 // Ensure there is a valid handle to return to the caller, even if the text itself is not yet ready
                 asset->handle = objectPool->reserveText({});
+                fetchAssetObject(asset);
             }
 
             taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
@@ -416,6 +419,7 @@ namespace litl
             {
                 // Ensure there is a valid handle to return to the caller, even if the texture itself is not yet ready
                 asset->handle = objectPool->reserveTexture2D({});
+                fetchAssetObject(asset);
             }
 
             taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
