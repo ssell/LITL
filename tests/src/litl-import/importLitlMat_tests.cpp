@@ -10,7 +10,7 @@ namespace litl::tests
 {
     LITL_TEST_CASE("litlmat -> MaterialIntermediateData", "[import::litlmat]")
     {
-        const File source("assets/materials/flat.litlmat");
+        const File source("assets/materials/test.litlmat");
 
         REQUIRE(source.exists() == true);
 
@@ -78,8 +78,8 @@ namespace litl::tests
 
     LITL_TEST_CASE("litlmat -> MaterialIntermediateData -> litlmatb", "[import::litlmat]")
     {
-        File source("assets/materials/flat.litlmat");
-        File dest("assets/materials/flat.litlmatb");
+        File source("assets/materials/test.litlmat");
+        File dest("assets/materials/test.litlmatb");
 
         REQUIRE(source.exists() == true);
 
@@ -99,8 +99,8 @@ namespace litl::tests
 
     LITL_TEST_CASE("litlmat -> MaterialIntermediateData -> litlmatb -> MaterialIntermediateData", "[import::litlmat]")
     {
-        File source("assets/materials/flat.litlmat");
-        File dest("assets/materials/flat.litlmatb");
+        File source("assets/materials/test.litlmat");
+        File dest("assets/materials/test.litlmatb");
 
         REQUIRE(source.exists() == true);
 
@@ -110,7 +110,7 @@ namespace litl::tests
             REQUIRE(dest.exists() == false);
         }
 
-        // flat.litlmat -> MaterialIntermediateData
+        // test.litlmat -> MaterialIntermediateData
         import::ImportService importer{};
         import::ImportedData data{};
         import::Result result = importer.import(source, data, true);
@@ -120,13 +120,13 @@ namespace litl::tests
 
         import::MaterialIntermediateData& litlmatIntermediateData = *data.material->intermediateMaterial;
 
-        // flat.litlmat -> flat.litlmatb
+        // test.litlmat -> test.litlmatb
         result = importer.convert(source.absolutePath());
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
 
-        // flat.litlmatb -> MaterialIntermediateData
+        // test.litlmatb -> MaterialIntermediateData
         auto litlmatbBytes = dest.readAllBytes();
         REQUIRE(litlmatbBytes.has_value() == true);
 
@@ -141,7 +141,7 @@ namespace litl::tests
         REQUIRE(litlmatb.deserialize(litlmatbIntermediateData, error) == true);
         REQUIRE(error == BinaryBlockFile::ErrorCode::None);
 
-        // The intermediate data from the two sources (flat.litlmat and flat.litlmatb) should be identical.
+        // The intermediate data from the two sources (test.litlmat and test.litlmatb) should be identical.
         for (uint32_t i = 0; i < import::MaterialIntermediateData::ShaderStageCount; ++i)
         {
             auto& litlmatShader = litlmatIntermediateData.getShaders()[i];

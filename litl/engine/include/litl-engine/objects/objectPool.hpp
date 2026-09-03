@@ -42,7 +42,7 @@ namespace litl
         void destroyGpuBuffer(GpuBufferHandle handle) noexcept;
         void deferDestroyGpuBuffer(GpuBufferHandle handle) noexcept;
 
-        [[nodiscard]] MaterialHandle reserveMaterial(Authority<AssetManager> auth) noexcept;
+        [[nodiscard]] MaterialHandle reserveMaterial(Authority<AssetManager> auth, ObjectDescriptor const& descriptor) noexcept;
         [[nodiscard]] MaterialHandle createMaterial(MaterialDescriptor const& descriptor) noexcept;
         [[nodiscard]] Material* getMaterial(MaterialHandle handle) noexcept;
         void getAllMaterialHandles(std::vector<MaterialHandle>& handles) const noexcept;

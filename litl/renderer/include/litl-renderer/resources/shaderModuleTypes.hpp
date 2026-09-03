@@ -2,6 +2,7 @@
 #define LITL_RENDERER_RESOURCES_SHADER_MODULE_TYPES_H__
 
 #include <cstdint>
+#include "litl-core/enumBitFlags.hpp"
 
 namespace litl
 {

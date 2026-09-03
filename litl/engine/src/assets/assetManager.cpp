@@ -210,7 +210,7 @@ namespace litl
             if (!asset->handle.isValid())
             {
                 // Ensure there is a valid handle to return to the caller, even if the material itself is not yet ready
-                asset->handle = objectPool->reserveMaterial({});
+                asset->handle = objectPool->reserveMaterial({}, ObjectDescriptor{ .name = asset->key, .lifetime = ObjectLifetime::Application });
             }
 
             taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);

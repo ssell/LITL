@@ -34,6 +34,7 @@ namespace litl
             {
                 logError("Failed to decode shader asset with error code ", static_cast<uint32_t>(litlshaderError));
                 error = AssetErrorCode::DeserializationFailed;
+                return false;
             }
 
             return true;
@@ -119,7 +120,7 @@ namespace litl
             return false;
         }
 
-        const bool success = shaderAsset->shader->setData(*shaderAsset->shaderIntermediateData);
+        const bool success = shaderAsset->shader->setData({}, *shaderAsset->shaderIntermediateData);
 
         if (!success)
         {

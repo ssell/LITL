@@ -37,13 +37,12 @@ namespace litl
         if (this != &other)
         {
             file = other.file;
-            key = std::move(other.key);
-            hashedKey = std::exchange(other.hashedKey, {});
-            type = std::exchange(other.type, AssetType::Unknown);
+            key = other.key;
+            hashedKey = other.hashedKey;
+            type = other.type;
             status.store(other.status.load(std::memory_order_relaxed), std::memory_order_relaxed);
-            other.status.store(AssetStatus::Unloaded, std::memory_order_relaxed);
-            error = std::exchange(other.error, AssetErrorCode::None);
-            assetOps = std::exchange(other.assetOps, nullptr);
+            error = other.error;
+            assetOps = other.assetOps;
         }
     }
 
@@ -52,13 +51,12 @@ namespace litl
         if (this != &other)
         {
             file = other.file;
-            key = std::move(other.key);
-            hashedKey = std::exchange(other.hashedKey, {});
-            type = std::exchange(other.type, AssetType::Unknown);
+            key = other.key;
+            hashedKey = other.hashedKey;
+            type = other.type;
             status.store(other.status.load(std::memory_order_relaxed), std::memory_order_relaxed);
-            other.status.store(AssetStatus::Unloaded, std::memory_order_relaxed);
-            error = std::exchange(other.error, AssetErrorCode::None);
-            assetOps = std::exchange(other.assetOps, nullptr);
+            error = other.error;
+            assetOps = other.assetOps;
         }
 
         return *this;

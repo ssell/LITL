@@ -2,7 +2,7 @@
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-import/importService.hpp"
-#include "litl-import/material/intermediate/materialIntermediateData.hpp"
+#include "litl-import/material/intermediate/litlmatb.hpp"
 
 namespace litl
 {
@@ -15,7 +15,25 @@ namespace litl
 
     bool decodeLitlMaterialBinaryBytes(MaterialAsset* materialAsset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
     {
-        // ... todo ...
+        import::LitlMatBinary litlmatb;
+        BinaryBlockFile::ErrorCode litlmatbError = BinaryBlockFile::ErrorCode::None;
+
+        if (!import::LitlMatBinary::parse(bytes, litlmatb, litlmatbError))
+        {
+            logError("Failed to parse material asset with error code ", static_cast<uint32_t>(litlmatbError));
+            error = AssetErrorCode::ParseFailed;
+            return false;
+        }
+
+        materialAsset->materialIntermediateData = std::make_shared<import::MaterialIntermediateData>();
+
+        if (!litlmatb.deserialize(*materialAsset->materialIntermediateData, litlmatbError))
+        {
+            logError("Failed to decode material asset with error code ", static_cast<uint32_t>(litlmatbError));
+            error = AssetErrorCode::DeserializationFailed;
+            return false;
+        }
+
         return false;
     }
 
@@ -30,8 +48,17 @@ namespace litl
 
         if (importResult.success)
         {
-            // ... todo ...
-            return true;
+            if (importedData.type == import::ImportedDataType::Material)
+            {
+                materialAsset->materialIntermediateData = importedData.material->intermediateMaterial;
+                return true;
+            }
+            else
+            {
+                logError("Import of material bytes from third-party asset failed due to detected import format was not shader but instead format type ", static_cast<uint32_t>(importedData.type));
+                error = AssetErrorCode::ExternalFormatImportFailed;
+                return false;
+            }
         }
         else
         {
@@ -73,8 +100,10 @@ namespace litl
 
     bool MaterialAsset::gatherDependencies(Asset* asset, AssetManager& assetManager, std::vector<Asset*>& dependencies) noexcept
     {
-        dependencies.clear();
         MaterialAsset* materialAsset = static_cast<MaterialAsset*>(asset);
+
+        dependencies.clear();
+        materialAsset->materialShaderDependencies.clear();
 
         if (materialAsset->materialIntermediateData == nullptr)
         {
@@ -87,15 +116,21 @@ namespace litl
         {
             if (shader.stage != import::LitlMatShaderStage::Unknown)
             {
-                auto* shaderAsset = assetManager.getShader(shader.resource);
+                auto shaderHandle = assetManager.getShaderHandle(shader.resource);
+                auto* shaderAsset = assetManager.getShader(shaderHandle);
 
                 if (shaderAsset != nullptr)
                 {
                     dependencies.push_back(shaderAsset);
+
+                    materialAsset->materialShaderDependencies.push_back(MaterialAssetShaderDependency{
+                        .stage = static_cast<ShaderStage>(shader.stage),
+                        .handle = shaderHandle
+                    });
                 }
             }
         }
-
+        /*
         auto& properties = materialAsset->materialIntermediateData->getProperties();
 
         for (auto& property : properties)
@@ -108,11 +143,17 @@ namespace litl
                 {
                     if (property.type == import::LitlMatPropertyType::Texture2D)
                     {
-                        auto* texture2DAsset = assetManager.getTexture2D(*textureResource);
+                        auto texture2DHandle = assetManager.getTexture2DHandle(*textureResource);
+                        auto* texture2DAsset = assetManager.getTexture2D(texture2DHandle);
 
                         if (texture2DAsset != nullptr)
                         {
                             dependencies.push_back(texture2DAsset);
+
+                            materialAsset->materialDependencies.push_back(MaterialAssetDependency{
+                                .type = AssetType::Texture2D,
+                                .handle = texture2DHandle
+                            });
                         }
                     }
                     else if (property.type == import::LitlMatPropertyType::Texture3D)
@@ -122,14 +163,36 @@ namespace litl
                 }
             }
         }
-        
+        */
 
         return true;
     }
 
     bool MaterialAsset::processOnMain(Asset* asset, ObjectPool& objectPool, AssetErrorCode& error) noexcept
     {
-        // ... todo ...
-        return true;
+        MaterialAsset* materialAsset = static_cast<MaterialAsset*>(asset);
+
+        if (materialAsset->material == nullptr)
+        {
+            logError("Processing MaterialAsset '", materialAsset->key, "' failed as material object is null.");
+            return false;
+        }
+
+        if (materialAsset->materialIntermediateData == nullptr)
+        {
+            logError("Processing MaterialAsset '", materialAsset->key, "' failed as intermediate data is null.");
+            return false;
+        }
+
+        const bool success = materialAsset->material->setData({}, *materialAsset->materialIntermediateData, materialAsset->materialShaderDependencies);
+
+        if (!success)
+        {
+            logError("Failed to create Material object for MaterialAsset '", materialAsset->key, "'");
+        }
+
+        materialAsset->materialIntermediateData = nullptr;
+
+        return success;
     }
 }

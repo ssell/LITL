@@ -15,13 +15,21 @@
 #include "litl-renderer/resources/graphicsPipeline.hpp"
 #include "litl-renderer/resources/computePipeline.hpp"
 
+namespace litl::import
+{
+    class MaterialIntermediateData;
+}
+
 namespace litl
 {
     class MaterialManager;
     class DeferredMaterialCommands;
     class ObjectPool;
     class Renderer;
+    class AssetManager;
     struct ActiveMaterialSystem;
+    struct MaterialAsset;
+    struct MaterialAssetShaderDependency;
 
     struct VertexInputDescriptor
     {
@@ -80,9 +88,20 @@ namespace litl
         Material& operator=(Material&& other) noexcept;
         ~Material();
 
+        /// <summary>
+        /// Path when being created all at once.
+        /// </summary>
         [[nodiscard]] bool create(Authority<ObjectPool> auth, MaterialDescriptor const& descriptor, Renderer const& renderer, ObjectPool& objectPool) noexcept;
+
+        /// <summary>
+        /// Path when being created incrementally by the asset system.
+        /// </summary>
+        [[nodiscard]] bool create(Authority<ObjectPool> auth, ObjectDescriptor const& descriptor, Renderer const& renderer, ObjectPool& objectPool, AssetManager& assetManager) noexcept;
+
         void setSelfHandle(Authority<ObjectPool> author, MaterialHandle handle) noexcept;
         void destroy(Authority<ObjectPool> auth) noexcept;
+
+        [[nodiscard]] bool setData(Authority<MaterialAsset> auth, import::MaterialIntermediateData const& data, std::span<MaterialAssetShaderDependency const> shaderDependencies) noexcept;
 
         /// <summary>
         /// Enables/disables the split of Tier 3 data into its own separate GPU buffer space.

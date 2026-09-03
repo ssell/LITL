@@ -1,6 +1,7 @@
 #include "litl-core/containers/common.hpp"
 #include "litl-engine/objects/shader.hpp"
 #include "litl-engine/objects/objectPool.hpp"
+#include "litl-engine/assets/shaderAsset.hpp"
 #include "litl-import/shader/intermediate/shaderIntermediateData.hpp"
 #include "litl-renderer/renderer.hpp"
 
@@ -50,7 +51,7 @@ namespace litl
         return true;
     }
 
-    bool Shader::setData(import::ShaderIntermediateData const& intermediateData) noexcept
+    bool Shader::setData(Authority<ShaderAsset> auth, import::ShaderIntermediateData const& intermediateData) noexcept
     {
         if (m_pImpl->shaderModuleHandle.isValid())
         {
@@ -81,5 +82,10 @@ namespace litl
         }
 
         m_pImpl->renderer = nullptr;
+    }
+
+    ShaderModuleHandle Shader::getShaderModuleHandle() const noexcept
+    {
+        return m_pImpl->shaderModuleHandle;
     }
 }

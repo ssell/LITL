@@ -7,7 +7,6 @@ fragment = { resource = "shaders/flat", entry = "fragmentMain" }
 [properties]
 tint   = { type = "vec4", value = [1.0, 1.0, 1.0, 1.0] }
 fade   = { type = "float", value = 1.0 }
-albedo = { type = "tex2D", value = "textures/white" }
 
 [raster]
 cullMode  = "Back"

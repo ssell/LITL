@@ -114,7 +114,7 @@ set (LITL_TEST_ASSETS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/data/assets")
 
 set (LITL_TESTS_ASSETS
 	"${LITL_TEST_ASSETS_DIR}/mesh/bunny.obj"
-	"${LITL_TEST_ASSETS_DIR}/materials/flat.litlmat"
+	"${LITL_TEST_ASSETS_DIR}/materials/test.litlmat"
 	"${LITL_TEST_ASSETS_DIR}/shaders/test.slang"
 )
 

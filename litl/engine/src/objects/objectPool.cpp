@@ -3,6 +3,7 @@
 #include "litl-core/assert.hpp"
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/world.hpp"
+#include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/objects/material/material.hpp"
 #include "litl-engine/render/renderManager.hpp"
@@ -16,6 +17,7 @@ namespace litl
         std::shared_ptr<RenderManager> renderManager;
         std::shared_ptr<World> world;
         std::shared_ptr<SceneView> sceneView;
+        std::shared_ptr<AssetManager> assetManager;
 
         HandlePool<Camera, CameraHandleTag> cameraPool;
         HandlePool<GpuBuffer, GpuBufferHandleTag> gpuBufferPool;
@@ -41,10 +43,12 @@ namespace litl
         m_impl->renderManager = services.get<RenderManager>();
         m_impl->world = services.get<World>();
         m_impl->sceneView = services.get<SceneView>();
+        m_impl->assetManager = services.get<AssetManager>();
 
         LITL_FATAL_ASSERT_MSG((m_impl->renderManager != nullptr), "Failed to inject RenderManager to ObjectPool");
         LITL_FATAL_ASSERT_MSG((m_impl->world != nullptr), "Failed to inject World to ObjectPool");
         LITL_FATAL_ASSERT_MSG((m_impl->sceneView != nullptr), "Failed to inject SceneView to ObjectPool");
+        LITL_FATAL_ASSERT_MSG((m_impl->assetManager != nullptr), "Failed to inject AssetManager to ObjectPool");
     }
 
     void ObjectPool::destroy(Authority<Engine> auth) noexcept
@@ -229,9 +233,17 @@ namespace litl
     // Material
     //--------------------------------------------------------------------------------------
 
-    MaterialHandle ObjectPool::reserveMaterial(Authority<AssetManager> auth) noexcept
+    MaterialHandle ObjectPool::reserveMaterial(Authority<AssetManager> auth, ObjectDescriptor const& descriptor) noexcept
     {
         Material material{};
+
+        if (!material.create({}, descriptor, *(m_impl->renderManager->getRenderer()), *this, *m_impl->assetManager))
+        {
+            logWarning("Failed to reserve Material '", descriptor.name, "'");
+            material.destroy({});
+            return {};
+        }
+
         return m_impl->materialPool.create(material);
     }
 

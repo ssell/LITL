@@ -18,6 +18,7 @@ namespace litl
 {
     class ObjectPool;
     class Renderer;
+    struct ShaderAsset;
 
     struct ShaderDescriptor
     {
@@ -44,12 +45,14 @@ namespace litl
         /// </summary>
         [[nodiscard]] bool create(Authority<ObjectPool> auth, Renderer const& renderer, ObjectDescriptor const& descriptor) noexcept;
 
-        [[nodiscard]] bool setData(import::ShaderIntermediateData const& intermediateData) noexcept;
+        [[nodiscard]] bool setData(Authority<ShaderAsset> auth, import::ShaderIntermediateData const& intermediateData) noexcept;
 
         /// <summary>
         /// 
         /// </summary>
         void destroy(Authority<ObjectPool> auth) noexcept;
+
+        [[nodiscard]] ShaderModuleHandle getShaderModuleHandle() const noexcept;
 
     private:
 

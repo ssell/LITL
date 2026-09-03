@@ -6,7 +6,6 @@
 #include <string>
 
 #include "litl-core/handles.hpp"
-#include "litl-core/enumBitFlags.hpp"
 #include "litl-renderer/resources/shaderModuleTypes.hpp"
 #include "litl-renderer/reflection.hpp"
 

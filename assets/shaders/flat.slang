@@ -38,6 +38,12 @@ struct RenderInstanceData
     uint materialSlot;
 }
 
+struct MaterialProperties
+{
+    float3 tint;
+    float fade;
+}
+
 // Maps to RenderPushConstants in litl-engine/render/renderStructs.hpp
 struct PushConstants
 {
@@ -45,6 +51,7 @@ struct PushConstants
     PerPassData *passData;
     RenderInstanceData* instanceData;
     float4x4* worldMatrices;
+    MaterialProperties* materialProperties;
 };
 
 [[vk::push_constant]] PushConstants _pc;
@@ -53,19 +60,20 @@ struct PushConstants
 // Vertex Shader
 // -----------------------------------------------------------------------------------------
 
-// Maps to Vertex in litl-engine/types/vertex.hpp
+// Maps to Vertex in litl-core/math/geometry/vertex.hpp
 struct VertexInput
 {
-    float3 position : POSITION;
-    float3 color    : COLOR;
-    float2 uv       : UV;
+    float3 position;
+    float2 uv;
+    float3 normal;
+    float4 tangent;
 };
 
 struct VertexOutput
 {
     float4 position : SV_Position;
-    float3 color    : COLOR;
     float2 uv       : UV;
+    float3 color    : COLOR;
 };
 
 [shader("vertex")]
@@ -77,13 +85,16 @@ VertexOutput vertexMain(
     VertexOutput output = (VertexOutput)0;
 
     uint gpuIndex = _pc->instanceData[globalInstanceId].gpuIndex;
+    uint matIndex = _pc->instanceData[globalInstanceId].materialSlot;
+    
     float4x4 worldMatrix = _pc->worldMatrices[gpuIndex];
     float4x4 mvpMatrix = mul(_pc->passData->viewProjection, worldMatrix);
+    MaterialProperties matProps = _pc->materialProperties[matIndex];
 
     output.position = mul(mvpMatrix, float4(input.position.xyz, 1.0));
-    output.color = input.color;
     output.uv = input.uv;
-    
+    output.color = (matProps.tint * matProps.fade) * ((input.normal.y + 1.0) * 0.5);      // [-1, 1] to [0, 1]
+
     return output;
 }
 
@@ -100,10 +111,6 @@ struct FragmentOutput
 FragmentOutput fragmentMain(VertexOutput input)
 {
     FragmentOutput output = (FragmentOutput)0;
-
-    float transition = 1.0f;//(sin(_pc->frameData->elapsedTime) + 1.0f) * 0.5f;
-    output.color = float4(input.color.rgb * transition, 1.0f);
-    //output.color.r = 1.0f;
-
+    output.color = float4(input.color, 1.0f);
     return output;
 }

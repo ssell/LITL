@@ -1,11 +1,15 @@
 #include <format>
+#include <optional>
 
 #include "litl-core/assert.hpp"
+#include "litl-engine/assets/assetManager.hpp"
+#include "litl-engine/assets/materialAsset.hpp"
 #include "litl-engine/objects/material/material.hpp"
 #include "litl-engine/objects/material/materialManager.hpp"
 #include "litl-engine/objects/material/materialProperties.hpp"
 #include "litl-engine/objects/material/deferredMaterialCommands.hpp"
 #include "litl-engine/objects/objectPool.hpp"
+#include "litl-engine/objects/shader.hpp"
 #include "litl-engine/ecs/systems/activeMaterialSystem.hpp"
 #include "litl-renderer/renderer.hpp"
 
@@ -15,6 +19,7 @@ namespace litl
     {
         Renderer const* renderer = nullptr;
         ObjectPool* objectPool = nullptr;
+        AssetManager* assetManager = nullptr;
         MaterialHandle selfHandle{};
 
         MaterialDescriptor descriptor;
@@ -199,6 +204,119 @@ namespace litl
                     }
                 }
             }
+
+            // ---------------------------------------------------------------------------------
+            // --- Alternate Graphics Pipeline (mesh + task)
+
+            else if (meshHandle.isValid())      // task handle is optional
+            {
+                // ... todo ...
+            }
+
+            // ---------------------------------------------------------------------------------
+            // --- Compute Pipeline
+
+            if (computeHandle.isValid())
+            {
+                // ... todo ...
+            }
+
+            return (graphicsPipelineHandle.isValid() || computePipelineHandle.isValid());
+        }
+
+        bool create(ObjectDescriptor const& objectDescriptor, Renderer const& pRenderer, ObjectPool& pObjectPool, AssetManager& pAssetManager) noexcept
+        {
+            descriptor.objectInfo = objectDescriptor;
+            renderer = &pRenderer;
+            objectPool = &pObjectPool;
+            assetManager = &pAssetManager;
+
+            return true;
+        }
+
+        bool setData(import::MaterialIntermediateData const& data, std::span<MaterialAssetShaderDependency const> shaderDependencies) noexcept
+        {
+            if (assetManager == nullptr)
+            {
+                return false;
+            }
+
+            // ---------------------------------------------------------------------------------
+            // --- Shader Module Handles
+
+            auto fetchShaderModuleHandle = [&](ShaderStage stage, ShaderModuleHandle& handle) noexcept -> bool
+            {
+                for (auto& shaderAssetDependency : shaderDependencies)
+                {
+                    if (shaderAssetDependency.stage == stage)
+                    {
+                        auto* shaderAsset = assetManager->getShader(shaderAssetDependency.handle);
+
+                        if ((shaderAsset != nullptr) && (shaderAsset->shader != nullptr))
+                        {
+                            handle = shaderAsset->shader->getShaderModuleHandle();
+                            return true;
+                        }
+
+                        return false;
+                    }
+                }
+
+                return true;
+            };
+
+            if (!fetchShaderModuleHandle(ShaderStage::Vertex, vertexHandle))
+            {
+                logError("Failed to retrieve expected Vertex Shader asset for Material '", descriptor.objectInfo.name, "'");
+                return false;
+            }
+
+            if (!fetchShaderModuleHandle(ShaderStage::Fragment, fragmentHandle))
+            {
+                logError("Failed to retrieve expected Fragment Shader asset for Material '", descriptor.objectInfo.name, "'");
+                return false;
+            }
+
+            if (!fetchShaderModuleHandle(ShaderStage::Geometry, geometryHandle))
+            {
+                logError("Failed to retrieve expected Geometry Shader asset for Material '", descriptor.objectInfo.name, "'");
+                return false;
+            }
+
+            if (!fetchShaderModuleHandle(ShaderStage::TessellationControl, tessellationControlHandle))
+            {
+                logError("Failed to retrieve expected Tessellation Control Shader asset for Material '", descriptor.objectInfo.name, "'");
+                return false;
+            }
+
+            if (!fetchShaderModuleHandle(ShaderStage::TessellationEvaluation, tessellationEvaluationHandle))
+            {
+                logError("Failed to retrieve expected Tessellation Evaluation Shader asset for Material '", descriptor.objectInfo.name, "'");
+                return false;
+            }
+
+            if (!fetchShaderModuleHandle(ShaderStage::Mesh, meshHandle))
+            {
+                logError("Failed to retrieve expected Mesh Shader asset for Material '", descriptor.objectInfo.name, "'");
+                return false;
+            }
+
+            if (!fetchShaderModuleHandle(ShaderStage::Task, taskHandle))
+            {
+                logError("Failed to retrieve expected Task Shader asset for Material '", descriptor.objectInfo.name, "'");
+                return false;
+            }
+
+            if (!fetchShaderModuleHandle(ShaderStage::Compute, computeHandle))
+            {
+                logError("Failed to retrieve expected Compute Shader asset for Material '", descriptor.objectInfo.name, "'");
+                return false;
+            }
+
+            // ---------------------------------------------------------------------------------
+            // --- Standard Graphics Pipeline (vertex + fragment + optional geometry/tessellation)
+
+            // ... todo ...
 
             // ---------------------------------------------------------------------------------
             // --- Alternate Graphics Pipeline (mesh + task)
@@ -425,6 +543,11 @@ namespace litl
     {
         return m_pImpl->create(descriptor, renderer, objectPool);
     }
+
+    bool Material::create(Authority<ObjectPool> auth, ObjectDescriptor const& descriptor, Renderer const& renderer, ObjectPool& objectPool, AssetManager& assetManager) noexcept
+    {
+        return m_pImpl->create(descriptor, renderer, objectPool, assetManager);
+    }
     
     void Material::setSelfHandle(Authority<ObjectPool> auth, MaterialHandle selfHandle) noexcept
     {
@@ -437,6 +560,11 @@ namespace litl
     void Material::destroy(Authority<ObjectPool> auth) noexcept
     {
         m_pImpl->destroy();
+    }
+
+    bool Material::setData(Authority<MaterialAsset> auth, import::MaterialIntermediateData const& data, std::span<MaterialAssetShaderDependency const> shaderDependencies) noexcept
+    {
+        return m_pImpl->setData(data, shaderDependencies);
     }
 
     void Material::toggleFrequentDataUpdateSeparation(bool enabled) noexcept
