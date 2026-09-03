@@ -1,8 +1,15 @@
 #ifndef LITL_ENGINE_ASSETS_MATERIAL_ASSET_H__
 #define LITL_ENGINE_ASSETS_MATERIAL_ASSET_H__
 
+#include <memory>
+
 #include "litl-engine/assets/asset.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
+
+namespace litl::import
+{
+    class MaterialIntermediateData;
+}
 
 namespace litl
 {
@@ -12,6 +19,7 @@ namespace litl
     {
         MaterialHandle handle{};
         Material* material{ nullptr };
+        std::shared_ptr<import::MaterialIntermediateData> materialIntermediateData;
 
         static bool fetchAssetObject(Asset* asset, ObjectPool& objectPool) noexcept;
         static bool decodeBytes(Asset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept;

@@ -8,7 +8,7 @@ namespace litl::import
 {
     struct MaterialImportResult
     {
-        std::unique_ptr<MaterialIntermediateData> intermediateMaterial;
+        std::shared_ptr<MaterialIntermediateData> intermediateMaterial;
     };
 }
 

@@ -1,7 +1,8 @@
 #include "litl-engine/assets/materialAsset.hpp"
+#include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-import/importService.hpp"
-
+#include "litl-import/material/intermediate/materialIntermediateData.hpp"
 
 namespace litl
 {
@@ -73,8 +74,55 @@ namespace litl
     bool MaterialAsset::gatherDependencies(Asset* asset, AssetManager& assetManager, std::vector<Asset*>& dependencies) noexcept
     {
         dependencies.clear();
+        MaterialAsset* materialAsset = static_cast<MaterialAsset*>(asset);
 
-        // ... todo ...
+        if (materialAsset->materialIntermediateData == nullptr)
+        {
+            return true;
+        }
+
+        auto& shaders = materialAsset->materialIntermediateData->getShaders();
+
+        for (auto& shader : shaders)
+        {
+            if (shader.stage != import::LitlMatShaderStage::Unknown)
+            {
+                auto* shaderAsset = assetManager.getShader(shader.resource);
+
+                if (shaderAsset != nullptr)
+                {
+                    dependencies.push_back(shaderAsset);
+                }
+            }
+        }
+
+        auto& properties = materialAsset->materialIntermediateData->getProperties();
+
+        for (auto& property : properties)
+        {
+            if ((property.type == import::LitlMatPropertyType::Texture2D) || (property.type == import::LitlMatPropertyType::Texture3D))
+            {
+                auto* textureResource = std::get_if<std::string>(&property.value);
+
+                if (textureResource != nullptr)
+                {
+                    if (property.type == import::LitlMatPropertyType::Texture2D)
+                    {
+                        auto* texture2DAsset = assetManager.getTexture2D(*textureResource);
+
+                        if (texture2DAsset != nullptr)
+                        {
+                            dependencies.push_back(texture2DAsset);
+                        }
+                    }
+                    else if (property.type == import::LitlMatPropertyType::Texture3D)
+                    {
+                        // ... todo add Texture3DAsset support ...
+                    }
+                }
+            }
+        }
+        
 
         return true;
     }

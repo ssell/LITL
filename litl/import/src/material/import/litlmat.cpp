@@ -259,7 +259,7 @@ namespace litl::import
 
         importedData.type = ImportedDataType::Material;
         importedData.material = std::make_unique<MaterialImportResult>();
-        importedData.material->intermediateMaterial = std::make_unique<MaterialIntermediateData>();
+        importedData.material->intermediateMaterial = std::make_shared<MaterialIntermediateData>();
         auto* intermediateMaterial = importedData.material->intermediateMaterial.get();
 
         if (!inputMaterial.name.empty())
