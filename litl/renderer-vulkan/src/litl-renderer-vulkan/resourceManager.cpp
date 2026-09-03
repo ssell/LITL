@@ -905,9 +905,28 @@ namespace litl::vulkan
             return false;
         }
 
+        if (!descriptor.reflection.entryPoints.empty())
+        {
+            resource.reflection = descriptor.reflection;
+        }
+        else
+        {
+            // Ideally the reflection comes from a pre-refleted shader that is imported. But there are times this may not be true. So reflect now.
+            auto optReflection = reflectSPIRV(descriptor.bytes);
+
+            if (optReflection.has_value() && optReflection->entryPoints.size() > 0)
+            {
+                resource.reflection = *optReflection;
+            }
+            else
+            {
+                logError("Failed to reflect Vulkan Shader at '", descriptor.resource, "'");
+                return false;
+            }
+        }
+
         resource.resource = descriptor.resource;
         resource.resourceId = StringId(descriptor.resource);
-        resource.reflection = descriptor.reflection;
         resource.spirvHash = hashArray(descriptor.bytes);
 
         return true;
