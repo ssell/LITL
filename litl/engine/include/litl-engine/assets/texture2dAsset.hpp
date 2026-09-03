@@ -23,6 +23,7 @@ namespace litl
         &Texture2DAsset::fetchAssetObject,
         &Texture2DAsset::decodeBytes,
         &Texture2DAsset::processOnWorker,
+        nullptr,
         &Texture2DAsset::processOnMain
     };
 }

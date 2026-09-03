@@ -45,7 +45,9 @@ namespace litl
         DeserializationFailed      = 11u,
         WorkerProcessFailed        = 12u,
         MainProcessFailed          = 13u,
-        ExternalFormatImportFailed = 14u
+        ExternalFormatImportFailed = 14u,
+        DependencyResolveFailed    = 15u,
+        DependencyLoadFailed       = 16u
     };
 }
 

@@ -70,6 +70,15 @@ namespace litl
         return true;
     }
 
+    bool MaterialAsset::gatherDependencies(Asset* asset, AssetManager& assetManager, std::vector<Asset*>& dependencies) noexcept
+    {
+        dependencies.clear();
+
+        // ... todo ...
+
+        return true;
+    }
+
     bool MaterialAsset::processOnMain(Asset* asset, ObjectPool& objectPool, AssetErrorCode& error) noexcept
     {
         // ... todo ...

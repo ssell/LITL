@@ -23,6 +23,7 @@ namespace litl
         &TextAsset::fetchAssetObject,
         &TextAsset::decodeBytes,
         &TextAsset::processOnWorker,
+        nullptr,
         &TextAsset::processOnMain
     };
 }

@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <mutex>
+#include <ranges>
 #include <unordered_map>
 
 #include "litl-core/assert.hpp"
@@ -7,6 +8,7 @@
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-engine/assets/assetManager.hpp"
+#include "litl-engine/assets/assetDependencies.hpp"
 #include "litl-engine/assets/assetLoadTask.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/tasks/taskManager.hpp"
@@ -70,12 +72,16 @@ namespace litl
 
         std::mutex assetMapMutex;
         std::mutex assetLoadMutex;
+        std::mutex pendingDependencyMutex;
 
         HandlePool<MaterialAsset, MaterialAssetHandleTag> materialAssetPool;
         HandlePool<MeshAsset, MeshAssetHandleTag> meshAssetPool;
         HandlePool<TextAsset, TextAssetHandleTag> textAssetPool;
         HandlePool<ShaderAsset, ShaderAssetHandleTag> shaderAssetPool;
         HandlePool<Texture2DAsset, Texture2DAssetHandleTag> texture2DAssetPool;
+
+        std::vector<PendingAssetDependency> pendingDependencies;
+        std::vector<PendingAssetDependency> pendingAtFrameStart;
 
         /// <summary>
         /// Invoked during AssetManager setup. It searches the local "assets/" directory for all
@@ -158,7 +164,7 @@ namespace litl
             asset.key = key;
             asset.hashedKey = hashedKey;
             asset.type = type;
-            asset.status = AssetStatus::Unloaded;
+            asset.status.store(AssetStatus::Unloaded, std::memory_order_relaxed);
 
             return asset;
         }
@@ -190,16 +196,16 @@ namespace litl
         /// Invoked at runtime when the material is first requested (or requested after it has been unloaded).
         /// Enqueues a Task to load the material in from disk.
         /// </summary>
-        void initiateMaterialAssetLoad(MaterialAsset* asset) noexcept
+        void initiateMaterialAssetLoad(MaterialAsset* asset, AssetManager& assetManager) noexcept
         {
             std::scoped_lock lock{ assetLoadMutex };
 
-            if (asset->status != AssetStatus::Unloaded)
+            if (asset->status.load(std::memory_order_relaxed) != AssetStatus::Unloaded)
             {
                 return;
             }
 
-            asset->status = AssetStatus::Loading;
+            asset->status.store(AssetStatus::Loading, std::memory_order_relaxed);
 
             if (!asset->handle.isValid())
             {
@@ -207,7 +213,7 @@ namespace litl
                 asset->handle = objectPool->reserveMaterial({});
             }
 
-            taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool), true);
+            taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
         }
 
         // ---------------------------------------------------------------------------------
@@ -237,16 +243,16 @@ namespace litl
         /// Invoked at runtime when the mesh is first requested (or requested after it has been unloaded).
         /// Enqueues a Task to load the mesh in from disk.
         /// </summary>
-        void initiateMeshAssetLoad(MeshAsset* asset) noexcept
+        void initiateMeshAssetLoad(MeshAsset* asset, AssetManager& assetManager) noexcept
         {
             std::scoped_lock lock{ assetLoadMutex };
 
-            if (asset->status != AssetStatus::Unloaded)
+            if (asset->status.load(std::memory_order_relaxed) != AssetStatus::Unloaded)
             {
                 return;
             }
 
-            asset->status = AssetStatus::Loading;
+            asset->status.store(AssetStatus::Loading, std::memory_order_relaxed);
 
             if (!asset->handle.isValid())
             {
@@ -254,7 +260,7 @@ namespace litl
                 asset->handle = objectPool->reserveMesh({}, ObjectDescriptor{ .name = asset->key, .lifetime = ObjectLifetime::Application });
             }
 
-            taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool), true);
+            taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
         }
 
         // ---------------------------------------------------------------------------------
@@ -284,16 +290,16 @@ namespace litl
         /// Invoked at runtime when the shader is first requested (or requested after it has been unloaded).
         /// Enqueues a Task to load the shader in from disk.
         /// </summary>
-        void initiateShaderAssetLoad(ShaderAsset* asset) noexcept
+        void initiateShaderAssetLoad(ShaderAsset* asset, AssetManager& assetManager) noexcept
         {
             std::scoped_lock lock{ assetLoadMutex };
 
-            if (asset->status != AssetStatus::Unloaded)
+            if (asset->status.load(std::memory_order_relaxed) != AssetStatus::Unloaded)
             {
                 return;
             }
 
-            asset->status = AssetStatus::Loading;
+            asset->status.store(AssetStatus::Loading, std::memory_order_relaxed);
 
             if (!asset->handle.isValid())
             {
@@ -301,7 +307,7 @@ namespace litl
                 asset->handle = objectPool->reserveShader({}, ObjectDescriptor{ .name = asset->key, .lifetime = ObjectLifetime::Application });
             }
 
-            taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool), true);
+            taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
         }
 
         // ---------------------------------------------------------------------------------
@@ -331,16 +337,16 @@ namespace litl
         /// Invoked at runtime when the text is first requested (or requested after it has been unloaded).
         /// Enqueues a Task to load the text in from disk.
         /// </summary>
-        void initiateTextAssetLoad(TextAsset* asset) noexcept
+        void initiateTextAssetLoad(TextAsset* asset, AssetManager& assetManager) noexcept
         {
             std::scoped_lock lock{ assetLoadMutex };
 
-            if (asset->status != AssetStatus::Unloaded)
+            if (asset->status.load(std::memory_order_relaxed) != AssetStatus::Unloaded)
             {
                 return;
             }
 
-            asset->status = AssetStatus::Loading;
+            asset->status.store(AssetStatus::Loading, std::memory_order_relaxed);
 
             if (!asset->handle.isValid())
             {
@@ -348,7 +354,7 @@ namespace litl
                 asset->handle = objectPool->reserveText({});
             }
 
-            taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool), true);
+            taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
         }
 
         // ---------------------------------------------------------------------------------
@@ -378,16 +384,16 @@ namespace litl
         /// Invoked at runtime when the texture is first requested (or requested after it has been unloaded).
         /// Enqueues a Task to load the texture in from disk.
         /// </summary>
-        void initiateTexture2DAssetLoad(Texture2DAsset* asset) noexcept
+        void initiateTexture2DAssetLoad(Texture2DAsset* asset, AssetManager& assetManager) noexcept
         {
             std::scoped_lock lock{ assetLoadMutex };
 
-            if (asset->status != AssetStatus::Unloaded)
+            if (asset->status.load(std::memory_order_relaxed) != AssetStatus::Unloaded)
             {
                 return;
             }
 
-            asset->status = AssetStatus::Loading;
+            asset->status.store(AssetStatus::Loading, std::memory_order_relaxed);
 
             if (!asset->handle.isValid())
             {
@@ -395,7 +401,7 @@ namespace litl
                 asset->handle = objectPool->reserveTexture2D({});
             }
 
-            taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool), true);
+            taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
         }
     };
 
@@ -423,6 +429,74 @@ namespace litl
     void AssetManager::destroy(Authority<Engine> auth) noexcept
     {
         logInfo("Destroying AssetManager ...");
+    }
+
+    void AssetManager::registerAwaitingDependency(Authority<AwaitAssetDependencies> auth, std::coroutine_handle<> handle, std::span<Asset* const> dependencies, Asset* dependent) noexcept
+    {
+        if (dependencies.empty() || (dependent == nullptr))
+        {
+            return;
+        }
+
+        PendingAssetDependency* pending = nullptr;
+        
+        {
+            std::scoped_lock lock{ m_impl->pendingDependencyMutex };
+            m_impl->pendingDependencies.emplace_back();
+            pending = &m_impl->pendingDependencies.back();
+        }
+
+        pending->handle = handle;
+        pending->dependencies.assign(dependencies.begin(), dependencies.end());
+        pending->dependent = dependent;
+    }
+
+    void AssetManager::onFrameStart() noexcept
+    {
+        m_impl->pendingAtFrameStart.clear();
+
+        {
+            std::scoped_lock lock{ m_impl->pendingDependencyMutex };
+
+            if (m_impl->pendingDependencies.empty())
+            {
+                return;
+            }
+
+            m_impl->pendingAtFrameStart.swap(m_impl->pendingDependencies);
+        }
+
+        for (auto& pending : m_impl->pendingAtFrameStart)
+        {
+            const bool donePending = std::ranges::all_of(pending.dependencies, [](Asset const* dependency) noexcept -> bool
+            {
+                const auto status = dependency->status.load(std::memory_order_relaxed);
+                return (status == AssetStatus::InMemory) || (status == AssetStatus::Error);
+            });
+
+            if (donePending)
+            {
+                TaskThreadQueue::GetMainThreadQueue().schedule(pending.handle);
+                pending.framesPending = 0u;
+                continue;
+            }
+
+            pending.framesPending++;
+
+            // ... todo determine how frames indicate a dependency has stalled and is failing to load ...
+        }
+
+        {
+            std::scoped_lock lock{ m_impl->pendingDependencyMutex };
+
+            for (auto& pending : m_impl->pendingAtFrameStart)
+            {
+                if (pending.framesPending != 0u)
+                {
+                    m_impl->pendingDependencies.push_back(std::move(pending));
+                }
+            }
+        }
     }
 
     AssetHandle AssetManager::getAsset(std::string_view resource) noexcept
@@ -470,9 +544,9 @@ namespace litl
             return nullptr;
         }
 
-        if (material->status == AssetStatus::Unloaded)
+        if (material->status.load(std::memory_order_relaxed) == AssetStatus::Unloaded)
         {
-            m_impl->initiateMaterialAssetLoad(material);
+            m_impl->initiateMaterialAssetLoad(material, *this);
         }
 
         return material;
@@ -509,9 +583,9 @@ namespace litl
             return nullptr;
         }
 
-        if (mesh->status == AssetStatus::Unloaded)
+        if (mesh->status.load(std::memory_order_relaxed) == AssetStatus::Unloaded)
         {
-            m_impl->initiateMeshAssetLoad(mesh);
+            m_impl->initiateMeshAssetLoad(mesh, *this);
         }
 
         return mesh;
@@ -548,9 +622,9 @@ namespace litl
             return nullptr;
         }
 
-        if (shaderModule->status == AssetStatus::Unloaded)
+        if (shaderModule->status.load(std::memory_order_relaxed) == AssetStatus::Unloaded)
         {
-            m_impl->initiateShaderAssetLoad(shaderModule);
+            m_impl->initiateShaderAssetLoad(shaderModule, *this);
         }
 
         return shaderModule;
@@ -587,9 +661,9 @@ namespace litl
             return nullptr;
         }
 
-        if (text->status == AssetStatus::Unloaded)
+        if (text->status.load(std::memory_order_relaxed) == AssetStatus::Unloaded)
         {
-            m_impl->initiateTextAssetLoad(text);
+            m_impl->initiateTextAssetLoad(text, *this);
         }
 
         return text;
@@ -628,9 +702,9 @@ namespace litl
             return nullptr;
         }
 
-        if (texture2D->status == AssetStatus::Unloaded)
+        if (texture2D->status.load(std::memory_order_relaxed) == AssetStatus::Unloaded)
         {
-            m_impl->initiateTexture2DAssetLoad(texture2D);
+            m_impl->initiateTexture2DAssetLoad(texture2D, *this);
         }
 
         return texture2D;

@@ -1,6 +1,7 @@
 #include "litl-core/authority.hpp"
 #include "litl-engine/engine.hpp"
 #include "litl-engine/engineCallbacks.hpp"
+#include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/render/renderManager.hpp"
 #include "litl-engine/scene/sceneManager.hpp"
 #include "litl-engine/tasks/taskManager.hpp"
@@ -11,6 +12,7 @@ namespace litl
     struct EngineCallbacks::Impl final
     {
         std::shared_ptr<World> world{ nullptr };
+        std::shared_ptr<AssetManager> assetManager{ nullptr };
         std::shared_ptr<RenderManager> renderManager{ nullptr };
         std::shared_ptr<SceneManager> sceneManager{ nullptr };
         std::shared_ptr<TaskManager> taskManager{ nullptr };
@@ -32,6 +34,7 @@ namespace litl
     void EngineCallbacks::setup(Authority<Engine> authority, ServiceProvider& services, std::shared_ptr<FrameCallbacks> userCallbacks) noexcept
     {
         m_impl->world = services.get<World>();
+        m_impl->assetManager = services.get<AssetManager>();
         m_impl->renderManager = services.get<RenderManager>();
         m_impl->sceneManager = services.get<SceneManager>();
         m_impl->taskManager = services.get<TaskManager>();
@@ -39,6 +42,7 @@ namespace litl
         m_impl->userFrameCallbacks = (userCallbacks != nullptr) ? userCallbacks : std::make_shared<FrameCallbacks>();
 
         LITL_FATAL_ASSERT_MSG((m_impl->world != nullptr), "Failed to inject World into EngineCallbacks");
+        LITL_FATAL_ASSERT_MSG((m_impl->assetManager != nullptr), "Failed to inject AssetManager into EngineCallbacks");
         LITL_FATAL_ASSERT_MSG((m_impl->renderManager != nullptr), "Failed to inject RenderManager into EngineCallbacks");
         LITL_FATAL_ASSERT_MSG((m_impl->sceneManager != nullptr), "Failed to inject SceneManager into EngineCallbacks");
         LITL_FATAL_ASSERT_MSG((m_impl->sceneManager != nullptr), "Failed to inject TaskManager into EngineCallbacks");
@@ -61,6 +65,7 @@ namespace litl
         m_impl->engineFrameCallbacks->onFrameStart = [this](ServiceProvider& services, float dt)
             {
                 m_impl->taskManager->update();
+                m_impl->assetManager->onFrameStart();
 
                 auto* renderer = m_impl->renderManager->getRenderer();
 

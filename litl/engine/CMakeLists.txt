@@ -36,7 +36,7 @@ add_library(litl-engine STATIC
 	"src/objects/material/materialProperties.cpp" 
 	"src/objects/material/materialManager.cpp" 
 	"src/ecs/systems/activeMaterialSystem.cpp" 
-	"src/objects/material/deferredMaterialCommands.cpp"  "src/assets/shaderAsset.cpp" "src/objects/shader.cpp")
+	"src/objects/material/deferredMaterialCommands.cpp"  "src/assets/shaderAsset.cpp" "src/objects/shader.cpp" "src/assets/assetDependencies.cpp" "src/assets/asset.cpp")
 
 target_include_directories(litl-engine
 	PUBLIC

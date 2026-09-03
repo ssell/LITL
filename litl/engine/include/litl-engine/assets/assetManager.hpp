@@ -1,7 +1,9 @@
 #ifndef LITL_ASSETS_ASSET_MANAGER_H__
 #define LITL_ASSETS_ASSET_MANAGER_H__
 
+#include <coroutine>
 #include <string_view>
+#include <vector>
 
 #include "litl-core/authority.hpp"
 #include "litl-core/impl.hpp"
@@ -16,6 +18,15 @@ namespace litl
 {
     class Engine;
     class ServiceProvider;
+    struct AwaitAssetDependencies;
+
+    struct PendingAssetDependency
+    {
+        std::coroutine_handle<> handle{};
+        std::vector<Asset*> dependencies;
+        Asset* dependent{ nullptr };
+        uint32_t framesPending{ 0u };
+    };
 
     class AssetManager final
     {
@@ -29,6 +40,8 @@ namespace litl
 
         void setup(Authority<Engine> auth, ServiceProvider& services) noexcept;
         void destroy(Authority<Engine> auth) noexcept;
+        void registerAwaitingDependency(Authority<AwaitAssetDependencies> auth, std::coroutine_handle<> handle, std::span<Asset* const> dependencies, Asset* dependent) noexcept;
+        void onFrameStart() noexcept;
 
         [[nodiscard]] AssetHandle getAsset(std::string_view resource) noexcept;
 
@@ -52,12 +65,10 @@ namespace litl
         [[nodiscard]] Texture2DAsset* getTexture2D(std::string_view resource) noexcept;
         [[nodiscard]] Texture2DAsset* getTexture2D(Texture2DAssetHandle handle) noexcept;
 
-        // ... todo text and shader asset ...
-
     private:
 
         struct Impl;
-        ImplPtr<Impl, 768u> m_impl;
+        ImplPtr<Impl, 800u> m_impl;
     };
 }
 
