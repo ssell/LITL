@@ -322,10 +322,10 @@ namespace litl
 
     enum class CullMode : uint32_t
     {
-        None = 0,               // No triangles discarded
-        Front,                  // Front-facing triangles discarded
-        Back,                   // Back-facing triangles discarded
-        Both                    // All triangles discarded
+        Back  = 0u,     // Back-facing triangles discarded
+        Front = 1u,     // Front-facing triangles discarded
+        None  = 2u,     // No triangles discarded
+        Both  = 3u      // All triangles discarded
     };
     
     enum class FrontFace : uint32_t

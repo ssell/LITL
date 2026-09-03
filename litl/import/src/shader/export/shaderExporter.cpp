@@ -3,7 +3,7 @@
 #include "litl-core/directory.hpp"
 #include "litl-core/containers/common.hpp"
 #include "litl-import/shader/export/shaderExporter.hpp"
-#include "litl-import/shader/intermediate/litlshader.hpp"
+#include "litl-import/shader/intermediate/litlbshd.hpp"
 #include "litl-renderer/reflection.hpp"
 
 namespace litl::import
@@ -63,7 +63,7 @@ namespace litl::import
 
         if (!LitlShader::serialize(*intermediateShader, serialized, errorCode))
         {
-            return Result::Error(ErrorType::SerializationFailed, std::format("Serialization of Shader to litlshader failed with error code {}", static_cast<uint32_t>(errorCode)));
+            return Result::Error(ErrorType::SerializationFailed, std::format("Serialization of Shader to litlbshd failed with error code {}", static_cast<uint32_t>(errorCode)));
         }
 
         if (serialized.empty())

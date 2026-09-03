@@ -38,7 +38,7 @@ namespace litl::tests
     LITL_TEST_CASE("Convert OBJ to litlmesh", "[import::obj]")
     {
         File source("assets/mesh/bunny.obj");
-        File dest("assets/mesh/bunny.litlmesh");
+        File dest("assets/mesh/bunny.litlbmsh");
 
         REQUIRE(source.exists() == true);
 
@@ -59,7 +59,7 @@ namespace litl::tests
     LITL_TEST_CASE("OBJ -> GeoMesh -> LitlMesh -> GeoMesh", "[import::obj]")
     {
         File source("assets/mesh/bunny.obj");
-        File dest("assets/mesh/bunny.litlmesh");
+        File dest("assets/mesh/bunny.litlbmsh");
 
         REQUIRE(source.exists() == true);
 
@@ -69,7 +69,7 @@ namespace litl::tests
             REQUIRE(dest.exists() == false);
         }
 
-        // Test full conversion (obj -> GeoMesh -> LitlMesh) so we have a .litlmesh to load later.
+        // Test full conversion (obj -> GeoMesh -> LitlMesh) so we have a .litlbmsh to load later.
         import::ImportService importer{};
         import::Result result = importer.convert(source.absolutePath());
 
@@ -83,7 +83,7 @@ namespace litl::tests
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
 
-        // Load the LitlMesh from the .litlmesh we previously exported to.
+        // Load the LitlMesh from the .litlbmsh we previously exported to.
         auto litlMeshBytes = dest.readAllBytes();
         REQUIRE(litlMeshBytes.has_value() == true);
 
@@ -100,7 +100,7 @@ namespace litl::tests
         REQUIRE(litlMesh.deserialize(litlGeoMesh, error) == true);
         REQUIRE(error == BinaryBlockFile::ErrorCode::None);
 
-        // Compare our intermediate GeoMesh made from the OBJ to the second GeoMesh loaded from the .litlmesh.
+        // Compare our intermediate GeoMesh made from the OBJ to the second GeoMesh loaded from the .litlbmsh.
         // Now these checks may not stay valid when the export pipeline is built up (triangulation, mikktspace, etc.)
         REQUIRE(litlGeoMesh.vertexCount() == objGeoMesh.vertexCount());
         REQUIRE(litlGeoMesh.indexCount() == objGeoMesh.indexCount());

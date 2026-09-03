@@ -79,14 +79,14 @@ namespace litl
 
         MeshAsset* meshAsset = static_cast<MeshAsset*>(asset);
 
-        if (meshAsset->file.extension() == ".litlmesh")
+        if (meshAsset->file.extension() == ".litlbmsh")
         {
-            // Already a .litlmesh, so we can just decode straight to our LitlMesh struct.
+            // Already a .litlbmsh, so we can just decode straight to our LitlMesh struct.
             return decodeLitlMeshBytes(meshAsset, bytes, error);
         }
         else
         {
-            logWarning("Decoding mesh asset with key '", asset->key, "' directly from external format. It is recommended to first convert the mesh to the internal .litlmesh format to improve loading performance.");
+            logWarning("Decoding mesh asset with key '", asset->key, "' directly from external format. It is recommended to first convert the mesh to the internal .litlbmsh format to improve loading performance.");
             return decodeNonLitlMeshBytes(meshAsset, bytes, error);
         }
     }

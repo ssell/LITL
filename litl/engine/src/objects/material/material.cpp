@@ -1,5 +1,6 @@
 #include <format>
 #include <optional>
+#include <variant>
 
 #include "litl-core/assert.hpp"
 #include "litl-engine/assets/assetManager.hpp"
@@ -12,6 +13,7 @@
 #include "litl-engine/objects/shader.hpp"
 #include "litl-engine/ecs/systems/activeMaterialSystem.hpp"
 #include "litl-renderer/renderer.hpp"
+#include "litl-import/material/intermediate/materialIntermediateData.hpp"
 
 namespace litl
 {
@@ -40,7 +42,11 @@ namespace litl
 
         std::vector<MaterialPropertyBlockPointer> dirtyPropertyBlocks;
 
-        uint32_t frameInFlightIndex{ 0u };
+        uint32_t frameInFlightIndex{ 0u }; 
+
+        // ---------------------------------------------------------------------------------
+        // Creation Initiation
+        // ---------------------------------------------------------------------------------
 
         bool create(MaterialDescriptor const& materialDescriptor, Renderer const& pRenderer, ObjectPool& pObjectPool) noexcept
         {
@@ -48,9 +54,149 @@ namespace litl
             renderer = &pRenderer;
             objectPool = &pObjectPool;
 
-            // ---------------------------------------------------------------------------------
-            // --- Shader Module Handles
+            return createInternalState(true, nullptr, {});
+        }
 
+        bool create(ObjectDescriptor const& objectDescriptor, Renderer const& pRenderer, ObjectPool& pObjectPool, AssetManager& pAssetManager) noexcept
+        {
+            descriptor.objectInfo = objectDescriptor;
+            renderer = &pRenderer;
+            objectPool = &pObjectPool;
+            assetManager = &pAssetManager;
+
+            return true;
+        }
+
+        bool setData(import::MaterialIntermediateData const& intermediateData, std::span<MaterialAssetShaderDependency const> shaderDependencies) noexcept
+        {
+            if (assetManager == nullptr)
+            {
+                return false;
+            }
+
+            auto& settings = intermediateData.getSettings();
+
+            descriptor.objectInfo.name = settings.materialName;
+            descriptor.rasterizerState.cullMode = static_cast<CullMode>(settings.cullMode);
+            descriptor.rasterizerState.frontFace = (settings.clockwise ? FrontFace::Clockwise : FrontFace::CounterClockwise);
+            properties.toggleTier3DataSeparation(!settings.frequentUpdates);
+            // ... update descriptor as more settings are exposed in the .litlmat format ...
+
+            if (!createInternalState(false, &intermediateData, shaderDependencies))
+            {
+                return false;
+            }
+
+            auto& defaultProperties = intermediateData.getProperties();
+
+            for (auto& defaultProperty : defaultProperties)
+            {
+                switch (defaultProperty.type)
+                {
+                case import::LitlMatPropertyType::Bool:
+                    {
+                        auto const* defaultValue = std::get_if<uint8_t>(&defaultProperty.value);
+                        if (defaultValue != nullptr) { properties.setBool(StringId(defaultProperty.name), *defaultValue, {}, true); }
+                    }
+                    break;
+
+                case import::LitlMatPropertyType::Integer:
+                    {
+                        auto const* defaultValue = std::get_if<int32_t>(&defaultProperty.value);
+                        if (defaultValue != nullptr) { properties.setInt32(StringId(defaultProperty.name), *defaultValue, {}, true); }
+                    }
+                    break;
+
+                case import::LitlMatPropertyType::UnsignedInteger:
+                    {
+                        auto const* defaultValue = std::get_if<uint32_t>(&defaultProperty.value);
+                        if (defaultValue != nullptr) { properties.setUint32(StringId(defaultProperty.name), *defaultValue, {}, true); }
+                    }
+                    break;
+
+                case import::LitlMatPropertyType::Float:
+                    {
+                        auto const* defaultValue = std::get_if<float>(&defaultProperty.value);
+                        if (defaultValue != nullptr) { properties.setFloat(StringId(defaultProperty.name), *defaultValue, {}, true); }
+                    }
+                    break;
+
+                case import::LitlMatPropertyType::Double:
+                    {
+                        auto const* defaultValue = std::get_if<double>(&defaultProperty.value);
+                        if (defaultValue != nullptr) { properties.setDouble(StringId(defaultProperty.name), *defaultValue, {}, true); }
+                    }
+                    break;
+
+                case import::LitlMatPropertyType::Vec2:
+                    {
+                        auto const* defaultValue = std::get_if<vec2>(&defaultProperty.value);
+                        if (defaultValue != nullptr) { properties.setVec2(StringId(defaultProperty.name), *defaultValue, {}, true); }
+                    }
+                    break;
+
+                case import::LitlMatPropertyType::Vec3:
+                    {
+                        auto const* defaultValue = std::get_if<vec3>(&defaultProperty.value);
+                        if (defaultValue != nullptr) { properties.setVec3(StringId(defaultProperty.name), *defaultValue, {}, true); }
+                    }
+                    break;
+
+                case import::LitlMatPropertyType::Vec4:
+                    {
+                        auto const* defaultValue = std::get_if<vec4>(&defaultProperty.value);
+                        if (defaultValue != nullptr) { properties.setVec4(StringId(defaultProperty.name), *defaultValue, {}, true); }
+                    }
+                    break;
+
+                case import::LitlMatPropertyType::Color:
+                    {
+                        auto const* defaultValue = std::get_if<color>(&defaultProperty.value);
+                        if (defaultValue != nullptr) { properties.setColor(StringId(defaultProperty.name), *defaultValue, {}, true); }
+                    }
+                    break;
+
+                case import::LitlMatPropertyType::Texture2D:
+                    logWarning("Material '", descriptor.objectInfo.name, "' specified a default value for Texture2D property '", defaultProperty.name, "'. This property type is currently unsupported.");
+                    break;
+
+                case import::LitlMatPropertyType::Texture3D:
+                    logWarning("Material '", descriptor.objectInfo.name, "' specified a default value for Texture3D property '", defaultProperty.name, "'. This property type is currently unsupported.");
+                    break;
+
+                case import::LitlMatPropertyType::Unknown:
+                default:
+                    logWarning("Material '", descriptor.objectInfo.name, "' specified a default value for unsupported property type ", static_cast<uint32_t>(defaultProperty.type));
+                    break;
+                }
+            }
+
+            return true;
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Creation Implementation
+        // ---------------------------------------------------------------------------------
+
+        bool createInternalState(bool shadersFromDescriptor, import::MaterialIntermediateData const* intermediateData, std::span<MaterialAssetShaderDependency const> shaderDependencies)
+        {
+            if (shadersFromDescriptor)
+            {
+                retrieveShaderHandlesFromDescriptor();
+            }
+            else
+            {
+                if ((intermediateData == nullptr) || !retrieveShaderHandlesFromDependencies(*intermediateData, shaderDependencies))
+                {
+                    return false;
+                }
+            }
+
+            return createGraphicsPipeline();
+        }
+
+        void retrieveShaderHandlesFromDescriptor() noexcept
+        {
             auto createShaderModuleHandle = [&](ShaderResourceDescriptor& shaderDescriptor) noexcept -> ShaderModuleHandle
                 {
                     if (shaderDescriptor.resource.empty() || shaderDescriptor.bytes.empty())
@@ -82,7 +228,108 @@ namespace litl
             descriptor.meshShader.bytes = {};
             descriptor.taskShader.bytes = {};
             descriptor.computeShader.bytes = {};
+        }
 
+        bool retrieveShaderHandlesFromDependencies(import::MaterialIntermediateData const& intermediateData, std::span<MaterialAssetShaderDependency const> shaderDependencies) noexcept
+        {
+            auto shaderStageToArrayIndex = [&](ShaderStage stage) noexcept -> uint32_t
+            {
+                switch (stage)      // Needed as ShaderStage is a bitmask while import::LitlMatShaderStage is a standard enum.
+                {
+                    case ShaderStage::Vertex: return static_cast<uint32_t>(import::LitlMatShaderStage::Vertex) - 1u;
+                    case ShaderStage::Fragment: return static_cast<uint32_t>(import::LitlMatShaderStage::Fragment) - 1u;
+                    case ShaderStage::Geometry: return static_cast<uint32_t>(import::LitlMatShaderStage::Geometry) - 1u;
+                    case ShaderStage::TessellationControl: return static_cast<uint32_t>(import::LitlMatShaderStage::TessellationControl) - 1u;
+                    case ShaderStage::TessellationEvaluation: return static_cast<uint32_t>(import::LitlMatShaderStage::TessellationEvaluation) - 1u;
+                    case ShaderStage::Compute: return static_cast<uint32_t>(import::LitlMatShaderStage::Compute) - 1u;
+                    case ShaderStage::Mesh: return static_cast<uint32_t>(import::LitlMatShaderStage::Mesh) - 1u;
+                    case ShaderStage::Task: return static_cast<uint32_t>(import::LitlMatShaderStage::Task) - 1u;
+                    default: return 0u;
+                }
+            };
+
+            auto processShaderStage = [&](ShaderStage stage, import::LitlMatShaderRecord const& intermediateShader, ShaderModuleHandle& targetHandle, ShaderResourceDescriptor& targetDescriptor) noexcept -> bool
+            {
+                if ((static_cast<ShaderStage>(intermediateShader.stage) == stage) && !intermediateShader.resource.empty() && !intermediateShader.entry.empty())
+                {
+                    targetDescriptor.resource = intermediateShader.resource;
+                    targetDescriptor.entryPoint = intermediateShader.entry;
+
+                    for (auto& shaderAssetDependency : shaderDependencies)
+                    {
+                        if (shaderAssetDependency.stage == stage)
+                        {
+                            auto* shaderAsset = assetManager->getShader(shaderAssetDependency.handle);
+
+                            if ((shaderAsset == nullptr) || (shaderAsset->shader == nullptr) || (shaderAsset->status != AssetStatus::InMemory))
+                            {
+                                return false;
+                            }
+
+                            targetHandle = shaderAsset->shader->getShaderModuleHandle();
+                        }
+                    }
+                }
+
+                return true;
+            };
+
+            auto& intermediateShaders = intermediateData.getShaders();
+            Shader* currShader = nullptr;
+
+            if (!processShaderStage(ShaderStage::Vertex, intermediateShaders[shaderStageToArrayIndex(ShaderStage::Vertex)], vertexHandle, descriptor.vertexShader))
+            {
+                logError("Failed to retrieve expected Vertex Shader asset for Material '", descriptor.objectInfo.name, "'");
+                return false;
+            }
+
+            if (!processShaderStage(ShaderStage::Fragment, intermediateShaders[shaderStageToArrayIndex(ShaderStage::Fragment)], fragmentHandle, descriptor.fragmentShader))
+            {
+                logError("Failed to retrieve expected Fragment Shader asset for Material '", descriptor.objectInfo.name, "'");
+                return false;
+            }
+
+            if (!processShaderStage(ShaderStage::Geometry, intermediateShaders[shaderStageToArrayIndex(ShaderStage::Geometry)], geometryHandle, descriptor.geometryShader))
+            {
+                logError("Failed to retrieve expected Geometry Shader asset for Material '", descriptor.objectInfo.name, "'");
+                return false;
+            }
+
+            if (!processShaderStage(ShaderStage::TessellationControl, intermediateShaders[shaderStageToArrayIndex(ShaderStage::TessellationControl)], tessellationControlHandle, descriptor.tessellationControlShader))
+            {
+                logError("Failed to retrieve expected Tessellation Control Shader asset for Material '", descriptor.objectInfo.name, "'");
+                return false;
+            }
+
+            if (!processShaderStage(ShaderStage::TessellationEvaluation, intermediateShaders[shaderStageToArrayIndex(ShaderStage::TessellationEvaluation)], tessellationEvaluationHandle, descriptor.tessellationEvaluationShader))
+            {
+                logError("Failed to retrieve expected Tessellation Evaluation Shader asset for Material '", descriptor.objectInfo.name, "'");
+                return false;
+            }
+
+            if (!processShaderStage(ShaderStage::Mesh, intermediateShaders[shaderStageToArrayIndex(ShaderStage::Mesh)], meshHandle, descriptor.meshShader))
+            {
+                logError("Failed to retrieve expected Mesh Shader asset for Material '", descriptor.objectInfo.name, "'");
+                return false;
+            }
+
+            if (!processShaderStage(ShaderStage::Task, intermediateShaders[shaderStageToArrayIndex(ShaderStage::Task)], taskHandle, descriptor.taskShader))
+            {
+                logError("Failed to retrieve expected Task Shader asset for Material '", descriptor.objectInfo.name, "'");
+                return false;
+            }
+
+            if (!processShaderStage(ShaderStage::Compute, intermediateShaders[shaderStageToArrayIndex(ShaderStage::Compute)], computeHandle, descriptor.computeShader))
+            {
+                logError("Failed to retrieve expected Compute Shader asset for Material '", descriptor.objectInfo.name, "'");
+                return false;
+            }
+
+            return true;
+        }
+
+        bool createGraphicsPipeline() noexcept
+        {
             // ---------------------------------------------------------------------------------
             // --- Standard Graphics Pipeline (vertex + fragment + optional geometry/tessellation)
 
@@ -165,7 +412,7 @@ namespace litl
                         .location = i,
                         .binding = 0u,
                         .format = format
-                    }, runningAttributeOffset);
+                        }, runningAttributeOffset);
                 }
 
                 // --- Create the Pipeline
@@ -195,7 +442,7 @@ namespace litl
                         .bytes = properties.totalMemoryRequirements() * 2,
                         .itemBytes = properties.individualSlotMemoryRequirements(),
                         .canResize = true
-                    });
+                        });
 
                     if (!gpuBufferHandle.isValid())
                     {
@@ -204,119 +451,6 @@ namespace litl
                     }
                 }
             }
-
-            // ---------------------------------------------------------------------------------
-            // --- Alternate Graphics Pipeline (mesh + task)
-
-            else if (meshHandle.isValid())      // task handle is optional
-            {
-                // ... todo ...
-            }
-
-            // ---------------------------------------------------------------------------------
-            // --- Compute Pipeline
-
-            if (computeHandle.isValid())
-            {
-                // ... todo ...
-            }
-
-            return (graphicsPipelineHandle.isValid() || computePipelineHandle.isValid());
-        }
-
-        bool create(ObjectDescriptor const& objectDescriptor, Renderer const& pRenderer, ObjectPool& pObjectPool, AssetManager& pAssetManager) noexcept
-        {
-            descriptor.objectInfo = objectDescriptor;
-            renderer = &pRenderer;
-            objectPool = &pObjectPool;
-            assetManager = &pAssetManager;
-
-            return true;
-        }
-
-        bool setData(import::MaterialIntermediateData const& data, std::span<MaterialAssetShaderDependency const> shaderDependencies) noexcept
-        {
-            if (assetManager == nullptr)
-            {
-                return false;
-            }
-
-            // ---------------------------------------------------------------------------------
-            // --- Shader Module Handles
-
-            auto fetchShaderModuleHandle = [&](ShaderStage stage, ShaderModuleHandle& handle) noexcept -> bool
-            {
-                for (auto& shaderAssetDependency : shaderDependencies)
-                {
-                    if (shaderAssetDependency.stage == stage)
-                    {
-                        auto* shaderAsset = assetManager->getShader(shaderAssetDependency.handle);
-
-                        if ((shaderAsset != nullptr) && (shaderAsset->shader != nullptr))
-                        {
-                            handle = shaderAsset->shader->getShaderModuleHandle();
-                            return true;
-                        }
-
-                        return false;
-                    }
-                }
-
-                return true;
-            };
-
-            if (!fetchShaderModuleHandle(ShaderStage::Vertex, vertexHandle))
-            {
-                logError("Failed to retrieve expected Vertex Shader asset for Material '", descriptor.objectInfo.name, "'");
-                return false;
-            }
-
-            if (!fetchShaderModuleHandle(ShaderStage::Fragment, fragmentHandle))
-            {
-                logError("Failed to retrieve expected Fragment Shader asset for Material '", descriptor.objectInfo.name, "'");
-                return false;
-            }
-
-            if (!fetchShaderModuleHandle(ShaderStage::Geometry, geometryHandle))
-            {
-                logError("Failed to retrieve expected Geometry Shader asset for Material '", descriptor.objectInfo.name, "'");
-                return false;
-            }
-
-            if (!fetchShaderModuleHandle(ShaderStage::TessellationControl, tessellationControlHandle))
-            {
-                logError("Failed to retrieve expected Tessellation Control Shader asset for Material '", descriptor.objectInfo.name, "'");
-                return false;
-            }
-
-            if (!fetchShaderModuleHandle(ShaderStage::TessellationEvaluation, tessellationEvaluationHandle))
-            {
-                logError("Failed to retrieve expected Tessellation Evaluation Shader asset for Material '", descriptor.objectInfo.name, "'");
-                return false;
-            }
-
-            if (!fetchShaderModuleHandle(ShaderStage::Mesh, meshHandle))
-            {
-                logError("Failed to retrieve expected Mesh Shader asset for Material '", descriptor.objectInfo.name, "'");
-                return false;
-            }
-
-            if (!fetchShaderModuleHandle(ShaderStage::Task, taskHandle))
-            {
-                logError("Failed to retrieve expected Task Shader asset for Material '", descriptor.objectInfo.name, "'");
-                return false;
-            }
-
-            if (!fetchShaderModuleHandle(ShaderStage::Compute, computeHandle))
-            {
-                logError("Failed to retrieve expected Compute Shader asset for Material '", descriptor.objectInfo.name, "'");
-                return false;
-            }
-
-            // ---------------------------------------------------------------------------------
-            // --- Standard Graphics Pipeline (vertex + fragment + optional geometry/tessellation)
-
-            // ... todo ...
 
             // ---------------------------------------------------------------------------------
             // --- Alternate Graphics Pipeline (mesh + task)
@@ -433,6 +567,10 @@ namespace litl
             return true;    // No reflected properties is OK - the shader stage isn't using any.
         }
 
+        // ---------------------------------------------------------------------------------
+        // Tear Down
+        // ---------------------------------------------------------------------------------
+
         void destroy() noexcept
         {
             if (renderer != nullptr)
@@ -466,6 +604,10 @@ namespace litl
                 gpuBufferHandle = {};
             }
         }
+
+        // ---------------------------------------------------------------------------------
+        // Lifecycle Updates
+        // ---------------------------------------------------------------------------------
 
         void onFrameStart(uint32_t frame, uint32_t frameIndex) noexcept
         {
@@ -797,5 +939,12 @@ namespace litl
         return m_pImpl->properties.setMat4(property, value, {}, true);
     }
 
+    // -------------------------------------------------------------------------------------
+    // Various static asserts needed to ensure no drift between Material definitions in litl-engine and litl-import
+    // -------------------------------------------------------------------------------------
 
+    static_assert(static_cast<uint32_t>(CullMode::Back) == static_cast<uint32_t>(import::LitlMatCullMode::Back));
+    static_assert(static_cast<uint32_t>(CullMode::Front) == static_cast<uint32_t>(import::LitlMatCullMode::Front));
+    static_assert(static_cast<uint32_t>(CullMode::None) == static_cast<uint32_t>(import::LitlMatCullMode::None));
+    static_assert(static_cast<uint32_t>(CullMode::Both) == static_cast<uint32_t>(import::LitlMatCullMode::Both));
 }

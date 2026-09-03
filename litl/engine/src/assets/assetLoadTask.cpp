@@ -19,13 +19,6 @@ namespace litl
             co_return false;
         }
 
-        if (!asset->assetOps->fetchAssetObject(asset, objectPool))
-        {
-            // Failed to retrieve the underlying object. Odd.
-            asset->setError(AssetErrorCode::InvalidObject);
-            co_return false;
-        }
-
         // ---------------------------------------------------------------------------------
         // --- Switch execution context to a worker thread
         // ---------------------------------------------------------------------------------

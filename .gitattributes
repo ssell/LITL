@@ -1,6 +1,11 @@
 # ------------------------------------------------------------------------------------------
-# Binaries and Archives
+# Internal Asset Formats
 
+*.ltlbmsh filter=lfs diff=lfs merge=lfs -text
+*.ltlbmat filter=lfs diff=lfs merge=lfs -text
+*.ltlbshd filter=lfs diff=lfs merge=lfs -text
+*.ltlbtex filter=lfs diff=lfs merge=lfs -text
+# Binaries and Archives
 *.dll filter=lfs diff=lfs merge=lfs -text
 *.lib filter=lfs diff=lfs merge=lfs -text
 *.exe filter=lfs diff=lfs merge=lfs -text
@@ -34,7 +39,6 @@
 *.skp filter=lfs diff=lfs merge=lfs -text
 *.stl filter=lfs diff=lfs merge=lfs -text
 *.ztl filter=lfs diff=lfs merge=lfs -text
-*.litlmesh filter=lfs diff=lfs merge=lfs -text
 # Substance
 *.spp filter=lfs diff=lfs merge=lfs -text
 # SpeedTree

@@ -33,12 +33,12 @@ namespace litl::import
         };
 
         /// <summary>
-        /// Given a ShaderIntermediateData object, populates the byte blob that will be recorded to disk as a .litlshader file.
+        /// Given a ShaderIntermediateData object, populates the byte blob that will be recorded to disk as a .litlbshd file.
         /// </summary>
         [[nodiscard]] static bool serialize(ShaderIntermediateData const& shader, std::vector<std::byte>& data, ErrorCode& error) noexcept;
 
         /// <summary>
-        /// Populates the provided ShaderIntermediateData object from the BinaryBlockFile::data byte array from a .litlshader that was processed via BinaryBlockFile::parse.
+        /// Populates the provided ShaderIntermediateData object from the BinaryBlockFile::data byte array from a .litlbshd that was processed via BinaryBlockFile::parse.
         /// </summary>
         [[nodiscard]] bool deserialize(ShaderIntermediateData& shader, ErrorCode& error) const noexcept;
     };

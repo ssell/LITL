@@ -2,7 +2,7 @@
 #include "litl-engine/assets/shaderAsset.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-import/importService.hpp"
-#include "litl-import/shader/intermediate/litlshader.hpp"
+#include "litl-import/shader/intermediate/litlbshd.hpp"
 
 namespace litl
 {
@@ -18,21 +18,21 @@ namespace litl
     {
         [[nodiscard]] bool decodeLitlShaderBytes(ShaderAsset* shaderAsset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
         {
-            import::LitlShader litlshader;
-            BinaryBlockFile::ErrorCode litlshaderError = BinaryBlockFile::ErrorCode::None;
+            import::LitlShader litlbshd;
+            BinaryBlockFile::ErrorCode litlbshdError = BinaryBlockFile::ErrorCode::None;
 
-            if (!import::LitlShader::parse(bytes, litlshader, litlshaderError))
+            if (!import::LitlShader::parse(bytes, litlbshd, litlbshdError))
             {
-                logError("Failed to parse shader asset with error code ", static_cast<uint32_t>(litlshaderError));
+                logError("Failed to parse shader asset with error code ", static_cast<uint32_t>(litlbshdError));
                 error = AssetErrorCode::ParseFailed;
                 return false;
             }
 
             shaderAsset->shaderIntermediateData = std::make_shared<import::ShaderIntermediateData>();
 
-            if (!litlshader.deserialize(*shaderAsset->shaderIntermediateData, litlshaderError))
+            if (!litlbshd.deserialize(*shaderAsset->shaderIntermediateData, litlbshdError))
             {
-                logError("Failed to decode shader asset with error code ", static_cast<uint32_t>(litlshaderError));
+                logError("Failed to decode shader asset with error code ", static_cast<uint32_t>(litlbshdError));
                 error = AssetErrorCode::DeserializationFailed;
                 return false;
             }
@@ -84,14 +84,14 @@ namespace litl
 
         ShaderAsset* shaderAsset = static_cast<ShaderAsset*>(asset);
 
-        if (shaderAsset->file.extension() == ".litlshader")
+        if (shaderAsset->file.extension() == ".litlbshd")
         {
-            // Already a .litlshader, so we can just decode straight to our LitlShader struct.
+            // Already a .litlbshd, so we can just decode straight to our LitlShader struct.
             return decodeLitlShaderBytes(shaderAsset, bytes, error);
         }
         else
         {
-            logWarning("Decoding shader asset with key '", asset->key, "' directly from external format. It is recommended to first convert the mesh to the internal .litlshader format to improve loading performance.");
+            logWarning("Decoding shader asset with key '", asset->key, "' directly from external format. It is recommended to first convert the mesh to the internal .litlbshd format to improve loading performance.");
             return decodeNonLitShaderBytes(shaderAsset, bytes, error);
         }
 

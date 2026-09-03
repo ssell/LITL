@@ -14,7 +14,7 @@ namespace litl::import
 
         static constexpr std::string_view ExporterName = "Shader";
         static constexpr ImportedDataType OperatesOnImportedDataType = ImportedDataType::Shader;
-        static constexpr std::string_view ExportedExtension = ".litlshader";
+        static constexpr std::string_view ExportedExtension = ".litlbshd";
 
         ShaderExporter();
         ~ShaderExporter();

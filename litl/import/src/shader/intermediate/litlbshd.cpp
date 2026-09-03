@@ -3,7 +3,7 @@
 #include <type_traits>
 
 #include "litl-core/containers/common.hpp"
-#include "litl-import/shader/intermediate/litlshader.hpp"
+#include "litl-import/shader/intermediate/litlbshd.hpp"
 
 namespace litl::import
 {

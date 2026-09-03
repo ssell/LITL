@@ -83,6 +83,11 @@ namespace litl
 
         m_pImpl->renderer = nullptr;
     }
+    
+    ShaderDescriptor const& Shader::getDescriptor() const noexcept
+    {
+        return m_pImpl->descriptor;
+    }
 
     ShaderModuleHandle Shader::getShaderModuleHandle() const noexcept
     {

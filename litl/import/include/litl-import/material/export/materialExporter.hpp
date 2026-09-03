@@ -14,7 +14,7 @@ namespace litl::import
 
         static constexpr std::string_view ExporterName = "Material";
         static constexpr ImportedDataType OperatesOnImportedDataType = ImportedDataType::Material;
-        static constexpr std::string_view ExportedExtension = ".litlmatb";
+        static constexpr std::string_view ExportedExtension = ".litlbmat";
 
         MaterialExporter();
         ~MaterialExporter();

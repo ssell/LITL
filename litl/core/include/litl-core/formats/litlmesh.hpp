@@ -37,7 +37,7 @@ namespace litl
     using LitlMeshFlag = LitlMeshFlagBits;
 
     /// <summary>
-    /// Binary file representation of a GeoMesh that is stored on disk as a ".litlmesh".
+    /// Binary file representation of a GeoMesh that is stored on disk as a ".litlbmsh".
     /// This is effectively a non-owning view over the raw data blob.
     /// 
     /// To convert a GeoMesh to a binary blob simply use the serialize method.
@@ -79,12 +79,12 @@ namespace litl
         };
 
         /// <summary>
-        /// Given a GeoMesh object, populates the byte blob that will be recorded to disk as a .litlmesh file.
+        /// Given a GeoMesh object, populates the byte blob that will be recorded to disk as a .litlbmsh file.
         /// </summary>
         [[nodiscard]] static bool serialize(GeoMesh const& mesh, std::vector<std::byte>& data, ErrorCode& error) noexcept;
 
         /// <summary>
-        /// Populates the provided GeoMesh object from the BinaryBlockFile::data byte array from a .litlmesh that was processed via BinaryBlockFile::parse.
+        /// Populates the provided GeoMesh object from the BinaryBlockFile::data byte array from a .litlbmsh that was processed via BinaryBlockFile::parse.
         /// </summary>
         [[nodiscard]] bool deserialize(GeoMesh& mesh, ErrorCode& error) const noexcept;
     };

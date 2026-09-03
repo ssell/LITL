@@ -4,7 +4,7 @@
 #include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/containers/common.hpp"
-#include "litl-import/material/intermediate/litlmatb.hpp"
+#include "litl-import/material/intermediate/litlbmat.hpp"
 
 namespace litl::import
 {

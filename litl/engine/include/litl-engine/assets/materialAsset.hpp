@@ -6,6 +6,7 @@
 
 #include "litl-engine/assets/asset.hpp"
 #include "litl-engine/assets/assetHandle.hpp"
+#include "litl-engine/ecs/components/materialRef.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
 #include "litl-renderer/resources/shaderModuleTypes.hpp"
 
@@ -42,6 +43,8 @@ namespace litl
         static bool processOnWorker(Asset* asset, AssetErrorCode& error) noexcept;
         static bool gatherDependencies(Asset* asset, AssetManager& assetManager, std::vector<Asset*>& dependencies) noexcept;
         static bool processOnMain(Asset* asset, ObjectPool& objectPool, AssetErrorCode& error) noexcept;
+
+        [[nodiscard]] MaterialRef allocate() noexcept;
     };
 
     inline constexpr Asset::AssetOps MaterialAssetOps = {

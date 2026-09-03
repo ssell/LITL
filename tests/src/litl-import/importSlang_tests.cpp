@@ -2,7 +2,7 @@
 
 #include "tests.hpp"
 #include "litl-import/importService.hpp"
-#include "litl-import/shader/intermediate/litlshader.hpp"
+#include "litl-import/shader/intermediate/litlbshd.hpp"
 #include "litl-import/shader/intermediate/shaderIntermediateData.hpp"
 
 namespace litl::tests
@@ -220,10 +220,10 @@ namespace litl::tests
         validateShaderReflectionForTestSlang(reflection);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("slang -> ShaderIntermediateData -> litlshader -> ShaderIntermediateData", "[import::slang]")
+    LITL_TEST_CASE("slang -> ShaderIntermediateData -> litlbshd -> ShaderIntermediateData", "[import::slang]")
     {
         const File source("assets/shaders/test.slang");
-        const File dest("assets/shaders/test.litlshader");
+        const File dest("assets/shaders/test.litlbshd");
 
         REQUIRE(source.exists() == true);
 
@@ -237,33 +237,33 @@ namespace litl::tests
 
         import::ShaderIntermediateData& slangIntermediateData = *data.shader->intermediateShader;
 
-        // test.slang -> test.litlshader
+        // test.slang -> test.litlbshd
         result = importer.convert(source.absolutePath());
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
 
-        // test.litlshader -> ShaderIntermediateData
-        auto litlshaderBytes = dest.readAllBytes();
-        REQUIRE(litlshaderBytes.has_value() == true);
+        // test.litlbshd -> ShaderIntermediateData
+        auto litlbshdBytes = dest.readAllBytes();
+        REQUIRE(litlbshdBytes.has_value() == true);
 
-        import::LitlShader litlshader{};
+        import::LitlShader litlbshd{};
         BinaryBlockFile::ErrorCode error = BinaryBlockFile::ErrorCode::None;
 
-        REQUIRE(import::LitlShader::parse(litlshaderBytes.value(), litlshader, error) == true);
+        REQUIRE(import::LitlShader::parse(litlbshdBytes.value(), litlbshd, error) == true);
         REQUIRE(error == BinaryBlockFile::ErrorCode::None);
 
-        import::ShaderIntermediateData litlshaderIntermediateData{};
+        import::ShaderIntermediateData litlbshdIntermediateData{};
 
-        REQUIRE(litlshader.deserialize(litlshaderIntermediateData, error) == true);
+        REQUIRE(litlbshd.deserialize(litlbshdIntermediateData, error) == true);
         REQUIRE(error == BinaryBlockFile::ErrorCode::None);
 
-        // The intermediate data from the two sources (test.slang and test.litlshader) should be identical.
+        // The intermediate data from the two sources (test.slang and test.litlbshd) should be identical.
         validateShaderReflectionForTestSlang(slangIntermediateData.getReflection());
-        validateShaderReflectionForTestSlang(litlshaderIntermediateData.getReflection());
+        validateShaderReflectionForTestSlang(litlbshdIntermediateData.getReflection());
 
-        REQUIRE(slangIntermediateData.getSpirvWords().size_bytes() == litlshaderIntermediateData.getSpirvWords().size_bytes());
-        REQUIRE(std::memcmp(slangIntermediateData.getSpirvWords().data(), litlshaderIntermediateData.getSpirvWords().data(), slangIntermediateData.getSpirvWords().size_bytes()) == 0);
+        REQUIRE(slangIntermediateData.getSpirvWords().size_bytes() == litlbshdIntermediateData.getSpirvWords().size_bytes());
+        REQUIRE(std::memcmp(slangIntermediateData.getSpirvWords().data(), litlbshdIntermediateData.getSpirvWords().data(), slangIntermediateData.getSpirvWords().size_bytes()) == 0);
 
     } LITL_END_TEST_CASE
 }

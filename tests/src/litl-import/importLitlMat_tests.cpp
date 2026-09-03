@@ -3,7 +3,7 @@
 #include "tests.hpp"
 #include "litl-core/math/common.hpp"
 #include "litl-import/importService.hpp"
-#include "litl-import/material/intermediate/litlmatb.hpp"
+#include "litl-import/material/intermediate/litlbmat.hpp"
 #include "litl-import/material/intermediate/materialIntermediateData.hpp"
 
 namespace litl::tests
@@ -76,10 +76,10 @@ namespace litl::tests
 
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("litlmat -> MaterialIntermediateData -> litlmatb", "[import::litlmat]")
+    LITL_TEST_CASE("litlmat -> MaterialIntermediateData -> litlbmat", "[import::litlmat]")
     {
         File source("assets/materials/test.litlmat");
-        File dest("assets/materials/test.litlmatb");
+        File dest("assets/materials/test.litlbmat");
 
         REQUIRE(source.exists() == true);
 
@@ -89,7 +89,7 @@ namespace litl::tests
             REQUIRE(dest.exists() == false);
         }
 
-        // Test full conversion (litlmat -> MaterialIntermediateData -> litlmatb)
+        // Test full conversion (litlmat -> MaterialIntermediateData -> litlbmat)
         import::ImportService importer{};
         import::Result result = importer.convert(source.absolutePath());
 
@@ -97,10 +97,10 @@ namespace litl::tests
         REQUIRE(result.error == import::ErrorType::None);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("litlmat -> MaterialIntermediateData -> litlmatb -> MaterialIntermediateData", "[import::litlmat]")
+    LITL_TEST_CASE("litlmat -> MaterialIntermediateData -> litlbmat -> MaterialIntermediateData", "[import::litlmat]")
     {
         File source("assets/materials/test.litlmat");
-        File dest("assets/materials/test.litlmatb");
+        File dest("assets/materials/test.litlbmat");
 
         REQUIRE(source.exists() == true);
 
@@ -120,56 +120,56 @@ namespace litl::tests
 
         import::MaterialIntermediateData& litlmatIntermediateData = *data.material->intermediateMaterial;
 
-        // test.litlmat -> test.litlmatb
+        // test.litlmat -> test.litlbmat
         result = importer.convert(source.absolutePath());
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
 
-        // test.litlmatb -> MaterialIntermediateData
-        auto litlmatbBytes = dest.readAllBytes();
-        REQUIRE(litlmatbBytes.has_value() == true);
+        // test.litlbmat -> MaterialIntermediateData
+        auto litlbmatBytes = dest.readAllBytes();
+        REQUIRE(litlbmatBytes.has_value() == true);
 
-        import::LitlMatBinary litlmatb{};
+        import::LitlMatBinary litlbmat{};
         BinaryBlockFile::ErrorCode error = BinaryBlockFile::ErrorCode::None;
 
-        REQUIRE(import::LitlMatBinary::parse(litlmatbBytes.value(), litlmatb, error) == true);
+        REQUIRE(import::LitlMatBinary::parse(litlbmatBytes.value(), litlbmat, error) == true);
         REQUIRE(error == BinaryBlockFile::ErrorCode::None);
 
-        import::MaterialIntermediateData litlmatbIntermediateData{};
+        import::MaterialIntermediateData litlbmatIntermediateData{};
 
-        REQUIRE(litlmatb.deserialize(litlmatbIntermediateData, error) == true);
+        REQUIRE(litlbmat.deserialize(litlbmatIntermediateData, error) == true);
         REQUIRE(error == BinaryBlockFile::ErrorCode::None);
 
-        // The intermediate data from the two sources (test.litlmat and test.litlmatb) should be identical.
+        // The intermediate data from the two sources (test.litlmat and test.litlbmat) should be identical.
         for (uint32_t i = 0; i < import::MaterialIntermediateData::ShaderStageCount; ++i)
         {
             auto& litlmatShader = litlmatIntermediateData.getShaders()[i];
-            auto& litlmatbShader = litlmatbIntermediateData.getShaders()[i];
+            auto& litlbmatShader = litlbmatIntermediateData.getShaders()[i];
 
-            REQUIRE(litlmatShader.stage == litlmatbShader.stage);
-            REQUIRE(litlmatShader.resource == litlmatbShader.resource);
-            REQUIRE(litlmatShader.entry == litlmatbShader.entry);
+            REQUIRE(litlmatShader.stage == litlbmatShader.stage);
+            REQUIRE(litlmatShader.resource == litlbmatShader.resource);
+            REQUIRE(litlmatShader.entry == litlbmatShader.entry);
         }
 
-        REQUIRE(litlmatIntermediateData.getProperties().size() == litlmatbIntermediateData.getProperties().size());
+        REQUIRE(litlmatIntermediateData.getProperties().size() == litlbmatIntermediateData.getProperties().size());
 
         for (uint32_t i = 0u; i < static_cast<uint32_t>(litlmatIntermediateData.getProperties().size()); ++i)
         {
             auto& litlmatProperty = litlmatIntermediateData.getProperties()[i];
-            auto& litlmatbProperty = litlmatbIntermediateData.getProperties()[i];
+            auto& litlbmatProperty = litlbmatIntermediateData.getProperties()[i];
 
-            REQUIRE(litlmatProperty.name == litlmatbProperty.name);
-            REQUIRE(litlmatProperty.type == litlmatbProperty.type);
-            REQUIRE(litlmatProperty.value == litlmatbProperty.value);
+            REQUIRE(litlmatProperty.name == litlbmatProperty.name);
+            REQUIRE(litlmatProperty.type == litlbmatProperty.type);
+            REQUIRE(litlmatProperty.value == litlbmatProperty.value);
         }
 
         const auto& litlmatSettings = litlmatIntermediateData.getSettings();
-        const auto& litlmatbSettings = litlmatbIntermediateData.getSettings();
+        const auto& litlbmatSettings = litlbmatIntermediateData.getSettings();
 
-        REQUIRE(litlmatSettings.materialName == litlmatbSettings.materialName);
-        REQUIRE(litlmatSettings.cullMode == litlmatbSettings.cullMode);
-        REQUIRE(litlmatSettings.clockwise == litlmatbSettings.clockwise);
-        REQUIRE(litlmatSettings.frequentUpdates == litlmatbSettings.frequentUpdates);
+        REQUIRE(litlmatSettings.materialName == litlbmatSettings.materialName);
+        REQUIRE(litlmatSettings.cullMode == litlbmatSettings.cullMode);
+        REQUIRE(litlmatSettings.clockwise == litlbmatSettings.clockwise);
+        REQUIRE(litlmatSettings.frequentUpdates == litlbmatSettings.frequentUpdates);
     } LITL_END_TEST_CASE
 }

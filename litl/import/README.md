@@ -8,4 +8,4 @@ Each subdirectory represents an object type (such as `mesh`) and itself has thre
 * `import`: Format-specific importers that convert to the intermediate representation.
 * `export`: Single exporter that saves the intermediate object to its binary file.
 
-The Engine itself does not work with the original file formats but only on the internal format. For example, it can not work with `.obj` or `.fbx` meshes, but it does make use of `.litlmesh` files.
+The Engine itself does not work with the original file formats but only on the internal format. For example, it can not work with `.obj` or `.fbx` meshes, but it does make use of `.litlbmsh` files.

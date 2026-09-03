@@ -510,6 +510,11 @@ namespace litl
         return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value32, slot, defaultValue);
     }
 
+    bool MaterialProperties::setBool(StringId property, uint8_t value, MaterialPropertySlotId slot, bool defaultValue) noexcept
+    {
+        return setBool(property, (value == 0 ? false : true), slot, defaultValue);
+    }
+
     bool MaterialProperties::setInt32(StringId property, int32_t value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
         auto* reflectedProperty = getReflectedProperty(property);

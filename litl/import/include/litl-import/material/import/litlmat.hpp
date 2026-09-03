@@ -9,7 +9,7 @@ namespace litl::import
     /// Imports our internal .litlmat material file format.
     /// 
     /// This is a TOML-based format and not to be confused with our intermediate
-    /// material binary file format that uses the .litlmatb extension.
+    /// material binary file format that uses the .litlbmat extension.
     /// </summary>
     class LitlMatImporter final : public Importer
     {

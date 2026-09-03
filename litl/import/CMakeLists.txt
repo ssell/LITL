@@ -13,12 +13,12 @@ add_library(litl-import STATIC
 	"src/exporterRegistry.cpp" 
 	"src/material/import/litlmat.cpp" 
 	"src/material/export/materialExporter.cpp" 
-	"src/material/intermediate/litlmatb.cpp" 
+	"src/material/intermediate/litlbmat.cpp" 
 	"src/material/intermediate/materialIntermediateData.cpp" 
 	"src/shader/export/shaderExporter.cpp" 
 	"src/shader/import/spirv.cpp" 
 	"src/shader/import/slang.cpp" 
-	"src/shader/intermediate/litlshader.cpp" 
+	"src/shader/intermediate/litlbshd.cpp" 
 	"src/shader/intermediate/shaderIntermediateData.cpp")
 
 target_include_directories(litl-import

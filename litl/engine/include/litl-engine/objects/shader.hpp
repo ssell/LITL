@@ -52,6 +52,7 @@ namespace litl
         /// </summary>
         void destroy(Authority<ObjectPool> auth) noexcept;
 
+        [[nodiscard]] ShaderDescriptor const& getDescriptor() const noexcept;
         [[nodiscard]] ShaderModuleHandle getShaderModuleHandle() const noexcept;
 
     private:

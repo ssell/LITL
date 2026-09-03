@@ -270,7 +270,7 @@ namespace litl
         struct Header
         {
             /// <summary>
-            /// Identifies the file as a .litlmesh
+            /// Identifies the file as a .litlbmsh
             /// </summary>
             BinaryBlockIdType magic{};
 

@@ -39,18 +39,18 @@ namespace litl
 
         static const StringIdMap<AssetTypeMapping> g_assetTypeMap = {
             // Material
-            { ".litlmatb"_sid, { MappingPriority::High, AssetType::Material } },
-            { ".litlmat"_sid, { MappingPriority::Medium, AssetType::Material } },
+            { ".litlmat"_sid, { MappingPriority::High, AssetType::Material } },
+            { ".litlbmat"_sid, { MappingPriority::Medium, AssetType::Material } },
 
             // Mesh
-            { ".litlmesh"_sid, { MappingPriority::High, AssetType::Mesh } },
+            { ".litlbmsh"_sid, { MappingPriority::High, AssetType::Mesh } },
             { ".glb"_sid, { MappingPriority::Medium, AssetType::Mesh } },
             { ".obj"_sid, { MappingPriority::Low, AssetType::Mesh } },
             { ".fbx"_sid, { MappingPriority::Low, AssetType::Mesh } },
             { ".gltf"_sid, { MappingPriority::Low, AssetType::Mesh } },
 
             // Shader Module
-            { ".litlshader"_sid, { MappingPriority::High, AssetType::Shader } },
+            { ".litlbshd"_sid, { MappingPriority::High, AssetType::Shader } },
             { ".spv"_sid, { MappingPriority::Medium, AssetType::Shader } },
             { ".slang"_sid, { MappingPriority::Low, AssetType::Shader } },
 
@@ -169,6 +169,22 @@ namespace litl
             return asset;
         }
 
+        [[nodiscard]] bool fetchAssetObject(Asset* asset) noexcept
+        {
+            if (asset == nullptr)
+            {
+                return false;
+            }
+
+            if (!asset->assetOps->fetchAssetObject(asset, *objectPool))
+            {
+                asset->setError(AssetErrorCode::InvalidObject);
+                return false;
+            }
+
+            return true;
+        }
+
         // ---------------------------------------------------------------------------------
         // --- Material Asset
         // ---------------------------------------------------------------------------------
@@ -211,6 +227,7 @@ namespace litl
             {
                 // Ensure there is a valid handle to return to the caller, even if the material itself is not yet ready
                 asset->handle = objectPool->reserveMaterial({}, ObjectDescriptor{ .name = asset->key, .lifetime = ObjectLifetime::Application });
+                fetchAssetObject(asset);
             }
 
             taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);

@@ -2,7 +2,7 @@
 
 #include "litl-core/directory.hpp"
 #include "litl-import/material/export/materialExporter.hpp"
-#include "litl-import/material/intermediate/litlmatb.hpp"
+#include "litl-import/material/intermediate/litlbmat.hpp"
 
 namespace litl::import
 {
@@ -52,7 +52,7 @@ namespace litl::import
 
         if (!LitlMatBinary::serialize(*intermediateMaterial, serialized, errorCode))
         {
-            return Result::Error(ErrorType::SerializationFailed, std::format("Serialization of Material to litlmatb failed with error code {}", static_cast<uint32_t>(errorCode)));
+            return Result::Error(ErrorType::SerializationFailed, std::format("Serialization of Material to litlbmat failed with error code {}", static_cast<uint32_t>(errorCode)));
         }
 
         if (serialized.empty())

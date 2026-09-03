@@ -11,7 +11,7 @@ namespace litl::import
 
         static constexpr std::string_view ExporterName = "Mesh";
         static constexpr ImportedDataType OperatesOnImportedDataType = ImportedDataType::Mesh;
-        static constexpr std::string_view ExportedExtension = ".litlmesh";
+        static constexpr std::string_view ExportedExtension = ".litlbmsh";
 
         MeshExporter();
         ~MeshExporter();

@@ -43,8 +43,8 @@ namespace litl::import
 
     enum class LitlMatCullMode : uint32_t
     {
-        Front = 0u,
-        Back = 1u,
+        Back = 0u,
+        Front = 1u,
         None = 2u,
         Both = 3u
     };

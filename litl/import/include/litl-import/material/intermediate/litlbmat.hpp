@@ -33,12 +33,12 @@ namespace litl::import
         };
 
         /// <summary>
-        /// Given a MaterialIntermediateData object, populates the byte blob that will be recorded to disk as a .litlmatb file.
+        /// Given a MaterialIntermediateData object, populates the byte blob that will be recorded to disk as a .litlbmat file.
         /// </summary>
         [[nodiscard]] static bool serialize(MaterialIntermediateData const& material, std::vector<std::byte>& data, ErrorCode& error) noexcept;
 
         /// <summary>
-        /// Populates the provided MaterialIntermediateData object from the BinaryBlockFile::data byte array from a .litlmatb that was processed via BinaryBlockFile::parse.
+        /// Populates the provided MaterialIntermediateData object from the BinaryBlockFile::data byte array from a .litlbmat that was processed via BinaryBlockFile::parse.
         /// </summary>
         [[nodiscard]] bool deserialize(MaterialIntermediateData& material, ErrorCode& error) const noexcept;
     };

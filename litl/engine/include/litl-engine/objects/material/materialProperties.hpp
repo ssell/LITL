@@ -284,6 +284,11 @@ namespace litl
         bool setBool(StringId property, bool value, MaterialPropertySlotId slot, bool defaultValue) noexcept;
 
         /// <summary>
+        /// Variant of setBool that takes an uint8_t. Used for the material asset path.
+        /// </summary>
+        bool setBool(StringId property, uint8_t value, MaterialPropertySlotId slot, bool defaultValue) noexcept;
+
+        /// <summary>
         /// Sets the 32-bit signed integer value with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>

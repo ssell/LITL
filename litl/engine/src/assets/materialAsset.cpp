@@ -2,7 +2,7 @@
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-import/importService.hpp"
-#include "litl-import/material/intermediate/litlmatb.hpp"
+#include "litl-import/material/intermediate/litlbmat.hpp"
 
 namespace litl
 {
@@ -15,21 +15,21 @@ namespace litl
 
     bool decodeLitlMaterialBinaryBytes(MaterialAsset* materialAsset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
     {
-        import::LitlMatBinary litlmatb;
-        BinaryBlockFile::ErrorCode litlmatbError = BinaryBlockFile::ErrorCode::None;
+        import::LitlMatBinary litlbmat;
+        BinaryBlockFile::ErrorCode litlbmatError = BinaryBlockFile::ErrorCode::None;
 
-        if (!import::LitlMatBinary::parse(bytes, litlmatb, litlmatbError))
+        if (!import::LitlMatBinary::parse(bytes, litlbmat, litlbmatError))
         {
-            logError("Failed to parse material asset with error code ", static_cast<uint32_t>(litlmatbError));
+            logError("Failed to parse material asset with error code ", static_cast<uint32_t>(litlbmatError));
             error = AssetErrorCode::ParseFailed;
             return false;
         }
 
         materialAsset->materialIntermediateData = std::make_shared<import::MaterialIntermediateData>();
 
-        if (!litlmatb.deserialize(*materialAsset->materialIntermediateData, litlmatbError))
+        if (!litlbmat.deserialize(*materialAsset->materialIntermediateData, litlbmatError))
         {
-            logError("Failed to decode material asset with error code ", static_cast<uint32_t>(litlmatbError));
+            logError("Failed to decode material asset with error code ", static_cast<uint32_t>(litlbmatError));
             error = AssetErrorCode::DeserializationFailed;
             return false;
         }
@@ -78,7 +78,7 @@ namespace litl
 
         MaterialAsset* materialAsset = static_cast<MaterialAsset*>(asset);
 
-        if (materialAsset->file.extension() == ".litlmatb")
+        if (materialAsset->file.extension() == ".litlbmat")
         {
             return decodeLitlMaterialBinaryBytes(materialAsset, bytes, error);
         }
@@ -194,5 +194,18 @@ namespace litl
         materialAsset->materialIntermediateData = nullptr;
 
         return success;
+    }
+    
+    MaterialRef MaterialAsset::allocate() noexcept
+    {
+        if (!handle.isValid() || (material == nullptr))
+        {
+            return {};
+        }
+
+        return MaterialRef{
+            .handle = handle,
+            .slot = material->allocateSlot()
+        };
     }
 }
