@@ -6,7 +6,7 @@ using namespace litl;
 void configureSystems(SystemCollection& systems);
 void bootstrap(ServiceProvider& services, EntityCommands& commands);
 MaterialHandle createPlaceholderMaterial(ObjectPool& objectPool);
-void createBunny(EntityCommands& commands, MeshHandle meshHandle, MaterialRef const& materialRef, vec3 position, color color, bool flashing);
+void createBunny(EntityCommands& commands, MeshHandle meshHandle, Material* material, MaterialRef const& materialRef, vec3 position, color color, bool flashing);
 
 int main()
 {
@@ -50,15 +50,14 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     {
         for (int32_t x = -10; x <= 10; ++x)
         {
-            if (x != 0) continue;
             for (int32_t y = -10; y <= 10; ++y)
             {
-                if (y != 0) continue;
                 createBunny(
                     commands, 
                     bunnyMesh->handle, 
+                    bunnyMaterial->material,
                     bunnyMaterial->allocate(),
-                    vec3{static_cast<float>(x) * 1.5f, static_cast<float>(y) * 1.5f, 5.0f },
+                    vec3{static_cast<float>(x) * 1.5f, static_cast<float>(y) * 1.5f, 28.0f },
                     color{ static_cast<float>(x + 10) * 0.05f, static_cast<float>(y + 10) * 0.05f, 0.0f },
                     ((x == 0u) && (y == 0u)));
             }
@@ -66,12 +65,12 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     }
 }
 
-void createBunny(EntityCommands& commands, MeshHandle meshHandle, MaterialRef const& materialRef, vec3 position, color color, bool flashing)
+void createBunny(EntityCommands& commands, MeshHandle meshHandle, Material* material, MaterialRef const& materialRef, vec3 position, color color, bool flashing)
 {
     const DeferredEntity entity = commands.createEntity();
 
     commands.addComponent<Transform>(entity, Transform::create(position));
-    commands.addComponent<LocalBounds>(entity, LocalBounds{});     // todo these need to come from the mesh ...
+    commands.addComponent<LocalBounds>(entity, LocalBounds{});      // todo these need to come from the mesh ...
     commands.addComponent<WorldBounds>(entity, WorldBounds{});
     commands.addComponent<MaterialRef>(entity, materialRef);
     commands.addComponent<MeshRef>(entity, MeshRef{ .handle = meshHandle });
@@ -81,5 +80,5 @@ void createBunny(EntityCommands& commands, MeshHandle meshHandle, MaterialRef co
         commands.addComponent<samples::Flash>(entity, {});
     }
 
-    //material->setColor("tint"_sid, (flashing ? colors::White : color), materialRef.slot);
+    material->setColor("tint"_sid, (flashing ? colors::White : color), materialRef.slot);
 }

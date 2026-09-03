@@ -54,7 +54,14 @@ namespace litl
             renderer = &pRenderer;
             objectPool = &pObjectPool;
 
-            return createInternalState(true, nullptr, {});
+            if (!createInternalState(true, nullptr, {}))
+            {
+                return false;
+            }
+
+            properties.setReady();
+
+            return true;
         }
 
         bool create(ObjectDescriptor const& objectDescriptor, Renderer const& pRenderer, ObjectPool& pObjectPool, AssetManager& pAssetManager) noexcept
@@ -171,6 +178,8 @@ namespace litl
                 }
             }
 
+            properties.setReady();
+
             return true;
         }
 
@@ -279,49 +288,49 @@ namespace litl
 
             if (!processShaderStage(ShaderStage::Vertex, intermediateShaders[shaderStageToArrayIndex(ShaderStage::Vertex)], vertexHandle, descriptor.vertexShader))
             {
-                logError("Failed to retrieve expected Vertex Shader asset for Material '", descriptor.objectInfo.name, "'");
+                logError("Failed to retrieve expected Vertex Shader asset for Material '", descriptor.objectInfo.name, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
                 return false;
             }
 
             if (!processShaderStage(ShaderStage::Fragment, intermediateShaders[shaderStageToArrayIndex(ShaderStage::Fragment)], fragmentHandle, descriptor.fragmentShader))
             {
-                logError("Failed to retrieve expected Fragment Shader asset for Material '", descriptor.objectInfo.name, "'");
+                logError("Failed to retrieve expected Fragment Shader asset for Material '", descriptor.objectInfo.name, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
                 return false;
             }
 
             if (!processShaderStage(ShaderStage::Geometry, intermediateShaders[shaderStageToArrayIndex(ShaderStage::Geometry)], geometryHandle, descriptor.geometryShader))
             {
-                logError("Failed to retrieve expected Geometry Shader asset for Material '", descriptor.objectInfo.name, "'");
+                logError("Failed to retrieve expected Geometry Shader asset for Material '", descriptor.objectInfo.name, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
                 return false;
             }
 
             if (!processShaderStage(ShaderStage::TessellationControl, intermediateShaders[shaderStageToArrayIndex(ShaderStage::TessellationControl)], tessellationControlHandle, descriptor.tessellationControlShader))
             {
-                logError("Failed to retrieve expected Tessellation Control Shader asset for Material '", descriptor.objectInfo.name, "'");
+                logError("Failed to retrieve expected Tessellation Control Shader asset for Material '", descriptor.objectInfo.name, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
                 return false;
             }
 
             if (!processShaderStage(ShaderStage::TessellationEvaluation, intermediateShaders[shaderStageToArrayIndex(ShaderStage::TessellationEvaluation)], tessellationEvaluationHandle, descriptor.tessellationEvaluationShader))
             {
-                logError("Failed to retrieve expected Tessellation Evaluation Shader asset for Material '", descriptor.objectInfo.name, "'");
+                logError("Failed to retrieve expected Tessellation Evaluation Shader asset for Material '", descriptor.objectInfo.name, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
                 return false;
             }
 
             if (!processShaderStage(ShaderStage::Mesh, intermediateShaders[shaderStageToArrayIndex(ShaderStage::Mesh)], meshHandle, descriptor.meshShader))
             {
-                logError("Failed to retrieve expected Mesh Shader asset for Material '", descriptor.objectInfo.name, "'");
+                logError("Failed to retrieve expected Mesh Shader asset for Material '", descriptor.objectInfo.name, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
                 return false;
             }
 
             if (!processShaderStage(ShaderStage::Task, intermediateShaders[shaderStageToArrayIndex(ShaderStage::Task)], taskHandle, descriptor.taskShader))
             {
-                logError("Failed to retrieve expected Task Shader asset for Material '", descriptor.objectInfo.name, "'");
+                logError("Failed to retrieve expected Task Shader asset for Material '", descriptor.objectInfo.name, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
                 return false;
             }
 
             if (!processShaderStage(ShaderStage::Compute, intermediateShaders[shaderStageToArrayIndex(ShaderStage::Compute)], computeHandle, descriptor.computeShader))
             {
-                logError("Failed to retrieve expected Compute Shader asset for Material '", descriptor.objectInfo.name, "'");
+                logError("Failed to retrieve expected Compute Shader asset for Material '", descriptor.objectInfo.name, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
                 return false;
             }
 
@@ -525,7 +534,7 @@ namespace litl
 
             if (reflection == nullptr)
             {
-                logWarning("Failed to retrieve shader reflection data for material '", descriptor.objectInfo.name, "' for entry point '", entryPointName, "'");
+                logWarning("Failed to retrieve shader reflection data for material '", descriptor.objectInfo.name, "' for entry point '", entryPointName, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
                 return false;
             }
 
@@ -533,7 +542,7 @@ namespace litl
 
             if (!entryPoint.has_value() || (*entryPoint == nullptr))
             {
-                logWarning("Failed to retrieve shader entry point '", entryPointName, "' for material '", descriptor.objectInfo.name, "'");
+                logWarning("Failed to retrieve shader entry point '", entryPointName, "' for material '", descriptor.objectInfo.name, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
                 return false;
             }
 
@@ -665,6 +674,182 @@ namespace litl
                 currGraphicsGpuBufferDeviceAddress = gpuBuffer->getBufferDeviceAddress();
             }
         }
+
+        bool setBool(StringId property, bool value, MaterialPropertySlotId slot, bool isDefault) noexcept
+        {
+            if (!slot.isValid())
+            {
+                return false;
+            }
+
+            if (!properties.setBool(property, value, slot, isDefault))
+            {
+                logWarning("Failed to set ", (isDefault ? "default " : ""), "bool value in material '", descriptor.objectInfo.name, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
+                return false;
+            }
+
+            return true;
+        }
+
+        bool setInt32(StringId property, int32_t value, MaterialPropertySlotId slot, bool isDefault) noexcept
+        {
+            if (!slot.isValid())
+            {
+                return false;
+            }
+
+            if (!properties.setInt32(property, value, slot, isDefault))
+            {
+                logWarning("Failed to set ", (isDefault ? "default " : ""), "int32 value in material '", descriptor.objectInfo.name, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
+                return false;
+            }
+
+            return true;
+        }
+
+        bool setUint32(StringId property, uint32_t value, MaterialPropertySlotId slot, bool isDefault) noexcept
+        {
+            if (!slot.isValid())
+            {
+                return false;
+            }
+
+            if (!properties.setUint32(property, value, slot, isDefault))
+            {
+                logWarning("Failed to set ", (isDefault ? "default " : ""), "uint32 value in material '", descriptor.objectInfo.name, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
+                return false;
+            }
+
+            return true;
+        }
+
+        bool setFloat(StringId property, float value, MaterialPropertySlotId slot, bool isDefault) noexcept
+        {
+            if (!slot.isValid())
+            {
+                return false;
+            }
+
+            if (!properties.setFloat(property, value, slot, isDefault))
+            {
+                logWarning("Failed to set ", (isDefault ? "default " : ""), "float value in material '", descriptor.objectInfo.name, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
+                return false;
+            }
+
+            return true;
+        }
+
+        bool setDouble(StringId property, double value, MaterialPropertySlotId slot, bool isDefault) noexcept
+        {
+            if (!slot.isValid())
+            {
+                return false;
+            }
+
+            if (!properties.setDouble(property, value, slot, isDefault))
+            {
+                logWarning("Failed to set ", (isDefault ? "default " : ""), "double value in material '", descriptor.objectInfo.name, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
+                return false;
+            }
+
+            return true;
+        }
+
+        bool setVec2(StringId property, vec2 value, MaterialPropertySlotId slot, bool isDefault) noexcept
+        {
+            if (!slot.isValid())
+            {
+                return false;
+            }
+
+            if (!properties.setVec2(property, value, slot, isDefault))
+            {
+                logWarning("Failed to set ", (isDefault ? "default " : ""), "vec2 value in material '", descriptor.objectInfo.name, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
+                return false;
+            }
+
+            return true;
+        }
+
+        bool setVec3(StringId property, vec3 value, MaterialPropertySlotId slot, bool isDefault) noexcept
+        {
+            if (!slot.isValid())
+            {
+                return false;
+            }
+
+            if (!properties.setVec3(property, value, slot, isDefault))
+            {
+                logWarning("Failed to set ", (isDefault ? "default " : ""), "vec3 value in material '", descriptor.objectInfo.name, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
+                return false;
+            }
+
+            return true;
+        }
+
+        bool setVec4(StringId property, vec4 const& value, MaterialPropertySlotId slot, bool isDefault) noexcept
+        {
+            if (!slot.isValid())
+            {
+                return false;
+            }
+
+            if (!properties.setVec4(property, value, slot, isDefault))
+            {
+                logWarning("Failed to set ", (isDefault ? "default " : ""), "vec4 value in material '", descriptor.objectInfo.name, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
+                return false;
+            }
+
+            return true;
+        }
+
+        bool setColor(StringId property, color const& value, MaterialPropertySlotId slot, bool isDefault) noexcept
+        {
+            if (!slot.isValid())
+            {
+                return false;
+            }
+
+            if (!properties.setColor(property, value, slot, isDefault))
+            {
+                logWarning("Failed to set ", (isDefault ? "default " : ""), "color value in material '", descriptor.objectInfo.name, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
+                return false;
+            }
+
+            return true;
+        }
+
+        bool setMat3(StringId property, mat3 const& value, MaterialPropertySlotId slot, bool isDefault) noexcept
+        {
+            if (!slot.isValid())
+            {
+                return false;
+            }
+
+            if (!properties.setMat3(property, value, slot, isDefault))
+            {
+                logWarning("Failed to set ", (isDefault ? "default " : ""), "mat3 value in material '", descriptor.objectInfo.name, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
+                return false;
+            }
+
+            return true;
+        }
+
+        bool setMat4(StringId property, mat4 const& value, MaterialPropertySlotId slot, bool isDefault) noexcept
+        {
+            if (!slot.isValid())
+            {
+                return false;
+            }
+
+            if (!properties.setMat4(property, value, slot, isDefault))
+            {
+                logWarning("Failed to set ", (isDefault ? "default " : ""), "mat4 value in material '", descriptor.objectInfo.name, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
+                return false;
+            }
+
+            return true;
+        }
     };
 
     Material::Material()
@@ -776,167 +961,112 @@ namespace litl
 
     bool Material::setBool(StringId property, bool value, MaterialPropertySlotId slot) noexcept
     {
-        if (!slot.isValid())
-        {
-            return false;
-        }
-
-        return m_pImpl->properties.setBool(property, value, slot, false);
+        return m_pImpl->setBool(property, value, slot, false);
     }
 
     bool Material::setInt32(StringId property, int32_t value, MaterialPropertySlotId slot) noexcept
     {
-        if (!slot.isValid())
-        {
-            return false;
-        }
-
-        return m_pImpl->properties.setInt32(property, value, slot, false);
+        return m_pImpl->setInt32(property, value, slot, false);
     }
 
     bool Material::setUint32(StringId property, uint32_t value, MaterialPropertySlotId slot) noexcept
     {
-        if (!slot.isValid())
-        {
-            return false;
-        }
-
-        return m_pImpl->properties.setUint32(property, value, slot, false);
+        return m_pImpl->setUint32(property, value, slot, false);
     }
 
     bool Material::setFloat(StringId property, float value, MaterialPropertySlotId slot) noexcept
     {
-        if (!slot.isValid())
-        {
-            return false;
-        }
-
-        return m_pImpl->properties.setFloat(property, value, slot, false);
+        return m_pImpl->setFloat(property, value, slot, false);
     }
 
     bool Material::setDouble(StringId property, double value, MaterialPropertySlotId slot) noexcept
     {
-        if (!slot.isValid())
-        {
-            return false;
-        }
-
-        return m_pImpl->properties.setDouble(property, value, slot, false);
+        return m_pImpl->setDouble(property, value, slot, false);
     }
 
     bool Material::setVec2(StringId property, vec2 value, MaterialPropertySlotId slot) noexcept
     {
-        if (!slot.isValid())
-        {
-            return false;
-        }
-
-        return m_pImpl->properties.setVec2(property, value, slot, false);
+        return m_pImpl->setVec2(property, value, slot, false);
     }
 
     bool Material::setVec3(StringId property, vec3 value, MaterialPropertySlotId slot) noexcept
     {
-        if (!slot.isValid())
-        {
-            return false;
-        }
-
-        return m_pImpl->properties.setVec3(property, value, slot, false);
+        return m_pImpl->setVec3(property, value, slot, false);
     }
 
     bool Material::setVec4(StringId property, vec4 const& value, MaterialPropertySlotId slot) noexcept
     {
-        if (!slot.isValid())
-        {
-            return false;
-        }
-
-        return m_pImpl->properties.setVec4(property, value, slot, false);
+        return m_pImpl->setVec4(property, value, slot, false);
     }
 
     bool Material::setColor(StringId property, color const& value, MaterialPropertySlotId slot) noexcept
     {
-        if (!slot.isValid())
-        {
-            return false;
-        }
-
-        return m_pImpl->properties.setColor(property, value, slot, false);
+        return m_pImpl->setColor(property, value, slot, false);
     }
 
     bool Material::setMat3(StringId property, mat3 const& value, MaterialPropertySlotId slot) noexcept
     {
-        if (!slot.isValid())
-        {
-            return false;
-        }
-
-        return m_pImpl->properties.setMat3(property, value, slot, false);
+        return m_pImpl->setMat3(property, value, slot, false);
     }
 
     bool Material::setMat4(StringId property, mat4 const& value, MaterialPropertySlotId slot) noexcept
     {
-        if (!slot.isValid())
-        {
-            return false;
-        }
-
-        return m_pImpl->properties.setMat4(property, value, slot, false);
+        return m_pImpl->setMat4(property, value, slot, false);
     }
 
     bool Material::setDefaultBool(StringId property, bool value) noexcept
     {
-        return m_pImpl->properties.setBool(property, value, {}, true);
+        return m_pImpl->setBool(property, value, {}, true);
     }
 
     bool Material::setDefaultInt32(StringId property, int32_t value) noexcept
     {
-        return m_pImpl->properties.setInt32(property, value, {}, true);
+        return m_pImpl->setInt32(property, value, {}, true);
     }
 
     bool Material::setDefaultUint32(StringId property, uint32_t value) noexcept
     {
-        return m_pImpl->properties.setUint32(property, value, {}, true);
+        return m_pImpl->setUint32(property, value, {}, true);
     }
 
     bool Material::setDefaultFloat(StringId property, float value) noexcept
     {
-        return m_pImpl->properties.setFloat(property, value, {}, true);
+        return m_pImpl->setFloat(property, value, {}, true);
     }
 
     bool Material::setDefaultDouble(StringId property, double value) noexcept
     {
-        return m_pImpl->properties.setDouble(property, value, {}, true);
+        return m_pImpl->setDouble(property, value, {}, true);
     }
 
     bool Material::setDefaultVec2(StringId property, vec2 value) noexcept
     {
-        return m_pImpl->properties.setVec2(property, value, {}, true);
+        return m_pImpl->setVec2(property, value, {}, true);
     }
 
     bool Material::setDefaultVec3(StringId property, vec3 value) noexcept
     {
-        return m_pImpl->properties.setVec3(property, value, {}, true);
+        return m_pImpl->setVec3(property, value, {}, true);
     }
 
     bool Material::setDefaultVec4(StringId property, vec4 const& value) noexcept
     {
-        return m_pImpl->properties.setVec4(property, value, {}, true);
+        return m_pImpl->setVec4(property, value, {}, true);
     }
 
     bool Material::setDefaultColor(StringId property, color const& value) noexcept
     {
-        return m_pImpl->properties.setColor(property, value, {}, true);
+        return m_pImpl->setColor(property, value, {}, true);
     }
 
     bool Material::setDefaultMat3(StringId property, mat3 const& value) noexcept
     {
-        return m_pImpl->properties.setMat3(property, value, {}, true);
+        return m_pImpl->setMat3(property, value, {}, true);
     }
 
     bool Material::setDefaultMat4(StringId property, mat4 const& value) noexcept
     {
-        return m_pImpl->properties.setMat4(property, value, {}, true);
+        return m_pImpl->setMat4(property, value, {}, true);
     }
 
     // -------------------------------------------------------------------------------------

@@ -244,7 +244,15 @@ namespace litl
             return {};
         }
 
-        return m_impl->materialPool.create(material);
+        MaterialHandle handle = m_impl->materialPool.create(material);
+        Material* materialPtr = m_impl->materialPool.get(handle);
+
+        if (materialPtr != nullptr)
+        {
+            materialPtr->setSelfHandle({}, handle);
+        }
+
+        return handle;
     }
 
     MaterialHandle ObjectPool::createMaterial(MaterialDescriptor const& descriptor) noexcept

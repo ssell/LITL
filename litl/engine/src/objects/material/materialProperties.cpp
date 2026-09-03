@@ -172,6 +172,17 @@ namespace litl
 
     MaterialPropertySlotId MaterialProperties::allocateSlot() noexcept
     {
+        if (!m_ready)
+        {
+            std::scoped_lock lock{ m_deferredWriteMutex };
+            m_deferredSlotAllocationCount++;
+
+            return MaterialPropertySlotId{
+                .index = (m_deferredSlotAllocationCount - 1),
+                .version = 1u
+            };
+        }
+
         if (m_slotSizeBytes == 0u)
         {
             // A material with no property block is legitimate but we can't allocate a slot for it.
@@ -438,6 +449,63 @@ namespace litl
         return &m_properties[find->second];
     }
 
+    bool MaterialProperties::deferSetData(PropertyWriteType type, StringId propertyId, ValidPropertyType const& value, MaterialPropertySlotId slotId, bool defaultValue) noexcept
+    {
+        std::scoped_lock lock{ m_deferredWriteMutex };
+        m_deferredWriteRequests.emplace_back();
+        auto* request = &m_deferredWriteRequests.back();
+
+        request->propertyId = propertyId;
+        request->slotId = slotId;
+        request->type = type;
+        request->value = value;
+        request->defaultValue = defaultValue;
+
+        return true;
+    }
+
+    void MaterialProperties::processDeferredDataSet(DeferredDataSetRequest const& request) noexcept
+    {
+        switch (request.type)
+        {
+        case PropertyWriteType::Bool:
+            if (auto* value = std::get_if<bool>(&request.value); value != nullptr) { setBool(request.propertyId, *value, request.slotId, request.defaultValue); }
+            break;
+        case PropertyWriteType::Int32:
+            if (auto* value = std::get_if<int32_t>(&request.value); value != nullptr) { setInt32(request.propertyId, *value, request.slotId, request.defaultValue); }
+            break;
+        case PropertyWriteType::Uint32:
+            if (auto* value = std::get_if<uint32_t>(&request.value); value != nullptr) { setUint32(request.propertyId, *value, request.slotId, request.defaultValue); }
+            break;
+        case PropertyWriteType::Float:
+            if (auto* value = std::get_if<float>(&request.value); value != nullptr) { setFloat(request.propertyId, *value, request.slotId, request.defaultValue); }
+            break;
+        case PropertyWriteType::Double:
+            if (auto* value = std::get_if<double>(&request.value); value != nullptr) { setDouble(request.propertyId, *value, request.slotId, request.defaultValue); }
+            break;
+        case PropertyWriteType::Vec2:
+            if (auto* value = std::get_if<vec2>(&request.value); value != nullptr) { setVec2(request.propertyId, *value, request.slotId, request.defaultValue); }
+            break;
+        case PropertyWriteType::Vec3:
+            if (auto* value = std::get_if<vec3>(&request.value); value != nullptr) { setVec3(request.propertyId, *value, request.slotId, request.defaultValue); }
+            break;
+        case PropertyWriteType::Vec4:
+            if (auto* value = std::get_if<vec4>(&request.value); value != nullptr) { setVec4(request.propertyId, *value, request.slotId, request.defaultValue); }
+            break;
+        case PropertyWriteType::Color:
+            if (auto* value = std::get_if<color>(&request.value); value != nullptr) { setColor(request.propertyId, *value, request.slotId, request.defaultValue); }
+            break;
+        case PropertyWriteType::Mat3:
+            if (auto* value = std::get_if<mat3>(&request.value); value != nullptr) { setMat3(request.propertyId, *value, request.slotId, request.defaultValue); }
+            break;
+        case PropertyWriteType::Mat4:
+            if (auto* value = std::get_if<mat4>(&request.value); value != nullptr) { setMat4(request.propertyId, *value, request.slotId, request.defaultValue); }
+            break;
+        default:
+            break;
+        }
+    }
+
     bool MaterialProperties::setData(uint32_t propertyOffset, uint32_t propertySize, void const* propertyData, MaterialPropertySlotId slotId, bool defaultValue) noexcept
     {
         if (defaultValue)
@@ -491,6 +559,11 @@ namespace litl
 
     bool MaterialProperties::setBool(StringId property, bool value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
+        if (!m_ready)
+        {
+            return deferSetData(PropertyWriteType::Bool, property, value, slot, defaultValue);
+        }
+
         auto* reflectedProperty = getReflectedProperty(property);
 
         if (reflectedProperty == nullptr)
@@ -517,6 +590,11 @@ namespace litl
 
     bool MaterialProperties::setInt32(StringId property, int32_t value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
+        if (!m_ready)
+        {
+            return deferSetData(PropertyWriteType::Int32, property, value, slot, defaultValue);
+        }
+
         auto* reflectedProperty = getReflectedProperty(property);
 
         if (reflectedProperty == nullptr)
@@ -542,6 +620,11 @@ namespace litl
 
     bool MaterialProperties::setUint32(StringId property, uint32_t value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
+        if (!m_ready)
+        {
+            return deferSetData(PropertyWriteType::Uint32, property, value, slot, defaultValue);
+        }
+
         auto* reflectedProperty = getReflectedProperty(property);
 
         if (reflectedProperty == nullptr)
@@ -567,6 +650,11 @@ namespace litl
 
     bool MaterialProperties::setFloat(StringId property, float value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
+        if (!m_ready)
+        {
+            return deferSetData(PropertyWriteType::Float, property, value, slot, defaultValue);
+        }
+
         auto* reflectedProperty = getReflectedProperty(property);
 
         if (reflectedProperty == nullptr)
@@ -586,6 +674,11 @@ namespace litl
 
     bool MaterialProperties::setDouble(StringId property, double value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
+        if (!m_ready)
+        {
+            return deferSetData(PropertyWriteType::Double, property, value, slot, defaultValue);
+        }
+
         auto* reflectedProperty = getReflectedProperty(property);
 
         if (reflectedProperty == nullptr)
@@ -605,6 +698,11 @@ namespace litl
 
     bool MaterialProperties::setVec2(StringId property, vec2 value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
+        if (!m_ready)
+        {
+            return deferSetData(PropertyWriteType::Vec2, property, value, slot, defaultValue);
+        }
+
         auto* reflectedProperty = getReflectedProperty(property);
 
         if (reflectedProperty == nullptr)
@@ -626,6 +724,11 @@ namespace litl
 
     bool MaterialProperties::setVec3(StringId property, vec3 value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
+        if (!m_ready)
+        {
+            return deferSetData(PropertyWriteType::Vec3, property, value, slot, defaultValue);
+        }
+
         auto* reflectedProperty = getReflectedProperty(property);
 
         if (reflectedProperty == nullptr)
@@ -647,6 +750,11 @@ namespace litl
 
     bool MaterialProperties::setVec4(StringId property, vec4 const& value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
+        if (!m_ready)
+        {
+            return deferSetData(PropertyWriteType::Vec4, property, value, slot, defaultValue);
+        }
+
         auto* reflectedProperty = getReflectedProperty(property);
 
         if (reflectedProperty == nullptr)
@@ -668,6 +776,11 @@ namespace litl
 
     bool MaterialProperties::setColor(StringId property, color const& value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
+        if (!m_ready)
+        {
+            return deferSetData(PropertyWriteType::Color, property, value, slot, defaultValue);
+        }
+
         auto* reflectedProperty = getReflectedProperty(property);
 
         if (reflectedProperty == nullptr)
@@ -689,6 +802,11 @@ namespace litl
 
     bool MaterialProperties::setMat3(StringId property, mat3 const& value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
+        if (!m_ready)
+        {
+            return deferSetData(PropertyWriteType::Mat3, property, value, slot, defaultValue);
+        }
+
         auto* reflectedProperty = getReflectedProperty(property);
 
         if (reflectedProperty == nullptr)
@@ -728,6 +846,11 @@ namespace litl
 
     bool MaterialProperties::setMat4(StringId property, mat4 const& value, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
+        if (!m_ready)
+        {
+            return deferSetData(PropertyWriteType::Mat4, property, value, slot, defaultValue);
+        }
+
         auto* reflectedProperty = getReflectedProperty(property);
 
         if (reflectedProperty == nullptr)
@@ -746,6 +869,38 @@ namespace litl
         }
 
         return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot, defaultValue);
+    }
+
+    void MaterialProperties::setReady() noexcept
+    {
+        if (m_ready)
+        {
+            return;
+        }
+
+        m_ready = true;
+
+        for (auto& writeRequest : m_deferredWriteRequests)
+        {
+            if (writeRequest.defaultValue)
+            {
+                processDeferredDataSet(writeRequest);
+            }
+        }
+        
+        while (m_deferredSlotAllocationCount > 0u)
+        {
+            std::ignore = allocateSlot();
+            m_deferredSlotAllocationCount--;
+        }
+
+        for (auto& writeRequest : m_deferredWriteRequests)
+        {
+            if (!writeRequest.defaultValue)
+            {
+                processDeferredDataSet(writeRequest);
+            }
+        }
     }
 
     void FrequentUpdateBlock::removeResident(uint32_t slot) noexcept

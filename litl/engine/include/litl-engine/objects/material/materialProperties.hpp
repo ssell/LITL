@@ -3,7 +3,9 @@
 
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <span>
+#include <variant>
 #include <vector>
 
 #include "litl-core/constants.hpp"
@@ -348,7 +350,36 @@ namespace litl
         /// </summary>
         bool setMat4(StringId property, mat4 const& value, MaterialPropertySlotId slot, bool defaultValue) noexcept;
 
+        void setReady() noexcept;
+
     private:
+
+        using ValidPropertyType = std::variant<bool, int32_t, uint32_t, float, double, vec2, vec3, vec4, color, mat3, mat4>;
+
+        enum class PropertyWriteType
+        {
+            Unknown = 0u,
+            Bool,
+            Int32,
+            Uint32,
+            Float,
+            Double,
+            Vec2,
+            Vec3,
+            Vec4,
+            Color,
+            Mat3,
+            Mat4
+        };
+
+        struct DeferredDataSetRequest
+        {
+            StringId propertyId{};
+            MaterialPropertySlotId slotId{};
+            PropertyWriteType type{ PropertyWriteType::Unknown };
+            ValidPropertyType value;
+            bool defaultValue{ false };
+        };
 
         /// <summary>
         /// Allocates a new block.
@@ -374,7 +405,11 @@ namespace litl
         /// <summary>
         /// Generic data set for a single property in a block. All other set methods (setBool, setFloat, setColor, etc.) all flow into here.
         /// </summary>
-        bool setData(uint32_t propertyOffset, uint32_t propertySize, void const* propertyData, MaterialPropertySlotId slot, bool defaultValue) noexcept;
+        bool setData(uint32_t propertyOffset, uint32_t propertySize, void const* propertyData, MaterialPropertySlotId slotId, bool defaultValue) noexcept;
+
+        bool deferSetData(PropertyWriteType type, StringId propertyId, ValidPropertyType const& value, MaterialPropertySlotId slotId, bool defaultValue) noexcept;
+
+        void processDeferredDataSet(DeferredDataSetRequest const& request) noexcept;
 
         /// <summary>
         /// Size of an individual slot in a block.
@@ -424,6 +459,26 @@ namespace litl
         /// Handle of the owning material.
         /// </summary>
         MaterialHandle m_materialHandle{};
+
+        /// <summary>
+        /// The number of slot allocations that were requested before the material was ready.
+        /// </summary>
+        uint32_t m_deferredSlotAllocationCount = 0u;
+
+        /// <summary>
+        /// Set data requests that came in prior to the material being ready.
+        /// </summary>
+        std::vector<DeferredDataSetRequest> m_deferredWriteRequests;
+
+        /// <summary>
+        /// Used for deferred request when the material is not yet ready.
+        /// </summary>
+        std::mutex m_deferredWriteMutex;
+
+        /// <summary>
+        /// Is the material fully setup and ready for use?
+        /// </summary>
+        bool m_ready{ false };
 
         /// <summary>
         /// Separate Tier 3 data in the GPU buffer.
