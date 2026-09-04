@@ -231,6 +231,7 @@ namespace litl
         /// <summary>
         /// Material slot associated with each individual face.
         /// Parallel to m_faceIndexCounts, where each index references the same face between the two vectors.
+        /// The value of Constants::uint32_null_index is used if no material is assigned.
         /// </summary>
         std::vector<uint32_t> m_faceMaterialSlots;
 

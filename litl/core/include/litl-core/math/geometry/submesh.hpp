@@ -2,7 +2,7 @@
 #define LITL_MATH_GEOMETRY_SUBMESH_H__
 
 #include <cstdint>
-#include "litl-core/math/bounds.hpp"
+#include "litl-core/math/bounds/aabb.hpp"
 
 namespace litl
 {

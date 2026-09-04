@@ -122,7 +122,7 @@ namespace litl
     void GeoMesh::setFaceDefaultMaterialSlots() noexcept
     {
         m_faceMaterialSlots.clear();
-        m_faceMaterialSlots.resize(m_faceIndexCounts.size(), 0u);
+        m_faceMaterialSlots.resize(m_faceIndexCounts.size(), Constants::uint32_null_index);
     }
 
     bounds::AABB const& GeoMesh::getBounds() const noexcept

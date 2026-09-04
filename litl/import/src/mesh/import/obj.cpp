@@ -3,6 +3,8 @@
 #include <spanstream>
 
 #include "litl-core/hash.hpp"
+#include "litl-core/containers/flatHashMap.hpp"
+#include "litl-core/containers/flatHashSet.hpp"
 #include "litl-core/math/geometry/geoMesh.hpp"
 #include "litl-import/mesh/import/obj.hpp"
 
@@ -72,9 +74,41 @@ namespace litl::import
             return vertex;
         }
 
+        void buildGlobalToLocalMaterialSlotMap(rapidobj::Mesh const& objMesh, FlatHashMap<int32_t, uint32_t>& globalToLocalMaterialSlot) noexcept
+        {
+            // rapidobj uses -1 to indicate "no material" and when it does reference an actual material it maps to the "global" objResult.materials index. 
+            // This needs remapping to the mesh local slots such that a mesh assigned to material 3 and 7 globally, refer to them locally as 0 and 1.
+
+            FlatHashSet<int32_t> localUsedMaterialSlots{};
+            globalToLocalMaterialSlot.insert(-1, Constants::uint32_null_index);
+
+            for (auto& materialIndex : objMesh.material_ids)
+            {
+                if (materialIndex != -1)
+                {
+                    localUsedMaterialSlots.insert(materialIndex);
+                }
+            }
+
+            if (!localUsedMaterialSlots.empty())
+            {
+                std::vector<int32_t> sortedLocalUsedMaterialSlots(localUsedMaterialSlots.begin(), localUsedMaterialSlots.end());
+                std::sort(sortedLocalUsedMaterialSlots.begin(), sortedLocalUsedMaterialSlots.end());
+
+                for (uint32_t i = 0u; i < static_cast<uint32_t>(sortedLocalUsedMaterialSlots.size()); ++i)
+                {
+                    globalToLocalMaterialSlot.insert(sortedLocalUsedMaterialSlots[i], i);
+                }
+            }
+        }
+
         void convertToLitlMesh(GeoMesh* litlMesh, rapidobj::Mesh const& objMesh, rapidobj::Attributes const& objAttributes) noexcept
         {
             std::unordered_map<ObjVertexKey, uint32_t> mappedVertices;
+            FlatHashMap<int32_t, uint32_t> globalToLocalMaterialSlot{};
+
+            buildGlobalToLocalMaterialSlotMap(objMesh, globalToLocalMaterialSlot);
+
             uint32_t index = 0u;
             uint32_t face = 0u;
 
@@ -92,7 +126,7 @@ namespace litl::import
                 uint32_t const faceIndexCount = objMesh.num_face_vertices[face];
 
                 faceIndexCounts.push_back(faceIndexCount);
-                faceMaterialSlots.push_back(objMesh.material_ids[face]);
+                faceMaterialSlots.push_back(globalToLocalMaterialSlot.find(objMesh.material_ids[face]).value());
 
                 for (uint32_t faceIndex = 0u; faceIndex < faceIndexCount; ++faceIndex)
                 {
