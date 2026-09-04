@@ -257,14 +257,12 @@ namespace litl::import
             return Result::Error(ErrorType::ImporterFailed, readTomlResult.custom_error_message);
         }
 
-        importedData.setType(ImportedDataType::Material);
-        auto* material = importedData.getDataPtr<MaterialImportResult>();
-
-        if (material == nullptr)
+        if (!importedData.setType(ImportedDataType::Material))
         {
             return Result::Error(ErrorType::ImporterFailed, "Failed to create material import data.");
         }
 
+        auto* material = importedData.getDataPtr<MaterialImportResult>();
         material->intermediateMaterial = std::make_shared<MaterialIntermediateData>();
         auto* intermediateMaterial = material->intermediateMaterial.get();
 

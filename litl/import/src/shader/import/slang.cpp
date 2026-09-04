@@ -199,7 +199,7 @@ namespace litl::import
 
         if (!importedData.setType(ImportedDataType::Shader))
         {
-            return Result::Error(ErrorType::ImporterFailed, "Failed to create mesh import data.");
+            return Result::Error(ErrorType::ImporterFailed, "Failed to create shader import data.");
         }
 
         auto* shader = importedData.getDataPtr<ShaderImportResult>();

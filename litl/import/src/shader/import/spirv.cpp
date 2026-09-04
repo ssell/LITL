@@ -15,14 +15,14 @@ namespace litl::import
     Result SpirvImporter::import(File const& file, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
     {
         // Convert the std::byte to uint32_t as SPIR-V works on 4-byte words.
-        importedData.setType(ImportedDataType::Shader);
-        auto* shader = importedData.getDataPtr<ShaderImportResult>();
-
-        if (shader != nullptr)
+        if (!importedData.setType(ImportedDataType::Shader))
         {
-            shader->intermediateShader = std::make_unique<ShaderIntermediateData>();
-            shader->intermediateShader->setSpirvWords(std::span<uint32_t const>{ reinterpret_cast<const uint32_t*>(sourceBytes.data()), sourceBytes.size_bytes() / sizeof(uint32_t) });
+            return Result::Error(ErrorType::ImporterFailed, "Failed to create shader import data.");
         }
+
+        auto* shader = importedData.getDataPtr<ShaderImportResult>();
+        shader->intermediateShader = std::make_unique<ShaderIntermediateData>();
+        shader->intermediateShader->setSpirvWords(std::span<uint32_t const>{ reinterpret_cast<const uint32_t*>(sourceBytes.data()), sourceBytes.size_bytes() / sizeof(uint32_t) });
 
         return Result::Success();
     }

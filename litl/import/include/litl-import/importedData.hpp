@@ -68,7 +68,7 @@ namespace litl::import
                 return false;
             }
 
-            switch (getType())
+            switch (type)
             {
             case ImportedDataType::Material:
                 m_dataPtr = std::make_unique<MaterialImportResult>();

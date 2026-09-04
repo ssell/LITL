@@ -194,14 +194,12 @@ namespace litl::import
             return Result::Error(ErrorType::ImporterEmptyResult);
         }
 
-        importedData.setType(ImportedDataType::Mesh);
-
-        auto* mesh = importedData.getDataPtr<MeshImportResult>();
-
-        if (mesh == nullptr)
+        if (!importedData.setType(ImportedDataType::Mesh))
         {
             return Result::Error(ErrorType::ImporterFailed, "Failed to create mesh import data.");
         }
+
+        auto* mesh = importedData.getDataPtr<MeshImportResult>();
 
         for (uint32_t i = 0u; i < static_cast<uint32_t>(objResult.shapes.size()); ++i)
         {
