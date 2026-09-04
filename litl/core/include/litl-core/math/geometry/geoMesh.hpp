@@ -138,15 +138,36 @@ namespace litl
         void setFaceDefaultMaterialSlots() noexcept;
 
         /// <summary>
+        /// Sets the submeshes in the mesh.
+        /// </summary>
+        void setSubmeshes(std::span<Submesh const> submeshes) noexcept;
+
+        /// <summary>
+        /// Sets the submeshes in the mesh from a raw byte blob.
+        /// </summary>
+        void setSubmeshes(std::span<std::byte const> bytes) noexcept;
+
+        /// <summary>
         /// Returns the AABB that encapsulates the mesh.
         /// Note: this can drift out-of-sync if vertices are modified without calling recalculateBounds or setBoundsMinMax after.
         /// </summary>
         [[nodiscard]] bounds::AABB const& getBounds() const noexcept;
 
         /// <summary>
+        /// Returns the AABB encapsulating the specified submesh.
+        /// Note: this can drift out-of-sync if vertices are modified without calling recalculateSubmeshBounds or finalizeSubmeshes.
+        /// </summary>
+        [[nodiscard]] std::optional<bounds::AABB> getSubmeshBounds(uint32_t submeshIndex) const noexcept;
+
+        /// <summary>
         /// Traverses all vertices and recalculates the bounding AABB.
         /// </summary>
         void recalculateBounds() noexcept;
+
+        /// <summary>
+        /// Traverse all vertices for the specified submesh and calculates its individual AABB.
+        /// </summary>
+        [[nodiscard]] bool recalculateSubmeshBounds(uint32_t submeshIndex) noexcept;
 
         /// <summary>
         /// Sets the bounding AABB min/max points.
@@ -207,6 +228,11 @@ namespace litl
         /// This assumes all .v coordinate values are on the range [0, 1].
         /// </summary>
         void flipTexcoordV() noexcept;
+
+        /// <summary>
+        /// Ensures there is at least one submesh.
+        /// </summary>
+        [[nodiscard]] bool finalizeSubmeshes() noexcept;
 
     private:
 

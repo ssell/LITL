@@ -125,9 +125,30 @@ namespace litl
         m_faceMaterialSlots.resize(m_faceIndexCounts.size(), Constants::uint32_null_index);
     }
 
+    void GeoMesh::setSubmeshes(std::span<Submesh const> submeshes) noexcept
+    {
+        m_submeshes.assign(submeshes.begin(), submeshes.end());
+    }
+
+    void GeoMesh::setSubmeshes(std::span<std::byte const> bytes) noexcept
+    {
+        std::span<Submesh const> submeshes = { reinterpret_cast<Submesh const*>(bytes.data()), bytes.size() / sizeof(Submesh) };
+        setSubmeshes(submeshes);
+    }
+
     bounds::AABB const& GeoMesh::getBounds() const noexcept
     {
         return m_bounds;
+    }
+
+    std::optional<bounds::AABB> GeoMesh::getSubmeshBounds(uint32_t submeshIndex) const noexcept
+    {
+        if (submeshIndex > m_submeshes.size())
+        {
+            return std::nullopt;
+        }
+
+        return m_submeshes[submeshIndex].bounds;
     }
 
     void GeoMesh::recalculateBounds() noexcept
@@ -148,6 +169,34 @@ namespace litl
         }
 
         setBoundsMinMax(minPoint, maxPoint);
+    }
+
+    bool GeoMesh::recalculateSubmeshBounds(uint32_t submeshIndex) noexcept
+    {
+        if (submeshIndex >= m_submeshes.size())
+        {
+            return false;
+        }
+
+        auto& submesh = m_submeshes[submeshIndex];
+
+        if ((submesh.firstIndex + submesh.indexCount) >= m_indices.size())
+        {
+            return false;
+        }
+
+        vec3 minPoint = vec3::max();
+        vec3 maxPoint = vec3::min();
+
+        for (uint32_t index = submesh.firstIndex; index < (submesh.firstIndex + submesh.indexCount); ++index)
+        {
+            minPoint = min(minPoint, m_vertices[m_indices[index]].position);
+            maxPoint = max(maxPoint, m_vertices[m_indices[index]].position);
+        }
+
+        submesh.bounds = bounds::AABB::fromMinMax(minPoint, maxPoint);
+
+        return true;
     }
 
     void GeoMesh::setBoundsMinMax(vec3 minPoint, vec3 maxPoint) noexcept
@@ -270,5 +319,31 @@ namespace litl
         {
             vertex.texcoord.y() = 1.0f - clamp(vertex.texcoord.y(), 0.0f, 1.0f);
         }
+    }
+
+    bool GeoMesh::finalizeSubmeshes() noexcept
+    {
+        if (m_submeshes.empty())
+        {
+            m_submeshes.push_back(Submesh{
+                .firstIndex = 0u,
+                .indexCount = static_cast<uint32_t>(m_indices.size()),
+                .materialSlot = Constants::uint32_null_index,
+                .bounds = m_bounds,
+            });
+        }
+        else
+        {
+            for (uint32_t i = 0u; i < static_cast<uint32_t>(m_submeshes.size()); ++i)
+            {
+                if (!recalculateSubmeshBounds(i))
+                {
+                    logWarning("Failed to recalculate bounds for submesh ", i);
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 }

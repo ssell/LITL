@@ -234,6 +234,14 @@ namespace litl
             /// </summary>
             InvalidBoundsValues = 1008u,
 
+            MissingSubmeshBlock,
+            MissingMaterialSlotsBlock,
+            MissingSubmesh,
+            InvalidSubmeshRange,
+            InvalidSubmeshCoverage,
+            OverlappingSubmeshRange,
+            InvalidMaterialSlot,
+
             // -----------------------------------------------------------------------------
             // LitlMaterial Error Codes
             // -----------------------------------------------------------------------------

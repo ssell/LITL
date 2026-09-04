@@ -76,6 +76,16 @@ namespace litl
             /// The bounds block is composed of float elements.
             /// </summary>
             static constexpr BinaryBlockIdType Bounds{ 'B', 'N', 'D', 'S' };
+
+            /// <summary>
+            /// Ids for a block that describes any submeshes.
+            /// </summary>
+            static constexpr BinaryBlockIdType Submeshes{ 'S', 'U', 'B', 'M' };
+
+            /// <summary>
+            /// Ids for a block that contains references to materials used in the file.
+            /// </summary>
+            static constexpr BinaryBlockIdType MissingMaterialSlots{ 'M', 'T', 'R', 'L' };
         };
 
         /// <summary>

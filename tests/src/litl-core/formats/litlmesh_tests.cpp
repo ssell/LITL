@@ -35,6 +35,7 @@ namespace litl::tests
             mesh.setIndices(indices);
             mesh.setFaceIndexCounts(faces);
             mesh.recalculateBounds();
+            mesh.finalizeSubmeshes();
         }
 
         /// <summary>
@@ -55,6 +56,7 @@ namespace litl::tests
             mesh.setIndices(indices);
             mesh.setFaceIndexCounts(faces);
             mesh.recalculateBounds();
+            mesh.finalizeSubmeshes();
         }
 
         /// <summary>
@@ -76,6 +78,7 @@ namespace litl::tests
             mesh.setIndices(indices);
             mesh.setFaceIndexCounts(faces);
             mesh.recalculateBounds();
+            mesh.finalizeSubmeshes();
         }
 
         // -------------------------------------------------------------------------------------
@@ -542,7 +545,6 @@ namespace litl::tests
     {
         GeoMesh mesh{};
         makeTriangleMesh(mesh);
-        mesh.setAllFaceIndexCounts(1u);     // Need this, otherwise when we serialize it will opt out of a FACE block anyways to just supply the AllTriangles flag.
 
         std::vector<std::byte> const good = serializeOrFail(mesh);
 
@@ -552,11 +554,12 @@ namespace litl::tests
             ErrorCode expected;
         };
 
-        std::array<Expectation, 4> const expectations{
+        std::array<Expectation, 5> const expectations{
             Expectation{ LitlMesh::BlockIds::Vertices, ErrorCode::MissingVertexBlock },
             Expectation{ LitlMesh::BlockIds::Indices,  ErrorCode::MissingIndexBlock },
             Expectation{ LitlMesh::BlockIds::Faces,    ErrorCode::MissingFaceBlock },
-            Expectation{ LitlMesh::BlockIds::Bounds,   ErrorCode::MissingBoundsBlock }
+            Expectation{ LitlMesh::BlockIds::Bounds,   ErrorCode::MissingBoundsBlock },
+            Expectation{ LitlMesh::BlockIds::Submeshes, ErrorCode::MissingSubmeshBlock }
         };
 
         for (auto const& expectation : expectations)
