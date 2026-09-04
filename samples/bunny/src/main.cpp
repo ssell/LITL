@@ -16,7 +16,7 @@ namespace litl::samples
         auto bunnyPos = vec3{ 0.0f, 0.0f, 3.5f };
 
         const auto camera = createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(0.0f, 1.5f, 0.0f), bunnyPos, vec3::up(), *objectPool, *sceneView);
-        const auto entity = createRenderable(commands, *assets, bunnyPos, "mesh/bunny"_sid, "material/flat"_sid);
+        const auto entity = createRenderable(bunnyPos, "mesh/bunny"_sid, "materials/flat"_sid, commands, *assets);
 
         commands.addComponent<Spin>(entity, Spin{ .rate = -1.0f });
     }
