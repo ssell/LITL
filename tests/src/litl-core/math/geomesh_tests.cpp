@@ -18,6 +18,7 @@ namespace litl::tests
             mesh.setVertices(vertices);
             mesh.setIndices(indices);
             mesh.setFaceIndexCounts(faceIndexCounts);
+            mesh.setFaceDefaultMaterialSlots();
             mesh.setWindingOrder(MeshWinding::Clockwise);
         }
 
@@ -54,6 +55,7 @@ namespace litl::tests
             const std::array<uint32_t, 1u> faceIndexCounts{ 3 };
 
             mesh.setFaceIndexCounts(faceIndexCounts);
+            mesh.setFaceDefaultMaterialSlots();
         }
 
         void createQuad(GeoMesh& mesh, bool clockwise, bool withNormals) noexcept
@@ -95,6 +97,7 @@ namespace litl::tests
             const std::array<uint32_t, 1u> faceIndexCounts{ 4 };
 
             mesh.setFaceIndexCounts(faceIndexCounts);
+            mesh.setFaceDefaultMaterialSlots();
         }
 
         void createNgon(GeoMesh& mesh, bool clockwise, bool withNormals) noexcept
@@ -136,6 +139,7 @@ namespace litl::tests
             const std::array<uint32_t, 1u> faceIndexCounts{ 6 };
 
             mesh.setFaceIndexCounts(faceIndexCounts);
+            mesh.setFaceDefaultMaterialSlots();
         }
         
         void requireIndices(GeoMesh const& mesh, std::span<uint32_t const> expected) noexcept

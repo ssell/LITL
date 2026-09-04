@@ -119,6 +119,12 @@ namespace litl
         m_faceIndexCounts.resize(faceCount, count);
     }
 
+    void GeoMesh::setFaceDefaultMaterialSlots() noexcept
+    {
+        m_faceMaterialSlots.clear();
+        m_faceMaterialSlots.resize(m_faceIndexCounts.size(), 0u);
+    }
+
     bounds::AABB const& GeoMesh::getBounds() const noexcept
     {
         return m_bounds;
@@ -159,7 +165,7 @@ namespace litl
         std::vector<uint32_t> triangulatedIndices;
         std::vector<uint32_t> triangulatedFaceMaterialSlots;
 
-        const auto report = triangulateMesh(m_vertices, m_indices, m_faceMaterialSlots, triangulatedIndices, triangulatedFaceMaterialSlots, m_faceIndexCounts);
+        const auto report = triangulateMesh(m_vertices, m_indices, m_faceIndexCounts, m_faceMaterialSlots, triangulatedIndices, triangulatedFaceMaterialSlots);
 
         if (report.success)
         {

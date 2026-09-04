@@ -132,6 +132,12 @@ namespace litl
         void setAllFaceIndexCounts(uint32_t count) noexcept;
 
         /// <summary>
+        /// Sets all faces to the default material slot of 0.
+        /// Some mesh actions, such as triangulation, expect there to be a valid material slot for each face.
+        /// </summary>
+        void setFaceDefaultMaterialSlots() noexcept;
+
+        /// <summary>
         /// Returns the AABB that encapsulates the mesh.
         /// Note: this can drift out-of-sync if vertices are modified without calling recalculateBounds or setBoundsMinMax after.
         /// </summary>

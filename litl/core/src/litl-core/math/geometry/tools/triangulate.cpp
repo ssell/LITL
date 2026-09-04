@@ -337,7 +337,7 @@ namespace litl
             report.resultTriangleFaceCount++;
         }
 
-        bool isValidInput(std::span<Vertex const> vertices, std::span<uint32_t const> sourceIndices, std::span<uint32_t const> faceIndexCounts) noexcept
+        bool isValidInput(std::span<Vertex const> vertices, std::span<uint32_t const> sourceIndices, std::span<uint32_t const> faceIndexCounts, std::span<uint32_t const> faceMaterialSlots) noexcept
         {
             uint32_t sumFaceIndexCounts = 0u;
             for (auto faceIndexCount : faceIndexCounts) { sumFaceIndexCounts += faceIndexCount; }
@@ -355,6 +355,12 @@ namespace litl
                 }
             }
 
+            if (faceMaterialSlots.size() != faceIndexCounts.size())
+            {
+                // Each face needs both a index count and material slot
+                return false;
+            }
+
             return true;
         }
     }
@@ -368,7 +374,7 @@ namespace litl
             .success = true
         };
 
-        if (!isValidInput(vertices, sourceIndices, faceIndexCounts))
+        if (!isValidInput(vertices, sourceIndices, faceIndexCounts, faceMaterialSlots))
         {
             report.success = false;
             return report;
