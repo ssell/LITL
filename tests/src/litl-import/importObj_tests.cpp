@@ -10,13 +10,13 @@ namespace litl::tests
     {
         // The high-res Stanford Bunny OBJ has 29k vertices and 179k indices.
         // Each vertex only has a position attribute - no texcoord or normal.
-        File source("assets/mesh/bunny.obj");
+        const File source("assets/mesh/bunny.obj");
 
         REQUIRE(source.exists() == true);
 
         import::ImportService importer{};
         import::ImportedData data{};
-        import::Result const result = importer.import(source, data, true);
+        const import::Result result = importer.import(source, data, true);
         
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);

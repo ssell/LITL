@@ -139,7 +139,7 @@ namespace litl::import
 
         if (objResult.error.code)
         {
-            // ... todo, be a bit more specific ...
+            logError("Import of '", file.name(), "' failed with error code ", objResult.error.code.value());
             return Result::Error(ErrorType::ImporterFailed);
         }
 
