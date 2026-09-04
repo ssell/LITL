@@ -46,15 +46,16 @@ namespace litl::samples
             return vec3{ rng.next01() * 2.0f - 1.0f, 0.0f, rng.next01() * 2.0f - 1.0f }.normalized();
         }
 
-        [[nodiscard]] DeferredEntity spawnEntity(EntityCommands& commands, Material* material, MeshHandle meshHandle, vec3 position, std::optional<vec3> velocity) noexcept
+        [[nodiscard]] DeferredEntity spawnEntity(EntityCommands& commands, Material* material, MeshHandle meshHandle, vec3 position, float uniformScale, color color, std::optional<vec3> velocity) noexcept
         {
             auto& rng = RandomFast::shared();
             auto entity = commands.createEntity();
+            const auto materialRef = MaterialRef{ .handle = material->getHandle(), .slot = material->allocateSlot() };
 
-            commands.addComponent<Transform>(entity, Transform::create(position));
+            commands.addComponent<Transform>(entity, Transform::create(position, quat::identity(), uniformScale));
             commands.addComponent<LocalBounds>(entity, LocalBounds{});
             commands.addComponent<WorldBounds>(entity, WorldBounds{});
-            commands.addComponent<MaterialRef>(entity, MaterialRef{ .handle = material->getHandle(), .slot = material->allocateSlot() });
+            commands.addComponent<MaterialRef>(entity, materialRef);
             commands.addComponent<MeshRef>(entity, MeshRef{ .handle = meshHandle });
 
             if (velocity.has_value())
@@ -63,12 +64,14 @@ namespace litl::samples
                 commands.addComponent<Movement>(entity, Movement{ .velocity = velocity.value() });
             }
 
+            material->setColor("tint"_sid, color, materialRef.slot);
+
             return entity;
         }
 
         void spawnBoid(EntityCommands& commands, Material* material, MeshHandle meshHandle, RandomFast& rng, uint32_t worldDimensions, uint32_t& boidCount) noexcept
         {
-            const auto boidEntity = spawnEntity(commands, nullptr, meshHandle, getRandomSpawnPoint(rng, worldDimensions, 0u), getRandomSpawnDirection(rng) * g_boidSteering.maxSpeed);
+            const auto boidEntity = spawnEntity(commands, material, meshHandle, getRandomSpawnPoint(rng, worldDimensions, 0u), 10.0f, colors::Purple, getRandomSpawnDirection(rng) * g_boidSteering.maxSpeed);
             commands.addComponent<Boid>(boidEntity, Boid{ .phase = boidCount % BoidSystem::SteeringPhases, .lastTick = -rng.next01() * BoidSystem::TickIntervalSec });                           // Boid system calculates targets at a set interval. Set random lastTick times so all the initial boids dont tick at the same time.
             boidCount++;
         }
@@ -76,7 +79,7 @@ namespace litl::samples
         [[nodiscard]] vec3 spawnPredator(EntityCommands& commands, Material* material, MeshHandle meshHandle, RandomFast& rng, uint32_t worldDimensions, uint32_t predatorCount) noexcept
         {
             const auto position = getRandomSpawnPoint(rng, worldDimensions, 0u);
-            const auto predatorEntity = spawnEntity(commands, nullptr, meshHandle, position, getRandomSpawnDirection(rng) * g_predatorSteering.maxSpeed);
+            const auto predatorEntity = spawnEntity(commands, material, meshHandle, position, 15.0f, colors::Orange, getRandomSpawnDirection(rng) * g_predatorSteering.maxSpeed);
             commands.addComponent<Predator>(predatorEntity, Predator{ .index = static_cast<uint32_t>(predatorCount), .lastTick = -rng.next01() * PredatorSystem::TickIntervalSec });
 
             return position;
@@ -85,7 +88,7 @@ namespace litl::samples
         [[nodiscard]] vec3 spawnFood(EntityCommands& commands, Material* material, MeshHandle meshHandle, RandomFast& rng, uint32_t worldDimensions, uint32_t index) noexcept
         {
             const auto position = getRandomSpawnPoint(rng, worldDimensions, 20u);
-            const auto foodEntity = spawnEntity(commands, nullptr, meshHandle, position, std::nullopt);
+            const auto foodEntity = spawnEntity(commands, material, meshHandle, position, 7.5f, colors::Green, std::nullopt);
             commands.addComponent<Food>(foodEntity, Food{ .index = index, .lastTick = -rng.next01() * FoodSystem::TickIntervalSec });
 
             return position;
@@ -119,7 +122,7 @@ namespace litl::samples
 
         m_materialHandle = materialAsset->handle;
 
-        auto* meshAsset = m_pAssetManager->getMesh("mesh/triangle");
+        auto* meshAsset = m_pAssetManager->getMesh("mesh/bunny");
 
         if (meshAsset == nullptr)
         {
