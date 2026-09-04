@@ -18,6 +18,9 @@ namespace litl
     // Create Main Camera
     // -------------------------------------------------------------------------------------
 
+    /// <summary>
+    /// Creates a new camera and assigns it as the main camera.
+    /// </summary>
     inline Camera* createMainCamera(CameraDescriptor const& descriptor, vec3 position, vec3 target, vec3 up, ObjectPool& objectPool, SceneView& sceneView) noexcept
     {
         auto cameraHandle = objectPool.createCamera(descriptor);
@@ -30,6 +33,9 @@ namespace litl
         return camera;
     }
 
+    /// <summary>
+    /// Creates a new camera and assigns it as the main camera.
+    /// </summary>
     inline Camera* createMainCamera(color clearColor, vec3 position, vec3 target, vec3 up, ObjectPool& objectPool, SceneView& sceneView) noexcept
     {
         return createMainCamera(CameraDescriptor{ .clearColor = clearColor }, position, target, up, objectPool, sceneView);
@@ -39,6 +45,10 @@ namespace litl
     // Create Renderable
     // -------------------------------------------------------------------------------------
 
+    /// <summary>
+    /// Creates a new entity and attaches to it the minimal components needed for it to be rendered.
+    /// This consists of: Transform, MeshRef, MaterialRef, and LocalBounds.
+    /// </summary>
     inline DeferredEntity createRenderable(vec3 position, StringId mesh, StringId material, EntityCommands& commands, AssetManager& assets) noexcept
     {
         const DeferredEntity entity = commands.createEntity();
@@ -56,6 +66,10 @@ namespace litl
         return entity;
     }
 
+    /// <summary>
+    /// Creates a new entity and attaches to it the minimal components needed for it to be rendered.
+    /// This consists of: Transform, MeshRef, MaterialRef, and LocalBounds.
+    /// </summary>
     inline DeferredEntity createRenderable(vec3 position, std::string_view mesh, std::string_view material, EntityCommands& commands, AssetManager& assets) noexcept
     {
         return createRenderable(position, StringId(mesh), StringId(material), commands, assets);

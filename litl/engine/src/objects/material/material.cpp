@@ -884,6 +884,11 @@ namespace litl
         m_pImpl->properties.setMaterialHandle(selfHandle);
     }
 
+    MaterialHandle Material::getHandle() const noexcept
+    {
+        return m_pImpl->selfHandle;
+    }
+
     void Material::destroy(Authority<ObjectPool> auth) noexcept
     {
         m_pImpl->destroy();

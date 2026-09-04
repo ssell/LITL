@@ -98,9 +98,24 @@ namespace litl
         /// </summary>
         [[nodiscard]] bool create(Authority<ObjectPool> auth, ObjectDescriptor const& descriptor, Renderer const& renderer, ObjectPool& objectPool, AssetManager& assetManager) noexcept;
 
+        /// <summary>
+        /// 
+        /// </summary>
         void setSelfHandle(Authority<ObjectPool> author, MaterialHandle handle) noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [[nodiscard]] MaterialHandle getHandle() const noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
         void destroy(Authority<ObjectPool> auth) noexcept;
 
+        /// <summary>
+        /// 
+        /// </summary>
         [[nodiscard]] bool setData(Authority<MaterialAsset> auth, import::MaterialIntermediateData const& data, std::span<MaterialAssetShaderDependency const> shaderDependencies) noexcept;
 
         /// <summary>

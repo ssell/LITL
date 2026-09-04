@@ -70,9 +70,9 @@ namespace litl
         std::shared_ptr<TaskManager> taskManager;
         StringIdMap<AssetMapping> assetMap;
 
-        std::mutex assetMapMutex;
-        std::mutex assetLoadMutex;
-        std::mutex pendingDependencyMutex;
+        std::mutex assetMapMutex{};
+        std::mutex assetLoadMutex{};
+        std::mutex pendingDependencyMutex{};
 
         HandlePool<MaterialAsset, MaterialAssetHandleTag> materialAssetPool;
         HandlePool<MeshAsset, MeshAssetHandleTag> meshAssetPool;

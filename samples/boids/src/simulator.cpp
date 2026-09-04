@@ -1,9 +1,10 @@
 #include <limits>
+#include <optional>
 
 #include "litl-core/file.hpp"
 #include "litl-ecs/world.hpp"
-#include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/assets/assetManager.hpp"
+#include "litl-engine/objects/objectPool.hpp"
 
 #include "simulator.hpp"
 #include "boid.hpp"
@@ -14,75 +15,23 @@ namespace litl::samples
 {
     namespace
     {
-        struct SampleVertex
-        {
-            vec3 position;
-            vec3 color;
-            vec2 uv;
-        };
-
         struct Triangle
         {
-            std::array<SampleVertex, 3> vertices;
+            std::array<Vertex, 3> vertices;
             std::array<uint32_t, 3> indices;
 
             static Triangle build(float scale, color bottomColor, color topColor) noexcept
             {
                 return Triangle{
-                    .vertices = std::array<SampleVertex, 3>{
-                        SampleVertex{.position = vec3{ -scale, 0.0f, 0.0f },       .color = bottomColor.rgb(), .uv = vec2{ 0.0f, 0.0f } },
-                        SampleVertex{.position = vec3{ 0.0f, 0.0f, scale * 2.0f }, .color = topColor.rgb(),    .uv = vec2{ 0.5f, 1.0f } },
-                        SampleVertex{.position = vec3{ scale, 0.0f, 0.0f },        .color = bottomColor.rgb(), .uv = vec2{ 1.0f, 0.0f } }
+                    .vertices = std::array<Vertex, 3>{
+                        Vertex{.position = vec3{ -scale, 0.0f, 0.0f }},
+                        Vertex{.position = vec3{ 0.0f, 0.0f, scale * 2.0f }},
+                        Vertex{.position = vec3{ scale, 0.0f, 0.0f }}
                     },
                     .indices = std::array<uint32_t, 3>{ 0u, 1u, 2u }
                 };
             }
         };
-
-        MaterialRef loadMaterial(ObjectPool& objectPool, std::string_view path, std::string_view name, std::string_view resource, std::string_view vertEntry, std::string_view fragEntry) noexcept
-        {
-            auto spirvBytes = File(path).readAllBytes();
-            auto materialHandle = objectPool.createMaterial(MaterialDescriptor{
-                .objectInfo = ObjectDescriptor {.name = name.data()},
-                .rasterizerState = RasterizationState { .cullMode = CullMode::None },
-                .inputDescriptor = VertexInputDescriptor {
-                    .vertexSize = sizeof(SampleVertex),
-                    .attributes = { DataFormat::RGB32_SFloat, DataFormat::RGB32_SFloat, DataFormat::RG32_SFloat }       // pos, color, uv
-                },
-                .vertexShader = ShaderResourceDescriptor {
-                    .resource = resource.data(),
-                    .entryPoint = vertEntry.data(),
-                    .bytes = spirvBytes.value()
-                },
-                .fragmentShader = ShaderResourceDescriptor {
-                    .resource = resource.data(),
-                    .entryPoint = fragEntry.data(),
-                    .bytes = spirvBytes.value()
-                }
-            });
-
-            return MaterialRef{
-                .handle = materialHandle,
-                .slot = objectPool.getMaterial(materialHandle)->allocateSlot()
-            };
-        }
-
-        MeshHandle loadMesh(ObjectPool& objectPool, std::span<SampleVertex const> vertices, std::span<uint32_t const> indices, std::string_view name) noexcept
-        {
-            return objectPool.createMesh(MeshDescriptor{
-                .objectInfo = ObjectDescriptor {.name = name.data()},
-                .vertexInfo = MeshVertexDescriptor {
-                    .vertexCount = static_cast<uint32_t>(vertices.size()),
-                    .vertexByteSize = sizeof(SampleVertex),
-                    .vertexData = as_byte_span(vertices)
-                },
-                .indexInfo = MeshIndexDescriptor {
-                    .indexCount = static_cast<uint32_t>(indices.size()),
-                    .indexByteSize = sizeof(uint32_t),
-                    .indexData = as_byte_span(indices)
-                }
-                });
-        }
 
         vec3 getRandomSpawnPoint(RandomLCG& rng, uint32_t worldDimensions, uint32_t padding) noexcept
         {
@@ -97,10 +46,50 @@ namespace litl::samples
             return vec3{ rng.next01() * 2.0f - 1.0f, 0.0f, rng.next01() * 2.0f - 1.0f }.normalized();
         }
 
-        // ... test ...
-        MeshAsset* g_testMeshAsset{ nullptr };
-        TextAsset* g_testPlainTextAsset{ nullptr };
-        TextAsset* g_testJsonTextAsset{ nullptr };
+        [[nodiscard]] DeferredEntity spawnEntity(EntityCommands& commands, Material* material, MeshHandle meshHandle, vec3 position, std::optional<vec3> velocity) noexcept
+        {
+            auto& rng = RandomFast::shared();
+            auto entity = commands.createEntity();
+
+            commands.addComponent<Transform>(entity, Transform::create(position));
+            commands.addComponent<LocalBounds>(entity, LocalBounds{});
+            commands.addComponent<WorldBounds>(entity, WorldBounds{});
+            commands.addComponent<MaterialRef>(entity, MaterialRef{ .handle = material->getHandle(), .slot = material->allocateSlot() });
+            commands.addComponent<MeshRef>(entity, MeshRef{ .handle = meshHandle });
+
+            if (velocity.has_value())
+            {
+                commands.addComponent<Acceleration>(entity, Acceleration{});
+                commands.addComponent<Movement>(entity, Movement{ .velocity = velocity.value() });
+            }
+
+            return entity;
+        }
+
+        void spawnBoid(EntityCommands& commands, Material* material, MeshHandle meshHandle, RandomFast& rng, uint32_t worldDimensions, uint32_t& boidCount) noexcept
+        {
+            const auto boidEntity = spawnEntity(commands, nullptr, meshHandle, getRandomSpawnPoint(rng, worldDimensions, 0u), getRandomSpawnDirection(rng) * g_boidSteering.maxSpeed);
+            commands.addComponent<Boid>(boidEntity, Boid{ .phase = boidCount % BoidSystem::SteeringPhases, .lastTick = -rng.next01() * BoidSystem::TickIntervalSec });                           // Boid system calculates targets at a set interval. Set random lastTick times so all the initial boids dont tick at the same time.
+            boidCount++;
+        }
+
+        [[nodiscard]] vec3 spawnPredator(EntityCommands& commands, Material* material, MeshHandle meshHandle, RandomFast& rng, uint32_t worldDimensions, uint32_t predatorCount) noexcept
+        {
+            const auto position = getRandomSpawnPoint(rng, worldDimensions, 0u);
+            const auto predatorEntity = spawnEntity(commands, nullptr, meshHandle, position, getRandomSpawnDirection(rng) * g_predatorSteering.maxSpeed);
+            commands.addComponent<Predator>(predatorEntity, Predator{ .index = static_cast<uint32_t>(predatorCount), .lastTick = -rng.next01() * PredatorSystem::TickIntervalSec });
+
+            return position;
+        }
+
+        [[nodiscard]] vec3 spawnFood(EntityCommands& commands, Material* material, MeshHandle meshHandle, RandomFast& rng, uint32_t worldDimensions, uint32_t index) noexcept
+        {
+            const auto position = getRandomSpawnPoint(rng, worldDimensions, 20u);
+            const auto foodEntity = spawnEntity(commands, nullptr, meshHandle, position, std::nullopt);
+            commands.addComponent<Food>(foodEntity, Food{ .index = index, .lastTick = -rng.next01() * FoodSystem::TickIntervalSec });
+
+            return position;
+        }
     }
 
     void Simulator::setup(ServiceProvider& services, SimulatorConfiguration const& config) noexcept
@@ -109,6 +98,7 @@ namespace litl::samples
         LITL_FATAL_ASSERT_MSG(config.tickRateMs >= 100u, "Invalid simulator tick rate. Minimum rate of 100ms between ticks.");
         LITL_FATAL_ASSERT_MSG(config.boidCount > 0u, "Invalid boid count.");
 
+        m_pAssetManager = services.get<AssetManager>();
         m_pObjectPool = services.get<ObjectPool>();
         m_pWorld = services.get<World>();
         m_config = config;
@@ -119,16 +109,25 @@ namespace litl::samples
         auto foodTriangle = Triangle::build(4.0f, colors::Green, colors::Green);
         auto predatorTriangle = Triangle::build(8.0f, colors::Red, colors::Yellow);
 
-        m_boidMesh = loadMesh(*m_pObjectPool, boidTriangle.vertices, boidTriangle.indices, "Boid Mesh");
-        m_foodMesh = loadMesh(*m_pObjectPool, foodTriangle.vertices, foodTriangle.indices, "Food Mesh");
-        m_predatorMesh = loadMesh(*m_pObjectPool, predatorTriangle.vertices, predatorTriangle.indices, "Predator Mesh");
-        m_sharedMaterial = loadMaterial(*m_pObjectPool, "assets/shaders/spirv/flat.spv", "Boid Material", "flat.spv", "vertexMain", "fragmentMain");
+        auto* materialAsset = m_pAssetManager->getMaterial("materials/flat");
 
-        // ... test ...
-        auto assetManager = services.get<AssetManager>();
-        g_testMeshAsset = assetManager->getMesh("mesh/test");
-        g_testPlainTextAsset = assetManager->getText("text/hello-plain");
-        g_testJsonTextAsset = assetManager->getText("text/hello-json");
+        if (materialAsset == nullptr)
+        {
+            logError("Failed to retrieve Boid material.");
+            return;
+        }
+
+        m_materialHandle = materialAsset->handle;
+
+        auto* meshAsset = m_pAssetManager->getMesh("mesh/triangle");
+
+        if (meshAsset == nullptr)
+        {
+            logError("Failed to retrieve Boid mesh.");
+            return;
+        }
+
+        m_meshHandle = meshAsset->handle;
 
         tick();
     }
@@ -210,14 +209,24 @@ namespace litl::samples
 
     void Simulator::tick() noexcept
     {
+        if (!m_materialHandle.isValid() || !m_meshHandle.isValid())
+        {
+            return;
+        }
+
+        auto& commands = m_pWorld->getCommandBuffer();
+        auto& rng = RandomFast::shared();
+        auto* material = m_pObjectPool->getMaterial(m_materialHandle);
+
         while (m_boidCount < m_config.boidCount)
         {
-            spawnBoid();
+            spawnBoid(commands, material, m_meshHandle, rng, m_config.worldDimensions, m_boidCount);
         }
 
         while (m_predatorCount < m_config.predatorCount)
         {
-            spawnPredator();
+            m_trackedPredators[m_predatorCount] = spawnPredator(commands, material, m_meshHandle, rng, m_config.worldDimensions, m_predatorCount);
+            m_predatorCount++;
         }
 
         // Update for any eaten food since the last tick
@@ -232,78 +241,23 @@ namespace litl::samples
 
         while (m_foodCount < m_config.foodCount)
         {
-            spawnFood();
-        }
-    }
+            uint32_t nextIndex = Constants::uint32_null_index;
 
-    void Simulator::spawnBoid() noexcept
-    {
-        auto& commands = m_pWorld->getCommandBuffer();
-        auto& rng = RandomFast::shared();
-        auto boidEntity = commands.createEntity();
-
-        commands.addComponent<Boid>(boidEntity, Boid{ .phase = m_boidCount % BoidSystem::SteeringPhases, .lastTick = -rng.next01() * BoidSystem::TickIntervalSec });                           // Boid system calculates targets at a set interval. Set random lastTick times so all the initial boids dont tick at the same time.
-        commands.addComponent<Transform>(boidEntity, Transform::create(getRandomSpawnPoint(rng, m_config.worldDimensions, 0u)));
-        commands.addComponent<LocalBounds>(boidEntity, LocalBounds{});
-        commands.addComponent<WorldBounds>(boidEntity, WorldBounds{});
-        commands.addComponent<Acceleration>(boidEntity, Acceleration{});
-        commands.addComponent<Movement>(boidEntity, Movement{ .velocity = getRandomSpawnDirection(rng) * g_boidSteering.maxSpeed });
-        commands.addComponent<MaterialRef>(boidEntity, m_sharedMaterial);
-        commands.addComponent<MeshRef>(boidEntity, MeshRef{ .handle = m_boidMesh });
-
-        m_boidCount++;
-    }
-
-    void Simulator::spawnPredator() noexcept
-    {
-        auto& commands = m_pWorld->getCommandBuffer();
-        auto& rng = RandomFast::shared();
-        auto predatorEntity = commands.createEntity();
-        auto position = getRandomSpawnPoint(rng, m_config.worldDimensions, 0u);
-
-        commands.addComponent<Predator>(predatorEntity, Predator{ .index = static_cast<uint32_t>(m_predatorCount), .lastTick = -rng.next01() * PredatorSystem::TickIntervalSec});
-        commands.addComponent<Transform>(predatorEntity, Transform::create(position));
-        commands.addComponent<LocalBounds>(predatorEntity, LocalBounds{});
-        commands.addComponent<WorldBounds>(predatorEntity, WorldBounds{});
-        commands.addComponent<Acceleration>(predatorEntity, Acceleration{});
-        commands.addComponent<Movement>(predatorEntity, Movement{ .velocity = getRandomSpawnDirection(rng) * g_predatorSteering.maxSpeed });
-        commands.addComponent<MaterialRef>(predatorEntity, m_sharedMaterial);
-        commands.addComponent<MeshRef>(predatorEntity, MeshRef{ .handle = m_predatorMesh });
-
-        m_trackedPredators[m_predatorCount] = position;
-        m_predatorCount++;
-    }
-
-    void Simulator::spawnFood() noexcept
-    {
-        uint32_t nextIndex = Constants::uint32_null_index;
-
-        for (uint32_t i = 0u; i < static_cast<uint32_t>(m_trackedFood.size()); ++i)
-        {
-            if (m_trackedFood[i].foodStatus == Food::Status::None)
+            for (uint32_t i = 0u; i < static_cast<uint32_t>(m_trackedFood.size()); ++i)
             {
-                nextIndex = i;
-                break;
+                if (m_trackedFood[i].foodStatus == Food::Status::None)
+                {
+                    nextIndex = i;
+                    break;
+                }
             }
-        }
 
-        if (nextIndex != Constants::uint32_null_index)
-        {
-            auto& commands = m_pWorld->getCommandBuffer();
-            auto& rng = RandomFast::shared();
-            auto foodEntity = commands.createEntity();
-            auto position = getRandomSpawnPoint(rng, m_config.worldDimensions, 20u);
-
-            commands.addComponent<Food>(foodEntity, Food{ .index = nextIndex, .lastTick = -rng.next01() * FoodSystem::TickIntervalSec });
-            commands.addComponent<Transform>(foodEntity, Transform::create(position));
-            commands.addComponent<LocalBounds>(foodEntity, LocalBounds{});
-            commands.addComponent<WorldBounds>(foodEntity, WorldBounds{});
-            commands.addComponent<MaterialRef>(foodEntity, m_sharedMaterial);
-            commands.addComponent<MeshRef>(foodEntity, MeshRef{ .handle = m_foodMesh });
-
-            m_trackedFood[nextIndex].position = position;
-            m_trackedFood[nextIndex].foodStatus = Food::Status::Alive;
-            m_foodCount++;
+            if (nextIndex != Constants::uint32_null_index)
+            {
+                m_trackedFood[nextIndex].position = spawnFood(commands, material, m_meshHandle, rng, m_config.worldDimensions, nextIndex);
+                m_trackedFood[nextIndex].foodStatus = Food::Status::Alive;
+                m_foodCount++;
+            }
         }
     }
 }

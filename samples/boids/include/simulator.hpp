@@ -15,9 +15,9 @@
 
 namespace litl
 {
+    class AssetManager;
     class ObjectPool;
     class World;
-    class MeshAsset;
 }
 
 namespace litl::samples
@@ -66,9 +66,6 @@ namespace litl::samples
         };
 
         void tick() noexcept;
-        void spawnBoid() noexcept;
-        void spawnPredator() noexcept;
-        void spawnFood() noexcept;
 
         /// <summary>
         /// The configuration used to setup the simulation.
@@ -86,6 +83,11 @@ namespace litl::samples
         std::vector<vec3> m_trackedPredators;
 
         /// <summary>
+        /// The global shared asset manager. Could request each frame via services, but can also just keep a reference.
+        /// </summary>
+        std::shared_ptr<AssetManager> m_pAssetManager{ nullptr };
+
+        /// <summary>
         /// The global shared object pool. Could request each frame via services, but can also just keep a reference.
         /// </summary>
         std::shared_ptr<ObjectPool> m_pObjectPool{ nullptr };
@@ -101,24 +103,14 @@ namespace litl::samples
         std::chrono::steady_clock::time_point m_lastTick;
 
         /// <summary>
-        /// The shared material pipeline used by all.
+        /// The shared material used by all.
         /// </summary>
-        MaterialRef m_sharedMaterial{};
+        MaterialHandle m_materialHandle{};
 
         /// <summary>
         /// The mesh used by boids.
         /// </summary>
-        MeshHandle m_boidMesh{};
-
-        /// <summary>
-        /// The mesh used by food.
-        /// </summary>
-        MeshHandle m_foodMesh{};
-
-        /// <summary>
-        /// The mesh used by predators.
-        /// </summary>
-        MeshHandle m_predatorMesh{};
+        MeshHandle m_meshHandle{};
 
         /// <summary>
         /// The current number of boids in the simulation.
