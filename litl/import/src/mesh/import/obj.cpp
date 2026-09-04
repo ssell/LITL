@@ -126,7 +126,15 @@ namespace litl::import
                 uint32_t const faceIndexCount = objMesh.num_face_vertices[face];
 
                 faceIndexCounts.push_back(faceIndexCount);
-                faceMaterialSlots.push_back(globalToLocalMaterialSlot.find(objMesh.material_ids[face]).value());
+
+                if (!objMesh.material_ids.empty())
+                {
+                    faceMaterialSlots.push_back(globalToLocalMaterialSlot.findOr(objMesh.material_ids[face], Constants::uint32_null_index));
+                }
+                else
+                {
+                    faceMaterialSlots.push_back(Constants::uint32_null_index);
+                }
 
                 for (uint32_t faceIndex = 0u; faceIndex < faceIndexCount; ++faceIndex)
                 {

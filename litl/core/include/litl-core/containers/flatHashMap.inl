@@ -68,6 +68,19 @@ namespace litl
     }
 
     template<typename K, typename V>
+    [[nodiscard]] V FlatHashMap<K, V>::findOr(K const& key, V defaultValue) noexcept
+    {
+        auto iter = m_pImpl->map.find(key);
+
+        if (iter == m_pImpl->map.end())
+        {
+            return defaultValue;
+        }
+
+        return iter->second;
+    }
+
+    template<typename K, typename V>
     size_t FlatHashMap<K, V>::size() const noexcept
     {
         return m_pImpl->map.size();

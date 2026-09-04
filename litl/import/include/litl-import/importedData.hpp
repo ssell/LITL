@@ -55,38 +55,36 @@ namespace litl::import
         /// Sets the data type stored in this import result.
         /// Note that once a type is set, it can not be changed.
         /// </summary>
-        void setType(ImportedDataType type)
+        [[nodiscard]] bool setType(ImportedDataType type)
         {
-            if (m_type == type)
+            if (getType() == type)
             {
-                return;
+                return false;
             }
 
-            if (m_type != ImportedDataType::Unknown)
+            if (getType() != ImportedDataType::Unknown)
             {
                 logWarning("Attempting to override already-set ImportedData type. Once a type is set, it can not be undone.");
-                return;
+                return false;
             }
 
-            m_type = type;
-
-            switch (m_type)
+            switch (getType())
             {
             case ImportedDataType::Material:
                 m_dataPtr = std::make_unique<MaterialImportResult>();
-                break;
+                return true;
 
             case ImportedDataType::Mesh:
                 m_dataPtr = std::make_unique<MeshImportResult>();
-                break;
+                return true;
 
             case ImportedDataType::Shader:
                 m_dataPtr = std::make_unique<ShaderImportResult>();
-                break;
+                return true;
 
             case ImportedDataType::Unknown:
             default:
-                break;
+                return false;
             }
         }
 
@@ -127,7 +125,6 @@ namespace litl::import
 
     private:
 
-        ImportedDataType m_type{ ImportedDataType::Unknown };
         ImportedDataPtr m_dataPtr;
     };
 }
