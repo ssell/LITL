@@ -42,7 +42,7 @@ Used for general math structures and operations.
 
 ## rapidobj
 
-Used for offline importing of OBJ files which are converted to our intermediate representation.
+Used for importing of `.obj` mesh files.
 
 * License: MIT
 * Source: https://github.com/guybrush77/rapidobj
@@ -55,6 +55,15 @@ Used for SPIRV bytecode reflection.
 * License: Apache-2.0
 * Source: https://github.com/KhronosGroup/SPIRV-Reflect
 * Include via: Submodule
+
+## ufbx
+
+Used for import of `.fbx` mesh files.
+
+* License: MIT / Public Domain
+* Source: https://github.com/ufbx/ufbx
+* Include via: Manual (v0.23.0)
+    * The two files used (individual `.h` and `.c`) were manually copied because ufbx is not configured to be used with `FetchContent` and the repository contains many test model files that pollute submodule usage.
 
 ## xxHash
 

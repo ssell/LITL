@@ -3,6 +3,7 @@
 # ------------------------------------------------------------------------------------------
 
 add_library(litl-import STATIC 
+	"${CMAKE_SOURCE_DIR}/deps/ufbx/ufbx.c"
 	"src/mesh/import/fbx.cpp"  
 	"src/mesh/import/obj.cpp" 
 	"src/mesh/import/gltf.cpp" 
@@ -26,6 +27,7 @@ target_include_directories(litl-import
 		"${CMAKE_CURRENT_SOURCE_DIR}/include"
 	PRIVATE
 		"${CMAKE_SOURCE_DIR}/deps/rapidobj/include"
+		"${CMAKE_SOURCE_DIR}/deps/ufbx"
 )
 
 target_link_libraries(litl-import PRIVATE litl-core litl-renderer)
