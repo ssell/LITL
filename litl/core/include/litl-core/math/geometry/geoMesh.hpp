@@ -2,6 +2,7 @@
 #define LITL_MATH_GEOMETRY_MESH_H__
 
 #include <type_traits>
+#include <optional>
 #include <span>
 #include <vector>
 
@@ -18,6 +19,15 @@ namespace litl
     /// </summary>
     struct GeoMesh
     {
+        enum class ErrorCode : uint32_t
+        {
+            None = 0u,
+            MissingSubmesh = 1u,
+            InvalidSubmeshRange = 2u,
+            InvalidSubmeshCoverage = 3u,
+            InvalidSubmeshIndex = 4u
+        };
+
         /// <summary>
         /// Clears all of the buffers.
         /// </summary>
@@ -167,7 +177,7 @@ namespace litl
         /// <summary>
         /// Traverse all vertices for the specified submesh and calculates its individual AABB.
         /// </summary>
-        [[nodiscard]] bool recalculateSubmeshBounds(uint32_t submeshIndex) noexcept;
+        [[nodiscard]] bool recalculateSubmeshBounds(uint32_t submeshIndex, ErrorCode& error) noexcept;
 
         /// <summary>
         /// Sets the bounding AABB min/max points.
@@ -229,10 +239,14 @@ namespace litl
         /// </summary>
         void flipTexcoordV() noexcept;
 
+        [[nodiscard]] static bool validateSubmeshes(std::span<Submesh const> submeshes, uint32_t indexCount, ErrorCode& error) noexcept;
+
+        [[nodiscard]] bool validateSubmeshes(ErrorCode& error) const noexcept;
+
         /// <summary>
         /// Ensures there is at least one submesh.
         /// </summary>
-        [[nodiscard]] bool finalizeSubmeshes() noexcept;
+        [[nodiscard]] bool finalizeSubmeshes(ErrorCode& error) noexcept;
 
     private:
 

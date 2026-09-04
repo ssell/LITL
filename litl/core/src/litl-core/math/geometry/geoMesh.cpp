@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "litl-core/math/geometry/geoMesh.hpp"
 #include "litl-core/math/geometry/tools/normals.hpp"
 #include "litl-core/math/geometry/tools/orientation.hpp"
@@ -143,7 +145,7 @@ namespace litl
 
     std::optional<bounds::AABB> GeoMesh::getSubmeshBounds(uint32_t submeshIndex) const noexcept
     {
-        if (submeshIndex > m_submeshes.size())
+        if (submeshIndex >= m_submeshes.size())
         {
             return std::nullopt;
         }
@@ -171,17 +173,19 @@ namespace litl
         setBoundsMinMax(minPoint, maxPoint);
     }
 
-    bool GeoMesh::recalculateSubmeshBounds(uint32_t submeshIndex) noexcept
+    bool GeoMesh::recalculateSubmeshBounds(uint32_t submeshIndex, ErrorCode& error) noexcept
     {
         if (submeshIndex >= m_submeshes.size())
         {
+            error = ErrorCode::InvalidSubmeshIndex;
             return false;
         }
 
         auto& submesh = m_submeshes[submeshIndex];
 
-        if ((submesh.firstIndex + submesh.indexCount) >= m_indices.size())
+        if ((submesh.firstIndex + submesh.indexCount) > m_indices.size())
         {
+            error = ErrorCode::InvalidSubmeshRange;
             return false;
         }
 
@@ -321,7 +325,54 @@ namespace litl
         }
     }
 
-    bool GeoMesh::finalizeSubmeshes() noexcept
+    bool GeoMesh::validateSubmeshes(std::span<Submesh const> submeshes, uint32_t indexCount, ErrorCode& error) noexcept
+    {
+        if (submeshes.empty())
+        {
+            error = ErrorCode::MissingSubmesh;
+            return false;
+        }
+
+        uint64_t cursor = 0ull;
+
+        for (auto& submesh : submeshes)
+        {
+            if (submesh.indexCount == 0u)
+            {
+                error = ErrorCode::InvalidSubmeshRange;
+                return false;
+            }
+
+            if (submesh.firstIndex != cursor)
+            {
+                error = ErrorCode::InvalidSubmeshCoverage;
+                return false;
+            }
+
+            cursor += submesh.indexCount;
+
+            if (cursor > indexCount)
+            {
+                error = ErrorCode::InvalidSubmeshRange;
+                return false;
+            }
+        }
+
+        if (cursor != indexCount)
+        {
+            error = ErrorCode::InvalidSubmeshCoverage;
+            return false;
+        }
+
+        return true;
+    }
+
+    bool GeoMesh::validateSubmeshes(ErrorCode& error) const noexcept
+    {
+        return validateSubmeshes(m_submeshes, indexCount(), error);
+    }
+
+    bool GeoMesh::finalizeSubmeshes(ErrorCode& error) noexcept
     {
         if (m_submeshes.empty())
         {
@@ -334,14 +385,23 @@ namespace litl
         }
         else
         {
+            std::sort(m_submeshes.begin(), m_submeshes.end(), [](Submesh const& a, Submesh const& b) -> bool
+            {
+                return (a.firstIndex < b.firstIndex);
+            });
+
             for (uint32_t i = 0u; i < static_cast<uint32_t>(m_submeshes.size()); ++i)
             {
-                if (!recalculateSubmeshBounds(i))
+                if (!recalculateSubmeshBounds(i, error))
                 {
-                    logWarning("Failed to recalculate bounds for submesh ", i);
                     return false;
                 }
             }
+        }
+
+        if (!validateSubmeshes(error))
+        {
+            return false;
         }
 
         return true;

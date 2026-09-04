@@ -85,7 +85,7 @@ namespace litl
             /// <summary>
             /// Ids for a block that contains references to materials used in the file.
             /// </summary>
-            static constexpr BinaryBlockIdType MissingMaterialSlots{ 'M', 'T', 'R', 'L' };
+            static constexpr BinaryBlockIdType MaterialSlots{ 'M', 'T', 'R', 'L' };
         };
 
         /// <summary>

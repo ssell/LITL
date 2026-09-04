@@ -24,6 +24,7 @@ namespace litl
     static_assert(sizeof(Submesh) == 48);
     static_assert((sizeof(Submesh) % 16) == 0);
     static_assert(std::is_trivially_copyable_v<Submesh>);
+    static_assert(std::is_standard_layout_v<Submesh>);
 }
 
 #endif

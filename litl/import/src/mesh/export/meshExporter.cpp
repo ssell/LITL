@@ -35,6 +35,7 @@ namespace litl::import
             return Result::Error(ErrorType::ImportedDataNull);
         }
 
+        GeoMesh::ErrorCode meshError = GeoMesh::ErrorCode::None;
         GeoMesh* geomesh = mesh->meshes[0].get();         // todo handle submeshes;
 
         const auto triangulationReport = geomesh->triangulate();
@@ -43,7 +44,6 @@ namespace litl::import
         {
             return Result::Error(ErrorType::ExportPrepareFailed);
         }
-
 
         // ... todo weld ...
         // ... todo remove degenerates (zero-area triangles, repeated indices, etc.) ...
@@ -76,9 +76,9 @@ namespace litl::import
         // ... todo meshoptimizer (vertex cache, overdraw, vertexfetch) ...
         // ... todo (optional) lod generation ...
 
-        if (!geomesh->finalizeSubmeshes())
+        if (!geomesh->finalizeSubmeshes(meshError))
         {
-            return Result::Error(ErrorType::ExportPrepareFailed);
+            return Result::Error(ErrorType::ExportPrepareFailed, std::format("GeoMesh::finalizeSubmeshes failed with GeoMesh::ErrorCode of {}", static_cast<uint32_t>(meshError)));
         }
 
         return Result::Success();

@@ -234,13 +234,13 @@ namespace litl
             /// </summary>
             InvalidBoundsValues = 1008u,
 
-            MissingSubmeshBlock,
-            MissingMaterialSlotsBlock,
-            MissingSubmesh,
-            InvalidSubmeshRange,
-            InvalidSubmeshCoverage,
-            OverlappingSubmeshRange,
-            InvalidMaterialSlot,
+            MissingSubmeshBlock = 1009u,
+            MissingMaterialSlotsBlock = 1010u,
+            MissingSubmesh = 1011u,
+            InvalidSubmeshRange = 1012u,
+            InvalidSubmeshCoverage = 1013u,
+            InvalidSubmeshIndex = 1014u,
+            InvalidMaterialSlot = 1015u,
 
             // -----------------------------------------------------------------------------
             // LitlMaterial Error Codes
@@ -266,7 +266,14 @@ namespace litl
             MissingSpecializationsConstantBlock = 3006u,
             MissingSpirvBlock = 3007u,
             ShaderBinarySubspanOutOfBounds = 3008u,
-            ShaderBinarySubspanInvalidInput = 3009u
+            ShaderBinarySubspanInvalidInput = 3009u,
+
+                
+            // -----------------------------------------------------------------------------
+            // Other
+            // -----------------------------------------------------------------------------
+
+            InternalError = 9999u
         };
 
         static constexpr uint32_t MaxBlocks = 16u;

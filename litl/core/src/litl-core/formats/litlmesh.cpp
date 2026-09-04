@@ -44,67 +44,35 @@ namespace litl
 
             return flag;
         }
+
+        [[nodiscard]] constexpr BinaryBlockFile::ErrorCode toBinaryBlockFileErrorCode(GeoMesh::ErrorCode geomeshError) noexcept
+        {
+            switch (geomeshError)
+            {
+            case GeoMesh::ErrorCode::MissingSubmesh:
+                return BinaryBlockFile::ErrorCode::MissingSubmesh;
+
+            case GeoMesh::ErrorCode::InvalidSubmeshRange:
+                return BinaryBlockFile::ErrorCode::InvalidSubmeshRange;
+
+            case GeoMesh::ErrorCode::InvalidSubmeshCoverage:
+                return BinaryBlockFile::ErrorCode::InvalidSubmeshCoverage;
+
+            case GeoMesh::ErrorCode::InvalidSubmeshIndex:
+                return BinaryBlockFile::ErrorCode::InvalidSubmeshIndex;
+
+            case GeoMesh::ErrorCode::None:
+                return BinaryBlockFile::ErrorCode::None;
+
+            default:
+                return BinaryBlockFile::ErrorCode::InternalError;
+            }
+        }
     }
 
     // -------------------------------------------------------------------------------------
     // Serialization
     // -------------------------------------------------------------------------------------
-
-    namespace
-    {
-        [[nodiscard]] bool validateSubmeshes(std::span<Submesh const> submeshes, uint32_t indexCount, BinaryBlockFile::ErrorCode& error) noexcept
-        {
-            if (submeshes.empty())
-            {
-                error = BinaryBlockFile::ErrorCode::MissingSubmesh;
-                return false;
-            }
-
-            // Validate each individual submesh for overlap
-            for (uint32_t i = 1u; i < static_cast<uint32_t>(submeshes.size()); ++i)
-            {
-                auto& prevSubmesh = submeshes[i - 1u];
-                auto& currSubmesh = submeshes[i];
-
-                if (((currSubmesh.firstIndex) + (currSubmesh.indexCount)) >= indexCount)
-                {
-                    error = BinaryBlockFile::ErrorCode::InvalidSubmeshRange;
-                    return false;
-                }
-
-                if ((prevSubmesh.indexCount == 0u) || (currSubmesh.indexCount == 0u))
-                {
-                    continue;
-                }
-
-                const uint32_t prevStart = prevSubmesh.firstIndex;
-                const uint32_t prevEnd = (prevStart + prevSubmesh.indexCount) - 1u;
-                const uint32_t currStart = currSubmesh.firstIndex;
-                const uint32_t currEnd = (currStart + currSubmesh.indexCount) - 1u;
-
-                if (between(currStart, prevStart, prevEnd) || (between(currEnd, prevStart, prevEnd)))
-                {
-                    error = BinaryBlockFile::ErrorCode::OverlappingSubmeshRange;
-                    return false;
-                }
-            }
-
-            uint32_t coveredIndices = 0u;
-
-            for (auto& submesh : submeshes)
-            {
-                coveredIndices += submesh.indexCount;
-            }
-
-            if (coveredIndices != indexCount)
-            {
-                error = BinaryBlockFile::ErrorCode::InvalidSubmeshCoverage;
-                return false;
-            }
-
-            return true;
-        }
-    }
 
     bool LitlMesh::serialize(GeoMesh const& mesh, std::vector<std::byte>& data, ErrorCode& error) noexcept
     {
@@ -119,6 +87,7 @@ namespace litl
          */
 
         error = ErrorCode::None;
+        auto geomeshError = GeoMesh::ErrorCode::None;
 
         if (mesh.vertexCount() == 0 || mesh.indexCount() == 0 || mesh.faceCount() == 0)
         {
@@ -126,8 +95,9 @@ namespace litl
             return false;
         }
 
-        if (!validateSubmeshes(mesh.getSubmeshes(), mesh.indexCount(), error))
+        if (!mesh.validateSubmeshes(geomeshError))
         {
+            error = toBinaryBlockFileErrorCode(geomeshError);
             return false;
         }
 
@@ -215,13 +185,11 @@ namespace litl
     {
         [[nodiscard]] bool deserializeSubmeshes(GeoMesh& mesh, uint32_t indexCount, std::span<Submesh const> submeshes, BinaryBlockFile::ErrorCode& error) noexcept
         {
-            if (submeshes.empty())
-            {
-                return true;
-            }
+            auto geomeshError = GeoMesh::ErrorCode::None;
 
-            if (!validateSubmeshes(submeshes, indexCount, error))
+            if (!GeoMesh::validateSubmeshes(submeshes, indexCount, geomeshError))
             {
+                error = toBinaryBlockFileErrorCode(geomeshError);
                 return false;
             }
 
@@ -288,7 +256,7 @@ namespace litl
         auto faceBlock = find(BlockIds::Faces);
         auto boundsBlock = find(BlockIds::Bounds);
         auto submeshBlock = find(BlockIds::Submeshes);
-        //auto materialSlotsBlock = find(BlockIds::MissingMaterialSlots);
+        //auto materialSlotsBlock = find(BlockIds::MaterialSlots);
 
         if (!stringsBlock.has_value()) { error = ErrorCode::MissingStringsBlock; return false; }
         if (!vertexBlock.has_value()) { error = ErrorCode::MissingVertexBlock; return false; }
