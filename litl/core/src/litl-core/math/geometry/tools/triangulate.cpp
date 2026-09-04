@@ -337,7 +337,7 @@ namespace litl
             report.resultTriangleFaceCount++;
         }
 
-        bool isValidInput(std::span<Vertex const> vertices, std::span<uint32_t const> sourceIndices, std::span<uint32_t const> faceIndexCounts, std::span<uint32_t const> faceMaterialSlots) noexcept
+        bool isValidInput(std::span<Vertex const> vertices, std::span<uint32_t const> sourceIndices, std::span<uint32_t const> faceIndexCounts) noexcept
         {
             uint32_t sumFaceIndexCounts = 0u;
             for (auto faceIndexCount : faceIndexCounts) { sumFaceIndexCounts += faceIndexCount; }
@@ -355,12 +355,6 @@ namespace litl
                 }
             }
 
-            if (faceMaterialSlots.size() != faceIndexCounts.size())
-            {
-                // Each face needs both a index count and material slot
-                return false;
-            }
-
             return true;
         }
     }
@@ -374,7 +368,7 @@ namespace litl
             .success = true
         };
 
-        if (!isValidInput(vertices, sourceIndices, faceIndexCounts, faceMaterialSlots))
+        if (!isValidInput(vertices, sourceIndices, faceIndexCounts))
         {
             report.success = false;
             return report;
@@ -382,6 +376,15 @@ namespace litl
 
         triangulatedIndices.clear();
         triangulatedIndices.reserve(sourceIndices.size());
+
+        // Face material slots are optional. If none are provided we will set all to the "no material" flag value.
+        std::vector<uint32_t> defaultFaceMaterialSlots;
+
+        if (faceMaterialSlots.empty())
+        {
+            defaultFaceMaterialSlots.resize(faceIndexCounts.size(), Constants::uint32_null_index);
+            faceMaterialSlots = defaultFaceMaterialSlots;
+        }
 
         triangulatedFaceMaterialSlots.clear();
         triangulatedFaceMaterialSlots.reserve(faceMaterialSlots.size());

@@ -186,8 +186,14 @@ namespace litl::import
             return Result::Error(ErrorType::ImporterEmptyResult);
         }
 
-        importedData.type = ImportedDataType::Mesh;
-        importedData.mesh = std::make_unique<MeshImportResult>();
+        importedData.setType(ImportedDataType::Mesh);
+
+        auto* mesh = importedData.getDataPtr<MeshImportResult>();
+
+        if (mesh == nullptr)
+        {
+            return Result::Error(ErrorType::ImporterFailed, "Failed to create mesh import data.");
+        }
 
         for (uint32_t i = 0u; i < static_cast<uint32_t>(objResult.shapes.size()); ++i)
         {
@@ -196,21 +202,21 @@ namespace litl::import
                 continue;
             }
 
-            importedData.mesh->meshes.push_back(std::make_unique<GeoMesh>());
-            auto* litlMesh = importedData.mesh->meshes.back().get();
+            mesh->meshes.push_back(std::make_unique<GeoMesh>());
+            auto* litlMesh = mesh->meshes.back().get();
             auto& objMesh = objResult.shapes[i].mesh;
 
             convertToLitlMesh(litlMesh, objMesh, objResult.attributes);
 
-            importedData.mesh->summary.meshCount += 1u;
-            importedData.mesh->summary.vertexCount += static_cast<uint32_t>(litlMesh->vertexCount());
-            importedData.mesh->summary.indexCount += static_cast<uint32_t>(litlMesh->indexCount());
+            mesh->summary.meshCount += 1u;
+            mesh->summary.vertexCount += static_cast<uint32_t>(litlMesh->vertexCount());
+            mesh->summary.indexCount += static_cast<uint32_t>(litlMesh->indexCount());
         }
 
         // OBJ itself does not enforce these, but it is a widely adopted convention that is (likely) safe to assume.
-        importedData.mesh->importConvention.sourceIsRightHanded = true;
-        importedData.mesh->importConvention.sourceIsCcwFront = true;
-        importedData.mesh->importConvention.flipTexcoordV = true;
+        mesh->importConvention.sourceIsRightHanded = true;
+        mesh->importConvention.sourceIsCcwFront = true;
+        mesh->importConvention.flipTexcoordV = true;
 
         return Result::Success();
     }

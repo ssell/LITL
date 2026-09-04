@@ -48,14 +48,25 @@ namespace litl
 
             if (importResult.success)
             {
-                if (importedData.type == import::ImportedDataType::Mesh)
+                if (importedData.getType() == import::ImportedDataType::Mesh)
                 {
-                    meshAsset->mesh->getGeoMesh() = std::move(*importedData.mesh->meshes[0].get());
-                    return true;
+                    auto* importedMesh = importedData.getDataPtr<import::MeshImportResult>();
+
+                    if (importedMesh != nullptr)
+                    {
+                        meshAsset->mesh->getGeoMesh() = std::move(*importedMesh->meshes[0].get());
+                        return true;
+                    }
+                    else
+                    {
+                        logError("Unexpected null imported mesh in asset decode.");
+                        error = AssetErrorCode::ExternalFormatImportFailed;
+                        return false;
+                    }
                 }
                 else
                 {
-                    logError("Import of mesh bytes from third-party asset failed due to detected import format was not mesh but instead format type ", static_cast<uint32_t>(importedData.type));
+                    logError("Import of mesh bytes from third-party asset failed due to detected import format was not mesh but instead format type ", static_cast<uint32_t>(importedData.getType()));
                     error = AssetErrorCode::ExternalFormatImportFailed;
                     return false;
                 }

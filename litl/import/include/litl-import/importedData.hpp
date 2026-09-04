@@ -1,8 +1,11 @@
 #ifndef LITL_IMPORT_IMPORTED_DATA_H__
 #define LITL_IMPORT_IMPORTED_DATA_H__
 
+#include <concepts>
 #include <memory>
+#include <variant>
 
+#include "litl-core/traits.hpp"
 #include "litl-import/material/import/result.hpp"
 #include "litl-import/mesh/import/result.hpp"
 #include "litl-import/shader/import/result.hpp"
@@ -17,45 +20,115 @@ namespace litl::import
         Shader = 3u
     };
 
-    struct ImportedData final
+    /// <summary>
+    /// The types of data that can be stored in ImportedData.
+    /// </summary>
+    template<typename T>
+    concept ImportedDataTypeClass = IsAnyOf<
+        T, 
+        MaterialImportResult,
+        MeshImportResult, 
+        ShaderImportResult>;
+
+    /// <summary>
+    /// The unique pointer types used in ImportedData.
+    /// </summary>
+    using ImportedDataPtr = std::variant<
+        std::monostate,     // maps to ImportedDataType::Unknown
+        std::unique_ptr<MaterialImportResult>,
+        std::unique_ptr<MeshImportResult>,
+        std::unique_ptr<ShaderImportResult>>;
+
+    class ImportedData final
     {
-        ImportedData() {}
+    public:
 
-        ~ImportedData()
+        /// <summary>
+        /// Returns the stored data type, if any.
+        /// </summary>
+        [[nodiscard]] ImportedDataType getType() const noexcept
         {
-            // Note that this wouldn't be needed if we used a std::variant instead of union.
-            // However, using a std::variant with std::unique_ptr adds a lot of boilerplate for the
-            // benefit of automatic cleanup and no longer needing this destructor.
+            return static_cast<ImportedDataType>(m_dataPtr.index());
+        }
 
-            switch (type)
+        /// <summary>
+        /// Sets the data type stored in this import result.
+        /// Note that once a type is set, it can not be changed.
+        /// </summary>
+        void setType(ImportedDataType type)
+        {
+            if (m_type == type)
+            {
+                return;
+            }
+
+            if (m_type != ImportedDataType::Unknown)
+            {
+                logWarning("Attempting to override already-set ImportedData type. Once a type is set, it can not be undone.");
+                return;
+            }
+
+            m_type = type;
+
+            switch (m_type)
             {
             case ImportedDataType::Material:
-                material = nullptr; 
+                m_dataPtr = std::make_unique<MaterialImportResult>();
                 break;
 
             case ImportedDataType::Mesh:
-                mesh = nullptr; 
+                m_dataPtr = std::make_unique<MeshImportResult>();
                 break;
 
             case ImportedDataType::Shader:
-                shader = nullptr;
+                m_dataPtr = std::make_unique<ShaderImportResult>();
                 break;
 
             case ImportedDataType::Unknown:
+            default:
                 break;
             }
         }
 
-        ImportedData(ImportedData const&) = delete;
-        ImportedData& operator=(ImportedData const&) = delete;
+        /// <summary>
+        /// Retrieves the pointer to the stored data in the specified form.
+        /// If there is no stored data, or the wrong form is supplied, then returns null.
+        /// </summary>
+        template<ImportedDataTypeClass T>
+        [[nodiscard]] T const* getDataPtr() const noexcept
+        {
+            auto* uniquePtr = std::get_if<std::unique_ptr<T>>(&m_dataPtr);
 
-        ImportedDataType type{ ImportedDataType::Unknown };
+            if (uniquePtr != nullptr)
+            {
+                return uniquePtr->get();
+            }
 
-        union {
-            std::unique_ptr<MaterialImportResult> material = nullptr;
-            std::unique_ptr<MeshImportResult> mesh;
-            std::unique_ptr<ShaderImportResult> shader;
-        };
+            return nullptr;
+        }
+
+        /// <summary>
+        /// Retrieves the pointer to the stored data in the specified form.
+        /// If there is no stored data, or the wrong form is supplied, then returns null.
+        /// </summary>
+        template<ImportedDataTypeClass T>
+        [[nodiscard]] T* getDataPtr() noexcept
+        {
+            auto* uniquePtr = std::get_if<std::unique_ptr<T>>(&m_dataPtr);
+
+            if (uniquePtr != nullptr)
+            {
+                return uniquePtr->get();
+            }
+
+            return nullptr;
+        }
+
+
+    private:
+
+        ImportedDataType m_type{ ImportedDataType::Unknown };
+        ImportedDataPtr m_dataPtr;
     };
 }
 

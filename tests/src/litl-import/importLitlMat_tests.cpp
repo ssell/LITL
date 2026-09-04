@@ -20,11 +20,14 @@ namespace litl::tests
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
-        REQUIRE(data.type == import::ImportedDataType::Material);
-        REQUIRE(data.material != nullptr);
-        REQUIRE(data.material->intermediateMaterial != nullptr);
+        REQUIRE(data.getType() == import::ImportedDataType::Material);
 
-        auto& shaders = data.material->intermediateMaterial->getShaders();
+        auto* material = data.getDataPtr<import::MaterialImportResult>();
+
+        REQUIRE(material != nullptr);
+        REQUIRE(material->intermediateMaterial != nullptr);
+
+        auto& shaders = material->intermediateMaterial->getShaders();
 
         REQUIRE(shaders[0].stage == import::LitlMatShaderStage::Vertex);
         REQUIRE(shaders[0].resource == "shaders/flat");
@@ -58,7 +61,7 @@ namespace litl::tests
         REQUIRE(shaders[7].resource.empty());
         REQUIRE(shaders[7].entry.empty());
 
-        auto& properties = data.material->intermediateMaterial->getProperties();
+        auto& properties = material->intermediateMaterial->getProperties();
 
         REQUIRE(properties.size() == 3);
 
@@ -118,7 +121,11 @@ namespace litl::tests
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
 
-        import::MaterialIntermediateData& litlmatIntermediateData = *data.material->intermediateMaterial;
+        auto* material = data.getDataPtr<import::MaterialImportResult>();
+
+        REQUIRE(material != nullptr);
+
+        import::MaterialIntermediateData& litlmatIntermediateData = *material->intermediateMaterial;
 
         // test.litlmat -> test.litlbmat
         result = importer.convert(source.absolutePath());

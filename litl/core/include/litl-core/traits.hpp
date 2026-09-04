@@ -15,16 +15,12 @@ namespace litl
     /// Implemented in it's const and non-const overloads, packages up the
     /// components of a method signature: class type, return type, and arguments (in a tuple).
     /// </summary>
-    /// <typeparam name=""></typeparam>
     template<typename>
     struct MethodTraits;
 
     /// <summary>
     /// Non-const overload of MethodTraits.
     /// </summary>
-    /// <typeparam name="C"></typeparam>
-    /// <typeparam name="R"></typeparam>
-    /// <typeparam name="...Args"></typeparam>
     template<typename ClassType , typename ReturnType, typename... Args>
     struct MethodTraits<ReturnType(ClassType::*)(Args...)>
     {
@@ -36,9 +32,6 @@ namespace litl
     /// <summary>
     /// Const overload of MethodTraits.
     /// </summary>
-    /// <typeparam name="C"></typeparam>
-    /// <typeparam name="R"></typeparam>
-    /// <typeparam name="...Args"></typeparam>
     template<typename ClassType, typename ReturnType, typename... Args>
     struct MethodTraits<ReturnType(ClassType::*)(Args...) const>
     {
@@ -46,6 +39,12 @@ namespace litl
         using returnType = ReturnType;
         using argsTuple = std::tuple<Args...>;
     };
+
+    /// <summary>
+    /// Is one of the specified types.
+    /// </summary>
+    template <typename T, typename... AllowedTypes>
+    concept IsAnyOf = (std::same_as<T, AllowedTypes> || ...);
 }
 
 #endif

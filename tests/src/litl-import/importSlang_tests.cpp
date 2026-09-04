@@ -207,15 +207,18 @@ namespace litl::tests
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
-        REQUIRE(data.type == import::ImportedDataType::Shader);
-        REQUIRE(data.shader != nullptr);
-        REQUIRE(data.shader->intermediateShader != nullptr);
+        REQUIRE(data.getType() == import::ImportedDataType::Shader);
 
-        auto spirvWords = data.shader->intermediateShader->getSpirvWords();
+        auto* shader = data.getDataPtr<import::ShaderImportResult>();
+
+        REQUIRE(shader != nullptr);
+        REQUIRE(shader->intermediateShader != nullptr);
+
+        auto spirvWords = shader->intermediateShader->getSpirvWords();
 
         REQUIRE(spirvWords.size() > 0);
 
-        const auto& reflection = data.shader->intermediateShader->getReflection();
+        const auto& reflection = shader->intermediateShader->getReflection();
 
         validateShaderReflectionForTestSlang(reflection);
     } LITL_END_TEST_CASE
@@ -235,7 +238,11 @@ namespace litl::tests
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
 
-        import::ShaderIntermediateData& slangIntermediateData = *data.shader->intermediateShader;
+        auto* shader = data.getDataPtr<import::ShaderImportResult>();
+
+        REQUIRE(shader != nullptr);
+
+        import::ShaderIntermediateData& slangIntermediateData = *shader->intermediateShader;
 
         // test.slang -> test.litlbshd
         result = importer.convert(source.absolutePath());

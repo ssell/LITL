@@ -91,7 +91,7 @@ namespace litl::import
 
         if (shouldPrepare)
         {
-            auto exporter = m_exporterRegistry.create(importedData.type);
+            auto exporter = m_exporterRegistry.create(importedData.getType());
 
             if (exporter == nullptr)
             {
@@ -124,7 +124,7 @@ namespace litl::import
         }
 
         // Export
-        auto exporter = m_exporterRegistry.create(importedData.type);
+        auto exporter = m_exporterRegistry.create(importedData.getType());
 
         if (exporter == nullptr)
         {

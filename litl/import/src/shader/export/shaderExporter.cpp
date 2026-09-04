@@ -20,29 +20,31 @@ namespace litl::import
 
     Result ShaderExporter::prepare(ImportedData const& data) noexcept
     {
-        if (data.type != ImportedDataType::Shader)
+        if (data.getType() != ImportedDataType::Shader)
         {
             return Result::Error(ErrorType::ImportedDataTypeMismatch);
         }
+        
+        auto* shader = data.getDataPtr<ShaderImportResult>();
 
-        if (data.shader == nullptr)
+        if (shader == nullptr)
         {
             return Result::Error(ErrorType::ImportedDataNull);
         }
 
-        if (data.shader->intermediateShader == nullptr)
+        if (shader->intermediateShader == nullptr)
         {
             return Result::Error(ErrorType::ImportedDataNull);
         }
 
-        auto reflection = reflectSPIRV(as_byte_span(data.shader->intermediateShader->getSpirvWords()));
+        auto reflection = reflectSPIRV(as_byte_span(shader->intermediateShader->getSpirvWords()));
 
         if (!reflection.has_value())
         {
             return Result::Error(ErrorType::ExportPrepareFailed, "Reflection of SPIR-V words failed.");
         }
 
-        data.shader->intermediateShader->setReflection(reflection.value());
+        shader->intermediateShader->setReflection(reflection.value());
 
         return Result::Success();
     }
@@ -58,8 +60,14 @@ namespace litl::import
         const auto destFile = File(destFilePath);
         auto errorCode = BinaryBlockFile::ErrorCode::None;
         auto serialized = std::vector<std::byte>();
+        auto* shader = data.getDataPtr<ShaderImportResult>();
 
-        ShaderIntermediateData* intermediateShader = data.shader->intermediateShader.get();
+        if (shader == nullptr)
+        {
+            return Result::Error(ErrorType::ImportedDataNull);
+        }
+
+        ShaderIntermediateData* intermediateShader = shader->intermediateShader.get();
 
         if (!LitlShader::serialize(*intermediateShader, serialized, errorCode))
         {

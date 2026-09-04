@@ -51,14 +51,25 @@ namespace litl
 
             if (importResult.success)
             {
-                if (importedData.type == import::ImportedDataType::Shader)
+                if (importedData.getType() == import::ImportedDataType::Shader)
                 {
-                    shaderAsset->shaderIntermediateData = importedData.shader->intermediateShader;
-                    return true;
+                    auto* shader = importedData.getDataPtr<import::ShaderImportResult>();
+
+                    if (shader != nullptr)
+                    {
+                        shaderAsset->shaderIntermediateData = shader->intermediateShader;
+                        return true;
+                    }
+                    else
+                    {
+                        logError("Unexpected null imported shader in asset decode.");
+                        error = AssetErrorCode::ExternalFormatImportFailed;
+                        return false;
+                    }
                 }
                 else
                 {
-                    logError("Import of shader bytes from third-party asset failed due to detected import format was not shader but instead format type ", static_cast<uint32_t>(importedData.type));
+                    logError("Import of shader bytes from third-party asset failed due to detected import format was not shader but instead format type ", static_cast<uint32_t>(importedData.getType()));
                     error = AssetErrorCode::ExternalFormatImportFailed;
                     return false;
                 }

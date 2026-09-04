@@ -20,19 +20,22 @@ namespace litl::tests
         
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
-        REQUIRE(data.type == import::ImportedDataType::Mesh);
-        REQUIRE(data.mesh != nullptr);
-        REQUIRE(data.mesh->summary.meshCount == 1u);
-        REQUIRE(data.mesh->summary.vertexCount == 29834u);
-        REQUIRE(data.mesh->summary.indexCount == 178992u);
-        REQUIRE(data.mesh->meshes.size() == 1ull);
-        REQUIRE(data.mesh->meshes[0] != nullptr);
-        REQUIRE(data.mesh->meshes[0]->getVertices().size() == 29834ull);
-        REQUIRE(data.mesh->meshes[0]->getIndices().size() == 178992ull);
-        REQUIRE(data.mesh->meshes[0]->getVertices()[0].position.isZeroed() == false);       // a valid non-zero position provided by the model
-        REQUIRE(data.mesh->meshes[0]->getVertices()[0].texcoord == vec2{ 0.0f, 1.0f });     // obj has an origin in the lower-left while vulkan has an upper-left origin. so our importer flips (0,0) -> (0,1)
-        REQUIRE(data.mesh->meshes[0]->getVertices()[0].normal.isZeroed() == false);         // missing normals generated
-        REQUIRE(data.mesh->meshes[0]->getVertices()[0].tangent.isIdentity() == true);       // (todo generate missing tangents)
+        REQUIRE(data.getType() == import::ImportedDataType::Mesh);
+
+        auto* mesh = data.getDataPtr<import::MeshImportResult>();
+
+        REQUIRE(mesh != nullptr);
+        REQUIRE(mesh->summary.meshCount == 1u);
+        REQUIRE(mesh->summary.vertexCount == 29834u);
+        REQUIRE(mesh->summary.indexCount == 178992u);
+        REQUIRE(mesh->meshes.size() == 1ull);
+        REQUIRE(mesh->meshes[0] != nullptr);
+        REQUIRE(mesh->meshes[0]->getVertices().size() == 29834ull);
+        REQUIRE(mesh->meshes[0]->getIndices().size() == 178992ull);
+        REQUIRE(mesh->meshes[0]->getVertices()[0].position.isZeroed() == false);       // a valid non-zero position provided by the model
+        REQUIRE(mesh->meshes[0]->getVertices()[0].texcoord == vec2{ 0.0f, 1.0f });     // obj has an origin in the lower-left while vulkan has an upper-left origin. so our importer flips (0,0) -> (0,1)
+        REQUIRE(mesh->meshes[0]->getVertices()[0].normal.isZeroed() == false);         // missing normals generated
+        REQUIRE(mesh->meshes[0]->getVertices()[0].tangent.isIdentity() == true);       // (todo generate missing tangents)
     } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Convert OBJ to litlmesh", "[import::obj]")
@@ -94,7 +97,11 @@ namespace litl::tests
         REQUIRE(error == BinaryBlockFile::ErrorCode::None);
 
         // Deserialize the LitlMesh to a second GeoMesh.
-        GeoMesh& objGeoMesh = *data.mesh->meshes[0].get();
+        auto* mesh = data.getDataPtr<import::MeshImportResult>();
+
+        REQUIRE(mesh != nullptr);
+
+        GeoMesh& objGeoMesh = *mesh->meshes[0].get();
         GeoMesh litlGeoMesh{};
 
         REQUIRE(litlMesh.deserialize(litlGeoMesh, error) == true);

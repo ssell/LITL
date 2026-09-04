@@ -18,17 +18,19 @@ namespace litl::import
 
     Result MaterialExporter::prepare(ImportedData const& data) noexcept
     {
-        if (data.type != ImportedDataType::Material)
+        if (data.getType() != ImportedDataType::Material)
         {
             return Result::Error(ErrorType::ImportedDataTypeMismatch);
         }
 
-        if (data.material == nullptr)
+        auto* material = data.getDataPtr<MaterialImportResult>();
+
+        if (material == nullptr)
         {
             return Result::Error(ErrorType::ImportedDataNull);
         }
 
-        if (data.material->intermediateMaterial == nullptr)
+        if (material->intermediateMaterial == nullptr)
         {
             return Result::Error(ErrorType::ImportedDataNull);
         }
@@ -47,8 +49,14 @@ namespace litl::import
         const auto destFile = File(destFilePath);
         auto errorCode = BinaryBlockFile::ErrorCode::None;
         auto serialized = std::vector<std::byte>();
+        auto* material = data.getDataPtr<MaterialImportResult>();
 
-        MaterialIntermediateData* intermediateMaterial = data.material->intermediateMaterial.get();
+        if (material == nullptr)
+        {
+            return Result::Error(ErrorType::ImportedDataNull);
+        }
+
+        MaterialIntermediateData* intermediateMaterial = material->intermediateMaterial.get();
 
         if (!LitlMatBinary::serialize(*intermediateMaterial, serialized, errorCode))
         {
