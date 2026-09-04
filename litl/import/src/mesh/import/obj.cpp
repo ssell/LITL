@@ -81,6 +81,7 @@ namespace litl::import
             auto& vertices = litlMesh->getVertices();
             auto& indices = litlMesh->getIndices();
             auto& faceIndexCounts = litlMesh->getFaceIndexCounts();
+            auto& faceMaterialSlots = litlMesh->getFaceMaterialSlots();
 
             vertices.reserve(objAttributes.positions.size());
             indices.reserve(objMesh.indices.size());
@@ -88,8 +89,10 @@ namespace litl::import
 
             while (index < static_cast<uint32_t>(objMesh.indices.size()))
             {
-                uint32_t const faceIndexCount = objMesh.num_face_vertices[face++];
+                uint32_t const faceIndexCount = objMesh.num_face_vertices[face];
+
                 faceIndexCounts.push_back(faceIndexCount);
+                faceMaterialSlots.push_back(objMesh.material_ids[face]);
 
                 for (uint32_t faceIndex = 0u; faceIndex < faceIndexCount; ++faceIndex)
                 {
@@ -114,6 +117,7 @@ namespace litl::import
                 }
 
                 index += faceIndexCount;
+                face++;
             }
 
             litlMesh->recalculateBounds();

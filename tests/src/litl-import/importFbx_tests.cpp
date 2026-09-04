@@ -20,6 +20,6 @@ namespace litl::tests
         REQUIRE(data.type == import::ImportedDataType::Mesh);
         REQUIRE(data.mesh != nullptr);
 
-        // ... todo rest ...
-    }
+        // todo ...
+    } LITL_END_TEST_CASE
 }

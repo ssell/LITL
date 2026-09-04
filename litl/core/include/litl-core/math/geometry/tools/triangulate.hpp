@@ -72,7 +72,7 @@ namespace litl
         bool success = false;
     };
 
-    [[nodiscard]] MeshTriangulationReport triangulateMesh(std::span<Vertex const> vertices, std::span<uint32_t const> sourceIndices, std::vector<uint32_t>& triangulatedIndices, std::span<uint32_t const> faceIndexCounts) noexcept;
+    [[nodiscard]] MeshTriangulationReport triangulateMesh(std::span<Vertex const> vertices, std::span<uint32_t const> sourceIndices, std::span<uint32_t const> faceIndexCounts, std::span<uint32_t const> faceMaterialSlots, std::vector<uint32_t>& triangulatedIndices, std::vector<uint32_t>& triangulatedFaceMaterialSlots) noexcept;
 }
 
 #endif

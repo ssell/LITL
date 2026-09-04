@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "litl-core/math/bounds/aabb.hpp"
+#include "litl-core/math/geometry/submesh.hpp"
 #include "litl-core/math/geometry/vertex.hpp"
 #include "litl-core/math/geometry/meshWinding.hpp"
 #include "litl-core/math/geometry/tools/triangulate.hpp"
@@ -38,6 +39,11 @@ namespace litl
         [[nodiscard]] size_t faceCount() const noexcept;
 
         /// <summary>
+        /// Returns the number of submeshes in the mesh.
+        /// </summary>
+        [[nodiscard]] size_t submeshCount() const noexcept;
+
+        /// <summary>
         /// Returns a read-only span of the mesh vertices.
         /// </summary>
         [[nodiscard]] std::span<Vertex const> getVertices() const noexcept;
@@ -46,7 +52,7 @@ namespace litl
         /// Returns a modifiable vector of the mesh vertices.
         /// If the vertices are modified, it is up to the caller to ensure indices and bounds also remain valid.
         /// </summary>
-        std::vector<Vertex>& getVertices() noexcept;
+        [[nodiscard]] std::vector<Vertex>& getVertices() noexcept;
 
         /// <summary>
         /// Returns a read-only span of the mesh indices.
@@ -57,7 +63,7 @@ namespace litl
         /// Returns a modifiable vector of the mesh indices.
         /// If the indices are modified, it is up to the caller to ensure that vertices and face counts also remain valid.
         /// </summary>
-        std::vector<uint32_t>& getIndices() noexcept;
+        [[nodiscard]] std::vector<uint32_t>& getIndices() noexcept;
 
         /// <summary>
         /// Returns a read-only span of the mesh "indices-per-face" values.
@@ -68,9 +74,28 @@ namespace litl
         /// Returns a modifiable vector of the mesh "indices-per-face" values.
         /// If the face counts are modified, it is up to the caller to ensure that the indices also remain valid.
         /// </summary>
-        /// <returns></returns>
-        std::vector<uint32_t>& getFaceIndexCounts() noexcept;
+        [[nodiscard]] std::vector<uint32_t>& getFaceIndexCounts() noexcept;
 
+        /// <summary>
+        /// Returns a read-only span of the material slots for each face.
+        /// </summary>
+        [[nodiscard]] std::span<uint32_t const> getFaceMaterialSlots() const noexcept;
+
+        /// <summary>
+        /// Returns a modifiable vector of the material slots for each face.
+        /// </summary>
+        [[nodiscard]] std::vector<uint32_t>& getFaceMaterialSlots() noexcept;
+
+        /// <summary>
+        /// Returns a read-only span of submeshes.
+        /// </summary>
+        [[nodiscard]] std::span<Submesh const> getSubmeshes() const noexcept;
+
+        /// <summary>
+        /// Returns a modifiable vector of submeshes.
+        /// </summary>
+        [[nodiscard]] std::vector<Submesh>& getSubmeshes() noexcept;
+        
         /// <summary>
         /// Sets the vertices in the mesh.
         /// If the vertices are modified, it is up to the caller to ensure indices and bounds also remain valid.
@@ -196,6 +221,17 @@ namespace litl
         /// For example, a mesh composed of 3 triangles and 1 quad may look like [3,3,3,4].
         /// </summary>
         std::vector<uint32_t> m_faceIndexCounts;
+
+        /// <summary>
+        /// Material slot associated with each individual face.
+        /// Parallel to m_faceIndexCounts, where each index references the same face between the two vectors.
+        /// </summary>
+        std::vector<uint32_t> m_faceMaterialSlots;
+
+        /// <summary>
+        /// All submeshes in the mesh.
+        /// </summary>
+        std::vector<Submesh> m_submeshes;
 
         /// <summary>
         /// The winding of the indices in the mesh.

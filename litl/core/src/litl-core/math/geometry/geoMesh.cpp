@@ -10,6 +10,8 @@ namespace litl
         m_vertices.clear();
         m_indices.clear();
         m_faceIndexCounts.clear();
+        m_faceMaterialSlots.clear();
+        m_submeshes.clear();
     }
 
     size_t GeoMesh::vertexCount() const noexcept
@@ -25,6 +27,11 @@ namespace litl
     size_t GeoMesh::faceCount() const noexcept
     {
         return m_faceIndexCounts.size();
+    }
+
+    size_t GeoMesh::submeshCount() const noexcept
+    {
+        return m_submeshes.size();
     }
 
     std::span<Vertex const> GeoMesh::getVertices() const noexcept
@@ -55,6 +62,26 @@ namespace litl
     std::vector<uint32_t>& GeoMesh::getFaceIndexCounts() noexcept
     {
         return m_faceIndexCounts;
+    }
+
+    std::span<uint32_t const> GeoMesh::getFaceMaterialSlots() const noexcept
+    {
+        return m_faceMaterialSlots;
+    }
+
+    std::vector<uint32_t>& GeoMesh::getFaceMaterialSlots() noexcept
+    {
+        return m_faceMaterialSlots;
+    }
+
+    std::span<Submesh const> GeoMesh::getSubmeshes() const noexcept
+    {
+        return m_submeshes;
+    }
+
+    std::vector<Submesh>& GeoMesh::getSubmeshes() noexcept
+    {
+        return m_submeshes;
     }
 
     void GeoMesh::setVertices(std::span<Vertex const> vertices) noexcept
@@ -130,11 +157,14 @@ namespace litl
         }
 
         std::vector<uint32_t> triangulatedIndices;
-        const auto report = triangulateMesh(m_vertices, m_indices, triangulatedIndices, m_faceIndexCounts);
+        std::vector<uint32_t> triangulatedFaceMaterialSlots;
+
+        const auto report = triangulateMesh(m_vertices, m_indices, m_faceMaterialSlots, triangulatedIndices, triangulatedFaceMaterialSlots, m_faceIndexCounts);
 
         if (report.success)
         {
             m_indices = std::move(triangulatedIndices);
+            m_faceMaterialSlots = std::move(triangulatedFaceMaterialSlots);
             setAllFaceIndexCounts(3u);
         }
 

@@ -9,6 +9,7 @@ namespace litl
     {
         struct TriangulatorContext
         {
+            size_t faceIndex{ 0 };
             std::span<uint32_t const> face;
             std::span<Vertex const> vertices;
             std::vector<vec3> positions3d;
@@ -145,7 +146,7 @@ namespace litl
             }
         }
 
-        void triangulateNgon(TriangulatorContext& context, std::vector<uint32_t>& triangulatedIndices, MeshTriangulationReport& report) noexcept
+        void triangulateNgon(TriangulatorContext& context, std::span<uint32_t const> faceMaterialSlots, std::vector<uint32_t>& triangulatedIndices, std::vector<uint32_t>& triangulatedFaceMaterialSlots, MeshTriangulationReport& report) noexcept
         {
             // Based on: https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
 
@@ -175,6 +176,8 @@ namespace litl
             if (faceIndexCount == 4u)
             {
                 emitQuad(triangulatedIndices, context.face, context.positions3d, context.positions2d, winding);
+                triangulatedFaceMaterialSlots.push_back(faceMaterialSlots[context.faceIndex]);
+                triangulatedFaceMaterialSlots.push_back(faceMaterialSlots[context.faceIndex]);
                 report.resultTriangleFaceCount += 2;
                 return;
             }
@@ -293,6 +296,7 @@ namespace litl
                     currIndex = earClip(currIndex);
                     remainingCount--;
                     stallCount = 0u;
+                    triangulatedFaceMaterialSlots.push_back(faceMaterialSlots[context.faceIndex]);
                     report.resultTriangleFaceCount++;
                     report.earsClipped++;
                 }
@@ -302,6 +306,7 @@ namespace litl
                     currIndex = earClip(findBestOfTheWorst(currIndex, remainingCount));
                     remainingCount--;
                     stallCount = 0u;
+                    triangulatedFaceMaterialSlots.push_back(faceMaterialSlots[context.faceIndex]);
                     report.resultTriangleFaceCount++;
                     report.earsClipped++;
                     report.forcedClips++;
@@ -318,16 +323,17 @@ namespace litl
             triangulatedIndices.push_back(context.face[currIndex]);
             triangulatedIndices.push_back(context.face[context.nextLocalFaceIndices[currIndex]]);
 
+            triangulatedFaceMaterialSlots.push_back(faceMaterialSlots[context.faceIndex]);
             report.resultTriangleFaceCount++;
         }
 
-        void triangulateTriangle(uint32_t firstIndexIndex, std::span<uint32_t const> sourceIndices, std::vector<uint32_t>& triangulatedIndices, MeshTriangulationReport& report) noexcept
+        void triangulateTriangle(TriangulatorContext& context, uint32_t firstIndexIndex, std::span<uint32_t const> sourceIndices, std::span<uint32_t const> faceMaterialSlots, std::vector<uint32_t>& triangulatedIndices, std::vector<uint32_t>& triangulatedFaceMaterialSlots, MeshTriangulationReport& report) noexcept
         {
-
             triangulatedIndices.push_back(sourceIndices[firstIndexIndex + 0]);
             triangulatedIndices.push_back(sourceIndices[firstIndexIndex + 1]);
             triangulatedIndices.push_back(sourceIndices[firstIndexIndex + 2]);
 
+            triangulatedFaceMaterialSlots.push_back(faceMaterialSlots[context.faceIndex]);
             report.resultTriangleFaceCount++;
         }
 
@@ -353,7 +359,7 @@ namespace litl
         }
     }
 
-    MeshTriangulationReport triangulateMesh(std::span<Vertex const> vertices, std::span<uint32_t const> sourceIndices, std::vector<uint32_t>& triangulatedIndices, std::span<uint32_t const> faceIndexCounts) noexcept
+    MeshTriangulationReport triangulateMesh(std::span<Vertex const> vertices, std::span<uint32_t const> sourceIndices, std::span<uint32_t const> faceIndexCounts, std::span<uint32_t const> faceMaterialSlots, std::vector<uint32_t>& triangulatedIndices, std::vector<uint32_t>& triangulatedFaceMaterialSlots) noexcept
     {
         // Rudimentary single-threaded triangulation. It is expected that most incoming meshes are already triangulated and that very few faces will need to be modified.
         // Rewrite as a jobs-based triangulation if this assumption is proved wrong in the future (or offer overloaded variant that takes in the JobScheduler)
@@ -371,6 +377,9 @@ namespace litl
         triangulatedIndices.clear();
         triangulatedIndices.reserve(sourceIndices.size());
 
+        triangulatedFaceMaterialSlots.clear();
+        triangulatedFaceMaterialSlots.reserve(faceMaterialSlots.size());
+
         TriangulatorContext context{ .vertices = vertices };
         context.positions3d.reserve(8u);
         context.positions2d.reserve(8u);
@@ -380,8 +389,9 @@ namespace litl
 
         uint32_t firstIndexIndex = 0u;
 
-        for (auto faceIndexCount : faceIndexCounts)
+        for (context.faceIndex = 0; context.faceIndex < faceIndexCounts.size(); ++context.faceIndex)
         {
+            uint32_t faceIndexCount = faceIndexCounts[context.faceIndex];
             report.sourceFaceCount++;
 
             switch (faceIndexCount)
@@ -399,19 +409,19 @@ namespace litl
 
             case 3:
                 report.sourceTriangleFaceCount++;
-                triangulateTriangle(firstIndexIndex, sourceIndices, triangulatedIndices, report);
+                triangulateTriangle(context, firstIndexIndex, sourceIndices, faceMaterialSlots, triangulatedIndices, triangulatedFaceMaterialSlots, report);
                 break;
 
             case 4:
                 report.sourceQuadFaceCount++;
                 context.face = { sourceIndices.data() + firstIndexIndex, faceIndexCount };
-                triangulateNgon(context, triangulatedIndices, report);
+                triangulateNgon(context, faceMaterialSlots, triangulatedIndices, triangulatedFaceMaterialSlots, report);
                 break;
 
             default:
                 report.sourceNgonFaceCount++;
                 context.face = { sourceIndices.data() + firstIndexIndex, faceIndexCount };
-                triangulateNgon(context, triangulatedIndices, report);
+                triangulateNgon(context, faceMaterialSlots, triangulatedIndices, triangulatedFaceMaterialSlots, report);
                 break;
             }
 
