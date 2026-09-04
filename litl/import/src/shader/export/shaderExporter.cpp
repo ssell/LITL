@@ -18,7 +18,7 @@ namespace litl::import
 
     }
 
-    Result ShaderExporter::prepare(ImportedData const& data) noexcept
+    Result ShaderExporter::prepare(ImportedData& data) noexcept
     {
         if (data.getType() != ImportedDataType::Shader)
         {

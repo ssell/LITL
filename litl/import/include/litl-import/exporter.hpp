@@ -24,7 +24,7 @@ namespace litl::import
         /// This ensures the data is correct for the destination internal format. For example with meshes,
         /// this is the step that ensures the mesh is triangulated, optimized, has normals, etc.
         /// </summary>
-        virtual Result prepare(ImportedData const& data) noexcept = 0;
+        virtual Result prepare(ImportedData& data) noexcept = 0;
 
         /// <summary>
         /// Step responsible for writing the data to disk.

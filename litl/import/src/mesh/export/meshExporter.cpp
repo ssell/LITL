@@ -16,7 +16,7 @@ namespace litl::import
 
     }
 
-    Result MeshExporter::prepare(ImportedData const& data) noexcept
+    Result MeshExporter::prepare(ImportedData& data) noexcept
     {
         if (data.getType() != ImportedDataType::Mesh)
         {

@@ -16,7 +16,7 @@ namespace litl::import
 
     }
 
-    Result MaterialExporter::prepare(ImportedData const& data) noexcept
+    Result MaterialExporter::prepare(ImportedData& data) noexcept
     {
         if (data.getType() != ImportedDataType::Material)
         {
