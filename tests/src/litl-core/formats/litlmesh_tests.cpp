@@ -31,11 +31,16 @@ namespace litl::tests
             std::array<uint32_t, 3> const indices{ 0u, 1u, 2u };
             std::array<uint32_t, 1> const faces{ 3u };
 
+            auto error = GeoMesh::ErrorCode::None;
+
             mesh.setVertices(vertices);
             mesh.setIndices(indices);
             mesh.setFaceIndexCounts(faces);
             mesh.recalculateBounds();
-            mesh.finalizeSubmeshes();
+
+            REQUIRE(mesh.finalizeSubmeshes(error) == true);
+            REQUIRE(error == GeoMesh::ErrorCode::None);
+            REQUIRE(mesh.submeshCount() == 1);
         }
 
         /// <summary>
@@ -52,11 +57,16 @@ namespace litl::tests
             std::array<uint32_t, 6> const indices{ 0u, 1u, 2u, 0u, 2u, 3u };
             std::array<uint32_t, 2> const faces{ 3u, 3u };
 
+            auto error = GeoMesh::ErrorCode::None;
+
             mesh.setVertices(vertices);
             mesh.setIndices(indices);
             mesh.setFaceIndexCounts(faces);
             mesh.recalculateBounds();
-            mesh.finalizeSubmeshes();
+
+            REQUIRE(mesh.finalizeSubmeshes(error) == true);
+            REQUIRE(error == GeoMesh::ErrorCode::None);
+            REQUIRE(mesh.submeshCount() == 1);
         }
 
         /// <summary>
@@ -74,11 +84,16 @@ namespace litl::tests
             std::array<uint32_t, 12> const indices{ 0u, 1u, 2u, 0u, 1u, 2u, 3u, 0u, 1u, 2u, 3u, 4u };
             std::array<uint32_t, 3> const faces{ 3u, 4u, 5u };
 
+            auto error = GeoMesh::ErrorCode::None;
+
             mesh.setVertices(vertices);
             mesh.setIndices(indices);
             mesh.setFaceIndexCounts(faces);
             mesh.recalculateBounds();
-            mesh.finalizeSubmeshes();
+
+            REQUIRE(mesh.finalizeSubmeshes(error) == true);
+            REQUIRE(error == GeoMesh::ErrorCode::None);
+            REQUIRE(mesh.submeshCount() == 1);
         }
 
         // -------------------------------------------------------------------------------------
