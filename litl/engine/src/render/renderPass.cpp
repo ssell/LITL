@@ -24,7 +24,9 @@ namespace litl
             GraphicsPipelineHandle graphicsPipelineHandle{};
             MeshHandle meshHandle{};
             Mesh* mesh{};
+            uint32_t firstVertex = 0u;
             uint32_t vertexCount = 0u;
+            uint32_t firstIndex = 0u;
             uint32_t indexCount = 0u;
             uint32_t instanceCount = 0u;
             uint32_t instanceOffset = 0u;
@@ -83,22 +85,37 @@ namespace litl
             {
                 // --- Compile Draw List
 
+                /**
+                 * TODO this will need to be reworked more for proper submesh support.
+                 * Currently sorting is done to the render entities in RenderManager based on mesh and material.
+                 * But that assumes only one material per mesh. Once there can be multiple materials per meshes
+                 * we will need to account for that in the sorting.
+                 * 
+                 * DrawListItems will likely need to be compiled in RenderManager and not in the individual pass
+                 * so we are not passing over entities multiple times resolving submeshes/materials.
+                 */
+
                 drawList.clear();
 
-                auto currListItem = createDrawListItem(entities[0], 0u);
-                drawList.push_back(currListItem);
-
-                for (uint32_t i = 1u; i < static_cast<uint32_t>(entities.size()); ++i)
+                if (createDrawListItems(entities[0], 0, drawList))
                 {
-                    if ((entities[i].material.handle != currListItem.materialHandle) || (entities[i].mesh.handle != currListItem.meshHandle))
-                    {
-                        drawList.back().instanceCount = i - drawList.back().instanceOffset;
-                        currListItem = createDrawListItem(entities[i], i);
-                        drawList.push_back(currListItem);
-                    }
-                }
+                    auto& currListItem = drawList.back();
 
-                drawList.back().instanceCount = static_cast<uint32_t>(entities.size()) - drawList.back().instanceOffset;
+                    for (uint32_t i = 1u; i < static_cast<uint32_t>(entities.size()); ++i)
+                    {
+                        if ((entities[i].material.handle != currListItem.materialHandle) || (entities[i].mesh.handle != currListItem.meshHandle))
+                        {
+                            drawList.back().instanceCount = i - drawList.back().instanceOffset;
+                            
+                            if (createDrawListItems(entities[i], i, drawList))
+                            {
+                                currListItem = drawList.back();
+                            }
+                        }
+                    }
+
+                    drawList.back().instanceCount = static_cast<uint32_t>(entities.size()) - drawList.back().instanceOffset;
+                }
 
                 // --- Render
                 MaterialHandle currMaterialHandle{};
@@ -168,7 +185,7 @@ namespace litl
 
                     // -- Instanced Draw
 
-                    renderer->cmdDrawIndexed(frameCommandBuffer, drawListItem.indexCount, drawListItem.instanceCount, 0u, 0, drawListItem.instanceOffset);
+                    renderer->cmdDrawIndexed(frameCommandBuffer, drawListItem.indexCount, drawListItem.instanceCount, drawListItem.firstIndex, 0, drawListItem.instanceOffset);
                 }
             }
             
@@ -180,23 +197,39 @@ namespace litl
             renderer->submitCommands(frameCommandBuffer);
         }
 
-        DrawListItem createDrawListItem(RenderableEntity entity, uint32_t instanceOffset) noexcept
+        [[nodiscard]] bool createDrawListItems(RenderableEntity entity, uint32_t instanceOffset, std::vector<DrawListItem>& drawListItems) noexcept
         {
-            auto* material = objectPool->getMaterial(entity.material.handle);
             auto* mesh = objectPool->getMesh(entity.mesh.handle);
             auto& meshDescriptor = mesh->getDescriptor();
 
-            return DrawListItem{
-                .materialHandle = entity.material.handle,
-                .material = material,
-                .graphicsPipelineHandle = material->getGraphicsPipelineHandle(),
-                .meshHandle = entity.mesh.handle,
-                .mesh = mesh,
-                .vertexCount = meshDescriptor.vertexInfo.vertexCount,
-                .indexCount = meshDescriptor.indexInfo.indexCount,
-                .instanceCount = 0u,
-                .instanceOffset = instanceOffset
-            };
+            if (auto* material = objectPool->getMaterial(entity.material.handle); material != nullptr)
+            {
+                auto const& submeshes = mesh->getGeoMesh().getSubmeshes();
+
+                if (!submeshes.empty())
+                {
+                    for (auto& submesh : submeshes)
+                    {
+                        drawListItems.push_back(DrawListItem{
+                            .materialHandle = entity.material.handle,
+                            .material = material,
+                            .graphicsPipelineHandle = material->getGraphicsPipelineHandle(),
+                            .meshHandle = entity.mesh.handle,
+                            .mesh = mesh,
+                            .firstVertex = 0u,
+                            .vertexCount = meshDescriptor.vertexInfo.vertexCount,
+                            .firstIndex = submesh.firstIndex,
+                            .indexCount = submesh.indexCount,
+                            .instanceCount = 0u,
+                            .instanceOffset = instanceOffset
+                            });
+                    }
+
+                    return true;
+                }
+            }
+
+            return false;
         }
     };
 

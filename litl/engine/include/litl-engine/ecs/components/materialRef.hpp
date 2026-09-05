@@ -7,6 +7,13 @@
 
 namespace litl
 {
+    /// <summary>
+    /// Used to indicate that there is a single material associated with the entity.
+    /// For entities/meshes that use multiple materials (submeshes) then use MultiMaterialRef.
+    /// 
+    /// If the mesh attached the entity has submeshes and this component is used, then the 
+    /// same material will be applied to all submeshes.
+    /// </summary>
     struct MaterialRef
     {
         /// <summary>
@@ -21,8 +28,19 @@ namespace litl
         /// </summary>
         MaterialPropertySlotId slot;
     };
+
+    /// <summary>
+    /// Used to indicate that there are multiple materials associated with the entity.
+    /// If the mesh associated with the entity has more materials than those provided
+    /// on this component, then the additional submeshes will use the first material.
+    /// </summary>
+    struct MultiMaterialRef
+    {
+        // ... todo ...
+    };
 }
 
 LITL_REGISTER_COMPONENT(litl::MaterialRef);
+LITL_REGISTER_COMPONENT(litl::MultiMaterialRef);
 
 #endif
