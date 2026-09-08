@@ -44,7 +44,7 @@ namespace litl
 
         void render(CommandBufferHandle frameCommandBuffer, RenderPushConstants pushConstants, Camera& camera, std::vector<RenderableEntity> const& entities) noexcept
         {
-            // --- Begin renderin
+            // --- Begin rendering
 
             const BeginRenderCommand beginRenderCommand{
                 .color = ColorAttachmentDescriptor { 
@@ -176,12 +176,14 @@ namespace litl
             }
 
             std::optional<MeshHandle> currMeshHandle{ std::nullopt };
-            std::optional<MaterialBindingsHandle> currMaterialBindingsHandle{ std::nullopt };
+            std::optional<MaterialHandle> currMaterialHandle{ std::nullopt };
+            //std::optional<MaterialBindingsHandle> currMaterialBindingsHandle{ std::nullopt };
 
             for (uint32_t i = 0u; i < static_cast<uint32_t>(entities.size()); ++i)
             {
                 if ((currMeshHandle != std::nullopt) && (currMeshHandle.value() == entities[i].meshRef.handle) &&
-                    (currMaterialBindingsHandle != std::nullopt) && (currMaterialBindingsHandle.value() == entities[i].materialRef.materialBindingsHandle))
+                    (currMaterialHandle != std::nullopt) && (currMaterialHandle.value() == entities[i].materialRef.handle))
+                    //(currMaterialBindingsHandle != std::nullopt) && (currMaterialBindingsHandle.value() == entities[i].materialRef.materialBindingsHandle))
                 {
                     // Same bound mesh and material(s)
                     continue;
@@ -192,7 +194,7 @@ namespace litl
                     drawList.back().instanceCount = i - drawList.back().instanceOffset;
                 }
 
-                createDrawListItems(entities[i], i, drawList, currMeshHandle, currMaterialBindingsHandle);
+                createDrawListItems(entities[i], i, drawList, currMeshHandle, currMaterialHandle);
             }
 
             if (drawList.empty())
@@ -204,7 +206,7 @@ namespace litl
             return true;
         }
 
-        void createDrawListItems(RenderableEntity entity, uint32_t instanceOffset, std::vector<DrawListItem>& drawListItems, std::optional<MeshHandle>& currMeshHandle, std::optional<MaterialBindingsHandle>& currMaterialBindingsHandle) noexcept
+        void createDrawListItems(RenderableEntity entity, uint32_t instanceOffset, std::vector<DrawListItem>& drawListItems, std::optional<MeshHandle>& currMeshHandle, std::optional<MaterialHandle>& currMaterialHandle) noexcept
         {
             auto* mesh = objectPool->getMesh(entity.meshRef.handle);
 
@@ -220,6 +222,28 @@ namespace litl
                 return;
             }
 
+            if (auto* material = objectPool->getMaterial(entity.materialRef.handle); material != nullptr)
+            {
+                drawListItems.push_back(DrawListItem{
+                    .materialHandle = material->getHandle(),
+                    .material = material,
+                    .graphicsPipelineHandle = material->getGraphicsPipelineHandle(),
+                    .meshHandle = entity.meshRef.handle,
+                    .mesh = mesh,
+                    .firstVertex = 0u,
+                    .vertexCount = meshDescriptor.vertexInfo.vertexCount,
+                    .firstIndex = entity.firstIndex,
+                    .indexCount = litl::min(entity.indexCount, meshDescriptor.indexInfo.indexCount - entity.firstIndex),
+                    .instanceCount = 0u,
+                    .instanceOffset = instanceOffset
+                    });
+
+                // Only update current handles on successful object retrievals and subsequent DrawListItem creation.
+                currMeshHandle = entity.meshRef.handle;
+                currMaterialHandle = entity.materialRef.handle;
+            }
+
+            /*
             if (auto* materialBindings = objectPool->getMaterialBindings(entity.materialRef.materialBindingsHandle); materialBindings != nullptr)
             {
                 const auto& submeshes = mesh->getGeoMesh().getSubmeshes();
@@ -248,6 +272,7 @@ namespace litl
                     }
                 }
             }
+            */
         }
     };
 

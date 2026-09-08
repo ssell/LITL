@@ -608,50 +608,6 @@ namespace litl
         return material;
     }
 
-    MaterialBinding AssetManager::getMaterialBinding(StringId resource) noexcept
-    {
-        MaterialAsset* materialAsset = getMaterial(resource);
-
-        if ((materialAsset == nullptr) || (materialAsset->material == nullptr))
-        {
-            return {};
-        }
-
-        return materialAsset->allocateBinding();
-    }
-
-    MaterialBinding AssetManager::getMaterialBinding(std::string_view resource) noexcept
-    {
-        return getMaterialBinding(StringId(resource));
-    }
-
-    MaterialBindingsHandle AssetManager::getSingleMaterialBindings(StringId resource) noexcept
-    {
-        MaterialAsset* materialAsset = getMaterial(resource);
-
-        if (materialAsset == nullptr)
-        {
-            return {};
-        }
-
-        return materialAsset->singleMaterialsBindingHandle;
-    }
-
-    MaterialBindingsHandle AssetManager::getSingleMaterialBindings(std::string_view resource) noexcept
-    {
-        return getSingleMaterialBindings(StringId(resource));
-    }
-
-    MaterialRef AssetManager::getSingleMaterialRef(StringId resource) noexcept
-    {
-        return MaterialRef{ .materialBindingsHandle = getSingleMaterialBindings(resource) };
-    }
-
-    MaterialRef AssetManager::getSingleMaterialRef(std::string_view resource) noexcept
-    {
-        return MaterialRef{ .materialBindingsHandle = getSingleMaterialBindings(resource) };
-    }
-
     // -------------------------------------------------------------------------------------
     // --- Get Mesh
     // -------------------------------------------------------------------------------------

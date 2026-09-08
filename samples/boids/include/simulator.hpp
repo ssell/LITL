@@ -15,7 +15,6 @@
 
 namespace litl
 {
-    class AssetManager;
     class ObjectPool;
     class World;
 }
@@ -83,11 +82,6 @@ namespace litl::samples
         std::vector<vec3> m_trackedPredators;
 
         /// <summary>
-        /// The global shared asset manager. Could request each frame via services, but can also just keep a reference.
-        /// </summary>
-        std::shared_ptr<AssetManager> m_pAssetManager{ nullptr };
-
-        /// <summary>
         /// The global shared object pool. Could request each frame via services, but can also just keep a reference.
         /// </summary>
         std::shared_ptr<ObjectPool> m_pObjectPool{ nullptr };
@@ -105,7 +99,7 @@ namespace litl::samples
         /// <summary>
         /// The shared material used by all.
         /// </summary>
-        MaterialBindingsHandle m_materialBindingsHandle{};
+        MaterialHandle m_materialHandle{};
 
         /// <summary>
         /// The mesh used by boids.

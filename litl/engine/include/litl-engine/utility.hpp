@@ -62,9 +62,12 @@ namespace litl
 
         auto* materialAsset = assets.getMaterial(material);
 
-        if (materialAsset != nullptr)
+        if ((materialAsset != nullptr) && (materialAsset->material != nullptr))
         {
-            commands.addComponent<MaterialRef>(entity, materialAsset->getSingleMaterialRef());
+            commands.addComponent<MaterialRef>(entity, MaterialRef{
+                .handle = materialAsset->materialHandle,
+                .slot = materialAsset->material->allocateSlot()
+            });
         }
 
         commands.addComponent<Transform>(entity, Transform::create(position));

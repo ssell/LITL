@@ -279,9 +279,9 @@ namespace litl
                     // This sort will group all entities of the same material and mesh together. Example result:
                     //     [(mat0, mesh0), (mat0, mesh0), (mat0, mesh3), (mat1, mesh2), (mat1, mesh2), (mat1, mesh4), (mat2, mesh5)]
 
-                    if (a.materialRef.materialBindingsHandle.index != b.materialRef.materialBindingsHandle.index)
+                    if (a.materialRef.handle.index != b.materialRef.handle.index)
                     {
-                        return (a.materialRef.materialBindingsHandle.index < b.materialRef.materialBindingsHandle.index);
+                        return (a.materialRef.handle.index < b.materialRef.handle.index);
                     }
 
                     return (a.meshRef.handle.index < b.meshRef.handle.index);
@@ -341,8 +341,20 @@ namespace litl
             instanceData.data.reserve(renderableEntities.size());
 
             for (auto& renderableEntity : renderableEntities)
-            {
-                auto* materialBindings = objectPool->getMaterialBindings(renderableEntity.materialRef.materialBindingsHandle);
+            {   
+                if (auto* material = objectPool->getMaterial(renderableEntity.materialRef.handle); material != nullptr)
+                {
+                    const uint32_t materialIndex = material->getSlotIndex(renderableEntity.materialRef.slot);
+
+                    if (materialIndex != Constants::uint32_null_index)
+                    {
+                        instanceData.data.emplace_back(
+                            sceneView->getGpuBufferIndex(renderableEntity.entity),
+                            materialIndex);
+                    }
+                }
+                /*
+                auto* materialBindings = objectPool->getMaterialBindings(renderableEntity.materialRef.handle);
 
                 if (materialBindings == nullptr)
                 {
@@ -369,6 +381,7 @@ namespace litl
                             materialIndex);
                     }
                 }
+                */
             }
 
             // --- Swap, resize, and update the GPU buffer

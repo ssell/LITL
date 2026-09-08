@@ -12,19 +12,6 @@ namespace litl
     {
         auto* materialAsset = static_cast<MaterialAsset*>(asset);
         materialAsset->material = objectPool.getMaterial(materialAsset->materialHandle);
-
-        if (materialAsset->material != nullptr)
-        {
-            MaterialBindingsDescriptor bindingsDescriptor{ .objectInfo = {.name = std::format("Single-Material Bindings for {}", materialAsset->key)} };
-
-            bindingsDescriptor.bindings.push_back(MaterialBinding{
-                .handle = materialAsset->materialHandle,
-                .slot = materialAsset->material->allocateSlot()
-            });
-
-            materialAsset->singleMaterialsBindingHandle = objectPool.createMaterialBindings(bindingsDescriptor);
-        }
-
         return (materialAsset->material != nullptr);
     }
 
@@ -220,28 +207,5 @@ namespace litl
         materialAsset->materialIntermediateData = nullptr;
 
         return success;
-    }
-    
-    MaterialBinding MaterialAsset::allocateBinding() noexcept
-    {
-        if (!materialHandle.isValid() || (material == nullptr))
-        {
-            return {};
-        }
-
-        return MaterialBinding{
-            .handle = materialHandle,
-            .slot = material->allocateSlot()
-        };
-    }
-
-    MaterialBindingsHandle MaterialAsset::getSingleMaterialBindings() noexcept
-    {
-        return singleMaterialsBindingHandle;
-    }
-
-    MaterialRef MaterialAsset::getSingleMaterialRef() noexcept
-    {
-        return MaterialRef{ .materialBindingsHandle = getSingleMaterialBindings() };
     }
 }

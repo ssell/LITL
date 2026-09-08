@@ -104,7 +104,7 @@ namespace litl
 
     void CullingSystem::update(SystemData const& data, Entity entity, Transform const& transform, MeshRef const& meshRef, MaterialRef const& materialRef)
     {
-        if (!meshRef.handle.isValid() || !materialRef.materialBindingsHandle.isValid())
+        if (!meshRef.handle.isValid() || !materialRef.handle.isValid())
         {
             return;
         }

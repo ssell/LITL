@@ -5,7 +5,7 @@ using namespace litl;
 
 void configureSystems(SystemCollection& systems);
 void bootstrap(ServiceProvider& services, EntityCommands& commands);
-void createSpinningTriangle(EntityCommands& commands, MaterialRef material, MeshHandle mesh, vec3 position, float spinRate);
+void createSpinningTriangle(EntityCommands& commands, Material* material, MeshHandle mesh, vec3 position, float spinRate);
 MeshHandle createTriangleMesh(ObjectPool& objectPool);
 
 int main()
@@ -49,23 +49,26 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     camera->setWorldPosition(vec3{ 0.0f, 0.0f, 0.0f });
     camera->lookAt(vec3{ 0.0f, 0.0f, 5.0f }, vec3::up());
 
-    auto triangleMaterial = assets->getSingleMaterialRef("materials/sampleTriangle");
     auto triangleMesh = createTriangleMesh(*objectPool);
+    auto triangleMaterialAsset = assets->getMaterial("materials/sampleTriangle");
 
-    createSpinningTriangle(commands, triangleMaterial, triangleMesh, vec3{ 0.0f, -0.35f, 2.0f }, 1.0f);
+    if (triangleMesh.isValid() && (triangleMaterialAsset != nullptr) && (triangleMaterialAsset->material != nullptr))
+    {
+        createSpinningTriangle(commands, triangleMaterialAsset->material, triangleMesh, vec3{ 0.0f, -0.35f, 2.0f }, 1.0f);
+    }
 }
 
 /// <summary>
 /// Creates a single spinning triangle at the specified position with the given spin rate.
 /// </summary>
-void createSpinningTriangle(EntityCommands& commands, MaterialRef material, MeshHandle mesh, vec3 position, float spinRate)
+void createSpinningTriangle(EntityCommands& commands, Material* material, MeshHandle mesh, vec3 position, float spinRate)
 {
     auto triangleEntity = commands.createEntity();      // Note that this is a DeferredEntity. It will be materialized into a true Entity when the commands are processed.
 
     commands.addComponent<Transform>(triangleEntity, Transform::create(position));
     commands.addComponent<LocalBounds>(triangleEntity, LocalBounds{});
     commands.addComponent<WorldBounds>(triangleEntity, WorldBounds{});
-    commands.addComponent<MaterialRef>(triangleEntity, material);
+    commands.addComponent<MaterialRef>(triangleEntity, MaterialRef { .handle = material->getHandle(), .slot = material->allocateSlot() });
     commands.addComponent<MeshRef>(triangleEntity, MeshRef{ .handle = mesh });
     commands.addComponent<samples::Spin>(triangleEntity, samples::Spin{ .rate = spinRate });
 }
