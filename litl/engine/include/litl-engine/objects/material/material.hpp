@@ -27,7 +27,6 @@ namespace litl
     class ObjectPool;
     class Renderer;
     class AssetManager;
-    struct ActiveMaterialSystem;
     struct MaterialAsset;
     struct MaterialAssetShaderDependency;
 
@@ -176,7 +175,7 @@ namespace litl
         /// This is used to determine which material slots are no longer in use. Any slot that is deemed
         /// inactive over a given number of frames will be automatically freed.
         /// </summary>
-        void markActive(Authority<ActiveMaterialSystem> auth, MaterialPropertySlotId slot) noexcept;
+        void markActive(MaterialPropertySlotId slot) noexcept;
 
         /// <summary>
         /// 

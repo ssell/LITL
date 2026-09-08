@@ -19,24 +19,7 @@ namespace litl
     {
         if (auto* material = m_pObjectPool->getMaterial(materialRef.handle); material != nullptr)
         {
-            material->markActive({}, materialRef.slot);
+            material->markActive(materialRef.slot);
         }
-
-        /*
-        MaterialBindings* materialBindings = m_pObjectPool->getMaterialBindings(materialRef.materialBindingsHandle);
-
-        if (materialBindings != nullptr)
-        {
-            auto const& bindings = materialBindings->getBindings();
-
-            for (auto& binding : bindings)
-            {
-                if (Material* material = m_pObjectPool->getMaterial(binding.handle); material != nullptr)
-                {
-                    material->markActive({}, binding.slot);
-                }
-            }
-        }
-        */
     }
 }

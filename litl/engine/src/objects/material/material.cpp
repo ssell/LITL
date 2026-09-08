@@ -11,7 +11,6 @@
 #include "litl-engine/objects/material/deferredMaterialCommands.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/objects/shader.hpp"
-#include "litl-engine/ecs/systems/activeMaterialSystem.hpp"
 #include "litl-renderer/renderer.hpp"
 #include "litl-import/material/intermediate/materialIntermediateData.hpp"
 
@@ -944,7 +943,7 @@ namespace litl
         m_pImpl->onPreRender();
     }
 
-    void Material::markActive(Authority<ActiveMaterialSystem> auth, MaterialPropertySlotId slot) noexcept
+    void Material::markActive(MaterialPropertySlotId slot) noexcept
     {
         m_pImpl->properties.markSlotActive(slot);
     }

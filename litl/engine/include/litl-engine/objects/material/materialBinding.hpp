@@ -41,12 +41,11 @@ namespace litl
     /// <summary>
     /// One or more material bindings for a renderable entity.
     /// 
-    /// If there is only one binding, then that material is applied to the entire mesh.
-    /// If there are more than one bindings, then each binding slot corresponds with a submesh.
-    /// If there are more submeshes than materials, then only those submeshes with a bound material will be rendered.
-    /// 
     /// It is expected that if there are multiple submeshes then each has a designated material binding. The excess
     /// submeshes are intentionally not rendered to serve as a visual signal that there is a misconfiguration.
+    /// 
+    /// Each MaterialBindings instance is tied directly to a VariableMaterialRefs component.
+    /// A MaterialBindings tied to a deleted VariableMaterialRefs component will eventually be garbage collected.
     /// </summary>
     class MaterialBindings
     {
@@ -100,10 +99,15 @@ namespace litl
         /// </summary>
         bool setBinding(uint32_t index, MaterialBinding binding) noexcept;
 
+        void setLastActiveFrame(uint32_t currFrame) noexcept;
+
+        [[nodiscard]] uint32_t getLastActiveFrame() const noexcept;
+
     private:
 
         ObjectPool* m_pObjectPool{ nullptr };
         MaterialBindingsHandle m_handle{};
+        uint32_t m_lastActiveFrame{ 0u };
         std::vector<MaterialBinding> m_bindings;
     };
 }

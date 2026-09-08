@@ -68,4 +68,14 @@ namespace litl
 
         return true;
     }
+
+    void MaterialBindings::setLastActiveFrame(uint32_t currFrame) noexcept
+    {
+        m_lastActiveFrame = currFrame;
+    }
+
+    [[nodiscard]] uint32_t MaterialBindings::getLastActiveFrame() const noexcept
+    {
+        return m_lastActiveFrame;
+    }
 }
