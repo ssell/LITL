@@ -2,6 +2,7 @@
 #define LITL_ECS_SYSTEM_TRAITS_H__
 
 #include <concepts>
+#include <cstdint>
 #include <tuple>
 #include <vector>
 
@@ -14,6 +15,147 @@
 namespace litl
 {
     class EntityCommands;
+
+    /// <summary>
+    /// A component type as it may appear inside a System::update parameter.
+    /// Deliberately rejects cv-qualified C so that each parameter spelling has exactly one viable specialization below (no reliance on partial ordering).
+    /// </summary>
+    template<typename C>
+    concept SystemComponentType = ValidComponentType<C> && std::same_as<C, std::remove_cv_t<C>>;
+
+    enum class ComponentAccessType : uint8_t
+    {
+        Read = 0,
+        Write = 1
+    };
+
+    enum class ComponentArity : uint8_t
+    {
+        Required = 0,
+        Optional = 1,
+        Excluded = 2
+    };
+
+    /// <summary>
+    /// Primary template: not a valid system parameter. Specializations opt in.
+    /// </summary>
+    template<typename Param>
+    struct SystemParamTraits
+    {
+        static constexpr bool valid = false;
+    };
+
+    /// <summary>
+    /// A non-const reference parameter. For example `Foo& foo`.
+    /// These are writable components required by the system.
+    /// </summary>
+    /// <typeparam name="C"></typeparam>
+    template<SystemComponentType C>
+    struct SystemParamTraits<C&>
+    {
+        static constexpr bool valid = true;
+        using ComponentType = C;
+        static constexpr auto access = ComponentAccessType::Write;
+        static constexpr auto arity = ComponentArity::Required;
+
+        static C& bind(C* column, uint32_t index) noexcept
+        {
+            return column[index];
+        }
+    };
+
+    /// <summary>
+    /// A const reference parameter. For example `Foo const& foo`.
+    /// These are read-only components required by the system.
+    /// </summary>
+    /// <typeparam name="C"></typeparam>
+    template<SystemComponentType C>
+    struct SystemParamTraits<C const&>
+    {
+        static constexpr bool valid = true;
+        using ComponentType = C;
+        static constexpr auto access = ComponentAccessType::Read;
+        static constexpr auto arity = ComponentArity::Required;
+
+        static C const& bind(C* column, uint32_t index) noexcept
+        {
+            return column[index];
+        }
+    };
+
+    /// <summary>
+    /// A non-const pointer parameter. For example `Foo* foo`.
+    /// These are writable components that are optional for the system to run.
+    /// </summary>
+    /// <typeparam name="C"></typeparam>
+    template<SystemComponentType C>
+    struct SystemParamTraits<C*>
+    {
+        static constexpr bool valid = true;
+        using ComponentType = C;
+        static constexpr auto access = ComponentAccessType::Write;
+        static constexpr auto arity = ComponentArity::Optional;
+
+        static C* bind(C* column, uint32_t index) noexcept
+        {
+            return (column ? column + index : nullptr);
+        }
+    };
+
+    /// <summary>
+    /// A const pointer parameter. For example `Foo const* foo`.
+    /// These are read-only components that are optional for the system to run.
+    /// </summary>
+    /// <typeparam name="C"></typeparam>
+    template<SystemComponentType C>
+    struct SystemParamTraits<C const*>
+    {
+        static constexpr bool valid = true;
+        using ComponentType = C;
+        static constexpr auto access = ComponentAccessType::Read;
+        static constexpr auto arity = ComponentArity::Optional;
+
+        static C const* bind(C* column, uint32_t index) noexcept
+        {
+            return (column ? column + index : nullptr);
+        }
+    };
+
+    template<typename Param>
+    consteval bool ValidSystemParam()
+    {
+        static_assert(SystemParamTraits<Param>::valid, "System::update component arguments must be T&, T const&, T*, T const*, or Without<T>.");
+        return SystemParamTraits<Param>::valid;
+    }
+
+    /// <summary>
+    /// The number of occurrences of C among the component types of Params...
+    /// </summary>
+    template<typename C, typename... Params>
+    consteval std::size_t CountSystemComponent()
+    {
+        return (std::size_t{ 0 } + ... + (std::same_as<C, typename SystemParamTraits<Params>::ComponentType> ? 1u : 0u));
+    }
+
+    template<typename ComponentsTuple>
+    struct SystemComponentsValidation;
+
+    /// <summary>
+    /// Validates that all individual parameters are valid and that there are no duplicates (based on type).
+    /// </summary>
+    template<typename... Params>
+    struct SystemComponentsValidation<std::tuple<Params...>>
+    {
+        static consteval bool allParamsValid()
+        {
+            return (ValidSystemParam<Params>() && ...);
+        }
+
+        static consteval bool noDuplicateComponents()
+        {
+            return ((CountSystemComponent<typename SystemParamTraits<Params>::ComponentType, Params...>() == 1) && ...);
+        }
+    };
 
     /// <summary>
     /// The system update methods must begin with "EntityCommands&,float,Entity" and so those are not needed for
@@ -43,15 +185,6 @@ namespace litl
     using SystemTupleTail = decltype(SystemTupleTailImpl<Tuple>(std::make_index_sequence<std::tuple_size_v<Tuple> - 2>{})); 
     //                                                                                    ^ reduce size by 2 so we dont go OOB in the Impl
 
-    template<typename Tuple, std::size_t... Indices>
-    consteval bool ValidSystemComponents(std::index_sequence<Indices...>)
-    {
-        return (
-            (std::is_lvalue_reference_v<std::tuple_element_t<Indices + 2, Tuple>> &&    // all optional ::update arguments must be reference types (either & or const&)
-             !std::is_volatile_v<std::tuple_element_t<Indices + 2, Tuple>>) &&          // volatile arguments are not allowed
-            ...);
-    }
-
     /// <summary>
     /// Requirements for a valid System class/struct.
     /// 
@@ -67,23 +200,30 @@ namespace litl
         &S::update;                                                             // must have an "update" method (more on that below)
     }
     && [] {
-        using traits = MethodTraits<decltype(&S::update)>;                      // get the traits of the required "update" method
-        using args = typename traits::argsTuple;                                // extract the argument types in the update signature
+        using traits = MethodTraits<decltype(&S::update)>;
+        using args = typename traits::argsTuple;
 
-        constexpr std::size_t argsCount = std::tuple_size_v<args>;
-        constexpr std::size_t componentsCount = std::tuple_size_v<args> - 2;
+        static_assert(std::tuple_size_v<args> >= 2, "System::update must take atleast (SystemData const&, Entity)");
 
-        static_assert(argsCount >= 2, "System::update must take atleast (SystemData&, Entity)");
-        static_assert((componentsCount == 0) || ValidSystemComponents<args>(std::make_index_sequence<componentsCount>{}), "System::update optional component arguments must be reference or const-reference values only.");
+        if constexpr (std::tuple_size_v<args> >= 2)
+        {
+            using components = SystemTupleTail<args>;
+            using validation = SystemComponentsValidation<components>;
 
-        using Arg0 = std::tuple_element_t<0, args>;                             // first argument type
-        using Arg1 = std::tuple_element_t<1, args>;                             // second argument type
+            if constexpr (validation::allParamsValid())
+            {
+                static_assert(validation::noDuplicateComponents(), "Each component type may appear at most once in System::update (Without<T> included).");
+            }
 
-        static_assert(std::same_as<typename traits::returnType, void>, "System::update return type must be void.");
-        static_assert(std::same_as<Arg0, SystemData const&>, "System::update first argument must be 'SystemData const&'");
-        static_assert(std::same_as<Arg1, Entity>, "System::update second argument must be 'Entity'");
+            using Arg0 = std::tuple_element_t<0, args>;
+            using Arg1 = std::tuple_element_t<1, args>;
 
-        return true; 
+            static_assert(std::same_as<typename traits::returnType, void>, "System::update return type must be void.");
+            static_assert(std::same_as<Arg0, SystemData const&>, "System::update first argument must be 'SystemData const&'");
+            static_assert(std::same_as<Arg1, Entity>, "System::update second argument must be 'Entity'");
+        }
+
+        return true;
     } ();
 
     /// <summary>
