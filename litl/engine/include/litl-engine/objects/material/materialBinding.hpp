@@ -52,8 +52,25 @@ namespace litl
     {
     public:
 
+        /// <summary>
+        /// 
+        /// </summary>
         [[nodiscard]] bool create(Authority<ObjectPool> auth, ObjectPool& pool, MaterialBindingsDescriptor const& descriptor) noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
         void destroy(Authority<ObjectPool> auth) noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        void setSelfHandle(Authority<ObjectPool> author, MaterialBindingsHandle handle) noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [[nodiscard]] MaterialBindingsHandle getHandle() const noexcept;
 
         /// <summary>
         /// Returns the number of bindings.
@@ -65,6 +82,11 @@ namespace litl
         /// If the index is not valid, then will return std::nullopt.
         /// </summary>
         [[nodiscard]] std::optional<MaterialBinding> getBinding(uint32_t index) const noexcept;
+
+        /// <summary>
+        /// Retrieves all bindings.
+        /// </summary>
+        [[nodiscard]] std::vector<MaterialBinding> const& getBindings() const noexcept;
 
         /// <summary>
         /// Retrieves the material bound at the specified index.
@@ -81,6 +103,7 @@ namespace litl
     private:
 
         ObjectPool* m_pObjectPool{ nullptr };
+        MaterialBindingsHandle m_handle{};
         std::vector<MaterialBinding> m_bindings;
     };
 }

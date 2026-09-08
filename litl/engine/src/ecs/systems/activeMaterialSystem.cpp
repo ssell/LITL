@@ -17,11 +17,19 @@ namespace litl
 
     void ActiveMaterialSystem::update(SystemData const& data, Entity entity, MaterialRef const& materialRef)
     {
-        Material* material = m_pObjectPool->getMaterial(materialRef.handle);
+        MaterialBindings* materialBindings = m_pObjectPool->getMaterialBindings(materialRef.materialBindingsHandle);
 
-        if (material != nullptr)
+        if (materialBindings != nullptr)
         {
-            material->markActive({}, materialRef.slot);
+            auto const& bindings = materialBindings->getBindings();
+
+            for (auto& binding : bindings)
+            {
+                if (Material* material = m_pObjectPool->getMaterial(binding.handle); material != nullptr)
+                {
+                    material->markActive({}, binding.slot);
+                }
+            }
         }
     }
 }

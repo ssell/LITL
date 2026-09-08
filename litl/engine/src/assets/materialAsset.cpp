@@ -1,3 +1,5 @@
+#include <format>
+
 #include "litl-engine/assets/materialAsset.hpp"
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/objects/objectPool.hpp"
@@ -8,9 +10,22 @@ namespace litl
 {
     bool MaterialAsset::fetchAssetObject(Asset* asset, ObjectPool& objectPool) noexcept
     {
-        auto* material = static_cast<MaterialAsset*>(asset);
-        material->material = objectPool.getMaterial(material->handle);
-        return (material->material != nullptr);
+        auto* materialAsset = static_cast<MaterialAsset*>(asset);
+        materialAsset->material = objectPool.getMaterial(materialAsset->materialHandle);
+
+        if (materialAsset->material != nullptr)
+        {
+            MaterialBindingsDescriptor bindingsDescriptor{ .objectInfo = {.name = std::format("Single-Material Bindings for {}", materialAsset->key)} };
+
+            bindingsDescriptor.bindings.push_back(MaterialBinding{
+                .handle = materialAsset->materialHandle,
+                .slot = materialAsset->material->allocateSlot()
+            });
+
+            materialAsset->singleMaterialsBindingHandle = objectPool.createMaterialBindings(bindingsDescriptor);
+        }
+
+        return (materialAsset->material != nullptr);
     }
 
     bool decodeLitlMaterialBinaryBytes(MaterialAsset* materialAsset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
@@ -207,16 +222,26 @@ namespace litl
         return success;
     }
     
-    MaterialRef MaterialAsset::allocate() noexcept
+    MaterialBinding MaterialAsset::allocateBinding() noexcept
     {
-        if (!handle.isValid() || (material == nullptr))
+        if (!materialHandle.isValid() || (material == nullptr))
         {
             return {};
         }
 
-        return MaterialRef{
-            .handle = handle,
+        return MaterialBinding{
+            .handle = materialHandle,
             .slot = material->allocateSlot()
         };
+    }
+
+    MaterialBindingsHandle MaterialAsset::getSingleMaterialBindings() noexcept
+    {
+        return singleMaterialsBindingHandle;
+    }
+
+    MaterialRef MaterialAsset::getSingleMaterialRef() noexcept
+    {
+        return MaterialRef{ .materialBindingsHandle = getSingleMaterialBindings() };
     }
 }

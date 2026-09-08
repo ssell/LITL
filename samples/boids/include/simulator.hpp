@@ -105,7 +105,7 @@ namespace litl::samples
         /// <summary>
         /// The shared material used by all.
         /// </summary>
-        MaterialHandle m_materialHandle{};
+        MaterialBindingsHandle m_materialBindingsHandle{};
 
         /// <summary>
         /// The mesh used by boids.

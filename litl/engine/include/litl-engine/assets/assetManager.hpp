@@ -54,8 +54,12 @@ namespace litl
         [[nodiscard]] MaterialAsset* getMaterial(StringId resource) noexcept;
         [[nodiscard]] MaterialAsset* getMaterial(std::string_view resource) noexcept;
         [[nodiscard]] MaterialAsset* getMaterial(MaterialAssetHandle handle) noexcept;
-        [[nodiscard]] MaterialRef getMaterialRef(StringId resource) noexcept;
-        [[nodiscard]] MaterialRef getMaterialRef(std::string_view resource) noexcept;
+        [[nodiscard]] MaterialBinding getMaterialBinding(StringId resource) noexcept;
+        [[nodiscard]] MaterialBinding getMaterialBinding(std::string_view resource) noexcept;
+        [[nodiscard]] MaterialBindingsHandle getSingleMaterialBindings(StringId resource) noexcept;
+        [[nodiscard]] MaterialBindingsHandle getSingleMaterialBindings(std::string_view resource) noexcept;
+        [[nodiscard]] MaterialRef getSingleMaterialRef(StringId resource) noexcept;
+        [[nodiscard]] MaterialRef getSingleMaterialRef(std::string_view resource) noexcept;
 
         [[nodiscard]] MeshAssetHandle getMeshHandle(StringId resource) noexcept;
         [[nodiscard]] MeshAssetHandle getMeshHandle(std::string_view resource) noexcept;

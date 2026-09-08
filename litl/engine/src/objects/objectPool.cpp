@@ -331,7 +331,15 @@ namespace litl
             return {};
         }
 
-        return m_impl->materialBindingsPool.create(bindings);
+        const MaterialBindingsHandle handle = m_impl->materialBindingsPool.create(bindings);
+        MaterialBindings* bindingsPtr = m_impl->materialBindingsPool.get(handle);
+
+        if (bindingsPtr != nullptr)
+        {
+            bindingsPtr->setSelfHandle({}, handle);
+        }
+
+        return handle;
     }
 
     MaterialBindings* ObjectPool::getMaterialBindings(MaterialBindingsHandle handle) noexcept

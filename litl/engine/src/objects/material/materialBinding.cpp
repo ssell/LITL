@@ -17,6 +17,16 @@ namespace litl
         m_bindings.clear();
     }
 
+    void MaterialBindings::setSelfHandle(Authority<ObjectPool> author, MaterialBindingsHandle handle) noexcept
+    {
+        m_handle = handle;
+    }
+
+    MaterialBindingsHandle MaterialBindings::getHandle() const noexcept
+    {
+        return m_handle;
+    }
+
     uint32_t MaterialBindings::getBindingsCount() const noexcept
     {
         return static_cast<uint32_t>(m_bindings.size());
@@ -30,6 +40,11 @@ namespace litl
         }
 
         return m_bindings[index];
+    }
+
+    std::vector<MaterialBinding> const& MaterialBindings::getBindings() const noexcept
+    {
+        return m_bindings;
     }
 
     Material* MaterialBindings::getBoundMaterial(uint32_t index) const noexcept

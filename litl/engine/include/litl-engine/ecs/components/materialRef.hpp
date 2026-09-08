@@ -3,23 +3,15 @@
 
 #include "litl-ecs/register.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
-#include "litl-engine/objects/material/materialPropertySlotId.hpp"
 
 namespace litl
 {
     struct MaterialRef
     {
         /// <summary>
-        /// The versioned handle to the shared Material object.
-        /// This is used in conjunction with the ObjectPool to retrieve a pointer to the Material.
+        /// Handle to an engine-owned MaterialBindings instance that defines which materials are bound to which Mesh submeshes.
         /// </summary>
-        MaterialHandle handle;
-
-        /// <summary>
-        /// The slot that this instance occupies in the shared Material object.
-        /// A slot is obtained by calling Material::allocateSlot.
-        /// </summary>
-        MaterialPropertySlotId slot;
+        MaterialBindingsHandle materialBindingsHandle;
     };
 }
 

@@ -196,7 +196,7 @@ namespace litl
         void createUnloadedMaterialAsset(File const& file, std::string const& key, StringId hashedKey, MappingPriority priority) noexcept
         {
             MaterialAsset asset = createBaseAsset<MaterialAsset>(AssetType::Material, file, key, hashedKey);
-            asset.handle = MaterialHandle{};
+            asset.materialHandle = MaterialHandle{};
             asset.assetOps = &MaterialAssetOps;
 
             assetMap[hashedKey] = AssetMapping{
@@ -223,10 +223,10 @@ namespace litl
 
             asset->status.store(AssetStatus::Loading, std::memory_order_relaxed);
 
-            if (!asset->handle.isValid())
+            if (!asset->materialHandle.isValid())
             {
                 // Ensure there is a valid handle to return to the caller, even if the material itself is not yet ready
-                asset->handle = objectPool->reserveMaterial({}, ObjectDescriptor{ .name = asset->key, .lifetime = ObjectLifetime::Application });
+                asset->materialHandle = objectPool->reserveMaterial({}, ObjectDescriptor{ .name = asset->key, .lifetime = ObjectLifetime::Application });
 
                 if (!fetchAssetObject(asset))
                 {
@@ -608,7 +608,7 @@ namespace litl
         return material;
     }
 
-    MaterialRef AssetManager::getMaterialRef(StringId resource) noexcept
+    MaterialBinding AssetManager::getMaterialBinding(StringId resource) noexcept
     {
         MaterialAsset* materialAsset = getMaterial(resource);
 
@@ -617,12 +617,39 @@ namespace litl
             return {};
         }
 
-        return materialAsset->allocate();
+        return materialAsset->allocateBinding();
     }
 
-    MaterialRef AssetManager::getMaterialRef(std::string_view resource) noexcept
+    MaterialBinding AssetManager::getMaterialBinding(std::string_view resource) noexcept
     {
-        return getMaterialRef(StringId(resource));
+        return getMaterialBinding(StringId(resource));
+    }
+
+    MaterialBindingsHandle AssetManager::getSingleMaterialBindings(StringId resource) noexcept
+    {
+        MaterialAsset* materialAsset = getMaterial(resource);
+
+        if (materialAsset == nullptr)
+        {
+            return {};
+        }
+
+        return materialAsset->singleMaterialsBindingHandle;
+    }
+
+    MaterialBindingsHandle AssetManager::getSingleMaterialBindings(std::string_view resource) noexcept
+    {
+        return getSingleMaterialBindings(StringId(resource));
+    }
+
+    MaterialRef AssetManager::getSingleMaterialRef(StringId resource) noexcept
+    {
+        return MaterialRef{ .materialBindingsHandle = getSingleMaterialBindings(resource) };
+    }
+
+    MaterialRef AssetManager::getSingleMaterialRef(std::string_view resource) noexcept
+    {
+        return MaterialRef{ .materialBindingsHandle = getSingleMaterialBindings(resource) };
     }
 
     // -------------------------------------------------------------------------------------

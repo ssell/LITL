@@ -279,9 +279,9 @@ namespace litl
                     // This sort will group all entities of the same material and mesh together. Example result:
                     //     [(mat0, mesh0), (mat0, mesh0), (mat0, mesh3), (mat1, mesh2), (mat1, mesh2), (mat1, mesh4), (mat2, mesh5)]
 
-                    if (a.materialRef.handle.index != b.materialRef.handle.index)
+                    if (a.materialRef.materialBindingsHandle.index != b.materialRef.materialBindingsHandle.index)
                     {
-                        return (a.materialRef.handle.index < b.materialRef.handle.index);
+                        return (a.materialRef.materialBindingsHandle.index < b.materialRef.materialBindingsHandle.index);
                     }
 
                     return (a.meshRef.handle.index < b.meshRef.handle.index);
@@ -342,20 +342,32 @@ namespace litl
 
             for (auto& renderableEntity : renderableEntities)
             {
-                auto* material = objectPool->getMaterial(renderableEntity.materialRef.handle);
+                auto* materialBindings = objectPool->getMaterialBindings(renderableEntity.materialRef.materialBindingsHandle);
 
-                if (material == nullptr)
+                if (materialBindings == nullptr)
                 {
                     continue;
                 }
 
-                const uint32_t materialIndex = material->getSlotIndex(renderableEntity.materialRef.slot);
+                auto& bindings = materialBindings->getBindings();
 
-                if (materialIndex != Constants::uint32_null_index)
+                for (auto& binding : bindings)
                 {
-                    instanceData.data.emplace_back(
-                        sceneView->getGpuBufferIndex(renderableEntity.entity),
-                        materialIndex);
+                    auto* material = objectPool->getMaterial(binding.handle);
+
+                    if (material == nullptr)
+                    {
+                        continue;
+                    }
+
+                    const uint32_t materialIndex = material->getSlotIndex(binding.slot);
+
+                    if (materialIndex != Constants::uint32_null_index)
+                    {
+                        instanceData.data.emplace_back(
+                            sceneView->getGpuBufferIndex(renderableEntity.entity),
+                            materialIndex);
+                    }
                 }
             }
 

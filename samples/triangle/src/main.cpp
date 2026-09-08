@@ -49,7 +49,7 @@ void bootstrap(ServiceProvider& services, EntityCommands& commands)
     camera->setWorldPosition(vec3{ 0.0f, 0.0f, 0.0f });
     camera->lookAt(vec3{ 0.0f, 0.0f, 5.0f }, vec3::up());
 
-    auto triangleMaterial = assets->getMaterialRef("materials/sampleTriangle");
+    auto triangleMaterial = assets->getSingleMaterialRef("materials/sampleTriangle");
     auto triangleMesh = createTriangleMesh(*objectPool);
 
     createSpinningTriangle(commands, triangleMaterial, triangleMesh, vec3{ 0.0f, -0.35f, 2.0f }, 1.0f);

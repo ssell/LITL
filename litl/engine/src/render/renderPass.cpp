@@ -81,44 +81,10 @@ namespace litl
             renderer->cmdBeginRender(frameCommandBuffer, beginRenderCommand);
             renderer->cmdSetViewportAndScissor(frameCommandBuffer, setViewportScissorCommand);
 
-            if (!entities.empty())
+            if (compileDrawList(entities))
             {
-                // --- Compile Draw List
-
-                /**
-                 * TODO this will need to be reworked more for proper submesh support.
-                 * Currently sorting is done to the render entities in RenderManager based on mesh and material.
-                 * But that assumes only one material per mesh. Once there can be multiple materials per meshes
-                 * we will need to account for that in the sorting.
-                 * 
-                 * DrawListItems will likely need to be compiled in RenderManager and not in the individual pass
-                 * so we are not passing over entities multiple times resolving submeshes/materials.
-                 */
-
-                drawList.clear();
-                drawList.reserve(entities.size());
-
-                if (createDrawListItems(entities[0], 0, drawList))
-                {
-                    auto* currListItem = &drawList.back();
-
-                    for (uint32_t i = 1u; i < static_cast<uint32_t>(entities.size()); ++i)
-                    {
-                        if ((entities[i].materialRef.handle != currListItem->materialHandle) || (entities[i].meshRef.handle != currListItem->meshHandle))
-                        {
-                            drawList.back().instanceCount = i - drawList.back().instanceOffset;
-                            
-                            if (createDrawListItems(entities[i], i, drawList))
-                            {
-                                currListItem = &drawList.back();
-                            }
-                        }
-                    }
-
-                    drawList.back().instanceCount = static_cast<uint32_t>(entities.size()) - drawList.back().instanceOffset;
-                }
-
                 // --- Render
+
                 MaterialHandle currMaterialHandle{};
                 MeshHandle currMeshHandle{};
                 uint32_t currVertexCount = 0u;
@@ -200,42 +166,88 @@ namespace litl
             renderer->submitCommands(frameCommandBuffer);
         }
 
-        [[nodiscard]] bool createDrawListItems(RenderableEntity entity, uint32_t instanceOffset, std::vector<DrawListItem>& drawListItems) noexcept
+        [[nodiscard]] bool compileDrawList(std::vector<RenderableEntity> const& entities) noexcept
+        {
+            drawList.clear();
+
+            if (entities.empty())
+            {
+                return false;
+            }
+
+            std::optional<MeshHandle> currMeshHandle{ std::nullopt };
+            std::optional<MaterialBindingsHandle> currMaterialBindingsHandle{ std::nullopt };
+
+            for (uint32_t i = 0u; i < static_cast<uint32_t>(entities.size()); ++i)
+            {
+                if ((currMeshHandle != std::nullopt) && (currMeshHandle.value() == entities[i].meshRef.handle) &&
+                    (currMaterialBindingsHandle != std::nullopt) && (currMaterialBindingsHandle.value() == entities[i].materialRef.materialBindingsHandle))
+                {
+                    // Same bound mesh and material(s)
+                    continue;
+                }
+
+                if (!drawList.empty())
+                {
+                    drawList.back().instanceCount = i - drawList.back().instanceOffset;
+                }
+
+                createDrawListItems(entities[i], i, drawList, currMeshHandle, currMaterialBindingsHandle);
+            }
+
+            if (drawList.empty())
+            {
+                return false;
+            }
+
+            drawList.back().instanceCount = static_cast<uint32_t>(entities.size()) - drawList.back().instanceOffset;    // Update instance count for the last drawable item
+            return true;
+        }
+
+        void createDrawListItems(RenderableEntity entity, uint32_t instanceOffset, std::vector<DrawListItem>& drawListItems, std::optional<MeshHandle>& currMeshHandle, std::optional<MaterialBindingsHandle>& currMaterialBindingsHandle) noexcept
         {
             auto* mesh = objectPool->getMesh(entity.meshRef.handle);
 
             if (mesh == nullptr)
             {
-                return false;
+                return;
             }
 
             auto& meshDescriptor = mesh->getDescriptor();
 
             if (entity.firstIndex >= meshDescriptor.indexInfo.indexCount)
             {
-                return false;
+                return;
             }
 
-            if (auto* material = objectPool->getMaterial(entity.materialRef.handle); material != nullptr)
+            if (auto* materialBindings = objectPool->getMaterialBindings(entity.materialRef.materialBindingsHandle); materialBindings != nullptr)
             {
-                drawListItems.push_back(DrawListItem{
-                    .materialHandle = entity.materialRef.handle,
-                    .material = material,
-                    .graphicsPipelineHandle = material->getGraphicsPipelineHandle(),
-                    .meshHandle = entity.meshRef.handle,
-                    .mesh = mesh,
-                    .firstVertex = 0u,
-                    .vertexCount = meshDescriptor.vertexInfo.vertexCount,
-                    .firstIndex = entity.firstIndex,
-                    .indexCount = litl::min(entity.indexCount, meshDescriptor.indexInfo.indexCount - entity.firstIndex),
-                    .instanceCount = 0u,
-                    .instanceOffset = instanceOffset
-                });
+                const auto& submeshes = mesh->getGeoMesh().getSubmeshes();
 
-                return true;
+                for (uint32_t i = 0u; (i < static_cast<uint32_t>(submeshes.size())) && (i < materialBindings->getBindingsCount()); ++i)
+                {
+                    if (auto* material = materialBindings->getBoundMaterial(i); material != nullptr)
+                    {
+                        drawListItems.push_back(DrawListItem{
+                            .materialHandle = material->getHandle(),
+                            .material = material,
+                            .graphicsPipelineHandle = material->getGraphicsPipelineHandle(),
+                            .meshHandle = entity.meshRef.handle,
+                            .mesh = mesh,
+                            .firstVertex = 0u,
+                            .vertexCount = meshDescriptor.vertexInfo.vertexCount,
+                            .firstIndex = entity.firstIndex,
+                            .indexCount = litl::min(entity.indexCount, meshDescriptor.indexInfo.indexCount - entity.firstIndex),
+                            .instanceCount = 0u,
+                            .instanceOffset = instanceOffset
+                        });
+
+                        // Only update current handles on successful object retrievals and subsequent DrawListItem creation.
+                        currMeshHandle = entity.meshRef.handle;
+                        currMaterialBindingsHandle = entity.materialRef.materialBindingsHandle;
+                    }
+                }
             }
-
-            return false;
         }
     };
 

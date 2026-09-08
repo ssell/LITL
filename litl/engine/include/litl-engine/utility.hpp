@@ -47,7 +47,7 @@ namespace litl
 
     /// <summary>
     /// Creates a new entity and attaches to it the minimal components needed for it to be rendered.
-    /// This consists of: Transform, MeshRef, MaterialRef, and LocalBounds.
+    /// This consists of: Transform, MeshRef, MaterialRef (with a single material), and LocalBounds.
     /// </summary>
     inline DeferredEntity createRenderable(vec3 position, StringId mesh, StringId material, EntityCommands& commands, AssetManager& assets) noexcept
     {
@@ -60,8 +60,14 @@ namespace litl
             commands.addComponent<LocalBounds>(entity, LocalBounds{ .bounds = meshAsset->mesh->getBounds() });
         }
 
+        auto* materialAsset = assets.getMaterial(material);
+
+        if (materialAsset != nullptr)
+        {
+            commands.addComponent<MaterialRef>(entity, materialAsset->getSingleMaterialRef());
+        }
+
         commands.addComponent<Transform>(entity, Transform::create(position));
-        commands.addComponent<MaterialRef>(entity, assets.getMaterialRef(material));
 
         return entity;
     }
