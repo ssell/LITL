@@ -103,7 +103,7 @@ namespace litl
 
                     for (uint32_t i = 1u; i < static_cast<uint32_t>(entities.size()); ++i)
                     {
-                        if ((entities[i].material.handle != currListItem.materialHandle) || (entities[i].mesh.handle != currListItem.meshHandle))
+                        if ((entities[i].materialRef.handle != currListItem.materialHandle) || (entities[i].meshRef.handle != currListItem.meshHandle))
                         {
                             drawList.back().instanceCount = i - drawList.back().instanceOffset;
                             
@@ -126,7 +126,9 @@ namespace litl
                 {
                     if (!drawListItem.graphicsPipelineHandle.isValid() ||
                          drawListItem.vertexCount == 0u ||
-                         drawListItem.indexCount == 0u)
+                         drawListItem.indexCount == 0u ||
+                         drawListItem.mesh == nullptr || 
+                         drawListItem.material == nullptr)
                     {
                         continue;
                     }
@@ -199,31 +201,26 @@ namespace litl
 
         [[nodiscard]] bool createDrawListItems(RenderableEntity entity, uint32_t instanceOffset, std::vector<DrawListItem>& drawListItems) noexcept
         {
-            auto* mesh = objectPool->getMesh(entity.mesh.handle);
+            auto* mesh = objectPool->getMesh(entity.meshRef.handle);
             auto& meshDescriptor = mesh->getDescriptor();
 
-            if (auto* material = objectPool->getMaterial(entity.material.handle); material != nullptr)
+            if (entity.materialRef.handle.isValid() && entity.materialRef.slot.isValid())
             {
-                auto const& submeshes = mesh->getGeoMesh().getSubmeshes();
-
-                if (!submeshes.empty())
+                if (auto* material = objectPool->getMaterial(entity.materialRef.handle); material != nullptr)
                 {
-                    for (auto& submesh : submeshes)
-                    {
-                        drawListItems.push_back(DrawListItem{
-                            .materialHandle = entity.material.handle,
-                            .material = material,
-                            .graphicsPipelineHandle = material->getGraphicsPipelineHandle(),
-                            .meshHandle = entity.mesh.handle,
-                            .mesh = mesh,
-                            .firstVertex = 0u,
-                            .vertexCount = meshDescriptor.vertexInfo.vertexCount,
-                            .firstIndex = submesh.firstIndex,
-                            .indexCount = submesh.indexCount,
-                            .instanceCount = 0u,
-                            .instanceOffset = instanceOffset
-                            });
-                    }
+                    drawListItems.push_back(DrawListItem{
+                        .materialHandle = entity.materialRef.handle,
+                        .material = material,
+                        .graphicsPipelineHandle = material->getGraphicsPipelineHandle(),
+                        .meshHandle = entity.meshRef.handle,
+                        .mesh = mesh,
+                        .firstVertex = 0u,
+                        .vertexCount = meshDescriptor.vertexInfo.vertexCount,
+                        .firstIndex = entity.firstIndex,
+                        .indexCount = litl::min(entity.indexCount, meshDescriptor.indexInfo.indexCount - entity.firstIndex),
+                        .instanceCount = 0u,
+                        .instanceOffset = instanceOffset
+                    });
 
                     return true;
                 }

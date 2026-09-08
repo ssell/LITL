@@ -279,12 +279,12 @@ namespace litl
                     // This sort will group all entities of the same material and mesh together. Example result:
                     //     [(mat0, mesh0), (mat0, mesh0), (mat0, mesh3), (mat1, mesh2), (mat1, mesh2), (mat1, mesh4), (mat2, mesh5)]
 
-                    if (a.material.handle.index != b.material.handle.index)
+                    if (a.materialRef.handle.index != b.materialRef.handle.index)
                     {
-                        return (a.material.handle.index < b.material.handle.index);
+                        return (a.materialRef.handle.index < b.materialRef.handle.index);
                     }
 
-                    return (a.mesh.handle.index < b.mesh.handle.index);
+                    return (a.meshRef.handle.index < b.meshRef.handle.index);
                 });
             }
         }
@@ -342,14 +342,14 @@ namespace litl
 
             for (auto& renderableEntity : renderableEntities)
             {
-                auto* material = objectPool->getMaterial(renderableEntity.material.handle);
+                auto* material = objectPool->getMaterial(renderableEntity.materialRef.handle);
 
                 if (material == nullptr)
                 {
                     continue;
                 }
 
-                const uint32_t materialIndex = material->getSlotIndex(renderableEntity.material.slot);
+                const uint32_t materialIndex = material->getSlotIndex(renderableEntity.materialRef.slot);
 
                 if (materialIndex != Constants::uint32_null_index)
                 {

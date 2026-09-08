@@ -72,10 +72,10 @@ namespace litl
         }
         else
         {
-            const uint32_t startIndex = registry.entityRecords.size();
-            const uint32_t endIndex = startIndex + count;
+            const uint32_t firstIndex = registry.entityRecords.size();
+            const uint32_t endIndex = firstIndex + count;
 
-            for (auto index = startIndex; index < endIndex; ++index)
+            for (auto index = firstIndex; index < endIndex; ++index)
             {
                 registry.entityRecords.emplace_back(
                     Entity{

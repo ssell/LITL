@@ -102,9 +102,9 @@ namespace litl
         }
     }
 
-    void CullingSystem::update(SystemData const& data, Entity entity, Transform const& transform, MeshRef const& mesh, MaterialRef const& materialRef)
+    void CullingSystem::update(SystemData const& data, Entity entity, Transform const& transform, MeshRef const& meshRef, MaterialRef const& materialRef)
     {
-        if (!mesh.handle.isValid() || !materialRef.handle.isValid())
+        if (!meshRef.handle.isValid() || !materialRef.handle.isValid())
         {
             return;
         }
@@ -122,9 +122,10 @@ namespace litl
                 // We are visible to this camera, add to our thread-specific culling bucket.
                 s_cullingBuckets[data.threadIndex].cameraRenderableEntities[cameraIndex].entities.push_back(RenderableEntity{
                     .entity = entity,
-                    .transform = transform,
-                    .mesh = mesh,
-                    .material = materialRef
+                    .meshRef = meshRef,
+                    .materialRef = materialRef,
+                    .firstIndex = 0u,                                   // Use of a MaterialRef indicates that the entire mesh is drawn with the same material.
+                    .indexCount = Constants::uint32_null_index 
                 });
             }
         }
