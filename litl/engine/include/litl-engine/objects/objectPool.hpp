@@ -7,6 +7,7 @@
 #include "litl-engine/objects/camera.hpp"
 #include "litl-engine/objects/gpuBuffer.hpp"
 #include "litl-engine/objects/material/material.hpp"
+#include "litl-engine/objects/material/materialBinding.hpp"
 #include "litl-engine/objects/mesh.hpp"
 #include "litl-engine/objects/shader.hpp"
 #include "litl-engine/objects/text.hpp"
@@ -48,6 +49,11 @@ namespace litl
         void getAllMaterialHandles(std::vector<MaterialHandle>& handles) const noexcept;
         void destroyMaterial(MaterialHandle handle) noexcept;
         void deferDestroyMaterial(MaterialHandle handle) noexcept;
+
+        [[nodiscard]] MaterialBindingsHandle createMaterialBindings(MaterialBindingsDescriptor const& descriptor) noexcept;
+        MaterialBindings* getMaterialBindings(MaterialBindingsHandle handle) noexcept;
+        void getAllMaterialBindingsHandles(std::vector<MaterialBindingsHandle>& handles) noexcept;
+        void destroyMaterialBindings(MaterialBindingsHandle handle) noexcept;
 
         [[nodiscard]] MeshHandle reserveMesh(Authority<AssetManager> auth, ObjectDescriptor const& descriptor) noexcept;
         [[nodiscard]] MeshHandle createMesh(MeshDescriptor const& descriptor) noexcept;

@@ -96,20 +96,21 @@ namespace litl
                  */
 
                 drawList.clear();
+                drawList.reserve(entities.size());
 
                 if (createDrawListItems(entities[0], 0, drawList))
                 {
-                    auto& currListItem = drawList.back();
+                    auto* currListItem = &drawList.back();
 
                     for (uint32_t i = 1u; i < static_cast<uint32_t>(entities.size()); ++i)
                     {
-                        if ((entities[i].materialRef.handle != currListItem.materialHandle) || (entities[i].meshRef.handle != currListItem.meshHandle))
+                        if ((entities[i].materialRef.handle != currListItem->materialHandle) || (entities[i].meshRef.handle != currListItem->meshHandle))
                         {
                             drawList.back().instanceCount = i - drawList.back().instanceOffset;
                             
                             if (createDrawListItems(entities[i], i, drawList))
                             {
-                                currListItem = drawList.back();
+                                currListItem = &drawList.back();
                             }
                         }
                     }
@@ -202,28 +203,36 @@ namespace litl
         [[nodiscard]] bool createDrawListItems(RenderableEntity entity, uint32_t instanceOffset, std::vector<DrawListItem>& drawListItems) noexcept
         {
             auto* mesh = objectPool->getMesh(entity.meshRef.handle);
+
+            if (mesh == nullptr)
+            {
+                return false;
+            }
+
             auto& meshDescriptor = mesh->getDescriptor();
 
-            if (entity.materialRef.handle.isValid() && entity.materialRef.slot.isValid())
+            if (entity.firstIndex >= meshDescriptor.indexInfo.indexCount)
             {
-                if (auto* material = objectPool->getMaterial(entity.materialRef.handle); material != nullptr)
-                {
-                    drawListItems.push_back(DrawListItem{
-                        .materialHandle = entity.materialRef.handle,
-                        .material = material,
-                        .graphicsPipelineHandle = material->getGraphicsPipelineHandle(),
-                        .meshHandle = entity.meshRef.handle,
-                        .mesh = mesh,
-                        .firstVertex = 0u,
-                        .vertexCount = meshDescriptor.vertexInfo.vertexCount,
-                        .firstIndex = entity.firstIndex,
-                        .indexCount = litl::min(entity.indexCount, meshDescriptor.indexInfo.indexCount - entity.firstIndex),
-                        .instanceCount = 0u,
-                        .instanceOffset = instanceOffset
-                    });
+                return false;
+            }
 
-                    return true;
-                }
+            if (auto* material = objectPool->getMaterial(entity.materialRef.handle); material != nullptr)
+            {
+                drawListItems.push_back(DrawListItem{
+                    .materialHandle = entity.materialRef.handle,
+                    .material = material,
+                    .graphicsPipelineHandle = material->getGraphicsPipelineHandle(),
+                    .meshHandle = entity.meshRef.handle,
+                    .mesh = mesh,
+                    .firstVertex = 0u,
+                    .vertexCount = meshDescriptor.vertexInfo.vertexCount,
+                    .firstIndex = entity.firstIndex,
+                    .indexCount = litl::min(entity.indexCount, meshDescriptor.indexInfo.indexCount - entity.firstIndex),
+                    .instanceCount = 0u,
+                    .instanceOffset = instanceOffset
+                });
+
+                return true;
             }
 
             return false;

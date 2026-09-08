@@ -22,6 +22,7 @@ namespace litl
         HandlePool<Camera, CameraHandleTag> cameraPool;
         HandlePool<GpuBuffer, GpuBufferHandleTag> gpuBufferPool;
         HandlePool<Material, MaterialHandleTag> materialPool;
+        HandlePool<MaterialBindings, MaterialBindingsHandleTag> materialBindingsPool;
         HandlePool<Mesh, MeshHandleTag> meshPool;
         HandlePool<Shader, ShaderHandleTag> shaderPool;
         HandlePool<Text, TextHandleTag> textPool;
@@ -77,6 +78,18 @@ namespace litl
         for (auto cameraHandle : cameraHandles)
         {
             destroyCamera(cameraHandle);
+        }
+
+        // ---- Material Bindings
+
+        std::vector<MaterialBindingsHandle> materialBindingsHandles;
+        getAllMaterialBindingsHandles(materialBindingsHandles);
+
+        logTrace("... destroying ", materialBindingsHandles.size(), " Material Bindings handles.");
+
+        for (auto materialBindingsHandle : materialBindingsHandles)
+        {
+            destroyMaterialBindings(materialBindingsHandle);
         }
 
         // ---- Materials
@@ -301,6 +314,45 @@ namespace litl
     void ObjectPool::deferDestroyMaterial(MaterialHandle handle) noexcept
     {
         // ... todo add to a defer destruction queue that is ticked and destroy on a later frame to ensure the resource is not in use by the GPU ...
+    }
+
+    //--------------------------------------------------------------------------------------
+    // Material Bindings
+    //--------------------------------------------------------------------------------------
+
+    [[nodiscard]] MaterialBindingsHandle ObjectPool::createMaterialBindings(MaterialBindingsDescriptor const& descriptor) noexcept
+    {
+        MaterialBindings bindings{};
+
+        if (!bindings.create({}, *this, descriptor))
+        {
+            logWarning("Failed to reserve Material Bindings '", descriptor.objectInfo.name, "'");
+            bindings.destroy({});
+            return {};
+        }
+
+        return m_impl->materialBindingsPool.create(bindings);
+    }
+
+    MaterialBindings* ObjectPool::getMaterialBindings(MaterialBindingsHandle handle) noexcept
+    {
+        return m_impl->materialBindingsPool.get(handle);
+    }
+
+    void ObjectPool::getAllMaterialBindingsHandles(std::vector<MaterialBindingsHandle>& handles) noexcept
+    {
+        m_impl->materialBindingsPool.getAllHandles(handles);
+    }
+
+    void ObjectPool::destroyMaterialBindings(MaterialBindingsHandle handle) noexcept
+    {
+        MaterialBindings* binding = getMaterialBindings(handle);
+
+        if (binding != nullptr)
+        {
+            binding->destroy({});
+            m_impl->materialBindingsPool.destroy(handle);
+        }
     }
 
     //--------------------------------------------------------------------------------------

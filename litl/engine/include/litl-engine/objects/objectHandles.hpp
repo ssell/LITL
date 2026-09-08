@@ -11,6 +11,9 @@ namespace litl
     struct GpuBufferHandleTag {};
     using GpuBufferHandle = Handle<GpuBufferHandleTag>;
 
+    struct MaterialBindingsHandleTag {};
+    using MaterialBindingsHandle = Handle<MaterialBindingsHandleTag>;
+
     struct MaterialHandleTag {};
     using MaterialHandle = Handle<MaterialHandleTag>;
 
@@ -30,6 +33,7 @@ namespace litl
 // Make the handles compatible with standard library hash maps (std::map, std:unordered_map, etc.)
 LITL_STD_HASH_HANDLE(litl::CameraHandleTag);
 LITL_STD_HASH_HANDLE(litl::GpuBufferHandleTag);
+LITL_STD_HASH_HANDLE(litl::MaterialBindingsHandleTag);
 LITL_STD_HASH_HANDLE(litl::MaterialHandle);
 LITL_STD_HASH_HANDLE(litl::MeshHandleTag);
 LITL_STD_HASH_HANDLE(litl::ShaderHandleTag);
