@@ -20,7 +20,7 @@ add_library(litl-import STATIC
 	"src/shader/import/spirv.cpp" 
 	"src/shader/import/slang.cpp" 
 	"src/shader/intermediate/litlbshd.cpp" 
-	"src/shader/intermediate/shaderIntermediateData.cpp" "src/model/export/modelExporter.cpp" "src/model/import/obj.cpp" "src/model/intermediate/modelIntermediateData.cpp" "src/model/intermediate/litlbmdl.cpp")
+	"src/shader/intermediate/shaderIntermediateData.cpp" "src/model/export/modelExporter.cpp" "src/model/import/obj.cpp" "src/model/intermediate/modelIntermediateData.cpp" "src/model/intermediate/litlmdl.cpp")
 
 target_include_directories(litl-import
 	PUBLIC

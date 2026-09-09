@@ -12,6 +12,9 @@ namespace litl
     struct MeshAssetHandleTag {};
     using MeshAssetHandle = Handle<MeshAssetHandleTag>;
 
+    struct ModelAssetHandleTag {};
+    using ModelAssetHandle = Handle<ModelAssetHandleTag>;
+
     struct ShaderAssetHandleTag {};
     using ShaderAssetHandle = Handle<ShaderAssetHandleTag>;
 
@@ -27,6 +30,7 @@ namespace litl
         {
             MaterialAssetHandle materialHandle;
             MeshAssetHandle meshHandle;
+            ModelAssetHandle modelHandle;
             ShaderAssetHandle shaderHandle;
             TextAssetHandle textHandle;
             Texture2DAssetHandle texture2DHandle;

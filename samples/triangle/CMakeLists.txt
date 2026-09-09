@@ -18,6 +18,6 @@ target_compile_definitions(litl-samples-triangle PRIVATE $<$<CONFIG:Debug>:DEBUG
 # Copy the samples asset directory
 add_custom_command(TARGET litl-samples-triangle POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory
-			"${CMAKE_CURRENT_SOURCE_DIR}/assets"
-			$<TARGET_FILE_DIR:litl-samples-triangle>/assets
+		"${CMAKE_CURRENT_SOURCE_DIR}/assets"
+		$<TARGET_FILE_DIR:litl-samples-triangle>/assets
 )

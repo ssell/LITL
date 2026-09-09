@@ -194,38 +194,40 @@ namespace litl::import
             return Result::Error(ErrorType::ImporterEmptyResult);
         }
 
-        importedData.items.push_back({});
-        auto& dataItem = importedData.items.back();
-
-        if (!dataItem.setType(ImportedDataType::Mesh))
-        {
-            return Result::Error(ErrorType::ImporterFailed, "Failed to create mesh import data.");
-        }
-
-        auto* mesh = dataItem.getDataPtr<MeshImportResult>();
-
         for (uint32_t i = 0u; i < static_cast<uint32_t>(objResult.shapes.size()); ++i)
         {
-            if (objResult.shapes[i].mesh.indices.empty())
+            auto& shape = objResult.shapes[i];
+
+            if (shape.mesh.indices.empty())
             {
                 continue;
             }
 
+            importedData.items.push_back({});
+            auto& dataItem = importedData.items.back();
+
+            if (!dataItem.setType(ImportedDataType::Mesh))
+            {
+                return Result::Error(ErrorType::ImporterFailed, "Failed to create mesh import data.");
+            }
+
+            auto* mesh = dataItem.getDataPtr<MeshImportResult>();
+
             mesh->meshes.push_back(std::make_unique<GeoMesh>());
             auto* litlMesh = mesh->meshes.back().get();
-            auto& objMesh = objResult.shapes[i].mesh;
+            auto& objMesh = shape.mesh;
 
             convertToLitlMesh(litlMesh, objMesh, objResult.attributes);
 
             mesh->summary.meshCount += 1u;
             mesh->summary.vertexCount += static_cast<uint32_t>(litlMesh->vertexCount());
             mesh->summary.indexCount += static_cast<uint32_t>(litlMesh->indexCount());
-        }
 
-        // OBJ itself does not enforce these, but it is a widely adopted convention that is (likely) safe to assume.
-        mesh->importConvention.sourceIsRightHanded = true;
-        mesh->importConvention.sourceIsCcwFront = true;
-        mesh->importConvention.flipTexcoordV = true;
+            // OBJ itself does not enforce these, but it is a widely adopted convention that is (likely) safe to assume.
+            mesh->importConvention.sourceIsRightHanded = true;
+            mesh->importConvention.sourceIsCcwFront = true;
+            mesh->importConvention.flipTexcoordV = true;
+        }
 
         return Result::Success();
     }

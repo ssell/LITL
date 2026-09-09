@@ -11,6 +11,7 @@
 #include "litl-engine/assets/assetHandle.hpp"
 #include "litl-engine/assets/materialAsset.hpp"
 #include "litl-engine/assets/meshAsset.hpp"
+#include "litl-engine/assets/modelAsset.hpp"
 #include "litl-engine/assets/shaderAsset.hpp"
 #include "litl-engine/assets/textAsset.hpp"
 #include "litl-engine/assets/texture2dAsset.hpp"
@@ -63,6 +64,12 @@ namespace litl
         [[nodiscard]] MeshRef getMeshRef(StringId resource) noexcept;
         [[nodiscard]] MeshRef getMeshRef(std::string_view resource) noexcept;
 
+        [[nodiscard]] ModelAssetHandle getModelHandle(StringId resource) noexcept;
+        [[nodiscard]] ModelAssetHandle getModelHandle(std::string_view resource) noexcept;
+        [[nodiscard]] ModelAsset* getModel(StringId resource) noexcept;
+        [[nodiscard]] ModelAsset* getModel(std::string_view resource) noexcept;
+        [[nodiscard]] ModelAsset* getModel(ModelAssetHandle handle) noexcept;
+
         [[nodiscard]] ShaderAssetHandle getShaderHandle(StringId resource) noexcept;
         [[nodiscard]] ShaderAssetHandle getShaderHandle(std::string_view resource) noexcept;
         [[nodiscard]] ShaderAsset* getShader(StringId resource) noexcept;
@@ -84,7 +91,7 @@ namespace litl
     private:
 
         struct Impl;
-        ImplPtr<Impl, 800u> m_impl;
+        ImplPtr<Impl, 848u> m_impl;
     };
 }
 

@@ -151,40 +151,6 @@ namespace litl
                 }
             }
         }
-        /*
-        auto& properties = materialAsset->materialIntermediateData->getProperties();
-
-        for (auto& property : properties)
-        {
-            if ((property.type == import::LitlMatPropertyType::Texture2D) || (property.type == import::LitlMatPropertyType::Texture3D))
-            {
-                auto* textureResource = std::get_if<std::string>(&property.value);
-
-                if (textureResource != nullptr)
-                {
-                    if (property.type == import::LitlMatPropertyType::Texture2D)
-                    {
-                        auto texture2DHandle = assetManager.getTexture2DHandle(*textureResource);
-                        auto* texture2DAsset = assetManager.getTexture2D(texture2DHandle);
-
-                        if (texture2DAsset != nullptr)
-                        {
-                            dependencies.push_back(texture2DAsset);
-
-                            materialAsset->materialDependencies.push_back(MaterialAssetDependency{
-                                .type = AssetType::Texture2D,
-                                .handle = texture2DHandle
-                            });
-                        }
-                    }
-                    else if (property.type == import::LitlMatPropertyType::Texture3D)
-                    {
-                        // ... todo add Texture3DAsset support ...
-                    }
-                }
-            }
-        }
-        */
 
         return true;
     }

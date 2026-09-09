@@ -12,7 +12,8 @@ namespace litl
         Mesh = 2u,
         Shader = 3u,
         Text = 4u,
-        Texture2D = 5u
+        Texture2D = 5u,
+        Model = 6u
     };
 }
 

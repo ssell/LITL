@@ -45,9 +45,12 @@ namespace litl
             // Mesh
             { ".litlbmsh"_sid, { MappingPriority::High, AssetType::Mesh } },
             { ".glb"_sid, { MappingPriority::Medium, AssetType::Mesh } },
-            { ".obj"_sid, { MappingPriority::Low, AssetType::Mesh } },
             { ".fbx"_sid, { MappingPriority::Low, AssetType::Mesh } },
             { ".gltf"_sid, { MappingPriority::Low, AssetType::Mesh } },
+
+            // Model
+            { ".litlmdl"_sid, { MappingPriority::High, AssetType::Model } },
+            { ".obj"_sid, { MappingPriority::Low, AssetType::Model } },
 
             // Shader Module
             { ".litlbshd"_sid, { MappingPriority::High, AssetType::Shader } },
@@ -76,6 +79,7 @@ namespace litl
 
         HandlePool<MaterialAsset, MaterialAssetHandleTag> materialAssetPool;
         HandlePool<MeshAsset, MeshAssetHandleTag> meshAssetPool;
+        HandlePool<ModelAsset, ModelAssetHandleTag> modelAssetPool;
         HandlePool<TextAsset, TextAssetHandleTag> textAssetPool;
         HandlePool<ShaderAsset, ShaderAssetHandleTag> shaderAssetPool;
         HandlePool<Texture2DAsset, Texture2DAssetHandleTag> texture2DAssetPool;
@@ -127,6 +131,10 @@ namespace litl
 
                         case AssetType::Mesh:
                             createUnloadedMeshAsset(file, assetKey, hashedKey, assetFileType->second.priority);
+                            break;
+
+                        case AssetType::Model:
+                            createUnloadedModelAsset(file, assetKey, hashedKey, assetFileType->second.priority);
                             break;
 
                         case AssetType::Shader:
@@ -286,6 +294,37 @@ namespace litl
                 }
             }
 
+            taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
+        }
+
+        // ---------------------------------------------------------------------------------
+        // --- Model Asset
+        // ---------------------------------------------------------------------------------
+
+        void createUnloadedModelAsset(File const& file, std::string const& key, StringId hashedKey, MappingPriority priority) noexcept
+        {
+            ModelAsset asset = createBaseAsset<ModelAsset>(AssetType::Model, file, key, hashedKey);
+            asset.assetOps = &ModelAssetOps;
+
+            assetMap[hashedKey] = AssetMapping{
+                .priority = priority,
+                .handle = AssetHandle {
+                    .modelHandle = modelAssetPool.create(asset),
+                    .type = asset.type
+                }
+            };
+        }
+
+        void initiateModelAssetLoad(ModelAsset* asset, AssetManager& assetManager) noexcept
+        {
+            std::scoped_lock lock{ assetLoadMutex };
+
+            if (asset->status.load(std::memory_order_relaxed) != AssetStatus::Unloaded)
+            {
+                return;
+            }
+
+            asset->status.store(AssetStatus::Loading, std::memory_order_relaxed);
             taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
         }
 
@@ -616,12 +655,12 @@ namespace litl
     {
         auto assetHandle = getAsset(resource);
 
-        if (assetHandle.type == AssetType::Mesh)
+        if (assetHandle.type != AssetType::Mesh)
         {
-            return assetHandle.meshHandle;
+            return {};
         }
 
-        return {};
+        return assetHandle.meshHandle;
     }
 
     MeshAssetHandle AssetManager::getMeshHandle(std::string_view resource) noexcept
@@ -675,6 +714,55 @@ namespace litl
     }
 
     // -------------------------------------------------------------------------------------
+    // --- Get Model
+    // -------------------------------------------------------------------------------------
+
+    ModelAssetHandle AssetManager::getModelHandle(StringId resource) noexcept
+    {
+        auto assetHandle = getAsset(resource);
+
+        if (assetHandle.type != AssetType::Model)
+        {
+            return {};
+        }
+
+        return assetHandle.modelHandle;
+    }
+
+    ModelAssetHandle AssetManager::getModelHandle(std::string_view resource) noexcept
+    {
+        return getModelHandle(StringId(resource));
+    }
+
+    ModelAsset* AssetManager::getModel(StringId resource) noexcept
+    {
+        auto handle = getModelHandle(resource);
+        return getModel(handle);
+    }
+
+    ModelAsset* AssetManager::getModel(std::string_view resource) noexcept
+    {
+        return getModel(StringId(resource));
+    }
+
+    ModelAsset* AssetManager::getModel(ModelAssetHandle handle) noexcept
+    {
+        ModelAsset* model = m_impl->modelAssetPool.get(handle);
+
+        if (model == nullptr)
+        {
+            return nullptr;
+        }
+
+        if (model->status.load(std::memory_order_relaxed) == AssetStatus::Unloaded)
+        {
+            m_impl->initiateModelAssetLoad(model, *this);
+        }
+
+        return model;
+    }
+
+    // -------------------------------------------------------------------------------------
     // --- Get Shader Module
     // -------------------------------------------------------------------------------------
 
@@ -682,12 +770,12 @@ namespace litl
     {
         auto assetHandle = getAsset(resource);
 
-        if (assetHandle.type == AssetType::Shader)
+        if (assetHandle.type != AssetType::Shader)
         {
-            return assetHandle.shaderHandle;
+            return {};
         }
 
-        return {};
+        return assetHandle.shaderHandle;
     }
 
     ShaderAssetHandle AssetManager::getShaderHandle(std::string_view resource) noexcept
@@ -731,12 +819,12 @@ namespace litl
     {
         auto assetHandle = getAsset(resource);
 
-        if (assetHandle.type == AssetType::Text)
+        if (assetHandle.type != AssetType::Text)
         {
-            return assetHandle.textHandle;
+            return {};
         }
 
-        return {};
+        return assetHandle.textHandle;
     }
 
     TextAssetHandle AssetManager::getTextHandle(std::string_view resource) noexcept
@@ -780,12 +868,12 @@ namespace litl
     {
         auto assetHandle = getAsset(resource);
 
-        if (assetHandle.type == AssetType::Texture2D)
+        if (assetHandle.type != AssetType::Texture2D)
         {
-            return assetHandle.texture2DHandle;
+            return {};
         }
 
-        return {};
+        return assetHandle.texture2DHandle;
     }
 
     Texture2DAssetHandle AssetManager::getTexture2DHandle(std::string_view resource) noexcept
