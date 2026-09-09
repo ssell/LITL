@@ -133,8 +133,19 @@ namespace litl
 
     std::byte const* Chunk::getComponentArray(ChunkLayout const& layout, ComponentTypeId componentTypeId) const
     {
+        auto* componentArray = tryGetComponentArray(layout, componentTypeId);
+        LITL_FATAL_ASSERT(componentArray != nullptr);
+        return componentArray;
+    }
+
+    std::byte const* Chunk::tryGetComponentArray(ChunkLayout const& layout, ComponentTypeId componentTypeId) const
+    {
         uint32_t componentIndex = layout.getComponentIndex(componentTypeId);
-        assert(componentIndex < ecs::Constants::max_components);
+
+        if (componentIndex >= ecs::Constants::max_components)
+        {
+            return nullptr;
+        }
 
         return &(m_data[layout.componentOffsets[componentIndex]]);
     }

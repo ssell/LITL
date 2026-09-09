@@ -4,6 +4,7 @@
 #include <concepts>
 #include <cstdint>
 #include <tuple>
+#include <type_traits>
 #include <vector>
 
 #include "litl-core/traits.hpp"
@@ -17,11 +18,23 @@ namespace litl
     class EntityCommands;
 
     /// <summary>
+    /// Wraps a component to flag that it should not be in any iterable archetypes.
+    /// </summary>
+    template<ValidComponentType C> struct Without {};
+
+    template<typename> struct IsWithout : std::false_type {};
+    template<typename C> struct IsWithout<Without<C>> : std::true_type {};
+
+    /// <summary>
     /// A component type as it may appear inside a System::update parameter.
     /// Deliberately rejects cv-qualified C so that each parameter spelling has exactly one viable specialization below (no reliance on partial ordering).
+    /// Additionally rejects any 'Without<C>' wrapper as Without itself is a valid component as per ValidComponentType constraints.
     /// </summary>
     template<typename C>
-    concept SystemComponentType = ValidComponentType<C> && std::same_as<C, std::remove_cv_t<C>>;
+    concept SystemComponentType = 
+        ValidComponentType<C> && 
+        std::same_as<C, std::remove_cv_t<C>> &&
+        !IsWithout<C>::value;
 
     enum class ComponentAccessType : uint8_t
     {
@@ -49,7 +62,6 @@ namespace litl
     /// A non-const reference parameter. For example `Foo& foo`.
     /// These are writable components required by the system.
     /// </summary>
-    /// <typeparam name="C"></typeparam>
     template<SystemComponentType C>
     struct SystemParamTraits<C&>
     {
@@ -68,7 +80,6 @@ namespace litl
     /// A const reference parameter. For example `Foo const& foo`.
     /// These are read-only components required by the system.
     /// </summary>
-    /// <typeparam name="C"></typeparam>
     template<SystemComponentType C>
     struct SystemParamTraits<C const&>
     {
@@ -87,7 +98,6 @@ namespace litl
     /// A non-const pointer parameter. For example `Foo* foo`.
     /// These are writable components that are optional for the system to run.
     /// </summary>
-    /// <typeparam name="C"></typeparam>
     template<SystemComponentType C>
     struct SystemParamTraits<C*>
     {
@@ -106,7 +116,6 @@ namespace litl
     /// A const pointer parameter. For example `Foo const* foo`.
     /// These are read-only components that are optional for the system to run.
     /// </summary>
-    /// <typeparam name="C"></typeparam>
     template<SystemComponentType C>
     struct SystemParamTraits<C const*>
     {
@@ -118,6 +127,23 @@ namespace litl
         static C const* bind(C* column, uint32_t index) noexcept
         {
             return (column ? column + index : nullptr);
+        }
+    };
+
+    /// <summary>
+    /// Indicates that the system will not run over any archetypes that the specified component.
+    /// </summary>
+    template<SystemComponentType C>
+    struct SystemParamTraits<Without<C>>
+    {
+        static constexpr bool valid = true;
+        using ComponentType = C;
+        static constexpr auto arity = ComponentArity::Excluded;
+        // Exclusion of `access` is intentional. An excluded component is never read or written.
+
+        static Without<C> bind(C*, uint32_t) noexcept 
+        {
+            return {};
         }
     };
 
@@ -252,46 +278,96 @@ namespace litl
     struct SystemComponentsTupleOperations<std::tuple<ComponentTypes...>>
     {
         /// <summary>
-        /// Returns a std::tuple of the plain component types expected by the system ::update method.
+        /// Returns a vector of the plain component types required by the system ::update method.
         /// For example `update(SystemData const&, Entity, Foo&, Bar const&)` would return `[Foo, Bar]`
         /// </summary>
-        /// <returns></returns>
-        static auto extractComponentIds()
+        static std::vector<ComponentTypeId> extractRequiredComponentIds()
         {
-            return std::tuple
-            {
-                ComponentDescriptor::get<std::remove_cvref_t<ComponentTypes>>()->id...
-            };
+            std::vector<ComponentTypeId> ids;
+            ids.reserve(sizeof...(ComponentTypes));
+
+            ((SystemParamTraits<ComponentTypes>::arity == ComponentArity::Required ?
+                void(ids.push_back(getComponentTypeId<typename SystemParamTraits<ComponentTypes>::ComponentType>())) :
+                void()), ...);
+
+            return ids;
         }
 
         /// <summary>
-        /// Returns a std::tuple of SystemComponentInfo describing the types expected by the system ::update method.
+        /// Returns a vector of the plain component types excluded by the system ::update method
+        /// and that can not be present in any archetype for it to be valid for iteration.
         /// </summary>
-        /// <returns></returns>
+        static std::vector<ComponentTypeId> extractExcludedComponentIds()
+        {
+            std::vector<ComponentTypeId> ids;
+            ids.reserve(sizeof...(ComponentTypes));
+
+            (
+                (SystemParamTraits<ComponentTypes>::arity == ComponentArity::Excluded ? 
+                    void(ids.push_back(getComponentTypeId<typename SystemParamTraits<ComponentTypes>::ComponentType>())) : 
+                    void()), 
+            ...);
+
+            return ids;
+        }
+
+        template<typename Param>
+        static void appendComponentInfo(std::vector<SystemComponentInfo>& infos)
+        {
+            // Excluded components are never read or written, so they must not produce a scheduling edge.
+            if constexpr (SystemParamTraits<Param>::arity != ComponentArity::Excluded)
+            {
+                infos.push_back(SystemComponentInfo{
+                    .id = getComponentTypeId<typename SystemParamTraits<Param>::ComponentType>(),
+                    .readonly = SystemParamTraits<Param>::access == ComponentAccessType::Read
+                });
+            }
+
+            // ^ note the above use of `if constexpr` instead of the ternary in extractExcludedComponentIds.
+            // In extract..., the use of getComponentTypeId and ::arity on all valid parameters.
+            // However here we make use of ::access which is not present on Without. With the ternary, both branch
+            // operands are instantiated regardless of the outcome. So a ternary there would be an error. 
+            // But with `if constexpr` the untaken branch is completely discarded and so Without is safe.
+        }
+
         static std::vector<SystemComponentInfo> extractComponentInfo()
         {
             std::vector<SystemComponentInfo> componentInfos;
+            componentInfos.reserve(sizeof...(ComponentTypes));
 
-            std::apply([&componentInfos](auto&&... systemComponentInfos)
-                {
-                    (componentInfos.push_back(systemComponentInfos), ...);
-                }, std::tuple
-                {
-                    SystemComponentInfo{
-                        ComponentDescriptor::get<std::remove_cvref_t<ComponentTypes>>()->id,
-                        std::is_const_v<std::remove_reference_t<ComponentTypes>>
-                        // ^ must remove reference first. the referred-to type is never const, so it "hides" it
-                    } ...
-                });
+            (appendComponentInfo<ComponentTypes>(componentInfos), ...);
 
             return componentInfos;
+        }
+
+        template<typename Param>
+        static auto extractComponentBuffer(Chunk& chunk, ChunkLayout const& layout) -> typename SystemParamTraits<Param>::ComponentType*
+        {
+            using traits = SystemParamTraits<Param>;
+            using ComponentType = typename traits::ComponentType;
+
+            if constexpr (traits::arity == ComponentArity::Required)
+            {
+                // asserts if absent
+                return chunk.getRawComponentArray<ComponentType>(layout);
+            }
+            else if constexpr (traits::arity ==  ComponentArity::Optional)
+            {
+                // nullptr if absent
+                return chunk.tryGetRawComponentArray<ComponentType>(layout);
+            }
+            else
+            {
+                // excluded: matching guarantees the archetype lacks this column
+                return nullptr;
+            }
         }
 
         static auto extractComponentBuffers(Chunk& chunk, ChunkLayout const& layout)
         {
             return std::tuple
             {
-                chunk.getRawComponentArray<std::remove_cvref_t<ComponentTypes>>(layout)...
+                extractComponentBuffer<ComponentTypes>(chunk, layout)...
             };
         }
     };

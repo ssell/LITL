@@ -56,18 +56,11 @@ namespace litl::tests
         world.destroyImmediate(entity1);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("Traits extractComponentIds", "[ecs::system]")
+    LITL_TEST_CASE("Traits extractRequiredComponentIds", "[ecs::system]")
     {
         //  SystemComponents<>: retrieves all types on the system ::update method, excluding the mandatory World& and float.
         //  SystemComponentsTupleOperations<>::extractComponentIds: transforms those types into a std::tuple of ComponentTypeIds
-        auto componentTypesTuple = SystemComponentsTupleOperations<SystemComponents<TraitsTestSystem>>::extractComponentIds();
-
-        // Place all of the found ComponentTypeIds into a vector and then verify
-        std::vector<ComponentTypeId> foundTypes;
-
-        std::apply([&foundTypes](auto&&... componentTypes) {
-            (foundTypes.push_back(componentTypes), ...);
-        }, componentTypesTuple);
+        auto foundTypes = SystemComponentsTupleOperations<SystemComponents<TraitsTestSystem>>::extractRequiredComponentIds();
 
         // TraitsTestSystem::update(World&, float, Foo const&, Bar&)
         // Expect to see Foo and Bar (World and float are stripped out)

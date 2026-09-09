@@ -61,6 +61,19 @@ namespace litl
         }
 
         template<ValidComponentType ComponentType>
+        ComponentType* tryGetRawComponentArray(ChunkLayout const& layout) noexcept
+        {
+            auto* rawComponentArray = tryGetComponentArray(layout, ComponentDescriptor::get<ComponentType>()->id);
+
+            if (rawComponentArray == nullptr)
+            {
+                return nullptr;
+            }
+
+            return std::bit_cast<ComponentType*>(rawComponentArray);
+        }
+
+        template<ValidComponentType ComponentType>
         std::span<ComponentType> getComponentArray(ChunkLayout const& layout) noexcept
         {
             auto header = getHeader();
@@ -70,6 +83,7 @@ namespace litl
         }
 
         std::byte const* getComponentArray(ChunkLayout const& layout, ComponentTypeId componentTypeId) const;
+        std::byte const* tryGetComponentArray(ChunkLayout const& layout, ComponentTypeId componentTypeId) const;
         void setComponentValue(ChunkLayout const& layout, ComponentDescriptor const* component, uint32_t entityChunkIndex, void* from) noexcept;
 
     protected:

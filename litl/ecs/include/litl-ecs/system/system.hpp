@@ -187,12 +187,12 @@ namespace litl
         template<typename SystemComponentTuple>
         void registerComponentTypes()
         {
-            auto componentTypesTuple = SystemComponentsTupleOperations<SystemComponentTuple>::extractComponentIds();
+            auto componentTypes = SystemComponentsTupleOperations<SystemComponentTuple>::extractRequiredComponentIds();
 
-            std::apply([&](auto&&... componentTypes)
-                {
-                    (registerComponentType(componentTypes), ...);
-                }, componentTypesTuple);
+            for (auto componentType : componentTypes)
+            {
+                registerComponentType(componentType);
+            }
         }
 
         struct Impl;
