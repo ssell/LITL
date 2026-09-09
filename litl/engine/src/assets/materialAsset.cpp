@@ -36,7 +36,7 @@ namespace litl
             return false;
         }
 
-        return false;
+        return true;
     }
 
     bool decodeNonLitlMaterialBinaryBytes(MaterialAsset* materialAsset, std::span<std::byte const> otherBytes, AssetErrorCode& error) noexcept

@@ -216,6 +216,7 @@ namespace litl::import
             mesh->mesh = std::make_unique<GeoMesh>();
             auto* litlMesh = mesh->mesh.get();
             auto& objMesh = shape.mesh;
+            dataItem.setName(shape.name);
 
             convertToLitlMesh(litlMesh, objMesh, objResult.attributes);
 

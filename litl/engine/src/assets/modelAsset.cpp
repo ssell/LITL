@@ -59,7 +59,7 @@ namespace litl
             {
                 if (importedItem.getType() == import::ImportedDataType::Mesh)
                 {
-
+                    // ... todo register/import as a distinct Mesh Asset in the Asset Manager ...
                 }
                 else
                 {

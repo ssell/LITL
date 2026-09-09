@@ -3,6 +3,8 @@
 
 #include <concepts>
 #include <memory>
+#include <string>
+#include <string_view>
 #include <unordered_map>
 #include <variant>
 #include <vector>
@@ -125,10 +127,20 @@ namespace litl::import
             return nullptr;
         }
 
+        void setName(std::string_view name) noexcept
+        {
+            m_name = name;
+        }
+
+        [[nodiscard]] std::string_view getName() const noexcept
+        {
+            return m_name;
+        }
 
     private:
 
         ImportedDataPtr m_dataPtr;
+        std::string m_name;
     };
 
     struct ImportedDataResult

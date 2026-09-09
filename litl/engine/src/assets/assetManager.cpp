@@ -501,7 +501,7 @@ namespace litl
         m_impl->taskManager = services.get<TaskManager>();
 
         LITL_FATAL_ASSERT_MSG((m_impl->objectPool != nullptr), "Failed to inject ObjectPool into AssetManager");
-        LITL_FATAL_ASSERT_MSG((m_impl->objectPool != nullptr), "Failed to inject TaskManager into AssetManager");
+        LITL_FATAL_ASSERT_MSG((m_impl->taskManager != nullptr), "Failed to inject TaskManager into AssetManager");
 
         m_impl->populateAssetMap();
     }
