@@ -216,7 +216,7 @@ void update(SystemData const& data, Entity entity, Foo const& read, Bar& write);
 //                                                 ^ read-only      ^ read-write
 ```
 
-`systemTraits.hpp` pulls this apart at compile time. `SystemComponents<S>` strips the leading two parameters via `SystemTupleTail`; `SystemComponentsTupleOperations` then turns the remaining types into either component ids (for archetype matching) or `SystemComponentInfo { id, readonly }` records. `const&` ⇒ `readonly = true`, `&` ⇒ `readonly = false`. That read/write classification drives implicit scheduling (see below). A `static_assert` rejects by-value or non-reference component parameters with a readable message.
+`systemTraits.hpp` pulls this apart at compile time. `SystemComponents<S>` strips the leading two parameters via `SystemTupleTail`; `SystemComponentOperations` then turns the remaining types into either component ids (for archetype matching) or `SystemComponentInfo { id, readonly }` records. `const&` ⇒ `readonly = true`, `&` ⇒ `readonly = false`. That read/write classification drives implicit scheduling (see below). A `static_assert` rejects by-value or non-reference component parameters with a readable message.
 
 ### Type erasure: Wrapper → Runner
 

@@ -173,10 +173,14 @@ namespace litl
         void storeLocalWrapperFunctions(ErasedSystemSetupFunc setup, ErasedSystemPrepareFunc prepare, ErasedSystemRunFunc run, ErasedSystemWrapperDestroyFunc destroy);
 
         /// <summary>
-        /// Adds the component type.
+        /// Registers that the system runs on any archetype with the specified component type.
         /// </summary>
-        /// <param name="componentType"></param>
         void registerComponentType(ComponentTypeId componentType) const noexcept;
+
+        /// <summary>
+        /// Registers that the system can not run on any archetype with the specified component type present.
+        /// </summary>
+        void registerExcludedComponentType(ComponentTypeId componentType) const noexcept;
 
         /// <summary>
         /// Given a tuple of System::update argument types (ie <Foo&, Bar const&>),
@@ -187,7 +191,7 @@ namespace litl
         template<typename SystemComponentTuple>
         void registerComponentTypes()
         {
-            auto componentTypes = SystemComponentsTupleOperations<SystemComponentTuple>::extractRequiredComponentIds();
+            auto componentTypes = SystemComponentOperations<SystemComponentTuple>::extractRequiredComponentIds();
 
             for (auto componentType : componentTypes)
             {

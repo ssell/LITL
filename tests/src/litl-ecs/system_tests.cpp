@@ -3,6 +3,7 @@
 #include "litl-ecs/tests-common.hpp"
 #include "litl-ecs/system/systemCollection.hpp"
 #include "litl-ecs/system/systemTraits.hpp"
+#include "litl-ecs/system/systemComponentOperations.hpp"
 
 namespace litl::tests
 {
@@ -59,8 +60,8 @@ namespace litl::tests
     LITL_TEST_CASE("Traits extractRequiredComponentIds", "[ecs::system]")
     {
         //  SystemComponents<>: retrieves all types on the system ::update method, excluding the mandatory World& and float.
-        //  SystemComponentsTupleOperations<>::extractComponentIds: transforms those types into a std::tuple of ComponentTypeIds
-        auto foundTypes = SystemComponentsTupleOperations<SystemComponents<TraitsTestSystem>>::extractRequiredComponentIds();
+        //  SystemComponentOperations<>::extractComponentIds: transforms those types into a std::tuple of ComponentTypeIds
+        auto foundTypes = SystemComponentOperations<SystemComponents<TraitsTestSystem>>::extractRequiredComponentIds();
 
         // TraitsTestSystem::update(World&, float, Foo const&, Bar&)
         // Expect to see Foo and Bar (World and float are stripped out)

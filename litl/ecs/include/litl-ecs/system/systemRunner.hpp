@@ -1,9 +1,7 @@
 #ifndef LITL_ENGINE_ECS_SYSTEM_RUNNER_H__
 #define LITL_ENGINE_ECS_SYSTEM_RUNNER_H__
 
-#include <tuple>
-
-#include "litl-ecs/system/systemTraits.hpp"
+#include "litl-ecs/system/systemComponentOperations.hpp"
 
 namespace litl
 {
@@ -45,38 +43,12 @@ namespace litl
         // Must match SystemRunFunc
         void run(SystemData const& data, Chunk& chunk, ChunkLayout const& layout)
         {
-            // Get the system components in tuple form. For example: std::tuple<Foo&, Bar&>
-            using SystemComponentTuple = SystemComponents<S>;
-            iterate<SystemComponentTuple>(data, chunk, layout);
+            SystemComponentOperations<SystemComponents<S>>::forEach(m_pSystem, data, chunk, layout);
         }
 
     protected:
 
     private:
-
-        template<typename SystemComponentTuple>
-        void iterate(SystemData const& data, Chunk& chunk, ChunkLayout const& layout)
-        {
-            // Retrieve the data ptr for each component in the tuple type.
-            // For example: SystemComponentTuple -> std::tuple<Foo&, Bar&> ->
-            //    componentArrays[0] = Foo*
-            //    componentArrays[1] = Bar*
-            // Ends with: std::tuple<Foo*, Bar*>
-            auto componentArrays = SystemComponentsTupleOperations<SystemComponentTuple>::extractComponentBuffers(chunk, layout);
-            auto chunkEntities = chunk.getEntities(layout);
-
-            // Call System::update for each entity in the chunk.
-            for (uint32_t i = 0; i < chunkEntities.size(); ++i)
-            {
-                // Use apply to expand the tuple into parameters.
-                // Applies the provded lambda to each member of the tuple.
-                std::apply([&](auto&... componentArray)
-                    {
-                        m_pSystem->update(data, chunkEntities[i], componentArray[i]...);
-                    }, componentArrays);
-            }
-        }
-
         /// <summary>
         /// The actual system instance underneath all of the layers of wrapping.
         /// </summary>

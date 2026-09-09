@@ -42,7 +42,8 @@ namespace litl
         const SystemTypeId id;
         SystemGroup group{ SystemGroup::Update };
         StoredWrappedFunctions functions;
-        std::vector<ComponentTypeId> componentTypes;
+        std::vector<ComponentTypeId> requiredComponentTypes;
+        std::vector<ComponentTypeId> excludedComponentTypes;
         std::vector<Archetype*> archetypes;
     };
 
@@ -101,7 +102,12 @@ namespace litl
 
     void System::registerComponentType(ComponentTypeId const componentType) const noexcept
     {
-        m_pImpl->componentTypes.push_back(componentType);
+        m_pImpl->requiredComponentTypes.push_back(componentType);
+    }
+
+    void System::registerExcludedComponentType(ComponentTypeId componentType) const noexcept
+    {
+        m_pImpl->excludedComponentTypes.push_back(componentType);
     }
 
     void System::updateArchetypes(std::vector<ArchetypeId> const& newArchetypes) const noexcept
@@ -111,9 +117,16 @@ namespace litl
             bool validArchetype = true;
             auto* archetype = ArchetypeRegistry::getById(archetypeId);
             
-            for (auto i = 0; i < m_pImpl->componentTypes.size() && validArchetype; ++i)
+            // Make sure all required all present
+            for (size_t i = 0; i < m_pImpl->requiredComponentTypes.size() && validArchetype; ++i)
             {
-                validArchetype = validArchetype && archetype->hasComponent(m_pImpl->componentTypes[i]);
+                validArchetype = validArchetype && archetype->hasComponent(m_pImpl->requiredComponentTypes[i]);
+            }
+
+            // Make sure no excluded component types are present
+            for (size_t i = 0; i < m_pImpl->excludedComponentTypes.size() && validArchetype; ++i)
+            {
+                validArchetype = validArchetype && !archetype->hasComponent(m_pImpl->excludedComponentTypes[i]);
             }
 
             if (validArchetype)
