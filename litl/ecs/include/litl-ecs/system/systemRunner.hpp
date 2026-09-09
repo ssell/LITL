@@ -1,17 +1,17 @@
 #ifndef LITL_ENGINE_ECS_SYSTEM_RUNNER_H__
 #define LITL_ENGINE_ECS_SYSTEM_RUNNER_H__
 
+#include "litl-core/services/serviceProvider.hpp"
+#include "litl-ecs/archetype/chunk.hpp"
+#include "litl-ecs/system/systemTraits.hpp"
 #include "litl-ecs/system/systemComponentOperations.hpp"
+#include "litl-ecs/system/systemData.hpp"
 
 namespace litl
 {
     class EntityCommands;
     struct ChunkLayout;
 
-    /// <summary>
-    /// The function signature required to run the SystemRunner.
-    /// </summary>
-    using SystemRunFunc = void(EntityCommands&, float, Chunk&, ChunkLayout const&);
     using ErasedSystemRunFunc = void(*)(void*, SystemData const&, Chunk&, ChunkLayout const&);
 
     /// <summary>

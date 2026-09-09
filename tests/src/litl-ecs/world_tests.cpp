@@ -526,7 +526,46 @@ namespace litl::tests
 
         world.destroyImmediate(entity0);
         world.destroyImmediate(entity1);
+    } LITL_END_TEST_CASE;
 
+    LITL_TEST_CASE("World Run Optional Components", "[ecs::world]")
+    {
+        ServiceCollection collection;
+        collection.addSingleton<JobScheduler>();
+        auto serviceProvider = collection.build();
+
+        World world;
+        world.setup((*serviceProvider), std::make_shared<FrameCallbacks>());
+
+        world.getSystemCollection().addSystem<TestSystemOptionals>(SystemGroup::Update);
+
+        auto entityFoo = world.createImmediate();
+        auto entityFooBar = world.createImmediate();
+        auto entityFooQux = world.createImmediate();        // Qux will (should) be skipped
+
+        world.addComponentsImmediate(entityFoo, Foo{ 0u });
+        world.addComponentsImmediate(entityFooBar, Foo{ 0u }, Bar{ 0.0f, 0u });
+        world.addComponentsImmediate(entityFooQux, Foo{ 0u }, Qux{ 0u });
+
+        auto entityFooRecord = world.getEntityRecord(entityFoo);
+        auto entityFooBarRecord = world.getEntityRecord(entityFooBar);
+        auto entityFooQuxRecord = world.getEntityRecord(entityFooQux);
+
+        world.finalize();
+
+        for (auto i = 0u; i < 10u; ++i)
+        {
+            world.run(0.1f, 0.1f);
+        }
+
+        REQUIRE(world.getComponent<Foo>(entityFoo)->a == 10u);
+        REQUIRE(world.getComponent<Foo>(entityFooBar)->a == 10u);
+        REQUIRE(world.getComponent<Bar>(entityFooBar)->b == 10u);
+        REQUIRE(world.getComponent<Foo>(entityFooQux)->a == 0u);
+
+        world.destroyImmediate(entityFoo);
+        world.destroyImmediate(entityFooBar);
+        world.destroyImmediate(entityFooQux);
     } LITL_END_TEST_CASE;
 
     LITL_TEST_CASE("System Setup", "[ecs::system]")

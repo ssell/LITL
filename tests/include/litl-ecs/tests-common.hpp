@@ -27,7 +27,7 @@ namespace litl::tests
 
     struct Qux
     {
-        bool awhat{ false };
+        uint32_t c{ 0 };
     };
 
     struct SystemSetupService
@@ -69,6 +69,22 @@ namespace litl::tests
         {
             foo.a++;
             bar.b++;
+        }
+    };
+
+    struct TestSystemOptionals
+    {
+        void setup(ServiceProvider& services) {}
+        void prepare() {}
+
+        void update(SystemData const& data, Entity entity, Foo& reqFoo, Bar* optBar, Without<Qux>)
+        {
+            reqFoo.a++;
+
+            if (optBar != nullptr)
+            {
+                optBar->b++;
+            }
         }
     };
 }

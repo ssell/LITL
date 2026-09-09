@@ -6,6 +6,7 @@
 
 #include "litl-ecs/system/systemCollectionContext.hpp"
 #include "litl-ecs/system/systemGroup.hpp"
+#include "litl-ecs/system/systemComponentOperations.hpp"
 
 namespace litl
 {

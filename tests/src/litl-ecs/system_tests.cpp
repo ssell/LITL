@@ -33,6 +33,7 @@ namespace litl::tests
         auto entityRecord = world.getEntityRecord(entity0);
 
         SystemRunner<TestSystem> runner(&system);
+
         const SystemData data{
             .world = world,
             .commands = world.getCommandBuffer(),
@@ -60,7 +61,7 @@ namespace litl::tests
     LITL_TEST_CASE("Traits extractRequiredComponentIds", "[ecs::system]")
     {
         //  SystemComponents<>: retrieves all types on the system ::update method, excluding the mandatory World& and float.
-        //  SystemComponentOperations<>::extractComponentIds: transforms those types into a std::tuple of ComponentTypeIds
+        //  SystemComponentOperations<>::extractRequiredComponentIds: transforms those types into a vector of ComponentTypeIds
         auto requiredTypes = SystemComponentOperations<SystemComponents<TraitsTestSystem>>::extractRequiredComponentIds();
 
         // TraitsTestSystem::update(World&, float, Foo const&, Bar&)

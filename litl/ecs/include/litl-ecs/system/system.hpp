@@ -183,9 +183,9 @@ namespace litl
         void registerExcludedComponentType(ComponentTypeId componentType) const noexcept;
 
         /// <summary>
-        /// Given a tuple of System::update argument types (ie <Foo&, Bar const&>),
-        /// extracts out the individual component types (Foo, Bar) and retrieves the
-        /// associated component type ids (1, 2) and registers those within the wrapper.
+        /// Given a tuple of System::update argument types (ie <Foo&, Bar const&>), extracts out the individual component types (Foo, Bar) 
+        /// and retrieves the associated component type ids (1, 2) and registers those within the wrapper. Additionally it also extracts
+        /// any component types wrapped within a Without<> and registers them as excluded component types.
         /// </summary>
         /// <typeparam name="SystemComponentTuple"></typeparam>
         template<typename SystemComponentTuple>

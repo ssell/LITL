@@ -209,16 +209,7 @@ A system is defined by its ability to satisfy the `ValidSystem` concept. This en
 
 ### The update signature is the query
 
-The first two parameters of `update` are exactly `SystemData const&` and `Entity`. Everything after that is the component query, and each must be an lvalue reference:
-
-```cpp
-void update(SystemData const& data, Entity entity, Foo const& read, Bar& write);
-//                                                 ^ read-only      ^ read-write
-```
-
-`systemTraits.hpp` pulls this apart at compile time. `SystemComponents<S>` strips the leading two parameters via `SystemTupleTail`; `SystemComponentOperations` then turns the remaining types into either component ids (for archetype matching) or `SystemComponentInfo { id, readonly }` records. `const&` ⇒ `readonly = true`, `&` ⇒ `readonly = false`. That read/write classification drives implicit scheduling (see below). A `static_assert` rejects by-value or non-reference component parameters with a readable message.
-
-Systems support the following types of component designations within the `update`:
+The first two parameters of `update` are exactly `SystemData const&` and `Entity`. Everything after that is the component query, and each must be one of the following types:
 
 * `Foo& foo` - Required writable component.
 * `Foo const& foo` - Required read-only component.
@@ -226,24 +217,36 @@ Systems support the following types of component designations within the `update
 * `Foo const* foo` - Optional read-only component.
 * `Without<Foo>` - Excluded component. Any archetype with this component is skipped and not iterated.
 
-An example of a `update` signature:
-
 ```cpp
-struct MovementSystem
-{
-    void update(SystemData const& data, Entity entity, Transform& transform, Movement const& movement, Without<Frozen>);
-}
+void update(SystemData const& data, Entity entity, Transform& transform, Movement const& movement, Without<Frozen>);
+//                                                 ^ read-write          ^ read-only               ^ excluded
 ```
+
+`systemTraits.hpp` pulls this apart at compile time. `SystemComponents<S>` strips the leading two parameters via `SystemTupleTail`; `SystemComponentOperations` then turns the remaining types into either component ids (for archetype matching) or `SystemComponentInfo { id, readonly }` records. The read/write classification drives implicit scheduling (see below).
 
 ### Type erasure: Wrapper → Runner
 
-A user system type is needed to *build* a `System`, but a `System` stores none of it directly. `System::attach<S>()` constructs a `SystemWrapper<S>` into 64 bytes of inline storage and records three erased function pointers (setup / run / destroy). The wrapper owns the user struct and a `SystemRunner<S>`; the runner is what actually iterates:
+A user system type is needed to *build* a `System`, but a `System` stores none of it directly. `System::attach<S>()` constructs a `SystemWrapper<S>` into 64 bytes of inline storage and records three erased function pointers (setup / run / destroy). The wrapper owns the user struct and a `SystemRunner<S>`; the runner is what actually iterates via `SystemComponentOperations`:
 
 ```cpp
 // SystemRunner<S>::run, per chunk:
-auto columns = extractComponentBuffers(chunk, layout);   // tuple<Foo*, Bar*>
-for (uint32_t i = 0; i < chunk.size(); ++i)
-    std::apply([&](auto&... col){ system->update(commands, dt, col[i]...); }, columns);
+template<ValidSystem S, std::size_t... Indices>
+static void forEachImpl(S* system, SystemData const& data, Chunk& chunk, ChunkLayout const& layout, std::index_sequence<Indices...>)
+{
+    auto entities = chunk.getEntities(layout);
+
+    if (entities.empty())
+    {
+        return;
+    }
+
+    auto columns = extractComponentBuffers(chunk, layout);
+
+    for (uint32_t i = 0u; i < static_cast<uint32_t>(entities.size()); ++i)
+    {
+        system->update(data, entities[i], SystemParamTraits<ComponentTypes>::bind(std::get<Indices>(columns), i)...);
+    }
+}
 ```
 
 So storage is SoA, but the user writes an ordinary per-entity `update`. The runner indexes each column in lockstep and expands them into the call.
@@ -404,6 +407,23 @@ void update(SystemData const& data, Entity entity, DestroyMe const& destroyMe)
     commands.destroyEntity(entity); // recorded now, applied at the next sync point
 }
 ```
+
+---
+
+## Uncommon Patterns
+
+### Iterating the World
+
+By declaring an `update` method with no components, or only optional components, the system will iterate over every entity.
+
+For example:
+
+```cpp
+void update(SystemData const& data, Entity entity);
+void update(SystemData const& data, Entity entity, Foo* foo);
+```
+
+This is legal and supported, but is more likely to be a mistake than an intentional decision.
 
 ---
 
