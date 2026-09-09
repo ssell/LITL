@@ -5,6 +5,10 @@
 
 namespace litl
 {
+    // -------------------------------------------------------------------------------------
+    // ActiveMaterialSystem
+    // -------------------------------------------------------------------------------------
+
     void ActiveMaterialSystem::setup(ServiceProvider& services)
     {
         m_pObjectPool = services.get<ObjectPool>();
@@ -20,6 +24,42 @@ namespace litl
         if (auto* material = m_pObjectPool->getMaterial(materialRef.handle); material != nullptr)
         {
             material->markActive(materialRef.slot);
+        }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // ActiveVariableMaterialSystem
+    // -------------------------------------------------------------------------------------
+
+    void ActiveVariableMaterialSystem::setup(ServiceProvider& services)
+    {
+        m_pObjectPool = services.get<ObjectPool>();
+    }
+
+    void ActiveVariableMaterialSystem::prepare()
+    {
+        // ... no action ...
+    }
+
+    void ActiveVariableMaterialSystem::update(SystemData const& data, Entity entity, VariableMaterialsRef const& materialRef)
+    {
+        MaterialBindings* materialBindings = m_pObjectPool->getMaterialBindings(materialRef.materialBindingsHandle);
+
+        if (materialBindings != nullptr)
+        {
+            // Mark the bindings object as a whole active
+            materialBindings->setLastActiveFrame(data.frameIndex);
+
+            // Mark the individual material slot bindings active
+            auto const& bindings = materialBindings->getBindings();
+
+            for (auto& binding : bindings)
+            {
+                if (Material* material = m_pObjectPool->getMaterial(binding.handle); material != nullptr)
+                {
+                    material->markActive(binding.slot);
+                }
+            }
         }
     }
 }

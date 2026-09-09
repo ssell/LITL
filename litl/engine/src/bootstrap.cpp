@@ -10,7 +10,6 @@
 #include "litl-engine/tasks/taskManager.hpp"
 #include "litl-engine/ecs/systems/cullingSystem.hpp"
 #include "litl-engine/ecs/systems/activeMaterialSystem.hpp"
-#include "litl-engine/ecs/systems/activeVariableMaterialSystem.hpp"
 #include "litl-renderer/window.hpp"
 #include "litl-ecs/world.hpp"
 
