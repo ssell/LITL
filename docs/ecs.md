@@ -218,6 +218,23 @@ void update(SystemData const& data, Entity entity, Foo const& read, Bar& write);
 
 `systemTraits.hpp` pulls this apart at compile time. `SystemComponents<S>` strips the leading two parameters via `SystemTupleTail`; `SystemComponentOperations` then turns the remaining types into either component ids (for archetype matching) or `SystemComponentInfo { id, readonly }` records. `const&` ⇒ `readonly = true`, `&` ⇒ `readonly = false`. That read/write classification drives implicit scheduling (see below). A `static_assert` rejects by-value or non-reference component parameters with a readable message.
 
+Systems support the following types of component designations within the `update`:
+
+* `Foo& foo` - Required writable component.
+* `Foo const& foo` - Required read-only component.
+* `Foo* foo` - Optional writable component.
+* `Foo const* foo` - Optional read-only component.
+* `Without<Foo>` - Excluded component. Any archetype with this component is skipped and not iterated.
+
+An example of a `update` signature:
+
+```cpp
+struct MovementSystem
+{
+    void update(SystemData const& data, Entity entity, Transform& transform, Movement const& movement, Without<Frozen>);
+}
+```
+
 ### Type erasure: Wrapper → Runner
 
 A user system type is needed to *build* a `System`, but a `System` stores none of it directly. `System::attach<S>()` constructs a `SystemWrapper<S>` into 64 bytes of inline storage and records three erased function pointers (setup / run / destroy). The wrapper owns the user struct and a `SystemRunner<S>`; the runner is what actually iterates:

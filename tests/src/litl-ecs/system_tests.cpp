@@ -82,8 +82,10 @@ namespace litl::tests
     {
         std::vector<SystemComponentInfo> componentInfos = ExtractSystemComponentInfo<TraitsTestSystem>();
 
-        // TraitsTestSystem::update(World&, float, Foo const&, Bar&, Qux const*)
-        // Expect to see Foo and Bar (World and float are stripped out)
+        // TraitsTestSystem::update(SystemData const&, Entity, Foo const&, Bar&, Qux const*, Without<Baz>)
+        // Expect to see Foo, Bar, and Qux. 
+        // SystemData and Entity are stripped out. Without<Baz> is excluded from the return set.
+
         REQUIRE(componentInfos.size() == 3);
 
         // Foo const& -> Foo and readonly = true
