@@ -20,9 +20,10 @@ namespace litl::tests
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
-        REQUIRE(data.getType() == import::ImportedDataType::Material);
+        REQUIRE(data.items.size() == 1);
+        REQUIRE(data.items[0].getType() == import::ImportedDataType::Material);
 
-        auto* material = data.getDataPtr<import::MaterialImportResult>();
+        auto* material = data.items[0].getDataPtr<import::MaterialImportResult>();
 
         REQUIRE(material != nullptr);
         REQUIRE(material->intermediateMaterial != nullptr);
@@ -120,8 +121,9 @@ namespace litl::tests
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
+        REQUIRE(data.items.size() == 1);
 
-        auto* material = data.getDataPtr<import::MaterialImportResult>();
+        auto* material = data.items[0].getDataPtr<import::MaterialImportResult>();
 
         REQUIRE(material != nullptr);
 

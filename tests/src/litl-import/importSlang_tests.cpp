@@ -207,9 +207,10 @@ namespace litl::tests
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
-        REQUIRE(data.getType() == import::ImportedDataType::Shader);
+        REQUIRE(data.items.size() == 1);
+        REQUIRE(data.items[0].getType() == import::ImportedDataType::Shader);
 
-        auto* shader = data.getDataPtr<import::ShaderImportResult>();
+        auto* shader = data.items[0].getDataPtr<import::ShaderImportResult>();
 
         REQUIRE(shader != nullptr);
         REQUIRE(shader->intermediateShader != nullptr);
@@ -237,8 +238,9 @@ namespace litl::tests
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
+        REQUIRE(data.items.size() == 1);
 
-        auto* shader = data.getDataPtr<import::ShaderImportResult>();
+        auto* shader = data.items[0].getDataPtr<import::ShaderImportResult>();
 
         REQUIRE(shader != nullptr);
 

@@ -39,7 +39,7 @@ namespace litl::import
         std::unique_ptr<MeshImportResult>,
         std::unique_ptr<ShaderImportResult>>;
 
-    class ImportedData final
+    class ImportedDataItem
     {
     public:
 
@@ -126,6 +126,30 @@ namespace litl::import
     private:
 
         ImportedDataPtr m_dataPtr;
+    };
+
+    struct ImportedDataResult
+    {
+        /// <summary>
+        /// The first non-success result response. This is the result for the item at the index specified in errorIndex.
+        /// </summary>
+        Result firstNonSuccessResult{};
+
+        /// <summary>
+        /// If an item failed to be processed, this is its index in the items vector.
+        /// </summary>
+        uint32_t errorIndex{ Constants::uint32_null_index };
+
+        /// <summary>
+        /// True if all items were properly processed.
+        /// </summary>
+        bool allSuccess{ true };
+    };
+
+    struct ImportedData
+    {
+        std::vector<ImportedDataItem> items;
+        ImportedDataResult result{};
     };
 }
 

@@ -16,14 +16,21 @@ namespace litl::import
 
     }
 
-    Result MaterialExporter::prepare(ImportedData& data) noexcept
+    Result MaterialExporter::prepare(ImportedData& data, uint32_t dataIndex) noexcept
     {
-        if (data.getType() != ImportedDataType::Material)
+        if (dataIndex >= data.items.size())
+        {
+            return Result::Error(ErrorType::InvalidImportedItemIndex);
+        }
+
+        auto& dataItem = data.items[dataIndex];
+
+        if (dataItem.getType() != ImportedDataType::Material)
         {
             return Result::Error(ErrorType::ImportedDataTypeMismatch);
         }
 
-        auto* material = data.getDataPtr<MaterialImportResult>();
+        auto* material = dataItem.getDataPtr<MaterialImportResult>();
 
         if (material == nullptr)
         {
@@ -38,7 +45,7 @@ namespace litl::import
         return Result::Success();
     }
 
-    Result MaterialExporter::write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data) noexcept
+    Result MaterialExporter::write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data, uint32_t dataIndex) noexcept
     {
         if (!Directory::ensureExists(destFolderPath))
         {
@@ -49,7 +56,7 @@ namespace litl::import
         const auto destFile = File(destFilePath);
         auto errorCode = BinaryBlockFile::ErrorCode::None;
         auto serialized = std::vector<std::byte>();
-        auto* material = data.getDataPtr<MaterialImportResult>();
+        auto* material = data.items[dataIndex].getDataPtr<MaterialImportResult>();
 
         if (material == nullptr)
         {

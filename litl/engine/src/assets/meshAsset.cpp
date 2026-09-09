@@ -48,9 +48,17 @@ namespace litl
 
             if (importResult.success)
             {
-                if (importedData.getType() == import::ImportedDataType::Mesh)
+                if (importedData.items.size() != 1)
                 {
-                    auto* importedMesh = importedData.getDataPtr<import::MeshImportResult>();
+                    error = AssetErrorCode::InvalidImportedItemCount;
+                    return false;
+                }
+
+                auto& importedItem = importedData.items[0];
+
+                if (importedItem.getType() == import::ImportedDataType::Mesh)
+                {
+                    auto* importedMesh = importedItem.getDataPtr<import::MeshImportResult>();
 
                     if (importedMesh != nullptr)
                     {
@@ -66,7 +74,7 @@ namespace litl
                 }
                 else
                 {
-                    logError("Import of mesh bytes from third-party asset failed due to detected import format was not mesh but instead format type ", static_cast<uint32_t>(importedData.getType()));
+                    logError("Import of mesh bytes from third-party asset failed due to detected import format was not mesh but instead format type ", static_cast<uint32_t>(importedItem.getType()));
                     error = AssetErrorCode::ExternalFormatImportFailed;
                     return false;
                 }

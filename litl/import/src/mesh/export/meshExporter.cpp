@@ -16,14 +16,21 @@ namespace litl::import
 
     }
 
-    Result MeshExporter::prepare(ImportedData& data) noexcept
+    Result MeshExporter::prepare(ImportedData& data, uint32_t dataIndex) noexcept
     {
-        if (data.getType() != ImportedDataType::Mesh)
+        if (dataIndex >= data.items.size())
+        {
+            return Result::Error(ErrorType::InvalidImportedItemIndex);
+        }
+
+        auto& dataItem = data.items[dataIndex];
+
+        if (dataItem.getType() != ImportedDataType::Mesh)
         {
             return Result::Error(ErrorType::ImportedDataTypeMismatch);
         }
 
-        auto* mesh = data.getDataPtr<MeshImportResult>();
+        auto* mesh = dataItem.getDataPtr<MeshImportResult>();
 
         if (mesh == nullptr)
         {
@@ -84,7 +91,7 @@ namespace litl::import
         return Result::Success();
     }
 
-    Result MeshExporter::write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data) noexcept
+    Result MeshExporter::write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data, uint32_t dataIndex) noexcept
     {
         if (!Directory::ensureExists(destFolderPath))
         {
@@ -95,7 +102,7 @@ namespace litl::import
         auto destFile = File(destFilePath);
         auto errorCode = BinaryBlockFile::ErrorCode::None;
         auto serialized = std::vector<std::byte>();
-        auto* mesh = data.getDataPtr<MeshImportResult>();
+        auto* mesh = data.items[dataIndex].getDataPtr<MeshImportResult>();
 
         if (mesh == nullptr)
         {

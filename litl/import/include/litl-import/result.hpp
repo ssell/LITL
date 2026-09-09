@@ -25,7 +25,9 @@ namespace litl::import
         SerializationFailed = 13u,
         SerializedResultEmpty = 14u,
         FileWriteFailed = 15u,
-        ExportPrepareFailed = 16u
+        ExportPrepareFailed = 16u,
+        InvalidImportedItemIndex = 17u,
+        ProcessFailedSeeIndividualItemResult = 18u
     };
 
     struct Result

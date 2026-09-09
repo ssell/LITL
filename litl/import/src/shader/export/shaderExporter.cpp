@@ -18,14 +18,21 @@ namespace litl::import
 
     }
 
-    Result ShaderExporter::prepare(ImportedData& data) noexcept
+    Result ShaderExporter::prepare(ImportedData& data, uint32_t dataIndex) noexcept
     {
-        if (data.getType() != ImportedDataType::Shader)
+        if (dataIndex >= data.items.size())
+        {
+            return Result::Error(ErrorType::InvalidImportedItemIndex);
+        }
+
+        auto& dataItem = data.items[dataIndex];
+
+        if (dataItem.getType() != ImportedDataType::Shader)
         {
             return Result::Error(ErrorType::ImportedDataTypeMismatch);
         }
         
-        auto* shader = data.getDataPtr<ShaderImportResult>();
+        auto* shader = dataItem.getDataPtr<ShaderImportResult>();
 
         if (shader == nullptr)
         {
@@ -49,7 +56,7 @@ namespace litl::import
         return Result::Success();
     }
 
-    Result ShaderExporter::write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data) noexcept
+    Result ShaderExporter::write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data, uint32_t dataIndex) noexcept
     {
         if (!Directory::ensureExists(destFolderPath))
         {
@@ -60,7 +67,7 @@ namespace litl::import
         const auto destFile = File(destFilePath);
         auto errorCode = BinaryBlockFile::ErrorCode::None;
         auto serialized = std::vector<std::byte>();
-        auto* shader = data.getDataPtr<ShaderImportResult>();
+        auto* shader = data.items[dataIndex].getDataPtr<ShaderImportResult>();
 
         if (shader == nullptr)
         {

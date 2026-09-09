@@ -89,21 +89,35 @@ namespace litl::import
             return importResult;
         }
 
-        if (shouldPrepare)
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(importedData.items.size()); ++i)
         {
-            auto exporter = m_exporterRegistry.create(importedData.getType());
-
-            if (exporter == nullptr)
+            if (shouldPrepare)
             {
-                return Result::Error(ErrorType::NoExporterForImportedDataType);
-            }
+                auto exporter = m_exporterRegistry.create(importedData.items[i].getType());
 
-            return exporter->prepare(importedData);
+                if (exporter == nullptr)
+                {
+                    importedData.result.allSuccess = false;
+                    importedData.result.firstNonSuccessResult =  Result::Error(ErrorType::NoExporterForImportedDataType);
+                    importedData.result.errorIndex = i;
+
+                    return Result::Error(ErrorType::ProcessFailedSeeIndividualItemResult);
+                }
+
+                auto result = exporter->prepare(importedData, i);
+
+                if (!result.success)
+                {
+                    importedData.result.allSuccess = false;
+                    importedData.result.firstNonSuccessResult = result;
+                    importedData.result.errorIndex = i;
+
+                    return Result::Error(ErrorType::ProcessFailedSeeIndividualItemResult);
+                }
+            }
         }
-        else
-        {
-            return importResult;
-        }
+
+        return Result::Success();
     }
 
     Result ImportService::convert(std::string_view sourcePath) noexcept
@@ -113,7 +127,7 @@ namespace litl::import
 
     Result ImportService::convert(std::string_view sourcePath, std::string_view destFolderPath) noexcept
     {
-        // Import
+        // Import from one external file
         File const sourceFile = sourcePath;
         ImportedData importedData{};
         Result const importResult = import(sourcePath, importedData, false);
@@ -123,26 +137,34 @@ namespace litl::import
             return importResult;
         }
 
-        // Export
-        auto exporter = m_exporterRegistry.create(importedData.getType());
-
-        if (exporter == nullptr)
+        // Export to N external files
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(importedData.items.size()); ++i)
         {
-            return Result::Error(ErrorType::NoExporterForImportedDataType);
-        }
+            auto& importDataItem = importedData.items[i];
+            auto exporter = m_exporterRegistry.create(importDataItem.getType());
 
-        Result const prepareResult = exporter->prepare(importedData);
+            if (exporter == nullptr)
+            {
+                importedData.result.allSuccess = false;
+                importedData.result.firstNonSuccessResult = Result::Error(ErrorType::NoExporterForImportedDataType);
+                importedData.result.errorIndex = i;
 
-        if (!prepareResult.success)
-        {
-            return prepareResult;
-        }
+                return Result::Error(ErrorType::ProcessFailedSeeIndividualItemResult);
+            }
 
-        Result const exportResult = exporter->write(sourceFile, destFolderPath, importedData);
+            Result const prepareResult = exporter->prepare(importedData, i);
 
-        if (!exportResult.success)
-        {
-            return exportResult;
+            if (!prepareResult.success)
+            {
+                return prepareResult;
+            }
+
+            Result const exportResult = exporter->write(sourceFile, destFolderPath, importedData, i);
+
+            if (!exportResult.success)
+            {
+                return exportResult;
+            }
         }
 
         return Result::Success();

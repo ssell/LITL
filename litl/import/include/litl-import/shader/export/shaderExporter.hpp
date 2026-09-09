@@ -22,8 +22,8 @@ namespace litl::import
         ShaderExporter(ShaderExporter const&) = delete;
         ShaderExporter& operator=(ShaderExporter const&) = delete;
 
-        [[nodiscard]] Result prepare(ImportedData& data) noexcept override;
-        [[nodiscard]] Result write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data) noexcept override;
+        [[nodiscard]] Result prepare(ImportedData& data, uint32_t dataIndex) noexcept override;
+        [[nodiscard]] Result write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data, uint32_t dataIndex) noexcept override;
 
     };
 }

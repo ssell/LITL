@@ -20,9 +20,10 @@ namespace litl::tests
         
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
-        REQUIRE(data.getType() == import::ImportedDataType::Mesh);
+        REQUIRE(data.items.size() == 1);
+        REQUIRE(data.items[0].getType() == import::ImportedDataType::Mesh);
 
-        auto* mesh = data.getDataPtr<import::MeshImportResult>();
+        auto* mesh = data.items[0].getDataPtr<import::MeshImportResult>();
 
         REQUIRE(mesh != nullptr);
         REQUIRE(mesh->summary.meshCount == 1u);
@@ -85,6 +86,7 @@ namespace litl::tests
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
+        REQUIRE(data.items.size() == 1);
 
         // Load the LitlMesh from the .litlbmsh we previously exported to.
         auto litlMeshBytes = dest.readAllBytes();
@@ -97,7 +99,7 @@ namespace litl::tests
         REQUIRE(error == BinaryBlockFile::ErrorCode::None);
 
         // Deserialize the LitlMesh to a second GeoMesh.
-        auto* mesh = data.getDataPtr<import::MeshImportResult>();
+        auto* mesh = data.items[0].getDataPtr<import::MeshImportResult>();
 
         REQUIRE(mesh != nullptr);
 

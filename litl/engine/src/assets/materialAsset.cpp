@@ -50,9 +50,17 @@ namespace litl
 
         if (importResult.success)
         {
-            if (importedData.getType() == import::ImportedDataType::Material)
+            if (importedData.items.size() != 1)
             {
-                auto* material = importedData.getDataPtr<import::MaterialImportResult>();
+                error = AssetErrorCode::InvalidImportedItemCount;
+                return false;
+            }
+
+            auto& importedItem = importedData.items[0];
+
+            if (importedItem.getType() == import::ImportedDataType::Material)
+            {
+                auto* material = importedItem.getDataPtr<import::MaterialImportResult>();
 
                 if (material != nullptr)
                 {
@@ -68,7 +76,7 @@ namespace litl
             }
             else
             {
-                logError("Import of material bytes from third-party asset failed due to detected import format was not shader but instead format type ", static_cast<uint32_t>(importedData.getType()));
+                logError("Import of material bytes from third-party asset failed due to detected import format was not shader but instead format type ", static_cast<uint32_t>(importedItem.getType()));
                 error = AssetErrorCode::ExternalFormatImportFailed;
                 return false;
             }

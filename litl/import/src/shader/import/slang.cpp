@@ -197,12 +197,15 @@ namespace litl::import
             logWarning("Slang SPIR-V compilation warning for '", file.localPath(), "': ", spirvModule->warnings);
         }
 
-        if (!importedData.setType(ImportedDataType::Shader))
+        importedData.items.push_back({});
+        auto& dataItem = importedData.items.back();
+
+        if (!dataItem.setType(ImportedDataType::Shader))
         {
             return Result::Error(ErrorType::ImporterFailed, "Failed to create shader import data.");
         }
 
-        auto* shader = importedData.getDataPtr<ShaderImportResult>();
+        auto* shader = dataItem.getDataPtr<ShaderImportResult>();
         shader->intermediateShader = std::make_unique<ShaderIntermediateData>();
         shader->intermediateShader->setSpirvWords(spirvModule->words);
 

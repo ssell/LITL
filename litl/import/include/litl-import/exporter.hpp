@@ -24,12 +24,12 @@ namespace litl::import
         /// This ensures the data is correct for the destination internal format. For example with meshes,
         /// this is the step that ensures the mesh is triangulated, optimized, has normals, etc.
         /// </summary>
-        virtual Result prepare(ImportedData& data) noexcept = 0;
+        virtual Result prepare(ImportedData& data, uint32_t dataIndex) noexcept = 0;
 
         /// <summary>
         /// Step responsible for writing the data to disk.
         /// </summary>
-        virtual Result write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data) noexcept = 0;
+        virtual Result write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data, uint32_t dataIndex) noexcept = 0;
     };
 
     template <typename T>

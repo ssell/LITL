@@ -47,7 +47,8 @@ namespace litl
         MainProcessFailed          = 13u,
         ExternalFormatImportFailed = 14u,
         DependencyResolveFailed    = 15u,
-        DependencyLoadFailed       = 16u
+        DependencyLoadFailed       = 16u,
+        InvalidImportedItemCount   = 17u
     };
 }
 
