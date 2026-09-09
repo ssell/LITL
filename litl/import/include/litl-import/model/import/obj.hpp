@@ -1,5 +1,5 @@
-#ifndef LITL_IMPORT_MESH_OBJ_H__
-#define LITL_IMPORT_MESH_OBJ_H__
+#ifndef LITL_IMPORT_MODEL_OBJ_H__
+#define LITL_IMPORT_MODEL_OBJ_H__
 
 #include "litl-import/importer.hpp"
 

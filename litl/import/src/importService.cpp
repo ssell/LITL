@@ -13,7 +13,10 @@
 #include "litl-import/mesh/import/fbx.hpp"
 #include "litl-import/mesh/import/glb.hpp"
 #include "litl-import/mesh/import/gltf.hpp"
-#include "litl-import/mesh/import/obj.hpp"
+
+// Model
+#include "litl-import/model/export/modelExporter.hpp"
+#include "litl-import/model/import/obj.hpp"
 
 // Shader
 #include "litl-import/shader/export/shaderExporter.hpp"
@@ -43,6 +46,9 @@ namespace litl::import
         m_importerRegistry.add<FbxImporter>();
         m_importerRegistry.add<GlbImporter>();
         m_importerRegistry.add<GltfImporter>();
+
+        // Model
+        m_exporterRegistry.add<ModelExporter>();
         m_importerRegistry.add<ObjImporter>();
 
         // Shader

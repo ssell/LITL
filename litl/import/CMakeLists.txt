@@ -5,7 +5,7 @@
 add_library(litl-import STATIC 
 	"${CMAKE_SOURCE_DIR}/deps/ufbx/ufbx.c"
 	"src/mesh/import/fbx.cpp"  
-	"src/mesh/import/obj.cpp" 
+	 
 	"src/mesh/import/gltf.cpp" 
 	"src/mesh/import/glb.cpp" 
 	"src/importService.cpp" 
@@ -20,7 +20,7 @@ add_library(litl-import STATIC
 	"src/shader/import/spirv.cpp" 
 	"src/shader/import/slang.cpp" 
 	"src/shader/intermediate/litlbshd.cpp" 
-	"src/shader/intermediate/shaderIntermediateData.cpp")
+	"src/shader/intermediate/shaderIntermediateData.cpp" "src/model/export/modelExporter.cpp" "src/model/import/obj.cpp" "src/model/intermediate/modelIntermediateData.cpp" "src/model/intermediate/litlbmdl.cpp")
 
 target_include_directories(litl-import
 	PUBLIC

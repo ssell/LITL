@@ -6,7 +6,7 @@
 #include "litl-core/containers/flatHashMap.hpp"
 #include "litl-core/containers/flatHashSet.hpp"
 #include "litl-core/math/geometry/geoMesh.hpp"
-#include "litl-import/mesh/import/obj.hpp"
+#include "litl-import/model/import/obj.hpp"
 
 namespace
 {
@@ -47,7 +47,7 @@ namespace litl::import
 
             // According to the docs, position index is mandatory. The rest are optional.
             vertex.position = vec3{
-                objAttributes.positions[index.position_index * 3 + 0], 
+                objAttributes.positions[index.position_index * 3 + 0],
                 objAttributes.positions[index.position_index * 3 + 1],
                 objAttributes.positions[index.position_index * 3 + 2]
             };
@@ -170,7 +170,7 @@ namespace litl::import
     {
 
     }
-    
+
     ObjImporter::~ObjImporter()
     {
 

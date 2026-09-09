@@ -1,5 +1,5 @@
-#ifndef LITL_IMPORT_MATERIAL_LITLMATB_H__
-#define LITL_IMPORT_MATERIAL_LITLMATB_H__
+#ifndef LITL_IMPORT_MATERIAL_LITLBMAT_H__
+#define LITL_IMPORT_MATERIAL_LITLBMAT_H__
 
 #include "litl-core/formats/binaryBlockFile.hpp"
 #include "litl-import/material/intermediate/materialIntermediateData.hpp"

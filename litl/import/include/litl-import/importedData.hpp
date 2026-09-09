@@ -17,7 +17,8 @@ namespace litl::import
         Unknown = 0u,
         Material = 1u,
         Mesh = 2u,
-        Shader = 3u
+        Shader = 3u,
+        Model = 4u
     };
 
     /// <summary>
