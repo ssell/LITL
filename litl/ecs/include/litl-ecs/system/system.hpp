@@ -191,11 +191,18 @@ namespace litl
         template<typename SystemComponentTuple>
         void registerComponentTypes()
         {
-            auto componentTypes = SystemComponentOperations<SystemComponentTuple>::extractRequiredComponentIds();
+            auto requiredComponentTypes = SystemComponentOperations<SystemComponentTuple>::extractRequiredComponentIds();
 
-            for (auto componentType : componentTypes)
+            for (auto componentType : requiredComponentTypes)
             {
                 registerComponentType(componentType);
+            }
+
+            auto excludedComponentTypes = SystemComponentOperations<SystemComponentTuple>::extractExcludedComponentIds();
+
+            for (auto componentType : excludedComponentTypes)
+            {
+                registerExcludedComponentType(componentType);
             }
         }
 
