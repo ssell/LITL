@@ -43,7 +43,7 @@ namespace litl
 
     void ActiveVariableMaterialSystem::update(SystemData const& data, Entity entity, VariableMaterialsRef const& materialRef)
     {
-        MaterialBindings* materialBindings = m_pObjectPool->getMaterialBindings(materialRef.materialBindingsHandle);
+        MaterialBindings* materialBindings = m_pObjectPool->getMaterialBindings(materialRef.handle);
 
         if (materialBindings != nullptr)
         {

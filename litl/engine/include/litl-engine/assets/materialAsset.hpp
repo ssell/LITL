@@ -8,7 +8,7 @@
 #include "litl-engine/assets/assetHandle.hpp"
 #include "litl-engine/ecs/components/materialRef.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
-#include "litl-engine/objects/material/materialBinding.hpp"
+#include "litl-engine/objects/material/materialBindings.hpp"
 #include "litl-renderer/resources/shaderModuleTypes.hpp"
 
 namespace litl::import

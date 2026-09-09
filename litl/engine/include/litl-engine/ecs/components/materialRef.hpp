@@ -34,7 +34,7 @@ namespace litl
         /// <summary>
         /// Handle to an engine-owned MaterialBindings instance that defines which materials are bound to which Mesh submeshes.
         /// </summary>
-        MaterialBindingsHandle materialBindingsHandle;
+        MaterialBindingsHandle handle;
     };
 }
 

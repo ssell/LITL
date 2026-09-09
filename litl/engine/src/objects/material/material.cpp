@@ -928,6 +928,14 @@ namespace litl
         return m_pImpl->properties.allocateSlot();
     }
 
+    MaterialBinding Material::allocateBinding() noexcept
+    {
+        return MaterialBinding{
+            .handle = m_pImpl->selfHandle,
+            .slot = allocateSlot()
+        };
+    }
+
     uint32_t Material::getSlotIndex(MaterialPropertySlotId slotId) const noexcept
     {
         return m_pImpl->properties.getSlotIndex(slotId);

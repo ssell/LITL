@@ -12,6 +12,7 @@
 #include "litl-engine/objects/objectDescriptor.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
 #include "litl-engine/objects/material/materialPropertySlotId.hpp"
+#include "litl-engine/objects/material/materialBindings.hpp"
 #include "litl-renderer/resources/graphicsPipeline.hpp"
 #include "litl-renderer/resources/computePipeline.hpp"
 
@@ -152,6 +153,13 @@ namespace litl
         /// Allocates a slot in the material buffer. This slot may be a reclaimed or new slot.
         /// </summary>
         [[nodiscard]] MaterialPropertySlotId allocateSlot() noexcept;
+
+        /// <summary>
+        /// Utility which creates a MaterialBinding for use with a MaterialBindings object which in turn is used 
+        /// by a VariableMaterialsRef component for rendering multiple materials on a single mesh via its submeshes.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] MaterialBinding allocateBinding() noexcept;
 
         /// <summary>
         /// Returns the index into the GPU buffer that the provided slot resides in.

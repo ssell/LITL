@@ -7,7 +7,7 @@
 #include "litl-engine/objects/camera.hpp"
 #include "litl-engine/objects/gpuBuffer.hpp"
 #include "litl-engine/objects/material/material.hpp"
-#include "litl-engine/objects/material/materialBinding.hpp"
+#include "litl-engine/objects/material/materialBindings.hpp"
 #include "litl-engine/objects/mesh.hpp"
 #include "litl-engine/objects/shader.hpp"
 #include "litl-engine/objects/text.hpp"

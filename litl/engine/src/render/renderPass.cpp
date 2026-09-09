@@ -183,7 +183,7 @@ namespace litl
             {
                 if ((currMeshHandle != std::nullopt) && (currMeshHandle.value() == entities[i].meshRef.handle) &&
                     (currMaterialHandle != std::nullopt) && (currMaterialHandle.value() == entities[i].materialRef.handle))
-                    //(currMaterialBindingsHandle != std::nullopt) && (currMaterialBindingsHandle.value() == entities[i].materialRef.materialBindingsHandle))
+                    //(currMaterialBindingsHandle != std::nullopt) && (currMaterialBindingsHandle.value() == entities[i].materialRef.handle))
                 {
                     // Same bound mesh and material(s)
                     continue;
@@ -244,7 +244,7 @@ namespace litl
             }
 
             /*
-            if (auto* materialBindings = objectPool->getMaterialBindings(entity.materialRef.materialBindingsHandle); materialBindings != nullptr)
+            if (auto* materialBindings = objectPool->getMaterialBindings(entity.materialRef.handle); materialBindings != nullptr)
             {
                 const auto& submeshes = mesh->getGeoMesh().getSubmeshes();
 
@@ -268,7 +268,7 @@ namespace litl
 
                         // Only update current handles on successful object retrievals and subsequent DrawListItem creation.
                         currMeshHandle = entity.meshRef.handle;
-                        currMaterialBindingsHandle = entity.materialRef.materialBindingsHandle;
+                        currMaterialBindingsHandle = entity.materialRef.handle;
                     }
                 }
             }

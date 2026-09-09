@@ -13,6 +13,7 @@
 
 namespace litl
 {
+    class ObjectPool;
     class ServiceProvider;
     class EntityCommands;
     class SceneView;
@@ -71,7 +72,7 @@ namespace litl
         /// Checks each renderable entity against the pre-computed set of visible entities for each camera.
         /// If a renderable entity is visible, it is added to a thread-specific collection that is later combined.
         /// </summary>
-        void update(SystemData const& data, Entity entity, Transform const& transform, MeshRef const& mesh, MaterialRef const& materialRef);
+        void update(SystemData const& data, Entity entity, Transform const& transform, MeshRef const& mesh, MaterialRef const* materialRef, VariableMaterialsRef const* variableMaterialsRef);
 
         /// <summary>
         /// Retrieves all visible renderable entities for each camera.
@@ -85,6 +86,7 @@ namespace litl
         void reset() noexcept;
         void setCameraAtIndex(uint32_t i, Camera* camera) noexcept;
 
+        std::shared_ptr<ObjectPool> m_pObjectPool;
         std::shared_ptr<SceneView> m_pSceneView;
         std::vector<PartitionQueryResult> m_tempVisibleEntities;
         std::array<CameraFrustumEntities, SceneCameras::MaxSceneCameras> m_cameraVisibleEntities;

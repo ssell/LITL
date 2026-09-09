@@ -82,14 +82,14 @@ namespace litl
 
         // ---- Material Bindings
 
-        std::vector<MaterialBindingsHandle> materialBindingsHandles;
-        getAllMaterialBindingsHandles(materialBindingsHandles);
+        std::vector<MaterialBindingsHandle> handles;
+        getAllMaterialBindingsHandles(handles);
 
-        logTrace("... destroying ", materialBindingsHandles.size(), " Material Bindings handles.");
+        logTrace("... destroying ", handles.size(), " Material Bindings handles.");
 
-        for (auto materialBindingsHandle : materialBindingsHandles)
+        for (auto handle : handles)
         {
-            destroyMaterialBindings(materialBindingsHandle);
+            destroyMaterialBindings(handle);
         }
 
         // ---- Materials

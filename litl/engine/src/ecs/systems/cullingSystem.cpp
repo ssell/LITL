@@ -5,7 +5,7 @@
 #include "litl-ecs/entity/entityCommands.hpp"
 #include "litl-engine/ecs/systems/cullingSystem.hpp"
 #include "litl-engine/scene/sceneView.hpp"
-#include "litl-engine/objects/camera.hpp"
+#include "litl-engine/objects/objectPool.hpp"
 
 namespace litl
 {
@@ -15,6 +15,7 @@ namespace litl
 
     void CullingSystem::setup(ServiceProvider& services)
     {
+        m_pObjectPool = services.get<ObjectPool>();
         m_pSceneView = services.get<SceneView>();
     }
 
@@ -102,10 +103,17 @@ namespace litl
         }
     }
 
-    void CullingSystem::update(SystemData const& data, Entity entity, Transform const& transform, MeshRef const& meshRef, MaterialRef const& materialRef)
+    void CullingSystem::update(SystemData const& data, Entity entity, Transform const& transform, MeshRef const& meshRef, MaterialRef const* materialRef, VariableMaterialsRef const* variableMaterialsRef)
     {
-        if (!meshRef.handle.isValid() || !materialRef.handle.isValid())
+        if (!meshRef.handle.isValid())
         {
+            // Mesh is not valid
+            return;
+        }
+
+        if (((materialRef == nullptr) || !materialRef->handle.isValid()) && ((variableMaterialsRef == nullptr) || !variableMaterialsRef->handle.isValid()))
+        {
+            // Neither material option is valid
             return;
         }
 
@@ -120,13 +128,42 @@ namespace litl
             if (m_cameraVisibleEntities[cameraIndex].entities.contains(entity))
             {
                 // We are visible to this camera, add to our thread-specific culling bucket.
-                s_cullingBuckets[data.threadIndex].cameraRenderableEntities[cameraIndex].entities.push_back(RenderableEntity{
-                    .entity = entity,
-                    .meshRef = meshRef,
-                    .materialRef = materialRef,
-                    .firstIndex = 0u,                                   // Use of a MaterialRef indicates that the entire mesh is drawn with the same material.
-                    .indexCount = Constants::uint32_null_index 
-                });
+                if (materialRef != nullptr)
+                {
+                    // Use of a MaterialRef indicates that the entire mesh is drawn with the same material.
+                    s_cullingBuckets[data.threadIndex].cameraRenderableEntities[cameraIndex].entities.push_back(RenderableEntity{
+                        .entity = entity,
+                        .meshRef = meshRef,
+                        .materialRef = *materialRef,
+                        .firstIndex = 0u,
+                        .indexCount = Constants::uint32_null_index
+                    });
+                }
+                else if (variableMaterialsRef != nullptr)
+                {
+                    // Use of a VariableMaterialsRef indicates that only the submeshes with a matching material index are rendered.
+                    // For variable materials we need to fetch both the mesh and the bindings.
+                    auto* mesh = m_pObjectPool->getMesh(meshRef.handle);
+                    auto* materialBindings = m_pObjectPool->getMaterialBindings(variableMaterialsRef->handle);
+
+                    if ((mesh != nullptr) && (materialBindings != nullptr))
+                    {
+                        const auto& submeshes = mesh->getGeoMesh().getSubmeshes();
+                        const auto& bindings = materialBindings->getBindings();
+                        const auto count = litl::min(submeshes.size(), bindings.size());
+
+                        for (auto i = 0; i < count; ++i)
+                        {
+                            s_cullingBuckets[data.threadIndex].cameraRenderableEntities[cameraIndex].entities.push_back(RenderableEntity{
+                                .entity = entity,
+                                .meshRef = meshRef,
+                                .materialRef = MaterialRef { .handle = bindings[i].handle, .slot = bindings[i].slot},
+                                .firstIndex = submeshes[i].firstIndex,
+                                .indexCount = submeshes[i].indexCount
+                            });
+                        }
+                    }
+                }
             }
         }
     }

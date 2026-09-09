@@ -1,5 +1,5 @@
 #include "litl-engine/objects/objectPool.hpp"
-#include "litl-engine/objects/material/materialBinding.hpp"
+#include "litl-engine/objects/material/materialBindings.hpp"
 #include "litl-engine/objects/material/material.hpp"
 
 namespace litl
