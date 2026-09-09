@@ -11,7 +11,7 @@ namespace litl::tests
     {
         void setup(ServiceProvider& services) {}
         void prepare() {}
-        void update(SystemData const& data, Entity entity, Foo const& read, Bar& write) {}
+        void update(SystemData const& data, Entity entity, Foo const& read, Bar& write, Qux const* optionalRead, Without<Baz>) {}
     };
 
     /// <summary>
@@ -61,22 +61,30 @@ namespace litl::tests
     {
         //  SystemComponents<>: retrieves all types on the system ::update method, excluding the mandatory World& and float.
         //  SystemComponentOperations<>::extractComponentIds: transforms those types into a std::tuple of ComponentTypeIds
-        auto foundTypes = SystemComponentOperations<SystemComponents<TraitsTestSystem>>::extractRequiredComponentIds();
+        auto requiredTypes = SystemComponentOperations<SystemComponents<TraitsTestSystem>>::extractRequiredComponentIds();
 
         // TraitsTestSystem::update(World&, float, Foo const&, Bar&)
         // Expect to see Foo and Bar (World and float are stripped out)
-        REQUIRE(foundTypes.size() == 2);
-        REQUIRE(foundTypes[0] == ComponentDescriptor::get<Foo>()->id);
-        REQUIRE(foundTypes[1] == ComponentDescriptor::get<Bar>()->id);
+        REQUIRE(requiredTypes.size() == 2);
+        REQUIRE(requiredTypes[0] == ComponentDescriptor::get<Foo>()->id);
+        REQUIRE(requiredTypes[1] == ComponentDescriptor::get<Bar>()->id);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("Traits extractExcludedComponentIds", "[ecs::system]")
+    {
+        auto excludedTypes = SystemComponentOperations<SystemComponents<TraitsTestSystem>>::extractExcludedComponentIds();
+
+        REQUIRE(excludedTypes.size() == 1);
+        REQUIRE(excludedTypes[0] == ComponentDescriptor::get<Baz>()->id);
     } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Traits extractComponentInfo", "[ecs::system]")
     {
         std::vector<SystemComponentInfo> componentInfos = ExtractSystemComponentInfo<TraitsTestSystem>();
 
-        // TraitsTestSystem::update(World&, float, Foo const&, Bar&)
+        // TraitsTestSystem::update(World&, float, Foo const&, Bar&, Qux const*)
         // Expect to see Foo and Bar (World and float are stripped out)
-        REQUIRE(componentInfos.size() == 2);
+        REQUIRE(componentInfos.size() == 3);
 
         // Foo const& -> Foo and readonly = true
         REQUIRE(componentInfos[0].id == ComponentDescriptor::get<Foo>()->id);
@@ -85,6 +93,10 @@ namespace litl::tests
         // Bar& -> Bar and readonly = false
         REQUIRE(componentInfos[1].id == ComponentDescriptor::get<Bar>()->id);
         REQUIRE(componentInfos[1].readonly == false);
+
+        // Qux const* -> Qux and readonly = true
+        REQUIRE(componentInfos[2].id == ComponentDescriptor::get<Qux>()->id);
+        REQUIRE(componentInfos[2].readonly == true);
 
     } LITL_END_TEST_CASE
 }

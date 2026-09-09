@@ -25,6 +25,11 @@ namespace litl::tests
         bool ok{ false };
     };
 
+    struct Qux
+    {
+        bool awhat{ false };
+    };
+
     struct SystemSetupService
     {
         bool wasSetup{ false };
@@ -71,5 +76,6 @@ namespace litl::tests
 LITL_REGISTER_TYPE_NAME(litl::tests::Foo)
 LITL_REGISTER_TYPE_NAME(litl::tests::Bar)
 LITL_REGISTER_TYPE_NAME(litl::tests::Baz)
+LITL_REGISTER_TYPE_NAME(litl::tests::Qux)
 
 #endif
