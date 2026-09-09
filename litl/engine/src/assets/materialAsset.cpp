@@ -108,9 +108,6 @@ namespace litl
             logWarning("Decoding material asset with key '", asset->key, "' directly from external format. It is recommended to first convert the material to the internal .litlbmat format to improve loading performance.");
             return decodeNonLitlMaterialBinaryBytes(materialAsset, bytes, error);
         }
-
-
-        return true;
     }
 
     bool MaterialAsset::processOnWorker(Asset* asset, AssetErrorCode& error) noexcept

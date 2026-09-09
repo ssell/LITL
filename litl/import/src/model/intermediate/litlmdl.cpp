@@ -2,6 +2,11 @@
 
 namespace litl::import
 {
+    bool LitlModel::parse(std::span<std::byte const> data, LitlModel& file, ErrorCode& error) noexcept
+    {
+        return false;
+    }
+
     bool LitlModel::serialize(ModelIntermediateData const& model, std::vector<std::byte>& data, ErrorCode& error) noexcept
     {
         return false;

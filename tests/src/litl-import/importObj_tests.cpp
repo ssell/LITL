@@ -29,14 +29,13 @@ namespace litl::tests
         REQUIRE(mesh->summary.meshCount == 1u);
         REQUIRE(mesh->summary.vertexCount == 29834u);
         REQUIRE(mesh->summary.indexCount == 178992u);
-        REQUIRE(mesh->meshes.size() == 1ull);
-        REQUIRE(mesh->meshes[0] != nullptr);
-        REQUIRE(mesh->meshes[0]->getVertices().size() == 29834ull);
-        REQUIRE(mesh->meshes[0]->getIndices().size() == 178992ull);
-        REQUIRE(mesh->meshes[0]->getVertices()[0].position.isZeroed() == false);       // a valid non-zero position provided by the model
-        REQUIRE(mesh->meshes[0]->getVertices()[0].texcoord == vec2{ 0.0f, 1.0f });     // obj has an origin in the lower-left while vulkan has an upper-left origin. so our importer flips (0,0) -> (0,1)
-        REQUIRE(mesh->meshes[0]->getVertices()[0].normal.isZeroed() == false);         // missing normals generated
-        REQUIRE(mesh->meshes[0]->getVertices()[0].tangent.isIdentity() == true);       // (todo generate missing tangents)
+        REQUIRE(mesh->mesh != nullptr);
+        REQUIRE(mesh->mesh->getVertices().size() == 29834ull);
+        REQUIRE(mesh->mesh->getIndices().size() == 178992ull);
+        REQUIRE(mesh->mesh->getVertices()[0].position.isZeroed() == false);       // a valid non-zero position provided by the model
+        REQUIRE(mesh->mesh->getVertices()[0].texcoord == vec2{ 0.0f, 1.0f });     // obj has an origin in the lower-left while vulkan has an upper-left origin. so our importer flips (0,0) -> (0,1)
+        REQUIRE(mesh->mesh->getVertices()[0].normal.isZeroed() == false);         // missing normals generated
+        REQUIRE(mesh->mesh->getVertices()[0].tangent.isIdentity() == true);       // (todo generate missing tangents)
     } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Convert OBJ to litlmesh", "[import::obj]")
@@ -102,8 +101,9 @@ namespace litl::tests
         auto* mesh = data.items[0].getDataPtr<import::MeshImportResult>();
 
         REQUIRE(mesh != nullptr);
+        REQUIRE(mesh->mesh != nullptr);
 
-        GeoMesh& objGeoMesh = *mesh->meshes[0].get();
+        GeoMesh& objGeoMesh = *mesh->mesh.get();
         GeoMesh litlGeoMesh{};
 
         REQUIRE(litlMesh.deserialize(litlGeoMesh, error) == true);

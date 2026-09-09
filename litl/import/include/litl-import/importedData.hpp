@@ -3,7 +3,9 @@
 
 #include <concepts>
 #include <memory>
+#include <unordered_map>
 #include <variant>
+#include <vector>
 
 #include "litl-core/traits.hpp"
 #include "litl-import/material/import/result.hpp"
@@ -151,6 +153,33 @@ namespace litl::import
     {
         std::vector<ImportedDataItem> items;
         ImportedDataResult result{};
+
+        void calculateTypeCounts() noexcept
+        {
+            m_dataTypeCounts.clear();
+
+            for (auto& item : items)
+            {
+                m_dataTypeCounts[item.getType()]++;
+            }
+        }
+
+        [[nodiscard]] uint32_t getTypeCount(ImportedDataType type) const noexcept
+        {
+            auto find = m_dataTypeCounts.find(type);
+
+            if (find == m_dataTypeCounts.end())
+            {
+                return 0u;
+            }
+
+            return find->second;
+        }
+
+    private:
+
+
+        std::unordered_map<ImportedDataType, uint32_t> m_dataTypeCounts;
     };
 }
 

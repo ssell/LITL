@@ -35,7 +35,7 @@ namespace litl::import
     struct MeshImportResult
     {
         MeshImportSummary summary{};
-        std::vector<std::unique_ptr<GeoMesh>> meshes;
+        std::unique_ptr<GeoMesh> mesh;
         MeshImportConvention importConvention{};
     };
 }

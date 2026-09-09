@@ -1,7 +1,9 @@
 #ifndef LITL_IMPORT_MODEL_LITLMDL_H__
 #define LITL_IMPORT_MODEL_LITLMDL_H__
 
+#include <span>
 #include <vector>
+
 #include "litl-import/model/intermediate/modelIntermediateData.hpp"
 
 namespace litl::import
@@ -17,11 +19,12 @@ namespace litl::import
     /// </summary>
     struct LitlModel final
     {
-        enum class ErrorCode
+        enum class ErrorCode : uint32_t
         {
-
+            None = 0u
         };
 
+        [[nodiscard]] static bool parse(std::span<std::byte const> data, LitlModel& file, ErrorCode& error) noexcept;
         [[nodiscard]] static bool serialize(ModelIntermediateData const& model, std::vector<std::byte>& data, ErrorCode& error) noexcept;
         [[nodiscard]] bool deserialize(ModelIntermediateData& model, ErrorCode& error) const noexcept;
     };

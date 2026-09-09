@@ -16,9 +16,11 @@ namespace litl::samples
         auto bunnyPos = vec3{ 0.0f, 0.0f, 3.5f };
 
         const auto camera = createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(0.0f, 1.5f, 0.0f), bunnyPos, vec3::up(), *objectPool, *sceneView);
-        const auto entity = createRenderable(bunnyPos, "mesh/bunny"_sid, "materials/flat"_sid, commands, *assets, *objectPool);
+        
+        ModelAsset* model = assets->getModel("models/sponza");   // trigger bunny.obj model import
 
-        commands.addComponent<Spin>(entity, Spin{ .rate = -1.0f });
+        //const auto entity = createRenderable(bunnyPos, "mesh/bunny"_sid, "materials/flat"_sid, commands, *assets);
+        //commands.addComponent<Spin>(entity, Spin{ .rate = -1.0f });
     }
 }
 

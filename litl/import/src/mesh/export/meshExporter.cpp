@@ -30,22 +30,17 @@ namespace litl::import
             return Result::Error(ErrorType::ImportedDataTypeMismatch);
         }
 
-        auto* mesh = dataItem.getDataPtr<MeshImportResult>();
+        auto* meshResult = dataItem.getDataPtr<MeshImportResult>();
 
-        if (mesh == nullptr)
-        {
-            return Result::Error(ErrorType::ImportedDataNull);
-        }
-
-        if (mesh->meshes.empty())
+        if ((meshResult == nullptr) || (meshResult->mesh == nullptr))
         {
             return Result::Error(ErrorType::ImportedDataNull);
         }
 
         GeoMesh::ErrorCode meshError = GeoMesh::ErrorCode::None;
-        GeoMesh* geomesh = mesh->meshes[0].get();         // todo handle submeshes;
+        GeoMesh* mesh = meshResult->mesh.get();         // todo handle submeshes;
 
-        const auto triangulationReport = geomesh->triangulate();
+        const auto triangulationReport = mesh->triangulate();
 
         if (!triangulationReport.success)
         {
@@ -55,26 +50,26 @@ namespace litl::import
         // ... todo weld ...
         // ... todo remove degenerates (zero-area triangles, repeated indices, etc.) ...
 
-        if (mesh->importConvention.sourceIsCcwFront)
+        if (meshResult->importConvention.sourceIsCcwFront)
         {
-            geomesh->setWindingOrder(MeshWinding::CounterClockwise);
-            geomesh->ensureClockwiseWinding();
+            mesh->setWindingOrder(MeshWinding::CounterClockwise);
+            mesh->ensureClockwiseWinding();
 
         }
 
-        if (!geomesh->hasNormals())
+        if (!mesh->hasNormals())
         {
-            geomesh->recalulateNormals(false);
+            mesh->recalulateNormals(false);
         }
 
-        if (mesh->importConvention.sourceIsRightHanded)
+        if (meshResult->importConvention.sourceIsRightHanded)
         {
-            geomesh->negateZValues();
+            mesh->negateZValues();
         }
 
-        if (mesh->importConvention.flipTexcoordV)
+        if (meshResult->importConvention.flipTexcoordV)
         {
-            geomesh->flipTexcoordV();
+            mesh->flipTexcoordV();
         }
 
         // ... todo crease split ...
@@ -83,7 +78,7 @@ namespace litl::import
         // ... todo meshoptimizer (vertex cache, overdraw, vertexfetch) ...
         // ... todo (optional) lod generation ...
 
-        if (!geomesh->finalizeSubmeshes(meshError))
+        if (!mesh->finalizeSubmeshes(meshError))
         {
             return Result::Error(ErrorType::ExportPrepareFailed, std::format("GeoMesh::finalizeSubmeshes failed with GeoMesh::ErrorCode of {}", static_cast<uint32_t>(meshError)));
         }
@@ -102,16 +97,16 @@ namespace litl::import
         auto destFile = File(destFilePath);
         auto errorCode = BinaryBlockFile::ErrorCode::None;
         auto serialized = std::vector<std::byte>();
-        auto* mesh = data.items[dataIndex].getDataPtr<MeshImportResult>();
+        auto* meshResult = data.items[dataIndex].getDataPtr<MeshImportResult>();
 
-        if (mesh == nullptr)
+        if ((meshResult == nullptr) || (meshResult->mesh == nullptr))
         {
             return Result::Error(ErrorType::ImportedDataNull);
         }
 
-        GeoMesh* geomesh = mesh->meshes[0].get();         // todo handle submeshes;
+        GeoMesh* mesh = meshResult->mesh.get();         // todo handle submeshes;
 
-        if (!LitlMesh::serialize(*geomesh, serialized, errorCode))
+        if (!LitlMesh::serialize(*mesh, serialized, errorCode))
         {
             return Result::Error(ErrorType::SerializationFailed, std::format("Serialization of GeoMesh to LitlMesh failed with error code {}", static_cast<uint32_t>(errorCode)));
         }

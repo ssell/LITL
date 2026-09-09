@@ -60,9 +60,9 @@ namespace litl
                 {
                     auto* importedMesh = importedItem.getDataPtr<import::MeshImportResult>();
 
-                    if (importedMesh != nullptr)
+                    if ((importedMesh != nullptr) && (importedMesh->mesh != nullptr))
                     {
-                        meshAsset->mesh->getGeoMesh() = std::move(*importedMesh->meshes[0].get());
+                        meshAsset->mesh->getGeoMesh() = std::move(*importedMesh->mesh.get());
                         return true;
                     }
                     else

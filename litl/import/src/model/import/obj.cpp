@@ -213,8 +213,8 @@ namespace litl::import
 
             auto* mesh = dataItem.getDataPtr<MeshImportResult>();
 
-            mesh->meshes.push_back(std::make_unique<GeoMesh>());
-            auto* litlMesh = mesh->meshes.back().get();
+            mesh->mesh = std::make_unique<GeoMesh>();
+            auto* litlMesh = mesh->mesh.get();
             auto& objMesh = shape.mesh;
 
             convertToLitlMesh(litlMesh, objMesh, objResult.attributes);

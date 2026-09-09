@@ -1,6 +1,7 @@
 #ifndef LITL_ENGINE_ASSETS_MODEL_ASSET_H__
 #define LITL_ENGINE_ASSETS_MODEL_ASSET_H__
 
+#include <memory>
 #include <vector>
 
 #include "litl-engine/assets/asset.hpp"
@@ -8,9 +9,15 @@
 
 namespace litl
 {
+    namespace import
+    {
+        class ModelIntermediateData;
+    }
+
     struct ModelAsset : public Asset
     {
         std::vector<MeshAssetHandle> meshAssetHandles;
+        std::shared_ptr<import::ModelIntermediateData> modelIntermediateData;
 
         static bool fetchAssetObject(Asset* asset, ObjectPool& objectPool) noexcept;
         static bool decodeBytes(Asset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept;

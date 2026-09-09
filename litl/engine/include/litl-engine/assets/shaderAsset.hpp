@@ -6,13 +6,13 @@
 #include "litl-engine/assets/asset.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
 
-namespace litl::import
-{
-    class ShaderIntermediateData;
-}
-
 namespace litl
 {
+    namespace import
+    {
+        class ShaderIntermediateData;
+    }
+
     class Shader;
 
     struct ShaderAsset : public Asset

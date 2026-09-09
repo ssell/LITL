@@ -11,13 +11,13 @@
 #include "litl-engine/objects/material/materialBindings.hpp"
 #include "litl-renderer/resources/shaderModuleTypes.hpp"
 
-namespace litl::import
-{
-    class MaterialIntermediateData;
-}
-
 namespace litl
 {
+    namespace import
+    {
+        class MaterialIntermediateData;
+    }
+
     class Material;
 
     struct MaterialAssetShaderDependency
