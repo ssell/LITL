@@ -1,6 +1,7 @@
 #include <format>
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "litl-core/file.hpp"
 #include "litl-core/string.hpp"
@@ -252,26 +253,24 @@ namespace litl::import
                 return;
             }
 
-            StringIdMap<uint32_t> nameOccurrences;
+            std::unordered_set<uint64_t> isNameTaken;
+            isNameTaken.reserve(importedData.items.size());
 
             for (auto& importedDataItem : importedData.items)
             {
                 const auto originalName = importedDataItem.getName();
                 auto uniqueName = std::string(originalName);
                 auto uniqueNameId = StringId(uniqueName);
-                auto occurrence = nameOccurrences.find(uniqueNameId);
                 auto occurrenceCount = 0u;
 
-                while (occurrence != nameOccurrences.end())
+                while (isNameTaken.contains(uniqueNameId.value))
                 {
                     occurrenceCount++;
                     uniqueName = std::format("{}_{}", originalName, occurrenceCount);
                     uniqueNameId = StringId(uniqueName);
-                    occurrence = nameOccurrences.find(uniqueNameId);
-                    nameOccurrences[uniqueNameId]++;
                 }
 
-                nameOccurrences[uniqueNameId]++;
+                isNameTaken.insert(uniqueNameId.value);
                 importedDataItem.setName(uniqueName);
             }
         }

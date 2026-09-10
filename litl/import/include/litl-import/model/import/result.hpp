@@ -25,11 +25,6 @@ namespace litl::import
         /// The ImportedDataItem's ImportedDataType is used to resolve which container to reference.
         /// </summary>
         uint32_t modelNameIndex{ Constants::uint32_null_index };
-
-        /// <summary>
-        /// The index of the appropriate node in the intermediate data that is tied to the item.
-        /// </summary>
-        uint32_t modelNodeIndex{ Constants::uint32_null_index };
     };
 
     struct ModelImportResult

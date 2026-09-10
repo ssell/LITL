@@ -112,11 +112,6 @@ namespace litl::import
                                 break;
                             }
                         }
-
-                        if (modelItem.modelNodeIndex != Constants::uint32_null_index)
-                        {
-                            modelPtr->model->updateNodeName(modelItem.modelNodeIndex, modelDataItem.getName());
-                        }
                     }
                 }
             }

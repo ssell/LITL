@@ -62,4 +62,59 @@ namespace litl::tests
         }
 
     } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("propagateNameUpdates", "[import::importService]")
+    {
+        const std::array<std::string, 11u> originalNames{ "wall", "WALL", "wall", "box", "box_1", "box", "box", "box_3", "box_4", "box_4", "box" };
+        const std::array<std::string, 11u> expectedNames{ "wall", "wall_1", "wall_2", "box", "box_1", "box_2", "box_3", "box_3_1", "box_4", "box_4_1", "box_5" };
+
+        static_assert(originalNames.size() == expectedNames.size());
+
+        import::ImportedData data;
+        data.items.reserve(originalNames.size() + 1);
+
+        data.items.push_back({});
+        auto& modelItem = data.items.back();
+        REQUIRE(modelItem.setType(import::ImportedDataType::Model) == true);
+        auto* modelResult = modelItem.getDataPtr<import::ModelImportResult>();
+        REQUIRE(modelResult != nullptr);
+        modelResult->model = std::make_unique<import::ModelIntermediateData>();
+
+        // Populate the ModelIntermediateData and MdoelDataItems
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(originalNames.size()); ++i)
+        {
+            // Build the Mesh ImportedDataItem
+            data.items.push_back({});
+            auto& meshItem = data.items.back();
+            REQUIRE(meshItem.setType(import::ImportedDataType::Mesh) == true);
+            auto* meshResult = meshItem.getDataPtr<import::MeshImportResult>();
+            REQUIRE(meshResult != nullptr);
+
+            // Populate the ImportedDataItem name and add the Mesh to the ModelIntermediateData as both a name and a one-to-one node.
+            meshItem.setName(originalNames[i]);
+            const auto modelNameIndex = modelResult->model->addMesh(originalNames[i]);
+            modelResult->model->addNode(import::Node{ .name = originalNames[i] });
+            modelResult->dataItems.push_back(import::ModelDataItem{
+                .importedDataItemIndex = static_cast<uint32_t>(data.items.size() - 1u),
+                .modelNameIndex = modelNameIndex
+            });
+        }
+
+        // (Sanitize + Dedupe) and then propagate clean ImportedDataItem names to the ModelIntermediateData mesh names.
+        import::sanitizeAndDeduplicateImportedItemNames(data);
+        data.propagateNameUpdates();
+
+        auto meshNames = modelResult->model->getMeshNames();
+        auto nodes = modelResult->model->getNodes();
+
+        REQUIRE(meshNames.size() == originalNames.size());
+        REQUIRE(nodes.size() == originalNames.size());
+
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(originalNames.size()); ++i)
+        {
+            REQUIRE(meshNames[i] == expectedNames[i]);      // Mesh name has been updated to the new name
+            REQUIRE(nodes[i].name == originalNames[i]);     // Node name is unaffected by propagateNameUpdates and keeps the original name
+        }
+
+    } LITL_END_TEST_CASE
 }

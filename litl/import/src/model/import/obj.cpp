@@ -246,8 +246,7 @@ namespace litl::import
             // Update the internal model item tracking. This is used to propagate deduplicated/sanitized names back to the intermediate data.
             modelImportResult->dataItems.push_back(ModelDataItem{
                 .importedDataItemIndex = meshDataItemIndex,
-                .modelNameIndex = meshIndex,
-                .modelNodeIndex = meshNodeIndex
+                .modelNameIndex = meshIndex
             });
 
             // Build mesh
