@@ -210,8 +210,8 @@ namespace litl::import
             return Result::Error(ErrorType::ImporterFailed, "Failed to create model import data.");
         }
 
-        auto* model = modelDataItem.getDataPtr<ModelImportResult>();
-        model->model = std::make_unique<ModelIntermediateData>();
+        auto* modelImportResult = modelDataItem.getDataPtr<ModelImportResult>();
+        modelImportResult->model = std::make_unique<ModelIntermediateData>();
 
         // ---------------------------------------------------------------------------------
         // Add OBJ Shapes as Meshes to Model
@@ -226,6 +226,7 @@ namespace litl::import
                 continue;
             }
 
+            const uint32_t meshDataItemIndex = static_cast<uint32_t>(importedData.items.size());
             importedData.items.push_back({});
             auto& meshDataItem = importedData.items.back();
 
@@ -236,9 +237,17 @@ namespace litl::import
 
             // Update model
             meshDataItem.setName(shape.name);
-            const auto meshIndex = model->model->addMesh(shape.name);
-            const auto meshNodeIndex = model->model->addNode(Node{ .name = shape.name, .meshIndex =  meshIndex });
-            model->model->addRootNode(meshNodeIndex);       // OBJ hierarchy is flat, so all meshes will be root nodes.
+            const auto meshIndex = modelImportResult->model->addMesh(shape.name);
+            const auto meshNodeIndex = modelImportResult->model->addNode(Node{ .name = shape.name, .meshIndex =  meshIndex });
+            modelImportResult->model->addRootNode(meshNodeIndex);       // OBJ hierarchy is flat, so all meshes will be root nodes.
+
+
+            // Update the internal model item tracking. This is used to propagate deduplicated/sanitized names back to the intermediate data.
+            modelImportResult->dataItems.push_back(ModelDataItem{
+                .importedDataItemIndex = meshDataItemIndex,
+                .modelNameIndex = meshIndex,
+                .modelNodeIndex = meshNodeIndex
+            });
 
             // Build mesh
             auto* mesh = meshDataItem.getDataPtr<MeshImportResult>();

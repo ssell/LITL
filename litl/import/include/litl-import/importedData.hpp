@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "litl-core/traits.hpp"
+#include "litl-import/result.hpp"
 #include "litl-import/material/import/result.hpp"
 #include "litl-import/mesh/import/result.hpp"
 #include "litl-import/model/import/result.hpp"
@@ -67,51 +68,23 @@ namespace litl::import
         /// <summary>
         /// Returns the stored data type, if any.
         /// </summary>
-        [[nodiscard]] ImportedDataType getType() const noexcept
-        {
-            return static_cast<ImportedDataType>(m_dataPtr.index());
-        }
+        [[nodiscard]] ImportedDataType getType() const noexcept;
 
         /// <summary>
         /// Sets the data type stored in this import result.
         /// Note that once a type is set, it can not be changed.
         /// </summary>
-        [[nodiscard]] bool setType(ImportedDataType type)
-        {
-            if (getType() == type)
-            {
-                return false;
-            }
+        [[nodiscard]] bool setType(ImportedDataType type) noexcept;
 
-            if (getType() != ImportedDataType::Unknown)
-            {
-                logWarning("Attempting to override already-set ImportedData type. Once a type is set, it can not be undone.");
-                return false;
-            }
+        /// <summary>
+        /// Updates the name tied to this data item.
+        /// </summary>
+        void setName(std::string_view name) noexcept;
 
-            switch (type)
-            {
-            case ImportedDataType::Material:
-                m_dataPtr = std::make_unique<MaterialImportResult>();
-                return true;
-
-            case ImportedDataType::Mesh:
-                m_dataPtr = std::make_unique<MeshImportResult>();
-                return true;
-
-            case ImportedDataType::Model:
-                m_dataPtr = std::make_unique<ModelImportResult>();
-                return true;
-
-            case ImportedDataType::Shader:
-                m_dataPtr = std::make_unique<ShaderImportResult>();
-                return true;
-
-            case ImportedDataType::Unknown:
-            default:
-                return false;
-            }
-        }
+        /// <summary>
+        /// Retrieves the name tied to this data item.
+        /// </summary>
+        [[nodiscard]] std::string_view getName() const noexcept;
 
         /// <summary>
         /// Retrieves the pointer to the stored data in the specified form.
@@ -147,16 +120,6 @@ namespace litl::import
             return nullptr;
         }
 
-        void setName(std::string_view name) noexcept
-        {
-            m_name = name;
-        }
-
-        [[nodiscard]] std::string_view getName() const noexcept
-        {
-            return m_name;
-        }
-
     private:
 
         ImportedDataPtr m_dataPtr;
@@ -186,27 +149,9 @@ namespace litl::import
         std::vector<ImportedDataItem> items;
         ImportedDataResult result{};
 
-        void calculateTypeCounts() noexcept
-        {
-            m_dataTypeCounts.clear();
-
-            for (auto& item : items)
-            {
-                m_dataTypeCounts[item.getType()]++;
-            }
-        }
-
-        [[nodiscard]] uint32_t getTypeCount(ImportedDataType type) const noexcept
-        {
-            auto find = m_dataTypeCounts.find(type);
-
-            if (find == m_dataTypeCounts.end())
-            {
-                return 0u;
-            }
-
-            return find->second;
-        }
+        void calculateTypeCounts() noexcept;
+        [[nodiscard]] uint32_t getTypeCount(ImportedDataType type) const noexcept;
+        void propagateNameUpdates() noexcept;
 
     private:
 

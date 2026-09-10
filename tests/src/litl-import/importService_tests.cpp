@@ -18,10 +18,18 @@ namespace litl::tests
 
     LITL_TEST_CASE("sanitizeAndDeduplicateItemNames", "[import::importService]")
     {
-        const std::array<ItemDedupe, 10> items{
+        const std::array<ItemDedupe, 18> items{
             ItemDedupe{ import::ImportedDataType::Mesh, "wall", "wall" },
             ItemDedupe{ import::ImportedDataType::Mesh, "WALL", "wall_1" },
             ItemDedupe{ import::ImportedDataType::Mesh, "wall", "wall_2" },
+            ItemDedupe{ import::ImportedDataType::Mesh, "box", "box" },
+            ItemDedupe{ import::ImportedDataType::Mesh, "box_1", "box_1" },
+            ItemDedupe{ import::ImportedDataType::Mesh, "box", "box_2" },
+            ItemDedupe{ import::ImportedDataType::Mesh, "box", "box_3" },
+            ItemDedupe{ import::ImportedDataType::Mesh, "box_3", "box_3_1" },
+            ItemDedupe{ import::ImportedDataType::Mesh, "box_4", "box_4" },
+            ItemDedupe{ import::ImportedDataType::Mesh, "box_4", "box_4_1" },
+            ItemDedupe{ import::ImportedDataType::Mesh, "box", "box_5" }, 
             ItemDedupe{ import::ImportedDataType::Material, "", "material_0" },
             ItemDedupe{ import::ImportedDataType::Material, "", "material_1" },
             ItemDedupe{ import::ImportedDataType::Material, "", "material_2" },

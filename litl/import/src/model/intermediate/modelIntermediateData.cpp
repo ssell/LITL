@@ -26,6 +26,26 @@ namespace litl::import
         m_rootNodes.push_back(nodeIndex);
     }
 
+    void ModelIntermediateData::updateMeshName(uint32_t meshIndex, std::string_view updatedName) noexcept
+    {
+        if (meshIndex >= m_meshNames.size())
+        {
+            return;
+        }
+
+        m_meshNames[meshIndex] = updatedName;
+    }
+
+    void ModelIntermediateData::updateNodeName(uint32_t nodeIndex, std::string_view updatedName) noexcept
+    {
+        if (nodeIndex >= m_nodes.size())
+        {
+            return;
+        }
+
+        m_nodes[nodeIndex].name = updatedName;
+    }
+
     std::string_view ModelIntermediateData::getName() const noexcept
     {
         return m_name;

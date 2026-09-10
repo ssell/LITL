@@ -99,7 +99,7 @@ namespace litl::import
         }
 
         sanitizeAndDeduplicateImportedItemNames(importedData);
-
+        
         for (uint32_t i = 0u; i < static_cast<uint32_t>(importedData.items.size()); ++i)
         {
             if (shouldPrepare)
@@ -255,24 +255,22 @@ namespace litl::import
 
             for (auto& importedDataItem : importedData.items)
             {
-                auto lowercaseName = toLowercase(importedDataItem.getName());
+                const auto originalNameLower = toLowercase(importedDataItem.getName());
+                auto lowercaseName = originalNameLower;
                 auto lowercaseNameId = StringId(lowercaseName);
                 auto occurrence = nameOccurrences.find(lowercaseNameId);
+                auto occurrenceCount = 0u;
 
-                if (occurrence != nameOccurrences.end())
+                while (occurrence != nameOccurrences.end())
                 {
-                    const auto occurenceCount = occurrence->second;
-                    nameOccurrences[lowercaseNameId]++;
-
-                    lowercaseName = std::format("{}_{}", lowercaseName, occurenceCount);
+                    occurrenceCount++;
+                    lowercaseName = std::format("{}_{}", originalNameLower, occurrenceCount);
                     lowercaseNameId = StringId(lowercaseName);
-                    nameOccurrences[lowercaseNameId]++;
-                }
-                else
-                {
+                    occurrence = nameOccurrences.find(lowercaseNameId);
                     nameOccurrences[lowercaseNameId]++;
                 }
 
+                nameOccurrences[lowercaseNameId]++;
                 importedDataItem.setName(lowercaseName);
             }
         }
@@ -283,5 +281,7 @@ namespace litl::import
         sanitizeItemNames(importedData);
         ensureItemsHaveNames(importedData);
         deduplicateItemNames(importedData);
+
+        importedData.propagateNameUpdates();
     }
 }
