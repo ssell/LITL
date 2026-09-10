@@ -12,6 +12,7 @@
 #include "litl-core/traits.hpp"
 #include "litl-import/material/import/result.hpp"
 #include "litl-import/mesh/import/result.hpp"
+#include "litl-import/model/import/result.hpp"
 #include "litl-import/shader/import/result.hpp"
 
 namespace litl::import
@@ -21,8 +22,8 @@ namespace litl::import
         Unknown = 0u,
         Material = 1u,
         Mesh = 2u,
-        Shader = 3u,
-        Model = 4u
+        Model = 3u,
+        Shader = 4u
     };
 
     /// <summary>
@@ -33,16 +34,18 @@ namespace litl::import
         T, 
         MaterialImportResult,
         MeshImportResult, 
+        ModelImportResult,
         ShaderImportResult>;
 
     /// <summary>
     /// The unique pointer types used in ImportedData.
     /// </summary>
-    using ImportedDataPtr = std::variant<
-        std::monostate,     // maps to ImportedDataType::Unknown
-        std::unique_ptr<MaterialImportResult>,
-        std::unique_ptr<MeshImportResult>,
-        std::unique_ptr<ShaderImportResult>>;
+    using ImportedDataPtr = std::variant<           // The indices into this variant MUST MATCH the corresponding integer value of ImportedDataType.
+        std::monostate,                             // maps to ImportedDataType::Unknown
+        std::unique_ptr<MaterialImportResult>,      // maps to ImportedDataType::Material
+        std::unique_ptr<MeshImportResult>,          // maps to ImportedDataType::Mesh
+        std::unique_ptr<ModelImportResult>,         // maps to ImportedDataType::Model
+        std::unique_ptr<ShaderImportResult>>;       // maps to ImportedDataType::Shader
 
     class ImportedDataItem
     {
@@ -81,6 +84,10 @@ namespace litl::import
 
             case ImportedDataType::Mesh:
                 m_dataPtr = std::make_unique<MeshImportResult>();
+                return true;
+
+            case ImportedDataType::Model:
+                m_dataPtr = std::make_unique<ModelImportResult>();
                 return true;
 
             case ImportedDataType::Shader:

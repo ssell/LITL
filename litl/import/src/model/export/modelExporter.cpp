@@ -15,7 +15,8 @@ namespace litl::import
 
     Result ModelExporter::prepare(ImportedData& data, uint32_t dataIndex) noexcept
     {
-        return Result::Error(ErrorType::ExporterNotImplemented);
+        // ... todo ... let pass through so we can develop / debug further down the pipeline ...
+        return Result::Success();
     }
 
     Result ModelExporter::write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data, uint32_t dataIndex) noexcept
@@ -25,6 +26,7 @@ namespace litl::import
             return Result::Error(ErrorType::ExportDestinationDoesNotExist);
         }
 
-        return Result::Error(ErrorType::ExporterNotImplemented);
+        // ... todo ... let pass through so we can develop / debug further down the pipeline ...
+        return Result::Success();
     }
 }

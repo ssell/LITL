@@ -178,6 +178,10 @@ namespace litl::import
 
     Result ObjImporter::import(File const& file, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
     {
+        // ---------------------------------------------------------------------------------
+        // Parse the OBJ
+        // ---------------------------------------------------------------------------------
+
         std::span<char const> sourceBytesChar{ reinterpret_cast<char const*>(sourceBytes.data()), sourceBytes.size_bytes() };
         std::ispanstream stream{ sourceBytesChar };
 
@@ -194,6 +198,25 @@ namespace litl::import
             return Result::Error(ErrorType::ImporterEmptyResult);
         }
 
+        // ---------------------------------------------------------------------------------
+        // Create the Model
+        // ---------------------------------------------------------------------------------
+
+        importedData.items.push_back({});
+        auto& modelDataItem = importedData.items.back();
+
+        if (!modelDataItem.setType(ImportedDataType::Model))
+        {
+            return Result::Error(ErrorType::ImporterFailed, "Failed to create model import data.");
+        }
+
+        auto* model = modelDataItem.getDataPtr<ModelImportResult>();
+        model->model = std::make_unique<ModelIntermediateData>();
+
+        // ---------------------------------------------------------------------------------
+        // Add OBJ Shapes as Meshes to Model
+        // ---------------------------------------------------------------------------------
+
         for (uint32_t i = 0u; i < static_cast<uint32_t>(objResult.shapes.size()); ++i)
         {
             auto& shape = objResult.shapes[i];
@@ -204,19 +227,24 @@ namespace litl::import
             }
 
             importedData.items.push_back({});
-            auto& dataItem = importedData.items.back();
+            auto& meshDataItem = importedData.items.back();
 
-            if (!dataItem.setType(ImportedDataType::Mesh))
+            if (!meshDataItem.setType(ImportedDataType::Mesh))
             {
                 return Result::Error(ErrorType::ImporterFailed, "Failed to create mesh import data.");
             }
 
-            auto* mesh = dataItem.getDataPtr<MeshImportResult>();
+            // Update model
+            meshDataItem.setName(shape.name);
+            const auto meshIndex = model->model->addMesh(shape.name);
+            const auto meshNodeIndex = model->model->addNode(Node{ .name = shape.name, .meshIndex =  meshIndex });
+            model->model->addRootNode(meshNodeIndex);       // OBJ hierarchy is flat, so all meshes will be root nodes.
 
+            // Build mesh
+            auto* mesh = meshDataItem.getDataPtr<MeshImportResult>();
             mesh->mesh = std::make_unique<GeoMesh>();
             auto* litlMesh = mesh->mesh.get();
             auto& objMesh = shape.mesh;
-            dataItem.setName(shape.name);
 
             convertToLitlMesh(litlMesh, objMesh, objResult.attributes);
 
