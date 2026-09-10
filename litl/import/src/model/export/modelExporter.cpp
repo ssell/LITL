@@ -1,4 +1,5 @@
 #include "litl-core/directory.hpp"
+#include "litl-core/logging/logging.hpp"
 #include "litl-import/model/export/modelExporter.hpp"
 
 namespace litl::import
@@ -16,6 +17,8 @@ namespace litl::import
     Result ModelExporter::prepare(ImportedData& data, uint32_t dataIndex) noexcept
     {
         // ... todo ... let pass through so we can develop / debug further down the pipeline ...
+        logWarning("Invoking unimplemented ModelExporter::prepare");
+
         return Result::Success();
     }
 
@@ -27,6 +30,8 @@ namespace litl::import
         }
 
         // ... todo ... let pass through so we can develop / debug further down the pipeline ...
+        logWarning("Invoking unimplemented ModelExporter::write");
+
         return Result::Success();
     }
 }

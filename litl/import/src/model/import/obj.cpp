@@ -202,6 +202,7 @@ namespace litl::import
         // Create the Model
         // ---------------------------------------------------------------------------------
 
+        importedData.items.reserve(objResult.shapes.size() + 1);        // 1 model + N meshes
         importedData.items.push_back({});
         auto& modelDataItem = importedData.items.back();
 

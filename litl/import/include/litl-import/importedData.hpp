@@ -53,13 +53,20 @@ namespace litl::import
     /// Lowercase string names for each ImportedDataType.
     /// The array indices MUST MATCH the corresponding integer value of ImportedDataType.
     /// </summary>
-    static constexpr std::array<std::string_view, 5> ImportedDataTypeNames = {
+    inline constexpr std::array<std::string_view, 5> ImportedDataTypeNames = {
         "unknown",
         "material",
         "mesh",
         "model",
         "shader"
     };
+
+    static_assert(std::variant_size_v<ImportedDataPtr> == ImportedDataTypeNames.size());
+    static_assert(ImportedDataTypeNames[static_cast<size_t>(ImportedDataType::Unknown)]  == "unknown");
+    static_assert(ImportedDataTypeNames[static_cast<size_t>(ImportedDataType::Material)] == "material");
+    static_assert(ImportedDataTypeNames[static_cast<size_t>(ImportedDataType::Mesh)]     == "mesh");
+    static_assert(ImportedDataTypeNames[static_cast<size_t>(ImportedDataType::Model)]    == "model");
+    static_assert(ImportedDataTypeNames[static_cast<size_t>(ImportedDataType::Shader)]   == "shader");
 
     class ImportedDataItem
     {

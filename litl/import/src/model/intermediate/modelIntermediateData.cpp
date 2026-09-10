@@ -17,7 +17,7 @@ namespace litl::import
     uint32_t ModelIntermediateData::addNode(Node&& node) noexcept
     {
         const uint32_t index = static_cast<uint32_t>(m_nodes.size());
-        m_nodes.push_back(node);
+        m_nodes.push_back(std::move(node));
         return index;
     }
 

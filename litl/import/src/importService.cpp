@@ -199,7 +199,7 @@ namespace litl::import
                 const auto lowercaseName = toLowercase(importedDataItem.getName());
                 auto sanitizedName = File::SanitizeFilename(lowercaseName);
 
-                if (File::IsReservedFileNameCaseInsensitive(sanitizedName))
+                if (File::IsReservedFileName(sanitizedName))
                 {
                     // Entire name is invalid. Clear it, and let the follow-up call to ensureItemsHaveNames give it a name.
                     importedDataItem.setName("");

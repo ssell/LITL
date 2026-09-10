@@ -236,11 +236,6 @@ namespace litl
 
     bool File::IsReservedFileName(std::string_view name) noexcept
     {
-        return g_ReservedFileNames.contains(StringId(name).value);
-    }
-
-    bool File::IsReservedFileNameCaseInsensitive(std::string_view name) noexcept
-    {
         return g_ReservedFileNames.contains(StringId(toLowercase(name)).value);
     }
 
@@ -259,11 +254,7 @@ namespace litl
 
         for (unsigned char c : name)
         {
-            if (forbidden.contains(static_cast<char>(c)) || (c < 0x20))
-            {
-                sanitized += '_';               // Structurally illegal character -> underscore
-            }
-            else if (std::isspace(c))
+            if (std::isspace(c))
             {
                 pendingSpace = true;            // We will collapse whitespace runs into a single '-'
             }
@@ -275,10 +266,18 @@ namespace litl
                     {
                         sanitized += '-';
                     }
+
                     pendingSpace = false;
                 }
 
-                sanitized += static_cast<char>(c);
+                if (forbidden.contains(static_cast<char>(c)) || (c < 0x20))
+                {
+                    sanitized += '_';           // Structurally illegal character -> underscore
+                }
+                else
+                {
+                    sanitized += static_cast<char>(c);
+                }
             }
         }
 

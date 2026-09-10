@@ -110,15 +110,9 @@ namespace litl
 
         /// <summary>
         /// Returns true if the provided filename is on the internal reserved list. This is the name excluding extension or path.
-        /// This check is case-sensitive. For example "con" would return true, but "CON" would not.
+        /// This check is case insensitive. For example both "con" and "CON" would return true.
         /// </summary>
         [[nodiscard]] static bool IsReservedFileName(std::string_view name) noexcept;
-
-        /// <summary>
-        /// Returns true if the provided filename is on the internal reserved list. This is the name excluding extension or path.
-        /// This check is case-insensitive. For example both "con" and "CON" would return true.
-        /// </summary>
-        [[nodiscard]] static bool IsReservedFileNameCaseInsensitive(std::string_view name) noexcept;
 
         /// <summary>
         /// Strips/replaces all characters unsafe for a file name. This includes: slashes, colon, whitespace runs, trailing dots and spaces, and operating system specific sets such as *?"<>|
