@@ -73,7 +73,7 @@ add_executable(litl-tests
 	"src/litl-core/math/geomesh_tests.cpp" 
 	"src/litl-import/importLitlMat_tests.cpp" 
 	"src/litl-import/importSlang_tests.cpp" 
-	"src/litl-import/importFbx_tests.cpp")
+	"src/litl-import/importFbx_tests.cpp" "src/litl-core/file_tests.cpp")
 
 target_link_libraries(litl-tests
 	PRIVATE

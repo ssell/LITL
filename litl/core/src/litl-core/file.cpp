@@ -261,17 +261,20 @@ namespace litl
         {
             if (forbidden.contains(static_cast<char>(c)) || (c < 0x20))
             {
-                sanitized += '_';       // Structurally illegal character -> underscore
+                sanitized += '_';               // Structurally illegal character -> underscore
             }
             else if (std::isspace(c))
             {
-                pendingSpace = true;    // We will collapse whitespace runs into a single '-'
+                pendingSpace = true;            // We will collapse whitespace runs into a single '-'
             }
             else
             {
                 if (pendingSpace)
                 {
-                    sanitized += '-';
+                    if (!sanitized.empty())     // Dont start with a '-'
+                    {
+                        sanitized += '-';
+                    }
                     pendingSpace = false;
                 }
 
