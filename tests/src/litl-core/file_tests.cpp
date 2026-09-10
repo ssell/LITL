@@ -12,6 +12,10 @@ namespace litl::tests
         REQUIRE(File::IsReservedFileName("null") == false);
         REQUIRE(File::IsReservedFileName("aux") == true);
         REQUIRE(File::IsReservedFileName("AUX") == false);
+        REQUIRE(File::IsReservedFileName("com3") == true);
+        REQUIRE(File::IsReservedFileName("COm3") == false);
+        REQUIRE(File::IsReservedFileName("lpt6") == true);
+        REQUIRE(File::IsReservedFileName("LpT6") == false);
     } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Is Reserved Name (Case Insensitive)", "[core::file]")
@@ -23,6 +27,10 @@ namespace litl::tests
         REQUIRE(File::IsReservedFileNameCaseInsensitive("null") == false);
         REQUIRE(File::IsReservedFileNameCaseInsensitive("aux") == true);
         REQUIRE(File::IsReservedFileNameCaseInsensitive("AUX") == true);
+        REQUIRE(File::IsReservedFileNameCaseInsensitive("com3") == true);
+        REQUIRE(File::IsReservedFileNameCaseInsensitive("COm3") == true);
+        REQUIRE(File::IsReservedFileNameCaseInsensitive("lpt6") == true);
+        REQUIRE(File::IsReservedFileNameCaseInsensitive("LpT6") == true);
     } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Sanitize Filename", "[core::file]")

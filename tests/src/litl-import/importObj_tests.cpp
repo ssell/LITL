@@ -20,10 +20,11 @@ namespace litl::tests
         
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
-        REQUIRE(data.items.size() == 1);
-        REQUIRE(data.items[0].getType() == import::ImportedDataType::Mesh);
+        REQUIRE(data.items.size() == 2);
+        REQUIRE(data.items[0].getType() == import::ImportedDataType::Model);
+        REQUIRE(data.items[1].getType() == import::ImportedDataType::Mesh);
 
-        auto* mesh = data.items[0].getDataPtr<import::MeshImportResult>();
+        auto* mesh = data.items[1].getDataPtr<import::MeshImportResult>();
 
         REQUIRE(mesh != nullptr);
         REQUIRE(mesh->summary.meshCount == 1u);
@@ -32,10 +33,10 @@ namespace litl::tests
         REQUIRE(mesh->mesh != nullptr);
         REQUIRE(mesh->mesh->getVertices().size() == 29834ull);
         REQUIRE(mesh->mesh->getIndices().size() == 178992ull);
-        REQUIRE(mesh->mesh->getVertices()[0].position.isZeroed() == false);       // a valid non-zero position provided by the model
-        REQUIRE(mesh->mesh->getVertices()[0].texcoord == vec2{ 0.0f, 1.0f });     // obj has an origin in the lower-left while vulkan has an upper-left origin. so our importer flips (0,0) -> (0,1)
-        REQUIRE(mesh->mesh->getVertices()[0].normal.isZeroed() == false);         // missing normals generated
-        REQUIRE(mesh->mesh->getVertices()[0].tangent.isIdentity() == true);       // (todo generate missing tangents)
+        REQUIRE(mesh->mesh->getVertices()[1].position.isZeroed() == false);       // a valid non-zero position provided by the model
+        REQUIRE(mesh->mesh->getVertices()[1].texcoord == vec2{ 0.0f, 1.0f });     // obj has an origin in the lower-left while vulkan has an upper-left origin. so our importer flips (0,0) -> (0,1)
+        REQUIRE(mesh->mesh->getVertices()[1].normal.isZeroed() == false);         // missing normals generated
+        REQUIRE(mesh->mesh->getVertices()[1].tangent.isIdentity() == true);       // (todo generate missing tangents)
     } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Convert OBJ to litlmesh", "[import::obj]")
@@ -85,7 +86,9 @@ namespace litl::tests
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
-        REQUIRE(data.items.size() == 1);
+        REQUIRE(data.items.size() == 2);
+        REQUIRE(data.items[0].getType() == import::ImportedDataType::Model);
+        REQUIRE(data.items[1].getType() == import::ImportedDataType::Mesh);
 
         // Load the LitlMesh from the .litlbmsh we previously exported to.
         auto litlMeshBytes = dest.readAllBytes();
@@ -98,7 +101,7 @@ namespace litl::tests
         REQUIRE(error == BinaryBlockFile::ErrorCode::None);
 
         // Deserialize the LitlMesh to a second GeoMesh.
-        auto* mesh = data.items[0].getDataPtr<import::MeshImportResult>();
+        auto* mesh = data.items[1].getDataPtr<import::MeshImportResult>();      // index 0 is the model
 
         REQUIRE(mesh != nullptr);
         REQUIRE(mesh->mesh != nullptr);

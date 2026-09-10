@@ -1,10 +1,10 @@
 #include <format>
 #include <memory>
+#include <unordered_map>
 
 #include "litl-core/file.hpp"
 #include "litl-core/string.hpp"
 #include "litl-core/stringId.hpp"
-#include "litl-core/containers/flatHashMap.hpp"
 #include "litl-import/importService.hpp"
 
 // Material
@@ -221,7 +221,7 @@ namespace litl::import
                 return;
             }
 
-            FlatHashMap<uint32_t, uint32_t> unnamedItemsOfTypeCount;
+            std::unordered_map<uint32_t, uint32_t> unnamedItemsOfTypeCount;
 
             for (auto& importedDataItem : importedData.items)
             {
@@ -231,10 +231,10 @@ namespace litl::import
                 }
 
                 const uint32_t key = static_cast<uint32_t>(importedDataItem.getType());
-                const uint32_t count = unnamedItemsOfTypeCount.findOr(key, 0u);
+                const uint32_t count = unnamedItemsOfTypeCount[key];        // defaults to 0
 
                 importedDataItem.setName(std::format("{}_{}", ImportedDataTypeNames[key], count));
-                unnamedItemsOfTypeCount.insert(key, count + 1);
+                unnamedItemsOfTypeCount[key] = count + 1;
             }
         }
 
