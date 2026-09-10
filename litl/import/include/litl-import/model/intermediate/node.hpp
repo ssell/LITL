@@ -15,6 +15,7 @@ namespace litl::import
         std::string name;
         mat4 localTransform{ mat4::identity() };
         std::optional<uint32_t> meshIndex;
+        std::optional<uint32_t> materialIndex;              // ... todo this needs to be a vector as you can have many materials associated with a single mesh on a node ...
         std::vector<uint32_t> children;
     };
 }

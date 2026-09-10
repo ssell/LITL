@@ -41,12 +41,10 @@ namespace litl
 
     bool ModelAsset::decodeNonLitlModelBytes(ModelAsset* modelAsset, std::span<std::byte const> otherBytes, AssetErrorCode& error) noexcept
     {
-        const auto extension = modelAsset->file.extension();
-
         import::ImportService importer{};
+        import::ImportedData importedData{};
 
-        modelAsset->importedData = std::make_shared<import::ImportedData>();
-        const auto importResult = importer.import(modelAsset->file, otherBytes, *modelAsset->importedData.get(), true);
+        const auto importResult = importer.import(modelAsset->file, otherBytes, importedData, true);
 
         if (!importResult.success)
         {
@@ -55,15 +53,15 @@ namespace litl
             return false;
         }
 
-        if (modelAsset->importedData->items.empty())
+        if (importedData.items.empty())
         {
             logError("Failed to import bytes of model from third-party asset as the imported items count is 0.");
             error = AssetErrorCode::DecodeBytesResultEmpty;
             return false;
         }
 
-        modelAsset->importedData->calculateTypeCounts();
-        const auto modelCount = modelAsset->importedData->getTypeCount(import::ImportedDataType::Model);
+        importedData.calculateTypeCounts();
+        const auto modelCount = importedData.getTypeCount(import::ImportedDataType::Model);
 
         if (modelCount != 1u)
         {
@@ -72,25 +70,16 @@ namespace litl
             return false;
         }
 
-        uint32_t modelIndex = Constants::uint32_null_index;
+        const auto modelIndex = importedData.getFirstIndexOfType(import::ImportedDataType::Model);
 
-        for (uint32_t i = 0u; i < static_cast<uint32_t>(modelAsset->importedData->items.size()); ++i)
-        {
-            if (modelAsset->importedData->items[i].getType() == import::ImportedDataType::Model)
-            {
-                modelIndex = i;
-                break;
-            }
-        }
-
-        if (modelIndex == Constants::uint32_null_index)
+        if (!modelIndex.has_value())
         {
             logError("Failed to import bytes of model from third-party asset as the importer failed to find the expected model item index.");
             error = AssetErrorCode::DecodeBytesUnexpectedResult;
             return false;
         }
 
-        auto& modelDataItem = modelAsset->importedData->items[0];
+        auto& modelDataItem = importedData.items[modelIndex.value()];
         auto* modelResult = modelDataItem.getDataPtr<import::ModelImportResult>();
 
         if ((modelResult == nullptr) || (modelResult->model == nullptr))
@@ -102,6 +91,9 @@ namespace litl
 
         // Move from the private internal result to the public modelIntermediateData
         modelAsset->modelIntermediateData = std::move(modelResult->model);
+
+        // Move imported data to the model asset after success
+        modelAsset->importedData = std::make_shared<import::ImportedData>(std::move(importedData));
 
         return true;
     }
@@ -133,6 +125,103 @@ namespace litl
         return true;
     }
 
+    bool ModelAsset::gatherDependenciesFromLitlModel(ModelAsset* modelAsset, AssetManager& assetManager, std::span<std::string const> meshNames, std::span<std::string const> materialNames, std::vector<Asset*>& dependencies) noexcept
+    {
+        // ... todo ...
+        return false;
+    }
+
+    /// <summary>
+    /// Traverses the model data items and builds proper keys for each item. The imported object data (mesh, material, etc.) is then used to create a new asset at the key.
+    /// </summary>
+    bool ModelAsset::gatherDependenciesFromNonLitlModel(ModelAsset* modelAsset, AssetManager& assetManager, std::span<std::string const> meshNames, std::span<std::string const> materialNames, std::vector<Asset*>& dependencies) noexcept
+    {
+        const auto modelIndex = modelAsset->importedData->getFirstIndexOfType(import::ImportedDataType::Model);
+
+        if (!modelIndex.has_value())
+        {
+            logWarning("Failed to get Model imported data item while gathering dependencies for Model '", modelAsset->key, "'");
+            return false;
+        }
+
+        auto* modelDataPtr = modelAsset->importedData->items[modelIndex.value()].getDataPtr<import::ModelImportResult>();
+
+        if (modelDataPtr == nullptr)
+        {
+            logWarning("Failed to get Model imported data item pointer while gathering dependencies for Model '", modelAsset->key, "'");
+            return false;
+        }
+
+        for (auto& modelDataItem : modelDataPtr->dataItems)
+        {
+            if (modelDataItem.importedDataItemIndex >= modelAsset->importedData->items.size())
+            {
+                continue;
+            }
+
+            auto& importedDataItem = modelAsset->importedData->items[modelDataItem.importedDataItemIndex];
+
+            if (auto* meshItem = importedDataItem.getDataPtr<import::MeshImportResult>(); meshItem != nullptr)
+            {
+                if (modelDataItem.modelNameIndex >= meshNames.size())
+                {
+                    logWarning("Found invalid mesh name index while gathering dependencies for Model '", modelAsset->key, "'");
+                    continue;
+                }
+
+                if (meshItem->mesh == nullptr)
+                {
+                    logWarning("Found null mesh reference while gathering dependencies for Model '", modelAsset->key, "'");
+                    continue;
+                }
+
+                auto const& meshName = meshNames[modelDataItem.modelNameIndex];
+                auto meshHandle = assetManager.createMeshAssetFromMemory(std::format("{}/{}", modelAsset->key, meshName), std::move(*meshItem->mesh));
+                auto* meshAsset = assetManager.getMesh(meshHandle);
+
+                if (meshAsset != nullptr)
+                {
+                    dependencies.push_back(meshAsset);
+                    modelAsset->meshAssetHandles[modelDataItem.modelNameIndex] = meshHandle;
+                }
+                else
+                {
+                    logWarning("Failed to gather Mesh dependency '", importedDataItem.getName(), "' for Model '", modelAsset->key, "'");
+                }
+            }
+            else if (auto* materialItem = importedDataItem.getDataPtr<import::MaterialImportResult>(); materialItem != nullptr)
+            {
+                if (modelDataItem.modelNameIndex >= materialNames.size())
+                {
+                    logWarning("Found invalid material name index while gathering dependencies for Model '", modelAsset->key, "'");
+                    continue;
+                }
+
+                if (materialItem->intermediateMaterial == nullptr)
+                {
+                    logWarning("Found null material reference while gathering dependencies for Model '", modelAsset->key, "'");
+                    continue;
+                }
+
+                auto const& materialName = materialNames[modelDataItem.modelNameIndex];
+                auto materialHandle = assetManager.createMaterialAssetFromMemory(std::format("{}/{}", modelAsset->key, materialName), std::move(*materialItem->intermediateMaterial));
+                auto* materialAsset = assetManager.getMaterial(materialHandle);
+
+                if (materialAsset != nullptr)
+                {
+                    dependencies.push_back(materialAsset);
+                    modelAsset->materialAssetHandles[modelDataItem.modelNameIndex] = materialHandle;
+                }
+                else
+                {
+                    logWarning("Failed to gather Material dependency '", importedDataItem.getName(), "' for Model '", modelAsset->key, "'");
+                }
+            }
+        }
+
+        return true;
+    }
+
     bool ModelAsset::gatherDependencies(Asset* asset, AssetManager& assetManager, std::vector<Asset*>& dependencies) noexcept
     {
         ModelAsset* modelAsset = static_cast<ModelAsset*>(asset);
@@ -143,48 +232,27 @@ namespace litl
             return true;
         }
 
-        modelAsset->meshAssetHandles.resize(modelAsset->modelIntermediateData->getMeshNames().size(), {});
-        //modelAsset->materialAssetHandles.resize(modelAsset->modelIntermediateData->getMaterialNames().size(), {});
-        // ^ todo 
+        auto meshNames = modelAsset->modelIntermediateData->getMeshNames();
+        auto materialNames = modelAsset->modelIntermediateData->getMaterialNames();
 
-        for (auto& dataItem : modelAsset->importedData->items)
+        modelAsset->meshAssetHandles.clear();
+        modelAsset->meshAssetHandles.resize(meshNames.size(), {});
+
+        modelAsset->materialAssetHandles.clear();
+        modelAsset->materialAssetHandles.resize(materialNames.size(), {});
+
+        // Split in logic because loading from a .litlmdl will NOT have an ImportedData while loading from a third-party will have an ImportedData.
+        /// With the .litlmdl we already have fully formed asset keys. With the third-party data we have locally unique item names but not actual asset keys.
+        if (modelAsset->importedData == nullptr)
         {
-            if (auto* meshItem = dataItem.getDataPtr<import::MeshImportResult>(); meshItem != nullptr)
-            {
-                auto meshHandle = assetManager.createMeshAssetFromMemory(dataItem.getName(), std::move(*meshItem->mesh));
-                auto* meshAsset = assetManager.getMesh(meshHandle);
-
-                if (meshAsset != nullptr)
-                {
-                    dependencies.push_back(meshAsset);
-                    modelAsset->meshAssetHandles.push_back(meshHandle);
-                }
-                else
-                {
-                    logWarning("Failed to gather Mesh dependency '", dataItem.getName(), "' for Model '", modelAsset->key, "'");
-                }
-            }
-            else if (auto* materialItem = dataItem.getDataPtr<import::MaterialImportResult>(); materialItem != nullptr)
-            {
-                auto materialHandle = assetManager.createMaterialAssetFromMemory(dataItem.getName(), std::move(*materialItem->intermediateMaterial));
-                auto* materialAsset = assetManager.getMaterial(materialHandle);
-
-                if (materialAsset != nullptr)
-                {
-                    dependencies.push_back(materialAsset);
-                    modelAsset->materialAssetHandles.push_back(materialHandle);
-                }
-                else
-                {
-                    logWarning("Failed to gather Material dependency '", dataItem.getName(), "' for Model '", modelAsset->key, "'");
-                }
-            }
+            return gatherDependenciesFromLitlModel(modelAsset, assetManager, meshNames, materialNames, dependencies);
         }
-
-        // All imported data has been moved.
-        modelAsset->importedData.reset();
-
-        return true;
+        else
+        {
+            const bool success = gatherDependenciesFromNonLitlModel(modelAsset, assetManager, meshNames, materialNames, dependencies);
+            modelAsset->importedData.reset();
+            return success;
+        }
     }
 
     bool ModelAsset::processOnMain(Asset* asset, ObjectPool& objectPool, AssetErrorCode& error) noexcept

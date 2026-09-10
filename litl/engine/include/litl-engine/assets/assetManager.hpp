@@ -53,46 +53,32 @@ namespace litl
         void registerAwaitingDependency(Authority<AwaitAssetDependencies> auth, std::coroutine_handle<> handle, std::span<Asset* const> dependencies, Asset* dependent) noexcept;
         void onFrameStart() noexcept;
 
-        [[nodiscard]] AssetHandle getAsset(StringId resource) noexcept;
         [[nodiscard]] AssetHandle getAsset(std::string_view resource) noexcept;
 
-        [[nodiscard]] MaterialAssetHandle getMaterialHandle(StringId resource) noexcept;
         [[nodiscard]] MaterialAssetHandle getMaterialHandle(std::string_view resource) noexcept;
-        [[nodiscard]] MaterialAsset* getMaterial(StringId resource) noexcept;
         [[nodiscard]] MaterialAsset* getMaterial(std::string_view resource) noexcept;
         [[nodiscard]] MaterialAsset* getMaterial(MaterialAssetHandle handle) noexcept;
-        [[nodiscard]] MaterialAssetHandle createMaterialAssetFromMemory(std::string_view key, import::MaterialIntermediateData&& intermediateData) noexcept;
+        [[nodiscard]] MaterialAssetHandle createMaterialAssetFromMemory(std::string_view key, import::MaterialIntermediateData intermediateData) noexcept;
 
-        [[nodiscard]] MeshAssetHandle getMeshHandle(StringId resource) noexcept;
         [[nodiscard]] MeshAssetHandle getMeshHandle(std::string_view resource) noexcept;
-        [[nodiscard]] MeshAsset* getMesh(StringId resource) noexcept;
         [[nodiscard]] MeshAsset* getMesh(std::string_view resource) noexcept;
         [[nodiscard]] MeshAsset* getMesh(MeshAssetHandle handle) noexcept;
-        [[nodiscard]] MeshRef getMeshRef(StringId resource) noexcept;
         [[nodiscard]] MeshRef getMeshRef(std::string_view resource) noexcept;
-        [[nodiscard]] MeshAssetHandle createMeshAssetFromMemory(std::string_view key, GeoMesh&& geoMesh) noexcept;
+        [[nodiscard]] MeshAssetHandle createMeshAssetFromMemory(std::string_view key, GeoMesh geoMesh) noexcept;
 
-        [[nodiscard]] ModelAssetHandle getModelHandle(StringId resource) noexcept;
         [[nodiscard]] ModelAssetHandle getModelHandle(std::string_view resource) noexcept;
-        [[nodiscard]] ModelAsset* getModel(StringId resource) noexcept;
         [[nodiscard]] ModelAsset* getModel(std::string_view resource) noexcept;
         [[nodiscard]] ModelAsset* getModel(ModelAssetHandle handle) noexcept;
 
-        [[nodiscard]] ShaderAssetHandle getShaderHandle(StringId resource) noexcept;
         [[nodiscard]] ShaderAssetHandle getShaderHandle(std::string_view resource) noexcept;
-        [[nodiscard]] ShaderAsset* getShader(StringId resource) noexcept;
         [[nodiscard]] ShaderAsset* getShader(std::string_view resource) noexcept;
         [[nodiscard]] ShaderAsset* getShader(ShaderAssetHandle handle) noexcept;
 
-        [[nodiscard]] TextAssetHandle getTextHandle(StringId resource) noexcept;
         [[nodiscard]] TextAssetHandle getTextHandle(std::string_view resource) noexcept;
-        [[nodiscard]] TextAsset* getText(StringId resource) noexcept;
         [[nodiscard]] TextAsset* getText(std::string_view resource) noexcept;
         [[nodiscard]] TextAsset* getText(TextAssetHandle handle) noexcept;
 
-        [[nodiscard]] Texture2DAssetHandle getTexture2DHandle(StringId resource) noexcept;
         [[nodiscard]] Texture2DAssetHandle getTexture2DHandle(std::string_view resource) noexcept;
-        [[nodiscard]] Texture2DAsset* getTexture2D(StringId resource) noexcept;
         [[nodiscard]] Texture2DAsset* getTexture2D(std::string_view resource) noexcept;
         [[nodiscard]] Texture2DAsset* getTexture2D(Texture2DAssetHandle handle) noexcept;
 

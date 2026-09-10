@@ -64,7 +64,7 @@ namespace litl
 
                 if (material != nullptr)
                 {
-                    materialAsset->materialIntermediateData = material->intermediateMaterial;
+                    materialAsset->materialIntermediateData = std::move(material->intermediateMaterial);
                     return true;
                 }
                 else

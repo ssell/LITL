@@ -4,6 +4,7 @@
 #include <array>
 #include <concepts>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -158,6 +159,7 @@ namespace litl::import
 
         void calculateTypeCounts() noexcept;
         [[nodiscard]] uint32_t getTypeCount(ImportedDataType type) const noexcept;
+        [[nodiscard]] std::optional<uint32_t> getFirstIndexOfType(ImportedDataType type) const noexcept;
         void propagateNameUpdates() noexcept;
 
     private:

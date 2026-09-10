@@ -21,7 +21,7 @@ namespace litl::import
         uint32_t importedDataItemIndex{ Constants::uint32_null_index };
 
         /// <summary>
-        /// The index of the appropriate container in the intermediate data that stores the name of the item.
+        /// The index of the appropriate container in the ModelIntermediateData that stores the name of the item.
         /// The ImportedDataItem's ImportedDataType is used to resolve which container to reference.
         /// </summary>
         uint32_t modelNameIndex{ Constants::uint32_null_index };

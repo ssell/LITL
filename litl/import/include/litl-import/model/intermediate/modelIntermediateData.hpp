@@ -17,12 +17,15 @@ namespace litl::import
 
         void setName(std::string_view name) noexcept;
         uint32_t addMesh(std::string_view meshName) noexcept;
+        uint32_t addMaterial(std::string_view materialName) noexcept;
         uint32_t addNode(Node&& node) noexcept;
         void addRootNode(uint32_t nodeIndex) noexcept;
         void updateMeshName(uint32_t meshIndex, std::string_view updatedName) noexcept;
+        void updateMaterialName(uint32_t materialIndex, std::string_view updatedName) noexcept;
 
         [[nodiscard]] std::string_view getName() const noexcept;
         [[nodiscard]] std::span<std::string const> getMeshNames() const noexcept;
+        [[nodiscard]] std::span<std::string const> getMaterialNames() const noexcept;
         [[nodiscard]] std::span<Node const> getNodes() const noexcept;
         [[nodiscard]] std::span<uint32_t const> getRootNodes() const noexcept;
 
@@ -30,6 +33,7 @@ namespace litl::import
 
         std::string m_name;
         std::vector<std::string> m_meshNames;
+        std::vector<std::string> m_materialNames;
         std::vector<Node> m_nodes;
         std::vector<uint32_t> m_rootNodes;
     };

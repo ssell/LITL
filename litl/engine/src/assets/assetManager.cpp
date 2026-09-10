@@ -4,10 +4,11 @@
 #include <unordered_map>
 
 #include "litl-core/assert.hpp"
+#include "litl-core/string.hpp"
 #include "litl-core/stringId.hpp"
+#include "litl-core/math/geometry/geoMesh.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/services/serviceProvider.hpp"
-#include "litl-core/math/geometry/geoMesh.hpp"
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/assets/assetDependencies.hpp"
 #include "litl-engine/assets/assetLoadTask.hpp"
@@ -89,6 +90,16 @@ namespace litl
         std::vector<PendingAssetDependency> pendingDependencies;
         std::vector<PendingAssetDependency> pendingAtFrameStart;
 
+        [[nodiscard]] std::string createAssetKey(std::string_view key) const noexcept
+        {
+            return toLowercase(key);
+        }
+
+        [[nodiscard]] StringId createHashedAssetKey(std::string_view key) const noexcept
+        {
+            return StringId(toLowercase(key));
+        }
+
         /// <summary>
         /// Invoked during AssetManager setup. It searches the local "assets/" directory for all
         /// valid assets (based on extension) and creates placeholder unloaded asset handles for them.
@@ -103,12 +114,12 @@ namespace litl
                     auto path = fileEntry.path();
                     auto file = File(fileEntry);
                     auto absPath = file.absolutePath();
-                    auto assetFileType = g_assetTypeMap.find(StringId(file.extension()));
+                    auto assetFileType = g_assetTypeMap.find(StringId(toLowercase(file.extension())));
 
                     if (assetFileType != g_assetTypeMap.end())
                     {
                         const auto relativePath = path.lexically_relative(g_assetsPath).generic_string();
-                        const auto assetKey = path.lexically_relative(g_assetsPath).replace_extension().generic_string();
+                        const auto assetKey = createAssetKey(path.lexically_relative(g_assetsPath).replace_extension().generic_string());
                         const auto hashedKey = StringId(assetKey);
                         const auto find = assetMap.find(hashedKey);
 
@@ -581,30 +592,29 @@ namespace litl
         }
     }
 
-    AssetHandle AssetManager::getAsset(StringId resource) noexcept
-    {
-        std::scoped_lock lock{ m_impl->assetMapMutex };
-
-        auto find = m_impl->assetMap.find(resource);
-
-        if (find != m_impl->assetMap.end())
-        {
-            return find->second.handle;
-        }
-
-        return {};
-    }
-
     AssetHandle AssetManager::getAsset(std::string_view resource) noexcept
     {
-        return getAsset(StringId(resource));
+        const auto key = m_impl->createHashedAssetKey(resource);
+
+        {
+            std::scoped_lock lock{ m_impl->assetMapMutex };
+
+            auto find = m_impl->assetMap.find(key);
+
+            if (find != m_impl->assetMap.end())
+            {
+                return find->second.handle;
+            }
+
+            return {};
+        }
     }
 
     // -------------------------------------------------------------------------------------
     // --- Get Material
     // -------------------------------------------------------------------------------------
 
-    MaterialAssetHandle AssetManager::getMaterialHandle(StringId resource) noexcept
+    MaterialAssetHandle AssetManager::getMaterialHandle(std::string_view resource) noexcept
     {
         auto assetHandle = getAsset(resource);
 
@@ -616,20 +626,10 @@ namespace litl
         return {};
     }
 
-    MaterialAssetHandle AssetManager::getMaterialHandle(std::string_view resource) noexcept
-    {
-        return getMaterialHandle(StringId(resource));
-    }
-
-    MaterialAsset* AssetManager::getMaterial(StringId resource) noexcept
+    MaterialAsset* AssetManager::getMaterial(std::string_view resource) noexcept
     {
         auto handle = getMaterialHandle(resource);
         return getMaterial(handle);
-    }
-
-    MaterialAsset* AssetManager::getMaterial(std::string_view resource) noexcept
-    {
-        return getMaterial(StringId(resource));
     }
 
     MaterialAsset* AssetManager::getMaterial(MaterialAssetHandle handle) noexcept
@@ -649,7 +649,7 @@ namespace litl
         return material;
     }
 
-    MaterialAssetHandle AssetManager::createMaterialAssetFromMemory(std::string_view key, import::MaterialIntermediateData&& intermediateData) noexcept
+    MaterialAssetHandle AssetManager::createMaterialAssetFromMemory(std::string_view key, import::MaterialIntermediateData intermediateData) noexcept
     {
         // ... todo ...
         logWarning("Invoking unimplemented AssetManager::createMaterialAssetFromMemory");
@@ -660,7 +660,7 @@ namespace litl
     // --- Get Mesh
     // -------------------------------------------------------------------------------------
 
-    MeshAssetHandle AssetManager::getMeshHandle(StringId resource) noexcept
+    MeshAssetHandle AssetManager::getMeshHandle(std::string_view resource) noexcept
     {
         auto assetHandle = getAsset(resource);
 
@@ -672,20 +672,10 @@ namespace litl
         return assetHandle.meshHandle;
     }
 
-    MeshAssetHandle AssetManager::getMeshHandle(std::string_view resource) noexcept
-    {
-        return getMeshHandle(StringId(resource));
-    }
-
-    MeshAsset* AssetManager::getMesh(StringId resource) noexcept
+    MeshAsset* AssetManager::getMesh(std::string_view resource) noexcept
     {
         auto handle = getMeshHandle(resource);
         return getMesh(handle);
-    }
-
-    MeshAsset* AssetManager::getMesh(std::string_view resource) noexcept
-    {
-        return getMesh(StringId(resource));
     }
 
     MeshAsset* AssetManager::getMesh(MeshAssetHandle handle) noexcept
@@ -705,7 +695,7 @@ namespace litl
         return mesh;
     }
 
-    MeshRef AssetManager::getMeshRef(StringId resource) noexcept
+    MeshRef AssetManager::getMeshRef(std::string_view resource) noexcept
     {
         MeshAsset* meshAsset = getMesh(resource);
 
@@ -717,12 +707,7 @@ namespace litl
         return MeshRef{ .handle = meshAsset->handle };
     }
 
-    MeshRef AssetManager::getMeshRef(std::string_view resource) noexcept
-    {
-        return getMeshRef(StringId(resource));
-    }
-
-    MeshAssetHandle AssetManager::createMeshAssetFromMemory(std::string_view key, GeoMesh&& geoMesh) noexcept
+    MeshAssetHandle AssetManager::createMeshAssetFromMemory(std::string_view key, GeoMesh geoMesh) noexcept
     {
         // ... todo ...
         logWarning("Invoking unimplemented AssetManager::createMeshAssetFromMemory");
@@ -733,7 +718,7 @@ namespace litl
     // --- Get Model
     // -------------------------------------------------------------------------------------
 
-    ModelAssetHandle AssetManager::getModelHandle(StringId resource) noexcept
+    ModelAssetHandle AssetManager::getModelHandle(std::string_view resource) noexcept
     {
         auto assetHandle = getAsset(resource);
 
@@ -745,20 +730,10 @@ namespace litl
         return assetHandle.modelHandle;
     }
 
-    ModelAssetHandle AssetManager::getModelHandle(std::string_view resource) noexcept
-    {
-        return getModelHandle(StringId(resource));
-    }
-
-    ModelAsset* AssetManager::getModel(StringId resource) noexcept
+    ModelAsset* AssetManager::getModel(std::string_view resource) noexcept
     {
         auto handle = getModelHandle(resource);
         return getModel(handle);
-    }
-
-    ModelAsset* AssetManager::getModel(std::string_view resource) noexcept
-    {
-        return getModel(StringId(resource));
     }
 
     ModelAsset* AssetManager::getModel(ModelAssetHandle handle) noexcept
@@ -782,7 +757,7 @@ namespace litl
     // --- Get Shader Module
     // -------------------------------------------------------------------------------------
 
-    ShaderAssetHandle AssetManager::getShaderHandle(StringId resource) noexcept
+    ShaderAssetHandle AssetManager::getShaderHandle(std::string_view resource) noexcept
     {
         auto assetHandle = getAsset(resource);
 
@@ -794,20 +769,10 @@ namespace litl
         return assetHandle.shaderHandle;
     }
 
-    ShaderAssetHandle AssetManager::getShaderHandle(std::string_view resource) noexcept
-    {
-        return getShaderHandle(StringId(resource));
-    }
-
-    ShaderAsset* AssetManager::getShader(StringId resource) noexcept
+    ShaderAsset* AssetManager::getShader(std::string_view resource) noexcept
     {
         auto handle = getShaderHandle(resource);
         return getShader(handle);
-    }
-
-    ShaderAsset* AssetManager::getShader(std::string_view resource) noexcept
-    {
-        return getShader(StringId(resource));
     }
 
     ShaderAsset* AssetManager::getShader(ShaderAssetHandle handle) noexcept
@@ -831,7 +796,7 @@ namespace litl
     // --- Get Text
     // -------------------------------------------------------------------------------------
 
-    TextAssetHandle AssetManager::getTextHandle(StringId resource) noexcept
+    TextAssetHandle AssetManager::getTextHandle(std::string_view resource) noexcept
     {
         auto assetHandle = getAsset(resource);
 
@@ -843,20 +808,10 @@ namespace litl
         return assetHandle.textHandle;
     }
 
-    TextAssetHandle AssetManager::getTextHandle(std::string_view resource) noexcept
-    {
-        return getTextHandle(StringId(resource));
-    }
-
-    TextAsset* AssetManager::getText(StringId resource) noexcept
+    TextAsset* AssetManager::getText(std::string_view resource) noexcept
     {
         auto handle = getTextHandle(resource);
         return getText(handle);
-    }
-
-    TextAsset* AssetManager::getText(std::string_view resource) noexcept
-    {
-        return getText(StringId(resource));
     }
 
     TextAsset* AssetManager::getText(TextAssetHandle handle) noexcept
@@ -880,7 +835,7 @@ namespace litl
     // --- Get Texture2D
     // -------------------------------------------------------------------------------------
 
-    Texture2DAssetHandle AssetManager::getTexture2DHandle(StringId resource) noexcept
+    Texture2DAssetHandle AssetManager::getTexture2DHandle(std::string_view resource) noexcept
     {
         auto assetHandle = getAsset(resource);
 
@@ -892,20 +847,10 @@ namespace litl
         return assetHandle.texture2DHandle;
     }
 
-    Texture2DAssetHandle AssetManager::getTexture2DHandle(std::string_view resource) noexcept
-    {
-        return getTexture2DHandle(StringId(resource));
-    }
-
-    Texture2DAsset* AssetManager::getTexture2D(StringId resource) noexcept
+    Texture2DAsset* AssetManager::getTexture2D(std::string_view resource) noexcept
     {
         auto handle = getTexture2DHandle(resource);
         return getTexture2D(handle);
-    }
-
-    Texture2DAsset* AssetManager::getTexture2D(std::string_view resource) noexcept
-    {
-        return getTexture2D(StringId(resource));
     }
 
     Texture2DAsset* AssetManager::getTexture2D(Texture2DAssetHandle handle) noexcept

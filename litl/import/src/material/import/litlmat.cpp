@@ -266,7 +266,7 @@ namespace litl::import
         }
 
         auto* material = dataItem.getDataPtr<MaterialImportResult>();
-        material->intermediateMaterial = std::make_shared<MaterialIntermediateData>();
+        material->intermediateMaterial = std::make_unique<MaterialIntermediateData>();
         auto* intermediateMaterial = material->intermediateMaterial.get();
 
         if (!inputMaterial.name.empty())

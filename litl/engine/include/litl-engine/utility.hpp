@@ -49,7 +49,7 @@ namespace litl
     /// Creates a new entity and attaches to it the minimal components needed for it to be rendered.
     /// This consists of: Transform, MeshRef, MaterialRef (with a single material), and LocalBounds.
     /// </summary>
-    inline DeferredEntity createRenderable(vec3 position, StringId mesh, StringId material, EntityCommands& commands, AssetManager& assets) noexcept
+    inline DeferredEntity createRenderable(vec3 position, std::string_view mesh, std::string_view material, EntityCommands& commands, AssetManager& assets) noexcept
     {
         const DeferredEntity entity = commands.createEntity();
         auto* meshAsset = assets.getMesh(mesh);
@@ -73,15 +73,6 @@ namespace litl
         commands.addComponent<Transform>(entity, Transform::create(position));
 
         return entity;
-    }
-
-    /// <summary>
-    /// Creates a new entity and attaches to it the minimal components needed for it to be rendered.
-    /// This consists of: Transform, MeshRef, MaterialRef, and LocalBounds.
-    /// </summary>
-    inline DeferredEntity createRenderable(vec3 position, std::string_view mesh, std::string_view material, EntityCommands& commands, AssetManager& assets) noexcept
-    {
-        return createRenderable(position, StringId(mesh), StringId(material), commands, assets);
     }
 }
 

@@ -85,6 +85,19 @@ namespace litl::import
         return find->second;
     }
 
+    std::optional<uint32_t> ImportedData::getFirstIndexOfType(ImportedDataType type) const noexcept
+    {
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(items.size()); ++i)
+        {
+            if (items[i].getType() == type)
+            {
+                return i;
+            }
+        }
+
+        return std::nullopt;
+    }
+
     void ImportedData::propagateNameUpdates() noexcept
     {
         for (auto& dataItem : items)
@@ -93,32 +106,36 @@ namespace litl::import
             {
                 auto* modelPtr = dataItem.getDataPtr<ModelImportResult>();
 
-                if ((modelPtr != nullptr) && !modelPtr->dataItems.empty() && (modelPtr->model != nullptr))
+                if ((modelPtr != nullptr) && (modelPtr->model != nullptr))
                 {
-                    for (auto& modelItem : modelPtr->dataItems)
+                    modelPtr->model->setName(dataItem.getName());
+
+                    if (!modelPtr->dataItems.empty())
                     {
-                        if (modelItem.importedDataItemIndex >= items.size())
+                        for (auto& modelItem : modelPtr->dataItems)
                         {
-                            continue;
-                        }
-
-                        auto& modelDataItem = items[modelItem.importedDataItemIndex];
-
-                        if (modelItem.modelNameIndex != Constants::uint32_null_index)
-                        {
-                            switch (modelDataItem.getType())
+                            if (modelItem.importedDataItemIndex >= items.size())
                             {
-                            case ImportedDataType::Mesh:
-                                modelPtr->model->updateMeshName(modelItem.modelNameIndex, modelDataItem.getName());
-                                break;
+                                continue;
+                            }
 
-                            // TODO
-                            //case ImportedDataType::Material:
-                            //    modelPtr->model->updateMaterialName(modelItem.modelNameIndex, modelDataItem.getName());
-                            //    break;
+                            auto& modelDataItem = items[modelItem.importedDataItemIndex];
 
-                            default:
-                                break;
+                            if (modelItem.modelNameIndex != Constants::uint32_null_index)
+                            {
+                                switch (modelDataItem.getType())
+                                {
+                                case ImportedDataType::Mesh:
+                                    modelPtr->model->updateMeshName(modelItem.modelNameIndex, modelDataItem.getName());
+                                    break;
+
+                                case ImportedDataType::Material:
+                                    modelPtr->model->updateMaterialName(modelItem.modelNameIndex, modelDataItem.getName());
+                                    break;
+
+                                default:
+                                    break;
+                                }
                             }
                         }
                     }
