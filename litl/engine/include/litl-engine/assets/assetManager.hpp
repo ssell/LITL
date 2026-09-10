@@ -20,8 +20,14 @@
 
 namespace litl
 {
+    namespace import
+    {
+        class MaterialIntermediateData;
+    }
+
     class Engine;
     class ServiceProvider;
+    struct GeoMesh;
     struct AwaitAssetDependencies;
 
     struct PendingAssetDependency
@@ -55,6 +61,7 @@ namespace litl
         [[nodiscard]] MaterialAsset* getMaterial(StringId resource) noexcept;
         [[nodiscard]] MaterialAsset* getMaterial(std::string_view resource) noexcept;
         [[nodiscard]] MaterialAsset* getMaterial(MaterialAssetHandle handle) noexcept;
+        [[nodiscard]] MaterialAssetHandle createMaterialAssetFromMemory(std::string_view key, import::MaterialIntermediateData&& intermediateData) noexcept;
 
         [[nodiscard]] MeshAssetHandle getMeshHandle(StringId resource) noexcept;
         [[nodiscard]] MeshAssetHandle getMeshHandle(std::string_view resource) noexcept;
@@ -63,6 +70,7 @@ namespace litl
         [[nodiscard]] MeshAsset* getMesh(MeshAssetHandle handle) noexcept;
         [[nodiscard]] MeshRef getMeshRef(StringId resource) noexcept;
         [[nodiscard]] MeshRef getMeshRef(std::string_view resource) noexcept;
+        [[nodiscard]] MeshAssetHandle createMeshAssetFromMemory(std::string_view key, GeoMesh&& geoMesh) noexcept;
 
         [[nodiscard]] ModelAssetHandle getModelHandle(StringId resource) noexcept;
         [[nodiscard]] ModelAssetHandle getModelHandle(std::string_view resource) noexcept;

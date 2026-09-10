@@ -1,7 +1,12 @@
+#include "litl-core/logging/logging.hpp"
 #include "litl-import/importedData.hpp"
 
 namespace litl::import
 {
+    // -------------------------------------------------------------------------------------
+    // ImportedDataItem
+    // -------------------------------------------------------------------------------------
+
     ImportedDataType ImportedDataItem::getType() const noexcept
     {
         return static_cast<ImportedDataType>(m_dataPtr.index());
@@ -54,6 +59,10 @@ namespace litl::import
         return m_name;
     }
 
+    // -------------------------------------------------------------------------------------
+    // ImportedData
+    // -------------------------------------------------------------------------------------
+
     void ImportedData::calculateTypeCounts() noexcept
     {
         m_dataTypeCounts.clear();
@@ -84,7 +93,7 @@ namespace litl::import
             {
                 auto* modelPtr = dataItem.getDataPtr<ModelImportResult>();
 
-                if ((modelPtr != nullptr) && !modelPtr->dataItems.empty())
+                if ((modelPtr != nullptr) && !modelPtr->dataItems.empty() && (modelPtr->model != nullptr))
                 {
                     for (auto& modelItem : modelPtr->dataItems)
                     {

@@ -15,7 +15,7 @@ namespace litl
         return true;
     }
 
-    bool decodeLitlModelBytes(ModelAsset* modelAsset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
+    bool ModelAsset::decodeLitlModelBytes(ModelAsset* modelAsset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
     {
         import::LitlModel litlmdl;
         import::LitlModel::ErrorCode litlmdlError = import::LitlModel::ErrorCode::None;
@@ -39,42 +39,71 @@ namespace litl
         return true;
     }
 
-    bool decodeNonLitlModelBytes(ModelAsset* modelAsset, std::span<std::byte const> otherBytes, AssetErrorCode& error) noexcept
+    bool ModelAsset::decodeNonLitlModelBytes(ModelAsset* modelAsset, std::span<std::byte const> otherBytes, AssetErrorCode& error) noexcept
     {
         const auto extension = modelAsset->file.extension();
 
         import::ImportService importer{};
-        import::ImportedData importedData{};
 
-        const auto importResult = importer.import(modelAsset->file, otherBytes, importedData, true);
+        modelAsset->importedData = std::make_shared<import::ImportedData>();
+        const auto importResult = importer.import(modelAsset->file, otherBytes, *modelAsset->importedData.get(), true);
 
-        if (importResult.success)
-        {
-            importedData.calculateTypeCounts();
-
-            modelAsset->meshAssetHandles.reserve(importedData.getTypeCount(import::ImportedDataType::Mesh));
-            // ... todo other types ...
-
-            for (auto& importedItem : importedData.items)
-            {
-                if (importedItem.getType() == import::ImportedDataType::Mesh)
-                {
-                    // ... todo register/import as a distinct Mesh Asset in the Asset Manager ...
-                }
-                else
-                {
-                    // ... todo other types ...
-                }
-            }
-            
-            return true;
-        }
-        else
+        if (!importResult.success)
         {
             logError("Failed to import bytes of model from third-party asset with message '", importResult.message, "' and error code ", static_cast<uint32_t>(importResult.error));
             error = AssetErrorCode::ExternalFormatImportFailed;
             return false;
         }
+
+        if (modelAsset->importedData->items.empty())
+        {
+            logError("Failed to import bytes of model from third-party asset as the imported items count is 0.");
+            error = AssetErrorCode::DecodeBytesResultEmpty;
+            return false;
+        }
+
+        modelAsset->importedData->calculateTypeCounts();
+        const auto modelCount = modelAsset->importedData->getTypeCount(import::ImportedDataType::Model);
+
+        if (modelCount != 1u)
+        {
+            logError("Failed to import bytes of model from third-party asset as the expected model count is 1 but the returned model count is ", modelCount);
+            error = AssetErrorCode::DecodeBytesUnexpectedResult;
+            return false;
+        }
+
+        uint32_t modelIndex = Constants::uint32_null_index;
+
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(modelAsset->importedData->items.size()); ++i)
+        {
+            if (modelAsset->importedData->items[i].getType() == import::ImportedDataType::Model)
+            {
+                modelIndex = i;
+                break;
+            }
+        }
+
+        if (modelIndex == Constants::uint32_null_index)
+        {
+            logError("Failed to import bytes of model from third-party asset as the importer failed to find the expected model item index.");
+            error = AssetErrorCode::DecodeBytesUnexpectedResult;
+            return false;
+        }
+
+        auto& modelDataItem = modelAsset->importedData->items[0];
+        auto* modelResult = modelDataItem.getDataPtr<import::ModelImportResult>();
+
+        if ((modelResult == nullptr) || (modelResult->model == nullptr))
+        {
+            logError("Failed to import bytes of model from third-party asset as the model intermediate data is null.");
+            error = AssetErrorCode::DecodeBytesUnexpectedResult;
+            return false;
+        }
+
+        // Move from the private internal result to the public modelIntermediateData
+        modelAsset->modelIntermediateData = std::move(modelResult->model);
+
+        return true;
     }
 
     bool ModelAsset::decodeBytes(Asset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
@@ -106,7 +135,55 @@ namespace litl
 
     bool ModelAsset::gatherDependencies(Asset* asset, AssetManager& assetManager, std::vector<Asset*>& dependencies) noexcept
     {
-        // ... todo ...
+        ModelAsset* modelAsset = static_cast<ModelAsset*>(asset);
+        dependencies.clear();
+
+        if (modelAsset->modelIntermediateData == nullptr)
+        {
+            return true;
+        }
+
+        modelAsset->meshAssetHandles.resize(modelAsset->modelIntermediateData->getMeshNames().size(), {});
+        //modelAsset->materialAssetHandles.resize(modelAsset->modelIntermediateData->getMaterialNames().size(), {});
+        // ^ todo 
+
+        for (auto& dataItem : modelAsset->importedData->items)
+        {
+            if (auto* meshItem = dataItem.getDataPtr<import::MeshImportResult>(); meshItem != nullptr)
+            {
+                auto meshHandle = assetManager.createMeshAssetFromMemory(dataItem.getName(), std::move(*meshItem->mesh));
+                auto* meshAsset = assetManager.getMesh(meshHandle);
+
+                if (meshAsset != nullptr)
+                {
+                    dependencies.push_back(meshAsset);
+                    modelAsset->meshAssetHandles.push_back(meshHandle);
+                }
+                else
+                {
+                    logWarning("Failed to gather Mesh dependency '", dataItem.getName(), "' for Model '", modelAsset->key, "'");
+                }
+            }
+            else if (auto* materialItem = dataItem.getDataPtr<import::MaterialImportResult>(); materialItem != nullptr)
+            {
+                auto materialHandle = assetManager.createMaterialAssetFromMemory(dataItem.getName(), std::move(*materialItem->intermediateMaterial));
+                auto* materialAsset = assetManager.getMaterial(materialHandle);
+
+                if (materialAsset != nullptr)
+                {
+                    dependencies.push_back(materialAsset);
+                    modelAsset->materialAssetHandles.push_back(materialHandle);
+                }
+                else
+                {
+                    logWarning("Failed to gather Material dependency '", dataItem.getName(), "' for Model '", modelAsset->key, "'");
+                }
+            }
+        }
+
+        // All imported data has been moved.
+        modelAsset->importedData.reset();
+
         return true;
     }
 

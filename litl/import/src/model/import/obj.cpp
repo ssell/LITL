@@ -202,7 +202,7 @@ namespace litl::import
         // Create the Model
         // ---------------------------------------------------------------------------------
 
-        importedData.items.reserve(objResult.shapes.size() + 1);        // 1 model + N meshes
+        importedData.items.reserve(importedData.items.size() + objResult.shapes.size() + 1);        // 1 model + N meshes
         importedData.items.push_back({});
         auto& modelDataItem = importedData.items.back();
 
@@ -213,6 +213,9 @@ namespace litl::import
 
         auto* modelImportResult = modelDataItem.getDataPtr<ModelImportResult>();
         modelImportResult->model = std::make_unique<ModelIntermediateData>();
+
+        modelDataItem.setName(file.name());
+        modelImportResult->model->setName(modelDataItem.getName());
 
         // ---------------------------------------------------------------------------------
         // Add OBJ Shapes as Meshes to Model

@@ -102,7 +102,6 @@ namespace litl::tests
 
         // (Sanitize + Dedupe) and then propagate clean ImportedDataItem names to the ModelIntermediateData mesh names.
         import::sanitizeAndDeduplicateImportedItemNames(data);
-        data.propagateNameUpdates();
 
         auto meshNames = modelResult->model->getMeshNames();
         auto nodes = modelResult->model->getNodes();

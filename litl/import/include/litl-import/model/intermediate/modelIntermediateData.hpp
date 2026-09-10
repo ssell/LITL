@@ -19,9 +19,7 @@ namespace litl::import
         uint32_t addMesh(std::string_view meshName) noexcept;
         uint32_t addNode(Node&& node) noexcept;
         void addRootNode(uint32_t nodeIndex) noexcept;
-
         void updateMeshName(uint32_t meshIndex, std::string_view updatedName) noexcept;
-        void updateNodeName(uint32_t nodeIndex, std::string_view updatedName) noexcept;
 
         [[nodiscard]] std::string_view getName() const noexcept;
         [[nodiscard]] std::span<std::string const> getMeshNames() const noexcept;

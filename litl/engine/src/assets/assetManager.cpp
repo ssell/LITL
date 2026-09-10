@@ -7,12 +7,14 @@
 #include "litl-core/stringId.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/services/serviceProvider.hpp"
+#include "litl-core/math/geometry/geoMesh.hpp"
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/assets/assetDependencies.hpp"
 #include "litl-engine/assets/assetLoadTask.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/tasks/taskManager.hpp"
 #include "litl-engine/engine.hpp"
+#include "litl-import/material/intermediate/materialIntermediateData.hpp"
 
 namespace litl
 {
@@ -647,6 +649,13 @@ namespace litl
         return material;
     }
 
+    MaterialAssetHandle AssetManager::createMaterialAssetFromMemory(std::string_view key, import::MaterialIntermediateData&& intermediateData) noexcept
+    {
+        // ... todo ...
+        logWarning("Invoking unimplemented AssetManager::createMaterialAssetFromMemory");
+        return {};
+    }
+
     // -------------------------------------------------------------------------------------
     // --- Get Mesh
     // -------------------------------------------------------------------------------------
@@ -711,6 +720,13 @@ namespace litl
     MeshRef AssetManager::getMeshRef(std::string_view resource) noexcept
     {
         return getMeshRef(StringId(resource));
+    }
+
+    MeshAssetHandle AssetManager::createMeshAssetFromMemory(std::string_view key, GeoMesh&& geoMesh) noexcept
+    {
+        // ... todo ...
+        logWarning("Invoking unimplemented AssetManager::createMeshAssetFromMemory");
+        return {};
     }
 
     // -------------------------------------------------------------------------------------

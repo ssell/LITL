@@ -12,11 +12,13 @@ namespace litl
     namespace import
     {
         class ModelIntermediateData;
+        class ImportedData;
     }
 
     struct ModelAsset : public Asset
     {
         std::vector<MeshAssetHandle> meshAssetHandles;
+        std::vector<MaterialAssetHandle> materialAssetHandles;
         std::shared_ptr<import::ModelIntermediateData> modelIntermediateData;
 
         static bool fetchAssetObject(Asset* asset, ObjectPool& objectPool) noexcept;
@@ -24,6 +26,23 @@ namespace litl
         static bool processOnWorker(Asset* asset, AssetErrorCode& error) noexcept;
         static bool gatherDependencies(Asset* asset, AssetManager& assetManager, std::vector<Asset*>& dependencies) noexcept;
         static bool processOnMain(Asset* asset, ObjectPool& objectPool, AssetErrorCode& error) noexcept;
+
+    private:
+
+        static bool decodeLitlModelBytes(ModelAsset* modelAsset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept;
+        static bool decodeNonLitlModelBytes(ModelAsset* modelAsset, std::span<std::byte const> otherBytes, AssetErrorCode& error) noexcept;
+
+        /// <summary>
+        /// The entire imported data of the model including meshes, materials, etc.
+        /// 
+        /// Note that this is only available from the import-from-disk path so it can not be relied
+        /// upon to be present outside of the internal workings of the Asset subsystem.
+        /// 
+        /// If it is present then it is guaranteed that the first ImportedDataItem is the model data item.
+        /// However, that model data item will not have a ModelIntermediateData past a certain point of
+        /// asset processing as its contents are moved into the modelIntermediateData stored directly on the ModelAsset.
+        /// </summary>
+        std::shared_ptr<import::ImportedData> importedData;
     };
 
     inline constexpr Asset::AssetOps ModelAssetOps = {
