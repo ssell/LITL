@@ -1,7 +1,10 @@
+#include <format>
 #include <memory>
 
 #include "litl-core/file.hpp"
 #include "litl-core/string.hpp"
+#include "litl-core/stringId.hpp"
+#include "litl-core/containers/flatHashMap.hpp"
 #include "litl-import/importService.hpp"
 
 // Material
@@ -95,6 +98,8 @@ namespace litl::import
             return importResult;
         }
 
+        sanitizeAndDeduplicateImportedItemNames(importedData);
+
         for (uint32_t i = 0u; i < static_cast<uint32_t>(importedData.items.size()); ++i)
         {
             if (shouldPrepare)
@@ -174,5 +179,109 @@ namespace litl::import
         }
 
         return Result::Success();
+    }
+
+    namespace
+    {
+        /// <summary>
+        /// Ensures all names are safe for use as file names and asset keys.
+        /// Any unsafe names are either modified to remove the offending characters or set to empty.
+        /// </summary>
+        void sanitizeItemNames(ImportedData& importedData) noexcept
+        {
+            if (importedData.items.empty())
+            {
+                return;
+            }
+
+            for (auto& importedDataItem : importedData.items)
+            {
+                auto originalName = importedDataItem.getName();
+
+                if (File::IsReservedFileNameCaseInsensitive(originalName))
+                {
+                    // Entire name is invalid. Clear it, and let the follow-up call to ensureItemsHaveNames give it a name.
+                    importedDataItem.setName("");
+                }
+                else
+                {
+                    importedDataItem.setName(File::SanitizeFilename(originalName));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Assigns a name based on the item type if it does not already have a name.
+        /// For example: mesh_0, mesh_1, material_0, etc.
+        /// </summary>
+        void ensureItemsHaveNames(ImportedData& importedData) noexcept
+        {
+            if (importedData.items.empty())
+            {
+                return;
+            }
+
+            FlatHashMap<uint32_t, uint32_t> unnamedItemsOfTypeCount;
+
+            for (auto& importedDataItem : importedData.items)
+            {
+                if (!importedDataItem.getName().empty())
+                {
+                    continue;
+                }
+
+                const uint32_t key = static_cast<uint32_t>(importedDataItem.getType());
+                const uint32_t count = unnamedItemsOfTypeCount.findOr(key, 0u);
+
+                importedDataItem.setName(std::format("{}_{}", ImportedDataTypeNames[key], count));
+                unnamedItemsOfTypeCount.insert(key, count + 1);
+            }
+        }
+
+        /// <summary>
+        /// Ensures all item names are unique.
+        /// If there are any duplicated names then they are appened with the current duplication count.
+        /// For example: wall (first), wall_1, wall_2, wall_3, etc.
+        /// Names are also all set to lowercase as part of the deduplication process.
+        /// </summary>
+        void deduplicateItemNames(ImportedData& importedData) noexcept
+        {
+            if (importedData.items.empty())
+            {
+                return;
+            }
+
+            StringIdMap<uint32_t> nameOccurrences;
+
+            for (auto& importedDataItem : importedData.items)
+            {
+                auto lowercaseName = toLowercase(importedDataItem.getName());
+                auto lowercaseNameId = StringId(lowercaseName);
+                auto occurrence = nameOccurrences.find(lowercaseNameId);
+
+                if (occurrence != nameOccurrences.end())
+                {
+                    const auto occurenceCount = occurrence->second;
+                    nameOccurrences[lowercaseNameId]++;
+
+                    lowercaseName = std::format("{}_{}", lowercaseName, occurenceCount);
+                    lowercaseNameId = StringId(lowercaseName);
+                    nameOccurrences[lowercaseNameId]++;
+                }
+                else
+                {
+                    nameOccurrences[lowercaseNameId]++;
+                }
+
+                importedDataItem.setName(lowercaseName);
+            }
+        }
+    }
+
+    void sanitizeAndDeduplicateImportedItemNames(ImportedData& importedData) noexcept
+    {
+        sanitizeItemNames(importedData);
+        ensureItemsHaveNames(importedData);
+        deduplicateItemNames(importedData);
     }
 }

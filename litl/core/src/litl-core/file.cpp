@@ -1,3 +1,4 @@
+#include <cctype>
 #include <chrono>
 #include <fstream>
 #include <optional>
@@ -7,7 +8,10 @@
 #include <vector>
 
 #include "litl-core/file.hpp"
+#include "litl-core/string.hpp"
+#include "litl-core/stringId.hpp"
 #include "litl-core/logging/logging.hpp"
+#include "litl-core/containers/flatHashSet.hpp"
 
 namespace litl
 {
@@ -199,5 +203,88 @@ namespace litl
         }
 
         return true;
+    }
+
+    namespace
+    {
+        static const FlatHashSet<uint64_t> g_ReservedFileNames{
+            // Windows reserved file names
+            "con"_sid.value,
+            "nul"_sid.value,
+            "aux"_sid.value,
+            "prn"_sid.value,
+            "com1"_sid.value,
+            "com2"_sid.value,
+            "com3"_sid.value,
+            "com4"_sid.value,
+            "com5"_sid.value,
+            "com6"_sid.value,
+            "com7"_sid.value,
+            "com8"_sid.value,
+            "com9"_sid.value,
+            "lpt1"_sid.value,
+            "lpt2"_sid.value,
+            "lpt3"_sid.value,
+            "lpt4"_sid.value,
+            "lpt5"_sid.value,
+            "lpt6"_sid.value,
+            "lpt7"_sid.value,
+            "lpt8"_sid.value,
+            "lpt9"_sid.value
+        };
+    }
+
+    bool File::IsReservedFileName(std::string_view name) noexcept
+    {
+        return g_ReservedFileNames.contains(StringId(name).value);
+    }
+
+    bool File::IsReservedFileNameCaseInsensitive(std::string_view name) noexcept
+    {
+        return g_ReservedFileNames.contains(StringId(toLowercase(name)).value);
+    }
+
+    std::string File::SanitizeFilename(std::string_view name) noexcept
+    {
+        static constexpr std::string_view forbidden = R"(/\:*?"<>|)";
+
+        if (name.empty())
+        {
+            return "";
+        }
+
+        std::string sanitized;
+        sanitized.reserve(name.size());
+        bool pendingSpace = false;
+
+        for (unsigned char c : name)
+        {
+            if (forbidden.contains(static_cast<char>(c)) || (c < 0x20))
+            {
+                sanitized += '_';       // Structurally illegal character -> underscore
+            }
+            else if (std::isspace(c))
+            {
+                pendingSpace = true;    // We will collapse whitespace runs into a single '-'
+            }
+            else
+            {
+                if (pendingSpace)
+                {
+                    sanitized += '-';
+                    pendingSpace = false;
+                }
+
+                sanitized += static_cast<char>(c);
+            }
+        }
+
+        // Windows disallows trailing '.' and ' ', and we strip any trailing '-' as well in case trailing whitespace was collapsed.
+        while (!sanitized.empty() && (sanitized.back() == '.' || sanitized.back() == ' ' || sanitized.back() == '-'))
+        {
+            sanitized.pop_back();
+        }
+
+        return sanitized;
     }
 }

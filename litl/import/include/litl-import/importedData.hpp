@@ -1,6 +1,7 @@
 #ifndef LITL_IMPORT_IMPORTED_DATA_H__
 #define LITL_IMPORT_IMPORTED_DATA_H__
 
+#include <array>
 #include <concepts>
 #include <memory>
 #include <string>
@@ -46,6 +47,18 @@ namespace litl::import
         std::unique_ptr<MeshImportResult>,          // maps to ImportedDataType::Mesh
         std::unique_ptr<ModelImportResult>,         // maps to ImportedDataType::Model
         std::unique_ptr<ShaderImportResult>>;       // maps to ImportedDataType::Shader
+
+    /// <summary>
+    /// Lowercase string names for each ImportedDataType.
+    /// The array indices MUST MATCH the corresponding integer value of ImportedDataType.
+    /// </summary>
+    static constexpr std::array<std::string_view, 5> ImportedDataTypeNames = {
+        "unknown",
+        "material",
+        "mesh",
+        "model",
+        "shader"
+    };
 
     class ImportedDataItem
     {
@@ -196,7 +209,6 @@ namespace litl::import
         }
 
     private:
-
 
         std::unordered_map<ImportedDataType, uint32_t> m_dataTypeCounts;
     };

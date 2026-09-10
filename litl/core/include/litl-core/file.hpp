@@ -81,7 +81,6 @@ namespace litl
         /// Returns the path relative to a parent directory.
         /// For example a file "C:\\Projects\\LITL\\assets\\mesh\\triangle.fbx" relative to "assets" would return "mesh\\triangle.fbx".
         /// </summary>
-        /// <param name="parentDir"></param>
         [[nodiscard]] std::string relativeTo(std::string_view parentDir) const noexcept;
 
         /// <summary>
@@ -96,22 +95,35 @@ namespace litl
         /// Reads the contents of the file synchronously.
         /// If there was an error reading the file then std::nullopt will be returned instead.
         /// </summary>
-        /// <param name="alignment"></param>
         [[nodiscard]] std::optional<std::vector<std::byte>> readAllBytes() const noexcept;
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="bytes"></param>
-        /// <returns></returns>
         bool writeAllBytes(std::span<std::byte const> bytes) const noexcept;
 
         /// <summary>
         /// Reads the contents of the file synchronously.
         /// Returns false if there was an error reading the file.
         /// </summary>
-        /// <param name="bytes"></param>
         [[nodiscard]] bool readAllBytes(std::vector<std::byte>& bytes) const noexcept;
+
+        /// <summary>
+        /// Returns true if the provided filename is on the internal reserved list. This is the name excluding extension or path.
+        /// This check is case-sensitive. For example "con" would return true, but "CON" would not.
+        /// </summary>
+        [[nodiscard]] static bool IsReservedFileName(std::string_view name) noexcept;
+
+        /// <summary>
+        /// Returns true if the provided filename is on the internal reserved list. This is the name excluding extension or path.
+        /// This check is case-insensitive. For example both "con" and "CON" would return true.
+        /// </summary>
+        [[nodiscard]] static bool IsReservedFileNameCaseInsensitive(std::string_view name) noexcept;
+
+        /// <summary>
+        /// Strips/replaces all characters unsafe for a file name. This includes: slashes, colon, whitespace runs, trailing dots and spaces, and operating system specific sets such as *?"<>|
+        /// </summary>
+        [[nodiscard]] static std::string SanitizeFilename(std::string_view name) noexcept;
 
     private:
 

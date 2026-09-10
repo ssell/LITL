@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <initializer_list>
 #include <absl/container/flat_hash_set.h>
 
 namespace litl
@@ -16,6 +17,16 @@ namespace litl
         using const_iterator = typename absl::flat_hash_set<T>::const_iterator;
 
         FlatHashSet() = default;
+        FlatHashSet(std::initializer_list<T> list)
+        {
+            m_set.reserve(list.size());
+
+            for (auto& t : list)
+            {
+                m_set.insert(t);
+            }
+        }
+
         FlatHashSet(FlatHashSet const&) = delete;
         FlatHashSet& operator=(FlatHashSet const&) = delete;
 

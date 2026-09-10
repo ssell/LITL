@@ -55,6 +55,12 @@ namespace litl::import
         ImporterRegistry m_importerRegistry{};
         ExporterRegistry m_exporterRegistry{};
     };
+
+    /// <summary>
+    /// Ensures the names of all imported data items are sanitized and unique for the scope of the provided ImportedData.
+    /// After running, all names should be collision-free and safe for both use as file name and AssetManager map keys.
+    /// </summary>
+    void sanitizeAndDeduplicateImportedItemNames(ImportedData& importedData) noexcept;
 }
 
 #endif
