@@ -11,7 +11,7 @@ namespace litl::import
 
         static constexpr std::string_view ExporterName = "Model";
         static constexpr ImportedDataType OperatesOnImportedDataType = ImportedDataType::Model;
-        static constexpr std::string_view ExportedExtension = ".litlbmdl";
+        static constexpr std::string_view ExportedExtension = ".litlmdl";
 
         ModelExporter();
         ~ModelExporter();

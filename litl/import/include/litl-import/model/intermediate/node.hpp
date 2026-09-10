@@ -1,5 +1,5 @@
-#ifndef LITL_IMPORT_MESH_NODE_H__
-#define LITL_IMPORT_MESH_NODE_H__
+#ifndef LITL_IMPORT_MODEL_NODE_H__
+#define LITL_IMPORT_MODEL_NODE_H__
 
 #include <cstdint>
 #include <optional>
@@ -13,7 +13,7 @@ namespace litl::import
     struct Node
     {
         std::string name;
-        mat4 localTransform;
+        mat4 localTransform{ mat4::identity() };
         std::optional<uint32_t> meshIndex;
         std::vector<uint32_t> children;
     };
