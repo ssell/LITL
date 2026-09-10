@@ -18,7 +18,7 @@ namespace litl::tests
 
     LITL_TEST_CASE("sanitizeAndDeduplicateItemNames", "[import::importService]")
     {
-        const std::array<ItemDedupe, 18> items{
+        const std::array<ItemDedupe, 19> items{
             ItemDedupe{ import::ImportedDataType::Mesh, "wall", "wall" },
             ItemDedupe{ import::ImportedDataType::Mesh, "WALL", "wall_1" },
             ItemDedupe{ import::ImportedDataType::Mesh, "wall", "wall_2" },
@@ -29,15 +29,16 @@ namespace litl::tests
             ItemDedupe{ import::ImportedDataType::Mesh, "box_3", "box_3_1" },
             ItemDedupe{ import::ImportedDataType::Mesh, "box_4", "box_4" },
             ItemDedupe{ import::ImportedDataType::Mesh, "box_4", "box_4_1" },
-            ItemDedupe{ import::ImportedDataType::Mesh, "box", "box_5" }, 
+            ItemDedupe{ import::ImportedDataType::Mesh, "box", "box_5" },
             ItemDedupe{ import::ImportedDataType::Material, "", "material_0" },
             ItemDedupe{ import::ImportedDataType::Material, "", "material_1" },
             ItemDedupe{ import::ImportedDataType::Material, "", "material_2" },
             ItemDedupe{ import::ImportedDataType::Shader, "  wall   SHADER!? lets go!!!!", "wall-shader!_-lets-go!!!!" },
             ItemDedupe{ import::ImportedDataType::Model, "aux_model", "aux_model" },
             ItemDedupe{ import::ImportedDataType::Model, "model_0", "model_0" },
-            ItemDedupe{ import::ImportedDataType::Model, "aux", "model_0_1" }         // "aux" is reserved so should get cleared and then a type-based name generated.
-        };                                                                            // this would typically make it "model_0" but that will already exist so it becomes "model_0_1"
+            ItemDedupe{ import::ImportedDataType::Model, "aux", "model_0_1" },      // "aux" is reserved so should get cleared and then a type-based name generated. however, that resolves to "model_0" which already exists.
+            ItemDedupe{ import::ImportedDataType::Model, "  aUx  ", "model_1" }     // "  aUx  " is NOT reserved, but the sanitized form "aux" is. so once again a type-based name is generated.
+        };
 
         import::ImportedData data;
 

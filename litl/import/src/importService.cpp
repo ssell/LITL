@@ -196,16 +196,17 @@ namespace litl::import
 
             for (auto& importedDataItem : importedData.items)
             {
-                auto originalName = importedDataItem.getName();
+                const auto lowercaseName = toLowercase(importedDataItem.getName());
+                auto sanitizedName = File::SanitizeFilename(lowercaseName);
 
-                if (File::IsReservedFileNameCaseInsensitive(originalName))
+                if (File::IsReservedFileNameCaseInsensitive(sanitizedName))
                 {
                     // Entire name is invalid. Clear it, and let the follow-up call to ensureItemsHaveNames give it a name.
                     importedDataItem.setName("");
                 }
                 else
                 {
-                    importedDataItem.setName(File::SanitizeFilename(originalName));
+                    importedDataItem.setName(sanitizedName);
                 }
             }
         }
@@ -255,23 +256,23 @@ namespace litl::import
 
             for (auto& importedDataItem : importedData.items)
             {
-                const auto originalNameLower = toLowercase(importedDataItem.getName());
-                auto lowercaseName = originalNameLower;
-                auto lowercaseNameId = StringId(lowercaseName);
-                auto occurrence = nameOccurrences.find(lowercaseNameId);
+                const auto originalName = importedDataItem.getName();
+                auto uniqueName = std::string(originalName);
+                auto uniqueNameId = StringId(uniqueName);
+                auto occurrence = nameOccurrences.find(uniqueNameId);
                 auto occurrenceCount = 0u;
 
                 while (occurrence != nameOccurrences.end())
                 {
                     occurrenceCount++;
-                    lowercaseName = std::format("{}_{}", originalNameLower, occurrenceCount);
-                    lowercaseNameId = StringId(lowercaseName);
-                    occurrence = nameOccurrences.find(lowercaseNameId);
-                    nameOccurrences[lowercaseNameId]++;
+                    uniqueName = std::format("{}_{}", originalName, occurrenceCount);
+                    uniqueNameId = StringId(uniqueName);
+                    occurrence = nameOccurrences.find(uniqueNameId);
+                    nameOccurrences[uniqueNameId]++;
                 }
 
-                nameOccurrences[lowercaseNameId]++;
-                importedDataItem.setName(lowercaseName);
+                nameOccurrences[uniqueNameId]++;
+                importedDataItem.setName(uniqueName);
             }
         }
     }
