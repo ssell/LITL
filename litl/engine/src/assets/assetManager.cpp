@@ -6,8 +6,9 @@
 #include "litl-core/assert.hpp"
 #include "litl-core/string.hpp"
 #include "litl-core/stringId.hpp"
-#include "litl-core/math/geometry/geoMesh.hpp"
+#include "litl-core/handles/lockedHandlePool.hpp"
 #include "litl-core/logging/logging.hpp"
+#include "litl-core/math/geometry/geoMesh.hpp"
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/assets/assetDependencies.hpp"
@@ -80,12 +81,12 @@ namespace litl
         std::mutex assetLoadMutex{};
         std::mutex pendingDependencyMutex{};
 
-        HandlePool<MaterialAsset, MaterialAssetHandleTag> materialAssetPool;
-        HandlePool<MeshAsset, MeshAssetHandleTag> meshAssetPool;
-        HandlePool<ModelAsset, ModelAssetHandleTag> modelAssetPool;
-        HandlePool<TextAsset, TextAssetHandleTag> textAssetPool;
-        HandlePool<ShaderAsset, ShaderAssetHandleTag> shaderAssetPool;
-        HandlePool<Texture2DAsset, Texture2DAssetHandleTag> texture2DAssetPool;
+        LockedHandlePool<MaterialAsset, MaterialAssetHandleTag> materialAssetPool;
+        LockedHandlePool<MeshAsset, MeshAssetHandleTag> meshAssetPool;
+        LockedHandlePool<ModelAsset, ModelAssetHandleTag> modelAssetPool;
+        LockedHandlePool<TextAsset, TextAssetHandleTag> textAssetPool;
+        LockedHandlePool<ShaderAsset, ShaderAssetHandleTag> shaderAssetPool;
+        LockedHandlePool<Texture2DAsset, Texture2DAssetHandleTag> texture2DAssetPool;
 
         std::vector<PendingAssetDependency> pendingDependencies;
         std::vector<PendingAssetDependency> pendingAtFrameStart;
@@ -220,7 +221,7 @@ namespace litl
             asset.materialHandle = MaterialHandle{};
             asset.assetOps = &MaterialAssetOps;
 
-            const MaterialAssetHandle handle = materialAssetPool.createLocked(asset);
+            const MaterialAssetHandle handle = materialAssetPool.create(asset);
 
             assetMap[hashedKey] = AssetMapping{
                 .priority = priority,
@@ -312,7 +313,7 @@ namespace litl
             asset.handle = MeshHandle{};
             asset.assetOps = &MeshAssetOps;
 
-            const MeshAssetHandle handle = meshAssetPool.createLocked(asset);
+            const MeshAssetHandle handle = meshAssetPool.create(asset);
 
             assetMap[hashedKey] = AssetMapping{
                 .priority = priority,
@@ -399,7 +400,7 @@ namespace litl
             ModelAsset asset = createBaseAsset<ModelAsset>(AssetType::Model, file, key, hashedKey, initialStatus);
             asset.assetOps = &ModelAssetOps;
 
-            const ModelAssetHandle handle = modelAssetPool.createLocked(asset);
+            const ModelAssetHandle handle = modelAssetPool.create(asset);
 
             assetMap[hashedKey] = AssetMapping{
                 .priority = priority,
@@ -445,7 +446,7 @@ namespace litl
             asset.handle = ShaderHandle{};
             asset.assetOps = &ShaderAssetOps;
 
-            const ShaderAssetHandle handle = shaderAssetPool.createLocked(asset);
+            const ShaderAssetHandle handle = shaderAssetPool.create(asset);
 
             assetMap[hashedKey] = AssetMapping{
                 .priority = priority,
@@ -507,7 +508,7 @@ namespace litl
             asset.handle = TextHandle{};
             asset.assetOps = &TextAssetOps;
 
-            const TextAssetHandle handle = textAssetPool.createLocked(asset);
+            const TextAssetHandle handle = textAssetPool.create(asset);
 
             assetMap[hashedKey] = AssetMapping{
                 .priority = priority,
@@ -569,7 +570,7 @@ namespace litl
             asset.handle = Texture2DHandle{};
             asset.assetOps = &Texture2DAssetOps;
 
-            const Texture2DAssetHandle handle = texture2DAssetPool.createLocked(asset);
+            const Texture2DAssetHandle handle = texture2DAssetPool.create(asset);
 
             assetMap[hashedKey] = AssetMapping{
                 .priority = priority,
@@ -754,7 +755,7 @@ namespace litl
 
     MaterialAsset* AssetManager::getMaterial(MaterialAssetHandle handle) noexcept
     {
-        MaterialAsset* material = m_impl->materialAssetPool.getLocked(handle);
+        MaterialAsset* material = m_impl->materialAssetPool.get(handle);
 
         if (material == nullptr)
         {
@@ -800,7 +801,7 @@ namespace litl
 
     MeshAsset* AssetManager::getMesh(MeshAssetHandle handle) noexcept
     {
-        MeshAsset* mesh = m_impl->meshAssetPool.getLocked(handle);
+        MeshAsset* mesh = m_impl->meshAssetPool.get(handle);
 
         if (mesh == nullptr)
         {
@@ -858,18 +859,24 @@ namespace litl
             meshAssetHandle = m_impl->createBaseMeshAsset(sourceFile, assetKey, hashedAssetKey, MappingPriority::Low, AssetStatus::Loading);
         }
 
-        auto* meshAsset = m_impl->meshAssetPool.getLocked(meshAssetHandle);
+        auto* meshAsset = m_impl->meshAssetPool.get(meshAssetHandle);
 
         if (meshAsset == nullptr)
         {
-            // Should not get here either.
+            // Should not get here.
             logWarning("AssetManager::createMeshAssetFromMemory failed to retrieve newly created unloaded Mesh asset '", assetKey, "'");
+            return {};
+        }
+
+        meshAsset->handle = m_impl->objectPool->reserveMesh({}, ObjectDescriptor{ .name = assetKey, .lifetime = ObjectLifetime::Application });
+        
+        if (!MeshAsset::fetchAssetObject(meshAsset, *m_impl->objectPool))
+        {
+            logWarning("AssetManager::createMeshAssetFromMemory failed to fetch underlying object for Mesh asset '", assetKey, "'");
             meshAsset->setError(AssetErrorCode::InvalidObject);
             return meshAssetHandle;
         }
 
-        meshAsset->handle = m_impl->objectPool->reserveMesh({}, ObjectDescriptor{ .name = assetKey, .lifetime = ObjectLifetime::Application });
-        MeshAsset::fetchAssetObject(meshAsset, *m_impl->objectPool);
         meshAsset->mesh->getGeoMesh() = std::move(geoMesh);
 
         m_impl->initiateMeshAssetLoadFromMemory(meshAsset, *this);
@@ -901,7 +908,7 @@ namespace litl
 
     ModelAsset* AssetManager::getModel(ModelAssetHandle handle) noexcept
     {
-        ModelAsset* model = m_impl->modelAssetPool.getLocked(handle);
+        ModelAsset* model = m_impl->modelAssetPool.get(handle);
 
         if (model == nullptr)
         {
@@ -940,7 +947,7 @@ namespace litl
 
     ShaderAsset* AssetManager::getShader(ShaderAssetHandle handle) noexcept
     {
-        ShaderAsset* shaderModule = m_impl->shaderAssetPool.getLocked(handle);
+        ShaderAsset* shaderModule = m_impl->shaderAssetPool.get(handle);
 
         if (shaderModule == nullptr)
         {
@@ -979,7 +986,7 @@ namespace litl
 
     TextAsset* AssetManager::getText(TextAssetHandle handle) noexcept
     {
-        TextAsset* text = m_impl->textAssetPool.getLocked(handle);
+        TextAsset* text = m_impl->textAssetPool.get(handle);
 
         if (text == nullptr)
         {
@@ -1018,7 +1025,7 @@ namespace litl
 
     Texture2DAsset* AssetManager::getTexture2D(Texture2DAssetHandle handle) noexcept
     {
-        Texture2DAsset* texture2D = m_impl->texture2DAssetPool.getLocked(handle);
+        Texture2DAsset* texture2D = m_impl->texture2DAssetPool.get(handle);
 
         if (texture2D == nullptr)
         {
