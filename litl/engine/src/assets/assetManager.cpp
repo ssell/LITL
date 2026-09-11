@@ -1013,7 +1013,7 @@ namespace litl
 
         if (asset == nullptr)
         {
-            return AssetStatus::Unloaded;
+            return AssetStatus::Invalid;
         }
 
         return asset->status.load(std::memory_order::relaxed);

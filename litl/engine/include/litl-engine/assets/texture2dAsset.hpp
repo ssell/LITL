@@ -20,12 +20,12 @@ namespace litl
     };
 
     inline constexpr Asset::AssetOps Texture2DAssetOps = {
-        &Texture2DAsset::fetchAssetObject,
-        &Texture2DAsset::decodeBytes,
-        &Texture2DAsset::processOnWorker,
-        nullptr,
-        nullptr,
-        &Texture2DAsset::processOnMain
+        .fetchAssetObject        = &Texture2DAsset::fetchAssetObject,
+        .decodeAssetBytes        = &Texture2DAsset::decodeBytes,
+        .processOnWorker         = &Texture2DAsset::processOnWorker,
+        .gatherDependencies      = nullptr,
+        .processOnMain           = &Texture2DAsset::processOnMain,
+        .requiresAllDependencies = true
     };
 }
 

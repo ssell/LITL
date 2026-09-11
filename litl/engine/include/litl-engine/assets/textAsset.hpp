@@ -19,12 +19,12 @@ namespace litl
     };
 
     inline constexpr Asset::AssetOps TextAssetOps = {
-        &TextAsset::fetchAssetObject,
-        &TextAsset::decodeBytes,
-        nullptr,
-        nullptr,
-        nullptr,
-        &TextAsset::processOnMain
+        .fetchAssetObject        = &TextAsset::fetchAssetObject,
+        .decodeAssetBytes        = &TextAsset::decodeBytes,
+        .processOnWorker         = nullptr,
+        .gatherDependencies      = nullptr,
+        .processOnMain           = &TextAsset::processOnMain,
+        .requiresAllDependencies = true
     };
 }
 

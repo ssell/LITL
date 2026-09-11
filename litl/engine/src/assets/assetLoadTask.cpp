@@ -188,11 +188,11 @@ namespace litl
 
                     if (dependency->status.load(std::memory_order::relaxed) != AssetStatus::InMemory)
                     {
-                        logError("Failed to load dependency '", dependency->key, "' for asset '", asset->key, "'");
+                        logError("Failed to load dependency '", dependency->key, "' for asset '", asset->key, "' with error code ", static_cast<uint32_t>(dependency->error));
                     }
                 }
 
-                if ((asset->assetOps->requiresAllDependencies == nullptr) || (asset->assetOps->requiresAllDependencies() == true))
+                if (asset->assetOps->requiresAllDependencies)
                 {
                     asset->setError(AssetErrorCode::DependencyLoadFailed);
                     co_return false;

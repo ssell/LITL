@@ -242,16 +242,26 @@ namespace litl
         }
     }
 
-    bool ModelAsset::requiresAllDependencies() noexcept
-    {
-        return false;
-    }
-
     bool ModelAsset::processOnMain(Asset* asset, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept
     {
         ModelAsset* modelAsset = static_cast<ModelAsset*>(asset);
 
-        // ... no action currently ...
+        // If a dependency asset failed to load then invalidate the corresponding handle.
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(modelAsset->meshAssetHandles.size()); ++i)
+        {
+            if (assetManager.getMeshAssetStatus(modelAsset->meshAssetHandles[i]) != AssetStatus::InMemory)
+            {
+                modelAsset->meshAssetHandles[i] = {};
+            }
+        }
+
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(modelAsset->materialAssetHandles.size()); ++i)
+        {
+            if (assetManager.getMaterialAssetStatus(modelAsset->materialAssetHandles[i]) != AssetStatus::InMemory)
+            {
+                modelAsset->materialAssetHandles[i] = {};
+            }
+        }
 
         return true;
     }

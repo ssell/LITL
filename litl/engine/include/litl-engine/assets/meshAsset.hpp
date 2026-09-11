@@ -19,12 +19,12 @@ namespace litl
     };
 
     inline constexpr Asset::AssetOps MeshAssetOps = {
-        &MeshAsset::fetchAssetObject,
-        &MeshAsset::decodeBytes,
-        nullptr,
-        nullptr,
-        nullptr,
-        &MeshAsset::processOnMain
+        .fetchAssetObject        = &MeshAsset::fetchAssetObject,
+        .decodeAssetBytes        = &MeshAsset::decodeBytes,
+        .processOnWorker         = nullptr,
+        .gatherDependencies      = nullptr,
+        .processOnMain           = &MeshAsset::processOnMain,
+        .requiresAllDependencies = true
     };
 }
 

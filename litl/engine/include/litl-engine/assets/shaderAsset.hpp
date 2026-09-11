@@ -27,12 +27,12 @@ namespace litl
     };
 
     inline constexpr Asset::AssetOps ShaderAssetOps = {
-        &ShaderAsset::fetchAssetObject,
-        &ShaderAsset::decodeBytes,
-        nullptr,
-        nullptr,
-        nullptr,
-        &ShaderAsset::processOnMain
+        .fetchAssetObject        = &ShaderAsset::fetchAssetObject,
+        .decodeAssetBytes        = &ShaderAsset::decodeBytes,
+        .processOnWorker         = nullptr,
+        .gatherDependencies      = nullptr,
+        .processOnMain           = &ShaderAsset::processOnMain,
+        .requiresAllDependencies = true
     };
 }
 
