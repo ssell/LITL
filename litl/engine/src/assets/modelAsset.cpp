@@ -242,52 +242,16 @@ namespace litl
         }
     }
 
+    bool ModelAsset::requiresAllDependencies() noexcept
+    {
+        return false;
+    }
+
     bool ModelAsset::processOnMain(Asset* asset, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept
     {
         ModelAsset* modelAsset = static_cast<ModelAsset*>(asset);
 
-        // Log out any assets that failed to load
-        for (auto meshAssetHandle : modelAsset->meshAssetHandles)
-        {
-            if (!meshAssetHandle.isValid())
-            {
-                continue;
-            }
-
-            auto* meshAsset = assetManager.getMesh(meshAssetHandle);
-
-            if (meshAsset == nullptr)
-            {
-                logError("Failed to retrieve Mesh asset dependency for Model '", modelAsset->key, "'");
-                continue;
-            }
-
-            if (meshAsset->status.load(std::memory_order::relaxed) != AssetStatus::InMemory)
-            {
-                logError("Failed to load Mesh dependency '", meshAsset->key, "' for Model '", modelAsset->key, "'");
-            }
-        }
-
-        for (auto materialAssetHandle : modelAsset->materialAssetHandles)
-        {
-            if (!materialAssetHandle.isValid())
-            {
-                continue;
-            }
-
-            auto* materialAsset = assetManager.getMaterial(materialAssetHandle);
-
-            if (materialAsset == nullptr)
-            {
-                logError("Failed to retrieve Material asset dependency for Model '", modelAsset->key, "'");
-                continue;
-            }
-
-            if (materialAsset->status.load(std::memory_order::relaxed) != AssetStatus::InMemory)
-            {
-                logError("Failed to load Material dependency '", materialAsset->key, "' for Model '", modelAsset->key, "'");
-            }
-        }
+        // ... no action currently ...
 
         return true;
     }

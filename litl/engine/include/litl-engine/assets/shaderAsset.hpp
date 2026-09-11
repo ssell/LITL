@@ -31,6 +31,7 @@ namespace litl
         &ShaderAsset::decodeBytes,
         nullptr,
         nullptr,
+        nullptr,
         &ShaderAsset::processOnMain
     };
 }

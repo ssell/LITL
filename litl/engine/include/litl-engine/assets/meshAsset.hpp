@@ -23,6 +23,7 @@ namespace litl
         &MeshAsset::decodeBytes,
         nullptr,
         nullptr,
+        nullptr,
         &MeshAsset::processOnMain
     };
 }

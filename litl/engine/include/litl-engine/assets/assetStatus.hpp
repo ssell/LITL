@@ -26,7 +26,12 @@ namespace litl
         /// <summary>
         /// The asset is not in memory and loading it failed.
         /// </summary>
-        Error = 3u
+        Error = 3u,
+
+        /// <summary>
+        /// No such asset is known to the Asset system.
+        /// </summary>
+        Invalid = 4u
     };
 
     enum class AssetErrorCode : uint32_t

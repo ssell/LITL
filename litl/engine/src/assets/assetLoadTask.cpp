@@ -179,8 +179,24 @@ namespace litl
 
             if (!co_await AwaitAssetDependencies{ assetManager, asset, dependencies })
             {
-                asset->setError(AssetErrorCode::DependencyLoadFailed);
-                co_return false;
+                for (auto* dependency : dependencies)
+                {
+                    if (dependency == nullptr)
+                    {
+                        continue;
+                    }
+
+                    if (dependency->status.load(std::memory_order::relaxed) != AssetStatus::InMemory)
+                    {
+                        logError("Failed to load dependency '", dependency->key, "' for asset '", asset->key, "'");
+                    }
+                }
+
+                if ((asset->assetOps->requiresAllDependencies == nullptr) || (asset->assetOps->requiresAllDependencies() == true))
+                {
+                    asset->setError(AssetErrorCode::DependencyLoadFailed);
+                    co_return false;
+                }
             }
         }
 

@@ -146,6 +146,11 @@ namespace litl
         return true;
     }
 
+    bool MaterialAsset::requiresAllDependencies() noexcept
+    {
+        return true;
+    }
+
     bool MaterialAsset::processOnMain(Asset* asset, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept
     {
         MaterialAsset* materialAsset = static_cast<MaterialAsset*>(asset);

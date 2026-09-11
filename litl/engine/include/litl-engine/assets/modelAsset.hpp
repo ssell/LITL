@@ -23,6 +23,7 @@ namespace litl
 
         static bool decodeBytes(Asset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept;
         static bool gatherDependencies(Asset* asset, AssetManager& assetManager, std::vector<Asset*>& dependencies) noexcept;
+        static bool requiresAllDependencies() noexcept;
         static bool processOnMain(Asset* asset, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept;
 
     private:
@@ -47,6 +48,7 @@ namespace litl
         &ModelAsset::decodeBytes,
         nullptr,
         &ModelAsset::gatherDependencies,
+        &ModelAsset::requiresAllDependencies,
         &ModelAsset::processOnMain
     };
 }

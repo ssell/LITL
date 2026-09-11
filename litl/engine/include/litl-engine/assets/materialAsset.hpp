@@ -43,6 +43,7 @@ namespace litl
         static bool fetchAssetObject(Asset* asset, ObjectPool& objectPool) noexcept;
         static bool decodeBytes(Asset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept;
         static bool gatherDependencies(Asset* asset, AssetManager& assetManager, std::vector<Asset*>& dependencies) noexcept;
+        static bool requiresAllDependencies() noexcept;
         static bool processOnMain(Asset* asset, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept;
     };
 
@@ -51,6 +52,7 @@ namespace litl
         &MaterialAsset::decodeBytes,
         nullptr,
         &MaterialAsset::gatherDependencies,
+        &MaterialAsset::requiresAllDependencies,
         &MaterialAsset::processOnMain
     };
 }

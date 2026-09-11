@@ -46,6 +46,13 @@ namespace litl
             bool (*gatherDependencies)(Asset*, AssetManager&, std::vector<Asset*>& dependencies);
 
             /// <summary>
+            /// (Optional) If returns true, then an asset load fails if one or more of its dependencies fail to load. Otherwise it can continue on if some dependencies fail. 
+            /// Materials for example require all dependencies to be present, whereas Models can continue with parts missing.
+            /// If this method is not provided, then it will be assumed that all dependencies are required.
+            /// </summary>
+            bool (*requiresAllDependencies)();
+
+            /// <summary>
             /// (Optional) Performs optional additional work on the main thread, for example uploading buffers to the GPU.
             /// </summary>
             bool (*processOnMain)(Asset*, AssetManager&, ObjectPool&, AssetErrorCode&);
