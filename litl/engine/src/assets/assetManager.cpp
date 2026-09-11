@@ -139,27 +139,27 @@ namespace litl
                         switch (assetFileType->second.type)
                         {
                         case AssetType::Material:
-                            createUnloadedMaterialAsset(file, assetKey, hashedKey, assetFileType->second.priority);
+                            createBaseMaterialAsset(file, assetKey, hashedKey, assetFileType->second.priority, AssetStatus::Unloaded);
                             break;
 
                         case AssetType::Mesh:
-                            createUnloadedMeshAsset(file, assetKey, hashedKey, assetFileType->second.priority);
+                            createBaseMeshAsset(file, assetKey, hashedKey, assetFileType->second.priority, AssetStatus::Unloaded);
                             break;
 
                         case AssetType::Model:
-                            createUnloadedModelAsset(file, assetKey, hashedKey, assetFileType->second.priority);
+                            createBaseModelAsset(file, assetKey, hashedKey, assetFileType->second.priority, AssetStatus::Unloaded);
                             break;
 
                         case AssetType::Shader:
-                            createUnloadedShaderAsset(file, assetKey, hashedKey, assetFileType->second.priority);
+                            createBaseShaderAsset(file, assetKey, hashedKey, assetFileType->second.priority, AssetStatus::Unloaded);
                             break;
 
                         case AssetType::Text:
-                            createUnloadedTextAsset(file, assetKey, hashedKey, assetFileType->second.priority);
+                            createBaseTextAsset(file, assetKey, hashedKey, assetFileType->second.priority, AssetStatus::Unloaded);
                             break;
 
                         case AssetType::Texture2D:
-                            createUnloadedTexture2DAsset(file, assetKey, hashedKey, assetFileType->second.priority);
+                            createBaseTexture2DAsset(file, assetKey, hashedKey, assetFileType->second.priority, AssetStatus::Unloaded);
                             break;
 
                         case AssetType::Unknown:
@@ -177,7 +177,7 @@ namespace litl
         // ---------------------------------------------------------------------------------
 
         template<typename T> requires std::is_base_of_v<Asset, T>
-        T createBaseAsset(AssetType type, File const& file, std::string const& key, StringId hashedKey) noexcept
+        T createBaseAsset(AssetType type, File const& file, std::string_view key, StringId hashedKey, AssetStatus initialStatus) noexcept
         {
             T asset{};
 
@@ -185,7 +185,7 @@ namespace litl
             asset.key = key;
             asset.hashedKey = hashedKey;
             asset.type = type;
-            asset.status.store(AssetStatus::Unloaded, std::memory_order_relaxed);
+            asset.status.store(initialStatus, std::memory_order_relaxed);
 
             return asset;
         }
@@ -214,9 +214,9 @@ namespace litl
         /// Invoked during asset map population.
         /// This creates an unloaded material asset reference in the asset map that can be loaded via initiateMaterialAssetLoad.
         /// </summary>
-        void createUnloadedMaterialAsset(File const& file, std::string const& key, StringId hashedKey, MappingPriority priority) noexcept
+        void createBaseMaterialAsset(File const& file, std::string_view key, StringId hashedKey, MappingPriority priority, AssetStatus initialStatus) noexcept
         {
-            MaterialAsset asset = createBaseAsset<MaterialAsset>(AssetType::Material, file, key, hashedKey);
+            MaterialAsset asset = createBaseAsset<MaterialAsset>(AssetType::Material, file, key, hashedKey, initialStatus);
             asset.materialHandle = MaterialHandle{};
             asset.assetOps = &MaterialAssetOps;
 
@@ -233,12 +233,18 @@ namespace litl
         /// Invoked at runtime when the material is first requested (or requested after it has been unloaded).
         /// Enqueues a Task to load the material in from disk.
         /// </summary>
-        void initiateMaterialAssetLoad(MaterialAsset* asset, AssetManager& assetManager) noexcept
+        void initiateMaterialAssetLoadFromDisk(MaterialAsset* asset, AssetManager& assetManager) noexcept
         {
+            if (asset == nullptr)
+            {
+                return;
+            }
+
             std::scoped_lock lock{ assetLoadMutex };
 
             if (asset->status.load(std::memory_order_relaxed) != AssetStatus::Unloaded)
             {
+                logWarning("Attempting to load Material asset from disk that is already loaded. Asset key = '", asset->key, "'");
                 return;
             }
 
@@ -258,6 +264,36 @@ namespace litl
             taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
         }
 
+        /// <summary>
+        /// Invoked at runtime to enqueue a task when the material asset is being created from an intermediate material object already in memory.
+        /// </summary>
+        void initiateMaterialAssetLoadFromMemory(MaterialAsset* asset, AssetManager& assetManager) noexcept
+        {
+            if (asset == nullptr)
+            {
+                return;
+            }
+
+            std::scoped_lock lock{ assetLoadMutex };
+
+            const auto currentStatus = asset->status.load(std::memory_order_relaxed);
+
+            if (currentStatus == AssetStatus::Unloaded)
+            {
+                // Generally it should already be in the "Loading" state, but just in case...
+                asset->status.store(AssetStatus::Loading, std::memory_order_relaxed);
+            }
+            else if (currentStatus != AssetStatus::Loading)
+            {
+                logWarning("Attempting to load Material asset from memory that is already loaded. Asset key = '", asset->key, "'");
+                return;
+            }
+
+            logWarning("Asset load from memory task is currently not implemented.");
+            // ... todo ... invoke coroutine to load from memory ...
+            // taskManager->schedule(...);
+        }
+
         // ---------------------------------------------------------------------------------
         // --- Mesh Asset
         // ---------------------------------------------------------------------------------
@@ -266,9 +302,9 @@ namespace litl
         /// Invoked during asset map population.
         /// This creates an unloaded mesh asset reference in the asset map that can be loaded via initiateMeshAssetLoad.
         /// </summary>
-        void createUnloadedMeshAsset(File const& file, std::string const& key, StringId hashedKey, MappingPriority priority) noexcept
+        void createBaseMeshAsset(File const& file, std::string_view key, StringId hashedKey, MappingPriority priority, AssetStatus initialStatus) noexcept
         {
-            MeshAsset asset = createBaseAsset<MeshAsset>(AssetType::Mesh, file, key, hashedKey);
+            MeshAsset asset = createBaseAsset<MeshAsset>(AssetType::Mesh, file, key, hashedKey, initialStatus);
             asset.handle = MeshHandle{};
             asset.assetOps = &MeshAssetOps;
 
@@ -285,12 +321,13 @@ namespace litl
         /// Invoked at runtime when the mesh is first requested (or requested after it has been unloaded).
         /// Enqueues a Task to load the mesh in from disk.
         /// </summary>
-        void initiateMeshAssetLoad(MeshAsset* asset, AssetManager& assetManager) noexcept
+        void initiateMeshAssetLoadFromDisk(MeshAsset* asset, AssetManager& assetManager) noexcept
         {
             std::scoped_lock lock{ assetLoadMutex };
 
             if (asset->status.load(std::memory_order_relaxed) != AssetStatus::Unloaded)
             {
+                logWarning("Attempting to load Mesh asset from disk that is already loaded. Asset key = '", asset->key, "'");
                 return;
             }
 
@@ -310,13 +347,43 @@ namespace litl
             taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
         }
 
+        /// <summary>
+        /// Invoked at runtime to enqueue a task when the mesh asset is being created from an intermediate mesh object already in memory.
+        /// </summary>
+        void initiateMeshAssetLoadFromMemory(MeshAsset* asset, AssetManager& assetManager) noexcept
+        {
+            if (asset == nullptr)
+            {
+                return;
+            }
+
+            std::scoped_lock lock{ assetLoadMutex };
+
+            const auto currentStatus = asset->status.load(std::memory_order_relaxed);
+
+            if (currentStatus == AssetStatus::Unloaded)
+            {
+                // Generally it should already be in the "Loading" state, but just in case...
+                asset->status.store(AssetStatus::Loading, std::memory_order_relaxed);
+            }
+            else if (currentStatus != AssetStatus::Loading)
+            {
+                logWarning("Attempting to load Mesh asset from memory that is already loaded. Asset key = '", asset->key, "'");
+                return;
+            }
+
+            logWarning("Asset load from memory task is currently not implemented.");
+            // ... todo ... invoke coroutine to load from memory ...
+            // taskManager->schedule(...);
+        }
+
         // ---------------------------------------------------------------------------------
         // --- Model Asset
         // ---------------------------------------------------------------------------------
 
-        void createUnloadedModelAsset(File const& file, std::string const& key, StringId hashedKey, MappingPriority priority) noexcept
+        void createBaseModelAsset(File const& file, std::string_view key, StringId hashedKey, MappingPriority priority, AssetStatus initialStatus) noexcept
         {
-            ModelAsset asset = createBaseAsset<ModelAsset>(AssetType::Model, file, key, hashedKey);
+            ModelAsset asset = createBaseAsset<ModelAsset>(AssetType::Model, file, key, hashedKey, initialStatus);
             asset.assetOps = &ModelAssetOps;
 
             assetMap[hashedKey] = AssetMapping{
@@ -328,7 +395,7 @@ namespace litl
             };
         }
 
-        void initiateModelAssetLoad(ModelAsset* asset, AssetManager& assetManager) noexcept
+        void initiateModelAssetLoadFromDisk(ModelAsset* asset, AssetManager& assetManager) noexcept
         {
             std::scoped_lock lock{ assetLoadMutex };
 
@@ -349,9 +416,9 @@ namespace litl
         /// Invoked during asset map population.
         /// This creates an unloaded shader asset reference in the asset map that can be loaded via initiateShaderAssetLoad.
         /// </summary>
-        void createUnloadedShaderAsset(File const& file, std::string const& key, StringId hashedKey, MappingPriority priority) noexcept
+        void createBaseShaderAsset(File const& file, std::string_view key, StringId hashedKey, MappingPriority priority, AssetStatus initialStatus) noexcept
         {
-            ShaderAsset asset = createBaseAsset<ShaderAsset>(AssetType::Shader, file, key, hashedKey);
+            ShaderAsset asset = createBaseAsset<ShaderAsset>(AssetType::Shader, file, key, hashedKey, initialStatus);
             asset.handle = ShaderHandle{};
             asset.assetOps = &ShaderAssetOps;
 
@@ -368,7 +435,7 @@ namespace litl
         /// Invoked at runtime when the shader is first requested (or requested after it has been unloaded).
         /// Enqueues a Task to load the shader in from disk.
         /// </summary>
-        void initiateShaderAssetLoad(ShaderAsset* asset, AssetManager& assetManager) noexcept
+        void initiateShaderAssetLoadFromDisk(ShaderAsset* asset, AssetManager& assetManager) noexcept
         {
             std::scoped_lock lock{ assetLoadMutex };
 
@@ -401,9 +468,9 @@ namespace litl
         /// Invoked during asset map population.
         /// This creates an unloaded text asset reference in the asset map that can be loaded via initiateTextAssetLoad.
         /// </summary>
-        void createUnloadedTextAsset(File const& file, std::string const& key, StringId hashedKey, MappingPriority priority) noexcept
+        void createBaseTextAsset(File const& file, std::string_view key, StringId hashedKey, MappingPriority priority, AssetStatus initialStatus) noexcept
         {
-            TextAsset asset = createBaseAsset<TextAsset>(AssetType::Text, file, key, hashedKey);
+            TextAsset asset = createBaseAsset<TextAsset>(AssetType::Text, file, key, hashedKey, initialStatus);
             asset.handle = TextHandle{};
             asset.assetOps = &TextAssetOps;
 
@@ -420,7 +487,7 @@ namespace litl
         /// Invoked at runtime when the text is first requested (or requested after it has been unloaded).
         /// Enqueues a Task to load the text in from disk.
         /// </summary>
-        void initiateTextAssetLoad(TextAsset* asset, AssetManager& assetManager) noexcept
+        void initiateTextAssetLoadFromDisk(TextAsset* asset, AssetManager& assetManager) noexcept
         {
             std::scoped_lock lock{ assetLoadMutex };
 
@@ -453,9 +520,9 @@ namespace litl
         /// Invoked during asset map population.
         /// This creates an unloaded texture asset reference in the asset map that can be loaded via initiateTexture2DAssetLoad.
         /// </summary>
-        void createUnloadedTexture2DAsset(File const& file, std::string const& key, StringId hashedKey, MappingPriority priority) noexcept
+        void createBaseTexture2DAsset(File const& file, std::string_view key, StringId hashedKey, MappingPriority priority, AssetStatus initialStatus) noexcept
         {
-            Texture2DAsset asset = createBaseAsset<Texture2DAsset>(AssetType::Texture2D, file, key, hashedKey);
+            Texture2DAsset asset = createBaseAsset<Texture2DAsset>(AssetType::Texture2D, file, key, hashedKey, initialStatus);
             asset.handle = Texture2DHandle{};
             asset.assetOps = &Texture2DAssetOps;
 
@@ -472,7 +539,7 @@ namespace litl
         /// Invoked at runtime when the texture is first requested (or requested after it has been unloaded).
         /// Enqueues a Task to load the texture in from disk.
         /// </summary>
-        void initiateTexture2DAssetLoad(Texture2DAsset* asset, AssetManager& assetManager) noexcept
+        void initiateTexture2DAssetLoadFromDisk(Texture2DAsset* asset, AssetManager& assetManager) noexcept
         {
             std::scoped_lock lock{ assetLoadMutex };
 
@@ -643,13 +710,13 @@ namespace litl
 
         if (material->status.load(std::memory_order_relaxed) == AssetStatus::Unloaded)
         {
-            m_impl->initiateMaterialAssetLoad(material, *this);
+            m_impl->initiateMaterialAssetLoadFromDisk(material, *this);
         }
 
         return material;
     }
 
-    MaterialAssetHandle AssetManager::createMaterialAssetFromMemory(std::string_view key, import::MaterialIntermediateData intermediateData) noexcept
+    MaterialAssetHandle AssetManager::createMaterialAssetFromMemory(Authority<MaterialAsset> auth, std::string_view key, import::MaterialIntermediateData intermediateData, File const& sourceFile) noexcept
     {
         // ... todo ...
         logWarning("Invoking unimplemented AssetManager::createMaterialAssetFromMemory");
@@ -689,7 +756,7 @@ namespace litl
 
         if (mesh->status.load(std::memory_order_relaxed) == AssetStatus::Unloaded)
         {
-            m_impl->initiateMeshAssetLoad(mesh, *this);
+            m_impl->initiateMeshAssetLoadFromDisk(mesh, *this);
         }
 
         return mesh;
@@ -707,11 +774,59 @@ namespace litl
         return MeshRef{ .handle = meshAsset->handle };
     }
 
-    MeshAssetHandle AssetManager::createMeshAssetFromMemory(std::string_view key, GeoMesh geoMesh) noexcept
+    MeshAssetHandle AssetManager::createMeshAssetFromMemory(Authority<MeshAsset> auth, std::string_view key, GeoMesh geoMesh, File const& sourceFile) noexcept
     {
-        // ... todo ...
-        logWarning("Invoking unimplemented AssetManager::createMeshAssetFromMemory");
-        return {};
+        const StringId hashedKey = m_impl->createHashedAssetKey(key);
+
+        {
+            // When creating from memory, we may be racing against a reader as this is not done in a preprocess step like with disk-based assets.
+            std::scoped_lock lock{ m_impl->assetMapMutex };
+
+            auto find = m_impl->assetMap.find(hashedKey);
+
+            // Does the key already exist? If so, return the handle if it is also a MeshHandle.
+            if (find != m_impl->assetMap.end())
+            {
+                if (find->second.handle.type == AssetType::Mesh)
+                {
+                    return find->second.handle.meshHandle;
+                }
+                else
+                {
+                    return {};
+                }
+            }
+
+            // Key is not yet occupied. Create an unloaded mesh asset at it.
+            m_impl->createBaseMeshAsset(sourceFile, key, hashedKey, MappingPriority::Low, AssetStatus::Loading);
+        }
+
+        auto find = m_impl->assetMap.find(hashedKey);
+
+        if ((find == m_impl->assetMap.end()) || (find->second.handle.type != AssetType::Mesh))
+        {
+            // Should not get here.
+            logWarning("AssetManager::createMeshAssetFromMemory failed to retrieve newly created unloaded Mesh asset handle '", key, "'");
+            return {};
+        }
+
+        auto meshAssetHandle = find->second.handle.meshHandle;
+        auto* meshAsset = m_impl->meshAssetPool.get(meshAssetHandle);
+
+        if (meshAsset == nullptr)
+        {
+            // Should not get here either.
+            logWarning("AssetManager::createMeshAssetFromMemory failed to retrieve newly created unloaded Mesh asset '", key, "'");
+            return {};
+        }
+
+        auto meshHandle = m_impl->objectPool->reserveMesh({}, ObjectDescriptor{ .name = std::string(key), .lifetime = ObjectLifetime::Application });
+        MeshAsset::fetchAssetObject(meshAsset, *m_impl->objectPool);
+        meshAsset->mesh->getGeoMesh() = std::move(geoMesh);
+
+        m_impl->initiateMeshAssetLoadFromMemory(meshAsset, *this);
+
+        return meshAssetHandle;
     }
 
     // -------------------------------------------------------------------------------------
@@ -747,7 +862,7 @@ namespace litl
 
         if (model->status.load(std::memory_order_relaxed) == AssetStatus::Unloaded)
         {
-            m_impl->initiateModelAssetLoad(model, *this);
+            m_impl->initiateModelAssetLoadFromDisk(model, *this);
         }
 
         return model;
@@ -786,7 +901,7 @@ namespace litl
 
         if (shaderModule->status.load(std::memory_order_relaxed) == AssetStatus::Unloaded)
         {
-            m_impl->initiateShaderAssetLoad(shaderModule, *this);
+            m_impl->initiateShaderAssetLoadFromDisk(shaderModule, *this);
         }
 
         return shaderModule;
@@ -825,7 +940,7 @@ namespace litl
 
         if (text->status.load(std::memory_order_relaxed) == AssetStatus::Unloaded)
         {
-            m_impl->initiateTextAssetLoad(text, *this);
+            m_impl->initiateTextAssetLoadFromDisk(text, *this);
         }
 
         return text;
@@ -864,7 +979,7 @@ namespace litl
 
         if (texture2D->status.load(std::memory_order_relaxed) == AssetStatus::Unloaded)
         {
-            m_impl->initiateTexture2DAssetLoad(texture2D, *this);
+            m_impl->initiateTexture2DAssetLoadFromDisk(texture2D, *this);
         }
 
         return texture2D;
