@@ -9,10 +9,11 @@
 // Include common, widely used components
 
 #include "litl-engine/ecs/components/bounds.hpp"
+#include "litl-engine/ecs/components/loadingAsset.hpp"
+#include "litl-engine/ecs/components/materialRef.hpp"
+#include "litl-engine/ecs/components/meshRef.hpp"
 #include "litl-engine/ecs/components/scale.hpp"
 #include "litl-engine/ecs/components/transform.hpp"
-#include "litl-engine/ecs/components/meshRef.hpp"
-#include "litl-engine/ecs/components/materialRef.hpp"
 
 /*
 

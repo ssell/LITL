@@ -7,13 +7,13 @@ namespace litl
 {
     enum class AssetType : uint8_t
     {
-        Unknown = 0u,
-        Material = 1u,
-        Mesh = 2u,
-        Shader = 3u,
-        Text = 4u,
+        Unknown   = 0u,
+        Material  = 1u,
+        Mesh      = 2u,
+        Shader    = 3u,
+        Text      = 4u,
         Texture2D = 5u,
-        Model = 6u
+        Model     = 6u
     };
 }
 

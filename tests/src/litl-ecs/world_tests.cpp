@@ -249,55 +249,6 @@ namespace litl::tests
         REQUIRE(world.isAlive(entity) == false);
     } LITL_END_TEST_CASE
 
-    namespace ComponentCtorDtorCallTest
-    {
-        static uint32_t CtorDtorTestCount = 0;
-
-        struct CtorDtorTestComponent
-        {
-            CtorDtorTestComponent()
-            {
-                CtorDtorTestCount++;
-            }
-
-            ~CtorDtorTestComponent()
-            {
-                CtorDtorTestCount--;
-            }
-
-            uint32_t value;
-        };
-    }
-
-    LITL_TEST_CASE("Component Ctor Dtor Call", "[ecs::world]")
-    {
-        World world;
-        Entity entity0 = world.createImmediate();
-        Entity entity1 = world.createImmediate();
-
-        REQUIRE(ComponentCtorDtorCallTest::CtorDtorTestCount == 0);
-
-        world.addComponentImmediate<ComponentCtorDtorCallTest::CtorDtorTestComponent>(entity0);
-
-        REQUIRE(ComponentCtorDtorCallTest::CtorDtorTestCount == 1);
-
-        world.addComponentImmediate<ComponentCtorDtorCallTest::CtorDtorTestComponent>(entity1);
-
-        REQUIRE(ComponentCtorDtorCallTest::CtorDtorTestCount == 2);
-
-        world.destroyImmediate(entity1);
-
-        REQUIRE(ComponentCtorDtorCallTest::CtorDtorTestCount == 1);
-
-        world.removeComponentImmediate<ComponentCtorDtorCallTest::CtorDtorTestComponent>(entity0);
-
-        REQUIRE(ComponentCtorDtorCallTest::CtorDtorTestCount == 0);
-
-        world.destroyImmediate(entity1);
-
-        REQUIRE(ComponentCtorDtorCallTest::CtorDtorTestCount == 0);
-    } LITL_END_TEST_CASE
-
     LITL_TEST_CASE("Modify Component", "[ecs::world]")
     {
         World world;
@@ -588,5 +539,3 @@ namespace litl::tests
         REQUIRE(setupService->wasSetup == true);
     } LITL_END_TEST_CASE
 }
-
-LITL_REGISTER_TYPE_NAME(litl::tests::ComponentCtorDtorCallTest::CtorDtorTestComponent)

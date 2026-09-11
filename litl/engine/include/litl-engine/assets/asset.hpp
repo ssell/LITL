@@ -7,6 +7,7 @@
 #include "litl-core/file.hpp"
 #include "litl-core/stringId.hpp"
 #include "litl-engine/assets/assetStatus.hpp"
+#include "litl-engine/assets/assetHandle.hpp"
 #include "litl-engine/assets/assetType.hpp"
 
 namespace litl
@@ -83,9 +84,9 @@ namespace litl
         StringId hashedKey{};
 
         /// <summary>
-        /// The type of asset.
+        /// The opaque handle that references this asset.
         /// </summary>
-        AssetType type{ AssetType::Unknown };
+        AssetHandle selfHandle{};
 
         /// <summary>
         /// Current status of the asset in memory.
@@ -93,14 +94,19 @@ namespace litl
         std::atomic<AssetStatus> status{ AssetStatus::Unloaded };
 
         /// <summary>
+        /// Asset-specific function operations table.
+        /// </summary>
+        AssetOps const* assetOps{ nullptr };
+
+        /// <summary>
         /// If the status is error, this is the error.
         /// </summary>
         AssetErrorCode error{ AssetErrorCode::None };
 
         /// <summary>
-        /// Asset-specific function operations table.
+        /// The type of asset.
         /// </summary>
-        AssetOps const* assetOps{ nullptr };
+        AssetType type{ AssetType::Unknown };
     };
 }
 

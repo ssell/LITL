@@ -224,14 +224,16 @@ namespace litl
             asset.materialHandle = MaterialHandle{};
             asset.assetOps = &MaterialAssetOps;
 
-            const MaterialAssetHandle handle = materialAssetPool.create(asset);
+            const auto materialAssetHandle = materialAssetPool.create(asset);
+            MaterialAsset* pooledAsset = materialAssetPool.get(materialAssetHandle);
+            pooledAsset->selfHandle = AssetHandle::fromMaterialAssetHandle(materialAssetHandle);
 
             assetMap[hashedKey] = AssetMapping{
                 .priority = priority,
-                .handle = AssetHandle::fromMaterialAssetHandle(handle)
+                .handle = pooledAsset->selfHandle
             };
 
-            return handle;
+            return materialAssetHandle;
         }
 
         /// <summary>
@@ -311,14 +313,16 @@ namespace litl
             asset.handle = MeshHandle{};
             asset.assetOps = &MeshAssetOps;
 
-            const MeshAssetHandle handle = meshAssetPool.create(asset);
+            const auto meshAssetHandle = meshAssetPool.create(asset);
+            MeshAsset* pooledAsset = meshAssetPool.get(meshAssetHandle);
+            pooledAsset->selfHandle = AssetHandle::fromMeshAssetHandle(meshAssetHandle);
 
             assetMap[hashedKey] = AssetMapping{
                 .priority = priority,
-                .handle = AssetHandle::fromMeshAssetHandle(handle)
+                .handle = pooledAsset->selfHandle
             };
 
-            return handle;
+            return meshAssetHandle;
         }
 
         /// <summary>
@@ -393,14 +397,16 @@ namespace litl
             ModelAsset asset = createBaseAsset<ModelAsset>(AssetType::Model, file, key, hashedKey, initialStatus);
             asset.assetOps = &ModelAssetOps;
 
-            const ModelAssetHandle handle = modelAssetPool.create(asset);
+            const auto modelAssetHandle = modelAssetPool.create(asset);
+            auto* pooledAsset = modelAssetPool.get(modelAssetHandle);
+            pooledAsset->selfHandle = AssetHandle::fromModelAssetHandle(modelAssetHandle);
 
             assetMap[hashedKey] = AssetMapping{
                 .priority = priority,
-                .handle = AssetHandle::fromModelAssetHandle(handle)
+                .handle = pooledAsset->selfHandle
             };
 
-            return handle;
+            return modelAssetHandle;
         }
 
         void initiateModelAssetLoadFromDisk(ModelAsset* asset, AssetManager& assetManager) noexcept
@@ -436,14 +442,16 @@ namespace litl
             asset.handle = ShaderHandle{};
             asset.assetOps = &ShaderAssetOps;
 
-            const ShaderAssetHandle handle = shaderAssetPool.create(asset);
+            const auto shaderAssetHandle = shaderAssetPool.create(asset);
+            auto* pooledAsset = shaderAssetPool.get(shaderAssetHandle);
+            pooledAsset->selfHandle = AssetHandle::fromShaderAssetHandle(shaderAssetHandle);
 
             assetMap[hashedKey] = AssetMapping{
                 .priority = priority,
-                .handle = AssetHandle::fromShaderAssetHandle(handle)
+                .handle = pooledAsset->selfHandle
             };
 
-            return handle;
+            return shaderAssetHandle;
         }
 
         /// <summary>
@@ -495,14 +503,16 @@ namespace litl
             asset.handle = TextHandle{};
             asset.assetOps = &TextAssetOps;
 
-            const TextAssetHandle handle = textAssetPool.create(asset);
+            const auto textAssetHandle = textAssetPool.create(asset);
+            auto* pooledAsset = textAssetPool.get(textAssetHandle);
+            pooledAsset->selfHandle = AssetHandle::fromTextAssetHandle(textAssetHandle);
 
             assetMap[hashedKey] = AssetMapping{
                 .priority = priority,
-                .handle = AssetHandle::fromTextAssetHandle(handle)
+                .handle = pooledAsset->selfHandle
             };
 
-            return handle;
+            return textAssetHandle;
         }
 
         /// <summary>
@@ -554,14 +564,16 @@ namespace litl
             asset.handle = Texture2DHandle{};
             asset.assetOps = &Texture2DAssetOps;
 
-            const Texture2DAssetHandle handle = texture2DAssetPool.create(asset);
+            const auto texture2DAssetHandle = texture2DAssetPool.create(asset);
+            auto* pooledAsset = texture2DAssetPool.get(texture2DAssetHandle);
+            pooledAsset->selfHandle = AssetHandle::fromTexture2DAssetHandle(texture2DAssetHandle);
 
             assetMap[hashedKey] = AssetMapping{
                 .priority = priority,
-                .handle = AssetHandle::fromTexture2DAssetHandle(handle)
+                .handle = pooledAsset->selfHandle
             };
 
-            return handle;
+            return texture2DAssetHandle;
         }
 
         /// <summary>
@@ -628,16 +640,13 @@ namespace litl
 
     void AssetManager::registerAwaitingDependency(Authority<AwaitAssetDependencies> auth, std::coroutine_handle<> handle, std::span<Asset* const> dependencies, Asset* dependent) noexcept
     {
-        if (dependencies.empty() || (dependent == nullptr))
-        {
-            return;
-        }
+        LITL_FATAL_ASSERT_MSG(dependent != nullptr, "Null dependency passed to AssetManager::registerAwaitingDependency");
 
-        PendingAssetDependency* pending = nullptr;
-        
+        std::vector<Asset*> dependencyVector(dependencies.begin(), dependencies.end());
+
         {
             std::scoped_lock lock{ m_impl->pendingDependencyMutex };
-            m_impl->pendingDependencies.emplace_back(handle, std::vector<Asset*>(dependencies.begin(), dependencies.end()), dependent, 0u);
+            m_impl->pendingDependencies.emplace_back(handle, std::move(dependencyVector), dependent, 0u);
         }
     }
 
