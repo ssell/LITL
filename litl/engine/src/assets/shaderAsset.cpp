@@ -110,7 +110,7 @@ namespace litl
         }
         else
         {
-            logWarning("Decoding shader asset with key '", asset->key, "' directly from external format. It is recommended to first convert the mesh to the internal .litlbshd format to improve loading performance.");
+            logWarning("Decoding shader asset with key '", asset->key, "' directly from external format. It is recommended to first convert the shader to the internal .litlbshd format to improve loading performance.");
             return decodeNonLitShaderBytes(shaderAsset, bytes, error);
         }
 

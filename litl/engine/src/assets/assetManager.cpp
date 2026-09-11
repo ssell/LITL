@@ -12,8 +12,7 @@
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/assets/assetDependencies.hpp"
-#include "litl-engine/assets/assetLoadFromDiskTask.hpp"
-#include "litl-engine/assets/assetLoadFromMemoryTask.hpp"
+#include "litl-engine/assets/assetLoadTask.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/tasks/taskManager.hpp"
 #include "litl-engine/engine.hpp"
@@ -270,7 +269,7 @@ namespace litl
                 }
             }
 
-            taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
+            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
         }
 
         /// <summary>
@@ -298,7 +297,7 @@ namespace litl
                 return;
             }
 
-            taskManager->schedule(loadAssetFromMemoryAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
+            taskManager->schedule(AssetLoadTask::loadFromMemoryAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
         }
 
         // ---------------------------------------------------------------------------------
@@ -360,7 +359,7 @@ namespace litl
                 }
             }
 
-            taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
+            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
         }
 
         /// <summary>
@@ -388,7 +387,7 @@ namespace litl
                 return;
             }
 
-            taskManager->schedule(loadAssetFromMemoryAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
+            taskManager->schedule(AssetLoadTask::loadFromMemoryAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
         }
 
         // ---------------------------------------------------------------------------------
@@ -429,7 +428,7 @@ namespace litl
             }
 
             asset->status.store(AssetStatus::Loading, std::memory_order::relaxed);
-            taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
+            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
         }
 
         // ---------------------------------------------------------------------------------
@@ -491,7 +490,7 @@ namespace litl
                 }
             }
 
-            taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
+            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
         }
 
         // ---------------------------------------------------------------------------------
@@ -553,7 +552,7 @@ namespace litl
                 }
             }
 
-            taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
+            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
         }
 
         // ---------------------------------------------------------------------------------
@@ -615,7 +614,7 @@ namespace litl
                 }
             }
 
-            taskManager->schedule(loadAssetFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
+            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
         }
     };
 

@@ -17,10 +17,10 @@ namespace litl::samples
 
         const auto camera = createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(0.0f, 1.5f, 0.0f), bunnyPos, vec3::up(), *objectPool, *sceneView);
         
-        ModelAsset* model = assets->getModel("models/sponza");   // trigger bunny.obj model import
+        //ModelAsset* model = assets->getModel("models/sponza");   // trigger bunny.obj model import
 
-        //const auto entity = createRenderable(bunnyPos, "mesh/bunny"_sid, "materials/flat"_sid, commands, *assets);
-        //commands.addComponent<Spin>(entity, Spin{ .rate = -1.0f });
+        const auto entity = createRenderable(bunnyPos, "mesh/bunny", "materials/flat", commands, *assets);
+        commands.addComponent<Spin>(entity, Spin{ .rate = -1.0f });
     }
 }
 

@@ -107,7 +107,7 @@ namespace litl
         }
         else
         {
-            logWarning("Decoding model asset with key '", asset->key, "' directly from external format. It is recommended to first convert the material to the internal .litlmdl format to improve loading performance.");
+            logWarning("Decoding model asset with key '", asset->key, "' directly from external format. It is recommended to first convert the model to the internal .litlmdl format to improve loading performance.");
             return decodeNonLitlModelBytes(modelAsset, bytes, error);
         }
     }
