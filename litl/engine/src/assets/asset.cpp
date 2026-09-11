@@ -14,7 +14,7 @@ namespace litl
         key = other.key;
         hashedKey = other.hashedKey;
         type = other.type;
-        status.store(other.status.load(std::memory_order_relaxed), std::memory_order_relaxed);
+        status.store(other.status.load(std::memory_order::relaxed), std::memory_order::relaxed);
         error = other.error;
         assetOps = other.assetOps;
     }
@@ -25,7 +25,7 @@ namespace litl
         key = other.key;
         hashedKey = other.hashedKey;
         type = other.type;
-        status.store(other.status.load(std::memory_order_relaxed), std::memory_order_relaxed);
+        status.store(other.status.load(std::memory_order::relaxed), std::memory_order::relaxed);
         error = other.error;
         assetOps = other.assetOps;
 
@@ -40,7 +40,7 @@ namespace litl
             key = other.key;
             hashedKey = other.hashedKey;
             type = other.type;
-            status.store(other.status.load(std::memory_order_relaxed), std::memory_order_relaxed);
+            status.store(other.status.load(std::memory_order::relaxed), std::memory_order::relaxed);
             error = other.error;
             assetOps = other.assetOps;
         }
@@ -54,7 +54,7 @@ namespace litl
             key = other.key;
             hashedKey = other.hashedKey;
             type = other.type;
-            status.store(other.status.load(std::memory_order_relaxed), std::memory_order_relaxed);
+            status.store(other.status.load(std::memory_order::relaxed), std::memory_order::relaxed);
             error = other.error;
             assetOps = other.assetOps;
         }
@@ -69,13 +69,13 @@ namespace litl
 
     void Asset::setError(AssetErrorCode err) noexcept
     {
-        status.store(AssetStatus::Error, std::memory_order_relaxed);
+        status.store(AssetStatus::Error, std::memory_order::relaxed);
         error = err;
     }
 
     void Asset::setError(AssetErrorCode err, AssetErrorCode def) noexcept
     {
-        status.store(AssetStatus::Error, std::memory_order_relaxed);
+        status.store(AssetStatus::Error, std::memory_order::relaxed);
         error = (err != AssetErrorCode::None ? err : def);
     }
 }

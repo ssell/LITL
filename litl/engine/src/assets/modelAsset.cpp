@@ -176,7 +176,7 @@ namespace litl
                 }
 
                 auto const& meshName = meshNames[modelDataItem.modelNameIndex];
-                auto meshHandle = assetManager.createMeshAssetFromMemory(std::format("{}/{}", modelAsset->key, meshName), std::move(*meshItem->mesh));
+                auto meshHandle = assetManager.createMeshAssetFromMemory({}, std::format("{}/{}", modelAsset->key, meshName), std::move(*meshItem->mesh), modelAsset->file);
                 auto* meshAsset = assetManager.getMesh(meshHandle);
 
                 if (meshAsset != nullptr)
@@ -204,7 +204,7 @@ namespace litl
                 }
 
                 auto const& materialName = materialNames[modelDataItem.modelNameIndex];
-                auto materialHandle = assetManager.createMaterialAssetFromMemory(std::format("{}/{}", modelAsset->key, materialName), std::move(*materialItem->intermediateMaterial));
+                auto materialHandle = assetManager.createMaterialAssetFromMemory({}, std::format("{}/{}", modelAsset->key, materialName), std::move(*materialItem->intermediateMaterial), modelAsset->file);
                 auto* materialAsset = assetManager.getMaterial(materialHandle);
 
                 if (materialAsset != nullptr)

@@ -58,13 +58,13 @@ namespace litl
         [[nodiscard]] MaterialAssetHandle getMaterialHandle(std::string_view resource) noexcept;
         [[nodiscard]] MaterialAsset* getMaterial(std::string_view resource) noexcept;
         [[nodiscard]] MaterialAsset* getMaterial(MaterialAssetHandle handle) noexcept;
-        [[nodiscard]] MaterialAssetHandle createMaterialAssetFromMemory(Authority<MaterialAsset> auth, std::string_view key, import::MaterialIntermediateData intermediateData, File const& sourceFile) noexcept;
+        [[nodiscard]] MaterialAssetHandle createMaterialAssetFromMemory(Authority<ModelAsset> auth, std::string_view key, import::MaterialIntermediateData intermediateData, File const& sourceFile) noexcept;
 
         [[nodiscard]] MeshAssetHandle getMeshHandle(std::string_view resource) noexcept;
         [[nodiscard]] MeshAsset* getMesh(std::string_view resource) noexcept;
         [[nodiscard]] MeshAsset* getMesh(MeshAssetHandle handle) noexcept;
         [[nodiscard]] MeshRef getMeshRef(std::string_view resource) noexcept;
-        [[nodiscard]] MeshAssetHandle createMeshAssetFromMemory(Authority<MeshAsset> auth, std::string_view key, GeoMesh geoMesh, File const& sourceFile) noexcept;
+        [[nodiscard]] MeshAssetHandle createMeshAssetFromMemory(Authority<ModelAsset> auth, std::string_view key, GeoMesh geoMesh, File const& sourceFile) noexcept;
 
         [[nodiscard]] ModelAssetHandle getModelHandle(std::string_view resource) noexcept;
         [[nodiscard]] ModelAsset* getModel(std::string_view resource) noexcept;
@@ -85,7 +85,7 @@ namespace litl
     private:
 
         struct Impl;
-        ImplPtr<Impl, 848u> m_impl;
+        ImplPtr<Impl, 1328u> m_impl;
     };
 }
 

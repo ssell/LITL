@@ -86,7 +86,7 @@ namespace litl
     private:
 
         struct Impl;
-        ImplPtr<Impl, 768> m_impl;
+        ImplPtr<Impl, 1280> m_impl;
     };
 }
 

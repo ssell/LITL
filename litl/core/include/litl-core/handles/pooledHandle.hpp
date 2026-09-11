@@ -1,6 +1,7 @@
 #ifndef LITL_CORE_POOLED_HANDLE_H__
 #define LITL_CORE_POOLED_HANDLE_H__
 
+#include <mutex>
 #include "litl-core/containers/pagedVector.hpp"
 
 namespace litl
@@ -35,8 +36,6 @@ namespace litl
         /// <summary>
         /// Create and returns a new opaque handle for the given payload.
         /// </summary>
-        /// <param name="payload"></param>
-        /// <returns></returns>
         [[nodiscard]] Handle<Tag> create(T& payload) noexcept
         {
             uint32_t index = 0;
@@ -60,11 +59,18 @@ namespace litl
         }
 
         /// <summary>
+        /// Variant of create that wraps the actions in a scoped lock.
+        /// </summary>
+        [[nodiscard]] Handle<Tag> createLocked(T& payload) noexcept
+        {
+            std::scoped_lock lock{ m_accessMutex };
+            return create(payload);
+        }
+
+        /// <summary>
         /// Retrieves the payload tied to the provided handle.
         /// If the handle is out-of-date, or no such payload was found, then returns nullptr.
         /// </summary>
-        /// <param name="handle"></param>
-        /// <returns></returns>
         [[nodiscard]] T* get(Handle<Tag> handle) noexcept
         {
             if (!valid(handle))
@@ -76,9 +82,17 @@ namespace litl
         }
 
         /// <summary>
+        /// Variant of get that wraps the actions in a scoped lock.
+        /// </summary>
+        [[nodiscard]] T* getLocked(Handle<Tag> handle) noexcept
+        {
+            std::scoped_lock lock{ m_accessMutex };
+            return get(handle);
+        }
+
+        /// <summary>
         /// Destroys (invalidates) the provided handle if it is currently valid.
         /// </summary>
-        /// <param name="handle"></param>
         bool destroy(Handle<Tag> handle) noexcept
         {
             if (!valid(handle))
@@ -127,6 +141,7 @@ namespace litl
 
         PagedVector<Slot, 32> m_slots;
         std::vector<uint32_t> m_freeList;
+        std::mutex m_accessMutex{};
     };
 }
 
