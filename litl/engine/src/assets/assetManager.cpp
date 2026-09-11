@@ -12,7 +12,8 @@
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/assets/assetDependencies.hpp"
-#include "litl-engine/assets/assetLoadTask.hpp"
+#include "litl-engine/assets/assetLoadFromDiskTask.hpp"
+#include "litl-engine/assets/assetLoadFromMemoryTask.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/tasks/taskManager.hpp"
 #include "litl-engine/engine.hpp"
@@ -198,10 +199,13 @@ namespace litl
                 return false;
             }
 
-            if (!asset->assetOps->fetchAssetObject(asset, *objectPool))
+            if ((asset->assetOps != nullptr) && (asset->assetOps->fetchAssetObject != nullptr))
             {
-                asset->setError(AssetErrorCode::InvalidObject);
-                return false;
+                if (!asset->assetOps->fetchAssetObject(asset, *objectPool))
+                {
+                    asset->setError(AssetErrorCode::InvalidObject);
+                    return false;
+                }
             }
 
             return true;
@@ -294,9 +298,7 @@ namespace litl
                 return;
             }
 
-            logWarning("Asset load from memory task is currently not implemented.");
-            // ... todo ... invoke coroutine to load from memory ...
-            // taskManager->schedule(...);
+            taskManager->schedule(loadAssetFromMemoryAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
         }
 
         // ---------------------------------------------------------------------------------
@@ -386,9 +388,7 @@ namespace litl
                 return;
             }
 
-            logWarning("Asset load from memory task is currently not implemented.");
-            // ... todo ... invoke coroutine to load from memory ...
-            // taskManager->schedule(...);
+            taskManager->schedule(loadAssetFromMemoryAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
         }
 
         // ---------------------------------------------------------------------------------

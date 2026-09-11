@@ -110,12 +110,6 @@ namespace litl
         }
     }
 
-    bool MaterialAsset::processOnWorker(Asset* asset, AssetErrorCode& error) noexcept
-    {
-        // ... no action ...
-        return true;
-    }
-
     bool MaterialAsset::gatherDependencies(Asset* asset, AssetManager& assetManager, std::vector<Asset*>& dependencies) noexcept
     {
         MaterialAsset* materialAsset = static_cast<MaterialAsset*>(asset);

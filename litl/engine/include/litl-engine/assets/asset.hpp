@@ -19,12 +19,36 @@ namespace litl
     /// </summary>
     struct Asset
     {
+        /// <summary>
+        /// Asset-specific operations invoked during the async loading tasks.
+        /// Not all operations may be applicable to all asset types and individual 
+        /// operations may be set to null if that asset does not need to implement them.
+        /// </summary>
         struct AssetOps
         {
+            /// <summary>
+            /// Retrieves the underlying engine-owned object associated with the asset.
+            /// </summary>
             bool (*fetchAssetObject)(Asset*, ObjectPool&);
+
+            /// <summary>
+            /// Takes a raw span of bytes and decodes that into the asset-specific intermediate object.
+            /// </summary>
             bool (*decodeAssetBytes)(Asset*, std::span<std::byte const>, AssetErrorCode&);
+
+            /// <summary>
+            /// Performs optional additional work on the worker thread against the intermediate object.
+            /// </summary>
             bool (*processOnWorker)(Asset*, AssetErrorCode&);
+
+            /// <summary>
+            /// If the asset is dependent on other assets (Material dependent on Shader and Textures, etc.) this is where it gathers those other assets together.
+            /// </summary>
             bool (*gatherDependencies)(Asset*, AssetManager&, std::vector<Asset*>& dependencies);
+
+            /// <summary>
+            /// Performs optional additional work on the main thread, for example uploading buffers to the GPU.
+            /// </summary>
             bool (*processOnMain)(Asset*, ObjectPool&, AssetErrorCode&);
         };
 

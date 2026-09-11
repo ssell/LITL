@@ -15,14 +15,13 @@ namespace litl
 
         static bool fetchAssetObject(Asset* asset, ObjectPool& objectPool) noexcept;
         static bool decodeBytes(Asset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept;
-        static bool processOnWorker(Asset* asset, AssetErrorCode& error) noexcept;
         static bool processOnMain(Asset* asset, ObjectPool& objectPool, AssetErrorCode& error) noexcept;
     };
 
     inline constexpr Asset::AssetOps TextAssetOps = {
         &TextAsset::fetchAssetObject,
         &TextAsset::decodeBytes,
-        &TextAsset::processOnWorker,
+        nullptr,
         nullptr,
         &TextAsset::processOnMain
     };

@@ -1,5 +1,5 @@
 #include "litl-core/task/taskThreadSwitch.hpp"
-#include "litl-engine/assets/assetLoadTask.hpp"
+#include "litl-engine/assets/assetLoadFromDiskTask.hpp"
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/assets/assetDependencies.hpp"
 #include "litl-engine/assets/asset.hpp"
@@ -7,8 +7,30 @@
 
 namespace litl
 {
-    Task<bool> loadAssetFromDiskAsync(Authority<AssetManager> auth, Asset* asset, TaskThreadPool& threadPool, ObjectPool& objectPool, AssetManager& assetManager) noexcept
+    /// <summary>
+    /// Task flow is below with thread labels as:
+    /// 
+    ///     * [OT] = Original calling thread
+    ///     * [WT] = Worker thread
+    ///     * [MT] = Main thread
+    /// 
+    /// [OT]: Sets asset status as Loading
+    /// [WT]: Refresh source file
+    /// [WT]: Read all file bytes
+    /// [WT]: Call into asset-specific decode bytes
+    /// [WT]: Call into asset-specific generic worker thread actions
+    /// [MT]: Gather other asset dependencies
+    /// [MT]: Call into asset-specific generic main thread actions
+    /// [MT]: Set asset status as InMemory
+    /// </summary>
+    Task<bool> loadAssetFromDiskAsync(
+        Authority<AssetManager> auth, 
+        Asset* asset, 
+        TaskThreadPool& threadPool, 
+        ObjectPool& objectPool, 
+        AssetManager& assetManager) noexcept
     {
+        // It should already be in the Loading state, but just in case ...
         asset->status.store(AssetStatus::Loading, std::memory_order_relaxed);
         std::vector<std::byte> bytes;
 
@@ -39,7 +61,8 @@ namespace litl
             }
 
             // Decode raw bytes into asset-specific data representation.
-            if (asset->status.load(std::memory_order_relaxed) != AssetStatus::Error)
+            if ((asset->status.load(std::memory_order_relaxed) != AssetStatus::Error) &&
+                (asset->assetOps->decodeAssetBytes != nullptr))
             {
                 if (!asset->assetOps->decodeAssetBytes(asset, bytes, asset->error))
                 {
@@ -48,7 +71,8 @@ namespace litl
             }
 
             // Perform any additional processing of the asset on the worker thread.
-            if (asset->status.load(std::memory_order_relaxed) != AssetStatus::Error)
+            if ((asset->status.load(std::memory_order_relaxed) != AssetStatus::Error) &&
+                (asset->assetOps->processOnWorker != nullptr))
             {
                 if (!asset->assetOps->processOnWorker(asset, asset->error))
                 {
@@ -58,7 +82,7 @@ namespace litl
         }
 
         // ---------------------------------------------------------------------------------
-        // --- Return to main thread
+        // --- Switch execution context to the main thread
         // ---------------------------------------------------------------------------------
 
         co_await ResumeTaskOnMainThread{};
@@ -86,9 +110,12 @@ namespace litl
             }
 
             // Perform any additional processing on the main thread.
-            if (!asset->assetOps->processOnMain(asset, objectPool, asset->error))
+            if (asset->assetOps->processOnMain != nullptr)
             {
-                asset->setError(asset->error, AssetErrorCode::MainProcessFailed);
+                if (!asset->assetOps->processOnMain(asset, objectPool, asset->error))
+                {
+                    asset->setError(asset->error, AssetErrorCode::MainProcessFailed);
+                }
             }
 
             if (asset->status.load(std::memory_order_relaxed) != AssetStatus::Error)

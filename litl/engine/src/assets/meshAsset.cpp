@@ -110,12 +110,6 @@ namespace litl
         }
     }
 
-    bool MeshAsset::processOnWorker(Asset* asset, AssetErrorCode& error) noexcept
-    {
-        // ... no action ...
-        return true;
-    }
-
     bool MeshAsset::processOnMain(Asset* asset, ObjectPool& objectPool, AssetErrorCode& error) noexcept
     {
         MeshAsset* meshAsset = static_cast<MeshAsset*>(asset);

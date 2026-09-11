@@ -21,9 +21,7 @@ namespace litl
         std::vector<MaterialAssetHandle> materialAssetHandles;
         std::shared_ptr<import::ModelIntermediateData> modelIntermediateData;
 
-        static bool fetchAssetObject(Asset* asset, ObjectPool& objectPool) noexcept;
         static bool decodeBytes(Asset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept;
-        static bool processOnWorker(Asset* asset, AssetErrorCode& error) noexcept;
         static bool gatherDependencies(Asset* asset, AssetManager& assetManager, std::vector<Asset*>& dependencies) noexcept;
         static bool processOnMain(Asset* asset, ObjectPool& objectPool, AssetErrorCode& error) noexcept;
 
@@ -45,11 +43,11 @@ namespace litl
     };
 
     inline constexpr Asset::AssetOps ModelAssetOps = {
-        &ModelAsset::fetchAssetObject,
-        & ModelAsset::decodeBytes,
-        & ModelAsset::processOnWorker,
-        & ModelAsset::gatherDependencies,
-        & ModelAsset::processOnMain
+        nullptr,
+        &ModelAsset::decodeBytes,
+        nullptr,
+        &ModelAsset::gatherDependencies,
+        &ModelAsset::processOnMain
     };
 }
 

@@ -28,7 +28,7 @@ namespace litl
     {
         union
         {
-            MaterialAssetHandle materialHandle;
+            MaterialAssetHandle materialHandle{};
             MeshAssetHandle meshHandle;
             ModelAssetHandle modelHandle;
             ShaderAssetHandle shaderHandle;

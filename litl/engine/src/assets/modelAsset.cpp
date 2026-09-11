@@ -8,13 +8,6 @@
 
 namespace litl
 {
-    bool ModelAsset::fetchAssetObject(Asset* asset, ObjectPool& objectPool) noexcept
-    {
-        // There is no underlying Model game object.
-        // A model is a collection of meshes, materials, etc. But those may be used independently of the model itself.
-        return true;
-    }
-
     bool ModelAsset::decodeLitlModelBytes(ModelAsset* modelAsset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
     {
         import::LitlModel litlmdl;
@@ -117,12 +110,6 @@ namespace litl
             logWarning("Decoding model asset with key '", asset->key, "' directly from external format. It is recommended to first convert the material to the internal .litlmdl format to improve loading performance.");
             return decodeNonLitlModelBytes(modelAsset, bytes, error);
         }
-    }
-
-    bool ModelAsset::processOnWorker(Asset* asset, AssetErrorCode& error) noexcept
-    {
-        // ... todo ...
-        return true;
     }
 
     bool ModelAsset::gatherDependenciesFromLitlModel(ModelAsset* modelAsset, AssetManager& assetManager, std::span<std::string const> meshNames, std::span<std::string const> materialNames, std::vector<Asset*>& dependencies) noexcept
