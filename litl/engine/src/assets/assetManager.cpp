@@ -637,13 +637,8 @@ namespace litl
         
         {
             std::scoped_lock lock{ m_impl->pendingDependencyMutex };
-            m_impl->pendingDependencies.emplace_back();
-            pending = &m_impl->pendingDependencies.back();
+            m_impl->pendingDependencies.emplace_back(handle, std::vector<Asset*>(dependencies.begin(), dependencies.end()), dependent, 0u);
         }
-
-        pending->handle = handle;
-        pending->dependencies.assign(dependencies.begin(), dependencies.end());
-        pending->dependent = dependent;
     }
 
     void AssetManager::onFrameStart() noexcept
