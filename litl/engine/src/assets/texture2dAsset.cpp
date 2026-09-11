@@ -28,7 +28,7 @@ namespace litl
         return true;
     }
 
-    bool Texture2DAsset::processOnMain(Asset* asset, ObjectPool& objectPool, AssetErrorCode& error) noexcept
+    bool Texture2DAsset::processOnMain(Asset* asset, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept
     {
         // ... todo ...
         return true;

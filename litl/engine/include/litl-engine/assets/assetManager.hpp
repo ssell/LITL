@@ -56,29 +56,35 @@ namespace litl
         [[nodiscard]] AssetHandle getAsset(std::string_view resource) noexcept;
 
         [[nodiscard]] MaterialAssetHandle getMaterialHandle(std::string_view resource) noexcept;
+        [[nodiscard]] AssetStatus getMaterialAssetStatus(MaterialAssetHandle handle) noexcept;
         [[nodiscard]] MaterialAsset* getMaterial(std::string_view resource) noexcept;
         [[nodiscard]] MaterialAsset* getMaterial(MaterialAssetHandle handle) noexcept;
         [[nodiscard]] MaterialAssetHandle createMaterialAssetFromMemory(Authority<ModelAsset> auth, std::string_view key, import::MaterialIntermediateData intermediateData, File const& sourceFile) noexcept;
 
         [[nodiscard]] MeshAssetHandle getMeshHandle(std::string_view resource) noexcept;
+        [[nodiscard]] AssetStatus getMeshAssetStatus(MeshAssetHandle handle) noexcept;
         [[nodiscard]] MeshAsset* getMesh(std::string_view resource) noexcept;
         [[nodiscard]] MeshAsset* getMesh(MeshAssetHandle handle) noexcept;
         [[nodiscard]] MeshRef getMeshRef(std::string_view resource) noexcept;
         [[nodiscard]] MeshAssetHandle createMeshAssetFromMemory(Authority<ModelAsset> auth, std::string_view key, GeoMesh geoMesh, File const& sourceFile) noexcept;
 
         [[nodiscard]] ModelAssetHandle getModelHandle(std::string_view resource) noexcept;
+        [[nodiscard]] AssetStatus getModelAssetStatus(ModelAssetHandle handle) noexcept;
         [[nodiscard]] ModelAsset* getModel(std::string_view resource) noexcept;
         [[nodiscard]] ModelAsset* getModel(ModelAssetHandle handle) noexcept;
 
         [[nodiscard]] ShaderAssetHandle getShaderHandle(std::string_view resource) noexcept;
+        [[nodiscard]] AssetStatus getShaderAssetStatus(ShaderAssetHandle handle) noexcept;
         [[nodiscard]] ShaderAsset* getShader(std::string_view resource) noexcept;
         [[nodiscard]] ShaderAsset* getShader(ShaderAssetHandle handle) noexcept;
 
         [[nodiscard]] TextAssetHandle getTextHandle(std::string_view resource) noexcept;
+        [[nodiscard]] AssetStatus getTextAssetStatus(TextAssetHandle handle) noexcept;
         [[nodiscard]] TextAsset* getText(std::string_view resource) noexcept;
         [[nodiscard]] TextAsset* getText(TextAssetHandle handle) noexcept;
 
         [[nodiscard]] Texture2DAssetHandle getTexture2DHandle(std::string_view resource) noexcept;
+        [[nodiscard]] AssetStatus getTexture2DAssetStatus(Texture2DAssetHandle handle) noexcept;
         [[nodiscard]] Texture2DAsset* getTexture2D(std::string_view resource) noexcept;
         [[nodiscard]] Texture2DAsset* getTexture2D(Texture2DAssetHandle handle) noexcept;
 

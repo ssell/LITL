@@ -117,7 +117,7 @@ namespace litl
         return true;
     }
 
-    bool ShaderAsset::processOnMain(Asset* asset, ObjectPool& objectPool, AssetErrorCode& error) noexcept
+    bool ShaderAsset::processOnMain(Asset* asset, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept
     {
         ShaderAsset* shaderAsset = static_cast<ShaderAsset*>(asset);
 

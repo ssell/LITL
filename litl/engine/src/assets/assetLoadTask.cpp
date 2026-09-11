@@ -187,7 +187,7 @@ namespace litl
         // Perform any additional processing on the main thread.
         if (asset->assetOps->processOnMain != nullptr)
         {
-            if (!asset->assetOps->processOnMain(asset, objectPool, asset->error))
+            if (!asset->assetOps->processOnMain(asset, assetManager, objectPool, asset->error))
             {
                 asset->setError(asset->error, AssetErrorCode::MainProcessFailed);
             }

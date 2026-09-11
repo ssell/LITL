@@ -228,10 +228,7 @@ namespace litl
 
             assetMap[hashedKey] = AssetMapping{
                 .priority = priority,
-                .handle = AssetHandle{
-                    .materialHandle = handle,
-                    .type = asset.type
-                }
+                .handle = AssetHandle::fromMaterialAssetHandle(handle)
             };
 
             return handle;
@@ -318,10 +315,7 @@ namespace litl
 
             assetMap[hashedKey] = AssetMapping{
                 .priority = priority,
-                .handle = AssetHandle{
-                    .meshHandle = handle,
-                    .type = asset.type
-                }
+                .handle = AssetHandle::fromMeshAssetHandle(handle)
             };
 
             return handle;
@@ -403,10 +397,7 @@ namespace litl
 
             assetMap[hashedKey] = AssetMapping{
                 .priority = priority,
-                .handle = AssetHandle {
-                    .modelHandle = handle,
-                    .type = asset.type
-                }
+                .handle = AssetHandle::fromModelAssetHandle(handle)
             };
 
             return handle;
@@ -449,10 +440,7 @@ namespace litl
 
             assetMap[hashedKey] = AssetMapping{
                 .priority = priority,
-                .handle = AssetHandle{
-                    .shaderHandle = handle,
-                    .type = asset.type
-                }
+                .handle = AssetHandle::fromShaderAssetHandle(handle)
             };
 
             return handle;
@@ -511,10 +499,7 @@ namespace litl
 
             assetMap[hashedKey] = AssetMapping{
                 .priority = priority,
-                .handle = AssetHandle{
-                    .textHandle = handle,
-                    .type = asset.type
-                }
+                .handle = AssetHandle::fromTextAssetHandle(handle)
             };
 
             return handle;
@@ -573,10 +558,7 @@ namespace litl
 
             assetMap[hashedKey] = AssetMapping{
                 .priority = priority,
-                .handle = AssetHandle{
-                    .texture2DHandle = handle,
-                    .type = asset.type
-                }
+                .handle = AssetHandle::fromTexture2DAssetHandle(handle)
             };
 
             return handle;
@@ -746,6 +728,18 @@ namespace litl
         return {};
     }
 
+    AssetStatus AssetManager::getMaterialAssetStatus(MaterialAssetHandle handle) noexcept
+    {
+        auto* asset = m_impl->materialAssetPool.get(handle);
+
+        if (asset == nullptr)
+        {
+            return AssetStatus::Unloaded;
+        }
+
+        return asset->status.load(std::memory_order::relaxed);
+    }
+
     MaterialAsset* AssetManager::getMaterial(std::string_view resource) noexcept
     {
         auto handle = getMaterialHandle(resource);
@@ -790,6 +784,18 @@ namespace litl
         }
 
         return assetHandle.meshHandle;
+    }
+
+    AssetStatus AssetManager::getMeshAssetStatus(MeshAssetHandle handle) noexcept
+    {
+        auto* asset = m_impl->meshAssetPool.get(handle);
+
+        if (asset == nullptr)
+        {
+            return AssetStatus::Unloaded;
+        }
+
+        return asset->status.load(std::memory_order::relaxed);
     }
 
     MeshAsset* AssetManager::getMesh(std::string_view resource) noexcept
@@ -899,6 +905,18 @@ namespace litl
         return assetHandle.modelHandle;
     }
 
+    AssetStatus AssetManager::getModelAssetStatus(ModelAssetHandle handle) noexcept
+    {
+        auto* asset = m_impl->modelAssetPool.get(handle);
+
+        if (asset == nullptr)
+        {
+            return AssetStatus::Unloaded;
+        }
+
+        return asset->status.load(std::memory_order::relaxed);
+    }
+
     ModelAsset* AssetManager::getModel(std::string_view resource) noexcept
     {
         auto handle = getModelHandle(resource);
@@ -936,6 +954,18 @@ namespace litl
         }
 
         return assetHandle.shaderHandle;
+    }
+
+    AssetStatus AssetManager::getShaderAssetStatus(ShaderAssetHandle handle) noexcept
+    {
+        auto* asset = m_impl->shaderAssetPool.get(handle);
+
+        if (asset == nullptr)
+        {
+            return AssetStatus::Unloaded;
+        }
+
+        return asset->status.load(std::memory_order::relaxed);
     }
 
     ShaderAsset* AssetManager::getShader(std::string_view resource) noexcept
@@ -977,6 +1007,18 @@ namespace litl
         return assetHandle.textHandle;
     }
 
+    AssetStatus AssetManager::getTextAssetStatus(TextAssetHandle handle) noexcept
+    {
+        auto* asset = m_impl->textAssetPool.get(handle);
+
+        if (asset == nullptr)
+        {
+            return AssetStatus::Unloaded;
+        }
+
+        return asset->status.load(std::memory_order::relaxed);
+    }
+
     TextAsset* AssetManager::getText(std::string_view resource) noexcept
     {
         auto handle = getTextHandle(resource);
@@ -1014,6 +1056,18 @@ namespace litl
         }
 
         return assetHandle.texture2DHandle;
+    }
+
+    AssetStatus AssetManager::getTexture2DAssetStatus(Texture2DAssetHandle handle) noexcept
+    {
+        auto* asset = m_impl->texture2DAssetPool.get(handle);
+
+        if (asset == nullptr)
+        {
+            return AssetStatus::Unloaded;
+        }
+
+        return asset->status.load(std::memory_order::relaxed);
     }
 
     Texture2DAsset* AssetManager::getTexture2D(std::string_view resource) noexcept

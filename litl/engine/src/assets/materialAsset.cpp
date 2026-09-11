@@ -146,7 +146,7 @@ namespace litl
         return true;
     }
 
-    bool MaterialAsset::processOnMain(Asset* asset, ObjectPool& objectPool, AssetErrorCode& error) noexcept
+    bool MaterialAsset::processOnMain(Asset* asset, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept
     {
         MaterialAsset* materialAsset = static_cast<MaterialAsset*>(asset);
 

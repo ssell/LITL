@@ -48,7 +48,7 @@ namespace litl
             /// <summary>
             /// (Optional) Performs optional additional work on the main thread, for example uploading buffers to the GPU.
             /// </summary>
-            bool (*processOnMain)(Asset*, ObjectPool&, AssetErrorCode&);
+            bool (*processOnMain)(Asset*, AssetManager&, ObjectPool&, AssetErrorCode&);
         };
 
         Asset();

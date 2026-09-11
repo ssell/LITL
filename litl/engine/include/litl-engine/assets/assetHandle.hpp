@@ -37,6 +37,36 @@ namespace litl
         };
 
         AssetType type{ AssetType::Unknown };
+
+        [[nodiscard]] static AssetHandle fromMaterialAssetHandle(MaterialAssetHandle handle) noexcept
+        {
+            return AssetHandle{ .materialHandle = handle, .type = AssetType::Material };
+        }
+
+        [[nodiscard]] static AssetHandle fromMeshAssetHandle(MeshAssetHandle handle) noexcept
+        {
+            return AssetHandle{ .meshHandle = handle, .type = AssetType::Mesh };
+        }
+
+        [[nodiscard]] static AssetHandle fromModelAssetHandle(ModelAssetHandle handle) noexcept
+        {
+            return AssetHandle{ .modelHandle = handle, .type = AssetType::Model };
+        }
+
+        [[nodiscard]] static AssetHandle fromShaderAssetHandle(ShaderAssetHandle handle) noexcept
+        {
+            return AssetHandle{ .shaderHandle = handle, .type = AssetType::Shader };
+        }
+
+        [[nodiscard]] static AssetHandle fromTextAssetHandle(TextAssetHandle handle) noexcept
+        {
+            return AssetHandle{ .textHandle = handle, .type = AssetType::Text };
+        }
+
+        [[nodiscard]] static AssetHandle fromTexture2DAssetHandle(Texture2DAssetHandle handle) noexcept
+        {
+            return AssetHandle{ .texture2DHandle = handle, .type = AssetType::Texture2D };
+        }
     };
 }
 
