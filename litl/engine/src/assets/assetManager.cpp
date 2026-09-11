@@ -248,7 +248,7 @@ namespace litl
 
             if (asset->status.load(std::memory_order::relaxed) != AssetStatus::Unloaded)
             {
-                logWarning("Attempting to load Material asset from disk that is already loaded. Asset key = '", asset->key, "'");
+                logInfo("Attempting to load Material asset from disk that is already loaded. Asset key = '", asset->key, "'");
                 return;
             }
 
@@ -331,11 +331,16 @@ namespace litl
         /// </summary>
         void initiateMeshAssetLoadFromDisk(MeshAsset* asset, AssetManager& assetManager) noexcept
         {
+            if (asset == nullptr)
+            {
+                return;
+            }
+
             std::scoped_lock lock{ assetLoadMutex };
 
             if (asset->status.load(std::memory_order::relaxed) != AssetStatus::Unloaded)
             {
-                logWarning("Attempting to load Mesh asset from disk that is already loaded. Asset key = '", asset->key, "'");
+                logInfo("Attempting to load Mesh asset from disk that is already loaded. Asset key = '", asset->key, "'");
                 return;
             }
 
@@ -409,10 +414,16 @@ namespace litl
 
         void initiateModelAssetLoadFromDisk(ModelAsset* asset, AssetManager& assetManager) noexcept
         {
+            if (asset == nullptr)
+            {
+                return;
+            }
+
             std::scoped_lock lock{ assetLoadMutex };
 
             if (asset->status.load(std::memory_order::relaxed) != AssetStatus::Unloaded)
             {
+                logInfo("Attempting to load Model asset from disk that is already loaded. Asset key = '", asset->key, "'");
                 return;
             }
 
@@ -453,10 +464,16 @@ namespace litl
         /// </summary>
         void initiateShaderAssetLoadFromDisk(ShaderAsset* asset, AssetManager& assetManager) noexcept
         {
+            if (asset == nullptr)
+            {
+                return;
+            }
+
             std::scoped_lock lock{ assetLoadMutex };
 
             if (asset->status.load(std::memory_order::relaxed) != AssetStatus::Unloaded)
             {
+                logInfo("Attempting to load Shader asset from disk that is already loaded. Asset key = '", asset->key, "'");
                 return;
             }
 
@@ -509,10 +526,16 @@ namespace litl
         /// </summary>
         void initiateTextAssetLoadFromDisk(TextAsset* asset, AssetManager& assetManager) noexcept
         {
+            if (asset == nullptr)
+            {
+                return;
+            }
+
             std::scoped_lock lock{ assetLoadMutex };
 
             if (asset->status.load(std::memory_order::relaxed) != AssetStatus::Unloaded)
             {
+                logInfo("Attempting to load Text asset from disk that is already loaded. Asset key = '", asset->key, "'");
                 return;
             }
 
@@ -565,10 +588,16 @@ namespace litl
         /// </summary>
         void initiateTexture2DAssetLoadFromDisk(Texture2DAsset* asset, AssetManager& assetManager) noexcept
         {
+            if (asset == nullptr)
+            {
+                return;
+            }
+
             std::scoped_lock lock{ assetLoadMutex };
 
             if (asset->status.load(std::memory_order::relaxed) != AssetStatus::Unloaded)
             {
+                logInfo("Attempting to load Texture2D asset from disk that is already loaded. Asset key = '", asset->key, "'");
                 return;
             }
 
@@ -800,14 +829,16 @@ namespace litl
 
     MeshAssetHandle AssetManager::createMeshAssetFromMemory(Authority<ModelAsset> auth, std::string_view key, GeoMesh geoMesh, File const& sourceFile) noexcept
     {
-        const StringId hashedKey = m_impl->createHashedAssetKey(key);
+        const std::string assetKey = m_impl->createAssetKey(key);
+        const StringId hashedAssetKey = StringId(assetKey);
+
         MeshAssetHandle meshAssetHandle{};
 
         {
             // When creating from memory, we may be racing against a reader as this is not done in a preprocess step like with disk-based assets.
             std::scoped_lock lock{ m_impl->assetMapMutex };
 
-            auto find = m_impl->assetMap.find(hashedKey);
+            auto find = m_impl->assetMap.find(hashedAssetKey);
 
             // Does the key already exist? If so, return the handle if it is also a MeshHandle.
             if (find != m_impl->assetMap.end())
@@ -818,12 +849,13 @@ namespace litl
                 }
                 else
                 {
+                    logWarning("AssetManager::createMeshAssetFromMemory failed as the key '", assetKey, "' already exists but is associated with a non-mesh asset type (", static_cast<uint32_t>(find->second.handle.type), ")");
                     return {};
                 }
             }
 
             // Key is not yet occupied. Create an unloaded mesh asset at it.
-            meshAssetHandle = m_impl->createBaseMeshAsset(sourceFile, key, hashedKey, MappingPriority::Low, AssetStatus::Loading);
+            meshAssetHandle = m_impl->createBaseMeshAsset(sourceFile, assetKey, hashedAssetKey, MappingPriority::Low, AssetStatus::Loading);
         }
 
         auto* meshAsset = m_impl->meshAssetPool.getLocked(meshAssetHandle);
@@ -831,12 +863,12 @@ namespace litl
         if (meshAsset == nullptr)
         {
             // Should not get here either.
-            logWarning("AssetManager::createMeshAssetFromMemory failed to retrieve newly created unloaded Mesh asset '", key, "'");
+            logWarning("AssetManager::createMeshAssetFromMemory failed to retrieve newly created unloaded Mesh asset '", assetKey, "'");
             meshAsset->setError(AssetErrorCode::InvalidObject);
             return meshAssetHandle;
         }
 
-        meshAsset->handle = m_impl->objectPool->reserveMesh({}, ObjectDescriptor{ .name = std::string(key), .lifetime = ObjectLifetime::Application });
+        meshAsset->handle = m_impl->objectPool->reserveMesh({}, ObjectDescriptor{ .name = assetKey, .lifetime = ObjectLifetime::Application });
         MeshAsset::fetchAssetObject(meshAsset, *m_impl->objectPool);
         meshAsset->mesh->getGeoMesh() = std::move(geoMesh);
 
