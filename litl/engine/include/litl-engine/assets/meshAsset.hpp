@@ -1,6 +1,7 @@
 #ifndef LITL_ENGINE_ASSETS_MESH_ASSET_H__
 #define LITL_ENGINE_ASSETS_MESH_ASSET_H__
 
+#include "litl-core/math/bounds/aabb.hpp"
 #include "litl-engine/assets/asset.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
 
@@ -12,6 +13,7 @@ namespace litl
     {
         MeshHandle handle{};
         Mesh* mesh{ nullptr };
+        bounds::AABB bounds{};
 
         static bool fetchAssetObject(Asset* asset, ObjectPool& objectPool) noexcept;
         static bool decodeBytes(Asset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept;

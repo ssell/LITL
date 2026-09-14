@@ -34,6 +34,8 @@ namespace litl
                 return false;
             }
 
+            meshAsset->bounds = meshAsset->mesh->getBounds();
+
             return true;
         }
 
@@ -63,6 +65,8 @@ namespace litl
                     if ((importedMesh != nullptr) && (importedMesh->mesh != nullptr))
                     {
                         meshAsset->mesh->getGeoMesh() = std::move(*importedMesh->mesh.get());
+                        meshAsset->bounds = meshAsset->mesh->getBounds();
+
                         return true;
                     }
                     else
