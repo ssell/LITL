@@ -276,7 +276,7 @@ namespace litl
 
         [[nodiscard]] static constexpr vec3 min() noexcept
         {
-            return vec3{ std::numeric_limits<float>::min() };
+            return vec3{ std::numeric_limits<float>::lowest() };        // min = smallest positive (so nearest to 0), while lowest = smallest negative.
         }
 
         [[nodiscard]] static constexpr vec3 max() noexcept

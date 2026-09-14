@@ -43,15 +43,10 @@ namespace litl
             // -----------------------------------------------------------------------------
 
             commands.addComponent<ModelInstance>(entity, ModelInstance{ .modelHandle = pendingModel.modelHandle });
-            Transform transform{};
 
             if (rootTransform == nullptr)
             {
-                commands.addComponent<Transform>(entity, transform);
-            }
-            else
-            {
-                transform = *rootTransform;
+                commands.addComponent<Transform>(entity, Transform{});
             }
 
             // -----------------------------------------------------------------------------
@@ -96,7 +91,7 @@ namespace litl
 
             uint32_t cycles = 0u;       // Protect against cyclic node hierarchies
 
-            while (!frontierNodes.empty() && (cycles++ <= nodes.size()))
+            while (!frontierNodes.empty() && (cycles++ < nodes.size()))
             {
                 // -------------------------------------------------------------------------
                 // Pop from the frontier and create the new child node for the mesh if valid
@@ -135,8 +130,11 @@ namespace litl
                             commands.addComponent<MaterialRef>(nodeEntity, fallbackMaterialRef);
                         }
                     }
+                }
 
-
+                if (cycles > nodes.size())
+                {
+                    logWarning("ModelInstantiationSystem encountered model node cycle for model asset '", model->key, "'");
                 }
 
                 // -------------------------------------------------------------------------

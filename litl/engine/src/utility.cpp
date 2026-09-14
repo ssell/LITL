@@ -107,7 +107,7 @@ namespace litl
         {
             auto* material = assetManager.getMaterial(fallbackMaterialResource);
 
-            if (material != nullptr)
+            if ((material != nullptr) && (material->material != nullptr))
             {
                 pendingModel.fallbackMaterialHandle = material->materialHandle;
                 pendingModel.fallbackMaterialSlot = material->material->allocateSlot();

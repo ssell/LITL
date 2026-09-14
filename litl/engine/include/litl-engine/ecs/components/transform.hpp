@@ -43,15 +43,15 @@ namespace litl
             return transform;
         }
 
-        [[nodiscard]] static Transform create(mat4 const& worldMatrix) noexcept
+        [[nodiscard]] static Transform create(mat4 const& transformMat) noexcept
         {
             Transform transform{};
 
-            vec3 position{ worldMatrix.position() };
+            vec3 position{ transformMat.position() };
             quat rotation{ quat::identity() };
             vec3 scale{ 1.0f, 1.0f, 1.0f };
 
-            worldMatrix.decompose(position, rotation, scale);
+            transformMat.decompose(position, rotation, scale);
 
             transform.setPosition(position);
             transform.setRotation(rotation);

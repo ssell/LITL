@@ -286,6 +286,12 @@ namespace litl::tests
         REQUIRE(calcForward == forward);
     } LITL_END_TEST_CASE
 
+    LITL_TEST_CASE("min max", "[math::vec3]")
+    {
+        REQUIRE(vec3::min() == vec3{ std::numeric_limits<float>::lowest() });       // min = smallest positive (so nearest to 0), while lowest = smallest negative.
+        REQUIRE(vec3::max() == vec3{ std::numeric_limits<float>::max() });
+    } LITL_END_TEST_CASE
+
     // -------------------------------------------------------------------------------------
     // Utility
     // -------------------------------------------------------------------------------------
