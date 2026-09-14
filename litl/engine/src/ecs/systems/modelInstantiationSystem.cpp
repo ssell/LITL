@@ -1,10 +1,21 @@
+#include <deque>
+#include <format>
+#include <optional>
+
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/ecs/systems/modelInstantiationSystem.hpp"
+#include "litl-import/model/intermediate/modelIntermediateData.hpp"
 
 namespace litl
 {
     namespace
     {
+        struct PendingModelNode
+        {
+            DeferredEntity parent{};
+            uint32_t index{ Constants::uint32_null_index };
+        };
+
         void transitionToFailedModelInstance(EntityCommands& commands, Entity entity, ModelAssetHandle modelHandle) noexcept
         {
             commands.removeComponent<PendingModelInstance>(entity);
@@ -16,43 +27,99 @@ namespace litl
             commands.removeComponent<PendingModelInstance>(entity);
             commands.addComponent<ModelInstance>(entity, ModelInstance{ .modelHandle = pendingModel.modelHandle });
 
-            ModelAsset* model = assetManager.getModel(pendingModel.modelHandle);
+            const ModelAsset* model = assetManager.getModel(pendingModel.modelHandle);
 
-            if (model == nullptr)
+            if ((model == nullptr) || (model->modelIntermediateData == nullptr))
             {
                 return;
             }
 
-            for (auto meshHandle : model->meshAssetHandles)
-            {
-                auto* mesh = assetManager.getMesh(meshHandle);
+            MaterialRef fallbackMaterialRef{};
 
-                if ((mesh == nullptr) || (mesh->status != AssetStatus::InMemory) || !mesh->handle.isValid())
+            if (pendingModel.fallbackMaterialHandle.isValid())
+            {
+                fallbackMaterialRef.handle = pendingModel.fallbackMaterialHandle;
+
+                if (pendingModel.fallbackMaterialSlot.isValid())
                 {
-                    continue;
+                    fallbackMaterialRef.slot = pendingModel.fallbackMaterialSlot;
+                }
+                else
+                {
+                    // ... todo allocate a slot ...
+                }
+            }
+
+            const auto meshNames = model->modelIntermediateData->getMeshNames();
+            const auto nodes = model->modelIntermediateData->getNodes();
+            const auto rootNodeIndices = model->modelIntermediateData->getRootNodes();
+            
+            std::deque<PendingModelNode> frontierNodes;
+
+            for (auto rootNodeIndex : rootNodeIndices)
+            {
+                if (rootNodeIndex < nodes.size())
+                {
+                    frontierNodes.push_back(PendingModelNode {
+                        .index = rootNodeIndex
+                    });
+                }
+            }
+
+            while (!frontierNodes.empty())
+            {
+                const auto pendingNode = frontierNodes.front(); frontierNodes.pop_front();
+                const auto& node = nodes[pendingNode.index];
+                const auto nodeEntity = commands.createEntity();
+
+                if (!pendingNode.parent.isNull())
+                {
+                    commands.setParent(nodeEntity, pendingNode.parent);
+                }
+                else
+                {
+                    commands.setParent(nodeEntity, entity);
                 }
 
-                // Create one child entity for every mesh handle.
-                auto childEntity = commands.createEntity();
-                commands.addComponent<Transform>(childEntity, transform);
-                commands.addComponent<MeshRef>(childEntity, MeshRef{ .handle = mesh->handle });
-                commands.addComponent<LocalBounds>(childEntity, LocalBounds{ .bounds = mesh->bounds });
+                commands.addComponent<Transform>(nodeEntity, transform);
 
-                // ... todo traverse the actual model node tree to pull out hierarchy and materials ...
-
-                if (pendingModel.fallbackMaterialHandle.isValid())
+                if (node.meshIndex.has_value() && (node.meshIndex.value() != Constants::uint32_null_index) && (node.meshIndex.value() < meshNames.size()))
                 {
-                    auto materialSlot = pendingModel.fallbackMaterialSlot;
+                    const auto meshAssetName = std::format("{}/{}", model->key, meshNames[node.meshIndex.value()]);
+                    const auto* mesh = assetManager.getMesh(meshAssetName);
 
-                    if (!materialSlot.isValid())
+                    if ((mesh != nullptr) && mesh->handle.isValid())
                     {
-                        // ... todo allocate a slot ...
+                        commands.addComponent<MeshRef>(nodeEntity, MeshRef{ .handle = mesh->handle });
+                        commands.addComponent<LocalBounds>(nodeEntity, LocalBounds{ .bounds = mesh->bounds });
+
+                        if (false /* todo materials from the model */)
+                        {
+                            // ... todo ...
+                        }
+                        else
+                        {
+                            commands.addComponent<MaterialRef>(nodeEntity, fallbackMaterialRef);
+                        }
                     }
 
-                    commands.addComponent<MaterialRef>(childEntity, MaterialRef{
-                        .handle = pendingModel.fallbackMaterialHandle,
-                        .slot = materialSlot
-                    });
+
+                }
+
+                if (!node.children.empty())
+                {
+                    for (auto childNodeIndex : node.children)
+                    {
+                        if (childNodeIndex > nodes.size())
+                        {
+                            continue;
+                        }
+
+                        frontierNodes.push_back(PendingModelNode{
+                            .parent = nodeEntity,
+                            .index = childNodeIndex
+                        });
+                    }
                 }
             }
         }

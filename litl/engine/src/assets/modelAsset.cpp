@@ -15,7 +15,7 @@ namespace litl
 
         if (!import::LitlModel::parse(bytes, litlmdl, litlmdlError))
         {
-            logError("Failed  to parse model asset with error code ", static_cast<uint32_t>(litlmdlError));
+            logError("Failed to parse model asset with error code ", static_cast<uint32_t>(litlmdlError));
             error = AssetErrorCode::ParseFailed;
             return false;
         }
