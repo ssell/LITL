@@ -1,11 +1,13 @@
 #ifndef LITL_MATH_BOUNDS_AABB_H__
 #define LITL_MATH_BOUNDS_AABB_H__
 
+#include <array>
 #include <span>
 #include <type_traits>
 
 #include "litl-core/assert.hpp"
 #include "litl-core/math/types/vec3.hpp"
+#include "litl-core/math/types/mat4.hpp"
 
 namespace litl::bounds
 {
@@ -48,6 +50,20 @@ namespace litl::bounds
         [[nodiscard]] constexpr vec3 center() const noexcept
         {
             return (min + ((max - min) * 0.5f));
+        }
+
+        [[nodiscard]] constexpr std::array<vec3, 8> corners() const noexcept
+        {
+            return {{
+                vec3{ min.x(), min.y(), min.z() },
+                vec3{ max.x(), min.y(), min.z() },
+                vec3{ min.x(), max.y(), min.z() },
+                vec3{ max.x(), max.y(), min.z() },
+                vec3{ min.x(), min.y(), max.z() },
+                vec3{ max.x(), min.y(), max.z() },
+                vec3{ min.x(), max.y(), max.z() },
+                vec3{ max.x(), max.y(), max.z() }
+            }};
         }
 
         /// <summary>
@@ -111,6 +127,26 @@ namespace litl::bounds
         [[nodiscard]] constexpr float distanceSqTo(vec3 point) const noexcept
         {
             return distanceSq(closestPoint(point), point);
+        }
+
+        /// <summary>
+        /// Returns a new AABB which wraps this AABB transformed by the provided world matrix.
+        /// </summary>
+        [[nodiscard]] AABB transformed(mat4 worldMatrix) const noexcept
+        {
+            // Must transform all 8 corners and then calculate the new min/max.
+            vec3 minPoint = vec3::max();
+            vec3 maxPoint = vec3::min();
+
+            std::array<vec3, 8> aabbCorners = corners();
+
+            for (vec3& corner : aabbCorners)
+            {
+                minPoint = litl::min(minPoint, corner);
+                maxPoint = litl::max(maxPoint, corner);
+            }
+
+            return fromMinMax(minPoint, maxPoint);
         }
 
         [[nodiscard]] static constexpr AABB fromMinMax(vec3 min, vec3 max) noexcept

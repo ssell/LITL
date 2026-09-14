@@ -164,9 +164,7 @@ namespace litl
                 if (localBounds.has_value())
                 {
                     // Update the scene partition with the world bounds
-                    bounds::AABB calculatedWorldBounds = localBounds.value().bounds;
-                    calculatedWorldBounds.min = worldMatrix * calculatedWorldBounds.min;
-                    calculatedWorldBounds.max = worldMatrix * calculatedWorldBounds.max;
+                    const bounds::AABB calculatedWorldBounds = localBounds.value().bounds.transformed(worldMatrix);
 
                     std::visit([&](auto& partition) 
                     { 

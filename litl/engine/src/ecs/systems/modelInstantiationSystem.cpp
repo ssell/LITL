@@ -22,17 +22,41 @@ namespace litl
             commands.addComponent<FailedModelInstance>(entity, FailedModelInstance{ .modelHandle = modelHandle });
         }
 
-        void processModelInstantiation(EntityCommands& commands, AssetManager& assetManager, Entity entity, Transform const& transform, PendingModelInstance const& pendingModel) noexcept
+        void processModelInstantiation(EntityCommands& commands, AssetManager& assetManager, Entity entity, Transform const* rootTransform, PendingModelInstance const& pendingModel) noexcept
         {
+            // -----------------------------------------------------------------------------
+            // Swap out PendingModelInstance for either ModelInstance or FailedModelInstance
+            // -----------------------------------------------------------------------------
+
             commands.removeComponent<PendingModelInstance>(entity);
-            commands.addComponent<ModelInstance>(entity, ModelInstance{ .modelHandle = pendingModel.modelHandle });
 
             const ModelAsset* model = assetManager.getModel(pendingModel.modelHandle);
 
             if ((model == nullptr) || (model->modelIntermediateData == nullptr))
             {
+                commands.addComponent<FailedModelInstance>(entity, FailedModelInstance{ .modelHandle = pendingModel.modelHandle });
                 return;
             }
+
+            // -----------------------------------------------------------------------------
+            // Add a Transform if one is not present
+            // -----------------------------------------------------------------------------
+
+            commands.addComponent<ModelInstance>(entity, ModelInstance{ .modelHandle = pendingModel.modelHandle });
+            Transform transform{};
+
+            if (rootTransform == nullptr)
+            {
+                commands.addComponent<Transform>(entity, transform);
+            }
+            else
+            {
+                transform = *rootTransform;
+            }
+
+            // -----------------------------------------------------------------------------
+            // Create the fallback MaterialRef
+            // -----------------------------------------------------------------------------
 
             MaterialRef fallbackMaterialRef{};
 
@@ -49,6 +73,10 @@ namespace litl
                     // ... todo allocate a slot ...
                 }
             }
+
+            // -----------------------------------------------------------------------------
+            // Loop over the Model node hierarchy
+            // -----------------------------------------------------------------------------
 
             const auto meshNames = model->modelIntermediateData->getMeshNames();
             const auto nodes = model->modelIntermediateData->getNodes();
@@ -70,6 +98,10 @@ namespace litl
 
             while (!frontierNodes.empty() && (cycles++ <= nodes.size()))
             {
+                // -------------------------------------------------------------------------
+                // Pop from the frontier and create the new child node for the mesh if valid
+                // -------------------------------------------------------------------------
+
                 const auto pendingNode = frontierNodes.front(); frontierNodes.pop_front();
                 const auto& node = nodes[pendingNode.index];
                 const auto nodeEntity = commands.createEntity();
@@ -85,7 +117,7 @@ namespace litl
 
                 commands.addComponent<Transform>(nodeEntity, Transform::create(node.localTransform));
 
-                if (node.meshIndex.has_value() && (node.meshIndex.value() != Constants::uint32_null_index) && (node.meshIndex.value() < meshNames.size()))
+                if (node.meshIndex.has_value() && (node.meshIndex.value() < meshNames.size()))
                 {
                     const auto meshAssetName = std::format("{}/{}", model->key, meshNames[node.meshIndex.value()]);
                     const auto* mesh = assetManager.getMesh(meshAssetName);
@@ -107,6 +139,10 @@ namespace litl
 
 
                 }
+
+                // -------------------------------------------------------------------------
+                // Add all valid child indices to the frontier
+                // -------------------------------------------------------------------------
 
                 if (!node.children.empty())
                 {
@@ -137,7 +173,7 @@ namespace litl
 
     }
 
-    void ModelInstantiationSystem::update(SystemData const& data, Entity entity, Transform const& transform, PendingModelInstance const& pendingModel)
+    void ModelInstantiationSystem::update(SystemData const& data, Entity entity, Transform const* transform, PendingModelInstance const& pendingModel)
     {
         if (!pendingModel.modelHandle.isValid())
         {
