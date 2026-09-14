@@ -947,9 +947,16 @@ namespace litl
     
     PendingModelInstance AssetManager::getModelInstance(std::string_view resource) noexcept
     {
+        auto* modelAsset = getModel(resource);
+
+        if (modelAsset == nullptr)
+        {
+            return {};
+        }
+
         return PendingModelInstance
         {
-            .modelHandle = getModelHandle(resource)
+            .modelHandle = modelAsset->selfHandle.modelHandle
         };
     }
 

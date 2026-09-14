@@ -66,7 +66,9 @@ namespace litl
                 }
             }
 
-            while (!frontierNodes.empty())
+            uint32_t cycles = 0u;       // Protect against cyclic node hierarchies
+
+            while (!frontierNodes.empty() && (cycles++ <= nodes.size()))
             {
                 const auto pendingNode = frontierNodes.front(); frontierNodes.pop_front();
                 const auto& node = nodes[pendingNode.index];
@@ -110,7 +112,7 @@ namespace litl
                 {
                     for (auto childNodeIndex : node.children)
                     {
-                        if (childNodeIndex > nodes.size())
+                        if (childNodeIndex >= nodes.size())
                         {
                             continue;
                         }
@@ -147,8 +149,12 @@ namespace litl
 
         switch (modelAssetStatus)
         {
-        case AssetStatus::Loading:
         case AssetStatus::Unloaded:
+            // Trigger the model load if it has not yet happened.
+            std::ignore = m_pAssetManager->getModel(pendingModel.modelHandle);
+            break;
+
+        case AssetStatus::Loading:
             // Keep waiting to transition to either Error, InMemory, or Invalid.
             break;
 

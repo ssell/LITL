@@ -362,7 +362,7 @@ namespace litl
                             downgradeSlotFromFrequentUpdateBlock(globalSlotIndex, *block, slot);
                         }
                     }
-                    else if (slot.isInFrequentUpdateBlock && ((m_currFrame - slot.lastWriteFrame) >= SlotDowngradeFromFrequntFrames))
+                    else if (slot.isInFrequentUpdateBlock && ((m_currFrame - slot.lastWriteFrame) >= SlotDowngradeFromFrequentFrames))
                     {
                         downgradeSlotFromFrequentUpdateBlock(globalSlotIndex, *block, slot);
                     }

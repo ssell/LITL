@@ -17,11 +17,19 @@ namespace litl::samples
 
         //const auto camera = createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(0.0f, 1.5f, 0.0f), bunnyPos, vec3::up(), *objectPool, *sceneView);
         const auto camera = createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(-5.0f, 1.5f, 0.0f), vec3(5.0f, 1.5f, 0.0f), vec3::up(), *objectPool, *sceneView);
-        
+        const auto pendingModel = assets->getModelInstance("models/sponza", "materials/flat");
+
         auto sponzaEntity = commands.createEntity();
-        commands.addComponent<PendingModelInstance>(sponzaEntity, assets->getModelInstance("models/sponza", "materials/flat"));
+        commands.addComponent<PendingModelInstance>(sponzaEntity, pendingModel);
         commands.addComponent<Transform>(sponzaEntity, Transform::create(vec3::zero(), quat::identity(), 0.01f));                   // OBJ sponza has 1 unit = 1 centimeter, we use 1 unit = 1 meter. So scale by 0.01.
         commands.addComponent<Spin>(sponzaEntity, Spin{ .rate = -1.0f });
+
+        if (pendingModel.fallbackMaterialHandle.isValid() && pendingModel.fallbackMaterialSlot.isValid())
+        {
+            auto* material = objectPool->getMaterial(pendingModel.fallbackMaterialHandle);
+            material->setColor("tint"_sid, colors::Red, pendingModel.fallbackMaterialSlot);
+        }
+
         //auto bunnyEntity = commands.createEntity();
         //commands.addComponent<PendingModelInstance>(bunnyEntity, assets->getModelInstance("mesh/bunny", "materials/flat"));
         //commands.addComponent<Transform>(bunnyEntity, Transform::create(bunnyPos));

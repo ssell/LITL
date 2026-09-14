@@ -34,8 +34,6 @@ namespace litl
                 return false;
             }
 
-            meshAsset->bounds = meshAsset->mesh->getBounds();
-
             return true;
         }
 
@@ -65,7 +63,6 @@ namespace litl
                     if ((importedMesh != nullptr) && (importedMesh->mesh != nullptr))
                     {
                         meshAsset->mesh->getGeoMesh() = std::move(*importedMesh->mesh.get());
-                        meshAsset->bounds = meshAsset->mesh->getBounds();
 
                         return true;
                     }
@@ -119,6 +116,8 @@ namespace litl
         MeshAsset* meshAsset = static_cast<MeshAsset*>(asset);
         Mesh::ErrorCode meshError = Mesh::ErrorCode::None;
 
+        meshAsset->bounds = meshAsset->mesh->getBounds();
+        
         if (!meshAsset->mesh->uploadCpuMeshToGpu(meshError))
         {
             logError("Failed to upload CPU mesh buffers to GPU with with error '", Mesh::ErrorStrings[static_cast<uint32_t>(meshError)], "' (", static_cast<uint32_t>(meshError), ")");

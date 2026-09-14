@@ -37,6 +37,7 @@ namespace litl::Internal
         systems.addSystem<ModelInstantiationSystem>(SystemGroup::Startup);
         systems.addSystem<ActiveMaterialSystem>(SystemGroup::PreRender);
         systems.addSystem<ActiveVariableMaterialSystem>(SystemGroup::PreRender);
+        systems.addSystem<PendingModelMaterialSystem>(SystemGroup::PreRender);
         systems.addSystem<CullingSystem>(SystemGroup::PreRender);
     }
 

@@ -169,7 +169,7 @@ namespace litl
         static constexpr uint32_t SlotsPerBlock = 64u;
         static constexpr uint32_t SlotExpirationFrames = 8u;
         static constexpr uint32_t SlotUpgradeToFrequentFrames = 8u;
-        static constexpr uint32_t SlotDowngradeFromFrequntFrames = 30u;
+        static constexpr uint32_t SlotDowngradeFromFrequentFrames = 30u;
 
         /// <summary>
         /// Configures the underlying property blocks to accomodate slots of the specified byte size.

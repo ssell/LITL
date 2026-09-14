@@ -6,6 +6,7 @@
 #include "litl-ecs/system/systemData.hpp"
 #include "litl-ecs/entity/entity.hpp"
 #include "litl-engine/ecs/components/materialRef.hpp"
+#include "litl-engine/ecs/components/modelInstance.hpp"
 
 /**
  * Note that we have two distinct systems for tracking active materials:
@@ -55,6 +56,23 @@ namespace litl
         void setup(ServiceProvider& services);
         void prepare();
         void update(SystemData const& data, Entity entity, VariableMaterialsRef const& materialRef);
+
+    private:
+
+        std::shared_ptr<ObjectPool> m_pObjectPool{ nullptr };
+    };
+
+    /// <summary>
+    /// Pending models may specify a fallback material handle + slot to use in the event there are meshes without valid materials.
+    /// We want to ensure any pre-allocated material slot is kept alive until the model is done loading.
+    /// </summary>
+    class PendingModelMaterialSystem final
+    {
+    public:
+
+        void setup(ServiceProvider& services);
+        void prepare();
+        void update(SystemData const& data, Entity entity, PendingModelInstance const& pendingModel);
 
     private:
 

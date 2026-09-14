@@ -21,9 +21,12 @@ namespace litl
 
     void ActiveMaterialSystem::update(SystemData const& data, Entity entity, MaterialRef const& materialRef)
     {
-        if (auto* material = m_pObjectPool->getMaterial(materialRef.handle); material != nullptr)
+        if (materialRef.handle.isValid() && materialRef.slot.isValid())
         {
-            material->markActive(materialRef.slot);
+            if (auto* material = m_pObjectPool->getMaterial(materialRef.handle); material != nullptr)
+            {
+                material->markActive(materialRef.slot);
+            }
         }
     }
 
@@ -59,6 +62,31 @@ namespace litl
                 {
                     material->markActive(binding.slot);
                 }
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // PendingModelMaterialSystem
+    // -------------------------------------------------------------------------------------
+
+    void PendingModelMaterialSystem::setup(ServiceProvider& services)
+    {
+        m_pObjectPool = services.get<ObjectPool>();
+    }
+
+    void PendingModelMaterialSystem::prepare()
+    {
+        // ... no action ...
+    }
+
+    void PendingModelMaterialSystem::update(SystemData const& data, Entity entity, PendingModelInstance const& pendingModel)
+    {
+        if (pendingModel.fallbackMaterialHandle.isValid() && pendingModel.fallbackMaterialSlot.isValid())
+        {
+            if (auto* material = m_pObjectPool->getMaterial(pendingModel.fallbackMaterialHandle); material != nullptr)
+            {
+                material->markActive(pendingModel.fallbackMaterialSlot);
             }
         }
     }
