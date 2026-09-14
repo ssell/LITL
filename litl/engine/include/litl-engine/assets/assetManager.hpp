@@ -29,6 +29,7 @@ namespace litl
     class ServiceProvider;
     struct GeoMesh;
     struct AwaitAssetDependencies;
+    struct PendingModelInstance;
 
     struct PendingAssetDependency
     {
@@ -72,6 +73,7 @@ namespace litl
         [[nodiscard]] AssetStatus getModelAssetStatus(ModelAssetHandle handle) noexcept;
         [[nodiscard]] ModelAsset* getModel(std::string_view resource) noexcept;
         [[nodiscard]] ModelAsset* getModel(ModelAssetHandle handle) noexcept;
+        [[nodiscard]] PendingModelInstance getModelInstance(std::string_view resource) noexcept;
 
         [[nodiscard]] ShaderAssetHandle getShaderHandle(std::string_view resource) noexcept;
         [[nodiscard]] AssetStatus getShaderAssetStatus(ShaderAssetHandle handle) noexcept;

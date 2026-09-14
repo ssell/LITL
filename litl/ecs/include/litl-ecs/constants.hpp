@@ -103,7 +103,6 @@ namespace litl
     template<typename T>
     concept ValidComponentType = 
         std::is_standard_layout_v<T> && 
-        std::is_trivially_copyable_v<T> &&
         sizeof(T) <= ecs::Constants::max_component_size;
 }
 

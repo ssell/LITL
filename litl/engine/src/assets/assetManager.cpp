@@ -13,6 +13,7 @@
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/assets/assetDependencies.hpp"
 #include "litl-engine/assets/assetLoadTask.hpp"
+#include "litl-engine/ecs/components/modelInstance.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/tasks/taskManager.hpp"
 #include "litl-engine/engine.hpp"
@@ -942,6 +943,14 @@ namespace litl
         }
 
         return model;
+    }
+    
+    PendingModelInstance AssetManager::getModelInstance(std::string_view resource) noexcept
+    {
+        return PendingModelInstance
+        {
+            .handle = getModelHandle(resource)
+        };
     }
 
     // -------------------------------------------------------------------------------------

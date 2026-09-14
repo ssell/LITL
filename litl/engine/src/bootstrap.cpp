@@ -10,7 +10,7 @@
 #include "litl-engine/tasks/taskManager.hpp"
 #include "litl-engine/ecs/systems/activeMaterialSystem.hpp"
 #include "litl-engine/ecs/systems/cullingSystem.hpp"
-#include "litl-engine/ecs/systems/loadingAssetSystem.hpp"
+#include "litl-engine/ecs/systems/modelInstantiationSystem.hpp"
 #include "litl-renderer/window.hpp"
 #include "litl-ecs/world.hpp"
 
@@ -34,7 +34,7 @@ namespace litl::Internal
 
     void defaultConfigureSystems(SystemCollection& systems)
     {
-        systems.addSystem<LoadingAssetSystem>(SystemGroup::Startup);
+        systems.addSystem<ModelInstantiationSystem>(SystemGroup::Startup);
         systems.addSystem<ActiveMaterialSystem>(SystemGroup::PreRender);
         systems.addSystem<ActiveVariableMaterialSystem>(SystemGroup::PreRender);
         systems.addSystem<CullingSystem>(SystemGroup::PreRender);
