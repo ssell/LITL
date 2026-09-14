@@ -482,6 +482,8 @@ namespace litl
         // Utility
         // ---------------------------------------------------------------------------------
 
+        bool decompose(vec3& outPosition, quat& outRotation, vec3& outScale) const noexcept;
+
         constexpr mat4& zero() noexcept
         {
             value = { 0.0f };

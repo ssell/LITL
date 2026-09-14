@@ -2,6 +2,7 @@
 #define LITL_ENGINE_ECS_COMPONENTS_TRANSFORM_H__
 
 #include "litl-core/math.hpp"
+
 #include "litl-ecs/register.hpp"
 #include "litl-ecs/world.hpp"
 #include "litl-ecs/entity/entity.hpp"
@@ -39,6 +40,32 @@ namespace litl
             transform.setPosition(position);
             transform.setRotation(rotation);
             transform.setUniformScale(uniformScale);
+            return transform;
+        }
+
+        [[nodiscard]] static Transform create(mat4 const& worldMatrix) noexcept
+        {
+            Transform transform{};
+
+            vec3 position{ worldMatrix.position() };
+            quat rotation{ quat::identity() };
+            vec3 scale{ 1.0f, 1.0f, 1.0f };
+
+            worldMatrix.decompose(position, rotation, scale);
+
+            transform.setPosition(position);
+            transform.setRotation(rotation);
+
+            if (fequals(scale.x(), scale.y()) && fequals(scale.x(), scale.z()))
+            {
+                // Uniform scale
+                transform.setUniformScale(scale.x());
+            }
+            else
+            {
+                // ... todo, would need to add a NonUniformScale component ...
+            }
+
             return transform;
         }
 

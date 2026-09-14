@@ -81,7 +81,7 @@ namespace litl
                     commands.setParent(nodeEntity, entity);
                 }
 
-                commands.addComponent<Transform>(nodeEntity, transform);
+                commands.addComponent<Transform>(nodeEntity, Transform::create(node.localTransform));
 
                 if (node.meshIndex.has_value() && (node.meshIndex.value() != Constants::uint32_null_index) && (node.meshIndex.value() < meshNames.size()))
                 {

@@ -21,7 +21,7 @@ namespace litl::samples
         auto sponzaEntity = commands.createEntity();
         commands.addComponent<PendingModelInstance>(sponzaEntity, assets->getModelInstance("models/sponza", "materials/flat"));
         commands.addComponent<Transform>(sponzaEntity, Transform::create(vec3::zero(), quat::identity(), 0.01f));                   // OBJ sponza has 1 unit = 1 centimeter, we use 1 unit = 1 meter. So scale by 0.01.
-
+        commands.addComponent<Spin>(sponzaEntity, Spin{ .rate = -1.0f });
         //auto bunnyEntity = commands.createEntity();
         //commands.addComponent<PendingModelInstance>(bunnyEntity, assets->getModelInstance("mesh/bunny", "materials/flat"));
         //commands.addComponent<Transform>(bunnyEntity, Transform::create(bunnyPos));

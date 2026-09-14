@@ -1,4 +1,5 @@
 #include "litl-core/math/types.hpp"
+#include <glm/gtx/matrix_decompose.hpp>
 
 namespace litl
 {
@@ -87,6 +88,26 @@ namespace litl
         : value(glm::mat4_cast(quaternion.data()))
     {
 
+    }
+
+    bool mat4::decompose(vec3& outPosition, quat& outRotation, vec3& outScale) const noexcept
+    {
+        glm::vec3 scale;
+        glm::quat rotation;
+        glm::vec3 translation;
+        glm::vec3 skew;
+        glm::vec4 perspective;
+
+        if (!glm::decompose(value, scale, rotation, translation, skew, perspective))
+        {
+            return false;
+        }
+
+        outPosition = vec3(translation);
+        outRotation = quat(rotation);
+        outScale = vec3(scale);
+
+        return true;
     }
 
     // -------------------------------------------------------------------------------------
