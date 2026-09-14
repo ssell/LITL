@@ -944,46 +944,6 @@ namespace litl
 
         return model;
     }
-    
-    PendingModelInstance AssetManager::getModelInstance(std::string_view resource) noexcept
-    {
-        auto* modelAsset = getModel(resource);
-
-        if (modelAsset == nullptr)
-        {
-            return {};
-        }
-
-        return PendingModelInstance
-        {
-            .modelHandle = modelAsset->selfHandle.modelHandle
-        };
-    }
-
-    PendingModelInstance AssetManager::getModelInstance(std::string_view modelResource, std::string_view fallbackMaterialResource) noexcept
-    {
-        auto* modelAsset = getModel(modelResource);
-
-        if (modelAsset == nullptr)
-        {
-            return {};
-        }
-
-        PendingModelInstance pendingModel{ .modelHandle = modelAsset->selfHandle.modelHandle };
-
-        if (pendingModel.modelHandle.isValid())
-        {
-            auto* material = getMaterial(fallbackMaterialResource);
-
-            if (material != nullptr)
-            {
-                pendingModel.fallbackMaterialHandle = material->materialHandle;
-                pendingModel.fallbackMaterialSlot = material->material->allocateSlot();
-            }
-        }
-
-        return pendingModel;
-    }
 
     // -------------------------------------------------------------------------------------
     // --- Get Shader Module

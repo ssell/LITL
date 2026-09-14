@@ -17,7 +17,7 @@ namespace litl::samples
 
         //const auto camera = createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(0.0f, 1.5f, 0.0f), bunnyPos, vec3::up(), *objectPool, *sceneView);
         const auto camera = createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(-5.0f, 1.5f, 0.0f), vec3(5.0f, 1.5f, 0.0f), vec3::up(), *objectPool, *sceneView);
-        const auto pendingModel = assets->getModelInstance("models/sponza", "materials/flat");
+        const auto pendingModel = createModelInstance("models/sponza", "materials/flat", *assets);
 
         auto sponzaEntity = commands.createEntity();
         commands.addComponent<PendingModelInstance>(sponzaEntity, pendingModel);

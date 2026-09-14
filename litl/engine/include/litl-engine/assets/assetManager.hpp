@@ -73,8 +73,6 @@ namespace litl
         [[nodiscard]] AssetStatus getModelAssetStatus(ModelAssetHandle handle) noexcept;
         [[nodiscard]] ModelAsset* getModel(std::string_view resource) noexcept;
         [[nodiscard]] ModelAsset* getModel(ModelAssetHandle handle) noexcept;
-        [[nodiscard]] PendingModelInstance getModelInstance(std::string_view resource) noexcept;
-        [[nodiscard]] PendingModelInstance getModelInstance(std::string_view modelResource, std::string_view fallbackMaterialResource) noexcept;
 
         [[nodiscard]] ShaderAssetHandle getShaderHandle(std::string_view resource) noexcept;
         [[nodiscard]] AssetStatus getShaderAssetStatus(ShaderAssetHandle handle) noexcept;
