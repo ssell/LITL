@@ -9,18 +9,18 @@
 #include "litl-engine/ecs/components/modelInstance.hpp"
 
 /**
- * Note that we have two distinct systems for tracking active materials:
+ * Note that we have three distinct systems for tracking active materials:
  * 
  *     * ActiveMaterialSystem tracks MaterialRef
  *     * ActiveVariableMaterialSystem tracks VariableMaterialsRef
+ *     * PendingModelMaterialSystem tracks PendingModelInstance (for the fallback material)
  * 
  * In theory they could be combined into a single system whose update would be
  * 
- *     update(SystemData const& data, Entity entity, MaterialRef const* materialRef, VariableMaterialRef const* variableMaterialRef)
+ *     update(SystemData const& data, Entity entity, MaterialRef const* materialRef, VariableMaterialRef const* variableMaterialRef, PendingModelInstance const* pendingmodel)
  * 
  * However that would result in iterating over all archetypes and entities. 
- * Since there are no further requirements for a material to be active than the individual material components 
- * then we must split into two systems and have hard requirements on those components.
+ * Since there are no further requirements for a material to be active than the individual material components then we must split into separate systems and have hard requirements on those components.
  */
 
 namespace litl
