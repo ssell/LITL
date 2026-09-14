@@ -117,10 +117,9 @@ namespace litl
 
                 commands.addComponent<Transform>(nodeEntity, Transform::create(node.localTransform));
 
-                if (node.meshIndex.has_value() && (node.meshIndex.value() < meshNames.size()))
+                if (node.meshIndex.has_value() && (node.meshIndex.value() < model->meshAssetHandles.size()))
                 {
-                    const auto meshAssetName = std::format("{}/{}", model->key, meshNames[node.meshIndex.value()]);
-                    const auto* mesh = assetManager.getMesh(meshAssetName);
+                    const auto* mesh = assetManager.getMesh(model->meshAssetHandles[*node.meshIndex]);
 
                     if ((mesh != nullptr) && mesh->handle.isValid())
                     {
