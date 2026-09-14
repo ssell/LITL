@@ -237,6 +237,31 @@ namespace litl::tests
         REQUIRE(classifyStraddles == bounds::IntersectionType::Intersects);
         REQUIRE(classifyContains == bounds::IntersectionType::Intersects);
     } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("aabb corners", "[math::bounds]")
+    {
+        const bounds::AABB aabb = bounds::AABB::fromMinMax(vec3{ -50.0f, -100.0f, -150.0f }, vec3{ 50.0f, 100.0f, 150.0f });
+        const auto corners = aabb.corners();
+
+        REQUIRE(corners[0] == vec3{ -50.0f, -100.0f, -150.0f });
+        REQUIRE(corners[1] == vec3{  50.0f, -100.0f, -150.0f });
+        REQUIRE(corners[2] == vec3{ -50.0f,  100.0f, -150.0f });
+        REQUIRE(corners[3] == vec3{  50.0f,  100.0f, -150.0f });
+        REQUIRE(corners[4] == vec3{ -50.0f, -100.0f,  150.0f });
+        REQUIRE(corners[5] == vec3{  50.0f, -100.0f,  150.0f });
+        REQUIRE(corners[6] == vec3{ -50.0f,  100.0f,  150.0f });
+        REQUIRE(corners[7] == vec3{  50.0f,  100.0f,  150.0f });
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("aabb transformed", "[math::bounds]")
+    {
+        const auto aabb = bounds::AABB::fromMinMax(vec3{ -50.0f, -100.0f, -150.0f }, vec3{ 50.0f, 100.0f, 150.0f });
+        const auto worldMatrix = mat4::scaling(vec3{ 0.1f, 0.1f, 0.1f });
+        const auto scaledAABB = aabb.transformed(worldMatrix);
+
+        REQUIRE(scaledAABB.min == vec3{ -5.0f, -10.0f, -15.0f });
+        REQUIRE(scaledAABB.max == vec3{  5.0f,  10.0f,  15.0f });
+    } LITL_END_TEST_CASE
         
     // -------------------------------------------------------------------------------------
     // Sphere

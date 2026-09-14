@@ -140,6 +140,15 @@ namespace litl::bounds
 
             std::array<vec3, 8> aabbCorners = corners();
 
+            aabbCorners[0] = worldMatrix * aabbCorners[0];
+            aabbCorners[1] = worldMatrix * aabbCorners[1];
+            aabbCorners[2] = worldMatrix * aabbCorners[2];
+            aabbCorners[3] = worldMatrix * aabbCorners[3];
+            aabbCorners[4] = worldMatrix * aabbCorners[4];
+            aabbCorners[5] = worldMatrix * aabbCorners[5];
+            aabbCorners[6] = worldMatrix * aabbCorners[6];
+            aabbCorners[7] = worldMatrix * aabbCorners[7];
+
             for (vec3& corner : aabbCorners)
             {
                 minPoint = litl::min(minPoint, corner);
