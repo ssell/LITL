@@ -56,14 +56,14 @@ namespace litl::import
         return Result::Success();
     }
 
-    Result ShaderExporter::write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data, uint32_t dataIndex) noexcept
+    Result ShaderExporter::write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data, uint32_t dataIndex, std::optional<std::string_view> nameOverride) noexcept
     {
         if (!Directory::ensureExists(destFolderPath))
         {
             return Result::Error(ErrorType::ExportDestinationDoesNotExist);
         }
 
-        const auto destFilePath = std::format("{}/{}{}", destFolderPath, sourceFile.name(), ExportedExtension);
+        const auto destFilePath = std::format("{}/{}{}", destFolderPath, (nameOverride.has_value() ? nameOverride.value() : sourceFile.name()), ExportedExtension);
         const auto destFile = File(destFilePath);
         auto errorCode = BinaryBlockFile::ErrorCode::None;
         auto serialized = std::vector<std::byte>();

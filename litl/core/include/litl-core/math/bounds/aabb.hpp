@@ -141,22 +141,30 @@ namespace litl::bounds
         /// <summary>
         /// Returns a new AABB which wraps this AABB transformed by the provided world matrix.
         /// </summary>
-        [[nodiscard]] AABB transformed(mat4 worldMatrix) const noexcept
+        [[nodiscard]] AABB transformed(mat4 transformMatrix) const noexcept
         {
+            // Using Arvo's method
+            const vec3 transformedCenter = transformMatrix * center();
+            const vec3 transformedHalfExtents = mat3(transformMatrix).absolute() * halfExtents();
+
+            return fromCenterHalfExtents(transformedCenter, transformedHalfExtents);
+
+            // Below is the traditional way to perform the transformation.
+            /*
             // Must transform all 8 corners and then calculate the new min/max.
             vec3 minPoint = vec3::max();
             vec3 maxPoint = vec3::min();
 
             std::array<vec3, 8> aabbCorners = corners();
 
-            aabbCorners[0] = worldMatrix * aabbCorners[0];
-            aabbCorners[1] = worldMatrix * aabbCorners[1];
-            aabbCorners[2] = worldMatrix * aabbCorners[2];
-            aabbCorners[3] = worldMatrix * aabbCorners[3];
-            aabbCorners[4] = worldMatrix * aabbCorners[4];
-            aabbCorners[5] = worldMatrix * aabbCorners[5];
-            aabbCorners[6] = worldMatrix * aabbCorners[6];
-            aabbCorners[7] = worldMatrix * aabbCorners[7];
+            aabbCorners[0] = transformMatrix * aabbCorners[0];
+            aabbCorners[1] = transformMatrix * aabbCorners[1];
+            aabbCorners[2] = transformMatrix * aabbCorners[2];
+            aabbCorners[3] = transformMatrix * aabbCorners[3];
+            aabbCorners[4] = transformMatrix * aabbCorners[4];
+            aabbCorners[5] = transformMatrix * aabbCorners[5];
+            aabbCorners[6] = transformMatrix * aabbCorners[6];
+            aabbCorners[7] = transformMatrix * aabbCorners[7];
 
             for (vec3& corner : aabbCorners)
             {
@@ -165,6 +173,7 @@ namespace litl::bounds
             }
 
             return fromMinMax(minPoint, maxPoint);
+            */
         }
 
         [[nodiscard]] static constexpr AABB fromMinMax(vec3 min, vec3 max) noexcept

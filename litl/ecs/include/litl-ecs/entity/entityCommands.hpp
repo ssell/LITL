@@ -146,7 +146,8 @@ namespace litl
         template<ValidComponentType T>
         void addComponent(DeferredEntity entity) noexcept
         {
-            addComponent(entity, ComponentDescriptor::get<T>()->id);
+            T t{};
+            addComponent(entity, ComponentDescriptor::get<T>()->id, &t, sizeof(T), alignof(T));
         }
 
         /// <summary>

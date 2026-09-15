@@ -253,11 +253,27 @@ namespace litl::tests
         REQUIRE(corners[7] == vec3{  50.0f,  100.0f,  150.0f });
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("aabb transformed", "[math::bounds]")
+    LITL_TEST_CASE("aabb transformed rotated", "[math::bounds]")
+    {
+        const auto radius = 0.5f;
+        const auto aabb = bounds::AABB::fromMinMax(vec3{ -radius }, vec3{ radius });
+        const auto transformMatrix = mat4::rotation(Traits<float>::pi_over_four, vec3::up());
+        const auto rotatedAABB = aabb.transformed(transformMatrix);
+
+        const auto aabbExtents = aabb.extents();
+        const auto expectedAABBExtents = vec3{ radius * 2.0f };
+        REQUIRE(aabbExtents == expectedAABBExtents);
+
+        const auto rotatedAABBExtents = rotatedAABB.extents();
+        const auto expectedRotatedAABBExtents = vec3{ Traits<float>::sqrt_two, 1.0f, Traits<float>::sqrt_two };
+        REQUIRE(rotatedAABBExtents == expectedRotatedAABBExtents); 
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("aabb transformed scale", "[math::bounds]")
     {
         const auto aabb = bounds::AABB::fromMinMax(vec3{ -50.0f, -100.0f, -150.0f }, vec3{ 50.0f, 100.0f, 150.0f });
-        const auto worldMatrix = mat4::scaling(vec3{ 0.1f, 0.1f, 0.1f });
-        const auto scaledAABB = aabb.transformed(worldMatrix);
+        const auto transformMatrix = mat4::scaling(vec3{ 0.1f, 0.1f, 0.1f });
+        const auto scaledAABB = aabb.transformed(transformMatrix);
 
         REQUIRE(scaledAABB.min == vec3{ -5.0f, -10.0f, -15.0f });
         REQUIRE(scaledAABB.max == vec3{  5.0f,  10.0f,  15.0f });

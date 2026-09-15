@@ -81,13 +81,12 @@ namespace litl
 
     std::string File::absolutePath() const noexcept
     {
-        return std::filesystem::canonical(m_file).string();
+        return std::filesystem::weakly_canonical(m_file).string();
     }
-
 
     std::string File::parentFolderPath() const noexcept
     {
-        return std::filesystem::canonical(m_file.parent_path()).string();
+        return std::filesystem::weakly_canonical(m_file.parent_path()).string();
     }
 
     std::string File::name() const noexcept

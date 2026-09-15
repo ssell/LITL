@@ -635,6 +635,47 @@ namespace litl::tests
         REQUIRE(s.find("C3:") != std::string::npos);
     } LITL_END_TEST_CASE
 
+    LITL_TEST_CASE("mat4 absolute", "[mat3::utility]")
+    {
+        mat4 m{};
+
+        m[0][0] = -1.0f;
+        m[0][1] = 33.0f;
+        m[0][2] = 0.0f;
+        m[0][3] = 9999.0f;
+        m[1][0] = 100.0f;
+        m[1][1] = 0.00001f;
+        m[1][2] = -0.00001f;
+        m[1][3] = 9999.0f;
+        m[2][0] = 18.0234f;
+        m[2][1] = -6783.55f;
+        m[2][2] = 346536.32f;
+        m[2][3] = -9999.0f;
+        m[3][0] = -0.11116f;
+        m[3][1] = 4320.43f;
+        m[3][2] = 10.0f;
+        m[3][3] = -10.0f;
+
+        mat4 am = m.absolute();
+
+        REQUIRE(am[0][0] == abs(m[0][0]));
+        REQUIRE(am[0][1] == abs(m[0][1]));
+        REQUIRE(am[0][2] == abs(m[0][2]));
+        REQUIRE(am[0][3] == abs(m[0][3]));
+        REQUIRE(am[1][0] == abs(m[1][0]));
+        REQUIRE(am[1][1] == abs(m[1][1]));
+        REQUIRE(am[1][2] == abs(m[1][2]));
+        REQUIRE(am[1][3] == abs(m[1][3]));
+        REQUIRE(am[2][0] == abs(m[2][0]));
+        REQUIRE(am[2][1] == abs(m[2][1]));
+        REQUIRE(am[2][2] == abs(m[2][2]));
+        REQUIRE(am[2][3] == abs(m[2][3]));
+        REQUIRE(am[3][0] == abs(m[3][0]));
+        REQUIRE(am[3][1] == abs(m[3][1]));
+        REQUIRE(am[3][2] == abs(m[3][2]));
+        REQUIRE(am[3][3] == abs(m[3][3]));
+    } LITL_END_TEST_CASE
+
     // -------------------------------------------------------------------------------------
    // Data access
     // -------------------------------------------------------------------------------------

@@ -9,13 +9,13 @@ namespace litl::tests
     // Construction
     // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("mat3 default constructs to zero matrix", "[mat3][construction]")
+    LITL_TEST_CASE("mat3 default constructs to zero matrix", "[mat3::construction]")
     {
         mat3 m;
         REQUIRE(m.isZeroed());
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 copy construction", "[mat3][construction]")
+    LITL_TEST_CASE("mat3 copy construction", "[mat3::construction]")
     {
         auto m = mat3::identity();
         mat3 copy{ m };
@@ -23,14 +23,14 @@ namespace litl::tests
         REQUIRE(copy.isIdentity());
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 construct from glm::mat3", "[mat3][construction]")
+    LITL_TEST_CASE("mat3 construct from glm::mat3", "[mat3::construction]")
     {
         glm::mat3 g{ 1.0f };
         mat3 m{ g };
         REQUIRE(m.isIdentity());
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 construct from span", "[mat3][construction]")
+    LITL_TEST_CASE("mat3 construct from span", "[mat3::construction]")
     {
         // Column-major: col0 = {1,2,3}, col1 = {4,5,6}, col2 = {7,8,9}
         std::array<float, 9> values{ 1, 2, 3, 4, 5, 6, 7, 8, 9 };
@@ -47,7 +47,7 @@ namespace litl::tests
         REQUIRE(fequals(m.get(2, 2), 9.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 construct from partial span pads with zero", "[mat3][construction]")
+    LITL_TEST_CASE("mat3 construct from partial span pads with zero", "[mat3::construction]")
     {
         std::array<float, 4> values{ 1, 2, 3, 4 };
         mat3 m{ std::span<float const>{ values } };
@@ -90,7 +90,7 @@ namespace litl::tests
     // Factory methods
     // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("mat3::identity", "[mat3][factory]")
+    LITL_TEST_CASE("mat3::identity", "[mat3::factory]")
     {
         auto m = mat3::identity();
         REQUIRE(m.isIdentity());
@@ -101,7 +101,7 @@ namespace litl::tests
         REQUIRE(fequals(m.get(1, 0), 0.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3::rotation around Z axis by 90 degrees", "[mat3][factory]")
+    LITL_TEST_CASE("mat3::rotation around Z axis by 90 degrees", "[mat3::factory]")
     {
         constexpr float angle = Traits<float>::pi_over_two;
         auto m = mat3::rotation(angle, vec3{ 0, 0, 1 });
@@ -113,7 +113,7 @@ namespace litl::tests
         REQUIRE(fequals(result.z(), 0.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3::rotation with Euler angles", "[mat3][factory]")
+    LITL_TEST_CASE("mat3::rotation with Euler angles", "[mat3::factory]")
     {
         // Rotating only around Z by 90°
         constexpr float angle = Traits<float>::pi_over_two;
@@ -125,7 +125,7 @@ namespace litl::tests
         REQUIRE(fequals(result.z(), 0.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3::scaling", "[mat3][factory]")
+    LITL_TEST_CASE("mat3::scaling", "[mat3::factory]")
     {
         auto m = mat3::scaling(vec3{ 2, 3, 4 });
 
@@ -139,7 +139,7 @@ namespace litl::tests
         REQUIRE(fequals(result.z(), 4.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3::fromAxis", "[mat3][factory]")
+    LITL_TEST_CASE("mat3::fromAxis", "[mat3::factory]")
     {
         vec3 right{ 1, 0, 0 };
         vec3 up{ 0, 1, 0 };
@@ -153,7 +153,7 @@ namespace litl::tests
     // Equality
     // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("mat3 equality uses epsilon comparison", "[mat3][equality]")
+    LITL_TEST_CASE("mat3 equality uses epsilon comparison", "[mat3::equality]")
     {
         auto a = mat3::identity();
         auto b = mat3::identity();
@@ -164,7 +164,7 @@ namespace litl::tests
         REQUIRE(a == g);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 inequality", "[mat3][equality]")
+    LITL_TEST_CASE("mat3 inequality", "[mat3::equality]")
     {
         auto a = mat3::identity();
         mat3 b;
@@ -175,7 +175,7 @@ namespace litl::tests
     // Negation
     // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("mat3 negation", "[mat3][negation]")
+    LITL_TEST_CASE("mat3 negation", "[mat3::negation]")
     {
         std::array<float, 9> values{ 1, 2, 3, 4, 5, 6, 7, 8, 9 };
         mat3 m{ std::span<float const>{ values } };
@@ -191,7 +191,7 @@ namespace litl::tests
     // Addition
     // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("mat3 + scalar", "[mat3][addition]")
+    LITL_TEST_CASE("mat3 + scalar", "[mat3::addition]")
     {
         auto m = mat3::identity();
         auto result = m + 1.0f;
@@ -202,7 +202,7 @@ namespace litl::tests
         REQUIRE(fequals(result.get(1, 1), 2.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 + mat3", "[mat3][addition]")
+    LITL_TEST_CASE("mat3 + mat3", "[mat3::addition]")
     {
         auto a = mat3::identity();
         auto b = mat3::identity();
@@ -214,7 +214,7 @@ namespace litl::tests
         REQUIRE(fequals(result.get(0, 1), 0.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 += scalar", "[mat3][addition]")
+    LITL_TEST_CASE("mat3 += scalar", "[mat3::addition]")
     {
         auto m = mat3::identity();
         m += 1.0f;
@@ -222,7 +222,7 @@ namespace litl::tests
         REQUIRE(fequals(m.get(0, 1), 1.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 += mat3", "[mat3][addition]")
+    LITL_TEST_CASE("mat3 += mat3", "[mat3::addition]")
     {
         auto m = mat3::identity();
         m += mat3::identity();
@@ -234,7 +234,7 @@ namespace litl::tests
     // Subtraction
     // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("mat3 - scalar", "[mat3][subtraction]")
+    LITL_TEST_CASE("mat3 - scalar", "[mat3::subtraction]")
     {
         auto m = mat3::identity();
         auto result = m - 1.0f;
@@ -243,7 +243,7 @@ namespace litl::tests
         REQUIRE(fequals(result.get(0, 1), -1.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 - mat3", "[mat3][subtraction]")
+    LITL_TEST_CASE("mat3 - mat3", "[mat3::subtraction]")
     {
         auto a = mat3::identity();
         auto b = mat3::identity();
@@ -251,7 +251,7 @@ namespace litl::tests
         REQUIRE(result.isZeroed());
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 -= scalar", "[mat3][subtraction]")
+    LITL_TEST_CASE("mat3 -= scalar", "[mat3::subtraction]")
     {
         auto m = mat3::identity();
         m -= 1.0f;
@@ -263,7 +263,7 @@ namespace litl::tests
     // Multiplication
     // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("mat3 * scalar", "[mat3][multiplication]")
+    LITL_TEST_CASE("mat3 * scalar", "[mat3::multiplication]")
     {
         auto m = mat3::identity();
         auto result = m * 3.0f;
@@ -272,7 +272,7 @@ namespace litl::tests
         REQUIRE(fequals(result.get(0, 1), 0.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 * mat3 (identity)", "[mat3][multiplication]")
+    LITL_TEST_CASE("mat3 * mat3 (identity)", "[mat3::multiplication]")
     {
         auto a = mat3::identity();
         std::array<float, 9> vals{ 1, 2, 3, 4, 5, 6, 7, 8, 9 };
@@ -282,7 +282,7 @@ namespace litl::tests
         REQUIRE(result == b);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 * vec3", "[mat3][multiplication]")
+    LITL_TEST_CASE("mat3 * vec3", "[mat3::multiplication]")
     {
         auto m = mat3::identity();
         vec3 v{ 1, 2, 3 };
@@ -290,7 +290,7 @@ namespace litl::tests
         REQUIRE(result == v);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 *= scalar", "[mat3][multiplication]")
+    LITL_TEST_CASE("mat3 *= scalar", "[mat3::multiplication]")
     {
         auto m = mat3::identity();
         m *= 5.0f;
@@ -298,7 +298,7 @@ namespace litl::tests
         REQUIRE(fequals(m.get(1, 1), 5.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 *= mat3", "[mat3][multiplication]")
+    LITL_TEST_CASE("mat3 *= mat3", "[mat3::multiplication]")
     {
         auto m = mat3::identity();
         std::array<float, 9> vals{ 1, 2, 3, 4, 5, 6, 7, 8, 9 };
@@ -312,7 +312,7 @@ namespace litl::tests
     // Division
     // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("mat3 / scalar", "[mat3][division]")
+    LITL_TEST_CASE("mat3 / scalar", "[mat3::division]")
     {
         auto m = mat3::identity() * 4.0f;
         auto result = m / 2.0f;
@@ -320,7 +320,7 @@ namespace litl::tests
         REQUIRE(fequals(result.get(1, 1), 2.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 /= scalar", "[mat3][division]")
+    LITL_TEST_CASE("mat3 /= scalar", "[mat3::division]")
     {
         auto m = mat3::identity() * 6.0f;
         m /= 3.0f;
@@ -331,14 +331,14 @@ namespace litl::tests
     // Setters / Getters
     // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("mat3 set/get by col,row", "[mat3][accessors]")
+    LITL_TEST_CASE("mat3 set/get by col,row", "[mat3::accessors]")
     {
         mat3 m;
         m.set(1, 2, 42.0f);
         REQUIRE(fequals(m.get(1, 2), 42.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 set/get by flat index", "[mat3][accessors]")
+    LITL_TEST_CASE("mat3 set/get by flat index", "[mat3::accessors]")
     {
         mat3 m;
         // Index 4 = col1, row1 (column-major: col*3 + row)
@@ -347,7 +347,7 @@ namespace litl::tests
         REQUIRE(fequals(m.get(1, 1), 99.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 operator[] column access", "[mat3][accessors]")
+    LITL_TEST_CASE("mat3 operator[] column access", "[mat3::accessors]")
     {
         auto m = mat3::identity();
         REQUIRE(fequals(m[0][0], 1.0f));
@@ -359,7 +359,7 @@ namespace litl::tests
         REQUIRE(fequals(m.get(2, 0), 7.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 setCol / col", "[mat3][accessors]")
+    LITL_TEST_CASE("mat3 setCol / col", "[mat3::accessors]")
     {
         mat3 m;
         m.setCol(1, 10.0f, 20.0f, 30.0f);
@@ -370,7 +370,7 @@ namespace litl::tests
         REQUIRE(fequals(c.z(), 30.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 setCol with vec3", "[mat3][accessors]")
+    LITL_TEST_CASE("mat3 setCol with vec3", "[mat3::accessors]")
     {
         mat3 m;
         m.setCol(0, vec3{ 5, 6, 7 });
@@ -381,7 +381,7 @@ namespace litl::tests
         REQUIRE(fequals(c.z(), 7.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 setRow / row", "[mat3][accessors]")
+    LITL_TEST_CASE("mat3 setRow / row", "[mat3::accessors]")
     {
         mat3 m;
         m.setRow(0, 1.0f, 2.0f, 3.0f);
@@ -392,7 +392,7 @@ namespace litl::tests
         REQUIRE(fequals(r.z(), 3.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 setRow with vec3", "[mat3][accessors]")
+    LITL_TEST_CASE("mat3 setRow with vec3", "[mat3::accessors]")
     {
         mat3 m;
         m.setRow(2, vec3{ 11, 12, 13 });
@@ -407,7 +407,7 @@ namespace litl::tests
     // Basis extraction
     // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("mat3 right/up/forward on identity", "[mat3][basis]")
+    LITL_TEST_CASE("mat3 right/up/forward on identity", "[mat3::basis]")
     {
         auto m = mat3::identity();
 
@@ -416,7 +416,7 @@ namespace litl::tests
         REQUIRE(m.forward() == vec3{ 0, 0, 1 });
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 scale extraction", "[mat3][basis]")
+    LITL_TEST_CASE("mat3 scale extraction", "[mat3::basis]")
     {
         auto m = mat3::scaling(vec3{ 2, 3, 4 });
         auto s = m.scale();
@@ -429,21 +429,21 @@ namespace litl::tests
     // Utility
     // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("mat3 zero()", "[mat3][utility]")
+    LITL_TEST_CASE("mat3 zero()", "[mat3::utility]")
     {
         auto m = mat3::identity();
         m.zero();
         REQUIRE(m.isZeroed());
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 setIdentity()", "[mat3][utility]")
+    LITL_TEST_CASE("mat3 setIdentity()", "[mat3::utility]")
     {
         mat3 m;
         m.setIdentity();
         REQUIRE(m.isIdentity());
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 transpose", "[mat3][utility]")
+    LITL_TEST_CASE("mat3 transpose", "[mat3::utility]")
     {
         mat3 m;
         m.setCol(0, 1, 2, 3);
@@ -466,7 +466,7 @@ namespace litl::tests
         REQUIRE(m2 == t);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 transpose is self-inverse", "[mat3][utility]")
+    LITL_TEST_CASE("mat3 transpose is self-inverse", "[mat3::utility]")
     {
         mat3 m;
         m.setCol(0, 1, 2, 3);
@@ -476,18 +476,18 @@ namespace litl::tests
         REQUIRE(m.transposed().transposed() == m);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 determinant of identity is 1", "[mat3][utility]")
+    LITL_TEST_CASE("mat3 determinant of identity is 1", "[mat3::utility]")
     {
         REQUIRE(fequals(mat3::identity().determinant(), 1.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 determinant of scaled matrix", "[mat3][utility]")
+    LITL_TEST_CASE("mat3 determinant of scaled matrix", "[mat3::utility]")
     {
         auto m = mat3::scaling(vec3{ 2, 3, 4 });
         REQUIRE(fequals(m.determinant(), 24.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 inverse", "[mat3][utility]")
+    LITL_TEST_CASE("mat3 inverse", "[mat3::utility]")
     {
         auto m = mat3::scaling(vec3{ 2, 4, 8 });
         auto inv = m.inverted();
@@ -501,7 +501,7 @@ namespace litl::tests
         REQUIRE(product.isIdentity());
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 in-place inverse", "[mat3][utility]")
+    LITL_TEST_CASE("mat3 in-place inverse", "[mat3::utility]")
     {
         auto m = mat3::scaling(vec3{ 2, 4, 8 });
         auto expected = m.inverted();
@@ -509,7 +509,7 @@ namespace litl::tests
         REQUIRE(m == expected);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 inverseTranspose", "[mat3][utility]")
+    LITL_TEST_CASE("mat3 inverseTranspose", "[mat3::utility]")
     {
         auto m = mat3::scaling(vec3{ 2, 3, 4 });
         auto it = m.inverseTranspose();
@@ -520,7 +520,7 @@ namespace litl::tests
         REQUIRE(fequals(it.get(2, 2), 0.25f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 transform is equivalent to operator*", "[mat3][utility]")
+    LITL_TEST_CASE("mat3 transform is equivalent to operator*", "[mat3::utility]")
     {
         auto m = mat3::scaling(vec3{ 2, 3, 4 });
         vec3 v{ 1, 1, 1 };
@@ -528,7 +528,7 @@ namespace litl::tests
         REQUIRE(m.transform(v) == (m * v));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 rotate in-place", "[mat3][utility]")
+    LITL_TEST_CASE("mat3 rotate in-place", "[mat3::utility]")
     {
         auto m = mat3::identity();
         constexpr float angle = Traits<float>::pi_over_two;
@@ -539,7 +539,7 @@ namespace litl::tests
         REQUIRE(fequals(result.y(), 1.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 scale in-place", "[mat3][utility]")
+    LITL_TEST_CASE("mat3 scale in-place", "[mat3::utility]")
     {
         auto m = mat3::identity();
         m.scale(vec3{ 2, 3, 4 });
@@ -550,11 +550,38 @@ namespace litl::tests
         REQUIRE(fequals(s.z(), 4.0f));
     } LITL_END_TEST_CASE
 
+    LITL_TEST_CASE("mat3 absolute", "[mat3::utility]")
+    {
+        mat3 m{};
+
+        m[0][0] = -1.0f;
+        m[0][1] = 33.0f;
+        m[0][2] = 0.0f;
+        m[1][0] = 100.0f;
+        m[1][1] = 0.00001f;
+        m[1][2] = -0.00001f;
+        m[2][0] = 18.0234f;
+        m[2][1] = -6783.55f;
+        m[2][2] = 346536.32f;
+
+        mat3 am = m.absolute();
+
+        REQUIRE(am[0][0] == abs(m[0][0]));
+        REQUIRE(am[0][1] == abs(m[0][1]));
+        REQUIRE(am[0][2] == abs(m[0][2]));
+        REQUIRE(am[1][0] == abs(m[1][0]));
+        REQUIRE(am[1][1] == abs(m[1][1]));
+        REQUIRE(am[1][2] == abs(m[1][2]));
+        REQUIRE(am[2][0] == abs(m[2][0]));
+        REQUIRE(am[2][1] == abs(m[2][1]));
+        REQUIRE(am[2][2] == abs(m[2][2]));
+    } LITL_END_TEST_CASE
+
     // -------------------------------------------------------------------------------------
     // Data access
     // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("mat3 data() returns reference to glm::mat3", "[mat3][access]")
+    LITL_TEST_CASE("mat3 data() returns reference to glm::mat3", "[mat3::access]")
     {
         auto m = mat3::identity();
         glm::mat3& ref = m.data();
@@ -562,7 +589,7 @@ namespace litl::tests
         REQUIRE(m.isZeroed());
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("mat3 dataPtr() provides contiguous float access", "[mat3][access]")
+    LITL_TEST_CASE("mat3 dataPtr() provides contiguous float access", "[mat3::access]")
     {
         auto m = mat3::identity();
         float const* ptr = m.dataPtr();
@@ -578,7 +605,7 @@ namespace litl::tests
     // toString
     // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("mat3 toString produces expected format", "[mat3][string]")
+    LITL_TEST_CASE("mat3 toString produces expected format", "[mat3::string]")
     {
         auto m = mat3::identity();
         auto s = m.toString();

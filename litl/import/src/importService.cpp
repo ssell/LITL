@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "litl-core/directory.hpp"
 #include "litl-core/file.hpp"
 #include "litl-core/string.hpp"
 #include "litl-core/stringId.hpp"
@@ -144,16 +145,27 @@ namespace litl::import
         ImportedData importedData{};
         Result const importResult = import(sourcePath, importedData, false);
 
-        if (!importResult.success)
+        if (!importResult.success || importedData.items.empty())
         {
             return importResult;
         }
 
-        // Export to N external files
+
+        const std::string rootItemFolderPath =  toLowercase(destFolderPath);
+        const std::string childItemFolderPath = toLowercase(Directory::appendFolder(rootItemFolderPath, sourceFile.name()));
+
+        if (importedData.items.size() > 1)
+        {
+            if (!Directory::ensureExists(childItemFolderPath))
+            {
+                return Result::Error(ErrorType::FailedToCreateChildItemSubDirectory);
+            }
+        }
+
         for (uint32_t i = 0u; i < static_cast<uint32_t>(importedData.items.size()); ++i)
         {
-            auto& importDataItem = importedData.items[i];
-            auto exporter = m_exporterRegistry.create(importDataItem.getType());
+            auto& importedDataItem = importedData.items[i];
+            auto exporter = m_exporterRegistry.create(importedDataItem.getType());
 
             if (exporter == nullptr)
             {
@@ -171,7 +183,16 @@ namespace litl::import
                 return prepareResult;
             }
 
-            Result const exportResult = exporter->write(sourceFile, destFolderPath, importedData, i);
+            Result exportResult = Result::Success();
+
+            if (i == 0u)
+            {
+                exportResult = exporter->write(sourceFile, rootItemFolderPath, importedData, i, std::nullopt);
+            }
+            else
+            {
+                exportResult = exporter->write(sourceFile, childItemFolderPath, importedData, i, importedDataItem.getName());
+            }
 
             if (!exportResult.success)
             {

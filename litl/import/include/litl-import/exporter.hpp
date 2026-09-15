@@ -4,6 +4,7 @@
 #include <array>
 #include <concepts>
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <string_view>
 
@@ -29,7 +30,7 @@ namespace litl::import
         /// <summary>
         /// Step responsible for writing the data to disk.
         /// </summary>
-        virtual Result write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data, uint32_t dataIndex) noexcept = 0;
+        virtual Result write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data, uint32_t dataIndex, std::optional<std::string_view> nameOverride) noexcept = 0;
     };
 
     template <typename T>

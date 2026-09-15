@@ -22,7 +22,7 @@ namespace litl::import
         return Result::Success();
     }
 
-    Result ModelExporter::write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data, uint32_t dataIndex) noexcept
+    Result ModelExporter::write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data, uint32_t dataIndex, std::optional<std::string_view> nameOverride) noexcept
     {
         if (!Directory::ensureExists(destFolderPath))
         {

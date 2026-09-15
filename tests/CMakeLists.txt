@@ -73,7 +73,9 @@ add_executable(litl-tests
 	"src/litl-core/math/geomesh_tests.cpp" 
 	"src/litl-import/importLitlMat_tests.cpp" 
 	"src/litl-import/importSlang_tests.cpp" 
-	"src/litl-import/importFbx_tests.cpp" "src/litl-core/file_tests.cpp" "src/litl-import/importService_tests.cpp")
+	"src/litl-import/importFbx_tests.cpp" 
+	"src/litl-core/file_tests.cpp" 
+	"src/litl-import/importService_tests.cpp")
 
 target_link_libraries(litl-tests
 	PRIVATE
@@ -117,6 +119,8 @@ set (LITL_TESTS_ASSETS
 	"${LITL_TEST_ASSETS_DIR}/mesh/bunny.obj"
 	"${LITL_TEST_ASSETS_DIR}/mesh/cube.fbx"
 	"${LITL_TEST_ASSETS_DIR}/materials/test.litlmat"
+	"${LITL_TEST_ASSETS_DIR}/models/sponza.obj"
+	"${LITL_TEST_ASSETS_DIR}/models/sponza.mtl"
 	"${LITL_TEST_ASSETS_DIR}/shaders/test.slang"
 )
 

@@ -2,6 +2,7 @@
 
 #include "tests.hpp"
 #include "litl-import/importService.hpp"
+#include "litl-core/directory.hpp"
 #include "litl-core/formats/litlmesh.hpp"
 
 namespace litl::tests
@@ -39,9 +40,32 @@ namespace litl::tests
         REQUIRE(mesh->mesh->getVertices()[1].tangent.isIdentity() == true);       // (todo generate missing tangents)
     } LITL_END_TEST_CASE
 
+    LITL_TEST_CASE("Convert complex OBJ to litlmdl", "[import::obj]")
+    {
+        const File source("assets/models/sponza.obj");
+        File dest("assets/models/sponza.litlmdl");
+
+        REQUIRE(source.exists() == true);
+
+        if (dest.exists() == true)
+        {
+            dest.erase();
+            REQUIRE(dest.exists() == false);
+            Directory::deleteRecursive("assets/models/sponza");
+        }
+
+        // Test full conversion (obj -> ModelIntermediateData -> .litlmdl)
+        import::ImportService importer{};
+        import::Result result = importer.convert(source.absolutePath());
+
+        REQUIRE(result.success == true);
+        REQUIRE(result.error == import::ErrorType::None);
+    
+    } LITL_END_TEST_CASE
+
     LITL_TEST_CASE("Convert OBJ to litlmesh", "[import::obj]")
     {
-        File source("assets/mesh/bunny.obj");
+        const File source("assets/mesh/bunny.obj");
         File dest("assets/mesh/bunny.litlbmsh");
 
         REQUIRE(source.exists() == true);
@@ -62,7 +86,7 @@ namespace litl::tests
 
     LITL_TEST_CASE("OBJ -> GeoMesh -> LitlMesh -> GeoMesh", "[import::obj]")
     {
-        File source("assets/mesh/bunny.obj");
+        const File source("assets/mesh/bunny.obj");
         File dest("assets/mesh/bunny.litlbmsh");
 
         REQUIRE(source.exists() == true);

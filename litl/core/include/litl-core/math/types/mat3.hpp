@@ -447,6 +447,18 @@ namespace litl
             return glm::determinant(value);
         }
 
+        [[nodiscard]] constexpr mat3 absolute() const noexcept
+        {
+            mat3 m{ value };
+
+            for (auto i = 0; i < 3; ++i)
+            {
+                m.value[i] = glm::abs(m.value[i]);
+            }
+
+            return m;
+        }
+
         [[nodiscard]] constexpr vec3 transform(vec3 const& v) const noexcept
         {
             return (*this * v);
