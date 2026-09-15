@@ -10,9 +10,9 @@ namespace litl::samples
     /// </summary>
     struct FlockControls
     {
-        float separationRadius = 20.0f;
+        float separationRadius = 15.0f;
         float perceptionRadius = 25.0f;
-        float separationWeight = 3.0f;
+        float separationWeight = 5.0f;
         float alignmentWeight = 2.0f;
         float cohesionWeight = 1.0f;
         float targetWeight = 2.0f;

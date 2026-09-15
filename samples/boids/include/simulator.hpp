@@ -104,7 +104,7 @@ namespace litl::samples
         /// <summary>
         /// The mesh used by boids.
         /// </summary>
-        MeshHandle m_meshHandle{};
+        ModelAssetHandle m_modelAssetHandle{};
 
         /// <summary>
         /// The current number of boids in the simulation.

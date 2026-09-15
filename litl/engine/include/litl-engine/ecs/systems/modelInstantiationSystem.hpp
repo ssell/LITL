@@ -15,8 +15,6 @@ namespace litl
     /// a ModelInstance component and creates all requisite other child entities and components (ModelRef, MaterialRef, etc.).
     /// 
     /// The entity with the PendingModelInstance component becomes the root entity for the fully loaded model.
-    /// If the entity does not already have a transform, an identity transform will be added to it upon successful model load.
-    /// 
     /// If the asset failed to load then the PendingModelInstance is replaced with a FailedModelInstance component.
     /// </summary>
     class ModelInstantiationSystem
@@ -25,7 +23,7 @@ namespace litl
 
         void setup(ServiceProvider& services);
         void prepare();
-        void update(SystemData const& data, Entity entity, Transform const* transform, PendingModelInstance const& pendingModel, LocalBounds* localBounds);
+        void update(SystemData const& data, Entity entity, PendingModelInstance const& pendingModel, Transform const& transform, LocalBounds& localBounds);
 
     private:
 

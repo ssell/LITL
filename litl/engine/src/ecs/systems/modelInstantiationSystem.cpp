@@ -22,7 +22,7 @@ namespace litl
             commands.addComponent<FailedModelInstance>(entity, FailedModelInstance{ .modelHandle = modelHandle });
         }
 
-        void processModelInstantiation(EntityCommands& commands, AssetManager& assetManager, Entity entity, Transform const* rootTransform, PendingModelInstance const& pendingModel, LocalBounds* localBounds) noexcept
+        void processModelInstantiation(EntityCommands& commands, AssetManager& assetManager, Entity entity, PendingModelInstance const& pendingModel, Transform const& transform, LocalBounds& localBounds) noexcept
         {
             // -----------------------------------------------------------------------------
             // Swap out PendingModelInstance for either ModelInstance or FailedModelInstance
@@ -38,16 +38,7 @@ namespace litl
                 return;
             }
 
-            // -----------------------------------------------------------------------------
-            // Add a Transform if one is not present
-            // -----------------------------------------------------------------------------
-
             commands.addComponent<ModelInstance>(entity, ModelInstance{ .modelHandle = pendingModel.modelHandle });
-
-            if (rootTransform == nullptr)
-            {
-                commands.addComponent<Transform>(entity, Transform{});
-            }
 
             // -----------------------------------------------------------------------------
             // Create the fallback MaterialRef
@@ -76,14 +67,14 @@ namespace litl
             const auto meshNames = modelAsset->modelIntermediateData->getMeshNames();
             const auto nodes = modelAsset->modelIntermediateData->getNodes();
             const auto rootNodeIndices = modelAsset->modelIntermediateData->getRootNodes();
-            
+
             std::deque<PendingModelNode> frontierNodes;
 
             for (auto rootNodeIndex : rootNodeIndices)
             {
                 if (rootNodeIndex < nodes.size())
                 {
-                    frontierNodes.push_back(PendingModelNode {
+                    frontierNodes.push_back(PendingModelNode{
                         .index = rootNodeIndex
                     });
                 }
@@ -119,15 +110,7 @@ namespace litl
                     if ((meshAsset != nullptr) && meshAsset->handle.isValid())
                     {
                         commands.addComponent<MeshRef>(nodeEntity, MeshRef{ .handle = meshAsset->handle });
-
-                        if (localBounds != nullptr)
-                        {
-                            localBounds->bounds = meshAsset->bounds;
-                        }
-                        else
-                        {
-                            commands.addComponent<LocalBounds>(nodeEntity, LocalBounds{ .bounds = meshAsset->bounds });
-                        }
+                        commands.addComponent<LocalBounds>(nodeEntity, LocalBounds{ .bounds = meshAsset->bounds });
 
                         if (false /* todo materials from the model */)
                         {
@@ -138,11 +121,6 @@ namespace litl
                             commands.addComponent<MaterialRef>(nodeEntity, fallbackMaterialRef);
                         }
                     }
-                }
-
-                if (cycles > nodes.size())
-                {
-                    logWarning("ModelInstantiationSystem encountered model node cycle for model asset '", modelAsset->key, "'");
                 }
 
                 // -------------------------------------------------------------------------
@@ -161,9 +139,14 @@ namespace litl
                         frontierNodes.push_back(PendingModelNode{
                             .parent = nodeEntity,
                             .index = childNodeIndex
-                        });
+                            });
                     }
                 }
+            }
+
+            if (cycles > nodes.size())
+            {
+                logWarning("ModelInstantiationSystem encountered model node cycle for model asset '", modelAsset->key, "'");
             }
         }
     }
@@ -178,7 +161,7 @@ namespace litl
 
     }
 
-    void ModelInstantiationSystem::update(SystemData const& data, Entity entity, Transform const* transform, PendingModelInstance const& pendingModel, LocalBounds* localBounds)
+    void ModelInstantiationSystem::update(SystemData const& data, Entity entity, PendingModelInstance const& pendingModel, Transform const& transform, LocalBounds& localBounds)
     {
         if (!pendingModel.modelHandle.isValid())
         {
@@ -200,7 +183,7 @@ namespace litl
             break;
 
         case AssetStatus::InMemory:
-            processModelInstantiation(data.commands, *m_pAssetManager.get(), entity, transform, pendingModel, localBounds);
+            processModelInstantiation(data.commands, *m_pAssetManager.get(), entity, pendingModel, transform, localBounds);
             break;
 
         case AssetStatus::Error:

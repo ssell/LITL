@@ -130,6 +130,15 @@ namespace litl::bounds
         }
 
         /// <summary>
+        /// Grows the AABB such that it encloses the other AABB.
+        /// </summary>
+        void grow(AABB const& other) noexcept
+        {
+            min = litl::min(min, other.min);
+            max = litl::max(max, other.max);
+        }
+
+        /// <summary>
         /// Returns a new AABB which wraps this AABB transformed by the provided world matrix.
         /// </summary>
         [[nodiscard]] AABB transformed(mat4 worldMatrix) const noexcept
