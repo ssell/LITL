@@ -78,7 +78,12 @@ namespace litl::import
         return m_model.rootNodes;
     }
 
-    Model& ModelIntermediateData::getModel() noexcept
+    Model const& ModelIntermediateData::getModel() const noexcept
+    {
+        return m_model;
+    }
+
+    Model& ModelIntermediateData::getModelWriteRef() noexcept
     {
         return m_model;
     }

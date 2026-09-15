@@ -4,7 +4,6 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
-#include <variant>
 
 #include "litl-core/string.hpp"
 #include "litl-core/logging/logging.hpp"
@@ -250,11 +249,11 @@ namespace litl::import
         const auto sourceBytesString = std::string_view{ reinterpret_cast<char const*>(sourceBytes.data()), sourceBytes.size() };
 
         ExpectedMaterialStructure inputMaterial{};
-        const auto readTomlResult = glz::read_toml(inputMaterial, sourceBytesString);
+        const auto glzError = glz::read_toml(inputMaterial, sourceBytesString);
 
-        if (readTomlResult != glz::error_code::none)
+        if (glzError != glz::error_code::none)
         {
-            return Result::Error(ErrorType::ImporterFailed, readTomlResult.custom_error_message);
+            return Result::Error(ErrorType::ImporterFailed, glzError.custom_error_message);
         }
 
         importedData.items.push_back({});

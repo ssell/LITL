@@ -12,9 +12,9 @@ namespace litl::import
     struct Node
     {
         std::string name;
-        mat4 localTransform{ mat4::identity() };
+        std::array<float, 16> localTransform{ mat4::identity().toArray() };     // Use array instead of mat4 directly for (de)serialization
         uint32_t meshIndex{ Constants::uint32_null_index };
-        uint32_t materialIndex{ Constants::uint32_null_index };     // ... todo this needs to be a vector as you can have many materials associated with a single mesh on a node ...
+        uint32_t materialIndex{ Constants::uint32_null_index };                 // ... todo this needs to be a vector as you can have many materials associated with a single mesh on a node ...
         std::vector<uint32_t> children;
     };
 

@@ -36,6 +36,7 @@ namespace litl
         constexpr explicit mat3(glm::mat3 const& other) noexcept : value(other) {}
         explicit mat3(mat4 const& other) noexcept;
         explicit mat3(quat const& quaternion) noexcept;
+        explicit mat3(std::array<float, 9> array) noexcept : value(glm::make_mat3(array.data())) {}
 
         constexpr explicit mat3(std::span<float const> values)
         {
@@ -384,6 +385,13 @@ namespace litl
                 glm::length(value[1]),
                 glm::length(value[2])
             };
+        }
+
+        [[nodiscard]] std::array<float, 9> toArray() const noexcept
+        {
+            std::array<float, 9> arr;
+            std::memcpy(arr.data(), &value, sizeof(float) * 9);
+            return arr;
         }
 
         // ---------------------------------------------------------------------------------

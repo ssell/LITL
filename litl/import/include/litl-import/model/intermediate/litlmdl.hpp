@@ -21,7 +21,8 @@ namespace litl::import
     {
         enum class ErrorCode : uint32_t
         {
-            None = 0u
+            None = 0u,
+            JsonConversionFailed = 1u
         };
 
         [[nodiscard]] static bool parse(std::span<std::byte const> data, LitlModel& file, ErrorCode& error) noexcept;

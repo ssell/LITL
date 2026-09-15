@@ -101,7 +101,7 @@ namespace litl
                     commands.setParent(nodeEntity, entity);
                 }
 
-                commands.addComponent<Transform>(nodeEntity, Transform::create(node.localTransform));
+                commands.addComponent<Transform>(nodeEntity, Transform::create(mat4(node.localTransform)));
 
                 if (node.meshIndex < modelAsset->meshAssetHandles.size())
                 {

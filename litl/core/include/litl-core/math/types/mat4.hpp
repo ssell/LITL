@@ -1,6 +1,7 @@
 #ifndef LITL_MATH_MAT4_H__
 #define LITL_MATH_MAT4_H__
 
+#include <array>
 #include <cassert>
 #include <format>
 #include <span>
@@ -42,6 +43,7 @@ namespace litl
         constexpr explicit mat4(glm::mat4 const& other) noexcept : value(other) {}
         explicit mat4(mat3 const& other) noexcept;
         explicit mat4(quat const& quaternion) noexcept;
+        explicit mat4(std::array<float, 16> array) noexcept : value(glm::make_mat4(array.data())) {}
 
         constexpr explicit mat4(std::span<float const> values)
         {
@@ -476,6 +478,13 @@ namespace litl
         [[nodiscard]] constexpr vec3 position() const noexcept
         {
             return vec3{ value[3][0], value[3][1], value[3][2] };
+        }
+
+        [[nodiscard]] std::array<float, 16> toArray() const noexcept
+        {
+            std::array<float, 16> arr;
+            std::memcpy(arr.data(), &value, sizeof(float) * 16);
+            return arr;
         }
 
         // ---------------------------------------------------------------------------------
