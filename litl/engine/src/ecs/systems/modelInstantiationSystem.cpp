@@ -22,7 +22,7 @@ namespace litl
             commands.addComponent<FailedModelInstance>(entity, FailedModelInstance{ .modelHandle = modelHandle });
         }
 
-        void processModelInstantiation(EntityCommands& commands, AssetManager& assetManager, Entity entity, Transform const* rootTransform, PendingModelInstance const& pendingModel) noexcept
+        void processModelInstantiation(EntityCommands& commands, AssetManager& assetManager, Entity entity, Transform const* rootTransform, PendingModelInstance const& pendingModel, LocalBounds* localBounds) noexcept
         {
             // -----------------------------------------------------------------------------
             // Swap out PendingModelInstance for either ModelInstance or FailedModelInstance
@@ -30,9 +30,9 @@ namespace litl
 
             commands.removeComponent<PendingModelInstance>(entity);
 
-            const ModelAsset* model = assetManager.getModel(pendingModel.modelHandle);
+            const ModelAsset* modelAsset = assetManager.getModel(pendingModel.modelHandle);
 
-            if ((model == nullptr) || (model->modelIntermediateData == nullptr))
+            if ((modelAsset == nullptr) || (modelAsset->modelIntermediateData == nullptr))
             {
                 commands.addComponent<FailedModelInstance>(entity, FailedModelInstance{ .modelHandle = pendingModel.modelHandle });
                 return;
@@ -73,9 +73,9 @@ namespace litl
             // Loop over the Model node hierarchy
             // -----------------------------------------------------------------------------
 
-            const auto meshNames = model->modelIntermediateData->getMeshNames();
-            const auto nodes = model->modelIntermediateData->getNodes();
-            const auto rootNodeIndices = model->modelIntermediateData->getRootNodes();
+            const auto meshNames = modelAsset->modelIntermediateData->getMeshNames();
+            const auto nodes = modelAsset->modelIntermediateData->getNodes();
+            const auto rootNodeIndices = modelAsset->modelIntermediateData->getRootNodes();
             
             std::deque<PendingModelNode> frontierNodes;
 
@@ -112,14 +112,22 @@ namespace litl
 
                 commands.addComponent<Transform>(nodeEntity, Transform::create(node.localTransform));
 
-                if (node.meshIndex.has_value() && (node.meshIndex.value() < model->meshAssetHandles.size()))
+                if (node.meshIndex.has_value() && (node.meshIndex.value() < modelAsset->meshAssetHandles.size()))
                 {
-                    const auto* mesh = assetManager.getMesh(model->meshAssetHandles[*node.meshIndex]);
+                    const auto* meshAsset = assetManager.getMesh(modelAsset->meshAssetHandles[*node.meshIndex]);
 
-                    if ((mesh != nullptr) && mesh->handle.isValid())
+                    if ((meshAsset != nullptr) && meshAsset->handle.isValid())
                     {
-                        commands.addComponent<MeshRef>(nodeEntity, MeshRef{ .handle = mesh->handle });
-                        commands.addComponent<LocalBounds>(nodeEntity, LocalBounds{ .bounds = mesh->bounds });
+                        commands.addComponent<MeshRef>(nodeEntity, MeshRef{ .handle = meshAsset->handle });
+
+                        if (localBounds != nullptr)
+                        {
+                            localBounds->bounds = meshAsset->bounds;
+                        }
+                        else
+                        {
+                            commands.addComponent<LocalBounds>(nodeEntity, LocalBounds{ .bounds = meshAsset->bounds });
+                        }
 
                         if (false /* todo materials from the model */)
                         {
@@ -134,7 +142,7 @@ namespace litl
 
                 if (cycles > nodes.size())
                 {
-                    logWarning("ModelInstantiationSystem encountered model node cycle for model asset '", model->key, "'");
+                    logWarning("ModelInstantiationSystem encountered model node cycle for model asset '", modelAsset->key, "'");
                 }
 
                 // -------------------------------------------------------------------------
@@ -170,7 +178,7 @@ namespace litl
 
     }
 
-    void ModelInstantiationSystem::update(SystemData const& data, Entity entity, Transform const* transform, PendingModelInstance const& pendingModel)
+    void ModelInstantiationSystem::update(SystemData const& data, Entity entity, Transform const* transform, PendingModelInstance const& pendingModel, LocalBounds* localBounds)
     {
         if (!pendingModel.modelHandle.isValid())
         {
@@ -192,7 +200,7 @@ namespace litl
             break;
 
         case AssetStatus::InMemory:
-            processModelInstantiation(data.commands, *m_pAssetManager.get(), entity, transform, pendingModel);
+            processModelInstantiation(data.commands, *m_pAssetManager.get(), entity, transform, pendingModel, localBounds);
             break;
 
         case AssetStatus::Error:

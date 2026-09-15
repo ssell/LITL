@@ -13,6 +13,7 @@
 #include "litl-engine/ecs/components/meshRef.hpp"
 #include "litl-engine/ecs/components/scale.hpp"
 #include "litl-engine/ecs/components/transform.hpp"
+#include "litl-engine/ecs/components/meshInstance.hpp"
 #include "litl-engine/ecs/components/modelInstance.hpp"
 
 /*

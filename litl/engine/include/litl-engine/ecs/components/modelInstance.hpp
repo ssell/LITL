@@ -19,7 +19,7 @@ namespace litl
         /// The handle to the Model asset that this component is waiting to load.
         /// Once this model is in memory, then all of its meshes will be added as individual children to the entity.
         /// </summary>
-        ModelAssetHandle modelHandle;
+        ModelAssetHandle modelHandle{};
 
         /// <summary>
         /// In the event a mesh does not have a material assigned to it, or if its material failed to load, then

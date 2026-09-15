@@ -40,13 +40,9 @@ namespace litl
     DeferredEntity createRenderable(vec3 position, std::string_view mesh, std::string_view material, EntityCommands& commands, AssetManager& assets) noexcept
     {
         const DeferredEntity entity = commands.createEntity();
-        auto* meshAsset = assets.getMesh(mesh);
 
-        if ((meshAsset != nullptr) && (meshAsset->mesh != nullptr))
-        {
-            commands.addComponent<MeshRef>(entity, MeshRef{ .handle = meshAsset->handle });
-            commands.addComponent<LocalBounds>(entity, LocalBounds{ .bounds = meshAsset->mesh->getBounds() });
-        }
+        commands.addComponent<PendingMeshInstance>(entity, PendingMeshInstance{ .meshHandle = assets.getMeshHandle(mesh) });
+        commands.addComponent<LocalBounds>(entity, LocalBounds{});      // This will be set when the mesh is instantiated
 
         auto* materialAsset = assets.getMaterial(material);
 
@@ -55,7 +51,7 @@ namespace litl
             commands.addComponent<MaterialRef>(entity, MaterialRef{
                 .handle = materialAsset->materialHandle,
                 .slot = materialAsset->material->allocateSlot()
-                });
+            });
         }
 
         commands.addComponent<Transform>(entity, Transform::create(position));
