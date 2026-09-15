@@ -1,6 +1,7 @@
 #ifndef LITL_IMPORT_MODEL_LITLMDL_H__
 #define LITL_IMPORT_MODEL_LITLMDL_H__
 
+#include <cstdint>
 #include <span>
 #include <vector>
 
@@ -22,12 +23,13 @@ namespace litl::import
         enum class ErrorCode : uint32_t
         {
             None = 0u,
-            JsonConversionFailed = 1u
+            ModelToJsonConversionFailed = 1u,
+            JsonToModelConversionFailed = 2u,
+            EmptyDeserializationData = 3u
         };
 
-        [[nodiscard]] static bool parse(std::span<std::byte const> data, LitlModel& file, ErrorCode& error) noexcept;
         [[nodiscard]] static bool serialize(ModelIntermediateData const& model, std::vector<std::byte>& data, ErrorCode& error) noexcept;
-        [[nodiscard]] bool deserialize(ModelIntermediateData& model, ErrorCode& error) const noexcept;
+        [[nodiscard]] static bool deserialize(ModelIntermediateData& model, std::span<std::byte const> data, ErrorCode& error) noexcept;
     };
 }
 

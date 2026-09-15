@@ -8,11 +8,6 @@ namespace litl::import
 
     }
 
-    bool LitlModel::parse(std::span<std::byte const> data, LitlModel& file, ErrorCode& error) noexcept
-    {
-        return false;
-    }
-
     bool LitlModel::serialize(ModelIntermediateData const& model, std::vector<std::byte>& data, ErrorCode& error) noexcept
     {
         std::string jsonBuffer{};
@@ -20,7 +15,7 @@ namespace litl::import
 
         if (glzError != glz::error_code::none)
         {
-            error = ErrorCode::JsonConversionFailed;
+            error = ErrorCode::ModelToJsonConversionFailed;
             return false;
         }
 
@@ -30,8 +25,28 @@ namespace litl::import
         return true;
     }
 
-    bool LitlModel::deserialize(ModelIntermediateData& model, ErrorCode& error) const noexcept
+    bool LitlModel::deserialize(ModelIntermediateData& model, std::span<std::byte const> data, ErrorCode& error) noexcept
     {
-        return false;
+        model.clear();
+
+        if (data.empty())
+        {
+            error = ErrorCode::EmptyDeserializationData;
+            return false;
+        }
+
+        std::string jsonBuffer{};
+        jsonBuffer.resize(data.size(), static_cast<char>(0));
+        std::memcpy(jsonBuffer.data(), reinterpret_cast<const char*>(data.data()), data.size_bytes());
+
+        const auto glzError = glz::read_json(model.getModelWriteRef(), jsonBuffer);
+
+        if (glzError != glz::error_code::none)
+        {
+            error = ErrorCode::JsonToModelConversionFailed;
+            return false;
+        }
+
+        return true;
     }
 }

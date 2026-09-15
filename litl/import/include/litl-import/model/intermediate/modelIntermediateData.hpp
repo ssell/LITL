@@ -16,6 +16,7 @@ namespace litl::import
     {
     public:
 
+        void clear() noexcept;
         void setName(std::string_view name) noexcept;
         uint32_t addMesh(std::string_view meshName) noexcept;
         uint32_t addMaterial(std::string_view materialName) noexcept;

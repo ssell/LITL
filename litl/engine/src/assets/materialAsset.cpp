@@ -17,6 +17,7 @@ namespace litl
 
     bool decodeLitlMaterialBinaryBytes(MaterialAsset* materialAsset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
     {
+        import::MaterialIntermediateData intermediateData{};
         import::LitlMatBinary litlbmat;
         BinaryBlockFile::ErrorCode litlbmatError = BinaryBlockFile::ErrorCode::None;
 
@@ -27,14 +28,15 @@ namespace litl
             return false;
         }
 
-        materialAsset->materialIntermediateData = std::make_shared<import::MaterialIntermediateData>();
-
-        if (!litlbmat.deserialize(*materialAsset->materialIntermediateData, litlbmatError))
+        if (!litlbmat.deserialize(intermediateData, litlbmatError))
         {
             logError("Failed to decode material asset with error code ", static_cast<uint32_t>(litlbmatError));
             error = AssetErrorCode::DeserializationFailed;
             return false;
         }
+
+        // Move only after all success
+        materialAsset->materialIntermediateData = std::make_shared<import::MaterialIntermediateData>(std::move(intermediateData));
 
         return true;
     }

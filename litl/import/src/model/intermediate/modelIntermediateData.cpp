@@ -2,6 +2,11 @@
 
 namespace litl::import
 {
+    void ModelIntermediateData::clear() noexcept
+    {
+        m_model = {};
+    }
+
     void ModelIntermediateData::setName(std::string_view name) noexcept
     {
         m_model.name = name;

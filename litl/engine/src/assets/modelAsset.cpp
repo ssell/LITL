@@ -10,24 +10,18 @@ namespace litl
 {
     bool ModelAsset::decodeLitlModelBytes(ModelAsset* modelAsset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
     {
-        import::LitlModel litlmdl;
+        import::ModelIntermediateData intermediateData{};
         import::LitlModel::ErrorCode litlmdlError = import::LitlModel::ErrorCode::None;
 
-        if (!import::LitlModel::parse(bytes, litlmdl, litlmdlError))
-        {
-            logError("Failed to parse model asset with error code ", static_cast<uint32_t>(litlmdlError));
-            error = AssetErrorCode::ParseFailed;
-            return false;
-        }
-
-        modelAsset->modelIntermediateData = std::make_shared<import::ModelIntermediateData>();
-
-        if (!litlmdl.deserialize(*modelAsset->modelIntermediateData, litlmdlError))
+        if (!import::LitlModel::deserialize(intermediateData, bytes, litlmdlError))
         {
             logError("Failed to decode model asset with error code ", static_cast<uint32_t>(litlmdlError));
             error = AssetErrorCode::DeserializationFailed;
             return false;
         }
+
+        // Move only after all success
+        modelAsset->modelIntermediateData = std::make_shared<import::ModelIntermediateData>(std::move(intermediateData));
 
         return true;
     }
