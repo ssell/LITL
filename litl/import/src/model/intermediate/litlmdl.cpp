@@ -2,6 +2,11 @@
 
 namespace litl::import
 {
+    namespace
+    {
+
+    }
+
     bool LitlModel::parse(std::span<std::byte const> data, LitlModel& file, ErrorCode& error) noexcept
     {
         return false;

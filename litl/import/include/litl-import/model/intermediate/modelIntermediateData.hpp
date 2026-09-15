@@ -7,7 +7,8 @@
 #include <string_view>
 #include <vector>
 
-#include "litl-import/model/intermediate/node.hpp"
+#include "litl-import/model/intermediate/model.hpp"
+
 
 namespace litl::import
 {
@@ -28,14 +29,11 @@ namespace litl::import
         [[nodiscard]] std::span<std::string const> getMaterialNames() const noexcept;
         [[nodiscard]] std::span<Node const> getNodes() const noexcept;
         [[nodiscard]] std::span<uint32_t const> getRootNodes() const noexcept;
+        [[nodiscard]] Model& getModel() noexcept;
 
     private:
 
-        std::string m_name;
-        std::vector<std::string> m_meshNames;
-        std::vector<std::string> m_materialNames;
-        std::vector<Node> m_nodes;
-        std::vector<uint32_t> m_rootNodes;
+        Model m_model{};
     };
 }
 
