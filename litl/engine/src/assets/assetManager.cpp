@@ -1,3 +1,4 @@
+#include <memory>
 #include <mutex>
 #include <ranges>
 #include <unordered_map>
@@ -31,10 +32,10 @@ namespace litl
 
         std::shared_ptr<ObjectPool> objectPool;
         std::shared_ptr<TaskManager> taskManager;
-        StringIdMap<AssetRegistration> assetMap;
-        std::vector<AssetSource> assetSources;
+        StringIdMap<AssetRegistration> assetRegistrations;
+        std::vector<std::unique_ptr<AssetSource>> assetSources;
 
-        std::mutex assetMapMutex{};
+        std::mutex assetRegistrationsMutex{};
         std::mutex assetLoadMutex{};
         std::mutex pendingDependencyMutex{};
 
@@ -62,7 +63,7 @@ namespace litl
         {
             if (registration.locator.sourceIndex < assetSources.size())
             {
-                return assetSources[registration.locator.sourceIndex].describe(registration.locator);
+                return assetSources[registration.locator.sourceIndex]->describe(registration.locator);
             }
             else
             {
@@ -74,7 +75,7 @@ namespace litl
         {
             if (locator.sourceIndex < assetSources.size())
             {
-                return &assetSources[locator.sourceIndex];
+                return assetSources[locator.sourceIndex].get();
             }
             else
             {
@@ -91,7 +92,7 @@ namespace litl
             std::vector<AssetRegistration> allRegistrations; allRegistrations.reserve(512u);
 
             assetSources.reserve(1);    // update as list grows
-            assetSources.push_back(FileAssetSource(g_assetsPath));
+            assetSources.push_back(std::make_unique<FileAssetSource>(g_assetsPath));
             // ... assetSources.push_back(FileAssetSource(projectAssetsPath));
             // ... assetSources.push_back(BundleAssetSource(...));
             // ... etc.
@@ -100,7 +101,7 @@ namespace litl
             for (uint32_t assetSourceIndex = 0u; assetSourceIndex < static_cast<uint32_t>(assetSources.size()); ++assetSourceIndex)
             {
                 const uint32_t startingIndex = static_cast<uint32_t>(allRegistrations.size());
-                assetSources[assetSourceIndex].enumerate(allRegistrations);
+                assetSources[assetSourceIndex]->enumerate(allRegistrations);
 
                 for (uint32_t i = startingIndex; startingIndex < static_cast<uint32_t>(allRegistrations.size()); ++i)
                 {
@@ -108,23 +109,23 @@ namespace litl
                     // ... todo adjust priority based on asset source type ...
                 }
             }
-            
+
             // Keep only the highest priority asset for each key
             for (uint32_t assetIndex = 0u; assetIndex < static_cast<uint32_t>(allRegistrations.size()); ++assetIndex)
             {
                 const auto& assetRegistration = allRegistrations[assetIndex];
-                const auto find = assetMap.find(assetRegistration.hashedKey);
+                const auto find = assetRegistrations.find(assetRegistration.hashedKey);
 
-                if (find == assetMap.end())
+                if (find == assetRegistrations.end())
                 {
-                    assetMap[assetRegistration.hashedKey] = std::move(allRegistrations[assetIndex]);
+                    assetRegistrations[assetRegistration.hashedKey] = std::move(allRegistrations[assetIndex]);
                 }
                 else
                 {
                     if (allRegistrations[assetIndex].priority > find->second.priority)
                     {
                         logWarning("Conflicting asset key for '", assetRegistration.key, "' with location '", describe(assetRegistration), "' has higher priority than preexisting mapped asset and is replacing it.");
-                        assetMap[assetRegistration.hashedKey] = std::move(allRegistrations[assetIndex]);
+                        assetRegistrations[assetRegistration.hashedKey] = std::move(allRegistrations[assetIndex]);
                     }
                     else
                     {
@@ -134,9 +135,9 @@ namespace litl
             }
 
             // Create placeholder base assets for each asset.
-            for (auto& assetRegistration : assetMap)
+            for (auto& assetRegistration : assetRegistrations)
             {
-                switch (assetRegistration.second.type)
+                switch (assetRegistration.second.assetType)
                 {
                 case AssetType::Material:
                     createBaseMaterialAsset(assetRegistration.second, AssetStatus::Unloaded);
@@ -175,14 +176,14 @@ namespace litl
         // ---------------------------------------------------------------------------------
 
         template<typename T> requires std::is_base_of_v<Asset, T>
-        T createBaseAsset(AssetType type, AssetRegistration& assetRegistration, AssetStatus initialStatus) noexcept
+        T createBaseAsset(AssetType type, AssetRegistration const& assetRegistration, AssetStatus initialStatus) noexcept
         {
             T asset{};
 
             asset.locator = assetRegistration.locator;
             asset.key = assetRegistration.key;
             asset.hashedKey = assetRegistration.hashedKey;
-            asset.type = assetRegistration.type;
+            asset.type = assetRegistration.assetType;
             asset.status.store(initialStatus, std::memory_order::relaxed);
 
             return asset;
@@ -228,6 +229,32 @@ namespace litl
 
             return materialAssetHandle;
         }
+        
+        void initiateAssetLoadFromDisk(Asset* asset, AssetManager& assetManager) noexcept
+        {
+            auto findAssetRegistration = assetRegistrations.find(asset->hashedKey);
+
+            if (findAssetRegistration == assetRegistrations.end())
+            {
+                logError("Failed to fetch asset registration for Material Asset '", asset->key, "'");
+                return;
+            }
+
+            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager, findAssetRegistration->second, getAssetSource(asset->locator)), true);
+        }
+
+        void initiateAssetLoadFromMemory(Asset* asset, AssetManager& assetManager) noexcept
+        {
+            auto findAssetRegistration = assetRegistrations.find(asset->hashedKey);
+
+            if (findAssetRegistration == assetRegistrations.end())
+            {
+                logError("Failed to fetch asset registration for Material Asset '", asset->key, "'");
+                return;
+            }
+
+            taskManager->schedule(AssetLoadTask::loadFromMemoryAsync({}, asset, * taskManager->getThreadPool(), * objectPool, assetManager, findAssetRegistration->second), true);
+        }
 
         /// <summary>
         /// Invoked at runtime when the material is first requested (or requested after it has been unloaded).
@@ -261,7 +288,7 @@ namespace litl
                 }
             }
 
-            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager, getAssetSource(asset->locator)), true);
+            initiateAssetLoadFromDisk(asset, assetManager);
         }
 
         /// <summary>
@@ -289,7 +316,7 @@ namespace litl
                 return;
             }
 
-            taskManager->schedule(AssetLoadTask::loadFromMemoryAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
+            initiateAssetLoadFromMemory(asset, assetManager);
         }
 
         // ---------------------------------------------------------------------------------
@@ -339,14 +366,14 @@ namespace litl
             {
                 // Ensure there is a valid handle to return to the caller, even if the mesh itself is not yet ready
                 asset->handle = objectPool->reserveMesh({}, ObjectDescriptor{ .name = asset->key, .lifetime = ObjectLifetime::Application });
-                
+
                 if (!fetchAssetObject(asset))
                 {
                     logError("Failed to fetch Mesh Asset underlying object for '", asset->key, "'");
                 }
             }
 
-            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager, getAssetSource(asset->locator)), true);
+            initiateAssetLoadFromDisk(asset, assetManager);
         }
 
         /// <summary>
@@ -374,7 +401,7 @@ namespace litl
                 return;
             }
 
-            taskManager->schedule(AssetLoadTask::loadFromMemoryAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
+            initiateAssetLoadFromMemory(asset, assetManager);
         }
 
         // ---------------------------------------------------------------------------------
@@ -409,8 +436,7 @@ namespace litl
                 return;
             }
 
-            asset->status.store(AssetStatus::Loading, std::memory_order::relaxed);
-            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager, getAssetSource(asset->locator)), true);
+            initiateAssetLoadFromDisk(asset, assetManager);
         }
 
         // ---------------------------------------------------------------------------------
@@ -467,7 +493,7 @@ namespace litl
                 }
             }
 
-            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager, getAssetSource(asset->locator)), true);
+            initiateAssetLoadFromDisk(asset, assetManager);
         }
 
         // ---------------------------------------------------------------------------------
@@ -524,7 +550,7 @@ namespace litl
                 }
             }
 
-            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager, getAssetSource(asset->locator)), true);
+            initiateAssetLoadFromDisk(asset, assetManager);
         }
 
         // ---------------------------------------------------------------------------------
@@ -581,7 +607,7 @@ namespace litl
                 }
             }
 
-            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager, getAssetSource(asset->locator)), true);
+            initiateAssetLoadFromDisk(asset, assetManager);
         }
     };
 
@@ -641,10 +667,10 @@ namespace litl
         for (auto& pending : m_impl->pendingAtFrameStart)
         {
             const bool donePending = std::ranges::all_of(pending.dependencies, [](Asset const* dependency) noexcept -> bool
-            {
-                const auto status = dependency->status.load(std::memory_order::relaxed);
-                return (status == AssetStatus::InMemory) || (status == AssetStatus::Error);
-            });
+                {
+                    const auto status = dependency->status.load(std::memory_order::relaxed);
+                    return (status == AssetStatus::InMemory) || (status == AssetStatus::Error);
+                });
 
             if (donePending)
             {
@@ -676,11 +702,11 @@ namespace litl
         const auto key = m_impl->createHashedAssetKey(resource);
 
         {
-            std::scoped_lock lock{ m_impl->assetMapMutex };
+            std::scoped_lock lock{ m_impl->assetRegistrationsMutex };
 
-            auto find = m_impl->assetMap.find(key);
+            auto find = m_impl->assetRegistrations.find(key);
 
-            if (find != m_impl->assetMap.end())
+            if (find != m_impl->assetRegistrations.end())
             {
                 return find->second.handle;
             }
@@ -740,7 +766,7 @@ namespace litl
         return material;
     }
 
-    MaterialAssetHandle AssetManager::createMaterialAssetFromMemory(Authority<ModelAsset> auth, std::string_view key, import::MaterialIntermediateData intermediateData, File const& sourceFile) noexcept
+    MaterialAssetHandle AssetManager::createMaterialAssetFromMemory(Authority<ModelAsset> auth, std::string_view key, import::MaterialIntermediateData intermediateData) noexcept
     {
         // ... todo ...
         logWarning("Invoking unimplemented AssetManager::createMaterialAssetFromMemory");
@@ -810,7 +836,7 @@ namespace litl
         return MeshRef{ .handle = meshAsset->handle };
     }
 
-    MeshAssetHandle AssetManager::createMeshAssetFromMemory(Authority<ModelAsset> auth, std::string_view key, GeoMesh geoMesh, File const& sourceFile) noexcept
+    MeshAssetHandle AssetManager::createMeshAssetFromMemory(Authority<ModelAsset> auth, std::string_view key, GeoMesh geoMesh) noexcept
     {
         const std::string assetKey = m_impl->createAssetKey(key);
         const StringId hashedAssetKey = StringId(assetKey);
@@ -819,12 +845,12 @@ namespace litl
 
         {
             // When creating from memory, we may be racing against a reader as this is not done in a preprocess step like with disk-based assets.
-            std::scoped_lock lock{ m_impl->assetMapMutex };
+            std::scoped_lock lock{ m_impl->assetRegistrationsMutex };
 
-            auto find = m_impl->assetMap.find(hashedAssetKey);
+            auto find = m_impl->assetRegistrations.find(hashedAssetKey);
 
             // Does the key already exist? If so, return the handle if it is also a MeshHandle.
-            if (find != m_impl->assetMap.end())
+            if (find != m_impl->assetRegistrations.end())
             {
                 if (find->second.handle.type == AssetType::Mesh)
                 {
@@ -837,8 +863,23 @@ namespace litl
                 }
             }
 
+            AssetRegistration assetRegistration {
+                .key = assetKey,
+                .location = "",
+                .hashedKey = hashedAssetKey,
+                .assetType = AssetType::Mesh,
+                .format = AssetFormat::Internal,
+                .sourceType = import::ImportSourceType::MeshLitlBinary,
+                .priority = 0u,
+                .locator = {},          // Default/null locator as this asset is sourced from memory and not disk
+                .handle = {}            // Will be made by createBaseMeshAsset
+            };
+
             // Key is not yet occupied. Create an unloaded mesh asset at it.
-            meshAssetHandle = m_impl->createBaseMeshAsset(sourceFile, assetKey, hashedAssetKey, MappingPriority::Low, AssetStatus::Loading);
+            meshAssetHandle = m_impl->createBaseMeshAsset(assetRegistration, AssetStatus::Loading);
+
+            // Track the new registration
+            m_impl->assetRegistrations[hashedAssetKey] = assetRegistration;
         }
 
         auto* meshAsset = m_impl->meshAssetPool.get(meshAssetHandle);

@@ -9,6 +9,7 @@ namespace litl
     class AssetManager;
     class AssetSource;
     struct Asset;
+    struct AssetRegistration;
     class ObjectPool;
     class TaskThreadPool;
 
@@ -20,6 +21,7 @@ namespace litl
             TaskThreadPool& threadPool,
             ObjectPool& objectPool,
             AssetManager& assetManager,
+            AssetRegistration const& assetRegistration,
             AssetSource* assetSource) noexcept;
 
         [[nodiscard]] static Task<bool> loadFromMemoryAsync(
@@ -27,7 +29,8 @@ namespace litl
             Asset* asset,
             TaskThreadPool& threadPool,
             ObjectPool& objectPool,
-            AssetManager& assetManager) noexcept;
+            AssetManager& assetManager,
+            AssetRegistration const& assetRegistration) noexcept;
 
     private:
 

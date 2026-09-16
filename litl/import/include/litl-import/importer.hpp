@@ -9,25 +9,10 @@
 #include "litl-core/file.hpp"
 #include "litl-import/result.hpp"
 #include "litl-import/importedData.hpp"
+#include "litl-import/importSourceType.hpp"
 
 namespace litl::import
 {
-    enum class ImportSourceType : uint32_t 
-    {
-        Unknown = 0u,
-        MaterialLitl,
-        MaterialLitlBinary,
-        ModelFbx,
-        ModelGlb,
-        ModelGltf,
-        ModelObj,
-        ShaderSlang,
-        ShaderSpirv,
-
-        // Must be last
-        ImportSourceTypeCount
-    };
-
     class Importer
     {
     public:

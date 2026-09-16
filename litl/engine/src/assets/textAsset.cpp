@@ -3,6 +3,24 @@
 
 namespace litl
 {
+    namespace
+    {
+        [[nodiscard]] constexpr TextType resolveType(import::ImportSourceType sourceType) noexcept
+        {
+            switch (sourceType)
+            {
+            case import::ImportSourceType::TextPlain:
+                return TextType::Plain;
+
+            case import::ImportSourceType::TextJson:
+                return TextType::Json;
+
+            default:
+                return TextType::Unknown;
+            }
+        }
+    }
+
     bool TextAsset::fetchAssetObject(Asset* asset, ObjectPool& objectPool) noexcept
     {
         auto* text = static_cast<TextAsset*>(asset);
@@ -10,7 +28,7 @@ namespace litl
         return (text->text != nullptr);
     }
 
-    bool TextAsset::decodeBytes(Asset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
+    bool TextAsset::decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
     {
         if (bytes.empty())
         {
@@ -26,9 +44,10 @@ namespace litl
             return false;
         }
 
-        const bool result = textAsset->text->create({}, TextDescriptor {
+        const bool result = textAsset->text->create(Authority<TextAsset>{}, TextDescriptor{
             .objectInfo = ObjectDescriptor{ .name = textAsset->key, .lifetime = ObjectLifetime::Application },
-            .string = std::string(reinterpret_cast<char const*>(bytes.data()), bytes.size())
+            .string = std::string(reinterpret_cast<char const*>(bytes.data()), bytes.size()),
+            .type = resolveType(assetRegistration.sourceType)
         });
 
         if (!result)

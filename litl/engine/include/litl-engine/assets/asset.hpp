@@ -34,7 +34,7 @@ namespace litl
             /// <summary>
             /// (Required) Takes a raw span of bytes and decodes that into the asset-specific intermediate object.
             /// </summary>
-            bool (*decodeAssetBytes)(Asset*, std::span<std::byte const>, AssetErrorCode&);
+            bool (*decodeAssetBytes)(Asset*, AssetRegistration const&, std::span<std::byte const>, AssetErrorCode&);
 
             /// <summary>
             /// (Optional) Performs optional additional work on the worker thread against the intermediate object.
@@ -104,7 +104,7 @@ namespace litl
         AssetErrorCode error{ AssetErrorCode::None };
 
         /// <summary>
-        /// The type of asset.
+        /// The general type of asset.
         /// </summary>
         AssetType type{ AssetType::Unknown };
     };

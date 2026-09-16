@@ -11,13 +11,15 @@ namespace litl::tests
     {
         // The high-res Stanford Bunny OBJ has 29k vertices and 179k indices.
         // Each vertex only has a position attribute - no texcoord or normal.
-        const File source("assets/mesh/bunny.obj");
+        constexpr std::string_view location = "assets/mesh/bunny.obj";
+        const File source(location);
+        const auto sourceBytes = source.readAllBytes();
 
-        REQUIRE(source.exists() == true);
+        REQUIRE(sourceBytes.has_value() == true);
 
         import::ImportService importer{};
         import::ImportedData data{};
-        const import::Result result = importer.import(source, data, true);
+        const import::Result result = importer.importForMemory(import::ImportSourceType::ModelObj, location, *sourceBytes, data, true);
         
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
@@ -42,21 +44,16 @@ namespace litl::tests
 
     LITL_TEST_CASE("Convert complex OBJ to litlmdl", "[import::obj]")
     {
-        const File source("assets/models/sponza.obj");
-        File dest("assets/models/sponza.litlmdl");
+        constexpr std::string_view sourceLocation = "assets/models/sponza.obj";
+        const File source(sourceLocation);
+        const auto sourceBytes = source.readAllBytes();
 
-        REQUIRE(source.exists() == true);
-
-        if (dest.exists() == true)
-        {
-            dest.erase();
-            REQUIRE(dest.exists() == false);
-            Directory::deleteRecursive("assets/models/sponza");
-        }
+        REQUIRE(sourceBytes.has_value() == true);
 
         // Test full conversion (obj -> ModelIntermediateData -> .litlmdl)
         import::ImportService importer{};
-        import::Result result = importer.convert(source.absolutePath());
+        import::WriteableImportResults results{};
+        import::Result result = importer.importForWriting(import::ImportSourceType::ModelObj, sourceLocation, *sourceBytes, results);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
@@ -65,20 +62,16 @@ namespace litl::tests
 
     LITL_TEST_CASE("Convert OBJ to litlmesh", "[import::obj]")
     {
-        const File source("assets/mesh/bunny.obj");
-        File dest("assets/mesh/bunny.litlbmsh");
+        constexpr std::string_view sourceLocation = "assets/mesh/bunny.obj";
+        const File source(sourceLocation);
+        const auto sourceBytes = source.readAllBytes();
 
-        REQUIRE(source.exists() == true);
-
-        if (dest.exists() == true)
-        {
-            dest.erase();
-            REQUIRE(dest.exists() == false);
-        }
+        REQUIRE(sourceBytes.has_value() == true);
 
         // Test full conversion (obj -> GeoMesh -> LitlMesh)
         import::ImportService importer{};
-        import::Result result = importer.convert(source.absolutePath());
+        import::WriteableImportResults results{};
+        import::Result result = importer.importForWriting(import::ImportSourceType::ModelObj, sourceLocation, *sourceBytes, results);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
@@ -86,46 +79,26 @@ namespace litl::tests
 
     LITL_TEST_CASE("OBJ -> GeoMesh -> LitlMesh -> GeoMesh", "[import::obj]")
     {
-        const File source("assets/mesh/bunny.obj");
-        File dest("assets/mesh/bunny.litlbmsh");
+        constexpr std::string_view sourceLocation = "assets/mesh/bunny.obj";
+        const File source(sourceLocation);
+        const auto sourceBytes = source.readAllBytes();
 
-        REQUIRE(source.exists() == true);
-
-        if (dest.exists() == true)
-        {
-            dest.erase();
-            REQUIRE(dest.exists() == false);
-        }
+        REQUIRE(sourceBytes.has_value() == true);
 
         // Test full conversion (obj -> GeoMesh -> LitlMesh) so we have a .litlbmsh to load later.
         import::ImportService importer{};
-        import::Result result = importer.convert(source.absolutePath());
+        import::WriteableImportResults results{};
+        import::Result result = importer.importForWriting(import::ImportSourceType::ModelObj, sourceLocation, *sourceBytes, results);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
+        REQUIRE(results.importedData.items.size() == 2);
+        REQUIRE(results.importedData.items[0].getType() == import::ImportedDataType::Model);
+        REQUIRE(results.importedData.items[1].getType() == import::ImportedDataType::Mesh);
+        REQUIRE(results.bytes.size() == 2);
 
-        // Reimport so we can get the intermediate GeoMesh.
-        import::ImportedData data{};
-        result = importer.import(source, data, true);
-
-        REQUIRE(result.success == true);
-        REQUIRE(result.error == import::ErrorType::None);
-        REQUIRE(data.items.size() == 2);
-        REQUIRE(data.items[0].getType() == import::ImportedDataType::Model);
-        REQUIRE(data.items[1].getType() == import::ImportedDataType::Mesh);
-
-        // Load the LitlMesh from the .litlbmsh we previously exported to.
-        auto litlMeshBytes = dest.readAllBytes();
-        REQUIRE(litlMeshBytes.has_value() == true);
-
-        LitlMesh litlMesh{};
-        BinaryBlockFile::ErrorCode error = BinaryBlockFile::ErrorCode::None;
-
-        REQUIRE(LitlMesh::parse(litlMeshBytes.value(), litlMesh, error) == true);
-        REQUIRE(error == BinaryBlockFile::ErrorCode::None);
-
-        // Deserialize the LitlMesh to a second GeoMesh.
-        auto* mesh = data.items[1].getDataPtr<import::MeshImportResult>();      // index 0 is the model
+        // Deserialize the OBJ-sourced LitlMesh to a GeoMesh which will be compared coming up ...
+        auto* mesh = results.importedData.items[1].getDataPtr<import::MeshImportResult>();      // index 0 is the model
 
         REQUIRE(mesh != nullptr);
         REQUIRE(mesh->mesh != nullptr);
@@ -133,6 +106,14 @@ namespace litl::tests
         GeoMesh& objGeoMesh = *mesh->mesh.get();
         GeoMesh litlGeoMesh{};
 
+        // litlbmsh bytes -> LitlMesh
+        LitlMesh litlMesh{};
+        BinaryBlockFile::ErrorCode error = BinaryBlockFile::ErrorCode::None;
+
+        REQUIRE(LitlMesh::parse(results.bytes[1], litlMesh, error) == true);
+        REQUIRE(error == BinaryBlockFile::ErrorCode::None);
+
+        // LitlMesh from bytes -> GeoMesh
         REQUIRE(litlMesh.deserialize(litlGeoMesh, error) == true);
         REQUIRE(error == BinaryBlockFile::ErrorCode::None);
 

@@ -1,6 +1,8 @@
 #ifndef LITL_ENGINE_ASSETS_TEXT_ASSET_H__
 #define LITL_ENGINE_ASSETS_TEXT_ASSET_H__
 
+#include <cstdint>
+
 #include "litl-engine/assets/asset.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
 
@@ -14,7 +16,7 @@ namespace litl
         Text* text{ nullptr };
 
         static bool fetchAssetObject(Asset* asset, ObjectPool& objectPool) noexcept;
-        static bool decodeBytes(Asset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept;
+        static bool decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept;
         static bool processOnMain(Asset* asset, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept;
     };
 

@@ -10,13 +10,15 @@ namespace litl::tests
 {
     LITL_TEST_CASE("litlmat -> MaterialIntermediateData", "[import::litlmat]")
     {
-        const File source("assets/materials/test.litlmat");
+        constexpr std::string_view location = "assets/materials/test.litlmat";
+        const File source(location);
+        const auto bytes = source.readAllBytes();
 
-        REQUIRE(source.exists() == true);
+        REQUIRE(bytes.has_value() == true);
 
         import::ImportService importer{};
         import::ImportedData data{};
-        const import::Result result = importer.import(source, data, true);
+        const import::Result result = importer.importForMemory(import::ImportSourceType::MaterialLitl, location, bytes.value(), data, true);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
@@ -82,20 +84,16 @@ namespace litl::tests
 
     LITL_TEST_CASE("litlmat -> MaterialIntermediateData -> litlbmat", "[import::litlmat]")
     {
-        File source("assets/materials/test.litlmat");
-        File dest("assets/materials/test.litlbmat");
+        constexpr std::string_view sourceLocation = "assets/materials/test.litlmat";
+        const File source(sourceLocation);
+        const auto sourceBytes = source.readAllBytes();
 
-        REQUIRE(source.exists() == true);
-
-        if (dest.exists() == true)
-        {
-            dest.erase();
-            REQUIRE(dest.exists() == false);
-        }
+        REQUIRE(sourceBytes.has_value() == true);
 
         // Test full conversion (litlmat -> MaterialIntermediateData -> litlbmat)
         import::ImportService importer{};
-        import::Result result = importer.convert(source.absolutePath());
+        import::WriteableImportResults results{};
+        import::Result result = importer.importForWriting(import::ImportSourceType::MaterialLitl, sourceLocation, *sourceBytes, results);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
@@ -103,46 +101,32 @@ namespace litl::tests
 
     LITL_TEST_CASE("litlmat -> MaterialIntermediateData -> litlbmat -> MaterialIntermediateData", "[import::litlmat]")
     {
-        File source("assets/materials/test.litlmat");
-        File dest("assets/materials/test.litlbmat");
+        constexpr std::string_view sourceLocation = "assets/materials/test.litlmat";
+        const File source(sourceLocation);
+        const auto sourceBytes = source.readAllBytes();
 
-        REQUIRE(source.exists() == true);
-
-        if (dest.exists() == true)
-        {
-            dest.erase();
-            REQUIRE(dest.exists() == false);
-        }
+        REQUIRE(sourceBytes.has_value() == true);
 
         // test.litlmat -> MaterialIntermediateData
         import::ImportService importer{};
-        import::ImportedData data{};
-        import::Result result = importer.import(source, data, true);
+        import::WriteableImportResults results{};
+        import::Result result = importer.importForWriting(import::ImportSourceType::MaterialLitl, sourceLocation, *sourceBytes, results);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
-        REQUIRE(data.items.size() == 1);
+        REQUIRE(results.importedData.items.size() == 1);
+        REQUIRE(results.bytes.size() == 1);
 
-        auto* material = data.items[0].getDataPtr<import::MaterialImportResult>();
-
+        // Intermediate Material from the .litlmat
+        auto* material = results.importedData.items[0].getDataPtr<import::MaterialImportResult>();
         REQUIRE(material != nullptr);
-
         import::MaterialIntermediateData& litlmatIntermediateData = *material->intermediateMaterial;
 
-        // test.litlmat -> test.litlbmat
-        result = importer.convert(source.absolutePath());
-
-        REQUIRE(result.success == true);
-        REQUIRE(result.error == import::ErrorType::None);
-
-        // test.litlbmat -> MaterialIntermediateData
-        auto litlbmatBytes = dest.readAllBytes();
-        REQUIRE(litlbmatBytes.has_value() == true);
-
+        // Intermediate Material from the bytes resulting from importForWriting (destined for .litlbmat)
         import::LitlMatBinary litlbmat{};
         BinaryBlockFile::ErrorCode error = BinaryBlockFile::ErrorCode::None;
 
-        REQUIRE(import::LitlMatBinary::parse(litlbmatBytes.value(), litlbmat, error) == true);
+        REQUIRE(import::LitlMatBinary::parse(results.bytes[0], litlbmat, error) == true);
         REQUIRE(error == BinaryBlockFile::ErrorCode::None);
 
         import::MaterialIntermediateData litlbmatIntermediateData{};

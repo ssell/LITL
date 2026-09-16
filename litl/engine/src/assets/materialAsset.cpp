@@ -41,14 +41,12 @@ namespace litl
         return true;
     }
 
-    bool decodeNonLitlMaterialBinaryBytes(MaterialAsset* materialAsset, std::span<std::byte const> otherBytes, AssetErrorCode& error) noexcept
+    bool decodeNonLitlMaterialBinaryBytes(MaterialAsset* materialAsset, import::ImportSourceType sourceType, std::string_view location, std::span<std::byte const> otherBytes, AssetErrorCode& error) noexcept
     {
-        const auto extension = materialAsset->file.extension();
-
         import::ImportService importer{};
         import::ImportedData importedData{};
 
-        const auto importResult = importer.import(materialAsset->file, otherBytes, importedData, true);
+        const auto importResult = importer.importForMemory(sourceType, location, otherBytes, importedData, true);
 
         if (importResult.success)
         {
@@ -91,7 +89,7 @@ namespace litl
         }
     }
 
-    bool MaterialAsset::decodeBytes(Asset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
+    bool MaterialAsset::decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
     {
         if (bytes.empty())
         {
@@ -101,14 +99,14 @@ namespace litl
 
         MaterialAsset* materialAsset = static_cast<MaterialAsset*>(asset);
 
-        if (materialAsset->file.extension() == ".litlbmat")
+        if (assetRegistration.sourceType == import::ImportSourceType::MaterialLitlBinary)
         {
             return decodeLitlMaterialBinaryBytes(materialAsset, bytes, error);
         }
         else
         {
             logWarning("Decoding material asset with key '", asset->key, "' directly from external format. It is recommended to first convert the material to the internal .litlbmat format to improve loading performance.");
-            return decodeNonLitlMaterialBinaryBytes(materialAsset, bytes, error);
+            return decodeNonLitlMaterialBinaryBytes(materialAsset, assetRegistration.sourceType, assetRegistration.location, bytes, error);
         }
     }
 

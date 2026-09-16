@@ -8,6 +8,7 @@
 #include "litl-core/stringId.hpp"
 #include "litl-engine/assets/assetHandle.hpp"
 #include "litl-engine/assets/assetType.hpp"
+#include "litl-import/importSourceType.hpp"
 
 namespace litl
 {
@@ -66,19 +67,29 @@ namespace litl
         std::string key;
 
         /// <summary>
+        /// Location of this asset, for logging purposes.
+        /// </summary>
+        std::string location;
+
+        /// <summary>
         /// Hashed key.
         /// </summary>
         StringId hashedKey{};
 
         /// <summary>
-        /// The type of asset.
+        /// The general type of asset.
         /// </summary>
-        AssetType type{ AssetType::Unknown };
+        AssetType assetType{ AssetType::Unknown };
 
         /// <summary>
-        /// The forat of the asset.
+        /// If the asset format internal or external?
         /// </summary>
         AssetFormat format{ AssetFormat::Unknown };
+
+        /// <summary>
+        /// The specific source/type of the bytes.
+        /// </summary>
+        import::ImportSourceType sourceType{ import::ImportSourceType::Unknown };
 
         /// <summary>
         /// The priority level for this particular asset registration.

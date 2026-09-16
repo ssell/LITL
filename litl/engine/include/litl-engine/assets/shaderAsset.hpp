@@ -22,7 +22,7 @@ namespace litl
         std::shared_ptr<import::ShaderIntermediateData> shaderIntermediateData;
 
         static bool fetchAssetObject(Asset* asset, ObjectPool& objectPool) noexcept;
-        static bool decodeBytes(Asset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept;
+        static bool decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept;
         static bool processOnMain(Asset* asset, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept;
     };
 

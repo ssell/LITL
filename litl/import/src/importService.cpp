@@ -62,31 +62,9 @@ namespace litl::import
         m_importerRegistry.add<SpirvImporter>();
     }
 
-    Result ImportService::import(File const& sourceFile, std::string_view location, ImportedData& importedData, bool shouldPrepare) noexcept
+    Result ImportService::importForMemory(ImportSourceType sourceType, std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData, bool shouldPrepare) noexcept
     {
-        if (!sourceFile.exists())
-        {
-            return Result::Error(ErrorType::SourceFileDoesNotExist);
-        }
-
-        if (sourceFile.size() == 0u)
-        {
-            return Result::Error(ErrorType::EmptySourceFile);
-        }
-
-        auto fileBytes = sourceFile.readAllBytes();
-
-        if (!fileBytes.has_value())
-        {
-            return Result::Error(ErrorType::FailedToReadSourceFile);
-        }
-
-        return import(location, *fileBytes, importedData, shouldPrepare);
-    }
-
-    Result ImportService::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData, bool shouldPrepare) noexcept
-    {
-        auto importer = m_importerRegistry.create(sourceFile.extension());
+        auto importer = m_importerRegistry.create(sourceType);
 
         if (importer == nullptr)
         {
@@ -133,24 +111,19 @@ namespace litl::import
         return Result::Success();
     }
 
-    Result ImportService::convert(std::string_view sourcePath) noexcept
-    {
-        return convert(sourcePath, File(sourcePath).parentFolderPath());
-    }
-
-    Result ImportService::convert(std::string_view sourcePath, std::string_view destFolderPath) noexcept
+    Result ImportService::importForWriting(ImportSourceType sourceType, std::string_view location, std::span<std::byte const> sourceBytes, WriteableImportResults& writeableResults) noexcept
     {
         // Import from one external file
-        File const sourceFile = sourcePath;
-        ImportedData importedData{};
-        Result const importResult = import(sourcePath, sourcePath, importedData, false);
+        Result const importResult = importForMemory(sourceType, location, sourceBytes, writeableResults.importedData, false);
 
-        if (!importResult.success || importedData.items.empty())
+        if (!importResult.success || writeableResults.importedData.items.empty())
         {
             return importResult;
         }
 
+        // ... todo make this work again ...
 
+        /*
         const std::string rootItemFolderPath =  toLowercase(destFolderPath);
         const std::string childItemFolderPath = toLowercase(Directory::appendFolder(rootItemFolderPath, sourceFile.name()));
 
@@ -199,6 +172,7 @@ namespace litl::import
                 return exportResult;
             }
         }
+        */
 
         return Result::Success();
     }

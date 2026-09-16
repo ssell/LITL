@@ -37,14 +37,12 @@ namespace litl
             return true;
         }
 
-        [[nodiscard]] bool decodeNonLitlMeshBytes(MeshAsset* meshAsset, std::span<std::byte const> otherBytes, AssetErrorCode& error) noexcept
+        [[nodiscard]] bool decodeNonLitlMeshBytes(MeshAsset* meshAsset, AssetRegistration const& assetRegistration, std::span<std::byte const> otherBytes, AssetErrorCode& error) noexcept
         {
-            const auto extension = meshAsset->file.extension();
-
             import::ImportService importer{};
             import::ImportedData importedData{};
 
-            const auto importResult = importer.import(meshAsset->file, otherBytes, importedData, true);
+            const auto importResult = importer.importForMemory(assetRegistration.sourceType, assetRegistration.location, otherBytes, importedData, true);
 
             if (importResult.success)
             {
@@ -89,7 +87,7 @@ namespace litl
         }
     }
 
-    bool MeshAsset::decodeBytes(Asset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
+    bool MeshAsset::decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
     {
         if (bytes.empty())
         {
@@ -99,7 +97,7 @@ namespace litl
 
         MeshAsset* meshAsset = static_cast<MeshAsset*>(asset);
 
-        if (meshAsset->file.extension() == ".litlbmsh")
+        if (assetRegistration.sourceType == import::ImportSourceType::MeshLitlBinary)
         {
             // Already a .litlbmsh, so we can just decode straight to our LitlMesh struct.
             return decodeLitlMeshBytes(meshAsset, bytes, error);
@@ -107,7 +105,7 @@ namespace litl
         else
         {
             logWarning("Decoding mesh asset with key '", asset->key, "' directly from external format. It is recommended to first convert the mesh to the internal .litlbmsh format to improve loading performance.");
-            return decodeNonLitlMeshBytes(meshAsset, bytes, error);
+            return decodeNonLitlMeshBytes(meshAsset, assetRegistration, bytes, error);
         }
     }
 

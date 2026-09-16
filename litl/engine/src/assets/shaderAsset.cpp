@@ -40,14 +40,12 @@ namespace litl
             return true;
         }
 
-        [[nodiscard]] bool decodeNonLitShaderBytes(ShaderAsset* shaderAsset, std::span<std::byte const> otherBytes, AssetErrorCode& error) noexcept
+        [[nodiscard]] bool decodeNonLitShaderBytes(ShaderAsset* shaderAsset, AssetRegistration const& assetRegistration, std::span<std::byte const> otherBytes, AssetErrorCode& error) noexcept
         {
-            const auto extension = shaderAsset->file.extension();
-
             import::ImportService importer{};
             import::ImportedData importedData{};
 
-            const auto importResult = importer.import(shaderAsset->file, otherBytes, importedData, true);
+            const auto importResult = importer.importForMemory(assetRegistration.sourceType, assetRegistration.location, otherBytes, importedData, true);
 
             if (importResult.success)
             {
@@ -93,7 +91,7 @@ namespace litl
         }
     }
 
-    bool ShaderAsset::decodeBytes(Asset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
+    bool ShaderAsset::decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
     {
         if (bytes.empty())
         {
@@ -103,7 +101,7 @@ namespace litl
 
         ShaderAsset* shaderAsset = static_cast<ShaderAsset*>(asset);
 
-        if (shaderAsset->file.extension() == ".litlbshd")
+        if (assetRegistration.sourceType == import::ImportSourceType::ShaderLitlBinary)
         {
             // Already a .litlbshd, so we can just decode straight to our LitlShader struct.
             return decodeLitlShaderBytes(shaderAsset, bytes, error);
@@ -111,7 +109,7 @@ namespace litl
         else
         {
             logWarning("Decoding shader asset with key '", asset->key, "' directly from external format. It is recommended to first convert the shader to the internal .litlbshd format to improve loading performance.");
-            return decodeNonLitShaderBytes(shaderAsset, bytes, error);
+            return decodeNonLitShaderBytes(shaderAsset, assetRegistration, bytes, error);
         }
 
         return true;

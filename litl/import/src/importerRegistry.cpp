@@ -25,14 +25,9 @@ namespace litl::import
         return nullptr;
     }
 
-    std::unique_ptr<Importer> ImporterRegistry::create(File const& file) const noexcept
+    std::unique_ptr<Importer> ImporterRegistry::create(ImportSourceType type) const noexcept
     {
-        return create(file.extension());
-    }
-
-    std::unique_ptr<Importer> ImporterRegistry::create(std::string_view extension) const noexcept
-    {
-        const auto* entry = find(extension);
+        const auto* entry = find(type);
 
         if (entry == nullptr)
         {
@@ -40,10 +35,5 @@ namespace litl::import
         }
 
         return entry->createFunc();
-    }
-
-    std::string ImporterRegistry::normalizeExtension(std::string_view extension) noexcept
-    {
-        return toLowercase(extension);      // ... todo add a trim function too ...
     }
 }

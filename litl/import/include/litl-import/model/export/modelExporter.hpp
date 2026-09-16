@@ -20,7 +20,7 @@ namespace litl::import
         ModelExporter& operator=(ModelExporter const&) = delete;
 
         [[nodiscard]] Result prepare(ImportedData& data, uint32_t dataIndex) noexcept override;
-        [[nodiscard]] Result write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data, uint32_t dataIndex, std::optional<std::string_view> nameOverride) noexcept override;
+        [[nodiscard]] Result write(std::vector<std::byte>& serialized, ImportedData const& data, uint32_t dataIndex) noexcept override;
     };
 }
 

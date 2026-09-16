@@ -197,13 +197,15 @@ namespace litl::tests
 
     LITL_TEST_CASE("slang -> ShaderIntermediateData", "[import::slang]")
     {
-        const File source("assets/shaders/test.slang");
+        constexpr std::string_view sourceLocation = "assets/shaders/test.slang";
+        const File source(sourceLocation);
+        const auto sourceBytes = source.readAllBytes();
 
-        REQUIRE(source.exists() == true);
+        REQUIRE(sourceBytes.has_value() == true);
 
         import::ImportService importer{};
         import::ImportedData data{};
-        const import::Result result = importer.import(source, data, true);
+        const import::Result result = importer.importForMemory(import::ImportSourceType::ShaderSlang, sourceLocation, *sourceBytes, data, true);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
@@ -226,40 +228,32 @@ namespace litl::tests
 
     LITL_TEST_CASE("slang -> ShaderIntermediateData -> litlbshd -> ShaderIntermediateData", "[import::slang]")
     {
-        const File source("assets/shaders/test.slang");
-        const File dest("assets/shaders/test.litlbshd");
+        constexpr std::string_view sourceLocation = "assets/shaders/test.slang";
+        const File source(sourceLocation);
+        const auto sourceBytes = source.readAllBytes();
 
-        REQUIRE(source.exists() == true);
+        REQUIRE(sourceBytes.has_value() == true);
 
         // test.slang -> ShaderIntermediateData
         import::ImportService importer{};
-        import::ImportedData data{};
-        import::Result result = importer.import(source, data, true);
+        import::WriteableImportResults results{};
+        import::Result result = importer.importForWriting(import::ImportSourceType::ShaderSlang, sourceLocation, *sourceBytes, results);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
-        REQUIRE(data.items.size() == 1);
+        REQUIRE(results.importedData.items.size() == 1);
+        REQUIRE(results.bytes.size() == 1);
 
-        auto* shader = data.items[0].getDataPtr<import::ShaderImportResult>();
-
+        // Intermediate shader from the .slang
+        auto* shader = results.importedData.items[0].getDataPtr<import::ShaderImportResult>();
         REQUIRE(shader != nullptr);
-
         import::ShaderIntermediateData& slangIntermediateData = *shader->intermediateShader;
 
-        // test.slang -> test.litlbshd
-        result = importer.convert(source.absolutePath());
-
-        REQUIRE(result.success == true);
-        REQUIRE(result.error == import::ErrorType::None);
-
-        // test.litlbshd -> ShaderIntermediateData
-        auto litlbshdBytes = dest.readAllBytes();
-        REQUIRE(litlbshdBytes.has_value() == true);
-
+        // Intermediate shader from the bytes resulting from importForWriting (destined for .litlbshd)
         import::LitlShader litlbshd{};
         BinaryBlockFile::ErrorCode error = BinaryBlockFile::ErrorCode::None;
 
-        REQUIRE(import::LitlShader::parse(litlbshdBytes.value(), litlbshd, error) == true);
+        REQUIRE(import::LitlShader::parse(results.bytes[0], litlbshd, error) == true);
         REQUIRE(error == BinaryBlockFile::ErrorCode::None);
 
         import::ShaderIntermediateData litlbshdIntermediateData{};

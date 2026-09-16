@@ -26,12 +26,12 @@ namespace litl
         return true;
     }
 
-    bool ModelAsset::decodeNonLitlModelBytes(ModelAsset* modelAsset, std::span<std::byte const> otherBytes, AssetErrorCode& error) noexcept
+    bool ModelAsset::decodeNonLitlModelBytes(ModelAsset* modelAsset, AssetRegistration const& assetRegistration, std::span<std::byte const> otherBytes, AssetErrorCode& error) noexcept
     {
         import::ImportService importer{};
         import::ImportedData importedData{};
 
-        const auto importResult = importer.import(modelAsset->file, otherBytes, importedData, true);
+        const auto importResult = importer.importForMemory(assetRegistration.sourceType, assetRegistration.location, otherBytes, importedData, true);
 
         if (!importResult.success)
         {
@@ -85,7 +85,7 @@ namespace litl
         return true;
     }
 
-    bool ModelAsset::decodeBytes(Asset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
+    bool ModelAsset::decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
     {
         if (bytes.empty())
         {
@@ -95,14 +95,14 @@ namespace litl
 
         ModelAsset* modelAsset = static_cast<ModelAsset*>(asset);
 
-        if (modelAsset->file.extension() == ".litlmdl")
+        if (assetRegistration.sourceType == import::ImportSourceType::ModelLitl)
         {
             return decodeLitlModelBytes(modelAsset, bytes, error);
         }
         else
         {
             logWarning("Decoding model asset with key '", asset->key, "' directly from external format. It is recommended to first convert the model to the internal .litlmdl format to improve loading performance.");
-            return decodeNonLitlModelBytes(modelAsset, bytes, error);
+            return decodeNonLitlModelBytes(modelAsset, assetRegistration, bytes, error);
         }
     }
 
@@ -157,7 +157,7 @@ namespace litl
                 }
 
                 auto const& meshName = meshNames[modelDataItem.modelNameIndex];
-                auto meshHandle = assetManager.createMeshAssetFromMemory({}, std::format("{}/{}", modelAsset->key, meshName), std::move(*meshItem->mesh), modelAsset->file);
+                auto meshHandle = assetManager.createMeshAssetFromMemory({}, std::format("{}/{}", modelAsset->key, meshName), std::move(*meshItem->mesh));
                 auto* meshAsset = assetManager.getMesh(meshHandle);
 
                 if (meshAsset != nullptr)
@@ -185,7 +185,7 @@ namespace litl
                 }
 
                 auto const& materialName = materialNames[modelDataItem.modelNameIndex];
-                auto materialHandle = assetManager.createMaterialAssetFromMemory({}, std::format("{}/{}", modelAsset->key, materialName), std::move(*materialItem->intermediateMaterial), modelAsset->file);
+                auto materialHandle = assetManager.createMaterialAssetFromMemory({}, std::format("{}/{}", modelAsset->key, materialName), std::move(*materialItem->intermediateMaterial));
                 auto* materialAsset = assetManager.getMaterial(materialHandle);
 
                 if (materialAsset != nullptr)

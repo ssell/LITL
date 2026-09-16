@@ -42,21 +42,15 @@ namespace litl::import
                     .name = T::ImporterName,
                     .types = T::SupportedTypes,
                     .createFunc = +[]() -> std::unique_ptr<Importer> { return std::make_unique<T>(); }
-                });
+                };
             }
         }
 
         [[nodiscard]] Entry const* find(ImportSourceType type) const noexcept;
-        [[nodiscard]] std::unique_ptr<Importer> create(File const& file) const noexcept;
-        [[nodiscard]] std::unique_ptr<Importer> create(std::string_view extension) const noexcept;
+        [[nodiscard]] std::unique_ptr<Importer> create(ImportSourceType type) const noexcept;
 
     private:
 
-        static std::string normalizeExtension(std::string_view extension) noexcept;
-
-        /// <summary>
-        /// All registered importers.
-        /// </summary>
         std::vector<Entry> m_entries;
     };
 }

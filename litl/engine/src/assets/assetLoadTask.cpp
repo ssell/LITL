@@ -34,6 +34,7 @@ namespace litl
         TaskThreadPool& threadPool,
         ObjectPool& objectPool,
         AssetManager& assetManager,
+        AssetRegistration const& assetRegistration,
         AssetSource* assetSource) noexcept
     {
         std::vector<std::byte> bytes;
@@ -66,7 +67,7 @@ namespace litl
             // Decode raw bytes into asset-specific data representation.
             if (asset->status.load(std::memory_order_relaxed) != AssetStatus::Error)
             {
-                if (!asset->assetOps->decodeAssetBytes(asset, bytes, asset->error))
+                if (!asset->assetOps->decodeAssetBytes(asset, assetRegistration, bytes, asset->error))
                 {
                     asset->setError(asset->error, AssetErrorCode::DecodeFail);
                 }
@@ -115,7 +116,8 @@ namespace litl
         Asset* asset,
         TaskThreadPool& threadPool,
         ObjectPool& objectPool,
-        AssetManager& assetManager) noexcept
+        AssetManager& assetManager,
+        AssetRegistration const& assetRegistration) noexcept
     {
         if (asset->assetOps == nullptr)
         {

@@ -7,6 +7,7 @@
 #include <optional>
 #include <span>
 #include <string_view>
+#include <vector>
 
 #include "litl-core/file.hpp"
 #include "litl-import/result.hpp"
@@ -28,9 +29,9 @@ namespace litl::import
         virtual Result prepare(ImportedData& data, uint32_t dataIndex) noexcept = 0;
 
         /// <summary>
-        /// Step responsible for writing the data to disk.
+        /// Writes the object bytes to the given vector.
         /// </summary>
-        virtual Result write(File const& sourceFile, std::string_view destFolderPath, ImportedData const& data, uint32_t dataIndex, std::optional<std::string_view> nameOverride) noexcept = 0;
+        virtual Result write(std::vector<std::byte>& serialized, ImportedData const& data, uint32_t dataIndex) noexcept = 0;
     };
 
     template <typename T>

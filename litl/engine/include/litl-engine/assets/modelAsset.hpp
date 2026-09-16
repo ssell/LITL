@@ -21,14 +21,14 @@ namespace litl
         std::vector<MaterialAssetHandle> materialAssetHandles;
         std::shared_ptr<import::ModelIntermediateData> modelIntermediateData;
 
-        static bool decodeBytes(Asset* asset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept;
+        static bool decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept;
         static bool gatherDependencies(Asset* asset, AssetManager& assetManager, std::vector<Asset*>& dependencies) noexcept;
         static bool processOnMain(Asset* asset, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept;
 
     private:
 
         static bool decodeLitlModelBytes(ModelAsset* modelAsset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept;
-        static bool decodeNonLitlModelBytes(ModelAsset* modelAsset, std::span<std::byte const> otherBytes, AssetErrorCode& error) noexcept;
+        static bool decodeNonLitlModelBytes(ModelAsset* modelAsset, AssetRegistration const& assetRegistration, std::span<std::byte const> otherBytes, AssetErrorCode& error) noexcept;
 
         static bool gatherDependenciesFromLitlModel(ModelAsset* modelAsset, AssetManager& assetManager, std::span<std::string const> meshNames, std::span<std::string const> materialNames, std::vector<Asset*>& dependencies) noexcept;
         static bool gatherDependenciesFromNonLitlModel(ModelAsset* modelAsset, AssetManager& assetManager, std::span<std::string const> meshNames, std::span<std::string const> materialNames, std::vector<Asset*>& dependencies) noexcept;
