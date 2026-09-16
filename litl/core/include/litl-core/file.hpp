@@ -98,15 +98,15 @@ namespace litl
         [[nodiscard]] std::optional<std::vector<std::byte>> readAllBytes() const noexcept;
 
         /// <summary>
-        /// 
-        /// </summary>
-        bool writeAllBytes(std::span<std::byte const> bytes) const noexcept;
-
-        /// <summary>
-        /// Reads the contents of the file synchronously.
+        /// Reads the contents of the file synchronously into the provided vector.
         /// Returns false if there was an error reading the file.
         /// </summary>
         [[nodiscard]] bool readAllBytes(std::vector<std::byte>& bytes) const noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        bool writeAllBytes(std::span<std::byte const> bytes) const noexcept;
 
         /// <summary>
         /// Returns true if the provided filename is on the internal reserved list. This is the name excluding extension or path.
@@ -118,6 +118,8 @@ namespace litl
         /// Strips/replaces all characters unsafe for a file name. This includes: slashes, colon, whitespace runs, trailing dots and spaces, and operating system specific sets such as *?"<>|
         /// </summary>
         [[nodiscard]] static std::string SanitizeFilename(std::string_view name) noexcept;
+
+        [[nodiscard]] std::filesystem::path const& getFileSystempath() const noexcept;
 
     private:
 

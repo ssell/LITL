@@ -41,6 +41,16 @@ namespace litl
             { ".txt"_sid, { AssetMappingPriority::Medium, AssetType::Text, AssetFormat::External, import::ImportSourceType::TextPlain } },
             { ".json"_sid, { AssetMappingPriority::Medium, AssetType::Text, AssetFormat::External, import::ImportSourceType::TextJson } }
         };
+
+        [[nodiscard]] std::string relativePathFromRoot(std::filesystem::path const& path, std::string_view root) noexcept
+        {
+            return path.lexically_relative(root).generic_string();;
+        }
+
+        [[nodiscard]] std::string assetKeyFromRoot(std::filesystem::path const& path, std::string_view root) noexcept
+        {
+            return toLowercase(path.lexically_relative(root).replace_extension().generic_string());
+        }
     }
 
     FileAssetSource::FileAssetSource(std::string_view rootPath) noexcept
@@ -76,8 +86,8 @@ namespace litl
 
                 if (assetFileType != g_assetTypeMap.end())
                 {
-                    const auto relativePath = path.lexically_relative(m_root).generic_string();
-                    const auto assetKey = toLowercase(path.lexically_relative(m_root).replace_extension().generic_string());
+                    const auto relativePath = relativePathFromRoot(path, m_root);
+                    const auto assetKey = assetKeyFromRoot(path, m_root);
                     const auto hashedKey = StringId(assetKey);
                     const auto locator = AssetLocator{ .entryIndex = static_cast<uint32_t>(m_files.size()) };                   // .sourceIndex is populated by the AssetManager
 
@@ -100,11 +110,28 @@ namespace litl
 
     bool FileAssetSource::read(AssetLocator locator, std::vector<std::byte>& bytes) noexcept
     {
-        return false;
+        if (locator.entryIndex >= m_files.size())
+        {
+            return false;
+        }
+
+        auto& file = m_files[locator.entryIndex];
+        
+        if (!file.readAllBytes(bytes))
+        {
+            return false;
+        }
+
+        return true;
     }
 
     std::string FileAssetSource::describe(AssetLocator locator) const noexcept
     {
-        return "";
+        if (locator.entryIndex >= m_files.size())
+        {
+            return "FileAssetSource::UnknownPath";
+        }
+
+        return relativePathFromRoot(m_files[locator.entryIndex].getFileSystempath(), m_root);
     }
 }

@@ -103,7 +103,7 @@ namespace litl
                 const uint32_t startingIndex = static_cast<uint32_t>(allRegistrations.size());
                 assetSources[assetSourceIndex]->enumerate(allRegistrations);
 
-                for (uint32_t i = startingIndex; startingIndex < static_cast<uint32_t>(allRegistrations.size()); ++i)
+                for (uint32_t i = startingIndex; i < static_cast<uint32_t>(allRegistrations.size()); ++i)
                 {
                     allRegistrations[i].locator.sourceIndex = assetSourceIndex;
                     // ... todo adjust priority based on asset source type ...
@@ -208,6 +208,32 @@ namespace litl
             return true;
         }
 
+        void initiateAssetLoadFromDisk(Asset* asset, AssetManager& assetManager) noexcept
+        {
+            auto findAssetRegistration = assetRegistrations.find(asset->hashedKey);
+
+            if (findAssetRegistration == assetRegistrations.end())
+            {
+                logError("Failed to fetch asset registration for asset '", asset->key, "'");
+                return;
+            }
+
+            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager, findAssetRegistration->second, getAssetSource(asset->locator)), true);
+        }
+
+        void initiateAssetLoadFromMemory(Asset* asset, AssetManager& assetManager) noexcept
+        {
+            auto findAssetRegistration = assetRegistrations.find(asset->hashedKey);
+
+            if (findAssetRegistration == assetRegistrations.end())
+            {
+                logError("Failed to fetch asset registration for asset '", asset->key, "'");
+                return;
+            }
+
+            taskManager->schedule(AssetLoadTask::loadFromMemoryAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager, findAssetRegistration->second), true);
+        }
+
         // ---------------------------------------------------------------------------------
         // --- Material Asset
         // ---------------------------------------------------------------------------------
@@ -229,32 +255,6 @@ namespace litl
 
             return materialAssetHandle;
         }
-        
-        void initiateAssetLoadFromDisk(Asset* asset, AssetManager& assetManager) noexcept
-        {
-            auto findAssetRegistration = assetRegistrations.find(asset->hashedKey);
-
-            if (findAssetRegistration == assetRegistrations.end())
-            {
-                logError("Failed to fetch asset registration for Material Asset '", asset->key, "'");
-                return;
-            }
-
-            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager, findAssetRegistration->second, getAssetSource(asset->locator)), true);
-        }
-
-        void initiateAssetLoadFromMemory(Asset* asset, AssetManager& assetManager) noexcept
-        {
-            auto findAssetRegistration = assetRegistrations.find(asset->hashedKey);
-
-            if (findAssetRegistration == assetRegistrations.end())
-            {
-                logError("Failed to fetch asset registration for Material Asset '", asset->key, "'");
-                return;
-            }
-
-            taskManager->schedule(AssetLoadTask::loadFromMemoryAsync({}, asset, * taskManager->getThreadPool(), * objectPool, assetManager, findAssetRegistration->second), true);
-        }
 
         /// <summary>
         /// Invoked at runtime when the material is first requested (or requested after it has been unloaded).
@@ -267,15 +267,14 @@ namespace litl
                 return;
             }
 
-            std::scoped_lock lock{ assetLoadMutex };
+            std::scoped_lock lock{ assetLoadMutex }; 
 
-            if (asset->status.load(std::memory_order::relaxed) != AssetStatus::Unloaded)
+            AssetStatus expected = AssetStatus::Unloaded;
+
+            if (!asset->status.compare_exchange_strong(expected, AssetStatus::Loading))
             {
-                logInfo("Attempting to load Material asset from disk that is already loaded. Asset key = '", asset->key, "'");
-                return;
+                logInfo("Attempting to load Material asset from disk that is already loaded or loading. Asset key = '", asset->key, "'");
             }
-
-            asset->status.store(AssetStatus::Loading, std::memory_order::relaxed);
 
             if (!asset->materialHandle.isValid())
             {
@@ -354,13 +353,12 @@ namespace litl
 
             std::scoped_lock lock{ assetLoadMutex };
 
-            if (asset->status.load(std::memory_order::relaxed) != AssetStatus::Unloaded)
-            {
-                logInfo("Attempting to load Mesh asset from disk that is already loaded. Asset key = '", asset->key, "'");
-                return;
-            }
+            AssetStatus expected = AssetStatus::Unloaded;
 
-            asset->status.store(AssetStatus::Loading, std::memory_order::relaxed);
+            if (!asset->status.compare_exchange_strong(expected, AssetStatus::Loading))
+            {
+                logInfo("Attempting to load Mesh asset from disk that is already loaded or loading. Asset key = '", asset->key, "'");
+            }
 
             if (!asset->handle.isValid())
             {
@@ -430,10 +428,11 @@ namespace litl
 
             std::scoped_lock lock{ assetLoadMutex };
 
-            if (asset->status.load(std::memory_order::relaxed) != AssetStatus::Unloaded)
+            AssetStatus expected = AssetStatus::Unloaded;
+
+            if (!asset->status.compare_exchange_strong(expected, AssetStatus::Loading))
             {
-                logInfo("Attempting to load Model asset from disk that is already loaded. Asset key = '", asset->key, "'");
-                return;
+                logInfo("Attempting to load Model asset from disk that is already loaded or loading. Asset key = '", asset->key, "'");
             }
 
             initiateAssetLoadFromDisk(asset, assetManager);
@@ -474,13 +473,12 @@ namespace litl
 
             std::scoped_lock lock{ assetLoadMutex };
 
-            if (asset->status.load(std::memory_order::relaxed) != AssetStatus::Unloaded)
-            {
-                logInfo("Attempting to load Shader asset from disk that is already loaded. Asset key = '", asset->key, "'");
-                return;
-            }
+            AssetStatus expected = AssetStatus::Unloaded;
 
-            asset->status.store(AssetStatus::Loading, std::memory_order::relaxed);
+            if (!asset->status.compare_exchange_strong(expected, AssetStatus::Loading))
+            {
+                logInfo("Attempting to load Shader asset from disk that is already loaded or loading. Asset key = '", asset->key, "'");
+            }
 
             if (!asset->handle.isValid())
             {
@@ -531,13 +529,12 @@ namespace litl
 
             std::scoped_lock lock{ assetLoadMutex };
 
-            if (asset->status.load(std::memory_order::relaxed) != AssetStatus::Unloaded)
-            {
-                logInfo("Attempting to load Text asset from disk that is already loaded. Asset key = '", asset->key, "'");
-                return;
-            }
+            AssetStatus expected = AssetStatus::Unloaded;
 
-            asset->status.store(AssetStatus::Loading, std::memory_order::relaxed);
+            if (!asset->status.compare_exchange_strong(expected, AssetStatus::Loading))
+            {
+                logInfo("Attempting to load Text asset from disk that is already loaded or loading. Asset key = '", asset->key, "'");
+            }
 
             if (!asset->handle.isValid())
             {
@@ -588,13 +585,12 @@ namespace litl
 
             std::scoped_lock lock{ assetLoadMutex };
 
-            if (asset->status.load(std::memory_order::relaxed) != AssetStatus::Unloaded)
-            {
-                logInfo("Attempting to load Texture2D asset from disk that is already loaded. Asset key = '", asset->key, "'");
-                return;
-            }
+            AssetStatus expected = AssetStatus::Unloaded;
 
-            asset->status.store(AssetStatus::Loading, std::memory_order::relaxed);
+            if (!asset->status.compare_exchange_strong(expected, AssetStatus::Loading))
+            {
+                logInfo("Attempting to load Texture2D asset from disk that is already loaded or loading. Asset key = '", asset->key, "'");
+            }
 
             if (!asset->handle.isValid())
             {
