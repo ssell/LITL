@@ -6,9 +6,9 @@
 
 #include "litl-core/file.hpp"
 #include "litl-core/stringId.hpp"
+#include "litl-engine/assets/assetRegistration.hpp"
 #include "litl-engine/assets/assetStatus.hpp"
-#include "litl-engine/assets/assetHandle.hpp"
-#include "litl-engine/assets/assetType.hpp"
+
 
 namespace litl
 {
@@ -69,9 +69,9 @@ namespace litl
         void setError(AssetErrorCode err, AssetErrorCode def) noexcept;
 
         /// <summary>
-        /// The file that the asset was loaded from.
+        /// The asset source location. This can map to an on-disk file, bundle entry, etc.
         /// </summary>
-        File file{};
+        AssetLocator locator{};
 
         /// <summary>
         /// The plain-text asset key name. For example: "mesh/triangle"

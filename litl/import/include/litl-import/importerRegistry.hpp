@@ -21,7 +21,7 @@ namespace litl::import
         struct Entry 
         {
             std::string_view name;
-            std::span<std::string_view const> extensions;
+            std::span<ImportSourceType const> types;
             FactoryFunc createFunc;
         };
 
@@ -36,19 +36,17 @@ namespace litl::import
         {
             const auto index = m_entries.size();
 
-            m_entries.push_back(Entry{
-                .name = T::ImporterName,
-                .extensions = T::SupportedExtensions,
-                .createFunc = +[]() -> std::unique_ptr<Importer> { return std::make_unique<T>(); }
-            });
-
-            for (auto extension : T::SupportedExtensions)
+            for (auto& type : T::SupportedTypes)
             {
-                m_entryExtensionMap[StringId(normalizeExtension(extension))] = index;
+                m_entries[static_cast<uint32_t>(type)] = Entry{
+                    .name = T::ImporterName,
+                    .types = T::SupportedTypes,
+                    .createFunc = +[]() -> std::unique_ptr<Importer> { return std::make_unique<T>(); }
+                });
             }
         }
 
-        [[nodiscard]] Entry const* find(std::string_view extension) const noexcept;
+        [[nodiscard]] Entry const* find(ImportSourceType type) const noexcept;
         [[nodiscard]] std::unique_ptr<Importer> create(File const& file) const noexcept;
         [[nodiscard]] std::unique_ptr<Importer> create(std::string_view extension) const noexcept;
 
@@ -60,11 +58,6 @@ namespace litl::import
         /// All registered importers.
         /// </summary>
         std::vector<Entry> m_entries;
-
-        /// <summary>
-        /// Map between extension (by StringId) and index into m_entries.
-        /// </summary>
-        StringIdMap<uint32_t> m_entryExtensionMap;
     };
 }
 

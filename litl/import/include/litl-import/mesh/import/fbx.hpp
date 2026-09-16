@@ -14,7 +14,7 @@ namespace litl::import
     public:
 
         static constexpr std::string_view ImporterName = "FBX";
-        static constexpr std::array SupportedExtensions = { std::string_view{".fbx"} };
+        static constexpr std::array SupportedTypes = { ImportSourceType::ModelFbx };
 
         FbxImporter();
         ~FbxImporter();
@@ -22,7 +22,7 @@ namespace litl::import
         FbxImporter(FbxImporter const&) = delete;
         FbxImporter& operator=(FbxImporter const&) = delete;
 
-        [[nodiscard]] Result import(File const& file, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept override;
+        [[nodiscard]] Result import(std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept override;
 
     private:
     };

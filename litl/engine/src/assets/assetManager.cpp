@@ -1,4 +1,3 @@
-#include <filesystem>
 #include <mutex>
 #include <ranges>
 #include <unordered_map>
@@ -10,10 +9,10 @@
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/math/geometry/geoMesh.hpp"
 #include "litl-core/services/serviceProvider.hpp"
-#include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/assets/assetDependencies.hpp"
 #include "litl-engine/assets/assetLoadTask.hpp"
-#include "litl-engine/ecs/components/modelInstance.hpp"
+#include "litl-engine/assets/assetManager.hpp"
+#include "litl-engine/assets/fileAssetSource.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/tasks/taskManager.hpp"
 #include "litl-engine/engine.hpp"
@@ -23,51 +22,7 @@ namespace litl
 {
     namespace
     {
-        enum class MappingPriority : uint32_t
-        {
-            Low = 0u,
-            Medium = 1u,
-            High = 2u
-        };
-
-        struct AssetTypeMapping
-        {
-            MappingPriority priority{ MappingPriority::Low };
-            AssetType type{ AssetType::Unknown };
-        };
-
-        struct AssetMapping
-        {
-            MappingPriority priority{ MappingPriority::Low };
-            AssetHandle handle{};
-        };
-
-        static const StringIdMap<AssetTypeMapping> g_assetTypeMap = {
-            // Material
-            { ".litlmat"_sid, { MappingPriority::High, AssetType::Material } },
-            { ".litlbmat"_sid, { MappingPriority::Medium, AssetType::Material } },
-
-            // Mesh
-            { ".litlbmsh"_sid, { MappingPriority::High, AssetType::Mesh } },
-            { ".glb"_sid, { MappingPriority::Medium, AssetType::Mesh } },
-            { ".fbx"_sid, { MappingPriority::Low, AssetType::Mesh } },
-            { ".gltf"_sid, { MappingPriority::Low, AssetType::Mesh } },
-
-            // Model
-            { ".litlmdl"_sid, { MappingPriority::High, AssetType::Model } },
-            { ".obj"_sid, { MappingPriority::Low, AssetType::Model } },
-
-            // Shader Module
-            { ".litlbshd"_sid, { MappingPriority::High, AssetType::Shader } },
-            { ".spv"_sid, { MappingPriority::Medium, AssetType::Shader } },
-            { ".slang"_sid, { MappingPriority::Low, AssetType::Shader } },
-
-            // Text
-            { ".txt"_sid, { MappingPriority::Medium, AssetType::Text } },
-            { ".json"_sid, { MappingPriority::Medium, AssetType::Text } }
-        };
-
-        static const std::filesystem::path g_assetsPath{ "assets" };
+        static constexpr std::string_view g_assetsPath{ "assets" };
     }
 
     struct AssetManager::Impl
@@ -76,7 +31,8 @@ namespace litl
 
         std::shared_ptr<ObjectPool> objectPool;
         std::shared_ptr<TaskManager> taskManager;
-        StringIdMap<AssetMapping> assetMap;
+        StringIdMap<AssetRegistration> assetMap;
+        std::vector<AssetSource> assetSources;
 
         std::mutex assetMapMutex{};
         std::mutex assetLoadMutex{};
@@ -102,74 +58,114 @@ namespace litl
             return StringId(toLowercase(key));
         }
 
+        std::string describe(AssetRegistration registration) const noexcept
+        {
+            if (registration.locator.sourceIndex < assetSources.size())
+            {
+                return assetSources[registration.locator.sourceIndex].describe(registration.locator);
+            }
+            else
+            {
+                return "INVALID LOCATOR";
+            }
+        }
+
+        AssetSource* getAssetSource(AssetLocator locator) noexcept
+        {
+            if (locator.sourceIndex < assetSources.size())
+            {
+                return &assetSources[locator.sourceIndex];
+            }
+            else
+            {
+                return nullptr;
+            }
+        }
+
         /// <summary>
         /// Invoked during AssetManager setup. It searches the local "assets/" directory for all
         /// valid assets (based on extension) and creates placeholder unloaded asset handles for them.
         /// </summary>
         void populateAssetMap() noexcept
         {
-            // In the future this would be some pre-baked binary or DB or something ...
-            for (auto const& fileEntry : std::filesystem::recursive_directory_iterator(g_assetsPath))
+            std::vector<AssetRegistration> allRegistrations; allRegistrations.reserve(512u);
+
+            assetSources.reserve(1);    // update as list grows
+            assetSources.push_back(FileAssetSource(g_assetsPath));
+            // ... assetSources.push_back(FileAssetSource(projectAssetsPath));
+            // ... assetSources.push_back(BundleAssetSource(...));
+            // ... etc.
+
+            // Fetch all assets across all sources.
+            for (uint32_t assetSourceIndex = 0u; assetSourceIndex < static_cast<uint32_t>(assetSources.size()); ++assetSourceIndex)
             {
-                if (fileEntry.is_regular_file())
+                const uint32_t startingIndex = static_cast<uint32_t>(allRegistrations.size());
+                assetSources[assetSourceIndex].enumerate(allRegistrations);
+
+                for (uint32_t i = startingIndex; startingIndex < static_cast<uint32_t>(allRegistrations.size()); ++i)
                 {
-                    auto path = fileEntry.path();
-                    auto file = File(fileEntry);
-                    auto absPath = file.absolutePath();
-                    auto assetFileType = g_assetTypeMap.find(StringId(toLowercase(file.extension())));
+                    allRegistrations[i].locator.sourceIndex = assetSourceIndex;
+                    // ... todo adjust priority based on asset source type ...
+                }
+            }
+            
+            // Keep only the highest priority asset for each key
+            for (uint32_t assetIndex = 0u; assetIndex < static_cast<uint32_t>(allRegistrations.size()); ++assetIndex)
+            {
+                const auto& assetRegistration = allRegistrations[assetIndex];
+                const auto find = assetMap.find(assetRegistration.hashedKey);
 
-                    if (assetFileType != g_assetTypeMap.end())
+                if (find == assetMap.end())
+                {
+                    assetMap[assetRegistration.hashedKey] = std::move(allRegistrations[assetIndex]);
+                }
+                else
+                {
+                    if (allRegistrations[assetIndex].priority > find->second.priority)
                     {
-                        const auto relativePath = path.lexically_relative(g_assetsPath).generic_string();
-                        const auto assetKey = createAssetKey(path.lexically_relative(g_assetsPath).replace_extension().generic_string());
-                        const auto hashedKey = StringId(assetKey);
-                        const auto find = assetMap.find(hashedKey);
-
-                        if (assetMap.find(hashedKey) != assetMap.end())
-                        {
-                            if (static_cast<uint32_t>(assetFileType->second.priority) > static_cast<uint32_t>(find->second.priority))
-                            {
-                                logWarning("Conflicting asset key for '", assetKey, "' with path '", relativePath, "' has higher priority than preexisting mapped asset and is replacing it.");
-                            }
-                            else
-                            {
-                                logWarning("Conflicted asset key for '", assetKey, "' with path '", relativePath, "' skipped due to equal or lower priority than preexisting mapped asset.");
-                                continue;
-                            }
-                        }
-
-                        switch (assetFileType->second.type)
-                        {
-                        case AssetType::Material:
-                            createBaseMaterialAsset(file, assetKey, hashedKey, assetFileType->second.priority, AssetStatus::Unloaded);
-                            break;
-
-                        case AssetType::Mesh:
-                            createBaseMeshAsset(file, assetKey, hashedKey, assetFileType->second.priority, AssetStatus::Unloaded);
-                            break;
-
-                        case AssetType::Model:
-                            createBaseModelAsset(file, assetKey, hashedKey, assetFileType->second.priority, AssetStatus::Unloaded);
-                            break;
-
-                        case AssetType::Shader:
-                            createBaseShaderAsset(file, assetKey, hashedKey, assetFileType->second.priority, AssetStatus::Unloaded);
-                            break;
-
-                        case AssetType::Text:
-                            createBaseTextAsset(file, assetKey, hashedKey, assetFileType->second.priority, AssetStatus::Unloaded);
-                            break;
-
-                        case AssetType::Texture2D:
-                            createBaseTexture2DAsset(file, assetKey, hashedKey, assetFileType->second.priority, AssetStatus::Unloaded);
-                            break;
-
-                        case AssetType::Unknown:
-                        default:
-                            logWarning("Unknown/unhandled asset type for '", assetKey, "' with path '", relativePath, "'.");
-                            break;
-                        }
+                        logWarning("Conflicting asset key for '", assetRegistration.key, "' with location '", describe(assetRegistration), "' has higher priority than preexisting mapped asset and is replacing it.");
+                        assetMap[assetRegistration.hashedKey] = std::move(allRegistrations[assetIndex]);
                     }
+                    else
+                    {
+                        logWarning("Conflicted asset key for '", assetRegistration.key, "' with path '", describe(assetRegistration), "' skipped due to equal or lower priority than preexisting mapped asset.");
+                    }
+                }
+            }
+
+            // Create placeholder base assets for each asset.
+            for (auto& assetRegistration : assetMap)
+            {
+                switch (assetRegistration.second.type)
+                {
+                case AssetType::Material:
+                    createBaseMaterialAsset(assetRegistration.second, AssetStatus::Unloaded);
+                    break;
+
+                case AssetType::Mesh:
+                    createBaseMeshAsset(assetRegistration.second, AssetStatus::Unloaded);
+                    break;
+
+                case AssetType::Model:
+                    createBaseModelAsset(assetRegistration.second, AssetStatus::Unloaded);
+                    break;
+
+                case AssetType::Shader:
+                    createBaseShaderAsset(assetRegistration.second, AssetStatus::Unloaded);
+                    break;
+
+                case AssetType::Text:
+                    createBaseTextAsset(assetRegistration.second, AssetStatus::Unloaded);
+                    break;
+
+                case AssetType::Texture2D:
+                    createBaseTexture2DAsset(assetRegistration.second, AssetStatus::Unloaded);
+                    break;
+
+                case AssetType::Unknown:
+                default:
+                    logWarning("Unknown/unhandled asset type for '", assetRegistration.second.key, "' with path '", describe(assetRegistration.second), "'.");
+                    break;
                 }
             }
         }
@@ -179,14 +175,14 @@ namespace litl
         // ---------------------------------------------------------------------------------
 
         template<typename T> requires std::is_base_of_v<Asset, T>
-        T createBaseAsset(AssetType type, File const& file, std::string_view key, StringId hashedKey, AssetStatus initialStatus) noexcept
+        T createBaseAsset(AssetType type, AssetRegistration& assetRegistration, AssetStatus initialStatus) noexcept
         {
             T asset{};
 
-            asset.file = file;
-            asset.key = key;
-            asset.hashedKey = hashedKey;
-            asset.type = type;
+            asset.locator = assetRegistration.locator;
+            asset.key = assetRegistration.key;
+            asset.hashedKey = assetRegistration.hashedKey;
+            asset.type = assetRegistration.type;
             asset.status.store(initialStatus, std::memory_order::relaxed);
 
             return asset;
@@ -219,20 +215,16 @@ namespace litl
         /// Invoked during asset map population.
         /// This creates an unloaded material asset reference in the asset map that can be loaded via initiateMaterialAssetLoad.
         /// </summary>
-        MaterialAssetHandle createBaseMaterialAsset(File const& file, std::string_view key, StringId hashedKey, MappingPriority priority, AssetStatus initialStatus) noexcept
+        MaterialAssetHandle createBaseMaterialAsset(AssetRegistration& assetRegistration, AssetStatus initialStatus) noexcept
         {
-            MaterialAsset asset = createBaseAsset<MaterialAsset>(AssetType::Material, file, key, hashedKey, initialStatus);
+            MaterialAsset asset = createBaseAsset<MaterialAsset>(AssetType::Material, assetRegistration, initialStatus);
             asset.materialHandle = MaterialHandle{};
             asset.assetOps = &MaterialAssetOps;
 
             const auto materialAssetHandle = materialAssetPool.create(asset);
             MaterialAsset* pooledAsset = materialAssetPool.get(materialAssetHandle);
             pooledAsset->selfHandle = AssetHandle::fromMaterialAssetHandle(materialAssetHandle);
-
-            assetMap[hashedKey] = AssetMapping{
-                .priority = priority,
-                .handle = pooledAsset->selfHandle
-            };
+            assetRegistration.handle = pooledAsset->selfHandle;
 
             return materialAssetHandle;
         }
@@ -269,7 +261,7 @@ namespace litl
                 }
             }
 
-            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
+            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager, getAssetSource(asset->locator)), true);
         }
 
         /// <summary>
@@ -308,20 +300,16 @@ namespace litl
         /// Invoked during asset map population.
         /// This creates an unloaded mesh asset reference in the asset map that can be loaded via initiateMeshAssetLoad.
         /// </summary>
-        MeshAssetHandle createBaseMeshAsset(File const& file, std::string_view key, StringId hashedKey, MappingPriority priority, AssetStatus initialStatus) noexcept
+        MeshAssetHandle createBaseMeshAsset(AssetRegistration& assetRegistration, AssetStatus initialStatus) noexcept
         {
-            MeshAsset asset = createBaseAsset<MeshAsset>(AssetType::Mesh, file, key, hashedKey, initialStatus);
+            MeshAsset asset = createBaseAsset<MeshAsset>(AssetType::Mesh, assetRegistration, initialStatus);
             asset.handle = MeshHandle{};
             asset.assetOps = &MeshAssetOps;
 
             const auto meshAssetHandle = meshAssetPool.create(asset);
             MeshAsset* pooledAsset = meshAssetPool.get(meshAssetHandle);
             pooledAsset->selfHandle = AssetHandle::fromMeshAssetHandle(meshAssetHandle);
-
-            assetMap[hashedKey] = AssetMapping{
-                .priority = priority,
-                .handle = pooledAsset->selfHandle
-            };
+            assetRegistration.handle = pooledAsset->selfHandle;
 
             return meshAssetHandle;
         }
@@ -358,7 +346,7 @@ namespace litl
                 }
             }
 
-            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
+            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager, getAssetSource(asset->locator)), true);
         }
 
         /// <summary>
@@ -393,19 +381,15 @@ namespace litl
         // --- Model Asset
         // ---------------------------------------------------------------------------------
 
-        ModelAssetHandle createBaseModelAsset(File const& file, std::string_view key, StringId hashedKey, MappingPriority priority, AssetStatus initialStatus) noexcept
+        ModelAssetHandle createBaseModelAsset(AssetRegistration& assetRegistration, AssetStatus initialStatus) noexcept
         {
-            ModelAsset asset = createBaseAsset<ModelAsset>(AssetType::Model, file, key, hashedKey, initialStatus);
+            ModelAsset asset = createBaseAsset<ModelAsset>(AssetType::Model, assetRegistration, initialStatus);
             asset.assetOps = &ModelAssetOps;
 
             const auto modelAssetHandle = modelAssetPool.create(asset);
             auto* pooledAsset = modelAssetPool.get(modelAssetHandle);
             pooledAsset->selfHandle = AssetHandle::fromModelAssetHandle(modelAssetHandle);
-
-            assetMap[hashedKey] = AssetMapping{
-                .priority = priority,
-                .handle = pooledAsset->selfHandle
-            };
+            assetRegistration.handle = pooledAsset->selfHandle;
 
             return modelAssetHandle;
         }
@@ -426,7 +410,7 @@ namespace litl
             }
 
             asset->status.store(AssetStatus::Loading, std::memory_order::relaxed);
-            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
+            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager, getAssetSource(asset->locator)), true);
         }
 
         // ---------------------------------------------------------------------------------
@@ -437,20 +421,16 @@ namespace litl
         /// Invoked during asset map population.
         /// This creates an unloaded shader asset reference in the asset map that can be loaded via initiateShaderAssetLoad.
         /// </summary>
-        ShaderAssetHandle createBaseShaderAsset(File const& file, std::string_view key, StringId hashedKey, MappingPriority priority, AssetStatus initialStatus) noexcept
+        ShaderAssetHandle createBaseShaderAsset(AssetRegistration& assetRegistration, AssetStatus initialStatus) noexcept
         {
-            ShaderAsset asset = createBaseAsset<ShaderAsset>(AssetType::Shader, file, key, hashedKey, initialStatus);
+            ShaderAsset asset = createBaseAsset<ShaderAsset>(AssetType::Shader, assetRegistration, initialStatus);
             asset.handle = ShaderHandle{};
             asset.assetOps = &ShaderAssetOps;
 
             const auto shaderAssetHandle = shaderAssetPool.create(asset);
             auto* pooledAsset = shaderAssetPool.get(shaderAssetHandle);
             pooledAsset->selfHandle = AssetHandle::fromShaderAssetHandle(shaderAssetHandle);
-
-            assetMap[hashedKey] = AssetMapping{
-                .priority = priority,
-                .handle = pooledAsset->selfHandle
-            };
+            assetRegistration.handle = pooledAsset->selfHandle;
 
             return shaderAssetHandle;
         }
@@ -487,7 +467,7 @@ namespace litl
                 }
             }
 
-            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
+            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager, getAssetSource(asset->locator)), true);
         }
 
         // ---------------------------------------------------------------------------------
@@ -498,20 +478,16 @@ namespace litl
         /// Invoked during asset map population.
         /// This creates an unloaded text asset reference in the asset map that can be loaded via initiateTextAssetLoad.
         /// </summary>
-        TextAssetHandle createBaseTextAsset(File const& file, std::string_view key, StringId hashedKey, MappingPriority priority, AssetStatus initialStatus) noexcept
+        TextAssetHandle createBaseTextAsset(AssetRegistration& assetRegistration, AssetStatus initialStatus) noexcept
         {
-            TextAsset asset = createBaseAsset<TextAsset>(AssetType::Text, file, key, hashedKey, initialStatus);
+            TextAsset asset = createBaseAsset<TextAsset>(AssetType::Text, assetRegistration, initialStatus);
             asset.handle = TextHandle{};
             asset.assetOps = &TextAssetOps;
 
             const auto textAssetHandle = textAssetPool.create(asset);
             auto* pooledAsset = textAssetPool.get(textAssetHandle);
             pooledAsset->selfHandle = AssetHandle::fromTextAssetHandle(textAssetHandle);
-
-            assetMap[hashedKey] = AssetMapping{
-                .priority = priority,
-                .handle = pooledAsset->selfHandle
-            };
+            assetRegistration.handle = pooledAsset->selfHandle;
 
             return textAssetHandle;
         }
@@ -548,7 +524,7 @@ namespace litl
                 }
             }
 
-            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
+            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager, getAssetSource(asset->locator)), true);
         }
 
         // ---------------------------------------------------------------------------------
@@ -559,20 +535,16 @@ namespace litl
         /// Invoked during asset map population.
         /// This creates an unloaded texture asset reference in the asset map that can be loaded via initiateTexture2DAssetLoad.
         /// </summary>
-        Texture2DAssetHandle createBaseTexture2DAsset(File const& file, std::string_view key, StringId hashedKey, MappingPriority priority, AssetStatus initialStatus) noexcept
+        Texture2DAssetHandle createBaseTexture2DAsset(AssetRegistration& assetRegistration, AssetStatus initialStatus) noexcept
         {
-            Texture2DAsset asset = createBaseAsset<Texture2DAsset>(AssetType::Texture2D, file, key, hashedKey, initialStatus);
+            Texture2DAsset asset = createBaseAsset<Texture2DAsset>(AssetType::Texture2D, assetRegistration, initialStatus);
             asset.handle = Texture2DHandle{};
             asset.assetOps = &Texture2DAssetOps;
 
             const auto texture2DAssetHandle = texture2DAssetPool.create(asset);
             auto* pooledAsset = texture2DAssetPool.get(texture2DAssetHandle);
             pooledAsset->selfHandle = AssetHandle::fromTexture2DAssetHandle(texture2DAssetHandle);
-
-            assetMap[hashedKey] = AssetMapping{
-                .priority = priority,
-                .handle = pooledAsset->selfHandle
-            };
+            assetRegistration.handle = pooledAsset->selfHandle;
 
             return texture2DAssetHandle;
         }
@@ -609,7 +581,7 @@ namespace litl
                 }
             }
 
-            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager), true);
+            taskManager->schedule(AssetLoadTask::loadFromDiskAsync({}, asset, *taskManager->getThreadPool(), *objectPool, assetManager, getAssetSource(asset->locator)), true);
         }
     };
 

@@ -12,19 +12,35 @@
 
 namespace litl::import
 {
+    enum class ImportSourceType : uint32_t 
+    {
+        Unknown = 0u,
+        MaterialLitl,
+        MaterialLitlBinary,
+        ModelFbx,
+        ModelGlb,
+        ModelGltf,
+        ModelObj,
+        ShaderSlang,
+        ShaderSpirv,
+
+        // Must be last
+        ImportSourceTypeCount
+    };
+
     class Importer
     {
     public:
 
         virtual ~Importer() = default;
-        virtual Result import(File const& file, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept = 0;
+        virtual Result import(std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept = 0;
     };
 
     template <typename T>
     concept ValidImporter = std::derived_from<T, Importer>&& std::default_initializable<T> && requires 
     {
-        { T::ImporterName }                       -> std::convertible_to<std::string_view>;
-        { T::SupportedExtensions }                -> std::convertible_to<std::span<const std::string_view>>;
+        { T::ImporterName }     -> std::convertible_to<std::string_view>;
+        { T::SupportedTypes }   -> std::convertible_to<std::span<const ImportSourceType>>;
     };
 }
 

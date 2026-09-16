@@ -7,37 +7,10 @@
 
 #include "litl-core/constants.hpp"
 #include "litl-core/stringId.hpp"
-#include "litl-engine/assets/assetType.hpp"
+#include "litl-engine/assets/assetRegistration.hpp"
 
 namespace litl
 {
-    /// <summary>
-    /// Identifies where an asset's bytes live.
-    /// </summary>
-    struct AssetLocator
-    {
-        /// <summary>
-        /// Which source owns it.
-        /// </summary>
-        uint32_t sourceIndex{ Constants::uint32_null_index };
-
-        /// <summary>
-        /// File table index, bundle entry index, etc.
-        /// </summary>
-        uint32_t entryIndex{ Constants::uint32_null_index };
-    };
-
-    /// <summary>
-    /// What an asset source reports for each asset it can provide.
-    /// </summary>
-    struct AssetRegistration
-    {
-        std::string key;
-        AssetType type{ AssetType::Unknown };
-        AssetLocator locator;
-        uint32_t priority{ 0u };
-    };
-
     /// <summary>
     /// Level of indirection above where the bytes of an asset come from: loose file, bundle, etc.
     /// </summary>

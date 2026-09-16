@@ -5,7 +5,7 @@ namespace litl::import
 {
     ImporterRegistry::ImporterRegistry()
     {
-
+        m_entries.resize(static_cast<uint32_t>(ImportSourceType::ImportSourceTypeCount), {});
     }
 
     ImporterRegistry::~ImporterRegistry()
@@ -13,16 +13,16 @@ namespace litl::import
 
     }
 
-    ImporterRegistry::Entry const* ImporterRegistry::find(std::string_view extension) const noexcept
+    ImporterRegistry::Entry const* ImporterRegistry::find(ImportSourceType type) const noexcept
     {
-        const auto iter = m_entryExtensionMap.find(StringId(normalizeExtension(extension)));
+        const uint32_t index = static_cast<uint32_t>(type);
 
-        if (iter == m_entryExtensionMap.end())
+        if (index < m_entries.size())
         {
-            return nullptr;
+            return &m_entries[index];
         }
 
-        return &m_entries[iter->second];
+        return nullptr;
     }
 
     std::unique_ptr<Importer> ImporterRegistry::create(File const& file) const noexcept

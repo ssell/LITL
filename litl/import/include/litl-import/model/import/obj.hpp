@@ -13,7 +13,7 @@ namespace litl::import
     public:
 
         static constexpr std::string_view ImporterName = "Wavefront OBJ";
-        static constexpr std::array SupportedExtensions = { std::string_view{".obj"} };
+        static constexpr std::array SupportedTypes = { ImportSourceType::ModelObj };
 
         ObjImporter();
         ~ObjImporter();
@@ -21,7 +21,7 @@ namespace litl::import
         ObjImporter(ObjImporter const&) = delete;
         ObjImporter& operator=(ObjImporter const&) = delete;
 
-        [[nodiscard]] Result import(File const& file, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept override;
+        [[nodiscard]] Result import(std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept override;
     };
 }
 

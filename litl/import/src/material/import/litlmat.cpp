@@ -114,7 +114,7 @@ namespace litl::import
 
     }
 
-    bool importShadersTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* intermediateMaterial, File const& file) noexcept
+    bool importShadersTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* intermediateMaterial, std::string_view location) noexcept
     {
         for (auto& shaderKvp : inputMaterial.shaders)
         {
@@ -123,13 +123,13 @@ namespace litl::import
 
             if (shader.resource.empty())
             {
-                logWarning(".litlmat import of ", file.name(), ": shader '", type, "' missing required resource path ('resource'). Rejecting.");
+                logWarning(".litlmat import of ", location, ": shader '", type, "' missing required resource path ('resource'). Rejecting.");
                 return false;
             }
 
             if (shader.entry.empty())
             {
-                logWarning(".litlmat import of ", file.name(), ": shader '", type, "' missing required entry point ('entry'). Rejecting.");
+                logWarning(".litlmat import of ", location, ": shader '", type, "' missing required entry point ('entry'). Rejecting.");
                 return false;
             }
 
@@ -137,7 +137,7 @@ namespace litl::import
 
             if (mappedType == s_shaderTypeMap.end())
             {
-                logWarning(".litlmat import of ", file.name(), ": shader '", type, "' invalid shader type '", type, "' specified. Rejecting.");
+                logWarning(".litlmat import of ", location, ": shader '", type, "' invalid shader type '", type, "' specified. Rejecting.");
                 return false;
             }
 
@@ -145,13 +145,13 @@ namespace litl::import
             {
                 if (!intermediateMaterial->setShader(mappedType->second, shader.resource, shader.entry))
                 {
-                    logWarning(".litlmat import of ", file.name(), ": shader '", type, "' failed to be set. Rejecting.");
+                    logWarning(".litlmat import of ", location, ": shader '", type, "' failed to be set. Rejecting.");
                     return false;
                 }
             }
             else
             {
-                logWarning(".litlmat import of ", file.name(), ": shader '", type, "' has unhandled type of '", mappedType->first, "'. Rejecting.");
+                logWarning(".litlmat import of ", location, ": shader '", type, "' has unhandled type of '", mappedType->first, "'. Rejecting.");
                 return false;
             }
         }
@@ -159,7 +159,7 @@ namespace litl::import
         return true;
     }
 
-    bool importRasterStateTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* intermediateMaterial, File const& file) noexcept
+    bool importRasterStateTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* intermediateMaterial, std::string_view location) noexcept
     {
         const auto cullMode = toLowercase(inputMaterial.raster.cullMode);
 
@@ -181,7 +181,7 @@ namespace litl::import
         }
         else
         {
-            logWarning(".litlmat import of ", file.name(), ": raster state 'cullMode' set to invalid value of '", cullMode, "'. Expected: 'back', 'front', 'none', 'both', or not provided. Rejecting.");
+            logWarning(".litlmat import of ", location, ": raster state 'cullMode' set to invalid value of '", cullMode, "'. Expected: 'back', 'front', 'none', 'both', or not provided. Rejecting.");
             return false;
         }
 
@@ -197,14 +197,14 @@ namespace litl::import
         }
         else
         {
-            logWarning(".litlmat import of ", file.name(), ": raster state 'frontFace' set to invalid value of '", cullMode, "'. Expected: 'clockwise', 'cw', 'counterclockwise', 'counter-clockwise', 'ccw', or not provided. Rejecting.");
+            logWarning(".litlmat import of ", location, ": raster state 'frontFace' set to invalid value of '", cullMode, "'. Expected: 'clockwise', 'cw', 'counterclockwise', 'counter-clockwise', 'ccw', or not provided. Rejecting.");
             return false;
         }
 
         return true;
     }
 
-    bool importPropertiesTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* intermediateMaterial, File const& file) noexcept
+    bool importPropertiesTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* intermediateMaterial, std::string_view location) noexcept
     {
         for (auto& propertyKvp : inputMaterial.properties)
         {
@@ -213,7 +213,7 @@ namespace litl::import
 
             if (type.empty())
             {
-                logWarning(".litlmat import of ", file.name(), ": property '", propertyKvp.first, "' missing type specifier. Rejecting.");
+                logWarning(".litlmat import of ", location, ": property '", propertyKvp.first, "' missing type specifier. Rejecting.");
                 return false;
             }
 
@@ -221,13 +221,13 @@ namespace litl::import
 
             if (mappedType == s_propertyTypeMap.end())
             {
-                logWarning(".litlmat import of ", file.name(), ": property '", propertyKvp.first, "' invalid type '", type, "' specified. Rejecting.");
+                logWarning(".litlmat import of ", location, ": property '", propertyKvp.first, "' invalid type '", type, "' specified. Rejecting.");
                 return false;
             }
 
             if (!intermediateMaterial->addProperty(propertyKvp.first, mappedType->second, propertyKvp.second.value))
             {
-                logWarning(".litlmat import of ", file.name(), ": property '", propertyKvp.first, "' invalid data. Rejecting.");
+                logWarning(".litlmat import of ", location, ": property '", propertyKvp.first, "' invalid data. Rejecting.");
                 return false;
             }
         }
@@ -235,7 +235,7 @@ namespace litl::import
         return true;
     }
 
-    bool importHintsTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* intermediateMaterial, File const& file) noexcept
+    bool importHintsTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* intermediateMaterial, std::string_view location) noexcept
     {
         intermediateMaterial->setHintFrequentUpdates(inputMaterial.hints.frequentUpdates);
 
@@ -244,7 +244,7 @@ namespace litl::import
         return true;      // leave bool return to match other importX functions and for future compatibility.
     }
 
-    Result LitlMatImporter::import(File const& file, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
+    Result LitlMatImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
     {
         const auto sourceBytesString = std::string_view{ reinterpret_cast<char const*>(sourceBytes.data()), sourceBytes.size() };
 
@@ -274,27 +274,27 @@ namespace litl::import
         }
         else
         {
-            intermediateMaterial->setName(file.name());
+            intermediateMaterial->setName(location);
         }
 
-        if (!importShadersTable(inputMaterial, intermediateMaterial, file))
+        if (!importShadersTable(inputMaterial, intermediateMaterial, location))
         {
-            return Result::Error(ErrorType::ImporterFailed, std::format(".litlmat import of {}: Error encountered importing [properties] table.", file.name()));
+            return Result::Error(ErrorType::ImporterFailed, std::format(".litlmat import of {}: Error encountered importing [properties] table.", location));
         }
 
-        if (!importRasterStateTable(inputMaterial, intermediateMaterial, file))
+        if (!importRasterStateTable(inputMaterial, intermediateMaterial, location))
         {
-            return Result::Error(ErrorType::ImporterFailed, std::format(".litlmat import of {}: Error encountered importing [raster] table.", file.name()));
+            return Result::Error(ErrorType::ImporterFailed, std::format(".litlmat import of {}: Error encountered importing [raster] table.", location));
         }
 
-        if (!importPropertiesTable(inputMaterial, intermediateMaterial, file))
+        if (!importPropertiesTable(inputMaterial, intermediateMaterial, location))
         {
-            return Result::Error(ErrorType::ImporterFailed, std::format(".litlmat import of {}: Error encountered importing [properties] table.", file.name()));
+            return Result::Error(ErrorType::ImporterFailed, std::format(".litlmat import of {}: Error encountered importing [properties] table.", location));
         }
 
-        if (!importHintsTable(inputMaterial, intermediateMaterial, file))
+        if (!importHintsTable(inputMaterial, intermediateMaterial, location))
         {
-            return Result::Error(ErrorType::ImporterFailed, std::format(".litlmat import of {}: Error encountered importing [hints] table.", file.name()));
+            return Result::Error(ErrorType::ImporterFailed, std::format(".litlmat import of {}: Error encountered importing [hints] table.", location));
         }
 
         return Result::Success();

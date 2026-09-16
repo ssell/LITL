@@ -16,7 +16,7 @@ namespace litl::import
     public:
 
         static constexpr std::string_view ImporterName = "LITL Material";
-        static constexpr std::array SupportedExtensions = { std::string_view{".litlmat"} };
+        static constexpr std::array SupportedTypes = { ImportSourceType::MaterialLitl };
 
         LitlMatImporter();
         ~LitlMatImporter();
@@ -24,7 +24,7 @@ namespace litl::import
         LitlMatImporter(LitlMatImporter const&) = delete;
         LitlMatImporter& operator=(LitlMatImporter const&) = delete;
 
-        [[nodiscard]] Result import(File const& file, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept override;
+        [[nodiscard]] Result import(std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept override;
     };
 }
 

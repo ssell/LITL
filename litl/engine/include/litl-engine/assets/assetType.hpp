@@ -5,7 +5,7 @@
 
 namespace litl
 {
-    enum class AssetType : uint8_t
+    enum class AssetType : uint32_t
     {
         Unknown   = 0u,
         Material  = 1u,

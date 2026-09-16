@@ -10,7 +10,7 @@ namespace litl
 
     Asset::Asset(Asset const& other) noexcept
     {
-        file = other.file;
+        locator = other.locator;
         key = other.key;
         hashedKey = other.hashedKey;
         type = other.type;
@@ -21,7 +21,7 @@ namespace litl
 
     Asset& Asset::operator=(Asset const& other) noexcept
     {
-        file = other.file;
+        locator = other.locator;
         key = other.key;
         hashedKey = other.hashedKey;
         type = other.type;
@@ -36,7 +36,7 @@ namespace litl
     {
         if (this != &other)
         {
-            file = other.file;
+            locator = other.locator;
             key = other.key;
             hashedKey = other.hashedKey;
             type = other.type;
@@ -50,7 +50,7 @@ namespace litl
     {
         if (this != &other)
         {
-            file = other.file;
+            locator = other.locator;
             key = other.key;
             hashedKey = other.hashedKey;
             type = other.type;

@@ -176,7 +176,7 @@ namespace litl::import
 
     }
 
-    Result ObjImporter::import(File const& file, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
+    Result ObjImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
     {
         // ---------------------------------------------------------------------------------
         // Parse the OBJ
@@ -189,7 +189,7 @@ namespace litl::import
 
         if (objResult.error.code)
         {
-            logError("Import of '", file.name(), "' failed with error code ", objResult.error.code.value());
+            logError("Import of '", location, "' failed with error code ", objResult.error.code.value());
             return Result::Error(ErrorType::ImporterFailed);
         }
 
@@ -214,7 +214,7 @@ namespace litl::import
         auto* modelImportResult = modelDataItem.getDataPtr<ModelImportResult>();
         modelImportResult->model = std::make_unique<ModelIntermediateData>();
 
-        modelDataItem.setName(file.name());
+        modelDataItem.setName(location);
         modelImportResult->model->setName(modelDataItem.getName());
 
         // ---------------------------------------------------------------------------------

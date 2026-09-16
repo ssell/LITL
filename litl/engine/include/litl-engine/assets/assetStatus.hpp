@@ -55,7 +55,8 @@ namespace litl
         DependencyLoadFailed        = 16u,
         InvalidImportedItemCount    = 17u,
         DecodeBytesResultEmpty      = 18u,
-        DecodeBytesUnexpectedResult = 19u
+        DecodeBytesUnexpectedResult = 19u,
+        InvalidAssetSource          = 20u
     };
 }
 

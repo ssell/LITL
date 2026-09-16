@@ -10,7 +10,7 @@ namespace litl::import
     public:
 
         static constexpr std::string_view ImporterName = "Slang Shader";
-        static constexpr std::array SupportedExtensions = { std::string_view{".slang"} };
+        static constexpr std::array SupportedTypes = { ImportSourceType::ShaderSlang };
 
         SlangImporter();
         ~SlangImporter();
@@ -18,7 +18,7 @@ namespace litl::import
         SlangImporter(SlangImporter const&) = delete;
         SlangImporter& operator=(SlangImporter const&) = delete;
 
-        [[nodiscard]] Result import(File const& file, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept override;
+        [[nodiscard]] Result import(std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept override;
     };
 }
 

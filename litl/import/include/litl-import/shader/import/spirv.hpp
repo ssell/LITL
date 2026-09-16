@@ -10,7 +10,7 @@ namespace litl::import
     public:
 
         static constexpr std::string_view ImporterName = "SPIR-V Shader";
-        static constexpr std::array SupportedExtensions = { std::string_view{".spv"} };
+        static constexpr std::array SupportedTypes = { ImportSourceType::ShaderSpirv };
 
         SpirvImporter();
         ~SpirvImporter();
@@ -18,7 +18,7 @@ namespace litl::import
         SpirvImporter(SpirvImporter const&) = delete;
         SpirvImporter& operator=(SpirvImporter const&) = delete;
 
-        [[nodiscard]] Result import(File const& file, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept override;
+        [[nodiscard]] Result import(std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept override;
     };
 }
 

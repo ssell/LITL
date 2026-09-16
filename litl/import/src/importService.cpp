@@ -62,7 +62,7 @@ namespace litl::import
         m_importerRegistry.add<SpirvImporter>();
     }
 
-    Result ImportService::import(File const& sourceFile, ImportedData& importedData, bool shouldPrepare) noexcept
+    Result ImportService::import(File const& sourceFile, std::string_view location, ImportedData& importedData, bool shouldPrepare) noexcept
     {
         if (!sourceFile.exists())
         {
@@ -81,10 +81,10 @@ namespace litl::import
             return Result::Error(ErrorType::FailedToReadSourceFile);
         }
 
-        return import(sourceFile, *fileBytes, importedData, shouldPrepare);
+        return import(location, *fileBytes, importedData, shouldPrepare);
     }
 
-    Result ImportService::import(File const& sourceFile, std::span<std::byte const> sourceBytes, ImportedData& importedData, bool shouldPrepare) noexcept
+    Result ImportService::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData, bool shouldPrepare) noexcept
     {
         auto importer = m_importerRegistry.create(sourceFile.extension());
 
@@ -93,7 +93,7 @@ namespace litl::import
             return Result::Error(ErrorType::NoImporterForSourceExtension);
         }
 
-        Result const importResult = importer->import(sourceFile, sourceBytes, importedData);
+        Result const importResult = importer->import(location, sourceBytes, importedData);
 
         if (!importResult.success)
         {
@@ -143,7 +143,7 @@ namespace litl::import
         // Import from one external file
         File const sourceFile = sourcePath;
         ImportedData importedData{};
-        Result const importResult = import(sourcePath, importedData, false);
+        Result const importResult = import(sourcePath, sourcePath, importedData, false);
 
         if (!importResult.success || importedData.items.empty())
         {

@@ -18,9 +18,4 @@ namespace litl
     {
         return m_descriptor.string;
     }
-
-    TextType Text::type() const noexcept
-    {
-        return m_descriptor.type;
-    }
 }

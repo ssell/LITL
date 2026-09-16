@@ -3,6 +3,7 @@
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/assets/assetDependencies.hpp"
 #include "litl-engine/assets/asset.hpp"
+#include "litl-engine/assets/assetSource.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 
 namespace litl
@@ -32,7 +33,8 @@ namespace litl
         Asset* asset,
         TaskThreadPool& threadPool,
         ObjectPool& objectPool,
-        AssetManager& assetManager) noexcept
+        AssetManager& assetManager,
+        AssetSource* assetSource) noexcept
     {
         std::vector<std::byte> bytes;
 
@@ -43,23 +45,22 @@ namespace litl
             co_return false;
         }
 
+        if (assetSource == nullptr)
+        {
+            asset->setError(AssetErrorCode::InvalidAssetSource);
+            co_return false;
+        }
+
         // ---------------------------------------------------------------------------------
         // --- Switch execution context to a worker thread
         // ---------------------------------------------------------------------------------
 
         co_await ResumeTaskOnWorkerThread{ threadPool };
         {
-            // Read in all file bytes.
-            if (asset->file.refresh())
+            // Read in all file bytes. May be from an on-disk file, bundle, etc.
+            if (!assetSource->read(asset->locator, bytes))
             {
-                if (!asset->file.readAllBytes(bytes))
-                {
-                    asset->setError(AssetErrorCode::SourceReadFail);
-                }
-            }
-            else
-            {
-                asset->setError(AssetErrorCode::FileRefreshFail);
+                asset->setError(AssetErrorCode::SourceReadFail);
             }
 
             // Decode raw bytes into asset-specific data representation.

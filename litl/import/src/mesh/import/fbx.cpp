@@ -16,7 +16,7 @@ namespace litl::import
 
     }
 
-    Result FbxImporter::import(File const& file, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
+    Result FbxImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
     {
         const ufbx_load_opts fbxOptions = { 0 };
         ufbx_error fbxError;
@@ -24,7 +24,7 @@ namespace litl::import
 
         if (fbxScene == nullptr)
         {
-            logError("Import of '", file.name(), "' failed with error code ", static_cast<uint32_t>(fbxError.type), ": ", std::string_view{ fbxError.description.data, fbxError.description.length });
+            logError("Import of '", location, "' failed with error code ", static_cast<uint32_t>(fbxError.type), ": ", std::string_view{ fbxError.description.data, fbxError.description.length });
             return Result::Error(ErrorType::ImporterFailed);
         }
 

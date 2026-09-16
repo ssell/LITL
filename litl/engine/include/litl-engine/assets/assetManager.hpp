@@ -92,7 +92,7 @@ namespace litl
     private:
 
         struct Impl;
-        ImplPtr<Impl, 1328u> m_impl;
+        ImplPtr<Impl, 1360u> m_impl;
     };
 }
 
