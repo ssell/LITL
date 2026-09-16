@@ -121,58 +121,37 @@ namespace litl::import
             return importResult;
         }
 
-        // ... todo make this work again ...
+        const uint32_t itemCount = static_cast<uint32_t>(writeableResults.importedData.items.size());
+        writeableResults.bytes.resize(itemCount);
 
-        /*
-        const std::string rootItemFolderPath =  toLowercase(destFolderPath);
-        const std::string childItemFolderPath = toLowercase(Directory::appendFolder(rootItemFolderPath, sourceFile.name()));
-
-        if (importedData.items.size() > 1)
+        for (uint32_t i = 0u; i < itemCount; ++i)
         {
-            if (!Directory::ensureExists(childItemFolderPath))
-            {
-                return Result::Error(ErrorType::FailedToCreateChildItemSubDirectory);
-            }
-        }
-
-        for (uint32_t i = 0u; i < static_cast<uint32_t>(importedData.items.size()); ++i)
-        {
-            auto& importedDataItem = importedData.items[i];
+            auto& importedDataItem = writeableResults.importedData.items[i];
             auto exporter = m_exporterRegistry.create(importedDataItem.getType());
 
             if (exporter == nullptr)
             {
-                importedData.result.allSuccess = false;
-                importedData.result.firstNonSuccessResult = Result::Error(ErrorType::NoExporterForImportedDataType);
-                importedData.result.errorIndex = i;
+                writeableResults.importedData.result.allSuccess = false;
+                writeableResults.importedData.result.firstNonSuccessResult = Result::Error(ErrorType::NoExporterForImportedDataType);
+                writeableResults.importedData.result.errorIndex = i;
 
                 return Result::Error(ErrorType::ProcessFailedSeeIndividualItemResult);
             }
 
-            Result const prepareResult = exporter->prepare(importedData, i);
+            const Result prepareResult = exporter->prepare(writeableResults.importedData, i);
 
             if (!prepareResult.success)
             {
                 return prepareResult;
             }
 
-            Result exportResult = Result::Success();
-
-            if (i == 0u)
-            {
-                exportResult = exporter->write(sourceFile, rootItemFolderPath, importedData, i, std::nullopt);
-            }
-            else
-            {
-                exportResult = exporter->write(sourceFile, childItemFolderPath, importedData, i, importedDataItem.getName());
-            }
+            const Result exportResult = exporter->write(writeableResults.bytes[i], writeableResults.importedData, i);
 
             if (!exportResult.success)
             {
                 return exportResult;
             }
         }
-        */
 
         return Result::Success();
     }
