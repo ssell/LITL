@@ -248,6 +248,12 @@ namespace litl
         /// </summary>
         [[nodiscard]] bool finalizeSubmeshes(ErrorCode& error) noexcept;
 
+        /// <summary>
+        /// Shrinks the CPU memory to fit the actual buffer sizes.
+        /// Particularly during import the buffers are oversized to avoid re-allocations.
+        /// </summary>
+        void shrinkToFit() noexcept;
+
     private:
 
         bounds::AABB m_bounds{};

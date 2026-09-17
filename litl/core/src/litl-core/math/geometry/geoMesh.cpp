@@ -406,4 +406,11 @@ namespace litl
 
         return true;
     }
+
+    void GeoMesh::shrinkToFit() noexcept
+    {
+        m_vertices.shrink_to_fit();
+        m_indices.shrink_to_fit();
+        m_faceIndexCounts.shrink_to_fit();
+    }
 }

@@ -50,6 +50,8 @@ namespace litl::import
         // ... todo weld ...
         // ... todo remove degenerates (zero-area triangles, repeated indices, etc.) ...
 
+        mesh->shrinkToFit();
+
         if (meshResult->importConvention.sourceIsCcwFront)
         {
             mesh->setWindingOrder(MeshWinding::CounterClockwise);

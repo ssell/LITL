@@ -117,9 +117,9 @@ namespace litl::import
             auto& faceIndexCounts = litlMesh->getFaceIndexCounts();
             auto& faceMaterialSlots = litlMesh->getFaceMaterialSlots();
 
-            vertices.reserve(objAttributes.positions.size());
+            vertices.reserve(objMesh.indices.size());
             indices.reserve(objMesh.indices.size());
-            faceIndexCounts.reserve(indices.size() / 3ull);
+            faceIndexCounts.reserve(objMesh.num_face_vertices.size() / 3ull);
 
             while (index < static_cast<uint32_t>(objMesh.indices.size()))
             {
