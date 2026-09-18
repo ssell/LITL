@@ -9,7 +9,7 @@ namespace litl::import
         return false;
     }
 
-    bool LitlTextureBinary::deserialize(TextureIntermediateData const& texture, ErrorCode& error) const noexcept
+    bool LitlTextureBinary::deserialize(TextureIntermediateData& texture, ErrorCode& error) const noexcept
     {
         // ... todo ...
         error = ErrorCode::FunctionNotImplemented;

@@ -3,7 +3,7 @@
 
 #include "litl-core/hash.hpp"
 #include "litl-core/containers/common.hpp"
-#include "litl-core/formats/litlmesh.hpp"
+#include "litl-core/formats/litlbmsh.hpp"
 
 namespace litl
 {
@@ -74,14 +74,14 @@ namespace litl
     // Serialization
     // -------------------------------------------------------------------------------------
 
-    bool LitlMesh::serialize(GeoMesh const& mesh, std::vector<std::byte>& data, ErrorCode& error) noexcept
+    bool LitlMeshBinary::serialize(GeoMesh const& mesh, std::vector<std::byte>& data, ErrorCode& error) noexcept
     {
         /*
          * TODO: In the future, serialize can likely be abstracted out a lot more.
          * It can potentially be condensed to the expected blockDataTable and fed to a common serialize in BinaryBlockFile.
          * But it is best to do that after we have another file format (such as a potential texture format) that is built on BinaryBlockFile.
          * A potential abstraction would be a block builder:
-         * 
+         *
          *     addBlock(...);
          *     finalize(...);
          */
@@ -101,7 +101,7 @@ namespace litl
             return false;
         }
 
-        LitlMesh litlMesh{};
+        LitlMeshBinary litlMesh{};
         const LitlMeshFlag flags = determineFlags(mesh);
         StringMap stringMap{};
 
@@ -194,7 +194,7 @@ namespace litl
             }
 
             mesh.setSubmeshes(submeshes);
-            
+
             return true;
         }
 
@@ -246,7 +246,7 @@ namespace litl
         }
     }
 
-    bool LitlMesh::deserialize(GeoMesh& mesh, ErrorCode& error) const noexcept
+    bool LitlMeshBinary::deserialize(GeoMesh& mesh, ErrorCode& error) const noexcept
     {
         // todo: material slot support
         const LitlMeshFlag flags = static_cast<LitlMeshFlag>(header.flags);

@@ -29,7 +29,7 @@
 #include "litl-import/shader/import/spirv.hpp"
 
 // Texture
-#include "litl-import/texture/export/textureExporter.hpp""
+#include "litl-import/texture/export/textureExporter.hpp"
 
 namespace litl::import
 {

@@ -27,7 +27,7 @@ namespace litl::import
         /// <summary>
         /// Populates the provided TextureIntermediateData object from the BinaryBlockFile::data byte array from a .litlbtex that was processed via BinaryBlockFile::parse.
         /// </summary>
-        [[nodiscard]] bool deserialize(TextureIntermediateData const& texture, ErrorCode& error) const noexcept;
+        [[nodiscard]] bool deserialize(TextureIntermediateData& texture, ErrorCode& error) const noexcept;
     };
 }
 

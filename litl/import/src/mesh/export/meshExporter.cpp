@@ -1,7 +1,6 @@
 #include <format>
 
-#include "litl-core/directory.hpp"
-#include "litl-core/formats/litlmesh.hpp"
+#include "litl-core/formats/litlbmsh.hpp"
 #include "litl-import/mesh/export/meshExporter.hpp"
 
 namespace litl::import
@@ -100,7 +99,7 @@ namespace litl::import
 
         GeoMesh* mesh = meshResult->mesh.get();         // todo handle submeshes;
 
-        if (!LitlMesh::serialize(*mesh, serialized, errorCode))
+        if (!LitlMeshBinary::serialize(*mesh, serialized, errorCode))
         {
             return Result::Error(ErrorType::SerializationFailed, std::format("Serialization of GeoMesh to LitlMesh failed with error code {}", static_cast<uint32_t>(errorCode)));
         }

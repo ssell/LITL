@@ -43,7 +43,7 @@ namespace litl
     /// To convert a GeoMesh to a binary blob simply use the serialize method.
     /// To deserialize a binary blob to a GeoMesh you must first call parse and then deserialize.
     /// </summary>
-    struct LitlMesh final : public BinaryBlockFile
+    struct LitlMeshBinary final : public BinaryBlockFile
     {
         static constexpr BinaryBlockFileFormatIdentity Identity{
             .magic = { 'L', 'M', 'S', 'H' },
@@ -99,7 +99,7 @@ namespace litl
         [[nodiscard]] bool deserialize(GeoMesh& mesh, ErrorCode& error) const noexcept;
     };
 
-    static_assert(std::is_trivially_copyable_v<LitlMesh>);
+    static_assert(std::is_trivially_copyable_v<LitlMeshBinary>);
 }
 
 #endif
