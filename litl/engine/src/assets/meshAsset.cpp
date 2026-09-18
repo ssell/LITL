@@ -1,4 +1,4 @@
-#include "litl-core/formats/litlbmsh.hpp"
+#include "litl-import/mesh/intermediate/litlbmsh.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-engine/assets/meshAsset.hpp"
 #include "litl-engine/objects/objectPool.hpp"
@@ -17,10 +17,10 @@ namespace litl
     {
         [[nodiscard]] bool decodeLitlMeshBytes(MeshAsset* meshAsset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
         {
-            LitlMeshBinary litlmesh;
+            import::LitlMeshBinary litlmesh;
             BinaryBlockFile::ErrorCode litlmeshError = BinaryBlockFile::ErrorCode::None;
 
-            if (!LitlMeshBinary::parse(bytes, litlmesh, litlmeshError))
+            if (!import::LitlMeshBinary::parse(bytes, litlmesh, litlmeshError))
             {
                 logError("Failed to parse mesh asset with error code ", static_cast<uint32_t>(litlmeshError));
                 error = AssetErrorCode::ParseFailed;

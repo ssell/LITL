@@ -12,8 +12,6 @@
 #include "litl-core/math/geometry/geoMesh.hpp"
 #include "litl-core/formats/binaryBlockFile.hpp"
 
-static_assert(std::endian::native == std::endian::little);
-
 namespace litl
 {
     /// <summary>
@@ -35,7 +33,10 @@ namespace litl
     static_assert(sizeof(LitlMeshFlagBits) == sizeof(uint32_t));
     LITL_ENABLE_BITMASK(LitlMeshFlagBits);
     using LitlMeshFlag = LitlMeshFlagBits;
+}
 
+namespace litl::import
+{
     /// <summary>
     /// Binary file representation of a GeoMesh that is stored on disk as a ".litlbmsh".
     /// This is effectively a non-owning view over the raw data blob.

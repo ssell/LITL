@@ -30,7 +30,10 @@ add_library(litl-core
 		"src/litl-core/task/taskThreadQueue.cpp" 
 		"src/litl-core/math/geometry/geoMesh.cpp" 
 		"src/litl-core/directory.cpp" 
-		"src/litl-core/formats/litlbmsh.cpp" "src/litl-core/formats/binaryBlockFile.cpp" "src/litl-core/math/geometry/tools/orientation.cpp" "src/litl-core/math/geometry/tools/normals.cpp" "src/litl-core/math/geometry/tools/triangulate.cpp")
+		"src/litl-core/formats/binaryBlockFile.cpp" 
+		"src/litl-core/math/geometry/tools/orientation.cpp" 
+		"src/litl-core/math/geometry/tools/normals.cpp" 
+		"src/litl-core/math/geometry/tools/triangulate.cpp")
 		
 target_include_directories(litl-core 
 	PUBLIC 

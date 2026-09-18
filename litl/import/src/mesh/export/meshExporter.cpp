@@ -1,6 +1,6 @@
 #include <format>
 
-#include "litl-core/formats/litlbmsh.hpp"
+#include "litl-import/mesh/intermediate/litlbmsh.hpp"
 #include "litl-import/mesh/export/meshExporter.hpp"
 
 namespace litl::import

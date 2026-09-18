@@ -3,9 +3,9 @@
 
 #include "litl-core/hash.hpp"
 #include "litl-core/containers/common.hpp"
-#include "litl-core/formats/litlbmsh.hpp"
+#include "litl-import/mesh/intermediate/litlbmsh.hpp"
 
-namespace litl
+namespace litl::import
 {
     namespace
     {

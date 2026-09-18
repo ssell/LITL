@@ -67,7 +67,7 @@ add_executable(litl-tests
 	"src/litl-core/moveOnlyFunc_tests.cpp" 
 	"src/litl-engine/asset_tests.cpp" 
 	"src/litl-import/importObj_tests.cpp" 
-	"src/litl-core/formats/litlmesh_tests.cpp" 
+	"src/litl-import/litlbmsh_tests.cpp" 
 	"src/litl-core/math/normals_tests.cpp" 
 	"src/litl-core/math/uncommon_tests.cpp" 
 	"src/litl-core/math/geomesh_tests.cpp" 

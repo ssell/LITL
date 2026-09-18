@@ -9,6 +9,7 @@ add_library(litl-import STATIC
 	"src/mesh/import/glb.cpp" 
 	"src/importService.cpp" 
 	"src/mesh/export/meshExporter.cpp" 
+	"src/mesh/intermediate/litlbmsh.cpp" 
 	"src/importerRegistry.cpp" 
 	"src/exporterRegistry.cpp" 
 	"src/material/import/litlmat.cpp" 
@@ -24,7 +25,11 @@ add_library(litl-import STATIC
 	"src/model/import/obj.cpp" 
 	"src/model/intermediate/modelIntermediateData.cpp" 
 	"src/model/intermediate/litlmdl.cpp" 
-	"src/importedData.cpp" "src/texture/import/stb.cpp" "src/texture/export/textureExporter.cpp" "src/texture/intermediate/textureIntermediateData.cpp" "src/texture/intermediate/litlbtex.cpp")
+	"src/importedData.cpp" 
+	"src/texture/import/stb.cpp" 
+	"src/texture/export/textureExporter.cpp" 
+	"src/texture/intermediate/textureIntermediateData.cpp" 
+	"src/texture/intermediate/litlbtex.cpp")
 
 target_include_directories(litl-import
 	PUBLIC

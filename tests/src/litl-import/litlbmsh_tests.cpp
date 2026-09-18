@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "tests.hpp"
-#include "litl-core/formats/litlbmsh.hpp"
+#include "litl-import/mesh/intermediate/litlbmsh.hpp"
 
 namespace litl::tests
 {
@@ -105,7 +105,7 @@ namespace litl::tests
             std::vector<std::byte> blob{};
             ErrorCode error = ErrorCode::None;
 
-            REQUIRE(LitlMeshBinary::serialize(mesh, blob, error) == true);
+            REQUIRE(import::LitlMeshBinary::serialize(mesh, blob, error) == true);
             REQUIRE(error == ErrorCode::None);
 
             return blob;
@@ -180,20 +180,20 @@ namespace litl::tests
 
         void requireParseFails(std::vector<std::byte> const& blob, ErrorCode expected) noexcept
         {
-            LitlMeshBinary parsed{};
+            import::LitlMeshBinary parsed{};
             ErrorCode error = ErrorCode::None;
 
-            REQUIRE(LitlMeshBinary::parse(blob, parsed, error) == false);
+            REQUIRE(import::LitlMeshBinary::parse(blob, parsed, error) == false);
             REQUIRE(error == expected);
         }
 
         void requireDeserializeFails(std::vector<std::byte> const& blob, ErrorCode expected) noexcept
         {
-            LitlMeshBinary parsed{};
+            import::LitlMeshBinary parsed{};
             ErrorCode error = ErrorCode::None;
 
             // Structure must still be valid - only the mesh semantics are wrong.
-            REQUIRE(LitlMeshBinary::parse(blob, parsed, error) == true);
+            REQUIRE(import::LitlMeshBinary::parse(blob, parsed, error) == true);
             REQUIRE(error == ErrorCode::None);
 
             GeoMesh out{};
@@ -223,10 +223,10 @@ namespace litl::tests
         {
             std::vector<std::byte> const blob = serializeOrFail(source);
 
-            LitlMeshBinary parsed{};
+            import::LitlMeshBinary parsed{};
             ErrorCode error = ErrorCode::None;
 
-            REQUIRE(LitlMeshBinary::parse(blob, parsed, error) == true);
+            REQUIRE(import::LitlMeshBinary::parse(blob, parsed, error) == true);
             REQUIRE(error == ErrorCode::None);
 
             GeoMesh restored{};
@@ -290,7 +290,7 @@ namespace litl::tests
         std::vector<std::byte> blob{};
         ErrorCode error = ErrorCode::None;
 
-        REQUIRE(LitlMeshBinary::serialize(empty, blob, error) == false);
+        REQUIRE(import::LitlMeshBinary::serialize(empty, blob, error) == false);
         REQUIRE(error == ErrorCode::SourceMeshEmpty);
     } LITL_END_TEST_CASE
 
@@ -320,13 +320,13 @@ namespace litl::tests
 
         {
             std::vector<std::byte> blob = good;
-            patch<uint16_t>(blob, offsetof(Header, versionMajor), LitlMeshBinary::Identity.versionMajor + 1u);
+            patch<uint16_t>(blob, offsetof(Header, versionMajor), import::LitlMeshBinary::Identity.versionMajor + 1u);
             requireParseFails(blob, ErrorCode::MajorVersionMismatch);
         }
 
         {
             std::vector<std::byte> blob = good;
-            patch<uint16_t>(blob, offsetof(Header, versionMinor), LitlMeshBinary::Identity.versionMinor + 1u);
+            patch<uint16_t>(blob, offsetof(Header, versionMinor), import::LitlMeshBinary::Identity.versionMinor + 1u);
             requireParseFails(blob, ErrorCode::MinorVersionMismatch);
         }
 
@@ -388,7 +388,7 @@ namespace litl::tests
         // Corrupt payload byte, hash left untouched.
         {
             std::vector<std::byte> blob = good;
-            BlockDescriptor const vertices = readDescriptor(blob, LitlMeshBinary::BlockIds::Vertices);
+            BlockDescriptor const vertices = readDescriptor(blob, import::LitlMeshBinary::BlockIds::Vertices);
             size_t const target = static_cast<size_t>(vertices.blockOffset);
 
             blob[target] = static_cast<std::byte>(std::to_integer<uint8_t>(blob[target]) ^ 0xFFu);
@@ -408,13 +408,13 @@ namespace litl::tests
         std::vector<std::byte> const good = serializeOrFail(mesh);
         Header const header = readHeader(good);
 
-        size_t const vertexDescriptor = descriptorOffset(good, LitlMeshBinary::BlockIds::Vertices);
-        size_t const indexDescriptor = descriptorOffset(good, LitlMeshBinary::BlockIds::Indices);
+        size_t const vertexDescriptor = descriptorOffset(good, import::LitlMeshBinary::BlockIds::Vertices);
+        size_t const indexDescriptor = descriptorOffset(good, import::LitlMeshBinary::BlockIds::Indices);
 
         REQUIRE(vertexDescriptor != 0ull);
         REQUIRE(indexDescriptor != 0ull);
 
-        BlockDescriptor const vertices = readDescriptor(good, LitlMeshBinary::BlockIds::Vertices);
+        BlockDescriptor const vertices = readDescriptor(good, import::LitlMeshBinary::BlockIds::Vertices);
 
         // Block starting before the first legal block offset.
         {
@@ -482,7 +482,7 @@ namespace litl::tests
         makeQuadMesh(mesh);
 
         std::vector<std::byte> const good = serializeOrFail(mesh);
-        BlockDescriptor const indices = readDescriptor(good, LitlMeshBinary::BlockIds::Indices);
+        BlockDescriptor const indices = readDescriptor(good, import::LitlMeshBinary::BlockIds::Indices);
 
         // Exactly one past the last vertex.
         {
@@ -508,7 +508,7 @@ namespace litl::tests
         mesh.setAllFaceIndexCounts(1u);     // change from triangle faces or else the AllTriangles flag will be set and the face block omitted.
 
         std::vector<std::byte> const good = serializeOrFail(mesh);
-        BlockDescriptor const faces = readDescriptor(good, LitlMeshBinary::BlockIds::Faces);
+        BlockDescriptor const faces = readDescriptor(good, import::LitlMeshBinary::BlockIds::Faces);
         size_t const firstFace = static_cast<size_t>(faces.blockOffset);
 
         {
@@ -544,7 +544,7 @@ namespace litl::tests
         makeTriangleMesh(mesh);
 
         std::vector<std::byte> blob = serializeOrFail(mesh);
-        size_t const bounds = descriptorOffset(blob, LitlMeshBinary::BlockIds::Bounds);
+        size_t const bounds = descriptorOffset(blob, import::LitlMeshBinary::BlockIds::Bounds);
 
         REQUIRE(bounds != 0ull);
 
@@ -570,11 +570,11 @@ namespace litl::tests
         };
 
         std::array<Expectation, 5> const expectations{
-            Expectation{ LitlMeshBinary::BlockIds::Vertices, ErrorCode::MissingVertexBlock },
-            Expectation{ LitlMeshBinary::BlockIds::Indices,  ErrorCode::MissingIndexBlock },
-            Expectation{ LitlMeshBinary::BlockIds::Faces,    ErrorCode::MissingFaceBlock },
-            Expectation{ LitlMeshBinary::BlockIds::Bounds,   ErrorCode::MissingBoundsBlock },
-            Expectation{ LitlMeshBinary::BlockIds::Submeshes, ErrorCode::MissingSubmeshBlock }
+            Expectation{ import::LitlMeshBinary::BlockIds::Vertices, ErrorCode::MissingVertexBlock },
+            Expectation{ import::LitlMeshBinary::BlockIds::Indices,  ErrorCode::MissingIndexBlock },
+            Expectation{ import::LitlMeshBinary::BlockIds::Faces,    ErrorCode::MissingFaceBlock },
+            Expectation{ import::LitlMeshBinary::BlockIds::Bounds,   ErrorCode::MissingBoundsBlock },
+            Expectation{ import::LitlMeshBinary::BlockIds::Submeshes, ErrorCode::MissingSubmeshBlock }
         };
 
         for (auto const& expectation : expectations)
@@ -598,15 +598,15 @@ namespace litl::tests
         makeQuadMesh(source);
 
         std::vector<std::byte> blob = serializeOrFail(source);
-        BlockDescriptor const indices = readDescriptor(blob, LitlMeshBinary::BlockIds::Indices);
+        BlockDescriptor const indices = readDescriptor(blob, import::LitlMeshBinary::BlockIds::Indices);
 
         patch<uint32_t>(blob, static_cast<size_t>(indices.blockOffset), 0xFFFFFFFFu);
         rehash(blob);
 
-        LitlMeshBinary parsed{};
+        import::LitlMeshBinary parsed{};
         ErrorCode error = ErrorCode::None;
 
-        REQUIRE(LitlMeshBinary::parse(blob, parsed, error) == true);
+        REQUIRE(import::LitlMeshBinary::parse(blob, parsed, error) == true);
 
         // Pre-populate the destination, then confirm a failed load does not partially overwrite it.
         GeoMesh destination{};
@@ -632,12 +632,12 @@ namespace litl::tests
 
         std::vector<std::byte> const blob = serializeOrFail(mesh);
 
-        LitlMeshBinary parsed{};
+        import::LitlMeshBinary parsed{};
         ErrorCode error = ErrorCode::None;
 
-        REQUIRE(LitlMeshBinary::parse(blob, parsed, error) == true);
+        REQUIRE(import::LitlMeshBinary::parse(blob, parsed, error) == true);
 
-        auto const vertices = parsed.find(LitlMeshBinary::BlockIds::Vertices);
+        auto const vertices = parsed.find(import::LitlMeshBinary::BlockIds::Vertices);
 
         REQUIRE(vertices.has_value() == true);
         REQUIRE(vertices.value().elementBytes == sizeof(Vertex));
@@ -654,12 +654,12 @@ namespace litl::tests
 
         std::vector<std::byte> const blob = serializeOrFail(mesh);
 
-        LitlMeshBinary parsed{};
+        import::LitlMeshBinary parsed{};
         ErrorCode error = ErrorCode::None;
 
-        REQUIRE(LitlMeshBinary::parse(blob, parsed, error) == true);
+        REQUIRE(import::LitlMeshBinary::parse(blob, parsed, error) == true);
 
-        auto const vertices = parsed.find(LitlMeshBinary::BlockIds::Vertices);
+        auto const vertices = parsed.find(import::LitlMeshBinary::BlockIds::Vertices);
 
         REQUIRE(vertices.has_value() == true);
         REQUIRE(vertices.value().as<uint32_t>(error).has_value() == false);
@@ -686,12 +686,12 @@ namespace litl::tests
 
         std::span<std::byte const> const view{ shifted.data() + 1u, aligned.size() };
 
-        LitlMeshBinary parsed{};
+        import::LitlMeshBinary parsed{};
         ErrorCode error = ErrorCode::None;
 
-        REQUIRE(LitlMeshBinary::parse(view, parsed, error) == true);
+        REQUIRE(import::LitlMeshBinary::parse(view, parsed, error) == true);
 
-        auto const vertices = parsed.find(LitlMeshBinary::BlockIds::Vertices);
+        auto const vertices = parsed.find(import::LitlMeshBinary::BlockIds::Vertices);
 
         REQUIRE(vertices.has_value() == true);
         REQUIRE(vertices.value().as<Vertex>(error).has_value() == false);

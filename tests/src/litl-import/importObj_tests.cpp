@@ -3,7 +3,7 @@
 #include "tests.hpp"
 #include "litl-import/importService.hpp"
 #include "litl-core/directory.hpp"
-#include "litl-core/formats/litlbmsh.hpp"
+#include "litl-import/mesh/intermediate/litlbmsh.hpp"
 
 namespace litl::tests
 {
@@ -107,10 +107,10 @@ namespace litl::tests
         GeoMesh litlGeoMesh{};
 
         // litlbmsh bytes -> LitlMesh
-        LitlMeshBinary litlMesh{};
+        import::LitlMeshBinary litlMesh{};
         BinaryBlockFile::ErrorCode error = BinaryBlockFile::ErrorCode::None;
 
-        REQUIRE(LitlMeshBinary::parse(results.bytes[1], litlMesh, error) == true);
+        REQUIRE(import::LitlMeshBinary::parse(results.bytes[1], litlMesh, error) == true);
         REQUIRE(error == BinaryBlockFile::ErrorCode::None);
 
         // LitlMesh from bytes -> GeoMesh
