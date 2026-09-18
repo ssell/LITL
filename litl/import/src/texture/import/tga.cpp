@@ -22,7 +22,7 @@ namespace litl::import
             auto& textureDataDescriptor = textureResult->intermediateTexture->getDataDescriptorWriteRef();
             auto& texturePixelData = textureResult->intermediateTexture->getPixelBytesWriteRef();
 
-            textureDataDescriptor.format = DataFormat::RGBA8_SRGB;
+            textureDataDescriptor.format = DataFormat::RGBA32_SFloat;               // stbi_loadf_from_memory loads as float
             textureDataDescriptor.width = width;
             textureDataDescriptor.height = height;
             textureDataDescriptor.depth = 1u;
@@ -31,7 +31,7 @@ namespace litl::import
             textureDataDescriptor.isCubeMap = false;
             textureDataDescriptor.alphaPremultiplied = false;
 
-            const uint64_t totalByteSize = width * height * sizeof(float) * 4;      // loaded as float, forced to 4 channels.
+            const uint64_t totalByteSize = width * height * sizeof(float) * 4;      // forced to 4 channels.
             texturePixelData.resize(totalByteSize, std::byte{ 0 });
 
             std::memcpy(texturePixelData.data(), data, totalByteSize);

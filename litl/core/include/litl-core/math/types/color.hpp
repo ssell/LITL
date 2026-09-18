@@ -4,6 +4,7 @@
 #include "litl-core/math/glm.hpp"
 #include <glm/gtc/type_ptr.hpp>
 #include "litl-core/types.hpp"
+#include "litl-core/math/common.hpp"
 
 namespace litl
 {
@@ -35,7 +36,6 @@ namespace litl
         [[nodiscard]] constexpr float const& b() const noexcept { return value.z; }
         [[nodiscard]] constexpr float& a() noexcept { return value.w; }
         [[nodiscard]] constexpr float const& a() const noexcept { return value.w; }
-        [[nodiscard]] constexpr vec3 rgb() { return { value.x, value.y, value.z }; };
 
         [[nodiscard]] constexpr glm::vec4& data() noexcept
         {

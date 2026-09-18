@@ -50,7 +50,8 @@ namespace litl::import
             return false;
         }
 
-        if ((m_dataDescriptor.format != DataFormat::RGBA8_SRGB) &&
+        if ((m_dataDescriptor.format != DataFormat::RGBA32_SFloat) &&
+            (m_dataDescriptor.format != DataFormat::RGBA8_SRGB) &&
             (m_dataDescriptor.format != DataFormat::RGBA8_UNorm) &&
             (m_dataDescriptor.format != DataFormat::RGBA16_SFloat))
         {

@@ -1,4 +1,8 @@
+#include <array>
+#include <cstring>
+
 #include "tests.hpp"
+#include "litl-core/math/types/color.hpp"
 #include "litl-import/importService.hpp"
 #include "litl-import/texture/import/tga.hpp"
 #include "litl-import/texture/intermediate/textureIntermediateData.hpp"
@@ -7,6 +11,13 @@ namespace litl::tests
 {
     LITL_TEST_CASE("tga -> TextureIntermediateData", "[import::tga]")
     {
+        // test_tga is a 3x3 texture with three horizontal stripes, top-to-bottom: red, green, blue.
+        static constexpr std::array<color, 9> expectedPixelArray{
+            colors::Red,   colors::Red,   colors::Red,
+            colors::Green, colors::Green, colors::Green,
+            colors::Blue,  colors::Blue,  colors::Blue
+        };
+
         constexpr std::string_view sourceLocation = "assets/textures/test_tga.tga";
         const File source(sourceLocation);
         const auto sourceBytes = source.readAllBytes();
@@ -30,11 +41,20 @@ namespace litl::tests
 
         auto& textureDataDescriptor = textureResult->intermediateTexture->getDataDescriptor();
 
-        // ... todo validate descriptor ...
+        REQUIRE(textureDataDescriptor.format == DataFormat::RGBA32_SFloat);
+        REQUIRE(textureDataDescriptor.width == 3u);
+        REQUIRE(textureDataDescriptor.height == 3u);
+        REQUIRE(textureDataDescriptor.depth == 1u);
+        REQUIRE(textureDataDescriptor.arrayLayers == 1u);
+        REQUIRE(textureDataDescriptor.semantic == import::TextureSemantic::Albedo);
+        REQUIRE(textureDataDescriptor.isCubeMap == false);
+        REQUIRE(textureDataDescriptor.alphaPremultiplied == false);
 
         auto texturePixelBytes = textureResult->intermediateTexture->getPixelBytes();
 
-        // ... todo validate pixels ...
+        REQUIRE(texturePixelBytes.size_bytes() == (sizeof(float) * 4 * 3 * 3));     // 4 floats per pixel, image is 3x3
+        REQUIRE(texturePixelBytes.size_bytes() == (expectedPixelArray.size() * sizeof(color)));
+        REQUIRE(std::memcmp(expectedPixelArray.data(), texturePixelBytes.data(), texturePixelBytes.size()) == 0);
 
     } LITL_END_TEST_CASE
 }

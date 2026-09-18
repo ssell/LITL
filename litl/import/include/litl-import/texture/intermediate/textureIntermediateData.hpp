@@ -15,9 +15,9 @@ namespace litl::import
     enum class TextureSemantic
     {
         Unknown       = 0u,
-        Albedo        = 1u,     // Color data (RGBA8_SRGB)
-        NormalTangent = 2u,     // Tangent-space normal map (RGBA8_UNORM)
-        Mask          = 3u,     // Masking texture (RGBA8_UNORM)
+        Albedo        = 1u,     // Color data (RGBA32_SFloat)
+        NormalTangent = 2u,     // Tangent-space normal map (RGBA32_SFloat)
+        Mask          = 3u,     // Masking texture (RGBA32_SFloat)
         Hdr           = 4u      // High-dynamic range texture (RGBA16_SFLOAT)
     };
 
