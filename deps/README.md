@@ -56,6 +56,14 @@ Used for SPIRV bytecode reflection.
 * Source: https://github.com/KhronosGroup/SPIRV-Reflect
 * Include via: Submodule
 
+## stb
+
+Specifically `stb_image.h`. Used for various image format decoders: JPEG, PNG, TGA, BMP, GIF, HDR, etc.
+
+* License: Public Domain
+* Source: https://github.com/nothings/stb
+* Included via: CMake Include Directory
+
 ## ufbx
 
 Used for import of `.fbx` mesh files.

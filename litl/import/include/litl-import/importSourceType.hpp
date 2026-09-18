@@ -21,6 +21,10 @@ namespace litl::import
         ShaderSpirv,
         TextPlain,
         TextJson,
+        TextureLitlBinary,
+        TextureHdr,
+        TexturePng,
+        TextureTga,
 
         // Must be last
         ImportSourceTypeCount
