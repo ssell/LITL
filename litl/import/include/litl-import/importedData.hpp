@@ -17,6 +17,7 @@
 #include "litl-import/mesh/import/result.hpp"
 #include "litl-import/model/import/result.hpp"
 #include "litl-import/shader/import/result.hpp"
+#include "litl-import/texture/import/result.hpp"
 
 namespace litl::import
 {
@@ -26,7 +27,8 @@ namespace litl::import
         Material = 1u,
         Mesh = 2u,
         Model = 3u,
-        Shader = 4u
+        Shader = 4u,
+        Texture = 5u
     };
 
     /// <summary>
@@ -38,7 +40,8 @@ namespace litl::import
         MaterialImportResult,
         MeshImportResult, 
         ModelImportResult,
-        ShaderImportResult>;
+        ShaderImportResult,
+        TextureImportResult>;
 
     /// <summary>
     /// The unique pointer types used in ImportedData.
@@ -48,18 +51,20 @@ namespace litl::import
         std::unique_ptr<MaterialImportResult>,      // maps to ImportedDataType::Material
         std::unique_ptr<MeshImportResult>,          // maps to ImportedDataType::Mesh
         std::unique_ptr<ModelImportResult>,         // maps to ImportedDataType::Model
-        std::unique_ptr<ShaderImportResult>>;       // maps to ImportedDataType::Shader
+        std::unique_ptr<ShaderImportResult>,        // maps to ImportedDataType::Shader
+        std::unique_ptr<TextureImportResult>>;      // maps to ImportedDataType::Texture
 
     /// <summary>
     /// Lowercase string names for each ImportedDataType.
     /// The array indices MUST MATCH the corresponding integer value of ImportedDataType.
     /// </summary>
-    inline constexpr std::array<std::string_view, 5> ImportedDataTypeNames = {
+    inline constexpr std::array<std::string_view, 6> ImportedDataTypeNames = {
         "unknown",
         "material",
         "mesh",
         "model",
-        "shader"
+        "shader",
+        "texture"
     };
 
     static_assert(std::variant_size_v<ImportedDataPtr> == ImportedDataTypeNames.size());
@@ -67,7 +72,8 @@ namespace litl::import
     static_assert(ImportedDataTypeNames[static_cast<size_t>(ImportedDataType::Material)] == "material");
     static_assert(ImportedDataTypeNames[static_cast<size_t>(ImportedDataType::Mesh)]     == "mesh");
     static_assert(ImportedDataTypeNames[static_cast<size_t>(ImportedDataType::Model)]    == "model");
-    static_assert(ImportedDataTypeNames[static_cast<size_t>(ImportedDataType::Shader)]   == "shader");
+    static_assert(ImportedDataTypeNames[static_cast<size_t>(ImportedDataType::Shader)] == "shader");
+    static_assert(ImportedDataTypeNames[static_cast<size_t>(ImportedDataType::Texture)] == "texture");
 
     class ImportedDataItem
     {

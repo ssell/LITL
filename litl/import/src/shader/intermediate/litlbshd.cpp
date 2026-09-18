@@ -391,9 +391,9 @@ namespace litl::import
         }
     }
 
-    bool LitlShader::serialize(ShaderIntermediateData const& shader, std::vector<std::byte>& data, ErrorCode& error) noexcept
+    bool LitlShaderBinary::serialize(ShaderIntermediateData const& shader, std::vector<std::byte>& data, ErrorCode& error) noexcept
     {
-        LitlShader litlShader{};
+        LitlShaderBinary litlShader{};
         LitlShaderBlocksData blocksData{};
         auto& reflection = shader.getReflection();
 
@@ -494,7 +494,7 @@ namespace litl::import
             std::span<uint32_t const> spirvWords;
         };
 
-        template<typename T> 
+        template<typename T>
         [[nodiscard]] std::expected<std::span<T const>, BinaryBlockFile::ErrorCode> getSafeSubspan(std::span<T const> sourceSpan, BinaryRecordGrouping const& grouping) noexcept
         {
             if (grouping.count == 0)
@@ -531,7 +531,7 @@ namespace litl::import
             const ResourceProperty resourceProperty{
                 .variable = deserializeBinaryShaderVariable(binaryResourceProperty.variable),
                 .offset = binaryResourceProperty.offset,
-                .size= binaryResourceProperty.size,
+                .size = binaryResourceProperty.size,
                 .sizePadded = binaryResourceProperty.sizePadded,
                 .hashedName = StringId(binaryResourceProperty.hashedName),
                 .name = std::string(BinaryBlockFile::deserializeString(binaryShaderData.strings, binaryResourceProperty.name, error))
@@ -579,7 +579,7 @@ namespace litl::import
                     }
                 }
             }
-            else 
+            else
             {
                 error = binaryResourceProperties.error();
                 return false;
@@ -680,7 +680,7 @@ namespace litl::import
             }
 
             entryPointReflection.pushConstants.push_back(pushConstant);
-            
+
             return true;
         }
 
@@ -731,8 +731,8 @@ namespace litl::import
         }
 
         [[nodiscard]] bool deserializeBinaryEntryPoint(
-            LitlShaderDeserializationData const& binaryShaderData, 
-            ShaderReflection& shaderReflection, 
+            LitlShaderDeserializationData const& binaryShaderData,
+            ShaderReflection& shaderReflection,
             BinaryEntryPointReflection const& binaryEntryPoint,
             BinaryBlockFile::ErrorCode& error) noexcept
         {
@@ -841,8 +841,8 @@ namespace litl::import
         }
 
         [[nodiscard]] bool deserializeBinaryShaderData(
-            ShaderIntermediateData& shader, 
-            LitlShaderDeserializationData const& binaryShaderData, 
+            ShaderIntermediateData& shader,
+            LitlShaderDeserializationData const& binaryShaderData,
             BinaryBlockFile::ErrorCode& error) noexcept
         {
             shader.setSpirvWords(binaryShaderData.spirvWords);
@@ -868,7 +868,7 @@ namespace litl::import
         }
     }
 
-    bool LitlShader::deserialize(ShaderIntermediateData& shader, ErrorCode& error) const noexcept
+    bool LitlShaderBinary::deserialize(ShaderIntermediateData& shader, ErrorCode& error) const noexcept
     {
         auto stringsBlock = find(DefaultBlocks::Strings);
         auto entryPointsBlock = find(BlockIds::EntryPoints);

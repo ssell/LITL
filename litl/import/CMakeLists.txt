@@ -24,7 +24,7 @@ add_library(litl-import STATIC
 	"src/model/import/obj.cpp" 
 	"src/model/intermediate/modelIntermediateData.cpp" 
 	"src/model/intermediate/litlmdl.cpp" 
-	"src/importedData.cpp")
+	"src/importedData.cpp" "src/texture/import/stb.cpp" "src/texture/export/textureExporter.cpp" "src/texture/intermediate/textureIntermediateData.cpp" "src/texture/intermediate/litlbtex.cpp")
 
 target_include_directories(litl-import
 	PUBLIC

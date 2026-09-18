@@ -18,10 +18,10 @@ namespace litl
     {
         [[nodiscard]] bool decodeLitlShaderBytes(ShaderAsset* shaderAsset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
         {
-            import::LitlShader litlbshd;
+            import::LitlShaderBinary litlbshd;
             BinaryBlockFile::ErrorCode litlbshdError = BinaryBlockFile::ErrorCode::None;
 
-            if (!import::LitlShader::parse(bytes, litlbshd, litlbshdError))
+            if (!import::LitlShaderBinary::parse(bytes, litlbshd, litlbshdError))
             {
                 logError("Failed to parse shader asset with error code ", static_cast<uint32_t>(litlbshdError));
                 error = AssetErrorCode::ParseFailed;

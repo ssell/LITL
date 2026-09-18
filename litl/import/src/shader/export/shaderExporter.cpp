@@ -68,7 +68,7 @@ namespace litl::import
 
         ShaderIntermediateData* intermediateShader = shader->intermediateShader.get();
 
-        if (!LitlShader::serialize(*intermediateShader, serialized, errorCode))
+        if (!LitlShaderBinary::serialize(*intermediateShader, serialized, errorCode))
         {
             return Result::Error(ErrorType::SerializationFailed, std::format("Serialization of Shader to litlbshd failed with error code {}", static_cast<uint32_t>(errorCode)));
         }

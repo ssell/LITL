@@ -28,6 +28,9 @@
 #include "litl-import/shader/import/slang.hpp"
 #include "litl-import/shader/import/spirv.hpp"
 
+// Texture
+#include "litl-import/texture/export/textureExporter.hpp""
+
 namespace litl::import
 {
     ImportService::ImportService()
@@ -60,6 +63,9 @@ namespace litl::import
         m_exporterRegistry.add<ShaderExporter>();
         m_importerRegistry.add<SlangImporter>();
         m_importerRegistry.add<SpirvImporter>();
+
+        // Texture
+        m_exporterRegistry.add<TextureExporter>();
     }
 
     Result ImportService::importForMemory(ImportSourceType sourceType, std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData, bool shouldPrepare) noexcept

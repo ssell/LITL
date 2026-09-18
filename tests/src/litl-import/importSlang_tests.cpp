@@ -250,10 +250,10 @@ namespace litl::tests
         import::ShaderIntermediateData& slangIntermediateData = *shader->intermediateShader;
 
         // Intermediate shader from the bytes resulting from importForWriting (destined for .litlbshd)
-        import::LitlShader litlbshd{};
+        import::LitlShaderBinary litlbshd{};
         BinaryBlockFile::ErrorCode error = BinaryBlockFile::ErrorCode::None;
 
-        REQUIRE(import::LitlShader::parse(results.bytes[0], litlbshd, error) == true);
+        REQUIRE(import::LitlShaderBinary::parse(results.bytes[0], litlbshd, error) == true);
         REQUIRE(error == BinaryBlockFile::ErrorCode::None);
 
         import::ShaderIntermediateData litlbshdIntermediateData{};

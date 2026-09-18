@@ -1,5 +1,5 @@
-#ifndef LITL_IMPORT_SHADER_LITLSHADER_H__
-#define LITL_IMPORT_SHADER_LITLSHADER_H__
+#ifndef LITL_IMPORT_SHADER_LITLBSHD_H__
+#define LITL_IMPORT_SHADER_LITLBSHD_H__
 
 #include "litl-core/formats/binaryBlockFile.hpp"
 #include "litl-import/shader/intermediate/shaderIntermediateData.hpp"
@@ -11,12 +11,12 @@ namespace litl::import
     /// To convert a ShaderIntermediateData to a binary blob simply use the serialize method.
     /// To deserialize a binary blob to a ShaderIntermediateData you must first call parse and then deserialize.
     /// </summary>
-    struct LitlShader final : public BinaryBlockFile
+    struct LitlShaderBinary final : public BinaryBlockFile
     {
         static constexpr BinaryBlockFileFormatIdentity Identity{
             .magic = { 'L', 'S', 'H', 'D' },
-            .versionMajor = 1,
-            .versionMinor = 0
+            .versionMajor = 1u,
+            .versionMinor = 0u
         };
 
         struct BlockIds
