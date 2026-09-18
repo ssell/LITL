@@ -54,11 +54,13 @@ namespace litl::import
         TextureDataDescriptor& getDataDescriptorWriteRef() noexcept;
         TextureDataDescriptor const& getDataDescriptor() const noexcept;
 
-        std::vector<TextureLevel>& getTextureLevelsWriteRef() noexcept;
-        std::span<TextureLevel const> getTextureLevels() const noexcept;
+        [[nodiscard]] std::vector<TextureLevel>& getTextureLevelsWriteRef() noexcept;
+        [[nodiscard]] std::span<TextureLevel const> getTextureLevels() const noexcept;
 
-        std::vector<std::byte>& getPixelBytesWriteRef() noexcept;
-        std::span<std::byte const> getPixelBytes() const noexcept;
+        [[nodiscard]] std::vector<std::byte>& getPixelBytesWriteRef() noexcept;
+        [[nodiscard]] std::span<std::byte const> getPixelBytes() const noexcept;
+
+        [[nodiscard]] bool validate() const noexcept;
 
     private:
 

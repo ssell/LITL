@@ -75,7 +75,9 @@ add_executable(litl-tests
 	"src/litl-import/importSlang_tests.cpp" 
 	"src/litl-import/importFbx_tests.cpp" 
 	"src/litl-core/file_tests.cpp" 
-	"src/litl-import/importService_tests.cpp" "src/litl-renderer/texture_tests.cpp"  "src/litl-core/formats/dataFormats_tests.cpp")
+	"src/litl-import/importService_tests.cpp" 
+	"src/litl-renderer/texture_tests.cpp"  
+	"src/litl-core/formats/dataFormats_tests.cpp")
 
 target_link_libraries(litl-tests
 	PRIVATE
@@ -88,10 +90,11 @@ target_compile_features(litl-tests
 		cxx_std_20
 )
 
-target_compile_options(litl-tests PRIVATE 
-	$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-fno-rtti>
-    $<$<CXX_COMPILER_ID:MSVC>:/GR->
-)
+if (MSVC)
+	target_compile_options(litl-tests PRIVATE /EHs-c- /D_HAS_EXCEPTIONS=0 /GR-)
+else()
+	target_compile_options(litl-tests PRIVATE -fno-exceptions -fno-rtti)
+endif()
 
 target_include_directories(litl-tests
 	PRIVATE 

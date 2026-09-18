@@ -30,6 +30,7 @@
 
 // Texture
 #include "litl-import/texture/export/textureExporter.hpp"
+#include "litl-import/texture/import/tga.hpp"
 
 namespace litl::import
 {
@@ -66,6 +67,7 @@ namespace litl::import
 
         // Texture
         m_exporterRegistry.add<TextureExporter>();
+        m_importerRegistry.add<TgaImporter>();
     }
 
     Result ImportService::importForMemory(ImportSourceType sourceType, std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData, bool shouldPrepare) noexcept

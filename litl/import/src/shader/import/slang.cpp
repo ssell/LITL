@@ -205,9 +205,9 @@ namespace litl::import
             return Result::Error(ErrorType::ImporterFailed, "Failed to create shader import data.");
         }
 
-        auto* shader = dataItem.getDataPtr<ShaderImportResult>();
-        shader->intermediateShader = std::make_unique<ShaderIntermediateData>();
-        shader->intermediateShader->setSpirvWords(spirvModule->words);
+        auto* shaderResult = dataItem.getDataPtr<ShaderImportResult>();
+        shaderResult->intermediateShader = std::make_shared<ShaderIntermediateData>();
+        shaderResult->intermediateShader->setSpirvWords(spirvModule->words);
 
 
         return Result::Success();

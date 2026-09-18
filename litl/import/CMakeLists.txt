@@ -29,12 +29,12 @@ add_library(litl-import STATIC
 	"src/texture/import/stb.cpp" 
 	"src/texture/export/textureExporter.cpp" 
 	"src/texture/intermediate/textureIntermediateData.cpp" 
-	"src/texture/intermediate/litlbtex.cpp")
+	"src/texture/intermediate/litlbtex.cpp" "src/texture/import/tga.cpp")
 
 target_include_directories(litl-import
 	PUBLIC
 		"${CMAKE_CURRENT_SOURCE_DIR}/include"
-	PRIVATE
+	SYSTEM PRIVATE
 		"${CMAKE_SOURCE_DIR}/deps/rapidobj/include"
 		"${CMAKE_SOURCE_DIR}/deps/stb"
 		"${CMAKE_SOURCE_DIR}/deps/ufbx"

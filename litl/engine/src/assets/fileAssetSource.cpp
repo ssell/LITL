@@ -39,7 +39,13 @@ namespace litl
 
             // Text
             { ".txt"_sid, { AssetMappingPriority::Medium, AssetType::Text, AssetFormat::External, import::ImportSourceType::TextPlain } },
-            { ".json"_sid, { AssetMappingPriority::Medium, AssetType::Text, AssetFormat::External, import::ImportSourceType::TextJson } }
+            { ".json"_sid, { AssetMappingPriority::Medium, AssetType::Text, AssetFormat::External, import::ImportSourceType::TextJson } },
+
+            // Texture
+            { ".litlbtex"_sid, { AssetMappingPriority::High, AssetType::Texture2D, AssetFormat::Internal, import::ImportSourceType::TextureLitlBinary } },
+            { ".hdr"_sid, { AssetMappingPriority::Medium, AssetType::Texture2D, AssetFormat::External, import::ImportSourceType::TextureHdr } },
+            { ".png"_sid, { AssetMappingPriority::Medium, AssetType::Texture2D, AssetFormat::External, import::ImportSourceType::TexturePng } },
+            { ".tga"_sid, { AssetMappingPriority::Medium, AssetType::Texture2D, AssetFormat::External, import::ImportSourceType::TextureTga } },
         };
 
         [[nodiscard]] std::string relativePathFromRoot(std::filesystem::path const& path, std::string_view root) noexcept
