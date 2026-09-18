@@ -186,6 +186,7 @@ namespace litl
 
         // HDR
         RGBA16_SFloat,          // 64-bit RGBA color where each channel gets a 16-bit floating point value.
+        RGB32_SFloat,           // 96-bit RGB color where each channel gets a 32-bit floating point value. Note this is typically used a data format (for example in vertex input layouts) and is not widely supported as a texture format.
         RGBA32_SFloat,          // 128-bit RGBA color where each channel gets a 32-bit floating point value.
         R11G11B10_UFloat,       // 32-bit RGB color where R and G gets a 11-bit and B gets a 10-bit unsigned floating point value.
 
@@ -207,11 +208,122 @@ namespace litl
         // Compressed
         BC4_UNorm,              // A one-component, block-compressed format where each 64-bit compressed texel block encodes a 4×4 rectangle of unsigned normalized red texel data.
         BC5_UNorm,              // A two-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned normalized RG texel data with the first 64 bits encoding red values followed by 64 bits encoding green values.
-        BC6H_UFloat,            // A three-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned floating-point RGB texel data.
-        BC6H_SFloat,            // A three-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of signed floating-point RGB texel data.
+        BC6H_UFloat,            // A three-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned floating-point RGB texel data. No alpha, strictly RGB.
+        BC6H_SFloat,            // A three-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of signed floating-point RGB texel data. No alpha, strictly RGB.
         BC7_UNorm,              // A four-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned normalized RGBA texel data. Used for color textures such as albedo, emissive, etc.
         BC7_SRGB,               // A four-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned normalized RGBA texel data with sRGB nonlinear encoding applied to the RGB components. Used for color textures such as albedo, emissive, etc.
     };
+
+    [[nodiscard]] constexpr bool dataFormatHasDepth(DataFormat format) noexcept
+    {
+        switch (format)
+        {
+        case DataFormat::D32_SFloat:
+        case DataFormat::D24_UNorm_S8_UInt:
+        case DataFormat::D32_SFloat_S8_UInt:
+            return true;
+
+        case DataFormat::RGBA8_UNorm:
+        case DataFormat::RGBA8_SRGB:
+        case DataFormat::BGRA8_Unorm:
+        case DataFormat::BGRA8_SRGB:
+        case DataFormat::ABGR10_UNorm_Pack32:
+        case DataFormat::RGBA16_SFloat:
+        case DataFormat::RGB32_SFloat:
+        case DataFormat::RGBA32_SFloat:
+        case DataFormat::R11G11B10_UFloat:
+        case DataFormat::R8_UNorm:
+        case DataFormat::R16_SFloat:
+        case DataFormat::R32_SFloat:
+        case DataFormat::RG8_UNorm:
+        case DataFormat::RG16_SFloat:
+        case DataFormat::RG32_SFloat:
+        case DataFormat::BC7_UNorm:
+        case DataFormat::BC7_SRGB:
+        case DataFormat::BC4_UNorm:
+        case DataFormat::BC5_UNorm:
+        case DataFormat::BC6H_UFloat:
+        case DataFormat::BC6H_SFloat:
+        case DataFormat::Undefined:
+            return false;
+        }
+
+        return false;
+    }
+
+    [[nodiscard]] constexpr bool dataFormatHasStencil(DataFormat format) noexcept
+    {
+        switch (format)
+        {
+        case DataFormat::D24_UNorm_S8_UInt:
+        case DataFormat::D32_SFloat_S8_UInt:
+            return true;
+
+        case DataFormat::RGBA8_UNorm:
+        case DataFormat::RGBA8_SRGB:
+        case DataFormat::BGRA8_Unorm:
+        case DataFormat::BGRA8_SRGB:
+        case DataFormat::ABGR10_UNorm_Pack32:
+        case DataFormat::RGBA16_SFloat:
+        case DataFormat::RGB32_SFloat:
+        case DataFormat::RGBA32_SFloat:
+        case DataFormat::R11G11B10_UFloat:
+        case DataFormat::R8_UNorm:
+        case DataFormat::R16_SFloat:
+        case DataFormat::R32_SFloat:
+        case DataFormat::RG8_UNorm:
+        case DataFormat::RG16_SFloat:
+        case DataFormat::RG32_SFloat:
+        case DataFormat::D32_SFloat:
+        case DataFormat::BC7_UNorm:
+        case DataFormat::BC7_SRGB:
+        case DataFormat::BC4_UNorm:
+        case DataFormat::BC5_UNorm:
+        case DataFormat::BC6H_UFloat:
+        case DataFormat::BC6H_SFloat:
+        case DataFormat::Undefined:
+            return false;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Returns the number of bytes per each texel block for a given format.
+    /// </summary>
+    [[nodiscard]] constexpr uint32_t dataFormatSize(DataFormat format) noexcept
+    {
+        switch (format)
+        {
+        case DataFormat::RGBA8_UNorm: return 4u;
+        case DataFormat::RGBA8_SRGB: return 4u;
+        case DataFormat::BGRA8_Unorm: return 4u;
+        case DataFormat::BGRA8_SRGB: return 4u;
+        case DataFormat::ABGR10_UNorm_Pack32: return 4u;
+        case DataFormat::RGBA16_SFloat: return 8u;
+        case DataFormat::RGB32_SFloat: return 12u;
+        case DataFormat::RGBA32_SFloat: return 16u;
+        case DataFormat::R11G11B10_UFloat: return 4u;
+        case DataFormat::R8_UNorm: return 1u;
+        case DataFormat::R16_SFloat: return 2u;
+        case DataFormat::R32_SFloat: return 4u;
+        case DataFormat::RG8_UNorm: return 2u;
+        case DataFormat::RG16_SFloat: return 4u;
+        case DataFormat::RG32_SFloat: return 8u;
+        case DataFormat::D32_SFloat: return 4u;
+        case DataFormat::D24_UNorm_S8_UInt: return 4u;
+        case DataFormat::D32_SFloat_S8_UInt: return 8u;
+        case DataFormat::BC7_UNorm: return 16u;
+        case DataFormat::BC7_SRGB: return 16u;
+        case DataFormat::BC4_UNorm: return 8u;
+        case DataFormat::BC5_UNorm: return 16u;
+        case DataFormat::BC6H_UFloat: return 16u;
+        case DataFormat::BC6H_SFloat: return 16u;
+        case DataFormat::Undefined: return 0u;
+        }
+
+        return 0u;
+    }
 
     enum class PrimitiveTopology : uint32_t
     {
@@ -445,171 +557,6 @@ namespace litl
 
     LITL_ENABLE_BITMASK(TextureUsageFlagBits);
     using TextureUsageFlag = TextureUsageFlagBits;
-
-    // -------------------------------------------------------------------------------------
-    // Utility Functions
-    // -------------------------------------------------------------------------------------
-
-    [[nodiscard]] constexpr bool dataFormatHasDepth(DataFormat format) noexcept
-    {
-        switch (format)
-        {
-        case DataFormat::D32_SFloat:
-        case DataFormat::D24_UNorm_S8_UInt:
-        case DataFormat::D32_SFloat_S8_UInt:
-            return true;
-
-        case DataFormat::RGBA8_UNorm:
-        case DataFormat::RGBA8_SRGB:
-        case DataFormat::BGRA8_Unorm:
-        case DataFormat::BGRA8_SRGB:
-        case DataFormat::ABGR10_UNorm_Pack32:
-        case DataFormat::RGBA16_SFloat:
-        case DataFormat::RGBA32_SFloat:
-        case DataFormat::R11G11B10_UFloat:
-        case DataFormat::R8_UNorm:
-        case DataFormat::R16_SFloat:
-        case DataFormat::R32_SFloat:
-        case DataFormat::RG8_UNorm:
-        case DataFormat::RG16_SFloat:
-        case DataFormat::RG32_SFloat:
-        case DataFormat::BC7_UNorm:
-        case DataFormat::BC7_SRGB:
-        case DataFormat::BC4_UNorm:
-        case DataFormat::BC5_UNorm:
-        case DataFormat::BC6H_UFloat:
-        case DataFormat::BC6H_SFloat:
-        case DataFormat::Undefined:
-            return false;
-        }
-
-        return false;
-    }
-
-    [[nodiscard]] constexpr bool dataFormatHasStencil(DataFormat format) noexcept
-    {
-        switch (format)
-        {
-        case DataFormat::D24_UNorm_S8_UInt:
-        case DataFormat::D32_SFloat_S8_UInt:
-            return true;
-
-        case DataFormat::RGBA8_UNorm:
-        case DataFormat::RGBA8_SRGB:
-        case DataFormat::BGRA8_Unorm:
-        case DataFormat::BGRA8_SRGB:
-        case DataFormat::ABGR10_UNorm_Pack32:
-        case DataFormat::RGBA16_SFloat:
-        case DataFormat::RGBA32_SFloat:
-        case DataFormat::R11G11B10_UFloat:
-        case DataFormat::R8_UNorm:
-        case DataFormat::R16_SFloat:
-        case DataFormat::R32_SFloat:
-        case DataFormat::RG8_UNorm:
-        case DataFormat::RG16_SFloat:
-        case DataFormat::RG32_SFloat:
-        case DataFormat::D32_SFloat:
-        case DataFormat::BC7_UNorm:
-        case DataFormat::BC7_SRGB:
-        case DataFormat::BC4_UNorm:
-        case DataFormat::BC5_UNorm:
-        case DataFormat::BC6H_UFloat:
-        case DataFormat::BC6H_SFloat:
-        case DataFormat::Undefined:
-            return false;
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// Returns the size, in bytes, represented by each data format.
-    /// </summary>
-    [[nodiscard]] constexpr uint32_t dataFormatSize(DataFormat format) noexcept
-    {
-        switch (format)
-        {
-        case DataFormat::RGBA8_UNorm: return 4u;
-        case DataFormat::RGBA8_SRGB: return 4u;
-        case DataFormat::BGRA8_Unorm: return 4u;
-        case DataFormat::BGRA8_SRGB: return 4u;
-        case DataFormat::ABGR10_UNorm_Pack32: return 4u;
-        case DataFormat::RGBA16_SFloat: return 8u;
-        case DataFormat::RGBA32_SFloat: return 16u;
-        case DataFormat::R11G11B10_UFloat: return 4u;
-        case DataFormat::R8_UNorm: return 1u;
-        case DataFormat::R16_SFloat: return 2u;
-        case DataFormat::R32_SFloat: return 4u;
-        case DataFormat::RG8_UNorm: return 2u;
-        case DataFormat::RG16_SFloat: return 4u;
-        case DataFormat::RG32_SFloat: return 8u;
-        case DataFormat::D32_SFloat: return 4u;
-        case DataFormat::D24_UNorm_S8_UInt: return 4u;
-        case DataFormat::D32_SFloat_S8_UInt: return 8u;
-        case DataFormat::BC7_UNorm: return 16u;
-        case DataFormat::BC7_SRGB: return 16u;
-        case DataFormat::BC4_UNorm: return 8u;
-        case DataFormat::BC5_UNorm: return 16u;
-        case DataFormat::BC6H_UFloat: return 16u;
-        case DataFormat::BC6H_SFloat: return 16u;
-        case DataFormat::Undefined: return 4u;
-        }
-
-        return 0u;
-    }
-
-    struct TexelBlockExtent
-    {
-        uint32_t width{ 0u };
-        uint32_t height{ 0u };
-    };
-
-    [[nodiscard]] constexpr TexelBlockExtent texelBlockExtent(DataFormat format) noexcept
-    {
-        switch (format)
-        {
-        // Compressed formats are 4x4
-        case DataFormat::BC4_UNorm:
-        case DataFormat::BC5_UNorm:
-        case DataFormat::BC6H_UFloat:
-        case DataFormat::BC6H_SFloat:
-        case DataFormat::BC7_UNorm:
-        case DataFormat::BC7_SRGB:
-            return { 4u, 4u };
-
-        // Uncompressed formats are 1x1
-        case DataFormat::RGBA8_UNorm:
-        case DataFormat::RGBA8_SRGB:
-        case DataFormat::BGRA8_Unorm:
-        case DataFormat::BGRA8_SRGB:
-        case DataFormat::ABGR10_UNorm_Pack32:
-        case DataFormat::RGBA16_SFloat:
-        case DataFormat::RGBA32_SFloat:
-        case DataFormat::R11G11B10_UFloat:
-        case DataFormat::R8_UNorm:
-        case DataFormat::R16_SFloat:
-        case DataFormat::R32_SFloat:
-        case DataFormat::RG8_UNorm:
-        case DataFormat::RG16_SFloat:
-        case DataFormat::RG32_SFloat:
-        case DataFormat::D32_SFloat:
-        case DataFormat::D24_UNorm_S8_UInt:
-        case DataFormat::D32_SFloat_S8_UInt:
-        case DataFormat::Undefined:
-        default:
-            return { 1u, 1u };
-        }
-    }
-
-    [[nodiscard]] constexpr uint32_t texelBlockBytes(DataFormat format) noexcept
-    {
-
-    }
-
-    [[nodiscard]] constexpr uint64_t imageLevelBytes(DataFormat format, uint32_t w, uint32_t h, uint32_t d) noexcept
-    {
-
-    }
 }
 
 #endif

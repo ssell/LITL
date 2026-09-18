@@ -5,8 +5,9 @@
 #include <optional>
 
 #include "litl-core/handles.hpp"
-#include "litl-renderer/resources/shaderModule.hpp"
 #include "litl-renderer/enums.hpp"
+#include "litl-renderer/resources/shaderModule.hpp"
+#include "litl-renderer/resources/texture.hpp"
 
 namespace litl
 {

@@ -135,7 +135,7 @@ namespace litl::vulkan
     // ImageFormat <-> VkFormat
     // -------------------------------------------------------------------------------------
 
-    static_assert(static_cast<uint32_t>(DataFormat::BC7_SRGB) == 23u, "DataFormat has changed! Update toVkFormat, fromVkFormat, and deriveAspectMaskFromFormat!");
+    static_assert(static_cast<uint32_t>(DataFormat::BC7_SRGB) == 24u, "DataFormat has changed! Update toVkFormat, fromVkFormat, and deriveAspectMaskFromFormat!");
 
     VkFormat toVkFormat(DataFormat format) noexcept
     {
@@ -160,6 +160,9 @@ namespace litl::vulkan
             // HDR
         case DataFormat::RGBA16_SFloat:
             return VkFormat::VK_FORMAT_R16G16B16A16_SFLOAT;
+
+        case DataFormat::RGB32_SFloat:
+            return VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
 
         case DataFormat::RGBA32_SFloat:
             return VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
@@ -250,6 +253,9 @@ namespace litl::vulkan
             // HDR
         case VkFormat::VK_FORMAT_R16G16B16A16_SFLOAT:
             return DataFormat::RGBA16_SFloat;
+
+        case VkFormat::VK_FORMAT_R32G32B32_SFLOAT:
+            return DataFormat::RGB32_SFloat;
 
         case VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT:
             return DataFormat::RGBA32_SFloat;
