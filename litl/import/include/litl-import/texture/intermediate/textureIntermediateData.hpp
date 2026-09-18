@@ -46,6 +46,8 @@ namespace litl::import
     /// Intermediate representation of a texture. All external texture formats converge onto this shape.
     /// It should be noted that all formats are expanded to RGBA for both consistency and hardware support
     /// as RGB formats (for example VK_FORMAT_R8G8B8_*) are frequently unsupported as sampled images.
+    /// 
+    /// Additionally all pixel data should be top-left origin orientated.
     /// </summary>
     class TextureIntermediateData
     {

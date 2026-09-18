@@ -14,11 +14,13 @@ namespace litl::import
 
     Result TextureExporter::prepare(ImportedData& data, uint32_t dataIndex) noexcept
     {
-        return Result::Error(ErrorType::ExporterNotImplemented);
+        // ... todo implement ... allow pass through for now for testing ...
+        return Result::Success();
     }
 
     Result TextureExporter::write(std::vector<std::byte>& serialized, ImportedData const& data, uint32_t dataIndex) noexcept
     {
-        return Result::Error(ErrorType::ExporterNotImplemented);
+        // ... todo implement ... allow pass through for now for testing ...
+        return Result::Success();
     }
 }

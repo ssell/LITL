@@ -77,7 +77,8 @@ add_executable(litl-tests
 	"src/litl-core/file_tests.cpp" 
 	"src/litl-import/importService_tests.cpp" 
 	"src/litl-renderer/texture_tests.cpp"  
-	"src/litl-core/formats/dataFormats_tests.cpp")
+	"src/litl-core/formats/dataFormats_tests.cpp" 
+	"src/litl-import/importTga_tests.cpp")
 
 target_link_libraries(litl-tests
 	PRIVATE
@@ -125,6 +126,7 @@ set (LITL_TESTS_ASSETS
 	"${LITL_TEST_ASSETS_DIR}/models/sponza.obj"
 	"${LITL_TEST_ASSETS_DIR}/models/sponza.mtl"
 	"${LITL_TEST_ASSETS_DIR}/shaders/test.slang"
+	"${LITL_TEST_ASSETS_DIR}/textures/test_tga.tga"
 )
 
 foreach(TEST_ASSET_PATH IN LISTS LITL_TESTS_ASSETS)

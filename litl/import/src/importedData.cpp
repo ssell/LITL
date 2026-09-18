@@ -43,6 +43,10 @@ namespace litl::import
             m_dataPtr = std::make_unique<ShaderImportResult>();
             return true;
 
+        case ImportedDataType::Texture:
+            m_dataPtr = std::make_unique<TextureImportResult>();
+            return true;
+
         case ImportedDataType::Unknown:
         default:
             return false;

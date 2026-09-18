@@ -65,6 +65,7 @@ namespace litl::import
         int height = 0;
         int channels = 0;
 
+        // Note that stb_image automatically handles flipping images to top-left origin if they are not already
         const ScopedData scopedData { .data = stbi_loadf_from_memory(
             reinterpret_cast<stbi_uc const*>(sourceBytes.data()),
             static_cast<int>(sourceBytes.size_bytes()),
