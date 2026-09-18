@@ -5,7 +5,7 @@
 #include <span>
 #include <vector>
 
-#include "litl-renderer/enums.hpp"
+#include "litl-core/formats/dataFormats.hpp"
 
 namespace litl::import
 {

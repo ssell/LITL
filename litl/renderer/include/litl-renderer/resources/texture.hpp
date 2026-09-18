@@ -5,6 +5,7 @@
 #include <string>
 
 #include "litl-core/handles.hpp"
+#include "litl-core/formats/dataFormats.hpp"
 #include "litl-renderer/enums.hpp"
 
 namespace litl

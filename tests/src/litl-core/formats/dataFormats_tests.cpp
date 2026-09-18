@@ -1,4 +1,4 @@
-#include "litl-renderer/enums.hpp"
+#include "litl-core/formats/dataFormats.hpp"
 
 namespace litl::tests
 {

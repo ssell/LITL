@@ -2,6 +2,7 @@
 #define LITL_VULKAN_RENDERER_CONVERSIONS_H__
 
 #include "litl-core/math/types.hpp"
+#include "litl-core/formats/dataFormats.hpp"
 #include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer/enums.hpp"
 #include "litl-renderer/resources/shaderModule.hpp"
