@@ -96,7 +96,7 @@ namespace litl
     /// <summary>
     /// Converts a four-component linear color to sRGB color. Alpha is untouched.
     /// </summary>
-    [[nodiscard]] static color linear_color_to_srgb(color c) noexcept
+    [[nodiscard]] static color linear_color_to_srgb_color(color c) noexcept
     {
         return color{
             linear_float_to_srgb_float(c.r()),

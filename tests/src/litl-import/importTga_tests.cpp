@@ -15,9 +15,9 @@ namespace litl::tests
         // test_tga is a 3x3 texture with three horizontal stripes, top-to-bottom: red, green, blue.
         // there is a gray diagonal stripe to catch premature gamma correction.
         static const std::array<color, 9> expectedPixelArray{
-            linear_color_to_srgb(colors::Red),   linear_color_to_srgb(colors::Red),   linear_color_to_srgb(colors::Gray),
-            linear_color_to_srgb(colors::Green), linear_color_to_srgb(colors::Gray),  linear_color_to_srgb(colors::Green),
-            linear_color_to_srgb(colors::Gray),  linear_color_to_srgb(colors::Blue),  linear_color_to_srgb(colors::Blue)
+            linear_color_to_srgb_color(colors::Red),   linear_color_to_srgb_color(colors::Red),   linear_color_to_srgb_color(colors::Gray),
+            linear_color_to_srgb_color(colors::Green), linear_color_to_srgb_color(colors::Gray),  linear_color_to_srgb_color(colors::Green),
+            linear_color_to_srgb_color(colors::Gray),  linear_color_to_srgb_color(colors::Blue),  linear_color_to_srgb_color(colors::Blue)
         };
 
         constexpr std::string_view sourceLocation = "assets/textures/test_tga.tga";
