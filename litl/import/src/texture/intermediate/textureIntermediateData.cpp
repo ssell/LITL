@@ -1,3 +1,6 @@
+#include <array>
+
+#include "litl-core/constants.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-import/texture/intermediate/textureIntermediateData.hpp"
 
@@ -31,6 +34,40 @@ namespace litl::import
     std::span<std::byte const> TextureIntermediateData::getPixelBytes() const noexcept
     {
         return m_pixels;
+    }
+
+    bool TextureIntermediateData::store8BitPixelsAsFloat(std::span<uint8_t const> pixels) noexcept
+    {
+        if ((pixels.size() % 4) != 0u)
+        {
+            // Must be RGBA
+            return false;
+        }
+
+        m_pixels.clear();
+        m_pixels.resize(pixels.size() * 4u);
+
+        std::span<float> pixelsReinterp{ reinterpret_cast<float*>(m_pixels.data()), pixels.size() * 4u };
+
+        if (m_dataDescriptor.transfer == TransferFunction::Linear)
+        {
+            for (uint32_t i = 0u; i < static_cast<uint32_t>(pixels.size()); ++i)
+            {
+                pixelsReinterp[i] = Constants::uint8_to_float[pixels[i]];
+            }
+        }
+        else
+        {
+            for (uint32_t i = 0u; i < static_cast<uint32_t>(pixels.size()); i += 4u)
+            {
+                pixelsReinterp[i + 0] = Constants::uint8_to_srgb_float[pixels[i + 0]];
+                pixelsReinterp[i + 1] = Constants::uint8_to_srgb_float[pixels[i + 1]];
+                pixelsReinterp[i + 2] = Constants::uint8_to_srgb_float[pixels[i + 2]];
+                pixelsReinterp[i + 3] = Constants::uint8_to_float[pixels[i + 3]];           // alpha is linear
+            }
+        }
+
+        return true;
     }
 
     bool TextureIntermediateData::validate() const noexcept

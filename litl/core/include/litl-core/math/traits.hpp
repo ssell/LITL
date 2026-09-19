@@ -18,6 +18,7 @@ namespace litl
     {
         static constexpr float epsilon = 0.000001f;
         static constexpr float relative_epsilon = 0.0001f;
+        static constexpr float one_over_255 = 0.00392157;
         static constexpr float pi = 3.1415926f;
         static constexpr float pi_over_two = 1.5707963f;            // = 90 degrees
         static constexpr float pi_over_four = 0.7853982f;           // = 45 degrees
@@ -34,9 +35,10 @@ namespace litl
     {
         static constexpr double epsilon = 0.0000001;
         static constexpr double relative_epsilon = 0.0001;
+        static constexpr double one_over_255 = 0.00392156862;
         static constexpr double pi = 3.14159265359;
-        static constexpr float pi_over_two = 1.5707963;             // = 90 degrees
-        static constexpr float pi_over_four = 0.7853982;            // = 45 degrees
+        static constexpr double pi_over_two = 1.5707963;             // = 90 degrees
+        static constexpr double pi_over_four = 0.7853982;            // = 45 degrees
         static constexpr double one_over_pi = 0.31830989;
         static constexpr double deg_to_rad = 0.0174533;
         static constexpr double rad_to_deg = 57.2958;

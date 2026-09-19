@@ -72,6 +72,7 @@ namespace litl
     {
         static constexpr color Black  { 0.0f, 0.0f, 0.0f, 1.0f };
         static constexpr color White  { 1.0f, 1.0f, 1.0f, 1.0f };
+        static constexpr color Gray   { 0.5f, 0.5f, 0.5f, 1.0f };
         static constexpr color Clear  { 0.0f, 0.0f, 0.0f, 0.0f };
         static constexpr color Red    { 1.0f, 0.0f, 0.0f, 1.0f };
         static constexpr color Green  { 0.0f, 1.0f, 0.0f, 1.0f };

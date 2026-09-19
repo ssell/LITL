@@ -12,10 +12,11 @@ namespace litl::tests
     LITL_TEST_CASE("tga -> TextureIntermediateData", "[import::tga]")
     {
         // test_tga is a 3x3 texture with three horizontal stripes, top-to-bottom: red, green, blue.
+        // there is a gray diagonal stripe to catch premature gamma correction.
         static constexpr std::array<color, 9> expectedPixelArray{
-            colors::Red,   colors::Red,   colors::Red,
-            colors::Green, colors::Green, colors::Green,
-            colors::Blue,  colors::Blue,  colors::Blue
+            colors::Red,   colors::Red,   colors::Gray,
+            colors::Green, colors::Gray,  colors::Green,
+            colors::Gray,  colors::Blue,  colors::Blue
         };
 
         constexpr std::string_view sourceLocation = "assets/textures/test_tga.tga";
@@ -54,7 +55,13 @@ namespace litl::tests
 
         REQUIRE(texturePixelBytes.size_bytes() == (sizeof(float) * 4 * 3 * 3));     // 4 floats per pixel, image is 3x3
         REQUIRE(texturePixelBytes.size_bytes() == (expectedPixelArray.size() * sizeof(color)));
-        REQUIRE(std::memcmp(expectedPixelArray.data(), texturePixelBytes.data(), texturePixelBytes.size()) == 0);
+
+        auto texturePixelColors = std::span<color const>(reinterpret_cast<color const*>(texturePixelBytes.data()), expectedPixelArray.size());
+
+        for (uint32_t i = 0u; i < 9u; ++i)
+        {
+            REQUIRE(texturePixelColors[i] == expectedPixelArray[i]);
+        }
 
     } LITL_END_TEST_CASE
 }
