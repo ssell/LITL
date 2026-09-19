@@ -3,6 +3,7 @@
 
 #include "tests.hpp"
 #include "litl-core/math/types/color.hpp"
+#include "litl-core/formats/srgb.hpp"
 #include "litl-import/importService.hpp"
 #include "litl-import/texture/import/tga.hpp"
 #include "litl-import/texture/intermediate/textureIntermediateData.hpp"
@@ -13,10 +14,10 @@ namespace litl::tests
     {
         // test_tga is a 3x3 texture with three horizontal stripes, top-to-bottom: red, green, blue.
         // there is a gray diagonal stripe to catch premature gamma correction.
-        static constexpr std::array<color, 9> expectedPixelArray{
-            colors::Red,   colors::Red,   colors::Gray,
-            colors::Green, colors::Gray,  colors::Green,
-            colors::Gray,  colors::Blue,  colors::Blue
+        static const std::array<color, 9> expectedPixelArray{
+            linear_color_to_srgb(colors::Red),   linear_color_to_srgb(colors::Red),   linear_color_to_srgb(colors::Gray),
+            linear_color_to_srgb(colors::Green), linear_color_to_srgb(colors::Gray),  linear_color_to_srgb(colors::Green),
+            linear_color_to_srgb(colors::Gray),  linear_color_to_srgb(colors::Blue),  linear_color_to_srgb(colors::Blue)
         };
 
         constexpr std::string_view sourceLocation = "assets/textures/test_tga.tga";

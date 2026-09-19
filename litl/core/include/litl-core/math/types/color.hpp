@@ -68,6 +68,7 @@ namespace litl
     static_assert(std::is_nothrow_move_assignable_v<color>);
     static_assert(std::is_trivially_copyable_v<color>);
 
+    // Predefine colors and utilities
     namespace colors
     {
         static constexpr color Black  { 0.0f, 0.0f, 0.0f, 1.0f };

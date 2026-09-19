@@ -1,6 +1,6 @@
 #include <array>
 
-#include "litl-core/constants.hpp"
+#include "litl-core/formats/srgb.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-import/texture/intermediate/textureIntermediateData.hpp"
 
@@ -53,17 +53,17 @@ namespace litl::import
         {
             for (uint32_t i = 0u; i < static_cast<uint32_t>(pixels.size()); ++i)
             {
-                pixelsReinterp[i] = Constants::uint8_to_float[pixels[i]];
+                pixelsReinterp[i] = uint8_to_linear_float[pixels[i]];
             }
         }
         else
         {
             for (uint32_t i = 0u; i < static_cast<uint32_t>(pixels.size()); i += 4u)
             {
-                pixelsReinterp[i + 0] = Constants::uint8_to_srgb_float[pixels[i + 0]];
-                pixelsReinterp[i + 1] = Constants::uint8_to_srgb_float[pixels[i + 1]];
-                pixelsReinterp[i + 2] = Constants::uint8_to_srgb_float[pixels[i + 2]];
-                pixelsReinterp[i + 3] = Constants::uint8_to_float[pixels[i + 3]];           // alpha is linear
+                pixelsReinterp[i + 0] = uint8_to_srgb_float[pixels[i + 0]];
+                pixelsReinterp[i + 1] = uint8_to_srgb_float[pixels[i + 1]];
+                pixelsReinterp[i + 2] = uint8_to_srgb_float[pixels[i + 2]];
+                pixelsReinterp[i + 3] = uint8_to_linear_float[pixels[i + 3]];           // alpha is linear
             }
         }
 
