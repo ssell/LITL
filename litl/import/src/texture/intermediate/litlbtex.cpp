@@ -1,7 +1,9 @@
 #include <array>
+#include <cstring>
 
 #include "litl-import/texture/intermediate/litlbtex.hpp"
 #include "litl-core/containers/common.hpp"
+#include "litl-core/math/textureUtils.hpp"
 
 namespace litl::import
 {
@@ -19,7 +21,8 @@ namespace litl::import
             TextureSemantic semantic{ TextureSemantic::Unknown };
             bool isCubeMap{ false };
             bool alphaPremultiplied{ false };
-            uint32_t padding{ 0u };
+            bool mipMaps{ false };
+            std::array<std::byte, 3> padding{};
         };
 
         static_assert(sizeof(BinaryTextureDataDescriptor) == 32);
@@ -53,7 +56,7 @@ namespace litl::import
             return BinaryTextureLevel{
                 .byteOffset = level.byteOffset,
                 .byteSize = level.byteSize,
-                .uncompressedByteSize = 0ull,
+                .uncompressedByteSize = level.byteSize,         // Update in the future when compression is supported
                 .width = level.width,
                 .height = level.height,
                 .depth = level.depth,
@@ -93,10 +96,11 @@ namespace litl::import
                 .depth = desc.depth,
                 .arrayLayers = desc.arrayLayers,
                 .faceCount = desc.faceCount,
-                .transfer = desc.transfer,
-                .semantic = desc.semantic,
-                .isCubeMap = desc.isCubeMap,
-                .alphaPremultiplied = desc.alphaPremultiplied
+                    .transfer = desc.transfer,
+                    .semantic = desc.semantic,
+                    .isCubeMap = desc.isCubeMap,
+                    .alphaPremultiplied = desc.alphaPremultiplied,
+                    .mipMaps = desc.mipMaps
             };
         }
 
@@ -112,7 +116,8 @@ namespace litl::import
                 .transfer = desc.transfer,
                 .semantic = desc.semantic,
                 .isCubeMap = desc.isCubeMap,
-                .alphaPremultiplied = desc.alphaPremultiplied
+                .alphaPremultiplied = desc.alphaPremultiplied,
+                .mipMaps = desc.mipMaps
             };
         }
 
@@ -121,6 +126,12 @@ namespace litl::import
             if (textureData.textureDescriptors.size() == 0u)
             {
                 error = BinaryBlockFile::ErrorCode::TextureMissingDescriptorInfo;
+                return false;
+            }
+
+            if (textureData.textureDescriptors.size() > 1)
+            {
+                error = BinaryBlockFile::ErrorCode::TextureTooManyDescriptors;
                 return false;
             }
 
@@ -136,8 +147,57 @@ namespace litl::import
                 return false;
             }
 
+            // -----------------------------------------------------------------------------
+            // Deserialize Descriptor
+            // -----------------------------------------------------------------------------
+
             auto& textureDescriptor = texture.getDataDescriptorWriteRef();
             textureDescriptor = deserializeTextureDataDescriptor(textureData.textureDescriptors[0]);
+
+            const uint32_t expectedLevelsCount = (textureDescriptor.mipMaps ? mipLevelCount(textureDescriptor.width, textureDescriptor.height, textureDescriptor.depth) : 1u);
+
+            if (textureData.textureLevels.size() > expectedLevelsCount)
+            {
+                error = BinaryBlockFile::ErrorCode::TextureInvalidLevelsCount;
+                return false;
+            }
+
+            if (textureData.pixels.size_bytes() != imageLevelBytes(textureDescriptor.format, textureDescriptor.width, textureDescriptor.height, textureDescriptor.depth) * textureDescriptor.arrayLayers * textureDescriptor.faceCount)
+            {
+                error = BinaryBlockFile::ErrorCode::TextureInvalidPixelsByteCount;
+                return false;
+            }
+
+            // -----------------------------------------------------------------------------
+            // Deserialize Levels
+            // -----------------------------------------------------------------------------
+
+            for (uint32_t i = 0u; i < static_cast<uint32_t>(textureData.textureLevels.size()); ++i)
+            {
+                if (textureData.textureLevels[i].byteOffset % 16 != 0)
+                {
+                    error = BinaryBlockFile::ErrorCode::TextureInvalidLevelOffset;
+                    return false;
+                }
+
+                const uint32_t expW = mipExtent(textureDescriptor.width, i);
+                const uint32_t expH = mipExtent(textureDescriptor.height, i);
+                const uint32_t expD = mipExtent(textureDescriptor.depth, i);
+
+                if ((textureData.textureLevels[i].width != mipExtent(textureDescriptor.width, i)) ||
+                    (textureData.textureLevels[i].height != mipExtent(textureDescriptor.height, i)) ||
+                    (textureData.textureLevels[i].depth != mipExtent(textureDescriptor.depth, i)))
+                {
+                    error = BinaryBlockFile::ErrorCode::TextureInvalidLevelExtents;
+                    return false;
+                }
+
+                if (textureData.textureLevels[i].byteOffset + textureData.textureLevels[i].byteSize > textureData.pixels.size_bytes())
+                {
+                    error = BinaryBlockFile::ErrorCode::TextureLevelOutOfBounds;
+                    return false;
+                }
+            }
 
             auto& textureLevels = texture.getTextureLevelsWriteRef();
             textureLevels.clear();
@@ -147,7 +207,11 @@ namespace litl::import
             {
                 textureLevels.push_back(deserializeTextureLevel(textureData.textureLevels[i]));
             }
-            
+
+            // -----------------------------------------------------------------------------
+            // Deserialize Pixels
+            // -----------------------------------------------------------------------------
+
             auto& texturePixels = texture.getPixelBytesWriteRef();
             texturePixels.clear();
             texturePixels.resize(textureData.pixels.size(), std::byte{ 0 });
@@ -159,6 +223,12 @@ namespace litl::import
 
     bool LitlTextureBinary::serialize(TextureIntermediateData const& texture, std::vector<std::byte>& data, ErrorCode& error) noexcept
     {
+        if (!texture.validate())
+        {
+            error = BinaryBlockFile::ErrorCode::TextureValidationFailed;
+            return false;
+        }
+
         LitlTextureBinary litlTexture{};
         BinaryBlockFile::StringMap stringMap{};
 

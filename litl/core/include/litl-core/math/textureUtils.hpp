@@ -5,9 +5,77 @@
 #include <cstdint>
 
 #include "litl-core/math/common.hpp"
+#include "litl-core/formats/dataFormats.hpp"
 
 namespace litl
 {
+    /// <summary>
+    /// Dimensions of a texel block for a given format.
+    /// </summary>
+    struct TexelBlockExtent
+    {
+        uint32_t width{ 0u };
+        uint32_t height{ 0u };
+    };
+
+    /// <summary>
+    /// The number of texels sampled at a time for each format.
+    /// Uncompressed textures sample an individual texel (1x1 block), while compressed textures sample a 4x4 block of texels.
+    /// </summary>
+    [[nodiscard]] constexpr TexelBlockExtent texelBlockExtent(DataFormat format) noexcept
+    {
+        switch (format)
+        {
+            // Compressed formats are 4x4
+        case DataFormat::BC4_UNorm:
+        case DataFormat::BC5_UNorm:
+        case DataFormat::BC6H_UFloat:
+        case DataFormat::BC6H_SFloat:
+        case DataFormat::BC7_UNorm:
+        case DataFormat::BC7_SRGB:
+            return { 4u, 4u };
+
+            // Uncompressed formats are 1x1
+        case DataFormat::RGBA8_UNorm:
+        case DataFormat::RGBA8_SRGB:
+        case DataFormat::BGRA8_Unorm:
+        case DataFormat::BGRA8_SRGB:
+        case DataFormat::ABGR10_UNorm_Pack32:
+        case DataFormat::RGBA16_SFloat:
+        case DataFormat::RGB32_SFloat:
+        case DataFormat::RGBA32_SFloat:
+        case DataFormat::R11G11B10_UFloat:
+        case DataFormat::R8_UNorm:
+        case DataFormat::R16_SFloat:
+        case DataFormat::R32_SFloat:
+        case DataFormat::RG8_UNorm:
+        case DataFormat::RG16_SFloat:
+        case DataFormat::RG32_SFloat:
+        case DataFormat::D32_SFloat:
+        case DataFormat::D24_UNorm_S8_UInt:
+        case DataFormat::D32_SFloat_S8_UInt:
+        case DataFormat::Undefined:
+            return { 1u, 1u };
+        }
+
+        return { 1u, 1u };
+    }
+
+    /// <summary>
+    /// Size, in bytes, of a single tightly packed mip level of a color or block-compressed image.
+    /// Dimensions are rounded up to whole texel blocks, a 1x1 BC7 mip tail still occupies a full 16-byte block.
+    /// Not valid for depth/stencil formats as the depth and stencil components are treated as two distinct regions.
+    /// </summary>
+    [[nodiscard]] constexpr uint64_t imageLevelBytes(DataFormat format, uint32_t width, uint32_t height, uint32_t depth) noexcept
+    {
+        const TexelBlockExtent block = texelBlockExtent(format);
+
+        const uint64_t blocksX = (static_cast<uint64_t>(width) + block.width - 1u) / block.width;
+        const uint64_t blocksY = (static_cast<uint64_t>(height) + block.height - 1u) / block.height;
+
+        return blocksX * blocksY * static_cast<uint64_t>(depth) * static_cast<uint64_t>(dataFormatSize(format));
+    }
+
     /// <summary>
     /// The extent of the given mip level, derived from the base extent. Never returns 0.
     /// 

@@ -1,4 +1,5 @@
 #include <array>
+#include <memory>
 
 #include "litl-core/formats/srgb.hpp"
 #include "litl-core/math/textureUtils.hpp"
@@ -7,6 +8,11 @@
 
 namespace litl::import
 {
+    namespace
+    {
+        static constexpr size_t ComponentCount = 4;         // RGBA
+    }
+
     TextureDataDescriptor& TextureIntermediateData::getDataDescriptorWriteRef() noexcept
     {
         return m_dataDescriptor;
@@ -39,7 +45,7 @@ namespace litl::import
 
     bool TextureIntermediateData::store8BitPixelsAsFloat(std::span<std::byte const> pixels) noexcept
     {
-        if (pixels.size() != (m_dataDescriptor.width * m_dataDescriptor.height * m_dataDescriptor.depth * 4u))      // * 4 as expected to be RGBA
+        if (pixels.size() != (m_dataDescriptor.width * m_dataDescriptor.height * m_dataDescriptor.depth * ComponentCount))
         {
             // Data descriptor is out-of-sync with the data being provided.
             return false;
@@ -51,7 +57,7 @@ namespace litl::import
         m_levels.reserve(textureLevelCount);
         m_levels.push_back(TextureLevel{
             .byteOffset = 0ull,
-            .byteSize = pixels.size() * 4u,             // * 4 as we will be expanding from std::byte/uint8_t to float
+            .byteSize = pixels.size() * sizeof(float),
             .width = m_dataDescriptor.width,
             .height = m_dataDescriptor.height,
             .depth = m_dataDescriptor.depth
@@ -67,7 +73,7 @@ namespace litl::import
 
                 m_levels.push_back(TextureLevel{
                     .byteOffset = (m_levels[i - 1].byteOffset + m_levels[i - 1].byteSize),
-                    .byteSize = (levelWidth * levelHeight * levelDepth * 4u),
+                    .byteSize = (levelWidth * levelHeight * levelDepth * sizeof(float) * ComponentCount),
                     .width = levelWidth,
                     .height = levelHeight,
                     .depth = levelDepth
@@ -78,7 +84,8 @@ namespace litl::import
         m_pixels.clear();
         m_pixels.resize(m_levels.back().byteOffset + m_levels.back().byteSize, std::byte{ 0 });
 
-        std::span<float> pixelsReinterp{ reinterpret_cast<float*>(m_pixels.data()), pixels.size() * 4u };
+
+        std::span<float> pixelsReinterp{ reinterpret_cast<float*>(m_pixels.data()), pixels.size() };
 
         const auto& byteToFloatTransferTable = getByteToFloatTable(m_dataDescriptor.transfer);
         const auto& byteToLinearFloatTable = getByteToLinearFloatTable();

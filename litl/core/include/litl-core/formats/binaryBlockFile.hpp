@@ -280,6 +280,13 @@ namespace litl
             TextureMissingDescriptorInfo = 4003u,
             TextureMissingTextureLevels = 4004u,
             TextureMissingPixels = 4005u,
+            TextureTooManyDescriptors = 4006u,
+            TextureInvalidLevelsCount = 4007u,
+            TextureInvalidLevelOffset = 4008u,
+            TextureInvalidLevelExtents = 4009u,
+            TextureLevelOutOfBounds = 4010u,
+            TextureInvalidPixelsByteCount = 4011u,
+            TextureValidationFailed = 4012u,
 
             // -----------------------------------------------------------------------------
             // Other
