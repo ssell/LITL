@@ -274,6 +274,13 @@ namespace litl
             // LitlTexture Error Codes (4000-4999)
             // -----------------------------------------------------------------------------
 
+            MissingTextureInfoBlock = 4000u,
+            MissingTextureLevelsBlock = 4001u,
+            MissingTexturePixelsBlock = 4002u,
+            TextureMissingDescriptorInfo = 4003u,
+            TextureMissingTextureLevels = 4004u,
+            TextureMissingPixels = 4005u,
+
             // -----------------------------------------------------------------------------
             // Other
             // -----------------------------------------------------------------------------

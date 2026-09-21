@@ -69,6 +69,7 @@ namespace litl::tests
         REQUIRE(textureDataDescriptor.semantic == import::TextureSemantic::Albedo);
         REQUIRE(textureDataDescriptor.isCubeMap == false);
         REQUIRE(textureDataDescriptor.alphaPremultiplied == false);
+        REQUIRE(textureDataDescriptor.mipMaps == false);
 
         auto texturePixelBytes = textureResult->intermediateTexture->getPixelBytes();
 
@@ -81,5 +82,13 @@ namespace litl::tests
             REQUIRE(texturePixelColors[i] == expectedSRGBColorArray[i]);
         }
 
+        auto textureLevels = textureResult->intermediateTexture->getTextureLevels();
+
+        REQUIRE(textureLevels.size() == 1u);            // No mipmaps at the moment
+        REQUIRE(textureLevels[0].byteOffset == 0ull);
+        REQUIRE(textureLevels[0].byteSize == texturePixelBytes.size_bytes());
+        REQUIRE(textureLevels[0].width == textureDataDescriptor.width);
+        REQUIRE(textureLevels[0].height == textureDataDescriptor.height);
+        REQUIRE(textureLevels[0].depth == textureDataDescriptor.depth);
     } LITL_END_TEST_CASE
 }

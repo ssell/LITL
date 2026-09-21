@@ -33,7 +33,7 @@ add_library(litl-core
 		"src/litl-core/formats/binaryBlockFile.cpp" 
 		"src/litl-core/math/geometry/tools/orientation.cpp" 
 		"src/litl-core/math/geometry/tools/normals.cpp" 
-		"src/litl-core/math/geometry/tools/triangulate.cpp" "src/litl-core/formats/srgb.cpp")
+		"src/litl-core/math/geometry/tools/triangulate.cpp" "src/litl-core/formats/srgb.cpp" )
 		
 target_include_directories(litl-core 
 	PUBLIC 

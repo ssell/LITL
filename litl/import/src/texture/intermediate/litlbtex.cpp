@@ -7,21 +7,6 @@ namespace litl::import
 {
     namespace
     {
-        struct BinaryTextureLevel
-        {
-            uint64_t byteOffset{ 0ull };                // Relative to the start of the PIXL block.
-            uint64_t byteSize{ 0ull };                  // Bytes for this level across all layers and faces.
-            uint64_t uncompressedByteSize{ 0ull };      // Future facing for zstd
-            uint32_t width{ 1u };
-            uint32_t height{ 1u };
-            uint32_t depth{ 1u };
-            std::array<uint32_t, 3> padding;
-        };
-
-        static_assert(sizeof(BinaryTextureLevel) == 48);
-        static_assert(sizeof(BinaryTextureLevel) % 16 == 0);
-        static_assert(std::is_trivially_copyable_v<BinaryTextureLevel>);
-
         struct BinaryTextureDataDescriptor
         {
             DataFormat format{ DataFormat::Undefined };
@@ -40,6 +25,28 @@ namespace litl::import
         static_assert(sizeof(BinaryTextureDataDescriptor) == 32);
         static_assert(sizeof(BinaryTextureDataDescriptor) % 16 == 0);
         static_assert(std::is_trivially_copyable_v<BinaryTextureDataDescriptor>);
+
+        struct BinaryTextureLevel
+        {
+            uint64_t byteOffset{ 0ull };                // Relative to the start of the PIXL block.
+            uint64_t byteSize{ 0ull };                  // Bytes for this level across all layers and faces.
+            uint64_t uncompressedByteSize{ 0ull };      // Future facing for zstd
+            uint32_t width{ 1u };
+            uint32_t height{ 1u };
+            uint32_t depth{ 1u };
+            std::array<uint32_t, 3> padding;
+        };
+
+        static_assert(sizeof(BinaryTextureLevel) == 48);
+        static_assert(sizeof(BinaryTextureLevel) % 16 == 0);
+        static_assert(std::is_trivially_copyable_v<BinaryTextureLevel>);
+
+        struct LitlTextureDeserializationData
+        {
+            std::span<BinaryTextureDataDescriptor const> textureDescriptors;
+            std::span<BinaryTextureLevel const> textureLevels;
+            std::span<std::byte const> pixels;
+        };
 
         [[nodiscard]] BinaryTextureLevel serializeTextureLevel(TextureLevel level) noexcept
         {
@@ -66,7 +73,18 @@ namespace litl::import
             return binaryLevels;
         }
 
-        [[nodiscard]] BinaryTextureDataDescriptor serializeTextureDataDescriptor(TextureDataDescriptor desc) noexcept
+        [[nodiscard]] TextureLevel deserializeTextureLevel(BinaryTextureLevel const& level) noexcept
+        {
+            return TextureLevel{
+                .byteOffset = level.byteOffset,
+                .byteSize = level.byteSize,
+                .width = level.width,
+                .height = level.height,
+                .depth = level.depth
+            };
+        }
+
+        [[nodiscard]] BinaryTextureDataDescriptor serializeTextureDataDescriptor(TextureDataDescriptor const& desc) noexcept
         {
             return BinaryTextureDataDescriptor{
                 .format = desc.format,
@@ -80,6 +98,62 @@ namespace litl::import
                 .isCubeMap = desc.isCubeMap,
                 .alphaPremultiplied = desc.alphaPremultiplied
             };
+        }
+
+        [[nodiscard]] TextureDataDescriptor deserializeTextureDataDescriptor(BinaryTextureDataDescriptor const& desc) noexcept
+        {
+            return TextureDataDescriptor{
+                .format = desc.format,
+                .width = desc.width,
+                .height = desc.height,
+                .depth = desc.depth,
+                .arrayLayers = desc.arrayLayers,
+                .faceCount = desc.faceCount,
+                .transfer = desc.transfer,
+                .semantic = desc.semantic,
+                .isCubeMap = desc.isCubeMap,
+                .alphaPremultiplied = desc.alphaPremultiplied
+            };
+        }
+
+        [[nodiscard]] bool deserializeBinaryTextureData(TextureIntermediateData& texture, LitlTextureDeserializationData const& textureData, BinaryBlockFile::ErrorCode& error) noexcept
+        {
+            if (textureData.textureDescriptors.size() == 0u)
+            {
+                error = BinaryBlockFile::ErrorCode::TextureMissingDescriptorInfo;
+                return false;
+            }
+
+            if (textureData.textureLevels.size() == 0u)
+            {
+                error = BinaryBlockFile::ErrorCode::TextureMissingTextureLevels;
+                return false;
+            }
+
+            if (textureData.pixels.size() == 0u)
+            {
+                error = BinaryBlockFile::ErrorCode::TextureMissingPixels;
+                return false;
+            }
+
+            auto& textureDescriptor = texture.getDataDescriptorWriteRef();
+            textureDescriptor = deserializeTextureDataDescriptor(textureData.textureDescriptors[0]);
+
+            auto& textureLevels = texture.getTextureLevelsWriteRef();
+            textureLevels.clear();
+            textureLevels.reserve(textureData.textureLevels.size());
+
+            for (uint32_t i = 0u; i < static_cast<uint32_t>(textureData.textureLevels.size()); ++i)
+            {
+                textureLevels.push_back(deserializeTextureLevel(textureData.textureLevels[i]));
+            }
+            
+            auto& texturePixels = texture.getPixelBytesWriteRef();
+            texturePixels.clear();
+            texturePixels.resize(textureData.pixels.size(), std::byte{ 0 });
+            std::memcpy(texturePixels.data(), textureData.pixels.data(), textureData.pixels.size_bytes());
+
+            return true;
         }
     }
 
@@ -154,8 +228,30 @@ namespace litl::import
 
     bool LitlTextureBinary::deserialize(TextureIntermediateData& texture, ErrorCode& error) const noexcept
     {
-        // ... todo ...
-        error = ErrorCode::FunctionNotImplemented;
-        return false;
+        auto infoBlock = find(BlockIds::Info);
+        auto levelsBlock = find(BlockIds::Levels);
+        auto pixelsBlock = find(BlockIds::Pixels);
+
+        if (!infoBlock.has_value()) { error = ErrorCode::MissingTextureInfoBlock; return false; }
+        if (!levelsBlock.has_value()) { error = ErrorCode::MissingTextureLevelsBlock; return false; }
+        if (!pixelsBlock.has_value()) { error = ErrorCode::MissingTexturePixelsBlock; return false; }
+
+        LitlTextureDeserializationData binaryTextureData{};
+
+        binaryTextureData.textureDescriptors = infoBlock->as<BinaryTextureDataDescriptor const>(error).value_or({});
+        binaryTextureData.textureLevels = levelsBlock->as<BinaryTextureLevel const>(error).value_or({});
+        binaryTextureData.pixels = pixelsBlock->as<std::byte const>(error).value_or({});
+
+        if (error != ErrorCode::None)
+        {
+            return false;
+        }
+
+        if (!deserializeBinaryTextureData(texture, binaryTextureData, error))
+        {
+            return false;
+        }
+
+        return true;
     }
 }

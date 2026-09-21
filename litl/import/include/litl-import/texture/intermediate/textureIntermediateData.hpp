@@ -56,15 +56,16 @@ namespace litl::import
     struct TextureDataDescriptor
     {
         DataFormat format{ DataFormat::Undefined };
-        TransferFunction transfer{ TransferFunction::Linear };
         uint32_t width{ 1u };
         uint32_t height{ 1u };
         uint32_t depth{ 1u };
         uint32_t arrayLayers{ 1u };
         uint32_t faceCount{ 1u };
+        TransferFunction transfer{ TransferFunction::Linear };
         TextureSemantic semantic{ TextureSemantic::Unknown };
         bool isCubeMap{ false };
         bool alphaPremultiplied{ false };
+        bool mipMaps{ false };
     };
 
     /// <summary>
@@ -90,6 +91,10 @@ namespace litl::import
         /// <summary>
         /// Given a span of four-component pixels stored as 8-bit components, converts and stores them as four-component float pixels.
         /// Note that if the descriptor has a transfer value of SRGB, then the incoming bytes will be converted to linear from sRGB gamma space.
+        /// 
+        /// This will also populate the texture levels and size the pixel buffer accordingly if mipmaps are enabled in the data descriptor.
+        /// However, it will not generate mipmaps and pixel bytes beyond the end of the first level (index 0) will be left at 0. The user
+        /// is responsible for calling generateMipMaps to populate the rest of the pixel buffer.
         /// </summary>
         [[nodiscard]] bool store8BitPixelsAsFloat(std::span<std::byte const> pixelBytes) noexcept;
 
@@ -104,6 +109,13 @@ namespace litl::import
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] uint32_t levelsCount() const noexcept;
+
+        /// <summary>
+        /// Generates mipmaps from the first level of pixel data.
+        /// Expects the internal levels and pixels arrays to already be sized/ready to receive the mipmap data.
+        /// If mipmaps are disabled in the texture descriptor then no action is performed and true is returned.
+        /// </summary>
+        [[nodiscard]] bool generateMipMaps() noexcept;
 
     private:
 
