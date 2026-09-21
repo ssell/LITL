@@ -281,12 +281,14 @@ namespace litl
             TextureMissingTextureLevels = 4004u,
             TextureMissingPixels = 4005u,
             TextureTooManyDescriptors = 4006u,
-            TextureInvalidLevelsCount = 4007u,
-            TextureInvalidLevelOffset = 4008u,
-            TextureInvalidLevelExtents = 4009u,
-            TextureLevelOutOfBounds = 4010u,
-            TextureInvalidPixelsByteCount = 4011u,
-            TextureValidationFailed = 4012u,
+            TextureLevelInvalidCount = 4007u,
+            TextureLevelInvalidOffset = 4008u,
+            TextureLevelGapOrOverlap = 4009u,
+            TextureLevelInvalidExtents = 4010u,
+            TextureLevelInvalidBytes = 4011u,
+            TextureLevelOutOfBounds = 4012u,
+            TexturePixelsInvalidByteCount = 4013u,
+            TextureValidationFailed = 4014u,
 
             // -----------------------------------------------------------------------------
             // Other

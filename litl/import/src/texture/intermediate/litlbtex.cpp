@@ -37,7 +37,7 @@ namespace litl::import
             uint32_t width{ 1u };
             uint32_t height{ 1u };
             uint32_t depth{ 1u };
-            std::array<uint32_t, 3> padding;
+            std::array<uint32_t, 3> padding{};
         };
 
         static_assert(sizeof(BinaryTextureLevel) == 48);
@@ -96,11 +96,11 @@ namespace litl::import
                 .depth = desc.depth,
                 .arrayLayers = desc.arrayLayers,
                 .faceCount = desc.faceCount,
-                    .transfer = desc.transfer,
-                    .semantic = desc.semantic,
-                    .isCubeMap = desc.isCubeMap,
-                    .alphaPremultiplied = desc.alphaPremultiplied,
-                    .mipMaps = desc.mipMaps
+                .transfer = desc.transfer,
+                .semantic = desc.semantic,
+                .isCubeMap = desc.isCubeMap,
+                .alphaPremultiplied = desc.alphaPremultiplied,
+                .mipMaps = desc.mipMaps
             };
         }
 
@@ -156,15 +156,15 @@ namespace litl::import
 
             const uint32_t expectedLevelsCount = (textureDescriptor.mipMaps ? mipLevelCount(textureDescriptor.width, textureDescriptor.height, textureDescriptor.depth) : 1u);
 
-            if (textureData.textureLevels.size() > expectedLevelsCount)
+            if (textureData.textureLevels.size() != expectedLevelsCount)
             {
-                error = BinaryBlockFile::ErrorCode::TextureInvalidLevelsCount;
+                error = BinaryBlockFile::ErrorCode::TextureLevelInvalidCount;
                 return false;
             }
 
-            if (textureData.pixels.size_bytes() != imageLevelBytes(textureDescriptor.format, textureDescriptor.width, textureDescriptor.height, textureDescriptor.depth) * textureDescriptor.arrayLayers * textureDescriptor.faceCount)
+            if (textureData.pixels.size_bytes() != imageChainBytes(textureDescriptor.format, textureDescriptor.width, textureDescriptor.height, textureDescriptor.depth) * textureDescriptor.arrayLayers * textureDescriptor.faceCount)
             {
-                error = BinaryBlockFile::ErrorCode::TextureInvalidPixelsByteCount;
+                error = BinaryBlockFile::ErrorCode::TexturePixelsInvalidByteCount;
                 return false;
             }
 
@@ -174,9 +174,18 @@ namespace litl::import
 
             for (uint32_t i = 0u; i < static_cast<uint32_t>(textureData.textureLevels.size()); ++i)
             {
-                if (textureData.textureLevels[i].byteOffset % 16 != 0)
+                const auto& prevLevel = textureData.textureLevels[i - 1];
+                const auto& currLevel = textureData.textureLevels[i];
+
+                if (currLevel.byteOffset % 16 != 0)
                 {
-                    error = BinaryBlockFile::ErrorCode::TextureInvalidLevelOffset;
+                    error = BinaryBlockFile::ErrorCode::TextureLevelInvalidOffset;
+                    return false;
+                }
+
+                if (currLevel.byteOffset != (prevLevel.byteOffset + prevLevel.byteSize))
+                {
+                    error = BinaryBlockFile::ErrorCode::TextureLevelGapOrOverlap;
                     return false;
                 }
 
@@ -184,15 +193,19 @@ namespace litl::import
                 const uint32_t expH = mipExtent(textureDescriptor.height, i);
                 const uint32_t expD = mipExtent(textureDescriptor.depth, i);
 
-                if ((textureData.textureLevels[i].width != mipExtent(textureDescriptor.width, i)) ||
-                    (textureData.textureLevels[i].height != mipExtent(textureDescriptor.height, i)) ||
-                    (textureData.textureLevels[i].depth != mipExtent(textureDescriptor.depth, i)))
+                if ((currLevel.width != expW) || (currLevel.height != expH) || (currLevel.depth != expD))
                 {
-                    error = BinaryBlockFile::ErrorCode::TextureInvalidLevelExtents;
+                    error = BinaryBlockFile::ErrorCode::TextureLevelInvalidExtents;
                     return false;
                 }
 
-                if (textureData.textureLevels[i].byteOffset + textureData.textureLevels[i].byteSize > textureData.pixels.size_bytes())
+                if (currLevel.byteSize != imageLevelBytes(textureDescriptor.format, expW, expH, expD))
+                {
+                    error = BinaryBlockFile::ErrorCode::TextureLevelInvalidBytes;
+                    return false;
+                }
+
+                if ((currLevel.byteOffset + currLevel.byteSize) > textureData.pixels.size_bytes())
                 {
                     error = BinaryBlockFile::ErrorCode::TextureLevelOutOfBounds;
                     return false;
@@ -214,8 +227,7 @@ namespace litl::import
 
             auto& texturePixels = texture.getPixelBytesWriteRef();
             texturePixels.clear();
-            texturePixels.resize(textureData.pixels.size(), std::byte{ 0 });
-            std::memcpy(texturePixels.data(), textureData.pixels.data(), textureData.pixels.size_bytes());
+            texturePixels.assign(textureData.pixels.begin(), textureData.pixels.end());
 
             return true;
         }

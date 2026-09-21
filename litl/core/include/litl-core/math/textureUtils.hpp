@@ -10,12 +10,34 @@
 namespace litl
 {
     /// <summary>
+    /// The extent of the given mip level, derived from the base extent. Never returns 0.
+    /// 
+    /// An extent defines the exact pixel dimension (width, height, and depth) of a specific 
+    /// downsampled image in a mipmap chain. The base level (0) represents the original, highest-resolution 
+    /// texture dimensions. Each subsequent mip level (level + 1) custs the previous levels width, height, 
+    /// and depth dimensions in half, rounding down until it reaches 1 pixel.
+    /// </summary>
+    [[nodiscard]] constexpr uint32_t mipExtent(uint32_t baseExtent, uint32_t level) noexcept
+    {
+        return (level >= 32u) ? 1u : ((baseExtent >> level) > 0u ? (baseExtent >> level) : 1u);
+    }
+
+    /// <summary>
+    /// Returns the total number of levels to represent all of the mipmaps for a texture with the given dimensions.
+    /// </summary>
+    [[nodiscard]] constexpr uint32_t mipLevelCount(uint32_t width, uint32_t height, uint32_t depth) noexcept
+    {
+        const uint32_t largest = max(width, max(height, max(depth, 1u)));
+        return static_cast<uint32_t>(std::bit_width(largest));
+    }
+
+    /// <summary>
     /// Dimensions of a texel block for a given format.
     /// </summary>
     struct TexelBlockExtent
     {
-        uint32_t width{ 0u };
-        uint32_t height{ 0u };
+        uint32_t width{ 1u };
+        uint32_t height{ 1u };
     };
 
     /// <summary>
@@ -68,6 +90,11 @@ namespace litl
     /// </summary>
     [[nodiscard]] constexpr uint64_t imageLevelBytes(DataFormat format, uint32_t width, uint32_t height, uint32_t depth) noexcept
     {
+        if (dataFormatHasDepth(format) || dataFormatHasStencil(format))
+        {
+            return 0ull;
+        }
+
         const TexelBlockExtent block = texelBlockExtent(format);
 
         const uint64_t blocksX = (static_cast<uint64_t>(width) + block.width - 1u) / block.width;
@@ -77,25 +104,19 @@ namespace litl
     }
 
     /// <summary>
-    /// The extent of the given mip level, derived from the base extent. Never returns 0.
-    /// 
-    /// An extent defines the exact pixel dimension (width, height, and depth) of a specific 
-    /// downsampled image in a mipmap chain. The base level (0) represents the original, highest-resolution 
-    /// texture dimensions. Each subsequent mip level (level + 1) custs the previous levels width, height, 
-    /// and depth dimensions in half, rounding down until it reaches 1 pixel.
+    /// Given the original extents of an image, calculates the total bytes needed to store it and all of its mipmaps.
     /// </summary>
-    [[nodiscard]] constexpr uint32_t mipExtent(uint32_t baseExtent, uint32_t level) noexcept
+    [[nodiscard]] constexpr uint64_t imageChainBytes(DataFormat format, uint32_t width, uint32_t height, uint32_t depth) noexcept
     {
-        return (level >= 32u) ? 1u : ((baseExtent >> level) > 0u ? (baseExtent >> level) : 1u);
-    }
+        const uint32_t mipLevels = mipLevelCount(width, height, depth);
+        uint64_t totalBytes = 0ull;
 
-    /// <summary>
-    /// Returns the total number of levels to represent all of the mipmaps for a texture with the given dimensions.
-    /// </summary>
-    [[nodiscard]] constexpr uint32_t mipLevelCount(uint32_t width, uint32_t height, uint32_t depth) noexcept
-    {
-        const uint32_t largest = max(width, max(height, max(depth, 1u)));
-        return static_cast<uint32_t>(std::bit_width(largest));
+        for (uint32_t i = 0u; i < mipLevels; ++i)
+        {
+            totalBytes += imageLevelBytes(format, mipExtent(width, i), mipExtent(height, i), mipExtent(depth, i));
+        }
+
+        return totalBytes;
     }
 }
 

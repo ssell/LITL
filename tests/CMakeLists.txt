@@ -76,9 +76,10 @@ add_executable(litl-tests
 	"src/litl-import/importFbx_tests.cpp" 
 	"src/litl-core/file_tests.cpp" 
 	"src/litl-import/importService_tests.cpp" 
-	  
 	"src/litl-core/formats/dataFormats_tests.cpp" 
-	"src/litl-import/importTga_tests.cpp" "src/litl-core/formats/srgb_tests.cpp" "src/litl-core/math/textureUtils_tests.cpp")
+	"src/litl-import/importTga_tests.cpp" 
+	"src/litl-core/formats/srgb_tests.cpp" 
+	"src/litl-core/math/textureUtils_tests.cpp")
 
 target_link_libraries(litl-tests
 	PRIVATE

@@ -6,13 +6,6 @@ namespace litl::tests
     // Static Compile-Time Tests
     // -------------------------------------------------------------------------------------
 
-    static_assert(imageLevelBytes(DataFormat::RGBA8_UNorm, 4u, 4u, 1u) == 64u);
-    static_assert(imageLevelBytes(DataFormat::BC7_UNorm, 4u, 4u, 1u) == 16u);                       // exactly one block
-    static_assert(imageLevelBytes(DataFormat::BC7_UNorm, 1u, 1u, 1u) == 16u);                       // mip tail, still one whole block
-    static_assert(imageLevelBytes(DataFormat::BC7_UNorm, 5u, 5u, 1u) == 64u);                       // rounds up to 2x2 blocks
-    static_assert(imageLevelBytes(DataFormat::BC4_UNorm, 4u, 4u, 1u) == 8u);
-    static_assert(imageLevelBytes(DataFormat::RGBA8_UNorm, 16384u, 16384u, 1u) == 1073741824ull);   // no 32-bit wrap
-
     static_assert(mipExtent(256u, 0) == 256u);
     static_assert(mipExtent(256u, 1) == 128u);
     static_assert(mipExtent(256u, 2) == 64u);
@@ -30,4 +23,16 @@ namespace litl::tests
     static_assert(mipLevelCount(0, 0, 0) == 1);
     static_assert(mipLevelCount(300, 200, 1) == 9);     // non-power-of-2: floor(log2(300)) + 1
     static_assert(mipLevelCount(16, 16, 16) == 5);      // 3D texture
+
+    static_assert(imageLevelBytes(DataFormat::RGBA8_UNorm, 4u, 4u, 1u) == 64u);
+    static_assert(imageLevelBytes(DataFormat::BC7_UNorm, 4u, 4u, 1u) == 16u);                       // exactly one block
+    static_assert(imageLevelBytes(DataFormat::BC7_UNorm, 1u, 1u, 1u) == 16u);                       // mip tail, still one whole block
+    static_assert(imageLevelBytes(DataFormat::BC7_UNorm, 5u, 5u, 1u) == 64u);                       // rounds up to 2x2 blocks
+    static_assert(imageLevelBytes(DataFormat::BC4_UNorm, 4u, 4u, 1u) == 8u);
+    static_assert(imageLevelBytes(DataFormat::RGBA8_UNorm, 16384u, 16384u, 1u) == 1073741824ull);   // no 32-bit wrap
+
+    static_assert(imageChainBytes(DataFormat::RGBA8_UNorm, 32u, 32u, 1u) == 5460ull);
+    static_assert(imageChainBytes(DataFormat::RGBA8_UNorm, 4u, 4u, 4u) == 292ull);
+    static_assert(imageChainBytes(DataFormat::RGBA8_UNorm, 10u, 10u, 1u) == 520ull);
+    static_assert(imageChainBytes(DataFormat::BC7_UNorm, 10u, 10u, 1u) == 240ull);
 }
