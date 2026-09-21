@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "litl-core/formats/dataFormats.hpp"
+#include "litl-core/formats/srgb.hpp"
 
 namespace litl::import
 {
@@ -19,29 +20,6 @@ namespace litl::import
         NormalTangent = 2u,     // Tangent-space normal map (RGBA32_SFloat)
         Mask          = 3u,     // Masking texture (RGBA32_SFloat)
         Hdr           = 4u      // High-dynamic range texture (RGBA16_SFLOAT)
-    };
-
-    /// <summary>
-    /// How the pixels are transferred.
-    /// </summary>
-    enum class TransferFunction : uint8_t
-    {
-        /// <summary>
-        /// Pixels are linear on the range (0-255) (0.0-1.0).
-        /// Use for non-color textures such as normal maps, masks, roughness, etc.
-        /// </summary>
-        Linear = 0,
-
-        /// <summary>
-        /// Pixels are stored in sRGB gamma space which interpolates values more
-        /// closely to how human eyes perceive them. For example, we see dark
-        /// shades in more detail than bright ones.
-        /// 
-        /// Use for color textures such as albedo.
-        /// 
-        /// Most standard image formats such as JPEG, PNG, etc. store in sRGB.
-        /// </summary>
-        SRGB = 1
     };
 
     struct TextureLevel
@@ -90,7 +68,7 @@ namespace litl::import
         /// Given a span of four-component pixels stored as 8-bit components, converts and stores them as four-component float pixels.
         /// Note that if the descriptor has a transfer value of SRGB, then the incoming bytes will be converted to linear from sRGB gamma space.
         /// </summary>
-        [[nodiscard]] bool store8BitPixelsAsFloat(std::span<uint8_t const> pixels) noexcept;
+        [[nodiscard]] bool store8BitPixelsAsFloat(std::span<std::byte const> pixelBytes) noexcept;
 
         /// <summary>
         /// Returns true if the descriptor and pixels are valid.
@@ -101,7 +79,7 @@ namespace litl::import
 
         TextureDataDescriptor m_dataDescriptor{};
         std::vector<TextureLevel> m_levels;             // m_levels[0] is always present. Mipmap generation appends additional levels.
-        std::vector<std::byte> m_pixels;                // raw pixel data. m_levels indexes into this.
+        std::vector<std::byte> m_pixels;                // Raw pixel data. Each pixel is composed of 4 floats (RGBA). m_levels indexes into this.
     };
 }
 

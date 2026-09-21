@@ -36,7 +36,7 @@ namespace litl::import
         return m_pixels;
     }
 
-    bool TextureIntermediateData::store8BitPixelsAsFloat(std::span<uint8_t const> pixels) noexcept
+    bool TextureIntermediateData::store8BitPixelsAsFloat(std::span<std::byte const> pixels) noexcept
     {
         if ((pixels.size() % 4) != 0u)
         {
@@ -49,22 +49,15 @@ namespace litl::import
 
         std::span<float> pixelsReinterp{ reinterpret_cast<float*>(m_pixels.data()), pixels.size() * 4u };
 
-        if (m_dataDescriptor.transfer == TransferFunction::Linear)
+        const auto& byteToFloatTransferTable = getByteToFloatTable(m_dataDescriptor.transfer);
+        const auto& byteToLinearFloatTable = getByteToLinearFloatTable();
+
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(pixels.size()); i += 4u)
         {
-            for (uint32_t i = 0u; i < static_cast<uint32_t>(pixels.size()); ++i)
-            {
-                pixelsReinterp[i] = uint8_to_linear_float[pixels[i]];
-            }
-        }
-        else
-        {
-            for (uint32_t i = 0u; i < static_cast<uint32_t>(pixels.size()); i += 4u)
-            {
-                pixelsReinterp[i + 0] = uint8_to_srgb_float[pixels[i + 0]];
-                pixelsReinterp[i + 1] = uint8_to_srgb_float[pixels[i + 1]];
-                pixelsReinterp[i + 2] = uint8_to_srgb_float[pixels[i + 2]];
-                pixelsReinterp[i + 3] = uint8_to_linear_float[pixels[i + 3]];           // alpha is linear
-            }
+            pixelsReinterp[i + 0] = byteToFloatTransferTable[static_cast<uint8_t>(pixels[i + 0])];
+            pixelsReinterp[i + 1] = byteToFloatTransferTable[static_cast<uint8_t>(pixels[i + 1])];
+            pixelsReinterp[i + 2] = byteToFloatTransferTable[static_cast<uint8_t>(pixels[i + 2])];
+            pixelsReinterp[i + 3] = byteToLinearFloatTable[static_cast<uint8_t>(pixels[i + 3])];            // alpha is linear
         }
 
         return true;

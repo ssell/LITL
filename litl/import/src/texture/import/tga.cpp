@@ -11,7 +11,7 @@ namespace litl::import
     {
         struct ScopedData
         {
-            float* data{ nullptr };
+            uint8_t* data{ nullptr };
             ~ScopedData() { if (data != nullptr) stbi_image_free(data); }
         };
 
@@ -22,7 +22,8 @@ namespace litl::import
             auto& textureDataDescriptor = textureResult->intermediateTexture->getDataDescriptorWriteRef();
             auto& texturePixelData = textureResult->intermediateTexture->getPixelBytesWriteRef();
 
-            textureDataDescriptor.format = DataFormat::RGBA32_SFloat;               // stbi_loadf_from_memory loads as float
+            textureDataDescriptor.format = DataFormat::RGBA32_SFloat;
+            textureDataDescriptor.transfer = TransferFunction::SRGB;
             textureDataDescriptor.width = width;
             textureDataDescriptor.height = height;
             textureDataDescriptor.depth = 1u;
@@ -31,12 +32,7 @@ namespace litl::import
             textureDataDescriptor.isCubeMap = false;
             textureDataDescriptor.alphaPremultiplied = false;
 
-            const uint64_t totalByteSize = width * height * sizeof(float) * 4;      // forced to 4 channels.
-            texturePixelData.resize(totalByteSize, std::byte{ 0 });
-
-            std::memcpy(texturePixelData.data(), data, totalByteSize);
-
-            if (!textureResult->intermediateTexture->validate())
+            if (!textureResult->intermediateTexture->store8BitPixelsAsFloat(std::span<std::byte const>{data, (width * height * 4)}))        // 4 components forced to RGBA
             {
                 return false;
             }
@@ -66,7 +62,8 @@ namespace litl::import
         int channels = 0;
 
         // Note that stb_image automatically handles flipping images to top-left origin if they are not already
-        const ScopedData scopedData { .data = stbi_loadf_from_memory(
+        // Note that we do not use stbi_loadf_from_memory as that performs a forced sRGB conversion, and it uses a different EOTF than we do.
+        const ScopedData scopedData { .data = stbi_load_from_memory(
             reinterpret_cast<stbi_uc const*>(sourceBytes.data()),
             static_cast<int>(sourceBytes.size_bytes()),
             &width,
