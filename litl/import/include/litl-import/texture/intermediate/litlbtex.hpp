@@ -16,7 +16,9 @@ namespace litl::import
 
         struct BlockIds
         {
-            // ... todo ...
+            static constexpr BinaryBlockIdType Info{ 'I', 'N', 'F', 'O' };
+            static constexpr BinaryBlockIdType Levels{ 'M', 'I', 'P', 'S' };
+            static constexpr BinaryBlockIdType Pixels{ 'P', 'I', 'X', 'L' };
         };
 
         /// <summary>

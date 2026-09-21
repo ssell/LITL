@@ -104,4 +104,9 @@ namespace litl::import
 
         return true;
     }
+
+    uint32_t TextureIntermediateData::levelsCount() const noexcept
+    {
+        return static_cast<uint32_t>(m_levels.size());
+    }
 }

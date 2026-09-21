@@ -31,9 +31,6 @@ namespace litl
     /// <summary>
     /// Converts a POD to a const byte span.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="obj"></param>
-    /// <returns></returns>
     template<typename T> requires std::is_trivially_copyable_v<T>
     [[nodiscard]] std::span<std::byte const, sizeof(T)> as_byte_span(T const& obj) noexcept
     {
@@ -43,9 +40,6 @@ namespace litl
     /// <summary>
     /// Converts a generic void pointer with a given size to a const byte span.
     /// </summary>
-    /// <param name="data"></param>
-    /// <param name="size"></param>
-    /// <returns></returns>
     [[nodiscard]] static std::span<std::byte const> generic_as_byte_span(void const* data, size_t size)
     {
         return std::span<std::byte const>{ reinterpret_cast<const std::byte*>(data), size };

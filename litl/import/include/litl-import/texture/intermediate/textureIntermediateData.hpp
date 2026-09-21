@@ -22,12 +22,34 @@ namespace litl::import
         Hdr           = 4u      // High-dynamic range texture (RGBA16_SFLOAT)
     };
 
+    /// <summary>
+    /// An individual level/mipmap of the texture.
+    /// </summary>
     struct TextureLevel
     {
+        /// <summary>
+        /// The offset into the pixels array where this level (mipmap) begins.
+        /// </summary>
         uint64_t byteOffset{ 0ull };
+
+        /// <summary>
+        /// The total size of this level (mipmap) in bytes.
+        /// </summary>
         uint64_t byteSize{ 0ull };
+
+        /// <summary>
+        /// Width of the level, in pixels.
+        /// </summary>
         uint32_t width{ 1u };
+
+        /// <summary>
+        /// Height of the level, in pixels.
+        /// </summary>
         uint32_t height{ 1u };
+
+        /// <summary>
+        /// The depth of the level, in pixels.
+        /// </summary>
         uint32_t depth{ 1u };
     };
 
@@ -39,6 +61,7 @@ namespace litl::import
         uint32_t height{ 1u };
         uint32_t depth{ 1u };
         uint32_t arrayLayers{ 1u };
+        uint32_t faceCount{ 1u };
         TextureSemantic semantic{ TextureSemantic::Unknown };
         bool isCubeMap{ false };
         bool alphaPremultiplied{ false };
@@ -75,11 +98,28 @@ namespace litl::import
         /// </summary>
         [[nodiscard]] bool validate() const noexcept;
 
+        /// <summary>
+        /// Returns the number of levels in the texture.
+        /// There is always at minimum 1 level. Mipmap generation increases the level count.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] uint32_t levelsCount() const noexcept;
+
     private:
 
         TextureDataDescriptor m_dataDescriptor{};
-        std::vector<TextureLevel> m_levels;             // m_levels[0] is always present. Mipmap generation appends additional levels.
-        std::vector<std::byte> m_pixels;                // Raw pixel data. Each pixel is composed of 4 floats (RGBA). m_levels indexes into this.
+
+        /// <summary>
+        /// Array of levels/mipmaps in the texture.
+        /// The first level (index 0) is always present. Mipmap generation appends additional levels.
+        /// </summary>
+        std::vector<TextureLevel> m_levels;
+
+        /// <summary>
+        /// The raw byte array of the texture and all of its mipmaps. Each pixel is expanded to 4 components: RGBA.
+        /// The TextureLevel::byteOffset value indexes into here.
+        /// </summary>
+        std::vector<std::byte> m_pixels;
     };
 }
 

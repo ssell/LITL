@@ -61,7 +61,7 @@ namespace litl
     float sRGBFloatToLinearFloat(float c)
     {
         static constexpr float one_over_2p4 = 1.0f / 2.4f;
-        return (c <= 0.0031308) ? (c * 12.92f) : (1.055f * powf(c, one_over_2p4)) - 0.055f;
+        return (c <= 0.0031308f) ? (c * 12.92f) : (1.055f * powf(c, one_over_2p4)) - 0.055f;
     }
 
     color linearColorToSRGBColor(color c) noexcept
