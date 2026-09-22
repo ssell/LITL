@@ -244,7 +244,7 @@ namespace litl::import
         return true;      // leave bool return to match other importX functions and for future compatibility.
     }
 
-    Result LitlMatImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
+    Result LitlMatImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, ImportedData& importedData) noexcept
     {
         const auto sourceBytesString = std::string_view{ reinterpret_cast<char const*>(sourceBytes.data()), sourceBytes.size() };
 

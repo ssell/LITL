@@ -63,7 +63,7 @@ namespace litl::import
             .depth = m_dataDescriptor.depth
         });
 
-        if (m_dataDescriptor.mipMaps)
+        if (m_dataDescriptor.mipmaps)
         {
             for (uint32_t i = 1u; i < textureLevelCount; ++i)
             {
@@ -168,11 +168,11 @@ namespace litl::import
             return false;
         }
 
-        const uint32_t expectedLevelCount = (m_dataDescriptor.mipMaps ? mipLevelCount(m_dataDescriptor.width, m_dataDescriptor.height, m_dataDescriptor.depth) : 1u);
+        const uint32_t expectedLevelCount = (m_dataDescriptor.mipmaps ? mipLevelCount(m_dataDescriptor.width, m_dataDescriptor.height, m_dataDescriptor.depth) : 1u);
 
         if (m_levels.size() != static_cast<size_t>(expectedLevelCount))
         {
-            logError("Failed to validate TextureIntermediateData: level count of ", m_levels.size(), " does not match the expected count of ", expectedLevelCount, " for mipMaps = ", m_dataDescriptor.mipMaps, ".");
+            logError("Failed to validate TextureIntermediateData: level count of ", m_levels.size(), " does not match the expected count of ", expectedLevelCount, " for mipmaps = ", m_dataDescriptor.mipmaps, ".");
             return false;
         }
 
@@ -241,7 +241,7 @@ namespace litl::import
 
     bool TextureIntermediateData::generateMipMaps() noexcept
     {
-        if (!m_dataDescriptor.mipMaps)
+        if (!m_dataDescriptor.mipmaps)
         {
             // Nothing to do.
             return true;

@@ -173,7 +173,7 @@ namespace litl::import
 
     }
 
-    Result SlangImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
+    Result SlangImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, ImportedData& importedData) noexcept
     {
         if (t_slangSession == nullptr)
         {

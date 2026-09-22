@@ -18,7 +18,7 @@ namespace litl::import
         TgaImporter(TgaImporter const&) = delete;
         TgaImporter& operator=(TgaImporter const&) = delete;
 
-        [[nodiscard]] Result import(std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept override;
+        [[nodiscard]] Result import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, ImportedData& importedData) noexcept override;
 
     };
 }

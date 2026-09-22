@@ -24,7 +24,7 @@ namespace litl::import
         LitlMatImporter(LitlMatImporter const&) = delete;
         LitlMatImporter& operator=(LitlMatImporter const&) = delete;
 
-        [[nodiscard]] Result import(std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept override;
+        [[nodiscard]] Result import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, ImportedData& importedData) noexcept override;
     };
 }
 

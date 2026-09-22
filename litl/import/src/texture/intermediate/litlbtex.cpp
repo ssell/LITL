@@ -21,7 +21,7 @@ namespace litl::import
             TextureSemantic semantic{ TextureSemantic::Unknown };
             bool isCubeMap{ false };
             bool alphaPremultiplied{ false };
-            bool mipMaps{ false };
+            bool mipmaps{ false };
             std::array<std::byte, 3> padding{};
         };
 
@@ -100,7 +100,7 @@ namespace litl::import
                 .semantic = desc.semantic,
                 .isCubeMap = desc.isCubeMap,
                 .alphaPremultiplied = desc.alphaPremultiplied,
-                .mipMaps = desc.mipMaps
+                .mipmaps = desc.mipmaps
             };
         }
 
@@ -117,7 +117,7 @@ namespace litl::import
                 .semantic = desc.semantic,
                 .isCubeMap = desc.isCubeMap,
                 .alphaPremultiplied = desc.alphaPremultiplied,
-                .mipMaps = desc.mipMaps
+                .mipmaps = desc.mipmaps
             };
         }
 
@@ -154,7 +154,7 @@ namespace litl::import
             auto& textureDescriptor = texture.getDataDescriptorWriteRef();
             textureDescriptor = deserializeTextureDataDescriptor(textureData.textureDescriptors[0]);
 
-            const uint32_t expectedLevelsCount = (textureDescriptor.mipMaps ? 
+            const uint32_t expectedLevelsCount = (textureDescriptor.mipmaps ?
                 mipLevelCount(textureDescriptor.width, textureDescriptor.height, textureDescriptor.depth) : 
                 1u);
 
@@ -164,7 +164,7 @@ namespace litl::import
                 return false;
             }
 
-            const uint32_t expectedChainBytes = (textureDescriptor.mipMaps ? 
+            const uint32_t expectedChainBytes = (textureDescriptor.mipmaps ?
                 imageChainBytes(textureDescriptor.format, textureDescriptor.width, textureDescriptor.height, textureDescriptor.depth) : 
                 imageLevelBytes(textureDescriptor.format, textureDescriptor.width, textureDescriptor.height, textureDescriptor.depth)) * textureDescriptor.arrayLayers * textureDescriptor.faceCount;
             

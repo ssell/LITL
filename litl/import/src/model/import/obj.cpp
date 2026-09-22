@@ -176,7 +176,7 @@ namespace litl::import
 
     }
 
-    Result ObjImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
+    Result ObjImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, ImportedData& importedData) noexcept
     {
         // ---------------------------------------------------------------------------------
         // Parse the OBJ

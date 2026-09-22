@@ -15,7 +15,7 @@ namespace litl::import
             ~ScopedData() { if (data != nullptr) stbi_image_free(data); }
         };
 
-        [[nodiscard]] bool importToIntermediate(std::byte const* data, uint32_t width, uint32_t height, ImportedDataItem& dataItem) noexcept
+        [[nodiscard]] bool importToIntermediate(std::byte const* data, uint32_t width, uint32_t height, ImportSettings const& settings, ImportedDataItem& dataItem) noexcept
         {
             auto* textureResult = dataItem.getDataPtr<TextureImportResult>();
             textureResult->intermediateTexture = std::make_shared<TextureIntermediateData>();
@@ -23,14 +23,15 @@ namespace litl::import
             auto& texturePixelData = textureResult->intermediateTexture->getPixelBytesWriteRef();
 
             textureDataDescriptor.format = DataFormat::RGBA32_SFloat;
-            textureDataDescriptor.transfer = TransferFunction::SRGB;
+            textureDataDescriptor.transfer = settings.texture.transfer;
             textureDataDescriptor.width = width;
             textureDataDescriptor.height = height;
             textureDataDescriptor.depth = 1u;
             textureDataDescriptor.arrayLayers = 1u;
-            textureDataDescriptor.semantic = TextureSemantic::Albedo;
+            textureDataDescriptor.semantic = settings.texture.semantic;
             textureDataDescriptor.isCubeMap = false;
             textureDataDescriptor.alphaPremultiplied = false;
+            textureDataDescriptor.mipmaps = settings.texture.mipmaps;
 
             if (!textureResult->intermediateTexture->store8BitPixelsAsFloat(std::span<std::byte const>{data, (width * height * 4)}))        // 4 components forced to RGBA
             {
@@ -50,7 +51,7 @@ namespace litl::import
 
     }
 
-    Result TgaImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
+    Result TgaImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, ImportedData& importedData) noexcept
     {
         if (sourceBytes.size() > std::numeric_limits<int>::max())
         {
@@ -85,7 +86,7 @@ namespace litl::import
             return Result::Error(ErrorType::ImporterFailed, "Failed to create texture import data.");
         }
 
-        if (!importToIntermediate(reinterpret_cast<std::byte const*>(scopedData.data), static_cast<uint32_t>(width), static_cast<uint32_t>(height), dataItem))
+        if (!importToIntermediate(reinterpret_cast<std::byte const*>(scopedData.data), static_cast<uint32_t>(width), static_cast<uint32_t>(height), settings, dataItem))
         {
             return Result::Error(ErrorType::ImporterFailed, "Failed to validate processed TGA data to intermediate format.");
         }

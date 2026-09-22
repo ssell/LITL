@@ -79,7 +79,7 @@ namespace litl::import
             return Result::Error(ErrorType::NoImporterForSourceExtension);
         }
 
-        Result const importResult = importer->import(location, sourceBytes, importedData);
+        Result const importResult = importer->import(location, sourceBytes, settings, importedData);
 
         if (!importResult.success)
         {

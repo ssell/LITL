@@ -19,7 +19,7 @@ namespace litl::import
     public:
 
         virtual ~Importer() = default;
-        virtual Result import(std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept = 0;
+        virtual Result import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, ImportedData& importedData) noexcept = 0;
     };
 
     template <typename T>

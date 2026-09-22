@@ -54,7 +54,7 @@ namespace litl::import
         TextureSemantic semantic{ TextureSemantic::Unknown };
         bool isCubeMap{ false };
         bool alphaPremultiplied{ false };
-        bool mipMaps{ false };
+        bool mipmaps{ false };
     };
 
     /// <summary>

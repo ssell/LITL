@@ -12,7 +12,7 @@ namespace litl::import
 
     }
 
-    Result SpirvImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
+    Result SpirvImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, ImportedData& importedData) noexcept
     {
         importedData.items.push_back({});
         auto& dataItem = importedData.items.back();

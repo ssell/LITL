@@ -22,7 +22,7 @@ namespace litl::import
         GlbImporter(GlbImporter const&) = delete;
         GlbImporter& operator=(GlbImporter const&) = delete;
 
-        [[nodiscard]] Result import(std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept override;
+        [[nodiscard]] Result import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, ImportedData& importedData) noexcept override;
 
     private:
     };

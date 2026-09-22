@@ -16,7 +16,7 @@ namespace litl::import
 
     }
 
-    Result FbxImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
+    Result FbxImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, ImportedData& importedData) noexcept
     {
         const ufbx_load_opts fbxOptions = { 0 };
         ufbx_error fbxError;

@@ -52,7 +52,16 @@ namespace litl::tests
 
         import::ImportService importer{};
         import::ImportedData data{};
-        const import::Result result = importer.importForMemory(import::ImportSourceType::TextureTga, s_testTgaSourceLocation, *sourceBytes, {}, data, true);
+
+        const import::ImportSettings settings{ 
+            .texture = import::TextureImportSettings{ 
+                .semantic = import::TextureSemantic::Albedo,
+                .transfer = TransferFunction::SRGB,
+                .mipmaps = false
+            }
+        };
+
+        const import::Result result = importer.importForMemory(import::ImportSourceType::TextureTga, s_testTgaSourceLocation, *sourceBytes, settings, data, true);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
@@ -72,10 +81,11 @@ namespace litl::tests
         REQUIRE(textureDataDescriptor.height == 3u);
         REQUIRE(textureDataDescriptor.depth == 1u);
         REQUIRE(textureDataDescriptor.arrayLayers == 1u);
-        REQUIRE(textureDataDescriptor.semantic == import::TextureSemantic::Albedo);
+        REQUIRE(textureDataDescriptor.transfer == settings.texture.transfer);
+        REQUIRE(textureDataDescriptor.semantic == settings.texture.semantic);
         REQUIRE(textureDataDescriptor.isCubeMap == false);
         REQUIRE(textureDataDescriptor.alphaPremultiplied == false);
-        REQUIRE(textureDataDescriptor.mipMaps == false);
+        REQUIRE(textureDataDescriptor.mipmaps == settings.texture.mipmaps);
 
         auto texturePixelBytes = textureResult->intermediateTexture->getPixelBytes();
 
@@ -157,7 +167,7 @@ namespace litl::tests
         REQUIRE(tgaDataDescriptor.semantic == litlbtexDataDescriptor.semantic);
         REQUIRE(tgaDataDescriptor.isCubeMap == litlbtexDataDescriptor.isCubeMap);
         REQUIRE(tgaDataDescriptor.alphaPremultiplied == litlbtexDataDescriptor.alphaPremultiplied);
-        REQUIRE(tgaDataDescriptor.mipMaps == litlbtexDataDescriptor.mipMaps);
+        REQUIRE(tgaDataDescriptor.mipmaps == litlbtexDataDescriptor.mipmaps);
 
         // Compare TextureLevels
         REQUIRE(tgaTextureLevels.size() == litlbtexTextureLevels.size());
