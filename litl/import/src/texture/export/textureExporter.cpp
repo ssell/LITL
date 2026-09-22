@@ -1,4 +1,7 @@
+#include <format>
+
 #include "litl-import/texture/export/textureExporter.hpp"
+#include "litl-import/texture/intermediate/litlbtex.hpp"
 
 namespace litl::import
 {
@@ -22,7 +25,26 @@ namespace litl::import
 
     Result TextureExporter::write(std::vector<std::byte>& serialized, ImportedData const& data, uint32_t dataIndex) noexcept
     {
-        // ... todo implement ... allow pass through for now for testing ...
+        auto errorCode = BinaryBlockFile::ErrorCode::None;
+        auto* textureResult = data.items[dataIndex].getDataPtr<TextureImportResult>();
+
+        if (textureResult == nullptr)
+        {
+            return Result::Error(ErrorType::ImportedDataNull);
+        }
+
+        auto* texture = textureResult->intermediateTexture.get();
+
+        if (!LitlTextureBinary::serialize(*texture, serialized, errorCode))
+        {
+            return Result::Error(ErrorType::SerializationFailed, std::format("Serialization of Texture to litlbtex failed with error code {}", static_cast<uint32_t>(errorCode)));
+        }
+
+        if (serialized.empty())
+        {
+            return Result::Error(ErrorType::SerializedResultEmpty);
+        }
+
         return Result::Success();
     }
 }

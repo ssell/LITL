@@ -154,7 +154,9 @@ namespace litl::import
             auto& textureDescriptor = texture.getDataDescriptorWriteRef();
             textureDescriptor = deserializeTextureDataDescriptor(textureData.textureDescriptors[0]);
 
-            const uint32_t expectedLevelsCount = (textureDescriptor.mipMaps ? mipLevelCount(textureDescriptor.width, textureDescriptor.height, textureDescriptor.depth) : 1u);
+            const uint32_t expectedLevelsCount = (textureDescriptor.mipMaps ? 
+                mipLevelCount(textureDescriptor.width, textureDescriptor.height, textureDescriptor.depth) : 
+                1u);
 
             if (textureData.textureLevels.size() != expectedLevelsCount)
             {
@@ -162,7 +164,11 @@ namespace litl::import
                 return false;
             }
 
-            if (textureData.pixels.size_bytes() != imageChainBytes(textureDescriptor.format, textureDescriptor.width, textureDescriptor.height, textureDescriptor.depth) * textureDescriptor.arrayLayers * textureDescriptor.faceCount)
+            const uint32_t expectedChainBytes = (textureDescriptor.mipMaps ? 
+                imageChainBytes(textureDescriptor.format, textureDescriptor.width, textureDescriptor.height, textureDescriptor.depth) : 
+                imageLevelBytes(textureDescriptor.format, textureDescriptor.width, textureDescriptor.height, textureDescriptor.depth)) * textureDescriptor.arrayLayers * textureDescriptor.faceCount;
+            
+            if (textureData.pixels.size_bytes() != expectedChainBytes)
             {
                 error = BinaryBlockFile::ErrorCode::TexturePixelsInvalidByteCount;
                 return false;
@@ -174,7 +180,6 @@ namespace litl::import
 
             for (uint32_t i = 0u; i < static_cast<uint32_t>(textureData.textureLevels.size()); ++i)
             {
-                const auto& prevLevel = textureData.textureLevels[i - 1];
                 const auto& currLevel = textureData.textureLevels[i];
 
                 if (currLevel.byteOffset % 16 != 0)
@@ -183,10 +188,15 @@ namespace litl::import
                     return false;
                 }
 
-                if (currLevel.byteOffset != (prevLevel.byteOffset + prevLevel.byteSize))
+                if (i != 0u)
                 {
-                    error = BinaryBlockFile::ErrorCode::TextureLevelGapOrOverlap;
-                    return false;
+                    const auto& prevLevel = textureData.textureLevels[i - 1];
+
+                    if (currLevel.byteOffset != (prevLevel.byteOffset + prevLevel.byteSize))
+                    {
+                        error = BinaryBlockFile::ErrorCode::TextureLevelGapOrOverlap;
+                        return false;
+                    }
                 }
 
                 const uint32_t expW = mipExtent(textureDescriptor.width, i);

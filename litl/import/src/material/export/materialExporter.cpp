@@ -1,6 +1,5 @@
 #include <format>
 
-#include "litl-core/directory.hpp"
 #include "litl-import/material/export/materialExporter.hpp"
 #include "litl-import/material/intermediate/litlbmat.hpp"
 
@@ -48,16 +47,16 @@ namespace litl::import
     Result MaterialExporter::write(std::vector<std::byte>& serialized, ImportedData const& data, uint32_t dataIndex) noexcept
     {
         auto errorCode = BinaryBlockFile::ErrorCode::None;
-        auto* material = data.items[dataIndex].getDataPtr<MaterialImportResult>();
+        auto* materialResult = data.items[dataIndex].getDataPtr<MaterialImportResult>();
 
-        if (material == nullptr)
+        if (materialResult == nullptr)
         {
             return Result::Error(ErrorType::ImportedDataNull);
         }
 
-        MaterialIntermediateData* intermediateMaterial = material->intermediateMaterial.get();
+        auto* material = materialResult->intermediateMaterial.get();
 
-        if (!LitlMatBinary::serialize(*intermediateMaterial, serialized, errorCode))
+        if (!LitlMatBinary::serialize(*material, serialized, errorCode))
         {
             return Result::Error(ErrorType::SerializationFailed, std::format("Serialization of Material to litlbmat failed with error code {}", static_cast<uint32_t>(errorCode)));
         }
