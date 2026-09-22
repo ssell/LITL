@@ -22,7 +22,7 @@ namespace litl::tests
 
         import::ImportService importer{};
         import::ImportedData data{};
-        const import::Result result = importer.importForMemory(import::ImportSourceType::MaterialLitl, s_testlitlmatLocation, bytes.value(), data, true);
+        const import::Result result = importer.importForMemory(import::ImportSourceType::MaterialLitl, s_testlitlmatLocation, bytes.value(), {}, data, true);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
@@ -96,7 +96,7 @@ namespace litl::tests
         // Test full conversion (litlmat -> MaterialIntermediateData -> litlbmat)
         import::ImportService importer{};
         import::WriteableImportResults results{};
-        import::Result result = importer.importForWriting(import::ImportSourceType::MaterialLitl, s_testlitlmatLocation, *sourceBytes, results);
+        import::Result result = importer.importForWriting(import::ImportSourceType::MaterialLitl, s_testlitlmatLocation, *sourceBytes, {}, results);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
@@ -112,7 +112,7 @@ namespace litl::tests
         // test.litlmat -> MaterialIntermediateData
         import::ImportService importer{};
         import::WriteableImportResults results{};
-        import::Result result = importer.importForWriting(import::ImportSourceType::MaterialLitl, s_testlitlmatLocation, *sourceBytes, results);
+        import::Result result = importer.importForWriting(import::ImportSourceType::MaterialLitl, s_testlitlmatLocation, *sourceBytes, {}, results);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);

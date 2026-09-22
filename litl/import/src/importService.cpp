@@ -70,7 +70,7 @@ namespace litl::import
         m_importerRegistry.add<TgaImporter>();
     }
 
-    Result ImportService::importForMemory(ImportSourceType sourceType, std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData, bool shouldPrepare) noexcept
+    Result ImportService::importForMemory(ImportSourceType sourceType, std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, ImportedData& importedData, bool shouldPrepare) noexcept
     {
         auto importer = m_importerRegistry.create(sourceType);
 
@@ -119,10 +119,10 @@ namespace litl::import
         return Result::Success();
     }
 
-    Result ImportService::importForWriting(ImportSourceType sourceType, std::string_view location, std::span<std::byte const> sourceBytes, WriteableImportResults& writeableResults) noexcept
+    Result ImportService::importForWriting(ImportSourceType sourceType, std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, WriteableImportResults& writeableResults) noexcept
     {
         // Import from one external file
-        Result const importResult = importForMemory(sourceType, location, sourceBytes, writeableResults.importedData, false);
+        Result const importResult = importForMemory(sourceType, location, sourceBytes, settings, writeableResults.importedData, false);
 
         if (!importResult.success || writeableResults.importedData.items.empty())
         {

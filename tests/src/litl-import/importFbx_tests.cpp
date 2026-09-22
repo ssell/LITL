@@ -16,7 +16,7 @@ namespace litl::tests
 
         import::ImportService importer{};
         import::ImportedData data{};
-        const import::Result result = importer.importForMemory(import::ImportSourceType::ModelFbx, location, bytes.value(), data, true);
+        const import::Result result = importer.importForMemory(import::ImportSourceType::ModelFbx, location, bytes.value(), {}, data, true);
 
         // todo ...
         //REQUIRE(result.success == true);

@@ -19,7 +19,7 @@ namespace litl::tests
 
         import::ImportService importer{};
         import::ImportedData data{};
-        const import::Result result = importer.importForMemory(import::ImportSourceType::ModelObj, location, *sourceBytes, data, true);
+        const import::Result result = importer.importForMemory(import::ImportSourceType::ModelObj, location, *sourceBytes, {}, data, true);
         
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
@@ -53,7 +53,7 @@ namespace litl::tests
         // Test full conversion (obj -> ModelIntermediateData -> .litlmdl)
         import::ImportService importer{};
         import::WriteableImportResults results{};
-        import::Result result = importer.importForWriting(import::ImportSourceType::ModelObj, sourceLocation, *sourceBytes, results);
+        import::Result result = importer.importForWriting(import::ImportSourceType::ModelObj, sourceLocation, *sourceBytes, {}, results);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
@@ -71,7 +71,7 @@ namespace litl::tests
         // Test full conversion (obj -> GeoMesh -> LitlMesh)
         import::ImportService importer{};
         import::WriteableImportResults results{};
-        import::Result result = importer.importForWriting(import::ImportSourceType::ModelObj, sourceLocation, *sourceBytes, results);
+        import::Result result = importer.importForWriting(import::ImportSourceType::ModelObj, sourceLocation, *sourceBytes, {}, results);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
@@ -88,7 +88,7 @@ namespace litl::tests
         // Test full conversion (obj -> GeoMesh -> LitlMesh) so we have a .litlbmsh to load later.
         import::ImportService importer{};
         import::WriteableImportResults results{};
-        import::Result result = importer.importForWriting(import::ImportSourceType::ModelObj, sourceLocation, *sourceBytes, results);
+        import::Result result = importer.importForWriting(import::ImportSourceType::ModelObj, sourceLocation, *sourceBytes, {}, results);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);

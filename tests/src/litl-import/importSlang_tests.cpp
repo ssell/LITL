@@ -205,7 +205,7 @@ namespace litl::tests
 
         import::ImportService importer{};
         import::ImportedData data{};
-        const import::Result result = importer.importForMemory(import::ImportSourceType::ShaderSlang, sourceLocation, *sourceBytes, data, true);
+        const import::Result result = importer.importForMemory(import::ImportSourceType::ShaderSlang, sourceLocation, *sourceBytes, {}, data, true);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
@@ -237,7 +237,7 @@ namespace litl::tests
         // test.slang -> ShaderIntermediateData
         import::ImportService importer{};
         import::WriteableImportResults results{};
-        import::Result result = importer.importForWriting(import::ImportSourceType::ShaderSlang, sourceLocation, *sourceBytes, results);
+        import::Result result = importer.importForWriting(import::ImportSourceType::ShaderSlang, sourceLocation, *sourceBytes, {}, results);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);

@@ -10,6 +10,7 @@
 #include "litl-import/result.hpp"
 #include "litl-import/importedData.hpp"
 #include "litl-import/importSourceType.hpp"
+#include "litl-import/importSettings.hpp"
 
 namespace litl::import
 {

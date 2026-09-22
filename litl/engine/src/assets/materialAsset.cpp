@@ -46,7 +46,7 @@ namespace litl
         import::ImportService importer{};
         import::ImportedData importedData{};
 
-        const auto importResult = importer.importForMemory(sourceType, location, otherBytes, importedData, true);
+        const auto importResult = importer.importForMemory(sourceType, location, otherBytes, {}, importedData, true);
 
         if (importResult.success)
         {

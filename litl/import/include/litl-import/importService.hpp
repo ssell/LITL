@@ -42,7 +42,7 @@ namespace litl::import
         /// This method should be used if you only need the intermediate internal objects in memory. Use importForWriting if they need to be written to disk/embedded in a bundle/etc.
         /// </summary>
         /// <param name="shouldPrepare">If true, the relevant Exporter::prepare will be run on the data to perform any necessary internal conversions. Otherwise the data will be returned untransformed.</param>
-        [[nodiscard]] Result importForMemory(ImportSourceType sourceType, std::string_view location, std::span<std::byte const> sourceBytes, ImportedData& importedData, bool shouldPrepare) noexcept;
+        [[nodiscard]] Result importForMemory(ImportSourceType sourceType, std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, ImportedData& importedData, bool shouldPrepare) noexcept;
 
         /// <summary>
         /// Given an external format source file, attempts to convert it to an internal representation format.
@@ -51,7 +51,7 @@ namespace litl::import
         /// 
         /// This method should be used if you need to write the results to disk/embed in bundle/etc. If you only need the intermediate internal object in memory, then use importForMemory.
         /// </summary>
-        [[nodiscard]] Result importForWriting(ImportSourceType sourceType, std::string_view location, std::span<std::byte const> sourceBytes, WriteableImportResults& writeableResults) noexcept;
+        [[nodiscard]] Result importForWriting(ImportSourceType sourceType, std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, WriteableImportResults& writeableResults) noexcept;
 
     private:
 
