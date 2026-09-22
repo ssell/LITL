@@ -26,7 +26,7 @@ namespace litl
         HandlePool<Mesh, MeshHandleTag> meshPool;
         HandlePool<Shader, ShaderHandleTag> shaderPool;
         HandlePool<Text, TextHandleTag> textPool;
-        HandlePool<Texture2D, Texture2DHandleTag> texture2DPool;
+        HandlePool<Texture, TextureHandleTag> texturePool;
     };
 
     ObjectPool::ObjectPool()
@@ -116,16 +116,16 @@ namespace litl
             destroyShader(shaderHandle);
         }
 
-        // ---- Texture2D
+        // ---- Texture
 
-        std::vector<Texture2DHandle> texture2DHandles;
-        getAllTexture2DHandles(texture2DHandles);
+        std::vector<TextureHandle> textureHandles;
+        getAllTextureHandles(textureHandles);
 
-        logTrace("... destroying ", texture2DHandles.size(), " Texture2D handles.");
+        logTrace("... destroying ", textureHandles.size(), " Texture handles.");
 
-        for (auto texture2DHandle : texture2DHandles)
+        for (auto textureHandle : textureHandles)
         {
-            destroyTexture2D(texture2DHandle);
+            destroyTexture(textureHandle);
         }
 
         // ---- Meshes
@@ -534,51 +534,51 @@ namespace litl
     }
 
     //--------------------------------------------------------------------------------------
-    // Texture2D
+    // Texture
     //--------------------------------------------------------------------------------------
 
-    Texture2DHandle ObjectPool::reserveTexture2D(Authority<AssetManager> auth) noexcept
+    TextureHandle ObjectPool::reserveTexture(Authority<AssetManager> auth) noexcept
     {
-        Texture2D texture{};
-        return m_impl->texture2DPool.create(texture);
+        Texture texture{};
+        return m_impl->texturePool.create(texture);
     }
 
-    Texture2DHandle ObjectPool::createTexture2D(Texture2DDescriptor const& descriptor) noexcept
+    TextureHandle ObjectPool::createTexture(TextureDescriptor const& descriptor) noexcept
     {
-        Texture2D texture2D{};
+        Texture texture{};
 
-        if (!texture2D.create({}, descriptor))
+        if (!texture.create({}, descriptor))
         {
-            logWarning("Failed to create Texture2D '", descriptor.objectInfo.name, "'");
-            texture2D.destroy({});      // make sure there are no lingering resources depending on when in the creation process the error occurred.
+            logWarning("Failed to create Texture '", descriptor.objectInfo.name, "'");
+            texture.destroy({});      // make sure there are no lingering resources depending on when in the creation process the error occurred.
             return {};
         }
 
-        return m_impl->texture2DPool.create(texture2D);
+        return m_impl->texturePool.create(texture);
     }
 
-    Texture2D* ObjectPool::getTexture2D(Texture2DHandle handle) noexcept
+    Texture* ObjectPool::getTexture(TextureHandle handle) noexcept
     {
-        return m_impl->texture2DPool.get(handle);
+        return m_impl->texturePool.get(handle);
     }
 
-    void ObjectPool::getAllTexture2DHandles(std::vector<Texture2DHandle>& handles) const noexcept
+    void ObjectPool::getAllTextureHandles(std::vector<TextureHandle>& handles) const noexcept
     {
-        m_impl->texture2DPool.getAllHandles(handles);
+        m_impl->texturePool.getAllHandles(handles);
     }
 
-    void ObjectPool::destroyTexture2D(Texture2DHandle handle) noexcept
+    void ObjectPool::destroyTexture(TextureHandle handle) noexcept
     {
-        Texture2D* texture2D = getTexture2D(handle);
+        Texture* texture = getTexture(handle);
 
-        if (texture2D != nullptr)
+        if (texture != nullptr)
         {
-            texture2D->destroy({});
-            m_impl->texture2DPool.destroy(handle);
+            texture->destroy({});
+            m_impl->texturePool.destroy(handle);
         }
     }
 
-    void ObjectPool::deferDestroyTexture2D(Texture2DHandle handle) noexcept
+    void ObjectPool::deferDestroyTexture(TextureHandle handle) noexcept
     {
         // ... todo add to a defer destruction queue that is ticked and destroy on a later frame to ensure the resource is not in use by the GPU ...
     }

@@ -1,5 +1,5 @@
-#ifndef LITL_ENGINE_OBJECTS_TEXTURE2D_H__
-#define LITL_ENGINE_OBJECTS_TEXTURE2D_H__
+#ifndef LITL_ENGINE_OBJECTS_TEXTURE_H__
+#define LITL_ENGINE_OBJECTS_TEXTURE_H__
 
 #include "litl-core/authority.hpp"
 #include "litl-engine/objects/objectDescriptor.hpp"
@@ -8,21 +8,21 @@ namespace litl
 {
     class ObjectPool;
 
-    struct Texture2DDescriptor
+    struct TextureDescriptor
     {
         ObjectDescriptor objectInfo{};
     };
 
-    class Texture2D final
+    class Texture final
     {
     public:
 
-        [[nodiscard]] bool create(Authority<ObjectPool> auth, Texture2DDescriptor const& descriptor) noexcept;
+        [[nodiscard]] bool create(Authority<ObjectPool> auth, TextureDescriptor const& descriptor) noexcept;
         void destroy(Authority<ObjectPool> auth) noexcept;
 
     private:
 
-        Texture2DDescriptor m_descriptor{};
+        TextureDescriptor m_descriptor{};
     };
 }
 

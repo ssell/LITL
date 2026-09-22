@@ -162,12 +162,8 @@ namespace litl
                     }
                     break;
 
-                case import::LitlMatPropertyType::Texture2D:
-                    logWarning("Material '", descriptor.objectInfo.name, "' specified a default value for Texture2D property '", defaultProperty.name, "'. This property type is currently unsupported.");
-                    break;
-
-                case import::LitlMatPropertyType::Texture3D:
-                    logWarning("Material '", descriptor.objectInfo.name, "' specified a default value for Texture3D property '", defaultProperty.name, "'. This property type is currently unsupported.");
+                case import::LitlMatPropertyType::Texture:
+                    logWarning("Material '", descriptor.objectInfo.name, "' specified a default value for Texture property '", defaultProperty.name, "'. This property type is currently unsupported.");
                     break;
 
                 case import::LitlMatPropertyType::Unknown:

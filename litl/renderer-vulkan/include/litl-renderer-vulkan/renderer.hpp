@@ -35,10 +35,10 @@ namespace litl::vulkan
     [[nodiscard]] ShaderReflection* getShaderReflection(litl::RendererContext* context, ShaderModuleHandle handle) noexcept;
     void reloadShaderModule(litl::RendererContext* context, ShaderModuleDescriptor const& descriptor) noexcept;
     void destroyShaderModule(litl::RendererContext* context, ShaderModuleHandle handle) noexcept;
-    [[nodiscard]] TextureHandle createTexture(litl::RendererContext* context, TextureDescriptor const& descriptor) noexcept;
-    void destroyTexture(litl::RendererContext* context, TextureHandle handle) noexcept;
-    [[nodiscard]] RendererResult mapTexture(litl::RendererContext* context, TextureHandle textureHandle, MappedTexture& mapped) noexcept;
-    [[nodiscard]] RendererResult unmapTexture(litl::RendererContext* context, TextureHandle textureHandle) noexcept;
+    [[nodiscard]] TextureResourceHandle createTexture(litl::RendererContext* context, TextureResourceDescriptor const& descriptor) noexcept;
+    void destroyTexture(litl::RendererContext* context, TextureResourceHandle handle) noexcept;
+    [[nodiscard]] RendererResult mapTexture(litl::RendererContext* context, TextureResourceHandle textureHandle, MappedTexture& mapped) noexcept;
+    [[nodiscard]] RendererResult unmapTexture(litl::RendererContext* context, TextureResourceHandle textureHandle) noexcept;
     [[nodiscard]] ShaderStage getGraphicsPipelinePushConstantStages(litl::RendererContext* context, GraphicsPipelineHandle pipelineHandle) noexcept;
 
     // -------------------------------------------------------------------------------------
@@ -64,9 +64,9 @@ namespace litl::vulkan
     [[nodiscard]] RendererResult cmdBindBuffer(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, BufferHandle bufferHandle, StringId key, uint64_t offset, uint64_t range, bool isGraphics) noexcept;
     [[nodiscard]] RendererResult cmdBufferUpload(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, std::span<std::byte const> source, BufferHandle destBufferHandle, uint64_t sourceOffset, uint64_t destOffset) noexcept;
     [[nodiscard]] RendererResult cmdBufferFlush(litl::RendererContext* context, CommandBufferHandle commandBufferHandle) noexcept;
-    [[nodiscard]] RendererResult cmdBindTexture(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, TextureHandle textureHandle, StringId textureId, bool isGraphics) noexcept;
+    [[nodiscard]] RendererResult cmdBindTexture(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, TextureResourceHandle textureHandle, StringId textureId, bool isGraphics) noexcept;
     [[nodiscard]] RendererResult cmdBindSampler(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, SamplerHandle samplerHandle, StringId samplerId, bool isGraphics) noexcept;
-    [[nodiscard]] RendererResult cmdTextureUpload(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, std::span<std::byte const> source, TextureHandle destTextureHandle) noexcept;
+    [[nodiscard]] RendererResult cmdTextureUpload(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, std::span<std::byte const> source, TextureResourceHandle destTextureHandle) noexcept;
 
     // -------------------------------------------------------------------------------------
     // rendererDrawOps.cpp

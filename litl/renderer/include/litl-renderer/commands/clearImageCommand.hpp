@@ -17,7 +17,7 @@ namespace litl
         /// The texture/image to clear.
         /// If left to the default value, then the current swapchain image will be cleared.
         /// </summary>
-        TextureHandle image;
+        TextureResourceHandle image;
 
         /// <summary>
         /// 

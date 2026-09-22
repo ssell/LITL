@@ -24,8 +24,7 @@ namespace litl::import
         Vec3 = 7u,
         Vec4 = 8u,
         Color = 9u,
-        Texture2D = 10u,
-        Texture3D = 11u
+        Texture = 10u
     };
 
     enum class LitlMatShaderStage : uint32_t

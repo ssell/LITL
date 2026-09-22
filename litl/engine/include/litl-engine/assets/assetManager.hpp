@@ -14,7 +14,7 @@
 #include "litl-engine/assets/modelAsset.hpp"
 #include "litl-engine/assets/shaderAsset.hpp"
 #include "litl-engine/assets/textAsset.hpp"
-#include "litl-engine/assets/texture2dAsset.hpp"
+#include "litl-engine/assets/textureAsset.hpp"
 #include "litl-engine/ecs/components/materialRef.hpp"
 #include "litl-engine/ecs/components/meshRef.hpp"
 
@@ -84,10 +84,10 @@ namespace litl
         [[nodiscard]] TextAsset* getText(std::string_view resource) noexcept;
         [[nodiscard]] TextAsset* getText(TextAssetHandle handle) noexcept;
 
-        [[nodiscard]] Texture2DAssetHandle getTexture2DHandle(std::string_view resource) noexcept;
-        [[nodiscard]] AssetStatus getTexture2DAssetStatus(Texture2DAssetHandle handle) noexcept;
-        [[nodiscard]] Texture2DAsset* getTexture2D(std::string_view resource) noexcept;
-        [[nodiscard]] Texture2DAsset* getTexture2D(Texture2DAssetHandle handle) noexcept;
+        [[nodiscard]] TextureAssetHandle getTextureHandle(std::string_view resource) noexcept;
+        [[nodiscard]] AssetStatus getTextureAssetStatus(TextureAssetHandle handle) noexcept;
+        [[nodiscard]] TextureAsset* getTexture(std::string_view resource) noexcept;
+        [[nodiscard]] TextureAsset* getTexture(TextureAssetHandle handle) noexcept;
 
     private:
 

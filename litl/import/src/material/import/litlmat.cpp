@@ -31,9 +31,8 @@ namespace litl::import
             { "vec4",     LitlMatPropertyType::Vec4 },
             { "float4",   LitlMatPropertyType::Vec4 },
             { "color",    LitlMatPropertyType::Color },
-            { "texture",  LitlMatPropertyType::Texture2D },
-            { "tex2d",    LitlMatPropertyType::Texture2D },
-            { "tex3d",    LitlMatPropertyType::Texture3D }
+            { "texture",  LitlMatPropertyType::Texture },
+            { "tex2d",    LitlMatPropertyType::Texture }
         };
 
         static const std::unordered_map<std::string, LitlMatShaderStage> s_shaderTypeMap{

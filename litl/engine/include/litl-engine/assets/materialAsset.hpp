@@ -26,12 +26,6 @@ namespace litl
         ShaderAssetHandle handle;
     };
 
-    //struct MateriaAssetlTextureDependency
-    //{
-    //    AssetType type{ AssetType::Unknown };
-    //    std::variant<Texture2DAssetHandle , Texture3DAssetHandle> handle;
-    //};
-    
     struct MaterialAsset : public Asset
     {
         MaterialHandle materialHandle{};

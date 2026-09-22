@@ -197,19 +197,19 @@ namespace litl::vulkan
         vulkanContext->resources.destroyShaderModule(handle);
     }
 
-    TextureHandle createTexture(litl::RendererContext* context, TextureDescriptor const& descriptor) noexcept
+    TextureResourceHandle createTexture(litl::RendererContext* context, TextureResourceDescriptor const& descriptor) noexcept
     {
         auto* vulkanContext = unwrap(context);
         return vulkanContext->resources.createTexture(descriptor);
     }
 
-    void destroyTexture(litl::RendererContext* context, TextureHandle handle) noexcept
+    void destroyTexture(litl::RendererContext* context, TextureResourceHandle handle) noexcept
     {
         auto* vulkanContext = unwrap(context);
         vulkanContext->resources.destroyTexture(handle);
     }
 
-    RendererResult mapTexture(litl::RendererContext* context, TextureHandle textureHandle, MappedTexture& mapped) noexcept
+    RendererResult mapTexture(litl::RendererContext* context, TextureResourceHandle textureHandle, MappedTexture& mapped) noexcept
     {
         auto* vulkanContext = unwrap(context);
         auto* texture = vulkanContext->resources.getTexture(textureHandle);
@@ -247,7 +247,7 @@ namespace litl::vulkan
         return RendererResult::Success;
     }
     
-    RendererResult unmapTexture(litl::RendererContext* context, TextureHandle textureHandle) noexcept
+    RendererResult unmapTexture(litl::RendererContext* context, TextureResourceHandle textureHandle) noexcept
     {
         auto* vulkanContext = unwrap(context);
         auto* texture = vulkanContext->resources.getTexture(textureHandle);

@@ -15,7 +15,7 @@ namespace litl
         /// <summary>
         /// The color texture. If not specified (left at default value), then the current swapchain image will be used.
         /// </summary>
-        TextureHandle colorTexture{};
+        TextureResourceHandle colorTexture{};
 
         /// <summary>
         /// How are the contents treated at the beginning of the pass?
@@ -35,7 +35,7 @@ namespace litl
         /// <summary>
         /// Optional resolve texture (MSAA)
         /// </summary>
-        TextureHandle resolveTexture{};
+        TextureResourceHandle resolveTexture{};
     };
 
     struct DepthAttachmentDescriptor
@@ -43,7 +43,7 @@ namespace litl
         /// <summary>
         /// The depth texture. If not specified (left at default value), then the current swapchain depth texture will be used.
         /// </summary>
-        TextureHandle depthTexture{};
+        TextureResourceHandle depthTexture{};
 
         /// <summary>
         /// How are the contents treated at the beginning of the pass?

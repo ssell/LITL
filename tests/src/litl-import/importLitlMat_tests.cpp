@@ -81,7 +81,7 @@ namespace litl::tests
         REQUIRE(isOne(std::get<float>(properties[1].value)));
 
         REQUIRE(properties[2].name == "albedo");
-        REQUIRE(properties[2].type == import::LitlMatPropertyType::Texture2D);
+        REQUIRE(properties[2].type == import::LitlMatPropertyType::Texture);
         REQUIRE(std::get<std::string>(properties[2].value) == "textures/white");
 
     } LITL_END_TEST_CASE

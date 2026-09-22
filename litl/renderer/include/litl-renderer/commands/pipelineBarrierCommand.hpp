@@ -12,7 +12,7 @@ namespace litl
         /// The texture the barrier is for. 
         /// If not specified (left at default value), then the current swapchain image will be used.
         /// </summary>
-        TextureHandle texture{};
+        TextureResourceHandle texture{};
 
         ImageLayoutType fromLayout = ImageLayoutType::Undefined;
         ImageLayoutType toLayout = ImageLayoutType::Undefined;

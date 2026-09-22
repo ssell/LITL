@@ -11,7 +11,7 @@
 #include "litl-engine/objects/mesh.hpp"
 #include "litl-engine/objects/shader.hpp"
 #include "litl-engine/objects/text.hpp"
-#include "litl-engine/objects/texture2d.hpp"
+#include "litl-engine/objects/texture.hpp"
 
 namespace litl
 {
@@ -76,12 +76,12 @@ namespace litl
         void destroyText(TextHandle handle) noexcept;
         void deferDestroyText(TextHandle handle) noexcept;
 
-        [[nodiscard]] Texture2DHandle reserveTexture2D(Authority<AssetManager> auth) noexcept;
-        [[nodiscard]] Texture2DHandle createTexture2D(Texture2DDescriptor const& descriptor) noexcept;
-        [[nodiscard]] Texture2D* getTexture2D(Texture2DHandle handle) noexcept;
-        void getAllTexture2DHandles(std::vector<Texture2DHandle>& handles) const noexcept;
-        void destroyTexture2D(Texture2DHandle handle) noexcept;
-        void deferDestroyTexture2D(Texture2DHandle handle) noexcept;
+        [[nodiscard]] TextureHandle reserveTexture(Authority<AssetManager> auth) noexcept;
+        [[nodiscard]] TextureHandle createTexture(TextureDescriptor const& descriptor) noexcept;
+        [[nodiscard]] Texture* getTexture(TextureHandle handle) noexcept;
+        void getAllTextureHandles(std::vector<TextureHandle>& handles) const noexcept;
+        void destroyTexture(TextureHandle handle) noexcept;
+        void deferDestroyTexture(TextureHandle handle) noexcept;
 
     private:
 

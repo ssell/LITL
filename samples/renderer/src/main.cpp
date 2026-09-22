@@ -94,7 +94,7 @@ struct SampleRenderState
     // Textures
     // -------------------------------------------------------------------------------------
 
-    TextureHandle texture{};
+    TextureResourceHandle texture{};
     SamplerHandle sampler{};
 };
 
@@ -686,7 +686,7 @@ void updatePerCameraDataBuffer(SampleRenderState& sample) noexcept
 /// <returns></returns>
 bool createTexture(SampleRenderState& sample, CommandBufferHandle commandBuffer) noexcept
 {
-    sample.texture = sample.renderer->createTexture(TextureDescriptor{
+    sample.texture = sample.renderer->createTexture(TextureResourceDescriptor{
         .width = 3,
         .height = 3,
         .format = DataFormat::RGBA32_SFloat,

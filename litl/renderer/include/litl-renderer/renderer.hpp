@@ -52,8 +52,8 @@ namespace litl
         ShaderReflection* (*getShaderReflection)(RendererContext*, ShaderModuleHandle);
         void (*reloadShaderModule)(RendererContext*, ShaderModuleDescriptor const&);
         void (*destroyShaderModule)(RendererContext*, ShaderModuleHandle);
-        TextureHandle (*createTexture)(RendererContext*, TextureDescriptor const&);
-        void (*destroyTexture)(RendererContext*, TextureHandle);
+        TextureResourceHandle (*createTexture)(RendererContext*, TextureResourceDescriptor const&);
+        void (*destroyTexture)(RendererContext*, TextureResourceHandle);
 
         // generic commands
         CommandBufferHandle (*cmdBeginFrame)(RendererContext*);
@@ -81,11 +81,11 @@ namespace litl
         std::optional<uint64_t> (*getBufferDeviceAddress)(RendererContext*, BufferHandle);
 
         // texture commands and operations
-        RendererResult (*cmdBindTexture)(RendererContext*, CommandBufferHandle, TextureHandle, StringId, bool);
+        RendererResult (*cmdBindTexture)(RendererContext*, CommandBufferHandle, TextureResourceHandle, StringId, bool);
         RendererResult (*cmdBindSampler)(RendererContext*, CommandBufferHandle, SamplerHandle, StringId, bool);
-        RendererResult (*cmdTextureUpload)(RendererContext*, CommandBufferHandle, std::span<std::byte const>, TextureHandle);
-        RendererResult (*mapTexture)(RendererContext*, TextureHandle, MappedTexture&);
-        RendererResult (*unmapTexture)(RendererContext*, TextureHandle);
+        RendererResult (*cmdTextureUpload)(RendererContext*, CommandBufferHandle, std::span<std::byte const>, TextureResourceHandle);
+        RendererResult (*mapTexture)(RendererContext*, TextureResourceHandle, MappedTexture&);
+        RendererResult (*unmapTexture)(RendererContext*, TextureResourceHandle);
 
         // pipeline commands and operations
         ShaderStage (*getGraphicsPipelinePushConstantStages)(RendererContext*, GraphicsPipelineHandle);
@@ -228,13 +228,13 @@ namespace litl
         /// 
         /// </summary>
         /// <param name="descriptor"></param>
-        [[nodiscard]] TextureHandle createTexture(TextureDescriptor const& descriptor) const noexcept;
+        [[nodiscard]] TextureResourceHandle createTexture(TextureResourceDescriptor const& descriptor) const noexcept;
         
         /// <summary>
         /// Destroys the underlying texture resource pointed to by the provided handle.
         /// </summary>
         /// <param name="handle"></param>
-        void destroyTexture(TextureHandle handle) const noexcept;
+        void destroyTexture(TextureResourceHandle handle) const noexcept;
 
         // ---------------------------------------------------------------------------------
         // Commands
@@ -423,7 +423,7 @@ namespace litl
         /// <param name="texture"></param>
         /// <param name="textureId"></param>
         /// <param name="isGraphics"></param>
-        RendererResult cmdBindTexture(CommandBufferHandle commandBuffer, TextureHandle texture, StringId textureId, bool isGraphics) const noexcept;
+        RendererResult cmdBindTexture(CommandBufferHandle commandBuffer, TextureResourceHandle texture, StringId textureId, bool isGraphics) const noexcept;
 
         /// <summary>
         /// Binds the sampler to the currently bound graphics or compute pipeline.
@@ -441,20 +441,20 @@ namespace litl
         /// <param name="commandBuffer"></param>
         /// <param name="source"></param>
         /// <param name="destTextureHandle"></param>
-        RendererResult cmdTextureUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, TextureHandle destTextureHandle) const noexcept;
+        RendererResult cmdTextureUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, TextureResourceHandle destTextureHandle) const noexcept;
         
         /// <summary>
         /// Maps the memory address of the texture so that it can be written to.
         /// </summary>
         /// <param name="texture"></param>
         /// <param name="mapped"></param>
-        RendererResult mapTexture(TextureHandle texture, MappedTexture& mapped);
+        RendererResult mapTexture(TextureResourceHandle texture, MappedTexture& mapped);
         
         /// <summary>
         /// Unmaps the texture memory address to conclude any writes.
         /// </summary>
         /// <param name="texture"></param>
-        RendererResult unmapTexture(TextureHandle texture);
+        RendererResult unmapTexture(TextureResourceHandle texture);
 
         // ---------------------------------------------------------------------------------
         // Drawing

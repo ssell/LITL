@@ -823,7 +823,7 @@ namespace litl::vulkan
 
     bool createFrameDepthTextures(RendererContext& context) noexcept
     {
-        TextureDescriptor depthDescriptor{
+        TextureResourceDescriptor depthDescriptor{
             .dimensions = TextureDimensions::Texture2D,
             .width = context.swapChain.vkSwapChainExtent.width,
             .height = context.swapChain.vkSwapChainExtent.height,

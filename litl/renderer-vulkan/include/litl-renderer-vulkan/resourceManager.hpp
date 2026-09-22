@@ -59,11 +59,11 @@ namespace litl::vulkan
         void destroyShaderModule(ShaderModuleHandle handle) noexcept;
         void onShaderModuleReload(ShaderModuleDescriptor const& descriptor) noexcept;
 
-        [[nodiscard]] TextureHandle getTextureHandle(StringId resourceId) const noexcept;
-        [[nodiscard]] TextureHandle createTexture(TextureDescriptor const& descriptor) noexcept;
-        [[nodiscard]] TextureResource* getTexture(TextureHandle handle) noexcept;
-        void destroyTexture(TextureHandle handle) noexcept;
-        void onTextureReload(TextureDescriptor const& descriptor) noexcept;
+        [[nodiscard]] TextureResourceHandle getTextureHandle(StringId resourceId) const noexcept;
+        [[nodiscard]] TextureResourceHandle createTexture(TextureResourceDescriptor const& descriptor) noexcept;
+        [[nodiscard]] TextureResource* getTexture(TextureResourceHandle handle) noexcept;
+        void destroyTexture(TextureResourceHandle handle) noexcept;
+        void onTextureReload(TextureResourceDescriptor const& descriptor) noexcept;
 
         [[nodiscard]] VkDescriptorSetLayout getOrCreateSetLayout(DescriptorSetLayoutDesc const& descriptorSetLayoutDesc, uint32_t setIndex) noexcept;
         [[nodiscard]] VkPipelineLayout getOrCreatePipelineLayout(PipelineLayoutDescriptor const& pipelineLayoutDesc) noexcept;
@@ -77,7 +77,7 @@ namespace litl::vulkan
         HandlePool<ComputePipelineResource, ComputePipelineTag> m_computePipelinePool;
         HandlePool<GraphicsPipelineResource, GraphicsPipelineTag> m_graphicsPipelinePool;
         HandlePool<SamplerResource, SamplerTag> m_samplerPool;
-        HandlePool<TextureResource, TextureTag> m_texturePool;
+        HandlePool<TextureResource, TextureResourceTag> m_texturePool;
 
         HandlePool<ShaderModuleResource, ShaderModuleTag> m_shaderModulePool;
         StringIdMap<ShaderModuleHandle> m_shaderModuleMap;
@@ -86,7 +86,7 @@ namespace litl::vulkan
         PipelineLayoutCache m_pipelineLayoutCache;
         SamplerCache m_samplerCache;
 
-        StringIdMap<TextureHandle> m_textureMap;
+        StringIdMap<TextureResourceHandle> m_textureMap;
     };
 }
 

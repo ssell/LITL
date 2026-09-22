@@ -95,7 +95,7 @@ namespace litl::vulkan
 
         // ---- Textures
 
-        std::vector<TextureHandle> textureHandles;
+        std::vector<TextureResourceHandle> textureHandles;
         m_texturePool.getAllHandles(textureHandles);
 
         logTrace("... destroying ", textureHandles.size(), " Texture handles.");
@@ -1067,7 +1067,7 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
     // Texture
     //--------------------------------------------------------------------------------------
 
-    TextureHandle ResourceManager::getTextureHandle(StringId resourceId) const noexcept
+    TextureResourceHandle ResourceManager::getTextureHandle(StringId resourceId) const noexcept
     {
         auto find = m_textureMap.find(resourceId);
 
@@ -1079,7 +1079,7 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
         return {};
     }
 
-    TextureHandle ResourceManager::createTexture(TextureDescriptor const& descriptor) noexcept
+    TextureResourceHandle ResourceManager::createTexture(TextureResourceDescriptor const& descriptor) noexcept
     {
         auto name = generateResourceId<TextureResource>(descriptor.name, "Texture");
         auto nameId = StringId(name);
@@ -1246,12 +1246,12 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
         return textureHandle;
     }
 
-    TextureResource* ResourceManager::getTexture(TextureHandle handle) noexcept
+    TextureResource* ResourceManager::getTexture(TextureResourceHandle handle) noexcept
     {
         return m_texturePool.get(handle);
     }
 
-    void ResourceManager::destroyTexture(TextureHandle handle) noexcept
+    void ResourceManager::destroyTexture(TextureResourceHandle handle) noexcept
     {
         TextureResource* resource = m_texturePool.get(handle);
 
@@ -1277,7 +1277,7 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
         }
     }
 
-    void ResourceManager::onTextureReload(TextureDescriptor const& descriptor) noexcept
+    void ResourceManager::onTextureReload(TextureResourceDescriptor const& descriptor) noexcept
     {
         auto handle = getTextureHandle(StringId(descriptor.name));
 

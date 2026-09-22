@@ -129,8 +129,7 @@ namespace litl::import
             }
             break;
 
-        case LitlMatPropertyType::Texture2D:
-        case LitlMatPropertyType::Texture3D:
+        case LitlMatPropertyType::Texture:
             if (std::holds_alternative<std::string>(value)) { m_properties.push_back(LitlMatPropertyRecord{ name, type, std::get<std::string>(value) }); return true; }
             break;
 

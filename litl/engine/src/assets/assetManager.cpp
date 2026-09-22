@@ -44,7 +44,7 @@ namespace litl
         LockedHandlePool<ModelAsset, ModelAssetHandleTag> modelAssetPool;
         LockedHandlePool<TextAsset, TextAssetHandleTag> textAssetPool;
         LockedHandlePool<ShaderAsset, ShaderAssetHandleTag> shaderAssetPool;
-        LockedHandlePool<Texture2DAsset, Texture2DAssetHandleTag> texture2DAssetPool;
+        LockedHandlePool<TextureAsset, TextureAssetHandleTag> textureAssetPool;
 
         std::vector<PendingAssetDependency> pendingDependencies;
         std::vector<PendingAssetDependency> pendingAtFrameStart;
@@ -159,8 +159,8 @@ namespace litl
                     createBaseTextAsset(assetRegistration.second, AssetStatus::Unloaded);
                     break;
 
-                case AssetType::Texture2D:
-                    createBaseTexture2DAsset(assetRegistration.second, AssetStatus::Unloaded);
+                case AssetType::Texture:
+                    createBaseTextureAsset(assetRegistration.second, AssetStatus::Unloaded);
                     break;
 
                 case AssetType::Unknown:
@@ -551,32 +551,32 @@ namespace litl
         }
 
         // ---------------------------------------------------------------------------------
-        // --- Texture2D Asset
+        // --- Texture Asset
         // ---------------------------------------------------------------------------------
 
         /// <summary>
         /// Invoked during asset map population.
-        /// This creates an unloaded texture asset reference in the asset map that can be loaded via initiateTexture2DAssetLoad.
+        /// This creates an unloaded texture asset reference in the asset map that can be loaded via initiateTextureAssetLoad.
         /// </summary>
-        Texture2DAssetHandle createBaseTexture2DAsset(AssetRegistration& assetRegistration, AssetStatus initialStatus) noexcept
+        TextureAssetHandle createBaseTextureAsset(AssetRegistration& assetRegistration, AssetStatus initialStatus) noexcept
         {
-            Texture2DAsset asset = createBaseAsset<Texture2DAsset>(AssetType::Texture2D, assetRegistration, initialStatus);
-            asset.handle = Texture2DHandle{};
-            asset.assetOps = &Texture2DAssetOps;
+            TextureAsset asset = createBaseAsset<TextureAsset>(AssetType::Texture, assetRegistration, initialStatus);
+            asset.handle = TextureHandle{};
+            asset.assetOps = &TextureAssetOps;
 
-            const auto texture2DAssetHandle = texture2DAssetPool.create(asset);
-            auto* pooledAsset = texture2DAssetPool.get(texture2DAssetHandle);
-            pooledAsset->selfHandle = AssetHandle::fromTexture2DAssetHandle(texture2DAssetHandle);
+            const auto textureAssetHandle = textureAssetPool.create(asset);
+            auto* pooledAsset = textureAssetPool.get(textureAssetHandle);
+            pooledAsset->selfHandle = AssetHandle::fromTextureAssetHandle(textureAssetHandle);
             assetRegistration.handle = pooledAsset->selfHandle;
 
-            return texture2DAssetHandle;
+            return textureAssetHandle;
         }
 
         /// <summary>
         /// Invoked at runtime when the texture is first requested (or requested after it has been unloaded).
         /// Enqueues a Task to load the texture in from disk.
         /// </summary>
-        void initiateTexture2DAssetLoadFromDisk(Texture2DAsset* asset, AssetManager& assetManager) noexcept
+        void initiateTextureAssetLoadFromDisk(TextureAsset* asset, AssetManager& assetManager) noexcept
         {
             if (asset == nullptr)
             {
@@ -589,17 +589,17 @@ namespace litl
 
             if (!asset->status.compare_exchange_strong(expected, AssetStatus::Loading))
             {
-                logInfo("Attempting to load Texture2D asset from disk that is already loaded or loading. Asset key = '", asset->key, "'");
+                logInfo("Attempting to load Texture asset from disk that is already loaded or loading. Asset key = '", asset->key, "'");
             }
 
             if (!asset->handle.isValid())
             {
                 // Ensure there is a valid handle to return to the caller, even if the texture itself is not yet ready
-                asset->handle = objectPool->reserveTexture2D({});
+                asset->handle = objectPool->reserveTexture({});
 
                 if (!fetchAssetObject(asset))
                 {
-                    logError("Failed to fetch Texture2D Asset underlying object for '", asset->key, "'");
+                    logError("Failed to fetch Texture Asset underlying object for '", asset->key, "'");
                 }
             }
 
@@ -1057,24 +1057,24 @@ namespace litl
     }
 
     // -------------------------------------------------------------------------------------
-    // --- Get Texture2D
+    // --- Get Texture
     // -------------------------------------------------------------------------------------
 
-    Texture2DAssetHandle AssetManager::getTexture2DHandle(std::string_view resource) noexcept
+    TextureAssetHandle AssetManager::getTextureHandle(std::string_view resource) noexcept
     {
         auto assetHandle = getAsset(resource);
 
-        if (assetHandle.type != AssetType::Texture2D)
+        if (assetHandle.type != AssetType::Texture)
         {
             return {};
         }
 
-        return assetHandle.texture2DHandle;
+        return assetHandle.textureHandle;
     }
 
-    AssetStatus AssetManager::getTexture2DAssetStatus(Texture2DAssetHandle handle) noexcept
+    AssetStatus AssetManager::getTextureAssetStatus(TextureAssetHandle handle) noexcept
     {
-        auto* asset = m_impl->texture2DAssetPool.get(handle);
+        auto* asset = m_impl->textureAssetPool.get(handle);
 
         if (asset == nullptr)
         {
@@ -1084,26 +1084,26 @@ namespace litl
         return asset->status.load(std::memory_order::relaxed);
     }
 
-    Texture2DAsset* AssetManager::getTexture2D(std::string_view resource) noexcept
+    TextureAsset* AssetManager::getTexture(std::string_view resource) noexcept
     {
-        auto handle = getTexture2DHandle(resource);
-        return getTexture2D(handle);
+        auto handle = getTextureHandle(resource);
+        return getTexture(handle);
     }
 
-    Texture2DAsset* AssetManager::getTexture2D(Texture2DAssetHandle handle) noexcept
+    TextureAsset* AssetManager::getTexture(TextureAssetHandle handle) noexcept
     {
-        Texture2DAsset* texture2D = m_impl->texture2DAssetPool.get(handle);
+        TextureAsset* texture = m_impl->textureAssetPool.get(handle);
 
-        if (texture2D == nullptr)
+        if (texture == nullptr)
         {
             return nullptr;
         }
 
-        if (texture2D->status.load(std::memory_order::relaxed) == AssetStatus::Unloaded)
+        if (texture->status.load(std::memory_order::relaxed) == AssetStatus::Unloaded)
         {
-            m_impl->initiateTexture2DAssetLoadFromDisk(texture2D, *this);
+            m_impl->initiateTextureAssetLoadFromDisk(texture, *this);
         }
 
-        return texture2D;
+        return texture;
     }
 }

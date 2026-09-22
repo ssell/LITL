@@ -194,7 +194,7 @@ namespace litl
             /// <summary>
             /// The swapchain depth texture for each frame.
             /// </summary>
-            TextureHandle depthTexture;
+            TextureResourceHandle depthTexture;
         };
 
         /// <summary>
@@ -263,12 +263,12 @@ namespace litl
                 return renderInfo.imageSyncInfo[swapChain.swapChainImageIndex];
             }
 
-            [[nodiscard]] TextureHandle getCurrFrameDepthTexture() noexcept
+            [[nodiscard]] TextureResourceHandle getCurrFrameDepthTexture() noexcept
             {
                 return getCurrFrameSyncInfo().depthTexture;
             }
 
-            [[nodiscard]] TextureHandle getPrevFrameDepthTexture() noexcept
+            [[nodiscard]] TextureResourceHandle getPrevFrameDepthTexture() noexcept
             {
                 return getPrevFrameSyncInfo().depthTexture;
             }

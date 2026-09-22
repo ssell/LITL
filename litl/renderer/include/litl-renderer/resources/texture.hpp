@@ -11,7 +11,7 @@
 
 namespace litl
 {
-    struct TextureDescriptor
+    struct TextureResourceDescriptor
     {
         /// <summary>
         /// The dimensionality of the texture.
@@ -89,8 +89,8 @@ namespace litl
         std::string name;
     };
 
-    struct TextureTag {};
-    using TextureHandle = Handle<TextureTag>;
+    struct TextureResourceTag {};
+    using TextureResourceHandle = Handle<TextureResourceTag>;
 
     struct MappedTexture
     {

@@ -26,8 +26,8 @@ namespace litl
     struct TextHandleTag {};
     using TextHandle = Handle<TextHandleTag>;
 
-    struct Texture2DHandleTag {};
-    using Texture2DHandle = Handle<Texture2DHandleTag>;
+    struct TextureHandleTag {};
+    using TextureHandle = Handle<TextureHandleTag>;
 }
 
 // Make the handles compatible with standard library hash maps (std::map, std:unordered_map, etc.)
@@ -38,6 +38,6 @@ LITL_STD_HASH_HANDLE(litl::MaterialHandle);
 LITL_STD_HASH_HANDLE(litl::MeshHandleTag);
 LITL_STD_HASH_HANDLE(litl::ShaderHandleTag);
 LITL_STD_HASH_HANDLE(litl::TextHandleTag);
-LITL_STD_HASH_HANDLE(litl::Texture2DHandleTag);
+LITL_STD_HASH_HANDLE(litl::TextureHandleTag);
 
 #endif

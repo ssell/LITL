@@ -120,8 +120,7 @@ namespace litl::import
                     std::memcpy(binaryPropertyRecord.value.data(), &std::get<color>(property.value), sizeof(color));
                     break;
 
-                case LitlMatPropertyType::Texture2D:
-                case LitlMatPropertyType::Texture3D:
+                case LitlMatPropertyType::Texture:
                     {
                         auto stringRef = BinaryBlockFile::serializeString(std::get<std::string>(property.value), stringMap);
                         std::memcpy(binaryPropertyRecord.value.data(), &stringRef, sizeof(BinaryBlockFile::StringRef));
@@ -361,8 +360,7 @@ namespace litl::import
                     deserializeTrivialPropertyType<color>(material, strings, propertyRecord, error);
                     break;
 
-                case LitlMatPropertyType::Texture2D:
-                case LitlMatPropertyType::Texture3D:
+                case LitlMatPropertyType::Texture:
                     deserializeStringPropertyType(material, strings, propertyRecord, error);
                     break;
 

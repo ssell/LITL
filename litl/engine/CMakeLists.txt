@@ -26,11 +26,11 @@ add_library(litl-engine STATIC
 	"src/assets/assetManager.cpp" 
     
 	"src/tasks/taskManager.cpp" 
-	"src/objects/texture2d.cpp" 
+	"src/objects/texture.cpp" 
 	"src/objects/text.cpp" 
 	"src/tasks/ownedTask.cpp" 
 	"src/assets/textAsset.cpp" 
-	"src/assets/texture2dAsset.cpp" 
+	"src/assets/textureAsset.cpp" 
 	"src/assets/meshAsset.cpp" 
 	"src/assets/materialAsset.cpp"  
 	"src/objects/material/materialProperties.cpp" 

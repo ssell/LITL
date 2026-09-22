@@ -123,12 +123,12 @@ namespace litl
         m_pOps->destroyShaderModule(m_pContext, handle);
     }
 
-    TextureHandle Renderer::createTexture(TextureDescriptor const& descriptor) const noexcept
+    TextureResourceHandle Renderer::createTexture(TextureResourceDescriptor const& descriptor) const noexcept
     {
         return m_pOps->createTexture(m_pContext, descriptor);
     }
 
-    void Renderer::destroyTexture(TextureHandle handle) const noexcept
+    void Renderer::destroyTexture(TextureResourceHandle handle) const noexcept
     {
         m_pOps->destroyTexture(m_pContext, handle);
     }
@@ -260,7 +260,7 @@ namespace litl
         return m_pOps->getBufferDeviceAddress(m_pContext, buffer);
     }
 
-    RendererResult Renderer::cmdBindTexture(CommandBufferHandle commandBuffer, TextureHandle texture, StringId textureId, bool isGraphics) const noexcept
+    RendererResult Renderer::cmdBindTexture(CommandBufferHandle commandBuffer, TextureResourceHandle texture, StringId textureId, bool isGraphics) const noexcept
     {
         return m_pOps->cmdBindTexture(m_pContext, commandBuffer, texture, textureId, isGraphics);
     }
@@ -270,17 +270,17 @@ namespace litl
         return m_pOps->cmdBindSampler(m_pContext, commandBuffer, sampler, samplerId, isGraphics);
     }
 
-    RendererResult Renderer::cmdTextureUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, TextureHandle destTextureHandle) const noexcept
+    RendererResult Renderer::cmdTextureUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, TextureResourceHandle destTextureHandle) const noexcept
     {
         return m_pOps->cmdTextureUpload(m_pContext, commandBuffer, source, destTextureHandle);
     }
     
-    RendererResult Renderer::mapTexture(TextureHandle texture, MappedTexture& mapped)
+    RendererResult Renderer::mapTexture(TextureResourceHandle texture, MappedTexture& mapped)
     {
         return m_pOps->mapTexture(m_pContext, texture, mapped);
     }
     
-    RendererResult Renderer::unmapTexture(TextureHandle texture)
+    RendererResult Renderer::unmapTexture(TextureResourceHandle texture)
     {
         return m_pOps->unmapTexture(m_pContext, texture);
     }

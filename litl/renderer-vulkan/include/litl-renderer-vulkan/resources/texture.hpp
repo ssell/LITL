@@ -76,7 +76,7 @@ namespace litl::vulkan
         /// <summary>
         /// The descriptor that created the texture.
         /// </summary>
-        TextureDescriptor descriptor{};
+        TextureResourceDescriptor descriptor{};
     };
 }
 
