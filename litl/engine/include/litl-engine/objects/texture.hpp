@@ -3,6 +3,7 @@
 
 #include "litl-core/authority.hpp"
 #include "litl-engine/objects/objectDescriptor.hpp"
+#include "litl-renderer/resources/texture.hpp"
 
 namespace litl
 {
@@ -11,6 +12,7 @@ namespace litl
     struct TextureDescriptor
     {
         ObjectDescriptor objectInfo{};
+        TextureResourceDescriptor textureInfo{};
     };
 
     class Texture final

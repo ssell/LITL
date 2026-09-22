@@ -45,7 +45,7 @@ namespace litl::import
 
     bool TextureIntermediateData::store8BitPixelsAsFloat(std::span<std::byte const> pixels) noexcept
     {
-        if (pixels.size() != imageLevelBytes(m_dataDescriptor.format, m_dataDescriptor.width, m_dataDescriptor.height, m_dataDescriptor.depth))
+        if (pixels.size() != imageLevelBytes(DataFormat::RGBA8_UNorm, m_dataDescriptor.width, m_dataDescriptor.height, m_dataDescriptor.depth))     // This function expects the incoming pixel data to be 8-bits per channel with 4 channels (RGBA)
         {
             // Data descriptor is out-of-sync with the data being provided.
             return false;

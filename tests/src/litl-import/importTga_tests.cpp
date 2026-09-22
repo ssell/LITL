@@ -118,7 +118,16 @@ namespace litl::tests
         // Test full conversion (tga -> TextureIntermediateData -> litlbtex)
         import::ImportService importer{};
         import::WriteableImportResults results{};
-        import::Result result = importer.importForWriting(import::ImportSourceType::TextureTga, s_testTgaSourceLocation, *sourceBytes, {}, results);
+
+        const import::ImportSettings settings{
+            .texture = import::TextureImportSettings{
+                .semantic = import::TextureSemantic::Albedo,
+                .transfer = TransferFunction::SRGB,
+                .mipmaps = false
+            }
+        };
+
+        import::Result result = importer.importForWriting(import::ImportSourceType::TextureTga, s_testTgaSourceLocation, *sourceBytes, settings, results);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
