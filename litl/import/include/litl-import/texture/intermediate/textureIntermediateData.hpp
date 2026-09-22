@@ -7,21 +7,10 @@
 
 #include "litl-core/formats/dataFormats.hpp"
 #include "litl-core/formats/srgb.hpp"
+#include "litl-import/texture/import/textureImportSettings.hpp"
 
 namespace litl::import
 {
-    /// <summary>
-    /// How the texture is to be interpreted.
-    /// </summary>
-    enum class TextureSemantic : uint8_t
-    {
-        Unknown       = 0u,
-        Albedo        = 1u,     // Color data (RGBA32_SFloat)
-        NormalTangent = 2u,     // Tangent-space normal map (RGBA32_SFloat)
-        Mask          = 3u,     // Masking texture (RGBA32_SFloat)
-        Hdr           = 4u      // High-dynamic range texture (RGBA16_SFLOAT)
-    };
-
     /// <summary>
     /// An individual level/mipmap of the texture.
     /// </summary>
