@@ -18,7 +18,7 @@ namespace litl::import
 
     }
 
-    Result ShaderExporter::prepare(ImportedData& data, uint32_t dataIndex) noexcept
+    Result ShaderExporter::prepare(ImportedData& data, ImportSettings const& settings, uint32_t dataIndex) noexcept
     {
         if (dataIndex >= data.items.size())
         {

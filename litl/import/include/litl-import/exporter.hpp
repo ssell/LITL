@@ -12,6 +12,7 @@
 #include "litl-core/file.hpp"
 #include "litl-import/result.hpp"
 #include "litl-import/importedData.hpp"
+#include "litl-import/importSettings.hpp"
 
 namespace litl::import
 {
@@ -26,7 +27,7 @@ namespace litl::import
         /// This ensures the data is correct for the destination internal format. For example with meshes,
         /// this is the step that ensures the mesh is triangulated, optimized, has normals, etc.
         /// </summary>
-        virtual Result prepare(ImportedData& data, uint32_t dataIndex) noexcept = 0;
+        virtual Result prepare(ImportedData& data, ImportSettings const& settings, uint32_t dataIndex) noexcept = 0;
 
         /// <summary>
         /// Writes the object bytes to the given vector.

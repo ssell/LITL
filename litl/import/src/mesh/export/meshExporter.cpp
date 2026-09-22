@@ -15,7 +15,7 @@ namespace litl::import
 
     }
 
-    Result MeshExporter::prepare(ImportedData& data, uint32_t dataIndex) noexcept
+    Result MeshExporter::prepare(ImportedData& data, ImportSettings const& settings, uint32_t dataIndex) noexcept
     {
         if (dataIndex >= data.items.size())
         {

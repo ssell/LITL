@@ -15,7 +15,7 @@ namespace litl::import
 
     }
 
-    Result ModelExporter::prepare(ImportedData& data, uint32_t dataIndex) noexcept
+    Result ModelExporter::prepare(ImportedData& data, ImportSettings const& settings, uint32_t dataIndex) noexcept
     {
         // ... todo ... let pass through so we can develop / debug further down the pipeline ...
         logWarning("Invoking unimplemented ModelExporter::prepare");

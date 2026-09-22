@@ -45,7 +45,7 @@ namespace litl::import
 
     bool TextureIntermediateData::store8BitPixelsAsFloat(std::span<std::byte const> pixels) noexcept
     {
-        if (pixels.size() != (m_dataDescriptor.width * m_dataDescriptor.height * m_dataDescriptor.depth * ComponentCount))
+        if (pixels.size() != imageLevelBytes(m_dataDescriptor.format, m_dataDescriptor.width, m_dataDescriptor.height, m_dataDescriptor.depth))
         {
             // Data descriptor is out-of-sync with the data being provided.
             return false;

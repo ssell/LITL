@@ -15,7 +15,7 @@ namespace litl::import
 
     }
 
-    Result MaterialExporter::prepare(ImportedData& data, uint32_t dataIndex) noexcept
+    Result MaterialExporter::prepare(ImportedData& data, ImportSettings const& settings, uint32_t dataIndex) noexcept
     {
         if (dataIndex >= data.items.size())
         {

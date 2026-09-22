@@ -164,7 +164,7 @@ namespace litl::import
                 return false;
             }
 
-            const uint32_t expectedChainBytes = (textureDescriptor.mipmaps ?
+            const uint64_t expectedChainBytes = (textureDescriptor.mipmaps ?
                 imageChainBytes(textureDescriptor.format, textureDescriptor.width, textureDescriptor.height, textureDescriptor.depth) : 
                 imageLevelBytes(textureDescriptor.format, textureDescriptor.width, textureDescriptor.height, textureDescriptor.depth)) * textureDescriptor.arrayLayers * textureDescriptor.faceCount;
             
@@ -178,11 +178,14 @@ namespace litl::import
             // Deserialize Levels
             // -----------------------------------------------------------------------------
 
+            const uint64_t blockBytes = static_cast<uint64_t>(dataFormatSize(textureDescriptor.format));
+            const uint64_t levelAlignment = (blockBytes < 4ull) ? 4ull : blockBytes;
+
             for (uint32_t i = 0u; i < static_cast<uint32_t>(textureData.textureLevels.size()); ++i)
             {
                 const auto& currLevel = textureData.textureLevels[i];
 
-                if (currLevel.byteOffset % 16 != 0)
+                if ((currLevel.byteOffset % levelAlignment) != 0)
                 {
                     error = BinaryBlockFile::ErrorCode::TextureLevelInvalidOffset;
                     return false;
@@ -209,7 +212,7 @@ namespace litl::import
                     return false;
                 }
 
-                if (currLevel.byteSize != imageLevelBytes(textureDescriptor.format, expW, expH, expD))
+                if (currLevel.byteSize != (imageLevelBytes(textureDescriptor.format, expW, expH, expD) * textureDescriptor.arrayLayers * textureDescriptor.faceCount))
                 {
                     error = BinaryBlockFile::ErrorCode::TextureLevelInvalidBytes;
                     return false;

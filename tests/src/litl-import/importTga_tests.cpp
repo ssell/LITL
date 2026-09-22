@@ -172,7 +172,7 @@ namespace litl::tests
         // Compare TextureLevels
         REQUIRE(tgaTextureLevels.size() == litlbtexTextureLevels.size());
 
-        for (auto i = 0; i < tgaTextureLevels.size(); ++i)
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(tgaTextureLevels.size()); ++i)
         {
             REQUIRE(tgaTextureLevels[i].byteOffset == litlbtexTextureLevels[i].byteOffset);
             REQUIRE(tgaTextureLevels[i].byteSize == litlbtexTextureLevels[i].byteSize);

@@ -15,7 +15,7 @@ namespace litl::import
 
     }
 
-    Result TextureExporter::prepare(ImportedData& data, uint32_t dataIndex) noexcept
+    Result TextureExporter::prepare(ImportedData& data, ImportSettings const& settings, uint32_t dataIndex) noexcept
     {
         // ... todo mip generation ...
         // ... todo bc encoding ...

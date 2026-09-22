@@ -22,7 +22,7 @@ namespace litl::import
         MaterialExporter(MaterialExporter const&) = delete;
         MaterialExporter& operator=(MaterialExporter const&) = delete;
 
-        [[nodiscard]] Result prepare(ImportedData& data, uint32_t dataIndex) noexcept override;
+        [[nodiscard]] Result prepare(ImportedData& data, ImportSettings const& settings, uint32_t dataIndex) noexcept override;
         [[nodiscard]] Result write(std::vector<std::byte>& serialized, ImportedData const& data, uint32_t dataIndex) noexcept override;
     };
 }

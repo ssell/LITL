@@ -22,24 +22,24 @@ namespace litl::import
 
     struct TextureImportSettings
     {
-        TextureSemantic semantic{ TextureSemantic::Albedo };
-        TransferFunction transfer{ TransferFunction::SRGB };
+        TextureSemantic semantic{ TextureSemantic::Unknown };
+        TransferFunction transfer{ TransferFunction::Linear };
         bool mipmaps{ false };
     };
 
-    static constexpr TextureImportSettings ColorTextureImportSettings{
+    inline constexpr TextureImportSettings ColorTextureImportSettings{
         .semantic = TextureSemantic::Albedo,
         .transfer = TransferFunction::SRGB,
         .mipmaps = true
     };
 
-    static constexpr TextureImportSettings NormalMapImportSettings{
+    inline constexpr TextureImportSettings NormalMapImportSettings{
         .semantic = TextureSemantic::NormalTangent,
         .transfer = TransferFunction::Linear,
         .mipmaps = false
     };
 
-    static constexpr TextureImportSettings MaskTextureImportSettings{
+    inline constexpr TextureImportSettings MaskTextureImportSettings{
         .semantic = TextureSemantic::Mask,
         .transfer = TransferFunction::Linear,
         .mipmaps = false

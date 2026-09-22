@@ -103,7 +103,7 @@ namespace litl::import
                     return Result::Error(ErrorType::ProcessFailedSeeIndividualItemResult);
                 }
 
-                auto result = exporter->prepare(importedData, i);
+                auto result = exporter->prepare(importedData, settings, i);
 
                 if (!result.success)
                 {
@@ -146,7 +146,7 @@ namespace litl::import
                 return Result::Error(ErrorType::ProcessFailedSeeIndividualItemResult);
             }
 
-            const Result prepareResult = exporter->prepare(writeableResults.importedData, i);
+            const Result prepareResult = exporter->prepare(writeableResults.importedData, settings, i);
 
             if (!prepareResult.success)
             {
