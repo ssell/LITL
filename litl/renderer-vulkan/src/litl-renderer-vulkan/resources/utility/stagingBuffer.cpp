@@ -24,7 +24,7 @@ namespace litl::vulkan
         freeBuffers();
     }
 
-    std::optional<StagingBufferIndex> StagingBuffer::copyIntoStaging(std::span<std::byte const> source, uint64_t sourceOffset) noexcept
+    std::optional<StagingBufferIndex> StagingBuffer::copyIntoStaging(std::span<std::byte const> source, uint64_t sourceOffset, uint64_t sourceSize) noexcept
     {
         // 1. Allocate staging buffer
 
@@ -61,7 +61,7 @@ namespace litl::vulkan
             source.data() + sourceOffset,
             targetBuffer->allocation,
             static_cast<VkDeviceSize>(stagingIndex.bufferOffset),
-            static_cast<VkDeviceSize>(source.size()));
+            sourceSize);
 
         LITL_ASSERT_MSG((result == VK_SUCCESS), "Failed to copy source memory into staging buffer", std::nullopt);
 

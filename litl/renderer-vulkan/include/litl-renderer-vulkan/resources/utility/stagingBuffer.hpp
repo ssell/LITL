@@ -38,7 +38,7 @@ namespace litl::vulkan
         void build(RendererContext& context) noexcept;
         void destroy() noexcept;
 
-        [[nodiscard]] std::optional<StagingBufferIndex> copyIntoStaging(std::span<std::byte const> source, uint64_t sourceOffset) noexcept;
+        [[nodiscard]] std::optional<StagingBufferIndex> copyIntoStaging(std::span<std::byte const> source, uint64_t sourceOffset, uint64_t sourceSize) noexcept;
         [[nodiscard]] bool copyIntoDestination(CommandBufferResource* commandBuffer, StagingBufferIndex stagingIndex, BufferResource* destination, uint64_t destOffset) noexcept;
         void flushBuffers(CommandBufferResource* commandBuffer) noexcept;
         void freeBuffers() noexcept;

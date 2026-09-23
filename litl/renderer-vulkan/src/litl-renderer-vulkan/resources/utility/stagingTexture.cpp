@@ -24,7 +24,7 @@ namespace litl::vulkan
         freeBuffers();
     }
 
-    std::optional<StagingTextureIndex> StagingTexture::copyIntoStaging(std::span<std::byte const> source, uint64_t sourceOffset) noexcept
+    std::optional<StagingTextureIndex> StagingTexture::copyIntoStaging(std::span<std::byte const> source, uint64_t sourceOffset, uint64_t sourceSize) noexcept
     {
         // 1. Allocate staging texture
 
@@ -61,26 +61,34 @@ namespace litl::vulkan
             source.data() + sourceOffset,
             targetBuffer->allocation,
             static_cast<VkDeviceSize>(stagingIndex.bufferOffset),
-            static_cast<VkDeviceSize>(source.size()));
+            sourceSize);
 
         LITL_ASSERT_MSG((result == VK_SUCCESS), "Failed to copy source memory into staging buffer", std::nullopt);
 
         return stagingIndex;
     }
 
-    bool StagingTexture::copyIntoDestination(CommandBufferResource* commandBuffer, StagingTextureIndex stagingIndex, std::span<TextureUploadRegion const> regions, TextureResource* destination) noexcept
+    bool StagingTexture::copyIntoDestination(CommandBufferResource* commandBuffer, std::span<StagingTextureIndex const> stagingIndices, std::span<TextureUploadRegion const> regions, TextureResource* destination) noexcept
     {
         LITL_ASSERT_MSG((commandBuffer != nullptr), "Invalid command buffer provided to StagingTexture::copyIntoDestination", false);
 
-        BufferResource* sourceBuffer = m_pFixedBuffer;
+        std::vector<BufferResource*> sourceBuffers;
+        sourceBuffers.reserve(stagingIndices.size());
 
-        if (stagingIndex.bufferIndex != StagingTextureIndex::FixedStagingTextureIndex)
+        for (auto stagingIndex : stagingIndices)
         {
-            // Source data lies in an oveflow buffer.
-            LITL_ASSERT_MSG(stagingIndex.bufferIndex < static_cast<uint32_t>(m_overflowBuffers.size()), "Invalid overflow buffer index for StagingTexture", false);
-            BufferHandle sourceBufferHandle = m_overflowBuffers[stagingIndex.bufferIndex];
-            sourceBuffer = m_pContext->resources.getBuffer(sourceBufferHandle);
-            LITL_ASSERT_MSG((sourceBuffer != nullptr), "Invalid overflow buffer retrieved for StagingTexture", false);
+            BufferResource* sourceBuffer = m_pFixedBuffer;
+
+            if (stagingIndex.bufferIndex != StagingTextureIndex::FixedStagingTextureIndex)
+            {
+                // Source data lies in an oveflow buffer.
+                LITL_ASSERT_MSG(stagingIndex.bufferIndex < static_cast<uint32_t>(m_overflowBuffers.size()), "Invalid overflow buffer index for StagingTexture", false);
+                BufferHandle sourceBufferHandle = m_overflowBuffers[stagingIndex.bufferIndex];
+                sourceBuffer = m_pContext->resources.getBuffer(sourceBufferHandle);
+                LITL_ASSERT_MSG((sourceBuffer != nullptr), "Invalid overflow buffer retrieved for StagingTexture", false);
+            }
+
+            sourceBuffers.push_back(sourceBuffer);
         }
 
         // barrier (undefined -> transfer write)
@@ -103,33 +111,37 @@ namespace litl::vulkan
         std::vector<VkBufferImageCopy2> copyRegions;
         copyRegions.reserve(regions.size());
 
-        for (auto& textureUploadRegion : regions)
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(regions.size()); ++i)
         {
-            copyRegions.push_back(VkBufferImageCopy2{
+            const auto& stagingIndex = stagingIndices[i];
+            const auto* sourceBuffer = sourceBuffers[i];
+            const auto& region = regions[i];
+
+            const VkBufferImageCopy2 bufferImageCopy {
                 .sType = VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2,
-                .bufferOffset = stagingIndex.bufferOffset + textureUploadRegion.sourceOffset,
+                .bufferOffset = stagingIndex.bufferOffset,
                 .bufferRowLength = 0,                               // a length and height of 0 indicate a tightly packed buffer
                 .bufferImageHeight = 0,
                 .imageSubresource = VkImageSubresourceLayers {
                     .aspectMask = destination->vkImageSubresourceRange.aspectMask,
-                    .mipLevel = textureUploadRegion.mipLevel,
+                    .mipLevel = region.mipLevel,
                     .baseArrayLayer = destination->vkImageSubresourceRange.baseArrayLayer,
                     .layerCount = destination->vkImageSubresourceRange.layerCount
                 },
                 .imageExtent = destination->vkExtent
-            });
+            };
+
+            VkCopyBufferToImageInfo2 copyInfo{
+                .sType = VK_STRUCTURE_TYPE_COPY_BUFFER_TO_IMAGE_INFO_2,
+                .srcBuffer = sourceBuffer->vkBuffer,
+                .dstImage = destination->vkImage,
+                .dstImageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                .regionCount = 1ull,
+                .pRegions = &bufferImageCopy
+            };
+
+            vkCmdCopyBufferToImage2(commandBuffer->vkCommandBuffer, &copyInfo);
         }
-
-        VkCopyBufferToImageInfo2 copyInfo{
-            .sType = VK_STRUCTURE_TYPE_COPY_BUFFER_TO_IMAGE_INFO_2,
-            .srcBuffer = sourceBuffer->vkBuffer,
-            .dstImage = destination->vkImage,
-            .dstImageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            .regionCount = static_cast<uint32_t>(copyRegions.size()),
-            .pRegions = copyRegions.data()
-        };
-
-        vkCmdCopyBufferToImage2(commandBuffer->vkCommandBuffer, &copyInfo);
         
         // barrier (transfer write -> shader sample read)
         toDst.srcStageMask = VK_PIPELINE_STAGE_2_COPY_BIT;

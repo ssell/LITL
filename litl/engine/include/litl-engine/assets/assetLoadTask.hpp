@@ -37,7 +37,8 @@ namespace litl
         [[nodiscard]] static Task<bool> processMainThreadLoadAsync(
             Asset* asset,
             ObjectPool& objectPool,
-            AssetManager& assetManager) noexcept;
+            AssetManager& assetManager,
+            AssetRegistration const& assetRegistration) noexcept;
     };
 }
 

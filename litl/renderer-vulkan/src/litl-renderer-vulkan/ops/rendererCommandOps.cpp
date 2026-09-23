@@ -681,7 +681,8 @@ namespace litl::vulkan
         // Source -> Staging
         auto stagingIndex = frameSync.stagingBufferArena->copyIntoStaging(
             source, 
-            sourceOffset);
+            sourceOffset,
+            source.size_bytes());
 
         if (!stagingIndex.has_value())
         {
@@ -832,29 +833,34 @@ namespace litl::vulkan
             regions = { &defaultRegion, 1 };
         }
 
+        std::vector<StagingTextureIndex> stagingIndices;
+        stagingIndices.reserve(regions.size());
+
         auto& frameSync = vulkanContext->getCurrFrameSyncInfo();
 
         for (auto& region : regions)
         {
             // Source -> Staging
-            auto stagingIndex = frameSync.stagingTextureArena->copyIntoStaging(source, region.sourceOffset);
+            auto stagingIndex = frameSync.stagingTextureArena->copyIntoStaging(source, region.sourceOffset, imageLevelBytes(destTexture->descriptor.format, region.width, region.height, region.depth));
 
             if (!stagingIndex.has_value())
             {
                 return RendererResult::MemoryCopyFailed;
             }
 
-            // Staging -> Destination
-            const bool result = frameSync.stagingTextureArena->copyIntoDestination(
-                commandBuffer,
-                stagingIndex.value(),
-                regions,
-                destTexture);
+            stagingIndices.push_back(stagingIndex.value());
+        }
 
-            if (!result)
-            {
-                return RendererResult::MemoryCopyFailed;
-            }
+        // Staging -> Destination
+        const bool result = frameSync.stagingTextureArena->copyIntoDestination(
+            commandBuffer,
+            stagingIndices,
+            regions,
+            destTexture);
+
+        if (!result)
+        {
+            return RendererResult::MemoryCopyFailed;
         }
 
         return RendererResult::Success;

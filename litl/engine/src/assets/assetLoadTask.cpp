@@ -90,7 +90,7 @@ namespace litl
 
         co_await ResumeTaskOnMainThread{};
         {
-            co_return ((co_await processMainThreadLoadAsync(asset, objectPool, assetManager)).value == true);
+            co_return ((co_await processMainThreadLoadAsync(asset, objectPool, assetManager, assetRegistration)).value == true);
         }
     }
 
@@ -148,7 +148,7 @@ namespace litl
 
         co_await ResumeTaskOnMainThread{};
         {
-            co_return ((co_await processMainThreadLoadAsync(asset, objectPool, assetManager)).value == true);
+            co_return ((co_await processMainThreadLoadAsync(asset, objectPool, assetManager, assetRegistration)).value == true);
         }
     }
 
@@ -163,7 +163,8 @@ namespace litl
     Task<bool> AssetLoadTask::processMainThreadLoadAsync(
         Asset* asset,
         ObjectPool& objectPool,
-        AssetManager& assetManager) noexcept
+        AssetManager& assetManager,
+        AssetRegistration const& assetRegistration) noexcept
     {
         if (asset->status.load(std::memory_order_relaxed) == AssetStatus::Error)
         {
@@ -206,7 +207,7 @@ namespace litl
         // Perform any additional processing on the main thread.
         if (asset->assetOps->processOnMain != nullptr)
         {
-            if (!asset->assetOps->processOnMain(asset, assetManager, objectPool, asset->error))
+            if (!asset->assetOps->processOnMain(asset, assetRegistration, assetManager, objectPool, asset->error))
             {
                 asset->setError(asset->error, AssetErrorCode::MainProcessFailed);
             }

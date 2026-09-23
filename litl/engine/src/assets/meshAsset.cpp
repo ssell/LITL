@@ -109,7 +109,7 @@ namespace litl
         }
     }
 
-    bool MeshAsset::processOnMain(Asset* asset, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept
+    bool MeshAsset::processOnMain(Asset* asset, AssetRegistration const& assetRegistration, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept
     {
         MeshAsset* meshAsset = static_cast<MeshAsset*>(asset);
         Mesh::ErrorCode meshError = Mesh::ErrorCode::None;

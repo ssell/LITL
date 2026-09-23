@@ -236,7 +236,7 @@ namespace litl
         }
     }
 
-    bool ModelAsset::processOnMain(Asset* asset, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept
+    bool ModelAsset::processOnMain(Asset* asset, AssetRegistration const& assetRegistration, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept
     {
         ModelAsset* modelAsset = static_cast<ModelAsset*>(asset);
 

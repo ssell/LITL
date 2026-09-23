@@ -109,6 +109,23 @@ namespace litl
             logWarning("Decoding texture asset with key '", asset->key, "' directly from external format. It is recommended to first convert the mesh to the internal .litlbtex format to improve loading performance.");
             return decodeNonLitlTextureBytes(textureAsset, assetRegistration, bytes, error);
         }
+    }
+
+    bool TextureAsset::processOnMain(Asset* asset, AssetRegistration const& assetRegistration, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept
+    {
+        TextureAsset* textureAsset = static_cast<TextureAsset*>(asset);
+
+        if (textureAsset->texture == nullptr)
+        {
+            logError("Processing TextureAsset '", textureAsset->key, "' failed as material object is null.");
+            return false;
+        }
+
+        if (textureAsset->textureIntermediateData == nullptr)
+        {
+            logError("Processing TextureAsset '", textureAsset->key, "' failed as intermediate data is null.");
+            return false;
+        }
 
         const auto& dataDescriptor = textureAsset->textureIntermediateData->getDataDescriptor();
 
@@ -132,34 +149,19 @@ namespace litl
         resourceDescriptor.calculateDimensionality();
 
         textureAsset->texture->updateDescriptor({}, resourceDescriptor, false);     // persistsOnCpu to false for now. may change if needed in the future.
-    }
-
-    bool TextureAsset::processOnMain(Asset* asset, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept
-    {
-        TextureAsset* textureAsset = static_cast<TextureAsset*>(asset);
-
-        if (textureAsset->texture == nullptr)
-        {
-            logError("Processing TextureAsset '", textureAsset->key, "' failed as material object is null.");
-            return false;
-        }
-
-        if (textureAsset->textureIntermediateData == nullptr)
-        {
-            logError("Processing TextureAsset '", textureAsset->key, "' failed as intermediate data is null.");
-            return false;
-        }
 
         if (textureAsset->texture->setPixelBytes(textureAsset->textureIntermediateData->getPixelBytes()))
         {
             if (!textureAsset->texture->apply(std::nullopt))
             {
                 logError("Failed to apply pixel bytes for TextureAsset '", textureAsset->key, "'");
+                return false;
             }
         }
         else
         {
             logError("Failed to set pixel bytes for TextureAsset '", textureAsset->key, "'");
+            return false;
         }
 
         textureAsset->textureIntermediateData = nullptr;

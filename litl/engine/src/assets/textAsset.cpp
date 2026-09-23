@@ -58,7 +58,7 @@ namespace litl
         return result;
     }
 
-    bool TextAsset::processOnMain(Asset* asset, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept
+    bool TextAsset::processOnMain(Asset* asset, AssetRegistration const& assetRegistration, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept
     {
         // ... no action ...
         return true;
