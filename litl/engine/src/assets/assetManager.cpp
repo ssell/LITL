@@ -595,7 +595,7 @@ namespace litl
             if (!asset->handle.isValid())
             {
                 // Ensure there is a valid handle to return to the caller, even if the texture itself is not yet ready
-                asset->handle = objectPool->reserveTexture({});
+                asset->handle = objectPool->reserveTexture({}, ObjectDescriptor{ .name = asset->key, .lifetime = ObjectLifetime::Application });
 
                 if (!fetchAssetObject(asset))
                 {

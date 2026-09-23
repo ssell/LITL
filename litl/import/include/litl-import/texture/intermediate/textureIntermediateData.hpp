@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <span>
+#include <type_traits>
 #include <vector>
 
 #include "litl-core/formats/dataFormats.hpp"
@@ -122,6 +123,9 @@ namespace litl::import
         /// </summary>
         std::vector<std::byte> m_pixels;
     };
+
+    static_assert(std::is_move_constructible_v<TextureIntermediateData>);
+    static_assert(std::is_move_assignable_v<TextureIntermediateData>);
 }
 
 #endif

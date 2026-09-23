@@ -42,7 +42,7 @@ namespace litl
             import::ImportService importer{};
             import::ImportedData importedData{};
 
-            const auto importResult = importer.importForMemory(assetRegistration.sourceType, assetRegistration.location, otherBytes, {}, importedData, true);
+            const auto importResult = importer.importForMemory(assetRegistration.sourceType, assetRegistration.location, otherBytes, assetRegistration.importSettings, importedData, true);
 
             if (importResult.success)
             {
@@ -114,11 +114,17 @@ namespace litl
         MeshAsset* meshAsset = static_cast<MeshAsset*>(asset);
         Mesh::ErrorCode meshError = Mesh::ErrorCode::None;
 
+        if (meshAsset->mesh == nullptr)
+        {
+            logError("Processing MeshAsset '", meshAsset->key, "' failed as material object is null.");
+            return false;
+        }
+
         meshAsset->bounds = meshAsset->mesh->getBounds();
         
         if (!meshAsset->mesh->uploadCpuMeshToGpu(meshError))
         {
-            logError("Failed to upload CPU mesh buffers to GPU with with error '", Mesh::ErrorStrings[static_cast<uint32_t>(meshError)], "' (", static_cast<uint32_t>(meshError), ")");
+            logError("Failed to upload CPU mesh buffers to GPU with with error '", Mesh::ErrorStrings[static_cast<uint32_t>(meshError)], "' (", static_cast<uint32_t>(meshError), ") for MeshAsset '", meshAsset->key, "'");
             return false;
         }
         

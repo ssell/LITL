@@ -1,5 +1,8 @@
+#include "litl-import/texture/intermediate/litlbtex.hpp"
+#include "litl-core/logging/logging.hpp"
 #include "litl-engine/assets/textureAsset.hpp"
 #include "litl-engine/objects/objectPool.hpp"
+#include "litl-import/importService.hpp"
 
 namespace litl
 {
@@ -10,6 +13,83 @@ namespace litl
         return (textureAsset->texture != nullptr);
     }
 
+    namespace
+    {
+        [[nodiscard]] bool decodeLitlTextureBytes(TextureAsset* textureAsset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
+        {
+            import::TextureIntermediateData intermediateData{};
+            import::LitlTextureBinary litltexture;
+            BinaryBlockFile::ErrorCode litltextureError = BinaryBlockFile::ErrorCode::None;
+
+            if (!import::LitlTextureBinary::parse(bytes, litltexture, litltextureError))
+            {
+                logError("Failed to parse texture asset with error code ", static_cast<uint32_t>(litltextureError));
+                error = AssetErrorCode::ParseFailed;
+                return false;
+            }
+
+            if (!litltexture.deserialize(intermediateData, litltextureError))
+            {
+                logError("Failed to decode texture asset with error code ", static_cast<uint32_t>(litltextureError));
+                error = AssetErrorCode::DeserializationFailed;
+                return false;
+            }
+
+            // Move only after success
+            textureAsset->textureIntermediateData = std::make_shared<import::TextureIntermediateData>(std::move(intermediateData));
+
+            return true;
+        }
+
+        [[nodiscard]] bool decodeNonLitlTextureBytes(TextureAsset* textureAsset, AssetRegistration const& assetRegistration, std::span<std::byte const> otherBytes, AssetErrorCode& error) noexcept
+        {
+            import::ImportService importer{};
+            import::ImportedData importedData{};
+
+            const auto importResult = importer.importForMemory(assetRegistration.sourceType, assetRegistration.location, otherBytes, assetRegistration.importSettings, importedData, true);
+
+            if (importResult.success)
+            {
+                if (importedData.items.size() != 1)
+                {
+                    error = AssetErrorCode::InvalidImportedItemCount;
+                    return false;
+                }
+
+                auto& importedItem = importedData.items[0];
+
+                if (importedItem.getType() == import::ImportedDataType::Texture)
+                {
+                    auto* importedTexture = importedItem.getDataPtr<import::TextureImportResult>();
+
+                    if ((importedTexture != nullptr) && (importedTexture->intermediateTexture != nullptr))
+                    {
+                        textureAsset->textureIntermediateData = importedTexture->intermediateTexture;
+                        return true;
+                    }
+                    else
+                    {
+                        logError("Unexpected null imported texture in asset decode.");
+                        error = AssetErrorCode::ExternalFormatImportFailed;
+                        return false;
+                    }
+                }
+                else
+                {
+                    logError("Import of texture bytes from third-party asset failed due to detected import format was not texture but instead format type ", static_cast<uint32_t>(importedItem.getType()));
+                    error = AssetErrorCode::ExternalFormatImportFailed;
+                    return false;
+                }
+            }
+            else
+            {
+                logError("Failed to import bytes of texture from third-party asset with message '", importResult.message, "' and error code ", static_cast<uint32_t>(importResult.error));
+                error = AssetErrorCode::ExternalFormatImportFailed;
+                return false;
+            }
+        }
+    }
+
     bool TextureAsset::decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
     {
         if (bytes.empty())
@@ -17,20 +97,49 @@ namespace litl
             return false;
         }
 
-        // ... todo ...
+        TextureAsset* textureAsset = static_cast<TextureAsset*>(asset);
 
-        return true;
-    }
-
-    bool TextureAsset::processOnWorker(Asset* asset, AssetErrorCode& error) noexcept
-    {
-        // ... todo ...
-        return true;
+        if (assetRegistration.sourceType == import::ImportSourceType::TextureLitlBinary)
+        {
+            return decodeLitlTextureBytes(textureAsset, bytes, error);
+        }
+        else
+        {
+            logWarning("Decoding texture asset with key '", asset->key, "' directly from external format. It is recommended to first convert the mesh to the internal .litlbtex format to improve loading performance.");
+            return decodeNonLitlTextureBytes(textureAsset, assetRegistration, bytes, error);
+        }
     }
 
     bool TextureAsset::processOnMain(Asset* asset, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept
     {
-        // ... todo ...
+        TextureAsset* textureAsset = static_cast<TextureAsset*>(asset);
+
+        if (textureAsset->texture == nullptr)
+        {
+            logError("Processing TextureAsset '", textureAsset->key, "' failed as material object is null.");
+            return false;
+        }
+
+        if (textureAsset->textureIntermediateData == nullptr)
+        {
+            logError("Processing TextureAsset '", textureAsset->key, "' failed as intermediate data is null.");
+            return false;
+        }
+
+        if (textureAsset->texture->setPixelBytes(textureAsset->textureIntermediateData->getPixelBytes()))
+        {
+            if (!textureAsset->texture->apply(std::nullopt))
+            {
+                logError("Failed to apply pixel bytes for TextureAsset '", textureAsset->key, "'");
+            }
+        }
+        else
+        {
+            logError("Failed to set pixel bytes for TextureAsset '", textureAsset->key, "'");
+        }
+
+        textureAsset->textureIntermediateData = nullptr;
+
         return true;
     }
 }

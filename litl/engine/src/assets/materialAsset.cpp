@@ -41,12 +41,12 @@ namespace litl
         return true;
     }
 
-    bool decodeNonLitlMaterialBinaryBytes(MaterialAsset* materialAsset, import::ImportSourceType sourceType, std::string_view location, std::span<std::byte const> otherBytes, AssetErrorCode& error) noexcept
+    bool decodeNonLitlMaterialBinaryBytes(MaterialAsset* materialAsset, AssetRegistration const& assetRegistration, std::span<std::byte const> otherBytes, AssetErrorCode& error) noexcept
     {
         import::ImportService importer{};
         import::ImportedData importedData{};
 
-        const auto importResult = importer.importForMemory(sourceType, location, otherBytes, {}, importedData, true);
+        const auto importResult = importer.importForMemory(assetRegistration.sourceType, assetRegistration.location, otherBytes, assetRegistration.importSettings, importedData, true);
 
         if (importResult.success)
         {
@@ -106,7 +106,7 @@ namespace litl
         else
         {
             logWarning("Decoding material asset with key '", asset->key, "' directly from external format. It is recommended to first convert the material to the internal .litlbmat format to improve loading performance.");
-            return decodeNonLitlMaterialBinaryBytes(materialAsset, assetRegistration.sourceType, assetRegistration.location, bytes, error);
+            return decodeNonLitlMaterialBinaryBytes(materialAsset, assetRegistration, bytes, error);
         }
     }
 

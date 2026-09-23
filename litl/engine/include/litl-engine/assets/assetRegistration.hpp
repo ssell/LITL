@@ -9,6 +9,7 @@
 #include "litl-engine/assets/assetHandle.hpp"
 #include "litl-engine/assets/assetType.hpp"
 #include "litl-import/importSourceType.hpp"
+#include "litl-import/importSettings.hpp"
 
 namespace litl
 {
@@ -90,6 +91,11 @@ namespace litl
         /// The specific source/type of the bytes.
         /// </summary>
         import::ImportSourceType sourceType{ import::ImportSourceType::Unknown };
+
+        /// <summary>
+        /// Per-asset import settings.
+        /// </summary>
+        import::ImportSettings importSettings{};
 
         /// <summary>
         /// The priority level for this particular asset registration.

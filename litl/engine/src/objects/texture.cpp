@@ -75,17 +75,23 @@ namespace litl
 
     bool Texture::apply(std::optional<CommandBufferHandle> commandBuffer) noexcept
     {
-        if (!m_resourceHandle.isValid())
-        {
-            return false;
-        }
-
         if (!m_isDirty)
         {
             return true;
         }
 
         m_isDirty = false;
+
+        if (!m_resourceHandle.isValid())
+        {
+            m_resourceHandle = m_pRenderManager->getRenderer()->createTexture(m_descriptor.textureInfo);
+
+            if (!m_resourceHandle.isValid())
+            {
+                logError("apply called for Texture '", m_descriptor.objectInfo.name, "' but failed to create underlying texture resource.");
+                return false;
+            }
+        }
 
         if (commandBuffer.has_value() && commandBuffer.value().isValid())
         {

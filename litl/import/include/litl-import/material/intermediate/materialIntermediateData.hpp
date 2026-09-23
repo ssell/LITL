@@ -6,6 +6,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <variant>
 
 #include "litl-core/math/types.hpp"
@@ -134,6 +135,9 @@ namespace litl::import
         std::vector<LitlMatPropertyRecord> m_properties;
         LitlMatSettings m_settings;;
     };
+
+    static_assert(std::is_move_constructible_v<MaterialIntermediateData>);
+    static_assert(std::is_move_assignable_v<MaterialIntermediateData>);
 }
 
 #endif

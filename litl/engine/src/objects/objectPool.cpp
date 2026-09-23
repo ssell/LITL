@@ -538,9 +538,17 @@ namespace litl
     // Texture
     //--------------------------------------------------------------------------------------
 
-    TextureHandle ObjectPool::reserveTexture(Authority<AssetManager> auth) noexcept
+    TextureHandle ObjectPool::reserveTexture(Authority<AssetManager> auth, ObjectDescriptor const& descriptor) noexcept
     {
         Texture texture{};
+
+        if (!texture.create({}, descriptor, *m_impl->renderManager))
+        {
+            logWarning("Failed to reserve Texture '", descriptor.name, "'");
+            texture.destroy({});
+            return {};
+        }
+
         return m_impl->texturePool.create(texture);
     }
 

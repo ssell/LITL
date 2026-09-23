@@ -76,7 +76,7 @@ namespace litl
         void destroyText(TextHandle handle) noexcept;
         void deferDestroyText(TextHandle handle) noexcept;
 
-        [[nodiscard]] TextureHandle reserveTexture(Authority<AssetManager> auth) noexcept;
+        [[nodiscard]] TextureHandle reserveTexture(Authority<AssetManager> auth, ObjectDescriptor const& descriptor) noexcept;
         [[nodiscard]] TextureHandle createTexture(TextureDescriptor const& descriptor) noexcept;
         [[nodiscard]] Texture* getTexture(TextureHandle handle) noexcept;
         void getAllTextureHandles(std::vector<TextureHandle>& handles) const noexcept;
