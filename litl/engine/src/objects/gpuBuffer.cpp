@@ -178,20 +178,12 @@ namespace litl
         m_pRenderManager->trackDirtyBuffer({}, m_selfHandle);
     }
 
-    void GpuBuffer::setDataImmediate(std::span<std::byte const> data, std::optional<CommandBufferHandle> commandBuffer) noexcept
+    void GpuBuffer::setDataImmediate(std::span<std::byte const> data, CommandBufferHandle commandBuffer) noexcept
     {
         m_dataPtr = data;
         m_isDirty = true;
 
-        if (commandBuffer.has_value() && commandBuffer.value().isValid())
-        {
-            flushData(commandBuffer.value());
-        }
-        else
-        {
-            ScopedCommandBuffer scopedCommandBuffer = m_pRenderer->createScopedCommandBuffer();
-            flushData(scopedCommandBuffer.get());
-        }
+        flushData(commandBuffer);
     }
 
     void GpuBuffer::setDataPtr(std::span<std::byte const> data) noexcept

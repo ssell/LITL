@@ -162,7 +162,7 @@ namespace litl
         /// </summary>
         /// <param name="data"></param>
         /// <param name="commandBuffer">Optional command buffer to write the flush commands to. If none is provided, then a temporary command buffer is used.</param>
-        void setDataImmediate(std::span<std::byte const> data, std::optional<CommandBufferHandle> commandBuffer) noexcept;
+        void setDataImmediate(std::span<std::byte const> data, CommandBufferHandle commandBuffer) noexcept;
 
         /// <summary>
         /// Sets the CPU-source data pointer.
@@ -172,7 +172,6 @@ namespace litl
         /// This approach is more performant than setData but it is deferred
         /// and requires that the source pointer is valid until the transfer is complete.
         /// </summary>
-        /// <param name="data"></param>
         void setDataPtr(std::span<std::byte const> data) noexcept;
 
         /// <summary>
@@ -180,26 +179,21 @@ namespace litl
         /// The write is deferred and requires that the chunk source pointer remains valid until the transfer is complete.
         /// Note that this is only available to persistently mapped buffers.
         /// </summary>
-        /// <param name="chunk"></param>
         bool recordChunkDataWrite(GpuBufferChunk chunk) noexcept;
 
         /// <summary>
         /// Retrieves the data in the buffer if it has not been disposed.
         /// </summary>
-        /// <returns></returns>
         [[nodiscard]] std::span<std::byte const> getData() const noexcept;
 
         /// <summary>
         /// Invoked by the renderer when it is time to transfer any CPU data to the GPU.
         /// </summary>
-        /// <param name="auth"></param>
-        /// <param name="commandBuffer"></param>
         void flushData(Authority<RenderManager> auth, CommandBufferHandle commandBuffer) noexcept;
 
         /// <summary>
         /// Gets the current size of the buffer in bytes.
         /// </summary>
-        /// <returns></returns>
         [[nodiscard]] uint32_t getSizeBytes() const noexcept;
 
         /// <summary>
@@ -207,8 +201,6 @@ namespace litl
         /// May not be applicable to all buffers. Will return 0 if the buffer with created
         /// with an itemBytes value of 0.
         /// </summary>
-        /// <param name="itemSize"></param>
-        /// <returns></returns>
         [[nodiscard]] uint32_t getItemCapacity() const noexcept;
 
         /// <summary>
@@ -271,7 +263,6 @@ namespace litl
         /// <summary>
         /// Pushes the CPU data to the GPU.
         /// </summary>
-        /// <param name="commandBuffer"></param>
         void flushData(CommandBufferHandle commandBuffer) noexcept;
 
         /// <summary>

@@ -9,6 +9,7 @@
 #include "litl-engine/engineCallbacks.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/objects/gpuBuffer.hpp"
+#include "litl-engine/objects/texture.hpp"
 #include "litl-engine/scene/sceneView.hpp"
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-engine/ecs/systems/cullingSystem.hpp"
@@ -62,6 +63,7 @@ namespace litl
         std::shared_ptr<ObjectPool> objectPool{ nullptr };
         std::shared_ptr<SceneView> sceneView{ nullptr };
         std::queue<GpuBufferHandle> dirtyBuffers;
+        std::queue<TextureHandle> dirtyTextures;
 
         Renderer* renderer{ nullptr };
         RenderPass renderPass{};
@@ -171,6 +173,11 @@ namespace litl
             dirtyBuffers.push(handle);
         }
 
+        void trackDirtyTexture(TextureHandle handle) noexcept
+        {
+            dirtyTextures.push(handle);
+        }
+
         /// <summary>
         /// Invoked once per frame to render the scene.
         /// </summary>
@@ -234,7 +241,7 @@ namespace litl
         /// </summary>
         void processDeferredDataTransfers() noexcept
         {
-            if (dirtyBuffers.empty())
+            if (dirtyBuffers.empty() && dirtyTextures.empty())
             {
                 return;
             }
@@ -253,6 +260,17 @@ namespace litl
                     if (gpuBuffer != nullptr)
                     {
                         gpuBuffer->flushData({}, scopedCommandBuffer.get());
+                    }
+                }
+
+                while (!dirtyTextures.empty())
+                {
+                    auto textureHandle = dirtyTextures.front(); dirtyTextures.pop();
+                    auto* texture = objectPool->getTexture(textureHandle);
+
+                    if (texture != nullptr)
+                    {
+                        texture->flushData({}, scopedCommandBuffer.get());
                     }
                 }
             }
@@ -480,6 +498,11 @@ namespace litl
     void RenderManager::trackDirtyBuffer(Authority<GpuBuffer> auth, GpuBufferHandle handle) noexcept
     {
         m_pImpl->trackDirtyBuffer(handle);
+    }
+
+    void RenderManager::trackDirtyTexture(Authority<Texture> auth, TextureHandle handle) noexcept
+    {
+        m_pImpl->trackDirtyTexture(handle);
     }
 
     void RenderManager::onRender(Authority<EngineCallbacks> authority, float dt) noexcept

@@ -70,6 +70,8 @@ namespace litl
         /// </summary>
         uint32_t arrayLayers = 1u;
 
+        uint32_t faceCount = 1u;
+
         /// <summary>
         /// The number of samples per pixel. Primarily used for anti-aliasing.
         /// Set to a count of 1 for no multisampling.

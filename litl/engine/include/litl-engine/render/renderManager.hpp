@@ -17,6 +17,7 @@ namespace litl
     class ObjectPool;
     class Window;
     class GpuBuffer;
+    class Texture;
 
     struct CullingBucket;
     struct RendererConfiguration;
@@ -32,6 +33,7 @@ namespace litl
         void onRender(Authority<EngineCallbacks> authority, float dt) noexcept;
         [[nodiscard]] Renderer const* getRenderer() const noexcept;
         void trackDirtyBuffer(Authority<GpuBuffer> auth, GpuBufferHandle handle) noexcept;
+        void trackDirtyTexture(Authority<Texture> auth, TextureHandle handle) noexcept;
 
     private:
 

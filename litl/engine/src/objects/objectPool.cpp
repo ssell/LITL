@@ -6,6 +6,7 @@
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/objects/material/material.hpp"
+#include "litl-engine/objects/texture.hpp"
 #include "litl-engine/render/renderManager.hpp"
 #include "litl-engine/scene/sceneView.hpp"
 #include "litl-engine/assets/assetManager.hpp"
@@ -547,14 +548,18 @@ namespace litl
     {
         Texture texture{};
 
-        if (!texture.create({}, descriptor))
+        if (!texture.create({}, descriptor, *m_impl->renderManager))
         {
             logWarning("Failed to create Texture '", descriptor.objectInfo.name, "'");
             texture.destroy({});      // make sure there are no lingering resources depending on when in the creation process the error occurred.
             return {};
         }
 
-        return m_impl->texturePool.create(texture);
+        auto handle = m_impl->texturePool.create(texture);
+        auto* texturePtr = m_impl->texturePool.get(handle);
+        texturePtr->setSelfHandle({}, handle);
+
+        return handle;
     }
 
     Texture* ObjectPool::getTexture(TextureHandle handle) noexcept
