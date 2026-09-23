@@ -808,7 +808,7 @@ namespace litl::vulkan
         return RendererResult::Success;
     }
 
-    RendererResult cmdTextureUpload(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, std::span<std::byte const> source, TextureResourceHandle destTextureHandle) noexcept
+    RendererResult cmdTextureUpload(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, std::span<std::byte const> source, std::span<TextureUploadRegion const> regions, TextureResourceHandle destTextureHandle) noexcept
     {
         auto* vulkanContext = unwrap(context);
         auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
@@ -825,27 +825,37 @@ namespace litl::vulkan
             return RendererResult::InvalidTextureHandle;
         }
 
-        auto& frameSync = vulkanContext->getCurrFrameSyncInfo();
+        const TextureUploadRegion defaultRegion{ .sourceOffset = 0ull, .width = destTexture->descriptor.width, .height = destTexture->descriptor.height, .depth = destTexture->descriptor.depth };
 
-        // Source -> Staging
-        auto stagingIndex = frameSync.stagingTextureArena->copyIntoStaging(
-            source,
-            0ull);
-
-        if (!stagingIndex.has_value())
+        if (regions.empty())
         {
-            return RendererResult::MemoryCopyFailed;
+            regions = { &defaultRegion, 1 };
         }
 
-        // Staging -> Destination
-        const bool result = frameSync.stagingTextureArena->copyIntoDestination(
-            commandBuffer, 
-            stagingIndex.value(), 
-            destTexture);
+        auto& frameSync = vulkanContext->getCurrFrameSyncInfo();
 
-        if (!result)
+        for (auto& region : regions)
         {
-            return RendererResult::MemoryCopyFailed;
+            // Source -> Staging
+            auto stagingIndex = frameSync.stagingTextureArena->copyIntoStaging(
+                source,
+                0ull);
+
+            if (!stagingIndex.has_value())
+            {
+                return RendererResult::MemoryCopyFailed;
+            }
+
+            // Staging -> Destination
+            const bool result = frameSync.stagingTextureArena->copyIntoDestination(
+                commandBuffer,
+                stagingIndex.value(),
+                destTexture);
+
+            if (!result)
+            {
+                return RendererResult::MemoryCopyFailed;
+            }
         }
 
         return RendererResult::Success;

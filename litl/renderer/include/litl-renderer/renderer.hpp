@@ -14,6 +14,7 @@
 #include "litl-renderer/commands.hpp"
 #include "litl-renderer/scopedBufferUpload.hpp"
 #include "litl-renderer/resources/pipelineResource.hpp"
+#include "litl-renderer/resources/texture.hpp"
 
 namespace litl
 {
@@ -83,7 +84,7 @@ namespace litl
         // texture commands and operations
         RendererResult (*cmdBindTexture)(RendererContext*, CommandBufferHandle, TextureResourceHandle, StringId, bool);
         RendererResult (*cmdBindSampler)(RendererContext*, CommandBufferHandle, SamplerHandle, StringId, bool);
-        RendererResult (*cmdTextureUpload)(RendererContext*, CommandBufferHandle, std::span<std::byte const>, TextureResourceHandle);
+        RendererResult (*cmdTextureUpload)(RendererContext*, CommandBufferHandle, std::span<std::byte const>, std::span<TextureUploadRegion const>, TextureResourceHandle);
         RendererResult (*mapTexture)(RendererContext*, TextureResourceHandle, MappedTexture&);
         RendererResult (*unmapTexture)(RendererContext*, TextureResourceHandle);
 
@@ -435,13 +436,16 @@ namespace litl
         RendererResult cmdBindSampler(CommandBufferHandle commandBuffer, SamplerHandle sampler, StringId samplerId, bool isGraphics) const noexcept;
 
         /// <summary>
+        /// Writes the provided data to the texture's mipmap level 0 and array layer index 0.
+        /// If necessary, a temporary staging texture is employed to transfer the data to the GPU.
+        /// </summary>
+        RendererResult cmdTextureUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, TextureResourceHandle destTextureHandle) const noexcept;
+
+        /// <summary>
         /// Writes the provided data to the texture.
         /// If necessary, a temporary staging texture is employed to transfer the data to the GPU.
         /// </summary>
-        /// <param name="commandBuffer"></param>
-        /// <param name="source"></param>
-        /// <param name="destTextureHandle"></param>
-        RendererResult cmdTextureUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, TextureResourceHandle destTextureHandle) const noexcept;
+        RendererResult cmdTextureUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, std::span<TextureUploadRegion const> regions, TextureResourceHandle destTextureHandle) const noexcept;
         
         /// <summary>
         /// Maps the memory address of the texture so that it can be written to.

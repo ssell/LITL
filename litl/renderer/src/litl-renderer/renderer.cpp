@@ -272,7 +272,12 @@ namespace litl
 
     RendererResult Renderer::cmdTextureUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, TextureResourceHandle destTextureHandle) const noexcept
     {
-        return m_pOps->cmdTextureUpload(m_pContext, commandBuffer, source, destTextureHandle);
+        return m_pOps->cmdTextureUpload(m_pContext, commandBuffer, source, {}, destTextureHandle);
+    }
+
+    RendererResult Renderer::cmdTextureUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, std::span<TextureUploadRegion const> regions, TextureResourceHandle destTextureHandle) const noexcept
+    {
+        return m_pOps->cmdTextureUpload(m_pContext, commandBuffer, source, regions, destTextureHandle);
     }
     
     RendererResult Renderer::mapTexture(TextureResourceHandle texture, MappedTexture& mapped)

@@ -1,6 +1,7 @@
 #ifndef LITL_VULKAN_RENDERER_H__
 #define LITL_VULKAN_RENDERER_H__
 
+#include <span>
 #include "litl-renderer-vulkan/rendererContext.hpp"
 
 namespace litl::vulkan
@@ -66,7 +67,7 @@ namespace litl::vulkan
     [[nodiscard]] RendererResult cmdBufferFlush(litl::RendererContext* context, CommandBufferHandle commandBufferHandle) noexcept;
     [[nodiscard]] RendererResult cmdBindTexture(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, TextureResourceHandle textureHandle, StringId textureId, bool isGraphics) noexcept;
     [[nodiscard]] RendererResult cmdBindSampler(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, SamplerHandle samplerHandle, StringId samplerId, bool isGraphics) noexcept;
-    [[nodiscard]] RendererResult cmdTextureUpload(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, std::span<std::byte const> source, TextureResourceHandle destTextureHandle) noexcept;
+    [[nodiscard]] RendererResult cmdTextureUpload(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, std::span<std::byte const> source, std::span<TextureUploadRegion const> regions, TextureResourceHandle destTextureHandle) noexcept;
 
     // -------------------------------------------------------------------------------------
     // rendererDrawOps.cpp

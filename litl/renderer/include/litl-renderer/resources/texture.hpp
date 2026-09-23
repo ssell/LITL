@@ -101,6 +101,39 @@ namespace litl
         /// </summary>
         void* mappedPtr = nullptr;
     };
+
+    struct TextureUploadRegion
+    {
+        /// <summary>
+        /// Offset into the source data buffer that we are reading from.
+        /// </summary>
+        uint64_t sourceOffset{ 0ull };
+
+        /// <summary>
+        /// The mipmap level that we are writing to. Level 0 is the top-most level with full resolution.
+        /// </summary>
+        uint32_t mipLevel{ 0u };
+
+        /// <summary>
+        /// The array layer index that we are writing to.
+        /// </summary>
+        uint32_t arrayLayer{ 0u };
+
+        /// <summary>
+        /// Width of the region in pixels.
+        /// </summary>
+        uint32_t width{ 1u };
+
+        /// <summary>
+        /// Height of the region in pixels.
+        /// </summary>
+        uint32_t height{ 1u };
+
+        /// <summary>
+        /// Depth of the region in pixels.
+        /// </summary>
+        uint32_t depth{ 1u };
+    };
 }
 
 #endif
