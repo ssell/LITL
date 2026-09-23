@@ -32,11 +32,11 @@ namespace litl::vulkan
 
         StagingBufferIndex stagingIndex{
             .bufferOffset = m_fixedHead,
-            .bufferSize = static_cast<uint64_t>(source.size()),
+            .bufferSize = sourceSize,
             .bufferIndex = StagingBufferIndex::FixedStagingBufferIndex
         };
 
-        if ((m_fixedHead + stagingIndex.bufferSize) >= m_fixedBufferSize)
+        if ((m_fixedHead + stagingIndex.bufferSize) > m_fixedBufferSize)
         {
             // No room in the fixed buffer for the source data. Allocate a temporary staging buffer to overflow into.
             BufferHandle tempStagingBufferHandle = createStagingBuffer(stagingIndex.bufferSize);

@@ -132,7 +132,7 @@ namespace litl
         TextureResourceDescriptor resourceDescriptor{
             .width = dataDescriptor.width,
             .height = dataDescriptor.height,
-            .depth = dataDescriptor.height,
+            .depth = dataDescriptor.depth,
             .format = dataDescriptor.format,
             .usage = TextureUsageFlagBits::TransferDest | TextureUsageFlagBits::Sampled,
             .memory = BufferMemoryType::Auto,

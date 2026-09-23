@@ -46,10 +46,10 @@ namespace litl::vulkan
 
         BufferHandle createStagingBuffer(uint64_t size) noexcept;
 
-        RendererContext* m_pContext;
-        BufferResource* m_pFixedBuffer;
-        uint32_t m_fixedBufferSize;
-        uint32_t m_fixedHead;
+        RendererContext* m_pContext{ nullptr };
+        BufferResource* m_pFixedBuffer{ nullptr };
+        uint64_t m_fixedBufferSize{ 0ull };
+        uint64_t m_fixedHead{ 0ull };
 
         std::vector<BufferHandle> m_overflowBuffers;
     };

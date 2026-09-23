@@ -5,7 +5,6 @@
 namespace litl::vulkan
 {
     StagingTexture::StagingTexture()
-        : m_pContext(nullptr), m_fixedHead(0u)
     {
         m_overflowBuffers.reserve(32ull);
     }
@@ -32,11 +31,11 @@ namespace litl::vulkan
 
         StagingTextureIndex stagingIndex{
             .bufferOffset = m_fixedHead,
-            .bufferSize = static_cast<uint64_t>(source.size()),
+            .bufferSize = sourceSize,
             .bufferIndex = StagingTextureIndex::FixedStagingTextureIndex
         };
 
-        if ((m_fixedHead + stagingIndex.bufferSize) >= m_fixedBufferSize)
+        if ((m_fixedHead + stagingIndex.bufferSize) > m_fixedBufferSize)
         {
             // No room in the fixed buffer for the source data. Allocate a temporary staging buffer to overflow into.
             BufferHandle tempStagingBufferHandle = createStagingBuffer(stagingIndex.bufferSize);
@@ -66,6 +65,29 @@ namespace litl::vulkan
         LITL_ASSERT_MSG((result == VK_SUCCESS), "Failed to copy source memory into staging buffer", std::nullopt);
 
         return stagingIndex;
+    }
+
+    namespace
+    {
+        void uploadImageCopiesIntoDestination(std::vector<VkBufferImageCopy2>& imageCopies, BufferResource const* currentBuffer, TextureResource const* destination, CommandBufferResource* commandBuffer) noexcept
+        {
+            if (imageCopies.empty() || (currentBuffer == nullptr) || (destination == nullptr) || (commandBuffer == nullptr))
+            {
+                return;
+            }
+
+            VkCopyBufferToImageInfo2 copyInfo{
+                .sType = VK_STRUCTURE_TYPE_COPY_BUFFER_TO_IMAGE_INFO_2,
+                .srcBuffer = currentBuffer->vkBuffer,
+                .dstImage = destination->vkImage,
+                .dstImageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                .regionCount = static_cast<uint32_t>(imageCopies.size()),
+                .pRegions = imageCopies.data()
+            };
+
+            vkCmdCopyBufferToImage2(commandBuffer->vkCommandBuffer, &copyInfo);
+            imageCopies.clear();
+        }
     }
 
     bool StagingTexture::copyIntoDestination(CommandBufferResource* commandBuffer, std::span<StagingTextureIndex const> stagingIndices, std::span<TextureUploadRegion const> regions, TextureResource* destination) noexcept
@@ -108,8 +130,9 @@ namespace litl::vulkan
         vkCmdPipelineBarrier2(commandBuffer->vkCommandBuffer, &dep);
 
         // copy
-        std::vector<VkBufferImageCopy2> copyRegions;
-        copyRegions.reserve(regions.size());
+        std::vector<VkBufferImageCopy2> imageCopies;
+        imageCopies.reserve(regions.size());
+        BufferResource const* currentBuffer = nullptr;
 
         for (uint32_t i = 0u; i < static_cast<uint32_t>(regions.size()); ++i)
         {
@@ -117,7 +140,14 @@ namespace litl::vulkan
             const auto* sourceBuffer = sourceBuffers[i];
             const auto& region = regions[i];
 
-            const VkBufferImageCopy2 bufferImageCopy {
+            // If this region is stored in a different buffer than the previous region(s), upload the previous region(s) now.
+            if (sourceBuffer != currentBuffer)
+            {
+                uploadImageCopiesIntoDestination(imageCopies, currentBuffer, destination, commandBuffer);
+                currentBuffer = sourceBuffer;
+            }
+
+            imageCopies.push_back(VkBufferImageCopy2{
                 .sType = VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2,
                 .bufferOffset = stagingIndex.bufferOffset,
                 .bufferRowLength = 0,                               // a length and height of 0 indicate a tightly packed buffer
@@ -128,20 +158,12 @@ namespace litl::vulkan
                     .baseArrayLayer = destination->vkImageSubresourceRange.baseArrayLayer,
                     .layerCount = destination->vkImageSubresourceRange.layerCount
                 },
-                .imageExtent = destination->vkExtent
-            };
-
-            VkCopyBufferToImageInfo2 copyInfo{
-                .sType = VK_STRUCTURE_TYPE_COPY_BUFFER_TO_IMAGE_INFO_2,
-                .srcBuffer = sourceBuffer->vkBuffer,
-                .dstImage = destination->vkImage,
-                .dstImageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                .regionCount = 1ull,
-                .pRegions = &bufferImageCopy
-            };
-
-            vkCmdCopyBufferToImage2(commandBuffer->vkCommandBuffer, &copyInfo);
+                .imageExtent = VkExtent3D{.width = region.width, .height = region.height, .depth = region.depth }
+            });
         }
+
+        // Upload any lingering copies that were all in whatever the last buffer was
+        uploadImageCopiesIntoDestination(imageCopies, currentBuffer, destination, commandBuffer);
         
         // barrier (transfer write -> shader sample read)
         toDst.srcStageMask = VK_PIPELINE_STAGE_2_COPY_BIT;
