@@ -68,7 +68,7 @@ namespace litl::vulkan
         return stagingIndex;
     }
 
-    bool StagingTexture::copyIntoDestination(CommandBufferResource* commandBuffer, StagingTextureIndex stagingIndex, TextureResource* destination) noexcept
+    bool StagingTexture::copyIntoDestination(CommandBufferResource* commandBuffer, StagingTextureIndex stagingIndex, std::span<TextureUploadRegion const> regions, TextureResource* destination) noexcept
     {
         LITL_ASSERT_MSG((commandBuffer != nullptr), "Invalid command buffer provided to StagingTexture::copyIntoDestination", false);
 
@@ -100,27 +100,33 @@ namespace litl::vulkan
         vkCmdPipelineBarrier2(commandBuffer->vkCommandBuffer, &dep);
 
         // copy
-        VkBufferImageCopy2 copyRegion{
-            .sType = VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2,
-            .bufferOffset = stagingIndex.bufferOffset,
-            .bufferRowLength = 0,                               // tightly packed
-            .bufferImageHeight = 0,
-            .imageSubresource = VkImageSubresourceLayers {
-                .aspectMask = destination->vkImageSubresourceRange.aspectMask,
-                .mipLevel = 0u,                                 // todo support mipmapping
-                .baseArrayLayer = destination->vkImageSubresourceRange.baseArrayLayer,
-                .layerCount = destination->vkImageSubresourceRange.layerCount
-            },
-            .imageExtent = destination->vkExtent
-        };
+        std::vector<VkBufferImageCopy2> copyRegions;
+        copyRegions.reserve(regions.size());
+
+        for (auto& textureUploadRegion : regions)
+        {
+            copyRegions.push_back(VkBufferImageCopy2{
+                .sType = VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2,
+                .bufferOffset = stagingIndex.bufferOffset + textureUploadRegion.sourceOffset,
+                .bufferRowLength = 0,                               // a length and height of 0 indicate a tightly packed buffer
+                .bufferImageHeight = 0,
+                .imageSubresource = VkImageSubresourceLayers {
+                    .aspectMask = destination->vkImageSubresourceRange.aspectMask,
+                    .mipLevel = textureUploadRegion.mipLevel,
+                    .baseArrayLayer = destination->vkImageSubresourceRange.baseArrayLayer,
+                    .layerCount = destination->vkImageSubresourceRange.layerCount
+                },
+                .imageExtent = destination->vkExtent
+            });
+        }
 
         VkCopyBufferToImageInfo2 copyInfo{
             .sType = VK_STRUCTURE_TYPE_COPY_BUFFER_TO_IMAGE_INFO_2,
             .srcBuffer = sourceBuffer->vkBuffer,
             .dstImage = destination->vkImage,
             .dstImageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            .regionCount = 1,
-            .pRegions = &copyRegion
+            .regionCount = static_cast<uint32_t>(copyRegions.size()),
+            .pRegions = copyRegions.data()
         };
 
         vkCmdCopyBufferToImage2(commandBuffer->vkCommandBuffer, &copyInfo);

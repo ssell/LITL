@@ -94,6 +94,7 @@ namespace litl
     {
         if (bytes.empty())
         {
+            error = AssetErrorCode::DecodeBytesEmpty;
             return false;
         }
 
@@ -108,6 +109,29 @@ namespace litl
             logWarning("Decoding texture asset with key '", asset->key, "' directly from external format. It is recommended to first convert the mesh to the internal .litlbtex format to improve loading performance.");
             return decodeNonLitlTextureBytes(textureAsset, assetRegistration, bytes, error);
         }
+
+        const auto& dataDescriptor = textureAsset->textureIntermediateData->getDataDescriptor();
+
+        TextureResourceDescriptor resourceDescriptor{
+            .width = dataDescriptor.width,
+            .height = dataDescriptor.height,
+            .depth = dataDescriptor.height,
+            .format = dataDescriptor.format,
+            .usage = TextureUsageFlagBits::TransferDest | TextureUsageFlagBits::Sampled,
+            .memory = BufferMemoryType::Auto,
+            .memoryUsage = BufferMemoryUsage::GpuOnly,  // asset-loaded textures are not to be modified
+            .sharing = SharingMode::Exclusive,
+            .mipLevels = (assetRegistration.importSettings.texture.mipmaps ? mipLevelCount(dataDescriptor.width, dataDescriptor.height, dataDescriptor.depth) : 1u),
+            .arrayLayers = 1u,                          // update when adding support for arrays
+            .faceCount = 1u,                            // update when adding support for faces
+            .sampleCount = MultisampleCount::Count1,    // update when adding support for multi-sampling
+            .isCubeMap = false,                         // update when adding support for cubemaps
+            .name = textureAsset->key
+        };
+
+        resourceDescriptor.calculateDimensionality();
+
+        textureAsset->texture->updateDescriptor({}, resourceDescriptor, false);     // persistsOnCpu to false for now. may change if needed in the future.
     }
 
     bool TextureAsset::processOnMain(Asset* asset, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept

@@ -39,7 +39,7 @@ namespace litl::vulkan
         void destroy() noexcept;
 
         [[nodiscard]] std::optional<StagingTextureIndex> copyIntoStaging(std::span<std::byte const> source, uint64_t sourceOffset) noexcept;
-        [[nodiscard]] bool copyIntoDestination(CommandBufferResource* commandBuffer, StagingTextureIndex stagingIndex, TextureResource* destination) noexcept;
+        [[nodiscard]] bool copyIntoDestination(CommandBufferResource* commandBuffer, StagingTextureIndex stagingIndex, std::span<TextureUploadRegion const> regions, TextureResource* destination) noexcept;
         void freeBuffers() noexcept;
 
     private:

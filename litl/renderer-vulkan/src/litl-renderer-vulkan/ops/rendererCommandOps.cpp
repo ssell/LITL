@@ -837,9 +837,7 @@ namespace litl::vulkan
         for (auto& region : regions)
         {
             // Source -> Staging
-            auto stagingIndex = frameSync.stagingTextureArena->copyIntoStaging(
-                source,
-                0ull);
+            auto stagingIndex = frameSync.stagingTextureArena->copyIntoStaging(source, region.sourceOffset);
 
             if (!stagingIndex.has_value())
             {
@@ -850,6 +848,7 @@ namespace litl::vulkan
             const bool result = frameSync.stagingTextureArena->copyIntoDestination(
                 commandBuffer,
                 stagingIndex.value(),
+                regions,
                 destTexture);
 
             if (!result)

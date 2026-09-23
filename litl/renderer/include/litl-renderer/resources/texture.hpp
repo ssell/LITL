@@ -89,6 +89,23 @@ namespace litl
         /// Used for hotreloads and debugging.
         /// </summary>
         std::string name;
+
+        void calculateDimensionality() noexcept
+        {
+            dimensions = TextureDimensions::Texture3D;
+
+            if (depth == 1u)
+            {
+                if (height == 1u)
+                {
+                    dimensions = TextureDimensions::Texture1D;
+                }
+                else
+                {
+                    dimensions = TextureDimensions::Texture2D;
+                }
+            }
+        }
     };
 
     struct TextureResourceTag {};

@@ -18,10 +18,7 @@ namespace litl
             return false;
         }
 
-        uint64_t totalBytes = imageChainBytes(texDescriptor.textureInfo.format, texDescriptor.textureInfo.width, texDescriptor.textureInfo.height, texDescriptor.textureInfo.depth);
-        totalBytes *= texDescriptor.textureInfo.arrayLayers * texDescriptor.textureInfo.faceCount;
-
-        m_pixelBytes.resize(totalBytes, std::byte{ 0 });
+        resizePixelBuffer();
 
         return true;
     }
@@ -41,16 +38,47 @@ namespace litl
 
     void Texture::destroy(Authority<ObjectPool> auth) noexcept
     {
-        if (m_resourceHandle.isValid())
+        if (m_pRenderManager != nullptr)
         {
-            m_pRenderManager->getRenderer()->destroyTexture(m_resourceHandle);
-            m_resourceHandle = {};
+            if (m_resourceHandle.isValid())
+            {
+                m_pRenderManager->getRenderer()->destroyTexture(m_resourceHandle);
+                m_resourceHandle = {};
+            }
         }
+
+        m_pRenderManager = nullptr;
+        m_pixelBytes.clear();
+        m_pixelBytes.shrink_to_fit();
+    }
+
+    void Texture::resizePixelBuffer() noexcept
+    {
+        uint64_t totalBytes = m_descriptor.textureInfo.arrayLayers * m_descriptor.textureInfo.faceCount;
+
+        if (m_descriptor.textureInfo.mipLevels == 1u)
+        {
+            totalBytes *= imageLevelBytes(m_descriptor.textureInfo.format, m_descriptor.textureInfo.width, m_descriptor.textureInfo.height, m_descriptor.textureInfo.depth);
+        }
+        else
+        {
+            totalBytes *= imageChainBytes(m_descriptor.textureInfo.format, m_descriptor.textureInfo.width, m_descriptor.textureInfo.height, m_descriptor.textureInfo.depth);
+        }
+
+        m_pixelBytes.resize(totalBytes, std::byte{ 0 });
     }
 
     TextureDescriptor const& Texture::getDescriptor() const noexcept
     {
         return m_descriptor;
+    }
+
+    void Texture::updateDescriptor(Authority<TextureAsset> auth, TextureResourceDescriptor const& resourceDescriptor, bool persistOnCpu) noexcept
+    {
+        m_descriptor.textureInfo = resourceDescriptor;
+        m_descriptor.persistOnCpu = persistOnCpu;
+
+        resizePixelBuffer();
     }
 
     bool Texture::setPixelBytes(std::span<std::byte const> pixelBytes) noexcept
@@ -79,8 +107,6 @@ namespace litl
         {
             return true;
         }
-
-        m_isDirty = false;
 
         if (!m_resourceHandle.isValid())
         {
@@ -118,7 +144,31 @@ namespace litl
             return;
         }
 
-        const auto result = m_pRenderManager->getRenderer()->cmdTextureUpload(commandBuffer, m_pixelBytes, m_resourceHandle);
+        m_isDirty = false;
+
+        std::vector<TextureUploadRegion> regions;
+        regions.reserve(m_descriptor.textureInfo.mipLevels);
+        uint64_t offset = 0ull;
+
+        for (uint32_t i = 0; i < m_descriptor.textureInfo.mipLevels; ++i)
+        {
+            const uint32_t regionWidth = mipExtent(m_descriptor.textureInfo.width, i);
+            const uint32_t regionHeight = mipExtent(m_descriptor.textureInfo.height, i);
+            const uint32_t regionDepth = mipExtent(m_descriptor.textureInfo.depth, i);
+
+            regions.push_back(TextureUploadRegion{
+                .sourceOffset = offset,
+                .mipLevel = i,
+                .arrayLayer = 0u,               // update when adding support for array layers
+                .width = regionWidth,
+                .height = regionHeight,
+                .depth = regionDepth
+            });
+
+            offset += imageLevelBytes(m_descriptor.textureInfo.format, regionWidth, regionHeight, regionDepth);
+        }
+
+        const auto result = m_pRenderManager->getRenderer()->cmdTextureUpload(commandBuffer, m_pixelBytes, regions, m_resourceHandle);
 
         if (result != RendererResult::Success)
         {

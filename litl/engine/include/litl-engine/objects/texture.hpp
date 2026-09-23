@@ -17,6 +17,7 @@ namespace litl
     class ObjectPool;
     class RenderManager;
     class Renderer;
+    struct TextureAsset;
 
     struct TextureDescriptor
     {
@@ -61,6 +62,11 @@ namespace litl
         [[nodiscard]] TextureDescriptor const& getDescriptor() const noexcept;
 
         /// <summary>
+        /// 
+        /// </summary>
+        void updateDescriptor(Authority<TextureAsset> auth, TextureResourceDescriptor const& resourceDescriptor, bool persistOnCpu) noexcept;
+
+        /// <summary>
         /// Sets the CPU-side pixel bytes. These changes will not reflect on the GPU until apply is called.
         /// </summary>
         [[nodiscard]] bool setPixelBytes(std::span<std::byte const> pixelBytes) noexcept;
@@ -88,14 +94,17 @@ namespace litl
         /// </summary>
         [[nodiscard]] bool isValidTextureWrite() const noexcept;
 
+        /// <summary>
+        /// Utility for resizing the internal pixel buffer.
+        /// </summary>
+        void resizePixelBuffer() noexcept;
+
         RenderManager* m_pRenderManager = nullptr;
         TextureDescriptor m_descriptor{};
         TextureHandle m_selfHandle{};
         TextureResourceHandle m_resourceHandle{};
         std::vector<std::byte> m_pixelBytes;
-
         bool m_isDirty{ true };                 // Every texture starts as dirty
-        bool m_hasBeenAppliedOnce{ false };
     };
 }
 

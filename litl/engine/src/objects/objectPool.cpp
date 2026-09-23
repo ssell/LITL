@@ -549,7 +549,15 @@ namespace litl
             return {};
         }
 
-        return m_impl->texturePool.create(texture);
+        auto handle = m_impl->texturePool.create(texture);
+        auto* texturePtr = m_impl->texturePool.get(handle);
+
+        if (texturePtr != nullptr)
+        {
+            texturePtr->setSelfHandle({}, handle);
+        }
+
+        return handle;
     }
 
     TextureHandle ObjectPool::createTexture(TextureDescriptor const& descriptor) noexcept
@@ -565,7 +573,11 @@ namespace litl
 
         auto handle = m_impl->texturePool.create(texture);
         auto* texturePtr = m_impl->texturePool.get(handle);
-        texturePtr->setSelfHandle({}, handle);
+
+        if (texturePtr != nullptr)
+        {
+            texturePtr->setSelfHandle({}, handle);
+        }
 
         return handle;
     }
