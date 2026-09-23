@@ -34,7 +34,7 @@ namespace litl::samples
 
         const auto cubeEntity = commands.createEntity();
         commands.addComponent<Transform>(cubeEntity, Transform::create(vec3{ 0.0f, 0.0f, 5.0f }));
-        commands.addComponent<PendingModelInstance>(cubeEntity, createModelInstance("models/cube", "materials/flat", *assets));
+        commands.addComponent<PendingModelInstance>(cubeEntity, createModelInstance("models/cube", "materials/unlit", *assets));
         commands.addComponent<LocalBounds>(cubeEntity);
         commands.addComponent<Spin>(cubeEntity);
     }
