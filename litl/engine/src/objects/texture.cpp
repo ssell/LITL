@@ -54,7 +54,7 @@ namespace litl
 
     void Texture::resizePixelBuffer() noexcept
     {
-        uint64_t totalBytes = m_descriptor.textureInfo.arrayLayers * m_descriptor.textureInfo.faceCount;
+        uint64_t totalBytes = m_descriptor.textureInfo.arrayLayers;
 
         if (m_descriptor.textureInfo.mipLevels == 1u)
         {
@@ -147,26 +147,7 @@ namespace litl
         m_isDirty = false;
 
         std::vector<TextureUploadRegion> regions;
-        regions.reserve(m_descriptor.textureInfo.mipLevels);
-        uint64_t offset = 0ull;
-
-        for (uint32_t i = 0; i < m_descriptor.textureInfo.mipLevels; ++i)
-        {
-            const uint32_t regionWidth = mipExtent(m_descriptor.textureInfo.width, i);
-            const uint32_t regionHeight = mipExtent(m_descriptor.textureInfo.height, i);
-            const uint32_t regionDepth = mipExtent(m_descriptor.textureInfo.depth, i);
-
-            regions.push_back(TextureUploadRegion{
-                .sourceOffset = offset,
-                .mipLevel = i,
-                .arrayLayer = 0u,               // update when adding support for array layers
-                .width = regionWidth,
-                .height = regionHeight,
-                .depth = regionDepth
-            });
-
-            offset += imageLevelBytes(m_descriptor.textureInfo.format, regionWidth, regionHeight, regionDepth);
-        }
+        buildTightlyPackedUploadRegions(m_descriptor.textureInfo, regions);
 
         const auto result = m_pRenderManager->getRenderer()->cmdTextureUpload(commandBuffer, m_pixelBytes, regions, m_resourceHandle);
 

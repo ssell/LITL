@@ -93,6 +93,7 @@ namespace litl::vulkan
     bool StagingTexture::copyIntoDestination(CommandBufferResource* commandBuffer, std::span<StagingTextureIndex const> stagingIndices, std::span<TextureUploadRegion const> regions, TextureResource* destination) noexcept
     {
         LITL_ASSERT_MSG((commandBuffer != nullptr), "Invalid command buffer provided to StagingTexture::copyIntoDestination", false);
+        LITL_ASSERT_MSG(stagingIndices.size() == regions.size(), "Mismatch between number of staging indices and regions provided to StagingTexture::copyIntoDestination", false);
 
         std::vector<BufferResource*> sourceBuffers;
         sourceBuffers.reserve(stagingIndices.size());
@@ -155,7 +156,7 @@ namespace litl::vulkan
                 .imageSubresource = VkImageSubresourceLayers {
                     .aspectMask = destination->vkImageSubresourceRange.aspectMask,
                     .mipLevel = region.mipLevel,
-                    .baseArrayLayer = destination->vkImageSubresourceRange.baseArrayLayer,
+                    .baseArrayLayer = destination->vkImageSubresourceRange.baseArrayLayer + region.arrayLayer,      // Note that the resourceManager currently always makes baseArrayLayer 0, but we add it together here in case that even changes.
                     .layerCount = destination->vkImageSubresourceRange.layerCount
                 },
                 .imageExtent = VkExtent3D{.width = region.width, .height = region.height, .depth = region.depth }

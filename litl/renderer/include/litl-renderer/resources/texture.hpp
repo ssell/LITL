@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 #include "litl-core/handles.hpp"
 #include "litl-core/formats/dataFormats.hpp"
@@ -151,6 +152,11 @@ namespace litl
         /// </summary>
         uint32_t depth{ 1u };
     };
+
+    /// <summary>
+    /// Builds the region set for a tightly packed source buffer holding every mip of every layer, ordered level-major then layer. One region per subresource.
+    /// </summary>
+    void buildTightlyPackedUploadRegions(TextureResourceDescriptor const& descriptor, std::vector<TextureUploadRegion>& outRegions) noexcept;
 }
 
 #endif

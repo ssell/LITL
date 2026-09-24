@@ -166,7 +166,7 @@ namespace litl::import
 
             const uint64_t expectedChainBytes = (textureDescriptor.mipmaps ?
                 imageChainBytes(textureDescriptor.format, textureDescriptor.width, textureDescriptor.height, textureDescriptor.depth) : 
-                imageLevelBytes(textureDescriptor.format, textureDescriptor.width, textureDescriptor.height, textureDescriptor.depth)) * textureDescriptor.arrayLayers * textureDescriptor.faceCount;
+                imageLevelBytes(textureDescriptor.format, textureDescriptor.width, textureDescriptor.height, textureDescriptor.depth)) * textureDescriptor.arrayLayers;
             
             if (textureData.pixels.size_bytes() != expectedChainBytes)
             {
@@ -211,7 +211,7 @@ namespace litl::import
                     return false;
                 }
 
-                if (currLevel.byteSize != (imageLevelBytes(textureDescriptor.format, expW, expH, expD) * textureDescriptor.arrayLayers * textureDescriptor.faceCount))
+                if (currLevel.byteSize != (imageLevelBytes(textureDescriptor.format, expW, expH, expD) * textureDescriptor.arrayLayers))
                 {
                     error = BinaryBlockFile::ErrorCode::TextureLevelInvalidBytes;
                     return false;

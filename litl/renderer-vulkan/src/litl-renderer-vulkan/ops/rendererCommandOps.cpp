@@ -682,7 +682,7 @@ namespace litl::vulkan
         auto stagingIndex = frameSync.stagingBufferArena->copyIntoStaging(
             source, 
             sourceOffset,
-            source.size_bytes(),
+            source.size_bytes() - sourceOffset,
             4ull);
 
         if (!stagingIndex.has_value())
@@ -827,11 +827,12 @@ namespace litl::vulkan
             return RendererResult::InvalidTextureHandle;
         }
 
-        const TextureUploadRegion defaultRegion{ .sourceOffset = 0ull, .width = destTexture->descriptor.width, .height = destTexture->descriptor.height, .depth = destTexture->descriptor.depth };
+        std::vector<TextureUploadRegion> defaultRegions;
 
         if (regions.empty())
         {
-            regions = { &defaultRegion, 1 };
+            buildTightlyPackedUploadRegions(destTexture->descriptor, defaultRegions);
+            regions = defaultRegions;
         }
 
         std::vector<StagingTextureIndex> stagingIndices;
@@ -843,7 +844,11 @@ namespace litl::vulkan
         for (auto& region : regions)
         {
             // Source -> Staging
-            auto stagingIndex = frameSync.stagingTextureArena->copyIntoStaging(source, region.sourceOffset, imageLevelBytes(destTexture->descriptor.format, region.width, region.height, region.depth), copyAlignment);
+            auto stagingIndex = frameSync.stagingTextureArena->copyIntoStaging(
+                source, 
+                region.sourceOffset, 
+                imageLevelBytes(destTexture->descriptor.format, region.width, region.height, region.depth), 
+                copyAlignment);
 
             if (!stagingIndex.has_value())
             {
