@@ -108,6 +108,16 @@ namespace litl
             /// The optimum physical device supported depth-stencil format.
             /// </summary>
             VkFormat vkDepthStencilFormat = VK_FORMAT_UNDEFINED;
+
+            /// <summary>
+            /// Specifies the maximum number of sampled image descriptors that can be included in a pipeline layout when using the update-after-bind feature.
+            /// </summary>
+            uint32_t maxDescriptorSetUpdateAfterBindSampledImages = 0u;
+
+            /// <summary>
+            /// Specifies the maximum number of sampled images accessible to a single shader stage across all descriptor sets.
+            /// </summary>
+            uint32_t maxPerStageDescriptorUpdateAfterBindSampledImages = 0u;
         };
 
         struct SwapChainInfo
