@@ -6,10 +6,11 @@
 
 namespace litl::vulkan
 {
-    void PipelineLayoutCache::build(VkDevice vkDevice) noexcept
+    void PipelineLayoutCache::build(VkDevice vkDevice, uint32_t textureTableCapacity) noexcept
     {
         LITL_FATAL_ASSERT_MSG(m_vkDevice == VK_NULL_HANDLE, "Attempting to call PipelineLayoutCache::build twice");
         m_vkDevice = vkDevice;
+        m_textureTableCapacity = textureTableCapacity;
     }
 
     void PipelineLayoutCache::destroy() noexcept
@@ -37,36 +38,71 @@ namespace litl::vulkan
     // Get or Create VkDescriptorSetLayout
     // -------------------------------------------------------------------------------------
 
-    VkDescriptorSetLayout createVkDescriptorSetLayout(VkDevice vkDevice, DescriptorSetLayoutDesc const& descriptorSetLayoutDesc, bool isPushSet) noexcept
+    VkDescriptorSetLayout createVkDescriptorSetLayout(VkDevice vkDevice, DescriptorSetLayoutDesc const& descriptorSetLayoutDesc, DescriptorSetLayoutOptions const& options) noexcept
     {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
+        std::vector<VkDescriptorBindingFlags> bindingFlags;                 // Parallel, 0 for ordinary bindings.
+
         bindings.reserve(descriptorSetLayoutDesc.bindings.size());
+        bindingFlags.reserve(descriptorSetLayoutDesc.bindings.size());
+        
+        bool hasRuntimeArray = false;
 
         for (auto const& binding : descriptorSetLayoutDesc.bindings)
         {
+            const bool isRuntimeArray = (binding.arraySize == 0u);
+            hasRuntimeArray |= isRuntimeArray;
+
             bindings.push_back(VkDescriptorSetLayoutBinding{
                 .binding = binding.binding,
                 .descriptorType = toVkDescriptorType(binding.type),
-                .descriptorCount = binding.arraySize,
+                .descriptorCount = (isRuntimeArray ? options.runtimeArrayCapacity : binding.arraySize),
                 .stageFlags = toVkShaderStageFlags(binding.stages),
                 .pImmutableSamplers = nullptr
-                });
+            });
+
+            if (isRuntimeArray)
+            {
+                bindingFlags.push_back(VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT);
+            }
+            else
+            {
+                bindingFlags.push_back(VkDescriptorBindingFlags{ 0 });
+            }
         }
 
-        VkDescriptorSetLayoutCreateInfo info{
+        LITL_ASSERT_MSG(!(options.isPushDescriptor && hasRuntimeArray), "Descriptor set layout cannot be both push-descriptor and update-after-bind", VK_NULL_HANDLE);      // A push-descriptor set layout may not contain UPDATE_AFTER_BIND bindings.
+        LITL_ASSERT_MSG(!hasRuntimeArray || (options.runtimeArrayCapacity > 0u), "Runtime descriptor array requested with a capacity of zero", VK_NULL_HANDLE);             // A runtime array with capacity 0 would silently become a reserved/skipped binding.
+
+        const VkDescriptorSetLayoutBindingFlagsCreateInfo flagsInfo{
+            .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
+            .pNext = nullptr,
+            .bindingCount = static_cast<uint32_t>(bindingFlags.size()),
+            .pBindingFlags = bindingFlags.data()
+        };
+
+        VkDescriptorSetLayoutCreateFlags layoutFlags = 0;
+
+        if (options.isPushDescriptor)
+        {
+            layoutFlags |= VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT;
+        }
+
+        if (hasRuntimeArray)
+        {
+            layoutFlags |= VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
+        }
+
+        const VkDescriptorSetLayoutCreateInfo createInfo{
             .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-            .flags = 0u,
-            .bindingCount = static_cast<uint32_t>(descriptorSetLayoutDesc.bindings.size()),
+            .pNext = &flagsInfo,
+            .flags = layoutFlags,
+            .bindingCount = static_cast<uint32_t>(bindings.size()),
             .pBindings = bindings.data()
         };
 
-        if (isPushSet)
-        {
-            info.flags |= VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT;
-        }
-
         VkDescriptorSetLayout vkDescriptorSetLayout = VK_NULL_HANDLE;
-        const VkResult result = vkCreateDescriptorSetLayout(vkDevice, &info, nullptr, &vkDescriptorSetLayout);
+        const VkResult result = vkCreateDescriptorSetLayout(vkDevice, &createInfo, nullptr, &vkDescriptorSetLayout);
 
         if (result != VK_SUCCESS)
         {
@@ -90,7 +126,14 @@ namespace litl::vulkan
         }
 
         // Create
-        auto vkDescriptorSetLayout = createVkDescriptorSetLayout(m_vkDevice, descriptorSetLayoutDesc, (static_cast<DescriptorSetIndex>(setIndex) == DescriptorSetIndex::PerObject));
+        auto vkDescriptorSetLayout = createVkDescriptorSetLayout(
+            m_vkDevice, 
+            descriptorSetLayoutDesc, 
+            DescriptorSetLayoutOptions{
+                .isPushDescriptor = (static_cast<DescriptorSetIndex>(setIndex) == DescriptorSetIndex::PerObject),
+                .runtimeArrayCapacity = m_textureTableCapacity
+            }
+        );
 
         if (vkDescriptorSetLayout != VK_NULL_HANDLE)
         {

@@ -64,7 +64,7 @@ namespace litl::vulkan
         PipelineLayoutCache(PipelineLayoutCache const&) = delete;
         PipelineLayoutCache& operator=(PipelineLayoutCache const&) = delete;
 
-        void build(VkDevice vkDevice) noexcept;
+        void build(VkDevice vkDevice, uint32_t textureTableCapacity) noexcept;
         void destroy() noexcept;
 
         [[nodiscard]] VkDescriptorSetLayout getOrCreateSetLayout(DescriptorSetLayoutDesc const& descriptorSetLayoutDesc, uint32_t setIndex) noexcept;
@@ -73,6 +73,7 @@ namespace litl::vulkan
     private:
 
         VkDevice m_vkDevice{ VK_NULL_HANDLE };
+        uint32_t m_textureTableCapacity{ 0u };
 
         std::unordered_map<DescriptorSetLayoutDesc, VkDescriptorSetLayout> m_descriptorSetLayoutMap;
         std::unordered_map<PipelineLayoutCacheKey, VkPipelineLayout> m_pipelineLayoutMap;

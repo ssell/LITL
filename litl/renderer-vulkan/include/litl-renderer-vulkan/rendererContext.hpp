@@ -118,6 +118,11 @@ namespace litl
             /// Specifies the maximum number of sampled images accessible to a single shader stage across all descriptor sets.
             /// </summary>
             uint32_t maxPerStageDescriptorUpdateAfterBindSampledImages = 0u;
+
+            /// <summary>
+            /// The max between the per-descriptor set and per-shader stage bound sample image limits.
+            /// </summary>
+            uint32_t textureTableCapacity = 0u;
         };
 
         struct SwapChainInfo

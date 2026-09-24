@@ -68,6 +68,20 @@ namespace litl::vulkan
         }
     };
 
+    struct DescriptorSetLayoutOptions
+    {
+        /// <summary>
+        /// Descriptor Set index 3 only. Mutally exclusive with runtime arrays.
+        /// </summary>
+        bool isPushDescriptor{ false };
+
+        /// <summary>
+        /// Caller must clamp this against the device maxDescriptorSetUpdateAfterBindSampledImages and maxPerStageDescriptorUpdateAfterBindSampledImages.
+        /// For bindings whose arraySize is 0, the descriptorCount is used instead.
+        /// </summary>
+        uint32_t runtimeArrayCapacity{ 0u };
+    };
+
     /// <summary>
     /// Description of a single Pipeline Layout.
     /// A Pipeline Layout describes the layout/structure of data bound to the GPU in two forms:

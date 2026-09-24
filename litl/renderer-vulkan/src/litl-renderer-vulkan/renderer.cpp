@@ -477,6 +477,8 @@ namespace litl::vulkan
             }
         }
 
+        context.device.textureTableCapacity = litl::max(context.device.maxDescriptorSetUpdateAfterBindSampledImages, context.device.maxPerStageDescriptorUpdateAfterBindSampledImages);
+
         if (context.device.vkPhysicalDevice != VK_NULL_HANDLE)
         {
             logInfo("Selected Vulkan Physical Device");

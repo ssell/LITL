@@ -30,7 +30,7 @@ namespace litl::vulkan
     void ResourceManager::build(RendererContext& context) noexcept
     {
         m_pContext = &context;
-        m_pipelineLayoutCache.build(context.device.vkDevice);
+        m_pipelineLayoutCache.build(context.device.vkDevice, context.device.textureTableCapacity);
         m_samplerCache.build(context.device.vkDevice);
     }
 
