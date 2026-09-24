@@ -173,6 +173,18 @@ namespace litl
 
         return 0u;
     }
+
+    /// <summary>
+    /// Calculates the desired alignment for the provided data format.
+    /// This is the maximum between either 4 bytes or the result of dataFormatSize.
+    /// </summary>
+    [[nodiscard]] constexpr uint64_t dataFormatBufferCopyAlignment(DataFormat format) noexcept
+    {
+        const uint64_t formatBytes = static_cast<uint64_t>(dataFormatSize(format));
+        const uint64_t formatAlignment = (formatBytes < 4ull) ? 4ull : formatBytes;
+
+        return formatAlignment;
+    }
 }
 
 #endif

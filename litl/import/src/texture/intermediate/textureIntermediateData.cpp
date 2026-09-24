@@ -182,8 +182,7 @@ namespace litl::import
         // Each level begins on a whole texel block, which is what vkCmdCopyBufferToImage requires of bufferOffset
         // (a multiple of 4 and of the texel block size). Tight packing satisfies this for every supported format
         // as each level is a whole number of blocks, but it is checked explicitly so a hand-built level table cannot slip through.
-        const uint64_t blockBytes = static_cast<uint64_t>(dataFormatSize(m_dataDescriptor.format));
-        const uint64_t levelAlignment = (blockBytes < 4ull) ? 4ull : blockBytes;
+        const uint64_t levelAlignment = dataFormatBufferCopyAlignment(m_dataDescriptor.format);
 
         uint64_t runningOffset = 0ull;
 

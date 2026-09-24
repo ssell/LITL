@@ -338,9 +338,9 @@ namespace litl
          *     0001 0000 = 16
          */
 
-        assert(offset > 0);
         assert(alignment > 0);
         assert((alignment & (alignment - 1)) == 0);     // power of 2
+        // ^ note this will trigger if we ever add support for RGB32_SFloat or similar sized formats. Those however are not sampleable, so not sure why we would ...
 
         return (offset + alignment - 1) & ~(alignment - 1);
     }

@@ -24,19 +24,19 @@ namespace litl::vulkan
         freeBuffers();
     }
 
-    std::optional<StagingBufferIndex> StagingBuffer::copyIntoStaging(std::span<std::byte const> source, uint64_t sourceOffset, uint64_t sourceSize) noexcept
+    std::optional<StagingBufferIndex> StagingBuffer::copyIntoStaging(std::span<std::byte const> source, uint64_t sourceOffset, uint64_t sourceSize, uint64_t alignment) noexcept
     {
         // 1. Allocate staging buffer
-
         BufferResource* targetBuffer = m_pFixedBuffer;
+        const uint64_t alignedHead = alignMemoryOffsetUp(m_fixedHead, alignment);
 
         StagingBufferIndex stagingIndex{
-            .bufferOffset = m_fixedHead,
+            .bufferOffset = alignedHead,
             .bufferSize = sourceSize,
             .bufferIndex = StagingBufferIndex::FixedStagingBufferIndex
         };
 
-        if ((m_fixedHead + stagingIndex.bufferSize) > m_fixedBufferSize)
+        if ((alignedHead + stagingIndex.bufferSize) > m_fixedBufferSize)
         {
             // No room in the fixed buffer for the source data. Allocate a temporary staging buffer to overflow into.
             BufferHandle tempStagingBufferHandle = createStagingBuffer(stagingIndex.bufferSize);
@@ -51,7 +51,7 @@ namespace litl::vulkan
         else
         {
             // Room in the fixed buffer for the allocation. Increment the fixed head index.
-            m_fixedHead += stagingIndex.bufferSize;
+            m_fixedHead = alignedHead + stagingIndex.bufferSize;
         }
         
         // 2. Copy into staging buffer

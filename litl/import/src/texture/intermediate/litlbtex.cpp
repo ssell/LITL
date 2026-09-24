@@ -178,8 +178,7 @@ namespace litl::import
             // Deserialize Levels
             // -----------------------------------------------------------------------------
 
-            const uint64_t blockBytes = static_cast<uint64_t>(dataFormatSize(textureDescriptor.format));
-            const uint64_t levelAlignment = (blockBytes < 4ull) ? 4ull : blockBytes;
+            const uint64_t levelAlignment = dataFormatBufferCopyAlignment(textureDescriptor.format);
 
             for (uint32_t i = 0u; i < static_cast<uint32_t>(textureData.textureLevels.size()); ++i)
             {

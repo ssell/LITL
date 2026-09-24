@@ -682,7 +682,8 @@ namespace litl::vulkan
         auto stagingIndex = frameSync.stagingBufferArena->copyIntoStaging(
             source, 
             sourceOffset,
-            source.size_bytes());
+            source.size_bytes(),
+            4ull);
 
         if (!stagingIndex.has_value())
         {
@@ -837,11 +838,12 @@ namespace litl::vulkan
         stagingIndices.reserve(regions.size());
 
         auto& frameSync = vulkanContext->getCurrFrameSyncInfo();
+        const uint64_t copyAlignment = dataFormatBufferCopyAlignment(destTexture->descriptor.format);
 
         for (auto& region : regions)
         {
             // Source -> Staging
-            auto stagingIndex = frameSync.stagingTextureArena->copyIntoStaging(source, region.sourceOffset, imageLevelBytes(destTexture->descriptor.format, region.width, region.height, region.depth));
+            auto stagingIndex = frameSync.stagingTextureArena->copyIntoStaging(source, region.sourceOffset, imageLevelBytes(destTexture->descriptor.format, region.width, region.height, region.depth), copyAlignment);
 
             if (!stagingIndex.has_value())
             {
