@@ -1,6 +1,6 @@
 #include "litl-renderer-vulkan/requiredFeatures.hpp"
 
-namespace litl
+namespace litl::vulkan
 {
     [[nodiscard]] bool doesPhysicalDeviceSupportRequiredFeatures(VkPhysicalDevice device) noexcept
     {

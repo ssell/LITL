@@ -110,19 +110,21 @@ namespace litl
             VkFormat vkDepthStencilFormat = VK_FORMAT_UNDEFINED;
 
             /// <summary>
-            /// Specifies the maximum number of sampled image descriptors that can be included in a pipeline layout when using the update-after-bind feature.
+            /// Specifies the maximum number of various resource descriptors that can be included in a pipeline layout when using the update-after-bind feature.
             /// </summary>
-            uint32_t maxDescriptorSetUpdateAfterBindSampledImages = 0u;
-
-            /// <summary>
-            /// Specifies the maximum number of sampled images accessible to a single shader stage across all descriptor sets.
-            /// </summary>
-            uint32_t maxPerStageDescriptorUpdateAfterBindSampledImages = 0u;
+            VkPhysicalDeviceDescriptorIndexingProperties vkIndexingProperties{};
 
             /// <summary>
             /// The max between the per-descriptor set and per-shader stage bound sample image limits.
             /// </summary>
             uint32_t textureTableCapacity = 0u;
+
+            /// <summary>
+            /// Returns the maximum runtime array capacity that can be used for UAB (Update After Binding) descriptor sets.
+            /// </summary>
+            /// <param name="type"></param>
+            /// <returns></returns>
+            [[nodiscard]] uint32_t getUabRuntimeArrayCapacityFor(ShaderResourceType type) const noexcept;
         };
 
         struct SwapChainInfo
@@ -262,31 +264,11 @@ namespace litl
             DrawInfo drawInfo{};
             ResourceManager resources;
 
-            [[nodiscard]] PerFrameSyncInfo& getCurrFrameSyncInfo() noexcept
-            {
-                return renderInfo.frameSyncInfo[renderInfo.frame.frameInFlightIndex];
-            }
-
-            [[nodiscard]] PerFrameSyncInfo& getPrevFrameSyncInfo() noexcept
-            {
-                const uint32_t prevFrameInFlightIndex = (renderInfo.frame.frameCount + (renderInfo.frame.framesInFlight - 1)) % renderInfo.frame.framesInFlight;
-                return renderInfo.frameSyncInfo[prevFrameInFlightIndex];
-            }
-
-            [[nodiscard]] PerImageSyncInfo& getCurrImageSyncInfo() noexcept
-            {
-                return renderInfo.imageSyncInfo[swapChain.swapChainImageIndex];
-            }
-
-            [[nodiscard]] TextureResourceHandle getCurrFrameDepthTexture() noexcept
-            {
-                return getCurrFrameSyncInfo().depthTexture;
-            }
-
-            [[nodiscard]] TextureResourceHandle getPrevFrameDepthTexture() noexcept
-            {
-                return getPrevFrameSyncInfo().depthTexture;
-            }
+            [[nodiscard]] PerFrameSyncInfo& getCurrFrameSyncInfo() noexcept;
+            [[nodiscard]] PerFrameSyncInfo& getPrevFrameSyncInfo() noexcept;
+            [[nodiscard]] PerImageSyncInfo& getCurrImageSyncInfo() noexcept;
+            [[nodiscard]] TextureResourceHandle getCurrFrameDepthTexture() noexcept;
+            [[nodiscard]] TextureResourceHandle getPrevFrameDepthTexture() noexcept;
         };
 
         static RendererContext* unwrap(litl::RendererContext* opaqueContext) noexcept

@@ -3,7 +3,7 @@
 
 #include "litl-renderer-vulkan/common.hpp"
 
-namespace litl
+namespace litl::vulkan
 {
     struct RequiredFeatureChain
     {

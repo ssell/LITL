@@ -49,7 +49,7 @@ add_library(litl-renderer-vulkan
 		"src/litl-renderer-vulkan/resources/cache/samplerCache.cpp" 
 		"src/litl-renderer-vulkan/resources/utility/descriptorSetAllocator.cpp" 
 		"src/litl-renderer-vulkan/resources/utility/descriptorSetChangeTracker.cpp"
-		"src/litl-renderer-vulkan/resources/utility/destructionQueue.cpp" "src/litl-renderer-vulkan/requiredFeatures.cpp")
+		"src/litl-renderer-vulkan/resources/utility/destructionQueue.cpp" "src/litl-renderer-vulkan/requiredFeatures.cpp" "src/litl-renderer-vulkan/rendererContext.cpp")
 
 target_include_directories(litl-renderer-vulkan
 	PUBLIC

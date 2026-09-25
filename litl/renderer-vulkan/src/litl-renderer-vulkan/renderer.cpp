@@ -333,7 +333,7 @@ namespace litl::vulkan
     /// </summary>
     /// <param name="device"></param>
     /// <returns></returns>
-    [[nodiscard]] bool isPhysicalDeviceSuitable(VkPhysicalDevice device, uint32_t& maxDescriptorSetImages, uint32_t& maxPerStageImages) noexcept
+    [[nodiscard]] bool isPhysicalDeviceSuitable(VkPhysicalDevice device, VkPhysicalDeviceDescriptorIndexingProperties& vkIndexingProperties) noexcept
     {
         // Don't need this for these demos, but in reality see: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/03_Physical_devices_and_queue_families.html#_base_device_suitability_checks
         VkPhysicalDeviceProperties deviceProperties;
@@ -364,26 +364,23 @@ namespace litl::vulkan
             return false;
         }
 
-        VkPhysicalDeviceDescriptorIndexingProperties indexingProperties{
+        vkIndexingProperties = VkPhysicalDeviceDescriptorIndexingProperties{
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_PROPERTIES,
             .pNext = nullptr
         };
 
         VkPhysicalDeviceProperties2 physicalProperties2{
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
-            .pNext = &indexingProperties
+            .pNext = &vkIndexingProperties
         };
 
         vkGetPhysicalDeviceProperties2(device, &physicalProperties2);
 
-        if ((indexingProperties.maxDescriptorSetUpdateAfterBindSampledImages == 0u) ||
-            (indexingProperties.maxPerStageDescriptorUpdateAfterBindSampledImages == 0u))
+        if ((vkIndexingProperties.maxDescriptorSetUpdateAfterBindSampledImages == 0u) ||
+            (vkIndexingProperties.maxPerStageDescriptorUpdateAfterBindSampledImages == 0u))
         {
             return false;
         }
-
-        maxDescriptorSetImages = indexingProperties.maxDescriptorSetUpdateAfterBindSampledImages;
-        maxPerStageImages = indexingProperties.maxPerStageDescriptorUpdateAfterBindSampledImages;
 
         return true;
     }
@@ -462,7 +459,7 @@ namespace litl::vulkan
         {
             auto queueFamilies = findQueueFamilies(device, context.device.vkSurface);
 
-            if (isPhysicalDeviceSuitable(device, context.device.maxDescriptorSetUpdateAfterBindSampledImages, context.device.maxPerStageDescriptorUpdateAfterBindSampledImages) && queueFamilies.hasAll())
+            if (isPhysicalDeviceSuitable(device, context.device.vkIndexingProperties) && queueFamilies.hasAll())
             {
                 auto swapChainSupport = SwapChainSupport::querySwapChainSupport(device, context.device.vkSurface);
 
@@ -479,7 +476,7 @@ namespace litl::vulkan
             logInfo("Selected Vulkan Physical Device");
             
             context.device.vkDepthStencilFormat = findSupportedDepthStencilFormat(context.device.vkPhysicalDevice).value();     // confirmed present by isPhysicalDeviceSuitable
-            context.device.textureTableCapacity = litl::min(context.config.globalTexturePoolCapacity, litl::min(context.device.maxDescriptorSetUpdateAfterBindSampledImages, context.device.maxPerStageDescriptorUpdateAfterBindSampledImages));
+            context.device.textureTableCapacity = litl::min(context.config.globalTexturePoolCapacity, context.device.getUabRuntimeArrayCapacityFor(ShaderResourceType::SampledImage));
             
             return true;
         }
