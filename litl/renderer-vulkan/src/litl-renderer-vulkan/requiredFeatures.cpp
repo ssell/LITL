@@ -9,11 +9,10 @@ namespace litl::vulkan
         VkPhysicalDeviceVulkan13Features vulkan13Features{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES, .pNext = &vulkan14Features };
         VkPhysicalDeviceVulkan12Features vulkan12Features{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES, .pNext = &vulkan13Features };
         VkPhysicalDeviceVulkan11Features vulkan11Features{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES, .pNext = &vulkan12Features };
-        VkPhysicalDeviceFeatures2 physicalDeviceFeatures{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, .pNext = &vulkan11Features };
 
         VkPhysicalDeviceFeatures2 supportedFeatures{
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
-            .pNext = &physicalDeviceFeatures
+            .pNext = &vulkan11Features
         };
 
         vkGetPhysicalDeviceFeatures2(device, &supportedFeatures);
@@ -28,10 +27,10 @@ namespace litl::vulkan
             !vulkan12Features.runtimeDescriptorArray ||
             !vulkan12Features.bufferDeviceAddress ||
             !vulkan11Features.shaderDrawParameters ||
-            !physicalDeviceFeatures.features.geometryShader ||
-            !physicalDeviceFeatures.features.tessellationShader ||
-            !physicalDeviceFeatures.features.shaderInt64 ||
-            !physicalDeviceFeatures.features.textureCompressionBC)
+            !supportedFeatures.features.geometryShader ||
+            !supportedFeatures.features.tessellationShader ||
+            !supportedFeatures.features.shaderInt64 ||
+            !supportedFeatures.features.textureCompressionBC)
         {
             return false;
         }

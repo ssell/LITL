@@ -355,9 +355,4 @@ namespace litl::vulkan
             return 0u;
         }
     }
-
-    bool DescriptorSetRuntimeArrayCapacities::hasZeroCapacity() const noexcept
-    {
-        return (sampler + uniformBuffer + storageBuffer + imageBuffer + sampledImage + storageImage + inputAttachment) == 0u;
-    }
 }

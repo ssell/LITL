@@ -51,12 +51,16 @@ namespace litl::vulkan
         for (auto const& binding : descriptorSetLayoutDesc.bindings)
         {
             const bool isRuntimeArray = (binding.arraySize == 0u);
+            const auto descriptorCount = (isRuntimeArray ? options.capacities.getFor(binding.type) : binding.arraySize);
             hasRuntimeArray |= isRuntimeArray;
+
+            LITL_ASSERT_MSG((!isRuntimeArray || (binding.type != ShaderResourceType::AccelerationStructure)), "Runtime descriptor array of type AccelerationStructure is not supported", VK_NULL_HANDLE);
+            LITL_ASSERT_MSG((!isRuntimeArray || (descriptorCount != 0u)), "Runtime descriptor array(s) requested with a capacity of zero", VK_NULL_HANDLE);     // A runtime array with capacity 0 would silently become a reserved/skipped binding.
 
             bindings.push_back(VkDescriptorSetLayoutBinding{
                 .binding = binding.binding,
                 .descriptorType = toVkDescriptorType(binding.type),
-                .descriptorCount = (isRuntimeArray ? options.capacities.getFor(binding.type) : binding.arraySize),
+                .descriptorCount = descriptorCount,
                 .stageFlags = toVkShaderStageFlags(binding.stages),
                 .pImmutableSamplers = nullptr
             });
@@ -72,8 +76,7 @@ namespace litl::vulkan
             }
         }
 
-        LITL_ASSERT_MSG(!(options.isPushDescriptor && hasRuntimeArray), "Descriptor set layout cannot be both push-descriptor and update-after-bind", VK_NULL_HANDLE);      // A push-descriptor set layout may not contain UPDATE_AFTER_BIND bindings.
-        LITL_ASSERT_MSG(!hasRuntimeArray || !options.capacities.hasZeroCapacity(), "Runtime descriptor array(s) requested with a capacity of zero", VK_NULL_HANDLE);             // A runtime array with capacity 0 would silently become a reserved/skipped binding.
+        LITL_ASSERT_MSG(!(options.isPushDescriptor && hasRuntimeArray), "Descriptor set layout cannot be both push-descriptor and update-after-bind", VK_NULL_HANDLE);          // A push-descriptor set layout may not contain UPDATE_AFTER_BIND bindings.
 
         const VkDescriptorSetLayoutBindingFlagsCreateInfo flagsInfo{
             .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,

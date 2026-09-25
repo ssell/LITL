@@ -84,8 +84,9 @@ namespace litl::vulkan
 
         [[nodiscard]] bool operator==(DescriptorSetRuntimeArrayCapacities const&) const = default;
         [[nodiscard]] uint32_t getFor(ShaderResourceType resourceType) const noexcept;
-        [[nodiscard]] bool hasZeroCapacity() const noexcept;
     };
+
+    static_assert(sizeof(DescriptorSetRuntimeArrayCapacities) == 8 * sizeof(uint32_t), "Layout has padding; bytewise hash is unsafe");      // Needed to ensure hashPOD is safe.
 
     struct DescriptorSetLayoutOptions
     {
@@ -203,7 +204,7 @@ namespace std
     {
         size_t operator()(litl::vulkan::DescriptorSetLayoutDesc const& layout) const noexcept
         {
-            std::size_t h = 0ll;
+            std::size_t h = 0ull;
 
             litl::hashCombine64(h, layout.bindings.size());
             for (auto const& binding : layout.bindings) { litl::hashCombine64(h, std::hash<litl::vulkan::DescriptorSetLayoutBindingDesc>{}(binding)); }

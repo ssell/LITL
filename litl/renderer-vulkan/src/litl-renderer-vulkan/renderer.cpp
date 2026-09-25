@@ -5,6 +5,7 @@
 #include <set>
 #include <span>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "litl-core/debug.hpp"
@@ -65,8 +66,8 @@ namespace litl::vulkan
     /// Vulkan by default does very little error checking. Validation layers are
     /// ways to implement layer checking, profiling, etc.
     /// </summary>
-    static const std::vector<const char*> RequiredValidationLayers = {
-        "VK_LAYER_KHRONOS_validation"
+    static const std::array<const char*, 1> RequiredValidationLayers = {
+        "VK_LAYER_KHRONOS_validation"                       // All-in-one replacement of multiple older layers (such as VK_LAYER_LUNARG_standard_validation)
     };
 
     /// <summary>
