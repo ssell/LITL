@@ -20,6 +20,10 @@ namespace litl::vulkan
             return false;
         }
 
+        // Reserve the first N indices for internal engine usage.
+        m_head = static_cast<uint32_t>(TextureTableReservedIndices::ReservedIndicesCount);
+        m_capacity -= m_head;
+
         return true;
     }
 

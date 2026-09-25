@@ -159,6 +159,34 @@ namespace litl
     };
 
     /// <summary>
+    /// Series of reserved indices in the global texture table for common fallback textures.
+    /// </summary>
+    enum class TextureTableReservedIndices : uint32_t
+    {
+        /// <summary>
+        /// A 1x1 white (1.0, 1.0, 1.0, 1.0) texture.
+        /// </summary>
+        White = 0u,
+
+        /// <summary>
+        /// A 1x1 black (0.0, 0.0, 0.0, 1.0) texture.
+        /// </summary>
+        Black = 1u,
+
+        /// <summary>
+        /// A 1x1 pink (1.0, 0.0, 1.0, 1.0) texture commonly used to indicate a missing texture.
+        /// </summary>
+        Pink = 2u,
+
+        /// <summary>
+        /// A 1x1 passive tangent normal texture (0.5, 0.5, 0.5, 1.0)
+        /// </summary>
+        TangentNormal = 3u,
+
+        ReservedIndicesCount
+    };
+
+    /// <summary>
     /// Builds the region set for a tightly packed source buffer holding every mip of every layer, ordered level-major then layer. One region per subresource.
     /// </summary>
     void buildTightlyPackedUploadRegions(TextureResourceDescriptor const& descriptor, std::vector<TextureUploadRegion>& outRegions) noexcept;
