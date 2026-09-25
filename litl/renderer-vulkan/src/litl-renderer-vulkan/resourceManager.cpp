@@ -993,86 +993,86 @@ namespace litl::vulkan
         }
     }
 
-void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descriptor) noexcept
-{
-    auto handle = getShaderModuleHandle(StringId(descriptor.resource));
-    auto* resource = getShaderModule(handle);
-
-    if (resource == nullptr)
+    void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descriptor) noexcept
     {
-        // no active shader module matching the descriptor - nothing to reload
-        return;
-    }
+        auto handle = getShaderModuleHandle(StringId(descriptor.resource));
+        auto* resource = getShaderModule(handle);
 
-    ShaderModuleResource reloadedResource{};
-    auto* destructionQueue = m_pContext->getCurrFrameSyncInfo().destructionQueue.get();
-
-    if (createShaderModuleResource(m_pContext, reloadedResource, descriptor))
-    {
-        if (reloadedResource.spirvHash == resource->spirvHash)
+        if (resource == nullptr)
         {
-            // Identical, nothing needs to happen. Destroy the new duplicate module
-            destructionQueue->enqueue(reloadedResource.vkShaderModule);
+            // no active shader module matching the descriptor - nothing to reload
+            return;
+        }
+
+        ShaderModuleResource reloadedResource{};
+        auto* destructionQueue = m_pContext->getCurrFrameSyncInfo().destructionQueue.get();
+
+        if (createShaderModuleResource(m_pContext, reloadedResource, descriptor))
+        {
+            if (reloadedResource.spirvHash == resource->spirvHash)
+            {
+                // Identical, nothing needs to happen. Destroy the new duplicate module
+                destructionQueue->enqueue(reloadedResource.vkShaderModule);
+            }
+            else
+            {
+                // Recreate the shader module and any pipelines (both graphics and compute) that reference it.
+                // As the renderer library deals only with handles, we simply recreate the underlying resources associated with the handles.
+
+                VkShaderModule oldShaderModule = resource->vkShaderModule;
+
+                resource->vkShaderModule = reloadedResource.vkShaderModule;
+                resource->reflection = std::move(reloadedResource.reflection);      // move since 'reloadedResource' is dying anyways
+                resource->spirvHash = reloadedResource.spirvHash;
+
+                std::vector<GraphicsPipelineResource*> affectedGraphicsPipelines;
+                std::vector<ComputePipelineResource*> affectedComputePipelines;
+
+                m_shaderModuleReferenceMap.getGraphicsPipelinesFor(resource, affectedGraphicsPipelines);
+                m_shaderModuleReferenceMap.getComputePipelinesFor(resource, affectedComputePipelines);
+
+                for (auto* graphicsPipelineResource : affectedGraphicsPipelines)
+                {
+                    // Create to a staged pipeline and only swap on success.
+                    GraphicsPipelineResource stagedGraphicsPipeline{};
+
+                    if (createGraphicsPipelineResource(*this, m_pContext, stagedGraphicsPipeline, graphicsPipelineResource->descriptor))
+                    {
+                        VkPipeline oldGraphicsPipeline = graphicsPipelineResource->pipeline.vkPipeline;
+                        graphicsPipelineResource->pipeline.vkPipeline = stagedGraphicsPipeline.pipeline.vkPipeline;
+                        destructionQueue->enqueue(oldGraphicsPipeline);
+                    }
+                    else
+                    {
+                        logError("Failed to recreate Vulkan Graphics Pipeline following reload of shader at '", descriptor.resource, "'");
+                    }
+                }
+
+                for (auto* computePipelineResource : affectedComputePipelines)
+                {
+                    // Create to a staged pipeline and only swap on success.
+                    ComputePipelineResource stagedComputePipeline{};
+
+                    if (createComputePipelineResource(*this, m_pContext, stagedComputePipeline, computePipelineResource->descriptor))
+                    {
+                        VkPipeline oldComputePipeline = computePipelineResource->pipeline.vkPipeline;
+                        computePipelineResource->pipeline.vkPipeline = stagedComputePipeline.pipeline.vkPipeline;
+                        destructionQueue->enqueue(oldComputePipeline);
+                    }
+                    else
+                    {
+                        logError("Failed to recreate Vulkan Compute Pipeline following reload of shader at '", descriptor.resource, "'");
+                    }
+                }
+
+                destructionQueue->enqueue(oldShaderModule);
+            }
         }
         else
         {
-            // Recreate the shader module and any pipelines (both graphics and compute) that reference it.
-            // As the renderer library deals only with handles, we simply recreate the underlying resources associated with the handles.
-
-            VkShaderModule oldShaderModule = resource->vkShaderModule;
-
-            resource->vkShaderModule = reloadedResource.vkShaderModule;
-            resource->reflection = std::move(reloadedResource.reflection);      // move since 'reloadedResource' is dying anyways
-            resource->spirvHash = reloadedResource.spirvHash;
-
-            std::vector<GraphicsPipelineResource*> affectedGraphicsPipelines;
-            std::vector<ComputePipelineResource*> affectedComputePipelines;
-
-            m_shaderModuleReferenceMap.getGraphicsPipelinesFor(resource, affectedGraphicsPipelines);
-            m_shaderModuleReferenceMap.getComputePipelinesFor(resource, affectedComputePipelines);
-
-            for (auto* graphicsPipelineResource : affectedGraphicsPipelines)
-            {
-                // Create to a staged pipeline and only swap on success.
-                GraphicsPipelineResource stagedGraphicsPipeline{};
-
-                if (createGraphicsPipelineResource(*this, m_pContext, stagedGraphicsPipeline, graphicsPipelineResource->descriptor))
-                {
-                    VkPipeline oldGraphicsPipeline = graphicsPipelineResource->pipeline.vkPipeline;
-                    graphicsPipelineResource->pipeline.vkPipeline = stagedGraphicsPipeline.pipeline.vkPipeline;
-                    destructionQueue->enqueue(oldGraphicsPipeline);
-                }
-                else
-                {
-                    logError("Failed to recreate Vulkan Graphics Pipeline following reload of shader at '", descriptor.resource, "'");
-                }
-            }
-
-            for (auto* computePipelineResource : affectedComputePipelines)
-            {
-                // Create to a staged pipeline and only swap on success.
-                ComputePipelineResource stagedComputePipeline{};
-
-                if (createComputePipelineResource(*this, m_pContext, stagedComputePipeline, computePipelineResource->descriptor))
-                {
-                    VkPipeline oldComputePipeline = computePipelineResource->pipeline.vkPipeline;
-                    computePipelineResource->pipeline.vkPipeline = stagedComputePipeline.pipeline.vkPipeline;
-                    destructionQueue->enqueue(oldComputePipeline);
-                }
-                else
-                {
-                    logError("Failed to recreate Vulkan Compute Pipeline following reload of shader at '", descriptor.resource, "'");
-                }
-            }
-
-            destructionQueue->enqueue(oldShaderModule);
+            logError("Failed to recreate Vulkan Shader Module following reload of shader at '", descriptor.resource, "'");
         }
     }
-    else
-    {
-        logError("Failed to recreate Vulkan Shader Module following reload of shader at '", descriptor.resource, "'");
-    }
-}
 
     //--------------------------------------------------------------------------------------
     // Texture
@@ -1251,8 +1251,25 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
         resource.memoryMap.persistent = resource.allocationInfo.pMappedData;
 
         auto textureHandle = m_texturePool.create(resource);
+        auto* textureResource = m_texturePool.get(textureHandle);
+
+        if (textureResource == nullptr)
+        {
+            logError("Failed to retrieve Vulkan Texture Resource on new handle. Pool exhaustion.");
+            return textureHandle;
+        }
 
         m_textureMap[nameId] = textureHandle;
+
+        if (descriptor.residesInTextureTable)
+        {
+            textureResource->textureTableSlot = m_pContext->textureTable.acquire(textureHandle);
+
+            if (textureResource->textureTableSlot == Constants::uint32_null_index)
+            {
+                logError("Failed to acquire slot for new TextureResource in Vulkan TextureTable");
+            }
+        }
 
         return textureHandle;
     }
@@ -1268,6 +1285,14 @@ void ResourceManager::onShaderModuleReload(ShaderModuleDescriptor const& descrip
 
         if (resource != nullptr)
         {
+            if (resource->textureTableSlot != Constants::uint32_null_index)
+            {
+                if (!m_pContext->textureTable.release(resource->textureTableSlot))
+                {
+                    logError("Failed to release TextureResource from Vulkan TextureTable at slot ", resource->textureTableSlot);
+                }
+            }
+
             if (resource->vkImage != VK_NULL_HANDLE)
             {
                 vmaDestroyImage(m_pContext->device.vmaAllocator, resource->vkImage, resource->allocation);

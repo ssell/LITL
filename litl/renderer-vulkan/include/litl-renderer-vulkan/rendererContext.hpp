@@ -12,6 +12,7 @@
 #include "litl-renderer-vulkan/resources/utility/stagingTexture.hpp"
 #include "litl-renderer-vulkan/resources/utility/descriptorSetAllocator.hpp"
 #include "litl-renderer-vulkan/resources/utility/destructionQueue.hpp"
+#include "litl-renderer-vulkan/resources/utility/textureTable.hpp"
 
 namespace litl
 {
@@ -262,7 +263,8 @@ namespace litl
             SwapChainInfo swapChain{};
             RenderInfo renderInfo{};
             DrawInfo drawInfo{};
-            ResourceManager resources;
+            ResourceManager resources{};
+            TextureTable textureTable{};
 
             [[nodiscard]] PerFrameSyncInfo& getCurrFrameSyncInfo() noexcept;
             [[nodiscard]] PerFrameSyncInfo& getPrevFrameSyncInfo() noexcept;

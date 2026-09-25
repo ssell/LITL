@@ -85,6 +85,11 @@ namespace litl
         bool isCubeMap = false;
 
         /// <summary>
+        /// Does this texture reside in the global bindless texture table?
+        /// </summary>
+        bool residesInTextureTable = true;
+
+        /// <summary>
         /// Optional name for the texture.
         /// If specified, it needs to be unique (or the original resource path).
         /// Used for hotreloads and debugging.

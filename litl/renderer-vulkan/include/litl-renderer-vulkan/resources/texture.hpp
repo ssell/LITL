@@ -74,6 +74,11 @@ namespace litl::vulkan
         StringId id{};
 
         /// <summary>
+        /// The slot that this texture occupies in the global bindless texture table.
+        /// </summary>
+        uint32_t textureTableSlot{ Constants::uint32_null_index };
+
+        /// <summary>
         /// The descriptor that created the texture.
         /// </summary>
         TextureResourceDescriptor descriptor{};

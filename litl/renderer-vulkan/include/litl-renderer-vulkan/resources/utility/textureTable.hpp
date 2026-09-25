@@ -5,11 +5,11 @@
 #include <vector>
 
 #include "litl-renderer-vulkan/common.hpp"
+#include "litl-renderer/resources/texture.hpp"
 
 namespace litl::vulkan
 {
     struct RendererContext;
-    struct TextureResource;
 
     /// <summary>
     /// The global texture table used for bindless texture sampling.
@@ -18,15 +18,15 @@ namespace litl::vulkan
     {
     public:
 
-        [[nodiscard]] bool build(RendererContext& context, uint32_t capacity) noexcept;
+        [[nodiscard]] bool build(RendererContext& context) noexcept;
         void destroy() noexcept;
 
-        [[nodiscard]] uint32_t acquire(TextureResource const& texture) noexcept;
-        void release(uint32_t slot) noexcept;
-        void update(uint32_t slot, TextureResource const& texture) noexcept;
+        [[nodiscard]] uint32_t acquire(TextureResourceHandle handle) noexcept;
+        [[nodiscard]] bool release(uint32_t slot) noexcept;
+        [[nodiscard]] bool update(uint32_t slot, TextureResourceHandle handle) noexcept;
 
-        [[nodiscard]] VkDescriptorSet getSet() const noexcept;
-        [[nodiscard]] VkDescriptorSetLayout getLayout() const noexcept;
+        [[nodiscard]] VkDescriptorSet getDescriptorSet() const noexcept;
+        [[nodiscard]] VkDescriptorSetLayout getDescriptorSetLayout() const noexcept;
 
     private:
 
@@ -38,6 +38,7 @@ namespace litl::vulkan
         VkDescriptorPool m_vkDescriptorPool{ VK_NULL_HANDLE };
         VkDescriptorSetLayout m_vkDescriptorSetLayout{ VK_NULL_HANDLE };
         VkDescriptorSet m_vkDescriptorSet{ VK_NULL_HANDLE };
+        std::vector<TextureResourceHandle> m_slotOwners;
         std::vector<uint32_t> m_freeSlots;
         uint32_t m_head{ 0u };
         uint32_t m_capacity{ 0u };

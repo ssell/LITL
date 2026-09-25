@@ -97,6 +97,7 @@ namespace litl::vulkan
     bool createFrameSyncObjects(RendererContext& context) noexcept;
     bool createFrameDepthTextures(RendererContext& context) noexcept;
     bool createImageSyncObjects(RendererContext& context) noexcept;
+    bool createTextureTable(RendererContext& context) noexcept;
 
     bool build(litl::RendererContext* context) noexcept
     {
@@ -118,7 +119,8 @@ namespace litl::vulkan
             createCommandPool(*vulkanContext) &&
             createFrameSyncObjects(*vulkanContext) &&
             createFrameDepthTextures(*vulkanContext) &&
-            createImageSyncObjects(*vulkanContext);
+            createImageSyncObjects(*vulkanContext) &&
+            createTextureTable(*vulkanContext);
     }
 
     /// <summary>
@@ -814,7 +816,8 @@ namespace litl::vulkan
             .mipLevels = 1u,
             .arrayLayers = 1u,
             .sampleCount = MultisampleCount::Count1,
-            .isCubeMap = false
+            .isCubeMap = false,
+            .residesInTextureTable = false
         };
 
         for (uint32_t i = 0u; i < context.renderInfo.frame.framesInFlight; ++i)
@@ -885,6 +888,17 @@ namespace litl::vulkan
         return true;
     }
 
+    bool createTextureTable(RendererContext& context) noexcept
+    {
+        if (!context.textureTable.build(context))
+        {
+            logError("Failed to create Vulkan TextureTable");
+            return false;
+        }
+
+        return true;
+    }
+
     // -------------------------------------------------------------------------------------
     // Destruction
     // -------------------------------------------------------------------------------------
@@ -898,6 +912,7 @@ namespace litl::vulkan
     void cleanupSwapChain(RendererContext& context, VkSwapchainKHR swapchain) noexcept;
     void cleanupDevice(RendererContext& context) noexcept;
     void recreateSwapchain(RendererContext& context) noexcept;
+    void cleanupTextureTable(RendererContext& context) noexcept;
 
     void destroy(litl::RendererContext* context) noexcept
     {
@@ -906,6 +921,7 @@ namespace litl::vulkan
         vkDeviceWaitIdle(vulkanContext->device.vkDevice);
 
         cleanupPipelineCache(*vulkanContext);
+        cleanupTextureTable(*vulkanContext);
         cleanupFrameDepthTextures(*vulkanContext);
         cleanupFrameSync(*vulkanContext);
         cleanupImageSync(*vulkanContext);
@@ -1055,5 +1071,10 @@ namespace litl::vulkan
         // Swapchain image count _can_ change. So must recreate the image sync objects.
         cleanupImageSync(context);
         createImageSyncObjects(context);
+    }
+
+    void cleanupTextureTable(RendererContext& context) noexcept
+    {
+        context.textureTable.destroy();
     }
 }
