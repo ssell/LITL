@@ -1,12 +1,16 @@
 #ifndef LITL_CORE_CONTAINERS_COMMON_H__
 #define LITL_CORE_CONTAINERS_COMMON_H__
 
+#include <algorithm>
 #include <cstddef>
 #include <cstring>
 #include <optional>
 #include <ranges>
 #include <span>
 #include <type_traits>
+#include <vector>
+
+#include "litl-core/assert.hpp"
 
 namespace litl
 {
@@ -57,6 +61,35 @@ namespace litl
         std::memcpy(&obj, bytes.data() + offset, sizeof(T));
 
         return obj;
+    }
+
+    /// <summary>
+    /// Given a target vector, removes a list of sorted and unique indices from it.
+    /// This is an O(n) implementation that does at most one move per surviving element, and never moves an element more than once.
+    /// </summary>
+    template<typename T>
+    void eraseVectorIndices(std::vector<T>& targetVector, std::vector<std::size_t> const& sortedUniqueIndices) noexcept
+    {
+        if (sortedUniqueIndices.empty())
+        {
+            return;
+        }
+        
+        size_t i = 0ull;
+        size_t indexPos = 0ull;
+
+        std::erase_if(targetVector, [&](const T&) 
+        {
+            i++;
+
+            if ((indexPos < sortedUniqueIndices.size()) && ((i - 1) == sortedUniqueIndices[indexPos]))
+            {
+                ++indexPos;
+                return true;
+            }
+
+            return false;
+        });
     }
 }
 

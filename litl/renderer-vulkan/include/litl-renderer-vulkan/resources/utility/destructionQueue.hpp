@@ -1,7 +1,8 @@
 #ifndef LITL_RENDERER_VULKAN_DESTRUCTION_QUEUE_H__
 #define LITL_RENDERER_VULKAN_DESTRUCTION_QUEUE_H__
 
-#include <queue>
+#include <vector>
+
 #include "litl-renderer-vulkan/common.hpp"
 
 namespace litl::vulkan
@@ -12,25 +13,34 @@ namespace litl::vulkan
         {
             Pipeline     = 0u,
             ShaderModule = 1u,
-            Buffer       = 2u
+            Buffer       = 2u,
+            SampledImage = 3u,
             // ... add others as needed ...
         };
 
         struct DestructionBuffer
         {
-            VkBuffer vkBuffer;
-            VmaAllocation vmaAllocation;
+            VkBuffer vkBuffer{ VK_NULL_HANDLE };
+            VmaAllocation vmaAllocation{ VK_NULL_HANDLE };
+        };
+
+        struct DestructionImage
+        {
+            VkImage vkImage{ VK_NULL_HANDLE };
+            VkImageView vkImageView{ VK_NULL_HANDLE };
         };
 
         struct DestructionItem
         {
             DestructionResourceType type;
+            uint32_t frames{ 2u };
 
             union
             {
                 VkPipeline vkPipeline;
                 VkShaderModule vkShaderModule;
                 DestructionBuffer destructionBuffer;
+                DestructionImage destructionImage;
             };
         };
     public:
@@ -41,17 +51,22 @@ namespace litl::vulkan
         DestructionQueue(DestructionQueue const&) = delete;
         DestructionQueue& operator=(DestructionQueue const&) = delete;
 
-        void build(VkDevice vkDevice, VmaAllocator vmaAllocator) noexcept;
+        void build(VkDevice vkDevice, VmaAllocator vmaAllocator, uint32_t frameDelay) noexcept;
         void process() noexcept;
+
         void enqueue(VkPipeline vkPipeline) noexcept;
         void enqueue(VkShaderModule vkShaderModule) noexcept;
         void enqueue(VkBuffer vkBuffer, VmaAllocation vmaAllocation) noexcept;
+        void enqueue(VkImage vkImage, VkImageView vkImageView) noexcept;
 
     private:
 
         VkDevice m_vkDevice = VK_NULL_HANDLE;
         VmaAllocator m_vmaAllocator = VK_NULL_HANDLE;
-        std::queue<DestructionItem> m_toDestroy;
+        uint32_t m_frameDelay{ 2u };
+
+        std::vector<DestructionItem> m_toDestroy;
+        std::vector<size_t> m_toDestroyIndices;
     };
 }
 
