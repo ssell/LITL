@@ -115,12 +115,12 @@ namespace litl::vulkan
             createMemoryAllocator(*vulkanContext) &&
             createPipelineCache(*vulkanContext) &&
             createResourceManager(*vulkanContext) &&
+            createTextureTable(*vulkanContext) &&
             createSwapChain(*vulkanContext, VK_NULL_HANDLE) &&
             createCommandPool(*vulkanContext) &&
             createFrameSyncObjects(*vulkanContext) &&
             createFrameDepthTextures(*vulkanContext) &&
-            createImageSyncObjects(*vulkanContext) &&
-            createTextureTable(*vulkanContext);
+            createImageSyncObjects(*vulkanContext);
     }
 
     /// <summary>

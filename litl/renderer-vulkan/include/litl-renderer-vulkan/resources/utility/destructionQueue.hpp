@@ -1,7 +1,7 @@
 #ifndef LITL_RENDERER_VULKAN_DESTRUCTION_QUEUE_H__
 #define LITL_RENDERER_VULKAN_DESTRUCTION_QUEUE_H__
 
-#include <vector>
+#include <queue>
 
 #include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer/resources/buffer.hpp"
@@ -11,6 +11,13 @@ namespace litl::vulkan
 {
     class RendererContext;
 
+    /// <summary>
+    /// A deferred queue of resources to destroy.
+    /// 
+    /// There is one destruction queue per frame-in-flight and so no internal tracking of "frames remaining" is required
+    /// as the queue is processed at the start of the frame. So an application with 2 frames-in-flight that defers destroying
+    /// a texture on Frame 5 will have the texture destroyed on Frame 7, after all per-frame command buffers are done with it.
+    /// </summary>
     class DestructionQueue final
     {
         enum class DestructionResourceType : uint32_t
@@ -37,7 +44,6 @@ namespace litl::vulkan
         struct DestructionItem
         {
             DestructionResourceType type;
-            uint32_t frames{ 2u };
 
             union
             {
@@ -47,6 +53,7 @@ namespace litl::vulkan
                 TextureResourceHandle textureHandle;
             };
         };
+
     public:
 
         DestructionQueue() = default;
@@ -66,10 +73,7 @@ namespace litl::vulkan
     private:
 
         RendererContext* m_pContext{ nullptr };
-        uint32_t m_frameDelay{ 2u };
-
-        std::vector<DestructionItem> m_toDestroy;
-        std::vector<size_t> m_toDestroyIndices;
+        std::queue<DestructionItem> m_toDestroy;
     };
 }
 

@@ -86,8 +86,9 @@ namespace litl
 
         /// <summary>
         /// Does this texture reside in the global bindless texture table?
+        /// This is generally true for asset-loaded textures and false for runtime created textures.
         /// </summary>
-        bool residesInTextureTable = true;
+        bool residesInTextureTable = false;
 
         /// <summary>
         /// Optional name for the texture.

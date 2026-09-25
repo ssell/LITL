@@ -42,6 +42,7 @@ namespace litl::vulkan
         std::vector<uint32_t> m_freeSlots;
         uint32_t m_head{ 0u };
         uint32_t m_capacity{ 0u };
+        uint32_t m_freeCount{ 0u };
     };
 }
 
