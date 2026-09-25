@@ -68,16 +68,37 @@ namespace litl::vulkan
         }
     };
 
+    /// <summary>
+    /// The runtime array maximum capacities for each shader resource type.
+    /// </summary>
+    struct DescriptorSetRuntimeArrayCapacities
+    {
+        uint32_t accelerationStructure{ 0u };
+        uint32_t imageBuffer{ 0u };
+        uint32_t inputAttachment{ 0u };
+        uint32_t sampledImage{ 0u };
+        uint32_t sampler{ 0u };
+        uint32_t storageBuffer{ 0u };
+        uint32_t storageImage{ 0u };
+        uint32_t uniformBuffer{ 0u };
+
+        [[nodiscard]] bool operator==(DescriptorSetRuntimeArrayCapacities const&) const = default;
+        [[nodiscard]] uint32_t getFor(ShaderResourceType resourceType) const noexcept;
+        [[nodiscard]] bool hasZeroCapacity() const noexcept;
+    };
+
     struct DescriptorSetLayoutOptions
     {
         /// <summary>
-        /// Caller must clamp this against the device maxDescriptorSetUpdateAfterBindSampledImages and maxPerStageDescriptorUpdateAfterBindSampledImages.
-        /// For bindings whose arraySize is 0, the descriptorCount is used instead.
+        /// The array capacities for each shader resource type that is used by the descriptor set.
         /// </summary>
-        uint32_t runtimeArrayCapacity{ 0u };
+        DescriptorSetRuntimeArrayCapacities capacities{ 0u };
 
         /// <summary>
         /// Descriptor Set index 3 only. Mutally exclusive with runtime arrays.
+        /// 
+        /// Note that we key on "pushness" rather than individual set indices because sets 0, 1, 2 all result in the same layout.
+        /// Whether or not it is a push descriptor is what really changes the creation call.
         /// </summary>
         bool isPushDescriptor{ false };
 
@@ -199,7 +220,7 @@ namespace std
             size_t h = std::hash<litl::vulkan::DescriptorSetLayoutDesc>{}(key.desc);
 
             // Layout has padding (thanks to the bool+uint32 shape of DescriptorSetLayoutOptions) so hash and combine the individual elements and dont hash the entire object.
-            litl::hashCombine64(h, static_cast<uint64_t>(key.options.runtimeArrayCapacity));
+            litl::hashCombine64(h, litl::hashPOD(key.options.capacities));
             litl::hashCombine64(h, static_cast<uint64_t>(key.options.isPushDescriptor ? 1u : 0u));
 
             return h;

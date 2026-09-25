@@ -6,11 +6,11 @@
 
 namespace litl::vulkan
 {
-    void PipelineLayoutCache::build(VkDevice vkDevice, uint32_t textureTableCapacity) noexcept
+    void PipelineLayoutCache::build(VkDevice vkDevice, DescriptorSetRuntimeArrayCapacities arrayCapacities) noexcept
     {
         LITL_FATAL_ASSERT_MSG(m_vkDevice == VK_NULL_HANDLE, "Attempting to call PipelineLayoutCache::build twice");
         m_vkDevice = vkDevice;
-        m_textureTableCapacity = textureTableCapacity;
+        m_arrayCapacities = arrayCapacities;
     }
 
     void PipelineLayoutCache::destroy() noexcept
@@ -56,7 +56,7 @@ namespace litl::vulkan
             bindings.push_back(VkDescriptorSetLayoutBinding{
                 .binding = binding.binding,
                 .descriptorType = toVkDescriptorType(binding.type),
-                .descriptorCount = (isRuntimeArray ? options.runtimeArrayCapacity : binding.arraySize),
+                .descriptorCount = (isRuntimeArray ? options.capacities.getFor(binding.type) : binding.arraySize),
                 .stageFlags = toVkShaderStageFlags(binding.stages),
                 .pImmutableSamplers = nullptr
             });
@@ -73,7 +73,7 @@ namespace litl::vulkan
         }
 
         LITL_ASSERT_MSG(!(options.isPushDescriptor && hasRuntimeArray), "Descriptor set layout cannot be both push-descriptor and update-after-bind", VK_NULL_HANDLE);      // A push-descriptor set layout may not contain UPDATE_AFTER_BIND bindings.
-        LITL_ASSERT_MSG(!hasRuntimeArray || (options.runtimeArrayCapacity > 0u), "Runtime descriptor array requested with a capacity of zero", VK_NULL_HANDLE);             // A runtime array with capacity 0 would silently become a reserved/skipped binding.
+        LITL_ASSERT_MSG(!hasRuntimeArray || !options.capacities.hasZeroCapacity(), "Runtime descriptor array(s) requested with a capacity of zero", VK_NULL_HANDLE);             // A runtime array with capacity 0 would silently become a reserved/skipped binding.
 
         const VkDescriptorSetLayoutBindingFlagsCreateInfo flagsInfo{
             .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
@@ -122,7 +122,7 @@ namespace litl::vulkan
         const DescriptorSetLayoutCacheKey cacheKey{
             .desc = descriptorSetLayoutDesc,
             .options = DescriptorSetLayoutOptions{
-                .runtimeArrayCapacity = m_textureTableCapacity,
+                .capacities = m_arrayCapacities,
                 .isPushDescriptor = (static_cast<DescriptorSetIndex>(setIndex) == DescriptorSetIndex::PerObject)
             }
         };

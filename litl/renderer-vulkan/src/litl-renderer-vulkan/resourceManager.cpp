@@ -30,7 +30,18 @@ namespace litl::vulkan
     void ResourceManager::build(RendererContext& context) noexcept
     {
         m_pContext = &context;
-        m_pipelineLayoutCache.build(context.device.vkDevice, context.device.textureTableCapacity);
+
+        m_pipelineLayoutCache.build(context.device.vkDevice, DescriptorSetRuntimeArrayCapacities{
+            .accelerationStructure = context.device.getUabRuntimeArrayCapacityFor(ShaderResourceType::AccelerationStructure),
+            .imageBuffer = context.device.getUabRuntimeArrayCapacityFor(ShaderResourceType::ImageBuffer),
+            .inputAttachment = context.device.getUabRuntimeArrayCapacityFor(ShaderResourceType::InputAttachment),
+            .sampledImage = context.device.textureTableCapacity,
+            .sampler = context.device.getUabRuntimeArrayCapacityFor(ShaderResourceType::Sampler),
+            .storageBuffer = context.device.getUabRuntimeArrayCapacityFor(ShaderResourceType::StorageBuffer),
+            .storageImage = context.device.getUabRuntimeArrayCapacityFor(ShaderResourceType::StorageImage),
+            .uniformBuffer = context.device.getUabRuntimeArrayCapacityFor(ShaderResourceType::UniformBuffer)
+        });
+
         m_samplerCache.build(context.device.vkDevice);
     }
 

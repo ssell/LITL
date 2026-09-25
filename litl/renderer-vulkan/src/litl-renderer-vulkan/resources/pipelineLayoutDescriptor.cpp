@@ -321,4 +321,43 @@ namespace litl::vulkan
 
         return result;
     }
+
+    uint32_t DescriptorSetRuntimeArrayCapacities::getFor(ShaderResourceType type) const noexcept
+    {
+        switch (type)
+        {
+        case ShaderResourceType::Sampler:
+            return sampler;
+
+        case ShaderResourceType::UniformBuffer:
+            return uniformBuffer;
+
+        case ShaderResourceType::StorageBuffer:
+            return storageBuffer;
+
+        case ShaderResourceType::ImageBuffer:
+            return imageBuffer;
+
+        case ShaderResourceType::SampledImage:
+            return sampledImage;
+
+        case ShaderResourceType::StorageImage:
+            return storageImage;
+
+        case ShaderResourceType::InputAttachment:
+            return inputAttachment;
+
+        case ShaderResourceType::AccelerationStructure:
+            return accelerationStructure;
+
+        case ShaderResourceType::Unknown:
+        default:
+            return 0u;
+        }
+    }
+
+    bool DescriptorSetRuntimeArrayCapacities::hasZeroCapacity() const noexcept
+    {
+        return (sampler + uniformBuffer + storageBuffer + imageBuffer + sampledImage + storageImage + inputAttachment) == 0u;
+    }
 }
