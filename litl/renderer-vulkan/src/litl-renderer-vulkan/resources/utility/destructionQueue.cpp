@@ -1,4 +1,5 @@
 #include "litl-renderer-vulkan/resources/utility/destructionQueue.hpp"
+#include "litl-renderer-vulkan/rendererContext.hpp"
 #include "litl-core/assert.hpp"
 #include "litl-core/containers/common.hpp"
 #include "litl-core/logging/logging.hpp"
@@ -6,16 +7,15 @@
 
 namespace litl::vulkan
 {
-    void DestructionQueue::build(VkDevice vkDevice, VmaAllocator vmaAllocator, uint32_t frameDelay) noexcept
+    void DestructionQueue::build(RendererContext& rendererContext) noexcept
     {
-        m_vkDevice = vkDevice;
-        m_vmaAllocator = vmaAllocator;
-        m_frameDelay = litl::max(frameDelay, 1u);
+        m_pContext = &rendererContext;
+        m_frameDelay = m_pContext->renderInfo.frame.framesInFlight;
     }
 
     void DestructionQueue::process() noexcept
     {
-        LITL_ASSERT_MSG((m_vkDevice != VK_NULL_HANDLE), "DestructionQueue::process invoked while m_vkDevice is NULL", );
+        LITL_ASSERT_MSG((m_pContext != nullptr), "DestructionQueue::process invoked while RendererContext is NULL", );
 
         m_toDestroyIndices.reserve(m_toDestroy.size());
         m_toDestroyIndices.clear();
@@ -35,20 +35,19 @@ namespace litl::vulkan
                 switch (item.type)
                 {
                 case DestructionResourceType::Pipeline:
-                    vkDestroyPipeline(m_vkDevice, item.vkPipeline, nullptr);
+                    vkDestroyPipeline(m_pContext->device.vkDevice, item.vkPipeline, nullptr);
                     break;
 
                 case DestructionResourceType::ShaderModule:
-                    vkDestroyShaderModule(m_vkDevice, item.vkShaderModule, nullptr);
+                    vkDestroyShaderModule(m_pContext->device.vkDevice, item.vkShaderModule, nullptr);
                     break;
 
                 case DestructionResourceType::Buffer:
-                    vmaDestroyBuffer(m_vmaAllocator, item.destructionBuffer.vkBuffer, item.destructionBuffer.vmaAllocation);
+                    m_pContext->resources.destroyBuffer(item.bufferHandle);
                     break;
 
                 case DestructionResourceType::SampledImage:
-                    vkDestroyImageView(m_vkDevice, item.destructionImage.vkImageView, nullptr);
-                    vkDestroyImage(m_vkDevice, item.destructionImage.vkImage, nullptr);
+                    m_pContext->resources.destroyTexture(item.textureHandle);
                     break;
 
                 default:
@@ -79,27 +78,21 @@ namespace litl::vulkan
         });
     }
 
-    void DestructionQueue::enqueue(VkBuffer vkBuffer, VmaAllocation vmaAllocation) noexcept
+    void DestructionQueue::enqueue(BufferHandle bufferHandle) noexcept
     {
         m_toDestroy.push_back(DestructionItem{
             .type = DestructionResourceType::Buffer,
             .frames = m_frameDelay,
-            .destructionBuffer = DestructionBuffer {
-                .vkBuffer = vkBuffer,
-                .vmaAllocation = vmaAllocation
-            }
+            .bufferHandle = bufferHandle
         });
     }
 
-    void DestructionQueue::enqueue(VkImage vkImage, VkImageView vkImageView) noexcept
+    void DestructionQueue::enqueue(TextureResourceHandle textureHandle) noexcept
     {
         m_toDestroy.push_back(DestructionItem{
             .type = DestructionResourceType::SampledImage,
             .frames = m_frameDelay,
-            .destructionImage = DestructionImage {
-                .vkImage = vkImage,
-                .vkImageView = vkImageView
-            }
+            .textureHandle = textureHandle
         });
     }
 }

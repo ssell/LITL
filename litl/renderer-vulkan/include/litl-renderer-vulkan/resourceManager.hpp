@@ -63,6 +63,7 @@ namespace litl::vulkan
         [[nodiscard]] TextureResourceHandle createTexture(TextureResourceDescriptor const& descriptor) noexcept;
         [[nodiscard]] TextureResource* getTexture(TextureResourceHandle handle) noexcept;
         void destroyTexture(TextureResourceHandle handle) noexcept;
+        void deferDestroyTexture(TextureResourceHandle handle) noexcept;
         void onTextureReload(TextureResourceDescriptor const& descriptor) noexcept;
 
         [[nodiscard]] VkDescriptorSetLayout getOrCreateSetLayout(DescriptorSetLayoutDesc const& descriptorSetLayoutDesc, uint32_t setIndex) noexcept;

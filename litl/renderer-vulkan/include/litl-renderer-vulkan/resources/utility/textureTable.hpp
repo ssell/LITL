@@ -34,7 +34,7 @@ namespace litl::vulkan
         [[nodiscard]] bool buildDescriptorSetLayout() noexcept;
         [[nodiscard]] bool buildDescriptorSet() noexcept;
 
-        VkDevice m_vkDevice{ VK_NULL_HANDLE };
+        RendererContext* m_pContext{ nullptr };
         VkDescriptorPool m_vkDescriptorPool{ VK_NULL_HANDLE };
         VkDescriptorSetLayout m_vkDescriptorSetLayout{ VK_NULL_HANDLE };
         VkDescriptorSet m_vkDescriptorSet{ VK_NULL_HANDLE };

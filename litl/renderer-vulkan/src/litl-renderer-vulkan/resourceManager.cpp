@@ -266,8 +266,7 @@ namespace litl::vulkan
 
             if (resource->vkBuffer != VK_NULL_HANDLE)
             {
-                auto* destructionQueue = m_pContext->getCurrFrameSyncInfo().destructionQueue.get();
-                destructionQueue->enqueue(resource->vkBuffer, resource->allocation);
+                m_pContext->getCurrFrameSyncInfo().destructionQueue->enqueue(handle);
             }
         }
     }
@@ -1311,6 +1310,16 @@ namespace litl::vulkan
             m_textureMap.erase(resource->id);
             m_texturePool.destroy(handle);
         }
+    }
+
+    void ResourceManager::deferDestroyTexture(TextureResourceHandle handle) noexcept
+    {
+        if (!handle.isValid())
+        {
+            return;
+        }
+
+        m_pContext->getCurrFrameSyncInfo().destructionQueue->enqueue(handle);
     }
 
     void ResourceManager::onTextureReload(TextureResourceDescriptor const& descriptor) noexcept

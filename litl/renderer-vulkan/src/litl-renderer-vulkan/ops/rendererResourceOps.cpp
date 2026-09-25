@@ -206,7 +206,7 @@ namespace litl::vulkan
     void destroyTexture(litl::RendererContext* context, TextureResourceHandle handle) noexcept
     {
         auto* vulkanContext = unwrap(context);
-        vulkanContext->resources.destroyTexture(handle);
+        vulkanContext->resources.deferDestroyTexture(handle);
     }
 
     RendererResult mapTexture(litl::RendererContext* context, TextureResourceHandle textureHandle, MappedTexture& mapped) noexcept

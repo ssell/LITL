@@ -765,7 +765,7 @@ namespace litl::vulkan
 
             // Destruction Queue
             frameSyncInfo.destructionQueue = std::make_unique<DestructionQueue>();
-            frameSyncInfo.destructionQueue->build(context.device.vkDevice, context.device.vmaAllocator, context.renderInfo.frame.framesInFlight);
+            frameSyncInfo.destructionQueue->build(context);
 
             // Per-Frame Staging Arenas
             frameSyncInfo.stagingBufferArena = std::make_unique<StagingBuffer>();
@@ -951,7 +951,7 @@ namespace litl::vulkan
     {
         for (auto& frameInfo : context.renderInfo.frameSyncInfo)
         {
-            context.resources.destroyTexture(frameInfo.depthTexture);
+            context.resources.deferDestroyTexture(frameInfo.depthTexture);
             frameInfo.depthTexture = {};
         }
     }

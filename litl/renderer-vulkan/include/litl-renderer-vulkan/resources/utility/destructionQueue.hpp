@@ -4,9 +4,13 @@
 #include <vector>
 
 #include "litl-renderer-vulkan/common.hpp"
+#include "litl-renderer/resources/buffer.hpp"
+#include "litl-renderer/resources/texture.hpp"
 
 namespace litl::vulkan
 {
+    class RendererContext;
+
     class DestructionQueue final
     {
         enum class DestructionResourceType : uint32_t
@@ -39,8 +43,8 @@ namespace litl::vulkan
             {
                 VkPipeline vkPipeline;
                 VkShaderModule vkShaderModule;
-                DestructionBuffer destructionBuffer;
-                DestructionImage destructionImage;
+                BufferHandle bufferHandle;
+                TextureResourceHandle textureHandle;
             };
         };
     public:
@@ -51,18 +55,17 @@ namespace litl::vulkan
         DestructionQueue(DestructionQueue const&) = delete;
         DestructionQueue& operator=(DestructionQueue const&) = delete;
 
-        void build(VkDevice vkDevice, VmaAllocator vmaAllocator, uint32_t frameDelay) noexcept;
+        void build(RendererContext& rendererContext) noexcept;
         void process() noexcept;
 
         void enqueue(VkPipeline vkPipeline) noexcept;
         void enqueue(VkShaderModule vkShaderModule) noexcept;
-        void enqueue(VkBuffer vkBuffer, VmaAllocation vmaAllocation) noexcept;
-        void enqueue(VkImage vkImage, VkImageView vkImageView) noexcept;
+        void enqueue(BufferHandle bufferHandle) noexcept;
+        void enqueue(TextureResourceHandle textureHandle) noexcept;
 
     private:
 
-        VkDevice m_vkDevice = VK_NULL_HANDLE;
-        VmaAllocator m_vmaAllocator = VK_NULL_HANDLE;
+        RendererContext* m_pContext{ nullptr };
         uint32_t m_frameDelay{ 2u };
 
         std::vector<DestructionItem> m_toDestroy;

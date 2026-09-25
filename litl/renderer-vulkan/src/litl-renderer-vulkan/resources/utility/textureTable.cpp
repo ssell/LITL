@@ -9,8 +9,8 @@ namespace litl::vulkan
 {
     bool TextureTable::build(RendererContext& context) noexcept
     {
-        m_vkDevice = context.device.vkDevice;
-        m_capacity = context.device.textureTableCapacity;
+        m_pContext = &context;
+        m_capacity = m_pContext->device.textureTableCapacity;
         m_slotOwners.resize(m_capacity, {});
 
         if (!buildDescriptorPool() ||
@@ -46,7 +46,7 @@ namespace litl::vulkan
         };
 
         m_vkDescriptorPool = VK_NULL_HANDLE;
-        const VkResult result = vkCreateDescriptorPool(m_vkDevice, &createDescriptorPoolInfo, nullptr, &m_vkDescriptorPool);
+        const VkResult result = vkCreateDescriptorPool(m_pContext->device.vkDevice, &createDescriptorPoolInfo, nullptr, &m_vkDescriptorPool);
 
         if (result != VK_SUCCESS)
         {
@@ -91,7 +91,7 @@ namespace litl::vulkan
         };
 
         m_vkDescriptorSetLayout = VK_NULL_HANDLE;
-        const VkResult result = vkCreateDescriptorSetLayout(m_vkDevice, &createInfo, nullptr, &m_vkDescriptorSetLayout);
+        const VkResult result = vkCreateDescriptorSetLayout(m_pContext->device.vkDevice, &createInfo, nullptr, &m_vkDescriptorSetLayout);
 
         if (result != VK_SUCCESS)
         {
@@ -112,7 +112,7 @@ namespace litl::vulkan
         };
 
         m_vkDescriptorSet = VK_NULL_HANDLE;
-        const VkResult result = vkAllocateDescriptorSets(m_vkDevice, &createInfo, &m_vkDescriptorSet);
+        const VkResult result = vkAllocateDescriptorSets(m_pContext->device.vkDevice, &createInfo, &m_vkDescriptorSet);
 
         if (result != VK_SUCCESS)
         {
@@ -125,21 +125,24 @@ namespace litl::vulkan
 
     void TextureTable::destroy() noexcept
     {
-        if (m_vkDevice != VK_NULL_HANDLE)
+        if (m_pContext == nullptr)
+        {
+            return;
+        }
+
+        if (m_pContext->device.vkDevice != VK_NULL_HANDLE)
         {
             if (m_vkDescriptorSetLayout != VK_NULL_HANDLE)
             {
-                vkDestroyDescriptorSetLayout(m_vkDevice, m_vkDescriptorSetLayout, nullptr);
+                vkDestroyDescriptorSetLayout(m_pContext->device.vkDevice, m_vkDescriptorSetLayout, nullptr);
                 m_vkDescriptorSetLayout = VK_NULL_HANDLE;
             }
 
             if (m_vkDescriptorPool != VK_NULL_HANDLE)
             {
-                vkDestroyDescriptorPool(m_vkDevice, m_vkDescriptorPool, nullptr);
+                vkDestroyDescriptorPool(m_pContext->device.vkDevice, m_vkDescriptorPool, nullptr);
                 m_vkDescriptorPool = VK_NULL_HANDLE;
             }
-
-            m_vkDevice = VK_NULL_HANDLE;
         }
     }
 
@@ -174,6 +177,29 @@ namespace litl::vulkan
 
         m_capacity--;
         m_slotOwners[slot] = handle;
+
+        TextureResource* texture = m_pContext->resources.getTexture(handle);
+
+        if (texture != nullptr)
+        {
+            const VkDescriptorImageInfo imageInfo{
+                .sampler = VK_NULL_HANDLE,              // We have a separate sampler array and not a combined texture+sampler array.
+                .imageView = (texture->vkSampledImageView != VK_NULL_HANDLE ? texture->vkSampledImageView : texture->vkImageView),
+                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            };
+
+            const VkWriteDescriptorSet write{
+                .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                .dstSet = m_vkDescriptorSet,
+                .dstBinding = 0u,
+                .dstArrayElement = slot,
+                .descriptorCount = 1u,
+                .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+                .pImageInfo = &imageInfo
+            };
+
+            vkUpdateDescriptorSets(m_pContext->device.vkDevice, 1u, &write, 0u, nullptr);
+        }
 
         return slot;
     }
