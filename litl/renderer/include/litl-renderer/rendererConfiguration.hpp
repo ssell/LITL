@@ -61,6 +61,11 @@ namespace litl
         uint32_t stagingTextureFixedSize = 32u * Constants::bytes_to_megabyte;
 
         /// <summary>
+        /// The number of texture slots in the global texture pool at descriptor set 0.
+        /// </summary>
+        uint32_t globalTexturePoolCapacity = 16384u;
+
+        /// <summary>
         /// 
         /// </summary>
         RendererDescriptorSetConfiguration descriptorSet{};

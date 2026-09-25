@@ -67,6 +67,7 @@ namespace litl::vulkan
             }
             else
             {
+                // flags binding count must be 0 or match bindings count exactly. We push zero for ordinary bindings to ensure that it always aligns.
                 bindingFlags.push_back(VkDescriptorBindingFlags{ 0 });
             }
         }

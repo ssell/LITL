@@ -16,6 +16,7 @@
 #include "litl-renderer-vulkan/renderer.hpp"
 #include "litl-renderer-vulkan/queueFamily.hpp"
 #include "litl-renderer-vulkan/swapChainSupport.hpp"
+#include "litl-renderer-vulkan/requiredFeatures.hpp"
 
 namespace litl
 {
@@ -332,14 +333,12 @@ namespace litl::vulkan
     /// </summary>
     /// <param name="device"></param>
     /// <returns></returns>
-    bool isPhysicalDeviceSuitable(VkPhysicalDevice device, uint32_t& maxDescriptorSetImages, uint32_t& maxPerStageImages) noexcept
+    [[nodiscard]] bool isPhysicalDeviceSuitable(VkPhysicalDevice device, uint32_t& maxDescriptorSetImages, uint32_t& maxPerStageImages) noexcept
     {
         // Don't need this for these demos, but in reality see: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/03_Physical_devices_and_queue_families.html#_base_device_suitability_checks
         VkPhysicalDeviceProperties deviceProperties;
-        VkPhysicalDeviceFeatures deviceFeatures;
 
         vkGetPhysicalDeviceProperties(device, &deviceProperties);
-        vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
         if ((deviceProperties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) && (deviceProperties.deviceType != VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU))
         {
@@ -359,13 +358,11 @@ namespace litl::vulkan
             return false;
         }
 
-        if ((deviceFeatures.geometryShader == VK_FALSE) ||
-            (deviceFeatures.tessellationShader == VK_FALSE))
+        if (!doesPhysicalDeviceSupportRequiredFeatures(device))
         {
-            logWarning("Candidate Vulkan Physical device does not provide proper shader support.");
+            logWarning("Candidate Vulkan Physical device does not support one or more required features.");
             return false;
         }
-
 
         VkPhysicalDeviceDescriptorIndexingProperties indexingProperties{
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_PROPERTIES,
@@ -477,7 +474,7 @@ namespace litl::vulkan
             }
         }
 
-        context.device.textureTableCapacity = litl::max(context.device.maxDescriptorSetUpdateAfterBindSampledImages, context.device.maxPerStageDescriptorUpdateAfterBindSampledImages);
+        context.device.textureTableCapacity = litl::min(context.config.globalTexturePoolCapacity, litl::min(context.device.maxDescriptorSetUpdateAfterBindSampledImages, context.device.maxPerStageDescriptorUpdateAfterBindSampledImages));
 
         if (context.device.vkPhysicalDevice != VK_NULL_HANDLE)
         {
@@ -517,55 +514,11 @@ namespace litl::vulkan
             });
         }
 
-        // query for Vulkan advanced feature set
-        VkPhysicalDeviceExtendedDynamicStateFeaturesEXT vulkanDynamicStateFeatures {
-            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT,
-            .pNext = nullptr,
-            .extendedDynamicState = VK_TRUE                                 // Allows us to specify pipeline states during command buffer recording instead of having to bake Pipeline State Objects (PSOs)
-        };
-
-        VkPhysicalDeviceVulkan14Features vulkan14Features{
-            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_FEATURES,
-            .pNext = &vulkanDynamicStateFeatures,
-            .pushDescriptor = VK_TRUE
-        };
-
-        VkPhysicalDeviceVulkan13Features vulkan13Features {
-            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
-            .pNext = &vulkan14Features,
-            .synchronization2 = VK_TRUE,                                    // Replaces the legacy Synchronization API with a cleaner easier-to-use design.
-            .dynamicRendering = VK_TRUE,                                    // Removes the need to create explicit VkRenderPass and VkFramebuffer objects allowing us to begin and end rendering directly on image views.
-        };
-
-        VkPhysicalDeviceVulkan12Features vulkan12Features {
-            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
-            .pNext = &vulkan13Features,
-            .shaderSampledImageArrayNonUniformIndexing = VK_TRUE,           // Allows non-uniform indexing (per-vertex or per-pixel, not per-warp) of sampled image arrays. Needed for our bindless rendering and using a single large texture array.
-            .descriptorBindingSampledImageUpdateAfterBind = VK_TRUE,        // Allows us to stream/update descriptors while the command buffer runs (edit our single large texture array) as long as indexes being samples are untouched.
-            .descriptorBindingPartiallyBound = VK_TRUE,                     // Allows us to use descriptor bindings where some array elements or descriptors are not valid or populated, as long as those are never accessed during execution.
-            .runtimeDescriptorArray = VK_TRUE,                              // Enables SPIR-V capability of the same name, which allows us to have unbounded/runtime-sized descriptor arrays.
-            .bufferDeviceAddress = VK_TRUE                                  // Allows us to access buffer memory directly via 64-bit virtual memory pointers and removes the need for traditional descriptor sets. 
-        };
-
-        VkPhysicalDeviceVulkan11Features vulkan11Features {
-            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES,
-            .pNext = &vulkan12Features,
-            .shaderDrawParameters = VK_TRUE                                 // Enables accessto built-in GLSL shader variables like gl_BaseVertex, gl_BaseInstance, and gl_DrawID.
-        };
-
-        VkPhysicalDeviceFeatures2 physicalDeviceFeatures {
-            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
-            .pNext = &vulkan11Features,
-            .features = VkPhysicalDeviceFeatures {
-                .geometryShader = VK_TRUE,                                  // Enables geometry shader support.
-                .tessellationShader = VK_TRUE,                              // Enables tessellation shader suport.
-                .shaderInt64 = VK_TRUE                                      // Add support for 64-bit signed and unsigned integers. Needed for BDA addresses.
-            }
-        };
+        const auto requiredFeaturesChain = createRequiredFeaturesChain();
 
         const VkDeviceCreateInfo deviceCreateInfo {
             .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-            .pNext = &physicalDeviceFeatures,
+            .pNext = &requiredFeaturesChain.physicalDeviceFeatures,
             .queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size()),
             .pQueueCreateInfos = queueCreateInfos.data(),
             .enabledExtensionCount = static_cast<uint32_t>(RequiredDeviceExtensions.size()),
