@@ -366,7 +366,7 @@ namespace litl::vulkan
 
         VkPhysicalDeviceDescriptorIndexingProperties indexingProperties{
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_PROPERTIES,
-            .pNext = VK_NULL_HANDLE
+            .pNext = nullptr
         };
 
         VkPhysicalDeviceProperties2 physicalProperties2{
@@ -474,12 +474,13 @@ namespace litl::vulkan
             }
         }
 
-        context.device.textureTableCapacity = litl::min(context.config.globalTexturePoolCapacity, litl::min(context.device.maxDescriptorSetUpdateAfterBindSampledImages, context.device.maxPerStageDescriptorUpdateAfterBindSampledImages));
-
         if (context.device.vkPhysicalDevice != VK_NULL_HANDLE)
         {
             logInfo("Selected Vulkan Physical Device");
+            
             context.device.vkDepthStencilFormat = findSupportedDepthStencilFormat(context.device.vkPhysicalDevice).value();     // confirmed present by isPhysicalDeviceSuitable
+            context.device.textureTableCapacity = litl::min(context.config.globalTexturePoolCapacity, litl::min(context.device.maxDescriptorSetUpdateAfterBindSampledImages, context.device.maxPerStageDescriptorUpdateAfterBindSampledImages));
+            
             return true;
         }
         else

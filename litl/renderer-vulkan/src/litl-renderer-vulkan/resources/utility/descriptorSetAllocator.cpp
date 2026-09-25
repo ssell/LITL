@@ -104,6 +104,7 @@ namespace litl::vulkan
     {
         const VkDescriptorPoolCreateInfo info{
             .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+            .flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT,       // This flag is permissive and simply allows the pool to be able to create Update After Bind (UAB) sets and does not forbid ordinary non-UAB layouts. Note that this may no longer be true if we relax our Vulkan 1.4 (primary 1.2+) requirement.
             .maxSets = m_setsPerPool,
             .poolSizeCount = static_cast<uint32_t>(m_sizesPerPool.size()),
             .pPoolSizes = m_sizesPerPool.data()

@@ -71,15 +71,32 @@ namespace litl::vulkan
     struct DescriptorSetLayoutOptions
     {
         /// <summary>
-        /// Descriptor Set index 3 only. Mutally exclusive with runtime arrays.
-        /// </summary>
-        bool isPushDescriptor{ false };
-
-        /// <summary>
         /// Caller must clamp this against the device maxDescriptorSetUpdateAfterBindSampledImages and maxPerStageDescriptorUpdateAfterBindSampledImages.
         /// For bindings whose arraySize is 0, the descriptorCount is used instead.
         /// </summary>
         uint32_t runtimeArrayCapacity{ 0u };
+
+        /// <summary>
+        /// Descriptor Set index 3 only. Mutally exclusive with runtime arrays.
+        /// </summary>
+        bool isPushDescriptor{ false };
+
+        [[nodiscard]] bool operator==(DescriptorSetLayoutOptions const&) const = default;
+    };
+
+    /// <summary>
+    /// Identity of a creted VkDescriptorSetLayout: what the shader asked for (desc) plus the creation policy applied to it (options).
+    /// Both participate because both change the resulting object.
+    /// </summary>
+    struct DescriptorSetLayoutCacheKey
+    {
+        DescriptorSetLayoutDesc desc{};
+        DescriptorSetLayoutOptions options{};
+
+        [[nodiscard]] bool operator==(DescriptorSetLayoutCacheKey const& other) const noexcept
+        {
+            return (options == other.options) && (desc == other.desc);
+        }
     };
 
     /// <summary>
@@ -154,7 +171,7 @@ namespace std
     template<>
     struct hash<litl::vulkan::DescriptorSetLayoutBindingDesc>
     {
-        std::size_t operator()(litl::vulkan::DescriptorSetLayoutBindingDesc const& binding) const noexcept
+        size_t operator()(litl::vulkan::DescriptorSetLayoutBindingDesc const& binding) const noexcept
         {
             return litl::hashPOD(binding);
         }
@@ -163,12 +180,27 @@ namespace std
     template<>
     struct hash<litl::vulkan::DescriptorSetLayoutDesc>
     {
-        std::size_t operator()(litl::vulkan::DescriptorSetLayoutDesc const& layout) const noexcept
+        size_t operator()(litl::vulkan::DescriptorSetLayoutDesc const& layout) const noexcept
         {
-            std::size_t h = 0;
+            std::size_t h = 0ll;
 
             litl::hashCombine64(h, layout.bindings.size());
             for (auto const& binding : layout.bindings) { litl::hashCombine64(h, std::hash<litl::vulkan::DescriptorSetLayoutBindingDesc>{}(binding)); }
+
+            return h;
+        }
+    };
+
+    template<>
+    struct hash<litl::vulkan::DescriptorSetLayoutCacheKey>
+    {
+        size_t operator()(litl::vulkan::DescriptorSetLayoutCacheKey const& key) const noexcept
+        {
+            size_t h = std::hash<litl::vulkan::DescriptorSetLayoutDesc>{}(key.desc);
+
+            // Layout has padding (thanks to the bool+uint32 shape of DescriptorSetLayoutOptions) so hash and combine the individual elements and dont hash the entire object.
+            litl::hashCombine64(h, static_cast<uint64_t>(key.options.runtimeArrayCapacity));
+            litl::hashCombine64(h, static_cast<uint64_t>(key.options.isPushDescriptor ? 1u : 0u));
 
             return h;
         }

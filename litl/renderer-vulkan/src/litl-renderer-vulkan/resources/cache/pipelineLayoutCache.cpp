@@ -118,27 +118,27 @@ namespace litl::vulkan
     {
         LITL_ASSERT_MSG(m_vkDevice != VK_NULL_HANDLE, "Attempting to use Vulkan PipelineLayoutCache without providing a VkDevice", VK_NULL_HANDLE);
 
-        // Get
-        auto find = m_descriptorSetLayoutMap.find(descriptorSetLayoutDesc);
+        // Resolve the cache key once and then use for both the lookup and creation
+        const DescriptorSetLayoutCacheKey cacheKey{
+            .desc = descriptorSetLayoutDesc,
+            .options = DescriptorSetLayoutOptions{
+                .runtimeArrayCapacity = m_textureTableCapacity,
+                .isPushDescriptor = (static_cast<DescriptorSetIndex>(setIndex) == DescriptorSetIndex::PerObject)
+            }
+        };
+
+        const auto find = m_descriptorSetLayoutMap.find(cacheKey);
 
         if (find != m_descriptorSetLayoutMap.end())
         {
             return find->second;
         }
 
-        // Create
-        auto vkDescriptorSetLayout = createVkDescriptorSetLayout(
-            m_vkDevice, 
-            descriptorSetLayoutDesc, 
-            DescriptorSetLayoutOptions{
-                .isPushDescriptor = (static_cast<DescriptorSetIndex>(setIndex) == DescriptorSetIndex::PerObject),
-                .runtimeArrayCapacity = m_textureTableCapacity
-            }
-        );
+        const auto vkDescriptorSetLayout = createVkDescriptorSetLayout(m_vkDevice, cacheKey.desc, cacheKey.options);
 
         if (vkDescriptorSetLayout != VK_NULL_HANDLE)
         {
-            m_descriptorSetLayoutMap[descriptorSetLayoutDesc] = vkDescriptorSetLayout;
+            m_descriptorSetLayoutMap[cacheKey] = vkDescriptorSetLayout;
         }
 
         return vkDescriptorSetLayout;

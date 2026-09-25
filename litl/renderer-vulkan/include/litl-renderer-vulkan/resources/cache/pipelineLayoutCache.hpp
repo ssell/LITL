@@ -75,7 +75,7 @@ namespace litl::vulkan
         VkDevice m_vkDevice{ VK_NULL_HANDLE };
         uint32_t m_textureTableCapacity{ 0u };
 
-        std::unordered_map<DescriptorSetLayoutDesc, VkDescriptorSetLayout> m_descriptorSetLayoutMap;
+        std::unordered_map<DescriptorSetLayoutCacheKey, VkDescriptorSetLayout> m_descriptorSetLayoutMap;
         std::unordered_map<PipelineLayoutCacheKey, VkPipelineLayout> m_pipelineLayoutMap;
     };
 }
