@@ -160,7 +160,17 @@ namespace litl::vulkan
             maxSet = std::max(maxSet, mergedResource.set);
         }
 
-        descriptor.setLayouts.resize(resourceBindings.empty() ? 0u : maxSet + 1u);
+        /**
+         * This was previously:
+         * 
+         *     descriptor.setLayouts.resize(resourceBindings.empty() ? 0u : maxSet + 1u);
+         * 
+         * However, a shader with no explicit resource bindings would get a setLayoutCount of 0.
+         * So there would be no set 0 to bind global resources, such as the texture table.
+         * Unused sets become empty DescriptorSetLayoutDesc objects which our cache turns into
+         * valid zero-binding layouts, which are empty but valid.
+         */
+        descriptor.setLayouts.resize(static_cast<uint32_t>(DescriptorSetIndex::DescriptorSetMaxCount));
 
         for (auto const& mergedResource : resourceBindings)
         {

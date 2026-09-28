@@ -6,11 +6,12 @@
 
 namespace litl::vulkan
 {
-    void PipelineLayoutCache::build(VkDevice vkDevice, DescriptorSetRuntimeArrayCapacities arrayCapacities) noexcept
+    void PipelineLayoutCache::build(VkDevice vkDevice, DescriptorSetRuntimeArrayCapacities arrayCapacities, VkDescriptorSetLayout globalTextureSetLayout) noexcept
     {
         LITL_FATAL_ASSERT_MSG(m_vkDevice == VK_NULL_HANDLE, "Attempting to call PipelineLayoutCache::build twice");
         m_vkDevice = vkDevice;
         m_arrayCapacities = arrayCapacities;
+        m_globalTextureSetLayout = globalTextureSetLayout;
     }
 
     void PipelineLayoutCache::destroy() noexcept
@@ -183,6 +184,30 @@ namespace litl::vulkan
         return vkPipelineLayout;
     }
 
+    namespace
+    {
+        [[nodiscard]] bool validatePerFrameSetDeclaration(DescriptorSetLayoutDesc const& reflectedSet0) noexcept
+        {
+            // Make sure the reflected PerFrame set matches our expectation for a runtime/dynamic sampled texture array.
+            if (!reflectedSet0.bindings.empty())
+            {
+                if (reflectedSet0.bindings[0].type != ShaderResourceType::SampledImage)
+                {
+                    logError("Descriptor Set Layout at index 0 (PerFrame) has unexpected type ", getShadeResourceTypeName(reflectedSet0.bindings[0].type), ". Expected type of ", getShadeResourceTypeName(ShaderResourceType::SampledImage));
+                    return false;
+                }
+
+                if (reflectedSet0.bindings[0].arraySize == 0)
+                {
+                    logError("Descriptor Set Layout at index 0 (PerFrame) as unexpected arraySize of ", reflectedSet0.bindings[0].arraySize, ". Expected arraySize of 0 (runtime bindless array).");
+                    return false;
+                }
+            }
+
+            return true;
+        }
+    }
+
     VkPipelineLayout PipelineLayoutCache::getOrCreatePipelineLayout(PipelineLayoutDescriptor const& pipelineLayoutDesc) noexcept
     {
         LITL_ASSERT_MSG(m_vkDevice != VK_NULL_HANDLE, "Attempting to use Vulkan PipelineLayoutCache without providing a VkDevice", VK_NULL_HANDLE);
@@ -192,10 +217,21 @@ namespace litl::vulkan
         cacheKey.pushConstants = pipelineLayoutDesc.pushConstants;
         cacheKey.setLayoutHandles.reserve(pipelineLayoutDesc.setLayouts.size());
 
-        LITL_ASSERT_MSG((pipelineLayoutDesc.setLayouts.size() <= static_cast<size_t>(DescriptorSetIndex::DescriptorSetMaxCount)), "Pipeline Layout Descriptor Set count exceeds expected maximum count.", VK_NULL_HANDLE);
+        LITL_ASSERT_MSG((pipelineLayoutDesc.setLayouts.size() == static_cast<size_t>(DescriptorSetIndex::DescriptorSetMaxCount)), "Pipeline Layout Descriptor Set count exceeds expected maximum count.", VK_NULL_HANDLE);
 
         for (uint32_t i = 0u; i < pipelineLayoutDesc.setLayouts.size(); ++i)
         {
+            if (i == static_cast<uint32_t>(DescriptorSetIndex::PerFrame))                   // Named PerFrame, but for this Vulkan 1.4+ renderer this is actually the global texture table since per-frame data is supplied through BDA.
+            {
+                if (!validatePerFrameSetDeclaration(pipelineLayoutDesc.setLayouts[i]))
+                {
+                    return VK_NULL_HANDLE;
+                }
+
+                cacheKey.setLayoutHandles.push_back(m_globalTextureSetLayout);
+                continue;
+            }
+
             auto& setLayout = pipelineLayoutDesc.setLayouts[i];
             cacheKey.setLayoutHandles.push_back(getOrCreateSetLayout(setLayout, i));
         }

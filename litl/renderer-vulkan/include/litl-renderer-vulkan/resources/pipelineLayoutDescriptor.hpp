@@ -38,7 +38,7 @@ namespace litl::vulkan
         ShaderResourceType type;
 
         /// <summary>
-        /// 0 = runtime bindless array, 1 = not array, >=2 = array of declared size
+        /// 0 = runtime (dynamic) bindless array, 1 = not array, >=2 = array of declared size
         /// </summary>
         uint32_t arraySize;
 

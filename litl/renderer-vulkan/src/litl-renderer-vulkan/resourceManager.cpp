@@ -1,4 +1,5 @@
 #include <array>
+#include <format>
 
 #include "litl-core/hash.hpp"
 #include "litl-core/id.hpp"
@@ -40,7 +41,7 @@ namespace litl::vulkan
             .storageBuffer = context.device.getUabRuntimeArrayCapacityFor(ShaderResourceType::StorageBuffer),
             .storageImage = context.device.getUabRuntimeArrayCapacityFor(ShaderResourceType::StorageImage),
             .uniformBuffer = context.device.getUabRuntimeArrayCapacityFor(ShaderResourceType::UniformBuffer)
-        });
+        }, context.textureTable.getDescriptorSetLayout());
 
         m_samplerCache.build(context.device.vkDevice);
     }
@@ -633,7 +634,7 @@ namespace litl::vulkan
 
         if (mergePipelineLayoutResult != MergeShaderReflectionResult::Success)
         {
-            logError("Failed to create Vulkan Graphics Pipeline due to failed pipeline layout merger with result ", static_cast<uint32_t>(mergePipelineLayoutResult));
+            logError("Failed to create Vulkan Graphics Pipeline for due to failed pipeline layout merger with result ", static_cast<uint32_t>(mergePipelineLayoutResult));
             return {};
         }
 

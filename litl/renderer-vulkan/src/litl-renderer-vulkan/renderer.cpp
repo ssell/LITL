@@ -349,6 +349,12 @@ namespace litl::vulkan
             return false;
         }
 
+        if (deviceProperties.limits.maxBoundDescriptorSets < static_cast<uint32_t>(DescriptorSetIndex::DescriptorSetMaxCount))
+        {
+            logWarning("Candidate Vulkan Physical device supports ", deviceProperties.limits.maxBoundDescriptorSets, " while we require ", static_cast<uint32_t>(DescriptorSetIndex::DescriptorSetMaxCount));
+            return false;
+        }
+
         if (!checkPhysicalDeviceExtensionSupport(device))
         {
             logWarning("Candidate Vulkan Physical device is missing extension support.");

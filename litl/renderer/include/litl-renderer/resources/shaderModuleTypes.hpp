@@ -1,7 +1,10 @@
 #ifndef LITL_RENDERER_RESOURCES_SHADER_MODULE_TYPES_H__
 #define LITL_RENDERER_RESOURCES_SHADER_MODULE_TYPES_H__
 
+#include <array>
 #include <cstdint>
+#include <string_view>
+
 #include "litl-core/enumBitFlags.hpp"
 
 namespace litl
@@ -39,8 +42,28 @@ namespace litl
         SampledImage = 5,
         StorageImage = 6,
         InputAttachment = 7,
-        AccelerationStructure = 8
+        AccelerationStructure = 8,
+
+        ShaderResourceTypeCount
     };
+
+    [[nodiscard]] constexpr std::string_view getShadeResourceTypeName(ShaderResourceType type) noexcept
+    {
+        switch (type)
+        {
+            case ShaderResourceType::Sampler: return "Sampler";
+            case ShaderResourceType::UniformBuffer: return "UniformBuffer";
+            case ShaderResourceType::StorageBuffer: return "StorageBuffer";
+            case ShaderResourceType::ImageBuffer: return "ImageBuffer";
+            case ShaderResourceType::SampledImage: return "SampledImage";
+            case ShaderResourceType::StorageImage: return "StorageImage";
+            case ShaderResourceType::InputAttachment: return "InputAttachment";
+            case ShaderResourceType::AccelerationStructure: return "AccelerationStructure";
+            case ShaderResourceType::Unknown:
+            default:
+                return "Unknown";
+        }
+    }
 
     /// <summary>
     /// Scalar types that can be bound to shader stages.
@@ -133,12 +156,17 @@ namespace litl
 
     /// <summary>
     /// What each set within a DescriptorSetLayout correlates to.
+    /// Each incrementing index also directly correlates to set volatility both in theory and in practice.
+    /// For example in Vulkan, if set 1 (PerPass) is disturbed then all following sets (PerMaterial, PerObject) also have to be rebound.
     /// </summary>
     enum class DescriptorSetIndex : uint32_t
     {
         /// <summary>
         /// Descriptor set that is consistent the entire frame.
         /// Example: (view matrix, projection matrix, time, camera position, frame uniforms)
+        /// 
+        /// Note that in our mainline Vulkan 1.4+ render path that the traditional PerFrame data
+        /// is provided through BDA and that set 0 actually maps to the global texture table.
         /// </summary>
         PerFrame = 0,
 
