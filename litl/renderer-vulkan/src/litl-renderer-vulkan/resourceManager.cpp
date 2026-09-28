@@ -28,22 +28,24 @@ namespace litl::vulkan
             }
         }
     }
-    void ResourceManager::build(RendererContext& context) noexcept
+    void ResourceManager::buildEarly(RendererContext& context) noexcept
     {
         m_pContext = &context;
-
-        m_pipelineLayoutCache.build(context.device.vkDevice, DescriptorSetRuntimeArrayCapacities{
-            .accelerationStructure = context.device.getUabRuntimeArrayCapacityFor(ShaderResourceType::AccelerationStructure),
-            .imageBuffer = context.device.getUabRuntimeArrayCapacityFor(ShaderResourceType::ImageBuffer),
-            .inputAttachment = context.device.getUabRuntimeArrayCapacityFor(ShaderResourceType::InputAttachment),
-            .sampledImage = context.device.textureTableCapacity,
-            .sampler = context.device.getUabRuntimeArrayCapacityFor(ShaderResourceType::Sampler),
-            .storageBuffer = context.device.getUabRuntimeArrayCapacityFor(ShaderResourceType::StorageBuffer),
-            .storageImage = context.device.getUabRuntimeArrayCapacityFor(ShaderResourceType::StorageImage),
-            .uniformBuffer = context.device.getUabRuntimeArrayCapacityFor(ShaderResourceType::UniformBuffer)
-        }, context.textureTable.getDescriptorSetLayout());
-
         m_samplerCache.build(context.device.vkDevice);
+    }
+
+    void ResourceManager::buildLate() noexcept
+    {
+        m_pipelineLayoutCache.build(m_pContext->device.vkDevice, DescriptorSetRuntimeArrayCapacities{
+            .accelerationStructure = m_pContext->device.getUabRuntimeArrayCapacityFor(ShaderResourceType::AccelerationStructure),
+            .imageBuffer = m_pContext->device.getUabRuntimeArrayCapacityFor(ShaderResourceType::ImageBuffer),
+            .inputAttachment = m_pContext->device.getUabRuntimeArrayCapacityFor(ShaderResourceType::InputAttachment),
+            .sampledImage = m_pContext->device.textureTableCapacity,
+            .sampler = m_pContext->device.getUabRuntimeArrayCapacityFor(ShaderResourceType::Sampler),
+            .storageBuffer = m_pContext->device.getUabRuntimeArrayCapacityFor(ShaderResourceType::StorageBuffer),
+            .storageImage = m_pContext->device.getUabRuntimeArrayCapacityFor(ShaderResourceType::StorageImage),
+            .uniformBuffer = m_pContext->device.getUabRuntimeArrayCapacityFor(ShaderResourceType::UniformBuffer)
+        }, m_pContext->textureTable.getDescriptorSetLayout());
     }
 
     void ResourceManager::destroy() noexcept

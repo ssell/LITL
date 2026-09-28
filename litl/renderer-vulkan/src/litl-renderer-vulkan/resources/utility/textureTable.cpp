@@ -32,10 +32,14 @@ namespace litl::vulkan
     bool TextureTable::buildDescriptorPool() noexcept
     {
         // TODO add a VK_DESCRIPTOR_TYPE_SAMPLER entry sized to the fixed sample-array count of 8 or 16 when samplers are added.
-        const std::array<VkDescriptorPoolSize, 1> descriptorPoolSizes = {
+        const std::array<VkDescriptorPoolSize, 2> descriptorPoolSizes = {
             VkDescriptorPoolSize{
                 .type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
                 .descriptorCount = m_capacity
+            },
+            VkDescriptorPoolSize{
+                .type = VK_DESCRIPTOR_TYPE_SAMPLER,
+                .descriptorCount = static_cast<uint32_t>(SamplerPredefines::PredefinedSamplerCount)
             }
         };
 
@@ -61,18 +65,26 @@ namespace litl::vulkan
 
     bool TextureTable::buildDescriptorSetLayout() noexcept
     {
-        const std::array<VkDescriptorSetLayoutBinding, 1> bindings = {
+        const std::array<VkDescriptorSetLayoutBinding, 2> bindings = {
             VkDescriptorSetLayoutBinding {
                 .binding = 0u,
                 .descriptorType = VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
                 .descriptorCount = m_capacity,
                 .stageFlags = VK_SHADER_STAGE_ALL,
                 .pImmutableSamplers = nullptr
+            },
+            VkDescriptorSetLayoutBinding {
+                .binding = 1u,
+                .descriptorType = VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLER,
+                .descriptorCount = static_cast<uint32_t>(m_pContext->samplerArray.getVkSamplers().size()),
+                .stageFlags = VK_SHADER_STAGE_ALL,
+                .pImmutableSamplers = m_pContext->samplerArray.getVkSamplers().data()
             }
         };
 
-        const std::array< VkDescriptorBindingFlags, 1> bindingFlags = {
-            VkDescriptorBindingFlags { VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT }
+        const std::array< VkDescriptorBindingFlags, 2> bindingFlags = {
+            VkDescriptorBindingFlags { VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT },
+            VkDescriptorBindingFlags { 0 }
         };
 
         LITL_ASSERT_MSG(bindings.size() == bindingFlags.size(), "Mismatch between bindings count and binding flags count in Vulkan Texture Table", false);

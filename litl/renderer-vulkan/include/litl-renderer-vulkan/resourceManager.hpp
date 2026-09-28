@@ -29,7 +29,19 @@ namespace litl::vulkan
         ResourceManager(ResourceManager const&) = delete;
         ResourceManager& operator=(ResourceManager const&) = delete;
 
-        void build(RendererContext& context) noexcept;
+        /// <summary>
+        /// First step of the build process that has no external dependencies outside the Vulkan device. 
+        /// Tracks the context and creates the Sampler cache.
+        /// </summary>
+        void buildEarly(RendererContext& context) noexcept;
+
+        /// <summary>
+        /// Secondary step of the build process that has external dependencies on other systems in place.
+        /// Creates the PipelineLayoutCache which is dependent on the global TextureTable descriptor set layout
+        /// which in turn is dependent on the predefined Samplers.
+        /// </summary>
+        void buildLate() noexcept;
+
         void destroy() noexcept;
 
         [[nodiscard]] BufferHandle createBuffer(BufferDescriptor const& descriptor) noexcept;

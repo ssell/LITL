@@ -188,6 +188,10 @@ namespace litl
         /// </summary>
         PerObject = 3,
 
+        /// <summary>
+        /// Note that we need a really good reason to increase this. While Vulkan can support more,
+        /// other potential backends such as WebGPU have a hard limit of 4.
+        /// </summary>
         DescriptorSetMaxCount = 4
     };
 }

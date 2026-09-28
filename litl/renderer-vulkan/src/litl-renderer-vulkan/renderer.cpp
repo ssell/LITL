@@ -91,14 +91,12 @@ namespace litl::vulkan
     bool createLogicalDevice(RendererContext& context) noexcept;
     bool createMemoryAllocator(RendererContext& context) noexcept;
     bool createPipelineCache(RendererContext& context) noexcept;
-    bool createResourceManager(RendererContext& context) noexcept;
+    bool createGlobalResources(RendererContext& context) noexcept;
     bool createSwapChain(RendererContext& context, VkSwapchainKHR oldSwapchain) noexcept;
     bool createCommandPool(RendererContext& context) noexcept;
     bool createFrameSyncObjects(RendererContext& context) noexcept;
     bool createFrameDepthTextures(RendererContext& context) noexcept;
     bool createImageSyncObjects(RendererContext& context) noexcept;
-    bool createTextureTable(RendererContext& context) noexcept;
-    bool createSamplerArray(RendererContext& context) noexcept;
 
     bool build(litl::RendererContext* context) noexcept
     {
@@ -115,9 +113,7 @@ namespace litl::vulkan
             createLogicalDevice(*vulkanContext) &&
             createMemoryAllocator(*vulkanContext) &&
             createPipelineCache(*vulkanContext) &&
-            createTextureTable(*vulkanContext) &&                    // Must come before ResourceManager so its descriptor set layout is available
-            createResourceManager(*vulkanContext) && 
-            createSamplerArray(*vulkanContext) &&
+            createGlobalResources(*vulkanContext) &&
             createSwapChain(*vulkanContext, VK_NULL_HANDLE) &&
             createCommandPool(*vulkanContext) &&
             createFrameSyncObjects(*vulkanContext) &&
@@ -890,30 +886,26 @@ namespace litl::vulkan
         return true;
     }
 
-    bool createResourceManager(RendererContext& context) noexcept
+    bool createGlobalResources(RendererContext& context) noexcept
     {
-        context.resources.build(context);
-        return true;
-    }
+        // The ordering below is paramount and can not change.
+        // PipelineLayoutCache (buildLate) depends on TextureTable, TextureTable depends on SamplerArray, SamplerArray depends on SamplerCache (buildEarly).
 
-    bool createTextureTable(RendererContext& context) noexcept
-    {
+        context.resources.buildEarly(context);
+
+        if (!context.samplerArray.build(context))
+        {
+            logError("Failed to create Vulkan global sampler array.");
+            return false;
+        }
+
         if (!context.textureTable.build(context))
         {
             logError("Failed to create Vulkan global texture table.");
             return false;
         }
 
-        return true;
-    }
-
-    bool createSamplerArray(RendererContext& context) noexcept
-    {
-        if (!context.samplerArray.build(context))
-        {
-            logError("Failed to create Vulkan global sampler array.");
-            return false;
-        }
+        context.resources.buildLate();
 
         return true;
     }
@@ -941,8 +933,8 @@ namespace litl::vulkan
         vkDeviceWaitIdle(vulkanContext->device.vkDevice);
 
         cleanupPipelineCache(*vulkanContext);
-        cleanupSamplerArray(*vulkanContext);
         cleanupTextureTable(*vulkanContext);
+        cleanupSamplerArray(*vulkanContext);
         cleanupFrameDepthTextures(*vulkanContext);
         cleanupFrameSync(*vulkanContext);
         cleanupImageSync(*vulkanContext);

@@ -14,7 +14,7 @@ namespace litl::vulkan
 
     /// <summary>
     /// A fixed array of predefined texture samplers.
-    /// This is bound at binding 0 (PerFrame) and set 1 for our standard Vulkan 1.4+ rendering path.
+    /// This is bound at set 0 (PerFrame) and binding 1 for our standard Vulkan 1.4+ rendering path.
     /// </summary>
     class SamplerArray final
     {
@@ -24,10 +24,11 @@ namespace litl::vulkan
         void destroy() noexcept;
 
         [[nodiscard]] std::span<SamplerHandle const> getSamplerHandles() const noexcept;
-
+        [[nodiscard]] std::span<VkSampler const> getVkSamplers() const noexcept;
     private:
 
         std::array<SamplerHandle, static_cast<uint32_t>(SamplerPredefines::PredefinedSamplerCount)> m_samplerHandles;
+        std::array<VkSampler, static_cast<uint32_t>(SamplerPredefines::PredefinedSamplerCount)> m_vkSamplers;
     };
 }
 

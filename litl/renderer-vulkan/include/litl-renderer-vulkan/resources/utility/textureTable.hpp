@@ -13,7 +13,7 @@ namespace litl::vulkan
 
     /// <summary>
     /// The global texture table used for bindless texture sampling.
-    /// This is bound at binding 0 (PerFrame) and set 0 for our standard Vulkan 1.4+ rendering path.
+    /// This is bound at set 0 (PerFrame) and binding 0 for our standard Vulkan 1.4+ rendering path.
     /// </summary>
     class TextureTable final
     {
