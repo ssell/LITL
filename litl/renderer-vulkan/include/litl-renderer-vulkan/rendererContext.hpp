@@ -122,6 +122,11 @@ namespace litl
             uint32_t textureTableCapacity = 0u;
 
             /// <summary>
+            /// Max sampler anisotropy value.
+            /// </summary>
+            float maxAnisotropy = 16.0f;
+
+            /// <summary>
             /// Returns the maximum runtime array capacity that can be used for UAB (Update After Binding) descriptor sets.
             /// </summary>
             /// <param name="type"></param>

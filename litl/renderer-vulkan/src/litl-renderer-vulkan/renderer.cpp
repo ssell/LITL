@@ -334,7 +334,7 @@ namespace litl::vulkan
     /// </summary>
     /// <param name="device"></param>
     /// <returns></returns>
-    [[nodiscard]] bool isPhysicalDeviceSuitable(VkPhysicalDevice device, VkPhysicalDeviceDescriptorIndexingProperties& vkIndexingProperties) noexcept
+    [[nodiscard]] bool isPhysicalDeviceSuitable(VkPhysicalDevice device, VkPhysicalDeviceDescriptorIndexingProperties& vkIndexingProperties, float& maxAnisotropy) noexcept
     {
         // Don't need this for these demos, but in reality see: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/03_Physical_devices_and_queue_families.html#_base_device_suitability_checks
         VkPhysicalDeviceProperties deviceProperties;
@@ -370,6 +370,8 @@ namespace litl::vulkan
             logWarning("Candidate Vulkan Physical device does not support one or more required features.");
             return false;
         }
+
+        maxAnisotropy = deviceProperties.limits.maxSamplerAnisotropy;
 
         vkIndexingProperties = VkPhysicalDeviceDescriptorIndexingProperties{
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_PROPERTIES,
@@ -466,7 +468,7 @@ namespace litl::vulkan
         {
             auto queueFamilies = findQueueFamilies(device, context.device.vkSurface);
 
-            if (isPhysicalDeviceSuitable(device, context.device.vkIndexingProperties) && queueFamilies.hasAll())
+            if (isPhysicalDeviceSuitable(device, context.device.vkIndexingProperties, context.device.maxAnisotropy) && queueFamilies.hasAll())
             {
                 auto swapChainSupport = SwapChainSupport::querySwapChainSupport(device, context.device.vkSurface);
 

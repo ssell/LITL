@@ -822,7 +822,7 @@ namespace litl::vulkan
             .addressModeW = toVkSamplerAddressMode(descriptor.addressW),
             .mipLodBias = descriptor.lodBias,
             .anisotropyEnable = (descriptor.anisotropy == SamplerAnisotropy::Off ? VK_FALSE : VK_TRUE),
-            .maxAnisotropy = toMaxAnisotropy(descriptor.anisotropy),
+            .maxAnisotropy = litl::min(m_pContext->device.maxAnisotropy, toMaxAnisotropy(descriptor.anisotropy)),
             .compareEnable = (descriptor.compareOp.has_value() ? VK_TRUE : VK_FALSE),
             .compareOp = (descriptor.compareOp.has_value() ? toVkCompareOp(descriptor.compareOp.value()) : VK_COMPARE_OP_NEVER),
             .minLod = descriptor.minLod,
