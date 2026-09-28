@@ -98,6 +98,7 @@ namespace litl::vulkan
     bool createFrameDepthTextures(RendererContext& context) noexcept;
     bool createImageSyncObjects(RendererContext& context) noexcept;
     bool createTextureTable(RendererContext& context) noexcept;
+    bool createSamplerArray(RendererContext& context) noexcept;
 
     bool build(litl::RendererContext* context) noexcept
     {
@@ -114,8 +115,9 @@ namespace litl::vulkan
             createLogicalDevice(*vulkanContext) &&
             createMemoryAllocator(*vulkanContext) &&
             createPipelineCache(*vulkanContext) &&
-            createTextureTable(*vulkanContext) &&                       // Must come before ResourceManager so its descriptor set layout is available
-            createResourceManager(*vulkanContext) &&
+            createTextureTable(*vulkanContext) &&                    // Must come before ResourceManager so its descriptor set layout is available
+            createResourceManager(*vulkanContext) && 
+            createSamplerArray(*vulkanContext) &&
             createSwapChain(*vulkanContext, VK_NULL_HANDLE) &&
             createCommandPool(*vulkanContext) &&
             createFrameSyncObjects(*vulkanContext) &&
@@ -898,7 +900,18 @@ namespace litl::vulkan
     {
         if (!context.textureTable.build(context))
         {
-            logError("Failed to create Vulkan TextureTable");
+            logError("Failed to create Vulkan global texture table.");
+            return false;
+        }
+
+        return true;
+    }
+
+    bool createSamplerArray(RendererContext& context) noexcept
+    {
+        if (!context.samplerArray.build(context))
+        {
+            logError("Failed to create Vulkan global sampler array.");
             return false;
         }
 
@@ -919,6 +932,7 @@ namespace litl::vulkan
     void cleanupDevice(RendererContext& context) noexcept;
     void recreateSwapchain(RendererContext& context) noexcept;
     void cleanupTextureTable(RendererContext& context) noexcept;
+    void cleanupSamplerArray(RendererContext& context) noexcept;
 
     void destroy(litl::RendererContext* context) noexcept
     {
@@ -927,6 +941,7 @@ namespace litl::vulkan
         vkDeviceWaitIdle(vulkanContext->device.vkDevice);
 
         cleanupPipelineCache(*vulkanContext);
+        cleanupSamplerArray(*vulkanContext);
         cleanupTextureTable(*vulkanContext);
         cleanupFrameDepthTextures(*vulkanContext);
         cleanupFrameSync(*vulkanContext);
@@ -1082,5 +1097,10 @@ namespace litl::vulkan
     void cleanupTextureTable(RendererContext& context) noexcept
     {
         context.textureTable.destroy();
+    }
+
+    void cleanupSamplerArray(RendererContext& context) noexcept
+    {
+        context.samplerArray.destroy();
     }
 }

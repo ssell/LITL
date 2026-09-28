@@ -13,6 +13,7 @@
 #include "litl-renderer-vulkan/resources/utility/descriptorSetAllocator.hpp"
 #include "litl-renderer-vulkan/resources/utility/destructionQueue.hpp"
 #include "litl-renderer-vulkan/resources/utility/textureTable.hpp"
+#include "litl-renderer-vulkan/resources/utility/samplerArray.hpp"
 
 namespace litl
 {
@@ -265,6 +266,7 @@ namespace litl
             DrawInfo drawInfo{};
             ResourceManager resources{};
             TextureTable textureTable{};
+            SamplerArray samplerArray{};
 
             [[nodiscard]] PerFrameSyncInfo& getCurrFrameSyncInfo() noexcept;
             [[nodiscard]] PerFrameSyncInfo& getPrevFrameSyncInfo() noexcept;
