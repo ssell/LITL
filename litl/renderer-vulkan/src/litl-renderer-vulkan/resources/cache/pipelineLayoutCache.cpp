@@ -158,6 +158,7 @@ namespace litl::vulkan
         // This is to avoid potential silent bugs where a pipeline is bound with an incompatible push constant layout than what is currently bound and
         // the user forgets to bind the new push constant layout. So all we have to do instead is enforce that no push constant structure exceedes this size.
 
+        // Note that if this ever changes, it will likely invalidate the bind pipeline created by the global texture table.
         const VkPushConstantRange pushConstantRange {
             .stageFlags = VK_SHADER_STAGE_ALL,
             .offset = 0u,

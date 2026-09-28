@@ -27,17 +27,20 @@ namespace litl::vulkan
 
         [[nodiscard]] VkDescriptorSet getDescriptorSet() const noexcept;
         [[nodiscard]] VkDescriptorSetLayout getDescriptorSetLayout() const noexcept;
+        [[nodiscard]] VkPipelineLayout getPipelineLayout() const noexcept;
 
     private:
 
         [[nodiscard]] bool buildDescriptorPool() noexcept;
         [[nodiscard]] bool buildDescriptorSetLayout() noexcept;
         [[nodiscard]] bool buildDescriptorSet() noexcept;
+        [[nodiscard]] bool buildPipelineLayout() noexcept;
 
         RendererContext* m_pContext{ nullptr };
         VkDescriptorPool m_vkDescriptorPool{ VK_NULL_HANDLE };
         VkDescriptorSetLayout m_vkDescriptorSetLayout{ VK_NULL_HANDLE };
         VkDescriptorSet m_vkDescriptorSet{ VK_NULL_HANDLE };
+        VkPipelineLayout m_vkPipelineLayout{ VK_NULL_HANDLE };
         std::vector<TextureResourceHandle> m_slotOwners;
         std::vector<uint32_t> m_freeSlots;
         uint32_t m_head{ 0u };

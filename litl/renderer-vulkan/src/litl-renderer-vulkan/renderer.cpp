@@ -114,8 +114,8 @@ namespace litl::vulkan
             createLogicalDevice(*vulkanContext) &&
             createMemoryAllocator(*vulkanContext) &&
             createPipelineCache(*vulkanContext) &&
+            createTextureTable(*vulkanContext) &&                       // Must come before ResourceManager so its descriptor set layout is available
             createResourceManager(*vulkanContext) &&
-            createTextureTable(*vulkanContext) &&
             createSwapChain(*vulkanContext, VK_NULL_HANDLE) &&
             createCommandPool(*vulkanContext) &&
             createFrameSyncObjects(*vulkanContext) &&

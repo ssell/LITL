@@ -16,7 +16,8 @@ namespace litl::vulkan
 
         if (!buildDescriptorPool() ||
             !buildDescriptorSetLayout() ||
-            !buildDescriptorSet())
+            !buildDescriptorSet() ||
+            !buildPipelineLayout())
         {
             return false;
         }
@@ -124,6 +125,34 @@ namespace litl::vulkan
         return true;
     }
 
+    bool TextureTable::buildPipelineLayout() noexcept
+    {
+        // Note that this needs to stay in sync with the push constant range defined in the PipelineLayoutCache
+        const VkPushConstantRange pushConstantRange{
+            .stageFlags = VK_SHADER_STAGE_ALL,
+            .offset = 0u,
+            .size = 128u
+        };
+
+        const VkPipelineLayoutCreateInfo createInfo{
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+            .setLayoutCount = 1u,
+            .pSetLayouts = &m_vkDescriptorSetLayout,
+            .pushConstantRangeCount = 1u,
+            .pPushConstantRanges = &pushConstantRange
+        };
+
+        const VkResult result = vkCreatePipelineLayout(m_pContext->device.vkDevice, &createInfo, nullptr, &m_vkPipelineLayout);
+
+        if (result != VK_SUCCESS)
+        {
+            logError("Failed to create VkPipelineLayout for Vulkan TextureTable with result ", result);
+            return false;
+        }
+
+        return true;
+    }
+
     void TextureTable::destroy() noexcept
     {
         m_slotOwners.clear();
@@ -149,6 +178,12 @@ namespace litl::vulkan
             {
                 vkDestroyDescriptorPool(m_pContext->device.vkDevice, m_vkDescriptorPool, nullptr);
                 m_vkDescriptorPool = VK_NULL_HANDLE;
+            }
+
+            if (m_vkPipelineLayout != VK_NULL_HANDLE)
+            {
+                vkDestroyPipelineLayout(m_pContext->device.vkDevice, m_vkPipelineLayout, nullptr);
+                m_vkPipelineLayout = VK_NULL_HANDLE;
             }
         }
     }
@@ -270,5 +305,10 @@ namespace litl::vulkan
     VkDescriptorSetLayout TextureTable::getDescriptorSetLayout() const noexcept
     {
         return m_vkDescriptorSetLayout;
+    }
+
+    VkPipelineLayout TextureTable::getPipelineLayout() const noexcept
+    {
+        return m_vkPipelineLayout;
     }
 }

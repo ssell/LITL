@@ -248,7 +248,7 @@ namespace litl::vulkan
         }
 
         // ---------------------------------------------------------------------------------
-        // Begin Render
+        // vkCmdBeginRendering
         // ---------------------------------------------------------------------------------
 
         VkRenderingInfo renderingInfo{
@@ -278,6 +278,24 @@ namespace litl::vulkan
         }
 
         vkCmdBeginRendering(commandBuffer->vkCommandBuffer, &renderingInfo);
+
+        // ---------------------------------------------------------------------------------
+        // Bind the Global Texture Table
+        // ---------------------------------------------------------------------------------
+
+        const VkDescriptorSet textureTableDescriptorSet = vulkanContext->textureTable.getDescriptorSet();
+
+        vkCmdBindDescriptorSets(
+            commandBuffer->vkCommandBuffer,
+            VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+            vulkanContext->textureTable.getPipelineLayout(),
+            static_cast<uint32_t>(DescriptorSetIndex::PerFrame),
+            1u,
+            &textureTableDescriptorSet,
+            0,
+            nullptr);
+
+        // todo update for Compute pipeline if/when compute shaders ever need to sample from the global texture table
     }
 
     void cmdEndRender(litl::RendererContext* context, CommandBufferHandle handle) noexcept
