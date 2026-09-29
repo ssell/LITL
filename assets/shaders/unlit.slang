@@ -17,6 +17,30 @@
 BindPerFrame(0) Texture2D<float4> g_Textures[];
 BindPerFrame(1) SamplerState g_Samplers[16];
 
+// These correlate to TextureTableReservedIndices in litl-renderer
+#define DefaultTextureIndex_Pink          0
+#define DefaultTextureIndex_White         1
+#define DefaultTextureIndex_Black         2
+#define DefaultTextureIndex_TangentNormal 3
+
+// These correlate to SamplerPredefines in litl-renderer
+#define DefaultSamplerIndex_LinearRepeat           0
+#define DefaultSamplerIndex_LinearClamp            1
+#define DefaultSamplerIndex_LinearRepeatAniso      2
+#define DefaultSamplerIndex_LinearClampAniso       3
+#define DefaultSamplerIndex_NearestRepeat          4
+#define DefaultSamplerIndex_NearestClamp           5
+#define DefaultSamplerIndex_NearestClampNoMip      6
+#define DefaultSamplerIndex_LinearClampNoMip       7
+#define DefaultSamplerIndex_ShadowCompare          8
+#define DefaultSamplerIndex_LinearClampBorderWhite 9
+#define DefaultSamplerIndex_LinearClampBorderBlack 10
+#define DefaultSamplerIndex_LinearMirrorRepeat     11
+#define DefaultSamplerIndex_Reserved12             12
+#define DefaultSamplerIndex_Reserved13             13
+#define DefaultSamplerIndex_Reserved14             14
+#define DefaultSamplerIndex_Reserved15             15
+
 void UnpackPackedTextureSlotSamplerIndex(in uint packedTextureSlotSamplerIndex, out uint textureIndex, out uint samplerIndex)
 {
     // The texture slot occupies the lower 24-bits and the sampler index is in the upper 8-bits.

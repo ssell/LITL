@@ -171,39 +171,47 @@ namespace litl
             renderer->build();
         }
 
-        void createDefaultTextures() noexcept
+        void createDefaultTexture(std::string_view name, color value, uint32_t textureSlot) noexcept
         {
-            const TextureDescriptor pinkTextureDesc{
-                .objectInfo = ObjectDescriptor { .name = "LITL_INTERNAL_Texture_Pink" },
+            const TextureDescriptor textureDesc{
+                .objectInfo = ObjectDescriptor { .name = std::string(name) },
                 .textureInfo = TextureResourceDescriptor {
                     .width = 1u,
                     .height = 1u,
                     .format = DataFormat::RGBA32_SFloat,
                     .residesInTextureTable = true,
-                    .textureTableIndexOverride = static_cast<uint32_t>(TextureTableReservedIndices::Pink)
+                    .textureTableIndexOverride = textureSlot
                 },
                 .persistOnCpu = false
             };
 
-            const TextureHandle pinkTextureHandle = objectPool->createTexture(pinkTextureDesc);
-            Texture* pinkTexture = objectPool->getTexture(pinkTextureHandle);
+            const TextureHandle textureHandle = objectPool->createTexture(textureDesc);
+            Texture* texture = objectPool->getTexture(textureHandle);
 
-            if (pinkTexture != nullptr)
+            if (texture != nullptr)
             {
-                constexpr std::array<color, 1> pixels = { colors::Pink };
+                const std::array<color, 1> pixels = { value };
 
-                if (pinkTexture->setPixelBytes(as_byte_span(pixels)))
+                if (texture->setPixelBytes(as_byte_span(pixels)))
                 {
-                    if (!pinkTexture->apply(std::nullopt))
+                    if (!texture->apply(std::nullopt))
                     {
-                        logError("Failed to apply pixel bytes for default texture 'LITL_INTERNAL_Texture_Pink'");
+                        logError("Failed to apply pixel bytes for default texture '", name, "'");
                     }
                 }
                 else
                 {
-                    logError("Failed to set pixel bytes for default texture 'LITL_INTERNAL_Texture_Pink'");
+                    logError("Failed to set pixel bytes for default texture '", name, "'");
                 }
             }
+        }
+
+        void createDefaultTextures() noexcept
+        {
+            createDefaultTexture("LITL_INTERNAL_Texture_Pink", colors::Pink, static_cast<uint32_t>(TextureTableReservedIndices::Pink));
+            createDefaultTexture("LITL_INTERNAL_Texture_White", colors::White, static_cast<uint32_t>(TextureTableReservedIndices::White));
+            createDefaultTexture("LITL_INTERNAL_Texture_Black", colors::Black, static_cast<uint32_t>(TextureTableReservedIndices::Black));
+            createDefaultTexture("LITL_INTERNAL_Texture_TangentNormal", colors::Gray, static_cast<uint32_t>(TextureTableReservedIndices::TangentNormal));
         }
 
         void trackDirtyBuffer(GpuBufferHandle handle) noexcept
