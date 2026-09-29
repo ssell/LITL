@@ -189,18 +189,41 @@ namespace litl::vulkan
     {
         [[nodiscard]] bool validatePerFrameSetDeclaration(DescriptorSetLayoutDesc const& reflectedSet0) noexcept
         {
-            // Make sure the reflected PerFrame set matches our expectation for a runtime/dynamic sampled texture array.
-            if (!reflectedSet0.bindings.empty())
+            // If nothing bound, then pass through.
+            if (reflectedSet0.bindings.empty())
+            {
+                return true;
+            }
+
+            // If something is bound it must match our global texture/sampler bindings.
+            // Expected binding 0 is the texture table.
+            if (reflectedSet0.bindings.size() >= 1)
             {
                 if (reflectedSet0.bindings[0].type != ShaderResourceType::SampledImage)
                 {
-                    logError("Descriptor Set Layout at index 0 (PerFrame) has unexpected type ", getShadeResourceTypeName(reflectedSet0.bindings[0].type), ". Expected type of ", getShadeResourceTypeName(ShaderResourceType::SampledImage));
+                    logError("Descriptor Set Layout at index 0 (PerFrame) has unexpected type ", getShadeResourceTypeName(reflectedSet0.bindings[0].type), " at binding 0. Expected type of ", getShadeResourceTypeName(ShaderResourceType::SampledImage));
                     return false;
                 }
 
-                if (reflectedSet0.bindings[0].arraySize != 0)
+                if (reflectedSet0.bindings[0].arraySize != 0u)
                 {
-                    logError("Descriptor Set Layout at index 0 (PerFrame) as unexpected arraySize of ", reflectedSet0.bindings[0].arraySize, ". Expected arraySize of 0 (runtime bindless array).");
+                    logError("Descriptor Set Layout at index 0 (PerFrame) as unexpected arraySize of ", reflectedSet0.bindings[0].arraySize, " at binding 0. Expected arraySize of 0 (runtime bindless array).");
+                    return false;
+                }
+            }
+
+            // Expected binding 1 is the sampler array.
+            if (reflectedSet0.bindings.size() >= 2)
+            {
+                if (reflectedSet0.bindings[1].type != ShaderResourceType::Sampler)
+                {
+                    logError("Descriptor Set Layout at index 0 (PerFrame) has unexpected type ", getShadeResourceTypeName(reflectedSet0.bindings[0].type), " at binding 1. Expected type of ", getShadeResourceTypeName(ShaderResourceType::Sampler));
+                    return false;
+                }
+
+                if (reflectedSet0.bindings[1].arraySize != 16u)
+                {
+                    logError("Descriptor Set Layout at index 0 (PerFrame) as unexpected arraySize of ", reflectedSet0.bindings[0].arraySize, " at binding 1. Expected arraySize of 16.");
                     return false;
                 }
             }

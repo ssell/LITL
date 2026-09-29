@@ -10,6 +10,7 @@
 namespace litl::vulkan
 {
     struct RendererContext;
+    struct TextureResource;
 
     /// <summary>
     /// The global texture table used for bindless texture sampling.

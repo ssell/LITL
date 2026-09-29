@@ -1,3 +1,4 @@
+#include <bit>
 #include <optional>
 
 #include "litl-renderer-vulkan/resources/cache/samplerCache.hpp"
@@ -21,6 +22,7 @@ namespace litl::vulkan
         hashCombine64(hash, static_cast<uint64_t>(descriptor.addressV));
         hashCombine64(hash, static_cast<uint64_t>(descriptor.addressW));
         hashCombine64(hash, static_cast<uint64_t>(descriptor.anisotropy));
+        hashCombine64(hash, static_cast<uint64_t>(descriptor.compareOp.has_value()));                   // Have the presence of a compare op (or rather the lack of one) contribute to the hash as well.
 
         if (descriptor.compareOp.has_value())
         {
@@ -28,9 +30,9 @@ namespace litl::vulkan
         }
 
         hashCombine64(hash, static_cast<uint64_t>(descriptor.border));
-        hashCombine64(hash, static_cast<uint64_t>(descriptor.lodBias));
-        hashCombine64(hash, static_cast<uint64_t>(descriptor.minLod));
-        hashCombine64(hash, static_cast<uint64_t>(descriptor.maxLod));
+        hashCombine64(hash, static_cast<uint64_t>(std::bit_cast<uint32_t>(descriptor.lodBias)));        // Note these are floats, so static_cast<uint64_t> without the bit_cast first would silently truncate them.
+        hashCombine64(hash, static_cast<uint64_t>(std::bit_cast<uint32_t>(descriptor.minLod)));
+        hashCombine64(hash, static_cast<uint64_t>(std::bit_cast<uint32_t>(descriptor.maxLod)));
 
         return hash;
     }

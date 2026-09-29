@@ -32,7 +32,6 @@ namespace litl::vulkan
 
     bool TextureTable::buildDescriptorPool() noexcept
     {
-        // TODO add a VK_DESCRIPTOR_TYPE_SAMPLER entry sized to the fixed sample-array count of 8 or 16 when samplers are added.
         const std::array<VkDescriptorPoolSize, 2> descriptorPoolSizes = {
             VkDescriptorPoolSize{
                 .type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
