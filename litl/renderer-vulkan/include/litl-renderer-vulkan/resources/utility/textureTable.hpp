@@ -36,6 +36,7 @@ namespace litl::vulkan
         [[nodiscard]] bool buildDescriptorSetLayout() noexcept;
         [[nodiscard]] bool buildDescriptorSet() noexcept;
         [[nodiscard]] bool buildPipelineLayout() noexcept;
+        [[nodiscard]] bool writeSlot(uint32_t slot, TextureResource* texture) noexcept;
 
         RendererContext* m_pContext{ nullptr };
         VkDescriptorPool m_vkDescriptorPool{ VK_NULL_HANDLE };

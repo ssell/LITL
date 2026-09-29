@@ -2,7 +2,7 @@
 
 namespace litl::vulkan
 {
-    [[nodiscard]] bool doesPhysicalDeviceSupportRequiredFeatures(VkPhysicalDevice device) noexcept
+    bool doesPhysicalDeviceSupportRequiredFeatures(VkPhysicalDevice device) noexcept
     {
         VkPhysicalDeviceExtendedDynamicStateFeaturesEXT extendedDynamicStateFeatures{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT, .pNext = nullptr };
         VkPhysicalDeviceVulkan14Features vulkan14Features{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_FEATURES, .pNext = &extendedDynamicStateFeatures };
@@ -29,6 +29,7 @@ namespace litl::vulkan
             !vulkan11Features.shaderDrawParameters ||
             !supportedFeatures.features.geometryShader ||
             !supportedFeatures.features.tessellationShader ||
+            !supportedFeatures.features.samplerAnisotropy ||
             !supportedFeatures.features.shaderInt64 ||
             !supportedFeatures.features.textureCompressionBC)
         {
@@ -38,9 +39,13 @@ namespace litl::vulkan
         return true;
     }
 
-    [[nodiscard]] RequiredFeatureChain createRequiredFeaturesChain() noexcept
+    RequiredFeatureChain createRequiredFeaturesChain() noexcept
     {
         RequiredFeatureChain chain{};
+
+        // ! NOTE !
+        // ! NOTE ! any added required feature below needs to also be reflected in doesPhysicalDeviceSupportRequiredFeatures
+        // ! NOTE !
 
         chain.vulkanDynamicStateFeatures = VkPhysicalDeviceExtendedDynamicStateFeaturesEXT{
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT,

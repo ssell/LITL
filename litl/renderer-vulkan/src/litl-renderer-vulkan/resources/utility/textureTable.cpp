@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <array>
 
 #include "litl-core/assert.hpp"
@@ -232,30 +233,45 @@ namespace litl::vulkan
         m_freeCount--;
         m_slotOwners[slot] = handle;
 
-        TextureResource* texture = m_pContext->resources.getTexture(handle);
-
-        if (texture != nullptr)
+        if (!writeSlot(slot, m_pContext->resources.getTexture(handle)))
         {
-            const VkDescriptorImageInfo imageInfo{
-                .sampler = VK_NULL_HANDLE,              // We have a separate sampler array and not a combined texture+sampler array.
-                .imageView = (texture->vkSampledImageView != VK_NULL_HANDLE ? texture->vkSampledImageView : texture->vkImageView),
-                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            };
+            // Failed to write into the slot. Undo the slot allocation and return a null index.
+            m_freeCount++;
+            m_freeSlots.push_back(slot);
+            m_slotOwners[slot] = {};
 
-            const VkWriteDescriptorSet write{
-                .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-                .dstSet = m_vkDescriptorSet,
-                .dstBinding = 0u,
-                .dstArrayElement = slot,
-                .descriptorCount = 1u,
-                .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-                .pImageInfo = &imageInfo
-            };
-
-            vkUpdateDescriptorSets(m_pContext->device.vkDevice, 1u, &write, 0u, nullptr);
+            return Constants::uint32_null_index;
         }
 
         return slot;
+    }
+
+    bool TextureTable::writeSlot(uint32_t slot, TextureResource* texture) noexcept
+    {
+        if (texture == nullptr)
+        {
+            return false;
+        }
+
+        const VkDescriptorImageInfo imageInfo{
+            .sampler = VK_NULL_HANDLE,              // We have a separate sampler array and not a combined texture+sampler array.
+            .imageView = (texture->vkSampledImageView != VK_NULL_HANDLE ? texture->vkSampledImageView : texture->vkImageView),
+            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+        };
+
+        const VkWriteDescriptorSet write{
+            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .dstSet = m_vkDescriptorSet,
+            .dstBinding = 0u,
+            .dstArrayElement = slot,
+            .descriptorCount = 1u,
+            .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+            .pImageInfo = &imageInfo
+        };
+
+        vkUpdateDescriptorSets(m_pContext->device.vkDevice, 1u, &write, 0u, nullptr);
+
+        return true;
     }
 
     bool TextureTable::release(uint32_t slot) noexcept
@@ -301,10 +317,15 @@ namespace litl::vulkan
         else
         {
             // Updating an unoccupied slot. This is typically avoided except for the engine reserved default textures.
+            std::erase(m_freeSlots, slot);
             m_slotOwners[slot] = handle;
             m_freeCount--;
         }
 
+        if (!writeSlot(slot, m_pContext->resources.getTexture(handle)))
+        {
+            return false;
+        }
 
         return true;
     }

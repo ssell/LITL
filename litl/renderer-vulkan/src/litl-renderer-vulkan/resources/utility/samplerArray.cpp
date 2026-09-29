@@ -16,7 +16,7 @@ namespace litl::vulkan
 
             auto* samplerResource = context.resources.getSampler(m_samplerHandles[i]);
 
-            if ((samplerResource != nullptr) || (samplerResource->vkSampler == VK_NULL_HANDLE))
+            if ((samplerResource != nullptr) && (samplerResource->vkSampler != VK_NULL_HANDLE))
             {
                 m_vkSamplers[i] = samplerResource->vkSampler;
             }

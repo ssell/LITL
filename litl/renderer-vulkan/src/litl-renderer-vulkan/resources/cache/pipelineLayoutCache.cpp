@@ -198,7 +198,7 @@ namespace litl::vulkan
                     return false;
                 }
 
-                if (reflectedSet0.bindings[0].arraySize == 0)
+                if (reflectedSet0.bindings[0].arraySize != 0)
                 {
                     logError("Descriptor Set Layout at index 0 (PerFrame) as unexpected arraySize of ", reflectedSet0.bindings[0].arraySize, ". Expected arraySize of 0 (runtime bindless array).");
                     return false;
