@@ -1,6 +1,20 @@
+#define BindSetPerFrame    0
+#define BindSetPerPass     1
+#define BindSetPerMaterial 2
+#define BindSetPerObject   3
+
+#define Bind(_b, _s)        [[vk::binding(binding, _s)]]
+#define BindPerFrame(_b)    [[vk::binding(_b, BindSetPerFrame)]]
+#define BindPerPass(_b)     [[vk::binding(_b, BindSetPerPass)]]
+#define BindPerMaterial(_b) [[vk::binding(_b, BindSetPerMaterial)]]
+#define BindPerObject(_b)   [[vk::binding(_b, BindSetPerObject)]]
+
 // -----------------------------------------------------------------------------------------
 // Input
 // -----------------------------------------------------------------------------------------
+
+BindPerFrame(0) Texture2D<float4> g_Textures[];
+BindPerFrame(1) SamplerState g_Samplers[16];
 
 // Maps to RenderPerFrameData in litl-engine/render/renderStructs.hpp
 struct PerFrameData
@@ -87,13 +101,6 @@ VertexOutput vertexMain(VertexInput input, uint globalInstanceId: SV_VulkanInsta
 // Fragment Shader
 // -----------------------------------------------------------------------------------------
 
-// !TEMPORARY BINDING! will move to bindless shortly ...
-//#define BindSetPerObject 3
-//#define Bind(_b, _s) [[vk::binding(binding, _s)]]
-//#define BindPerObject(_b) [[vk::binding(_b, BindSetPerObject)]]
-//BindPerObject(0) Texture2D<float4> _texture;
-//BindPerObject(1) SamplerState _texture_sampler;
-
 struct FragmentOutput
 {
     float4 color : SV_Target;
@@ -105,8 +112,8 @@ FragmentOutput fragmentMain(VertexOutput input)
     FragmentOutput output = (FragmentOutput)0;
 
     const float3 tint = input.color;
-    const float3 texColor = float3(1.0f, 1.0f, 1.0f);// _texture.Sample(_texture_sampler, input.uv).rgb;
-    const float3 color = (tint * texColor * input.normal);
+    const float3 texColor = g_Textures[0].Sample(g_Samplers[0], input.uv).rgb;
+    const float3 color = (texColor);
 
     output.color = float4(color, 1.0f);
 

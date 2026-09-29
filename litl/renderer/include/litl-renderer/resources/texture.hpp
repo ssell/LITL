@@ -2,6 +2,7 @@
 #define LITL_RENDERER_TEXTURE_H__
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -91,6 +92,12 @@ namespace litl
         bool residesInTextureTable = false;
 
         /// <summary>
+        /// Sets the specific index in the texture table that this occupies.
+        /// Usage is discouraged aside from internal default textures.
+        /// </summary>
+        std::optional<uint32_t> textureTableIndexOverride = std::nullopt;
+
+        /// <summary>
         /// Optional name for the texture.
         /// If specified, it needs to be unique (or the original resource path).
         /// Used for hotreloads and debugging.
@@ -165,19 +172,19 @@ namespace litl
     enum class TextureTableReservedIndices : uint32_t
     {
         /// <summary>
+        /// A 1x1 pink (1.0, 0.0, 1.0, 1.0) texture commonly used to indicate a missing texture.
+        /// </summary>
+        Pink = 0u,
+
+        /// <summary>
         /// A 1x1 white (1.0, 1.0, 1.0, 1.0) texture.
         /// </summary>
-        White = 0u,
+        White = 1u,
 
         /// <summary>
         /// A 1x1 black (0.0, 0.0, 0.0, 1.0) texture.
         /// </summary>
-        Black = 1u,
-
-        /// <summary>
-        /// A 1x1 pink (1.0, 0.0, 1.0, 1.0) texture commonly used to indicate a missing texture.
-        /// </summary>
-        Pink = 2u,
+        Black = 2u,
 
         /// <summary>
         /// A 1x1 passive tangent normal texture (0.5, 0.5, 0.5, 1.0)

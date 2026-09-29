@@ -24,6 +24,11 @@ namespace litl
             return fequals(value.x, other.value.x) && fequals(value.y, other.value.y) && fequals(value.z, other.value.z) && fequals(value.w, other.value.w);
         }
 
+        [[nodiscard]] constexpr color operator*(float scalar) const noexcept
+        {
+            return color(value * scalar);
+        }
+
         // ---------------------------------------------------------------------------------
         // Accessors
         // ---------------------------------------------------------------------------------

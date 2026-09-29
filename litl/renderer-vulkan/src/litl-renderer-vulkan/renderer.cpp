@@ -936,7 +936,7 @@ namespace litl::vulkan
 
         cleanupPipelineCache(*vulkanContext);
         cleanupTextureTable(*vulkanContext);
-        cleanupSamplerArray(*vulkanContext);
+        cleanupSamplerArray(*vulkanContext);                    // Must occur before the resource manager is destroyed
         cleanupFrameDepthTextures(*vulkanContext);
         cleanupFrameSync(*vulkanContext);
         cleanupImageSync(*vulkanContext);

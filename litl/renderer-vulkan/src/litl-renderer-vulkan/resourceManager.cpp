@@ -1265,11 +1265,25 @@ namespace litl::vulkan
 
         if (descriptor.residesInTextureTable)
         {
-            textureResource->textureTableSlot = m_pContext->textureTable.acquire(textureHandle);
+            if (descriptor.textureTableIndexOverride.has_value())
+            {
+                if (m_pContext->textureTable.update(descriptor.textureTableIndexOverride.value(), textureHandle))
+                {
+                    textureResource->textureTableSlot = descriptor.textureTableIndexOverride.value();
+                }
+                else
+                {
+                    logError("Failed to acquire slot ", descriptor.textureTableIndexOverride.value(), " for new Texture resource '", textureResource->descriptor.name, "' in Vulkan texture table.");
+                }
+            }
+            else
+            {
+                textureResource->textureTableSlot = m_pContext->textureTable.acquire(textureHandle);
+            }
 
             if (textureResource->textureTableSlot == Constants::uint32_null_index)
             {
-                logError("Failed to acquire slot for new TextureResource in Vulkan TextureTable");
+                logError("Failed to acquire slot for new Texture resource '", textureResource->descriptor.name, "' in Vulkan texture table.");
             }
         }
 
@@ -1291,7 +1305,7 @@ namespace litl::vulkan
             {
                 if (!m_pContext->textureTable.release(resource->textureTableSlot))
                 {
-                    logError("Failed to release TextureResource from Vulkan TextureTable at slot ", resource->textureTableSlot);
+                    logError("Failed to release TextureResource from Vulkan texture table at slot ", resource->textureTableSlot);
                 }
             }
 

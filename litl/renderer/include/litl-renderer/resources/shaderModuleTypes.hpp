@@ -47,7 +47,7 @@ namespace litl
         ShaderResourceTypeCount
     };
 
-    [[nodiscard]] constexpr std::string_view getShadeResourceTypeName(ShaderResourceType type) noexcept
+    [[nodiscard]] constexpr std::string_view getShaderResourceTypeName(ShaderResourceType type) noexcept
     {
         switch (type)
         {

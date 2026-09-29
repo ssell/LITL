@@ -18,6 +18,11 @@ namespace litl
             return false;
         }
 
+        if (m_descriptor.textureInfo.name.empty())
+        {
+            m_descriptor.textureInfo.name = m_descriptor.objectInfo.name;
+        }
+
         resizePixelBuffer();
 
         return true;
@@ -26,6 +31,7 @@ namespace litl
     bool Texture::create(Authority<ObjectPool> auth, ObjectDescriptor const& objDescriptor, RenderManager& renderManager) noexcept
     {
         m_descriptor.objectInfo = objDescriptor;
+        m_descriptor.textureInfo.name = m_descriptor.objectInfo.name;
         m_pRenderManager = &renderManager;
 
         return true;

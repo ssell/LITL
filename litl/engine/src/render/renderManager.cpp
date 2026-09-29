@@ -2,6 +2,7 @@
 #include <span>
 
 #include "litl-core/assert.hpp"
+#include "litl-core/containers/common.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-engine/engine.hpp"
 #include "litl-engine/render/renderManager.hpp"
@@ -135,6 +136,8 @@ namespace litl
             LITL_FATAL_ASSERT_MSG(worldMatrices.handle.isValid(), "Failed to create World Matrices buffer.");
 
             renderPass.setup(*renderer, *objectPool);
+
+            createDefaultTextures();
         }
 
         void createRenderer(Window* window, RendererConfiguration const& rendererDescriptor) noexcept
@@ -166,6 +169,41 @@ namespace litl
             LITL_FATAL_ASSERT_MSG((renderer != nullptr), "Failed to create Renderer in RenderManager");
 
             renderer->build();
+        }
+
+        void createDefaultTextures() noexcept
+        {
+            const TextureDescriptor pinkTextureDesc{
+                .objectInfo = ObjectDescriptor { .name = "LITL_INTERNAL_Texture_Pink" },
+                .textureInfo = TextureResourceDescriptor {
+                    .width = 1u,
+                    .height = 1u,
+                    .format = DataFormat::RGBA32_SFloat,
+                    .residesInTextureTable = true,
+                    .textureTableIndexOverride = static_cast<uint32_t>(TextureTableReservedIndices::Pink)
+                },
+                .persistOnCpu = false
+            };
+
+            const TextureHandle pinkTextureHandle = objectPool->createTexture(pinkTextureDesc);
+            Texture* pinkTexture = objectPool->getTexture(pinkTextureHandle);
+
+            if (pinkTexture != nullptr)
+            {
+                constexpr std::array<color, 1> pixels = { colors::Pink };
+
+                if (pinkTexture->setPixelBytes(as_byte_span(pixels)))
+                {
+                    if (!pinkTexture->apply(std::nullopt))
+                    {
+                        logError("Failed to apply pixel bytes for default texture 'LITL_INTERNAL_Texture_Pink'");
+                    }
+                }
+                else
+                {
+                    logError("Failed to set pixel bytes for default texture 'LITL_INTERNAL_Texture_Pink'");
+                }
+            }
         }
 
         void trackDirtyBuffer(GpuBufferHandle handle) noexcept

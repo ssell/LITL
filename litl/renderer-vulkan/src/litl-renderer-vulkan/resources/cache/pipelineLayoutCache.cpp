@@ -201,7 +201,7 @@ namespace litl::vulkan
             {
                 if (reflectedSet0.bindings[0].type != ShaderResourceType::SampledImage)
                 {
-                    logError("Descriptor Set Layout at index 0 (PerFrame) has unexpected type ", getShadeResourceTypeName(reflectedSet0.bindings[0].type), " at binding 0. Expected type of ", getShadeResourceTypeName(ShaderResourceType::SampledImage));
+                    logError("Descriptor Set Layout at index 0 (PerFrame) has unexpected type ", getShaderResourceTypeName(reflectedSet0.bindings[0].type), " at binding 0. Expected type of ", getShaderResourceTypeName(ShaderResourceType::SampledImage));
                     return false;
                 }
 
@@ -217,7 +217,7 @@ namespace litl::vulkan
             {
                 if (reflectedSet0.bindings[1].type != ShaderResourceType::Sampler)
                 {
-                    logError("Descriptor Set Layout at index 0 (PerFrame) has unexpected type ", getShadeResourceTypeName(reflectedSet0.bindings[0].type), " at binding 1. Expected type of ", getShadeResourceTypeName(ShaderResourceType::Sampler));
+                    logError("Descriptor Set Layout at index 0 (PerFrame) has unexpected type ", getShaderResourceTypeName(reflectedSet0.bindings[0].type), " at binding 1. Expected type of ", getShaderResourceTypeName(ShaderResourceType::Sampler));
                     return false;
                 }
 
