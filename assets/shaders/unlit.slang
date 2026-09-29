@@ -10,11 +10,44 @@
 #define BindPerObject(_b)   [[vk::binding(_b, BindSetPerObject)]]
 
 // -----------------------------------------------------------------------------------------
-// Input
+// Global Texture Utilities
+// (these will eventually be moved into their own file)
 // -----------------------------------------------------------------------------------------
 
 BindPerFrame(0) Texture2D<float4> g_Textures[];
 BindPerFrame(1) SamplerState g_Samplers[16];
+
+void UnpackPackedTextureSlotSamplerIndex(in uint packedTextureSlotSamplerIndex, out uint textureIndex, out uint samplerIndex)
+{
+    // The texture slot occupies the lower 24-bits and the sampler index is in the upper 8-bits.
+    // This must be kept in sync with packing/unpacking functions in litl-renderer/utility.hpp
+    textureIndex = packedTextureSlotSamplerIndex & 0x00FFFFFF;
+    samplerIndex = (packedTextureSlotSamplerIndex >> 24u);
+}
+
+float4 SampleGlobalTexture(uint packedTextureSlotSamplerIndex, float2 uv)
+{
+    uint textureIndex = 0;
+    uint samplerIndex = 0;
+
+    UnpackPackedTextureSlotSamplerIndex(packedTextureSlotSamplerIndex, /* out */ textureIndex, /* out */ samplerIndex);
+
+    return g_Textures[NonUniformResourceIndex(textureIndex)].Sample(g_Samplers[samplerIndex], uv);
+}
+
+float4 SampleGlobalTexture(uint packedTextureSlotSamplerIndex, in SamplerState samplerOverride, float2 uv)
+{
+    uint textureIndex = 0;
+    uint samplerIndex = 0;
+
+    UnpackPackedTextureSlotSamplerIndex(packedTextureSlotSamplerIndex, /* out */ textureIndex, /* out */ samplerIndex);
+
+    return g_Textures[NonUniformResourceIndex(textureIndex)].Sample(samplerOverride, uv);
+}
+
+// -----------------------------------------------------------------------------------------
+// Input
+// -----------------------------------------------------------------------------------------
 
 // Maps to RenderPerFrameData in litl-engine/render/renderStructs.hpp
 struct PerFrameData
@@ -112,7 +145,7 @@ FragmentOutput fragmentMain(VertexOutput input)
     FragmentOutput output = (FragmentOutput)0;
 
     const float3 tint = input.color;
-    const float3 texColor = g_Textures[0].Sample(g_Samplers[0], input.uv).rgb;
+    const float3 texColor = SampleGlobalTexture(0, input.uv).rgb;
     const float3 color = (texColor);
 
     output.color = float4(color, 1.0f);

@@ -14,12 +14,11 @@ namespace litl::samples
         auto sceneView = services.get<SceneView>();
         auto assets = services.get<AssetManager>();
 
-        /*
         createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(-5.0f, 1.5f, 0.0f), vec3(5.0f, 1.5f, 0.0f), vec3::up(), *objectPool, *sceneView);
 
         const auto bunnyEntity = commands.createEntity();
         commands.addComponent<Transform>(bunnyEntity, Transform::create(vec3{ 0.0f, 1.0f, 0.0f }));
-        commands.addComponent<PendingModelInstance>(bunnyEntity, createModelInstance("mesh/bunny", "materials/flat", *assets));
+        commands.addComponent<PendingModelInstance>(bunnyEntity, createModelInstance("mesh/bunny", "materials/unlit", *assets));
         commands.addComponent<LocalBounds>(bunnyEntity);
         commands.addComponent<Spin>(bunnyEntity);
 
@@ -28,15 +27,6 @@ namespace litl::samples
         commands.addComponent<PendingModelInstance>(sponzaEntity, createModelInstance("models/sponza", "materials/flat", *assets));
         commands.addComponent<LocalBounds>(sponzaEntity);
         commands.addComponent<Spin>(bunnyEntity);
-        */
-
-        createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3{ 0.0f, 2.0f, 0.0f }, vec3{ 0.0f, 0.0f, 5.0f }, vec3::up(), *objectPool, *sceneView);
-
-        const auto cubeEntity = commands.createEntity();
-        commands.addComponent<Transform>(cubeEntity, Transform::create(vec3{ 0.0f, 0.0f, 5.0f }));
-        commands.addComponent<PendingModelInstance>(cubeEntity, createModelInstance("models/cube", "materials/unlit", *assets));
-        commands.addComponent<LocalBounds>(cubeEntity);
-        commands.addComponent<Spin>(cubeEntity);
     }
 }
 

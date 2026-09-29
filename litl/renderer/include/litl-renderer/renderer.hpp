@@ -14,7 +14,6 @@
 #include "litl-renderer/commands.hpp"
 #include "litl-renderer/scopedBufferUpload.hpp"
 #include "litl-renderer/resources/pipelineResource.hpp"
-#include "litl-renderer/resources/texture.hpp"
 
 namespace litl
 {
