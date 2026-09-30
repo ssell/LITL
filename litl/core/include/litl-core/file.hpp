@@ -1,9 +1,13 @@
 #ifndef LITL_CORE_FILE_H__
 #define LITL_CORE_FILE_H__
 
+#include <cstdint>
 #include <ctime>
 #include <filesystem>
+#include <optional>
 #include <span>
+#include <string>
+#include <vector>
 
 namespace litl
 {
@@ -13,7 +17,10 @@ namespace litl
 
         File();
         File(std::string_view path);
+        File(std::filesystem::path const& path);
         File(std::filesystem::directory_entry const& entry);
+
+        [[nodiscard]] bool operator==(File const& other) const noexcept;
 
         /// <summary>
         /// Erases the file. Returns true if successfully erased, otherwise will return false.
@@ -120,6 +127,8 @@ namespace litl
         [[nodiscard]] static std::string SanitizeFilename(std::string_view name) noexcept;
 
         [[nodiscard]] std::filesystem::path const& getFileSystempath() const noexcept;
+
+        [[nodiscard]] static std::optional<std::filesystem::path> ResolvePath(std::filesystem::path const& base, std::string_view referencePath) noexcept;
 
     private:
 

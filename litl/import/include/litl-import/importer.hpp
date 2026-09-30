@@ -5,12 +5,14 @@
 #include <concepts>
 #include <cstdint>
 #include <span>
+#include <string_view>
+#include <vector>
 
-#include "litl-core/file.hpp"
 #include "litl-import/result.hpp"
 #include "litl-import/importedData.hpp"
 #include "litl-import/importSourceType.hpp"
 #include "litl-import/importSettings.hpp"
+#include "litl-import/importDependencies.hpp"
 
 namespace litl::import
 {
@@ -19,7 +21,9 @@ namespace litl::import
     public:
 
         virtual ~Importer() = default;
-        virtual Result import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, ImportedData& importedData) noexcept = 0;
+
+        [[nodiscard]] virtual Result import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, ImportedData& importedData) noexcept = 0;
+        [[nodiscard]] virtual Result scanDependencies(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::vector<ImportDependency>& outDependencies) noexcept;
     };
 
     template <typename T>

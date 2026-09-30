@@ -140,4 +140,44 @@ namespace litl
 
         return relativePathFromRoot(m_files[locator.entryIndex].getFileSystempath(), m_root);
     }
+
+    bool FileAssetSource::resolve(AssetLocator base, std::string_view reference, AssetLocator& outLocator) noexcept
+    {
+        if (base.entryIndex >= m_files.size())
+        {
+            return false;
+        }
+
+        // Base file. Build the reference file location from this path.
+        auto& file = m_files[base.entryIndex];
+        auto referencePath = File::ResolvePath(file.getFileSystempath(), reference);
+
+        if (!referencePath.has_value())
+        {
+            return false;
+        }
+
+        {
+            std::scoped_lock lock{ m_filesMutex };
+
+            outLocator.sourceIndex = base.sourceIndex;
+            const File referenceFile{ referencePath.value() };
+
+            // First check if this a registered path already (unlikely)
+            for (uint32_t entryIndex = 0u; entryIndex < m_files.size(); ++entryIndex)
+            {
+                if (m_files[entryIndex] == referenceFile)
+                {
+                    outLocator.entryIndex = entryIndex;
+                    return true;
+                }
+            }
+
+            // Otherwise we have to add 
+            outLocator.sourceIndex = static_cast<uint32_t>(m_files.size());
+            m_files.push_back(referenceFile);
+        }
+
+        return true;
+    }
 }

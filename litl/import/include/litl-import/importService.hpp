@@ -9,6 +9,7 @@
 #include "litl-import/result.hpp"
 #include "litl-import/importerRegistry.hpp"
 #include "litl-import/exporterRegistry.hpp"
+#include "litl-import/importDependencies.hpp"
 
 namespace litl::import
 {
@@ -36,13 +37,18 @@ namespace litl::import
         ImportService& operator=(ImportService const&) = delete;
 
         /// <summary>
+        /// Given a source location and block of bytes, attempts to discover all side-carriage companion files required. For example, material libraries or textures required by a model.
+        /// </summary>
+        [[nodiscard]] Result scanForDependencies(ImportSourceType sourceType, std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::vector<ImportDependency>& outDependencies) noexcept;
+
+        /// <summary>
         /// Given a source block of bytes attempts to convert it to an internal representation format.
         /// The output is an ImportedData structure that has the converted data objects in their intermediate object form.
         /// 
         /// This method should be used if you only need the intermediate internal objects in memory. Use importForWriting if they need to be written to disk/embedded in a bundle/etc.
         /// </summary>
         /// <param name="shouldPrepare">If true, the relevant Exporter::prepare will be run on the data to perform any necessary internal conversions. Otherwise the data will be returned untransformed.</param>
-        [[nodiscard]] Result importForMemory(ImportSourceType sourceType, std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, ImportedData& importedData, bool shouldPrepare) noexcept;
+        [[nodiscard]] Result importForMemory(ImportSourceType sourceType, std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, ImportedData& importedData, bool shouldPrepare) noexcept;
 
         /// <summary>
         /// Given an external format source file, attempts to convert it to an internal representation format.
@@ -51,7 +57,7 @@ namespace litl::import
         /// 
         /// This method should be used if you need to write the results to disk/embed in bundle/etc. If you only need the intermediate internal object in memory, then use importForMemory.
         /// </summary>
-        [[nodiscard]] Result importForWriting(ImportSourceType sourceType, std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, WriteableImportResults& writeableResults) noexcept;
+        [[nodiscard]] Result importForWriting(ImportSourceType sourceType, std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, WriteableImportResults& writeableResults) noexcept;
 
     private:
 

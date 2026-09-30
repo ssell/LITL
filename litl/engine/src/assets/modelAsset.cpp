@@ -8,6 +8,38 @@
 
 namespace litl
 {
+    bool ModelAsset::scanExternalDependencies(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, std::vector<import::ImportDependency>& dependencies, AssetErrorCode& error) noexcept
+    {
+        if (bytes.empty())
+        {
+            error = AssetErrorCode::ScanBytesEmpty;
+            return false;
+        }
+
+        ModelAsset* modelAsset = static_cast<ModelAsset*>(asset);
+
+        if (assetRegistration.sourceType != import::ImportSourceType::ModelLitl)
+        {
+            import::ImportService importer{};
+            import::ImportedData importedData{};
+
+            const auto scanResult = importer.scanForDependencies(assetRegistration.sourceType, assetRegistration.location, bytes, assetRegistration.importSettings, dependencies);
+
+            if (!scanResult.success)
+            {
+                logError("Failed to scan bytes of model from third-party asset for external dependencies with message '", scanResult.message, "' and error code ", static_cast<uint32_t>(scanResult.error));
+                error = AssetErrorCode::ExternalFormatScanFailed;
+                return false;
+            }
+        }
+        //else
+        //{
+            // No need to scan internal file format
+        //}
+
+        return true;
+    }
+
     bool ModelAsset::decodeLitlModelBytes(ModelAsset* modelAsset, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
     {
         import::ModelIntermediateData intermediateData{};
@@ -26,12 +58,12 @@ namespace litl
         return true;
     }
 
-    bool ModelAsset::decodeNonLitlModelBytes(ModelAsset* modelAsset, AssetRegistration const& assetRegistration, std::span<std::byte const> otherBytes, AssetErrorCode& error) noexcept
+    bool ModelAsset::decodeNonLitlModelBytes(ModelAsset* modelAsset, AssetRegistration const& assetRegistration, std::span<std::byte const> otherBytes, std::span<import::ImportCompanion const> companions, AssetErrorCode& error) noexcept
     {
         import::ImportService importer{};
         import::ImportedData importedData{};
 
-        const auto importResult = importer.importForMemory(assetRegistration.sourceType, assetRegistration.location, otherBytes, assetRegistration.importSettings, importedData, true);
+        const auto importResult = importer.importForMemory(assetRegistration.sourceType, assetRegistration.location, otherBytes, assetRegistration.importSettings, companions, importedData, true);
 
         if (!importResult.success)
         {
@@ -85,7 +117,7 @@ namespace litl
         return true;
     }
 
-    bool ModelAsset::decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
+    bool ModelAsset::decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, std::span<import::ImportCompanion const> companions, AssetErrorCode& error) noexcept
     {
         if (bytes.empty())
         {
@@ -102,11 +134,11 @@ namespace litl
         else
         {
             logWarning("Decoding model asset with key '", asset->key, "' directly from external format. It is recommended to first convert the model to the internal .litlmdl format to improve loading performance.");
-            return decodeNonLitlModelBytes(modelAsset, assetRegistration, bytes, error);
+            return decodeNonLitlModelBytes(modelAsset, assetRegistration, bytes, companions, error);
         }
     }
 
-    bool ModelAsset::gatherDependenciesFromLitlModel(ModelAsset* modelAsset, AssetManager& assetManager, std::span<std::string const> meshNames, std::span<std::string const> materialNames, std::vector<Asset*>& dependencies) noexcept
+    bool ModelAsset::gatherAssetDependenciesFromLitlModel(ModelAsset* modelAsset, AssetManager& assetManager, std::span<std::string const> meshNames, std::span<std::string const> materialNames, std::vector<Asset*>& dependencies) noexcept
     {
         // ... todo ...
         return false;
@@ -115,7 +147,7 @@ namespace litl
     /// <summary>
     /// Traverses the model data items and builds proper keys for each item. The imported object data (mesh, material, etc.) is then used to create a new asset at the key.
     /// </summary>
-    bool ModelAsset::gatherDependenciesFromNonLitlModel(ModelAsset* modelAsset, AssetManager& assetManager, std::span<std::string const> meshNames, std::span<std::string const> materialNames, std::vector<Asset*>& dependencies) noexcept
+    bool ModelAsset::gatherAssetDependenciesFromNonLitlModel(ModelAsset* modelAsset, AssetManager& assetManager, std::span<std::string const> meshNames, std::span<std::string const> materialNames, std::vector<Asset*>& dependencies) noexcept
     {
         const auto modelIndex = modelAsset->importedData->getFirstIndexOfType(import::ImportedDataType::Model);
 
@@ -203,7 +235,7 @@ namespace litl
         return true;
     }
 
-    bool ModelAsset::gatherDependencies(Asset* asset, AssetManager& assetManager, std::vector<Asset*>& dependencies) noexcept
+    bool ModelAsset::gatherAssetDependencies(Asset* asset, AssetManager& assetManager, std::vector<Asset*>& dependencies) noexcept
     {
         ModelAsset* modelAsset = static_cast<ModelAsset*>(asset);
         dependencies.clear();
@@ -226,11 +258,11 @@ namespace litl
         /// With the .litlmdl we already have fully formed asset keys. With the third-party data we have locally unique item names but not actual asset keys.
         if (modelAsset->importedData == nullptr)
         {
-            return gatherDependenciesFromLitlModel(modelAsset, assetManager, meshNames, materialNames, dependencies);
+            return gatherAssetDependenciesFromLitlModel(modelAsset, assetManager, meshNames, materialNames, dependencies);
         }
         else
         {
-            const bool success = gatherDependenciesFromNonLitlModel(modelAsset, assetManager, meshNames, materialNames, dependencies);
+            const bool success = gatherAssetDependenciesFromNonLitlModel(modelAsset, assetManager, meshNames, materialNames, dependencies);
             modelAsset->importedData.reset();
             return success;
         }

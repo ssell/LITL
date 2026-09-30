@@ -8,7 +8,7 @@
 #include "litl-core/stringId.hpp"
 #include "litl-engine/assets/assetRegistration.hpp"
 #include "litl-engine/assets/assetStatus.hpp"
-
+#include "litl-import/importDependencies.hpp"
 
 namespace litl
 {
@@ -32,9 +32,15 @@ namespace litl
             bool (*fetchAssetObject)(Asset*, ObjectPool&);
 
             /// <summary>
+            /// (Optional) Scans the asset bytes for external file dependencies. For example, a .obj model file that requires an external .mtl material file.
+            /// These external dependencies are not themselves assets and live outside the asset ecosystem. For dependencies on other assets (such as materials on textures) see gatherAssetDependencies.
+            /// </summary>
+            bool (*scanExternalDependencies)(Asset*, AssetRegistration const&, std::span<std::byte const>, std::vector<import::ImportDependency>&, AssetErrorCode&);
+
+            /// <summary>
             /// (Required) Takes a raw span of bytes and decodes that into the asset-specific intermediate object.
             /// </summary>
-            bool (*decodeAssetBytes)(Asset*, AssetRegistration const&, std::span<std::byte const>, AssetErrorCode&);
+            bool (*decodeAssetBytes)(Asset*, AssetRegistration const&, std::span<std::byte const>, std::span<import::ImportCompanion const>, AssetErrorCode&);
 
             /// <summary>
             /// (Optional) Performs optional additional work on the worker thread against the intermediate object.
@@ -44,7 +50,7 @@ namespace litl
             /// <summary>
             /// (Optional) If the asset is dependent on other assets (Material dependent on Shader and Textures, etc.) this is where it gathers those other assets together.
             /// </summary>
-            bool (*gatherDependencies)(Asset*, AssetManager&, std::vector<Asset*>& dependencies);
+            bool (*gatherAssetDependencies)(Asset*, AssetManager&, std::vector<Asset*>& dependencies);
 
             /// <summary>
             /// (Optional) Performs optional additional work on the main thread, for example uploading buffers to the GPU.

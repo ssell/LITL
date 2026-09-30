@@ -22,17 +22,18 @@ namespace litl
         std::shared_ptr<import::ShaderIntermediateData> shaderIntermediateData;
 
         static bool fetchAssetObject(Asset* asset, ObjectPool& objectPool) noexcept;
-        static bool decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept;
+        static bool decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, std::span<import::ImportCompanion const> companions, AssetErrorCode& error) noexcept;
         static bool processOnMain(Asset* asset, AssetRegistration const& assetRegistration, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept;
     };
 
     inline constexpr Asset::AssetOps ShaderAssetOps = {
-        .fetchAssetObject        = &ShaderAsset::fetchAssetObject,
-        .decodeAssetBytes        = &ShaderAsset::decodeBytes,
-        .processOnWorker         = nullptr,
-        .gatherDependencies      = nullptr,
-        .processOnMain           = &ShaderAsset::processOnMain,
-        .requiresAllDependencies = true
+        .fetchAssetObject         = &ShaderAsset::fetchAssetObject,
+        .scanExternalDependencies = nullptr,
+        .decodeAssetBytes         = &ShaderAsset::decodeBytes,
+        .processOnWorker          = nullptr,
+        .gatherAssetDependencies  = nullptr,
+        .processOnMain            = &ShaderAsset::processOnMain,
+        .requiresAllDependencies  = true
     };
 }
 

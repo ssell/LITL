@@ -176,7 +176,7 @@ namespace litl::import
 
     }
 
-    Result ObjImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, ImportedData& importedData) noexcept
+    Result ObjImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, ImportedData& importedData) noexcept
     {
         // ---------------------------------------------------------------------------------
         // Parse the OBJ
@@ -271,5 +271,11 @@ namespace litl::import
         }
 
         return Result::Success();
+    }
+
+    Result ObjImporter::scanDependencies(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::vector<ImportDependency>& outDependencies) noexcept
+    {
+        // ... todo ... obj will have .mtl material companions ...
+        return Result::Error(ErrorType::ImporterNotImplemented);
     }
 }

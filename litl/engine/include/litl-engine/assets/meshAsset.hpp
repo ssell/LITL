@@ -16,17 +16,18 @@ namespace litl
         bounds::AABB bounds{};
 
         static bool fetchAssetObject(Asset* asset, ObjectPool& objectPool) noexcept;
-        static bool decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept;
+        static bool decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, std::span<import::ImportCompanion const> companions, AssetErrorCode& error) noexcept;
         static bool processOnMain(Asset* asset, AssetRegistration const& assetRegistration, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept;
     };
 
     inline constexpr Asset::AssetOps MeshAssetOps = {
-        .fetchAssetObject        = &MeshAsset::fetchAssetObject,
-        .decodeAssetBytes        = &MeshAsset::decodeBytes,
-        .processOnWorker         = nullptr,
-        .gatherDependencies      = nullptr,
-        .processOnMain           = &MeshAsset::processOnMain,
-        .requiresAllDependencies = true
+        .fetchAssetObject         = &MeshAsset::fetchAssetObject,
+        .scanExternalDependencies = nullptr,
+        .decodeAssetBytes         = &MeshAsset::decodeBytes,
+        .processOnWorker          = nullptr,
+        .gatherAssetDependencies  = nullptr,
+        .processOnMain            = &MeshAsset::processOnMain,
+        .requiresAllDependencies  = true
     };
 }
 

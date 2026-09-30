@@ -2,6 +2,7 @@
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 #include "litl-core/directory.hpp"
 #include "litl-core/file.hpp"
@@ -70,16 +71,28 @@ namespace litl::import
         m_importerRegistry.add<TgaImporter>();
     }
 
-    Result ImportService::importForMemory(ImportSourceType sourceType, std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, ImportedData& importedData, bool shouldPrepare) noexcept
+    Result ImportService::scanForDependencies(ImportSourceType sourceType, std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::vector<ImportDependency>& outDependencies) noexcept
     {
         auto importer = m_importerRegistry.create(sourceType);
 
         if (importer == nullptr)
         {
-            return Result::Error(ErrorType::NoImporterForSourceExtension);
+            return Result::Error(ErrorType::NoImporterForSourceType);
         }
 
-        Result const importResult = importer->import(location, sourceBytes, settings, importedData);
+        return importer->scanDependencies(location, sourceBytes, settings, outDependencies);
+    }
+
+    Result ImportService::importForMemory(ImportSourceType sourceType, std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, ImportedData& importedData, bool shouldPrepare) noexcept
+    {
+        auto importer = m_importerRegistry.create(sourceType);
+
+        if (importer == nullptr)
+        {
+            return Result::Error(ErrorType::NoImporterForSourceType);
+        }
+
+        Result const importResult = importer->import(location, sourceBytes, settings, companions, importedData);
 
         if (!importResult.success)
         {
@@ -119,10 +132,10 @@ namespace litl::import
         return Result::Success();
     }
 
-    Result ImportService::importForWriting(ImportSourceType sourceType, std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, WriteableImportResults& writeableResults) noexcept
+    Result ImportService::importForWriting(ImportSourceType sourceType, std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, WriteableImportResults& writeableResults) noexcept
     {
         // Import from one external file
-        Result const importResult = importForMemory(sourceType, location, sourceBytes, settings, writeableResults.importedData, false);
+        Result const importResult = importForMemory(sourceType, location, sourceBytes, settings, companions, writeableResults.importedData, false);
 
         if (!importResult.success || writeableResults.importedData.items.empty())
         {

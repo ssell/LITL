@@ -1,6 +1,8 @@
 #ifndef LITL_ENGINE_ASSETS_FILE_SOURCE_H__
 #define LITL_ENGINE_ASSETS_FILE_SOURCE_H__
 
+#include <mutex>
+
 #include "litl-core/file.hpp"
 #include "litl-engine/assets/assetSource.hpp"
 
@@ -30,10 +32,16 @@ namespace litl
         /// </summary>
         [[nodiscard]] std::string describe(AssetLocator locator) const noexcept override;
 
+        /// <summary>
+        /// Given a file asset reference, composes the expected file path that the reference resides at.
+        /// </summary>
+        [[nodiscard]] bool resolve(AssetLocator base, std::string_view reference, AssetLocator& outLocator) noexcept override;
+
     private:
 
         std::string m_root;
         std::vector<File> m_files;
+        std::mutex m_filesMutex{};
     };
 }
 

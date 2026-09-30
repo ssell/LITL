@@ -38,6 +38,9 @@ namespace litl
         AssetSource* assetSource) noexcept
     {
         std::vector<std::byte> bytes;
+        std::vector<import::ImportDependency> dependencies;
+        std::vector<std::vector<std::byte>> dependencyBytes;
+        std::vector<import::ImportCompanion> companions;
 
         if ((asset->assetOps == nullptr) ||
             (asset->assetOps->decodeAssetBytes == nullptr))         // decode is mandatory when loading from disk (not used when loading from memory)
@@ -67,9 +70,69 @@ namespace litl
             // Decode raw bytes into asset-specific data representation.
             if (asset->status.load(std::memory_order_relaxed) != AssetStatus::Error)
             {
-                if (!asset->assetOps->decodeAssetBytes(asset, assetRegistration, bytes, asset->error))
+                // Scan for external dependencies (for example .obj on .mtl) and gather their bytes.
+                if (asset->assetOps->scanExternalDependencies != nullptr)
                 {
-                    asset->setError(asset->error, AssetErrorCode::DecodeFail);
+                    bool encounteredDependencyFailures = false;
+
+                    if (asset->assetOps->scanExternalDependencies(asset, assetRegistration, bytes, dependencies, asset->error))
+                    {
+                        dependencyBytes.reserve(dependencies.size());
+                        companions.reserve(dependencies.size());
+
+                        for (auto& dependency : dependencies)
+                        {
+                            AssetLocator dependencyLocator{};
+
+                            if (assetSource->resolve(asset->locator, dependency.reference, dependencyLocator))
+                            {
+                                dependencyBytes.emplace_back();
+
+                                if (assetSource->read(dependencyLocator, dependencyBytes.back()))
+                                {
+                                    companions.push_back(import::ImportCompanion{
+                                        .reference = dependency.reference,
+                                        .bytes = dependencyBytes.back()
+                                    });
+                                }
+                                // Failed to read a dependency
+                                else
+                                {
+                                    dependencyBytes.pop_back();
+                                    encounteredDependencyFailures = true;
+                                }
+                            }
+                            // Failed to resolve a dependency
+                            else
+                            {
+                                encounteredDependencyFailures = false;
+                            }
+
+                            if (encounteredDependencyFailures && !assetRegistration.importSettings.continueOnDependencyFailure)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                    // Failed to scan for dependencies
+                    else
+                    {
+                        encounteredDependencyFailures = true;
+                    }
+
+                    if (encounteredDependencyFailures && !assetRegistration.importSettings.continueOnDependencyFailure)
+                    {
+                        asset->setError(asset->error, AssetErrorCode::ScanDependenciesFailed);
+                    }
+                }
+
+                // Decode the bytes into our intermediate data.
+                if ((asset->status.load(std::memory_order_relaxed) != AssetStatus::Error))
+                {
+                    if (!asset->assetOps->decodeAssetBytes(asset, assetRegistration, bytes, companions, asset->error))
+                    {
+                        asset->setError(asset->error, AssetErrorCode::DecodeFail);
+                    }
                 }
             }
 
@@ -173,9 +236,9 @@ namespace litl
 
         std::vector<Asset*> dependencies;
 
-        if (asset->assetOps->gatherDependencies != nullptr)
+        if (asset->assetOps->gatherAssetDependencies != nullptr)
         {
-            if (!asset->assetOps->gatherDependencies(asset, assetManager, dependencies))
+            if (!asset->assetOps->gatherAssetDependencies(asset, assetManager, dependencies))
             {
                 asset->setError(asset->error, AssetErrorCode::DependencyResolveFailed);
                 co_return false;

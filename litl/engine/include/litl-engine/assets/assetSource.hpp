@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "litl-core/constants.hpp"
@@ -34,6 +35,11 @@ namespace litl
         /// Used to describe an asset location for error logging. May be a file path, bundle path, etc.
         /// </summary>
         [[nodiscard]] virtual std::string describe(AssetLocator locator) const noexcept = 0;
+
+        /// <summary>
+        /// Given a relative reference location, returns the AssetLocator for the asset.
+        /// </summary>
+        [[nodiscard]] virtual bool resolve(AssetLocator base, std::string_view reference, AssetLocator& outLocator) noexcept = 0;
     };
 }
 

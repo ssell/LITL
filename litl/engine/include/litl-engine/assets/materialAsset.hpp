@@ -40,18 +40,19 @@ namespace litl
         std::vector<MaterialAssetShaderDependency> materialShaderDependencies;
 
         static bool fetchAssetObject(Asset* asset, ObjectPool& objectPool) noexcept;
-        static bool decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept;
-        static bool gatherDependencies(Asset* asset, AssetManager& assetManager, std::vector<Asset*>& dependencies) noexcept;
+        static bool decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, std::span<import::ImportCompanion const> companions, AssetErrorCode& error) noexcept;
+        static bool gatherAssetDependencies(Asset* asset, AssetManager& assetManager, std::vector<Asset*>& dependencies) noexcept;
         static bool processOnMain(Asset* asset, AssetRegistration const& assetRegistration, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept;
     };
 
     inline constexpr Asset::AssetOps MaterialAssetOps = {
-        .fetchAssetObject        = &MaterialAsset::fetchAssetObject,
-        .decodeAssetBytes        = &MaterialAsset::decodeBytes,
-        .processOnWorker         = nullptr,
-        .gatherDependencies      = &MaterialAsset::gatherDependencies,
-        .processOnMain           = &MaterialAsset::processOnMain,
-        .requiresAllDependencies = true
+        .fetchAssetObject         = &MaterialAsset::fetchAssetObject,
+        .scanExternalDependencies = nullptr,
+        .decodeAssetBytes         = &MaterialAsset::decodeBytes,
+        .processOnWorker          = nullptr,
+        .gatherAssetDependencies  = &MaterialAsset::gatherAssetDependencies,
+        .processOnMain            = &MaterialAsset::processOnMain,
+        .requiresAllDependencies  = true
     };
 }
 

@@ -12,7 +12,7 @@ namespace litl::import
         None = 0u,
         ImporterNotImplemented = 1u,
         ExporterNotImplemented = 2u,
-        NoImporterForSourceExtension = 3u,
+        NoImporterForSourceType = 3u,
         NoExporterForImportedDataType = 4u,
         SourceFileDoesNotExist = 5u,
         FailedToReadSourceFile = 6u,

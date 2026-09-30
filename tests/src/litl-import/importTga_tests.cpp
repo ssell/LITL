@@ -61,7 +61,7 @@ namespace litl::tests
             }
         };
 
-        const import::Result result = importer.importForMemory(import::ImportSourceType::TextureTga, s_testTgaSourceLocation, *sourceBytes, settings, data, true);
+        const import::Result result = importer.importForMemory(import::ImportSourceType::TextureTga, s_testTgaSourceLocation, *sourceBytes, settings, {}, data, true);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
@@ -127,7 +127,7 @@ namespace litl::tests
             }
         };
 
-        import::Result result = importer.importForWriting(import::ImportSourceType::TextureTga, s_testTgaSourceLocation, *sourceBytes, settings, results);
+        import::Result result = importer.importForWriting(import::ImportSourceType::TextureTga, s_testTgaSourceLocation, *sourceBytes, settings, {}, results);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);

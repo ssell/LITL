@@ -29,7 +29,9 @@ add_library(litl-import STATIC
 	"src/texture/import/stb.cpp" 
 	"src/texture/export/textureExporter.cpp" 
 	"src/texture/intermediate/textureIntermediateData.cpp" 
-	"src/texture/intermediate/litlbtex.cpp" "src/texture/import/tga.cpp")
+	"src/texture/intermediate/litlbtex.cpp" 
+	"src/texture/import/tga.cpp" 
+	"src/importer.cpp")
 
 target_include_directories(litl-import
 	PUBLIC

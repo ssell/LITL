@@ -56,7 +56,10 @@ namespace litl
         InvalidImportedItemCount    = 17u,
         DecodeBytesResultEmpty      = 18u,
         DecodeBytesUnexpectedResult = 19u,
-        InvalidAssetSource          = 20u
+        InvalidAssetSource          = 20u,
+        ScanDependenciesFailed      = 21u,
+        ScanBytesEmpty              = 22u,
+        ExternalFormatScanFailed    = 23u
     };
 }
 

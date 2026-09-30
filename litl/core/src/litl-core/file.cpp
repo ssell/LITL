@@ -34,11 +34,21 @@ namespace litl
         refresh();
     }
 
+    File::File(std::filesystem::path const& path) : m_file(path)
+    {
+        refresh();
+    }
+
     File::File(std::filesystem::directory_entry const& entry) : m_file(entry.path())
     {
         // Prefer refresh here instead of pulling straight from the directory_entry.
         // The directory_entry::file_size() and directory_entry::last_write_time() can throw exceptions.
         refresh();
+    }
+
+    bool File::operator==(File const& other) const noexcept
+    {
+        return (m_file == other.m_file);
     }
 
     bool File::erase() noexcept
@@ -292,5 +302,27 @@ namespace litl
     std::filesystem::path const& File::getFileSystempath() const noexcept
     {
         return m_file;
+    }
+
+    std::optional<std::filesystem::path> File::ResolvePath(std::filesystem::path const& base, std::string_view referencePath) noexcept
+    {
+        if (referencePath.empty())
+        {
+            return std::nullopt;
+        }
+
+        // Copy element-wise into char8_t so the path treats the bytes as UTF-8, not the ANSI code page.
+        std::u8string portable(referencePath.begin(), referencePath.end());
+        std::ranges::replace(portable, u8'\\', u8'/');
+
+#ifndef _WIN32
+        // "C:/..." is not absolute on POSIX; it would silently become <base>/C:/...
+        if ((portable.size() >= 2) && std::isalpha(static_cast<unsigned char>(portable[0])) && (portable[1] == u8':'))
+        {
+            return std::nullopt;
+        }
+#endif
+
+        return (base / std::filesystem::path(portable)).lexically_normal();
     }
 }

@@ -51,7 +51,7 @@ namespace litl::import
 
     }
 
-    Result TgaImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, ImportedData& importedData) noexcept
+    Result TgaImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, ImportedData& importedData) noexcept
     {
         if (sourceBytes.size() > std::numeric_limits<int>::max())
         {

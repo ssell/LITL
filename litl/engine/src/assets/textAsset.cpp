@@ -28,7 +28,7 @@ namespace litl
         return (text->text != nullptr);
     }
 
-    bool TextAsset::decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
+    bool TextAsset::decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, std::span<import::ImportCompanion const> companions, AssetErrorCode& error) noexcept
     {
         if (bytes.empty())
         {

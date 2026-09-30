@@ -43,12 +43,12 @@ namespace litl
         return true;
     }
 
-    bool decodeNonLitlMaterialBinaryBytes(MaterialAsset* materialAsset, AssetRegistration const& assetRegistration, std::span<std::byte const> otherBytes, AssetErrorCode& error) noexcept
+    bool decodeNonLitlMaterialBinaryBytes(MaterialAsset* materialAsset, AssetRegistration const& assetRegistration, std::span<std::byte const> otherBytes, std::span<import::ImportCompanion const> companions, AssetErrorCode& error) noexcept
     {
         import::ImportService importer{};
         import::ImportedData importedData{};
 
-        const auto importResult = importer.importForMemory(assetRegistration.sourceType, assetRegistration.location, otherBytes, assetRegistration.importSettings, importedData, true);
+        const auto importResult = importer.importForMemory(assetRegistration.sourceType, assetRegistration.location, otherBytes, assetRegistration.importSettings, companions, importedData, true);
 
         if (importResult.success)
         {
@@ -91,7 +91,7 @@ namespace litl
         }
     }
 
-    bool MaterialAsset::decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
+    bool MaterialAsset::decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, std::span<import::ImportCompanion const> companions, AssetErrorCode& error) noexcept
     {
         if (bytes.empty())
         {
@@ -108,11 +108,11 @@ namespace litl
         else
         {
             logWarning("Decoding material asset with key '", asset->key, "' directly from external format. It is recommended to first convert the material to the internal .litlbmat format to improve loading performance.");
-            return decodeNonLitlMaterialBinaryBytes(materialAsset, assetRegistration, bytes, error);
+            return decodeNonLitlMaterialBinaryBytes(materialAsset, assetRegistration, bytes, companions, error);
         }
     }
 
-    bool MaterialAsset::gatherDependencies(Asset* asset, AssetManager& assetManager, std::vector<Asset*>& dependencies) noexcept
+    bool MaterialAsset::gatherAssetDependencies(Asset* asset, AssetManager& assetManager, std::vector<Asset*>& dependencies) noexcept
     {
         MaterialAsset* materialAsset = static_cast<MaterialAsset*>(asset);
 

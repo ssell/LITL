@@ -41,12 +41,12 @@ namespace litl
             return true;
         }
 
-        [[nodiscard]] bool decodeNonLitlTextureBytes(TextureAsset* textureAsset, AssetRegistration const& assetRegistration, std::span<std::byte const> otherBytes, AssetErrorCode& error) noexcept
+        [[nodiscard]] bool decodeNonLitlTextureBytes(TextureAsset* textureAsset, AssetRegistration const& assetRegistration, std::span<std::byte const> otherBytes, std::span<import::ImportCompanion const> companions, AssetErrorCode& error) noexcept
         {
             import::ImportService importer{};
             import::ImportedData importedData{};
 
-            const auto importResult = importer.importForMemory(assetRegistration.sourceType, assetRegistration.location, otherBytes, assetRegistration.importSettings, importedData, true);
+            const auto importResult = importer.importForMemory(assetRegistration.sourceType, assetRegistration.location, otherBytes, assetRegistration.importSettings, companions, importedData, true);
 
             if (importResult.success)
             {
@@ -90,7 +90,7 @@ namespace litl
         }
     }
 
-    bool TextureAsset::decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept
+    bool TextureAsset::decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, std::span<import::ImportCompanion const> companions, AssetErrorCode& error) noexcept
     {
         if (bytes.empty())
         {
@@ -107,7 +107,7 @@ namespace litl
         else
         {
             logWarning("Decoding texture asset with key '", asset->key, "' directly from external format. It is recommended to first convert the mesh to the internal .litlbtex format to improve loading performance.");
-            return decodeNonLitlTextureBytes(textureAsset, assetRegistration, bytes, error);
+            return decodeNonLitlTextureBytes(textureAsset, assetRegistration, bytes, companions, error);
         }
     }
 

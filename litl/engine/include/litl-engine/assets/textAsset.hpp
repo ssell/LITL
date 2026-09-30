@@ -16,17 +16,18 @@ namespace litl
         Text* text{ nullptr };
 
         static bool fetchAssetObject(Asset* asset, ObjectPool& objectPool) noexcept;
-        static bool decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept;
+        static bool decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, std::span<import::ImportCompanion const> companions, AssetErrorCode& error) noexcept;
         static bool processOnMain(Asset* asset, AssetRegistration const& assetRegistration, AssetManager& assetManager, ObjectPool& objectPool, AssetErrorCode& error) noexcept;
     };
 
     inline constexpr Asset::AssetOps TextAssetOps = {
-        .fetchAssetObject        = &TextAsset::fetchAssetObject,
-        .decodeAssetBytes        = &TextAsset::decodeBytes,
-        .processOnWorker         = nullptr,
-        .gatherDependencies      = nullptr,
-        .processOnMain           = &TextAsset::processOnMain,
-        .requiresAllDependencies = true
+        .fetchAssetObject         = &TextAsset::fetchAssetObject,
+        .scanExternalDependencies = nullptr,
+        .decodeAssetBytes         = &TextAsset::decodeBytes,
+        .processOnWorker          = nullptr,
+        .gatherAssetDependencies  = nullptr,
+        .processOnMain            = &TextAsset::processOnMain,
+        .requiresAllDependencies  = true
     };
 }
 
