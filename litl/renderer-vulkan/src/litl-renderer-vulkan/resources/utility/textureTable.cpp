@@ -287,9 +287,14 @@ namespace litl::vulkan
             return false;
         }
 
-        m_slotOwners[slot] = m_slotOwners[static_cast<uint32_t>(TextureTableReservedIndices::Pink)];        // A released texture will show up as pink if a bad reference exists
+        m_slotOwners[slot] = {};
         m_freeSlots.push_back(slot);
         m_freeCount++;
+
+        if (!writeSlot(slot, m_pContext->resources.getTexture(m_fallbackHandle)))
+        {
+            logWarning("Failed to set released texture table slot ", slot, " to fallback texture handle.");
+        }
 
         return true;
     }
@@ -308,11 +313,14 @@ namespace litl::vulkan
             return false;
         }
 
+        bool updatedExistingSlot = false;
+
         if (m_slotOwners[slot].isValid())
         {
             // Updating an existing occupied slot. Capacity is already accounted for.
             logWarning("Updating an existing occupied Vulkan texture table slot (", slot, "). Release by previous owner may have an unintended result.");
             m_slotOwners[slot] = handle;
+            updatedExistingSlot = true;
         }
         else
         {
@@ -324,11 +332,20 @@ namespace litl::vulkan
 
         if (!writeSlot(slot, m_pContext->resources.getTexture(handle)))
         {
-            m_freeCount++;
-            m_freeSlots.push_back(slot);
+            if (!updatedExistingSlot)
+            {
+                m_freeCount++;
+                m_freeSlots.push_back(slot);
+            }
+
             m_slotOwners[slot] = {};
 
             return false;
+        }
+
+        if (slot == 0u)
+        {
+            m_fallbackHandle = handle;
         }
 
         return true;

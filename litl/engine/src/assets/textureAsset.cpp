@@ -143,7 +143,7 @@ namespace litl
             .faceCount = 1u,                            // update when adding support for faces
             .sampleCount = MultisampleCount::Count1,    // update when adding support for multi-sampling
             .isCubeMap = false,                         // update when adding support for cubemaps
-            .residesInTextureTable = true,
+            .residesInTextureTable = assetRegistration.importSettings.texture.residesInTextureTable,
             .name = textureAsset->key
         };
 

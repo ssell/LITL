@@ -38,7 +38,6 @@ namespace litl
 
         std::shared_ptr<import::MaterialIntermediateData> materialIntermediateData;
         std::vector<MaterialAssetShaderDependency> materialShaderDependencies;
-        std::vector<MaterialAssetTextureDependency> materialTextureDependencies;
 
         static bool fetchAssetObject(Asset* asset, ObjectPool& objectPool) noexcept;
         static bool decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, AssetErrorCode& error) noexcept;

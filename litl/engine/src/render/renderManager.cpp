@@ -190,7 +190,11 @@ namespace litl
 
             if (texture != nullptr)
             {
-                const std::array<uint8_t, 4> pixels = { static_cast<uint8_t>(value.r() * 255), static_cast<uint8_t>(value.g() * 255), static_cast<uint8_t>(value.b() * 255), static_cast<uint8_t>(value.a() * 255) };
+                const std::array<uint8_t, 4> pixels = { 
+                    static_cast<uint8_t>((value.r() * 255.0f) + 0.5f), 
+                    static_cast<uint8_t>((value.g() * 255.0f) + 0.5f), 
+                    static_cast<uint8_t>((value.b() * 255.0f) + 0.5f), 
+                    static_cast<uint8_t>((value.a() * 255.0f) + 0.5f) };
 
                 if (texture->setPixelBytes(as_byte_span(pixels)))
                 {
@@ -211,7 +215,7 @@ namespace litl
             createDefaultTexture("LITL_INTERNAL_Texture_Pink", colors::Pink, static_cast<uint32_t>(TextureTableReservedIndices::Pink));
             createDefaultTexture("LITL_INTERNAL_Texture_White", colors::White, static_cast<uint32_t>(TextureTableReservedIndices::White));
             createDefaultTexture("LITL_INTERNAL_Texture_Black", colors::Black, static_cast<uint32_t>(TextureTableReservedIndices::Black));
-            createDefaultTexture("LITL_INTERNAL_Texture_TangentNormal", color{ 0.0f, 0.0f, 1.0f, 1.0f }, static_cast<uint32_t>(TextureTableReservedIndices::TangentNormal));        // Encodes to (0.5, 0.5, 1.0)
+            createDefaultTexture("LITL_INTERNAL_Texture_TangentNormal", color{ 0.5f, 0.5f, 1.0f, 1.0f }, static_cast<uint32_t>(TextureTableReservedIndices::TangentNormal));
         }
 
         void trackDirtyBuffer(GpuBufferHandle handle) noexcept

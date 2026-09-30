@@ -1,4 +1,4 @@
- #include "litl-engine/startup.hpp"
+#include "litl-engine/startup.hpp"
 #include "spinSystem.hpp"
 
 namespace litl::samples

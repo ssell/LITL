@@ -25,6 +25,7 @@ namespace litl::import
         TextureSemantic semantic{ TextureSemantic::Unknown };
         TransferFunction transfer{ TransferFunction::Linear };
         bool mipmaps{ false };
+        bool residesInTextureTable{ true };
     };
 
     inline constexpr TextureImportSettings ColorTextureImportSettings{

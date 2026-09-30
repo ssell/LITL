@@ -44,6 +44,7 @@ namespace litl::vulkan
         VkDescriptorSetLayout m_vkDescriptorSetLayout{ VK_NULL_HANDLE };
         VkDescriptorSet m_vkDescriptorSet{ VK_NULL_HANDLE };
         VkPipelineLayout m_vkPipelineLayout{ VK_NULL_HANDLE };
+        TextureResourceHandle m_fallbackHandle{};
         std::vector<TextureResourceHandle> m_slotOwners;
         std::vector<uint32_t> m_freeSlots;
         uint32_t m_head{ 0u };

@@ -118,7 +118,6 @@ namespace litl
 
         dependencies.clear();
         materialAsset->materialShaderDependencies.clear();
-        materialAsset->materialTextureDependencies.clear();
 
         if (materialAsset->materialIntermediateData == nullptr)
         {
@@ -152,20 +151,16 @@ namespace litl
         {
             if (property.type == import::LitlMatPropertyType::Texture)
             {
-                auto* textureAsset = std::get_if<std::string>(&property.value);
+                auto* textureAssetPath = std::get_if<std::string>(&property.value);
 
-                if (textureAsset != nullptr)
+                if (textureAssetPath != nullptr)
                 {
-                    auto textureAssetHandle = assetManager.getTextureHandle(*textureAsset);
+                    auto textureAssetHandle = assetManager.getTextureHandle(*textureAssetPath);
                     auto* textureAsset = assetManager.getTexture(textureAssetHandle);
 
                     if (textureAsset != nullptr)
                     {
                         dependencies.push_back(textureAsset);
-
-                        materialAsset->materialTextureDependencies.push_back(MaterialAssetTextureDependency{
-                            .handle = textureAssetHandle
-                        });
                     }
                 }
             }

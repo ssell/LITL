@@ -1,7 +1,7 @@
 name = "Unlit"
 
 [shaders]
-vertex = { resource = "shaders/unlit", entry = "vertexMain" }
+vertex   = { resource = "shaders/unlit", entry = "vertexMain" }
 fragment = { resource = "shaders/unlit", entry = "fragmentMain" }
 
 [properties]

@@ -693,7 +693,7 @@ namespace litl
 
         bool setBool(StringId property, bool value, MaterialPropertySlotId slot, bool isDefault) noexcept
         {
-            if (!slot.isValid())
+            if (!slot.isValid() && !isDefault)
             {
                 return false;
             }
@@ -709,7 +709,7 @@ namespace litl
 
         bool setInt32(StringId property, int32_t value, MaterialPropertySlotId slot, bool isDefault) noexcept
         {
-            if (!slot.isValid())
+            if (!slot.isValid() && !isDefault)
             {
                 return false;
             }
@@ -725,7 +725,7 @@ namespace litl
 
         bool setUint32(StringId property, uint32_t value, MaterialPropertySlotId slot, bool isDefault) noexcept
         {
-            if (!slot.isValid())
+            if (!slot.isValid() && !isDefault)
             {
                 return false;
             }
@@ -741,7 +741,7 @@ namespace litl
 
         bool setFloat(StringId property, float value, MaterialPropertySlotId slot, bool isDefault) noexcept
         {
-            if (!slot.isValid())
+            if (!slot.isValid() && !isDefault)
             {
                 return false;
             }
@@ -757,7 +757,7 @@ namespace litl
 
         bool setDouble(StringId property, double value, MaterialPropertySlotId slot, bool isDefault) noexcept
         {
-            if (!slot.isValid())
+            if (!slot.isValid() && !isDefault)
             {
                 return false;
             }
@@ -773,7 +773,7 @@ namespace litl
 
         bool setVec2(StringId property, vec2 value, MaterialPropertySlotId slot, bool isDefault) noexcept
         {
-            if (!slot.isValid())
+            if (!slot.isValid() && !isDefault)
             {
                 return false;
             }
@@ -789,7 +789,7 @@ namespace litl
 
         bool setVec3(StringId property, vec3 value, MaterialPropertySlotId slot, bool isDefault) noexcept
         {
-            if (!slot.isValid())
+            if (!slot.isValid() && !isDefault)
             {
                 return false;
             }
@@ -805,7 +805,7 @@ namespace litl
 
         bool setVec4(StringId property, vec4 const& value, MaterialPropertySlotId slot, bool isDefault) noexcept
         {
-            if (!slot.isValid())
+            if (!slot.isValid() && !isDefault)
             {
                 return false;
             }
@@ -821,7 +821,7 @@ namespace litl
 
         bool setColor(StringId property, color const& value, MaterialPropertySlotId slot, bool isDefault) noexcept
         {
-            if (!slot.isValid())
+            if (!slot.isValid() && !isDefault)
             {
                 return false;
             }
@@ -837,7 +837,7 @@ namespace litl
 
         bool setMat3(StringId property, mat3 const& value, MaterialPropertySlotId slot, bool isDefault) noexcept
         {
-            if (!slot.isValid())
+            if (!slot.isValid() && !isDefault)
             {
                 return false;
             }
@@ -853,7 +853,7 @@ namespace litl
 
         bool setMat4(StringId property, mat4 const& value, MaterialPropertySlotId slot, bool isDefault) noexcept
         {
-            if (!slot.isValid())
+            if (!slot.isValid() && !isDefault)
             {
                 return false;
             }
@@ -869,7 +869,7 @@ namespace litl
 
         bool setTexture(StringId property, TextureHandle handle, MaterialPropertySlotId slot, bool isDefault) noexcept
         {
-            if (!slot.isValid())
+            if (!slot.isValid() && !isDefault)
             {
                 return false;
             }
