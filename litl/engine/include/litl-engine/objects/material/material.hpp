@@ -262,6 +262,11 @@ namespace litl
         bool setMat4(StringId property, mat4 const& value, MaterialPropertySlotId slot) noexcept;
 
         /// <summary>
+        /// Sets the texture with the specified property name at the provided slot index.
+        /// </summary>
+        bool setTexture(StringId property, TextureHandle handle, MaterialPropertySlotId slot) noexcept;
+
+        /// <summary>
         /// Sets the default bool value for the specified property.
         /// This value will be applied to all slots that have do have a custom value set.
         /// </summary>
@@ -326,6 +331,12 @@ namespace litl
         /// This value will be applied to all slots that have do have a custom value set.
         /// </summary>
         bool setDefaultMat4(StringId property, mat4 const& value) noexcept;
+
+        /// <summary>
+        /// Sets the default texture value for the specified property.
+        /// This value will be applied to all slots that have do have a custom value set.
+        /// </summary>
+        bool setDefaultTexture(StringId property, TextureHandle handle) noexcept;
 
     private:
 

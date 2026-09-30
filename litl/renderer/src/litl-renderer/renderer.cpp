@@ -290,6 +290,11 @@ namespace litl
         return m_pOps->unmapTexture(m_pContext, texture);
     }
 
+    uint32_t Renderer::getTextureTableIndex(TextureResourceHandle texture) const noexcept
+    {
+        return m_pOps->getTextureTableIndex(m_pContext, texture);
+    }
+
     // ---------------------------------------------------------------------------------
     // Drawing
     // ---------------------------------------------------------------------------------

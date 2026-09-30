@@ -23,6 +23,11 @@ namespace litl
             m_descriptor.textureInfo.name = m_descriptor.objectInfo.name;
         }
 
+        if (m_descriptor.textureInfo.residesInTextureTable)
+        {
+            m_textureTableIndex = renderManager.getRenderer()->getTextureTableIndex(m_resourceHandle);
+        }
+
         resizePixelBuffer();
 
         return true;
@@ -79,6 +84,11 @@ namespace litl
         return m_descriptor;
     }
 
+    uint32_t Texture::getTextureTableIndex() const noexcept
+    {
+        return m_textureTableIndex;
+    }
+
     void Texture::updateDescriptor(Authority<TextureAsset> auth, TextureResourceDescriptor const& resourceDescriptor, bool persistOnCpu) noexcept
     {
         m_descriptor.textureInfo = resourceDescriptor;
@@ -118,7 +128,14 @@ namespace litl
         {
             m_resourceHandle = m_pRenderManager->getRenderer()->createTexture(m_descriptor.textureInfo);
 
-            if (!m_resourceHandle.isValid())
+            if (m_resourceHandle.isValid())
+            {
+                if (m_descriptor.textureInfo.residesInTextureTable)
+                {
+                    m_textureTableIndex = m_pRenderManager->getRenderer()->getTextureTableIndex(m_resourceHandle);
+                }
+            }
+            else
             {
                 logError("apply called for Texture '", m_descriptor.objectInfo.name, "' but failed to create underlying texture resource.");
                 return false;

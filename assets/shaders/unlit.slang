@@ -71,6 +71,7 @@ float4 SampleGlobalTexture(uint packedTextureSlotSamplerIndex, in SamplerState s
 
 // -----------------------------------------------------------------------------------------
 // Input
+// (these will eventually be moved into their own file)
 // -----------------------------------------------------------------------------------------
 
 // Maps to RenderPerFrameData in litl-engine/render/renderStructs.hpp
@@ -100,6 +101,7 @@ struct RenderInstanceData
 struct MaterialProperties
 {
     float3 tint;
+    uint albedo;
 }
 
 // Maps to RenderPushConstants in litl-engine/render/renderStructs.hpp
@@ -113,6 +115,11 @@ struct PushConstants
 };
 
 [[vk::push_constant]] PushConstants _pc;
+
+MaterialProperties FetchMaterialProperties(in uint globalInstanceId)
+{
+    return _pc->materialProperties[_pc->instanceData[globalInstanceId].materialSlot];
+}
 
 // -----------------------------------------------------------------------------------------
 // Vertex Shader
@@ -133,6 +140,7 @@ struct VertexOutput
     float3 normal   : NORMAL;
     float2 uv       : UV;
     float3 color    : COLOR;
+    uint globalInstanceId;
 };
 
 [shader("vertex")]
@@ -167,10 +175,11 @@ struct FragmentOutput
 FragmentOutput fragmentMain(VertexOutput input)
 {
     FragmentOutput output = (FragmentOutput)0;
+    MaterialProperties matProps = FetchMaterialProperties(input.globalInstanceId);
 
-    const float3 tint = input.color;
-    const float3 texColor = SampleGlobalTexture(0, input.uv).rgb;
-    const float3 color = (texColor);
+    const float3 tint = matProps.tint;
+    const float3 texColor = SampleGlobalTexture(matProps.albedo, input.uv).rgb;
+    const float3 color = texColor * tint;
 
     output.color = float4(color, 1.0f);
 

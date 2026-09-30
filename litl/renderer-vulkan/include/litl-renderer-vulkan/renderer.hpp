@@ -40,6 +40,7 @@ namespace litl::vulkan
     void destroyTexture(litl::RendererContext* context, TextureResourceHandle handle) noexcept;
     [[nodiscard]] RendererResult mapTexture(litl::RendererContext* context, TextureResourceHandle textureHandle, MappedTexture& mapped) noexcept;
     [[nodiscard]] RendererResult unmapTexture(litl::RendererContext* context, TextureResourceHandle textureHandle) noexcept;
+    [[nodiscard]] uint32_t getTextureTableIndex(litl::RendererContext* context, TextureResourceHandle textureHandle) noexcept;
     [[nodiscard]] ShaderStage getGraphicsPipelinePushConstantStages(litl::RendererContext* context, GraphicsPipelineHandle pipelineHandle) noexcept;
 
     // -------------------------------------------------------------------------------------
@@ -147,6 +148,7 @@ namespace litl::vulkan
         .cmdTextureUpload = &cmdTextureUpload,
         .mapTexture = &mapTexture,
         .unmapTexture = &unmapTexture,
+        .getTextureTableIndex = &getTextureTableIndex,
         .getGraphicsPipelinePushConstantStages = &getGraphicsPipelinePushConstantStages,
 
         // drawing

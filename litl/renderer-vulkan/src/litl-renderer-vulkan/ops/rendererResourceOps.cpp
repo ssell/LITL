@@ -268,6 +268,19 @@ namespace litl::vulkan
         return RendererResult::Success;
     }
 
+    uint32_t getTextureTableIndex(litl::RendererContext* context, TextureResourceHandle textureHandle) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+        auto* texture = vulkanContext->resources.getTexture(textureHandle);
+
+        if (texture == nullptr)
+        {
+            return Constants::uint32_null_index;
+        }
+
+        return texture->textureTableSlot;
+    }
+
     ShaderStage getGraphicsPipelinePushConstantStages(litl::RendererContext* context, GraphicsPipelineHandle pipelineHandle) noexcept
     {
         auto* vulkanContext = unwrap(context);

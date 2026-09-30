@@ -86,6 +86,7 @@ namespace litl
         RendererResult (*cmdTextureUpload)(RendererContext*, CommandBufferHandle, std::span<std::byte const>, std::span<TextureUploadRegion const>, TextureResourceHandle);
         RendererResult (*mapTexture)(RendererContext*, TextureResourceHandle, MappedTexture&);
         RendererResult (*unmapTexture)(RendererContext*, TextureResourceHandle);
+        uint32_t (*getTextureTableIndex)(RendererContext*, TextureResourceHandle);
 
         // pipeline commands and operations
         ShaderStage (*getGraphicsPipelinePushConstantStages)(RendererContext*, GraphicsPipelineHandle);
@@ -458,6 +459,12 @@ namespace litl
         /// </summary>
         /// <param name="texture"></param>
         RendererResult unmapTexture(TextureResourceHandle texture);
+
+        /// <summary>
+        /// Returns the index into the texture table that the texture resides in.
+        /// If the texture is not in the texture table then returns the uint32_t null index.
+        /// </summary>
+        [[nodiscard]] uint32_t getTextureTableIndex(TextureResourceHandle texture) const noexcept;
 
         // ---------------------------------------------------------------------------------
         // Drawing

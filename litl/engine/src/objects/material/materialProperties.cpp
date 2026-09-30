@@ -5,6 +5,10 @@
 #include "litl-core/math/common.hpp"
 #include "litl-engine/objects/material/materialProperties.hpp"
 #include "litl-engine/objects/material/deferredMaterialCommands.hpp"
+#include "litl-engine/objects/texture.hpp"
+#include "litl-renderer/resources/sampler.hpp"
+#include "litl-renderer/resources/texture.hpp"
+#include "litl-renderer/utility.hpp"
 
 namespace litl
 {
@@ -869,6 +873,58 @@ namespace litl
         }
 
         return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot, defaultValue);
+    }
+
+    bool MaterialProperties::setTexture(StringId property, Texture* texture, MaterialPropertySlotId slot, bool defaultValue) noexcept
+    {
+        auto* reflectedProperty = getReflectedProperty(property);
+
+        if (reflectedProperty == nullptr)
+        {
+            return false;
+        }
+
+        // Is this an index into our global texture table?
+        if ((reflectedProperty->variable.scalarType == ShaderScalarType::Integer) &&
+            (reflectedProperty->variable.scalarSize == sizeof(uint32_t)) &&
+            (reflectedProperty->variable.componentCount == 1u))
+        {
+            uint32_t textureIndex = static_cast<uint32_t>(TextureTableReservedIndices::Pink);
+
+            if (texture != nullptr)
+            {
+                const auto& textureDescriptor = texture->getDescriptor();
+
+                if (textureDescriptor.textureInfo.residesInTextureTable)
+                {
+                    textureIndex = texture->getTextureTableIndex();
+                }
+                else
+                {
+                    logError("Attempting to set global texture table index for material but the provided texture '", textureDescriptor.objectInfo.name, "' does not reside in the global texture table.");
+                }
+            }
+            else
+            {
+                logError("Attempting to set global texture table index for material but the provided texture does not exist.");
+            }
+
+            uint32_t samplerIndex = static_cast<uint32_t>(SamplerPredefines::LinearRepeat);
+
+            // ... todo specify sampler in material ...
+
+            const uint32_t packedTextureSamplerIndex = packTextureSlotSamplerIndex(textureIndex, samplerIndex);
+
+            return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &packedTextureSamplerIndex, slot, defaultValue);
+        }
+        // Is this a non-global texture table texture? (TODO)
+        else
+        {
+            logWarning("Attempting to set non-global texture table texture in material. This is currently not yet supported.");
+            return false;
+        }
+
+        return false;
     }
 
     void MaterialProperties::setReady() noexcept

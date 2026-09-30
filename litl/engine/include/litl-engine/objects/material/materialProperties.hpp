@@ -17,6 +17,8 @@
 
 namespace litl
 {
+    class Texture;
+
     struct MaterialPropertySlot
     {
         /// <summary>
@@ -349,6 +351,12 @@ namespace litl
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
         bool setMat4(StringId property, mat4 const& value, MaterialPropertySlotId slot, bool defaultValue) noexcept;
+
+        /// <summary>
+        /// Sets the texture with the specified property name at the provided slot index.
+        /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
+        /// </summary>
+        bool setTexture(StringId property, Texture* texture, MaterialPropertySlotId slot, bool defaultValue) noexcept;
 
         void setReady() noexcept;
 

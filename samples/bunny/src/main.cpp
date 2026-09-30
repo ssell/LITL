@@ -1,4 +1,4 @@
-#include "litl-engine/startup.hpp"
+ #include "litl-engine/startup.hpp"
 #include "spinSystem.hpp"
 
 namespace litl::samples
@@ -14,11 +14,11 @@ namespace litl::samples
         auto sceneView = services.get<SceneView>();
         auto assets = services.get<AssetManager>();
 
-        createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(-5.0f, 1.5f, 0.0f), vec3(5.0f, 1.5f, 0.0f), vec3::up(), *objectPool, *sceneView);
+        createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(-5.0f, 2.5f, 0.0f), vec3(5.0f, 1.5f, 0.0f), vec3::up(), *objectPool, *sceneView);
 
         const auto bunnyEntity = commands.createEntity();
         commands.addComponent<Transform>(bunnyEntity, Transform::create(vec3{ 0.0f, 1.0f, 0.0f }));
-        commands.addComponent<PendingModelInstance>(bunnyEntity, createModelInstance("mesh/bunny", "materials/unlit", *assets));
+        commands.addComponent<PendingModelInstance>(bunnyEntity, createModelInstance("models/cube", "materials/unlit", *assets));       // Using cube instead of bunny for now since OBJ bunny has no texture coords
         commands.addComponent<LocalBounds>(bunnyEntity);
         commands.addComponent<Spin>(bunnyEntity);
 

@@ -163,7 +163,28 @@ namespace litl
                     break;
 
                 case import::LitlMatPropertyType::Texture:
-                    logWarning("Material '", descriptor.objectInfo.name, "' specified a default value for Texture property '", defaultProperty.name, "'. This property type is currently unsupported.");
+                    {
+                        auto const* defaultValue = std::get_if<std::string>(&defaultProperty.value);
+
+                        if (defaultValue != nullptr)
+                        {
+                            // Global texture index
+                            auto* textureAsset = assetManager->getTexture(*defaultValue);
+
+                            if (textureAsset != nullptr)
+                            {
+                                properties.setTexture(StringId(defaultProperty.name), textureAsset->texture, {}, true);
+                            }
+                            else
+                            {
+                                logWarning("Material '", descriptor.objectInfo.name, "' failed to retrieve default texture '", defaultValue->c_str(), "' for property '", defaultProperty.name, "'.");
+                            }
+                        }
+                        else
+                        {
+                            logWarning("Material '", descriptor.objectInfo.name, "' specified a default value for non-global texture table texture property '", defaultProperty.name, "'. This property type is currently unsupported.");
+                        }
+                    }
                     break;
 
                 case import::LitlMatPropertyType::Unknown:
@@ -845,6 +866,22 @@ namespace litl
 
             return true;
         }
+
+        bool setTexture(StringId property, TextureHandle handle, MaterialPropertySlotId slot, bool isDefault) noexcept
+        {
+            if (!slot.isValid())
+            {
+                return false;
+            }
+
+            if (!properties.setTexture(property, objectPool->getTexture(handle), slot, isDefault))
+            {
+                logWarning("Failed to set ", (isDefault ? "default " : ""), "texture value in material '", descriptor.objectInfo.name, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
+                return false;
+            }
+
+            return true;
+        }
     };
 
     Material::Material()
@@ -1022,6 +1059,11 @@ namespace litl
         return m_pImpl->setMat4(property, value, slot, false);
     }
 
+    bool Material::setTexture(StringId property, TextureHandle handle, MaterialPropertySlotId slot) noexcept
+    {
+        return m_pImpl->setTexture(property, handle, slot, false);
+    }
+
     bool Material::setDefaultBool(StringId property, bool value) noexcept
     {
         return m_pImpl->setBool(property, value, {}, true);
@@ -1075,6 +1117,11 @@ namespace litl
     bool Material::setDefaultMat4(StringId property, mat4 const& value) noexcept
     {
         return m_pImpl->setMat4(property, value, {}, true);
+    }
+
+    bool Material::setDefaultTexture(StringId property, TextureHandle handle) noexcept
+    {
+        return m_pImpl->setTexture(property, handle, {}, true);
     }
 
     // -------------------------------------------------------------------------------------
