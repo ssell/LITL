@@ -277,17 +277,17 @@ namespace litl::vulkan
     {
         if (slot >= m_capacity)
         {
-            logWarning("Attempting to free slot ", slot, " in Vulkan TextureTable that is out-of-bounds (max = ", m_capacity, ")");
+            logWarning("Attempting to free slot ", slot, " in Vulkan texture table that is out-of-bounds (max = ", m_capacity, ")");
             return false;
         }
 
         if (!m_slotOwners[slot].isValid())
         {
-            logWarning("Attempting to free slot in Vulkan TextureTable that is not currently owned.");
+            logWarning("Attempting to free slot in Vulkan texture table that is not currently owned.");
             return false;
         }
 
-        m_slotOwners[slot] = {};
+        m_slotOwners[slot] = m_slotOwners[static_cast<uint32_t>(TextureTableReservedIndices::Pink)];        // A released texture will show up as pink if a bad reference exists
         m_freeSlots.push_back(slot);
         m_freeCount++;
 
@@ -298,19 +298,20 @@ namespace litl::vulkan
     {
         if (!handle.isValid())
         {
-            logWarning("Attempting to update slot ", slot, " in Vulkan TextureTable with an invalid handle.");
+            logWarning("Attempting to update slot ", slot, " in Vulkan texture table with an invalid handle.");
             return false;
         }
 
         if (slot >= m_capacity)
         {
-            logWarning("Attempting to update slot ", slot, " in Vulkan TextureTable that is out-of-bounds (max = ", m_capacity, ")");
+            logWarning("Attempting to update slot ", slot, " in Vulkan texture table that is out-of-bounds (max = ", m_capacity, ")");
             return false;
         }
 
         if (m_slotOwners[slot].isValid())
         {
             // Updating an existing occupied slot. Capacity is already accounted for.
+            logWarning("Updating an existing occupied Vulkan texture table slot (", slot, "). Release by previous owner may have an unintended result.");
             m_slotOwners[slot] = handle;
         }
         else
@@ -323,6 +324,10 @@ namespace litl::vulkan
 
         if (!writeSlot(slot, m_pContext->resources.getTexture(handle)))
         {
+            m_freeCount++;
+            m_freeSlots.push_back(slot);
+            m_slotOwners[slot] = {};
+
             return false;
         }
 

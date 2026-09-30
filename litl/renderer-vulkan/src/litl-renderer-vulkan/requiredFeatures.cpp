@@ -30,6 +30,7 @@ namespace litl::vulkan
             !supportedFeatures.features.geometryShader ||
             !supportedFeatures.features.tessellationShader ||
             !supportedFeatures.features.samplerAnisotropy ||
+            !supportedFeatures.features.shaderSampledImageArrayDynamicIndexing || 
             !supportedFeatures.features.shaderInt64 ||
             !supportedFeatures.features.textureCompressionBC)
         {
@@ -90,6 +91,7 @@ namespace litl::vulkan
                 .tessellationShader = VK_TRUE,                              // Enables tessellation shader suport.
                 .samplerAnisotropy = VK_TRUE,                               // Enables the use of anisotropic filtering in samplers.
                 .textureCompressionBC = VK_TRUE,                            // Enable Block Compression (BC) texture formats. We make use of BC4, BC5, BC6H, and BC7.
+                .shaderSampledImageArrayDynamicIndexing = VK_TRUE,          // Enable sampling of dynamic image arrays (like our global texture array).
                 .shaderInt64 = VK_TRUE                                      // Add support for 64-bit signed and unsigned integers. Needed for BDA addresses.
             }
         };

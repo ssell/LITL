@@ -217,13 +217,13 @@ namespace litl::vulkan
             {
                 if (reflectedSet0.bindings[1].type != ShaderResourceType::Sampler)
                 {
-                    logError("Descriptor Set Layout at index 0 (PerFrame) has unexpected type ", getShaderResourceTypeName(reflectedSet0.bindings[0].type), " at binding 1. Expected type of ", getShaderResourceTypeName(ShaderResourceType::Sampler));
+                    logError("Descriptor Set Layout at index 0 (PerFrame) has unexpected type ", getShaderResourceTypeName(reflectedSet0.bindings[1].type), " at binding 1. Expected type of ", getShaderResourceTypeName(ShaderResourceType::Sampler));
                     return false;
                 }
 
                 if (reflectedSet0.bindings[1].arraySize != 16u)
                 {
-                    logError("Descriptor Set Layout at index 0 (PerFrame) as unexpected arraySize of ", reflectedSet0.bindings[0].arraySize, " at binding 1. Expected arraySize of 16.");
+                    logError("Descriptor Set Layout at index 0 (PerFrame) as unexpected arraySize of ", reflectedSet0.bindings[1].arraySize, " at binding 1. Expected arraySize of 16.");
                     return false;
                 }
             }
