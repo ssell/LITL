@@ -26,6 +26,7 @@ namespace litl::samples
         commands.addComponent<Transform>(sponzaEntity, Transform::create(vec3::zero(), quat::identity(), 0.01f));                       // OBJ sponza has 1 unit = 1 centimeter, we use 1 unit = 1 meter. So scale by 0.01.
         commands.addComponent<PendingModelInstance>(sponzaEntity, createModelInstance("models/sponza", "materials/flat", *assets));
         commands.addComponent<LocalBounds>(sponzaEntity);
+
     }
 }
 

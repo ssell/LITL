@@ -1,3 +1,4 @@
+#include <array>
 #include <cstdint>
 #include <expected>
 #include <format>
@@ -31,10 +32,25 @@ namespace litl::import
                 return std::unexpected("Failed to create Slang Global session.");
             }
 
+            // Slang's capability inference over-approximates: referencing Texture2D from a fragment entry point pulls in the union of the type's method requirements (spvImageQuery, spvImageGatherExtended, spvSparseResidency, spvMinLod) 
+            // plus fragment-stage atoms (spvDerivativeControl, spvFragmentFullyCoveredEXT), regardless of which methods are actually called. SPV_GOOGLE_user_type comes from reflection decorations on resource declarations. 
+            // None of these appear as OpCapability in the emitted module — verified with spirv-dis. Declared here only to silence warning 41012.
+            const std::array<slang::CompilerOptionEntry, 7> compilerOptions{
+                slang::CompilerOptionEntry {.name = slang::CompilerOptionName::Capability, .value = slang::CompilerOptionValue {.intValue0 = global->findCapability("spvImageQuery") } },
+                slang::CompilerOptionEntry {.name = slang::CompilerOptionName::Capability, .value = slang::CompilerOptionValue {.intValue0 = global->findCapability("spvImageGatherExtended") } },
+                slang::CompilerOptionEntry {.name = slang::CompilerOptionName::Capability, .value = slang::CompilerOptionValue {.intValue0 = global->findCapability("spvSparseResidency") } },
+                slang::CompilerOptionEntry {.name = slang::CompilerOptionName::Capability, .value = slang::CompilerOptionValue {.intValue0 = global->findCapability("spvMinLod") } },
+                slang::CompilerOptionEntry {.name = slang::CompilerOptionName::Capability, .value = slang::CompilerOptionValue {.intValue0 = global->findCapability("spvDerivativeControl") } },
+                slang::CompilerOptionEntry {.name = slang::CompilerOptionName::Capability, .value = slang::CompilerOptionValue {.intValue0 = global->findCapability("spvFragmentFullyCoveredEXT") } },
+                slang::CompilerOptionEntry {.name = slang::CompilerOptionName::Capability, .value = slang::CompilerOptionValue {.intValue0 = global->findCapability("SPV_GOOGLE_user_type") } }
+            };
+
             const slang::TargetDesc targetDesc{
                 .format = SLANG_SPIRV,
-                .profile = global->findProfile("spirv_1_5"),            // for Vulkan 1.4
-                .flags = 0
+                .profile = global->findProfile("spirv_1_6"),            // requires Vulkan 1.3+
+                .flags = 0,
+                .compilerOptionEntries = reinterpret_cast<slang::CompilerOptionEntry const*>(compilerOptions.data()),
+                .compilerOptionEntryCount = static_cast<uint32_t>(compilerOptions.size())
             };
 
             const slang::SessionDesc sessionDesc{
@@ -185,7 +201,7 @@ namespace litl::import
             }
         }
 
-        auto spirvModule = compileSlang(t_slangSession.value(), location, "", sourceBytes);
+        auto spirvModule = compileSlang(t_slangSession.value(), location, location, sourceBytes);
 
         if (!spirvModule)
         {

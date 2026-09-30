@@ -66,7 +66,7 @@ float4 SampleGlobalTexture(uint packedTextureSlotSamplerIndex, in SamplerState s
 
     UnpackPackedTextureSlotSamplerIndex(packedTextureSlotSamplerIndex, /* out */ textureIndex, /* out */ samplerIndex);
 
-    return g_Textures[NonUniformResourceIndex(textureIndex)].Sample(NonUniformResourceIndex(samplerOverride), uv);
+    return g_Textures[NonUniformResourceIndex(textureIndex)].Sample(samplerOverride, uv);
 }
 
 // -----------------------------------------------------------------------------------------
