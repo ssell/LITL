@@ -105,7 +105,7 @@ namespace litl
                             // Failed to resolve a dependency
                             else
                             {
-                                encounteredDependencyFailures = false;
+                                encounteredDependencyFailures = true;
                             }
 
                             if (encounteredDependencyFailures && !assetRegistration.importSettings.continueOnDependencyFailure)

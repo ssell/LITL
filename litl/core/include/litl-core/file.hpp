@@ -126,7 +126,7 @@ namespace litl
         /// </summary>
         [[nodiscard]] static std::string SanitizeFilename(std::string_view name) noexcept;
 
-        [[nodiscard]] std::filesystem::path const& getFileSystempath() const noexcept;
+        [[nodiscard]] std::filesystem::path const& getFileSystemPath() const noexcept;
 
         [[nodiscard]] static std::optional<std::filesystem::path> ResolvePath(std::filesystem::path const& base, std::string_view referencePath) noexcept;
 

@@ -1,6 +1,7 @@
 #ifndef LITL_ENGINE_ASSETS_FILE_SOURCE_H__
 #define LITL_ENGINE_ASSETS_FILE_SOURCE_H__
 
+#include <deque>
 #include <mutex>
 
 #include "litl-core/file.hpp"
@@ -39,9 +40,11 @@ namespace litl
 
     private:
 
+        [[nodiscard]] bool isFileIndexSafe(uint32_t index) const noexcept;
+
         std::string m_root;
-        std::vector<File> m_files;
-        std::mutex m_filesMutex{};
+        std::deque<File> m_files;
+        mutable std::mutex m_filesMutex{};          // resolve is typically called on a worker thread and can add additional files to m_file. So this is needed to guard .size() and the resolve's .push_back
     };
 }
 

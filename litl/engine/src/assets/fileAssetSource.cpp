@@ -66,6 +66,8 @@ namespace litl
 
     void FileAssetSource::enumerate(std::vector<AssetRegistration>& registrations) noexcept
     {
+        // Note that enumerate does not need to lock m_files as this is done on the main thread prior to calls to read, resolve, etc.
+
         if (!Directory::exists(m_root))
         {
             logError("Root directory '", m_root, "' provided to FileAssetSource does not exists.");
@@ -78,8 +80,6 @@ namespace litl
         {
             return;
         }
-
-        m_files.reserve(maxFileCount);
 
         for (auto const& fileEntry : std::filesystem::recursive_directory_iterator(m_root))
         {
@@ -116,7 +116,7 @@ namespace litl
 
     bool FileAssetSource::read(AssetLocator locator, std::vector<std::byte>& bytes) noexcept
     {
-        if (locator.entryIndex >= m_files.size())
+        if (!isFileIndexSafe(locator.entryIndex))
         {
             return false;
         }
@@ -133,49 +133,60 @@ namespace litl
 
     std::string FileAssetSource::describe(AssetLocator locator) const noexcept
     {
-        if (locator.entryIndex >= m_files.size())
+        if (!isFileIndexSafe(locator.entryIndex))
         {
             return "FileAssetSource::UnknownPath";
         }
 
-        return relativePathFromRoot(m_files[locator.entryIndex].getFileSystempath(), m_root);
+        return relativePathFromRoot(m_files[locator.entryIndex].getFileSystemPath(), m_root);
     }
 
     bool FileAssetSource::resolve(AssetLocator base, std::string_view reference, AssetLocator& outLocator) noexcept
     {
-        if (base.entryIndex >= m_files.size())
+        if (!isFileIndexSafe(base.entryIndex))
         {
             return false;
         }
 
         // Base file. Build the reference file location from this path.
         auto& file = m_files[base.entryIndex];
-        auto referencePath = File::ResolvePath(file.getFileSystempath(), reference);
+        auto referencePath = File::ResolvePath(file.parentFolderPath(), reference);
 
         if (!referencePath.has_value())
         {
             return false;
         }
 
+        outLocator.sourceIndex = base.sourceIndex;
+        const File referenceFile{ referencePath.value() };
+
+        // First check if this a registered path already (unlikely)
+        for (uint32_t entryIndex = 0u; entryIndex < m_files.size(); ++entryIndex)
+        {
+            if (m_files[entryIndex] == referenceFile)
+            {
+                outLocator.entryIndex = entryIndex;
+                return true;
+            }
+        }
+
+        // Otherwise we have to add 
         {
             std::scoped_lock lock{ m_filesMutex };
-
-            outLocator.sourceIndex = base.sourceIndex;
-            const File referenceFile{ referencePath.value() };
-
-            // First check if this a registered path already (unlikely)
-            for (uint32_t entryIndex = 0u; entryIndex < m_files.size(); ++entryIndex)
-            {
-                if (m_files[entryIndex] == referenceFile)
-                {
-                    outLocator.entryIndex = entryIndex;
-                    return true;
-                }
-            }
-
-            // Otherwise we have to add 
-            outLocator.sourceIndex = static_cast<uint32_t>(m_files.size());
+            outLocator.entryIndex = static_cast<uint32_t>(m_files.size());
             m_files.push_back(referenceFile);
+        }
+
+        return true;
+    }
+
+    [[nodiscard]] bool FileAssetSource::isFileIndexSafe(uint32_t index) const noexcept
+    {
+        std::scoped_lock lock{ m_filesMutex };
+
+        if (index >= m_files.size())
+        {
+            return false;
         }
 
         return true;

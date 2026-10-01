@@ -299,7 +299,7 @@ namespace litl
         return sanitized;
     }
 
-    std::filesystem::path const& File::getFileSystempath() const noexcept
+    std::filesystem::path const& File::getFileSystemPath() const noexcept
     {
         return m_file;
     }
