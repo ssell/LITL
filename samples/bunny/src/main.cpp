@@ -16,11 +16,11 @@ namespace litl::samples
 
         createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(-5.0f, 2.5f, 0.0f), vec3(5.0f, 1.5f, 0.0f), vec3::up(), *objectPool, *sceneView);
 
-        const auto bunnyEntity = commands.createEntity();
-        commands.addComponent<Transform>(bunnyEntity, Transform::create(vec3{ 0.0f, 1.0f, 0.0f }));
-        commands.addComponent<PendingModelInstance>(bunnyEntity, createModelInstance("models/cube", "materials/unlit", *assets));       // Using cube instead of bunny for now since OBJ bunny has no texture coords
-        commands.addComponent<LocalBounds>(bunnyEntity);
-        commands.addComponent<Spin>(bunnyEntity);
+        //const auto bunnyEntity = commands.createEntity();
+        //commands.addComponent<Transform>(bunnyEntity, Transform::create(vec3{ 0.0f, 1.0f, 0.0f }));
+        //commands.addComponent<PendingModelInstance>(bunnyEntity, createModelInstance("models/cube", "materials/unlit", *assets));       // Using cube instead of bunny for now since OBJ bunny has no texture coords
+        //commands.addComponent<LocalBounds>(bunnyEntity);
+        //commands.addComponent<Spin>(bunnyEntity);
 
         auto sponzaEntity = commands.createEntity();
         commands.addComponent<Transform>(sponzaEntity, Transform::create(vec3::zero(), quat::identity(), 0.01f));                       // OBJ sponza has 1 unit = 1 centimeter, we use 1 unit = 1 meter. So scale by 0.01.

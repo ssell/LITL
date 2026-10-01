@@ -3,6 +3,7 @@
 #include <optional>
 
 #include "litl-engine/assets/assetManager.hpp"
+#include "litl-engine/objects/material/material.hpp"
 #include "litl-engine/ecs/systems/modelInstantiationSystem.hpp"
 #include "litl-import/model/intermediate/modelIntermediateData.hpp"
 
@@ -112,13 +113,32 @@ namespace litl
                         commands.addComponent<MeshRef>(nodeEntity, MeshRef{ .handle = meshAsset->handle });
                         commands.addComponent<LocalBounds>(nodeEntity, LocalBounds{ .bounds = meshAsset->bounds });
 
-                        if (false /* todo materials from the model */)
+                        // Prefer the material the model itself carries, falling back to the one supplied with the
+                        // PendingModelInstance when the model has none (or when its material failed to load).
+                        // Note: a single MaterialRef covers the whole mesh. A mesh whose faces reference several
+                        // materials needs a VariableMaterialsRef built from its submeshes. ... todo ...
+                        MaterialRef materialRef = fallbackMaterialRef;
+
+                        if (node.materialIndex < modelAsset->materialAssetHandles.size())
                         {
-                            // ... todo ...
+                            auto* materialAsset = assetManager.getMaterial(modelAsset->materialAssetHandles[node.materialIndex]);
+
+                            if ((materialAsset != nullptr) && (materialAsset->material != nullptr) && materialAsset->materialHandle.isValid())
+                            {
+                                materialRef.handle = materialAsset->materialHandle;
+                                materialRef.slot = materialAsset->material->allocateSlot();
+                            }
+                        }
+
+                        if (materialRef.handle.isValid())
+                        {
+                            commands.addComponent<MaterialRef>(nodeEntity, materialRef);
                         }
                         else
                         {
-                            commands.addComponent<MaterialRef>(nodeEntity, fallbackMaterialRef);
+                            // Without a material the CullingSystem discards this node, so say so rather than
+                            // leaving it to be found later as a silently missing mesh.
+                            logWarning("Model '", modelAsset->key, "' node '", node.name, "' has no valid material and no fallback was supplied. It will not be rendered.");
                         }
                     }
                 }

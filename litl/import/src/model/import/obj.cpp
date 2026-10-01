@@ -1,4 +1,6 @@
 #include <rapidobj/rapidobj.hpp>
+#include <algorithm>
+#include <string>
 #include <unordered_map>
 #include <span>
 #include <spanstream>
@@ -104,6 +106,58 @@ namespace litl::import
                     globalToLocalMaterialSlot.insert(sortedLocalUsedMaterialSlots[i], i);
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns the lowest global (objResult.materials) material index referenced by the shape,
+        /// or Constants::uint32_null_index if the shape references no material at all.
+        /// </summary>
+        uint32_t findFirstGlobalMaterialIndex(rapidobj::Mesh const& objMesh) noexcept
+        {
+            int32_t first = -1;
+
+            for (auto const& materialIndex : objMesh.material_ids)
+            {
+                if ((materialIndex >= 0) && ((first < 0) || (materialIndex < first)))
+                {
+                    first = materialIndex;
+                }
+            }
+
+            return ((first < 0) ? Constants::uint32_null_index : static_cast<uint32_t>(first));
+        }
+
+        /// <summary>
+        /// Builds an asset key for a texture referenced by an MTL. The reference is treated as relative to the
+        /// directory holding the model, and its extension is dropped, as asset keys carry neither.
+        /// For example a model at 'models/sponza.obj' referencing 'textures/lion.tga' becomes 'models/textures/lion'.
+        /// </summary>
+        std::string buildTextureAssetKey(std::string_view modelLocation, std::string_view texname) noexcept
+        {
+            std::string reference(texname);
+            std::replace(reference.begin(), reference.end(), '\\', '/');
+
+            // Drop the extension, taking care not to mistake a dot in a directory name for one.
+            const auto lastSlash = reference.find_last_of('/');
+            const auto lastDot = reference.find_last_of('.');
+
+            if ((lastDot != std::string::npos) && ((lastSlash == std::string::npos) || (lastDot > lastSlash)))
+            {
+                reference.resize(lastDot);
+            }
+
+            // Prefix with the directory that holds the model itself.
+            const auto modelDirEnd = modelLocation.find_last_of("/\\");
+            std::string key;
+
+            if (modelDirEnd != std::string_view::npos)
+            {
+                key.assign(modelLocation.substr(0u, modelDirEnd + 1u));
+            }
+
+            key.append(reference);
+
+            return toLowercase(key);
         }
 
         void convertToLitlMesh(GeoMesh* litlMesh, rapidobj::Mesh const& objMesh, rapidobj::Attributes const& objAttributes) noexcept
@@ -228,7 +282,8 @@ namespace litl::import
         // Create the Model
         // ---------------------------------------------------------------------------------
 
-        importedData.items.reserve(importedData.items.size() + objResult.shapes.size() + 1);        // 1 model + N meshes
+        importedData.items.reserve(importedData.items.size() + objResult.shapes.size() + objResult.materials.size() + 1);        // 1 model + N meshes + M materials
+        const uint32_t modelDataItemIndex = static_cast<uint32_t>(importedData.items.size());
         importedData.items.push_back({});
         auto& modelDataItem = importedData.items.back();
 
@@ -242,6 +297,81 @@ namespace litl::import
 
         modelDataItem.setName(location);
         modelImportResult->model->setName(modelDataItem.getName());
+
+        // ---------------------------------------------------------------------------------
+        // Add OBJ Materials to Model
+        //
+        // Materials are added ahead of the meshes so that the mesh nodes can reference them by index.
+        // ---------------------------------------------------------------------------------
+
+        // Maps a global (objResult.materials) index onto the material index within the Model. These hold the
+        // same value unless a material failed to be created, in which case it is Constants::uint32_null_index.
+        std::vector<uint32_t> globalToModelMaterialIndex(objResult.materials.size(), Constants::uint32_null_index);
+
+        for (uint32_t m = 0u; m < static_cast<uint32_t>(objResult.materials.size()); ++m)
+        {
+            auto& objmtl = objResult.materials[m];
+
+            const uint32_t materialDataItemIndex = static_cast<uint32_t>(importedData.items.size());
+            importedData.items.push_back({});
+            auto& materialDataItem = importedData.items.back();
+
+            if (!materialDataItem.setType(ImportedDataType::Material))
+            {
+                // Do not fail out the entire OBJ due to a material failure.
+                importedData.items.pop_back();
+                continue;
+            }
+
+            materialDataItem.setName(objmtl.name);
+
+            auto* materialResult = materialDataItem.getDataPtr<MaterialImportResult>();
+            materialResult->intermediateMaterial = std::make_unique<MaterialIntermediateData>();
+            auto* material = materialResult->intermediateMaterial.get();
+
+            material->setName(objmtl.name);
+
+            // todo store these default shader values _somewhere_. unlit and lit (future)
+            if (!material->setShader(LitlMatShaderStage::Vertex, "shaders/unlit", "vertexMain") ||
+                !material->setShader(LitlMatShaderStage::Fragment, "shaders/unlit", "fragmentMain"))
+            {
+                logWarning("Failed to assign the default shaders to OBJ material '", objmtl.name, "'. The material will be skipped.");
+                importedData.items.pop_back();
+                continue;
+            }
+
+            // Kd drives the tint. This must be set, otherwise the property is left zeroed and the shader
+            // multiplies the sampled albedo by zero, rendering the material black rather than untinted.
+            const color tint{ objmtl.diffuse[0], objmtl.diffuse[1], objmtl.diffuse[2], 1.0f };
+
+            if (!material->addProperty("tint", LitlMatPropertyType::Color, tint))
+            {
+                logWarning("Failed to assign the tint property to OBJ material '", objmtl.name, "'");
+            }
+
+            // only setting diffuse texture for the moment. todo rest
+            if (!objmtl.diffuse_texname.empty())
+            {
+                if (!material->addProperty("albedo", LitlMatPropertyType::Texture, buildTextureAssetKey(location, objmtl.diffuse_texname)))
+                {
+                    logWarning("Failed to assign the albedo property to OBJ material '", objmtl.name, "'");
+                }
+            }
+
+            // Re-acquired rather than held across the push_backs above, as those may grow the items vector.
+            auto* model = importedData.items[modelDataItemIndex].getDataPtr<ModelImportResult>();
+            const auto materialIndex = model->model->addMaterial(objmtl.name);
+
+            globalToModelMaterialIndex[m] = materialIndex;
+
+            // Update the internal model item tracking. This is used to propagate deduplicated/sanitized names back to the intermediate data.
+            model->dataItems.push_back(ModelDataItem{
+                .importedDataItemIndex = materialDataItemIndex,
+                .modelNameIndex = materialIndex
+            });
+        }
+
+        modelImportResult = importedData.items[modelDataItemIndex].getDataPtr<ModelImportResult>();
 
         // ---------------------------------------------------------------------------------
         // Add OBJ Shapes as Meshes to Model
@@ -268,7 +398,14 @@ namespace litl::import
             // Update model
             meshDataItem.setName(shape.name);
             const auto meshIndex = modelImportResult->model->addMesh(shape.name);
-            const auto meshNodeIndex = modelImportResult->model->addNode(Node{ .name = shape.name, .meshIndex =  meshIndex });
+
+            // A shape may reference several materials across its faces. Until submesh-level material bindings
+            // are in place, the node takes the first material the shape uses.
+            const auto globalMaterialIndex = findFirstGlobalMaterialIndex(shape.mesh);
+            const auto nodeMaterialIndex = ((globalMaterialIndex < static_cast<uint32_t>(globalToModelMaterialIndex.size())) ?
+                globalToModelMaterialIndex[globalMaterialIndex] : Constants::uint32_null_index);
+
+            const auto meshNodeIndex = modelImportResult->model->addNode(Node{ .name = shape.name, .meshIndex =  meshIndex, .materialIndex = nodeMaterialIndex });
             modelImportResult->model->addRootNode(meshNodeIndex);       // OBJ hierarchy is flat, so all meshes will be root nodes.
 
 
@@ -294,39 +431,6 @@ namespace litl::import
             mesh->importConvention.sourceIsRightHanded = true;
             mesh->importConvention.sourceIsCcwFront = true;
             mesh->importConvention.flipTexcoordV = true;
-        }
-
-        // ---------------------------------------------------------------------------------
-        // Add OBJ materials
-        // ---------------------------------------------------------------------------------
-
-        for (auto& objmtl : objResult.materials)
-        {
-            const uint32_t materialDataItemIndex = static_cast<uint32_t>(importedData.items.size());
-            importedData.items.push_back({});
-            auto& materialDataItem = importedData.items.back();
-
-            if (!materialDataItem.setType(ImportedDataType::Material))
-            {
-                // Do not fail out the entire OBJ due to a material failure.
-                importedData.items.pop_back();
-                continue;
-            }
-
-            materialDataItem.setName(objmtl.name);
-            auto* materialResult = materialDataItem.getDataPtr<MaterialImportResult>();
-            materialResult->intermediateMaterial = std::make_unique<MaterialIntermediateData>();
-            auto* material = materialResult->intermediateMaterial.get();
-
-            material->setName(objmtl.name);
-            material->setShader(LitlMatShaderStage::Vertex, "shaders/unlit", "vertexMain");             // todo store these default shader values _somewhere_. unlit and lit (future)
-            material->setShader(LitlMatShaderStage::Fragment, "shader/unlit", "fragmentMain");
-            
-            // only setting diffuse texture for the moment. todo rest
-            if (!objmtl.diffuse_texname.empty())
-            {
-                material->addProperty("albedo", LitlMatPropertyType::Texture, objmtl.diffuse_texname);
-            }
         }
 
         return Result::Success();

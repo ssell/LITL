@@ -764,9 +764,75 @@ namespace litl
 
     MaterialAssetHandle AssetManager::createMaterialAssetFromMemory(Authority<ModelAsset> auth, std::string_view key, import::MaterialIntermediateData intermediateData) noexcept
     {
-        // ... todo ...
-        logWarning("Invoking unimplemented AssetManager::createMaterialAssetFromMemory");
-        return {};
+        const std::string assetKey = m_impl->createAssetKey(key);
+        const StringId hashedAssetKey = StringId(assetKey);
+
+        MaterialAssetHandle materialAssetHandle{};
+
+        {
+            // When creating from memory, we may be racing against a reader as this is not done in a preprocess step like with disk-based assets.
+            std::scoped_lock lock{ m_impl->assetRegistrationsMutex };
+
+            auto find = m_impl->assetRegistrations.find(hashedAssetKey);
+
+            // Does the key already exist? If so, return the handle if it is also a MaterialHandle.
+            if (find != m_impl->assetRegistrations.end())
+            {
+                if (find->second.handle.type == AssetType::Material)
+                {
+                    return find->second.handle.materialHandle;
+                }
+                else
+                {
+                    logWarning("AssetManager::createMaterialAssetFromMemory failed as the key '", assetKey, "' already exists but is associated with a non-material asset type (", static_cast<uint32_t>(find->second.handle.type), ")");
+                    return {};
+                }
+            }
+
+            AssetRegistration assetRegistration {
+                .key = assetKey,
+                .location = "",
+                .hashedKey = hashedAssetKey,
+                .assetType = AssetType::Material,
+                .format = AssetFormat::Internal,
+                .sourceType = import::ImportSourceType::MaterialLitlBinary,
+                .priority = 0u,
+                .locator = {},          // Default/null locator as this asset is sourced from memory and not disk
+                .handle = {}            // Will be made by createBaseMaterialAsset
+            };
+
+            // Key is not yet occupied. Create an unloaded material asset at it.
+            materialAssetHandle = m_impl->createBaseMaterialAsset(assetRegistration, AssetStatus::Loading);
+
+            // Track the new registration
+            m_impl->assetRegistrations[hashedAssetKey] = assetRegistration;
+        }
+
+        auto* materialAsset = m_impl->materialAssetPool.get(materialAssetHandle);
+
+        if (materialAsset == nullptr)
+        {
+            // Should not get here.
+            logWarning("AssetManager::createMaterialAssetFromMemory failed to retrieve newly created unloaded Material asset '", assetKey, "'");
+            return {};
+        }
+
+        materialAsset->materialHandle = m_impl->objectPool->reserveMaterial({}, ObjectDescriptor{ .name = assetKey, .lifetime = ObjectLifetime::Application });
+
+        if (!MaterialAsset::fetchAssetObject(materialAsset, *m_impl->objectPool))
+        {
+            logWarning("AssetManager::createMaterialAssetFromMemory failed to fetch underlying object for Material asset '", assetKey, "'");
+            materialAsset->setError(AssetErrorCode::InvalidObject);
+            return materialAssetHandle;
+        }
+
+        // Unlike a mesh, a material is not complete once its intermediate data is in place: the shader (and texture)
+        // dependencies still have to be resolved, which MaterialAsset::gatherAssetDependencies and processOnMain do.
+        materialAsset->materialIntermediateData = std::make_shared<import::MaterialIntermediateData>(std::move(intermediateData));
+
+        m_impl->initiateMaterialAssetLoadFromMemory(materialAsset, *this);
+
+        return materialAssetHandle;
     }
 
     // -------------------------------------------------------------------------------------
