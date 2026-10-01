@@ -185,7 +185,7 @@ namespace litl::import
         std::span<char const> sourceBytesChar{ reinterpret_cast<char const*>(sourceBytes.data()), sourceBytes.size_bytes() };
         std::ispanstream stream{ sourceBytesChar };
 
-        rapidobj::Result objResult = rapidobj::ParseStream(stream);
+        const rapidobj::Result objResult = rapidobj::ParseStream(stream);
 
         if (objResult.error.code)
         {
@@ -271,11 +271,5 @@ namespace litl::import
         }
 
         return Result::Success();
-    }
-
-    Result ObjImporter::scanDependencies(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::vector<ImportDependency>& outDependencies) noexcept
-    {
-        // ... todo ... obj will have .mtl material companions ...
-        return Result::Error(ErrorType::ImporterNotImplemented);
     }
 }

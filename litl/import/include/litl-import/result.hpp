@@ -28,7 +28,8 @@ namespace litl::import
         ExportPrepareFailed = 16u,
         InvalidImportedItemIndex = 17u,
         ProcessFailedSeeIndividualItemResult = 18u,
-        FailedToCreateChildItemSubDirectory = 19u
+        FailedToCreateChildItemSubDirectory = 19u,
+        DependencyScanFailed = 20u
     };
 
     struct Result
