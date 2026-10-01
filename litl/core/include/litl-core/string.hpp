@@ -7,17 +7,19 @@
 
 namespace litl
 {
-    inline std::string toLowercase(std::string_view str) noexcept
-    {
-        std::string lowered(str);
+    /// <summary>
+    /// Converts the provided string to lowercase.
+    /// </summary>
+    /// <param name="str"></param>
+    /// <returns></returns>
+    [[nodiscard]] std::string toLowercase(std::string_view str) noexcept;
 
-        for (auto& c : lowered)
-        {
-            c = std::tolower(static_cast<unsigned char>(c));
-        }
-
-        return lowered;
-    }
+    /// <summary>
+    /// Returns a view of the string with the leading whitespace ommitted.
+    /// </summary>
+    /// <param name="str"></param>
+    /// <returns></returns>
+    [[nodiscard]] std::string_view trimLeadingWhitespace(std::string_view str) noexcept;
 }
 
 #endif
