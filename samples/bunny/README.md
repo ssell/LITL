@@ -1,6 +1,7 @@
 # Bunny Sample
 
 _**Note:** The sample is currently in progress and is slated for the v0.2 release._
+_**Note:** This sample will be renamed to Sponza sometime before the v0.2 release._
 
 This is a basic sample demonstrating how to load a mesh using the Assets system. It demonstrates that several new features are operational:
 
