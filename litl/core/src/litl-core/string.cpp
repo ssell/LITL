@@ -24,4 +24,19 @@ namespace litl
         auto const first = str.find_first_not_of(g_whitespace);
         return (first == std::string_view::npos) ? std::string_view{} : str.substr(first);
     }
+
+    bool isWhitespace(char c) noexcept
+    {
+        return g_whitespace.find(c) != std::string_view::npos;
+    }
+
+    size_t findFirstWhitespace(std::string_view str) noexcept
+    {
+        return str.find_first_of(g_whitespace);
+    }
+
+    size_t findFirstNonWhitespace(std::string_view str) noexcept
+    {
+        return str.find_first_not_of(g_whitespace);
+    }
 }
