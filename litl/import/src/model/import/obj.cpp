@@ -199,13 +199,15 @@ namespace litl::import
             for (const auto& companion : companions)
             {
                 totalSize += companion.bytes.size();
+                totalSize += 1;     // for \n
             }
 
             mtllib.reserve(totalSize);
 
             for (const auto& companion : companions)
             {
-                mtllib.append(reinterpret_cast<const char*>(companion.bytes.data()));
+                mtllib.append(reinterpret_cast<const char*>(companion.bytes.data()), companion.bytes.size());
+                mtllib += '\n';
             }
         }
 
@@ -213,7 +215,7 @@ namespace litl::import
 
         if (objResult.error.code)
         {
-            logError("Import of '", location, "' failed with error code ", objResult.error.code.value());
+            logError("Import of '", location, "' failed with error code ", objResult.error.code.value(), " at line number ", objResult.error.line_num, " and line '", objResult.error.line, "'");
             return Result::Error(ErrorType::ImporterFailed);
         }
 
