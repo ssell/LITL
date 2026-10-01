@@ -189,7 +189,27 @@ namespace litl::import
         std::span<char const> sourceBytesChar{ reinterpret_cast<char const*>(sourceBytes.data()), sourceBytes.size_bytes() };
         std::ispanstream stream{ sourceBytesChar };
 
-        const rapidobj::Result objResult = rapidobj::ParseStream(stream);
+        // rapidobj can only take in a single mtl file string, however we may have multiple. So they need to be appended into a single string.
+        std::string mtllib;
+
+        if (!companions.empty())
+        {
+            size_t totalSize = 0ull;
+
+            for (const auto& companion : companions)
+            {
+                totalSize += companion.bytes.size();
+            }
+
+            mtllib.reserve(totalSize);
+
+            for (const auto& companion : companions)
+            {
+                mtllib.append(reinterpret_cast<const char*>(companion.bytes.data()));
+            }
+        }
+
+        const rapidobj::Result objResult = rapidobj::ParseStream(stream, rapidobj::MaterialLibrary::String(mtllib));
 
         if (objResult.error.code)
         {

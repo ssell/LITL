@@ -16,12 +16,9 @@ namespace litl
             return false;
         }
 
-        ModelAsset* modelAsset = static_cast<ModelAsset*>(asset);
-
         if (assetRegistration.sourceType != import::ImportSourceType::ModelLitl)
         {
             import::ImportService importer{};
-            import::ImportedData importedData{};
 
             const auto scanResult = importer.scanForDependencies(assetRegistration.sourceType, assetRegistration.location, bytes, assetRegistration.importSettings, dependencies);
 
