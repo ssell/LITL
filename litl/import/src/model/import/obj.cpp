@@ -296,6 +296,40 @@ namespace litl::import
             mesh->importConvention.flipTexcoordV = true;
         }
 
+        // ---------------------------------------------------------------------------------
+        // Add OBJ materials
+        // ---------------------------------------------------------------------------------
+
+        for (auto& objmtl : objResult.materials)
+        {
+            const uint32_t materialDataItemIndex = static_cast<uint32_t>(importedData.items.size());
+            importedData.items.push_back({});
+            auto& materialDataItem = importedData.items.back();
+
+            if (!materialDataItem.setType(ImportedDataType::Material))
+            {
+                // Do not fail out the entire OBJ due to a material failure.
+                importedData.items.pop_back();
+                continue;
+            }
+
+            materialDataItem.setName(objmtl.name);
+            auto* materialResult = materialDataItem.getDataPtr<MaterialImportResult>();
+            materialResult->intermediateMaterial = std::make_unique<MaterialIntermediateData>();
+            auto* material = materialResult->intermediateMaterial.get();
+
+            material->setName(objmtl.name);
+            material->setShader(LitlMatShaderStage::Vertex, "shaders/unlit", "vertexMain");             // todo store these default shader values _somewhere_. unlit and lit (future)
+            material->setShader(LitlMatShaderStage::Fragment, "shader/unlit", "fragmentMain");
+            
+            // only setting diffuse texture for the moment. todo rest
+            if (!objmtl.diffuse_texname.empty())
+            {
+                material->addProperty("albedo", LitlMatPropertyType::Texture, objmtl.diffuse_texname);
+            }
+        }
+
+
         return Result::Success();
     }
 
