@@ -1,8 +1,12 @@
 #include <rapidobj/rapidobj.hpp>
 #include <unordered_map>
+#include <span>
 #include <spanstream>
+#include <string_view>
+#include <vector>
 
 #include "litl-core/hash.hpp"
+#include "litl-core/string.hpp"
 #include "litl-core/containers/flatHashMap.hpp"
 #include "litl-core/containers/flatHashSet.hpp"
 #include "litl-core/math/geometry/geoMesh.hpp"
@@ -268,6 +272,89 @@ namespace litl::import
             mesh->importConvention.sourceIsRightHanded = true;
             mesh->importConvention.sourceIsCcwFront = true;
             mesh->importConvention.flipTexcoordV = true;
+        }
+
+        return Result::Success();
+    }
+
+    namespace
+    {
+        [[nodiscard]] std::vector<std::string_view> extractMtllibs(std::span<char const> obj) noexcept
+        {
+            constexpr std::string_view mtllib = "mtllib";
+            const std::string_view text{ obj.data(), obj.size() };
+
+            std::vector<std::string_view> mtllibPaths;
+            size_t pos = 0ull;
+
+            while (pos < text.size())
+            {
+                // Slice out one line. Note that the last line might not have a trailing '\n'.
+                auto eol = text.find('\n', pos);
+
+                if (eol == std::string_view::npos)
+                {
+                    eol = text.size();
+                }
+
+                std::string_view line = trimLeadingWhitespace(text.substr(pos, eol - pos));
+                pos = eol + 1;
+
+                // Check that it is the full keyword. For example, "mtllib" vs "mtllibrary".
+                if (!line.starts_with(mtllib))
+                {
+                    continue;
+                }
+
+                line.remove_prefix(mtllib.size());
+
+                if (!line.empty() && !isWhitespace(line.front()))
+                {
+                    continue;
+                }
+
+                // The remaining whitespace separated tokens are all paths.
+                while (true)
+                {
+                    const auto begin = findFirstNonWhitespace(line);
+
+                    if (begin == std::string_view::npos)
+                    {
+                        break;
+                    }
+
+                    line.remove_prefix(begin);
+
+                    const auto end = findFirstWhitespace(line);
+                    mtllibPaths.push_back(line.substr(0ull, end));          // std::string_view::npos is clamped by substr
+
+                    if (end == std::string_view::npos)
+                    {
+                        break;
+                    }
+
+                    line.remove_prefix(end);
+                }
+            }
+
+            return mtllibPaths;
+        }
+    }
+
+    Result ObjImporter::scanDependencies(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::vector<ImportDependency>& outDependencies) noexcept
+    {
+        std::span<char const> sourceBytesChar{ reinterpret_cast<char const*>(sourceBytes.data()), sourceBytes.size_bytes() };
+
+        // rapidobj does not provide a way for us to retrieve the `mtllib` values directly. So we must parse the buffer ourselves and extract.
+        const auto mtllibPaths = extractMtllibs(sourceBytesChar);
+
+        for (auto& mtllibPath : mtllibPaths)
+        {
+            outDependencies.push_back(ImportDependency{
+                .kind = ImportDependencyKind::MaterialLibrary,
+                .reference = std::string(mtllibPath),
+                .required = false                                   // mtllib declarations can be very messy and unreliable, so do not fail if the dependency is not resolved.
+            });
         }
 
         return Result::Success();
