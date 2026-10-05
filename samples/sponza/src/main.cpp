@@ -14,6 +14,13 @@ namespace litl::samples
         commands.addComponent<Transform>(sponzaEntity, Transform::create(vec3::zero(), quat::identity(), 0.01f));                       // OBJ sponza has 1 unit = 1 centimeter, we use 1 unit = 1 meter. So scale by 0.01.
         commands.addComponent<PendingModelInstance>(sponzaEntity, createModelInstance("models/sponza", *assets));
         commands.addComponent<LocalBounds>(sponzaEntity);
+
+        // temporary while we work on glb import
+        auto sphereEntity = commands.createEntity();
+        commands.addComponent<Transform>(sphereEntity, Transform::create(vec3::zero()));
+        commands.addComponent<PendingModelInstance>(sphereEntity, createModelInstance("models/sphere", *assets));
+        commands.addComponent<LocalBounds>(sphereEntity);
+
     }
 }
 

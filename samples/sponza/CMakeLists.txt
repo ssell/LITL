@@ -34,6 +34,7 @@ add_custom_command(TARGET litl-samples-sponza POST_BUILD
 set (LITL_SAMPLES_SPONZA_ASSETS
 	"${LITL_ASSETS_DIR}/shaders/unlit.slang"
 	"${LITL_ASSETS_DIR}/materials/unlit.litlmat"
+	"${LITL_ASSETS_DIR}/models/sphere.glb"
 )
 
 foreach(LITL_SAMPLES_SPONZA_ASSET_PATH IN LISTS LITL_SAMPLES_SPONZA_ASSETS)

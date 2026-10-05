@@ -300,7 +300,6 @@ namespace litl::import
 
         // ---------------------------------------------------------------------------------
         // Add OBJ Materials to Model
-        //
         // Materials are added ahead of the meshes so that the mesh nodes can reference them by index.
         // ---------------------------------------------------------------------------------
 

@@ -75,6 +75,7 @@ namespace litl
 
         if (modelAsset == nullptr)
         {
+            logError("Requested to load unknown model '", resource, "'");
             return {};
         }
 

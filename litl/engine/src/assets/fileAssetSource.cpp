@@ -27,9 +27,9 @@ namespace litl
 
             // Model
             { ".litlmdl"_sid, { AssetMappingPriority::High, AssetType::Model, AssetFormat::Internal, import::ImportSourceType::ModelLitl } },
-            { ".glb"_sid, { AssetMappingPriority::Medium, AssetType::Mesh, AssetFormat::External, import::ImportSourceType::ModelGlb } },
-            { ".fbx"_sid, { AssetMappingPriority::Low, AssetType::Mesh, AssetFormat::External, import::ImportSourceType::ModelFbx } },
-            { ".gltf"_sid, { AssetMappingPriority::Low, AssetType::Mesh, AssetFormat::External, import::ImportSourceType::ModelGltf } },
+            { ".glb"_sid, { AssetMappingPriority::Medium, AssetType::Model, AssetFormat::External, import::ImportSourceType::ModelGlb } },
+            //{ ".gltf"_sid, { AssetMappingPriority::Low, AssetType::Model, AssetFormat::External, import::ImportSourceType::ModelGltf } },
+            //{ ".fbx"_sid, { AssetMappingPriority::Low, AssetType::Model, AssetFormat::External, import::ImportSourceType::ModelFbx } },
             { ".obj"_sid, { AssetMappingPriority::Low, AssetType::Model, AssetFormat::External, import::ImportSourceType::ModelObj } },
 
             // Shader Module
