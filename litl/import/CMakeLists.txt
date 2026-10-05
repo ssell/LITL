@@ -6,7 +6,6 @@ add_library(litl-import STATIC
 	"${CMAKE_SOURCE_DIR}/deps/ufbx/ufbx.c"
 	"src/mesh/import/fbx.cpp"  
 	"src/mesh/import/gltf.cpp" 
-	 
 	"src/importService.cpp" 
 	"src/mesh/export/meshExporter.cpp" 
 	"src/mesh/intermediate/litlbmsh.cpp" 
@@ -39,7 +38,6 @@ target_include_directories(litl-import
 	PUBLIC
 		"${CMAKE_CURRENT_SOURCE_DIR}/include"
 	SYSTEM PRIVATE
-		"${CMAKE_SOURCE_DIR}/deps/rapidobj/include"
 		"${CMAKE_SOURCE_DIR}/deps/stb"
 		"${CMAKE_SOURCE_DIR}/deps/ufbx"
 )
@@ -72,6 +70,15 @@ FetchContent_Declare(glaze GIT_REPOSITORY https://github.com/stephenberry/glaze.
 FetchContent_MakeAvailable(glaze)
 
 target_link_libraries(litl-import PRIVATE glaze::glaze)
+
+# ------------------------------------------------------------------------------------------
+# rapidobj (obj)
+# ------------------------------------------------------------------------------------------
+
+FetchContent_Declare(rapidobj GIT_REPOSITORY https://github.com/guybrush77/rapidobj.git GIT_TAG v1.1 GIT_SHALLOW TRUE SYSTEM)
+FetchContent_MakeAvailable(rapidobj)
+
+target_link_libraries(litl-import PRIVATE rapidobj::rapidobj)
 
 # ------------------------------------------------------------------------------------------
 # cgltf (gltf, glb)

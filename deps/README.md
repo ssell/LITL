@@ -54,7 +54,7 @@ Used for importing of `.obj` mesh files.
 
 * License: MIT
 * Source: https://github.com/guybrush77/rapidobj
-* Included via: Submodule
+* Include via: CMake `FetchContent`
 
 ## SPIRV-Reflect
 
