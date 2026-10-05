@@ -43,6 +43,7 @@ namespace litl
 
             // Texture
             { ".litlbtex"_sid, { AssetMappingPriority::High, AssetType::Texture, AssetFormat::Internal, import::ImportSourceType::TextureLitlBinary } },
+            { ".bmp"_sid, { AssetMappingPriority::Medium, AssetType::Texture, AssetFormat::External, import::ImportSourceType::TextureBmp } },
             { ".hdr"_sid, { AssetMappingPriority::Medium, AssetType::Texture, AssetFormat::External, import::ImportSourceType::TextureHdr } },
             { ".png"_sid, { AssetMappingPriority::Medium, AssetType::Texture, AssetFormat::External, import::ImportSourceType::TexturePng } },
             { ".tga"_sid, { AssetMappingPriority::Medium, AssetType::Texture, AssetFormat::External, import::ImportSourceType::TextureTga } },

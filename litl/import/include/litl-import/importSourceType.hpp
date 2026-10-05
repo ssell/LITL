@@ -22,6 +22,7 @@ namespace litl::import
         TextPlain,
         TextJson,
         TextureLitlBinary,
+        TextureBmp,
         TextureHdr,
         TexturePng,
         TextureTga,
