@@ -1,4 +1,5 @@
-#include "litl-import/mesh/import/glb.hpp"
+#include "litl-import/model/import/glb.hpp"
+#include "cgltf.h"
 
 namespace litl::import
 {
@@ -14,7 +15,11 @@ namespace litl::import
 
     Result GlbImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, ImportedData& importedData) noexcept
     {
-        // ... todo ...
-        return Result::Error(ErrorType::ImporterNotImplemented);
+        return Result::Success();
+    }
+
+    Result GlbImporter::scanDependencies(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::vector<ImportDependency>& outDependencies) noexcept
+    {
+        return Result::Success();
     }
 }

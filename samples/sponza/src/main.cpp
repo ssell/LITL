@@ -1,16 +1,9 @@
 #include "litl-engine/startup.hpp"
-#include "spinSystem.hpp"
 
 namespace litl::samples
 {
-    void configureSystems(SystemCollection& systems)
-    {
-        systems.addSystem<SpinSystem>(SystemGroup::Update);
-    }
-
     void bootstrap(ServiceProvider& services, EntityCommands& commands)
     {
-
         auto objectPool = services.get<ObjectPool>();
         auto sceneView = services.get<SceneView>();
         auto assets = services.get<AssetManager>();
@@ -31,7 +24,7 @@ int main()
     engine.setup(
         { .engineSettings { .applicationName = "LITL - Sponza Sample" } },
         nullptr,
-        litl::samples::configureSystems,
+        nullptr,
         nullptr,
         litl::samples::bootstrap);
 

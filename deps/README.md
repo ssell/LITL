@@ -16,6 +16,14 @@ Used for Unit testing.
 * Source: https://github.com/catchorg/Catch2
 * Included via: CMake `FetchContent`
 
+## cgltf
+
+Used for `.gltf` and `.glb` support.
+
+* License: MIT
+* Source: https://github.com/jkuhlmann/cgltf
+* Included via: CMake `FetchContent`
+
 ## glaze
 
 Used for various text file support including: `.json`, `.toml`, and `.beve` (binary JSON).

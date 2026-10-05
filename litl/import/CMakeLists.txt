@@ -6,7 +6,7 @@ add_library(litl-import STATIC
 	"${CMAKE_SOURCE_DIR}/deps/ufbx/ufbx.c"
 	"src/mesh/import/fbx.cpp"  
 	"src/mesh/import/gltf.cpp" 
-	"src/mesh/import/glb.cpp" 
+	 
 	"src/importService.cpp" 
 	"src/mesh/export/meshExporter.cpp" 
 	"src/mesh/intermediate/litlbmsh.cpp" 
@@ -31,7 +31,9 @@ add_library(litl-import STATIC
 	"src/texture/intermediate/textureIntermediateData.cpp" 
 	"src/texture/intermediate/litlbtex.cpp" 
 	"src/texture/import/tga.cpp" 
-	"src/importer.cpp" "src/texture/import/png.cpp" "src/texture/import/bmp.cpp")
+	"src/importer.cpp" 
+	"src/texture/import/png.cpp" 
+	"src/texture/import/bmp.cpp" "src/model/import/glb.cpp")
 
 target_include_directories(litl-import
 	PUBLIC
@@ -69,4 +71,16 @@ target_link_libraries(litl-import PRIVATE "$ENV{VULKAN_SDK}/Lib/slang.lib")
 FetchContent_Declare(glaze GIT_REPOSITORY https://github.com/stephenberry/glaze.git GIT_TAG v8.2.0 GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(glaze)
 
-target_link_libraries(litl-import PUBLIC glaze::glaze)
+target_link_libraries(litl-import PRIVATE glaze::glaze)
+
+# ------------------------------------------------------------------------------------------
+# cgltf (gltf, glb)
+# ------------------------------------------------------------------------------------------
+
+FetchContent_Declare(cgltf GIT_REPOSITORY https://github.com/jkuhlmann/cgltf.git GIT_TAG v1.15 GIT_SHALLOW TRUE)
+FetchContent_MakeAvailable(cgltf)
+
+target_include_directories(litl-import 
+	SYSTEM PRIVATE 
+		"${cgltf_SOURCE_DIR}"
+)

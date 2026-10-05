@@ -1,19 +1,15 @@
-#ifndef LITL_IMPORT_MESH_GLB_H__
-#define LITL_IMPORT_MESH_GLB_H__
+#ifndef LITL_IMPORT_MODEL_GLB_H__
+#define LITL_IMPORT_MODEL_GLB_H__
 
 #include "litl-import/importer.hpp"
 
 namespace litl::import
 {
-    /// <summary>
-    /// GLB is the binary representation of the glTF format.
-    /// It stores all of the same data as a glTF but packed into a single file.
-    /// </summary>
     class GlbImporter final : public Importer
     {
     public:
 
-        static constexpr std::string_view ImporterName = "GLB";
+        static constexpr std::string_view ImporterName = "GL Transmission Format Binary";
         static constexpr std::array SupportedTypes = { ImportSourceType::ModelGlb };
 
         GlbImporter();
@@ -23,8 +19,7 @@ namespace litl::import
         GlbImporter& operator=(GlbImporter const&) = delete;
 
         [[nodiscard]] Result import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, ImportedData& importedData) noexcept override;
-
-    private:
+        [[nodiscard]] Result scanDependencies(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::vector<ImportDependency>& outDependencies) noexcept override;
     };
 }
 

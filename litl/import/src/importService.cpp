@@ -17,11 +17,11 @@
 // Mesh
 #include "litl-import/mesh/export/meshExporter.hpp"
 #include "litl-import/mesh/import/fbx.hpp"
-#include "litl-import/mesh/import/glb.hpp"
 #include "litl-import/mesh/import/gltf.hpp"
 
 // Model
 #include "litl-import/model/export/modelExporter.hpp"
+#include "litl-import/model/import/glb.hpp"
 #include "litl-import/model/import/obj.hpp"
 
 // Shader
@@ -56,11 +56,11 @@ namespace litl::import
         // Mesh
         m_exporterRegistry.add<MeshExporter>();
         m_importerRegistry.add<FbxImporter>();
-        m_importerRegistry.add<GlbImporter>();
         m_importerRegistry.add<GltfImporter>();
 
         // Model
         m_exporterRegistry.add<ModelExporter>();
+        m_importerRegistry.add<GlbImporter>();
         m_importerRegistry.add<ObjImporter>();
 
         // Shader
