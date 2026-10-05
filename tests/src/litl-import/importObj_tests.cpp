@@ -50,10 +50,23 @@ namespace litl::tests
 
         REQUIRE(sourceBytes.has_value() == true);
 
+        constexpr std::string_view sourceMtlLocation = "assets/models/sponza.mtl";
+        const File sourceMtl(sourceMtlLocation);
+        const auto sourceMtlBytes = sourceMtl.readAllBytes();
+
+        REQUIRE(sourceMtlBytes.has_value() == true);
+
         // Test full conversion (obj -> ModelIntermediateData -> .litlmdl)
+        const std::array<import::ImportCompanion, 1> mtlFile{
+            import::ImportCompanion {
+                .reference = "sponza.mtl",
+                .bytes = sourceMtlBytes.value()
+            }
+        };
+
         import::ImportService importer{};
         import::WriteableImportResults results{};
-        import::Result result = importer.importForWriting(import::ImportSourceType::ModelObj, sourceLocation, *sourceBytes, {}, {}, results);
+        import::Result result = importer.importForWriting(import::ImportSourceType::ModelObj, sourceLocation, *sourceBytes, {}, mtlFile, results);
 
         REQUIRE(result.success == true);
         REQUIRE(result.error == import::ErrorType::None);
