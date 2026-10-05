@@ -70,7 +70,7 @@ Specifically `stb_image.h`. Used for various image format decoders: JPEG, PNG, T
 
 * License: Public Domain
 * Source: https://github.com/nothings/stb
-* Included via: CMake Include Directory
+* Include via: CMake `FetchContent`
 
 ## ufbx
 

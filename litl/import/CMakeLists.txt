@@ -91,3 +91,15 @@ target_include_directories(litl-import
 	SYSTEM PRIVATE 
 		"${cgltf_SOURCE_DIR}"
 )
+
+# ------------------------------------------------------------------------------------------
+# stb (png, bmp, tga, etc.)
+# ------------------------------------------------------------------------------------------
+
+FetchContent_Declare(stb GIT_REPOSITORY https://github.com/nothings/stb.git GIT_TAG 2c980bb59875b0d32144a71867fbdebb2f77cd20 GIT_SHALLOW TRUE SYSTEM)
+FetchContent_MakeAvailable(stb)
+
+target_include_directories(litl-import
+	SYSTEM PRIVATE
+		"${stb_SOURCE_DIR}"
+)
