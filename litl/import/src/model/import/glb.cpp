@@ -1,5 +1,5 @@
+#include <cgltf.h>
 #include "litl-import/model/import/glb.hpp"
-#include "cgltf.h"
 
 namespace litl::import
 {

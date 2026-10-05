@@ -78,8 +78,7 @@ Used for import of `.fbx` mesh files.
 
 * License: MIT / Public Domain
 * Source: https://github.com/ufbx/ufbx
-* Include via: Manual (v0.23.0)
-    * The two files used (individual `.h` and `.c`) were manually copied because ufbx is not configured to be used with `FetchContent` and the repository contains many test model files that pollute submodule usage.
+* Include via: CMake `FetchContent`
 
 ## xxHash
 

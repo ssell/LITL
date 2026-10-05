@@ -3,7 +3,6 @@
 # ------------------------------------------------------------------------------------------
 
 add_library(litl-import STATIC 
-	"${CMAKE_SOURCE_DIR}/deps/ufbx/ufbx.c"
 	"src/mesh/import/fbx.cpp"  
 	"src/mesh/import/gltf.cpp" 
 	"src/importService.cpp" 
@@ -32,14 +31,13 @@ add_library(litl-import STATIC
 	"src/texture/import/tga.cpp" 
 	"src/importer.cpp" 
 	"src/texture/import/png.cpp" 
-	"src/texture/import/bmp.cpp" "src/model/import/glb.cpp")
+	"src/texture/import/bmp.cpp" 
+	"src/model/import/glb.cpp"
+)
 
 target_include_directories(litl-import
 	PUBLIC
 		"${CMAKE_CURRENT_SOURCE_DIR}/include"
-	SYSTEM PRIVATE
-		"${CMAKE_SOURCE_DIR}/deps/stb"
-		"${CMAKE_SOURCE_DIR}/deps/ufbx"
 )
 
 target_link_libraries(litl-import PRIVATE litl-core litl-renderer)
@@ -66,7 +64,7 @@ target_link_libraries(litl-import PRIVATE "$ENV{VULKAN_SDK}/Lib/slang.lib")
 # glaze (json, yaml, beve)
 # ------------------------------------------------------------------------------------------
 
-FetchContent_Declare(glaze GIT_REPOSITORY https://github.com/stephenberry/glaze.git GIT_TAG v8.2.0 GIT_SHALLOW TRUE)
+FetchContent_Declare(glaze GIT_REPOSITORY https://github.com/stephenberry/glaze.git GIT_TAG v8.2.0 GIT_SHALLOW TRUE SYSTEM)
 FetchContent_MakeAvailable(glaze)
 
 target_link_libraries(litl-import PRIVATE glaze::glaze)
@@ -84,13 +82,10 @@ target_link_libraries(litl-import PRIVATE rapidobj::rapidobj)
 # cgltf (gltf, glb)
 # ------------------------------------------------------------------------------------------
 
-FetchContent_Declare(cgltf GIT_REPOSITORY https://github.com/jkuhlmann/cgltf.git GIT_TAG v1.15 GIT_SHALLOW TRUE)
+FetchContent_Declare(cgltf GIT_REPOSITORY https://github.com/jkuhlmann/cgltf.git GIT_TAG v1.15 GIT_SHALLOW TRUE SYSTEM)
 FetchContent_MakeAvailable(cgltf)
 
-target_include_directories(litl-import 
-	SYSTEM PRIVATE 
-		"${cgltf_SOURCE_DIR}"
-)
+target_include_directories(litl-import SYSTEM PRIVATE "${cgltf_SOURCE_DIR}")
 
 # ------------------------------------------------------------------------------------------
 # stb (png, bmp, tga, etc.)
@@ -99,7 +94,16 @@ target_include_directories(litl-import
 FetchContent_Declare(stb GIT_REPOSITORY https://github.com/nothings/stb.git GIT_TAG 2c980bb59875b0d32144a71867fbdebb2f77cd20 GIT_SHALLOW TRUE SYSTEM)
 FetchContent_MakeAvailable(stb)
 
-target_include_directories(litl-import
-	SYSTEM PRIVATE
-		"${stb_SOURCE_DIR}"
-)
+target_include_directories(litl-import SYSTEM PRIVATE "${stb_SOURCE_DIR}")
+
+# ------------------------------------------------------------------------------------------
+# ufbx (fbx)
+# ------------------------------------------------------------------------------------------
+
+FetchContent_Declare(ufbx GIT_REPOSITORY https://github.com/ufbx/ufbx.git GIT_TAG v0.23.1 GIT_SHALLOW TRUE SYSTEM)
+FetchContent_MakeAvailable(ufbx)
+
+target_include_directories(litl-import SYSTEM PRIVATE "${ufbx_SOURCE_DIR}")
+target_sources(litl-import PRIVATE "${ufbx_SOURCE_DIR}/ufbx.c")
+
+# Future todo for ufbx: can make it is own small static library to both avoid third-party C code in litl-import and so it doesn't pick up our C++ only compile options.
