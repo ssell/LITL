@@ -32,7 +32,7 @@ _Currently in progress. Features include: Task async via coroutines, Import libr
 
 **Samples:**
 
-* [Bunny](samples/bunny)
+* [Sponza](samples/sponza)
 
 ### [Version 0.1.0 on 2026-07-30](https://github.com/ssell/LITL/releases/tag/v0.1.0)
 
