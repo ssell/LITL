@@ -1,6 +1,91 @@
 // Need to define once per assembly to expand the function implementations
 #include "litl-core/assert.hpp"
+#include "litl-import/texture/import/stb.hpp"
+
+#include <limits>
 #define STBI_ASSERT(x) LITL_FATAL_ASSERT(x)
 #define STBI_NO_STDIO
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+
+namespace litl::import
+{
+    namespace
+    {
+        struct ScopedData
+        {
+            uint8_t* data{ nullptr };
+            ~ScopedData() { if (data != nullptr) stbi_image_free(data); }
+        };
+
+        [[nodiscard]] bool importToIntermediate(std::byte const* data, uint32_t width, uint32_t height, ImportSettings const& settings, ImportedDataItem& dataItem) noexcept
+        {
+            auto* textureResult = dataItem.getDataPtr<TextureImportResult>();
+            textureResult->intermediateTexture = std::make_shared<TextureIntermediateData>();
+            auto& textureDataDescriptor = textureResult->intermediateTexture->getDataDescriptorWriteRef();
+            auto& texturePixelData = textureResult->intermediateTexture->getPixelBytesWriteRef();
+
+            textureDataDescriptor.format = DataFormat::RGBA32_SFloat;
+            textureDataDescriptor.transfer = settings.texture.transfer;
+            textureDataDescriptor.width = width;
+            textureDataDescriptor.height = height;
+            textureDataDescriptor.depth = 1u;
+            textureDataDescriptor.arrayLayers = 1u;
+            textureDataDescriptor.semantic = settings.texture.semantic;
+            textureDataDescriptor.isCubeMap = false;
+            textureDataDescriptor.alphaPremultiplied = false;
+            textureDataDescriptor.mipmaps = settings.texture.mipmaps;
+
+            if (!textureResult->intermediateTexture->store8BitPixelsAsFloat(std::span<std::byte const>{data, (width* height * 4)}))        // 4 components forced to RGBA
+            {
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    Result StbImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, ImportedData& importedData) noexcept
+    {
+        if (sourceBytes.size() > std::numeric_limits<int>::max())
+        {
+            return Result::Error(ErrorType::ImporterFailed, "Input texture source bytes too large.");
+        }
+
+        int width = 0;
+        int height = 0;
+        int channels = 0;
+
+        // Note that stb_image automatically handles flipping images to top-left origin if they are not already
+        // Note that we do not use stbi_loadf_from_memory as that performs a forced sRGB conversion, and it uses a different EOTF than we do.
+        const ScopedData scopedData{
+            .data = stbi_load_from_memory(
+                reinterpret_cast<stbi_uc const*>(sourceBytes.data()),
+                static_cast<int>(sourceBytes.size_bytes()),
+                &width,
+                &height,
+                &channels,
+                4)             // Force to RGBA
+        };
+
+        if (scopedData.data == nullptr)
+        {
+            return Result::Error(ErrorType::ImporterFailed, "stbi_load_from_memory failed.");
+        }
+
+        importedData.items.push_back({});
+        auto& dataItem = importedData.items.back();
+
+        if (!dataItem.setType(ImportedDataType::Texture))
+        {
+            return Result::Error(ErrorType::ImporterFailed, "Failed to create texture import data.");
+        }
+
+        if (!importToIntermediate(reinterpret_cast<std::byte const*>(scopedData.data), static_cast<uint32_t>(width), static_cast<uint32_t>(height), settings, dataItem))
+        {
+            return Result::Error(ErrorType::ImporterFailed, "Failed to validate processed STB data to intermediate format.");
+        }
+
+        return Result::Success();
+    }
+}

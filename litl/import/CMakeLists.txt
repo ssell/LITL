@@ -31,7 +31,7 @@ add_library(litl-import STATIC
 	"src/texture/intermediate/textureIntermediateData.cpp" 
 	"src/texture/intermediate/litlbtex.cpp" 
 	"src/texture/import/tga.cpp" 
-	"src/importer.cpp")
+	"src/importer.cpp" "src/texture/import/png.cpp")
 
 target_include_directories(litl-import
 	PUBLIC

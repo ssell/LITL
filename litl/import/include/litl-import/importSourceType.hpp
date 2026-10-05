@@ -26,6 +26,7 @@ namespace litl::import
         TexturePng,
         TextureTga,
 
+
         // Must be last
         ImportSourceTypeCount
     };
