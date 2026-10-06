@@ -5,9 +5,9 @@ vertex   = { resource = "shaders/flat", entry = "vertexMain" }
 fragment = { resource = "shaders/flat", entry = "fragmentMain" }
 
 [properties]
-tint   = { type = "vec4", value = [1.0, 1.0, 1.0, 1.0] }
-fade   = { type = "float", value = 1.0 }
-albedo = { type = "texture", value = "textures/white" }
+tint = { type = "vec4", value = [1.0, 1.0, 1.0, 1.0] }
+fade = { type = "float", value = 1.0 }
+baseColor = { type = "texture", value = "textures/white" }
 
 [raster]
 cullMode  = "Back"

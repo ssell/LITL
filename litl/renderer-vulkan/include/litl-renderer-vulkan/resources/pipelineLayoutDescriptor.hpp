@@ -144,7 +144,7 @@ namespace litl::vulkan
         ///       bindings[0] = shadow map
         /// 
         ///     setLayouts[DescriptorSetIndex::PerMaterial] =
-        ///       bindings[0] = albedo map
+        ///       bindings[0] = base color map
         ///       bindings[1] = normal map
         /// 
         ///     setLayouts[DescriptorSetIndex::PerObject] =

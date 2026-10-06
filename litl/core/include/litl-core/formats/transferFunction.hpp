@@ -18,7 +18,7 @@ namespace litl
         /// closely to how human eyes perceive them. For example, we see dark
         /// shades in more detail than bright ones.
         /// 
-        /// Use for color textures such as albedo.
+        /// Use for color textures such as base color.
         /// 
         /// Most standard image formats such as JPEG, PNG, etc. store in sRGB.
         /// </summary>

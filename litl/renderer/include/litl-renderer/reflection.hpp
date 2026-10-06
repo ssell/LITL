@@ -84,7 +84,7 @@ namespace litl
         StringId hashedName;
 
         /// <summary>
-        /// "Camera", "AlbedoTexture", etc.
+        /// "Camera", "BaseColor", etc.
         /// </summary>
         std::string name;
 

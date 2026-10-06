@@ -13,11 +13,11 @@ namespace litl
     /// SRGB: the stored bytes are interpreted as being in sRGB gamma space and the hardware automatically applies the sRGB->linear EOTF conversion during texel fetch, before the value reaches the shader as a float.
     /// 
     /// Typically UNORM for data textures that are not color textures such as normal maps, roughness/ao, heightmaps, velocity buffers, etc.
-    /// Typically SRGB for externally authored color textures such as albedo/diffuse maps, UI textures, etc.
+    /// Typically SRGB for externally authored color textures such as base color maps, UI textures, etc.
     /// 
     /// The most commonly used formats are the compressed formats. Used as:
     /// 
-    /// BC7_SRGB: for high-quality color textures such as albedo, emissive, etc.
+    /// BC7_SRGB: for high-quality color textures such as base color, emissive, etc.
     /// BC6H_UFloat: for HDR content such as skyboxes, cubemap irradiance, baked lightmaps, etc.
     /// BC5_UNorm: for tangent-space normal maps. XY, reconstruct Z.
     /// BC4_UNorm: for grayscale masks, heightmaps, roughness/AO packed alone, etc.
@@ -59,8 +59,8 @@ namespace litl
         BC5_UNorm,              // A two-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned normalized RG texel data with the first 64 bits encoding red values followed by 64 bits encoding green values.
         BC6H_UFloat,            // A three-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned floating-point RGB texel data. No alpha, strictly RGB.
         BC6H_SFloat,            // A three-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of signed floating-point RGB texel data. No alpha, strictly RGB.
-        BC7_UNorm,              // A four-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned normalized RGBA texel data. Used for color textures such as albedo, emissive, etc.
-        BC7_SRGB,               // A four-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned normalized RGBA texel data with sRGB nonlinear encoding applied to the RGB components. Used for color textures such as albedo, emissive, etc.
+        BC7_UNorm,              // A four-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned normalized RGBA texel data. Used for color textures such as base color, emissive, etc.
+        BC7_SRGB,               // A four-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned normalized RGBA texel data with sRGB nonlinear encoding applied to the RGB components. Used for color textures such as base color, emissive, etc.
     };
 
     [[nodiscard]] constexpr bool dataFormatHasDepth(DataFormat format) noexcept

@@ -20,7 +20,6 @@ namespace litl::samples
         commands.addComponent<Transform>(sphereEntity, Transform::create(vec3{ 0.0f, 1.5f, 0.0 }));
         commands.addComponent<PendingModelInstance>(sphereEntity, createModelInstance("models/sphere", "materials/lit", *assets));
         commands.addComponent<LocalBounds>(sphereEntity);
-
     }
 }
 

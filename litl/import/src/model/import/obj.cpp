@@ -340,7 +340,7 @@ namespace litl::import
             }
 
             // Kd drives the tint. This must be set, otherwise the property is left zeroed and the shader
-            // multiplies the sampled albedo by zero, rendering the material black rather than untinted.
+            // multiplies the sampled base color by zero, rendering the material black rather than untinted.
             const color tint{ objmtl.diffuse[0], objmtl.diffuse[1], objmtl.diffuse[2], 1.0f };
 
             if (!material->addProperty("tint", LitlMatPropertyType::Color, tint))
@@ -351,9 +351,9 @@ namespace litl::import
             // only setting diffuse texture for the moment. todo rest
             if (!objmtl.diffuse_texname.empty())
             {
-                if (!material->addProperty("albedo", LitlMatPropertyType::Texture, buildTextureAssetKey(location, objmtl.diffuse_texname)))
+                if (!material->addProperty("baseColor", LitlMatPropertyType::Texture, buildTextureAssetKey(location, objmtl.diffuse_texname)))
                 {
-                    logWarning("Failed to assign the albedo property to OBJ material '", objmtl.name, "'");
+                    logWarning("Failed to assign the baseColor property to OBJ material '", objmtl.name, "'");
                 }
             }
 

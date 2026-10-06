@@ -56,7 +56,7 @@ namespace litl::tests
 
         const import::ImportSettings settings{ 
             .texture = import::TextureImportSettings{ 
-                .semantic = import::TextureSemantic::Albedo,
+                .semantic = import::TextureSemantic::BaseColor,
                 .transfer = TransferFunction::SRGB,
                 .mipmaps = false
             }
@@ -122,7 +122,7 @@ namespace litl::tests
 
         const import::ImportSettings settings{
             .texture = import::TextureImportSettings{
-                .semantic = import::TextureSemantic::Albedo,
+                .semantic = import::TextureSemantic::BaseColor,
                 .transfer = TransferFunction::SRGB,
                 .mipmaps = false
             }

@@ -9,7 +9,7 @@ import litl.core;
 struct MaterialProperties
 {
     float3 tint;
-    uint albedo;
+    uint baseColor;
 };
 
 [[vk::push_constant]] ConstantBuffer<PushConstants<MaterialProperties>> _pc;
@@ -59,9 +59,9 @@ FragmentOutput fragmentMain(VertexOutput input)
     FragmentOutput output = (FragmentOutput)0;
 
     const MaterialProperties matProps = _pc.getMaterial(input.materialSlot);
-    const float3 tint = matProps.tint;
-    const float3 texColor = sampleGlobalTexture(matProps.albedo, input.uv).rgb;
-    const float shading = (input.normal.y + 1.0f) * 0.5f;
+    const float3 tint     = matProps.tint;
+    const float3 texColor = sampleGlobalTexture(matProps.baseColor, input.uv).rgb;
+    const float shading   = (normalize(input.normal).y + 1.0f) * 0.5f;
 
     output.color = float4(texColor * tint * shading, 1.0f);
 

@@ -1,9 +1,9 @@
 name = "Unlit"
 
 [shaders]
-vertex   = { resource = "shaders/unlit", entry = "vertexMain" }
+vertex = { resource = "shaders/unlit", entry = "vertexMain" }
 fragment = { resource = "shaders/unlit", entry = "fragmentMain" }
 
 [properties]
-tint   = { type = "color", value = [1.0, 1.0, 1.0, 1.0] }
-albedo = { type = "texture", value = "white" }                  # "white" is one of the reserved, globally present textures. Others include: "pink", "black", and "normal".
+tint = { type = "color", value = [1.0, 1.0, 1.0, 1.0] }
+baseColor = { type = "texture", value = "white" }                  # "white" is one of the reserved, globally present textures. Others include: "pink", "black", and "normal".

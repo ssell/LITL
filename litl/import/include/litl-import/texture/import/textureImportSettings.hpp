@@ -14,7 +14,7 @@ namespace litl::import
     enum class TextureSemantic : uint8_t
     {
         Unknown = 0u,
-        Albedo = 1u,            // Color data (RGBA32_SFloat)
+        BaseColor = 1u,         // Color data (RGBA32_SFloat)
         NormalTangent = 2u,     // Tangent-space normal map (RGBA32_SFloat)
         Mask = 3u,              // Masking texture (RGBA32_SFloat)
         Hdr = 4u                // High-dynamic range texture (RGBA16_SFLOAT)
@@ -29,7 +29,7 @@ namespace litl::import
     };
 
     inline constexpr TextureImportSettings ColorTextureImportSettings{
-        .semantic = TextureSemantic::Albedo,
+        .semantic = TextureSemantic::BaseColor,
         .transfer = TransferFunction::SRGB,
         .mipmaps = true
     };

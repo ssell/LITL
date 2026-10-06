@@ -48,7 +48,7 @@ namespace litl
 
         /// <summary>
         /// Linear filter with mipmaps, repeating address mode, and 16x anisotropy.
-        /// Default for floors, terrain, most world albedo/normal.
+        /// Default for floors, terrain, most world base color/normal.
         /// </summary>
         LinearRepeatAniso = 2,
 
