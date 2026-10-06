@@ -401,10 +401,16 @@ namespace litl::import
             // A shape may reference several materials across its faces. Until submesh-level material bindings are in place, the node takes the first material the shape uses.
             const auto globalMaterialIndex = findFirstGlobalMaterialIndex(shape.mesh);
             const auto nodeMaterialIndex = ((globalMaterialIndex < static_cast<uint32_t>(globalToModelMaterialIndex.size())) ?
-                globalToModelMaterialIndex[globalMaterialIndex] : Constants::uint32_null_index);
+                globalToModelMaterialIndex[globalMaterialIndex] : 
+                Constants::uint32_null_index);
 
-            const auto meshNodeIndex = modelImportResult->model->addNode(Node{ .name = shape.name, .meshIndex =  meshIndex, .materialIndex = nodeMaterialIndex });
-            modelImportResult->model->addRootNode(meshNodeIndex);       // OBJ hierarchy is flat, so all meshes will be root nodes.
+            {
+                Node node{ .name = shape.name, .meshIndex = meshIndex };
+                node.materialIndices.push_back(nodeMaterialIndex);
+
+                const auto meshNodeIndex = modelImportResult->model->addNode(std::move(node));
+                modelImportResult->model->addRootNode(meshNodeIndex);       // OBJ hierarchy is flat, so all meshes will be root nodes.
+            }
 
 
             // Update the internal model item tracking. This is used to propagate deduplicated/sanitized names back to the intermediate data.
