@@ -1,6 +1,7 @@
 // -----------------------------------------------------------------------------------------
-// unlit.slang
-// Basic shader that applies tint and textures without any lighting or other effects.
+// lit.slang
+// Applies tint, textures, and lighting. Note: there currently is no lighting in LITL so it
+// simply modifes the final color value by the model normal.y to give the illusion.
 // -----------------------------------------------------------------------------------------
 
 import litl.core;
@@ -60,8 +61,9 @@ FragmentOutput fragmentMain(VertexOutput input)
     const MaterialProperties matProps = _pc.getMaterial(input.materialSlot);
     const float3 tint = matProps.tint;
     const float3 texColor = sampleGlobalTexture(matProps.albedo, input.uv).rgb;
-    
-    output.color = float4(texColor * tint, 1.0f);
+    const float shading = (input.normal.y + 1.0f) * 0.5f;
+
+    output.color = float4(texColor * tint * shading, 1.0f);
 
     return output;
 }

@@ -53,10 +53,16 @@ namespace litl::import
                 .compilerOptionEntryCount = static_cast<uint32_t>(compilerOptions.size())
             };
 
+            std::vector<const char*> searchPaths;
+            searchPaths.push_back("assets/shaders");                    // this needs to be the folder containing the "litl/" engine-provided modules folder
+            // ... todo add ability for project to specify other module folders ...
+
             const slang::SessionDesc sessionDesc{
                 .targets = &targetDesc,
                 .targetCount = 1,
-                .defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_COLUMN_MAJOR
+                .defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_COLUMN_MAJOR,
+                .searchPaths = searchPaths.data(),
+                .searchPathCount = static_cast<SlangInt>(searchPaths.size())
             };
 
             Slang::ComPtr<slang::ISession> session;
