@@ -215,7 +215,7 @@ namespace litl
             createDefaultTexture("LITL_INTERNAL_Texture_Pink", colors::Pink, static_cast<uint32_t>(TextureTableReservedIndices::Pink));
             createDefaultTexture("LITL_INTERNAL_Texture_White", colors::White, static_cast<uint32_t>(TextureTableReservedIndices::White));
             createDefaultTexture("LITL_INTERNAL_Texture_Black", colors::Black, static_cast<uint32_t>(TextureTableReservedIndices::Black));
-            createDefaultTexture("LITL_INTERNAL_Texture_TangentNormal", color{ 0.5f, 0.5f, 1.0f, 1.0f }, static_cast<uint32_t>(TextureTableReservedIndices::TangentNormal));
+            createDefaultTexture("LITL_INTERNAL_Texture_Normal", color{ 0.5f, 0.5f, 1.0f, 1.0f }, static_cast<uint32_t>(TextureTableReservedIndices::Normal));
         }
 
         void trackDirtyBuffer(GpuBufferHandle handle) noexcept

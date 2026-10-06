@@ -6,4 +6,4 @@ fragment = { resource = "shaders/unlit", entry = "fragmentMain" }
 
 [properties]
 tint   = { type = "color", value = [1.0, 1.0, 1.0, 1.0] }
-albedo = { type = "texture", value = "textures/cube_test" }
+albedo = { type = "texture", value = "white" }

@@ -215,7 +215,7 @@ namespace litl::import
         }
 
         // ---------------------------------------------------------------------------------
-        // Create the Model Hierarchy
+        // Create the Node Hierarchy
         // ---------------------------------------------------------------------------------
 
         std::vector<uint32_t> parentlessNodes;

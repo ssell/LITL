@@ -1,7 +1,33 @@
 #include "litl-renderer/resources/texture.hpp"
+#include "litl-core/string.hpp"
 
 namespace litl
 {
+    namespace
+    {
+        constexpr std::array<std::string_view, static_cast<uint32_t>(TextureTableReservedIndices::ReservedIndicesCount)> g_TextureTableReservedIndexNames{
+            "pink",
+            "white",
+            "black",
+            "normal"
+        };
+    }
+
+    std::optional<TextureTableReservedIndices> getReservedTextureTableIndex(std::string_view name) noexcept
+    {
+        const std::string_view* __restrict preservedNames = g_TextureTableReservedIndexNames.data();
+
+        for (size_t i = 0ull; i < g_TextureTableReservedIndexNames.size(); ++i)
+        {
+            if (stringsEqualFirstLowercase(preservedNames[i], name))
+            {
+                return static_cast<TextureTableReservedIndices>(i);
+            }
+        }
+
+        return std::nullopt;
+    }
+
     void buildTightlyPackedUploadRegions(TextureResourceDescriptor const& descriptor, std::vector<TextureUploadRegion>& outRegions) noexcept
     {
         outRegions.reserve(static_cast<size_t>(descriptor.mipLevels) * descriptor.arrayLayers);

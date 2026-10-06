@@ -47,4 +47,28 @@ namespace litl::tests
         REQUIRE(findFirstNonWhitespace("apples") == 0ull);
         REQUIRE(findFirstNonWhitespace("      ") == std::string_view::npos);
     } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("stringsEqual", "[core::string]")
+    {
+        REQUIRE(stringsEquals("apple", "apple", true) == true);
+        REQUIRE(stringsEquals("apple", "apple", false) == true);
+        REQUIRE(stringsEquals("apple", "APPLE", true) == true);
+        REQUIRE(stringsEquals("apple", "APPLE", false) == false);
+        REQUIRE(stringsEquals("APPLE", "apple", true) == true);
+        REQUIRE(stringsEquals("APPLE", "apple", false) == false);
+        REQUIRE(stringsEquals("APPLE", "APPLE", true) == true);
+        REQUIRE(stringsEquals("APPLE", "APPLE", false) == true);
+        REQUIRE(stringsEquals(" apple", "apple", true) == false);
+        REQUIRE(stringsEquals("apple ", "apple", true) == false);
+        REQUIRE(stringsEquals(" apple", "apple", false) == false);
+        REQUIRE(stringsEquals("apple ", "apple", false) == false);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("stringsEqualFirstLowercase", "[core::string]")
+    {
+        REQUIRE(stringsEqualFirstLowercase("apple", "apple") == true);
+        REQUIRE(stringsEqualFirstLowercase("apple", "APPlE") == true);
+        REQUIRE(stringsEqualFirstLowercase("apple", "apple ") == false);
+        REQUIRE(stringsEqualFirstLowercase("APPLE", "APPLE") == false);         // Function requires the first string to be lowercase already as an optimization
+    } LITL_END_TEST_CASE
 }

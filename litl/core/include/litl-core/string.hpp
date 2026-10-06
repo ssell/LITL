@@ -33,6 +33,17 @@ namespace litl
     /// Returns std::string_view::npos if there are no non-whitespace characters.
     /// </summary>
     [[nodiscard]] size_t findFirstNonWhitespace(std::string_view str) noexcept;
+
+    /// <summary>
+    /// Compares the two strings and returns true if they are equal.
+    /// </summary>
+    [[nodiscard]] bool stringsEquals(std::string_view a, std::string_view b, bool ignoreCase) noexcept;
+
+    /// <summary>
+    /// Compares the two strings and returns true if they are equal.
+    /// This particular implementation expects that the first string is already lowercase.
+    /// </summary>
+    [[nodiscard]] bool stringsEqualFirstLowercase(std::string_view lowercase, std::string_view unknowncase) noexcept;
 }
 
 #endif

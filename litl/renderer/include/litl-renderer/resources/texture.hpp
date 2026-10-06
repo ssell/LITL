@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "litl-core/handles.hpp"
@@ -189,10 +190,15 @@ namespace litl
         /// <summary>
         /// A 1x1 passive tangent normal texture (0.5, 0.5, 0.5, 1.0)
         /// </summary>
-        TangentNormal = 3u,
+        Normal = 3u,
 
         ReservedIndicesCount
     };
+
+    /// <summary>
+    /// Given a string texture name, returns the matching reserved index if it exists.
+    /// </summary>
+    [[nodiscard]] std::optional<TextureTableReservedIndices> getReservedTextureTableIndex(std::string_view name) noexcept;
 
     /// <summary>
     /// Builds the region set for a tightly packed source buffer holding every mip of every layer, ordered level-major then layer. One region per subresource.

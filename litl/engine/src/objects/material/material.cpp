@@ -177,6 +177,9 @@ namespace litl
                             }
                             else
                             {
+                                // Check if the user is requesting one of the reserved textures.
+                                // ... todo ...
+
                                 logWarning("Material '", descriptor.objectInfo.name, "' failed to retrieve default texture '", defaultValue->c_str(), "' for property '", defaultProperty.name, "'.");
                             }
                         }

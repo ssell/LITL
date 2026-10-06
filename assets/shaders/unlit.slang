@@ -18,10 +18,10 @@ BindPerFrame(0) Texture2D<float4> g_Textures[];
 BindPerFrame(1) SamplerState g_Samplers[16];
 
 // These correlate to TextureTableReservedIndices in litl-renderer
-#define DefaultTextureIndex_Pink          0
-#define DefaultTextureIndex_White         1
-#define DefaultTextureIndex_Black         2
-#define DefaultTextureIndex_TangentNormal 3
+#define DefaultTextureIndex_Pink   0
+#define DefaultTextureIndex_White  1
+#define DefaultTextureIndex_Black  2
+#define DefaultTextureIndex_Normal 3
 
 // These correlate to SamplerPredefines in litl-renderer
 #define DefaultSamplerIndex_LinearRepeat           0
