@@ -146,21 +146,21 @@ namespace litl::import
             modelImportResult->dataItems.push_back(ModelDataItem{
                 .importedDataItemIndex = meshDataItemIndex,
                 .modelNameIndex = meshIndex
-                });
+            });
 
             // Build mesh
-            auto* mesh = meshDataItem.getDataPtr<MeshImportResult>();
-            mesh->mesh = std::make_unique<GeoMesh>();
-            auto* litlMesh = mesh->mesh.get();
+            auto* meshResult = meshDataItem.getDataPtr<MeshImportResult>();
+            meshResult->mesh = std::make_unique<GeoMesh>();
+            auto* litlMesh = meshResult->mesh.get();
 
             convertToLitlMesh(litlMesh, glMesh);
 
-            mesh->summary.meshCount += 1u;
-            mesh->summary.vertexCount += static_cast<uint32_t>(litlMesh->vertexCount());
-            mesh->summary.indexCount += static_cast<uint32_t>(litlMesh->indexCount());
-            mesh->importConvention.sourceIsRightHanded = true;
-            mesh->importConvention.sourceIsCcwFront = true;
-            mesh->importConvention.flipTexcoordV = false;
+            meshResult->summary.meshCount += 1u;
+            meshResult->summary.vertexCount += static_cast<uint32_t>(litlMesh->vertexCount());
+            meshResult->summary.indexCount += static_cast<uint32_t>(litlMesh->indexCount());
+            meshResult->importConvention.sourceIsRightHanded = true;
+            meshResult->importConvention.sourceIsCcwFront = true;
+            meshResult->importConvention.flipTexcoordV = false;
 
             return Result::Success();
         }
@@ -169,7 +169,39 @@ namespace litl::import
         // Materials
         // ---------------------------------------------------------------------------------
 
-        [[nodiscard]] Result createMaterialDataItem(cgltf_material const& glMaterial, ModelImportResult* modelImportResult, ImportedData& importedData) noexcept
+        /// <summary>
+        /// Converts the cgltf material to our intermediate format.
+        /// </summary>
+        [[nodiscard]] bool convertToLitlMaterial(MaterialIntermediateData* litlMaterial, cgltf_material const& glMaterial) noexcept
+        {
+            if (!litlMaterial->setShader(LitlMatShaderStage::Vertex, "shaders/lit", "vertexMain") ||
+                !litlMaterial->setShader(LitlMatShaderStage::Fragment, "shaders/lit", "fragmentMain"))
+            {
+                logWarning("Failed to assign the default shaders to GLB material '", glMaterial.name, "'. The material will be skipped.");
+                return false;
+            }
+
+            const color tint{
+                glMaterial.pbr_metallic_roughness.base_color_factor[0],
+                glMaterial.pbr_metallic_roughness.base_color_factor[1],
+                glMaterial.pbr_metallic_roughness.base_color_factor[2],
+                glMaterial.pbr_metallic_roughness.base_color_factor[3]
+            };
+
+            if (!litlMaterial->addProperty("tint", LitlMatPropertyType::Color, tint))
+            {
+                logWarning("Failed to assign the 'tint' property to GLB material '", glMaterial.name, "'");
+            }
+
+            // ... todo ...
+
+            return true;
+        }
+
+        /// <summary>
+        /// Creates the material item for the ImportedData, adds it to the model, and converts the cgltf material to our intermediate format.
+        /// </summary>
+        void createMaterialDataItem(cgltf_material const& glMaterial, ModelImportResult* modelImportResult, ImportedData& importedData) noexcept
         {
             const uint32_t materialDataItemIndex = static_cast<uint32_t>(importedData.items.size());
             importedData.items.push_back({});
@@ -177,38 +209,68 @@ namespace litl::import
 
             if (!materialDataItem.setType(ImportedDataType::Material))
             {
-                return Result::Error(ErrorType::ImporterFailed, "Failed to create material import data.");
+                // Do not fail out the entire GLB due to a material failure.
+                importedData.items.pop_back();
+                return;
             }
 
             // Update model
             const std::string_view materialName = (glMaterial.name != nullptr ? glMaterial.name : "Material");
             materialDataItem.setName(materialName);
-            const auto materialIndex = modelImportResult->model->addMaterial(materialName);
+            const auto materialIndex = modelImportResult->model->addMaterial(materialName);            
 
             // Update the internal model item tracking. This is used to propagate deduplicated/sanitized names back to the intermediate data.
             modelImportResult->dataItems.push_back(ModelDataItem{
                 .importedDataItemIndex = materialDataItemIndex,
                 .modelNameIndex = materialIndex
-                });
+            });
 
             // Build the material
-            auto* material = materialDataItem.getDataPtr<MaterialImportResult>();
-            material->intermediateMaterial = std::make_unique<MaterialIntermediateData>();
-            auto* litlMaterial = material->intermediateMaterial.get();
+            auto* materialResult = materialDataItem.getDataPtr<MaterialImportResult>();
+            materialResult->intermediateMaterial = std::make_unique<MaterialIntermediateData>();
+            auto* litlMaterial = materialResult->intermediateMaterial.get();
+            litlMaterial->setName(materialName);
 
-            // ... todo ...
-
-            return Result::Success();
+            if (!convertToLitlMaterial(litlMaterial, glMaterial))
+            {
+                importedData.items.pop_back();
+            }
         }
 
         // ---------------------------------------------------------------------------------
         // Textures
         // ---------------------------------------------------------------------------------
 
-        [[nodiscard]] Result createTextureDataItem(cgltf_texture const& glTexture, ModelImportResult* modelImportResult, ImportedData& importedData) noexcept
+        /// <summary>
+        /// Converts the cgltf texture to our intermediate format.
+        /// </summary>
+        void convertToLitlTexture(TextureIntermediateData* litlTexture, cgltf_texture const& glTexture) noexcept
         {
             // ... todo ...
-            return Result::Success();
+        }
+
+        /// <summary>
+        /// Creates the texture item for the ImportedData, adds it to the model, and converts the cgltf texture to our intermediate format.
+        /// </summary>
+        void createTextureDataItem(cgltf_texture const& glTexture, ModelImportResult* modelImportResult, ImportedData& importedData) noexcept
+        {
+            const uint32_t textureDataItemIndex = static_cast<uint32_t>(importedData.items.size());
+            importedData.items.push_back({});
+            auto& textureDataItem = importedData.items.back();
+
+            if (!textureDataItem.setType(ImportedDataType::Texture))
+            {
+                // Do not fail out the entire GLB due to a texture failure.
+                importedData.items.pop_back();
+                return;
+            }
+
+            // Build the texture
+            auto* textureResult = textureDataItem.getDataPtr<TextureImportResult>();
+            textureResult->intermediateTexture = std::make_unique<TextureIntermediateData>();
+            auto* litlTexture = textureResult->intermediateTexture.get();
+
+            convertToLitlTexture(litlTexture, glTexture);
         }
     }
 
@@ -273,6 +335,24 @@ namespace litl::import
         auto* litlModel = modelImportResult->model.get();
 
         // ---------------------------------------------------------------------------------
+        // Create the Textures
+        // ---------------------------------------------------------------------------------
+
+        for (cgltf_size texIdx = 0; texIdx < data->textures_count; ++texIdx)
+        {
+            createTextureDataItem(data->textures[texIdx], modelImportResult, importedData);
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Create the Materials
+        // ---------------------------------------------------------------------------------
+
+        for (cgltf_size matIdx = 0; matIdx < data->materials_count; ++matIdx)
+        {
+            createMaterialDataItem(data->materials[matIdx], modelImportResult, importedData);
+        }
+
+        // ---------------------------------------------------------------------------------
         // Create the Meshes
         // ---------------------------------------------------------------------------------
 
@@ -283,34 +363,6 @@ namespace litl::import
             if (!meshResult.success)
             {
                 return meshResult;
-            }
-        }
-
-        // ---------------------------------------------------------------------------------
-        // Create the Materials
-        // ---------------------------------------------------------------------------------
-
-        for (cgltf_size matIdx = 0; matIdx < data->materials_count; ++matIdx)
-        {
-            const auto materialResult = createMaterialDataItem(data->materials[matIdx], modelImportResult, importedData);
-
-            if (!materialResult.success)
-            {
-                return materialResult;
-            }
-        }
-
-        // ---------------------------------------------------------------------------------
-        // Create the Textures
-        // ---------------------------------------------------------------------------------
-
-        for (cgltf_size texIdx = 0; texIdx < data->textures_count; ++texIdx)
-        {
-            const auto textureResult = createTextureDataItem(data->textures[texIdx], modelImportResult, importedData);
-
-            if (!textureResult.success)
-            {
-                return textureResult;
             }
         }
 

@@ -345,7 +345,7 @@ namespace litl::import
 
             if (!material->addProperty("tint", LitlMatPropertyType::Color, tint))
             {
-                logWarning("Failed to assign the tint property to OBJ material '", objmtl.name, "'");
+                logWarning("Failed to assign the 'tint' property to OBJ material '", objmtl.name, "'");
             }
 
             // only setting diffuse texture for the moment. todo rest
@@ -353,7 +353,7 @@ namespace litl::import
             {
                 if (!material->addProperty("baseColor", LitlMatPropertyType::Texture, buildTextureAssetKey(location, objmtl.diffuse_texname)))
                 {
-                    logWarning("Failed to assign the baseColor property to OBJ material '", objmtl.name, "'");
+                    logWarning("Failed to assign the 'baseColor' property to OBJ material '", objmtl.name, "'");
                 }
             }
 
@@ -400,9 +400,7 @@ namespace litl::import
 
             // A shape may reference several materials across its faces. Until submesh-level material bindings are in place, the node takes the first material the shape uses.
             const auto globalMaterialIndex = findFirstGlobalMaterialIndex(shape.mesh);
-            const auto nodeMaterialIndex = ((globalMaterialIndex < static_cast<uint32_t>(globalToModelMaterialIndex.size())) ?
-                globalToModelMaterialIndex[globalMaterialIndex] : 
-                Constants::uint32_null_index);
+            const auto nodeMaterialIndex = ((globalMaterialIndex < static_cast<uint32_t>(globalToModelMaterialIndex.size())) ? globalToModelMaterialIndex[globalMaterialIndex] : Constants::uint32_null_index);
 
             {
                 Node node{ .name = shape.name, .meshIndex = meshIndex };
