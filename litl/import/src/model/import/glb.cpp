@@ -12,6 +12,10 @@ namespace litl::import
 {
     namespace
     {
+        // ---------------------------------------------------------------------------------
+        // cgltf Utilities
+        // ---------------------------------------------------------------------------------
+
         constexpr std::array<std::string_view, cgltf_result::cgltf_result_max_enum> g_gltfErrorStrings{
             "Success",
             "Data Too Short",
@@ -27,8 +31,8 @@ namespace litl::import
 
         struct ScopedData
         {
-            cgltf_data* gltfData = nullptr;
-            ~ScopedData() { if (gltfData != nullptr) { cgltf_free(gltfData); } }
+            cgltf_data* glData = nullptr;
+            ~ScopedData() { if (glData != nullptr) { cgltf_free(glData); } }
         };
 
         [[nodiscard]] bool unpackFloats(cgltf_accessor const* accessor, cgltf_size expectedComponents, std::vector<float>& out) noexcept
@@ -44,6 +48,13 @@ namespace litl::import
             return cgltf_accessor_unpack_floats(accessor, out.data(), out.size()) == out.size();
         }
 
+        // ---------------------------------------------------------------------------------
+        // Meshes
+        // ---------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Converts the cgltf mesh to our intermediate format.
+        /// </summary>
         void convertToLitlMesh(GeoMesh* litlMesh, cgltf_mesh const& glMesh) noexcept
         {
             auto& vertices = litlMesh->getVertices();
@@ -111,74 +122,12 @@ namespace litl::import
 
             litlMesh->recalculateBounds();
         }
-    }
 
-
-    GlbImporter::GlbImporter()
-    {
-
-    }
-
-    GlbImporter::~GlbImporter()
-    {
-
-    }
-
-    Result GlbImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, ImportedData& importedData) noexcept
-    {
-        cgltf_options options{ .type = cgltf_file_type_glb };
-        ScopedData scopedData{};
-
-        const cgltf_result parseResult = cgltf_parse(&options, sourceBytes.data(), sourceBytes.size(), &scopedData.gltfData);
-
-        if (parseResult != cgltf_result_success)
+        /// <summary>
+        /// Creates the mesh item for the ImportedData, adds it to the model, and converts the cgltf mesh to our intermediate format.
+        /// </summary>
+        [[nodiscard]] Result createMeshDataItem(cgltf_mesh const& glMesh, ModelImportResult* modelImportResult, ImportedData& importedData) noexcept
         {
-            logError("Import of '", location, "' failed during parse with error '", g_gltfErrorStrings[static_cast<uint32_t>(parseResult)], "' (", static_cast<uint32_t>(parseResult), ")");
-            return Result::Error(ErrorType::ImporterFailed, "Failed to parse glb file.");
-        }
-
-        const cgltf_result loadResult = cgltf_load_buffers(&options, scopedData.gltfData, nullptr);
-
-        if (loadResult != cgltf_result_success)
-        {
-            logError("Import of '", location, "' failed during buffer load with error '", g_gltfErrorStrings[static_cast<uint32_t>(parseResult)], "' (", static_cast<uint32_t>(parseResult), ")");
-            return Result::Error(ErrorType::ImporterFailed, "Failed to load glb file buffers.");
-        }
-
-        const cgltf_result validateResult = cgltf_validate(scopedData.gltfData);
-
-        if (validateResult != cgltf_result_success)
-        {
-            logError("Import of '", location, "' failed during validation with error '", g_gltfErrorStrings[static_cast<uint32_t>(parseResult)], "' (", static_cast<uint32_t>(parseResult), ")");
-            return Result::Error(ErrorType::ImporterFailed, "Failed to validate glb file buffers.");
-        }
-
-        // ---------------------------------------------------------------------------------
-        // Create the Model
-        // ---------------------------------------------------------------------------------
-
-        importedData.items.reserve(importedData.items.size() + scopedData.gltfData->meshes_count + scopedData.gltfData->materials_count + scopedData.gltfData->images_count + 1);
-        const uint32_t modelDataItemIndex = static_cast<uint32_t>(importedData.items.size());
-        importedData.items.push_back({});
-        auto& modelDataItem = importedData.items.back();
-
-        if (!modelDataItem.setType(ImportedDataType::Model))
-        {
-            return Result::Error(ErrorType::ImporterFailed, "Failed to create model import data.");
-        }
-
-        auto* modelImportResult = modelDataItem.getDataPtr<ModelImportResult>();
-        modelImportResult->model = std::make_unique<ModelIntermediateData>();
-        auto* litlModel = modelImportResult->model.get();
-
-        // ---------------------------------------------------------------------------------
-        // Create the Meshes
-        // ---------------------------------------------------------------------------------
-
-        for (cgltf_size meshIdx = 0; meshIdx < scopedData.gltfData->meshes_count; ++meshIdx)
-        {
-            const auto& glMesh = scopedData.gltfData->meshes[meshIdx];
-
             const uint32_t meshDataItemIndex = static_cast<uint32_t>(importedData.items.size());
             importedData.items.push_back({});
             auto& meshDataItem = importedData.items.back();
@@ -197,7 +146,7 @@ namespace litl::import
             modelImportResult->dataItems.push_back(ModelDataItem{
                 .importedDataItemIndex = meshDataItemIndex,
                 .modelNameIndex = meshIndex
-            });
+                });
 
             // Build mesh
             auto* mesh = meshDataItem.getDataPtr<MeshImportResult>();
@@ -212,42 +161,181 @@ namespace litl::import
             mesh->importConvention.sourceIsRightHanded = true;
             mesh->importConvention.sourceIsCcwFront = true;
             mesh->importConvention.flipTexcoordV = false;
+
+            return Result::Success();
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Materials
+        // ---------------------------------------------------------------------------------
+
+        [[nodiscard]] Result createMaterialDataItem(cgltf_material const& glMaterial, ModelImportResult* modelImportResult, ImportedData& importedData) noexcept
+        {
+            const uint32_t materialDataItemIndex = static_cast<uint32_t>(importedData.items.size());
+            importedData.items.push_back({});
+            auto& materialDataItem = importedData.items.back();
+
+            if (!materialDataItem.setType(ImportedDataType::Material))
+            {
+                return Result::Error(ErrorType::ImporterFailed, "Failed to create material import data.");
+            }
+
+            // Update model
+            const std::string_view materialName = (glMaterial.name != nullptr ? glMaterial.name : "Material");
+            materialDataItem.setName(materialName);
+            const auto materialIndex = modelImportResult->model->addMaterial(materialName);
+
+            // Update the internal model item tracking. This is used to propagate deduplicated/sanitized names back to the intermediate data.
+            modelImportResult->dataItems.push_back(ModelDataItem{
+                .importedDataItemIndex = materialDataItemIndex,
+                .modelNameIndex = materialIndex
+                });
+
+            // Build the material
+            auto* material = materialDataItem.getDataPtr<MaterialImportResult>();
+            material->intermediateMaterial = std::make_unique<MaterialIntermediateData>();
+            auto* litlMaterial = material->intermediateMaterial.get();
+
+            // ... todo ...
+
+            return Result::Success();
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Textures
+        // ---------------------------------------------------------------------------------
+
+        [[nodiscard]] Result createTextureDataItem(cgltf_texture const& glTexture, ModelImportResult* modelImportResult, ImportedData& importedData) noexcept
+        {
+            // ... todo ...
+            return Result::Success();
+        }
+    }
+
+
+    GlbImporter::GlbImporter()
+    {
+
+    }
+
+    GlbImporter::~GlbImporter()
+    {
+
+    }
+
+    Result GlbImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, ImportedData& importedData) noexcept
+    {
+        cgltf_options options{ .type = cgltf_file_type_glb };
+        ScopedData scopedData{};
+
+        const cgltf_result parseResult = cgltf_parse(&options, sourceBytes.data(), sourceBytes.size(), &scopedData.glData);
+
+        if (parseResult != cgltf_result_success)
+        {
+            logError("Import of '", location, "' failed during parse with error '", g_gltfErrorStrings[static_cast<uint32_t>(parseResult)], "' (", static_cast<uint32_t>(parseResult), ")");
+            return Result::Error(ErrorType::ImporterFailed, "Failed to parse glb file.");
+        }
+
+        cgltf_data* data = scopedData.glData;
+
+        const cgltf_result loadResult = cgltf_load_buffers(&options, data, nullptr);
+
+        if (loadResult != cgltf_result_success)
+        {
+            logError("Import of '", location, "' failed during buffer load with error '", g_gltfErrorStrings[static_cast<uint32_t>(parseResult)], "' (", static_cast<uint32_t>(parseResult), ")");
+            return Result::Error(ErrorType::ImporterFailed, "Failed to load glb file buffers.");
+        }
+
+        const cgltf_result validateResult = cgltf_validate(data);
+
+        if (validateResult != cgltf_result_success)
+        {
+            logError("Import of '", location, "' failed during validation with error '", g_gltfErrorStrings[static_cast<uint32_t>(parseResult)], "' (", static_cast<uint32_t>(parseResult), ")");
+            return Result::Error(ErrorType::ImporterFailed, "Failed to validate glb file buffers.");
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Create the Model
+        // ---------------------------------------------------------------------------------
+
+        importedData.items.reserve(importedData.items.size() + data->meshes_count + data->materials_count + data->images_count + 1);
+        const uint32_t modelDataItemIndex = static_cast<uint32_t>(importedData.items.size());
+        importedData.items.push_back({});
+        auto& modelDataItem = importedData.items.back();
+
+        if (!modelDataItem.setType(ImportedDataType::Model))
+        {
+            return Result::Error(ErrorType::ImporterFailed, "Failed to create model import data.");
+        }
+
+        auto* modelImportResult = modelDataItem.getDataPtr<ModelImportResult>();
+        modelImportResult->model = std::make_unique<ModelIntermediateData>();
+        auto* litlModel = modelImportResult->model.get();
+
+        // ---------------------------------------------------------------------------------
+        // Create the Meshes
+        // ---------------------------------------------------------------------------------
+
+        for (cgltf_size meshIdx = 0; meshIdx < data->meshes_count; ++meshIdx)
+        {
+            const auto meshResult = createMeshDataItem(data->meshes[meshIdx], modelImportResult, importedData);
+
+            if (!meshResult.success)
+            {
+                return meshResult;
+            }
         }
 
         // ---------------------------------------------------------------------------------
         // Create the Materials
         // ---------------------------------------------------------------------------------
 
-        // ... todo ...
+        for (cgltf_size matIdx = 0; matIdx < data->materials_count; ++matIdx)
+        {
+            const auto materialResult = createMaterialDataItem(data->materials[matIdx], modelImportResult, importedData);
+
+            if (!materialResult.success)
+            {
+                return materialResult;
+            }
+        }
 
         // ---------------------------------------------------------------------------------
         // Create the Textures
         // ---------------------------------------------------------------------------------
 
-        // ... todo ...
+        for (cgltf_size texIdx = 0; texIdx < data->textures_count; ++texIdx)
+        {
+            const auto textureResult = createTextureDataItem(data->textures[texIdx], modelImportResult, importedData);
+
+            if (!textureResult.success)
+            {
+                return textureResult;
+            }
+        }
 
         // ---------------------------------------------------------------------------------
         // Create the Node Hierarchy
         // ---------------------------------------------------------------------------------
 
         std::vector<uint32_t> parentlessNodes;
-        parentlessNodes.reserve(scopedData.gltfData->nodes_count);
+        parentlessNodes.reserve(data->nodes_count);
 
-        for (cgltf_size nodeIdx = 0; nodeIdx < scopedData.gltfData->nodes_count; ++nodeIdx)
+        for (cgltf_size nodeIdx = 0; nodeIdx < data->nodes_count; ++nodeIdx)
         {
-            auto& glNode = scopedData.gltfData->nodes[nodeIdx];
+            auto& glNode = data->nodes[nodeIdx];
 
             Node node{ .name = (glNode.name != nullptr ? glNode.name : "node") };
             cgltf_node_transform_local(&glNode, node.localTransform.data());
 
             if (glNode.mesh != nullptr)
             {
-                node.meshIndex = static_cast<uint32_t>(cgltf_mesh_index(scopedData.gltfData, glNode.mesh));
+                node.meshIndex = static_cast<uint32_t>(cgltf_mesh_index(data, glNode.mesh));
             }
 
             for (cgltf_size childIdx = 0; childIdx < glNode.children_count; ++childIdx)
             {
-                node.children.push_back(static_cast<uint32_t>(cgltf_node_index(scopedData.gltfData, glNode.children[childIdx])));
+                node.children.push_back(static_cast<uint32_t>(cgltf_node_index(data, glNode.children[childIdx])));
             }
 
             litlModel->addNode(std::move(node));
@@ -262,14 +350,14 @@ namespace litl::import
         // Populate the Root Node(s)
         // ---------------------------------------------------------------------------------
 
-        cgltf_scene const* glScene = (scopedData.gltfData->scene != nullptr) ? scopedData.gltfData->scene : (scopedData.gltfData->scenes_count > 0) ? &scopedData.gltfData->scenes[0] : nullptr;
+        cgltf_scene const* glScene = (data->scene != nullptr) ? data->scene : (data->scenes_count > 0) ? &data->scenes[0] : nullptr;
 
         // If a scene is present, then every node whose parent is the scene is a root.
         if (glScene != nullptr)
         {
             for (cgltf_size nodeIdx = 0; nodeIdx < glScene->nodes_count; ++nodeIdx)
             {
-                litlModel->addRootNode(cgltf_node_index(scopedData.gltfData, glScene->nodes[nodeIdx]));
+                litlModel->addRootNode(cgltf_node_index(data, glScene->nodes[nodeIdx]));
             }
         }
         // Otherwise, every node who has no parent is a root.
