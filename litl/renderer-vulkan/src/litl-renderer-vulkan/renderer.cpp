@@ -95,7 +95,7 @@ namespace litl::vulkan
     bool createSwapChain(RendererContext& context, VkSwapchainKHR oldSwapchain) noexcept;
     bool createCommandPool(RendererContext& context) noexcept;
     bool createFrameSyncObjects(RendererContext& context) noexcept;
-    bool createFrameDepthTextures(RendererContext& context) noexcept;
+    bool createFrameDepthTextures(RendererContext& context, uint32_t count) noexcept;
     bool createImageSyncObjects(RendererContext& context) noexcept;
 
     bool build(litl::RendererContext* context) noexcept
@@ -117,7 +117,7 @@ namespace litl::vulkan
             createSwapChain(*vulkanContext, VK_NULL_HANDLE) &&
             createCommandPool(*vulkanContext) &&
             createFrameSyncObjects(*vulkanContext) &&
-            createFrameDepthTextures(*vulkanContext) &&
+            createFrameDepthTextures(*vulkanContext, 0u) &&
             createImageSyncObjects(*vulkanContext);
     }
 
@@ -807,7 +807,7 @@ namespace litl::vulkan
         return true;
     }
 
-    bool createFrameDepthTextures(RendererContext& context) noexcept
+    bool createFrameDepthTextures(RendererContext& context, uint32_t count) noexcept
     {
         TextureResourceDescriptor depthDescriptor{
             .dimensions = TextureDimensions::Texture2D,
@@ -828,7 +828,7 @@ namespace litl::vulkan
 
         for (uint32_t i = 0u; i < context.renderInfo.frame.framesInFlight; ++i)
         {
-            depthDescriptor.name = std::format("Internal_DepthTexture_{}", i);
+            depthDescriptor.name = std::format("Internal_DepthTexture_{}_{}", i, count);        // Increment the name on swapchain recreation
             context.renderInfo.frameSyncInfo[i].depthTexture = context.resources.createTexture(depthDescriptor);
             auto* depthTexture = context.resources.getTexture(context.renderInfo.frameSyncInfo[i].depthTexture);
 
@@ -966,7 +966,8 @@ namespace litl::vulkan
     {
         for (auto& frameInfo : context.renderInfo.frameSyncInfo)
         {
-            context.resources.deferDestroyTexture(frameInfo.depthTexture);
+            // Note we destroy immediately. At this point the renderer has already vkDeviceWaitIdle so there is nothing using the texture.
+            context.resources.destroyTexture(frameInfo.depthTexture);
             frameInfo.depthTexture = {};
         }
     }
@@ -1068,8 +1069,15 @@ namespace litl::vulkan
         }
     }
 
+    namespace
+    {
+        static uint32_t s_swapchainRecreateCount = 0u;
+    }
+
     void recreateSwapchain(RendererContext& context) noexcept
     {
+        s_swapchainRecreateCount++;
+
         // Wait for a valid recreation state
         waitForValidFramebufferSize(context);           // wait for frame buffer to have non-zero dimensions (minimized, etc.)
         vkDeviceWaitIdle(context.device.vkDevice);      // wait for all resources to be free
@@ -1081,7 +1089,7 @@ namespace litl::vulkan
         cleanupSwapChain(context, oldSwapchain);        // destroy the old one
 
         cleanupFrameDepthTextures(context);
-        createFrameDepthTextures(context);
+        createFrameDepthTextures(context, s_swapchainRecreateCount);
 
         // Swapchain image count _can_ change. So must recreate the image sync objects.
         cleanupImageSync(context);
