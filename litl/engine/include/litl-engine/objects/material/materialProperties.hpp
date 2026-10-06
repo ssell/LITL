@@ -358,6 +358,12 @@ namespace litl
         /// </summary>
         bool setTexture(StringId property, Texture* texture, MaterialPropertySlotId slot, bool defaultValue) noexcept;
 
+        /// <summary>
+        /// Directs sets the texture table index value.
+        /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
+        /// </summary>
+        bool setTextureIndex(StringId property, uint32_t index, MaterialPropertySlotId slot, bool defaultValue) noexcept;
+
         void setReady() noexcept;
 
     private:

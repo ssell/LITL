@@ -927,6 +927,32 @@ namespace litl
         return false;
     }
 
+    bool MaterialProperties::setTextureIndex(StringId property, uint32_t index, MaterialPropertySlotId slot, bool defaultValue) noexcept
+    {
+        auto* reflectedProperty = getReflectedProperty(property);
+
+        if (reflectedProperty == nullptr)
+        {
+            return false;
+        }
+
+        // Is this an index into our global texture table?
+        if ((reflectedProperty->variable.scalarType == ShaderScalarType::Integer) &&
+            (reflectedProperty->variable.scalarSize == sizeof(uint32_t)) &&
+            (reflectedProperty->variable.componentCount == 1u))
+        {
+            uint32_t samplerIndex = static_cast<uint32_t>(SamplerPredefines::LinearRepeat);
+            // ... todo specify sampler in material ...
+            const uint32_t packedTextureSamplerIndex = packTextureSlotSamplerIndex(index, samplerIndex);
+
+            return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &packedTextureSamplerIndex, slot, defaultValue);
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     void MaterialProperties::setReady() noexcept
     {
         if (m_ready)

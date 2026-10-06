@@ -178,9 +178,16 @@ namespace litl
                             else
                             {
                                 // Check if the user is requesting one of the reserved textures.
-                                // ... todo ...
+                                auto reservedIndex = getReservedTextureTableIndex(*defaultValue);
 
-                                logWarning("Material '", descriptor.objectInfo.name, "' failed to retrieve default texture '", defaultValue->c_str(), "' for property '", defaultProperty.name, "'.");
+                                if (reservedIndex.has_value())
+                                {
+                                    properties.setTextureIndex(StringId(defaultProperty.name), static_cast<uint32_t>(reservedIndex.value()), {}, true);
+                                }
+                                else
+                                {
+                                    logWarning("Material '", descriptor.objectInfo.name, "' failed to retrieve default texture '", defaultValue->c_str(), "' for property '", defaultProperty.name, "'.");
+                                }
                             }
                         }
                         else
