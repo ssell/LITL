@@ -83,7 +83,7 @@ namespace litl::vulkan
             VK_NULL_HANDLE,
             imageIndex);
 
-        if ((acquireResult == VK_ERROR_OUT_OF_DATE_KHR) || (acquireResult == VK_SUBOPTIMAL_KHR) || context.window.wasResized)
+        if ((acquireResult == VK_ERROR_OUT_OF_DATE_KHR) || context.window.wasResized)
         {
             recreateSwapchain(context);
             return false;
