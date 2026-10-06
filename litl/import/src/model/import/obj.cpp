@@ -398,8 +398,7 @@ namespace litl::import
             meshDataItem.setName(shape.name);
             const auto meshIndex = modelImportResult->model->addMesh(shape.name);
 
-            // A shape may reference several materials across its faces. Until submesh-level material bindings
-            // are in place, the node takes the first material the shape uses.
+            // A shape may reference several materials across its faces. Until submesh-level material bindings are in place, the node takes the first material the shape uses.
             const auto globalMaterialIndex = findFirstGlobalMaterialIndex(shape.mesh);
             const auto nodeMaterialIndex = ((globalMaterialIndex < static_cast<uint32_t>(globalToModelMaterialIndex.size())) ?
                 globalToModelMaterialIndex[globalMaterialIndex] : Constants::uint32_null_index);
