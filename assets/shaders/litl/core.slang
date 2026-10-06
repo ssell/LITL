@@ -134,7 +134,7 @@ public struct PushConstants<MatProps>
 
     public uint getMaterialSlot(in uint globalInstanceId)
     {
-        return instanceData[getGpuIndex(globalInstanceId)].materialSlot;
+        return instanceData[globalInstanceId].materialSlot;
     }
 
     public MatProps getMaterial(in uint slot)

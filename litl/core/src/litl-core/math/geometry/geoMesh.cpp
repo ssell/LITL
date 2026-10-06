@@ -321,7 +321,7 @@ namespace litl
     {
         for (auto& vertex : m_vertices)
         {
-            vertex.texcoord.y() = 1.0f - clamp(vertex.texcoord.y(), 0.0f, 1.0f);
+            vertex.texcoord.y() = 1.0f - vertex.texcoord.y();       // Note: do not clamp here as it will break repeating samplers.
         }
     }
 
