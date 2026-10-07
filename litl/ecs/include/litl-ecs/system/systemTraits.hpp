@@ -270,6 +270,25 @@ namespace litl
         ComponentTypeId id{ 0 };
         bool readonly{ true };
     };
+
+    /// <summary>
+    /// Does the system define a 'static constexpr SystemExecution Execution = ...;' ?
+    /// </summary>
+    template<typename S>
+    concept HasSystemExecutionOverride = requires {
+        S::Execution;                                                                           // Execution member is present and accessible.
+        requires std::same_as<std::remove_cv_t<decltype(S::Execution)>, SystemExecution>;       // Execution is of type SystemExecution.
+        typename std::integral_constant<SystemExecution, S::Execution>;                         // Usable as a constant expression.
+    };
+
+    /// <summary>
+    /// Get the value of the T::Execution if present. Otherwise returns the default of Parallel.
+    /// </summary>
+    template<typename T, SystemExecution Default = SystemExecution::Parallel>
+    inline constexpr SystemExecution GetSystemExecutionPolicy = Default;
+
+    template<HasSystemExecutionOverride T, SystemExecution Default>
+    inline constexpr SystemExecution GetSystemExecutionPolicy<T, Default> = T::Execution;
 }
 
 #endif
