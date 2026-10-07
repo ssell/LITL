@@ -111,29 +111,16 @@ namespace litl
         void prepare();
 
         /// <summary>
-        /// Runs the underyling user system over the provided chunk.
-        /// The actual execution is performed by a SystemRunner.
-        /// 
-        /// Execution of the "run" method is done in a parallel manner 
-        /// and there may be any number of invocations of it operating
-        /// at the same time on other chunks.
+        /// Runs the underyling user system over the provided chunk. The actual execution is performed by a SystemRunner.
+        /// This variation of run does not internally use any form of async and runs all chunks of the calling thread.
         /// </summary>
-        /// <param name="world"></param>
-        /// <param name="frameIndex"></param>
-        /// <param name="elapsedTime"></param>
-        /// <param name="deltaTime"></param>
         void run(World& world, uint32_t frameIndex, float elapsedTime, float deltaTime);
 
         /// <summary>
-        /// 
+        /// Runs the underyling user system over the provided chunk. The actual execution is performed by a SystemRunner.
+        /// Execution of the "run" method is done in a parallel manner using jobs and there may be any number of invocations of it operating at the same time on other chunks.
         /// </summary>
-        /// <param name="world"></param>
-        /// <param name="frameIndex"></param>
-        /// <param name="elapsedTime"></param>
-        /// <param name="deltaTime"></param>
-        /// <param name="scheduler"></param>
-        /// <param name="fence"></param>
-        void run(World& world, uint32_t frameIndex, float elapsedTime, float deltaTime, JobScheduler& scheduler, JobFence& fence);
+        void runAsync(World& world, uint32_t frameIndex, float elapsedTime, float deltaTime, JobScheduler& scheduler, JobFence& fence);
 
     protected:
 

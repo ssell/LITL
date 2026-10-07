@@ -28,16 +28,24 @@ namespace litl
         std::mutex systemsMutex;
         std::array<SystemGraph, SystemGroupCount> schedules;
         std::vector<System*> systems;
-        std::vector<System*> runningSystems;
+        std::vector<System*> runningParallelSystems;
+        std::vector<System*> runningExclusiveSystems;
         FlatHashMap<SystemTypeId, uint32_t> systemMap;        // value = index into systems
         std::vector<System*> newSystems;
+
+        [[nodiscard]] System* getSystemById(SystemTypeId id) noexcept
+        {
+            const auto systemIndex = systemMap.find(id);
+            return systems[systemIndex.value()];
+        }
     };
 
     SystemManager::SystemManager()
         : m_pImpl(std::make_unique<SystemManager::Impl>())
     {
         m_pImpl->schedules.fill({});
-        m_pImpl->runningSystems.reserve(32u);
+        m_pImpl->runningParallelSystems.reserve(32u);
+        m_pImpl->runningExclusiveSystems.reserve(32u);
     }
 
     SystemManager::~SystemManager()
@@ -165,37 +173,79 @@ namespace litl
         m_pImpl->callbacks->invokePreGroup(*m_pImpl->services, deltaTime, group);
 
         auto& schedule = m_pImpl->schedules[static_cast<uint32_t>(group)];
-        auto& graph = schedule.getNodeGraph();
+        auto systemLayers = schedule.getLayers();
 
-        for (auto& layer : graph.getLayers())
+        for (auto& layer : systemLayers)
         {
-            m_pImpl->runningSystems.clear();
+            // -----------------------------------------------------------------------------
+            // Build System Lists
+            // -----------------------------------------------------------------------------
 
-            for (auto layerNodeIndex : layer)
+            m_pImpl->runningParallelSystems.clear();
+            m_pImpl->runningExclusiveSystems.clear();
+
+            for (auto psystemId : layer.parallelNodes)
             {
-                auto& layerNode = schedule.getNode(layerNodeIndex);                 // get the fixed index into the schedule
-                auto systemIndex = m_pImpl->systemMap.find(layerNode.systemId);     // get the fixed index into our systems vector
-                auto* system = m_pImpl->systems[systemIndex.value()];               // get the system pointer
-                m_pImpl->runningSystems.push_back(system);
+                m_pImpl->runningParallelSystems.push_back(m_pImpl->getSystemById(psystemId));
             }
 
-            // Prepare (sequential)
+            for (auto esystemId : layer.exclusiveNodes)
+            {
+                m_pImpl->runningExclusiveSystems.push_back(m_pImpl->getSystemById(esystemId));
+            }
 
-            for (auto* runningSystem : m_pImpl->runningSystems)
+            // -----------------------------------------------------------------------------
+            // Prepare (sequential)
+            // -----------------------------------------------------------------------------
+
+            for (auto* runningSystem : m_pImpl->runningExclusiveSystems)
             {
                 runningSystem->prepare();
             }
 
-            // Run (parallel)
-
-            JobFence layerFence{ &scheduler, JobPriority::High };
-
-            for (auto* runningSystem : m_pImpl->runningSystems)
+            for (auto* runningSystem : m_pImpl->runningParallelSystems)
             {
-                runningSystem->run(world, frameIndex, elapsedTime, deltaTime, scheduler, layerFence);
+                runningSystem->prepare();
             }
 
-            layerFence.wait();
+            // -----------------------------------------------------------------------------
+            // Run SystemExecution::Exclusive
+            // -----------------------------------------------------------------------------
+
+            if (!m_pImpl->runningExclusiveSystems.empty())
+            {
+                JobFence exclusiveLayerFence{ &scheduler, JobPriority::High };
+
+                scheduler.createAndSubmit([this, &world, frameIndex, elapsedTime, deltaTime](Job* job)
+                {
+                    for (auto* runningSystem : m_pImpl->runningExclusiveSystems)
+                    {
+                        runningSystem->run(world, frameIndex, elapsedTime, deltaTime);
+                    }
+                }, exclusiveLayerFence, nullptr);
+
+                exclusiveLayerFence.wait();
+            }
+
+            // -----------------------------------------------------------------------------
+            // Run SystemExecution::Parallel
+            // -----------------------------------------------------------------------------
+
+            if (!m_pImpl->runningParallelSystems.empty())
+            {
+                JobFence parallelLayerFence{ &scheduler, JobPriority::High };
+
+                for (auto* runningSystem : m_pImpl->runningParallelSystems)
+                {
+                    runningSystem->runAsync(world, frameIndex, elapsedTime, deltaTime, scheduler, parallelLayerFence);
+                }
+
+                parallelLayerFence.wait();
+            }
+
+            // -----------------------------------------------------------------------------
+            // Sync
+            // -----------------------------------------------------------------------------
 
             world.processCommandBuffers(group);
         }

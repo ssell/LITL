@@ -72,6 +72,7 @@ namespace litl
     bool SystemGraph::build() noexcept
     {
         m_nodeGraph = {};
+        m_systemNodeLayers.clear();
 
         std::vector<uint32_t> sortedNodes(m_systemNodes.size());
 
@@ -81,9 +82,9 @@ namespace litl
         }
 
         std::stable_sort(sortedNodes.begin(), sortedNodes.end(), [this](uint32_t a, uint32_t b) -> bool
-            {
-                return m_systemNodes[a] < m_systemNodes[b];
-            });
+        {
+            return m_systemNodes[a] < m_systemNodes[b];
+        });
 
         for (auto sortedNodeIndex : sortedNodes)
         {
@@ -95,7 +96,35 @@ namespace litl
         applyPlacementHints();
 
         // If the DAG sort returns false, then it indicates a cycle was detected.
-        return m_nodeGraph.sort();
+        if (!m_nodeGraph.sort())
+        {
+            return false;
+        }
+
+        // Split the layer into parallel and exclusive nodes.
+        for (auto& layer : m_nodeGraph.getLayers())
+        {
+            m_systemNodeLayers.push_back({});
+            auto& systemNodeLayer = m_systemNodeLayers.back();
+            systemNodeLayer.exclusiveNodes.reserve(layer.size());
+            systemNodeLayer.parallelNodes.reserve(layer.size());
+
+            for (auto layerNodeIndex : layer)
+            {
+                auto& systemNode = m_systemNodes[layerNodeIndex];
+
+                if (systemNode.executionPolicy == SystemExecution::Exclusive)
+                {
+                    systemNodeLayer.exclusiveNodes.push_back(systemNode.systemId);
+                }
+                else
+                {
+                    systemNodeLayer.parallelNodes.push_back(systemNode.systemId);
+                }
+            }
+        }
+
+        return true;
     }
 
     void SystemGraph::applyPlacementHints() noexcept
@@ -234,17 +263,6 @@ namespace litl
         return false;
     }
 
-    void SystemGraph::run(World& world, uint32_t frameIndex, float elapsedTime, float deltaTime, std::vector<System*> const& systems)
-    {
-        for (auto& sortedNode : m_nodeGraph.getSorted())
-        {
-            auto* system = systems[m_systemNodes[sortedNode].systemId];
-
-            system->prepare();
-            system->run(world, frameIndex, elapsedTime, deltaTime);
-        }
-    }
-
     std::optional<uint32_t> SystemGraph::findSystemIndex(SystemTypeId systemTypeId) const noexcept
     {
         for (auto i = 0; i < m_systemNodes.size(); ++i)
@@ -267,5 +285,25 @@ namespace litl
     {
         assert(index <= m_systemNodes.size());
         return m_systemNodes[index];
+    }
+
+    std::span<SystemGraphLayer const> SystemGraph::getLayers() const noexcept
+    {
+        return m_systemNodeLayers;
+    }
+
+    // -------------------------------------------------------------------------------------
+    // Deprecated / for testing purposes only
+    // -------------------------------------------------------------------------------------
+
+    void SystemGraph::run(World& world, uint32_t frameIndex, float elapsedTime, float deltaTime, std::vector<System*> const& systems)
+    {
+        for (auto& sortedNode : m_nodeGraph.getSorted())
+        {
+            auto* system = systems[m_systemNodes[sortedNode].systemId];
+
+            system->prepare();
+            system->run(world, frameIndex, elapsedTime, deltaTime);
+        }
     }
 }

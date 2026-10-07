@@ -174,7 +174,7 @@ namespace litl
         }
     }
 
-    void System::run(World& world, uint32_t frameIndex, float elapsedTime, float deltaTime, JobScheduler& scheduler, JobFence& fence)
+    void System::runAsync(World& world, uint32_t frameIndex, float elapsedTime, float deltaTime, JobScheduler& scheduler, JobFence& fence)
     {
         assert(m_pImpl->functions.runFunc != nullptr);
 

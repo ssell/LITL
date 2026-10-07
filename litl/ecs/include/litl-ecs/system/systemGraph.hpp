@@ -16,6 +16,23 @@ namespace litl
     class World;
 
     /// <summary>
+    /// Layer of systems that have no interdependencies and can be safely run together.
+    /// </summary>
+    struct SystemGraphLayer
+    {
+        /// <summary>
+        /// Systems that have been requested to be run exclusively and so are run sequentially
+        /// on the same calling thread prior to the parallel systems being run.
+        /// </summary>
+        std::vector<SystemTypeId> exclusiveNodes;
+
+        /// <summary>
+        /// Systems that will all be run in parallel at the same time.
+        /// </summary>
+        std::vector<SystemTypeId> parallelNodes;
+    };
+
+    /// <summary>
     /// A directed acyclic graph (DAG) of systems that all belong to the same group.
     /// 
     /// Used to satisfy two main requirements of a flexible (and functional) system architecture:
@@ -37,14 +54,11 @@ namespace litl
         /// <summary>
         /// Adds a system to the schedule. It is not yet ordered in the DAG.
         /// </summary>
-        /// <param name="systemTypeId"></param>
         void add(SystemTypeId systemTypeId, SystemExecution execution, std::vector<SystemComponentInfo> const& componentInfo) noexcept;
 
         /// <summary>
         /// Adds an explicit intergroup system dependency.
         /// </summary>
-        /// <param name="dependentSystem"></param>
-        /// <param name="dependsOnSystem"></param>
         bool addDependency(SystemTypeId dependentSystem, SystemTypeId dependsOnSystem) noexcept;
 
         /// <summary>
@@ -66,50 +80,36 @@ namespace litl
         /// 
         /// Can return false if the specified system is not in the graph.
         /// </summary>
-        /// <param name="systemTypeId"></param>
-        /// <param name="placement"></param>
         bool setPlacementHint(SystemTypeId systemTypeId, SystemPlacementHint placement) noexcept;
 
         /// <summary>
         /// Builds the DAG according to both explicit and implicit system dependencies.
         /// </summary>
-        bool build() noexcept;
+        [[nodiscard]] bool build() noexcept;
 
         /// <summary>
         /// Runs all systems in the schedule according to their order in the DAG.
         /// This runs them sequentially on the main thread. For testing and soon to be deprecated.
         /// </summary>
-        /// <param name="world"></param>
-        /// <param name="elapsedTime"></param>
-        /// <param name="deltaTime"></param>
-        /// <param name="systems"></param>
-        /// <returns></returns>
         [[deprecated("Sequential implementation of run is deprecated. Use the parallel version instead.")]]
         void run(World& world, uint32_t frameIndex, float elapsedTime, float deltaTime, std::vector<System*> const& systems);
-
-        /// <summary>
-        /// Parallelized job running.
-        /// </summary>
-        /// <param name="world"></param>
-        /// <param name="elapsedTime"></param>
-        /// <param name="deltaTime"></param>
-        /// <param name="systems"></param>
-        /// <param name="scheduler"></param>
-        void run(World& world, uint32_t frameIndex, float elapsedTime, float deltaTime, FlatHashMap<SystemTypeId, uint32_t> const& systems, JobScheduler& scheduler);
 
         /// <summary>
         /// Retrieves the DAG.
         /// Must first call build if it needs to be fully formed and sorted.
         /// </summary>
-        /// <returns></returns>
         DirectedAcyclicGraph const& getNodeGraph() const noexcept;
 
         /// <summary>
         /// Retreives the node at the specified index.
         /// </summary>
-        /// <param name="index"></param>
-        /// <returns></returns>
         SystemNode const& getNode(uint32_t index) const noexcept;
+
+        /// <summary>
+        /// Retrieves all of the layers in the graph. Each layer is then split by execution policy.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] std::span<SystemGraphLayer const> getLayers() const noexcept;
 
     protected:
 
@@ -152,6 +152,11 @@ namespace litl
         /// These nodes are not sorted, and their indices are fixed.
         /// </summary>
         std::vector<SystemNode> m_systemNodes;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        std::vector<SystemGraphLayer> m_systemNodeLayers;
 
         /// <summary>
         /// The DAG which can be sorted to produce executable layers.
