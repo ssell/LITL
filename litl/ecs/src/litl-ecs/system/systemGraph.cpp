@@ -35,9 +35,9 @@ namespace litl
 
     }
 
-    void SystemGraph::add(SystemTypeId systemTypeId, std::vector<SystemComponentInfo> const& componentInfo) noexcept
+    void SystemGraph::add(SystemTypeId systemTypeId, SystemExecution execution, std::vector<SystemComponentInfo> const& componentInfo) noexcept
     {
-        m_systemNodes.emplace_back(systemTypeId, componentInfo);
+        m_systemNodes.emplace_back(systemTypeId, execution, componentInfo);
     }
 
     bool SystemGraph::addDependency(SystemTypeId dependentSystem, SystemTypeId dependsOnSystem) noexcept

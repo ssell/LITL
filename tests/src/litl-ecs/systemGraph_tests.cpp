@@ -14,10 +14,10 @@ namespace litl::tests
         // [2]
         // [3]
 
-        systemGraph.add(0, {});
-        systemGraph.add(1, {});
-        systemGraph.add(2, {});
-        systemGraph.add(3, {});
+        systemGraph.add(0, SystemExecution::Parallel, {});
+        systemGraph.add(1, SystemExecution::Parallel, {});
+        systemGraph.add(2, SystemExecution::Parallel, {});
+        systemGraph.add(3, SystemExecution::Parallel, {});
 
         REQUIRE(systemGraph.addDependency(3, 2) == true);
         REQUIRE(systemGraph.addDependency(2, 1) == true);
@@ -60,14 +60,14 @@ namespace litl::tests
         // 6 write to 0
         // 7 reads 0
 
-        systemGraph.add(0, { { 0, false} });
-        systemGraph.add(1, { { 0, true } });
-        systemGraph.add(2, {});
-        systemGraph.add(3, { { 0, true } });
-        systemGraph.add(4, { { 0, false } });
-        systemGraph.add(5, {});
-        systemGraph.add(6, { { 0, false } });
-        systemGraph.add(7, { { 0, true } });
+        systemGraph.add(0, SystemExecution::Parallel, { { 0, false} });
+        systemGraph.add(1, SystemExecution::Parallel, { { 0, true } });
+        systemGraph.add(2, SystemExecution::Parallel, {});
+        systemGraph.add(3, SystemExecution::Parallel, { { 0, true } });
+        systemGraph.add(4, SystemExecution::Parallel, { { 0, false } });
+        systemGraph.add(5, SystemExecution::Parallel, {});
+        systemGraph.add(6, SystemExecution::Parallel, { { 0, false } });
+        systemGraph.add(7, SystemExecution::Parallel, { { 0, true } });
 
         // Exported sort:
         // [0, 2, 5, 1, 3, 4, 6, 7]
@@ -116,11 +116,11 @@ namespace litl::tests
     {
         SystemGraph systemGraph;
 
-        systemGraph.add(0, {});
-        systemGraph.add(1, {});
-        systemGraph.add(2, {});
-        systemGraph.add(3, {});
-        systemGraph.add(4, {});
+        systemGraph.add(0, SystemExecution::Parallel, {});
+        systemGraph.add(1, SystemExecution::Parallel, {});
+        systemGraph.add(2, SystemExecution::Parallel, {});
+        systemGraph.add(3, SystemExecution::Parallel, {});
+        systemGraph.add(4, SystemExecution::Parallel, {});
 
         REQUIRE(systemGraph.setPlacementHint(2, SystemPlacementHint::First) == true);
         REQUIRE(systemGraph.setPlacementHint(4, SystemPlacementHint::First) == true);
@@ -157,11 +157,11 @@ namespace litl::tests
     {
         SystemGraph systemGraph;
 
-        systemGraph.add(0, {});
-        systemGraph.add(1, {});
-        systemGraph.add(2, {});
-        systemGraph.add(3, {});
-        systemGraph.add(4, {});
+        systemGraph.add(0, SystemExecution::Parallel, {});
+        systemGraph.add(1, SystemExecution::Parallel, {});
+        systemGraph.add(2, SystemExecution::Parallel, {});
+        systemGraph.add(3, SystemExecution::Parallel, {});
+        systemGraph.add(4, SystemExecution::Parallel, {});
 
         REQUIRE(systemGraph.setPlacementHint(2, SystemPlacementHint::Last) == true);
         REQUIRE(systemGraph.setPlacementHint(4, SystemPlacementHint::Last) == true);
@@ -213,13 +213,13 @@ namespace litl::tests
         constexpr bool ReadOnly = true;
         constexpr bool ReadWrite = false;
 
-        systemGraph.add(PhysicsSystem, { {TransformComponent, ReadOnly}, {VelocityComponent, ReadWrite} });
-        systemGraph.add(MovementSystem, { {TransformComponent, ReadWrite}, {VelocityComponent, ReadOnly} });
-        systemGraph.add(NetworkReceiveSystem, { {TransformComponent, ReadWrite}, {VelocityComponent, ReadWrite} });
-        systemGraph.add(NetworkSendSystem, { {TransformComponent, ReadWrite}, {VelocityComponent, ReadWrite} });
-        systemGraph.add(CameraFollowSystem, { {TransformComponent, ReadOnly} });
-        systemGraph.add(FallDamageSystem, { {TransformComponent, ReadOnly}, {VelocityComponent, ReadOnly} });
-        systemGraph.add(AnimationStateSystem, { {TransformComponent, ReadOnly} });
+        systemGraph.add(PhysicsSystem, SystemExecution::Parallel, { {TransformComponent, ReadOnly}, {VelocityComponent, ReadWrite} });
+        systemGraph.add(MovementSystem, SystemExecution::Parallel, { {TransformComponent, ReadWrite}, {VelocityComponent, ReadOnly} });
+        systemGraph.add(NetworkReceiveSystem, SystemExecution::Parallel, { {TransformComponent, ReadWrite}, {VelocityComponent, ReadWrite} });
+        systemGraph.add(NetworkSendSystem, SystemExecution::Parallel, { {TransformComponent, ReadWrite}, {VelocityComponent, ReadWrite} });
+        systemGraph.add(CameraFollowSystem, SystemExecution::Parallel, { {TransformComponent, ReadOnly} });
+        systemGraph.add(FallDamageSystem, SystemExecution::Parallel, { {TransformComponent, ReadOnly}, {VelocityComponent, ReadOnly} });
+        systemGraph.add(AnimationStateSystem, SystemExecution::Parallel, { {TransformComponent, ReadOnly} });
 
         systemGraph.addDependency(MovementSystem, PhysicsSystem);
         systemGraph.addDependency(CameraFollowSystem, MovementSystem);

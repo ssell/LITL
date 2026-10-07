@@ -38,7 +38,7 @@ namespace litl
         /// Adds a system to the schedule. It is not yet ordered in the DAG.
         /// </summary>
         /// <param name="systemTypeId"></param>
-        void add(SystemTypeId systemTypeId, std::vector<SystemComponentInfo> const& componentInfo) noexcept;
+        void add(SystemTypeId systemTypeId, SystemExecution execution, std::vector<SystemComponentInfo> const& componentInfo) noexcept;
 
         /// <summary>
         /// Adds an explicit intergroup system dependency.

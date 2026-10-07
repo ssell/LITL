@@ -54,7 +54,7 @@ namespace litl
         m_pImpl->callbacks = callbacks;
     }
 
-    void SystemManager::addSystem(System* system, SystemGroup group, std::vector<SystemComponentInfo> const& componentInfo) const noexcept
+    void SystemManager::addSystem(System* system, SystemGroup group, SystemExecution execution, std::vector<SystemComponentInfo> const& componentInfo) const noexcept
     {
         const auto systemId = system->id();
         bool isSystemAlreadyKnown = false;
@@ -79,7 +79,7 @@ namespace litl
             m_pImpl->systemMap.insert(system->id(), static_cast<uint32_t>(m_pImpl->systems.size()));
             m_pImpl->systems.push_back(system);
             m_pImpl->newSystems.push_back(system);
-            m_pImpl->schedules[static_cast<uint32_t>(group)].add(systemId, componentInfo);
+            m_pImpl->schedules[static_cast<uint32_t>(group)].add(systemId, execution, componentInfo);
         }
     }
 

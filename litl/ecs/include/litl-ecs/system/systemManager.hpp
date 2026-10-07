@@ -36,10 +36,7 @@ namespace litl
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="system"></param>
-        /// <param name="group"></param>
-        /// <param name="componentInfo"></param>
-        void addSystem(System* system, SystemGroup group, std::vector<SystemComponentInfo> const& componentInfo) const noexcept;
+        void addSystem(System* system, SystemGroup group, SystemExecution execution, std::vector<SystemComponentInfo> const& componentInfo) const noexcept;
 
         /// <summary>
         /// 

@@ -39,7 +39,7 @@ namespace litl
             if (!contains(system))
             {
                 system->template attach<S>();
-                trackSystem(system, group, ExtractSystemComponentInfo<S>());
+                trackSystem(system, group, GetSystemExecutionPolicy<S>, ExtractSystemComponentInfo<S>());
             }
 
             return { this, system };
@@ -62,7 +62,7 @@ namespace litl
         friend class World;
 
         bool build(World const* world);
-        void trackSystem(System* system, SystemGroup group, std::vector<SystemComponentInfo> const& componentInfo) const noexcept;
+        void trackSystem(System* system, SystemGroup group, SystemExecution execution, std::vector<SystemComponentInfo> const& componentInfo) const noexcept;
 
         struct Impl;
         std::unique_ptr<Impl> m_pImpl;
