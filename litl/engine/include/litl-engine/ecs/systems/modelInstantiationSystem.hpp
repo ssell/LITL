@@ -21,6 +21,11 @@ namespace litl
     {
     public:
 
+        /// <summary>
+        /// Run exclusively (not parallel) as our update relies on creating new entries in the ObjectPool, which is not thread-safe.
+        /// </summary>
+        static constexpr SystemExecution Execution = SystemExecution::Exclusive;
+
         void setup(ServiceProvider& services);
         void prepare();
         void update(SystemData const& data, Entity entity, PendingModelInstance const& pendingModel, Transform const& transform, LocalBounds& localBounds);

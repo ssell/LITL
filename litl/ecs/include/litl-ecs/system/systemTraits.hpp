@@ -10,6 +10,7 @@
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/component/component.hpp"
 #include "litl-ecs/system/systemData.hpp"
+#include "litl-ecs/system/systemExecution.hpp"
 #include "litl-ecs/entity/entity.hpp"
 
 namespace litl
