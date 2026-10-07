@@ -1,5 +1,4 @@
 #include "litl-core/authority.hpp"
-#include "litl-core/hash.hpp"
 #include "litl-core/thread.hpp"
 #include "litl-engine/objects/material/deferredMaterialCommands.hpp"
 #include "litl-engine/objects/objectPool.hpp"
@@ -7,7 +6,6 @@
 
 namespace litl
 {
-    std::unordered_map<MaterialHandle, std::vector<DeferredMaterialCommands::DeferredMaterialCommand>> DeferredMaterialCommands::s_combinedCommands;
     std::array<std::vector<DeferredMaterialCommands::DeferredMaterialCommand>, Constants::max_thread_count> DeferredMaterialCommands::t_threadCommands{};
 
     namespace
@@ -17,58 +15,61 @@ namespace litl
 
     void DeferredMaterialCommands::onPreRender(Authority<MaterialManager> auth, ObjectPool& objectPool) noexcept
     {
-        s_combinedCommands.clear();
-        s_invalidMaterialHandles.clear();
-
         for (auto& threadCommands : t_threadCommands)
         {
-            for (auto& threadCommand : threadCommands)
+            for (auto& command : threadCommands)
             {
-                s_combinedCommands[threadCommand.handle].push_back(threadCommand);
+                switch (command.type)
+                {
+                case DeferredMaterialCommandType::UpgradeSlotToFrequentBlock:
+                    {
+                        const auto* pCommand = std::get_if<UpdateSlotToFrequentBlockCommand>(&command.command);
+
+                        if (pCommand != nullptr)
+                        {
+                            auto* material = objectPool.getMaterial(pCommand->handle);
+
+                            if (material != nullptr)
+                            {
+                                material->upgradeSlotToFrequentBlock({}, pCommand->slot);
+                            }
+                        }
+                    }
+                    break;
+
+                case DeferredMaterialCommandType::CreateVariableMaterialsRef:
+                    {
+                        const auto* pCommand = std::get_if<CreateVariableMaterialsRefCommand>(&command.command);
+
+                        if (pCommand != nullptr)
+                        {
+                            // ... todo ...
+                        }
+                    }
+                    break;
+
+                default:
+                    break;
+                }
             }
 
             threadCommands.clear();
         }
-
-        for (auto& kvp : s_combinedCommands)
-        {
-            auto* material = objectPool.getMaterial(kvp.first);
-
-            if (material != nullptr)
-            {
-                for (auto& command : kvp.second)
-                {
-                    switch (command.type)
-                    {
-                    case CommandType::UpgradeSlotToFrequentBlock:
-                        material->upgradeSlotToFrequentBlock({}, command.slot);
-                        break;
-
-                    case CommandType::Unknown:
-                        break;
-                    }
-                }
-
-                kvp.second.clear();
-            }
-            else
-            {
-                s_invalidMaterialHandles.push_back(kvp.first);
-            }
-        }
-
-        for (auto invalidMaterialHandle : s_invalidMaterialHandles)
-        {
-            s_combinedCommands.erase(invalidMaterialHandle);
-        }
     }
 
-    void DeferredMaterialCommands::enqueue(CommandType commandType, MaterialPropertySlotId slot, MaterialHandle handle) noexcept
+    void DeferredMaterialCommands::enqueueUpgradeSlotCommand(UpdateSlotToFrequentBlockCommand const& command) noexcept
     {
         t_threadCommands[ThreadInfo::get().index].push_back(DeferredMaterialCommand{
-            .type = commandType,
-            .handle = handle,
-            .slot = slot
+            .type = UpdateSlotToFrequentBlockCommand::Type,
+            .command = command
+        });
+    }
+
+    void DeferredMaterialCommands::enqueueCreateVariableMaterialsRefCommand(CreateVariableMaterialsRefCommand const& command) noexcept
+    {
+        t_threadCommands[ThreadInfo::get().index].push_back(DeferredMaterialCommand{
+            .type = CreateVariableMaterialsRefCommand::Type,
+            .command = command
         });
     }
 }

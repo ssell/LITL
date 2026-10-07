@@ -67,9 +67,13 @@ namespace litl::import
             std::vector<float> texcoords;
             std::vector<float> tangents;
 
+            std::vector<Submesh> submeshes;
+            submeshes.reserve(glMesh.primitives_count);
+
             for (cgltf_size p = 0; p < glMesh.primitives_count; ++p)
             {
                 cgltf_primitive const& glPrimitive = glMesh.primitives[p];
+                Submesh submesh{};
 
                 if (glPrimitive.type != cgltf_primitive_type_triangles)
                 {
@@ -103,6 +107,7 @@ namespace litl::import
 
                 // Indices are optional. Absent means "draw vertices in order"
                 const size_t indexCount = (glPrimitive.indices != nullptr) ? glPrimitive.indices->count : primitiveVertexCount;
+                submesh.firstIndex = static_cast<uint32_t>(indices.size());
 
                 for (size_t i = 0ull; i < indexCount; ++i)
                 {
@@ -113,13 +118,19 @@ namespace litl::import
                     indices.push_back(primitiveBaseVertex + local);
                 }
 
+                submesh.indexCount = static_cast<uint32_t>(indices.size()) - submesh.firstIndex;
+                submesh.materialSlot = static_cast<uint32_t>(p);
+                submeshes.push_back(submesh);
+
+                // Set all faces to 3 (triangles)
                 for (size_t f = 0ull; f < (indexCount / 3); ++f)
                 {
                     faceIndexCounts.push_back(3u);
-                    faceMaterialSlots.push_back(Constants::uint32_null_index);
+                    faceMaterialSlots.push_back(submesh.materialSlot);
                 }
             }
 
+            litlMesh->setSubmeshes(submeshes);
             litlMesh->recalculateBounds();
         }
 
@@ -201,7 +212,7 @@ namespace litl::import
         /// <summary>
         /// Creates the material item for the ImportedData, adds it to the model, and converts the cgltf material to our intermediate format.
         /// </summary>
-        void createMaterialDataItem(cgltf_material const& glMaterial, ModelImportResult* modelImportResult, ImportedData& importedData) noexcept
+        [[nodiscard]] uint32_t createMaterialDataItem(cgltf_material const& glMaterial, ModelImportResult* modelImportResult, ImportedData& importedData) noexcept
         {
             const uint32_t materialDataItemIndex = static_cast<uint32_t>(importedData.items.size());
             importedData.items.push_back({});
@@ -211,7 +222,7 @@ namespace litl::import
             {
                 // Do not fail out the entire GLB due to a material failure.
                 importedData.items.pop_back();
-                return;
+                return Constants::uint32_null_index;
             }
 
             // Update model
@@ -234,7 +245,10 @@ namespace litl::import
             if (!convertToLitlMaterial(litlMaterial, glMaterial))
             {
                 importedData.items.pop_back();
+                return Constants::uint32_null_index;
             }
+
+            return materialIndex;
         }
 
         // ---------------------------------------------------------------------------------
@@ -347,17 +361,37 @@ namespace litl::import
         // Create the Materials
         // ---------------------------------------------------------------------------------
 
+        // Maps glTF materialIndex -> model material index
+        std::vector<uint32_t> glMatIndexToModelMatIndex(data->materials_count, Constants::uint32_null_index);
+
         for (cgltf_size matIdx = 0; matIdx < data->materials_count; ++matIdx)
         {
-            createMaterialDataItem(data->materials[matIdx], modelImportResult, importedData);
+            // Returns either the model material index (result of model->addMaterial()) or Constants::uint32_null_index on failure.
+            glMatIndexToModelMatIndex[matIdx] = createMaterialDataItem(data->materials[matIdx], modelImportResult, importedData);
         }
 
         // ---------------------------------------------------------------------------------
         // Create the Meshes
         // ---------------------------------------------------------------------------------
 
+        // Mesh slot table. Slot == primitive index.
+        std::vector<std::vector<uint32_t>> meshSlotMaterials(data->meshes_count);
+
         for (cgltf_size meshIdx = 0; meshIdx < data->meshes_count; ++meshIdx)
         {
+            const cgltf_mesh& glMesh = data->meshes[meshIdx];
+            auto& slotTable = meshSlotMaterials[meshIdx];
+            slotTable.resize(glMesh.primitives_count, Constants::uint32_null_index);
+
+            for (cgltf_size p = 0; p < glMesh.primitives_count; ++p)
+            {
+                if (glMesh.primitives->material != nullptr)
+                {
+                    const auto glMatIdx = cgltf_material_index(data, glMesh.primitives[p].material);
+                    slotTable[p] = glMatIndexToModelMatIndex[glMatIdx];
+                }
+            }
+
             const auto meshResult = createMeshDataItem(data->meshes[meshIdx], modelImportResult, importedData);
 
             if (!meshResult.success)
@@ -383,6 +417,7 @@ namespace litl::import
             if (glNode.mesh != nullptr)
             {
                 node.meshIndex = static_cast<uint32_t>(cgltf_mesh_index(data, glNode.mesh));
+                node.materialIndices = meshSlotMaterials[node.meshIndex];
             }
 
             for (cgltf_size childIdx = 0; childIdx < glNode.children_count; ++childIdx)

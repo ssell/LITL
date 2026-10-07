@@ -553,7 +553,10 @@ namespace litl
 
                 if (m_enabledTier3DataSeparation && (slotRef.consecutiveWriteFrames >= SlotUpgradeToFrequentFrames))
                 {
-                    DeferredMaterialCommands::enqueue(DeferredMaterialCommands::CommandType::UpgradeSlotToFrequentBlock, slotId, m_materialHandle);
+                    DeferredMaterialCommands::enqueueUpgradeSlotCommand(UpdateSlotToFrequentBlockCommand{
+                        .handle = m_materialHandle,
+                        .slot = slotId
+                    });
                 }
             }
 
