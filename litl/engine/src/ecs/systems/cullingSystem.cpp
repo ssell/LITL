@@ -154,10 +154,17 @@ namespace litl
 
                         for (auto i = 0; i < count; ++i)
                         {
+                            if ((i >= submeshes.size()) || (submeshes[i].materialSlot >= bindings.size()))
+                            {
+                                continue;
+                            }
+
+                            const auto& binding = bindings[submeshes[i].materialSlot];
+
                             s_cullingBuckets[data.threadIndex].cameraRenderableEntities[cameraIndex].entities.push_back(RenderableEntity{
                                 .entity = entity,
                                 .meshRef = meshRef,
-                                .materialRef = MaterialRef { .handle = bindings[i].handle, .slot = bindings[i].slot},
+                                .materialRef = MaterialRef { .handle = binding.handle, .slot = binding.slot},
                                 .firstIndex = submeshes[i].firstIndex,
                                 .indexCount = submeshes[i].indexCount
                             });

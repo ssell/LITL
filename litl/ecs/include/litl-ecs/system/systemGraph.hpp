@@ -21,8 +21,7 @@ namespace litl
     struct SystemGraphLayer
     {
         /// <summary>
-        /// Systems that have been requested to be run exclusively and so are run sequentially
-        /// on the same calling thread prior to the parallel systems being run.
+        /// Systems that have been requested to be run exclusively and so are run sequentially on a job prior to the parallel systems being run.
         /// </summary>
         std::vector<SystemTypeId> exclusiveNodes;
 

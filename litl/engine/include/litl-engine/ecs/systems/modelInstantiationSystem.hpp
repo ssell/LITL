@@ -36,7 +36,7 @@ namespace litl
         std::shared_ptr<ObjectPool> m_pObjectPool{ nullptr };
     };
 
-    static_assert(ModelInstantiationSystem::ExecutionPolicy == SystemExecutionPolicy::Exclusive);
+    static_assert(GetSystemExecutionPolicy<ModelInstantiationSystem> == SystemExecutionPolicy::Exclusive);
 }
 
 #endif

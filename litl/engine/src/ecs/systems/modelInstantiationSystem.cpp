@@ -143,39 +143,39 @@ namespace litl
                         {
                             // Mesh has multiple materials. Use a VariableMaterialRef
                             MaterialBindingsDescriptor bindingsDesc{};
-                            bindingsDesc.bindings.reserve(node.materialIndices.size());
+                            bindingsDesc.bindings.resize(node.materialIndices.size(), {});
 
-                            for (auto materialIndex : node.materialIndices)
+                            for (uint32_t nodeMaterialIndex = 0u; nodeMaterialIndex < static_cast<uint32_t>(node.materialIndices.size()); ++nodeMaterialIndex)
                             {
-                                auto* materialAsset = assetManager.getMaterial(modelAsset->materialAssetHandles[materialIndex]);
-
-                                if ((materialAsset != nullptr) && (materialAsset->material != nullptr) && materialAsset->materialHandle.isValid())
-                                {
-                                    bindingsDesc.bindings.push_back(MaterialBinding{
-                                        .handle = materialAsset->materialHandle,
-                                        .slot = materialAsset->material->allocateSlot()
-                                    });
-                                }
-                            }
-
-                            if (!bindingsDesc.bindings.empty())
-                            {
-                                const VariableMaterialsRef variableMaterialsRef{
-                                    .handle = objectPool.createMaterialBindings(bindingsDesc)       // Note: this call to ObjectPool is not thread-safe which is why we define this system to use SystemExecutionPolicy::Exclusive
+                                MaterialBinding binding{
+                                    .handle = fallbackMaterialRef.handle,
+                                    .slot = fallbackMaterialRef.slot
                                 };
 
-                                if (variableMaterialsRef.handle.isValid())
+                                if (nodeMaterialIndex < modelAsset->materialAssetHandles.size())
                                 {
-                                    commands.addComponent<VariableMaterialsRef>(nodeEntity, variableMaterialsRef);
+                                    auto* materialAsset = assetManager.getMaterial(modelAsset->materialAssetHandles[nodeMaterialIndex]);
+
+                                    if ((materialAsset != nullptr) && (materialAsset->material != nullptr) && materialAsset->materialHandle.isValid())
+                                    {
+                                        binding.handle = materialAsset->materialHandle;
+                                        binding.slot = materialAsset->material->allocateSlot();
+                                    }
                                 }
-                                else
-                                {
-                                    logWarning("Model '", modelAsset->key, "' node '", node.name, "' failed to create MaterialBindingsHandle and so no VariableMaterialsRef component was added. It will not be rendered.");
-                                }
+
+                                bindingsDesc.bindings[nodeMaterialIndex] = binding;
+                            }
+
+                            // Note: this call to ObjectPool is not thread-safe which is why we define this system to use SystemExecutionPolicy::Exclusive
+                            const VariableMaterialsRef variableMaterialsRef{ .handle = objectPool.createMaterialBindings(bindingsDesc) };
+
+                            if (variableMaterialsRef.handle.isValid())
+                            {
+                                commands.addComponent<VariableMaterialsRef>(nodeEntity, variableMaterialsRef);
                             }
                             else
                             {
-                                logWarning("Model '", modelAsset->key, "' node '", node.name, "' declared multiple materials but failed to retrieve any valid material bindings. No VariableMaterialsRef component was added. It will not be rendered.");
+                                logWarning("Model '", modelAsset->key, "' node '", node.name, "' failed to create MaterialBindingsHandle and so no VariableMaterialsRef component was added. It will not be rendered.");
                             }
                         }
                     }

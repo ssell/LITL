@@ -157,6 +157,7 @@ namespace litl
         const SystemData data{
             .world = world,
             .commands = commandBuffer,
+            .threadIndex = ThreadInfo::get().index,
             .frameIndex = frameIndex,
             .elapsedTime = elapsedTime,
             .deltaTime = deltaTime

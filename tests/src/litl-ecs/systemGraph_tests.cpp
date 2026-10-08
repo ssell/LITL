@@ -46,7 +46,7 @@ namespace litl::tests
         REQUIRE(systemGraph.getNode(layers[2][0]).systemId == 3);
     } LITL_END_TEST_CASE
 
-        LITL_TEST_CASE("Implicit Dependency", "[ecs::systemGraph]")
+    LITL_TEST_CASE("Implicit Dependency", "[ecs::systemGraph]")
     {
         // Implicit dependency checks - those based on component read/write access.
         SystemGraph systemGraph;
@@ -112,7 +112,7 @@ namespace litl::tests
 
     } LITL_END_TEST_CASE
 
-        LITL_TEST_CASE("Prefer First", "[ecs::systemGraph]")
+    LITL_TEST_CASE("Prefer First", "[ecs::systemGraph]")
     {
         SystemGraph systemGraph;
 
@@ -153,7 +153,7 @@ namespace litl::tests
         REQUIRE(systemGraph.getNode(layers[1][2]).systemId == 3);
     } LITL_END_TEST_CASE
 
-        LITL_TEST_CASE("Prefer Last", "[ecs::systemGraph]")
+    LITL_TEST_CASE("Prefer Last", "[ecs::systemGraph]")
     {
         SystemGraph systemGraph;
 
@@ -194,7 +194,7 @@ namespace litl::tests
         REQUIRE(systemGraph.getNode(layers[1][1]).systemId == 4);
     } LITL_END_TEST_CASE
 
-        LITL_TEST_CASE("Mixed Dependency", "[ecs::systemGraph]")
+    LITL_TEST_CASE("Mixed Dependency", "[ecs::systemGraph]")
     {
         // Mix of explicit and implicit dependencies along with placement hints. Fun.
         SystemGraph systemGraph;
@@ -257,5 +257,93 @@ namespace litl::tests
         REQUIRE(systemGraph.getNode(layers[3][2]).systemId == AnimationStateSystem);
         REQUIRE(layers[4].size() == 1);
         REQUIRE(systemGraph.getNode(layers[4][0]).systemId == NetworkSendSystem);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("Exclusive Split Same Layer", "[ecs::systemGraph]")
+    {
+        // No dependencies, so all systems share one layer, which is split by execution policy.
+        // Covers exclusive alongside unrelated parallel nodes, and two exclusive nodes at the same depth.
+        SystemGraph systemGraph;
+
+        systemGraph.add(0, SystemExecutionPolicy::Parallel, {});
+        systemGraph.add(1, SystemExecutionPolicy::Exclusive, {});
+        systemGraph.add(2, SystemExecutionPolicy::Parallel, {});
+        systemGraph.add(3, SystemExecutionPolicy::Exclusive, {});
+
+        REQUIRE(systemGraph.build() == true);
+
+        auto layers = systemGraph.getLayers();
+
+        REQUIRE(layers.size() == 1);
+        REQUIRE(layers[0].exclusiveNodes == std::vector<SystemTypeId>{ 1, 3 });
+        REQUIRE(layers[0].parallelNodes == std::vector<SystemTypeId>{ 0, 2 });
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("Exclusive In Dependency Chain", "[ecs::systemGraph]")
+    {
+        // 0 (parallel) -> 1 (exclusive) -> 2 (parallel), with an unrelated exclusive 3.
+        // Expected layers:
+        // [0 | 3]      parallel | exclusive
+        // [  | 1]
+        // [2 |  ]
+        SystemGraph systemGraph;
+
+        systemGraph.add(0, SystemExecutionPolicy::Parallel, {});
+        systemGraph.add(1, SystemExecutionPolicy::Exclusive, {});
+        systemGraph.add(2, SystemExecutionPolicy::Parallel, {});
+        systemGraph.add(3, SystemExecutionPolicy::Exclusive, {});
+
+        REQUIRE(systemGraph.addDependency(1, 0) == true);
+        REQUIRE(systemGraph.addDependency(2, 1) == true);
+
+        REQUIRE(systemGraph.build() == true);
+
+        auto layers = systemGraph.getLayers();
+
+        REQUIRE(layers.size() == 3);
+
+        REQUIRE(layers[0].parallelNodes == std::vector<SystemTypeId>{ 0 });
+        REQUIRE(layers[0].exclusiveNodes == std::vector<SystemTypeId>{ 3 });
+
+        REQUIRE(layers[1].parallelNodes.empty());
+        REQUIRE(layers[1].exclusiveNodes == std::vector<SystemTypeId>{ 1 });
+
+        REQUIRE(layers[2].parallelNodes == std::vector<SystemTypeId>{ 2 });
+        REQUIRE(layers[2].exclusiveNodes.empty());
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("Exclusive With Placement Hints", "[ecs::systemGraph]")
+    {
+        // Exclusive systems hinted First and Last should land in their own layers,
+        // with the unhinted parallel systems in between.
+        // Expected layers:
+        // [        | 1]
+        // [0, 2, 4 |  ]
+        // [        | 3]
+        SystemGraph systemGraph;
+
+        systemGraph.add(0, SystemExecutionPolicy::Parallel, {});
+        systemGraph.add(1, SystemExecutionPolicy::Exclusive, {});
+        systemGraph.add(2, SystemExecutionPolicy::Parallel, {});
+        systemGraph.add(3, SystemExecutionPolicy::Exclusive, {});
+        systemGraph.add(4, SystemExecutionPolicy::Parallel, {});
+
+        REQUIRE(systemGraph.setPlacementHint(1, SystemPlacementHint::First) == true);
+        REQUIRE(systemGraph.setPlacementHint(3, SystemPlacementHint::Last) == true);
+
+        REQUIRE(systemGraph.build() == true);
+
+        auto layers = systemGraph.getLayers();
+
+        REQUIRE(layers.size() == 3);
+
+        REQUIRE(layers[0].parallelNodes.empty());
+        REQUIRE(layers[0].exclusiveNodes == std::vector<SystemTypeId>{ 1 });
+
+        REQUIRE(layers[1].parallelNodes == std::vector<SystemTypeId>{ 0, 2, 4 });
+        REQUIRE(layers[1].exclusiveNodes.empty());
+
+        REQUIRE(layers[2].parallelNodes.empty());
+        REQUIRE(layers[2].exclusiveNodes == std::vector<SystemTypeId>{ 3 });
     } LITL_END_TEST_CASE
 }
