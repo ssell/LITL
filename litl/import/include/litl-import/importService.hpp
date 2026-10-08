@@ -61,6 +61,8 @@ namespace litl::import
 
     private:
 
+        class EmbeddedImportService;
+
         void registerProcessors() noexcept;
 
         ImporterRegistry m_importerRegistry{};

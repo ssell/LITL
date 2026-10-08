@@ -37,6 +37,61 @@
 
 namespace litl::import
 {
+    class ImportService::EmbeddedImportService : public EmbeddedImporter
+    {
+    public:
+
+        EmbeddedImportService(ImporterRegistry& registry, ImportedData& data) : importerRegistry(registry), importedData(data) {}
+
+        ImporterRegistry& importerRegistry;
+        ImportedData& importedData;
+
+        std::optional<uint32_t> importEmbedded(ImportSourceType sourceType, std::string_view name, std::span<std::byte const> sourceBytes, ImportSettings const& settings) const noexcept override
+        {
+            // Only certan types are allowed for embedded importing. This is to avoid multi-nested importes.
+            switch (sourceType)
+            {
+                // Explicitly allowed
+            case ImportSourceType::TextureBmp:
+            case ImportSourceType::TextureHdr:
+            case ImportSourceType::TexturePng:
+            case ImportSourceType::TextureTga:
+                break;
+
+                // Everything else rejected
+            default:
+                logError("Requested to perform embedded import of restricted type '", static_cast<uint32_t>(sourceType), "' which does not allow embedded import.");
+                return std::nullopt;
+            }
+
+            auto importer = importerRegistry.create(sourceType);
+
+            if (importer == nullptr)
+            {
+                logError("Failed to retrieve importer of type '", static_cast<uint32_t>(sourceType), "' for embedded import service.");
+                return std::nullopt;
+            }
+
+            const ImportContext context{
+                .location = name,
+                .settings = settings,
+                .companions = {},
+                .embeddedImporter = *this
+            };
+
+            const uint32_t importedItemIndex = static_cast<uint32_t>(importedData.items.size());
+            const Result embeddedImportResult = importer->import(context, sourceBytes, importedData);
+
+            if (!embeddedImportResult.success)
+            {
+                logError("Embedded import of type '", static_cast<uint32_t>(sourceType), "' failed with code ", static_cast<uint32_t>(embeddedImportResult.error), " and message '", embeddedImportResult.message, "'");
+                return std::nullopt;
+            }
+
+            return importedItemIndex;
+        }
+    };
+
     ImportService::ImportService()
     {
         registerProcessors();
@@ -96,10 +151,13 @@ namespace litl::import
             return Result::Error(ErrorType::NoImporterForSourceType);
         }
 
+        EmbeddedImportService embeddedImporter(m_importerRegistry, importedData);
+
         const ImportContext context{
             .location = location,
             .settings = settings,
-            .companions = companions
+            .companions = companions,
+            .embeddedImporter = embeddedImporter
         };
 
         Result const importResult = importer->import(context, sourceBytes, importedData);

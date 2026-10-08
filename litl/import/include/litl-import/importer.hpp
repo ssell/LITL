@@ -16,12 +16,20 @@
 
 namespace litl::import
 {
+    class EmbeddedImporter
+    {
+    public:
+        virtual std::optional<uint32_t> importEmbedded(ImportSourceType sourceType, std::string_view name, std::span<std::byte const> sourceBytes, ImportSettings const& settings) const noexcept = 0;
+    };
+
     struct ImportContext final
     {
         std::string_view location;
         ImportSettings settings;
         std::span<ImportCompanion const> companions;
+        EmbeddedImporter const& embeddedImporter;
     };
+
 
     class Importer
     {

@@ -7,6 +7,7 @@
 #include "litl-import/model/import/glb.hpp"
 #include "litl-import/model/intermediate/modelIntermediateData.hpp"
 #include "litl-core/math/geometry/geoMesh.hpp"
+#include "litl-core/string.hpp"
 
 namespace litl::import
 {
@@ -263,19 +264,22 @@ namespace litl::import
             // Update model
             const std::string_view materialName = nameOr(glMaterial.name, "Material");
 
-            // Build the material
+            // Build the material import item
             auto* materialResult = materialDataItem.getDataPtr<MaterialImportResult>();
             materialResult->intermediateMaterial = std::make_unique<MaterialIntermediateData>();
+
             auto* litlMaterial = materialResult->intermediateMaterial.get();
             litlMaterial->setName(materialName);
+            materialDataItem.setName(materialName);
 
+            // Convert the gl material to our internal material
             if (!convertToLitlMaterial(litlMaterial, glMaterial, location))
             {
                 importedData.items.pop_back();
                 return Constants::uint32_null_index;
             }
 
-            materialDataItem.setName(materialName);
+            // Add the material to the model
             const auto materialIndex = modelImportResult->model->addMaterial(materialName);
 
             // Update the internal model item tracking. This is used to propagate deduplicated/sanitized names back to the intermediate data.
@@ -292,35 +296,56 @@ namespace litl::import
         // ---------------------------------------------------------------------------------
 
         /// <summary>
-        /// Converts the cgltf texture to our intermediate format.
+        /// Given a string-based mime type, returns the ImportSourceType associated with it. Returns Unknown if the mime type is not supported.
         /// </summary>
-        void convertToLitlTexture(TextureIntermediateData* litlTexture, cgltf_texture const& glTexture) noexcept
+        [[nodiscard]] ImportSourceType getImportSourceTypeFromMimeType(std::string_view mimeType) noexcept
         {
-            // ... todo ...
+            const auto mimeTypeLower = toLowercase(mimeType);
+
+            // We could use a StringIdMap, but we only support a few mime types.
+            if (mimeTypeLower == "image/png")
+            {
+                return ImportSourceType::TexturePng;
+            }
+            else if (mimeTypeLower == "image/jpeg")
+            {
+                // return ImportSourceType::TextureJpeg;
+            }
+
+            return ImportSourceType::Unknown;
         }
 
         /// <summary>
         /// Creates the texture item for the ImportedData, adds it to the model, and converts the cgltf texture to our intermediate format.
         /// </summary>
-        void createTextureDataItem(cgltf_texture const& glTexture, ModelImportResult* modelImportResult, ImportedData& importedData) noexcept
+        void createTextureDataItem(cgltf_image const& glImage, ModelImportResult* modelImportResult, ImportedData& importedData, ImportContext const& context) noexcept
         {
-            const uint32_t textureDataItemIndex = static_cast<uint32_t>(importedData.items.size());
-            importedData.items.push_back({});
-            auto& textureDataItem = importedData.items.back();
+            const auto imageName = nameOr(glImage.name, "Image");
+            const auto mimeType = nameOr(glImage.mime_type, "UNKNOWN");
+            const auto sourceType = getImportSourceTypeFromMimeType(mimeType);
 
-            if (!textureDataItem.setType(ImportedDataType::Texture))
+            if (sourceType == ImportSourceType::Unknown)
             {
-                // Do not fail out the entire GLB due to a texture failure.
-                importedData.items.pop_back();
+                logWarning("GLB image '", imageName, "' in model '", context.location, "' has an unsupported mime type of '", mimeType, "'. Skipping.");
                 return;
             }
 
-            // Build the texture
-            auto* textureResult = textureDataItem.getDataPtr<TextureImportResult>();
-            textureResult->intermediateTexture = std::make_unique<TextureIntermediateData>();
-            auto* litlTexture = textureResult->intermediateTexture.get();
+            if ((glImage.buffer_view == nullptr) || (glImage.buffer_view->buffer == nullptr) || (glImage.buffer_view->buffer->data == nullptr) || (glImage.buffer_view->buffer->size == 0))
+            {
+                logWarning("GLB image '", imageName, "' in model '", context.location, "' has a missing or empty buffer. Skipping.");
+                return;
+            }
 
-            convertToLitlTexture(litlTexture, glTexture);
+            const std::span<std::byte const> imageBytes{ reinterpret_cast<std::byte const*>(cgltf_buffer_view_data(glImage.buffer_view)), glImage.buffer_view->size };
+            const auto textureDataItemIndex = context.embeddedImporter.importEmbedded(sourceType, imageName, imageBytes, context.settings);
+
+            if (!textureDataItemIndex.has_value())
+            {
+                logError("GLB image '", imageName, "' in model '", context.location, "' failed to be imported.");
+                return;
+            }
+
+            // ... todo ...
         }
     }
 
@@ -391,9 +416,9 @@ namespace litl::import
 
         // Reminder: gltf images = raw image (png, etc.), textures = image+sampler.
 
-        for (cgltf_size texIdx = 0; texIdx < data->images_count; ++texIdx)
+        for (cgltf_size imgIdx = 0; imgIdx < data->images_count; ++imgIdx)
         {
-            //createTextureDataItem(data->textures[texIdx], modelImportResult, importedData);
+            createTextureDataItem(data->images[imgIdx], modelImportResult, importedData, context);
         }
 
         // ---------------------------------------------------------------------------------
