@@ -145,12 +145,14 @@ namespace litl
                             MaterialBindingsDescriptor bindingsDesc{};
                             bindingsDesc.bindings.resize(node.materialIndices.size(), {});
 
-                            for (uint32_t nodeMaterialIndex = 0u; nodeMaterialIndex < static_cast<uint32_t>(node.materialIndices.size()); ++nodeMaterialIndex)
+                            for (uint32_t i = 0u; i < static_cast<uint32_t>(node.materialIndices.size()); ++i)
                             {
                                 MaterialBinding binding{
                                     .handle = fallbackMaterialRef.handle,
                                     .slot = fallbackMaterialRef.slot
                                 };
+
+                                const uint32_t nodeMaterialIndex = node.materialIndices[i];
 
                                 if (nodeMaterialIndex < modelAsset->materialAssetHandles.size())
                                 {

@@ -150,16 +150,20 @@ namespace litl
                     {
                         const auto& submeshes = mesh->getGeoMesh().getSubmeshes();
                         const auto& bindings = materialBindings->getBindings();
-                        const auto count = litl::min(submeshes.size(), bindings.size());
 
-                        for (auto i = 0; i < count; ++i)
+                        for (auto i = 0; i < submeshes.size(); ++i)
                         {
-                            if ((i >= submeshes.size()) || (submeshes[i].materialSlot >= bindings.size()))
+                            if (submeshes[i].materialSlot >= bindings.size())
                             {
                                 continue;
                             }
 
                             const auto& binding = bindings[submeshes[i].materialSlot];
+
+                            if (!binding.handle.isValid() || !binding.slot.isValid())
+                            {
+                                continue;
+                            }
 
                             s_cullingBuckets[data.threadIndex].cameraRenderableEntities[cameraIndex].entities.push_back(RenderableEntity{
                                 .entity = entity,

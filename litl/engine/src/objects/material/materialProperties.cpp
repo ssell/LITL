@@ -331,14 +331,14 @@ namespace litl
     void MaterialProperties::freeSlots() noexcept
     {
         auto downgradeSlotFromFrequentUpdateBlock = [&](uint32_t globalSlotIndex, MaterialPropertyBlock& block, MaterialPropertySlot& slot) noexcept -> void
-            {
-                m_frequentUpdateBlock.removeResident(globalSlotIndex);
+        {
+            m_frequentUpdateBlock.removeResident(globalSlotIndex);
 
-                slot.consecutiveWriteFrames = 0u;
-                slot.frequentGlobalSlot = Constants::uint32_null_index;
-                slot.isInFrequentUpdateBlock = false;
-                block.dirtyFrameCount = m_framesInFlight;                   // Data in the non-frequent slot on the GPU may be stale. Force a refresh.
-            };
+            slot.consecutiveWriteFrames = 0u;
+            slot.frequentGlobalSlot = Constants::uint32_null_index;
+            slot.isInFrequentUpdateBlock = false;
+            block.dirtyFrameCount = m_framesInFlight;                   // Data in the non-frequent slot on the GPU may be stale. Force a refresh.
+        };
 
         for (uint32_t i = 0u; i < static_cast<uint32_t>(m_propertyBlocks.size()); ++i)
         {
@@ -403,7 +403,7 @@ namespace litl
                 dirtyBlocks.push_back(MaterialPropertyBlockPointer{
                     .sourcePtr = m_propertyBlocks[i]->data,
                     .blockOffset = i * MaterialSlotsPerBlock * m_slotSizeBytes
-                    });
+                });
             }
         }
     }

@@ -59,9 +59,10 @@ namespace litl
 
             if (materialBindings != nullptr)
             {
-                const uint32_t framesSinceLastActive = m_frame - materialBindings->getLastActiveFrame();
+                const uint32_t lastActiveFrame = materialBindings->getLastActiveFrame();
+                const uint32_t expirationFrame = lastActiveFrame + MaterialBindingsExpirationFrames;
 
-                if (framesSinceLastActive >= MaterialBindingsExpirationFrames)
+                if ((lastActiveFrame != 0u) && (expirationFrame < m_frame))
                 {
                     m_pObjectPool->destroyMaterialBindings(materialBindingsHandle);
                 }
