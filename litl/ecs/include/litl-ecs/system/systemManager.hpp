@@ -36,7 +36,7 @@ namespace litl
         /// <summary>
         /// 
         /// </summary>
-        void addSystem(System* system, SystemGroup group, SystemExecution execution, std::vector<SystemComponentInfo> const& componentInfo) const noexcept;
+        void addSystem(System* system, SystemGroup group, SystemExecutionPolicy executionPolicy, std::vector<SystemComponentInfo> const& componentInfo) const noexcept;
 
         /// <summary>
         /// 

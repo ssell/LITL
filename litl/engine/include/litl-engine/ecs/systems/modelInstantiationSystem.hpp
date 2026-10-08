@@ -24,7 +24,7 @@ namespace litl
         /// <summary>
         /// Run exclusively (not parallel) as our update relies on creating new entries in the ObjectPool, which is not thread-safe.
         /// </summary>
-        static constexpr SystemExecution Execution = SystemExecution::Exclusive;
+        static constexpr SystemExecutionPolicy ExecutionPolicy = SystemExecutionPolicy::Exclusive;
 
         void setup(ServiceProvider& services);
         void prepare();
@@ -35,6 +35,8 @@ namespace litl
         std::shared_ptr<AssetManager> m_pAssetManager{ nullptr };
         std::shared_ptr<ObjectPool> m_pObjectPool{ nullptr };
     };
+
+    static_assert(ModelInstantiationSystem::ExecutionPolicy == SystemExecutionPolicy::Exclusive);
 }
 
 #endif

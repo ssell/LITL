@@ -1,11 +1,11 @@
-#ifndef LITL_ECS_SYSTEM_EXECUTION_H__
-#define LITL_ECS_SYSTEM_EXECUTION_H__
+#ifndef LITL_ECS_SYSTEM_EXECUTION_POLICY_H__
+#define LITL_ECS_SYSTEM_EXECUTION_POLICY_H__
 
 #include <cstdint>
 
 namespace litl
 {
-    enum class SystemExecution : uint32_t
+    enum class SystemExecutionPolicy : uint32_t
     {
         /// <summary>
         /// The default execution style for all systems.

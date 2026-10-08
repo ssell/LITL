@@ -17,8 +17,8 @@ namespace litl
     /// </summary>
     struct SystemNode
     {
-        explicit SystemNode(SystemTypeId systemIndex, SystemExecution execution, std::vector<SystemComponentInfo> const& components)
-            : systemId(systemIndex), executionPolicy(execution), componentInfo(components)
+        explicit SystemNode(SystemTypeId systemIndex, SystemExecutionPolicy executionPolicy, std::vector<SystemComponentInfo> const& components)
+            : systemId(systemIndex), executionPolicy(executionPolicy), componentInfo(components)
         {
 
         }
@@ -43,7 +43,7 @@ namespace litl
         /// <summary>
         /// Execution policy of the system.
         /// </summary>
-        SystemExecution executionPolicy{ SystemExecution::Parallel };
+        SystemExecutionPolicy executionPolicy{ SystemExecutionPolicy::Parallel };
 
         /// <summary>
         /// The access levels required by the system for the components it operates on.

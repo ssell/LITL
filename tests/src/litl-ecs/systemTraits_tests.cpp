@@ -8,14 +8,14 @@ namespace litl::tests
     // -------------------------------------------------------------------------------------
 
     struct SystemWithoutExecutionPolicy {};
-    struct SystemWithExclusiveExecutionPolicy { static constexpr SystemExecution Execution = SystemExecution::Exclusive; };
-    struct SystemWithParallelExecutionPolicy { static constexpr SystemExecution Execution = SystemExecution::Parallel; };
+    struct SystemWithExclusiveExecutionPolicy { static constexpr SystemExecutionPolicy ExecutionPolicy = SystemExecutionPolicy::Exclusive; };
+    struct SystemWithParallelExecutionPolicy { static constexpr SystemExecutionPolicy ExecutionPolicy = SystemExecutionPolicy::Parallel; };
 
     static_assert(!HasSystemExecutionOverride<SystemWithoutExecutionPolicy>);
     static_assert(HasSystemExecutionOverride<SystemWithExclusiveExecutionPolicy>);
     static_assert(HasSystemExecutionOverride<SystemWithParallelExecutionPolicy>);
 
-    static_assert(GetSystemExecutionPolicy<SystemWithoutExecutionPolicy> == SystemExecution::Parallel);
-    static_assert(GetSystemExecutionPolicy<SystemWithExclusiveExecutionPolicy> == SystemExecution::Exclusive);
-    static_assert(GetSystemExecutionPolicy<SystemWithParallelExecutionPolicy> == SystemExecution::Parallel);
+    static_assert(GetSystemExecutionPolicy<SystemWithoutExecutionPolicy> == SystemExecutionPolicy::Parallel);
+    static_assert(GetSystemExecutionPolicy<SystemWithExclusiveExecutionPolicy> == SystemExecutionPolicy::Exclusive);
+    static_assert(GetSystemExecutionPolicy<SystemWithParallelExecutionPolicy> == SystemExecutionPolicy::Parallel);
 }

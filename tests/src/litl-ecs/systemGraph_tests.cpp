@@ -14,10 +14,10 @@ namespace litl::tests
         // [2]
         // [3]
 
-        systemGraph.add(0, SystemExecution::Parallel, {});
-        systemGraph.add(1, SystemExecution::Parallel, {});
-        systemGraph.add(2, SystemExecution::Parallel, {});
-        systemGraph.add(3, SystemExecution::Parallel, {});
+        systemGraph.add(0, SystemExecutionPolicy::Parallel, {});
+        systemGraph.add(1, SystemExecutionPolicy::Parallel, {});
+        systemGraph.add(2, SystemExecutionPolicy::Parallel, {});
+        systemGraph.add(3, SystemExecutionPolicy::Parallel, {});
 
         REQUIRE(systemGraph.addDependency(3, 2) == true);
         REQUIRE(systemGraph.addDependency(2, 1) == true);
@@ -46,7 +46,7 @@ namespace litl::tests
         REQUIRE(systemGraph.getNode(layers[2][0]).systemId == 3);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("Implicit Dependency", "[ecs::systemGraph]")
+        LITL_TEST_CASE("Implicit Dependency", "[ecs::systemGraph]")
     {
         // Implicit dependency checks - those based on component read/write access.
         SystemGraph systemGraph;
@@ -60,18 +60,18 @@ namespace litl::tests
         // 6 write to 0
         // 7 reads 0
 
-        systemGraph.add(0, SystemExecution::Parallel, { { 0, false} });
-        systemGraph.add(1, SystemExecution::Parallel, { { 0, true } });
-        systemGraph.add(2, SystemExecution::Parallel, {});
-        systemGraph.add(3, SystemExecution::Parallel, { { 0, true } });
-        systemGraph.add(4, SystemExecution::Parallel, { { 0, false } });
-        systemGraph.add(5, SystemExecution::Parallel, {});
-        systemGraph.add(6, SystemExecution::Parallel, { { 0, false } });
-        systemGraph.add(7, SystemExecution::Parallel, { { 0, true } });
+        systemGraph.add(0, SystemExecutionPolicy::Parallel, { { 0, false} });
+        systemGraph.add(1, SystemExecutionPolicy::Parallel, { { 0, true } });
+        systemGraph.add(2, SystemExecutionPolicy::Parallel, {});
+        systemGraph.add(3, SystemExecutionPolicy::Parallel, { { 0, true } });
+        systemGraph.add(4, SystemExecutionPolicy::Parallel, { { 0, false } });
+        systemGraph.add(5, SystemExecutionPolicy::Parallel, {});
+        systemGraph.add(6, SystemExecutionPolicy::Parallel, { { 0, false } });
+        systemGraph.add(7, SystemExecutionPolicy::Parallel, { { 0, true } });
 
         // Exported sort:
         // [0, 2, 5, 1, 3, 4, 6, 7]
-        
+
         // Expected layers
         // [0, 2, 5]
         // [1, 3]
@@ -112,15 +112,15 @@ namespace litl::tests
 
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("Prefer First", "[ecs::systemGraph]")
+        LITL_TEST_CASE("Prefer First", "[ecs::systemGraph]")
     {
         SystemGraph systemGraph;
 
-        systemGraph.add(0, SystemExecution::Parallel, {});
-        systemGraph.add(1, SystemExecution::Parallel, {});
-        systemGraph.add(2, SystemExecution::Parallel, {});
-        systemGraph.add(3, SystemExecution::Parallel, {});
-        systemGraph.add(4, SystemExecution::Parallel, {});
+        systemGraph.add(0, SystemExecutionPolicy::Parallel, {});
+        systemGraph.add(1, SystemExecutionPolicy::Parallel, {});
+        systemGraph.add(2, SystemExecutionPolicy::Parallel, {});
+        systemGraph.add(3, SystemExecutionPolicy::Parallel, {});
+        systemGraph.add(4, SystemExecutionPolicy::Parallel, {});
 
         REQUIRE(systemGraph.setPlacementHint(2, SystemPlacementHint::First) == true);
         REQUIRE(systemGraph.setPlacementHint(4, SystemPlacementHint::First) == true);
@@ -153,15 +153,15 @@ namespace litl::tests
         REQUIRE(systemGraph.getNode(layers[1][2]).systemId == 3);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("Prefer Last", "[ecs::systemGraph]")
+        LITL_TEST_CASE("Prefer Last", "[ecs::systemGraph]")
     {
         SystemGraph systemGraph;
 
-        systemGraph.add(0, SystemExecution::Parallel, {});
-        systemGraph.add(1, SystemExecution::Parallel, {});
-        systemGraph.add(2, SystemExecution::Parallel, {});
-        systemGraph.add(3, SystemExecution::Parallel, {});
-        systemGraph.add(4, SystemExecution::Parallel, {});
+        systemGraph.add(0, SystemExecutionPolicy::Parallel, {});
+        systemGraph.add(1, SystemExecutionPolicy::Parallel, {});
+        systemGraph.add(2, SystemExecutionPolicy::Parallel, {});
+        systemGraph.add(3, SystemExecutionPolicy::Parallel, {});
+        systemGraph.add(4, SystemExecutionPolicy::Parallel, {});
 
         REQUIRE(systemGraph.setPlacementHint(2, SystemPlacementHint::Last) == true);
         REQUIRE(systemGraph.setPlacementHint(4, SystemPlacementHint::Last) == true);
@@ -194,7 +194,7 @@ namespace litl::tests
         REQUIRE(systemGraph.getNode(layers[1][1]).systemId == 4);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("Mixed Dependency", "[ecs::systemGraph]")
+        LITL_TEST_CASE("Mixed Dependency", "[ecs::systemGraph]")
     {
         // Mix of explicit and implicit dependencies along with placement hints. Fun.
         SystemGraph systemGraph;
@@ -213,13 +213,13 @@ namespace litl::tests
         constexpr bool ReadOnly = true;
         constexpr bool ReadWrite = false;
 
-        systemGraph.add(PhysicsSystem, SystemExecution::Parallel, { {TransformComponent, ReadOnly}, {VelocityComponent, ReadWrite} });
-        systemGraph.add(MovementSystem, SystemExecution::Parallel, { {TransformComponent, ReadWrite}, {VelocityComponent, ReadOnly} });
-        systemGraph.add(NetworkReceiveSystem, SystemExecution::Parallel, { {TransformComponent, ReadWrite}, {VelocityComponent, ReadWrite} });
-        systemGraph.add(NetworkSendSystem, SystemExecution::Parallel, { {TransformComponent, ReadWrite}, {VelocityComponent, ReadWrite} });
-        systemGraph.add(CameraFollowSystem, SystemExecution::Parallel, { {TransformComponent, ReadOnly} });
-        systemGraph.add(FallDamageSystem, SystemExecution::Parallel, { {TransformComponent, ReadOnly}, {VelocityComponent, ReadOnly} });
-        systemGraph.add(AnimationStateSystem, SystemExecution::Parallel, { {TransformComponent, ReadOnly} });
+        systemGraph.add(PhysicsSystem, SystemExecutionPolicy::Parallel, { {TransformComponent, ReadOnly}, {VelocityComponent, ReadWrite} });
+        systemGraph.add(MovementSystem, SystemExecutionPolicy::Parallel, { {TransformComponent, ReadWrite}, {VelocityComponent, ReadOnly} });
+        systemGraph.add(NetworkReceiveSystem, SystemExecutionPolicy::Parallel, { {TransformComponent, ReadWrite}, {VelocityComponent, ReadWrite} });
+        systemGraph.add(NetworkSendSystem, SystemExecutionPolicy::Parallel, { {TransformComponent, ReadWrite}, {VelocityComponent, ReadWrite} });
+        systemGraph.add(CameraFollowSystem, SystemExecutionPolicy::Parallel, { {TransformComponent, ReadOnly} });
+        systemGraph.add(FallDamageSystem, SystemExecutionPolicy::Parallel, { {TransformComponent, ReadOnly}, {VelocityComponent, ReadOnly} });
+        systemGraph.add(AnimationStateSystem, SystemExecutionPolicy::Parallel, { {TransformComponent, ReadOnly} });
 
         systemGraph.addDependency(MovementSystem, PhysicsSystem);
         systemGraph.addDependency(CameraFollowSystem, MovementSystem);

@@ -62,7 +62,7 @@ namespace litl
         friend class World;
 
         bool build(World const* world);
-        void trackSystem(System* system, SystemGroup group, SystemExecution execution, std::vector<SystemComponentInfo> const& componentInfo) const noexcept;
+        void trackSystem(System* system, SystemGroup group, SystemExecutionPolicy execution, std::vector<SystemComponentInfo> const& componentInfo) const noexcept;
 
         struct Impl;
         std::unique_ptr<Impl> m_pImpl;

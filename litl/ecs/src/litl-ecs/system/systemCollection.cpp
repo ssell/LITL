@@ -10,7 +10,7 @@ namespace litl
         System* system;
         SystemGroup group;
         SystemPlacementHint hint;
-        SystemExecution execution;
+        SystemExecutionPolicy executionPolicy;
 
         std::vector<SystemComponentInfo> componentInfo;
         std::vector<System*> dependencies;
@@ -67,7 +67,7 @@ namespace litl
         // Add the systems
         for (auto& tracked : m_pImpl->trackedSystems)
         {
-            systemManager.addSystem(tracked.system, tracked.group, tracked.execution, tracked.componentInfo);
+            systemManager.addSystem(tracked.system, tracked.group, tracked.executionPolicy, tracked.componentInfo);
         }
 
         // Add dependencies and placement
@@ -91,10 +91,10 @@ namespace litl
         return m_pImpl->find(system) != nullptr;
     }
 
-    void SystemCollection::trackSystem(System* system, SystemGroup group, SystemExecution execution, std::vector<SystemComponentInfo> const& componentInfo) const noexcept
+    void SystemCollection::trackSystem(System* system, SystemGroup group, SystemExecutionPolicy executionPolicy, std::vector<SystemComponentInfo> const& componentInfo) const noexcept
     {
         assert(system != nullptr);
-        m_pImpl->trackedSystems.emplace_back(system, group, SystemPlacementHint::None, execution, componentInfo);
+        m_pImpl->trackedSystems.emplace_back(system, group, SystemPlacementHint::None, executionPolicy, componentInfo);
     }
 
     void SystemCollection::dependsOn(System const* thisSystem, System const* dependsOnThisSystem) const noexcept

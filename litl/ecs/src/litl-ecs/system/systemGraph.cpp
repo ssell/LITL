@@ -35,9 +35,9 @@ namespace litl
 
     }
 
-    void SystemGraph::add(SystemTypeId systemTypeId, SystemExecution execution, std::vector<SystemComponentInfo> const& componentInfo) noexcept
+    void SystemGraph::add(SystemTypeId systemTypeId, SystemExecutionPolicy executionPolicy, std::vector<SystemComponentInfo> const& componentInfo) noexcept
     {
-        m_systemNodes.emplace_back(systemTypeId, execution, componentInfo);
+        m_systemNodes.emplace_back(systemTypeId, executionPolicy, componentInfo);
     }
 
     bool SystemGraph::addDependency(SystemTypeId dependentSystem, SystemTypeId dependsOnSystem) noexcept
@@ -113,7 +113,7 @@ namespace litl
             {
                 auto& systemNode = m_systemNodes[layerNodeIndex];
 
-                if (systemNode.executionPolicy == SystemExecution::Exclusive)
+                if (systemNode.executionPolicy == SystemExecutionPolicy::Exclusive)
                 {
                     systemNodeLayer.exclusiveNodes.push_back(systemNode.systemId);
                 }

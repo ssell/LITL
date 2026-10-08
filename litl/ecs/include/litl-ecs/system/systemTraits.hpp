@@ -10,7 +10,7 @@
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/component/component.hpp"
 #include "litl-ecs/system/systemData.hpp"
-#include "litl-ecs/system/systemExecution.hpp"
+#include "litl-ecs/system/systemExecutionPolicy.hpp"
 #include "litl-ecs/entity/entity.hpp"
 
 namespace litl
@@ -272,23 +272,23 @@ namespace litl
     };
 
     /// <summary>
-    /// Does the system define a 'static constexpr SystemExecution Execution = ...;' ?
+    /// Does the system define a 'static constexpr SystemExecutionPolicy ExecutionPolicy = ...;' ?
     /// </summary>
     template<typename S>
     concept HasSystemExecutionOverride = requires {
-        S::Execution;                                                                           // Execution member is present and accessible.
-        requires std::same_as<std::remove_cv_t<decltype(S::Execution)>, SystemExecution>;       // Execution is of type SystemExecution.
-        typename std::integral_constant<SystemExecution, S::Execution>;                         // Usable as a constant expression.
+        S::ExecutionPolicy;                                                                                 // ExecutionPolicy member is present and accessible.
+        requires std::same_as<std::remove_cv_t<decltype(S::ExecutionPolicy)>, SystemExecutionPolicy>;       // Execution is of type SystemExecution.
+        typename std::integral_constant<SystemExecutionPolicy, S::ExecutionPolicy>;                         // Usable as a constant expression.
     };
 
     /// <summary>
-    /// Get the value of the T::Execution if present. Otherwise returns the default of Parallel.
+    /// Get the value of the T::ExecutionPolicy if present. Otherwise returns the default of Parallel.
     /// </summary>
-    template<typename T, SystemExecution Default = SystemExecution::Parallel>
-    inline constexpr SystemExecution GetSystemExecutionPolicy = Default;
+    template<typename T, SystemExecutionPolicy Default = SystemExecutionPolicy::Parallel>
+    inline constexpr SystemExecutionPolicy GetSystemExecutionPolicy = Default;
 
-    template<HasSystemExecutionOverride T, SystemExecution Default>
-    inline constexpr SystemExecution GetSystemExecutionPolicy<T, Default> = T::Execution;
+    template<HasSystemExecutionOverride T, SystemExecutionPolicy Default>
+    inline constexpr SystemExecutionPolicy GetSystemExecutionPolicy<T, Default> = T::ExecutionPolicy;
 }
 
 #endif

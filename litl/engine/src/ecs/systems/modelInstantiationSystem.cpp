@@ -161,7 +161,7 @@ namespace litl
                             if (!bindingsDesc.bindings.empty())
                             {
                                 const VariableMaterialsRef variableMaterialsRef{
-                                    .handle = objectPool.createMaterialBindings(bindingsDesc)
+                                    .handle = objectPool.createMaterialBindings(bindingsDesc)       // Note: this call to ObjectPool is not thread-safe which is why we define this system to use SystemExecutionPolicy::Exclusive
                                 };
 
                                 if (variableMaterialsRef.handle.isValid())

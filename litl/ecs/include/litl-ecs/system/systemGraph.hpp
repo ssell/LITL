@@ -54,7 +54,7 @@ namespace litl
         /// <summary>
         /// Adds a system to the schedule. It is not yet ordered in the DAG.
         /// </summary>
-        void add(SystemTypeId systemTypeId, SystemExecution execution, std::vector<SystemComponentInfo> const& componentInfo) noexcept;
+        void add(SystemTypeId systemTypeId, SystemExecutionPolicy executionPolicy, std::vector<SystemComponentInfo> const& componentInfo) noexcept;
 
         /// <summary>
         /// Adds an explicit intergroup system dependency.
