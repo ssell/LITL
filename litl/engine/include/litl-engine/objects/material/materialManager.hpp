@@ -31,6 +31,8 @@ namespace litl
 
         std::shared_ptr<ObjectPool> m_pObjectPool{ nullptr };
         std::vector<MaterialHandle> m_materialHandles;
+        std::vector<MaterialBindingsHandle> m_materialBindingsHandles;
+        uint32_t m_frame{ 0u };
     };
 }
 

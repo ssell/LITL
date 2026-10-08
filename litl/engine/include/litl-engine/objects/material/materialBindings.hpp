@@ -99,8 +99,14 @@ namespace litl
         /// </summary>
         bool setBinding(uint32_t index, MaterialBinding binding) noexcept;
 
+        /// <summary>
+        /// Sets the frame number of the last frame that this bindings was active.
+        /// </summary>
         void setLastActiveFrame(uint32_t currFrame) noexcept;
 
+        /// <summary>
+        /// Retrieves the last frame that this bindings was active.
+        /// </summary>
         [[nodiscard]] uint32_t getLastActiveFrame() const noexcept;
 
     private:

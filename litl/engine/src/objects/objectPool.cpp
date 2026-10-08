@@ -338,6 +338,7 @@ namespace litl
         if (bindingsPtr != nullptr)
         {
             bindingsPtr->setSelfHandle({}, handle);
+            bindingsPtr->setLastActiveFrame(m_impl->renderManager->getRenderer()->getFrameData().frameCount);
         }
 
         return handle;

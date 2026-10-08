@@ -3,6 +3,7 @@
 
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/math/common.hpp"
+#include "litl-engine/objects/material/materialConstants.hpp"
 #include "litl-engine/objects/material/materialProperties.hpp"
 #include "litl-engine/objects/material/deferredMaterialCommands.hpp"
 #include "litl-engine/objects/texture.hpp"
@@ -72,7 +73,7 @@ namespace litl
         m_slotSizeBytes = reflectedProperties.sizeBytes;
         m_framesInFlight = framesInFlight;
         m_defaultPropertyBlob.resize(m_slotSizeBytes, std::byte{ 0 });
-        m_frequentUpdateBlock.residents.reserve(SlotsPerBlock);
+        m_frequentUpdateBlock.residents.reserve(MaterialSlotsPerBlock);
 
         allocateBlock();
 
@@ -93,8 +94,8 @@ namespace litl
             // Downgrade any current Tier 3 residents
             for (auto resident : m_frequentUpdateBlock.residents)
             {
-                uint32_t block = resident / SlotsPerBlock;
-                uint32_t localSlot = resident % SlotsPerBlock;
+                uint32_t block = resident / MaterialSlotsPerBlock;
+                uint32_t localSlot = resident % MaterialSlotsPerBlock;
 
                 auto& slot = m_propertyBlocks[block]->slots[localSlot];
 
@@ -135,9 +136,9 @@ namespace litl
         m_propertyBlocks.push_back(std::make_unique<MaterialPropertyBlock>());
         auto& newBlock = m_propertyBlocks.back();
 
-        newBlock->data.resize(m_slotSizeBytes * SlotsPerBlock, std::byte{ 0 });
-        newBlock->slots.resize(SlotsPerBlock);
-        newBlock->vacantSlotCount = SlotsPerBlock;
+        newBlock->data.resize(m_slotSizeBytes * MaterialSlotsPerBlock, std::byte{ 0 });
+        newBlock->slots.resize(MaterialSlotsPerBlock);
+        newBlock->vacantSlotCount = MaterialSlotsPerBlock;
         newBlock->dirtyFrameCount = m_framesInFlight;
     }
 
@@ -148,7 +149,7 @@ namespace litl
             return false;
         }
 
-        for (localSlotIndex = 0u; localSlotIndex < MaterialProperties::SlotsPerBlock; ++localSlotIndex)
+        for (localSlotIndex = 0u; localSlotIndex < MaterialSlotsPerBlock; ++localSlotIndex)
         {
             if (!slots[localSlotIndex].occupied)
             {
@@ -156,7 +157,7 @@ namespace litl
             }
         }
 
-        if (localSlotIndex == MaterialProperties::SlotsPerBlock)
+        if (localSlotIndex == MaterialSlotsPerBlock)
         {
             // Shouldn't get here ...
             return false;
@@ -201,7 +202,7 @@ namespace litl
             if (m_propertyBlocks[i]->acquireSlot(m_slotSizeBytes, m_currFrame, m_framesInFlight, localSlotIndex, localSlotVersion, m_defaultPropertyBlob))
             {
                 return MaterialPropertySlotId{
-                    .index = ((SlotsPerBlock * i) + localSlotIndex),
+                    .index = ((MaterialSlotsPerBlock * i) + localSlotIndex),
                     .version = localSlotVersion
                 };
             }
@@ -212,7 +213,7 @@ namespace litl
         if (m_propertyBlocks.back()->acquireSlot(m_slotSizeBytes, m_currFrame, m_framesInFlight, localSlotIndex, localSlotVersion, m_defaultPropertyBlob))
         {
             return MaterialPropertySlotId{
-                .index = ((SlotsPerBlock * static_cast<uint32_t>(m_propertyBlocks.size() - 1)) + localSlotIndex),
+                .index = ((MaterialSlotsPerBlock * static_cast<uint32_t>(m_propertyBlocks.size() - 1)) + localSlotIndex),
                 .version = localSlotVersion
             };
         }
@@ -229,7 +230,7 @@ namespace litl
         uint32_t blockIndex, localSlot, slotVersion;
 
         if (getBlockLocalSlot(slotId, blockIndex, localSlot, slotVersion, true))
-        { 
+        {
             auto& slot = m_propertyBlocks[blockIndex]->slots[localSlot];
             return (slot.frequentGlobalSlot == Constants::uint32_null_index ? slotId.index : slot.frequentGlobalSlot);
         }
@@ -279,7 +280,7 @@ namespace litl
             return;
         }
 
-        const uint32_t frequentUpdateBlockFirstIndex = static_cast<uint32_t>(m_propertyBlocks.size()) * SlotsPerBlock;
+        const uint32_t frequentUpdateBlockFirstIndex = static_cast<uint32_t>(m_propertyBlocks.size()) * MaterialSlotsPerBlock;
         uint32_t blockIndex, localSlot;
 
         m_frequentUpdateBlock.data.resize(m_frequentUpdateBlock.residents.size() * m_slotSizeBytes, std::byte{ 0 });
@@ -322,7 +323,7 @@ namespace litl
         }
 
         blockPointer.sourcePtr = m_frequentUpdateBlock.data;
-        blockPointer.blockOffset = static_cast<uint32_t>(m_propertyBlocks.size()) * SlotsPerBlock * m_slotSizeBytes;
+        blockPointer.blockOffset = static_cast<uint32_t>(m_propertyBlocks.size()) * MaterialSlotsPerBlock * m_slotSizeBytes;
 
         return true;
     }
@@ -330,28 +331,28 @@ namespace litl
     void MaterialProperties::freeSlots() noexcept
     {
         auto downgradeSlotFromFrequentUpdateBlock = [&](uint32_t globalSlotIndex, MaterialPropertyBlock& block, MaterialPropertySlot& slot) noexcept -> void
-        {
-            m_frequentUpdateBlock.removeResident(globalSlotIndex);
+            {
+                m_frequentUpdateBlock.removeResident(globalSlotIndex);
 
-            slot.consecutiveWriteFrames = 0u;
-            slot.frequentGlobalSlot = Constants::uint32_null_index;
-            slot.isInFrequentUpdateBlock = false;
-            block.dirtyFrameCount = m_framesInFlight;                   // Data in the non-frequent slot on the GPU may be stale. Force a refresh.
-        };
+                slot.consecutiveWriteFrames = 0u;
+                slot.frequentGlobalSlot = Constants::uint32_null_index;
+                slot.isInFrequentUpdateBlock = false;
+                block.dirtyFrameCount = m_framesInFlight;                   // Data in the non-frequent slot on the GPU may be stale. Force a refresh.
+            };
 
         for (uint32_t i = 0u; i < static_cast<uint32_t>(m_propertyBlocks.size()); ++i)
         {
             auto& block = m_propertyBlocks[i];
 
-            for (uint32_t j = (m_currFrame % SlotExpirationFrames); j < SlotsPerBlock; j += SlotExpirationFrames)       // Stagger only check 1/8 slots per frame
+            for (uint32_t j = (m_currFrame % MaterialSlotExpirationFrames); j < MaterialSlotsPerBlock; j += MaterialSlotExpirationFrames)       // Stagger only check 1/8 slots per frame
             {
                 auto& slot = block->slots[j];
-                const uint32_t globalSlotIndex = (SlotsPerBlock * i) + j;
+                const uint32_t globalSlotIndex = (MaterialSlotsPerBlock * i) + j;
 
                 // If the slot is labelled active but hasn't been used, then mark it as vacant so it can be reused.
                 if (slot.occupied)
                 {
-                    if ((slot.lastActiveFrame + SlotExpirationFrames) < m_currFrame)
+                    if ((slot.lastActiveFrame + MaterialSlotExpirationFrames) < m_currFrame)
                     {
                         // Reset the slot tracking
                         slot.occupied = false;
@@ -366,7 +367,7 @@ namespace litl
                             downgradeSlotFromFrequentUpdateBlock(globalSlotIndex, *block, slot);
                         }
                     }
-                    else if (slot.isInFrequentUpdateBlock && ((m_currFrame - slot.lastWriteFrame) >= SlotDowngradeFromFrequentFrames))
+                    else if (slot.isInFrequentUpdateBlock && ((m_currFrame - slot.lastWriteFrame) >= MaterialSlotDowngradeFromFrequentFrames))
                     {
                         downgradeSlotFromFrequentUpdateBlock(globalSlotIndex, *block, slot);
                     }
@@ -382,7 +383,7 @@ namespace litl
 
     size_t MaterialProperties::totalMemoryRequirements() const noexcept
     {
-        return (m_slotSizeBytes * SlotsPerBlock * m_propertyBlocks.size()) + (m_slotSizeBytes * m_frequentUpdateBlock.residents.size());
+        return (m_slotSizeBytes * MaterialSlotsPerBlock * m_propertyBlocks.size()) + (m_slotSizeBytes * m_frequentUpdateBlock.residents.size());
     }
 
     uint32_t MaterialProperties::propertyCount() const noexcept
@@ -401,8 +402,8 @@ namespace litl
             {
                 dirtyBlocks.push_back(MaterialPropertyBlockPointer{
                     .sourcePtr = m_propertyBlocks[i]->data,
-                    .blockOffset = i * SlotsPerBlock * m_slotSizeBytes
-                });
+                    .blockOffset = i * MaterialSlotsPerBlock * m_slotSizeBytes
+                    });
             }
         }
     }
@@ -417,13 +418,13 @@ namespace litl
 
     bool MaterialProperties::getBlockLocalSlot(MaterialPropertySlotId slotId, uint32_t& blockIndex, uint32_t& localSlot, uint32_t& slotVersion, bool validateVersion) const noexcept
     {
-        if (static_cast<size_t>(slotId.index) >= (m_propertyBlocks.size() * SlotsPerBlock))
+        if (static_cast<size_t>(slotId.index) >= (m_propertyBlocks.size() * MaterialSlotsPerBlock))
         {
             return false;
         }
 
-        blockIndex = slotId.index / SlotsPerBlock;
-        localSlot = slotId.index % SlotsPerBlock;
+        blockIndex = slotId.index / MaterialSlotsPerBlock;
+        localSlot = slotId.index % MaterialSlotsPerBlock;
         slotVersion = m_propertyBlocks[blockIndex]->slots[localSlot].version;
 
         return !validateVersion || (slotId.version == slotVersion);
@@ -551,7 +552,7 @@ namespace litl
             {
                 m_propertyBlocks[blockIndex]->dirtyFrameCount = m_framesInFlight;
 
-                if (m_enabledTier3DataSeparation && (slotRef.consecutiveWriteFrames >= SlotUpgradeToFrequentFrames))
+                if (m_enabledTier3DataSeparation && (slotRef.consecutiveWriteFrames >= MaterialSlotUpgradeToFrequentFrames))
                 {
                     DeferredMaterialCommands::enqueueUpgradeSlotCommand(UpdateSlotToFrequentBlockCommand{
                         .handle = m_materialHandle,
