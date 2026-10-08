@@ -21,7 +21,7 @@ namespace litl::import
         ObjImporter(ObjImporter const&) = delete;
         ObjImporter& operator=(ObjImporter const&) = delete;
 
-        [[nodiscard]] Result import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, ImportedData& importedData) noexcept override;
+        [[nodiscard]] Result import(ImportContext const& context, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept override;
         [[nodiscard]] Result scanDependencies(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::vector<ImportDependency>& outDependencies) noexcept override;
     };
 }

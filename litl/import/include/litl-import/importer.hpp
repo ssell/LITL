@@ -16,13 +16,20 @@
 
 namespace litl::import
 {
+    struct ImportContext final
+    {
+        std::string_view location;
+        ImportSettings settings;
+        std::span<ImportCompanion const> companions;
+    };
+
     class Importer
     {
     public:
 
         virtual ~Importer() = default;
 
-        [[nodiscard]] virtual Result import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, ImportedData& importedData) noexcept = 0;
+        [[nodiscard]] virtual Result import(ImportContext const& context, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept = 0;
         [[nodiscard]] virtual Result scanDependencies(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::vector<ImportDependency>& outDependencies) noexcept;
     };
 

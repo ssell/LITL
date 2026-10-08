@@ -335,7 +335,7 @@ namespace litl::import
 
     }
 
-    Result GlbImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, ImportedData& importedData) noexcept
+    Result GlbImporter::import(ImportContext const& context, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
     {
         cgltf_options options{ .type = cgltf_file_type_glb };
         ScopedData scopedData{};
@@ -344,7 +344,7 @@ namespace litl::import
 
         if (parseResult != cgltf_result_success)
         {
-            logError("Import of '", location, "' failed during parse with error '", g_gltfErrorStrings[static_cast<uint32_t>(parseResult)], "' (", static_cast<uint32_t>(parseResult), ")");
+            logError("Import of '", context.location, "' failed during parse with error '", g_gltfErrorStrings[static_cast<uint32_t>(parseResult)], "' (", static_cast<uint32_t>(parseResult), ")");
             return Result::Error(ErrorType::ImporterFailed, "Failed to parse glb file.");
         }
 
@@ -354,7 +354,7 @@ namespace litl::import
 
         if (loadResult != cgltf_result_success)
         {
-            logError("Import of '", location, "' failed during buffer load with error '", g_gltfErrorStrings[static_cast<uint32_t>(loadResult)], "' (", static_cast<uint32_t>(loadResult), ")");
+            logError("Import of '", context.location, "' failed during buffer load with error '", g_gltfErrorStrings[static_cast<uint32_t>(loadResult)], "' (", static_cast<uint32_t>(loadResult), ")");
             return Result::Error(ErrorType::ImporterFailed, "Failed to load glb file buffers.");
         }
 
@@ -362,7 +362,7 @@ namespace litl::import
 
         if (validateResult != cgltf_result_success)
         {
-            logError("Import of '", location, "' failed during validation with error '", g_gltfErrorStrings[static_cast<uint32_t>(validateResult)], "' (", static_cast<uint32_t>(validateResult), ")");
+            logError("Import of '", context.location, "' failed during validation with error '", g_gltfErrorStrings[static_cast<uint32_t>(validateResult)], "' (", static_cast<uint32_t>(validateResult), ")");
             return Result::Error(ErrorType::ImporterFailed, "Failed to validate glb file buffers.");
         }
 
@@ -383,7 +383,7 @@ namespace litl::import
         auto* modelImportResult = modelDataItem.getDataPtr<ModelImportResult>();
         modelImportResult->model = std::make_unique<ModelIntermediateData>();
         auto* litlModel = modelImportResult->model.get();
-        litlModel->setName(location);
+        litlModel->setName(context.location);
 
         // ---------------------------------------------------------------------------------
         // Create the Textures
@@ -406,7 +406,7 @@ namespace litl::import
         for (cgltf_size matIdx = 0; matIdx < data->materials_count; ++matIdx)
         {
             // Returns either the model material index (result of model->addMaterial()) or Constants::uint32_null_index on failure.
-            glMatIndexToModelMatIndex[matIdx] = createMaterialDataItem(data->materials[matIdx], modelImportResult, importedData, location);
+            glMatIndexToModelMatIndex[matIdx] = createMaterialDataItem(data->materials[matIdx], modelImportResult, importedData, context.location);
         }
 
         // ---------------------------------------------------------------------------------
@@ -433,7 +433,7 @@ namespace litl::import
                 }
             }
 
-            const auto meshResult = createMeshDataItem(data->meshes[meshIdx], modelImportResult, importedData, location);
+            const auto meshResult = createMeshDataItem(data->meshes[meshIdx], modelImportResult, importedData, context.location);
 
             if (!meshResult.success)
             {

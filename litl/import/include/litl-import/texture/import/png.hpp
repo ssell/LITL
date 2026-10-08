@@ -18,7 +18,7 @@ namespace litl::import
         PngImporter(PngImporter const&) = delete;
         PngImporter& operator=(PngImporter const&) = delete;
 
-        [[nodiscard]] Result import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, ImportedData& importedData) noexcept override;
+        [[nodiscard]] Result import(ImportContext const& context, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept override;
     };
 }
 

@@ -96,7 +96,13 @@ namespace litl::import
             return Result::Error(ErrorType::NoImporterForSourceType);
         }
 
-        Result const importResult = importer->import(location, sourceBytes, settings, companions, importedData);
+        const ImportContext context{
+            .location = location,
+            .settings = settings,
+            .companions = companions
+        };
+
+        Result const importResult = importer->import(context, sourceBytes, importedData);
 
         if (!importResult.success)
         {

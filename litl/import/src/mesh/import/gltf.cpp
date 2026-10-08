@@ -12,7 +12,7 @@ namespace litl::import
 
     }
 
-    Result GltfImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, ImportedData& importedData) noexcept
+    Result GltfImporter::import(ImportContext const& context, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
     {
         // ... todo ...
         return Result::Error(ErrorType::ImporterNotImplemented);

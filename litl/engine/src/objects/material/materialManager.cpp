@@ -15,9 +15,9 @@ namespace litl
         LITL_FATAL_ASSERT_MSG((m_pObjectPool != nullptr), "Failed to inject ObjectPool into MaterialManager");
     }
 
-    void MaterialManager::onFrameStart(Authority<EngineCallbacks> auth, uint32_t frame, uint32_t frameIndex) noexcept
+    void MaterialManager::onFrameStart(Authority<EngineCallbacks> auth, uint32_t ecsFrame, uint32_t renderFrameIndex) noexcept
     {
-        m_frame = frame;
+        m_frame = ecsFrame;     // We use the ECS frame, not the Render frame, since frame staleness is based off of the ActiveMaterialSystem which uses the ECS frame count. ECS frame does not necessarily equal Render frame.
         m_pObjectPool->getAllMaterialHandles(m_materialHandles);
 
         for (auto& materialHandle : m_materialHandles)
@@ -26,7 +26,7 @@ namespace litl
 
             if (material != nullptr)
             {
-                material->onFrameStart({}, m_frame, frameIndex);
+                material->onFrameStart({}, ecsFrame, renderFrameIndex);
             }
         }
     }
@@ -66,9 +66,6 @@ namespace litl
                 {
                     m_pObjectPool->destroyMaterialBindings(materialBindingsHandle);
                 }
-
-                // Note about the above comparison that lastActiveFrame is the ECS frame, whereas m_frame is the Renderer frame.
-                // Due to frames-in-flight this may not always align. However, the RendererConstants::MaxFramesInFlight limits this lag to well within the MaterialBindingsExpirationFrames count.
             }
         }
     }

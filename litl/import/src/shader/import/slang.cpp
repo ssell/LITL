@@ -195,7 +195,7 @@ namespace litl::import
 
     }
 
-    Result SlangImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, ImportedData& importedData) noexcept
+    Result SlangImporter::import(ImportContext const& context, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
     {
         if (t_slangSession == nullptr)
         {
@@ -207,7 +207,7 @@ namespace litl::import
             }
         }
 
-        auto spirvModule = compileSlang(t_slangSession.value(), location, location, sourceBytes);
+        auto spirvModule = compileSlang(t_slangSession.value(), context.location, context.location, sourceBytes);
 
         if (!spirvModule)
         {
@@ -216,7 +216,7 @@ namespace litl::import
 
         if (!spirvModule->warnings.empty())
         {
-            logWarning("Slang SPIR-V compilation warning for '", location, "': ", spirvModule->warnings);
+            logWarning("Slang SPIR-V compilation warning for '", context.location, "': ", spirvModule->warnings);
         }
 
         importedData.items.push_back({});

@@ -71,8 +71,8 @@ namespace litl
 
                 if (renderer != nullptr)
                 {
-                    auto frameData = renderer->getFrameData();
-                    m_impl->materialManager->onFrameStart({}, frameData.frameCount, frameData.frameInFlightIndex);
+                    const auto frameData = renderer->getFrameData();
+                    m_impl->materialManager->onFrameStart({}, m_impl->world->getFrame(), frameData.frameInFlightIndex);
                 }
 
                 m_impl->userFrameCallbacks->invokeFrameStart(services, dt);

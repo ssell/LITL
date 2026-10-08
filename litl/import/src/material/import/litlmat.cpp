@@ -242,7 +242,7 @@ namespace litl::import
         return true;      // leave bool return to match other importX functions and for future compatibility.
     }
 
-    Result LitlMatImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, ImportedData& importedData) noexcept
+    Result LitlMatImporter::import(ImportContext const& context, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
     {
         const auto sourceBytesString = std::string_view{ reinterpret_cast<char const*>(sourceBytes.data()), sourceBytes.size() };
 
@@ -272,27 +272,27 @@ namespace litl::import
         }
         else
         {
-            intermediateMaterial->setName(location);
+            intermediateMaterial->setName(context.location);
         }
 
-        if (!importShadersTable(inputMaterial, intermediateMaterial, location))
+        if (!importShadersTable(inputMaterial, intermediateMaterial, context.location))
         {
-            return Result::Error(ErrorType::ImporterFailed, std::format(".litlmat import of {}: Error encountered importing [properties] table.", location));
+            return Result::Error(ErrorType::ImporterFailed, std::format(".litlmat import of {}: Error encountered importing [properties] table.", context.location));
         }
 
-        if (!importRasterStateTable(inputMaterial, intermediateMaterial, location))
+        if (!importRasterStateTable(inputMaterial, intermediateMaterial, context.location))
         {
-            return Result::Error(ErrorType::ImporterFailed, std::format(".litlmat import of {}: Error encountered importing [raster] table.", location));
+            return Result::Error(ErrorType::ImporterFailed, std::format(".litlmat import of {}: Error encountered importing [raster] table.", context.location));
         }
 
-        if (!importPropertiesTable(inputMaterial, intermediateMaterial, location))
+        if (!importPropertiesTable(inputMaterial, intermediateMaterial, context.location))
         {
-            return Result::Error(ErrorType::ImporterFailed, std::format(".litlmat import of {}: Error encountered importing [properties] table.", location));
+            return Result::Error(ErrorType::ImporterFailed, std::format(".litlmat import of {}: Error encountered importing [properties] table.", context.location));
         }
 
-        if (!importHintsTable(inputMaterial, intermediateMaterial, location))
+        if (!importHintsTable(inputMaterial, intermediateMaterial, context.location))
         {
-            return Result::Error(ErrorType::ImporterFailed, std::format(".litlmat import of {}: Error encountered importing [hints] table.", location));
+            return Result::Error(ErrorType::ImporterFailed, std::format(".litlmat import of {}: Error encountered importing [hints] table.", context.location));
         }
 
         return Result::Success();

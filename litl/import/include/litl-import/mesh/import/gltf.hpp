@@ -23,7 +23,7 @@ namespace litl::import
         GltfImporter(GltfImporter const&) = delete;
         GltfImporter& operator=(GltfImporter const) = delete;
 
-        [[nodiscard]] Result import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, ImportedData& importedData) noexcept override;
+        [[nodiscard]] Result import(ImportContext const& context, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept override;
         [[nodiscard]] Result scanDependencies(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::vector<ImportDependency>& outDependencies) noexcept override;
 
     private:

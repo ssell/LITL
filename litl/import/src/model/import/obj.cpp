@@ -234,7 +234,7 @@ namespace litl::import
 
     }
 
-    Result ObjImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, ImportedData& importedData) noexcept
+    Result ObjImporter::import(ImportContext const& context, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
     {
         // ---------------------------------------------------------------------------------
         // Parse the OBJ
@@ -246,11 +246,11 @@ namespace litl::import
         // rapidobj can only take in a single mtl file string, however we may have multiple. So they need to be appended into a single string.
         std::string mtllib;
 
-        if (!companions.empty())
+        if (!context.companions.empty())
         {
             size_t totalSize = 0ull;
 
-            for (const auto& companion : companions)
+            for (const auto& companion : context.companions)
             {
                 totalSize += companion.bytes.size();
                 totalSize += 1;     // for \n
@@ -258,7 +258,7 @@ namespace litl::import
 
             mtllib.reserve(totalSize);
 
-            for (const auto& companion : companions)
+            for (const auto& companion : context.companions)
             {
                 mtllib.append(reinterpret_cast<const char*>(companion.bytes.data()), companion.bytes.size());
                 mtllib += '\n';
@@ -269,7 +269,7 @@ namespace litl::import
 
         if (objResult.error.code)
         {
-            logError("Import of '", location, "' failed with error code ", objResult.error.code.value(), " at line number ", objResult.error.line_num, " and line '", objResult.error.line, "'");
+            logError("Import of '", context.location, "' failed with error code ", objResult.error.code.value(), " at line number ", objResult.error.line_num, " and line '", objResult.error.line, "'");
             return Result::Error(ErrorType::ImporterFailed);
         }
 
@@ -295,7 +295,7 @@ namespace litl::import
         auto* modelImportResult = modelDataItem.getDataPtr<ModelImportResult>();
         modelImportResult->model = std::make_unique<ModelIntermediateData>();
 
-        modelDataItem.setName(location);
+        modelDataItem.setName(context.location);
         modelImportResult->model->setName(modelDataItem.getName());
 
         // ---------------------------------------------------------------------------------
@@ -351,7 +351,7 @@ namespace litl::import
             // only setting diffuse texture for the moment. todo rest
             if (!objmtl.diffuse_texname.empty())
             {
-                if (!material->addProperty("baseColor", LitlMatPropertyType::Texture, buildTextureAssetKey(location, objmtl.diffuse_texname)))
+                if (!material->addProperty("baseColor", LitlMatPropertyType::Texture, buildTextureAssetKey(context.location, objmtl.diffuse_texname)))
                 {
                     logWarning("Failed to assign the 'baseColor' property to OBJ material '", objmtl.name, "'");
                 }

@@ -45,7 +45,7 @@ namespace litl::import
         }
     }
 
-    Result StbImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, ImportedData& importedData) noexcept
+    Result StbImporter::import(ImportContext const& context, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
     {
         if (sourceBytes.size() > std::numeric_limits<int>::max())
         {
@@ -81,7 +81,7 @@ namespace litl::import
             return Result::Error(ErrorType::ImporterFailed, "Failed to create texture import data.");
         }
 
-        if (!importToIntermediate(reinterpret_cast<std::byte const*>(scopedData.data), static_cast<uint32_t>(width), static_cast<uint32_t>(height), settings, dataItem))
+        if (!importToIntermediate(reinterpret_cast<std::byte const*>(scopedData.data), static_cast<uint32_t>(width), static_cast<uint32_t>(height), context.settings, dataItem))
         {
             return Result::Error(ErrorType::ImporterFailed, "Failed to validate processed STB data to intermediate format.");
         }

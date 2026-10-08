@@ -13,8 +13,8 @@ namespace litl::import
 
     }
 
-    Result TgaImporter::import(std::string_view location, std::span<std::byte const> sourceBytes, ImportSettings const& settings, std::span<ImportCompanion const> companions, ImportedData& importedData) noexcept
+    Result TgaImporter::import(ImportContext const& context, std::span<std::byte const> sourceBytes, ImportedData& importedData) noexcept
     {
-        return StbImporter::import(location, sourceBytes, settings, companions, importedData);
+        return StbImporter::import(context, sourceBytes, importedData);
     }
 }
