@@ -1,10 +1,10 @@
 #include <deque>
 #include <format>
-#include <optional>
 
+#include "litl-core/assert.hpp"
 #include "litl-engine/assets/assetManager.hpp"
+#include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/objects/material/material.hpp"
-#include "litl-engine/objects/material/deferredMaterialCommands.hpp"
 #include "litl-engine/ecs/systems/modelInstantiationSystem.hpp"
 #include "litl-import/model/intermediate/modelIntermediateData.hpp"
 
@@ -24,7 +24,7 @@ namespace litl
             commands.addComponent<FailedModelInstance>(entity, FailedModelInstance{ .modelHandle = modelHandle });
         }
 
-        void processModelInstantiation(EntityCommands& commands, AssetManager& assetManager, Entity entity, PendingModelInstance const& pendingModel, Transform const& transform, LocalBounds& localBounds) noexcept
+        void processModelInstantiation(EntityCommands& commands, AssetManager& assetManager, ObjectPool& objectPool, Entity entity, PendingModelInstance const& pendingModel, Transform const& transform, LocalBounds& localBounds) noexcept
         {
             // -----------------------------------------------------------------------------
             // Swap out PendingModelInstance for either ModelInstance or FailedModelInstance
@@ -141,10 +141,42 @@ namespace litl
                         }
                         else
                         {
-                            // The mesh has multiple materials assigned to it. Use a VariableMaterialsRef.
-                            //CreateVariableMaterialsRefCommand command{
-                            //    .entity = nodeEntity
-                            //};
+                            // Mesh has multiple materials. Use a VariableMaterialRef
+                            MaterialBindingsDescriptor bindingsDesc{};
+                            bindingsDesc.bindings.reserve(node.materialIndices.size());
+
+                            for (auto materialIndex : node.materialIndices)
+                            {
+                                auto* materialAsset = assetManager.getMaterial(modelAsset->materialAssetHandles[materialIndex]);
+
+                                if ((materialAsset != nullptr) && (materialAsset->material != nullptr) && materialAsset->materialHandle.isValid())
+                                {
+                                    bindingsDesc.bindings.push_back(MaterialBinding{
+                                        .handle = materialAsset->materialHandle,
+                                        .slot = materialAsset->material->allocateSlot()
+                                    });
+                                }
+                            }
+
+                            if (!bindingsDesc.bindings.empty())
+                            {
+                                const VariableMaterialsRef variableMaterialsRef{
+                                    .handle = objectPool.createMaterialBindings(bindingsDesc)
+                                };
+
+                                if (variableMaterialsRef.handle.isValid())
+                                {
+                                    commands.addComponent<VariableMaterialsRef>(nodeEntity, variableMaterialsRef);
+                                }
+                                else
+                                {
+                                    logWarning("Model '", modelAsset->key, "' node '", node.name, "' failed to create MaterialBindingsHandle and so no VariableMaterialsRef component was added. It will not be rendered.");
+                                }
+                            }
+                            else
+                            {
+                                logWarning("Model '", modelAsset->key, "' node '", node.name, "' declared multiple materials but failed to retrieve any valid material bindings. No VariableMaterialsRef component was added. It will not be rendered.");
+                            }
                         }
                     }
                 }
@@ -180,11 +212,15 @@ namespace litl
     void ModelInstantiationSystem::setup(ServiceProvider& services)
     {
         m_pAssetManager = services.get<AssetManager>();
+        m_pObjectPool = services.get<ObjectPool>();
+
+        LITL_FATAL_ASSERT_MSG(m_pAssetManager != nullptr, "Failed to inject AssetManager into ModelInstantiationSystem");
+        LITL_FATAL_ASSERT_MSG(m_pObjectPool != nullptr, "Failed to inject ObjectPool into ModelInstantiationSystem");
     }
 
     void ModelInstantiationSystem::prepare()
     {
-
+        // ... intentionally empty ...
     }
 
     void ModelInstantiationSystem::update(SystemData const& data, Entity entity, PendingModelInstance const& pendingModel, Transform const& transform, LocalBounds& localBounds)
@@ -209,7 +245,7 @@ namespace litl
             break;
 
         case AssetStatus::InMemory:
-            processModelInstantiation(data.commands, *m_pAssetManager.get(), entity, pendingModel, transform, localBounds);
+            processModelInstantiation(data.commands, *m_pAssetManager.get(), *m_pObjectPool.get(), entity, pendingModel, transform, localBounds);
             break;
 
         case AssetStatus::Error:

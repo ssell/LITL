@@ -7,7 +7,7 @@
 namespace litl
 {
     class AssetManager;
-    class ServiceProvider;
+    class ObjectPool;
 
     /// <summary>
     /// Polls each frame to check the status of the model asset referenced by a PendingModelInstance component.
@@ -32,7 +32,8 @@ namespace litl
 
     private:
 
-        std::shared_ptr<AssetManager> m_pAssetManager;
+        std::shared_ptr<AssetManager> m_pAssetManager{ nullptr };
+        std::shared_ptr<ObjectPool> m_pObjectPool{ nullptr };
     };
 }
 
