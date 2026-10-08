@@ -22,8 +22,7 @@ namespace litl
     enum class DeferredMaterialCommandType : uint32_t
     {
         Unknown = 0u,
-        UpgradeSlotToFrequentBlock = 1u,
-        CreateVariableMaterialsRef = 2u
+        UpgradeSlotToFrequentBlock = 1u
     };
 
     struct UpdateSlotToFrequentBlockCommand
@@ -31,13 +30,6 @@ namespace litl
         static constexpr DeferredMaterialCommandType Type = DeferredMaterialCommandType::UpgradeSlotToFrequentBlock;
         MaterialHandle handle{};
         MaterialPropertySlotId slot{};
-    };
-
-    struct CreateVariableMaterialsRefCommand
-    {
-        static constexpr DeferredMaterialCommandType Type = DeferredMaterialCommandType::CreateVariableMaterialsRef;
-        Entity entity{};
-        MaterialBindingsDescriptor bindingsDesc{};
     };
 
     /// <summary>
@@ -49,14 +41,13 @@ namespace litl
 
         static void onPreRender(Authority<MaterialManager> auth, ObjectPool& objectPool) noexcept;
         static void enqueueUpgradeSlotCommand(UpdateSlotToFrequentBlockCommand const& command) noexcept;
-        static void enqueueCreateVariableMaterialsRefCommand(CreateVariableMaterialsRefCommand const& command) noexcept;
 
     private:
 
         struct DeferredMaterialCommand
         {
             DeferredMaterialCommandType type{ DeferredMaterialCommandType::Unknown };
-            std::variant<UpdateSlotToFrequentBlockCommand, CreateVariableMaterialsRefCommand> command;
+            std::variant<UpdateSlotToFrequentBlockCommand> command;
         };
 
         static std::array<std::vector<DeferredMaterialCommand>, Constants::max_thread_count> t_threadCommands;

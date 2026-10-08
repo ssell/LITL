@@ -37,17 +37,6 @@ namespace litl
                     }
                     break;
 
-                case DeferredMaterialCommandType::CreateVariableMaterialsRef:
-                    {
-                        const auto* pCommand = std::get_if<CreateVariableMaterialsRefCommand>(&command.command);
-
-                        if (pCommand != nullptr)
-                        {
-                            // ... todo ...
-                        }
-                    }
-                    break;
-
                 default:
                     break;
                 }
@@ -61,14 +50,6 @@ namespace litl
     {
         t_threadCommands[ThreadInfo::get().index].push_back(DeferredMaterialCommand{
             .type = UpdateSlotToFrequentBlockCommand::Type,
-            .command = command
-        });
-    }
-
-    void DeferredMaterialCommands::enqueueCreateVariableMaterialsRefCommand(CreateVariableMaterialsRefCommand const& command) noexcept
-    {
-        t_threadCommands[ThreadInfo::get().index].push_back(DeferredMaterialCommand{
-            .type = CreateVariableMaterialsRefCommand::Type,
             .command = command
         });
     }
