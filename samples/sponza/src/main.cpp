@@ -33,8 +33,17 @@ int main()
 {
     litl::Engine engine{};
 
+    const litl::Configuration config{
+        .engineSettings = litl::EngineConfiguration {
+            .applicationName = "LITL - Sponza Sample"
+        },
+        .sceneSettings = litl::SceneConfiguration {
+            .partition = litl::ScenePartitionType::Null
+        }
+    };
+
     engine.setup(
-        { .engineSettings { .applicationName = "LITL - Sponza Sample" } },
+        config,
         nullptr,
         nullptr,
         nullptr,
