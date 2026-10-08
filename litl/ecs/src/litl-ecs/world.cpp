@@ -542,4 +542,9 @@ namespace litl
     {
         return m_pImpl->systemManager.buildInfoGraph();
     }
+
+    uint32_t World::getFrame() noexcept
+    {
+        return m_pImpl->frame;
+    }
 }

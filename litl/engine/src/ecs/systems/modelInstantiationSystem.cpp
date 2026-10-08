@@ -165,7 +165,7 @@ namespace litl
                                     }
                                 }
 
-                                bindingsDesc.bindings[nodeMaterialIndex] = binding;
+                                bindingsDesc.bindings[i] = binding;
                             }
 
                             // Note: this call to ObjectPool is not thread-safe which is why we define this system to use SystemExecutionPolicy::Exclusive

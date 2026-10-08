@@ -41,7 +41,7 @@ namespace litl
 
         vulkanContext->config = rendererDescriptor;
         vulkanContext->window.window = pWindow;
-        vulkanContext->renderInfo.frame.framesInFlight = rendererDescriptor.framesInFlight;
+        vulkanContext->renderInfo.frame.framesInFlight = clamp(rendererDescriptor.framesInFlight, 1u, RendererConstants::MaxFramesInFlight);
 
         return new litl::Renderer(&litl::vulkan::VulkanRendererOps, vulkan::wrap(vulkanContext));
     }

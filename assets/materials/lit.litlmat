@@ -5,5 +5,7 @@ vertex = { resource = "shaders/lit", entry = "vertexMain" }
 fragment = { resource = "shaders/lit", entry = "fragmentMain" }
 
 [properties]
-tint = { type = "color", value = [1.0, 1.0, 1.0, 1.0] }
+tint      = { type = "color", value = [1.0, 1.0, 1.0, 1.0] }
+roughness = { type = "float", value = 0.5 }
+metallic  = { type = "float", value = 0.0 }
 baseColor = { type = "texture", value = "white" }                  # "white" is one of the reserved, globally present textures. Others include: "pink", "black", and "normal".

@@ -382,6 +382,12 @@ namespace litl
         /// <returns></returns>
         [[nodiscard]] static uint32_t getVersion() noexcept;
 
+        /// <summary>
+        /// Returns the current ECS world frame. 
+        /// Note that this may not always line up exactly with a renderer frame count as they may be using multiple frames-in-flight.
+        /// </summary>
+        [[nodiscard]] uint32_t getFrame() noexcept;
+
     protected:
 
     private:

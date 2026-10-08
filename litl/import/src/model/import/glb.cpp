@@ -35,6 +35,11 @@ namespace litl::import
             ~ScopedData() { if (glData != nullptr) { cgltf_free(glData); } }
         };
 
+        [[nodiscard]] constexpr std::string_view nameOr(const char* name, std::string_view altName) noexcept
+        {
+            return (name != nullptr ? name : altName);
+        }
+
         [[nodiscard]] bool unpackFloats(cgltf_accessor const* accessor, cgltf_size expectedComponents, std::vector<float>& out) noexcept
         {
             if ((accessor == nullptr) || (cgltf_num_components(accessor->type) != expectedComponents))
@@ -55,7 +60,7 @@ namespace litl::import
         /// <summary>
         /// Converts the cgltf mesh to our intermediate format.
         /// </summary>
-        void convertToLitlMesh(GeoMesh* litlMesh, cgltf_mesh const& glMesh) noexcept
+        void convertToLitlMesh(GeoMesh* litlMesh, cgltf_mesh const& glMesh, std::string_view location) noexcept
         {
             auto& vertices = litlMesh->getVertices();
             auto& indices = litlMesh->getIndices();
@@ -78,12 +83,14 @@ namespace litl::import
                 if (glPrimitive.type != cgltf_primitive_type_triangles)
                 {
                     // ... todo future support of strips/fans, or just keep skipping but add a log message ...
+                    logWarning("Skipping non-triangle based primitive ", p, " in GLB mesh '", nameOr(glMesh.name, "UNKNOWN"), "' in model '", location, "'");
                     continue;
                 }
 
                 if (!unpackFloats(cgltf_find_accessor(&glPrimitive, cgltf_attribute_type_position, 0), 3, positions))
                 {
                     // Position is required, the rest are optional.
+                    logWarning("Skipping primitive ", p, " that has no position attribute in GLB mesh '", nameOr(glMesh.name, "UNKNOWN"), "' in model '", location, "'");
                     continue;
                 }
 
@@ -137,7 +144,7 @@ namespace litl::import
         /// <summary>
         /// Creates the mesh item for the ImportedData, adds it to the model, and converts the cgltf mesh to our intermediate format.
         /// </summary>
-        [[nodiscard]] Result createMeshDataItem(cgltf_mesh const& glMesh, ModelImportResult* modelImportResult, ImportedData& importedData) noexcept
+        [[nodiscard]] Result createMeshDataItem(cgltf_mesh const& glMesh, ModelImportResult* modelImportResult, ImportedData& importedData, std::string_view location) noexcept
         {
             const uint32_t meshDataItemIndex = static_cast<uint32_t>(importedData.items.size());
             importedData.items.push_back({});
@@ -149,7 +156,7 @@ namespace litl::import
             }
 
             // Update model
-            const std::string_view meshName = (glMesh.name != nullptr ? glMesh.name : "Mesh");
+            const std::string_view meshName = nameOr(glMesh.name, "Mesh");
             meshDataItem.setName(meshName);
             const auto meshIndex = modelImportResult->model->addMesh(meshName);
 
@@ -164,7 +171,7 @@ namespace litl::import
             meshResult->mesh = std::make_unique<GeoMesh>();
             auto* litlMesh = meshResult->mesh.get();
 
-            convertToLitlMesh(litlMesh, glMesh);
+            convertToLitlMesh(litlMesh, glMesh, location);
 
             meshResult->summary.meshCount += 1u;
             meshResult->summary.vertexCount += static_cast<uint32_t>(litlMesh->vertexCount());
@@ -183,12 +190,14 @@ namespace litl::import
         /// <summary>
         /// Converts the cgltf material to our intermediate format.
         /// </summary>
-        [[nodiscard]] bool convertToLitlMaterial(MaterialIntermediateData* litlMaterial, cgltf_material const& glMaterial) noexcept
+        [[nodiscard]] bool convertToLitlMaterial(MaterialIntermediateData* litlMaterial, cgltf_material const& glMaterial, std::string_view location) noexcept
         {
+            // TODO general, need to move the default shader paths, default expected property names, etc. to some shared location to also use with OBJ, etc.
+
             if (!litlMaterial->setShader(LitlMatShaderStage::Vertex, "shaders/lit", "vertexMain") ||
                 !litlMaterial->setShader(LitlMatShaderStage::Fragment, "shaders/lit", "fragmentMain"))
             {
-                logWarning("Failed to assign the default shaders to GLB material '", glMaterial.name, "'. The material will be skipped.");
+                logWarning("Failed to assign the default shaders to GLB material '", nameOr(glMaterial.name, "UNKNOWN"), "' in model '", location, "'. The material will be skipped.");
                 return false;
             }
 
@@ -201,7 +210,33 @@ namespace litl::import
 
             if (!litlMaterial->addProperty("tint", LitlMatPropertyType::Color, tint))
             {
-                logWarning("Failed to assign the 'tint' property to GLB material '", glMaterial.name, "'");
+                logWarning("Failed to assign the 'tint' property to GLB material '", nameOr(glMaterial.name, "UNKNOWN"), "' in model '", location, "'");
+            }
+
+            if (!litlMaterial->addProperty("roughness", LitlMatPropertyType::Float, glMaterial.pbr_metallic_roughness.roughness_factor))
+            {
+                logWarning("Failed to assign the 'roughness' property to GLB material '", nameOr(glMaterial.name, "UNKNOWN"), "' in model '", location, "'");
+            }
+
+            if (!litlMaterial->addProperty("metallic", LitlMatPropertyType::Float, glMaterial.pbr_metallic_roughness.metallic_factor))
+            {
+                logWarning("Failed to assign the 'metallic' property to GLB material '", nameOr(glMaterial.name, "UNKNOWN"), "' in model '", location, "'");
+            }
+
+            if (glMaterial.double_sided)
+            {
+                litlMaterial->setRasterCullMode(LitlMatCullMode::None);
+            }
+
+            if (glMaterial.alpha_mode != cgltf_alpha_mode::cgltf_alpha_mode_opaque)
+            {
+                logWarning("GLB material '", nameOr(glMaterial.name, "UNKNOWN"), "' in model '", location, "' specifies a non-opaque alpha mode which is currently not supported. Defaulting to opaque.");
+                // ... todo ...
+            }
+
+            if (!fequals(glMaterial.alpha_cutoff, 0.5f))
+            {
+                logWarning("GLB material '", nameOr(glMaterial.name, "UNKNOWN"), "' in model '", location, "' specifies a non-default (0.5) alpha cutoff value of ", glMaterial.alpha_cutoff, "'. This is currently not supported.");
             }
 
             // ... todo ...
@@ -212,7 +247,7 @@ namespace litl::import
         /// <summary>
         /// Creates the material item for the ImportedData, adds it to the model, and converts the cgltf material to our intermediate format.
         /// </summary>
-        [[nodiscard]] uint32_t createMaterialDataItem(cgltf_material const& glMaterial, ModelImportResult* modelImportResult, ImportedData& importedData) noexcept
+        [[nodiscard]] uint32_t createMaterialDataItem(cgltf_material const& glMaterial, ModelImportResult* modelImportResult, ImportedData& importedData, std::string_view location) noexcept
         {
             const uint32_t materialDataItemIndex = static_cast<uint32_t>(importedData.items.size());
             importedData.items.push_back({});
@@ -226,15 +261,7 @@ namespace litl::import
             }
 
             // Update model
-            const std::string_view materialName = (glMaterial.name != nullptr ? glMaterial.name : "Material");
-            materialDataItem.setName(materialName);
-            const auto materialIndex = modelImportResult->model->addMaterial(materialName);            
-
-            // Update the internal model item tracking. This is used to propagate deduplicated/sanitized names back to the intermediate data.
-            modelImportResult->dataItems.push_back(ModelDataItem{
-                .importedDataItemIndex = materialDataItemIndex,
-                .modelNameIndex = materialIndex
-            });
+            const std::string_view materialName = nameOr(glMaterial.name, "Material");
 
             // Build the material
             auto* materialResult = materialDataItem.getDataPtr<MaterialImportResult>();
@@ -242,11 +269,20 @@ namespace litl::import
             auto* litlMaterial = materialResult->intermediateMaterial.get();
             litlMaterial->setName(materialName);
 
-            if (!convertToLitlMaterial(litlMaterial, glMaterial))
+            if (!convertToLitlMaterial(litlMaterial, glMaterial, location))
             {
                 importedData.items.pop_back();
                 return Constants::uint32_null_index;
             }
+
+            materialDataItem.setName(materialName);
+            const auto materialIndex = modelImportResult->model->addMaterial(materialName);
+
+            // Update the internal model item tracking. This is used to propagate deduplicated/sanitized names back to the intermediate data.
+            modelImportResult->dataItems.push_back(ModelDataItem{
+                .importedDataItemIndex = materialDataItemIndex,
+                .modelNameIndex = materialIndex
+            });
 
             return materialIndex;
         }
@@ -318,7 +354,7 @@ namespace litl::import
 
         if (loadResult != cgltf_result_success)
         {
-            logError("Import of '", location, "' failed during buffer load with error '", g_gltfErrorStrings[static_cast<uint32_t>(parseResult)], "' (", static_cast<uint32_t>(parseResult), ")");
+            logError("Import of '", location, "' failed during buffer load with error '", g_gltfErrorStrings[static_cast<uint32_t>(loadResult)], "' (", static_cast<uint32_t>(loadResult), ")");
             return Result::Error(ErrorType::ImporterFailed, "Failed to load glb file buffers.");
         }
 
@@ -326,7 +362,7 @@ namespace litl::import
 
         if (validateResult != cgltf_result_success)
         {
-            logError("Import of '", location, "' failed during validation with error '", g_gltfErrorStrings[static_cast<uint32_t>(parseResult)], "' (", static_cast<uint32_t>(parseResult), ")");
+            logError("Import of '", location, "' failed during validation with error '", g_gltfErrorStrings[static_cast<uint32_t>(validateResult)], "' (", static_cast<uint32_t>(validateResult), ")");
             return Result::Error(ErrorType::ImporterFailed, "Failed to validate glb file buffers.");
         }
 
@@ -347,14 +383,17 @@ namespace litl::import
         auto* modelImportResult = modelDataItem.getDataPtr<ModelImportResult>();
         modelImportResult->model = std::make_unique<ModelIntermediateData>();
         auto* litlModel = modelImportResult->model.get();
+        litlModel->setName(location);
 
         // ---------------------------------------------------------------------------------
         // Create the Textures
         // ---------------------------------------------------------------------------------
 
-        for (cgltf_size texIdx = 0; texIdx < data->textures_count; ++texIdx)
+        // Reminder: gltf images = raw image (png, etc.), textures = image+sampler.
+
+        for (cgltf_size texIdx = 0; texIdx < data->images_count; ++texIdx)
         {
-            createTextureDataItem(data->textures[texIdx], modelImportResult, importedData);
+            //createTextureDataItem(data->textures[texIdx], modelImportResult, importedData);
         }
 
         // ---------------------------------------------------------------------------------
@@ -367,7 +406,7 @@ namespace litl::import
         for (cgltf_size matIdx = 0; matIdx < data->materials_count; ++matIdx)
         {
             // Returns either the model material index (result of model->addMaterial()) or Constants::uint32_null_index on failure.
-            glMatIndexToModelMatIndex[matIdx] = createMaterialDataItem(data->materials[matIdx], modelImportResult, importedData);
+            glMatIndexToModelMatIndex[matIdx] = createMaterialDataItem(data->materials[matIdx], modelImportResult, importedData, location);
         }
 
         // ---------------------------------------------------------------------------------
@@ -385,14 +424,16 @@ namespace litl::import
 
             for (cgltf_size p = 0; p < glMesh.primitives_count; ++p)
             {
-                if (glMesh.primitives->material != nullptr)
+                auto* primitiveMaterial = glMesh.primitives[p].material;
+
+                if (primitiveMaterial != nullptr)
                 {
-                    const auto glMatIdx = cgltf_material_index(data, glMesh.primitives[p].material);
+                    const auto glMatIdx = cgltf_material_index(data, primitiveMaterial);
                     slotTable[p] = glMatIndexToModelMatIndex[glMatIdx];
                 }
             }
 
-            const auto meshResult = createMeshDataItem(data->meshes[meshIdx], modelImportResult, importedData);
+            const auto meshResult = createMeshDataItem(data->meshes[meshIdx], modelImportResult, importedData, location);
 
             if (!meshResult.success)
             {
@@ -411,7 +452,7 @@ namespace litl::import
         {
             auto& glNode = data->nodes[nodeIdx];
 
-            Node node{ .name = (glNode.name != nullptr ? glNode.name : "node") };
+            Node node{ .name = std::string(nameOr(glNode.name, "Node")) };
             cgltf_node_transform_local(&glNode, node.localTransform.data());
 
             if (glNode.mesh != nullptr)

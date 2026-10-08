@@ -44,7 +44,7 @@ namespace litl
         RendererBackendType rendererType = RendererBackendType::Vulkan;
 
         /// <summary>
-        /// How many frames to have queued at a time. Suggested 2-3.
+        /// How many frames to have queued at a time. Suggested 1-2.
         /// </summary>
         uint32_t framesInFlight = 2;
 

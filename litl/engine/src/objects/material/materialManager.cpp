@@ -66,6 +66,9 @@ namespace litl
                 {
                     m_pObjectPool->destroyMaterialBindings(materialBindingsHandle);
                 }
+
+                // Note about the above comparison that lastActiveFrame is the ECS frame, whereas m_frame is the Renderer frame.
+                // Due to frames-in-flight this may not always align. However, the RendererConstants::MaxFramesInFlight limits this lag to well within the MaterialBindingsExpirationFrames count.
             }
         }
     }
