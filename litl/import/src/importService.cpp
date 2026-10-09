@@ -32,6 +32,7 @@
 // Texture
 #include "litl-import/texture/export/textureExporter.hpp"
 #include "litl-import/texture/import/bmp.hpp"
+#include "litl-import/texture/import/jpeg.hpp"
 #include "litl-import/texture/import/png.hpp"
 #include "litl-import/texture/import/tga.hpp"
 
@@ -54,6 +55,7 @@ namespace litl::import
                 // Explicitly allowed
             case ImportSourceType::TextureBmp:
             case ImportSourceType::TextureHdr:
+            case ImportSourceType::TextureJpeg:
             case ImportSourceType::TexturePng:
             case ImportSourceType::TextureTga:
                 break;
@@ -126,6 +128,7 @@ namespace litl::import
         // Texture
         m_exporterRegistry.add<TextureExporter>();
         m_importerRegistry.add<BmpImporter>();
+        m_importerRegistry.add<JpegImporter>();
         m_importerRegistry.add<PngImporter>();
         m_importerRegistry.add<TgaImporter>();
     }

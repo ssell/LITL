@@ -38,6 +38,7 @@ set (LITL_SAMPLES_SPONZA_ASSETS
 	"${LITL_ASSETS_DIR}/materials/unlit.litlmat"
 	"${LITL_ASSETS_DIR}/materials/lit.litlmat"
 	"${LITL_ASSETS_DIR}/models/sphere.glb"
+	"${LITL_ASSETS_DIR}/models/cube.glb"
 )
 
 foreach(LITL_SAMPLES_SPONZA_ASSET_PATH IN LISTS LITL_SAMPLES_SPONZA_ASSETS)

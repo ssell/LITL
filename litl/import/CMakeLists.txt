@@ -33,7 +33,7 @@ add_library(litl-import STATIC
 	"src/texture/import/png.cpp" 
 	"src/texture/import/bmp.cpp" 
 	"src/model/import/glb.cpp"
- "src/model/import/cgltf.cpp")
+ "src/model/import/cgltf.cpp" "src/texture/import/jpeg.cpp")
 
 target_include_directories(litl-import
 	PUBLIC

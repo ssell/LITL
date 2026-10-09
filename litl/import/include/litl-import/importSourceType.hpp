@@ -24,6 +24,7 @@ namespace litl::import
         TextureLitlBinary,
         TextureBmp,
         TextureHdr,
+        TextureJpeg,
         TexturePng,
         TextureTga,
 

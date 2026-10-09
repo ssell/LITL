@@ -342,7 +342,7 @@ namespace litl::import
             }
             else if (mimeTypeLower == "image/jpeg")
             {
-                // return ImportSourceType::TextureJpeg;
+                return ImportSourceType::TextureJpeg;
             }
 
             return ImportSourceType::Unknown;
