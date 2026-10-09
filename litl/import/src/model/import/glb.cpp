@@ -188,10 +188,16 @@ namespace litl::import
         // Materials
         // ---------------------------------------------------------------------------------
 
+        struct MaterialTextureItemIndices
+        {
+            uint32_t baseColor{ Constants::uint32_null_index };
+            // ... todo add normal map, etc ...
+        };
+
         /// <summary>
         /// Converts the cgltf material to our intermediate format.
         /// </summary>
-        [[nodiscard]] bool convertToLitlMaterial(cgltf_data* glData, MaterialIntermediateData* litlMaterial, cgltf_material const& glMaterial, std::string_view location, std::span<uint32_t const> glImageIndexToModelTextureIndex) noexcept
+        [[nodiscard]] bool convertToLitlMaterial(cgltf_data* glData, MaterialIntermediateData* litlMaterial, cgltf_material const& glMaterial, std::string_view location, std::span<uint32_t const> glImageIndexToModelTextureIndex, MaterialTextureItemIndices& textureItemIndices) noexcept
         {
             // TODO general, need to move the default shader paths, default expected property names, etc. to some shared location to also use with OBJ, etc.
 
@@ -209,22 +215,17 @@ namespace litl::import
                 glMaterial.pbr_metallic_roughness.base_color_factor[3]
             };
 
-            if (glMaterial.pbr_metallic_roughness.base_color_texture.texture != nullptr)
+            if (const auto* glTexture = glMaterial.pbr_metallic_roughness.base_color_texture.texture; (glTexture != nullptr) && (glTexture->image != nullptr))
             {
-                const auto glImageIndex = cgltf_image_index(glData, glMaterial.pbr_metallic_roughness.base_color_texture.texture->image);
+                const auto glImageIndex = cgltf_image_index(glData, glTexture->image);
 
                 if (glImageIndex < glImageIndexToModelTextureIndex.size())
                 {
-                    const auto textureItemIndex = glImageIndexToModelTextureIndex[glImageIndex];
-
-                    if (!litlMaterial->addProperty("baseColor", LitlMatPropertyType::Texture, textureItemIndex))
-                    {
-                        logWarning("Failed to assign the 'baseColor' property to GLB material '", nameOr(glMaterial.name, "UNKNOWN"), "' in model '", location, "'");
-                    }
+                    textureItemIndices.baseColor = glImageIndexToModelTextureIndex[glImageIndex];
                 }
                 else
                 {
-                    logWarning("Failed to assign the 'basecolor' property to GLB material '", nameOr(glMaterial.name, "UNKNOWN"), "' in model '", location, "' as image index was invalid.");
+                    logWarning("Failed to link the 'baseColor' texture of GLB material '", nameOr(glMaterial.name, "UNKNOWN"), "' in model '", location, "' as the image index was invalid.");
                 }
             }
 
@@ -292,7 +293,9 @@ namespace litl::import
             materialDataItem.setName(materialName);
 
             // Convert the gl material to our internal material
-            if (!convertToLitlMaterial(glData, litlMaterial, glMaterial, location, glImageIndexToModelTextureIndex))
+            MaterialTextureItemIndices textureItemIndices{};
+
+            if (!convertToLitlMaterial(glData, litlMaterial, glMaterial, location, glImageIndexToModelTextureIndex, textureItemIndices))
             {
                 importedData.items.pop_back();
                 return Constants::uint32_null_index;
@@ -306,6 +309,17 @@ namespace litl::import
                 .importedDataItemIndex = materialDataItemIndex,
                 .modelNameIndex = materialIndex
             });
+
+            // Link the textures to the material
+            if (textureItemIndices.baseColor != Constants::uint32_null_index)
+            {
+                modelImportResult->textureLinks.push_back(MaterialTextureLink{
+                    .materialItemIndex = materialDataItemIndex,
+                    .textureItemIndex = textureItemIndices.baseColor,
+                    .propertyName = "baseColor"
+                });
+            }
+            // ... todo handle normal map, etc ...
 
             return materialIndex;
         }
@@ -356,8 +370,11 @@ namespace litl::import
                 return Constants::uint32_null_index;
             }
 
+            ImportSettings importSettings = context.settings;
+            importSettings.texture = ColorTextureImportSettings;        // ... todo we are only during baseColor at the moment so hardcoding to color (sRGB) ...
+
             const std::span<std::byte const> imageBytes{ reinterpret_cast<std::byte const*>(cgltf_buffer_view_data(glImage.buffer_view)), glImage.buffer_view->size };
-            const auto textureDataItemIndex = context.embeddedImporter.importEmbedded(sourceType, imageName, imageBytes, context.settings);
+            const auto textureDataItemIndex = context.embeddedImporter.importEmbedded(sourceType, imageName, imageBytes, importSettings);
 
             if (!textureDataItemIndex.has_value())
             {

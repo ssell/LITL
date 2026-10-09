@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "litl-core/constants.hpp"
@@ -27,10 +28,21 @@ namespace litl::import
         uint32_t modelNameIndex{ Constants::uint32_null_index };
     };
 
+    /// <summary>
+    /// Link together a material and texture at a given property name.
+    /// </summary>
+    struct MaterialTextureLink
+    {
+        uint32_t materialItemIndex{ Constants::uint32_null_index };
+        uint32_t textureItemIndex{ Constants::uint32_null_index };
+        std::string propertyName;
+    };
+
     struct ModelImportResult
     {
         std::unique_ptr<ModelIntermediateData> model;
         std::vector<ModelDataItem> dataItems;
+        std::vector<MaterialTextureLink> textureLinks;
     };
 }
 

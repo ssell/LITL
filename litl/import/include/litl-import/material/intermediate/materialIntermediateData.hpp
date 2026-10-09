@@ -119,6 +119,7 @@ namespace litl::import
 
         [[nodiscard]] bool setShader(LitlMatShaderStage stage, std::string const& resource, std::string const& entry) noexcept;
         [[nodiscard]] bool addProperty(std::string const& name, LitlMatPropertyType type, LitlMatSupportedRawPropertyTypes const& value) noexcept;
+        [[nodiscard]] bool setProperty(std::string const& name, LitlMatPropertyType type, LitlMatSupportedRawPropertyTypes const& value) noexcept;
 
         void setName(std::string_view name) noexcept;
         void setRasterCullMode(LitlMatCullMode cullMode) noexcept;

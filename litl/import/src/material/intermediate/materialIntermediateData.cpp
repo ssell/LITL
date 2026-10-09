@@ -140,6 +140,16 @@ namespace litl::import
         return false;
     }
 
+    bool MaterialIntermediateData::setProperty(std::string const& name, LitlMatPropertyType type, LitlMatSupportedRawPropertyTypes const& value) noexcept
+    {
+        std::erase_if(m_properties, [&name](LitlMatPropertyRecord const& record)
+        {
+            return record.name == name;
+        });
+
+        return addProperty(name, type, value);
+    }
+
     void MaterialIntermediateData::setName(std::string_view name) noexcept
     {
         m_settings.materialName = name;
