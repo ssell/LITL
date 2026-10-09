@@ -191,7 +191,7 @@ namespace litl::import
         /// <summary>
         /// Converts the cgltf material to our intermediate format.
         /// </summary>
-        [[nodiscard]] bool convertToLitlMaterial(MaterialIntermediateData* litlMaterial, cgltf_material const& glMaterial, std::string_view location) noexcept
+        [[nodiscard]] bool convertToLitlMaterial(cgltf_data* glData, MaterialIntermediateData* litlMaterial, cgltf_material const& glMaterial, std::string_view location, std::span<uint32_t const> glImageIndexToModelTextureIndex) noexcept
         {
             // TODO general, need to move the default shader paths, default expected property names, etc. to some shared location to also use with OBJ, etc.
 
@@ -208,6 +208,25 @@ namespace litl::import
                 glMaterial.pbr_metallic_roughness.base_color_factor[2],
                 glMaterial.pbr_metallic_roughness.base_color_factor[3]
             };
+
+            if (glMaterial.pbr_metallic_roughness.base_color_texture.texture != nullptr)
+            {
+                const auto glImageIndex = cgltf_image_index(glData, glMaterial.pbr_metallic_roughness.base_color_texture.texture->image);
+
+                if (glImageIndex < glImageIndexToModelTextureIndex.size())
+                {
+                    const auto textureItemIndex = glImageIndexToModelTextureIndex[glImageIndex];
+
+                    if (!litlMaterial->addProperty("baseColor", LitlMatPropertyType::Texture, textureItemIndex))
+                    {
+                        logWarning("Failed to assign the 'baseColor' property to GLB material '", nameOr(glMaterial.name, "UNKNOWN"), "' in model '", location, "'");
+                    }
+                }
+                else
+                {
+                    logWarning("Failed to assign the 'basecolor' property to GLB material '", nameOr(glMaterial.name, "UNKNOWN"), "' in model '", location, "' as image index was invalid.");
+                }
+            }
 
             if (!litlMaterial->addProperty("tint", LitlMatPropertyType::Color, tint))
             {
@@ -248,7 +267,7 @@ namespace litl::import
         /// <summary>
         /// Creates the material item for the ImportedData, adds it to the model, and converts the cgltf material to our intermediate format.
         /// </summary>
-        [[nodiscard]] uint32_t createMaterialDataItem(cgltf_material const& glMaterial, ModelImportResult* modelImportResult, ImportedData& importedData, std::string_view location) noexcept
+        [[nodiscard]] uint32_t createMaterialDataItem(cgltf_data* glData, cgltf_material const& glMaterial, ModelImportResult* modelImportResult, ImportedData& importedData, std::string_view location, std::span<uint32_t const> glImageIndexToModelTextureIndex) noexcept
         {
             const uint32_t materialDataItemIndex = static_cast<uint32_t>(importedData.items.size());
             importedData.items.push_back({});
@@ -273,7 +292,7 @@ namespace litl::import
             materialDataItem.setName(materialName);
 
             // Convert the gl material to our internal material
-            if (!convertToLitlMaterial(litlMaterial, glMaterial, location))
+            if (!convertToLitlMaterial(glData, litlMaterial, glMaterial, location, glImageIndexToModelTextureIndex))
             {
                 importedData.items.pop_back();
                 return Constants::uint32_null_index;
@@ -317,8 +336,9 @@ namespace litl::import
 
         /// <summary>
         /// Creates the texture item for the ImportedData, adds it to the model, and converts the cgltf texture to our intermediate format.
+        /// Returns the ImportedData::items index of the texture if successful. Returns Constants::uint32_null_index on failure.
         /// </summary>
-        void createTextureDataItem(cgltf_image const& glImage, ModelImportResult* modelImportResult, ImportedData& importedData, ImportContext const& context) noexcept
+        [[nodiscard]] uint32_t createTextureDataItem(cgltf_image const& glImage, ModelImportResult* modelImportResult, ImportedData& importedData, ImportContext const& context) noexcept
         {
             const auto imageName = nameOr(glImage.name, "Image");
             const auto mimeType = nameOr(glImage.mime_type, "UNKNOWN");
@@ -327,13 +347,13 @@ namespace litl::import
             if (sourceType == ImportSourceType::Unknown)
             {
                 logWarning("GLB image '", imageName, "' in model '", context.location, "' has an unsupported mime type of '", mimeType, "'. Skipping.");
-                return;
+                return Constants::uint32_null_index;
             }
 
             if ((glImage.buffer_view == nullptr) || (glImage.buffer_view->buffer == nullptr) || (glImage.buffer_view->buffer->data == nullptr) || (glImage.buffer_view->buffer->size == 0))
             {
                 logWarning("GLB image '", imageName, "' in model '", context.location, "' has a missing or empty buffer. Skipping.");
-                return;
+                return Constants::uint32_null_index;
             }
 
             const std::span<std::byte const> imageBytes{ reinterpret_cast<std::byte const*>(cgltf_buffer_view_data(glImage.buffer_view)), glImage.buffer_view->size };
@@ -342,10 +362,10 @@ namespace litl::import
             if (!textureDataItemIndex.has_value())
             {
                 logError("GLB image '", imageName, "' in model '", context.location, "' failed to be imported.");
-                return;
+                return Constants::uint32_null_index;
             }
 
-            // ... todo ...
+            return textureDataItemIndex.value();
         }
     }
 
@@ -415,10 +435,11 @@ namespace litl::import
         // ---------------------------------------------------------------------------------
 
         // Reminder: gltf images = raw image (png, etc.), textures = image+sampler.
+        std::vector<uint32_t> glImageIndexToModelTextureIndex(data->images_count, Constants::uint32_null_index);
 
         for (cgltf_size imgIdx = 0; imgIdx < data->images_count; ++imgIdx)
         {
-            createTextureDataItem(data->images[imgIdx], modelImportResult, importedData, context);
+            glImageIndexToModelTextureIndex[imgIdx] = createTextureDataItem(data->images[imgIdx], modelImportResult, importedData, context);
         }
 
         // ---------------------------------------------------------------------------------
@@ -431,7 +452,7 @@ namespace litl::import
         for (cgltf_size matIdx = 0; matIdx < data->materials_count; ++matIdx)
         {
             // Returns either the model material index (result of model->addMaterial()) or Constants::uint32_null_index on failure.
-            glMatIndexToModelMatIndex[matIdx] = createMaterialDataItem(data->materials[matIdx], modelImportResult, importedData, context.location);
+            glMatIndexToModelMatIndex[matIdx] = createMaterialDataItem(data, data->materials[matIdx], modelImportResult, importedData, context.location, glImageIndexToModelTextureIndex);
         }
 
         // ---------------------------------------------------------------------------------
