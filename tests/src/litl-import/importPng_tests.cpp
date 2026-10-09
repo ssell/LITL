@@ -43,7 +43,7 @@ namespace litl::tests
             }
 
             return colorArray;
-            }();
+        }();
 
         const File source(s_testPngSourceLocation);
         const auto sourceBytes = source.readAllBytes();
@@ -93,7 +93,7 @@ namespace litl::tests
 
         auto texturePixelColors = std::span<color const>(reinterpret_cast<color const*>(texturePixelBytes.data()), expectedSRGBColorArray.size());
 
-        for (uint32_t i = 0u; i < 9u; ++i)
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(expectedSRGBColorArray.size()); ++i)
         {
             REQUIRE(texturePixelColors[i] == expectedSRGBColorArray[i]);
         }

@@ -2,7 +2,6 @@
 
 #include "tests.hpp"
 #include "litl-import/importService.hpp"
-#include "litl-core/directory.hpp"
 #include "litl-import/mesh/intermediate/litlbmsh.hpp"
 
 namespace litl::tests

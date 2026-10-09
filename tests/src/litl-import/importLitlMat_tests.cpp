@@ -137,7 +137,7 @@ namespace litl::tests
         REQUIRE(error == BinaryBlockFile::ErrorCode::None);
 
         // The intermediate data from the two sources (test.litlmat and test.litlbmat) should be identical.
-        for (uint32_t i = 0; i < import::MaterialIntermediateData::ShaderStageCount; ++i)
+        for (uint32_t i = 0; i < static_cast<uint32_t>(import::LitlMatShaderStage::StageCount); ++i)
         {
             auto& litlmatShader = litlmatIntermediateData.getShaders()[i];
             auto& litlbmatShader = litlbmatIntermediateData.getShaders()[i];

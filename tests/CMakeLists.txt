@@ -84,7 +84,9 @@ add_executable(litl-tests
 	"src/litl-core/string_tests.cpp" 
 	"src/litl-import/importBmp_tests.cpp" 
 	"src/litl-import/importPng_tests.cpp"
- "src/litl-renderer/texture_tests.cpp" "src/litl-ecs/systemTraits_tests.cpp")
+	"src/litl-renderer/texture_tests.cpp" 
+	"src/litl-ecs/systemTraits_tests.cpp" 
+	"src/litl-import/importGlb_tests.cpp")
 
 target_link_libraries(litl-tests
 	PRIVATE
@@ -131,6 +133,7 @@ set (LITL_TESTS_ASSETS
 	"${LITL_TEST_ASSETS_DIR}/materials/test.litlmat"
 	"${LITL_TEST_ASSETS_DIR}/models/sponza.obj"
 	"${LITL_TEST_ASSETS_DIR}/models/sponza.mtl"
+	"${LITL_TEST_ASSETS_DIR}/models/test_cube.glb"
 	"${LITL_TEST_ASSETS_DIR}/shaders/test.slang"
 	"${LITL_TEST_ASSETS_DIR}/textures/test_bmp.bmp"
 	"${LITL_TEST_ASSETS_DIR}/textures/test_png.png"

@@ -170,7 +170,7 @@ namespace litl::import
         m_settings.frequentUpdates = frequentUpdates;
     }
 
-    std::array<LitlMatShaderRecord, 8> const& MaterialIntermediateData::getShaders() const noexcept
+    std::array<LitlMatShaderRecord, static_cast<uint32_t>(LitlMatShaderStage::StageCount)> const& MaterialIntermediateData::getShaders() const noexcept
     {
         return m_shaders;
     }
@@ -178,6 +178,19 @@ namespace litl::import
     std::vector<LitlMatPropertyRecord> const& MaterialIntermediateData::getProperties() const noexcept
     {
         return m_properties;
+    }
+
+    std::optional<LitlMatPropertyRecord> MaterialIntermediateData::getProperty(std::string_view name) const noexcept
+    {
+        for (auto& property : m_properties)
+        {
+            if (property.name == name)
+            {
+                return property;
+            }
+        }
+
+        return std::nullopt;
     }
 
     LitlMatSettings const& MaterialIntermediateData::getSettings() const noexcept

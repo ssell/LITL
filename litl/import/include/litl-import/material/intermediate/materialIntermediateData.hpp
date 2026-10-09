@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -38,7 +39,8 @@ namespace litl::import
         TessellationEvaluation = 5u,
         Compute = 6u,
         Mesh = 7u,
-        Task = 8u
+        Task = 8u,
+        StageCount
     };
 
     enum class LitlMatCullMode : uint32_t
@@ -115,8 +117,6 @@ namespace litl::import
     {
     public:
 
-        static constexpr uint32_t ShaderStageCount = 8u;
-
         [[nodiscard]] bool setShader(LitlMatShaderStage stage, std::string const& resource, std::string const& entry) noexcept;
         [[nodiscard]] bool addProperty(std::string const& name, LitlMatPropertyType type, LitlMatSupportedRawPropertyTypes const& value) noexcept;
         [[nodiscard]] bool setProperty(std::string const& name, LitlMatPropertyType type, LitlMatSupportedRawPropertyTypes const& value) noexcept;
@@ -126,15 +126,31 @@ namespace litl::import
         void setRasterWinding(bool clockwise) noexcept;
         void setHintFrequentUpdates(bool frequentUpdates) noexcept;
 
-        std::array<LitlMatShaderRecord, 8> const& getShaders() const noexcept;
-        std::vector<LitlMatPropertyRecord> const& getProperties() const noexcept;
-        LitlMatSettings const& getSettings() const noexcept;
+        /// <summary>
+        /// Returns an array of shaders used by the material. Indexed by the LitlMatShaderStage.
+        /// </summary>
+        [[nodiscard]] std::array<LitlMatShaderRecord, static_cast<uint32_t>(LitlMatShaderStage::StageCount)> const& getShaders() const noexcept;
+
+        /// <summary>
+        /// Returns all material properties.
+        /// </summary>
+        [[nodiscard]] std::vector<LitlMatPropertyRecord> const& getProperties() const noexcept;
+
+        /// <summary>
+        /// Returns the property with the specified case-sensitive name.
+        /// </summary>
+        [[nodiscard]] std::optional<LitlMatPropertyRecord> getProperty(std::string_view name) const noexcept;
+
+        /// <summary>
+        /// Returns the material settings.
+        /// </summary>
+        [[nodiscard]] LitlMatSettings const& getSettings() const noexcept;
 
     private:
 
-        std::array<LitlMatShaderRecord, ShaderStageCount> m_shaders;
+        std::array<LitlMatShaderRecord, static_cast<uint32_t>(LitlMatShaderStage::StageCount)> m_shaders;
         std::vector<LitlMatPropertyRecord> m_properties;
-        LitlMatSettings m_settings;;
+        LitlMatSettings m_settings;
     };
 
     static_assert(std::is_move_constructible_v<MaterialIntermediateData>);
