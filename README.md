@@ -1,8 +1,12 @@
 # LITL Engine
 
+**Current Version:** v0.1.0
+
 This is a learning engine and very (very) early in development. It is public merely to show that it exists, but not for it to see any use (yet).
 
-**Current Version:** v0.1.0
+## Screenshots
+
+![](media/litl_v0p2_sponza.png)
 
 ## Requirements
 
