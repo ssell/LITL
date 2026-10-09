@@ -18,6 +18,7 @@
 #include "litl-engine/tasks/taskManager.hpp"
 #include "litl-engine/engine.hpp"
 #include "litl-import/material/intermediate/materialIntermediateData.hpp"
+#include "litl-import/texture/intermediate/textureIntermediateData.hpp"
 
 namespace litl
 {
@@ -605,6 +606,33 @@ namespace litl
 
             initiateAssetLoadFromDisk(asset, assetManager);
         }
+
+        /// <summary>
+        /// Invoked at runtime to enqueue a task when the texture asset is being created from an intermediate texture object already in memory.
+        /// </summary>
+        void initiateTextureAssetLoadFromMemory(TextureAsset* asset, AssetManager& assetManager) noexcept
+        {
+            if (asset == nullptr)
+            {
+                return;
+            }
+
+            std::scoped_lock lock{ assetLoadMutex };
+
+            const auto currentStatus = asset->status.load(std::memory_order::relaxed);
+
+            if (currentStatus == AssetStatus::Unloaded)
+            {
+                asset->status.store(AssetStatus::Loading, std::memory_order::relaxed);
+            }
+            else if (currentStatus != AssetStatus::Loading)
+            {
+                logWarning("Attempting to load Texture asset from memory that is already loaded. Asset key = '", asset->key, "'");
+                return;
+            }
+
+            initiateAssetLoadFromMemory(asset, assetManager);
+        }
     };
 
     AssetManager::AssetManager()
@@ -1171,5 +1199,75 @@ namespace litl
         }
 
         return texture;
+    }
+
+    TextureAssetHandle AssetManager::createTextureAssetFromMemory(Authority<ModelAsset> auth, std::string_view key, std::shared_ptr<import::TextureIntermediateData> intermediateData) noexcept
+    {
+        if (intermediateData == nullptr)
+        {
+            return {};
+        }
+
+        const std::string assetKey = m_impl->createAssetKey(key);
+        const StringId hashedAssetKey = StringId(assetKey);
+
+        TextureAssetHandle textureAssetHandle{};
+
+        {
+            std::scoped_lock lock{ m_impl->assetRegistrationsMutex };
+
+            auto find = m_impl->assetRegistrations.find(hashedAssetKey);
+
+            if (find != m_impl->assetRegistrations.end())
+            {
+                if (find->second.handle.type == AssetType::Texture)
+                {
+                    return find->second.handle.textureHandle;
+                }
+
+                logWarning("AssetManager::createTextureAssetFromMemory failed as the key '", assetKey, "' already exists but is associated with a non-texture asset type (", static_cast<uint32_t>(find->second.handle.type), ")");
+                return {};
+            }
+
+            AssetRegistration assetRegistration{
+                .key = assetKey,
+                .location = "",
+                .hashedKey = hashedAssetKey,
+                .assetType = AssetType::Texture,
+                .format = AssetFormat::Internal,
+                .sourceType = import::ImportSourceType::TextureLitlBinary,
+                .priority = 0u,
+                .locator = {},
+                .handle = {}
+            };
+
+            // TextureAsset::processOnMain reads mipmaps (and residesInTextureTable) from the registration.
+            assetRegistration.importSettings.texture.mipmaps = intermediateData->getDataDescriptor().mipmaps;
+
+            textureAssetHandle = m_impl->createBaseTextureAsset(assetRegistration, AssetStatus::Loading);
+            m_impl->assetRegistrations[hashedAssetKey] = assetRegistration;
+        }
+
+        auto* textureAsset = m_impl->textureAssetPool.get(textureAssetHandle);
+
+        if (textureAsset == nullptr)
+        {
+            logWarning("AssetManager::createTextureAssetFromMemory failed to retrieve newly created unloaded Texture asset '", assetKey, "'");
+            return {};
+        }
+
+        textureAsset->handle = m_impl->objectPool->reserveTexture({}, ObjectDescriptor{ .name = assetKey, .lifetime = ObjectLifetime::Application });
+
+        if (!TextureAsset::fetchAssetObject(textureAsset, *m_impl->objectPool))
+        {
+            logWarning("AssetManager::createTextureAssetFromMemory failed to fetch underlying object for Texture asset '", assetKey, "'");
+            textureAsset->setError(AssetErrorCode::InvalidObject);
+            return textureAssetHandle;
+        }
+
+        textureAsset->textureIntermediateData = std::move(intermediateData);
+        m_impl->initiateTextureAssetLoadFromMemory(textureAsset, *this);
+
+        return textureAssetHandle;
     }
 }

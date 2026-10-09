@@ -1,10 +1,14 @@
 #include <format>
+#include <unordered_map>
 
 #include "litl-engine/assets/modelAsset.hpp"
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-import/importService.hpp"
 #include "litl-import/model/intermediate/litlmdl.hpp"
+#include "litl-import/texture/import/result.hpp"
+#include "litl-import/material/import/result.hpp"
+#include "litl-import/model/import/result.hpp"
 
 namespace litl
 {
@@ -161,6 +165,58 @@ namespace litl
             logWarning("Failed to get Model imported data item pointer while gathering dependencies for Model '", modelAsset->key, "'");
             return false;
         }
+
+        // ---------------------------------------------------------------------------------
+        // Resolve embedded texture links first. The material intermediate data is moved into its asset in the modelDataItem loop.
+        // ---------------------------------------------------------------------------------
+
+        auto& items = modelAsset->importedData->items;
+        std::unordered_map<uint32_t, std::string> textureItemKeys;
+
+        for (const auto& textureLink : modelDataPtr->textureLinks)
+        {
+            if ((textureLink.textureItemIndex >= items.size()) || (textureLink.materialItemIndex >= items.size()))
+            {
+                continue;
+            }
+
+            auto* textureItem = items[textureLink.textureItemIndex].getDataPtr<import::TextureImportResult>();
+            auto* materialItem = items[textureLink.materialItemIndex].getDataPtr<import::MaterialImportResult>();
+
+            if ((textureItem == nullptr) || (textureItem->intermediateTexture == nullptr) ||
+                (materialItem == nullptr) || (materialItem->intermediateMaterial == nullptr))
+            {
+                continue;
+            }
+
+            auto [keyIter, isNewTexture] = textureItemKeys.try_emplace(textureLink.textureItemIndex);
+
+            if (isNewTexture)
+            {
+                // Names are final here (sanitized + deduplicated during import)
+                keyIter->second = std::format("{}/{}", modelAsset->key, items[textureLink.textureItemIndex].getName());
+
+                auto textureHandle = assetManager.createTextureAssetFromMemory({}, keyIter->second, textureItem->intermediateTexture);
+
+                if (auto* textureAsset = assetManager.getTexture(textureHandle); (textureAsset != nullptr))
+                {
+                    dependencies.push_back(textureAsset);
+                }
+                else
+                {
+                    logWarning("Failed to create embedded Texture '", keyIter->second, "' for Model '", modelAsset->key, "'");
+                }
+            }
+
+            if (!materialItem->intermediateMaterial->setProperty(textureLink.propertyName, import::LitlMatPropertyType::Texture, keyIter->second))
+            {
+                logWarning("Failed to link Texture '", keyIter->second, "' to property '", textureLink.propertyName, "' for Model '", modelAsset->key, "'");
+            }
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Resolve meshes and materials
+        // ---------------------------------------------------------------------------------
 
         for (auto& modelDataItem : modelDataPtr->dataItems)
         {
