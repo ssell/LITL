@@ -30,7 +30,7 @@ namespace litl::tests
             std::array<color, 9> colorArray{};
 
             const auto& linearTable = getByteToLinearFloatTable();
-            const auto& srgbTable = getByteToSRGBFloatTable();
+            const auto& srgbTable = getSRGBByteToLinearFloatTable();
 
             for (auto i = 0; i < 9; ++i)
             {

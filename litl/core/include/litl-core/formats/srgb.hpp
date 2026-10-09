@@ -16,7 +16,7 @@ namespace litl
     /// <summary>
     /// Returns the pre-calculted transfer table for converting a byte value to a SRGB float value.
     /// </summary>
-    [[nodiscard]] std::array<float, 256> const& getByteToSRGBFloatTable() noexcept;
+    [[nodiscard]] std::array<float, 256> const& getSRGBByteToLinearFloatTable() noexcept;
 
     /// <summary>
     /// Given a transfer function, returns a pre-calculated transfer table for all values of a uint8_t.

@@ -20,7 +20,7 @@ namespace litl::tests
     LITL_TEST_CASE("linearFloatToSRGBFloat", "[formats::srgb]")
     {
         const auto& linearTable = getByteToFloatTable(TransferFunction::Linear);
-        const auto& srgbTable = getByteToSRGBFloatTable();
+        const auto& srgbTable = getSRGBByteToLinearFloatTable();
 
         for (auto i = 0; i < 256; ++i)
         {
@@ -35,7 +35,7 @@ namespace litl::tests
     LITL_TEST_CASE("sRGBFloatToLinearFloat", "[formats::srgb]")
     {
         const auto& linearTable = getByteToFloatTable(TransferFunction::Linear);
-        const auto& srgbTable = getByteToSRGBFloatTable();
+        const auto& srgbTable = getSRGBByteToLinearFloatTable();
 
         for (auto i = 0; i < 256; ++i)
         {
