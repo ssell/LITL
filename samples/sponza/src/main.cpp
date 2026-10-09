@@ -8,24 +8,12 @@ namespace litl::samples
         auto sceneView = services.get<SceneView>();
         auto assets = services.get<AssetManager>();
 
-        createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(-5.0f, 2.5f, 0.0f), vec3(5.0f, 1.5f, 0.0f), vec3::up(), *objectPool, *sceneView);
+        createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(-5.0f, 1.5f, 0.0f), vec3(5.0f, 1.5f, 0.0f), vec3::up(), *objectPool, *sceneView);
 
         auto sponzaEntity = commands.createEntity();
-        commands.addComponent<LocalBounds>(sponzaEntity);
-
-        // obj sponza
-        //commands.addComponent<Transform>(sponzaEntity, Transform::create(vec3::zero(), quat::identity(), 0.01f));                       // OBJ sponza has 1 unit = 1 centimeter, we use 1 unit = 1 meter. So scale by 0.01.
-        //commands.addComponent<PendingModelInstance>(sponzaEntity, createModelInstance("models/sponza", *assets));
-
-        // glb sponza
         commands.addComponent<Transform>(sponzaEntity, Transform::create(vec3::zero(), quat::identity()));
         commands.addComponent<PendingModelInstance>(sponzaEntity, createModelInstance("models/ignore/sponza", "materials/lit", *assets));
-
-        // temporary while we work on glb import
-        auto sphereEntity = commands.createEntity();
-        commands.addComponent<Transform>(sphereEntity, Transform::create(vec3{ 0.0f, 1.5f, 0.0 }));
-        commands.addComponent<PendingModelInstance>(sphereEntity, createModelInstance("models/sphere", "materials/lit", *assets));
-        commands.addComponent<LocalBounds>(sphereEntity);
+        commands.addComponent<LocalBounds>(sponzaEntity);
     }
 }
 

@@ -17,8 +17,14 @@ namespace litl::import
 
     Result TextureExporter::prepare(ImportedData& data, ImportSettings const& settings, uint32_t dataIndex) noexcept
     {
-        // ... todo mip generation ...
         // ... todo bc encoding ...
+
+        auto* textureResult = data.items[dataIndex].getDataPtr<TextureImportResult>();
+
+        if ((textureResult == nullptr) || (textureResult->intermediateTexture == nullptr))
+        {
+            return Result::Error(ErrorType::ImportedDataNull);
+        }
 
         return Result::Success();
     }
@@ -28,7 +34,7 @@ namespace litl::import
         auto errorCode = BinaryBlockFile::ErrorCode::None;
         auto* textureResult = data.items[dataIndex].getDataPtr<TextureImportResult>();
 
-        if (textureResult == nullptr)
+        if ((textureResult == nullptr) || (textureResult->intermediateTexture == nullptr))
         {
             return Result::Error(ErrorType::ImportedDataNull);
         }

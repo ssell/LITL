@@ -98,9 +98,7 @@ namespace litl::import
             pixelsReinterp[i + 3] = byteToLinearFloatTable[static_cast<uint8_t>(pixels[i + 3])];            // alpha is linear
         }
 
-        // Levels beyond 0 (mipmaps) are left unpopulated. It is up to the user to call generateMipMaps.
-
-        return true;
+        return generateMipMaps();
     }
 
     bool TextureIntermediateData::validate() const noexcept
@@ -242,13 +240,70 @@ namespace litl::import
     {
         if (!m_dataDescriptor.mipmaps)
         {
-            // Nothing to do.
             return true;
         }
 
-        // ... todo ...
-        logError("TextureIntermediateData::generateMipMaps for m_dataDescriptor.mipMaps == true is unimplemented.");
+        // Only the float path is handled. RGBA16_SFloat would need half <-> float conversion,
+        // and the 8-bit formats would need rounding (and sRGB decode/encode for RGBA8_SRGB).
+        if (m_dataDescriptor.format != DataFormat::RGBA32_SFloat)
+        {
+            logError("TextureIntermediateData::generateMipMaps only supports RGBA32_SFloat. Format = ", static_cast<uint32_t>(m_dataDescriptor.format));
+            return false;
+        }
 
-        return false;
+        if ((m_dataDescriptor.depth != 1u) || (m_dataDescriptor.arrayLayers != 1u) || (m_dataDescriptor.faceCount != 1u))
+        {
+            logError("TextureIntermediateData::generateMipMaps currently only supports single-layer 2D textures.");
+            return false;
+        }
+
+        if (m_levels.size() < 2u)
+        {
+            return true;    // 1x1, nothing to generate
+        }
+
+        if (m_pixels.size() < (m_levels.back().byteOffset + m_levels.back().byteSize))
+        {
+            logError("TextureIntermediateData::generateMipMaps pixel buffer is smaller than the level chain requires.");
+            return false;
+        }
+
+        float* const pixels = reinterpret_cast<float*>(m_pixels.data());
+
+        for (size_t level = 1u; level < m_levels.size(); ++level)
+        {
+            TextureLevel const& src = m_levels[level - 1u];
+            TextureLevel const& dst = m_levels[level];
+
+            float const* const srcPixels = pixels + (src.byteOffset / sizeof(float));
+            float* const dstPixels = pixels + (dst.byteOffset / sizeof(float));
+
+            for (uint32_t y = 0u; y < dst.height; ++y)
+            {
+                // Clamp handles odd source extents (e.g. 5 -> 2) and the 1-pixel-wide tail of non-square chains.
+                const size_t sy0 = litl::min(y * 2u, src.height - 1u);
+                const size_t sy1 = litl::min(y * 2u + 1u, src.height - 1u);
+
+                for (uint32_t x = 0u; x < dst.width; ++x)
+                {
+                    const size_t sx0 = litl::min(x * 2u, src.width - 1u);
+                    const size_t sx1 = litl::min(x * 2u + 1u, src.width - 1u);
+
+                    float const* const p00 = srcPixels + ((sy0 * src.width + sx0) * ComponentCount);
+                    float const* const p10 = srcPixels + ((sy0 * src.width + sx1) * ComponentCount);
+                    float const* const p01 = srcPixels + ((sy1 * src.width + sx0) * ComponentCount);
+                    float const* const p11 = srcPixels + ((sy1 * src.width + sx1) * ComponentCount);
+
+                    float* const out = dstPixels + ((static_cast<size_t>(y) * dst.width + x) * ComponentCount);
+
+                    for (uint32_t c = 0u; c < ComponentCount; ++c)
+                    {
+                        out[c] = (p00[c] + p10[c] + p01[c] + p11[c]) * 0.25f;
+                    }
+                }
+            }
+        }
+
+        return true;
     }
 }

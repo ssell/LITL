@@ -1,6 +1,6 @@
 # Sponza Sample
 
-_**Note:** The sample is currently in progress and is slated for the v0.2 release._
+**NOTE: The Sponza GLB file is not provided in the repository due to its size (115MB). In order to run the sample you will need to [download](https://github.com/Ludicon/sponza-gltf/blob/main/sponza-png.glb) the model file and place it under the sample local `assets/models/ignore` directory.**
 
 This is a basic sample demonstrating how to load a model using the Assets system. It demonstrates that several new features are operational:
 
@@ -11,12 +11,10 @@ This is a basic sample demonstrating how to load a model using the Assets system
 * Extraction of meshes, materials, etc. from complex model files along with inter-asset dependencies.
 * Depth-stencil buffer.
 
-In addition to basic byte loading and transforming to internal formats, the import pipeline also performs many preprocessing operations such as mesh winding correction, normal generation, texture compression, shader reflection, etc.
+In addition to basic byte loading and transforming to internal formats, the import pipeline also performs many preprocessing operations such as mesh winding correction, normal generation, texture compression, mipmap generation, shader reflection, etc.
 
-_**Note:** It is intended that this sample will be updated extensively in future versions as additional capabilities arrives. It will serve as a showcase for features such lighting, shadows, transparency, post-processing, etc._
-
-_**Note:** This OBJ version of the Sponza will eventually be replaced by either the modern glTF/glb version or the Intel PBR Sponza._
+It is intended that this sample will be updated extensively in future versions as additional capabilities arrives. It will serve as a showcase for features such lighting, shadows, transparency, post-processing, etc.
 
 ---
 
-![Screenshot of the Bunny sample application.](media/sample.png)
+![Screenshot of the Sponza sample application.](media/sample.png)
