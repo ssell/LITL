@@ -37,10 +37,13 @@ LITL_REGISTER_COMPONENT(Velocity);
 **System Structure:**
 
 ```cpp
-// A system a struct (or class) with three required public methods:
+// A system is a struct (or class) with three required public methods:
 //    setup(...), prepare(), and update(...)
 struct MovementSystem final
 {
+    // Optional. Defaults to SystemExecutionPolicy::Parallel when omitted. See "Execution policy".
+    // static constexpr SystemExecutionPolicy ExecutionPolicy = SystemExecutionPolicy::Exclusive;
+
     // Called one time for the lifetime of the application.
     void setup(ServiceProvider& services) 
     {
@@ -55,7 +58,7 @@ struct MovementSystem final
     }
 
     // Called each frame according to its SystemGroup and dependencies.
-    // There is only a single instance of the System but it is invoked in parallel on separate chunks.
+    // There is only a single instance of the System but (by default) it is invoked in parallel on separate chunks.
     // The first two parameters (SystemData, Entity) are required and at least one component.
     void update(SystemData const& data, Entity entity, Transform& transform, Velocity const& velocity)
     {
@@ -142,7 +145,7 @@ Removal is **swap-and-pop**: `removeAndSwap` moves the last entity into the vaca
 
 ## Components
 
-A component is any type satisfying `ValidComponentType`: standard layout and no larger than `max_component_size` (1024 bytes). For a type to be used a component the `LITL_REGISTER_TYPE_NAME` macro must be used on it - typically outside of the owning namespace. Example:
+A component is any type satisfying `ValidComponentType`: standard layout and no larger than `max_component_size` (1024 bytes). For a type to be used as a component the `LITL_REGISTER_COMPONENT` macro must be used on it - typically outside of the owning namespace. `LITL_REGISTER_COMPONENT` `static_assert`s the size and `ValidComponentType` constraints and then invokes `LITL_REGISTER_TYPE_NAME`. Example:
 
 ```cpp
 namespace game
@@ -154,7 +157,7 @@ namespace game
     };
 }
 
-LITL_REGISTER_TYPE_NAME(game::Health);
+LITL_REGISTER_COMPONENT(game::Health);
 ```
 
 ### Descriptors and the two ids
@@ -166,7 +169,7 @@ LITL_REGISTER_TYPE_NAME(game::Health);
 - **`size` / `alignment`** — for chunk layout.
 - **`build` / `move` / `destroy`** — function pointers that placement-new, move-construct, and destroy a `T` at a given address. This is how chunk code manipulates type-erased component bytes without ever naming `T`.
 
-`stableId` is the reason that `LITL_REGISTER_TYPE_NAME` needs to be called on each prospective component type.
+`stableId` is the reason that `LITL_REGISTER_COMPONENT` (via `LITL_REGISTER_TYPE_NAME`) needs to be called on each prospective component type.
 
 ```cpp
 build   = [](void* to)              { new (to) T(); };
@@ -222,11 +225,20 @@ void update(SystemData const& data, Entity entity, Transform& transform, Movemen
 //                                                 ^ read-write          ^ read-only               ^ excluded
 ```
 
+`SystemData` carries the per-invocation context: `world`, `commands` (the calling thread's `EntityCommands`), `threadIndex`, `frameIndex`, `elapsedTime`, and `deltaTime`.
+
 `systemTraits.hpp` pulls this apart at compile time. `SystemComponents<S>` strips the leading two parameters via `SystemTupleTail`; `SystemComponentOperations` then turns the remaining types into either component ids (for archetype matching) or `SystemComponentInfo { id, readonly }` records. The read/write classification drives implicit scheduling (see below).
 
 ### Type erasure: Wrapper → Runner
 
-A user system type is needed to *build* a `System`, but a `System` stores none of it directly. `System::attach<S>()` constructs a `SystemWrapper<S>` into 64 bytes of inline storage and records three erased function pointers (setup / run / destroy). The wrapper owns the user struct and a `SystemRunner<S>`; the runner is what actually iterates via `SystemComponentOperations`:
+A user system type is needed to *build* a `System`, but a `System` stores none of it directly. `System::attach<S>()` constructs a `SystemWrapper<S>` into 64 bytes of inline storage and records three erased function pointers (setup / run / destroy). The wrapper owns the user struct and a `SystemRunner<S>`; the runner is what actually iterates via `SystemComponentOperations`.
+
+`System` exposes two ways to drive the runner:
+
+- **`runAsync(..., JobScheduler&, JobFence&)`** — submits one job per matched chunk, all tracked by the provided fence. This is the `Parallel` path.
+- **`run(...)`** — iterates every matched chunk sequentially on the calling thread, with no jobs. This is the `Exclusive` path (and what the deprecated sequential `SystemGraph::run` uses).
+
+Either way, the per-chunk work is the same:
 
 ```cpp
 // SystemRunner<S>::run, per chunk:
@@ -253,6 +265,32 @@ So storage is SoA, but the user writes an ordinary per-entity `update`. The runn
 
 There is exactly **one** instance of each system, via `SystemRegistry::getSystem<S>()` returning a function-local static. This keeps archetype-match state in one place but assumes a single `World` per process; `SystemManager::~SystemManager` calls `reset()` on each system so test suites that spin up multiple worlds don't leak matched archetypes between them.
 
+### Execution policy
+
+By default every system is `SystemExecutionPolicy::Parallel`: each matched chunk becomes its own job, and those jobs run concurrently with the chunks of every other system in the same layer. That's the right default, but it requires that `update` touch only chunk data, `SystemData`, and thread-safe services.
+
+A system that needs a non-thread-safe external service (e.g. creating entries in the `ObjectPool`) can opt out by declaring a static constexpr member:
+
+```cpp
+class ModelInstantiationSystem
+{
+public:
+    static constexpr SystemExecutionPolicy ExecutionPolicy = SystemExecutionPolicy::Exclusive;
+    // setup / prepare / update as usual ...
+};
+```
+
+`GetSystemExecutionPolicy<S>` reads it at compile time (via the `HasSystemExecutionOverride` concept) and falls back to `Parallel` when the member is absent. The member must be of type `SystemExecutionPolicy` and usable as a constant expression. `SystemCollection::addSystem<S>` passes the result down to the system's `SystemGraph` node.
+
+An `Exclusive` system runs its chunks **sequentially, with no other system chunks running at the same time**, neither its own nor any other system's. Concretely (see [Scheduling](#scheduling)): within each layer, all exclusive systems run one after another on a single job, and only after that job completes do the layer's parallel systems start.
+
+Two things exclusive does *not* mean:
+
+- **Not the main thread.** The exclusive job is submitted to the `JobScheduler` like any other; whichever worker (or the waiting main thread) picks it up runs it. Don't use `Exclusive` as a substitute for main-thread affinity.
+- **Not a scheduling edge.** Execution policy does not add or remove dependencies. It only changes *how* a system runs inside the layer the DAG already placed it in.
+
+Reserve `Exclusive` for small systems. Every exclusive system in a layer delays all of that layer's parallel systems for its duration.
+
 ### Archetype matching
 
 When new archetypes appear, `SystemManager::prepareFrame` → `updateSystemArchetypes` feeds them to every system's `updateArchetypes(...)`; new systems get the full back-catalog of existing archetypes once. Each system keeps the set of archetypes whose component set is a superset of its query, and at run time iterates the chunks of exactly those.
@@ -272,9 +310,20 @@ Each group owns its own `SystemGraph` — a DAG built from two kinds of edge:
 - **Explicit** — `dependsOn<OtherSystem>()` in the builder. Honored only within a group (cross-group ordering is already implied by group order).
 - **Implicit** — derived from component access. Two systems conflict if they touch a shared component and at least one writes it (`doesComponentAccessConflict`). The conflict becomes a dependency edge, so a reader is ordered after the writer it shares a component with. This is what makes "Animation reads Transform, Physics writes Transform ⇒ Animation after Physics" fall out automatically.
 
-`SystemPlacementHint::{First, None, Last}` biases ordering within a group before dependencies are applied (a soft "as early/late as possible," not a hard pin). `SystemGraph::build()` applies hints, adds explicit then implicit edges, and topologically sorts the DAG into **layers** — sets of systems with no remaining dependency between them.
+`SystemPlacementHint::{First, None, Last}` is applied *after* the explicit and implicit edges, and is implemented as additional edges: every `First` system becomes a dependency of every unhinted root (no incoming edges), and every `Last` system becomes a dependent of every unhinted leaf (no outgoing edges). In practice this places `First` systems in a layer ahead of the unhinted systems and `Last` systems in a layer after them.
 
-At run time (`SystemManager::run(..., JobScheduler&)`), the systems in a layer are dispatched as parallel jobs behind a `JobFence`; the manager waits on the fence, then processes command buffers, then moves to the next layer. So **every layer boundary is a sync point.** (A sequential `run` path exists for tests and is slated for removal.)
+`SystemGraph::build()` adds the nodes, then explicit edges, then implicit edges, then placement hints, and topologically sorts the DAG into **layers** — sets of systems with no remaining dependency between them. Each layer is then split by execution policy into a `SystemGraphLayer { exclusiveNodes, parallelNodes }`, exposed through `SystemGraph::getLayers()`. `build()` is `[[nodiscard]]` and returns `false` if a cycle is detected.
+
+At run time (`SystemManager::run(..., JobScheduler&)`), each layer is processed as:
+
+```
+prepare() each exclusive system, then each parallel system    (sequential, calling thread)
+if any exclusive: submit ONE job that run()s each exclusive system in order; wait on its fence
+if any parallel:  runAsync() each parallel system (one job per chunk) behind a fence; wait on it
+processCommandBuffers(group)                                  (sync point -> onSyncPoint)
+```
+
+So **every layer boundary is a sync point**, and within a layer the exclusive systems always finish before the parallel ones begin. (A sequential `SystemGraph::run` path still exists for tests; it is `[[deprecated]]` and slated for removal.)
 
 ---
 
@@ -283,6 +332,7 @@ At run time (`SystemManager::run(..., JobScheduler&)`), the systems in a layer a
 `World::run(dt, fixedStep)` drives one frame:
 
 ```
+frame++                                 // exposed via World::getFrame()
 invokeFrameStart()
 prepareFrame()                          // pick up new archetypes
 run Startup
@@ -299,7 +349,9 @@ invokeFrameEnd()
 incrementGlobalWorldVersion()           // stamps the next frame's modifications
 ```
 
-`FrameCallbacks` is the engine's hook surface: `onFrameStart`, `onFrameEnd`, `onRender`, a per-group `onPreGroup`, and `onSyncPoint(group, changes)` — the last fires after each layer's command buffers are processed and carries the `EntityChange` list (see below). The fixed-update accumulator means `FixedUpdate` systems run at a rate decoupled from frame rate: zero times on a fast frame, several on a slow one.
+`FrameCallbacks` is the engine's hook surface: `onFrameStart`, `onFrameEnd`, `onRender`, a per-group `onPreGroup`, and `onSyncPoint(services, group, changes)` — the last fires after each layer's command buffers are processed and carries the `EntityChange` list (see below). Every callback receives the `ServiceProvider&` as its first argument.
+
+`World::getFrame()` returns the ECS frame counter, incremented at the top of `run` and passed to systems as `SystemData::frameIndex`. It is not guaranteed to match the renderer's frame count. The fixed-update accumulator means `FixedUpdate` systems run at a rate decoupled from frame rate: zero times on a fast frame, several on a slow one.
 
 ---
 
@@ -315,7 +367,7 @@ Structural changes — create, destroy, add/remove component, reparent — **can
 
 You often want to create an entity *and* configure it before it exists. `EntityCommands::createEntity()` returns a `DeferredEntity`: a versionless index local to that command buffer. You can `addComponent`/`removeComponent`/`setParent` against it just like a real `Entity`. At the sync point it is **materialized** into a real `Entity`, and the deferred commands referencing it are rewritten to target the materialized id. A `DeferredEntity` is invisible to all other systems until materialized.
 
-`addComponent` overloads cover three data-ownership stories: id only (no value), `void* sharedData` (caller keeps the value alive until the command runs), and `localData + size + alignment` (copied into the buffer's internal pool immediately). The templated `addComponent(entity, T value)` uses the copy path.
+`addComponent` overloads cover three data-ownership stories: id only (no value), `void* sharedData` (caller keeps the value alive until the command runs), and `localData + size + alignment` (copied into the buffer's internal pool immediately). Both templated forms use the copy path: `addComponent(entity, T value)` copies `value`, and `addComponent<T>(entity)` copies a value-initialized `T{}`.
 
 ### Processing: combine, sort, batch
 
@@ -392,9 +444,9 @@ world.getSystemCollection()
 ```cpp
 void update(SystemData const& data, Entity entity, Spawner& spawner)
 {
-    DeferredEntity newEntity = commands.createEntity();
-    commands.addComponent<Position>(newEntity, Position{ spawner.position });
-    commands.addComponent<Velocity>(newEntity, Velocity{ 0.0f, -1.0f, 0.0f });
+    DeferredEntity newEntity = data.commands.createEntity();
+    data.commands.addComponent<Position>(newEntity, Position{ spawner.position });
+    data.commands.addComponent<Velocity>(newEntity, Velocity{ 0.0f, -1.0f, 0.0f });
     // Materialized into a real Entity at the next sync point.
 }
 ```
@@ -404,8 +456,27 @@ void update(SystemData const& data, Entity entity, Spawner& spawner)
 ```cpp
 void update(SystemData const& data, Entity entity, DestroyMe const& destroyMe)
 {
-    commands.destroyEntity(entity); // recorded now, applied at the next sync point
+    data.commands.destroyEntity(entity); // recorded now, applied at the next sync point
 }
+```
+
+### A system that uses a non-thread-safe service
+
+```cpp
+struct SpawnFromPoolSystem
+{
+    static constexpr SystemExecutionPolicy ExecutionPolicy = SystemExecutionPolicy::Exclusive;
+
+    void setup(ServiceProvider& services) { m_pPool = services.get<ObjectPool>(); }
+    void prepare() {}
+    void update(SystemData const& data, Entity entity, PendingSpawn const& pending)
+    {
+        // Safe: no other system chunk runs while this executes.
+        // Not safe to assume: that this is the main thread.
+    }
+
+    std::shared_ptr<ObjectPool> m_pPool;
+};
 ```
 
 ---
@@ -437,7 +508,9 @@ Gaps worth knowing about, for context on the current shape:
 - **Single-world assumption.** Static system instances mean one world per process outside tests.
 - **Entity cap not enforced.** Indices can grow to `2^32` with no configurable ceiling yet (the tracking structures grow first).
 - **Hierarchy resolution lives outside the library.** `litl-ecs` emits `SetParent` changes; applying them is a scene-layer concern.
-- **Sequential scheduler path** (`SystemGraph::run(..., vector<System*>)`) is test-only and slated for removal in favor of the job-based path.
+- **Sequential scheduler path** (`SystemGraph::run(..., vector<System*>)`) is `[[deprecated]]`, test-only, and slated for removal in favor of the job-based path. (Not to be confused with `System::run`, which is the live exclusive path.)
+- **No main-thread execution policy.** `Exclusive` serializes against other systems but still runs on a job; nothing pins a system to the main thread.
+- **Exclusive is all-or-nothing per layer.** There is no "exclusive only with respect to systems X and Y"; an exclusive system delays every parallel system in its layer.
 
 Each is a deliberate deferral; none is locked out by the current structure.
 
@@ -455,12 +528,14 @@ When the document is no longer enough, these are the load-bearing files:
 | `litl/ecs/include/litl-ecs/component/component.hpp` | `ComponentDescriptor`, the build/move/destroy table, id generation |
 | `litl/ecs/include/litl-ecs/archetype/chunk.hpp` | Chunk layout, column access, `removeAndSwap` |
 | `litl/ecs/src/litl-ecs/archetype/chunkLayout.cpp` | The column-packing / capacity calculation |
-| `litl/ecs/include/litl-ecs/system/systemTraits.hpp` | `ValidSystem`, signature decomposition, read/write extraction |
+| `litl/ecs/include/litl-ecs/system/systemTraits.hpp` | `ValidSystem`, signature decomposition, read/write extraction, `GetSystemExecutionPolicy` |
+| `litl/ecs/include/litl-ecs/system/systemExecutionPolicy.hpp` | `SystemExecutionPolicy::{Parallel, Exclusive}` |
 | `litl/ecs/include/litl-ecs/system/systemRunner.hpp` | Per-chunk iteration over SoA columns |
-| `litl/ecs/src/litl-ecs/system/systemManager.cpp` | Group running, layer fences, sync points |
-| `litl/ecs/include/litl-ecs/system/systemGraph.hpp` | DAG, explicit + implicit dependencies, layers |
+| `litl/ecs/src/litl-ecs/system/systemManager.cpp` | Group running, exclusive/parallel layer fences, sync points |
+| `litl/ecs/include/litl-ecs/system/systemGraph.hpp` | DAG, explicit + implicit dependencies, `SystemGraphLayer` |
 | `litl/ecs/src/litl-ecs/entity/entityCommandProcessor.cpp` | Combine / sort / batch-mutate at sync points |
 | `litl/ecs/src/litl-ecs/world.cpp` | Frame loop and the immediate archetype-move operations |
 | `tests/src/litl-ecs/world_tests.cpp`, `system_tests.cpp` | Working examples of every path |
+| `tests/src/litl-ecs/systemGraph_tests.cpp`, `systemTraits_tests.cpp` | Layering, placement hints, execution-policy splitting |
 
 The tests and samples are the most accurate documentation — they're the paths through the API known to compile and pass.
