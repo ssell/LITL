@@ -1,4 +1,4 @@
-# LITL Common - Job System
+# LITL Core - Job System
 
 Comprised of the following:
 
@@ -8,6 +8,8 @@ Comprised of the following:
 * `JobScheduler`
 * `JobDeque`
 * `JobFence`
+* `JobPool`
+* `JobPriority`
 
 A job is a highly parallelized arbitrary unit of work.
 
@@ -18,7 +20,9 @@ They can not span across frame boundaries and they provide no output - either di
 A job can be implemented via a function pointer or a lambda. They can be run with shared external data and/or a local copy of data.
 
 * `Job::data` - simple `void*` that the user must ensure is still valid when the job runs.
-* `Job::localData` - fixed `std::byte` buffer of data copied directly into the job.
+* `Job::localData` - fixed 64-byte (`Job::JobLocalBufferSize`) `std::byte` buffer of data copied directly into the job. The copied type must be trivially copyable.
+
+Every `createAndSubmit` overload takes either a `JobPriority` or a `JobFence&` as its second argument. Submitting to a fence uses the fence's priority and lets the caller later block on `JobFence::wait`.
 
 **Function Pointer w/ Shared Data**
 
@@ -31,7 +35,7 @@ void jobFoo(Job* job)
 
 void runJob(JobScheduler& scheduler, JobData& data)
 {
-    scheduler.createAndSubmit(jobFoo, data);
+    scheduler.createAndSubmit(jobFoo, JobPriority::Normal, &data);
 }
 ```
 
@@ -52,7 +56,7 @@ void jobFoo(Job* job)
 void runJob(JobScheduler& scheduler)
 {
     JobData data{5};
-    scheduler.createAndSubmit(jobFoo, data, nullptr);
+    scheduler.createAndSubmit(jobFoo, JobPriority::Normal, data, nullptr);
 }
 ```
 
@@ -61,37 +65,39 @@ void runJob(JobScheduler& scheduler)
 ```cpp
 void runJob(JobScheduler& scheduler, JobData& data)
 {
-    scheduler.createAndSubmit([&data]()
+    JobFence fence{ &scheduler, JobPriority::High };
+
+    scheduler.createAndSubmit([&data](Job* job)
     {
         // ...
-    }, nullptr);
+    }, fence, nullptr);
+
+    fence.wait();
 }
 ```
 
-_Note: a lambda function may specify shared data (`nullptr` in the example), but not local data. The lambda closure itself is stored within the local data buffer._
+_Note: the lambda must still have the `Job::JobFunc` signature (`void(Job*)`). It may specify shared data (`nullptr` in the example), but not local data, because the lambda closure itself is stored within the local data buffer. The closure must therefore fit in 64 bytes and be trivially destructible (it is never destroyed)._
 
 ## Scheduling
 
 Jobs are run by Workers and are processed in accordance to their priority: High, Normal, Low.
 
-By default there are `max(1, CPU Concurreny Limit - 1)` workers, each running in their own thread. Additionally, there is a single dedicated worker for High priority jobs. The high priority worker is to avoid edge-cases where all workers are busy processing slower, low priority work while high priority jobs pile up.
+The scheduler creates `min(max(2, CPU concurrency), 32)` workers (`Constants::max_thread_count` is 32). Worker 0 is the main thread: it has no thread loop of its own and only executes jobs while the main thread is blocked in `JobFence::wait` or `JobScheduler::wait`. Every other worker runs on its own thread. The last worker is dedicated to High priority jobs and ignores Normal and Low work, which avoids edge-cases where every worker is busy with slower, low priority work while high priority jobs pile up.
 
-When a job is submitted it is added to the deque of the thread-local worker. When a worker runs it pops a job from its deque to execute. If the worker-specific deque is empty then it attempts to steal a job from a random other worker. Jobs are processed in accordance to their priority, with each priority level given its own deque on each worker.
+When a job is submitted it is added to the deque of the thread-local worker. Each worker has one deque per priority level. When a worker runs, it walks the priority levels from highest to lowest and, at each level, first pops from its own deque and then tries to steal from a random other worker before moving to the next level:
 
 ```
 Worker Run:
-    Pop job from High priority deque. If job retrieved, run it. Else,
-    Pop job from Normal priority deque. If job retrieved run it. Else,
-    Pop job from Low priority deque. If job retrieved run it. Else,
+    Pop High priority job from own deque. If none, steal High priority job from a random worker.
+    If still none: pop Normal priority job from own deque. If none, steal Normal priority job.
+    If still none: pop Low priority job from own deque. If none, steal Low priority job.
+    (The dedicated High worker only checks the High level.)
 
-    No thread-local jobs found.
-
-    Steal High priority job from other worker. If job stolen, run it. Else,
-    Steal Normal priority job from other worker. If job stolen, run it. Else,
-    Steal Low priority job from other worker. If job stolen, run it.
-
-    No jobs stolen, then sleep for 50 microseconds or until awoken by scheduler.
+    If a job was found, run it.
+    Otherwise sleep for up to 50 microseconds or until awoken by the scheduler.
 ```
+
+This means a local Normal job is never run while a High job is available to steal.
 
 Steals are done to a randomly selected Worker in order to avoid contention on the top (tail) of the deques. While a cold-start may see a disproportionate number of Jobs belonging to a single Worker (due to a main thread kicking things off), the workload quickly spreads out over all Workers as Jobs are stolen. When those Jobs are stolen, any further Jobs that they spawn directly or indirectly (via dependents) will be submitted to the thief Worker. Thus over a short period of time the optimal case for scanning, if contention is ignored, is no longer valid.
 
@@ -103,13 +109,14 @@ If a job was successfully popped or stolen, then:
 
     Foreach dependent:
         Decrement dependent dependency count.
-        If dependent dependency count is now 0, submit dependent to scheduler.
+        If dependent dependency count is now 0, submit dependent to scheduler (at this job's priority).
 
     If job is contained in a Fence, alert the fence that the job has been run.
 
     Decrement scheduler overall job count.
-        If overall job count is now 0, signal that the scheduler is empty.
 ```
+
+Dependents and fences are processed even if the job is no longer valid, so that a stale job can never leave a fence or dependent waiting forever.
 
 ## Synchronization
 
@@ -132,11 +139,11 @@ Jobs are processed in a LIFO manner by their own thread (`pop`), and FIFO by oth
 
 ## Pooling
 
-Jobs are pooled by in thread-local buffers and a global buffer.
+Jobs are pooled in thread-local buffers and a global buffer.
 
 The thread-local buffers can hold 1024 jobs each. Once a local buffer is full, additional allocations overflow into the global job buffer. The global buffer uses paged memory and generally does not shrink.
 
 Local pools are more efficient than the global pool as allocation simply increments the buffer offset. The global pool also increments a buffer offset, but one that is stored in an atomic, and if necessary it must allocate another memory page. While fast, it is still slower than a local pool.
 
-When the work scheduler syncs (`JobScheduler::wait`), it resets all job pools. This is done efficiently by simply resetting the current offets into each buffer. Because no data is actually cleared during a reset, it is imperative that a `JobHandle` is used as opposed to a raw `Job` pointer. A raw pointer can point to out-of-date memory, whereas a handle is trivially validated via `JobScheduler::valid`.
+When the work scheduler syncs (`JobScheduler::wait`), it resets all job pools. This is done efficiently by simply resetting the current offsets into each buffer. Because no data is actually cleared during a reset, it is imperative that a `JobHandle` is used as opposed to a raw `Job` pointer. A raw pointer can point to out-of-date memory, whereas a handle is trivially validated via `JobScheduler::valid`.
 
