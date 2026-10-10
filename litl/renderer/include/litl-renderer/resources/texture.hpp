@@ -188,7 +188,7 @@ namespace litl
         Black = 2u,
 
         /// <summary>
-        /// A 1x1 passive tangent normal texture (0.5, 0.5, 0.5, 1.0)
+        /// A 1x1 passive tangent normal texture (0.5, 0.5, 1.0, 1.0)
         /// </summary>
         Normal = 3u,
 

@@ -45,7 +45,7 @@ namespace litl
         LITL_FATAL_ASSERT_MSG((m_impl->assetManager != nullptr), "Failed to inject AssetManager into EngineCallbacks");
         LITL_FATAL_ASSERT_MSG((m_impl->renderManager != nullptr), "Failed to inject RenderManager into EngineCallbacks");
         LITL_FATAL_ASSERT_MSG((m_impl->sceneManager != nullptr), "Failed to inject SceneManager into EngineCallbacks");
-        LITL_FATAL_ASSERT_MSG((m_impl->sceneManager != nullptr), "Failed to inject TaskManager into EngineCallbacks");
+        LITL_FATAL_ASSERT_MSG((m_impl->taskManager != nullptr), "Failed to inject TaskManager into EngineCallbacks");
         LITL_FATAL_ASSERT_MSG((m_impl->materialManager != nullptr), "Failed to inject MaterialManager into EngineCallbacks");
 
         // ---------------------------------------------------------------------------------

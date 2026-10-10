@@ -174,7 +174,6 @@ namespace litl
             else if (!prevHadTransform && currHasTransform)
             {
                 // Gained the Transform component. Start tracking it.
-                // At this point dont worry about the bounds. That will be updated in the WorldBoundsSystem if it is present.
                 scene.track(change.entity, transform);
             }
         }

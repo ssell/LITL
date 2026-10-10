@@ -314,6 +314,7 @@ namespace litl::vulkan
         }
 
         bool updatedExistingSlot = false;
+        bool isReservedSlot = slot < static_cast<uint32_t>(TextureTableReservedIndices::ReservedIndicesCount);      // The free count already takes into account the reserved indices in build()
 
         if (m_slotOwners[slot].isValid())
         {
@@ -327,14 +328,22 @@ namespace litl::vulkan
             // Updating an unoccupied slot. This is typically avoided except for the engine reserved default textures.
             std::erase(m_freeSlots, slot);
             m_slotOwners[slot] = handle;
-            m_freeCount--;
+            
+            if (!isReservedSlot)
+            {
+                m_freeCount--;
+            }
         }
 
         if (!writeSlot(slot, m_pContext->resources.getTexture(handle)))
         {
             if (!updatedExistingSlot)
             {
-                m_freeCount++;
+                if (!isReservedSlot)
+                {
+                    m_freeCount++;
+                }
+
                 m_freeSlots.push_back(slot);
             }
 
