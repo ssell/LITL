@@ -656,7 +656,7 @@ namespace litl::tests
         m[3][2] = 10.0f;
         m[3][3] = -10.0f;
 
-        mat4 am = m.absolute();
+        const mat4 am = m.absolute();
 
         REQUIRE(am[0][0] == abs(m[0][0]));
         REQUIRE(am[0][1] == abs(m[0][1]));
@@ -676,8 +676,51 @@ namespace litl::tests
         REQUIRE(am[3][3] == abs(m[3][3]));
     } LITL_END_TEST_CASE
 
+    LITL_TEST_CASE("negateZValue", "[math::mat4]")
+    {
+        mat4 m{ std::array<float, 16> {
+             1.0f,  2.0f,  3.0f,  4.0f,
+             5.0f,  6.0f,  7.0f,  8.0f,
+             9.0f, 10.0f, 11.0f, 12.0f,
+            13.0f, 14.0f, 15.0f, 16.0f
+        } };
+
+        const mat4 mOriginal = m;
+        m.negateZValues();
+
+        //  1  5  9 13       1  5  -9  13
+        //  2  6 10 14  ->   2  6 -10  14
+        //  3  7 11 15      -3 -7  11 -15
+        //  4  8 12 16       4  8  12  16
+        // Note: 11 (index 10) is doubly-negated so has no change.
+
+        REQUIRE(fequals(m[0][0],   1.0f));
+        REQUIRE(fequals(m[0][1],   2.0f));
+        REQUIRE(fequals(m[0][2],  -3.0f));
+        REQUIRE(fequals(m[0][3],   4.0f));
+
+        REQUIRE(fequals(m[1][0],   5.0f));
+        REQUIRE(fequals(m[1][1],   6.0f));
+        REQUIRE(fequals(m[1][2],  -7.0f));
+        REQUIRE(fequals(m[1][3],   8.0f));
+
+        REQUIRE(fequals(m[2][0],  -9.0f));
+        REQUIRE(fequals(m[2][1], -10.0f));
+        REQUIRE(fequals(m[2][2],  11.0f));
+        REQUIRE(fequals(m[2][3], -12.0f));
+
+        REQUIRE(fequals(m[3][0],  13.0f));
+        REQUIRE(fequals(m[3][1],  14.0f));
+        REQUIRE(fequals(m[3][2], -15.0f));
+        REQUIRE(fequals(m[3][3],  16.0f));
+
+        m.negateZValues();
+
+        REQUIRE(m == mOriginal);
+    } LITL_END_TEST_CASE
+
     // -------------------------------------------------------------------------------------
-   // Data access
+    // Data access
     // -------------------------------------------------------------------------------------
 
     LITL_TEST_CASE("mat4 dataPtr gives contiguous column-major access", "[math::mat4]")

@@ -295,7 +295,7 @@ namespace litl
             return mat4{ glm::mat4(glm::mat3(glm::eulerAngleXYZ(xRad, yRad, zRad))) };
         }
 
-        [[nodiscard]] constexpr static mat4 scaling(vec3 const& scale) noexcept
+        [[nodiscard]] static mat4 scaling(vec3 const& scale) noexcept
         {
             return mat4{ glm::scale(glm::mat4{1.0f}, scale.data()) };
         }
@@ -561,6 +561,16 @@ namespace litl
             }
 
             return m;
+        }
+
+        mat4 negateZValues() noexcept
+        {
+            // Must negate each z-value (row AND column) in each node transformation matrix.
+            // Since matrix index 10 is a z-value (.z of z-axis rotation and .z of scale) it gets negated twice, and thus is unchanged.
+            // This leaves the following indices to be negated: 2, 6, 8, 9, 14.
+            static const auto negateZMat = glm::scale(glm::mat4{ 1.0f }, glm::vec3{ 1.0f, 1.0f, -1.0f });
+            value = negateZMat * value * negateZMat;
+            return *this;
         }
 
         [[nodiscard]] constexpr vec3 transform(vec3 const& v) const noexcept
