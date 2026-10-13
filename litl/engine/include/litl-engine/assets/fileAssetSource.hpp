@@ -40,7 +40,7 @@ namespace litl
 
     private:
 
-        [[nodiscard]] bool isFileIndexSafe(uint32_t index) const noexcept;
+        File const* getFileSafe(uint32_t index) const noexcept;
 
         std::string m_root;
         std::deque<File> m_files;

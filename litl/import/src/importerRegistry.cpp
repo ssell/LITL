@@ -29,7 +29,7 @@ namespace litl::import
     {
         const auto* entry = find(type);
 
-        if (entry == nullptr)
+        if ((entry == nullptr) || (entry->createFunc == nullptr))
         {
             return nullptr;
         }
