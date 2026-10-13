@@ -49,7 +49,11 @@ add_library(litl-renderer-vulkan
 		"src/litl-renderer-vulkan/resources/cache/samplerCache.cpp" 
 		"src/litl-renderer-vulkan/resources/utility/descriptorSetAllocator.cpp" 
 		"src/litl-renderer-vulkan/resources/utility/descriptorSetChangeTracker.cpp"
-		"src/litl-renderer-vulkan/resources/utility/destructionQueue.cpp" "src/litl-renderer-vulkan/requiredFeatures.cpp" "src/litl-renderer-vulkan/rendererContext.cpp" "src/litl-renderer-vulkan/resources/utility/textureTable.cpp" "src/litl-renderer-vulkan/resources/utility/samplerArray.cpp")
+		"src/litl-renderer-vulkan/resources/utility/destructionQueue.cpp" 
+		"src/litl-renderer-vulkan/requiredFeatures.cpp" 
+		"src/litl-renderer-vulkan/rendererContext.cpp" 
+		"src/litl-renderer-vulkan/resources/utility/textureTable.cpp" 
+		"src/litl-renderer-vulkan/resources/utility/samplerArray.cpp")
 
 target_include_directories(litl-renderer-vulkan
 	PUBLIC
@@ -74,10 +78,7 @@ target_link_libraries(litl-renderer-vulkan
 		volk::volk_headers
 )
 
-target_compile_features(litl-renderer-vulkan
-	PUBLIC
-		cxx_std_20
-)
+target_compile_features(litl-renderer-vulkan PUBLIC cxx_std_23)
 
 
 if (MSVC)

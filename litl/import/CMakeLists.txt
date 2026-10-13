@@ -33,19 +33,13 @@ add_library(litl-import STATIC
 	"src/texture/import/png.cpp" 
 	"src/texture/import/bmp.cpp" 
 	"src/model/import/glb.cpp"
- "src/model/import/cgltf.cpp" "src/texture/import/jpeg.cpp")
+	"src/model/import/cgltf.cpp" 
+	"src/texture/import/jpeg.cpp")
 
-target_include_directories(litl-import
-	PUBLIC
-		"${CMAKE_CURRENT_SOURCE_DIR}/include"
-)
+target_include_directories(litl-import PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 target_link_libraries(litl-import PRIVATE litl-core litl-renderer)
-
-target_compile_features(litl-import
-	PUBLIC
-		cxx_std_20
-)
+target_compile_features(litl-import PUBLIC cxx_std_23)
 
 if (MSVC)
 	target_compile_options(litl-import PRIVATE /EHs-c- /D_HAS_EXCEPTIONS=0 /GR-)

@@ -13,7 +13,7 @@ The author has previous experience with OpenGL 3/4 and Direct3D 9/10/11, but is 
 
 ## Language and toolchain
 
-- C++20. `import std;` is not assumed available; rely on headers unless a file already uses modules.
+- C++23. `import std;` is not assumed available; rely on headers unless a file already uses modules.
 - Target compilers: Clang
 - Build: CMake + Ninja. Test runner: Catch2.
 - Warnings-as-errors: `-Wall -Wextra -Wpedantic -Werror`

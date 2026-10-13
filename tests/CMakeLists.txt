@@ -94,10 +94,7 @@ target_link_libraries(litl-tests
 		Catch2::Catch2WithMain
 )
 
-target_compile_features(litl-tests
-	PUBLIC
-		cxx_std_20
-)
+target_compile_features(litl-tests PUBLIC cxx_std_23)
 
 if (MSVC)
 	target_compile_options(litl-tests PRIVATE /EHs-c- /D_HAS_EXCEPTIONS=0 /GR-)

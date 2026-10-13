@@ -42,7 +42,7 @@ target_include_directories(litl-core
 		"${CMAKE_SOURCE_DIR}/deps/xxHash"
 )
 
-target_compile_features(litl-core PUBLIC cxx_std_20)
+target_compile_features(litl-core PUBLIC cxx_std_23)
 
 if (MSVC)
 	target_compile_options(litl-core PRIVATE /EHs-c- /D_HAS_EXCEPTIONS=0 /GR-)

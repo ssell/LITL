@@ -1,5 +1,11 @@
 add_library(litl-renderer STATIC 
-	"src/litl-renderer/reflection.cpp"  "src/litl-renderer/rendererConfiguration.cpp" "src/litl-renderer/scopedBufferUpload.cpp"  "src/litl-renderer/renderer.cpp" "src/litl-renderer/resources/pipelineResource.cpp" "src/litl-renderer/resources/commandBuffer.cpp" "src/litl-renderer/resources/texture.cpp")
+	"src/litl-renderer/reflection.cpp"  
+	"src/litl-renderer/rendererConfiguration.cpp" 
+	"src/litl-renderer/scopedBufferUpload.cpp"  
+	"src/litl-renderer/renderer.cpp" 
+	"src/litl-renderer/resources/pipelineResource.cpp" 
+	"src/litl-renderer/resources/commandBuffer.cpp" 
+	"src/litl-renderer/resources/texture.cpp")
 
 target_include_directories(litl-renderer 
 	PUBLIC 
@@ -9,7 +15,7 @@ target_include_directories(litl-renderer
 )
 
 target_link_libraries(litl-renderer PUBLIC litl-core)
-target_compile_features(litl-renderer PUBLIC cxx_std_20)
+target_compile_features(litl-renderer PUBLIC cxx_std_23)
 
 if (MSVC)
 	target_compile_options(litl-renderer PRIVATE /EHs-c- /D_HAS_EXCEPTIONS=0 /GR-)

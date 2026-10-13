@@ -24,7 +24,6 @@ add_library(litl-engine STATIC
 	"src/render/renderManager.cpp" 
 	"src/objects/material/material.cpp" 
 	"src/assets/assetManager.cpp" 
-    
 	"src/tasks/taskManager.cpp" 
 	"src/objects/texture.cpp" 
 	"src/objects/text.cpp" 
@@ -36,12 +35,20 @@ add_library(litl-engine STATIC
 	"src/objects/material/materialProperties.cpp" 
 	"src/objects/material/materialManager.cpp" 
 	"src/ecs/systems/activeMaterialSystem.cpp" 
-	"src/objects/material/deferredMaterialCommands.cpp"  "src/assets/shaderAsset.cpp" "src/objects/shader.cpp" "src/assets/assetDependencies.cpp" "src/assets/asset.cpp" "src/objects/material/materialBindings.cpp"  "src/assets/modelAsset.cpp"  "src/assets/assetLoadTask.cpp"  "src/ecs/systems/modelInstantiationSystem.cpp" "src/utility.cpp" "src/ecs/systems/meshInstantiationSystem.cpp" "src/assets/fileAssetSource.cpp")
+	"src/objects/material/deferredMaterialCommands.cpp"  
+	"src/assets/shaderAsset.cpp" 
+	"src/objects/shader.cpp"
+	"src/assets/assetDependencies.cpp" 
+	"src/assets/asset.cpp" 
+	"src/objects/material/materialBindings.cpp"  
+	"src/assets/modelAsset.cpp"  
+	"src/assets/assetLoadTask.cpp"  
+	"src/ecs/systems/modelInstantiationSystem.cpp" 
+	"src/utility.cpp" 
+	"src/ecs/systems/meshInstantiationSystem.cpp"
+	"src/assets/fileAssetSource.cpp")
 
-target_include_directories(litl-engine
-	PUBLIC
-		"${CMAKE_CURRENT_SOURCE_DIR}/include"
-)
+target_include_directories(litl-engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 target_link_libraries(litl-engine 
 	PUBLIC 
@@ -57,7 +64,7 @@ endif()
 
 target_compile_features(litl-engine
 	PUBLIC
-		cxx_std_20
+		cxx_std_23
 )
 
 target_compile_definitions(litl-engine

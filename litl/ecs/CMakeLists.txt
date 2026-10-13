@@ -28,7 +28,7 @@ target_link_libraries(litl-ecs PRIVATE litl-core)
 
 target_compile_features(litl-ecs
 	PUBLIC
-		cxx_std_20
+		cxx_std_23
 )
 
 if (MSVC)
