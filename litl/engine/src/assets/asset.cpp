@@ -69,13 +69,13 @@ namespace litl
 
     void Asset::setError(AssetErrorCode err) noexcept
     {
-        status.store(AssetStatus::Error, std::memory_order::relaxed);
         error = err;
+        status.store(AssetStatus::Error, std::memory_order::memory_order_release);
     }
 
     void Asset::setError(AssetErrorCode err, AssetErrorCode def) noexcept
     {
-        status.store(AssetStatus::Error, std::memory_order::relaxed);
         error = (err != AssetErrorCode::None ? err : def);
+        status.store(AssetStatus::Error, std::memory_order::memory_order_release);
     }
 }

@@ -278,7 +278,7 @@ namespace litl
 
         if (asset->status.load(std::memory_order_relaxed) != AssetStatus::Error)
         {
-            asset->status.store(AssetStatus::InMemory, std::memory_order_relaxed);
+            asset->status.store(AssetStatus::InMemory, std::memory_order_release);
             co_return true;
         }
         else

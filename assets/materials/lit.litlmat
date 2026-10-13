@@ -1,4 +1,4 @@
-name = "Unlit"
+name = "Lit"
 
 [shaders]
 vertex = { resource = "shaders/lit", entry = "vertexMain" }
