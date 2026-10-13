@@ -30,15 +30,23 @@ As the engine is new and still under active development this may be small, but i
 
 ## Releases
 
-### Version 0.3.0 (TBD)
+### Version 0.6
 
-_Currently in progress. Planned features include: render targets, render passes, deferred rendering, directional light, primary directional light cascaded shadowmaps._
+_Future release. Planned features include: editor._
 
-**Samples:**
+### Version 0.5
 
-* Updated [Sponza](samples/sponza) for lighting and shadows.
+_Future release. Planned features include: deferred rendering, post-processing stack._
 
-### [Version 0.2.0 on 2026-10-13](https://github.com/ssell/LITL/releases/tag/v0.2.0)
+### Version 0.4
+
+_Future release. Planned features include: render targets, render passes, directional light, primary directional light cascaded shadowmaps._
+
+### Version 0.3
+
+_In progress. Planned features include: platform library, user input, updated Boids and Sponza samples._
+
+### [Version 0.2 on 2026-10-13](https://github.com/ssell/LITL/releases/tag/v0.2.0)
 
 Features include: Task async via coroutines, Import library, assets subsystem, ECS enhancements (optional components, exclusive execution), engine-level materials and textures, renderer depth-stencil and global texture table, etc. See the linked tagged release for a more complete list of updates.
 
@@ -46,7 +54,7 @@ Features include: Task async via coroutines, Import library, assets subsystem, E
 
 * [Sponza](samples/sponza)
 
-### [Version 0.1.0 on 2026-07-30](https://github.com/ssell/LITL/releases/tag/v0.1.0)
+### [Version 0.1 on 2026-07-30](https://github.com/ssell/LITL/releases/tag/v0.1.0)
 
 The first version of the engine that has many of the core systems operational: ECS, rendering, jobs, scene, dependency injection, etc. See the linked tagged release for a more complete list of updates.
 
