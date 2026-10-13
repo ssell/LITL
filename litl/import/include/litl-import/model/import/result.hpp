@@ -11,6 +11,16 @@
 
 namespace litl::import
 {
+    struct ModelImportConvention
+    {
+        /// <summary>
+        /// Is the source model built using a right-handed coordinate system?
+        /// If so, then each Z on the transformation matrix will need to be negated to match our internal left-handed system.
+        /// Most externally authored models are right-handed.
+        /// </summary>
+        bool sourceIsRightHanded = true;
+    };
+
     /// <summary>
     /// Used to tie the individual imported data item back to an imported model.
     /// </summary>
@@ -43,6 +53,7 @@ namespace litl::import
         std::unique_ptr<ModelIntermediateData> model;
         std::vector<ModelDataItem> dataItems;
         std::vector<MaterialTextureLink> textureLinks;
+        ModelImportConvention importConvention{};
     };
 }
 

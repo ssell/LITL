@@ -29,6 +29,7 @@ namespace litl::import
         [[nodiscard]] std::span<std::string const> getMeshNames() const noexcept;
         [[nodiscard]] std::span<std::string const> getMaterialNames() const noexcept;
         [[nodiscard]] std::span<Node const> getNodes() const noexcept;
+        [[nodiscard]] std::span<Node> getNodesWriteRef() noexcept;
         [[nodiscard]] std::span<uint32_t const> getRootNodes() const noexcept;
         [[nodiscard]] Model const& getModel() const noexcept;
         [[nodiscard]] Model& getModelWriteRef() noexcept;

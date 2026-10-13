@@ -17,7 +17,24 @@ namespace litl::import
 
     Result ModelExporter::prepare(ImportedData& data, ImportSettings const& settings, uint32_t dataIndex) noexcept
     {
-        // ... todo ... let pass through so we can develop / debug further down the pipeline ...
+        auto* modelResult = data.items[dataIndex].getDataPtr<ModelImportResult>();
+
+        if ((modelResult == nullptr) || (modelResult->model == nullptr))
+        {
+            return Result::Error(ErrorType::ImportedDataNull);
+        }
+
+        auto* model = modelResult->model.get();
+
+        if (modelResult->importConvention.sourceIsRightHanded)
+        {
+            // Negate z-values in all transform matrices to convert to left-handed transforms
+            for (auto& node : model->getNodesWriteRef())
+            {
+                node.localTransform = mat4(node.localTransform).negateZValues().toArray();
+            }
+        }
+
         return Result::Success();
     }
 

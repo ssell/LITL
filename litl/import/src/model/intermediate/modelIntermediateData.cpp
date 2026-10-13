@@ -78,6 +78,11 @@ namespace litl::import
         return m_model.nodes;
     }
 
+    std::span<Node> ModelIntermediateData::getNodesWriteRef() noexcept
+    {
+        return m_model.nodes;
+    }
+
     std::span<uint32_t const> ModelIntermediateData::getRootNodes() const noexcept
     {
         return m_model.rootNodes;

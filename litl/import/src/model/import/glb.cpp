@@ -444,6 +444,7 @@ namespace litl::import
 
         auto* modelImportResult = modelDataItem.getDataPtr<ModelImportResult>();
         modelImportResult->model = std::make_unique<ModelIntermediateData>();
+        modelImportResult->importConvention.sourceIsRightHanded = true;
         auto* litlModel = modelImportResult->model.get();
         litlModel->setName(context.location);
 

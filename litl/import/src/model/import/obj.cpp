@@ -371,6 +371,7 @@ namespace litl::import
         }
 
         modelImportResult = importedData.items[modelDataItemIndex].getDataPtr<ModelImportResult>();
+        modelImportResult->importConvention.sourceIsRightHanded = true;
 
         // ---------------------------------------------------------------------------------
         // Add OBJ Shapes as Meshes to Model
