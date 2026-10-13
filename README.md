@@ -1,6 +1,6 @@
 # LITL Engine
 
-**Current Version:** v0.1.0
+**Current Version:** v0.2.0
 
 This is a learning engine and very (very) early in development. It is public merely to show that it exists, but not for it to see any use (yet).
 
@@ -30,9 +30,17 @@ As the engine is new and still under active development this may be small, but i
 
 ## Releases
 
-### Version 0.2.0 (TBD)
+### Version 0.3.0 (TBD)
 
-_Currently in progress. Features include: Task async via coroutines, Import library, Assets system, etc._
+_Currently in progress. Planned features include: render targets, render passes, deferred rendering, directional light, primary directional light cascaded shadowmaps._
+
+**Samples:**
+
+* Updated [Sponza](samples/sponza) for lighting and shadows.
+
+### [Version 0.2.0 on 2026-10-13](https://github.com/ssell/LITL/releases/tag/v0.2.0)
+
+Features include: Task async via coroutines, Import library, assets subsystem, ECS enhancements (optional components, exclusive execution), engine-level materials and textures, renderer depth-stencil and global texture table, etc. See the linked tagged release for a more complete list of updates.
 
 **Samples:**
 
@@ -40,7 +48,7 @@ _Currently in progress. Features include: Task async via coroutines, Import libr
 
 ### [Version 0.1.0 on 2026-07-30](https://github.com/ssell/LITL/releases/tag/v0.1.0)
 
-The first version of the engine that has many of the core systems operational: ECS, rendering, jobs, scene, dependency injection, etc.
+The first version of the engine that has many of the core systems operational: ECS, rendering, jobs, scene, dependency injection, etc. See the linked tagged release for a more complete list of updates.
 
 **Samples:**
 
