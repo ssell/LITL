@@ -57,7 +57,7 @@ namespace litl
         return (c <= 0.0031308f) ? (c * 12.92f) : (1.055f * powf(c, one_over_2p4)) - 0.055f;
     }
 
-    float sRGBFloatToLinearFloat(float c)
+    float sRGBFloatToLinearFloat(float c) noexcept
     {
         static constexpr float one_over_12p92 = 1.0f / 12.92f;
         static constexpr float one_over1p055 = 1.0f / 1.055f;

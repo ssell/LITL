@@ -11,7 +11,7 @@ This is a basic sample demonstrating how to load a model using the Assets system
 * Extraction of meshes, materials, etc. from complex model files along with inter-asset dependencies.
 * Depth-stencil buffer.
 
-In addition to basic byte loading and transforming to internal formats, the import pipeline also performs many preprocessing operations such as mesh winding correction, normal generation, texture compression, mipmap generation, shader reflection, etc.
+In addition to basic byte loading and transforming to internal formats, the import pipeline also performs many preprocessing operations such as mesh winding correction, normal generation, mipmap generation, shader reflection, etc.
 
 It is intended that this sample will be updated extensively in future versions as additional capabilities arrives. It will serve as a showcase for features such lighting, shadows, transparency, post-processing, etc.
 

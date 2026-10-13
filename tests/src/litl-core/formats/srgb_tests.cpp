@@ -17,7 +17,7 @@ namespace litl::tests
         REQUIRE(fequals(srgbTable[255], 1.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("linearFloatToSRGBFloat", "[formats::srgb]")
+    LITL_TEST_CASE("sRGBFloatToLinearFloat", "[formats::srgb]")
     {
         const auto& linearTable = getByteToFloatTable(TransferFunction::Linear);
         const auto& srgbTable = getSRGBByteToLinearFloatTable();
@@ -26,13 +26,13 @@ namespace litl::tests
         {
             // Runtime calculated vs baked
             const float a = srgbTable[i];
-            const float b = linearFloatToSRGBFloat(linearTable[i]);
+            const float b = sRGBFloatToLinearFloat(linearTable[i]);
 
             REQUIRE(fequals(a, b));
         }
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("sRGBFloatToLinearFloat", "[formats::srgb]")
+    LITL_TEST_CASE("linearFloatToSRGBFloat", "[formats::srgb]")
     {
         const auto& linearTable = getByteToFloatTable(TransferFunction::Linear);
         const auto& srgbTable = getSRGBByteToLinearFloatTable();
@@ -41,7 +41,7 @@ namespace litl::tests
         {
             const float linear = linearTable[i];
             const float srgb = srgbTable[i];
-            const float srgbInverted = sRGBFloatToLinearFloat(srgb);
+            const float srgbInverted = linearFloatToSRGBFloat(srgb);
 
             REQUIRE(fequals(srgbInverted, linear));
         }
@@ -66,10 +66,10 @@ namespace litl::tests
         modifiedAlphaGray.a() = 0.5f;
         const color srbModifiedAlphaGray = linearColorToSRGBColor(modifiedAlphaGray);
 
-        REQUIRE(fequals(modifiedAlphaGray.r(), colors::Gray.r()));
-        REQUIRE(fequals(modifiedAlphaGray.g(), colors::Gray.g()));
-        REQUIRE(fequals(modifiedAlphaGray.b(), colors::Gray.b()));
-        REQUIRE(fequals(modifiedAlphaGray.a(), 0.5f));              // alpha remains linear
+        REQUIRE(fequals(srbModifiedAlphaGray.r(), srgbGray.r()));
+        REQUIRE(fequals(srbModifiedAlphaGray.g(), srgbGray.g()));
+        REQUIRE(fequals(srbModifiedAlphaGray.b(), srgbGray.b()));
+        REQUIRE(fequals(srbModifiedAlphaGray.a(), 0.5f));              // alpha remains linear
 
     } LITL_END_TEST_CASE
 }

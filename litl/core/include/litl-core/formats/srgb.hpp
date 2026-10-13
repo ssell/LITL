@@ -14,7 +14,7 @@ namespace litl
     [[nodiscard]] std::array<float, 256> const& getByteToLinearFloatTable() noexcept;
 
     /// <summary>
-    /// Returns the pre-calculted transfer table for converting a byte value to a SRGB float value.
+    /// Returns the pre-calculated transfer table for converting a SRGB byte value to a linear float value.
     /// </summary>
     [[nodiscard]] std::array<float, 256> const& getSRGBByteToLinearFloatTable() noexcept;
 
@@ -24,7 +24,7 @@ namespace litl
     [[nodiscard]] std::array<float, 256> const& getByteToFloatTable(TransferFunction function) noexcept;
 
     /// <summary>
-    /// Converts a single linear component to sRGB gamma space using the true EOTF transfer function. 
+    /// Converts a single linear component to sRGB gamma space. 
     /// See: https://en.wikipedia.org/wiki/SRGB
     /// </summary>
     [[nodiscard]] float linearFloatToSRGBFloat(float c) noexcept;
@@ -32,7 +32,7 @@ namespace litl
     /// <summary>
     /// Converts a single sRGB gamma encoded float to a linear float.
     /// </summary>
-    [[nodiscard]] float sRGBFloatToLinearFloat(float c);
+    [[nodiscard]] float sRGBFloatToLinearFloat(float c) noexcept;
 
     /// <summary>
     /// Converts a four-component linear color to sRGB color. Alpha is untouched.
