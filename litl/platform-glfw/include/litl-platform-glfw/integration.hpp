@@ -5,9 +5,9 @@
 
 namespace litl
 {
-    class Window;
+    class Platform;
 
-    [[nodiscard]] Window* createGlfwWindow() noexcept;      // in window.cpp
+    [[nodiscard]] Platform* createGlfwPlatform() noexcept;      // in platform.cpp
 }
 
 #endif
