@@ -1,4 +1,4 @@
-# LITL Importer
+# LITL Import
 
 Utility library for importing various formats and then exporting them to an unified internal format. This internal format is then easily digested by the Engine's Asset subsystem.
 
