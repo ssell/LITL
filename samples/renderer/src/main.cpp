@@ -133,8 +133,15 @@ int main()
         sample.startTime = std::chrono::steady_clock::now();
         sample.lastFrameTime = std::chrono::steady_clock::now();
 
-        while (!sample.window->closeRequested())
+        while(true)
         {
+            sample.window->pollForEvents();
+
+            if (sample.window->closeRequested())
+            {
+                break;
+            }
+
             if (sample.renderer->beginRender(0u))
             {
                 updateTiming(sample);
@@ -210,6 +217,13 @@ bool createWindow(SampleRenderState& sample) noexcept
 
     if (sample.platform == nullptr)
     {
+        logError("Failed to create platform.");
+        return false;
+    }
+
+    if (!sample.platform->initialize())
+    {
+        logError("Failed to initialize platform.");
         return false;
     }
 
@@ -217,10 +231,17 @@ bool createWindow(SampleRenderState& sample) noexcept
 
     if (sample.window == nullptr)
     {
+        logError("Failed to create window.");
         return false;
     }
 
-    return sample.window->open("LITL Renderer Only Sample", 1024u, 768u);
+    if (!sample.window->open("LITL Renderer Only Sample", 1024u, 768u))
+    {
+        logError("Failed to open window.");
+        return false;
+    }
+
+    return true;
 }
 
 /// <summary>

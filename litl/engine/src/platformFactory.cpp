@@ -29,6 +29,7 @@ namespace litl
         if (platform == nullptr)
         {
             logError("Failed to create Platform of type '", getPlatformName(platformType), "'");
+            return false;
         }
 
         if (!platform->initialize())
@@ -37,7 +38,7 @@ namespace litl
             return false;
         }
 
-        if (!serviceProvider.setSingleton<Platform, Platform>(platform))
+        if (!serviceProvider.setSingleton<Platform, Platform>(platform, false))
         {
             logError("Failed to inject Platform of type '", getPlatformName(platformType), "' to ServiceProvider");
             

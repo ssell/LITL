@@ -45,10 +45,22 @@ namespace litl
             return std::any_cast<std::shared_ptr<ServiceType>>(service);
         }
 
+        /// <summary>
+        /// Sets the value of a singleton service.
+        /// If serviceOwnsLifetime is true, then the service will be destroyed when the provider is destroyed (and all references end).
+        /// Otherwise, the caller owns the lifetime of the service and the provider will not attempt to delete it.
+        /// </summary>
         template<typename ServiceType, typename ServiceImpl> requires InheritsFrom<ServiceType, ServiceImpl>
-        bool setSingleton(ServiceImpl* service) noexcept
+        bool setSingleton(ServiceImpl* service, bool serviceOwnsLifetime) noexcept
         {
-            return setSingleton__(type_id<ServiceType>(), std::shared_ptr<ServiceImpl>(service));
+            if (serviceOwnsLifetime)
+            {
+                return setSingleton__(type_id<ServiceType>(), std::shared_ptr<ServiceImpl>(service));
+            }
+            else
+            {
+                return setSingleton__(type_id<ServiceType>(), std::shared_ptr<ServiceImpl>(service, [](ServiceImpl*) {}));      // a no-op deleter
+            }
         }
 
         std::shared_ptr<ServiceScope> createScope() const noexcept;

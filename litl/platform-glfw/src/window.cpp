@@ -48,7 +48,6 @@ namespace litl::glfw
         context->frameBufferWidth = width;
         context->frameBufferHeight = height;
 
-        glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
         context->glfwWindow = glfwCreateWindow(width, height, title.data(), nullptr, nullptr);
@@ -60,7 +59,7 @@ namespace litl::glfw
             return false;
         }
 
-        glfwSetWindowUserPointer(context->glfwWindow, context->glfwWindow);
+        glfwSetWindowUserPointer(context->glfwWindow, &context);
         glfwSetFramebufferSizeCallback(context->glfwWindow, [](GLFWwindow* pWindow, int width, int height)
         {
             auto litlWindow = static_cast<litl::Window*>(glfwGetWindowUserPointer(pWindow));

@@ -226,7 +226,7 @@ namespace litl
             return false;
         }
 
-        if (!m_pImpl->pServiceProvider->setSingleton<Window, Window>(window))
+        if (!m_pImpl->pServiceProvider->setSingleton<Window, Window>(window, false))
         {
             logCritical("Failed to inject window.");
             return false;
