@@ -88,7 +88,7 @@ namespace litl
             LITL_FATAL_ASSERT_MSG((config != nullptr), "Failed to inject Configuration into RenderManager.");
             LITL_FATAL_ASSERT_MSG((window != nullptr), "Failed to inject Window into RenderManager.");
 
-            createRenderer(window.get(), config.get()->rendererSettings);
+            createRenderer(window.get(), config.get()->renderer);
 
             LITL_FATAL_ASSERT_MSG((renderer != nullptr), "Failed to create Renderer.");
 

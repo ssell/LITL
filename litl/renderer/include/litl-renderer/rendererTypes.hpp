@@ -2,7 +2,7 @@
 #define LITL_RENDERER_TYPES_H__
 
 #include <array>
-#include <string>
+#include <string_view>
 
 namespace litl
 {
@@ -14,7 +14,7 @@ namespace litl
         Metal = 3
     };
 
-    inline constexpr std::array<char const*, 4> RendererBackendNames = {
+    inline constexpr std::array<std::string_view, 4> RendererBackendNames = {
         "None",
         "Vulkan",
         "D3D12",

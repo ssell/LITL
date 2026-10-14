@@ -1,5 +1,5 @@
 add_library(litl-platform STATIC
-	"src/window.cpp")
+	"src/window.cpp" "src/platformConfiguration.cpp")
 
 target_include_directories(litl-platform PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(litl-platform PUBLIC litl-core)

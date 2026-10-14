@@ -13,7 +13,7 @@ int main()
     Engine engine{};
 
     engine.setup(
-        { .engineSettings { .applicationName = "LITL - Triangle Sample" } },
+        { .platform { .title = "LITL - Triangle Sample" } },
         nullptr,
         configureSystems,
         nullptr,

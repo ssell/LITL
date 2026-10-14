@@ -1,7 +1,7 @@
 #ifndef LITL_ENGINE_WINDOW_FACTORY_H__
 #define LITL_ENGINE_WINDOW_FACTORY_H__
 
-#include "litl-renderer/rendererTypes.hpp"
+#include "litl-platform/platformTypes.hpp"
 
 namespace litl
 {
@@ -10,7 +10,7 @@ namespace litl
     /// <summary>
     /// Creates a new Window that supports the specified renderer type.
     /// </summary>
-    void injectWindow(ServiceProvider& serviceProvider, RendererBackendType rendererType);
+    void injectWindow(ServiceProvider& serviceProvider, PlatformType platformType);
 }
 
 #endif

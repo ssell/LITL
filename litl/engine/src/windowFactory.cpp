@@ -17,14 +17,14 @@
 
 namespace litl
 {
-    void injectWindow(ServiceProvider& serviceProvider, RendererBackendType rendererType)
+    void injectWindow(ServiceProvider& serviceProvider, PlatformType platformType)
     {
         Window* window = nullptr;
 
-        switch (rendererType)
+        switch (platformType)
         {
 #ifdef LITL_RENDERER_VULKAN
-        case RendererBackendType::Vulkan:
+        case PlatformType::Glfw:
             window = createVulkanWindow();
             break;
 #endif

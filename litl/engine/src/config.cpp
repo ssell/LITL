@@ -1,36 +1,39 @@
 #include "litl-core/math.hpp"
+#include "litl-core/logging/logging.hpp"
 #include "litl-engine/config.hpp"
 
 namespace litl
 {
     void Configuration::sanitize() noexcept
     {
-        if (!between(engineSettings.framesPerSecond, EngineConfiguration::MinFixedFps, EngineConfiguration::MaxFixedFps))
+        if (!between(engine.framesPerSecond, EngineConfiguration::MinFixedFps, EngineConfiguration::MaxFixedFps))
         {
             logWarning("Engine settings 'framesPerSecond' is outside of acceptable range of [", EngineConfiguration::MinFixedFps, ", ", EngineConfiguration::MaxFixedFps, "]. Clamping.");
-            engineSettings.framesPerSecond = clamp(engineSettings.framesPerSecond, EngineConfiguration::MinFixedFps, EngineConfiguration::MaxFixedFps);
+            engine.framesPerSecond = clamp(engine.framesPerSecond, EngineConfiguration::MinFixedFps, EngineConfiguration::MaxFixedFps);
         }
 
-        if (!between(engineSettings.ticksPerSecond, EngineConfiguration::MinTicksPerSecond, EngineConfiguration::MaxTicksPerSecond))
+        if (!between(engine.ticksPerSecond, EngineConfiguration::MinTicksPerSecond, EngineConfiguration::MaxTicksPerSecond))
         {
             logWarning("Engine settings 'ticksPerSecond' is outside of acceptable range of [", EngineConfiguration::MinTicksPerSecond, ", ", EngineConfiguration::MaxTicksPerSecond, "]. Clamping.");
-            engineSettings.ticksPerSecond = clamp(engineSettings.ticksPerSecond, EngineConfiguration::MinTicksPerSecond, EngineConfiguration::MaxTicksPerSecond);
+            engine.ticksPerSecond = clamp(engine.ticksPerSecond, EngineConfiguration::MinTicksPerSecond, EngineConfiguration::MaxTicksPerSecond);
         }
 
-        if (!between(engineSettings.taskThreadCount, EngineConfiguration::MinTaskThreadCount, EngineConfiguration::MaxTaskThreadCount))
+        if (!between(engine.taskThreadCount, EngineConfiguration::MinTaskThreadCount, EngineConfiguration::MaxTaskThreadCount))
         {
             logWarning("Engine settings 'taskThreadCount' is outside of acceptable range of [", EngineConfiguration::MinTaskThreadCount, ", ", EngineConfiguration::MaxTaskThreadCount, "]. Clamping.");
-            engineSettings.taskThreadCount = clamp(engineSettings.taskThreadCount, EngineConfiguration::MinTaskThreadCount, EngineConfiguration::MaxTaskThreadCount);
+            engine.taskThreadCount = clamp(engine.taskThreadCount, EngineConfiguration::MinTaskThreadCount, EngineConfiguration::MaxTaskThreadCount);
         }
 
-        rendererSettings.sanitize();
+        platform.sanitize();
+        renderer.sanitize();
     }
 
     void Configuration::set(Configuration& other) noexcept
     {
-        engineSettings = other.engineSettings;
-        rendererSettings = other.rendererSettings;
-        sceneSettings = other.sceneSettings;
+        engine = other.engine;
+        platform = other.platform;
+        renderer = other.renderer;
+        scene = other.scene;
 
         // ...
 

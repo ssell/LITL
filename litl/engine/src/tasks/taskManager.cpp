@@ -35,7 +35,7 @@ namespace litl
 
         auto config = services.get<Configuration>();
         LITL_FATAL_ASSERT_MSG((config != nullptr), "Failed to inject Configuration into TaskManager");
-        m_pTaskThreadPool = std::make_unique<TaskThreadPool>(config->engineSettings.taskThreadCount);
+        m_pTaskThreadPool = std::make_unique<TaskThreadPool>(config->engine.taskThreadCount);
     }
 
     void TaskManager::destroy(Authority<Engine> auth) noexcept

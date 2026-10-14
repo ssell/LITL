@@ -7,6 +7,7 @@ namespace litl::samples
     {
         systems.addSystem<SpinSystem>(SystemGroup::Update);
     }
+
     void bootstrap(ServiceProvider& services, EntityCommands& commands)
     {
         auto objectPool = services.get<ObjectPool>();
@@ -32,7 +33,7 @@ namespace litl::samples
 int main()
 {
     litl::Engine engine{};
-    litl::Configuration config{ .engineSettings = litl::EngineConfiguration { .applicationName = "LITL - Sponza Sample" } };
+    litl::Configuration config{ .platform { .title = "LITL - Sponza Sample" } };
 
     engine.setup(
         config,

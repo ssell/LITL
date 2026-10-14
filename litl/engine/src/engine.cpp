@@ -120,7 +120,7 @@ namespace litl
         m_pImpl->pSharedAssetManager->setup({}, *m_pImpl->pServiceProvider);
         m_pImpl->pSharedSceneManager->setup({}, (*m_pImpl->pServiceProvider));
         m_pImpl->pSharedConfig->set(config);
-        m_pImpl->pSharedFrameLimiter->setTargetFps(static_cast<float>(m_pImpl->pSharedConfig->engineSettings.framesPerSecond));
+        m_pImpl->pSharedFrameLimiter->setTargetFps(static_cast<float>(m_pImpl->pSharedConfig->engine.framesPerSecond));
 
         m_pImpl->setup.configureSystems(m_pImpl->pSharedECSWorld->getSystemCollection());
 
@@ -154,7 +154,7 @@ namespace litl
         m_pImpl->setup.bootstrap((*m_pImpl->pServiceProvider), (m_pImpl->pSharedECSWorld->getCommandBuffer()));
 
         // --- Setup Scene
-        m_pImpl->pSharedSceneManager->createScene(m_pImpl->pSharedConfig->sceneSettings);
+        m_pImpl->pSharedSceneManager->createScene(m_pImpl->pSharedConfig->scene);
 
         if (m_pImpl->userBootstrap != nullptr)
         {
@@ -186,13 +186,13 @@ namespace litl
 
     bool Engine::createWindow() noexcept
     {
-        auto title = m_pImpl->pSharedConfig->engineSettings.applicationName;
-        auto width = m_pImpl->pSharedConfig->engineSettings.windowWidth;
-        auto height = m_pImpl->pSharedConfig->engineSettings.windowHeight;
+        auto title = m_pImpl->pSharedConfig->platform.title;
+        auto width = m_pImpl->pSharedConfig->platform.windowWidth;
+        auto height = m_pImpl->pSharedConfig->platform.windowHeight;
 
         logInfo("Opening window \"", title, "\" (", width, "x", height, ") ...");
         
-        injectWindow((*m_pImpl->pServiceProvider), m_pImpl->pSharedConfig->rendererSettings.rendererType);
+        injectWindow((*m_pImpl->pServiceProvider), m_pImpl->pSharedConfig->platform.platformType);
 
         m_pImpl->pSharedWindow = m_pImpl->pServiceProvider->get<Window>();
 
@@ -219,6 +219,6 @@ namespace litl
     {
         m_pImpl->pSharedECSWorld->run(
             m_pImpl->pSharedFrameLimiter->frameDelta(),
-            1.0f / static_cast<float>(m_pImpl->pSharedConfig->engineSettings.ticksPerSecond));
+            1.0f / static_cast<float>(m_pImpl->pSharedConfig->engine.ticksPerSecond));
     }
 }
