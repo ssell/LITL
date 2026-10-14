@@ -7,13 +7,7 @@ add_library(litl-renderer STATIC
 	"src/litl-renderer/resources/commandBuffer.cpp" 
 	"src/litl-renderer/resources/texture.cpp")
 
-target_include_directories(litl-renderer 
-	PUBLIC 
-		"${CMAKE_CURRENT_SOURCE_DIR}/include"
-	PRIVATE
-		"${CMAKE_SOURCE_DIR}/deps/SPIRV-Reflect"
-)
-
+target_include_directories(litl-renderer PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(litl-renderer PUBLIC litl-core)
 target_compile_features(litl-renderer PUBLIC cxx_std_23)
 

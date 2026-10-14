@@ -62,14 +62,12 @@ if (LITL_ENABLE_VULKAN)
 	target_link_libraries(litl-engine PUBLIC litl-renderer-vulkan)
 endif()
 
-target_compile_features(litl-engine
-	PUBLIC
-		cxx_std_23
-)
+if (LITL_ENABLE_PLATFORM_GLFW)
+	target_link_libraries(litl-engine PUBLIC litl-platform-glfw)
+endif()
 
-target_compile_definitions(litl-engine
-	PUBLIC LITL_RENDERER_VULKAN
-)
+target_compile_features(litl-engine PUBLIC cxx_std_23)
+target_compile_definitions(litl-engine PUBLIC LITL_RENDERER_VULKAN)
 
 if (MSVC)
 	target_compile_options(litl-engine PRIVATE /EHs-c- /D_HAS_EXCEPTIONS=0 /GR-)

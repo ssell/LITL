@@ -9,6 +9,7 @@ include(FetchContent)
 
 option(LITL_BUILD_TESTS "Build Tests" ON)
 option(LITL_ENABLE_VULKAN "Enable Vulkan Renderer" ON)
+option(LITL_ENABLE_PLATFORM_GLFW "Enable GLFW Platform" ON)
 
 # ------------------------------------------------------------------------------------------
 # -- Compiler Setup
@@ -36,11 +37,16 @@ add_subdirectory(litl/core)
 add_subdirectory(litl/import)
 add_subdirectory(litl/ecs)
 add_subdirectory(litl/renderer)
+add_subdirectory(litl/platform)
 add_subdirectory(litl/engine)
 add_subdirectory(samples)
 
 if (LITL_ENABLE_VULKAN)
 	add_subdirectory(litl/renderer-vulkan)
+endif() 
+
+if (LITL_ENABLE_PLATFORM_GLFW)
+	add_subdirectory(litl/platform-glfw)
 endif()
 
 if (LITL_BUILD_TESTS)
