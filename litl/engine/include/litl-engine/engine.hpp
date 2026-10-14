@@ -29,7 +29,6 @@ namespace litl
     private:
 
         bool createWindow() noexcept;
-        bool shouldRun() noexcept;
         void run();
         void update();
 

@@ -12,8 +12,8 @@ namespace litl
         litl::Window* litlWindow = nullptr;
         GLFWwindow* glfwWindow = nullptr;
         litl::WindowState state;
-        uint32_t width = 0;
-        uint32_t height = 0;
+        uint32_t frameBufferWidth = 0u;
+        uint32_t frameBufferHeight = 0u;
     };
 
     Window* createVulkanWindow() noexcept
@@ -45,8 +45,8 @@ namespace litl::vulkan
         LITL_ASSERT_MSG(context != nullptr, "Attempted to open window with a provided NULL context!", false);
         LITL_ASSERT_MSG(context->litlWindow != nullptr, "Attempted to open with with a NULL internal window!", false);
 
-        context->width = width;
-        context->height = height;
+        context->frameBufferWidth = width;
+        context->frameBufferHeight = height;
 
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -97,8 +97,6 @@ namespace litl::vulkan
 
     bool shouldClose(WindowContext* context) noexcept
     {
-        // Has the (GLFW) window received a close event?
-        pollForEvents(context);
         return glfwWindowShouldClose(context->glfwWindow);
     }
 
@@ -107,19 +105,19 @@ namespace litl::vulkan
         return context->state;
     }
 
-    uint32_t getWidth(WindowContext* context) noexcept
+    uint32_t getFrameBufferWidth(WindowContext* context) noexcept
     {
-        return context->width;
+        return context->frameBufferWidth;
     }
 
-    uint32_t getHeight(WindowContext* context) noexcept
+    uint32_t getFrameBufferHeight(WindowContext* context) noexcept
     {
-        return context->height;
+        return context->frameBufferHeight;
     }
 
     float getAspectRatio(WindowContext* context) noexcept
     {
-        return (static_cast<float>(context->width) / static_cast<float>(context->height));
+        return (static_cast<float>(context->frameBufferWidth) / static_cast<float>(context->frameBufferHeight));
     }
 
     void* getSurfaceWindow(WindowContext* context) noexcept
@@ -130,8 +128,8 @@ namespace litl::vulkan
     void onResize(WindowContext* context, uint32_t width, uint32_t height) noexcept
     {
         context->state = (width == 0 && height == 0) ? WindowState::Minimized : WindowState::Open;
-        context->width = width;
-        context->height = height;
+        context->frameBufferWidth = width;
+        context->frameBufferHeight = height;
     }
 
     void pollForEvents(WindowContext* context) noexcept

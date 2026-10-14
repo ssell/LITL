@@ -10,7 +10,7 @@ namespace litl
 {
     struct WindowContext;
 
-    enum WindowState
+    enum class WindowState : uint32_t
     {
         Open = 0,
         Minimized = 1
@@ -23,8 +23,8 @@ namespace litl
         void (*destroy)(WindowContext*);
         bool (*shouldClose)(WindowContext*);
         WindowState (*getState)(WindowContext*);
-        uint32_t (*getWidth)(WindowContext*);
-        uint32_t (*getHeight)(WindowContext*);
+        uint32_t (*getFrameBufferWidth)(WindowContext*);
+        uint32_t (*getFrameBufferHeight)(WindowContext*);
         float (*getAspectRatio)(WindowContext*);
         void* (*getSurfaceWindow)(WindowContext*);
         void (*onResize)(WindowContext*, uint32_t, uint32_t);
@@ -87,14 +87,14 @@ namespace litl
             return m_pOps->getState(m_pContext);
         }
 
-        [[nodiscard]] uint32_t getWidth() const noexcept
+        [[nodiscard]] uint32_t getFrameBufferWidth() const noexcept
         {
-            return m_pOps->getWidth(m_pContext);
+            return m_pOps->getFrameBufferWidth(m_pContext);
         }
 
-        [[nodiscard]] uint32_t getHeight() const noexcept
+        [[nodiscard]] uint32_t getFrameBufferHeight() const noexcept
         {
-            return m_pOps->getHeight(m_pContext);
+            return m_pOps->getFrameBufferHeight(m_pContext);
         }
 
         /// <summary>
@@ -129,8 +129,8 @@ namespace litl
 
     private:
 
-        WindowOps const* m_pOps;
-        WindowContext* m_pContext;
+        WindowOps const* m_pOps{ nullptr };
+        WindowContext* m_pContext{ nullptr };
     };
 }
 

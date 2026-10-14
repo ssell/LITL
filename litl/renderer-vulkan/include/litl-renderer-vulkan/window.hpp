@@ -10,8 +10,8 @@ namespace litl::vulkan
     void destroy(WindowContext* context) noexcept;
     [[nodiscard]] bool shouldClose(WindowContext* context) noexcept;
     litl::WindowState getState(WindowContext* context) noexcept;
-    [[nodiscard]] uint32_t getWidth(WindowContext* context) noexcept;
-    [[nodiscard]] uint32_t getHeight(WindowContext* context) noexcept;
+    [[nodiscard]] uint32_t getFrameBufferWidth(WindowContext* context) noexcept;
+    [[nodiscard]] uint32_t getFrameBufferHeight(WindowContext* context) noexcept;
     [[nodiscard]] float getAspectRatio(WindowContext* context) noexcept;
     void* getSurfaceWindow(WindowContext* context) noexcept;
     void onResize(WindowContext* context, uint32_t width, uint32_t height) noexcept;
@@ -19,18 +19,18 @@ namespace litl::vulkan
     void waitForEvents(WindowContext* context, float timeoutSeconds) noexcept;
 
     inline constexpr litl::WindowOps VulkanWindowOps = {
-        &open,
-        &close,
-        &destroy,
-        &shouldClose,
-        &getState,
-        &getWidth,
-        &getHeight,
-        &getAspectRatio,
-        &getSurfaceWindow,
-        &onResize,
-        &pollForEvents,
-        &waitForEvents
+        .open = &open,
+        .close = &close,
+        .destroy = &destroy,
+        .shouldClose = &shouldClose,
+        .getState = &getState,
+        .getFrameBufferWidth = &getFrameBufferWidth,
+        .getFrameBufferHeight = &getFrameBufferHeight,
+        .getAspectRatio = &getAspectRatio,
+        .getSurfaceWindow = &getSurfaceWindow,
+        .onResize = &onResize,
+        .pollForEvents = &pollForEvents,
+        .waitForEvents = &waitForEvents
     };
 }
 

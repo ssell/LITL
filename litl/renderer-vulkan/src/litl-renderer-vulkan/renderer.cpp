@@ -1063,7 +1063,7 @@ namespace litl::vulkan
 
     void waitForValidFramebufferSize(RendererContext& context) noexcept
     {
-        while (context.window.window->getWidth() == 0u || context.window.window->getHeight() == 0u)
+        while (context.window.window->getFrameBufferWidth() == 0u || context.window.window->getFrameBufferHeight() == 0u)
         {
             context.window.window->waitForEvents();
         }

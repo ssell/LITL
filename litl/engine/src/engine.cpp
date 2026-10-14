@@ -168,8 +168,16 @@ namespace litl
 
         logInfo("Running ...");
 
-        while (shouldRun())
+        while (true)
         {
+            m_pImpl->pSharedWindow->pollForEvents();
+
+            if (m_pImpl->pSharedWindow->shouldClose())
+            {
+                logInfo("Window closing.");
+                break;
+            }
+
             run();
         }
 
@@ -195,11 +203,6 @@ namespace litl
         }
 
         return true;
-    }
-
-    bool Engine::shouldRun() noexcept
-    {
-        return !m_pImpl->pSharedWindow->shouldClose();
     }
 
     void Engine::run()
