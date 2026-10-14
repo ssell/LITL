@@ -28,32 +28,31 @@ FetchContent_MakeAvailable(glfw)
 FetchContent_Declare(VulkanMemoryAllocator GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git GIT_TAG v3.3.0)
 FetchContent_MakeAvailable(VulkanMemoryAllocator)
 
-add_library(litl-renderer-vulkan 
-	STATIC
-		"src/litl-renderer-vulkan/window.cpp" 
-		"src/litl-renderer-vulkan/renderer.cpp"
-		"src/litl-renderer-vulkan/resourceManager.cpp" 
-		"src/litl-renderer-vulkan/swapChainSupport.cpp"
-		"src/litl-renderer-vulkan/impl/impl.cpp"
-		"src/litl-renderer-vulkan/ops/rendererResourceOps.cpp" 
-		"src/litl-renderer-vulkan/ops/rendererDrawOps.cpp" 
-		"src/litl-renderer-vulkan/ops/rendererCommandOps.cpp"  
-		"src/litl-renderer-vulkan/resources/pipelineLayoutDescriptor.cpp" 
-		"src/litl-renderer-vulkan/resources/cache/pipelineLayoutCache.cpp" 
-		"src/litl-renderer-vulkan/conversions.cpp" 
-		"src/litl-renderer-vulkan/ops/rendererTesting.cpp" 
-		"src/litl-renderer-vulkan/ops/rendererMiscOps.cpp" 
-		"src/litl-renderer-vulkan/resources/map/shaderModuleReferenceMap.cpp" 
-		"src/litl-renderer-vulkan/resources/utility/stagingBuffer.cpp" 
-		"src/litl-renderer-vulkan/resources/utility/stagingTexture.cpp" 
-		"src/litl-renderer-vulkan/resources/cache/samplerCache.cpp" 
-		"src/litl-renderer-vulkan/resources/utility/descriptorSetAllocator.cpp" 
-		"src/litl-renderer-vulkan/resources/utility/descriptorSetChangeTracker.cpp"
-		"src/litl-renderer-vulkan/resources/utility/destructionQueue.cpp" 
-		"src/litl-renderer-vulkan/requiredFeatures.cpp" 
-		"src/litl-renderer-vulkan/rendererContext.cpp" 
-		"src/litl-renderer-vulkan/resources/utility/textureTable.cpp" 
-		"src/litl-renderer-vulkan/resources/utility/samplerArray.cpp")
+add_library(litl-renderer-vulkan STATIC
+	"src/litl-renderer-vulkan/window.cpp" 
+	"src/litl-renderer-vulkan/renderer.cpp"
+	"src/litl-renderer-vulkan/resourceManager.cpp" 
+	"src/litl-renderer-vulkan/swapChainSupport.cpp"
+	"src/litl-renderer-vulkan/impl/impl.cpp"
+	"src/litl-renderer-vulkan/ops/rendererResourceOps.cpp" 
+	"src/litl-renderer-vulkan/ops/rendererDrawOps.cpp" 
+	"src/litl-renderer-vulkan/ops/rendererCommandOps.cpp"  
+	"src/litl-renderer-vulkan/resources/pipelineLayoutDescriptor.cpp" 
+	"src/litl-renderer-vulkan/resources/cache/pipelineLayoutCache.cpp" 
+	"src/litl-renderer-vulkan/conversions.cpp" 
+	"src/litl-renderer-vulkan/ops/rendererTesting.cpp" 
+	"src/litl-renderer-vulkan/ops/rendererMiscOps.cpp" 
+	"src/litl-renderer-vulkan/resources/map/shaderModuleReferenceMap.cpp" 
+	"src/litl-renderer-vulkan/resources/utility/stagingBuffer.cpp" 
+	"src/litl-renderer-vulkan/resources/utility/stagingTexture.cpp" 
+	"src/litl-renderer-vulkan/resources/cache/samplerCache.cpp" 
+	"src/litl-renderer-vulkan/resources/utility/descriptorSetAllocator.cpp" 
+	"src/litl-renderer-vulkan/resources/utility/descriptorSetChangeTracker.cpp"
+	"src/litl-renderer-vulkan/resources/utility/destructionQueue.cpp" 
+	"src/litl-renderer-vulkan/requiredFeatures.cpp" 
+	"src/litl-renderer-vulkan/rendererContext.cpp" 
+	"src/litl-renderer-vulkan/resources/utility/textureTable.cpp" 
+	"src/litl-renderer-vulkan/resources/utility/samplerArray.cpp")
 
 target_include_directories(litl-renderer-vulkan
 	PUBLIC

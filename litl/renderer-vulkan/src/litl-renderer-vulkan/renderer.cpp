@@ -5,7 +5,6 @@
 #include <set>
 #include <span>
 #include <string>
-#include <string_view>
 #include <vector>
 
 #include "litl-core/debug.hpp"
@@ -24,9 +23,6 @@ namespace litl
     /// <summary>
     /// Defined in integration.hpp and used by the RenderManager in litl-engine
     /// </summary>
-    /// <param name="pWindow"></param>
-    /// <param name="rendererDescriptor"></param>
-    /// <returns></returns>
     litl::Renderer* createVulkanRenderer(Window* pWindow, RendererConfiguration const& rendererDescriptor) noexcept
     {
         LITL_FATAL_ASSERT_MSG(pWindow != nullptr, "Attempting to create Vulkan Renderer with a null Window");

@@ -191,7 +191,10 @@ void cleanupSample(SampleRenderState& sample) noexcept
         destroyVulkanRenderer(sample.renderer);
     }
 
-    destroyVulkanWindow(sample.window);
+    if (sample.window != nullptr)
+    {
+        sample.window->destroy();
+    }
 }
 
 /// <summary>

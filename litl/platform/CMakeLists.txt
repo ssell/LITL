@@ -1,4 +1,4 @@
-add_library(litl-platform
+add_library(litl-platform STATIC
 	"src/window.cpp")
 
 target_include_directories(litl-platform PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")

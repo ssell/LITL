@@ -18,7 +18,7 @@
 namespace litl
 {
     /// <summary>
-    /// Intentionally incomplete. Do not not define anywhere.
+    /// Explicitly not defined in litl-renderer, but instead is defined in the implementation (litl-renderer-vulkan, etc.)
     /// </summary>
     struct RendererContext;
     struct ShaderReflection;

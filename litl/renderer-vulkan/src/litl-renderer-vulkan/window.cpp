@@ -25,15 +25,6 @@ namespace litl
 
         return window;
     }
-
-    void destroyVulkanWindow(Window* window) noexcept
-    {
-        if (window != nullptr)
-        {
-
-            delete window;
-        }
-    }
 }
 
 namespace litl::vulkan
@@ -77,7 +68,6 @@ namespace litl::vulkan
         if (context->litlWindow != nullptr)
         {
             glfwDestroyWindow(context->glfwWindow);
-            context->litlWindow = nullptr;
         }
     }
 
@@ -89,6 +79,9 @@ namespace litl::vulkan
             {
                 close(context);
                 glfwTerminate();
+
+                delete context->litlWindow;
+                context->litlWindow = nullptr;
             }
 
             delete context;

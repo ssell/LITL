@@ -1,5 +1,6 @@
 #include "litl-renderer/renderer.hpp"
 #include "litl-renderer/reflection.hpp"
+#include "litl-core/assert.hpp"
 
 namespace litl
 {
@@ -45,16 +46,19 @@ namespace litl
 
     BufferHandle Renderer::createBuffer(BufferDescriptor const& descriptor) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->createBuffer(m_pContext, descriptor);
     }
 
     void Renderer::destroyBuffer(BufferHandle handle, bool immediate) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         m_pOps->destroyBuffer(m_pContext, handle, immediate);
     }
 
     CommandBufferHandle Renderer::createCommandBuffer(CommandBufferDescriptor const& descriptor) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->createCommandBuffer(m_pContext, descriptor);
     }
 
@@ -65,71 +69,85 @@ namespace litl
 
     void Renderer::destroyCommandBuffer(CommandBufferHandle handle) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         m_pOps->destroyCommandBuffer(m_pContext, handle);
     }
 
     ComputePipelineHandle Renderer::createComputePipeline(ComputePipelineDescriptor const& descriptor) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->createComputePipeline(m_pContext, descriptor);
     }
 
     void Renderer::destroyComputePipeline(ComputePipelineHandle handle) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         m_pOps->destroyComputePipeline(m_pContext, handle);
     }
 
     GraphicsPipelineHandle Renderer::createGraphicsPipeline(GraphicsPipelineDescriptor const& descriptor) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->createGraphicsPipeline(m_pContext, descriptor);
     }
 
     void Renderer::destroyGraphicsPipeline(GraphicsPipelineHandle handle) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         m_pOps->destroyGraphicsPipeline(m_pContext, handle);
     }
 
     SamplerHandle Renderer::createSampler(SamplerDescriptor const& descriptor) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->createSampler(m_pContext, descriptor);
     }
 
     void Renderer::destroySampler(SamplerHandle handle) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         m_pOps->destroySampler(m_pContext, handle);
     }
 
     ShaderModuleHandle Renderer::createShaderModule(ShaderModuleDescriptor const& descriptor) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->createShaderModule(m_pContext, descriptor);
     }
 
     ShaderModuleHandle Renderer::getShaderModule(std::string const& resource) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->getShaderModule(m_pContext, resource);
     }
 
     ShaderReflection* Renderer::getShaderReflection(ShaderModuleHandle handle) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->getShaderReflection(m_pContext, handle);
     }
 
     void Renderer::reloadShaderModule(ShaderModuleDescriptor const& descriptor) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         m_pOps->reloadShaderModule(m_pContext, descriptor);
     }
 
     void Renderer::destroyShaderModule(ShaderModuleHandle handle) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         m_pOps->destroyShaderModule(m_pContext, handle);
     }
 
     TextureResourceHandle Renderer::createTexture(TextureResourceDescriptor const& descriptor) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->createTexture(m_pContext, descriptor);
     }
 
     void Renderer::destroyTexture(TextureResourceHandle handle) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         m_pOps->destroyTexture(m_pContext, handle);
     }
 
@@ -139,51 +157,61 @@ namespace litl
 
     CommandBufferHandle Renderer::cmdBeginFrame() const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->cmdBeginFrame(m_pContext);
     }
 
     bool Renderer::cmdBegin(CommandBufferHandle handle) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->cmdBegin(m_pContext, handle);
     }
 
     bool Renderer::cmdEnd(CommandBufferHandle handle) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->cmdEnd(m_pContext, handle);
     }
 
     void Renderer::cmdBeginRender(CommandBufferHandle handle, BeginRenderCommand const& command) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         m_pOps->cmdBeginRender(m_pContext, handle, command);
     }
 
     void Renderer::cmdEndRender(CommandBufferHandle handle) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         m_pOps->cmdEndRender(m_pContext, handle);
     }
 
     void Renderer::cmdPipelineBarrier(CommandBufferHandle handle, PipelineBarrierCommand const& command) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         m_pOps->cmdPipelineBarrier(m_pContext, handle, command);
     }
 
     void Renderer::cmdClearImage(CommandBufferHandle handle, ClearImageCommand const& command) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         m_pOps->cmdClearImage(m_pContext, handle, command);
     }
 
     void Renderer::cmdSetViewportAndScissor(CommandBufferHandle handle, SetViewportAndScissorCommand const& command) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         m_pOps->cmdSetViewportAndScissor(m_pContext, handle, command);
     }
 
     void Renderer::cmdBindGraphicsPipeline(CommandBufferHandle handle, GraphicsPipelineHandle graphicsPipelineHandle) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         m_pOps->cmdBindGraphicsPipeline(m_pContext, handle, graphicsPipelineHandle);
     }
 
     RendererResult Renderer::cmdPushConstants(CommandBufferHandle handle, ShaderStage shaderStage, std::span<std::byte const> data) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         if (data.size() <= m_maxPushConstantSize)
         {
             return m_pOps->cmdPushConstants(m_pContext, handle, shaderStage, data);
@@ -196,36 +224,43 @@ namespace litl
 
     void Renderer::cmdDraw(CommandBufferHandle commandBuffer, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         m_pOps->cmdDraw(m_pContext, commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
     }
 
     void Renderer::cmdDrawIndexed(CommandBufferHandle commandBuffer, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         m_pOps->cmdDrawIndexed(m_pContext, commandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
     }
 
     RendererResult Renderer::cmdBindVertexBuffer(CommandBufferHandle commandBuffer, BufferHandle buffer, uint64_t offset, uint32_t firstBinding) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->cmdBindVertexBuffer(m_pContext, commandBuffer, buffer, offset, firstBinding);
     }
 
     RendererResult Renderer::cmdBindVertexBuffers(CommandBufferHandle commandBuffer, BufferHandle* buffers, uint64_t* offsets, uint32_t count, uint32_t firstBinding) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->cmdBindVertexBuffers(m_pContext, commandBuffer, buffers, offsets, count, firstBinding);
     }
 
     RendererResult Renderer::cmdBindIndexBuffer(CommandBufferHandle commandBuffer, BufferHandle buffer, IndexType indexType) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->cmdBindIndexBuffer(m_pContext, commandBuffer, buffer, indexType);
     }
 
     RendererResult Renderer::cmdBindBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key, uint64_t offset, uint64_t range, bool isGraphics) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->cmdBindBuffer(m_pContext, handle, buffer, key, offset, range, isGraphics);
     }
 
     RendererResult Renderer::cmdBindBuffer(CommandBufferHandle handle, BufferHandle buffer, StringId key, bool isGraphics) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         // Note: ~0ull == VK_WHOLE_SIZE == 0xFFFF...FFFF
         return cmdBindBuffer(handle, buffer, key, 0ull, ~0ull, isGraphics);
     }
@@ -237,61 +272,73 @@ namespace litl
 
     RendererResult Renderer::cmdBufferUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, BufferHandle destBufferHandle, uint64_t sourceOffset, uint64_t destOffset) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->cmdBufferUpload(m_pContext, commandBuffer, source, destBufferHandle, sourceOffset, destOffset);
     }
 
     RendererResult Renderer::cmdBufferFlush(CommandBufferHandle commandBuffer) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->cmdBufferFlush(m_pContext, commandBuffer);
     }
 
     RendererResult Renderer::mapBuffer(BufferHandle buffer, MappedBuffer& mapped) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->mapBuffer(m_pContext, buffer, mapped);
     }
 
     RendererResult Renderer::unmapBuffer(BufferHandle buffer) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->unmapBuffer(m_pContext, buffer);
     }
 
     std::optional<uint64_t> Renderer::getBufferDeviceAddress(BufferHandle buffer) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->getBufferDeviceAddress(m_pContext, buffer);
     }
 
     RendererResult Renderer::cmdBindTexture(CommandBufferHandle commandBuffer, TextureResourceHandle texture, StringId textureId, bool isGraphics) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->cmdBindTexture(m_pContext, commandBuffer, texture, textureId, isGraphics);
     }
 
     RendererResult Renderer::cmdBindSampler(CommandBufferHandle commandBuffer, SamplerHandle sampler, StringId samplerId, bool isGraphics) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->cmdBindSampler(m_pContext, commandBuffer, sampler, samplerId, isGraphics);
     }
 
     RendererResult Renderer::cmdTextureUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, TextureResourceHandle destTextureHandle) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->cmdTextureUpload(m_pContext, commandBuffer, source, {}, destTextureHandle);
     }
 
     RendererResult Renderer::cmdTextureUpload(CommandBufferHandle commandBuffer, std::span<std::byte const> source, std::span<TextureUploadRegion const> regions, TextureResourceHandle destTextureHandle) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->cmdTextureUpload(m_pContext, commandBuffer, source, regions, destTextureHandle);
     }
     
     RendererResult Renderer::mapTexture(TextureResourceHandle texture, MappedTexture& mapped)
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->mapTexture(m_pContext, texture, mapped);
     }
     
     RendererResult Renderer::unmapTexture(TextureResourceHandle texture)
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->unmapTexture(m_pContext, texture);
     }
 
     uint32_t Renderer::getTextureTableIndex(TextureResourceHandle texture) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->getTextureTableIndex(m_pContext, texture);
     }
 
@@ -301,6 +348,7 @@ namespace litl
 
     bool Renderer::beginRender(uint32_t maxWaitMs) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->beginRender(m_pContext, maxWaitMs);
     }
 
@@ -311,6 +359,7 @@ namespace litl
 
     void Renderer::submitCommands(std::span<CommandBufferHandle const> commands) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         m_pOps->submitCommands(m_pContext, commands);
     }
 
@@ -321,11 +370,13 @@ namespace litl
 
     RendererResult Renderer::submitCommandsAndWait(std::span<CommandBufferHandle const> commands) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->submitCommandsAndWait(m_pContext, commands);
     }
 
     void Renderer::endRender() const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         m_pOps->endRender(m_pContext);
     }
 
@@ -335,26 +386,31 @@ namespace litl
 
     DataFormat Renderer::getSwapchainImageFormat() const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->getSwapchainImageFormat(m_pContext);
     }
 
     DataFormat Renderer::getSwapchainDepthFormat() const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->getSwapchainDepthFormat(m_pContext);
     }
 
     SwapChainDimensions Renderer::getSwapchainDimensions() const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->getSwapchainDimensions(m_pContext);
     }
 
     FrameData Renderer::getFrameData() const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->getFrameData(m_pContext);
     }
 
     ShaderStage Renderer::getGraphicsPipelinePushConstantStages(GraphicsPipelineHandle handle) const noexcept
     {
+        LITL_FATAL_ASSERT(valid());
         return m_pOps->getGraphicsPipelinePushConstantStages(m_pContext, handle);
     }
 
