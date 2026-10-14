@@ -3,6 +3,7 @@
 
 #include <cstdint>
 
+#include "litl-core/authority.hpp"
 #include "litl-platform/window.hpp"
 
 namespace litl
@@ -17,6 +18,7 @@ namespace litl
         bool (*initialize)(PlatformContext*);
         bool (*shutdown)(PlatformContext*);
         Window* (*createWindow)(PlatformContext*);
+        Window* (*getWindow)(PlatformContext*);
     };
 
     class Platform final
@@ -29,9 +31,13 @@ namespace litl
         Platform(Platform const&) = delete;
         Platform& operator=(Platform const&) = delete;
 
+        [[nodiscard]] bool setup(PlatformOps const* operations, PlatformContext* context) noexcept;
         [[nodiscard]] bool initialize() const noexcept;
         [[nodiscard]] bool shutdown() const noexcept;
         [[nodiscard]] Window* createWindow() const noexcept;
+        [[nodiscard]] Window* getWindow() const noexcept;
+
+
 
     private:
 

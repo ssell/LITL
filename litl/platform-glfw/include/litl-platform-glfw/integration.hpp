@@ -8,6 +8,7 @@ namespace litl
     class Platform;
 
     [[nodiscard]] Platform* createGlfwPlatform() noexcept;      // in platform.cpp
+    void destroyGlfwPlatform(Platform* platform) noexcept;
 }
 
 #endif

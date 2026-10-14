@@ -166,9 +166,17 @@ namespace litl
                 break;
             }
 
-            LITL_FATAL_ASSERT_MSG((renderer != nullptr), "Failed to create Renderer in RenderManager");
+            if (renderer == nullptr)
+            {
+                logError("Failed to create Renderer of type '", getRendererName(rendererDescriptor.rendererType), "'");
+                return;
+            }
 
-            renderer->build();
+            if (!renderer->build())
+            {
+                logError("Failed to build Renderer of type '", getRendererName(rendererDescriptor.rendererType), "'");
+                return;
+            }
         }
 
         void createDefaultTexture(std::string_view name, color value, uint32_t textureSlot) noexcept

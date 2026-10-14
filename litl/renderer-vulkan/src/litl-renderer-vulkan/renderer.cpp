@@ -11,7 +11,7 @@
 #include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/math.hpp"
-#include "litl-renderer/window.hpp"
+#include "litl-platform/window.hpp"
 #include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer-vulkan/renderer.hpp"
 #include "litl-renderer-vulkan/queueFamily.hpp"
@@ -100,21 +100,91 @@ namespace litl::vulkan
 
         LITL_ASSERT_MSG(vulkanContext->window.window != nullptr, "Vulkan Renderer requires a non-null Window. Headless rendering not yet supported.", false);
 
-        return
-            initializeVolk() &&
-            verifyValidationLayers() &&
-            createInstance(*vulkanContext) &&
-            createWindowSurface(*vulkanContext) &&
-            selectPhysicalDevice(*vulkanContext) &&
-            createLogicalDevice(*vulkanContext) &&
-            createMemoryAllocator(*vulkanContext) &&
-            createPipelineCache(*vulkanContext) &&
-            createGlobalResources(*vulkanContext) &&
-            createSwapChain(*vulkanContext, VK_NULL_HANDLE) &&
-            createCommandPool(*vulkanContext) &&
-            createFrameSyncObjects(*vulkanContext) &&
-            createFrameDepthTextures(*vulkanContext, 0u) &&
-            createImageSyncObjects(*vulkanContext);
+        if (!initializeVolk())
+        {
+            logError("Vulkan Renderer failed to initialize Volk");
+            return false;
+        }
+
+        if (!verifyValidationLayers())
+        {
+            logError("Vulkan Renderer failed to verify validation layers.");
+            return false;
+        }
+
+        if (!createInstance(*vulkanContext))
+        {
+            logError("Vulkan Renderer failed to create VkInstance.");
+            return false;
+        }
+
+        if (!createWindowSurface(*vulkanContext))
+        {
+            logError("Vulkan Renderer failed to create window surface.");
+            return false;
+        }
+
+        if (!selectPhysicalDevice(*vulkanContext))
+        {
+            logError("Vulkan Renderer failed to select physical device.");
+            return false;
+        }
+
+        if (!createLogicalDevice(*vulkanContext))
+        {
+            logError("Vulkan Renderer failed to create logical device.");
+            return false;
+        }
+
+        if (!createMemoryAllocator(*vulkanContext))
+        {
+            logError("Vulkan Renderer failed to create memory allocator.");
+            return false;
+        }
+
+        if (!createPipelineCache(*vulkanContext))
+        {
+            logError("Vulkan Renderer failed to create pipeline cache.");
+            return false;
+        }
+
+        if (!createGlobalResources(*vulkanContext))
+        {
+            logError("Vulkan Renderer failed to create global resources.");
+            return false;
+        }
+
+        if (!createSwapChain(*vulkanContext, VK_NULL_HANDLE))
+        {
+            logError("Vulkan Renderer failed to create swapchain(s).");
+            return false;
+        }
+
+        if (!createCommandPool(*vulkanContext))
+        {
+            logError("Vulkan Renderer failed to create command pool(s).");
+            return false;
+        }
+
+        if (!createFrameSyncObjects(*vulkanContext))
+        {
+            logError("Vulkan Renderer failed to create sync object(s).");
+            return false;
+        }
+
+        if (!createFrameDepthTextures(*vulkanContext, 0u))
+        {
+            logError("Vulkan Renderer failed to depth texture(s).");
+            return false;
+        }
+
+        if (!createImageSyncObjects(*vulkanContext))
+        {
+            logError("Vulkan Renderer failed to create image sync object(s).");
+            return false;
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -1061,7 +1131,7 @@ namespace litl::vulkan
     {
         while (context.window.window->getFrameBufferWidth() == 0u || context.window.window->getFrameBufferHeight() == 0u)
         {
-            context.window.window->waitForEvents();
+            context.window.window->blockForEvents();
         }
     }
 

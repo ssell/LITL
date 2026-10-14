@@ -13,11 +13,31 @@ namespace litl
         destroy();
     }
 
-    bool Window::open(std::string_view title, uint32_t width, uint32_t height) const noexcept
+    bool Window::setup(WindowOps const* operations, WindowContext* context) noexcept
+    {
+        if ((m_pOps != nullptr) || (m_pContext != nullptr))
+        {
+            logError("Attempting to setup Window that is already setup.");
+            return false;
+        }
+
+        if ((operations == nullptr) || (context == nullptr))
+        {
+            logError("Attempting to setup Window with null parameters.");
+            return false;
+        }
+
+        m_pOps = operations;
+        m_pContext = context;
+
+        return true;
+    }
+
+    bool Window::open(std::string const& title, uint32_t width, uint32_t height) const noexcept
     {
         LITL_FATAL_ASSERT(width > 0u);
         LITL_FATAL_ASSERT(height > 0u);
-        return m_pOps->open(m_pContext, title.data(), width, height);
+        return m_pOps->open(m_pContext, title, width, height);
     }
 
     void Window::close() const noexcept

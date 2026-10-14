@@ -9,9 +9,6 @@ namespace litl
     class Renderer;
     struct RendererConfiguration;
 
-    [[nodiscard]] Window* createVulkanWindow() noexcept;    // window.cpp
-    void destroyVulkanWindow(Window* window) noexcept;
-
     [[nodiscard]] Renderer* createVulkanRenderer(Window* pWindow, RendererConfiguration const& configuration) noexcept;     // renderer.cpp
     void destroyVulkanRenderer(Renderer* renderer) noexcept;
 }

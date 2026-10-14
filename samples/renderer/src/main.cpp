@@ -16,7 +16,8 @@
 #include "litl-core/containers/alignedByteBuffer.hpp"
 #include "litl-core/containers/common.hpp"
 #include "litl-renderer/renderer.hpp"
-#include "litl-renderer/window.hpp"
+#include "litl-platform/platform.hpp"
+#include "litl-platform-glfw/integration.hpp"
 #include "litl-renderer-vulkan/integration.hpp"
 
 using namespace litl;
@@ -66,6 +67,7 @@ struct SampleRenderState
     // Renderer Resources
     // -------------------------------------------------------------------------------------
 
+    Platform* platform = nullptr;
     Window* window = nullptr;
     Renderer* renderer = nullptr;
     uint32_t framesInFlight = 0u;
@@ -131,7 +133,7 @@ int main()
         sample.startTime = std::chrono::steady_clock::now();
         sample.lastFrameTime = std::chrono::steady_clock::now();
 
-        while (!sample.window->shouldClose())
+        while (!sample.window->closeRequested())
         {
             if (sample.renderer->beginRender(0u))
             {
@@ -204,7 +206,14 @@ void cleanupSample(SampleRenderState& sample) noexcept
 /// <returns></returns>
 bool createWindow(SampleRenderState& sample) noexcept
 {
-    sample.window = createVulkanWindow();
+    sample.platform = createGlfwPlatform();
+
+    if (sample.platform == nullptr)
+    {
+        return false;
+    }
+
+    sample.window = sample.platform->createWindow();
 
     if (sample.window == nullptr)
     {

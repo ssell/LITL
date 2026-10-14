@@ -7,7 +7,8 @@ namespace litl
 {
     namespace glfw
     {
-        [[nodiscard]] bool open(WindowContext* context, const char* title, uint32_t width, uint32_t height) noexcept;
+        [[nodiscard]] Window* createGlfwWindow() noexcept;
+        [[nodiscard]] bool open(WindowContext* context, std::string const& title, uint32_t width, uint32_t height) noexcept;
         void close(WindowContext* context) noexcept;
         void destroy(WindowContext* context) noexcept;
         [[nodiscard]] bool closeRequested(WindowContext* context) noexcept;

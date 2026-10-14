@@ -3,12 +3,13 @@
 #include "litl-core/job/jobScheduler.hpp"
 #include "litl-core/services/serviceCollection.hpp"
 #include "litl-core/services/serviceProvider.hpp"
-#include "litl-renderer/window.hpp"
 #include "litl-renderer/renderer.hpp"
 #include "litl-ecs/frameCallbacks.hpp"
 #include "litl-ecs/world.hpp"
 #include "litl-engine/engine.hpp"
-#include "litl-engine/windowFactory.hpp"
+#include "litl-engine/platformFactory.hpp"
+#include "litl-platform/platform.hpp"
+#include "litl-platform/window.hpp"
 #include "litl-engine/frameLimiter.hpp"
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/objects/objectPool.hpp"
@@ -36,6 +37,7 @@ namespace litl
         // The below are also stored in pServiceProvider, but keep them in here to avoid having to frequently refetch.
         std::shared_ptr<Configuration> pSharedConfig{ nullptr };
         std::shared_ptr<FrameLimiter> pSharedFrameLimiter{ nullptr };
+        std::shared_ptr<Platform> pSharedPlatform{ nullptr };
         std::shared_ptr<Window> pSharedWindow{ nullptr };
         std::shared_ptr<JobScheduler> pSharedJobScheduler{ nullptr };
         std::shared_ptr<World> pSharedECSWorld{ nullptr };
@@ -141,19 +143,20 @@ namespace litl
             return false;
         }
 
-        // --- Setup Renderer
-        if (!createWindow())
+        // Setup Platform
+        if (!createPlatform())
         {
             return false;
         }
 
+        // Setup Renderer
         m_pImpl->pSharedRenderManager->setup({}, (*m_pImpl->pServiceProvider));
 
-        // --- Setup ECS
+        // Setup ECS
         m_pImpl->pSharedECSWorld->setup((*m_pImpl->pServiceProvider), m_pImpl->callbacks.getFrameCallbacks());
         m_pImpl->setup.bootstrap((*m_pImpl->pServiceProvider), (m_pImpl->pSharedECSWorld->getCommandBuffer()));
 
-        // --- Setup Scene
+        // Setup Scene
         m_pImpl->pSharedSceneManager->createScene(m_pImpl->pSharedConfig->scene);
 
         if (m_pImpl->userBootstrap != nullptr)
@@ -172,7 +175,7 @@ namespace litl
         {
             m_pImpl->pSharedWindow->pollForEvents();
 
-            if (m_pImpl->pSharedWindow->shouldClose())
+            if (m_pImpl->pSharedWindow->closeRequested())
             {
                 logInfo("Window closing.");
                 break;
@@ -184,23 +187,58 @@ namespace litl
         return true;
     }
 
-    bool Engine::createWindow() noexcept
+    bool Engine::createPlatform() noexcept
     {
+        // ---------------------------------------------------------------------------------
+        // Platform
+        // ---------------------------------------------------------------------------------
+
+        logInfo("Creating platform ...");
+        
+        if (!injectPlatform((*m_pImpl->pServiceProvider), m_pImpl->pSharedConfig->platform.platformType))
+        {
+            return false;
+        }
+
+        m_pImpl->pSharedPlatform = m_pImpl->pServiceProvider->get<Platform>();
+
+        if (m_pImpl->pSharedPlatform == nullptr)
+        {
+            logCritical("Failed to retrieve injected platform.");
+            return false;
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Window
+        // ---------------------------------------------------------------------------------
+
         auto title = m_pImpl->pSharedConfig->platform.title;
         auto width = m_pImpl->pSharedConfig->platform.windowWidth;
         auto height = m_pImpl->pSharedConfig->platform.windowHeight;
 
         logInfo("Opening window \"", title, "\" (", width, "x", height, ") ...");
-        
-        injectWindow((*m_pImpl->pServiceProvider), m_pImpl->pSharedConfig->platform.platformType);
 
-        m_pImpl->pSharedWindow = m_pImpl->pServiceProvider->get<Window>();
+        auto* window = m_pImpl->pSharedPlatform->createWindow();
 
-        if (!m_pImpl->pSharedWindow->open(title, width, height))
+        if (window == nullptr)
         {
-            logCritical("Failed to open Window");
+            logCritical("Failed to create window.");
             return false;
         }
+
+        if (!m_pImpl->pServiceProvider->setSingleton<Window, Window>(window))
+        {
+            logCritical("Failed to inject window.");
+            return false;
+        }
+
+        if (!window->open(title, width, height))
+        {
+            logCritical("Failed to open window.");
+            return false;
+        }
+
+        m_pImpl->pSharedWindow = m_pImpl->pServiceProvider->get<Window>();
 
         return true;
     }

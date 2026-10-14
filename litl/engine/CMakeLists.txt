@@ -1,6 +1,5 @@
 add_library(litl-engine STATIC
 	"src/engine.cpp"
-	"src/windowFactory.cpp" 
 	"src/frameLimiter.cpp" 
 	"src/config.cpp" 
 	"src/bootstrap.cpp" 
@@ -46,7 +45,8 @@ add_library(litl-engine STATIC
 	"src/ecs/systems/modelInstantiationSystem.cpp" 
 	"src/utility.cpp" 
 	"src/ecs/systems/meshInstantiationSystem.cpp"
-	"src/assets/fileAssetSource.cpp")
+	"src/assets/fileAssetSource.cpp" 
+	"src/platformFactory.cpp")
 
 target_include_directories(litl-engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
@@ -59,15 +59,16 @@ target_link_libraries(litl-engine
 )
 
 if (LITL_ENABLE_VULKAN)
+	target_compile_definitions(litl-engine PUBLIC LITL_RENDERER_VULKAN)
 	target_link_libraries(litl-engine PUBLIC litl-renderer-vulkan)
 endif()
 
 if (LITL_ENABLE_PLATFORM_GLFW)
+	target_compile_definitions(litl-engine PUBLIC LITL_PLATFORM_GLFW)
 	target_link_libraries(litl-engine PUBLIC litl-platform-glfw)
 endif()
 
 target_compile_features(litl-engine PUBLIC cxx_std_23)
-target_compile_definitions(litl-engine PUBLIC LITL_RENDERER_VULKAN)
 
 if (MSVC)
 	target_compile_options(litl-engine PRIVATE /EHs-c- /D_HAS_EXCEPTIONS=0 /GR-)

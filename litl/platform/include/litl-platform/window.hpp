@@ -2,7 +2,7 @@
 #define LITL_PLATFORM_WINDOW_H__
 
 #include <cstdint>
-#include <string_view>
+#include <string>
 
 namespace litl
 {
@@ -27,7 +27,7 @@ namespace litl
     /// </summary>
     struct WindowOps
     {
-        bool (*open)(WindowContext*, const char*, uint32_t, uint32_t);
+        bool (*open)(WindowContext*, std::string const&, uint32_t, uint32_t);
         void (*close)(WindowContext*);
         void (*destroy)(WindowContext*);
         bool (*closeRequested)(WindowContext*);
@@ -46,13 +46,13 @@ namespace litl
     public:
 
         Window();
-        explicit Window(WindowOps const* operations, WindowContext* context);
         ~Window();
 
         Window(Window const&) = delete;
         Window& operator=(Window const&) = delete;
 
-        [[nodiscard]] bool open(std::string_view title, uint32_t width, uint32_t height) const noexcept;
+        [[nodiscard]] bool setup(WindowOps const* operations, WindowContext* context) noexcept;
+        [[nodiscard]] bool open(std::string const& title, uint32_t width, uint32_t height) const noexcept;
         void close() const noexcept;
         void destroy() noexcept;
         [[nodiscard]] bool closeRequested() const noexcept;

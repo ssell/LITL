@@ -21,6 +21,18 @@ namespace litl
         "Metal"
     };
 
+    constexpr std::string_view getRendererName(RendererBackendType type) noexcept
+    {
+        const auto idx = static_cast<size_t>(type);
+
+        if (idx < RendererBackendNames.size())
+        {
+            return RendererBackendNames[idx];
+        }
+
+        return "Unknown";
+    }
+
     enum class PipelineBindType : uint32_t
     {
         Graphics = 0,

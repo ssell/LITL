@@ -29,7 +29,7 @@ FetchContent_Declare(VulkanMemoryAllocator GIT_REPOSITORY https://github.com/GPU
 FetchContent_MakeAvailable(VulkanMemoryAllocator)
 
 add_library(litl-renderer-vulkan STATIC
-	"src/litl-renderer-vulkan/window.cpp" 
+	 
 	"src/litl-renderer-vulkan/renderer.cpp"
 	"src/litl-renderer-vulkan/resourceManager.cpp" 
 	"src/litl-renderer-vulkan/swapChainSupport.cpp"
@@ -71,6 +71,7 @@ target_link_libraries(litl-renderer-vulkan
 	PRIVATE
 		litl-core
 		litl-renderer
+		litl-platform
 		glfw
 		Vulkan::Headers
 		GPUOpen::VulkanMemoryAllocator

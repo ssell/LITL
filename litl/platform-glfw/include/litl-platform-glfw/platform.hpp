@@ -10,12 +10,14 @@ namespace litl
         [[nodiscard]] bool initialize(PlatformContext* context) noexcept;
         [[nodiscard]] bool shutdown(PlatformContext* context) noexcept;
         [[nodiscard]] Window* createWindow(PlatformContext* context) noexcept;
+        [[nodiscard]] Window* getWindow(PlatformContext* context) noexcept;
     }
 
     inline constexpr PlatformOps GlfwPlatformOps = {
         .initialize = &glfw::initialize,
         .shutdown = &glfw::shutdown,
-        .createWindow = &glfw::createWindow
+        .createWindow = &glfw::createWindow,
+        .getWindow = &glfw::getWindow
     };
 }
 

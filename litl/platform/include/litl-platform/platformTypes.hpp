@@ -16,6 +16,18 @@ namespace litl
         "None",
         "GLFW"
     };
+
+    constexpr std::string_view getPlatformName(PlatformType type) noexcept
+    {
+        const auto idx = static_cast<size_t>(type);
+
+        if (idx < PlatformNames.size())
+        {
+            return PlatformNames[idx];
+        }
+
+        return "Unknown";
+    }
 }
 
 #endif

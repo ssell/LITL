@@ -2,41 +2,48 @@
 #include "litl-platform-glfw/glfw.hpp"
 #include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
-#include "litl-platform-glfw/integration.hpp"
 
 namespace litl
 {
     struct WindowContext
     {
-        Window* litlWindow = nullptr;
-        GLFWwindow* glfwWindow = nullptr;
+        Window litlWindow{};
+        GLFWwindow* glfwWindow{ nullptr };
         WindowState state;
         uint32_t frameBufferWidth = 0u;
         uint32_t frameBufferHeight = 0u;
     };
 
-    /// <summary>
-    /// Defined in integration.hpp and used by litl-engine.
-    /// </summary>
-    Window* createGlfwWindow() noexcept
+    WindowContext& getGlfwWindowContext() noexcept
     {
-        auto* context = new WindowContext();
-        auto* window = new Window(&litl::GlfwWindowOps, context);
-
-        context->litlWindow = window;
-
-        return window;
+        static WindowContext context{};
+        return context;
     }
 }
 
 namespace litl::glfw
 {
-    bool open(WindowContext* context, const char* title, uint32_t width, uint32_t height) noexcept
+    /// <summary>
+    /// Defined in integration.hpp and used by litl-engine.
+    /// </summary>
+    Window* createGlfwWindow() noexcept
+    {
+        WindowContext& context = getGlfwWindowContext();
+
+        if (!context.litlWindow.setup(&GlfwWindowOps, &context))
+        {
+            logError("Failed to setup GLFW window.");
+            return nullptr;
+        }
+
+        return &context.litlWindow;
+    }
+
+    bool open(WindowContext* context, std::string const& title, uint32_t width, uint32_t height) noexcept
     {
         logInfo("Opening GLFW Window");
 
         LITL_ASSERT_MSG(context != nullptr, "Attempted to open window with a provided NULL context!", false);
-        LITL_ASSERT_MSG(context->litlWindow != nullptr, "Attempted to open with with a NULL internal window!", false);
 
         context->frameBufferWidth = width;
         context->frameBufferHeight = height;
@@ -44,7 +51,7 @@ namespace litl::glfw
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-        context->glfwWindow = glfwCreateWindow(width, height, title, nullptr, nullptr);
+        context->glfwWindow = glfwCreateWindow(width, height, title.data(), nullptr, nullptr);
 
         if (!context->glfwWindow)
         {
@@ -53,7 +60,7 @@ namespace litl::glfw
             return false;
         }
 
-        glfwSetWindowUserPointer(context->glfwWindow, context->litlWindow);
+        glfwSetWindowUserPointer(context->glfwWindow, context->glfwWindow);
         glfwSetFramebufferSizeCallback(context->glfwWindow, [](GLFWwindow* pWindow, int width, int height)
         {
             auto litlWindow = static_cast<litl::Window*>(glfwGetWindowUserPointer(pWindow));
@@ -69,9 +76,10 @@ namespace litl::glfw
     {
         logInfo("Closing GLFW Window");
 
-        if (context->litlWindow != nullptr)
+        if (context->glfwWindow != nullptr)
         {
             glfwDestroyWindow(context->glfwWindow);
+            context->glfwWindow = nullptr;
         }
 
         context->state = WindowState::Closed;
@@ -81,16 +89,10 @@ namespace litl::glfw
     {
         if (context != nullptr)
         {
-            if (context->litlWindow != nullptr)
+            if (context->glfwWindow != nullptr)
             {
                 close(context);
-                glfwTerminate();
-
-                delete context->litlWindow;
-                context->litlWindow = nullptr;
             }
-
-            delete context;
         }
     }
 

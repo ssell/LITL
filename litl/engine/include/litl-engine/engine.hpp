@@ -28,7 +28,7 @@ namespace litl
 
     private:
 
-        bool createWindow() noexcept;
+        bool createPlatform() noexcept;
         void run();
         void update();
 
