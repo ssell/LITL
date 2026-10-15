@@ -22,15 +22,16 @@ namespace litl
         Engine& operator=(Engine const&) = delete;
 
         void setup(Configuration config, ConfigureServicesFunc servicesFunc, ConfigureSystemsFunc systemsFunc, ConfigureCallbacksFunc callbacksFunc, BootstrapFunc bootstrapFunc) noexcept;
-        bool start();
+        bool start() noexcept;
+        void shutdown() noexcept;
 
     protected:
 
     private:
 
         bool createPlatform() noexcept;
-        void run();
-        void update();
+        void run() noexcept;
+        void update() noexcept;
 
         struct Impl;
         std::unique_ptr<Impl> m_pImpl;

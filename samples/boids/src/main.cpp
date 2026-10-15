@@ -35,6 +35,7 @@ int main()
         bootstrap);
 
     engine.start();
+    engine.shutdown();
 
     return 0;
 }

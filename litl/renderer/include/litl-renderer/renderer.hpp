@@ -103,6 +103,7 @@ namespace litl
         SwapChainDimensions (*getSwapchainDimensions)(RendererContext*);
         FrameData (*getFrameData)(RendererContext*);
         uint32_t (*getMaxPushConstantSize)(RendererContext*);
+        void (*halt)(RendererContext*);
     };
 
     /// <summary>
@@ -537,6 +538,11 @@ namespace litl
         /// </summary>
         /// <param name="handle"></param>
         [[nodiscard]] ShaderStage getGraphicsPipelinePushConstantStages(GraphicsPipelineHandle handle) const noexcept;
+
+        /// <summary>
+        /// Forces a blocking wait until all GPU rendering operations are halted.
+        /// </summary>
+        void halt() const noexcept;
 
     private:
 

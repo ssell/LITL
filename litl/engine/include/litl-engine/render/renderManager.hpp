@@ -30,10 +30,12 @@ namespace litl
         ~RenderManager();
 
         void setup(Authority<Engine> authority, ServiceProvider& services) noexcept;
+        void destroy(Authority<Engine> authority) noexcept;
         void onRender(Authority<EngineCallbacks> authority, float dt) noexcept;
         [[nodiscard]] Renderer const* getRenderer() const noexcept;
         void trackDirtyBuffer(Authority<GpuBuffer> auth, GpuBufferHandle handle) noexcept;
         void trackDirtyTexture(Authority<Texture> auth, TextureHandle handle) noexcept;
+        void halt() noexcept;
 
     private:
 

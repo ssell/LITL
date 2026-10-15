@@ -65,6 +65,13 @@ namespace litl
         {
             LITL_FATAL_ASSERT(context != nullptr);
 
+            if (context->window != nullptr)
+            {
+                // Note: we do not delete window here as it is stack allocated.
+                context->window->destroy();
+                context->window = nullptr;
+            }
+
             if (context->initialized)
             {
                 glfwTerminate();

@@ -25,6 +25,20 @@ namespace litl
     // PIMPL
     // -------------------------------------------------------------------------------------
 
+    namespace
+    {
+        enum class EngineState : uint32_t
+        {
+            Waiting = 0u,
+            Ready = 1u,
+            Starting = 2u,
+            Running = 3u,
+            Stopped = 4u,
+            Shutdown = 5u,
+            Failed = 6u
+        };
+    }
+
     struct Engine::Impl
     {
         EngineSetupFunctions setup;
@@ -33,6 +47,7 @@ namespace litl
         std::shared_ptr<ServiceProvider> pServiceProvider{ nullptr };
         BootstrapFunc userBootstrap{ nullptr };
         EngineCallbacks callbacks;
+        EngineState state{ EngineState::Waiting };
 
         // The below are also stored in pServiceProvider, but keep them in here to avoid having to frequently refetch.
         std::shared_ptr<Configuration> pSharedConfig{ nullptr };
@@ -77,12 +92,7 @@ namespace litl
 
     Engine::~Engine()
     {
-        logInfo("LITL Engine Shutdown");
-
-        m_pImpl->pSharedAssetManager->destroy({});
-        m_pImpl->pSharedObjectPool->destroy({});
-
-        litl::Logger::shutdown();
+        shutdown();
     }
 
     void Engine::setup(
@@ -92,6 +102,13 @@ namespace litl
         ConfigureCallbacksFunc callbacksFunc,
         BootstrapFunc bootstrapFunc) noexcept
     {
+        if (m_pImpl->state != EngineState::Waiting)
+        {
+            return;
+        }
+
+        m_pImpl->state = EngineState::Ready;
+
         // These can be modified by the user (though it is unusual), so make sure they exist first.
         assert(m_pImpl->setup.configureServices != nullptr);
         assert(m_pImpl->setup.configureSystems != nullptr);
@@ -135,17 +152,73 @@ namespace litl
         m_pImpl->configureCallbacks(callbacksFunc);
     }
 
-    bool Engine::start()
+    void Engine::shutdown() noexcept
     {
+        if (m_pImpl->state == EngineState::Shutdown)
+        {
+            return;
+        }
+
+        logInfo("LITL Engine Shutdown ...");
+        m_pImpl->state = EngineState::Shutdown;
+
+        if (m_pImpl->pSharedRenderManager != nullptr)
+        {
+            logInfo("Halting Renderer ...");
+            m_pImpl->pSharedRenderManager->halt();
+        }
+
+        if (m_pImpl->pSharedAssetManager != nullptr)
+        {
+            logInfo("Shutdown Asset Manager ...");
+            m_pImpl->pSharedAssetManager->destroy({});
+        }
+
+        if (m_pImpl->pSharedObjectPool != nullptr)
+        {
+            logInfo("Shutdown Object Pool ...");
+            m_pImpl->pSharedObjectPool->destroy({});
+        }
+
+        if (m_pImpl->pSharedRenderManager != nullptr)
+        {
+            logInfo("Shutdown Render Manager ...");
+            m_pImpl->pSharedRenderManager->destroy({});
+        }
+
+        if (m_pImpl->pSharedPlatform != nullptr)
+        {
+            logInfo("Shutdown Platform ...");
+
+            if (!m_pImpl->pSharedPlatform->shutdown())
+            {
+                logInfo("... Platform shutdown failed.");
+            }
+        }
+
+        logInfo("Shutdown Logger. Goodbye.");
+        litl::Logger::shutdown();
+    }
+
+    bool Engine::start() noexcept
+    {
+        if (m_pImpl->state != EngineState::Ready)
+        {
+            logWarning("Attempting to start engine that is not in Ready state.");
+            return false;
+        }
+
         if (m_pImpl->pServiceProvider == nullptr)
         {
             logCritical("Attempted LITL Engine start prior to setup.");
+            m_pImpl->state = EngineState::Failed;
             return false;
         }
 
         // Setup Platform
         if (!createPlatform())
         {
+            m_pImpl->state = EngineState::Failed;
             return false;
         }
 
@@ -170,6 +243,7 @@ namespace litl
         m_pImpl->pSharedECSWorld->finalize();
 
         logInfo("Running ...");
+        m_pImpl->state = EngineState::Running;
 
         while (true)
         {
@@ -184,6 +258,7 @@ namespace litl
             run();
         }
 
+        m_pImpl->state = EngineState::Stopped;
         return true;
     }
 
@@ -243,7 +318,7 @@ namespace litl
         return true;
     }
 
-    void Engine::run()
+    void Engine::run() noexcept
     {
         m_pImpl->pSharedFrameLimiter->frameStart();
 
@@ -253,7 +328,7 @@ namespace litl
         m_pImpl->pSharedFrameLimiter->frameEnd();
     }
 
-    void Engine::update()
+    void Engine::update() noexcept
     {
         m_pImpl->pSharedECSWorld->run(
             m_pImpl->pSharedFrameLimiter->frameDelta(),

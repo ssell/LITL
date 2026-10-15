@@ -41,4 +41,14 @@ namespace litl::vulkan
 
         return physicalProperties.limits.maxPushConstantsSize;
     }
+
+    void halt(litl::RendererContext* context) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+
+        if ((vulkanContext != nullptr) && (vulkanContext->device.vkDevice != VK_NULL_HANDLE))
+        {
+            vkDeviceWaitIdle(vulkanContext->device.vkDevice);
+        }
+    }
 }

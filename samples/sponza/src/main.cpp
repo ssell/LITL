@@ -35,14 +35,9 @@ int main()
     litl::Engine engine{};
     litl::Configuration config{ .platform { .title = "LITL - Sponza Sample" } };
 
-    engine.setup(
-        config,
-        nullptr,
-        litl::samples::configureSystems,
-        nullptr,
-        litl::samples::bootstrap);
-
+    engine.setup(config, nullptr, litl::samples::configureSystems, nullptr, litl::samples::bootstrap);
     engine.start();
+    engine.shutdown();
 
     return 0;
 }

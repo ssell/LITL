@@ -414,6 +414,12 @@ namespace litl
         return m_pOps->getGraphicsPipelinePushConstantStages(m_pContext, handle);
     }
 
+    void Renderer::halt() const noexcept
+    {
+        LITL_FATAL_ASSERT(valid());
+        m_pOps->halt(m_pContext);
+    }
+
     bool Renderer::valid() const noexcept
     {
         return (m_pContext != nullptr) && (m_pOps != nullptr);

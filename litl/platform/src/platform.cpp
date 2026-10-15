@@ -50,7 +50,7 @@ namespace litl
             return m_pOps->shutdown(m_pContext);
         }
 
-        return false;
+        return true;
     }
 
     Window* Platform::createWindow() const noexcept

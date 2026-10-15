@@ -2,6 +2,7 @@
 #include "litl-platform-glfw/glfw.hpp"
 #include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
+#include "litl-core/math/common.hpp"
 
 namespace litl
 {
@@ -9,9 +10,9 @@ namespace litl
     {
         Window litlWindow{};
         GLFWwindow* glfwWindow{ nullptr };
-        WindowState state;
-        uint32_t frameBufferWidth = 0u;
-        uint32_t frameBufferHeight = 0u;
+        WindowState state{ WindowState::Unknown };
+        uint32_t frameBufferWidth{ 0u };
+        uint32_t frameBufferHeight{ 0u };
     };
 
     WindowContext& getGlfwWindowContext() noexcept
@@ -59,8 +60,9 @@ namespace litl::glfw
             return false;
         }
 
-        glfwSetWindowUserPointer(context->glfwWindow, &context);
-        glfwSetFramebufferSizeCallback(context->glfwWindow, [](GLFWwindow* pWindow, int width, int height)
+        glfwGetFramebufferSize(context->glfwWindow, reinterpret_cast<int*>(&context->frameBufferWidth), reinterpret_cast<int*>(&context->frameBufferHeight));
+        glfwSetWindowUserPointer(context->glfwWindow, &context->litlWindow);
+        glfwSetFramebufferSizeCallback(context->glfwWindow, [](GLFWwindow* pWindow, int width, int height)  
         {
             auto litlWindow = static_cast<litl::Window*>(glfwGetWindowUserPointer(pWindow));
             litlWindow->onResize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
@@ -117,7 +119,14 @@ namespace litl::glfw
 
     float getAspectRatio(WindowContext* context) noexcept
     {
-        return (static_cast<float>(context->frameBufferWidth) / static_cast<float>(context->frameBufferHeight));
+        if (isZero(context->frameBufferHeight))
+        {
+            return 1.0f;
+        }
+        else
+        {
+            return (static_cast<float>(context->frameBufferWidth) / static_cast<float>(context->frameBufferHeight));
+        }
     }
 
     void* getSurfaceWindow(WindowContext* context) noexcept

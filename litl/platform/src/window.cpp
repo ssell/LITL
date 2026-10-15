@@ -85,7 +85,7 @@ namespace litl
     float Window::getAspectRatio() const noexcept
     {
         LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
-        return m_pOps->getFrameBufferHeight(m_pContext);
+        return m_pOps->getAspectRatio(m_pContext);
     }
 
     void* Window::getSurfaceWindow() const noexcept

@@ -2,8 +2,6 @@
 #define LITL_PLATFORM_H__
 
 #include <cstdint>
-
-#include "litl-core/authority.hpp"
 #include "litl-platform/window.hpp"
 
 namespace litl
@@ -36,8 +34,6 @@ namespace litl
         [[nodiscard]] bool shutdown() const noexcept;
         [[nodiscard]] Window* createWindow() const noexcept;
         [[nodiscard]] Window* getWindow() const noexcept;
-
-
 
     private:
 

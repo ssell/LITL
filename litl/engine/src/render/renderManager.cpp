@@ -140,6 +140,15 @@ namespace litl
             createDefaultTextures();
         }
 
+        void destroy() noexcept
+        {
+            if (renderer != nullptr)
+            {
+                renderer->destroy();
+                renderer = nullptr;
+            }
+        }
+
         void createRenderer(Window* window, RendererConfiguration const& rendererDescriptor) noexcept
         {
             switch (rendererDescriptor.rendererType)
@@ -530,6 +539,15 @@ namespace litl
             renderer->cmdEnd(commandBuffer);
             renderer->submitCommands(commandBuffer);
         }
+
+        void halt() noexcept
+        {
+            if (renderer == nullptr)
+            {
+                return;
+            }
+
+        }
     };
 
     RenderManager::RenderManager()
@@ -548,6 +566,11 @@ namespace litl
         m_pImpl->setup(services);
     }
 
+    void RenderManager::destroy(Authority<Engine> authority) noexcept
+    {
+        m_pImpl->destroy();
+    }
+
     Renderer const* RenderManager::getRenderer() const noexcept
     {
         return m_pImpl->renderer;
@@ -561,6 +584,11 @@ namespace litl
     void RenderManager::trackDirtyTexture(Authority<Texture> auth, TextureHandle handle) noexcept
     {
         m_pImpl->trackDirtyTexture(handle);
+    }
+
+    void RenderManager::halt() noexcept
+    {
+        m_pImpl->halt();
     }
 
     void RenderManager::onRender(Authority<EngineCallbacks> authority, float dt) noexcept
