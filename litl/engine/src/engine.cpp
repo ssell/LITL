@@ -54,6 +54,7 @@ namespace litl
         std::shared_ptr<FrameLimiter> pSharedFrameLimiter{ nullptr };
         std::shared_ptr<Platform> pSharedPlatform{ nullptr };
         std::shared_ptr<Window> pSharedWindow{ nullptr };
+        std::shared_ptr<Input> pSharedInput{ nullptr };
         std::shared_ptr<JobScheduler> pSharedJobScheduler{ nullptr };
         std::shared_ptr<World> pSharedECSWorld{ nullptr };
         std::shared_ptr<RenderManager> pSharedRenderManager{ nullptr };
@@ -314,6 +315,28 @@ namespace litl
         }
 
         m_pImpl->pSharedWindow = m_pImpl->pServiceProvider->get<Window>();
+
+        // ---------------------------------------------------------------------------------
+        // Input
+        // ---------------------------------------------------------------------------------
+
+        logInfo("Creating input layer ...");
+
+        auto* input = m_pImpl->pSharedPlatform->createInput();
+
+        if (input == nullptr)
+        {
+            logCritical("Failed to create input layer.");
+            return false;
+        }
+
+        if (!m_pImpl->pServiceProvider->setSingleton<Input, Input>(input, false))
+        {
+            logCritical("Failed to inject input layer.");
+            return false;
+        }
+
+        m_pImpl->pSharedInput = m_pImpl->pServiceProvider->get<Input>();
 
         return true;
     }

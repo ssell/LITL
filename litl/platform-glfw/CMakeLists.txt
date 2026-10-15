@@ -1,5 +1,5 @@
 add_library(litl-platform-glfw STATIC
-	"src/window.cpp" "src/platform.cpp")
+	"src/window.cpp" "src/platform.cpp" "src/input.cpp")
 
 target_include_directories(litl-platform-glfw PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(litl-platform-glfw PUBLIC litl-platform)

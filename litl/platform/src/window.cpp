@@ -51,12 +51,13 @@ namespace litl
 
     void Window::destroy() noexcept
     {
-        if (m_pContext != nullptr)
+        if ((m_pOps != nullptr) && (m_pContext != nullptr))
         {
             m_pOps->destroy(m_pContext);
-            m_pContext = nullptr;
-            m_pOps = nullptr;
         }
+
+        m_pOps = nullptr;
+        m_pContext = nullptr;
     }
 
     bool Window::closeRequested() const noexcept

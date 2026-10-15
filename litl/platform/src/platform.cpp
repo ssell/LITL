@@ -64,4 +64,16 @@ namespace litl
         LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
         return m_pOps->getWindow(m_pContext);
     }
+    
+    Input* Platform::createInput() const noexcept
+    {
+        LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
+        return m_pOps->createInput(m_pContext);
+    }
+
+    Input* Platform::getInput() const noexcept
+    {
+        LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
+        return m_pOps->getInput(m_pContext);
+    }
 }

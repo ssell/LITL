@@ -19,6 +19,8 @@ namespace litl
         bool (*shutdown)(PlatformContext*);
         Window* (*createWindow)(PlatformContext*);
         Window* (*getWindow)(PlatformContext*);
+        Input* (*createInput)(PlatformContext*);
+        Input* (*getInput)(PlatformContext*);
     };
 
     class Platform final
@@ -36,6 +38,8 @@ namespace litl
         [[nodiscard]] bool shutdown() const noexcept;
         [[nodiscard]] Window* createWindow() const noexcept;
         [[nodiscard]] Window* getWindow() const noexcept;
+        [[nodiscard]] Input* createInput() const noexcept;
+        [[nodiscard]] Input* getInput() const noexcept;
 
     private:
 

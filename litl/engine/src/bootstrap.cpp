@@ -14,6 +14,7 @@
 #include "litl-engine/ecs/systems/modelInstantiationSystem.hpp"
 #include "litl-platform/platform.hpp"
 #include "litl-platform/window.hpp"
+#include "litl-platform/input.hpp"
 #include "litl-ecs/world.hpp"
 
 namespace litl::Internal
@@ -26,6 +27,7 @@ namespace litl::Internal
         services.addSingleton<World>();
         services.addSingleton<Platform>();
         services.addSingleton<Window>();
+        services.addSingleton<Input>();
         services.addSingleton<RenderManager>();
         services.addSingleton<ObjectPool>();
         services.addSingleton<MaterialManager>();

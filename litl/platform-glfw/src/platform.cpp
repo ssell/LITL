@@ -1,6 +1,7 @@
+#include "litl-platform-glfw/glfw.hpp"
 #include "litl-platform-glfw/platform.hpp"
 #include "litl-platform-glfw/window.hpp"
-#include "litl-platform-glfw/glfw.hpp"
+#include "litl-platform-glfw/input.hpp"
 #include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
 
@@ -10,6 +11,7 @@ namespace litl
     {
         bool initialized{ false };
         Window* window{ nullptr };
+        Input* input{ nullptr };
     };
 
     PlatformContext& getGlfwPlatformContext() noexcept
@@ -68,12 +70,22 @@ namespace litl
             if (context->window != nullptr)
             {
                 // Note: we do not delete window here as it is stack allocated.
+                logInfo("Platform destroy window ...");
                 context->window->destroy();
                 context->window = nullptr;
             }
 
+            if (context->input != nullptr)
+            {
+                // Note: we do not delete input here as it is stack allocated.
+                logInfo("Platform destroy input layer ...");
+                context->input->destroy();
+                context->input = nullptr;
+            }
+
             if (context->initialized)
             {
+                logInfo("Platform terminate GLFW ...");
                 glfwTerminate();
                 context->initialized = false;
             }
@@ -104,6 +116,29 @@ namespace litl
         Window* getWindow(PlatformContext* context) noexcept
         {
             return context->window;
+        }
+
+        Input* createInput(PlatformContext* context) noexcept
+        {
+            if (!context->initialized)
+            {
+                logError("Requested to create GLFW input layer when the GLFW subsystem is not yet initialized.");
+                return nullptr;
+            }
+
+            if (context->input != nullptr)
+            {
+                logError("Requested to create GLFW input layer when it already exists.");
+                return nullptr;
+            }
+
+            context->input = createGlfwInput();
+            return context->input;
+        }
+
+        Input* getInput(PlatformContext* context) noexcept
+        {
+            return context->input;
         }
     }
 }
