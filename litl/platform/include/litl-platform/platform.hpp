@@ -2,7 +2,9 @@
 #define LITL_PLATFORM_H__
 
 #include <cstdint>
+
 #include "litl-platform/window.hpp"
+#include "litl-platform/input.hpp"
 
 namespace litl
 {
