@@ -547,6 +547,7 @@ namespace litl
                 return;
             }
 
+            renderer->halt();
         }
     };
 

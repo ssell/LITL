@@ -1001,13 +1001,13 @@ namespace litl::vulkan
         vkDeviceWaitIdle(vulkanContext->device.vkDevice);
 
         cleanupPipelineCache(*vulkanContext);
-        cleanupTextureTable(*vulkanContext);
-        cleanupSamplerArray(*vulkanContext);                    // Must occur before the resource manager is destroyed
         cleanupFrameDepthTextures(*vulkanContext);
         cleanupFrameSync(*vulkanContext);
         cleanupImageSync(*vulkanContext);
         cleanupSwapChainImages(*vulkanContext);
         cleanupSwapChain(*vulkanContext, vulkanContext->swapChain.vkSwapChain);
+        cleanupTextureTable(*vulkanContext);
+        cleanupSamplerArray(*vulkanContext);                    // Must occur before the resource manager is destroyed
         cleanupResources(*vulkanContext);
         cleanupDevice(*vulkanContext);
 
@@ -1042,6 +1042,11 @@ namespace litl::vulkan
     {
         for (auto& frameInfo : context.renderInfo.frameSyncInfo)
         {
+            if (frameInfo.destructionQueue != nullptr)
+            {
+                frameInfo.destructionQueue->process();
+            }
+
             context.resources.destroyCommandBuffer(frameInfo.commandBuffer);
             frameInfo.commandBuffer = {};
 
@@ -1101,29 +1106,40 @@ namespace litl::vulkan
 
     void cleanupDevice(RendererContext& context) noexcept
     {
+        if (context.device.vkCommandPoolTransient != VK_NULL_HANDLE)
+        {
+            vkDestroyCommandPool(context.device.vkDevice, context.device.vkCommandPoolTransient, nullptr);
+            context.device.vkCommandPoolTransient = VK_NULL_HANDLE;
+        }
+
         if (context.device.vkCommandPool != VK_NULL_HANDLE)
         {
             vkDestroyCommandPool(context.device.vkDevice, context.device.vkCommandPool, nullptr);
+            context.device.vkCommandPool = VK_NULL_HANDLE;
         }
 
         if (context.device.vkSurface != VK_NULL_HANDLE)
         {
             vkDestroySurfaceKHR(context.device.vkInstance, context.device.vkSurface, nullptr);
+            context.device.vkSurface = VK_NULL_HANDLE;
         }
 
         if (context.device.vmaAllocator != VK_NULL_HANDLE)
         {
             vmaDestroyAllocator(context.device.vmaAllocator);
+            context.device.vmaAllocator = VK_NULL_HANDLE;
         }
 
         if (context.device.vkDevice != VK_NULL_HANDLE)
         {
             vkDestroyDevice(context.device.vkDevice, nullptr);
+            context.device.vkDevice = VK_NULL_HANDLE;
         }
 
         if (context.device.vkInstance != VK_NULL_HANDLE)
         {
             vkDestroyInstance(context.device.vkInstance, nullptr);
+            context.device.vkInstance = VK_NULL_HANDLE;
         }
     }
 

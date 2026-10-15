@@ -291,9 +291,15 @@ namespace litl::vulkan
         m_freeSlots.push_back(slot);
         m_freeCount++;
 
-        if (!writeSlot(slot, m_pContext->resources.getTexture(m_fallbackHandle)))
+        if (m_fallbackHandle.isValid() && !writeSlot(slot, m_pContext->resources.getTexture(m_fallbackHandle)))
         {
             logWarning("Failed to set released texture table slot ", slot, " to fallback texture handle.");
+        }
+
+        if (slot == 0u)
+        {
+            // The fallback handle was just released.
+            m_fallbackHandle = {};
         }
 
         return true;
