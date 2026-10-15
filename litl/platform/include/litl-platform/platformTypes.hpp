@@ -2,6 +2,7 @@
 #define LITL_PLATFORM_TYPES_H__
 
 #include <array>
+#include <cstdint>
 #include <string_view>
 
 namespace litl

@@ -16,7 +16,7 @@ namespace litl
         [[nodiscard]] uint32_t getFrameBufferWidth(WindowContext* context) noexcept;
         [[nodiscard]] uint32_t getFrameBufferHeight(WindowContext* context) noexcept;
         [[nodiscard]] float getAspectRatio(WindowContext* context) noexcept;
-        void* getSurfaceWindow(WindowContext* context) noexcept;
+        [[nodiscard]] NativeWindowHandle getNativeWindowHandle(WindowContext* context) noexcept;
         void onResize(WindowContext* context, uint32_t width, uint32_t height) noexcept;
         void pollForEvents(WindowContext* context) noexcept;
         void blockForEvents(WindowContext* context, float timeoutSeconds) noexcept;
@@ -31,7 +31,7 @@ namespace litl
         .getFrameBufferWidth = &glfw::getFrameBufferWidth,
         .getFrameBufferHeight = &glfw::getFrameBufferHeight,
         .getAspectRatio = &glfw::getAspectRatio,
-        .getSurfaceWindow = &glfw::getSurfaceWindow,
+        .getNativeWindowHandle = &glfw::getNativeWindowHandle,
         .onResize = &glfw::onResize,
         .pollForEvents = &glfw::pollForEvents,
         .blockForEvents = &glfw::blockForEvents

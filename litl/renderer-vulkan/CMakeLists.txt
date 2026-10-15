@@ -8,28 +8,15 @@ else()
 endif()
 
 # Volk
-FetchContent_Declare(
-    volk
-    GIT_REPOSITORY https://github.com/zeux/volk.git
-    GIT_TAG        1.4.350
-    GIT_SHALLOW    TRUE
-)
+FetchContent_Declare(volk GIT_REPOSITORY https://github.com/zeux/volk.git GIT_TAG 1.4.350 GIT_SHALLOW TRUE SYSTEM)
 set(VOLK_PULL_IN_VULKAN ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(volk)
 
-# GLFW
-FetchContent_Declare(glfw GIT_REPOSITORY https://github.com/glfw/glfw.git GIT_TAG 3.4)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_DOCS     OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(glfw)
-
 # Vulkan Memory Allocator (VMA)
-FetchContent_Declare(VulkanMemoryAllocator GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git GIT_TAG v3.3.0)
+FetchContent_Declare(VulkanMemoryAllocator GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git GIT_TAG v3.3.0 GIT_SHALLOW TRUE SYSTEM)
 FetchContent_MakeAvailable(VulkanMemoryAllocator)
 
 add_library(litl-renderer-vulkan STATIC
-	 
 	"src/litl-renderer-vulkan/renderer.cpp"
 	"src/litl-renderer-vulkan/resourceManager.cpp" 
 	"src/litl-renderer-vulkan/swapChainSupport.cpp"
@@ -52,7 +39,8 @@ add_library(litl-renderer-vulkan STATIC
 	"src/litl-renderer-vulkan/requiredFeatures.cpp" 
 	"src/litl-renderer-vulkan/rendererContext.cpp" 
 	"src/litl-renderer-vulkan/resources/utility/textureTable.cpp" 
-	"src/litl-renderer-vulkan/resources/utility/samplerArray.cpp")
+	"src/litl-renderer-vulkan/resources/utility/samplerArray.cpp" 
+	"src/litl-renderer-vulkan/platformSpecific.cpp")
 
 target_include_directories(litl-renderer-vulkan
 	PUBLIC
@@ -83,6 +71,7 @@ target_compile_features(litl-renderer-vulkan PUBLIC cxx_std_23)
 
 if (MSVC)
 	target_compile_options(litl-renderer-vulkan PRIVATE /EHs-c- /D_HAS_EXCEPTIONS=0 /GR-)
+	target_compile_definitions(litl-renderer-vulkan PRIVATE $<$<PLATFORM_ID:Windows>:VK_USE_PLATFORM_WIN32_KHR>)
 else()
 	target_compile_options(litl-renderer-vulkan PRIVATE -fno-exceptions -fno-rtti)
 endif()

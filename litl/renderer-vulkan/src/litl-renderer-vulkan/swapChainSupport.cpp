@@ -1,7 +1,4 @@
 #include <cstdint>
-#include <limits>
-#include <algorithm>
-
 #include "litl-core/math.hpp"
 #include "litl-renderer-vulkan/swapChainSupport.hpp"
 
@@ -69,7 +66,7 @@ namespace litl::vulkan
     VkExtent2D SwapChainSupport::chooseSwapExtent(int32_t width, int32_t height) const noexcept
     {
         // See: https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/01_Presentation/01_Swap_chain.html#_swap_extent
-        if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
+        if (capabilities.currentExtent.width != Constants::uint32_null_index)
         {
             return capabilities.currentExtent;
         }

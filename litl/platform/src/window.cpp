@@ -1,5 +1,6 @@
 #include "litl-platform/window.hpp"
 #include "litl-core/assert.hpp"
+#include "litl-core/logging/logging.hpp"
 
 namespace litl
 {
@@ -88,10 +89,10 @@ namespace litl
         return m_pOps->getAspectRatio(m_pContext);
     }
 
-    void* Window::getSurfaceWindow() const noexcept
+    NativeWindowHandle Window::getNativeWindowHandle() const noexcept
     {
         LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
-        return m_pOps->getSurfaceWindow(m_pContext);
+        return m_pOps->getNativeWindowHandle(m_pContext);
     }
 
     void Window::onResize(uint32_t width, uint32_t height) const noexcept

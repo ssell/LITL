@@ -13,6 +13,71 @@ namespace litl
         WindowState state{ WindowState::Unknown };
         uint32_t frameBufferWidth{ 0u };
         uint32_t frameBufferHeight{ 0u };
+
+#if defined(LITL_WINDOWS)
+        struct NativeWin32Window
+        {
+            HWND hwnd{};
+            HINSTANCE hinstance{};
+        };
+
+        NativeWin32Window nativeWindow{};
+#elif defined(LITL_LINUX)
+        struct NativeLinuxWindow
+        {
+            // ... todo ...
+        };
+
+        NativeLinuxWindow nativeWindow{};
+#elif defined(LITL_MACOS)
+        struct NativeMaxOSWindow
+        {
+            // ... todo ...
+        };
+
+        NativeMaxOSWindow nativeWindow{};
+#endif
+
+        NativeWindowHandle getNativeWindowHandle() const noexcept
+        {
+#if defined(LITL_WINDOWS)
+            return NativeWindowHandle{
+                .kind = NativeWindowKind::Win32,
+                .window = static_cast<void const*>(&nativeWindow.hwnd),
+                .display = static_cast<void const*>(&nativeWindow.hinstance)
+            };
+#elif defined(LITL_LINUX)
+            return NativeWindowHandle{
+                .kind = NativeWindowKind::Wayland 
+                // .window = wl_surface*
+                // .display = wl_display*
+            };
+#elif defined(LITL_MACOS)
+            return NativeWindowHandle{
+                .kind = NativeWindowKind::Cocoa
+                // .window = NSView* or CAMetalLayer*
+                // .display = unused
+            };
+#else
+            return NativeWindowHandle{
+                .kind = NativeWindowKind::Unknown
+            };
+#endif
+        }
+
+        void populateNativeWindowHandle() noexcept
+        {
+#if defined(LITL_WINDOWS)
+            nativeWindow.hwnd = glfwGetWin32Window(glfwWindow);
+            nativeWindow.hinstance = GetModuleHandle(nullptr);
+#elif defined(LITL_LINUX)
+            LITL_FATAL_ASSERT_MSG(false, "populateNativeWindowHandle called for unsupported operating system: Linux");
+#elif defined(LITL_MACOS)
+            LITL_FATAL_ASSERT_MSG(false, "populateNativeWindowHandle called for unsupported operating system: MacOS");
+#else
+            LITL_FATAL_ASSERT_MSG(false, "populateNativeWindowHandle called for unsupported operating system: Unknown");
+#endif
+        }
     };
 
     WindowContext& getGlfwWindowContext() noexcept
@@ -68,6 +133,7 @@ namespace litl::glfw
             litlWindow->onResize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
         });
 
+        context->populateNativeWindowHandle();
         context->state = WindowState::Open;
 
         return true;
@@ -129,9 +195,9 @@ namespace litl::glfw
         }
     }
 
-    void* getSurfaceWindow(WindowContext* context) noexcept
+    NativeWindowHandle getNativeWindowHandle(WindowContext* context) noexcept
     {
-        return static_cast<void*>(context->glfwWindow);
+        return context->getNativeWindowHandle();
     }
 
     void onResize(WindowContext* context, uint32_t width, uint32_t height) noexcept

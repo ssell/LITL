@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <string>
 
+#include "litl-platform/nativeWindowHandle.hpp"
+
 namespace litl
 {
     /// <summary>
@@ -35,7 +37,7 @@ namespace litl
         uint32_t(*getFrameBufferWidth)(WindowContext*);
         uint32_t(*getFrameBufferHeight)(WindowContext*);
         float (*getAspectRatio)(WindowContext*);
-        void* (*getSurfaceWindow)(WindowContext*);
+        NativeWindowHandle (*getNativeWindowHandle)(WindowContext*);
         void (*onResize)(WindowContext*, uint32_t, uint32_t);
         void (*pollForEvents)(WindowContext*);
         void (*blockForEvents)(WindowContext*, float);
@@ -60,7 +62,7 @@ namespace litl
         [[nodiscard]] uint32_t getFrameBufferWidth() const noexcept;
         [[nodiscard]] uint32_t getFrameBufferHeight() const noexcept;
         [[nodiscard]] float getAspectRatio() const noexcept;
-        [[nodiscard]] void* getSurfaceWindow() const noexcept;
+        [[nodiscard]] NativeWindowHandle getNativeWindowHandle() const noexcept;
         void onResize(uint32_t width, uint32_t height) const noexcept;
         void pollForEvents() const noexcept;
         void blockForEvents(float timeoutSeconds = 0.0f) const noexcept;

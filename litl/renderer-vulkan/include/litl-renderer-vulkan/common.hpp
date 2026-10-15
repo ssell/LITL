@@ -4,10 +4,9 @@
 // The ordering below is important. Do not change.
 
 #include "litl-core/assert.hpp"
+#include "litl-core/constants.hpp"
 
 #include <volk.h>
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
 
 #define VMA_ASSERT(expr) LITL_FATAL_ASSERT_MSG(expr, "Exception thrown by VMA")
 #include <vk_mem_alloc.h>

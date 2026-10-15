@@ -17,6 +17,7 @@
 #include "litl-renderer-vulkan/queueFamily.hpp"
 #include "litl-renderer-vulkan/swapChainSupport.hpp"
 #include "litl-renderer-vulkan/requiredFeatures.hpp"
+#include "litl-renderer-vulkan/platformSpecific.hpp"
 
 namespace litl
 {
@@ -267,16 +268,16 @@ namespace litl::vulkan
             .apiVersion = LITL_VULKAN_VERSION,
         };
 
-        uint32_t glfwExtensionCount = 0;
-        const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+        uint32_t platformExtensionsCount = 0u;
+        const char* const* platformExtensions = getRequiredPlatformExtensions(platformExtensionsCount);
 
         VkInstanceCreateInfo createInfo{
             .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
             .pApplicationInfo = &appInfo,
             .enabledLayerCount = 0,
             .ppEnabledLayerNames = nullptr,
-            .enabledExtensionCount = glfwExtensionCount,
-            .ppEnabledExtensionNames = glfwExtensions,
+            .enabledExtensionCount = platformExtensionsCount,
+            .ppEnabledExtensionNames = platformExtensions,
         };
 
         if constexpr (LITL_DEBUG)
@@ -306,15 +307,9 @@ namespace litl::vulkan
     /// <returns></returns>
     bool createWindowSurface(RendererContext& context) noexcept
     {
-        VkResult result = glfwCreateWindowSurface(
-            context.device.vkInstance, 
-            static_cast<GLFWwindow*>(context.window.window->getSurfaceWindow()),
-            nullptr, 
-            &context.device.vkSurface);
-
-        if (result != VK_SUCCESS)
+        if (!createVkSurface(context))
         {
-            logError("Failed to create Vulkan Window Surface with result ", result);
+            logError("Failed to create Vulkan Window Surface");
             return false;
         }
 
@@ -551,7 +546,7 @@ namespace litl::vulkan
             logInfo("Selected Vulkan Physical Device");
             
             context.device.vkDepthStencilFormat = findSupportedDepthStencilFormat(context.device.vkPhysicalDevice).value();     // confirmed present by isPhysicalDeviceSuitable
-            context.device.textureTableCapacity = litl::min(context.config.globalTexturePoolCapacity, context.device.getUabRuntimeArrayCapacityFor(ShaderResourceType::SampledImage));
+            context.device.textureTableCapacity = (litl::min)(context.config.globalTexturePoolCapacity, context.device.getUabRuntimeArrayCapacityFor(ShaderResourceType::SampledImage));
             
             return true;
         }
@@ -661,15 +656,13 @@ namespace litl::vulkan
     {
         context.window.wasResized = false;
 
-        int32_t frameBufferWidth = 0;
-        int32_t frameBufferHeight = 0;
+        const auto frameBufferWidth = context.window.window->getFrameBufferWidth();
+        const auto frameBufferHeight = context.window.window->getFrameBufferHeight();
+        const auto swapChainSupport = SwapChainSupport::querySwapChainSupport(context.device.vkPhysicalDevice, context.device.vkSurface);
+        const auto surfaceFormat = swapChainSupport.chooseSwapSurfaceFormat();
+        const auto presentMode = swapChainSupport.chooseSwapPresentMode();
+        const auto imageExtent = swapChainSupport.chooseSwapExtent(static_cast<int32_t>(frameBufferWidth), static_cast<int32_t>(frameBufferHeight));
 
-        glfwGetFramebufferSize(static_cast<GLFWwindow*>(context.window.window->getSurfaceWindow()), &frameBufferWidth, &frameBufferHeight);
-
-        auto swapChainSupport = SwapChainSupport::querySwapChainSupport(context.device.vkPhysicalDevice, context.device.vkSurface);
-        auto surfaceFormat = swapChainSupport.chooseSwapSurfaceFormat();
-        auto presentMode = swapChainSupport.chooseSwapPresentMode();
-        auto imageExtent = swapChainSupport.chooseSwapExtent(frameBufferWidth, frameBufferHeight);
         auto imageCount = swapChainSupport.capabilities.minImageCount + 1;
 
         if (swapChainSupport.capabilities.maxImageCount > 0)        // == 0 means no limit

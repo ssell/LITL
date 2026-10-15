@@ -1,6 +1,14 @@
 #ifndef LITL_CORE_CONSTANTS_H__
 #define LITL_CORE_CONSTANTS_H__
 
+#if defined(_WIN32) || defined(_WIN64)
+    #define LITL_WINDOWS
+#elif defined(__linux__)
+    #define LITL_LINUX
+#elif defined(__APPLE__) || defined(__MACH__)
+    #define LITL_MACOS
+#endif
+
 #include <array>
 #include <concepts>
 #include <cstdint>
@@ -52,6 +60,8 @@ namespace litl
         /// Used as a null index value for various items.
         /// </summary>
         static constexpr uint32_t uint32_null_index = ~0u;
+
+        static constexpr uint32_t uint32_max = std::numeric_limits<uint32_t>::max();
     };
 }
 
