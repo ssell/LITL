@@ -8,6 +8,10 @@
 
 namespace litl::glfw
 {
+    // -------------------------------------------------------------------------------------
+    // Keyboard Map
+    // -------------------------------------------------------------------------------------
+
     inline constexpr std::array<Key, GLFW_KEY_LAST + 1> g_GlfwKeyMap
     {
         Key::Unknown,
@@ -358,7 +362,7 @@ namespace litl::glfw
         Key::RightCtrl,
         Key::RightAlt,
         Key::RightSuper,
-        Key::Unknown
+        Key::Apps
     };
 
     static_assert(g_GlfwKeyMap[GLFW_KEY_SPACE]          == Key::Space);
@@ -464,6 +468,41 @@ namespace litl::glfw
     static_assert(g_GlfwKeyMap[GLFW_KEY_RIGHT_CONTROL]  == Key::RightCtrl);
     static_assert(g_GlfwKeyMap[GLFW_KEY_RIGHT_ALT]      == Key::RightAlt);
     static_assert(g_GlfwKeyMap[GLFW_KEY_RIGHT_SUPER]    == Key::RightSuper);
+    static_assert(g_GlfwKeyMap[GLFW_KEY_MENU]           == Key::Apps);
+
+    // -------------------------------------------------------------------------------------
+    // Mouse Button Map
+    // -------------------------------------------------------------------------------------
+
+    inline constexpr std::array<MouseButton, GLFW_MOUSE_BUTTON_LAST + 1> g_GlfwMouseButtonMap
+    {
+        MouseButton::Left,
+        MouseButton::Right,
+        MouseButton::Middle,
+        MouseButton::Back,
+        MouseButton::Forward,
+        MouseButton::Macro0,
+        MouseButton::Macro1,
+        MouseButton::Macro2
+    };
+
+    static_assert(g_GlfwMouseButtonMap[GLFW_MOUSE_BUTTON_1] == MouseButton::Left);
+    static_assert(g_GlfwMouseButtonMap[GLFW_MOUSE_BUTTON_2] == MouseButton::Right);
+    static_assert(g_GlfwMouseButtonMap[GLFW_MOUSE_BUTTON_3] == MouseButton::Middle);
+    static_assert(g_GlfwMouseButtonMap[GLFW_MOUSE_BUTTON_4] == MouseButton::Back);
+    static_assert(g_GlfwMouseButtonMap[GLFW_MOUSE_BUTTON_5] == MouseButton::Forward);
+    static_assert(g_GlfwMouseButtonMap[GLFW_MOUSE_BUTTON_6] == MouseButton::Macro0);
+    static_assert(g_GlfwMouseButtonMap[GLFW_MOUSE_BUTTON_7] == MouseButton::Macro1);
+    static_assert(g_GlfwMouseButtonMap[GLFW_MOUSE_BUTTON_8] == MouseButton::Macro2);
+
+    // -------------------------------------------------------------------------------------
+    // Gamepad Button Map
+    // -------------------------------------------------------------------------------------
+
+    inline constexpr std::array<GamepadButton, GLFW_GAMEPAD_BUTTON_LAST + 1> g_GlfwGamepadButtonMap
+    {
+
+    };
 }
 
 #endif

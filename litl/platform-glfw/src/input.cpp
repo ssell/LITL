@@ -63,16 +63,9 @@ namespace litl::glfw
     // https://www.glfw.org/docs/3.3/input_guide.html
     // -------------------------------------------------------------------------------------
 
-    namespace
-    {
-        
-        constexpr std::array<MouseButton, GLFW_MOUSE_BUTTON_LAST + 1> g_GlfwMouseButtonMap{};
-        constexpr std::array<GamepadButton, GLFW_GAMEPAD_BUTTON_LAST + 1> g_GlfwGamepadButtonMap{};
-    }
-
     void onGlfwKeyEvent(InputContext* context, int key, int scancode, int action, int mods) noexcept
     {
-        if (key < 0 || key >= GLFW_KEY_LAST)
+        if (key < 0 || key > GLFW_KEY_LAST)
         {
             return;
         }
@@ -98,6 +91,18 @@ namespace litl::glfw
 
     void onGlfwMouseButtonEvent(InputContext* context, int button, int action, int mods) noexcept
     {
+        if (button < 0 || button > GLFW_MOUSE_BUTTON_LAST)
+        {
+            return;
+        }
+
+        const MouseButton litlButton = g_GlfwMouseButtonMap[button];
+
+        if (litlButton == MouseButton::Unknown)
+        {
+            return;
+        }
+
         // ... todo ...
     }
 

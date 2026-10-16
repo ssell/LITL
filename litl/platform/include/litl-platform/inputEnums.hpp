@@ -27,6 +27,9 @@ namespace litl
         Middle         = 3u,
         Forward        = 4u,
         Back           = 5u,
+        Macro0         = 6u,
+        Macro1         = 7u,
+        Macro2         = 8u,
         // Number of buttons. Not a valid button.
         Count
     };
