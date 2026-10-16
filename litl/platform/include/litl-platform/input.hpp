@@ -53,22 +53,21 @@ namespace litl
         void triggerCallbacks(ServiceProvider& services, InputCallbacks& callbacks) const noexcept;
 
         /// <summary>
-        /// Returns the current state of a keyboard key.
-        /// </summary>
-        [[nodiscard]] KeyState getKeyState(Key key) const noexcept;
-
-        /// <summary>
-        /// Returns true if this is the first frame a key is held down (pressed).
+        /// Returns true if the key was pressed down since the last poll (typically the last frame).
+        /// The "pressed" state is not exclusive with the "released" state, and a key can be both pressed and released during the same frame.
         /// </summary>
         [[nodiscard]] bool getKeyPressed(Key key) const noexcept;
 
         /// <summary>
-        /// Returns true if the keyboard key is held down and this is not the first frame (pressed).
+        /// Returns true if the key was currently down at the last poll.
+        /// A key that is down but was not pressed this frame can be considered "held down", while a key that is not down
+        /// but was pressed and released this frame can be interpreted as a rapid single-frame tap.
         /// </summary>
         [[nodiscard]] bool getKeyHeld(Key key) const noexcept;
 
         /// <summary>
-        /// Returns true the frame the keyboard key was released.
+        /// Returns ture if the key was released since the last poll (typically the last frame).
+        /// The "released" state is not exclusive with the "pressed" state, and a key can be both pressed and released during the same frame.
         /// </summary>
         [[nodiscard]] bool getKeyReleased(Key key) const noexcept;
 

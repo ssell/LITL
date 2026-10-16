@@ -176,7 +176,7 @@ namespace litl
         // Keyboard Events
         // ---------------------------------------------------------------------------------
 
-        m_impl->engineInputCallbacks->onKeyEvent[static_cast<uint32_t>(Key::Escape)] = [this](ServiceProvider& services, Key key, bool pressed, bool released)
+        m_impl->engineInputCallbacks->onKeyEvent[static_cast<uint32_t>(Key::Escape)] = [this](ServiceProvider& services, Key key, bool pressed, bool released, bool down)
         {
             if (pressed) { logInfo("Escape key was pressed"); }
             if (released) { logInfo("Escape key was released!"); }

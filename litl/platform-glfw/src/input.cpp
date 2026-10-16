@@ -86,11 +86,13 @@ namespace litl::glfw
 
         if (action == GLFW_PRESS)
         {
-            context->frameState.keysPressed.set(static_cast<uint32_t>(litlKey), true);
+            context->frameState.keyboard.pressed[static_cast<uint32_t>(litlKey)] = true;
+            context->frameState.keyboard.down[static_cast<uint32_t>(litlKey)] = true;
         }
         else if (action == GLFW_RELEASE)
         {
-            context->frameState.keysReleased.set(static_cast<uint32_t>(litlKey), true);
+            context->frameState.keyboard.released[static_cast<uint32_t>(litlKey)] = true;
+            context->frameState.keyboard.down[static_cast<uint32_t>(litlKey)] = false;
         }
     }
 
