@@ -5,9 +5,11 @@
 
 namespace litl
 {
+    struct Platform;
+
     namespace glfw
     {
-        [[nodiscard]] Window* createGlfwWindow() noexcept;
+        [[nodiscard]] Window* createGlfwWindow(Platform* platform) noexcept;
         [[nodiscard]] bool open(WindowContext* context, std::string const& title, uint32_t width, uint32_t height) noexcept;
         void close(WindowContext* context) noexcept;
         void destroy(WindowContext* context) noexcept;

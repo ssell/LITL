@@ -9,7 +9,7 @@ namespace litl
     {
         [[nodiscard]] bool initialize(PlatformContext* context) noexcept;
         [[nodiscard]] bool shutdown(PlatformContext* context) noexcept;
-        [[nodiscard]] Window* createWindow(PlatformContext* context) noexcept;
+        [[nodiscard]] Window* createWindow(Platform* platform, PlatformContext* context) noexcept;
         [[nodiscard]] Window* getWindow(PlatformContext* context) noexcept;
         [[nodiscard]] Input* createInput(PlatformContext* context) noexcept;
         [[nodiscard]] Input* getInput(PlatformContext* context) noexcept;

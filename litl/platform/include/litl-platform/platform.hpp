@@ -12,12 +12,13 @@ namespace litl
     /// Explicitly not defined in litl-platform, but instead is defined in the implementation (litl-platform-glfw, etc.)
     /// </summary>
     struct PlatformContext;
+    class Platform;
 
     struct PlatformOps
     {
         bool (*initialize)(PlatformContext*);
         bool (*shutdown)(PlatformContext*);
-        Window* (*createWindow)(PlatformContext*);
+        Window* (*createWindow)(Platform*, PlatformContext*);
         Window* (*getWindow)(PlatformContext*);
         Input* (*createInput)(PlatformContext*);
         Input* (*getInput)(PlatformContext*);

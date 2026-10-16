@@ -95,7 +95,7 @@ namespace litl
             return true;
         }
 
-        Window* createWindow(PlatformContext* context) noexcept
+        Window* createWindow(Platform* platform, PlatformContext* context) noexcept
         {
             if (!context->initialized)
             {
@@ -109,7 +109,7 @@ namespace litl
                 return nullptr;
             }
 
-            context->window = createGlfwWindow();
+            context->window = createGlfwWindow(platform);
             return context->window;
         }
 

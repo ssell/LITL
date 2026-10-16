@@ -113,4 +113,9 @@ namespace litl
         LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
         m_pOps->blockForEvents(m_pContext, timeoutSeconds);
     }
+
+    WindowContext const* Window::getContext() const noexcept
+    {
+        return m_pContext;
+    }
 }

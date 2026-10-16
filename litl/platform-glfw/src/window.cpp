@@ -1,3 +1,4 @@
+#include "litl-platform/platform.hpp"
 #include "litl-platform-glfw/window.hpp"
 #include "litl-platform-glfw/glfw.hpp"
 #include "litl-core/assert.hpp"
@@ -8,6 +9,7 @@ namespace litl
 {
     struct WindowContext
     {
+        Platform* platform{ nullptr };
         Window litlWindow{};
         GLFWwindow* glfwWindow{ nullptr };
         WindowState state{ WindowState::Unknown };
@@ -92,17 +94,79 @@ namespace litl::glfw
     /// <summary>
     /// Defined in integration.hpp and used by litl-engine.
     /// </summary>
-    Window* createGlfwWindow() noexcept
+    Window* createGlfwWindow(Platform* platform) noexcept
     {
+        if (platform == nullptr)
+        {
+            logError("createGlfwWindow called with a null platform.");
+            return nullptr;
+        }
+
         WindowContext& context = getGlfwWindowContext();
+        context.platform = platform;
 
         if (!context.litlWindow.setup(&GlfwWindowOps, &context))
         {
-            logError("Failed to setup GLFW window.");
+            logError("createGlfwWindow failed to setup GLFW window.");
             return nullptr;
         }
 
         return &context.litlWindow;
+    }
+
+    GLFWwindow* getGlfwWindow(WindowContext const* context)
+    {
+        if (context == nullptr)
+        {
+            return nullptr;
+        }
+
+        return context->glfwWindow;
+    }
+
+    void setupCallbacks(WindowContext* context) noexcept
+    {
+        glfwSetFramebufferSizeCallback(context->glfwWindow, [](GLFWwindow* window, int width, int height)  
+        {
+            Platform* platform = static_cast<Platform*>(glfwGetWindowUserPointer(window));
+            platform->getWindow()->onResize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+        });
+
+        glfwSetKeyCallback(context->glfwWindow, [](GLFWwindow* window, int key, int scancode, int action, int mods)
+        {
+            Platform* platform = static_cast<Platform*>(glfwGetWindowUserPointer(window));
+            logWarning("Received key event. This event is not yet supported.");
+        });
+
+        glfwSetMouseButtonCallback(context->glfwWindow, [](GLFWwindow* window, int button, int action, int mods)
+        {
+            Platform* platform = static_cast<Platform*>(glfwGetWindowUserPointer(window));
+            logWarning("Received mouse button event. This event is not yet supported.");
+        });
+
+        glfwSetCursorPosCallback(context->glfwWindow, [](GLFWwindow* window, double xpos, double ypos)
+        {
+            Platform* platform = static_cast<Platform*>(glfwGetWindowUserPointer(window));
+            logWarning("Received cursor position event. This event is not yet supported.");
+        });
+
+        glfwSetCursorEnterCallback(context->glfwWindow, [](GLFWwindow* window, int entered)
+        {
+            Platform* platform = static_cast<Platform*>(glfwGetWindowUserPointer(window));
+            logWarning("Received cursor enter/exit event. This event is not yet supported.");
+        });
+
+        glfwSetScrollCallback(context->glfwWindow, [](GLFWwindow* window, double xoffset, double yoffset)
+        {
+            Platform* platform = static_cast<Platform*>(glfwGetWindowUserPointer(window));
+            logWarning("Received scroll event. This event is not yet supported.");
+        });
+
+        glfwSetDropCallback(context->glfwWindow, [](GLFWwindow* window, int pathCount, const char* paths[])
+        {
+            Platform* platform = static_cast<Platform*>(glfwGetWindowUserPointer(window));
+            logWarning("Received path drop event for ", pathCount, " path(s). This event is not yet supported.");
+        });
     }
 
     bool open(WindowContext* context, std::string const& title, uint32_t width, uint32_t height) noexcept
@@ -126,12 +190,8 @@ namespace litl::glfw
         }
 
         glfwGetFramebufferSize(context->glfwWindow, reinterpret_cast<int*>(&context->frameBufferWidth), reinterpret_cast<int*>(&context->frameBufferHeight));
-        glfwSetWindowUserPointer(context->glfwWindow, &context->litlWindow);
-        glfwSetFramebufferSizeCallback(context->glfwWindow, [](GLFWwindow* pWindow, int width, int height)  
-        {
-            auto litlWindow = static_cast<litl::Window*>(glfwGetWindowUserPointer(pWindow));
-            litlWindow->onResize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
-        });
+        glfwSetWindowUserPointer(context->glfwWindow, context->platform);
+        setupCallbacks(context);
 
         context->populateNativeWindowHandle();
         context->state = WindowState::Open;

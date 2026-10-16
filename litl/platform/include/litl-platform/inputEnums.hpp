@@ -24,7 +24,9 @@ namespace litl
         Right   = 1u,
         Middle  = 2u,
         Forward = 3u,
-        Back    = 4u
+        Back    = 4u,
+        // Number of buttons. Not a valid button.
+        Count
     };
 
     /// <summary>
@@ -55,7 +57,9 @@ namespace litl
         LeftTrigger   = 12u,        // The left trigger button on a gamepad.
         RightTrigger  = 13u,        // The right trigger button on a gamepad.
         Start         = 14u,        // The start button on a gamepad.
-        Select        = 15u         // The select button on a gamepad.
+        Select        = 15u,        // The select button on a gamepad.
+        // Number of buttons. Not a valid button.
+        Count
     };
 
     /// <summary>

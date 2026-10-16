@@ -2,9 +2,12 @@
 #define LITL_PLATFORM_INPUT_H__
 
 #include "litl-platform/inputEnums.hpp"
+#include "litl-platform/inputState.hpp"
 
 namespace litl
 {
+    class Window;
+
     /// <summary>
     /// Explicitly not defined in litl-platform, but instead defined in the implementation (litl-platform-glfw, etc.)
     /// </summary>
