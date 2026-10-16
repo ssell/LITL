@@ -21,7 +21,7 @@ namespace litl
         Engine& operator=(Engine&&) = delete;
         Engine& operator=(Engine const&) = delete;
 
-        void setup(Configuration config, ConfigureServicesFunc servicesFunc, ConfigureSystemsFunc systemsFunc, ConfigureCallbacksFunc callbacksFunc, BootstrapFunc bootstrapFunc) noexcept;
+        void setup(Configuration config, ConfigureServicesFunc servicesFunc, ConfigureSystemsFunc systemsFunc, ConfigureFrameCallbacksFunc frameCallbacksFunc, ConfigureInputCallbacksFunc inputCallbacksFunc, BootstrapFunc bootstrapFunc) noexcept;
         bool start() noexcept;
         void shutdown() noexcept;
 

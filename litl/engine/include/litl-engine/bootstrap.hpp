@@ -5,8 +5,9 @@
 
 #include "litl-core/services/serviceCollection.hpp"
 #include "litl-core/services/serviceProvider.hpp"
-#include "litl-ecs/frameCallbacks.hpp"
 #include "litl-ecs/system/systemCollection.hpp"
+#include "litl-ecs/frameCallbacks.hpp"
+#include "litl-platform/inputCallbacks.hpp"
 
 namespace litl
 {
@@ -26,9 +27,14 @@ namespace litl
     using BootstrapFunc = void(*)(ServiceProvider& services, EntityCommands& commands);
 
     /// <summary>
-    /// Optional function provided to the Engine to allow the user to add custom callbacks.
+    /// Optional function provided to the Engine to allow the user to add custom frame event callbacks. Such as on frame start, on group run, etc.
     /// </summary>
-    using ConfigureCallbacksFunc = void(*)(std::shared_ptr<FrameCallbacks> callbacks);
+    using ConfigureFrameCallbacksFunc = void(*)(std::shared_ptr<FrameCallbacks> callbacks);
+
+    /// <summary>
+    /// Optional function provided to the Engine to allow the user to add custom input event callbacks.
+    /// </summary>
+    using ConfigureInputCallbacksFunc = void(*)(std::shared_ptr<InputCallbacks> callbacks);
 
     namespace Internal
     {

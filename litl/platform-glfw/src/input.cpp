@@ -72,7 +72,7 @@ namespace litl::glfw
 
     void onGlfwKeyEvent(InputContext* context, int key, int scancode, int action, int mods) noexcept
     {
-        if (key < 0 || key >= GLFW_MOUSE_BUTTON_LAST)
+        if (key < 0 || key >= GLFW_KEY_LAST)
         {
             return;
         }

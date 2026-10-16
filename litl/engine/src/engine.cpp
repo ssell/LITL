@@ -64,16 +64,23 @@ namespace litl
         std::shared_ptr<AssetManager> pSharedAssetManager{ nullptr };
         std::shared_ptr<SceneManager> pSharedSceneManager{ nullptr };
         
-        void configureCallbacks(ConfigureCallbacksFunc userCallbacksFunc)
+        void configureCallbacks(ConfigureFrameCallbacksFunc userFrameCallbacksFunc, ConfigureInputCallbacksFunc userInputCallbacksFunc)
         {
-            std::shared_ptr<FrameCallbacks> userCallbacks = std::make_shared<FrameCallbacks>();
+            std::shared_ptr<FrameCallbacks> userFrameCallbacks = std::make_shared<FrameCallbacks>();
 
-            if (userCallbacksFunc != nullptr)
+            if (userFrameCallbacksFunc != nullptr)
             {
-                userCallbacksFunc(userCallbacks);
+                userFrameCallbacksFunc(userFrameCallbacks);
             }
 
-            callbacks.setup({}, *pServiceProvider, userCallbacks);
+            std::shared_ptr<InputCallbacks> userInputCallbacks = std::make_shared<InputCallbacks>();
+
+            if (userInputCallbacksFunc != nullptr)
+            {
+                userInputCallbacksFunc(userInputCallbacks);
+            }
+
+            callbacks.setup({}, *pServiceProvider, userFrameCallbacks, userInputCallbacks);
         }
 
         void prepareCallbacks()
@@ -105,7 +112,8 @@ namespace litl
         Configuration config, 
         ConfigureServicesFunc servicesFunc, 
         ConfigureSystemsFunc systemsFunc, 
-        ConfigureCallbacksFunc callbacksFunc,
+        ConfigureFrameCallbacksFunc frameCallbacksFunc,
+        ConfigureInputCallbacksFunc inputCallbacksFunc,
         BootstrapFunc bootstrapFunc) noexcept
     {
         if (m_pImpl->state != EngineState::Waiting)
@@ -155,7 +163,7 @@ namespace litl
         }
 
         m_pImpl->userBootstrap = bootstrapFunc;
-        m_pImpl->configureCallbacks(callbacksFunc);
+        m_pImpl->configureCallbacks(frameCallbacksFunc, inputCallbacksFunc);
     }
 
     void Engine::shutdown() noexcept

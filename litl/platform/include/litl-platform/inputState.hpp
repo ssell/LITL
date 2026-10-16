@@ -31,9 +31,17 @@ namespace litl
 
         void reset() noexcept
         {
-            keysDown.reset();
+            gamepadButtonsPressed.reset();
             gamepadButtonsDown.reset();
+            gamepadButtonsReleased.reset();
+
+            keysPressed.reset();
+            keysDown.reset();
+            keysReleased.reset();
+
+            mouseButtonsPressed.reset();
             mouseButtonsDown.reset();
+            mouseButtonsReleased.reset();
         }
     };
 }

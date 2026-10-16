@@ -11,7 +11,8 @@ constexpr uint32_t WorldDimensions = 1024u;
 
 void configureServices(ServiceCollection& services);
 void configureSystems(SystemCollection& systems);
-void configureCallbacks(std::shared_ptr<FrameCallbacks> callbacks);
+void configureFrameCallbacks(std::shared_ptr<FrameCallbacks> callbacks);
+void configureInputCallbacks(std::shared_ptr<InputCallbacks> callbacks);
 void bootstrap(ServiceProvider& services, EntityCommands& commands);
 
 int main()
@@ -31,7 +32,8 @@ int main()
         },
         configureServices,
         configureSystems,
-        configureCallbacks,
+        configureFrameCallbacks,
+        configureInputCallbacks,
         bootstrap);
 
     engine.start();
@@ -62,12 +64,20 @@ void configureSystems(SystemCollection& systems)
 /// <summary>
 /// This is called once by the engine and provides the user a chance to hook their custom callbacks into the frame lifecycle.
 /// </summary>
-void configureCallbacks(std::shared_ptr<FrameCallbacks> callbacks)
+void configureFrameCallbacks(std::shared_ptr<FrameCallbacks> callbacks)
 {
     callbacks->onFrameStart = [](ServiceProvider& services, float dt) -> void
-        {
-            services.get<samples::Simulator>()->update(dt);
-        };
+    {
+        services.get<samples::Simulator>()->update(dt);
+    };
+}
+
+/// <summary>
+/// This is called once by the engine and provides the user a chance to hook their custom callbacks into input events.
+/// </summary>
+void configureInputCallbacks(std::shared_ptr<InputCallbacks> callbacks)
+{
+    // ...
 }
 
 /// <summary>

@@ -59,7 +59,7 @@ namespace litl
 
         for (uint32_t i = 0u; i < static_cast<uint32_t>(Key::Count); ++i)
         {
-            bool released = m_currFrameState.keysReleased.test(i);
+            bool released = m_currFrameState.keysReleased[i];
 
             if (released)
             {
@@ -70,10 +70,25 @@ namespace litl
             else
             {
                 // Was not released, so transition from Pressed to Held Down if necessary.
-                if (m_lastFrameState.keysPressed.test(i))
+                if (m_lastFrameState.keysPressed[i])
                 {
                     m_currFrameState.keysDown.set(i, true);
                 }
+            }
+        }
+    }
+
+    void Input::triggerCallbacks(ServiceProvider& services, InputCallbacks& callbacks) const noexcept
+    {
+        // Trigger key callbacks
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(Key::Count); ++i)
+        {
+            bool pressed = m_currFrameState.keysPressed[i];
+            bool released = m_currFrameState.keysReleased[i];
+
+            if (pressed || released)
+            {
+                callbacks.invokeKeyEvent(services, static_cast<Key>(i), pressed, released);
             }
         }
     }
@@ -101,19 +116,19 @@ namespace litl
     bool Input::getKeyPressed(Key key) const noexcept
     {
         LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
-        return m_currFrameState.keysPressed.test(static_cast<uint32_t>(key));
+        return m_currFrameState.keysPressed[static_cast<uint32_t>(key)];
     }
 
     bool Input::getKeyHeld(Key key) const noexcept
     {
         LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
-        return m_currFrameState.keysDown.test(static_cast<uint32_t>(key));
+        return m_currFrameState.keysDown[static_cast<uint32_t>(key)];
     }
 
     bool Input::getKeyReleased(Key key) const noexcept
     {
         LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
-        return m_currFrameState.keysReleased.test(static_cast<uint32_t>(key));
+        return m_currFrameState.keysReleased[static_cast<uint32_t>(key)];
     }
 
     InputContext* Input::getContext() noexcept

@@ -21,6 +21,8 @@ namespace litl
         std::shared_ptr<MaterialManager> materialManager{ nullptr };
         std::shared_ptr<FrameCallbacks> engineFrameCallbacks{ std::make_shared<FrameCallbacks>() };
         std::shared_ptr<FrameCallbacks> userFrameCallbacks{ nullptr };
+        std::shared_ptr<InputCallbacks> engineInputCallbacks{ std::make_shared<InputCallbacks>() };
+        std::shared_ptr<InputCallbacks> userInputCallbacks{ nullptr };
     };
 
     EngineCallbacks::EngineCallbacks()
@@ -33,9 +35,10 @@ namespace litl
         // ... needed as we use an ImplPtr which invokes this ...
     }
 
-    void EngineCallbacks::setup(Authority<Engine> authority, ServiceProvider& services, std::shared_ptr<FrameCallbacks> userCallbacks) noexcept
+    void EngineCallbacks::setup(Authority<Engine> authority, ServiceProvider& services, std::shared_ptr<FrameCallbacks> userFrameCallbacks, std::shared_ptr<InputCallbacks> userInputCallbacks) noexcept
     {
-        m_impl->userFrameCallbacks = (userCallbacks != nullptr) ? userCallbacks : std::make_shared<FrameCallbacks>();
+        m_impl->userFrameCallbacks = (userFrameCallbacks != nullptr) ? userFrameCallbacks : std::make_shared<FrameCallbacks>();
+        m_impl->userInputCallbacks = (userInputCallbacks != nullptr) ? userInputCallbacks : std::make_shared<InputCallbacks>();
 
         // ---------------------------------------------------------------------------------
         // Intraframe Sync Points
@@ -53,10 +56,15 @@ namespace litl
 
         m_impl->engineFrameCallbacks->onFrameStart = [this](ServiceProvider& services, float dt)
             {
-                auto p = m_impl->platform;
-                auto* i = p->getInput();
+                auto* input = m_impl->platform->getInput();
 
-                m_impl->platform->getInput()->poll();
+                if (input != nullptr)
+                {
+                    input->poll();
+                    input->triggerCallbacks(services, *m_impl->engineInputCallbacks);
+                    input->triggerCallbacks(services, *m_impl->userInputCallbacks);
+                }
+
                 m_impl->taskManager->update();
                 m_impl->assetManager->onFrameStart();
 
@@ -163,6 +171,16 @@ namespace litl
             {
                 m_impl->userFrameCallbacks->invokeFrameEnd(services, dt);
             };
+
+        // ---------------------------------------------------------------------------------
+        // Keyboard Events
+        // ---------------------------------------------------------------------------------
+
+        m_impl->engineInputCallbacks->onKeyEvent[static_cast<uint32_t>(Key::Escape)] = [this](ServiceProvider& services, Key key, bool pressed, bool released)
+        {
+            if (pressed) { logInfo("Escape key was pressed"); }
+            if (released) { logInfo("Escape key was released!"); }
+        };
     }
     
     void EngineCallbacks::prepare(Authority<Engine> auth, ServiceProvider& services) noexcept
@@ -187,5 +205,10 @@ namespace litl
     std::shared_ptr<FrameCallbacks> EngineCallbacks::getFrameCallbacks() noexcept
     {
         return m_impl->engineFrameCallbacks;
+    }
+
+    std::shared_ptr<InputCallbacks> EngineCallbacks::getInputCallbacks() noexcept
+    {
+        return m_impl->engineInputCallbacks;
     }
 }

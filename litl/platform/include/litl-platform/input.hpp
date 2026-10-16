@@ -3,10 +3,12 @@
 
 #include "litl-platform/inputEnums.hpp"
 #include "litl-platform/inputState.hpp"
+#include "litl-platform/inputCallbacks.hpp"
 
 namespace litl
 {
     class Window;
+    class ServiceProvider;
 
     /// <summary>
     /// Explicitly not defined in litl-platform, but instead defined in the implementation (litl-platform-glfw, etc.)
@@ -44,6 +46,11 @@ namespace litl
         /// Polls for new input events. Must be called once per frame from the main thread.
         /// </summary>
         void poll() noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        void triggerCallbacks(ServiceProvider& services, InputCallbacks& callbacks) const noexcept;
 
         /// <summary>
         /// Returns the current state of a keyboard key.
