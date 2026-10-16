@@ -48,7 +48,11 @@ namespace litl
     void Input::poll() const noexcept
     {
         LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
+
         m_pOps->poll(m_pContext);
+        const auto frameState = m_pOps->getAccumulatedState(m_pContext, true);
+
+        // ... todo ...
     }
 
     KeyState Input::getKeyState(Key key) const noexcept
@@ -73,5 +77,10 @@ namespace litl
     {
         LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
         return m_pOps->getKeyReleased(m_pContext, key);
+    }
+
+    InputContext* Input::getContext() noexcept
+    {
+        return m_pContext;
     }
 }

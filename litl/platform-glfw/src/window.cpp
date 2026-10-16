@@ -1,5 +1,6 @@
 #include "litl-platform/platform.hpp"
 #include "litl-platform-glfw/window.hpp"
+#include "litl-platform-glfw/input.hpp"
 #include "litl-platform-glfw/glfw.hpp"
 #include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
@@ -135,31 +136,36 @@ namespace litl::glfw
         glfwSetKeyCallback(context->glfwWindow, [](GLFWwindow* window, int key, int scancode, int action, int mods)
         {
             Platform* platform = static_cast<Platform*>(glfwGetWindowUserPointer(window));
-            logWarning("Received key event. This event is not yet supported.");
+            LITL_ASSERT((platform != nullptr) && (platform->getInput() != nullptr));
+            onGlfwKeyEvent(platform->getInput()->getContext(), key, scancode, action, mods);
         });
 
         glfwSetMouseButtonCallback(context->glfwWindow, [](GLFWwindow* window, int button, int action, int mods)
         {
             Platform* platform = static_cast<Platform*>(glfwGetWindowUserPointer(window));
-            logWarning("Received mouse button event. This event is not yet supported.");
+            LITL_ASSERT((platform != nullptr) && (platform->getInput() != nullptr));
+            onGlfwMouseButtonEvent(platform->getInput()->getContext(), button, action, mods);
         });
 
         glfwSetCursorPosCallback(context->glfwWindow, [](GLFWwindow* window, double xpos, double ypos)
         {
             Platform* platform = static_cast<Platform*>(glfwGetWindowUserPointer(window));
-            logWarning("Received cursor position event. This event is not yet supported.");
+            LITL_ASSERT((platform != nullptr) && (platform->getInput() != nullptr));
+            onGlfwCursorPositionEvent(platform->getInput()->getContext(), xpos, ypos);
         });
 
         glfwSetCursorEnterCallback(context->glfwWindow, [](GLFWwindow* window, int entered)
         {
             Platform* platform = static_cast<Platform*>(glfwGetWindowUserPointer(window));
-            logWarning("Received cursor enter/exit event. This event is not yet supported.");
+            LITL_ASSERT((platform != nullptr) && (platform->getInput() != nullptr));
+            onGlfwCursorEnterEvent(platform->getInput()->getContext(), entered);
         });
 
         glfwSetScrollCallback(context->glfwWindow, [](GLFWwindow* window, double xoffset, double yoffset)
         {
             Platform* platform = static_cast<Platform*>(glfwGetWindowUserPointer(window));
-            logWarning("Received scroll event. This event is not yet supported.");
+            LITL_ASSERT((platform != nullptr) && (platform->getInput() != nullptr));
+            onGlfwScrollEvent(platform->getInput()->getContext(), xoffset, yoffset);
         });
 
         glfwSetDropCallback(context->glfwWindow, [](GLFWwindow* window, int pathCount, const char* paths[])

@@ -114,7 +114,7 @@ namespace litl
         m_pOps->blockForEvents(m_pContext, timeoutSeconds);
     }
 
-    WindowContext const* Window::getContext() const noexcept
+    WindowContext* Window::getContext() noexcept
     {
         return m_pContext;
     }

@@ -66,7 +66,7 @@ namespace litl
         void onResize(uint32_t width, uint32_t height) const noexcept;
         void pollForEvents() const noexcept;
         void blockForEvents(float timeoutSeconds = 0.0f) const noexcept;
-        [[nodiscard]] WindowContext const* getContext() const noexcept;
+        [[nodiscard]] WindowContext* getContext() noexcept;
 
     private:
 

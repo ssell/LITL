@@ -7,13 +7,24 @@ namespace litl
 {
     namespace glfw
     {
+        // Creation
         [[nodiscard]] Input* createGlfwInput() noexcept;
+
+        // InputOps implementations
         void destroy(InputContext* context) noexcept;
         void poll(InputContext* context) noexcept;
+        [[nodiscard]] InputState getAccumulatedState(InputContext* context, bool reset) noexcept;
         [[nodiscard]] KeyState getKeyState(InputContext* context, Key key) noexcept;
         [[nodiscard]] bool getKeyPressed(InputContext* context, Key key) noexcept;
         [[nodiscard]] bool getKeyHeld(InputContext* context, Key key) noexcept;
         [[nodiscard]] bool getKeyReleased(InputContext* context, Key key) noexcept;
+
+        // Internal input events routed from Window
+        void onGlfwKeyEvent(InputContext* context, int key, int scancode, int action, int mods) noexcept;
+        void onGlfwMouseButtonEvent(InputContext* context, int button, int action, int mods) noexcept;
+        void onGlfwCursorPositionEvent(InputContext* context, double xpos, double ypos) noexcept;
+        void onGlfwCursorEnterEvent(InputContext* context, int entered) noexcept;
+        void onGlfwScrollEvent(InputContext* context, double xoffset, double yoffset) noexcept;
     }
 
     inline constexpr InputOps GlfwInputOps = {

@@ -17,6 +17,7 @@ namespace litl
     {
         void (*destroy)(InputContext*);
         void (*poll)(InputContext*);
+        InputState (*getAccumulatedState)(InputContext*, bool);
         KeyState (*getKeyState)(InputContext*, Key);
         bool (*getKeyPressed)(InputContext*, Key);
         bool (*getKeyHeld)(InputContext*, Key);
@@ -67,6 +68,11 @@ namespace litl
         /// Returns true the frame the keyboard key was released.
         /// </summary>
         [[nodiscard]] bool getKeyReleased(Key key) const noexcept;
+
+        /// <summary>
+        /// Returns the internal context.
+        /// </summary>
+        [[nodiscard]] InputContext* getContext() noexcept;
 
     private:
 

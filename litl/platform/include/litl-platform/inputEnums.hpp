@@ -10,9 +10,10 @@ namespace litl
     /// </summary>
     enum class CursorMode : uint8_t
     {
-        Normal   = 0u,
-        Hidden   = 1u,
-        Captured = 2u
+        Unknown        = 0u,
+        Normal         = 1u,
+        Hidden         = 2u,
+        Captured       = 3u
     };
 
     /// <summary>
@@ -20,11 +21,12 @@ namespace litl
     /// </summary>
     enum class MouseButton : uint8_t
     {
-        Left    = 0u,
-        Right   = 1u,
-        Middle  = 2u,
-        Forward = 3u,
-        Back    = 4u,
+        Unknown        = 0u,
+        Left           = 1u,
+        Right          = 2u,
+        Middle         = 3u,
+        Forward        = 4u,
+        Back           = 5u,
         // Number of buttons. Not a valid button.
         Count
     };
@@ -34,30 +36,31 @@ namespace litl
     /// </summary>
     enum class GamepadButton : uint8_t
     {
-        DPadUp        = 0u,         // The up button on the dpad.
-        DPadDown      = 1u,         // The down button on the dpad.
-        DPadLeft      = 2u,         // The left button on the dpad.
-        DPadRight     = 3u,         // The right button on the dpad.
-        North         = 4u,         // The upper action button on a gamepad.
-        Y             = 4u,         // The upper action button on an Xbox controller.
-        Triangle      = 4u,         // The upper action button on a Playstation controller.
-        East          = 5u,         // The right action button on a gamepad.
-        B             = 5u,         // The right action button on an Xbox controller.
-        Circle        = 5u,         // The right action button on a Playstation controller.
-        South         = 6u,         // The lower action button on a gamepad.
-        A             = 6u,         // The lower action button on an Xbox controller.
-        Cross         = 6u,         // The lower action button on a Playstation controller.
-        West          = 7u,         // The left action button on a gamepad.
-        X             = 7u,         // The left action button on an Xbox controller.
-        Square        = 7u,         // The left action button on a Playstation controller.
-        LeftStick     = 8u,         // The button pressed when pressing down the left stick on a gamepad.
-        RightStick    = 9u,         // The button pressed when pressing down the right stick on a gamepad.
-        LeftShoulder  = 10u,        // The left shoulder button on a gamepad.
-        RightShoulder = 11u,        // The right shoulder button on a gamepad.
-        LeftTrigger   = 12u,        // The left trigger button on a gamepad.
-        RightTrigger  = 13u,        // The right trigger button on a gamepad.
-        Start         = 14u,        // The start button on a gamepad.
-        Select        = 15u,        // The select button on a gamepad.
+        Unknown        = 0u,        // Any button without a mapping.
+        DPadUp         = 1u,        // The up button on the dpad.
+        DPadDown       = 2u,        // The down button on the dpad.
+        DPadLeft       = 3u,        // The left button on the dpad.
+        DPadRight      = 4u,        // The right button on the dpad.
+        North          = 5u,        // The upper action button on a gamepad.
+        Y              = 5u,        // The upper action button on an Xbox controller.
+        Triangle       = 5u,        // The upper action button on a Playstation controller.
+        East           = 6u,        // The right action button on a gamepad.
+        B              = 6u,        // The right action button on an Xbox controller.
+        Circle         = 6u,        // The right action button on a Playstation controller.
+        South          = 7u,        // The lower action button on a gamepad.
+        A              = 7u,        // The lower action button on an Xbox controller.
+        Cross          = 7u,        // The lower action button on a Playstation controller.
+        West           = 8u,        // The left action button on a gamepad.
+        X              = 8u,        // The left action button on an Xbox controller.
+        Square         = 8u,        // The left action button on a Playstation controller.
+        LeftStick      = 9u,        // The button pressed when pressing down the left stick on a gamepad.
+        RightStick     = 10u,       // The button pressed when pressing down the right stick on a gamepad.
+        LeftShoulder   = 11u,       // The left shoulder button on a gamepad.
+        RightShoulder  = 12u,       // The right shoulder button on a gamepad.
+        LeftTrigger    = 13u,       // The left trigger button on a gamepad.
+        RightTrigger   = 14u,       // The right trigger button on a gamepad.
+        Start          = 15u,       // The start button on a gamepad.
+        Select         = 16u,       // The select button on a gamepad.
         // Number of buttons. Not a valid button.
         Count
     };
