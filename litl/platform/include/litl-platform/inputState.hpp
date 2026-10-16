@@ -17,16 +17,16 @@ namespace litl
     {
         vec2 cursorPosition{};
 
-        std::bitset<static_cast<uint32_t>(GamepadButton::Count)> gamepadButtonsDown;
         std::bitset<static_cast<uint32_t>(GamepadButton::Count)> gamepadButtonsPressed;
+        std::bitset<static_cast<uint32_t>(GamepadButton::Count)> gamepadButtonsDown;
         std::bitset<static_cast<uint32_t>(GamepadButton::Count)> gamepadButtonsReleased;
 
-        std::bitset<static_cast<uint32_t>(Key::Count)> keysDown;
         std::bitset<static_cast<uint32_t>(Key::Count)> keysPressed;
+        std::bitset<static_cast<uint32_t>(Key::Count)> keysDown;
         std::bitset<static_cast<uint32_t>(Key::Count)> keysReleased;
 
-        std::bitset<static_cast<uint32_t>(MouseButton::Count)> mouseButtonsDown;
         std::bitset<static_cast<uint32_t>(MouseButton::Count)> mouseButtonsPressed;
+        std::bitset<static_cast<uint32_t>(MouseButton::Count)> mouseButtonsDown;
         std::bitset<static_cast<uint32_t>(MouseButton::Count)> mouseButtonsReleased;
 
         void reset() noexcept

@@ -14,10 +14,6 @@ namespace litl
         void destroy(InputContext* context) noexcept;
         void poll(InputContext* context) noexcept;
         [[nodiscard]] InputState getAccumulatedState(InputContext* context, bool reset) noexcept;
-        [[nodiscard]] KeyState getKeyState(InputContext* context, Key key) noexcept;
-        [[nodiscard]] bool getKeyPressed(InputContext* context, Key key) noexcept;
-        [[nodiscard]] bool getKeyHeld(InputContext* context, Key key) noexcept;
-        [[nodiscard]] bool getKeyReleased(InputContext* context, Key key) noexcept;
 
         // Internal input events routed from Window
         void onGlfwKeyEvent(InputContext* context, int key, int scancode, int action, int mods) noexcept;
@@ -30,10 +26,7 @@ namespace litl
     inline constexpr InputOps GlfwInputOps = {
         .destroy = &glfw::destroy,
         .poll = &glfw::poll,
-        .getKeyState = &glfw::getKeyState,
-        .getKeyPressed = &glfw::getKeyPressed,
-        .getKeyHeld = &glfw::getKeyHeld,
-        .getKeyReleased = &glfw::getKeyReleased
+        .getAccumulatedState = &glfw::getAccumulatedState
     };
 }
 

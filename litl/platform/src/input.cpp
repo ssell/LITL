@@ -45,38 +45,75 @@ namespace litl
         m_pContext = nullptr;
     }
 
-    void Input::poll() const noexcept
+    void Input::poll() noexcept
     {
         LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
 
         m_pOps->poll(m_pContext);
-        const auto frameState = m_pOps->getAccumulatedState(m_pContext, true);
+        m_lastFrameState = m_currFrameState;
+        m_currFrameState = m_pOps->getAccumulatedState(m_pContext, true);
 
-        // ... todo ...
+        // Pressed and Released are calculated fresh each frame, but Down is an ongoing state that crosses frames.
+        // Transition keys that were held down last frame but released this frame.
+        m_currFrameState.keysDown = m_lastFrameState.keysDown;
+
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(Key::Count); ++i)
+        {
+            bool released = m_currFrameState.keysReleased.test(i);
+
+            if (released)
+            {
+                // Was released, so clear out any Pressed or Held Down state.
+                m_currFrameState.keysPressed.set(i, false);
+                m_currFrameState.keysDown.set(i, false);
+            }
+            else
+            {
+                // Was not released, so transition from Pressed to Held Down if necessary.
+                if (m_lastFrameState.keysPressed.test(i))
+                {
+                    m_currFrameState.keysDown.set(i, true);
+                }
+            }
+        }
     }
 
     KeyState Input::getKeyState(Key key) const noexcept
     {
         LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
-        return m_pOps->getKeyState(m_pContext, key);
+        
+        if (getKeyHeld(key))
+        {
+            return KeyState::Pressed;
+        }
+        else if (getKeyPressed(key))
+        {
+            return KeyState::Held;
+        }
+        else if (getKeyReleased(key))
+        {
+            return KeyState::Released;
+        }
+
+        return KeyState::None;
     }
 
     bool Input::getKeyPressed(Key key) const noexcept
     {
         LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
-        return m_pOps->getKeyPressed(m_pContext, key);
+        return m_currFrameState.keysPressed.test(static_cast<uint32_t>(key));
     }
 
     bool Input::getKeyHeld(Key key) const noexcept
     {
         LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
-        return m_pOps->getKeyHeld(m_pContext, key);
+        return m_currFrameState.keysDown.test(static_cast<uint32_t>(key));
     }
 
     bool Input::getKeyReleased(Key key) const noexcept
     {
         LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
-        return m_pOps->getKeyReleased(m_pContext, key);
+        return m_currFrameState.keysReleased.test(static_cast<uint32_t>(key));
     }
 
     InputContext* Input::getContext() noexcept

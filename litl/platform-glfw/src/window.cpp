@@ -136,35 +136,35 @@ namespace litl::glfw
         glfwSetKeyCallback(context->glfwWindow, [](GLFWwindow* window, int key, int scancode, int action, int mods)
         {
             Platform* platform = static_cast<Platform*>(glfwGetWindowUserPointer(window));
-            LITL_ASSERT((platform != nullptr) && (platform->getInput() != nullptr));
+            LITL_ASSERT((platform != nullptr) && (platform->getInput() != nullptr), );
             onGlfwKeyEvent(platform->getInput()->getContext(), key, scancode, action, mods);
         });
 
         glfwSetMouseButtonCallback(context->glfwWindow, [](GLFWwindow* window, int button, int action, int mods)
         {
             Platform* platform = static_cast<Platform*>(glfwGetWindowUserPointer(window));
-            LITL_ASSERT((platform != nullptr) && (platform->getInput() != nullptr));
+            LITL_ASSERT((platform != nullptr) && (platform->getInput() != nullptr), );
             onGlfwMouseButtonEvent(platform->getInput()->getContext(), button, action, mods);
         });
 
         glfwSetCursorPosCallback(context->glfwWindow, [](GLFWwindow* window, double xpos, double ypos)
         {
             Platform* platform = static_cast<Platform*>(glfwGetWindowUserPointer(window));
-            LITL_ASSERT((platform != nullptr) && (platform->getInput() != nullptr));
+            LITL_ASSERT((platform != nullptr) && (platform->getInput() != nullptr), );
             onGlfwCursorPositionEvent(platform->getInput()->getContext(), xpos, ypos);
         });
 
         glfwSetCursorEnterCallback(context->glfwWindow, [](GLFWwindow* window, int entered)
         {
             Platform* platform = static_cast<Platform*>(glfwGetWindowUserPointer(window));
-            LITL_ASSERT((platform != nullptr) && (platform->getInput() != nullptr));
+            LITL_ASSERT((platform != nullptr) && (platform->getInput() != nullptr), );
             onGlfwCursorEnterEvent(platform->getInput()->getContext(), entered);
         });
 
         glfwSetScrollCallback(context->glfwWindow, [](GLFWwindow* window, double xoffset, double yoffset)
         {
             Platform* platform = static_cast<Platform*>(glfwGetWindowUserPointer(window));
-            LITL_ASSERT((platform != nullptr) && (platform->getInput() != nullptr));
+            LITL_ASSERT((platform != nullptr) && (platform->getInput() != nullptr), );
             onGlfwScrollEvent(platform->getInput()->getContext(), xoffset, yoffset);
         });
 

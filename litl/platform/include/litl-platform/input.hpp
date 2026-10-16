@@ -18,10 +18,6 @@ namespace litl
         void (*destroy)(InputContext*);
         void (*poll)(InputContext*);
         InputState (*getAccumulatedState)(InputContext*, bool);
-        KeyState (*getKeyState)(InputContext*, Key);
-        bool (*getKeyPressed)(InputContext*, Key);
-        bool (*getKeyHeld)(InputContext*, Key);
-        bool (*getKeyReleased)(InputContext*, Key);
     };
 
     class Input final
@@ -47,7 +43,7 @@ namespace litl
         /// <summary>
         /// Polls for new input events. Must be called once per frame from the main thread.
         /// </summary>
-        void poll() const noexcept;
+        void poll() noexcept;
 
         /// <summary>
         /// Returns the current state of a keyboard key.
@@ -78,6 +74,8 @@ namespace litl
 
         InputOps const* m_pOps{ nullptr };
         InputContext* m_pContext{ nullptr };
+        InputState m_lastFrameState{};
+        InputState m_currFrameState{};
     };
 }
 

@@ -58,32 +58,9 @@ namespace litl::glfw
         return accumulated;
     }
 
-    KeyState getKeyState(InputContext* context, Key key) noexcept
-    {
-        // ... todo ...
-        return KeyState::None;
-    }
-
-    bool getKeyPressed(InputContext* context, Key key) noexcept
-    {
-        // ... todo ...
-        return false;
-    }
-
-    bool getKeyHeld(InputContext* context, Key key) noexcept
-    {
-        // ... todo ...
-        return false;
-    }
-
-    bool getKeyReleased(InputContext* context, Key key) noexcept
-    {
-        // ... todo ...
-        return false;
-    }
-
     // -------------------------------------------------------------------------------------
     // GLFW Events
+    // https://www.glfw.org/docs/3.3/input_guide.html
     // -------------------------------------------------------------------------------------
 
     namespace
@@ -95,7 +72,26 @@ namespace litl::glfw
 
     void onGlfwKeyEvent(InputContext* context, int key, int scancode, int action, int mods) noexcept
     {
-        // ... todo ...
+        if (key < 0 || key >= GLFW_MOUSE_BUTTON_LAST)
+        {
+            return;
+        }
+
+        const Key litlKey = g_GlfwKeyMap[key];
+
+        if (litlKey == Key::Unknown)
+        {
+            return;
+        }
+
+        if (action == GLFW_PRESS)
+        {
+            context->frameState.keysPressed.set(static_cast<uint32_t>(litlKey), true);
+        }
+        else if (action == GLFW_RELEASE)
+        {
+            context->frameState.keysReleased.set(static_cast<uint32_t>(litlKey), true);
+        }
     }
 
     void onGlfwMouseButtonEvent(InputContext* context, int button, int action, int mods) noexcept
