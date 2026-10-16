@@ -60,12 +60,22 @@ namespace litl
         RightStick     = 10u,       // The button pressed when pressing down the right stick on a gamepad.
         LeftShoulder   = 11u,       // The left shoulder button on a gamepad.
         RightShoulder  = 12u,       // The right shoulder button on a gamepad.
-        LeftTrigger    = 13u,       // The left trigger button on a gamepad.
-        RightTrigger   = 14u,       // The right trigger button on a gamepad.
-        Start          = 15u,       // The start button on a gamepad.
-        Select         = 16u,       // The select button on a gamepad.
+        Start          = 13u,       // The start button on a gamepad.
+        Select         = 14u,       // The select button on a gamepad.
+        Home           = 15u,
         // Number of buttons. Not a valid button.
         Count
+    };
+
+    enum class GamepadAxis : uint8_t
+    {
+        Unknown        = 0u,
+        LeftX          = 1u,
+        LeftY          = 2u,
+        RightX         = 3u,
+        RightY         = 4u,
+        LeftTrigger    = 5u,
+        RightTrigger   = 6u
     };
 
     /// <summary>

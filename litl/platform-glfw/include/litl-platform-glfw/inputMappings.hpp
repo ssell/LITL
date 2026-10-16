@@ -501,8 +501,38 @@ namespace litl::glfw
 
     inline constexpr std::array<GamepadButton, GLFW_GAMEPAD_BUTTON_LAST + 1> g_GlfwGamepadButtonMap
     {
-
+        GamepadButton::A,
+        GamepadButton::B,
+        GamepadButton::X,
+        GamepadButton::Y,
+        GamepadButton::LeftShoulder,
+        GamepadButton::RightShoulder,
+        GamepadButton::Select,
+        GamepadButton::Start,
+        GamepadButton::Home,
+        GamepadButton::LeftStick,
+        GamepadButton::RightStick,
+        GamepadButton::DPadUp,
+        GamepadButton::DPadRight,
+        GamepadButton::DPadDown,
+        GamepadButton::DPadLeft
     };
+
+    static_assert(g_GlfwGamepadButtonMap[GLFW_GAMEPAD_BUTTON_A]             == GamepadButton::A);
+    static_assert(g_GlfwGamepadButtonMap[GLFW_GAMEPAD_BUTTON_B]             == GamepadButton::B);
+    static_assert(g_GlfwGamepadButtonMap[GLFW_GAMEPAD_BUTTON_X]             == GamepadButton::X);
+    static_assert(g_GlfwGamepadButtonMap[GLFW_GAMEPAD_BUTTON_Y]             == GamepadButton::Y);
+    static_assert(g_GlfwGamepadButtonMap[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER]   == GamepadButton::LeftShoulder);
+    static_assert(g_GlfwGamepadButtonMap[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER]  == GamepadButton::RightShoulder);
+    static_assert(g_GlfwGamepadButtonMap[GLFW_GAMEPAD_BUTTON_BACK]          == GamepadButton::Select);
+    static_assert(g_GlfwGamepadButtonMap[GLFW_GAMEPAD_BUTTON_START]         == GamepadButton::Start);
+    static_assert(g_GlfwGamepadButtonMap[GLFW_GAMEPAD_BUTTON_GUIDE]         == GamepadButton::Home);
+    static_assert(g_GlfwGamepadButtonMap[GLFW_GAMEPAD_BUTTON_LEFT_THUMB]    == GamepadButton::LeftStick);
+    static_assert(g_GlfwGamepadButtonMap[GLFW_GAMEPAD_BUTTON_RIGHT_THUMB]   == GamepadButton::RightStick);
+    static_assert(g_GlfwGamepadButtonMap[GLFW_GAMEPAD_BUTTON_DPAD_UP]       == GamepadButton::DPadUp);
+    static_assert(g_GlfwGamepadButtonMap[GLFW_GAMEPAD_BUTTON_DPAD_RIGHT]    == GamepadButton::DPadRight);
+    static_assert(g_GlfwGamepadButtonMap[GLFW_GAMEPAD_BUTTON_DPAD_DOWN]     == GamepadButton::DPadDown);
+    static_assert(g_GlfwGamepadButtonMap[GLFW_GAMEPAD_BUTTON_DPAD_LEFT]     == GamepadButton::DPadLeft);
 }
 
 #endif

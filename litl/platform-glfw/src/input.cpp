@@ -48,7 +48,8 @@ namespace litl::glfw
 
     void poll(InputContext* context) noexcept
     {
-        // ... no action in GLFW as polling is done by the window event loop ...
+        // Most input polling is done by the glfwPollEvents in the window, except for gamepad input.
+        // That is a ... todo ... and uses glfwGetGamepadState which will be done in here.
     }
 
     InputState getAccumulatedState(InputContext* context, bool reset) noexcept
