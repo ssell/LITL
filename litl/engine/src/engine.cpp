@@ -75,6 +75,11 @@ namespace litl
 
             callbacks.setup({}, *pServiceProvider, userCallbacks);
         }
+
+        void prepareCallbacks()
+        {
+            callbacks.prepare({}, *pServiceProvider);
+        }
     };
 
     // -------------------------------------------------------------------------------------
@@ -233,6 +238,8 @@ namespace litl
         // Setup Scene
         m_pImpl->pSharedSceneManager->createScene(m_pImpl->pSharedConfig->scene);
 
+        m_pImpl->prepareCallbacks();
+
         if (m_pImpl->userBootstrap != nullptr)
         {
             logInfo("Bootstrapping ...");
@@ -285,6 +292,28 @@ namespace litl
         }
 
         // ---------------------------------------------------------------------------------
+        // Input
+        // ---------------------------------------------------------------------------------
+
+        logInfo("Creating input layer ...");
+
+        auto* input = m_pImpl->pSharedPlatform->createInput();
+
+        if (input == nullptr)
+        {
+            logCritical("Failed to create input layer.");
+            return false;
+        }
+
+        if (!m_pImpl->pServiceProvider->setSingleton<Input, Input>(input, false))
+        {
+            logCritical("Failed to inject input layer.");
+            return false;
+        }
+
+        m_pImpl->pSharedInput = m_pImpl->pServiceProvider->get<Input>();
+
+        // ---------------------------------------------------------------------------------
         // Window
         // ---------------------------------------------------------------------------------
 
@@ -315,28 +344,6 @@ namespace litl
         }
 
         m_pImpl->pSharedWindow = m_pImpl->pServiceProvider->get<Window>();
-
-        // ---------------------------------------------------------------------------------
-        // Input
-        // ---------------------------------------------------------------------------------
-
-        logInfo("Creating input layer ...");
-
-        auto* input = m_pImpl->pSharedPlatform->createInput();
-
-        if (input == nullptr)
-        {
-            logCritical("Failed to create input layer.");
-            return false;
-        }
-
-        if (!m_pImpl->pServiceProvider->setSingleton<Input, Input>(input, false))
-        {
-            logCritical("Failed to inject input layer.");
-            return false;
-        }
-
-        m_pImpl->pSharedInput = m_pImpl->pServiceProvider->get<Input>();
 
         return true;
     }

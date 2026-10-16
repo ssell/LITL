@@ -23,12 +23,13 @@ namespace litl
         EngineCallbacks& operator=(EngineCallbacks const&) = delete;
 
         void setup(Authority<Engine> authority, ServiceProvider& services, std::shared_ptr<FrameCallbacks> userCallbacks) noexcept;
+        void prepare(Authority<Engine> authority, ServiceProvider& services) noexcept;
         std::shared_ptr<FrameCallbacks> getFrameCallbacks() noexcept;
 
     private:
 
         struct Impl;
-        ImplPtr<Impl, 128u> m_impl;
+        ImplPtr<Impl, 256> m_impl;
     };
 }
 

@@ -6,12 +6,14 @@
 #include "litl-engine/scene/sceneManager.hpp"
 #include "litl-engine/tasks/taskManager.hpp"
 #include "litl-engine/objects/material/materialManager.hpp"
+#include "litl-platform/platform.hpp"
 
 namespace litl
 {
     struct EngineCallbacks::Impl final
     {
         std::shared_ptr<World> world{ nullptr };
+        std::shared_ptr<Platform> platform{ nullptr };
         std::shared_ptr<AssetManager> assetManager{ nullptr };
         std::shared_ptr<RenderManager> renderManager{ nullptr };
         std::shared_ptr<SceneManager> sceneManager{ nullptr };
@@ -33,20 +35,7 @@ namespace litl
 
     void EngineCallbacks::setup(Authority<Engine> authority, ServiceProvider& services, std::shared_ptr<FrameCallbacks> userCallbacks) noexcept
     {
-        m_impl->world = services.get<World>();
-        m_impl->assetManager = services.get<AssetManager>();
-        m_impl->renderManager = services.get<RenderManager>();
-        m_impl->sceneManager = services.get<SceneManager>();
-        m_impl->taskManager = services.get<TaskManager>();
-        m_impl->materialManager = services.get<MaterialManager>();
         m_impl->userFrameCallbacks = (userCallbacks != nullptr) ? userCallbacks : std::make_shared<FrameCallbacks>();
-
-        LITL_FATAL_ASSERT_MSG((m_impl->world != nullptr), "Failed to inject World into EngineCallbacks");
-        LITL_FATAL_ASSERT_MSG((m_impl->assetManager != nullptr), "Failed to inject AssetManager into EngineCallbacks");
-        LITL_FATAL_ASSERT_MSG((m_impl->renderManager != nullptr), "Failed to inject RenderManager into EngineCallbacks");
-        LITL_FATAL_ASSERT_MSG((m_impl->sceneManager != nullptr), "Failed to inject SceneManager into EngineCallbacks");
-        LITL_FATAL_ASSERT_MSG((m_impl->taskManager != nullptr), "Failed to inject TaskManager into EngineCallbacks");
-        LITL_FATAL_ASSERT_MSG((m_impl->materialManager != nullptr), "Failed to inject MaterialManager into EngineCallbacks");
 
         // ---------------------------------------------------------------------------------
         // Intraframe Sync Points
@@ -64,6 +53,10 @@ namespace litl
 
         m_impl->engineFrameCallbacks->onFrameStart = [this](ServiceProvider& services, float dt)
             {
+                auto p = m_impl->platform;
+                auto* i = p->getInput();
+
+                m_impl->platform->getInput()->poll();
                 m_impl->taskManager->update();
                 m_impl->assetManager->onFrameStart();
 
@@ -170,6 +163,25 @@ namespace litl
             {
                 m_impl->userFrameCallbacks->invokeFrameEnd(services, dt);
             };
+    }
+    
+    void EngineCallbacks::prepare(Authority<Engine> auth, ServiceProvider& services) noexcept
+    {
+        m_impl->world = services.get<World>();
+        m_impl->platform = services.get<Platform>();
+        m_impl->assetManager = services.get<AssetManager>();
+        m_impl->renderManager = services.get<RenderManager>();
+        m_impl->sceneManager = services.get<SceneManager>();
+        m_impl->taskManager = services.get<TaskManager>();
+        m_impl->materialManager = services.get<MaterialManager>();
+
+        LITL_FATAL_ASSERT_MSG((m_impl->world != nullptr), "Failed to inject World into EngineCallbacks");
+        LITL_FATAL_ASSERT_MSG((m_impl->platform != nullptr), "Failed to inject Platform into EngineCallbacks");
+        LITL_FATAL_ASSERT_MSG((m_impl->assetManager != nullptr), "Failed to inject AssetManager into EngineCallbacks");
+        LITL_FATAL_ASSERT_MSG((m_impl->renderManager != nullptr), "Failed to inject RenderManager into EngineCallbacks");
+        LITL_FATAL_ASSERT_MSG((m_impl->sceneManager != nullptr), "Failed to inject SceneManager into EngineCallbacks");
+        LITL_FATAL_ASSERT_MSG((m_impl->taskManager != nullptr), "Failed to inject TaskManager into EngineCallbacks");
+        LITL_FATAL_ASSERT_MSG((m_impl->materialManager != nullptr), "Failed to inject MaterialManager into EngineCallbacks");
     }
 
     std::shared_ptr<FrameCallbacks> EngineCallbacks::getFrameCallbacks() noexcept
