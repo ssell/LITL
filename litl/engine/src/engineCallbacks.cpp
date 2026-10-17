@@ -176,11 +176,31 @@ namespace litl
         // Keyboard Events
         // ---------------------------------------------------------------------------------
 
-        m_impl->engineInputCallbacks->onKeyEvent[static_cast<uint32_t>(Key::Escape)] = [this](ServiceProvider& services, Key key, bool pressed, bool released, bool down)
-        {
-            if (pressed) { logInfo("Escape key was pressed"); }
-            if (released) { logInfo("Escape key was released!"); }
-        };
+        // ... debug / test events ... 
+        m_impl->engineInputCallbacks->onKeyEvent[static_cast<uint32_t>(Key::Escape)].push_back([this](ServiceProvider& services, Key key, bool pressed, bool released, bool down)
+            {
+                if (pressed) { logInfo("Escape key was pressed"); }
+                if (released) { logInfo("Escape key was released"); }
+            });
+
+        m_impl->engineInputCallbacks->onMouseButtonEvent[static_cast<uint32_t>(MouseButton::Left)].push_back([this](ServiceProvider& services, MousePosition mouse, MouseButton buton, bool pressed, bool released, bool down)
+            {
+                if (pressed) { logInfo("Mouse left button was pressed at ", mouse.xy.toString()); }
+                if (released) { logInfo("Mouse left button was released at ", mouse.xy.toString()); }
+            });
+
+        m_impl->engineInputCallbacks->onMouseEnterExit.push_back([this](ServiceProvider& services, MousePosition const& mouse)
+            {
+                if (mouse.enteredWindow) { logInfo("Mouse entered the window.");}
+                if (mouse.exitedWindow) { logInfo("Mouse exited the window."); }
+            });
+
+        /*
+        m_impl->engineInputCallbacks->onMouseMove.push_back([this](ServiceProvider& services, MousePosition const& mouse)
+            {
+                logInfo("Mouse moved to ", mouse.xy.toString(), " (delta = ", mouse.xyDelta.toString(), ")");
+            });
+        */
     }
     
     void EngineCallbacks::prepare(Authority<Engine> auth, ServiceProvider& services) noexcept

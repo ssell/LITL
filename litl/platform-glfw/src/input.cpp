@@ -104,17 +104,35 @@ namespace litl::glfw
             return;
         }
 
-        // ... todo ...
+        if (action == GLFW_PRESS)
+        {
+            context->frameState.mouse.pressed[static_cast<uint32_t>(litlButton)] = true;
+            context->frameState.mouse.down[static_cast<uint32_t>(litlButton)] = true;
+        }
+        else if (action == GLFW_RELEASE)
+        {
+            context->frameState.mouse.released[static_cast<uint32_t>(litlButton)] = true;
+            context->frameState.mouse.down[static_cast<uint32_t>(litlButton)] = false;
+        }
     }
 
     void onGlfwCursorPositionEvent(InputContext* context, double xpos, double ypos) noexcept
     {
-        // ... todo ...
+        context->frameState.mouse.position.xy = vec2{ static_cast<float>(xpos), static_cast<float>(ypos) };
     }
 
     void onGlfwCursorEnterEvent(InputContext* context, int entered) noexcept
     {
-        // ... todo ...
+        if (entered != 0)
+        {
+            context->frameState.mouse.position.enteredWindow = true;
+            context->frameState.mouse.position.inWindow = true;
+        }
+        else
+        {
+            context->frameState.mouse.position.exitedWindow = true;
+            context->frameState.mouse.position.inWindow = false;
+        }
     }
 
     void onGlfwScrollEvent(InputContext* context, double xoffset, double yoffset) noexcept

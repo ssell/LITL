@@ -14,17 +14,17 @@ namespace litl
         /// <summary>
         /// Was the key pressed this frame? This is not exclusive to released and both can occur during the same frame.
         /// </summary>
-        std::bitset<static_cast<uint32_t>(Key::Count)> pressed;
+        std::bitset<static_cast<uint32_t>(Key::Count)> pressed{};
 
         /// <summary>
         /// The state of the button at the last poll and is directly set by whether the last received event for the key was a press or release.
         /// </summary>
-        std::bitset<static_cast<uint32_t>(Key::Count)> down;
+        std::bitset<static_cast<uint32_t>(Key::Count)> down{};
 
         /// <summary>
         /// Was the key released this frame? This is not exclusive to pressed and both can occur during the same frame.
         /// </summary>
-        std::bitset<static_cast<uint32_t>(Key::Count)> released;
+        std::bitset<static_cast<uint32_t>(Key::Count)> released{};
 
         /// <summary>
         /// Clears the pressed and released states, but keeps the down states.
@@ -37,6 +37,74 @@ namespace litl
         }
     };
 
+    struct MousePosition
+    {
+        /// <summary>
+        /// The current position of the mouse.
+        /// </summary>
+        vec2 xy{};
+
+        /// <summary>
+        /// The change in mouse position since the last capture.
+        /// </summary>
+        vec2 xyDelta{};
+
+        /// <summary>
+        /// Did the mouse enter the window since the last capture?
+        /// </summary>
+        bool enteredWindow{ false };
+
+        /// <summary>
+        /// Is the mouse currently in the window?
+        /// </summary>
+        bool inWindow{ false };
+
+        /// <summary>
+        /// Did the mouse exit the window since the last capture?
+        /// </summary>
+        bool exitedWindow{ false };
+    };
+
+    struct MouseState
+    {
+        /// <summary>
+        /// Was the button pressed this frame? This is not exclusive to released and both can occur during the same frame.
+        /// </summary>
+        std::bitset<static_cast<uint32_t>(MouseButton::Count)> pressed{};
+
+        /// <summary>
+        /// The state of the button at the last poll and is directly set by whether the last received event for the key was a press or release.
+        /// </summary>
+        std::bitset<static_cast<uint32_t>(MouseButton::Count)> down{};
+
+        /// <summary>
+        /// Was the button released this frame? This is not exclusive to pressed and both can occur during the same frame.
+        /// </summary>
+        std::bitset<static_cast<uint32_t>(MouseButton::Count)> released{};
+
+        /// <summary>
+        /// Position information for the mouse.
+        /// </summary>
+        MousePosition position{};
+
+        /// <summary>
+        /// Current mouse capture mode.
+        /// </summary>
+        CursorMode mode{ CursorMode::Normal };
+
+        /// <summary>
+        /// Clears the pressed and released states, but keeps the down states.
+        /// A button being held down can be interpreted as one that is down but was not pressed this frame.
+        /// </summary>
+        void reset() noexcept
+        {
+            pressed.reset();
+            released.reset();
+            position.enteredWindow = false;
+            position.exitedWindow = false;
+        }
+    };
+
     /// <summary>
     /// The current state of input for a frame.
     /// This is the raw state the simply records which buttons on currently down and does not discern between press, held, or release.
@@ -44,10 +112,12 @@ namespace litl
     struct InputState
     {
         KeyboardState keyboard{};
+        MouseState mouse{};
 
         void reset() noexcept
         {
             keyboard.reset();
+            mouse.reset();
         }
     };
 }
