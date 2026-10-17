@@ -1,10 +1,10 @@
-#include "litl-platform/platform.hpp"
-#include "litl-platform-glfw/window.hpp"
-#include "litl-platform-glfw/input.hpp"
-#include "litl-platform-glfw/glfw.hpp"
 #include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/math/common.hpp"
+#include "litl-platform/platform.hpp"
+#include "litl-platform-glfw/window.hpp"
+#include "litl-platform-glfw/input.hpp"
+#include "glfw.hpp"
 
 namespace litl
 {
@@ -133,18 +133,18 @@ namespace litl::glfw
             platform->getWindow()->onResize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
         });
 
-        glfwSetKeyCallback(context->glfwWindow, [](GLFWwindow* window, int key, int scancode, int action, int mods)
+        glfwSetKeyCallback(context->glfwWindow, [](GLFWwindow* window, int key, int scancode, int action, int mods)        // Note that "mods" (capslock/numlock state) is currently unused but may be desired in the future...
         {
             Platform* platform = static_cast<Platform*>(glfwGetWindowUserPointer(window));
             LITL_ASSERT((platform != nullptr) && (platform->getInput() != nullptr), );
-            onGlfwKeyEvent(platform->getInput()->getContext(), key, scancode, action, mods);
+            onGlfwKeyEvent(platform->getInput()->getContext(), key, action);
         });
 
         glfwSetMouseButtonCallback(context->glfwWindow, [](GLFWwindow* window, int button, int action, int mods)
         {
             Platform* platform = static_cast<Platform*>(glfwGetWindowUserPointer(window));
             LITL_ASSERT((platform != nullptr) && (platform->getInput() != nullptr), );
-            onGlfwMouseButtonEvent(platform->getInput()->getContext(), button, action, mods);
+            onGlfwMouseButtonEvent(platform->getInput()->getContext(), button, action);
         });
 
         glfwSetCursorPosCallback(context->glfwWindow, [](GLFWwindow* window, double xpos, double ypos)

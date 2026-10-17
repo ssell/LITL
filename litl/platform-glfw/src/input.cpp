@@ -1,7 +1,7 @@
-#include "litl-platform-glfw/glfw.hpp"
-#include "litl-platform-glfw/input.hpp"
-#include "litl-platform-glfw/inputMappings.hpp"
 #include "litl-core/logging/logging.hpp"
+#include "litl-platform-glfw/input.hpp"
+#include "glfw.hpp"
+#include "inputMappings.hpp"
 
 namespace litl
 {
@@ -64,7 +64,7 @@ namespace litl::glfw
     // https://www.glfw.org/docs/3.3/input_guide.html
     // -------------------------------------------------------------------------------------
 
-    void onGlfwKeyEvent(InputContext* context, int key, int scancode, int action, int mods) noexcept
+    void onGlfwKeyEvent(InputContext* context, int key, int action) noexcept
     {
         if (key < 0 || key > GLFW_KEY_LAST)
         {
@@ -90,7 +90,7 @@ namespace litl::glfw
         }
     }
 
-    void onGlfwMouseButtonEvent(InputContext* context, int button, int action, int mods) noexcept
+    void onGlfwMouseButtonEvent(InputContext* context, int button, int action) noexcept
     {
         if (button < 0 || button > GLFW_MOUSE_BUTTON_LAST)
         {

@@ -16,8 +16,8 @@ namespace litl
         [[nodiscard]] InputState getAccumulatedState(InputContext* context, bool reset) noexcept;
 
         // Internal input events routed from Window
-        void onGlfwKeyEvent(InputContext* context, int key, int scancode, int action, int mods) noexcept;
-        void onGlfwMouseButtonEvent(InputContext* context, int button, int action, int mods) noexcept;
+        void onGlfwKeyEvent(InputContext* context, int key, int action) noexcept;
+        void onGlfwMouseButtonEvent(InputContext* context, int button, int action) noexcept;
         void onGlfwCursorPositionEvent(InputContext* context, double xpos, double ypos) noexcept;
         void onGlfwCursorEnterEvent(InputContext* context, int entered) noexcept;
         void onGlfwScrollEvent(InputContext* context, double xoffset, double yoffset) noexcept;

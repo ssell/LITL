@@ -1,9 +1,9 @@
-#include "litl-platform-glfw/glfw.hpp"
+#include "litl-core/assert.hpp"
+#include "litl-core/logging/logging.hpp"
 #include "litl-platform-glfw/platform.hpp"
 #include "litl-platform-glfw/window.hpp"
 #include "litl-platform-glfw/input.hpp"
-#include "litl-core/assert.hpp"
-#include "litl-core/logging/logging.hpp"
+#include "glfw.hpp"
 
 namespace litl
 {

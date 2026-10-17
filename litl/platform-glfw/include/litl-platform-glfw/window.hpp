@@ -5,7 +5,7 @@
 
 namespace litl
 {
-    struct Platform;
+    class Platform;
 
     namespace glfw
     {

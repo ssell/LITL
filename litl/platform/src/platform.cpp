@@ -53,10 +53,10 @@ namespace litl
         return true;
     }
 
-    Window* Platform::createWindow() const noexcept
+    Window* Platform::createWindow() noexcept
     {
         LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
-        return m_pOps->createWindow(const_cast<Platform*>(this), m_pContext);
+        return m_pOps->createWindow(this, m_pContext);
     }
 
     Window* Platform::getWindow() const noexcept

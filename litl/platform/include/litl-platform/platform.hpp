@@ -37,7 +37,7 @@ namespace litl
         [[nodiscard]] bool setup(PlatformOps const* operations, PlatformContext* context) noexcept;
         [[nodiscard]] bool initialize() const noexcept;
         [[nodiscard]] bool shutdown() const noexcept;
-        [[nodiscard]] Window* createWindow() const noexcept;
+        [[nodiscard]] Window* createWindow() noexcept;
         [[nodiscard]] Window* getWindow() const noexcept;
         [[nodiscard]] Input* createInput() const noexcept;
         [[nodiscard]] Input* getInput() const noexcept;
