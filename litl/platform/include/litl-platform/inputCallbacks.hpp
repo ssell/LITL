@@ -12,6 +12,11 @@
 
 namespace litl
 {
+    /// <summary>
+    /// Collection of input related callbacks that can be registered.
+    /// The callbacks are invoked on the mainthread at the start of each frame, after the engine defined callbacks are processed.
+    /// Systems and other services can also check input status by retrieving the injected Input service from the ServiceProvider.
+    /// </summary>
     struct InputCallbacks
     {
         std::array<std::vector<inline_function<void(ServiceProvider& services, Key key, bool pressed, bool released, bool down)>>, static_cast<uint32_t>(Key::Count)> onKeyEvent;
@@ -20,80 +25,11 @@ namespace litl
         std::vector<inline_function<void(ServiceProvider& services, MousePosition const& mouse)>> onMouseMove;
         std::vector<inline_function<void(ServiceProvider& services, MousePosition const& mouse, vec2 scroll)>> onMouseScroll;
 
-        void invokeKeyEvent(ServiceProvider& services, Key key, bool pressed, bool released, bool down) const noexcept
-        {
-            if (!pressed && !released)
-            {
-                return;
-            }
-
-            auto& callbacks = onKeyEvent[static_cast<uint32_t>(key)];
-
-            if (!callbacks.empty())
-            {
-                for (auto& callback : callbacks)
-                {
-                    callback(services, key, pressed, released, down);
-                }
-            }
-        }
-
-        void invokeMouseButtonEvent(ServiceProvider& services, MousePosition const& mouse, MouseButton button, bool pressed, bool released, bool down) const noexcept
-        {
-            if (!pressed && !released)
-            {
-                return;
-            }
-
-            auto& callbacks = onMouseButtonEvent[static_cast<uint32_t>(button)];
-
-            if (!callbacks.empty())
-            {
-                for (auto& callback : callbacks)
-                {
-                    callback(services, mouse, button, pressed, released, down);
-                }
-            }
-        }
-
-        void invokeMouseEnterExitEvent(ServiceProvider& services, MousePosition const& mouse) const noexcept
-        {
-            if (onMouseEnterExit.empty() || !mouse.enteredWindow && !mouse.exitedWindow)
-            {
-                return;
-            }
-
-            for (auto& callback : onMouseEnterExit)
-            {
-                callback(services, mouse);
-            }
-        }
-
-        void invokeMouseMoveEvent(ServiceProvider& services, MousePosition const& mouse) const noexcept
-        {
-            if (mouse.xyDelta.isZeroed())
-            {
-                return;
-            }
-            
-            for (auto& callback : onMouseMove)
-            {
-                callback(services, mouse);
-            }
-        }
-
-        void invokeMouseScrollEvent(ServiceProvider& services, MousePosition const& mouse, vec2 scroll) const noexcept
-        {
-            if (scroll.isZeroed())
-            {
-                return;
-            }
-
-            for (auto& callback : onMouseScroll)
-            {
-                callback(services, mouse, scroll);
-            }
-        }
+        void invokeKeyEvent(ServiceProvider& services, Key key, bool pressed, bool released, bool down) const noexcept;
+        void invokeMouseButtonEvent(ServiceProvider& services, MousePosition const& mouse, MouseButton button, bool pressed, bool released, bool down) const noexcept;
+        void invokeMouseEnterExitEvent(ServiceProvider& services, MousePosition const& mouse) const noexcept;
+        void invokeMouseMoveEvent(ServiceProvider& services, MousePosition const& mouse) const noexcept;
+        void invokeMouseScrollEvent(ServiceProvider& services, MousePosition const& mouse, vec2 scroll) const noexcept;
     };
 }
 

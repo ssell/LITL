@@ -180,6 +180,16 @@ namespace litl::samples
         return m_config;
     }
 
+    void Simulator::spawnPredatorAt(vec2 pos) noexcept
+    {
+        auto& commands = m_pWorld->getCommandBuffer();
+        auto& rng = RandomFast::shared();
+        auto* material = m_pObjectPool->getMaterial(m_materialHandle);
+
+        m_trackedPredators.push_back(spawnPredator(commands, material, m_modelAssetHandle, rng, m_config.worldDimensions, m_predatorCount));
+        m_predatorCount++;
+    }
+
     void Simulator::tick() noexcept
     {
         if (!m_materialHandle.isValid() || !m_modelAssetHandle.isValid())

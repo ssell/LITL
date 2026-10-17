@@ -56,6 +56,9 @@ namespace litl::samples
         [[nodiscard]] NearestPoint getNearestPredator(vec3 pos) noexcept;
         [[nodiscard]] SimulatorConfiguration const& getConfig() const noexcept;
 
+        // ... test code ...
+        void spawnPredatorAt(vec2 pos) noexcept;
+
     private:
 
         struct TrackedFood

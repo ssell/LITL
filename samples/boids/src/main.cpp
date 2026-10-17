@@ -67,9 +67,9 @@ void configureSystems(SystemCollection& systems)
 void configureFrameCallbacks(std::shared_ptr<FrameCallbacks> callbacks)
 {
     callbacks->onFrameStart = [](ServiceProvider& services, float dt) -> void
-    {
-        services.get<samples::Simulator>()->update(dt);
-    };
+        {
+            services.get<samples::Simulator>()->update(dt);
+        };
 }
 
 /// <summary>
@@ -77,7 +77,14 @@ void configureFrameCallbacks(std::shared_ptr<FrameCallbacks> callbacks)
 /// </summary>
 void configureInputCallbacks(std::shared_ptr<InputCallbacks> callbacks)
 {
-    // ...
+    callbacks->onMouseButtonEvent[static_cast<uint32_t>(MouseButton::Left)].push_back([](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down)
+        {
+            if (released && mouse.inWindow)
+            {
+                // This is safe as the input callbacks occur on a mainthread sync point.
+                services.get<samples::Simulator>()->spawnPredatorAt(mouse.xy);
+            }
+        });
 }
 
 /// <summary>

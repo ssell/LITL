@@ -182,7 +182,7 @@ namespace litl
                 // ... add any ...
             });
 
-        m_impl->engineInputCallbacks->onMouseButtonEvent[static_cast<uint32_t>(MouseButton::Left)].push_back([this](ServiceProvider& services, MousePosition mouse, MouseButton buton, bool pressed, bool released, bool down)
+        m_impl->engineInputCallbacks->onMouseButtonEvent[static_cast<uint32_t>(MouseButton::Left)].push_back([this](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down)
             {
                 // ... add any ...
             });
