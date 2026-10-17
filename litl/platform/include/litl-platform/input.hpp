@@ -96,6 +96,36 @@ namespace litl
         [[nodiscard]] MousePosition const& getMousePosition() const noexcept;
 
         /// <summary>
+        /// Returns true if the mouse entered the window since the last poll.
+        /// Note that this is not exclusive to the mouse exiting. Both can occur on the same frame.
+        /// </summary>
+        [[nodiscard]] bool getMouseEntered() const noexcept;
+
+        /// <summary>
+        /// Returns true if the mouse existed the window since the last poll.
+        /// Note that this is not exclusive to the mouse entering. Both can occur on the same frame.
+        /// </summary>
+        [[nodiscard]] bool getMouseExited() const noexcept;
+
+        /// <summary>
+        /// Is the mouse in the window as of the last poll?
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] bool getMouseInWindow() const noexcept;
+
+        /// <summary>
+        /// Returns the xy-scroll amount since the last poll.
+        /// 
+        /// .x = horizontal scroll amount, which is typically 0.
+        /// .y = vertical scroll amout, where positive is up/forward and negative is down/backward.
+        /// 
+        /// A single "tick" of the scroll wheel is typically a value of +/- 1. A particularly fast scroll,
+        /// or particularly slow frame, may show greater magnitude values.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] vec2 getMouseScroll() const noexcept;
+
+        /// <summary>
         /// Returns the internal context.
         /// </summary>
         [[nodiscard]] InputContext* getContext() noexcept;

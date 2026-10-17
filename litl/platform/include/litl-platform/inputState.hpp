@@ -63,6 +63,13 @@ namespace litl
         /// Did the mouse exit the window since the last capture?
         /// </summary>
         bool exitedWindow{ false };
+
+        void reset()
+        {
+            enteredWindow = false;
+            exitedWindow = false;
+            xyDelta.setZero();
+        }
     };
 
     struct MouseState
@@ -88,6 +95,13 @@ namespace litl
         MousePosition position{};
 
         /// <summary>
+        /// Change in xy offset of the scroll wheel since the last capture.
+        /// .x = horizontal scroll amount, which is typically 0.
+        /// .y = vertical scroll amout, where positive is up/forward and negative is down/backward.
+        /// </summary>
+        vec2 scroll{};
+
+        /// <summary>
         /// Current mouse capture mode.
         /// </summary>
         CursorMode mode{ CursorMode::Normal };
@@ -100,8 +114,8 @@ namespace litl
         {
             pressed.reset();
             released.reset();
-            position.enteredWindow = false;
-            position.exitedWindow = false;
+            position.reset();
+            scroll.setZero();
         }
     };
 

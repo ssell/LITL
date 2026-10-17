@@ -137,6 +137,6 @@ namespace litl::glfw
 
     void onGlfwScrollEvent(InputContext* context, double xoffset, double yoffset) noexcept
     {
-        // ... todo ...
+        context->frameState.mouse.scroll += vec2{ static_cast<float>(xoffset), static_cast<float>(yoffset) };
     }
 }

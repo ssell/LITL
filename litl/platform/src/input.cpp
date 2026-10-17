@@ -92,6 +92,12 @@ namespace litl
         {
             callbacks.invokeMouseMoveEvent(services, m_currFrameState.mouse.position);
         }
+
+        // Trigger mouse scroll callbacks
+        if (!m_currFrameState.mouse.scroll.isZeroed())
+        {
+            callbacks.invokeMouseScrollEvent(services, m_currFrameState.mouse.position, m_currFrameState.mouse.scroll);
+        }
     }
 
     bool Input::getKeyPressed(Key key) const noexcept
@@ -132,5 +138,25 @@ namespace litl
     InputContext* Input::getContext() noexcept
     {
         return m_pContext;
+    }
+
+    bool Input::getMouseEntered() const noexcept
+    {
+        return m_currFrameState.mouse.position.enteredWindow;
+    }
+
+    bool Input::getMouseExited() const noexcept
+    {
+        return m_currFrameState.mouse.position.exitedWindow;
+    }
+
+    bool Input::getMouseInWindow() const noexcept
+    {
+        return m_currFrameState.mouse.position.inWindow;
+    }
+
+    vec2 Input::getMouseScroll() const noexcept
+    {
+        return m_currFrameState.mouse.scroll;
     }
 }

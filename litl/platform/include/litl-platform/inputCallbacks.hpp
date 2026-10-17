@@ -18,6 +18,7 @@ namespace litl
         std::array<std::vector<inline_function<void(ServiceProvider& services, MousePosition const& mouse, MouseButton button, bool pressed, bool released, bool down)>>, static_cast<uint32_t>(MouseButton::Count)> onMouseButtonEvent;
         std::vector<inline_function<void(ServiceProvider& services, MousePosition const& mouse)>> onMouseEnterExit;
         std::vector<inline_function<void(ServiceProvider& services, MousePosition const& mouse)>> onMouseMove;
+        std::vector<inline_function<void(ServiceProvider& services, MousePosition const& mouse, vec2 scroll)>> onMouseScroll;
 
         void invokeKeyEvent(ServiceProvider& services, Key key, bool pressed, bool released, bool down) const noexcept
         {
@@ -78,6 +79,19 @@ namespace litl
             for (auto& callback : onMouseMove)
             {
                 callback(services, mouse);
+            }
+        }
+
+        void invokeMouseScrollEvent(ServiceProvider& services, MousePosition const& mouse, vec2 scroll) const noexcept
+        {
+            if (scroll.isZeroed())
+            {
+                return;
+            }
+
+            for (auto& callback : onMouseScroll)
+            {
+                callback(services, mouse, scroll);
             }
         }
     };
