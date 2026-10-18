@@ -70,6 +70,7 @@ namespace litl
             uint32_t id{};
             CallbackCommandType commandType{};
             InputEventType eventType{};
+            uint32_t eventVecIdx{ Constants::uint32_null_index };
             std::variant<OnKeyEvent, OnMouseButtonEvent, OnMouseEnterExitEvent, OnMouseMoveEvent, OnMouseScrollEvent> event;
         };
     }
@@ -92,20 +93,20 @@ namespace litl
         }
 
         template<typename T>
-        void addOrRemoveEvent(std::vector<T>& events, T* event, CallbackCommandType commandType) noexcept
+        void addOrRemoveEvent(std::vector<T>& events, CallbackCommandType commandType, CallbackId id, T* event) noexcept
         {
-            if (event == nullptr)
-            {
-                return;
-            }
-
             if (commandType == CallbackCommandType::Add)
             {
+                if (event == nullptr)
+                {
+                    return;
+                }
+
                 events.push_back(std::move(*event));
             }
             else if (commandType == CallbackCommandType::Remove)
             {
-                std::erase_if(events, [event](T& e) { return (e.id == event->id); });
+                std::erase_if(events, [id](T& e) { return (e.id == id); });
             }
         }
 
@@ -123,39 +124,29 @@ namespace litl
                 switch (command.eventType)
                 {
                 case InputEventType::Key:
+                    if (command.eventVecIdx < onKeyEvents.size())
                     {
-                        auto* event = std::get_if<OnKeyEvent>(&command.event);
-
-                        if ((event != nullptr) && (event->key != Key::Unknown))
-                        {
-                            auto& keyVec = onKeyEvents[static_cast<uint32_t>(event->key)];
-                            addOrRemoveEvent(keyVec, event, command.commandType);
-                        }
+                        addOrRemoveEvent(onKeyEvents[command.eventVecIdx], command.commandType, command.id, std::get_if<OnKeyEvent>(&command.event));
                     }
                     break;
 
                 case InputEventType::MouseButton:
+                    if (command.eventVecIdx < onMouseButtonEvents.size())
                     {
-                        auto* event = std::get_if<OnMouseButtonEvent>(&command.event);
-
-                        if ((event != nullptr) && (event->button != MouseButton::Unknown))
-                        {
-                            auto& buttonVec = onMouseButtonEvents[static_cast<uint32_t>(event->button)];
-                            addOrRemoveEvent(buttonVec, event, command.commandType);
-                        }
+                        addOrRemoveEvent(onMouseButtonEvents[command.eventVecIdx], command.commandType, command.id, std::get_if<OnMouseButtonEvent>(&command.event));
                     }
                     break;
 
                 case InputEventType::MouseEnterExit:
-                    addOrRemoveEvent(onMouseEnterExitEvents, std::get_if<OnMouseEnterExitEvent>(&command.event), command.commandType);
+                    addOrRemoveEvent(onMouseEnterExitEvents, command.commandType, command.id, std::get_if<OnMouseEnterExitEvent>(&command.event));
                     break;
 
                 case InputEventType::MouseMove:
-                    addOrRemoveEvent(onMouseMoveEvents, std::get_if<OnMouseMoveEvent>(&command.event), command.commandType);
+                    addOrRemoveEvent(onMouseMoveEvents, command.commandType, command.id, std::get_if<OnMouseMoveEvent>(&command.event));
                     break;
 
                 case InputEventType::MouseScroll:
-                    addOrRemoveEvent(onMouseScrollEvents, std::get_if<OnMouseScrollEvent>(&command.event), command.commandType);
+                    addOrRemoveEvent(onMouseScrollEvents, command.commandType, command.id, std::get_if<OnMouseScrollEvent>(&command.event));
                     break;
 
                 default:
@@ -167,14 +158,15 @@ namespace litl
             deferredCommands.clear();
         }
 
-        [[nodiscard]] bool processResultAndShouldConsume(InputCallbackResult result, InputEventType type, CallbackId id) noexcept
+        [[nodiscard]] bool processResultAndShouldConsume(InputCallbackResult result, InputEventType type, CallbackId id, uint32_t eventVecIdx) noexcept
         {
             if ((result == InputCallbackResult::ConsumeAndRemove) || (result == InputCallbackResult::ContinueAndRemove))
             {
                 addDeferredCommand(CallbackCommand{
                     .id = id,
                     .commandType = CallbackCommandType::Remove,
-                    .eventType = type
+                    .eventType = type,
+                    .eventVecIdx = eventVecIdx
                 });
             }
 
@@ -201,7 +193,7 @@ namespace litl
                 {
                     const auto result = event.callback(services, key, pressed, released, down);
 
-                    if (processResultAndShouldConsume(result, InputEventType::Key, event.id))
+                    if (processResultAndShouldConsume(result, InputEventType::Key, event.id, static_cast<uint32_t>(key)))
                     {
                         break;
                     }
@@ -224,7 +216,7 @@ namespace litl
                 {
                     const auto result = event.callback(services, mouse, button, pressed, released, down);
 
-                    if (processResultAndShouldConsume(result, InputEventType::MouseButton, event.id))
+                    if (processResultAndShouldConsume(result, InputEventType::MouseButton, event.id, static_cast<uint32_t>(button)))
                     {
                         break;
                     }
@@ -243,7 +235,7 @@ namespace litl
             {
                 const auto result = event.callback(services, mouse);
 
-                if (processResultAndShouldConsume(result, InputEventType::MouseEnterExit, event.id))
+                if (processResultAndShouldConsume(result, InputEventType::MouseEnterExit, event.id, Constants::uint32_null_index))
                 {
                     break;
                 }
@@ -261,7 +253,7 @@ namespace litl
             {
                 const auto result = event.callback(services, mouse);
 
-                if (processResultAndShouldConsume(result, InputEventType::MouseMove, event.id))
+                if (processResultAndShouldConsume(result, InputEventType::MouseMove, event.id, Constants::uint32_null_index))
                 {
                     break;
                 }
@@ -279,7 +271,7 @@ namespace litl
             {
                 const auto result = event.callback(services, mouse, scroll);
 
-                if (processResultAndShouldConsume(result, InputEventType::MouseScroll, event.id))
+                if (processResultAndShouldConsume(result, InputEventType::MouseScroll, event.id, Constants::uint32_null_index))
                 {
                     break;
                 }
@@ -317,6 +309,7 @@ namespace litl
             .id = id,
             .commandType = CallbackCommandType::Add,
             .eventType = InputEventType::Key,
+            .eventVecIdx = static_cast<uint32_t>(key),
             .event = OnKeyEvent{
                 .id = id,
                 .callback = std::move(func),
@@ -341,6 +334,7 @@ namespace litl
             .id = id,
             .commandType = CallbackCommandType::Add,
             .eventType = InputEventType::MouseButton,
+            .eventVecIdx = static_cast<uint32_t>(button),
             .event = OnMouseButtonEvent{
                 .id = id,
                 .callback = std::move(func),
