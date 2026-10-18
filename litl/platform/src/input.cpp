@@ -57,6 +57,8 @@ namespace litl
 
     void Input::triggerCallbacks(ServiceProvider& services, InputCallbacks& callbacks) const noexcept
     {
+        callbacks.processDeferredCommands({});
+
         // Trigger key callbacks
         for (uint32_t i = 0u; i < static_cast<uint32_t>(Key::Count); ++i)
         {

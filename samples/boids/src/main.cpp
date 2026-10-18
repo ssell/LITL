@@ -77,7 +77,7 @@ void configureFrameCallbacks(std::shared_ptr<FrameCallbacks> callbacks)
 /// </summary>
 void configureInputCallbacks(std::shared_ptr<InputCallbacks> callbacks)
 {
-    callbacks->registerMouseButtonCallback(MouseButton::Left, [](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down) -> bool
+    callbacks->registerMouseButtonCallback(MouseButton::Left, [](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down)
         {
             if (released && mouse.inWindow)
             {
@@ -85,7 +85,7 @@ void configureInputCallbacks(std::shared_ptr<InputCallbacks> callbacks)
                 services.get<samples::Simulator>()->spawnPredatorAt(mouse.xy);
             }
 
-            return true;
+            return InputCallbackResult::Continue;
         });
 }
 
