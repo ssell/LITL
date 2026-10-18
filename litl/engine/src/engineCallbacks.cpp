@@ -175,7 +175,7 @@ namespace litl
 
         /*
         // Example:
-        m_impl->inputCallbacks->registerMouseButtonCallback(MouseButton::Left, [](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down) -> bool
+        m_impl->inputCallbacks->registerMouseButtonCallback(MouseButton::Left, [](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down)
         {
             return InputCallbackResult::Continue;
         });

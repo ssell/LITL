@@ -1,3 +1,5 @@
+#include <vector>
+
 #include "tests.hpp"
 #include "litl-core/services/serviceCollection.hpp"
 #include "litl-platform/inputCallbacks.hpp"
@@ -53,6 +55,23 @@ namespace litl::tests
                 ++counter;
                 return result;
             };
+        }
+
+        /// <summary>
+        /// Key callback that appends its tag to an ordering log and returns the specified result.
+        /// </summary>
+        OnKeyFunc orderedKeyCallback(std::vector<uint32_t>& log, uint32_t tag, InputCallbackResult result = InputCallbackResult::Continue)
+        {
+            return [&log, tag, result](ServiceProvider&, Key, bool, bool, bool)
+            {
+                log.push_back(tag);
+                return result;
+            };
+        }
+
+        constexpr InputCallbackPriority offsetPriority(InputCallbackPriority priority, int32_t offset) noexcept
+        {
+            return InputCallbackPriority{ static_cast<uint32_t>(static_cast<int32_t>(priority) + offset) };
         }
     }
 
@@ -407,6 +426,215 @@ namespace litl::tests
         pressKey(Key::A);
 
         REQUIRE(count == 1u);
+    }
+    LITL_END_TEST_CASE
+
+    // -------------------------------------------------------------------------------------
+    // Priority
+    // -------------------------------------------------------------------------------------
+
+    LITL_TEST_CASE_METHOD(InputCallbacksFixture, "higher priority runs first regardless of registration order", "[platform::inputCallbacks]")
+    {
+        std::vector<uint32_t> log;
+
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 1u), InputCallbackPriority::Fallback);
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 3u), InputCallbackPriority::UI);
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 5u), InputCallbackPriority::Debug);
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 2u), InputCallbackPriority::Gameplay);
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 4u), InputCallbackPriority::Overlay);
+        process();
+
+        pressKey(Key::A);
+
+        REQUIRE(log == std::vector<uint32_t>{ 5u, 4u, 3u, 2u, 1u });
+    }
+    LITL_END_TEST_CASE
+
+    LITL_TEST_CASE_METHOD(InputCallbacksFixture, "equal priority preserves registration order", "[platform::inputCallbacks]")
+    {
+        // Large enough to exceed the insertion-sort cutoff of common std::sort implementations,
+        // so an unstable sort would very likely reorder ties.
+        constexpr uint32_t CallbackCount = 64u;
+
+        std::vector<uint32_t> log;
+        std::vector<uint32_t> expected;
+
+        for (uint32_t i = 0u; i < CallbackCount; ++i)
+        {
+            callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, i), InputCallbackPriority::Gameplay);
+            expected.push_back(i);
+        }
+
+        process();
+        pressKey(Key::A);
+
+        REQUIRE(log == expected);
+    }
+    LITL_END_TEST_CASE
+
+    LITL_TEST_CASE_METHOD(InputCallbacksFixture, "ties keep registration order within each priority", "[platform::inputCallbacks]")
+    {
+        std::vector<uint32_t> log;
+
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 1u), InputCallbackPriority::Gameplay);
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 2u), InputCallbackPriority::UI);
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 3u), InputCallbackPriority::Gameplay);
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 4u), InputCallbackPriority::UI);
+        process();
+
+        pressKey(Key::A);
+
+        REQUIRE(log == std::vector<uint32_t>{ 2u, 4u, 1u, 3u });
+    }
+    LITL_END_TEST_CASE
+
+    LITL_TEST_CASE_METHOD(InputCallbacksFixture, "default priority is gameplay", "[platform::inputCallbacks]")
+    {
+        std::vector<uint32_t> log;
+
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 1u), offsetPriority(InputCallbackPriority::Gameplay, -1));
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 2u), InputCallbackPriority::Gameplay);
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 3u));                                     // default
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 4u), offsetPriority(InputCallbackPriority::Gameplay, 1));
+        process();
+
+        pressKey(Key::A);
+
+        // Default ties with explicit Gameplay (after it, by registration order), and sits between Gameplay +/- 1.
+        REQUIRE(log == std::vector<uint32_t>{ 4u, 2u, 3u, 1u });
+    }
+    LITL_END_TEST_CASE
+
+    LITL_TEST_CASE_METHOD(InputCallbacksFixture, "custom priorities sort between named levels", "[platform::inputCallbacks]")
+    {
+        std::vector<uint32_t> log;
+
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 1u), InputCallbackPriority::Gameplay);
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 3u), InputCallbackPriority::UI);
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 2u), offsetPriority(InputCallbackPriority::Gameplay, 1));
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 4u), offsetPriority(InputCallbackPriority::Debug, 1));
+        process();
+
+        pressKey(Key::A);
+
+        REQUIRE(log == std::vector<uint32_t>{ 4u, 3u, 2u, 1u });
+    }
+    LITL_END_TEST_CASE
+
+    LITL_TEST_CASE_METHOD(InputCallbacksFixture, "higher priority consume blocks lower priorities", "[platform::inputCallbacks]")
+    {
+        std::vector<uint32_t> log;
+
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 1u), InputCallbackPriority::Gameplay);
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 2u, InputCallbackResult::Consume), InputCallbackPriority::UI);
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 3u), InputCallbackPriority::Fallback);
+        process();
+
+        pressKey(Key::A);
+
+        REQUIRE(log == std::vector<uint32_t>{ 2u });
+    }
+    LITL_END_TEST_CASE
+
+    LITL_TEST_CASE_METHOD(InputCallbacksFixture, "lower priority consume does not affect higher priorities", "[platform::inputCallbacks]")
+    {
+        std::vector<uint32_t> log;
+
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 1u), InputCallbackPriority::Fallback);
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 2u, InputCallbackResult::Consume), InputCallbackPriority::Gameplay);
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 3u), InputCallbackPriority::Overlay);
+        process();
+
+        pressKey(Key::A);
+
+        REQUIRE(log == std::vector<uint32_t>{ 3u, 2u });
+    }
+    LITL_END_TEST_CASE
+
+    LITL_TEST_CASE_METHOD(InputCallbacksFixture, "later registration with higher priority is inserted ahead", "[platform::inputCallbacks]")
+    {
+        std::vector<uint32_t> log;
+
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 1u), InputCallbackPriority::Gameplay);
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 2u), InputCallbackPriority::Gameplay);
+        process();
+
+        pressKey(Key::A);
+        REQUIRE(log == std::vector<uint32_t>{ 1u, 2u });
+
+        log.clear();
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 3u), InputCallbackPriority::Overlay);
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 4u), InputCallbackPriority::Fallback);
+        process();
+
+        pressKey(Key::A);
+        REQUIRE(log == std::vector<uint32_t>{ 3u, 1u, 2u, 4u });
+    }
+    LITL_END_TEST_CASE
+
+    LITL_TEST_CASE_METHOD(InputCallbacksFixture, "unregistering preserves priority order", "[platform::inputCallbacks]")
+    {
+        std::vector<uint32_t> log;
+
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 1u), InputCallbackPriority::Fallback);
+        const auto middle = callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 2u), InputCallbackPriority::Gameplay);
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 3u), InputCallbackPriority::UI);
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 4u), InputCallbackPriority::Debug);
+        process();
+
+        callbacks.unregisterCallback(middle);
+        process();
+        pressKey(Key::A);
+
+        REQUIRE(log == std::vector<uint32_t>{ 4u, 3u, 1u });
+    }
+    LITL_END_TEST_CASE
+
+    LITL_TEST_CASE_METHOD(InputCallbacksFixture, "one-shot high priority callback leaves order intact", "[platform::inputCallbacks]")
+    {
+        std::vector<uint32_t> log;
+
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 1u), InputCallbackPriority::Gameplay);
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 2u, InputCallbackResult::ContinueAndRemove), InputCallbackPriority::Debug);
+        callbacks.registerKeyCallback(Key::A, orderedKeyCallback(log, 3u), InputCallbackPriority::UI);
+        process();
+
+        pressKey(Key::A);
+        REQUIRE(log == std::vector<uint32_t>{ 2u, 3u, 1u });
+
+        log.clear();
+        process();
+        pressKey(Key::A);
+        REQUIRE(log == std::vector<uint32_t>{ 3u, 1u });
+    }
+    LITL_END_TEST_CASE
+
+    LITL_TEST_CASE_METHOD(InputCallbacksFixture, "priority applies to mouse button and mouse move callbacks", "[platform::inputCallbacks]")
+    {
+        std::vector<uint32_t> buttonLog;
+        std::vector<uint32_t> moveLog;
+
+        const auto buttonCallback = [](std::vector<uint32_t>& log, uint32_t tag) -> OnMouseButtonFunc
+        {
+            return [&log, tag](ServiceProvider&, MousePosition const&, MouseButton, bool, bool, bool) { log.push_back(tag); return InputCallbackResult::Continue; };
+        };
+
+        const auto moveCallback = [](std::vector<uint32_t>& log, uint32_t tag) -> OnMouseMoveFunc
+        {
+            return [&log, tag](ServiceProvider&, MousePosition const&) { log.push_back(tag); return InputCallbackResult::Continue; };
+        };
+
+        callbacks.registerMouseButtonCallback(MouseButton::Left, buttonCallback(buttonLog, 1u), InputCallbackPriority::Gameplay);
+        callbacks.registerMouseButtonCallback(MouseButton::Left, buttonCallback(buttonLog, 2u), InputCallbackPriority::UI);
+        callbacks.registerMouseMoveCallback(moveCallback(moveLog, 1u), InputCallbackPriority::Fallback);
+        callbacks.registerMouseMoveCallback(moveCallback(moveLog, 2u), InputCallbackPriority::Overlay);
+        process();
+
+        clickMouse(MouseButton::Left);
+        moveMouse();
+
+        REQUIRE(buttonLog == std::vector<uint32_t>{ 2u, 1u });
+        REQUIRE(moveLog == std::vector<uint32_t>{ 2u, 1u });
     }
     LITL_END_TEST_CASE
 }
