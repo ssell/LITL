@@ -22,6 +22,7 @@ namespace litl
             CallbackId id{ Constants::uint32_null_index };
             OnKeyFunc callback;
             Key key{ Key::Unknown };
+            bool alive{ true };
         };
 
         struct OnMouseButtonEvent
@@ -29,27 +30,31 @@ namespace litl
             CallbackId id{ Constants::uint32_null_index };
             OnMouseButtonFunc callback;
             MouseButton button{ MouseButton::Unknown };
+            bool alive{ true };
         };
 
         struct OnMouseEnterExitEvent
         {
             CallbackId id{ Constants::uint32_null_index };
             OnMouseEnterExitFunc callback;
+            bool alive{ true };
         };
 
         struct OnMouseMoveEvent
         {
             CallbackId id{ Constants::uint32_null_index };
             OnMouseMoveFunc callback;
+            bool alive{ true };
         };
 
         struct OnMouseScrollEvent
         {
             CallbackId id{ Constants::uint32_null_index };
             OnMouseScrollFunc callback;
+            bool alive{ true };
         };
         
-        [[nodiscard]] constexpr uint32_t nextId() noexcept
+        [[nodiscard]] uint32_t nextId() noexcept
         {
             static std::atomic<uint32_t> id{ 0u };
             return id.fetch_add(1u, std::memory_order::relaxed);
@@ -102,9 +107,14 @@ namespace litl
 
         void processDeferredCommands() noexcept
         {
-            std::scoped_lock lock{ deferredCommandsMutex };
+            std::vector<CallbackCommand> copiedDeferredCommands;
 
-            for (auto& command : deferredCommands)
+            {
+                std::scoped_lock lock{ deferredCommandsMutex };
+                copiedDeferredCommands = std::move(deferredCommands);
+            }
+
+            for (auto& command : copiedDeferredCommands)
             {
                 if (command.id == Constants::uint32_null_index)
                 {
@@ -144,8 +154,6 @@ namespace litl
                     break;
                 }
             }
-
-            deferredCommands.clear();
         }
 
         [[nodiscard]] bool processResultAndShouldConsume(InputCallbackResult result, InputCallbackType type, CallbackId id, uint32_t eventVecIdx) noexcept
@@ -162,10 +170,10 @@ namespace litl
 
             if ((result == InputCallbackResult::Consume) || (result == InputCallbackResult::ConsumeAndRemove))
             {
-                return false;
+                return true;
             }
 
-            return true;
+            return false;
         }
 
         void invokeKeyEvent(ServiceProvider& services, Key key, bool pressed, bool released, bool down) noexcept
@@ -181,10 +189,16 @@ namespace litl
             {
                 for (auto& event : events)
                 {
+                    if (!event.alive)
+                    {
+                        continue;
+                    }
+
                     const auto result = event.callback(services, key, pressed, released, down);
 
                     if (processResultAndShouldConsume(result, InputCallbackType::Key, event.id, static_cast<uint32_t>(key)))
                     {
+                        event.alive = false;
                         break;
                     }
                 }
@@ -204,10 +218,16 @@ namespace litl
             {
                 for (auto& event : events)
                 {
+                    if (!event.alive)
+                    {
+                        continue;
+                    }
+
                     const auto result = event.callback(services, mouse, button, pressed, released, down);
 
                     if (processResultAndShouldConsume(result, InputCallbackType::MouseButton, event.id, static_cast<uint32_t>(button)))
                     {
+                        event.alive = false;
                         break;
                     }
                 }
@@ -223,10 +243,16 @@ namespace litl
 
             for (auto& event : onMouseEnterExitEvents)
             {
+                if (!event.alive)
+                {
+                    continue;
+                }
+
                 const auto result = event.callback(services, mouse);
 
                 if (processResultAndShouldConsume(result, InputCallbackType::MouseEnterExit, event.id, Constants::uint32_null_index))
                 {
+                    event.alive = false;
                     break;
                 }
             }
@@ -241,10 +267,16 @@ namespace litl
 
             for (auto& event : onMouseMoveEvents)
             {
+                if (!event.alive)
+                {
+                    continue;
+                }
+
                 const auto result = event.callback(services, mouse);
 
                 if (processResultAndShouldConsume(result, InputCallbackType::MouseMove, event.id, Constants::uint32_null_index))
                 {
+                    event.alive = false;
                     break;
                 }
             }
@@ -259,10 +291,16 @@ namespace litl
 
             for (auto& event : onMouseScrollEvents)
             {
+                if (!event.alive)
+                {
+                    continue;
+                }
+
                 const auto result = event.callback(services, mouse, scroll);
 
                 if (processResultAndShouldConsume(result, InputCallbackType::MouseScroll, event.id, Constants::uint32_null_index))
                 {
+                    event.alive = false;
                     break;
                 }
             }
@@ -307,7 +345,7 @@ namespace litl
             }
         });
 
-        return InputCallbackHandle{ .type = InputCallbackType::MouseButton, .id = id, .slot = static_cast<uint32_t>(key) };
+        return InputCallbackHandle{ .type = InputCallbackType::Key, .id = id, .slot = static_cast<uint32_t>(key) };
     }
 
     InputCallbackHandle InputCallbacks::registerMouseButtonCallback(MouseButton button, OnMouseButtonFunc&& func) noexcept
@@ -401,27 +439,27 @@ namespace litl
         });
     }
 
-    void InputCallbacks::invokeKeyEvent(Authority<Input> auth, ServiceProvider& services, Key key, bool pressed, bool released, bool down) const noexcept
+    void InputCallbacks::invokeKeyEvent(Authority<Input> auth, ServiceProvider& services, Key key, bool pressed, bool released, bool down) noexcept
     {
         m_pImpl->invokeKeyEvent(services, key, pressed, released, down);
     }
 
-    void InputCallbacks::invokeMouseButtonEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse, MouseButton button, bool pressed, bool released, bool down) const noexcept
+    void InputCallbacks::invokeMouseButtonEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse, MouseButton button, bool pressed, bool released, bool down) noexcept
     {
         m_pImpl->invokeMouseButtonEvent(services, mouse, button, pressed, released, down);
     }
 
-    void InputCallbacks::invokeMouseEnterExitEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse) const noexcept
+    void InputCallbacks::invokeMouseEnterExitEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse) noexcept
     {
         m_pImpl->invokeMouseEnterExitEvent(services, mouse);
     }
 
-    void InputCallbacks::invokeMouseMoveEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse) const noexcept
+    void InputCallbacks::invokeMouseMoveEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse) noexcept
     {
         m_pImpl->invokeMouseMoveEvent(services, mouse);
     }
 
-    void InputCallbacks::invokeMouseScrollEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse, vec2 scroll) const noexcept
+    void InputCallbacks::invokeMouseScrollEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse, vec2 scroll) noexcept
     {
         m_pImpl->invokeMouseScrollEvent(services, mouse, scroll);
     }

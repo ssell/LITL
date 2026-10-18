@@ -31,7 +31,7 @@ namespace litl
         uint32_t slot{ 0u };
     };
 
-    enum class InputCallbackResult
+    enum class InputCallbackResult : uint8_t
     {
         /// <summary>
         /// Keep propagating and processing callbacks for this event type.
@@ -64,9 +64,6 @@ namespace litl
     /// Collection of input related callbacks that can be registered.
     /// The callbacks are invoked on the mainthread at the start of each frame, after the engine defined callbacks are processed.
     /// Systems and other services can also check input status by retrieving the injected Input service from the ServiceProvider.
-    /// 
-    /// All callback functions are expected to return back a boolean value. A value of true indicates that processing of further
-    /// callbacks can continue. A response of false ends further callbacks for that event for the frame.
     /// </summary>
     class InputCallbacks
     {
@@ -88,11 +85,11 @@ namespace litl
 
         void unregisterCallback(InputCallbackHandle handle) noexcept;
 
-        void invokeKeyEvent(Authority<Input> auth, ServiceProvider& services, Key key, bool pressed, bool released, bool down) const noexcept;
-        void invokeMouseButtonEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse, MouseButton button, bool pressed, bool released, bool down) const noexcept;
-        void invokeMouseEnterExitEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse) const noexcept;
-        void invokeMouseMoveEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse) const noexcept;
-        void invokeMouseScrollEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse, vec2 scroll) const noexcept;
+        void invokeKeyEvent(Authority<Input> auth, ServiceProvider& services, Key key, bool pressed, bool released, bool down) noexcept;
+        void invokeMouseButtonEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse, MouseButton button, bool pressed, bool released, bool down) noexcept;
+        void invokeMouseEnterExitEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse) noexcept;
+        void invokeMouseMoveEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse) noexcept;
+        void invokeMouseScrollEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse, vec2 scroll) noexcept;
 
     private:
 

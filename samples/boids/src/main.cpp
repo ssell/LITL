@@ -83,7 +83,6 @@ void configureInputCallbacks(std::shared_ptr<InputCallbacks> callbacks)
             {
                 // This is safe as the input callbacks occur on a mainthread sync point.
                 services.get<samples::Simulator>()->spawnPredatorAt(mouse.xy);
-                return InputCallbackResult::ContinueAndRemove;      // dev/test only allow one additional predator
             }
 
             return InputCallbackResult::Continue;
