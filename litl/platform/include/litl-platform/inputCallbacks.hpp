@@ -54,6 +54,13 @@ namespace litl
         ConsumeAndRemove = 3u
     };
 
+    enum class InputCallbackPriority : uint32_t
+    {
+        Low = 10u,
+        Medium = 100u,
+        High = 1000u
+    };
+
     using OnKeyFunc = inline_function<InputCallbackResult(ServiceProvider& services, Key key, bool pressed, bool released, bool down)>;
     using OnMouseButtonFunc = inline_function<InputCallbackResult(ServiceProvider& services, MousePosition const& mouse, MouseButton button, bool pressed, bool released, bool down)>;
     using OnMouseEnterExitFunc = inline_function<InputCallbackResult(ServiceProvider& services, MousePosition const& mouse)>;
@@ -77,11 +84,11 @@ namespace litl
 
         void processDeferredCommands(Authority<Input> auth) noexcept;
 
-        InputCallbackHandle registerKeyCallback(Key key, OnKeyFunc&& func) noexcept;
-        InputCallbackHandle registerMouseButtonCallback(MouseButton button, OnMouseButtonFunc&& func) noexcept;
-        InputCallbackHandle registerMouseEnterExitCallback(OnMouseEnterExitFunc&& func) noexcept;
-        InputCallbackHandle registerMouseMoveCallback(OnMouseMoveFunc&& func) noexcept;
-        InputCallbackHandle registerMouseScrollCallback(OnMouseScrollFunc&& func) noexcept;
+        InputCallbackHandle registerKeyCallback(Key key, OnKeyFunc&& func, uint32_t priority = static_cast<uint32_t>(InputCallbackPriority::Medium)) noexcept;
+        InputCallbackHandle registerMouseButtonCallback(MouseButton button, OnMouseButtonFunc&& func, uint32_t priority = static_cast<uint32_t>(InputCallbackPriority::Medium)) noexcept;
+        InputCallbackHandle registerMouseEnterExitCallback(OnMouseEnterExitFunc&& func, uint32_t priority = static_cast<uint32_t>(InputCallbackPriority::Medium)) noexcept;
+        InputCallbackHandle registerMouseMoveCallback(OnMouseMoveFunc&& func, uint32_t priority = static_cast<uint32_t>(InputCallbackPriority::Medium)) noexcept;
+        InputCallbackHandle registerMouseScrollCallback(OnMouseScrollFunc&& func, uint32_t priority = static_cast<uint32_t>(InputCallbackPriority::Medium)) noexcept;
 
         void unregisterCallback(InputCallbackHandle handle) noexcept;
 
