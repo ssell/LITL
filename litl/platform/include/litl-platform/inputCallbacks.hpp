@@ -14,6 +14,23 @@ namespace litl
     class Input;
     using CallbackId = uint32_t;
 
+    enum class InputCallbackType : uint8_t
+    {
+        Unknown = 0u,
+        Key,
+        MouseButton,
+        MouseEnterExit,
+        MouseMove,
+        MouseScroll
+    };
+
+    struct InputCallbackHandle
+    {
+        InputCallbackType type{ InputCallbackType::Unknown };
+        CallbackId id{ Constants::uint32_null_index };
+        uint32_t slot{ 0u };
+    };
+
     enum class InputCallbackResult
     {
         /// <summary>
@@ -63,17 +80,13 @@ namespace litl
 
         void processDeferredCommands(Authority<Input> auth) noexcept;
 
-        CallbackId registerKeyCallback(Key key, OnKeyFunc&& func) noexcept;
-        CallbackId registerMouseButtonCallback(MouseButton button, OnMouseButtonFunc&& func) noexcept;
-        CallbackId registerMouseEnterExitCallback(OnMouseEnterExitFunc&& func) noexcept;
-        CallbackId registerMouseMoveCallback(OnMouseMoveFunc&& func) noexcept;
-        CallbackId registerMouseScrollCallback(OnMouseScrollFunc&& func) noexcept;
+        InputCallbackHandle registerKeyCallback(Key key, OnKeyFunc&& func) noexcept;
+        InputCallbackHandle registerMouseButtonCallback(MouseButton button, OnMouseButtonFunc&& func) noexcept;
+        InputCallbackHandle registerMouseEnterExitCallback(OnMouseEnterExitFunc&& func) noexcept;
+        InputCallbackHandle registerMouseMoveCallback(OnMouseMoveFunc&& func) noexcept;
+        InputCallbackHandle registerMouseScrollCallback(OnMouseScrollFunc&& func) noexcept;
 
-        void unregisterKeyCallback(CallbackId id) noexcept;
-        void unregisterMouseButtonCallback(CallbackId id) noexcept;
-        void unregisterMouseEnterExitCallback(CallbackId id) noexcept;
-        void unregisterMouseMoveCallback(CallbackId id) noexcept;
-        void unregisterMouseScrollCallback(CallbackId id) noexcept;
+        void unregisterCallback(InputCallbackHandle handle) noexcept;
 
         void invokeKeyEvent(Authority<Input> auth, ServiceProvider& services, Key key, bool pressed, bool released, bool down) const noexcept;
         void invokeMouseButtonEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse, MouseButton button, bool pressed, bool released, bool down) const noexcept;

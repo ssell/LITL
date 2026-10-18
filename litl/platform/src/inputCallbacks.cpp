@@ -11,16 +11,6 @@ namespace litl
 {
     namespace
     {
-        enum class InputEventType : uint8_t
-        {
-            Unknown = 0u,
-            Key,
-            MouseButton,
-            MouseEnterExit,
-            MouseMove,
-            MouseScroll
-        };
-
         enum class CallbackCommandType : uint8_t
         {
             Add = 0u,
@@ -69,7 +59,7 @@ namespace litl
         {
             uint32_t id{};
             CallbackCommandType commandType{};
-            InputEventType eventType{};
+            InputCallbackType eventType{};
             uint32_t eventVecIdx{ Constants::uint32_null_index };
             std::variant<OnKeyEvent, OnMouseButtonEvent, OnMouseEnterExitEvent, OnMouseMoveEvent, OnMouseScrollEvent> event;
         };
@@ -123,29 +113,29 @@ namespace litl
 
                 switch (command.eventType)
                 {
-                case InputEventType::Key:
+                case InputCallbackType::Key:
                     if (command.eventVecIdx < onKeyEvents.size())
                     {
                         addOrRemoveEvent(onKeyEvents[command.eventVecIdx], command.commandType, command.id, std::get_if<OnKeyEvent>(&command.event));
                     }
                     break;
 
-                case InputEventType::MouseButton:
+                case InputCallbackType::MouseButton:
                     if (command.eventVecIdx < onMouseButtonEvents.size())
                     {
                         addOrRemoveEvent(onMouseButtonEvents[command.eventVecIdx], command.commandType, command.id, std::get_if<OnMouseButtonEvent>(&command.event));
                     }
                     break;
 
-                case InputEventType::MouseEnterExit:
+                case InputCallbackType::MouseEnterExit:
                     addOrRemoveEvent(onMouseEnterExitEvents, command.commandType, command.id, std::get_if<OnMouseEnterExitEvent>(&command.event));
                     break;
 
-                case InputEventType::MouseMove:
+                case InputCallbackType::MouseMove:
                     addOrRemoveEvent(onMouseMoveEvents, command.commandType, command.id, std::get_if<OnMouseMoveEvent>(&command.event));
                     break;
 
-                case InputEventType::MouseScroll:
+                case InputCallbackType::MouseScroll:
                     addOrRemoveEvent(onMouseScrollEvents, command.commandType, command.id, std::get_if<OnMouseScrollEvent>(&command.event));
                     break;
 
@@ -158,7 +148,7 @@ namespace litl
             deferredCommands.clear();
         }
 
-        [[nodiscard]] bool processResultAndShouldConsume(InputCallbackResult result, InputEventType type, CallbackId id, uint32_t eventVecIdx) noexcept
+        [[nodiscard]] bool processResultAndShouldConsume(InputCallbackResult result, InputCallbackType type, CallbackId id, uint32_t eventVecIdx) noexcept
         {
             if ((result == InputCallbackResult::ConsumeAndRemove) || (result == InputCallbackResult::ContinueAndRemove))
             {
@@ -193,7 +183,7 @@ namespace litl
                 {
                     const auto result = event.callback(services, key, pressed, released, down);
 
-                    if (processResultAndShouldConsume(result, InputEventType::Key, event.id, static_cast<uint32_t>(key)))
+                    if (processResultAndShouldConsume(result, InputCallbackType::Key, event.id, static_cast<uint32_t>(key)))
                     {
                         break;
                     }
@@ -216,7 +206,7 @@ namespace litl
                 {
                     const auto result = event.callback(services, mouse, button, pressed, released, down);
 
-                    if (processResultAndShouldConsume(result, InputEventType::MouseButton, event.id, static_cast<uint32_t>(button)))
+                    if (processResultAndShouldConsume(result, InputCallbackType::MouseButton, event.id, static_cast<uint32_t>(button)))
                     {
                         break;
                     }
@@ -235,7 +225,7 @@ namespace litl
             {
                 const auto result = event.callback(services, mouse);
 
-                if (processResultAndShouldConsume(result, InputEventType::MouseEnterExit, event.id, Constants::uint32_null_index))
+                if (processResultAndShouldConsume(result, InputCallbackType::MouseEnterExit, event.id, Constants::uint32_null_index))
                 {
                     break;
                 }
@@ -253,7 +243,7 @@ namespace litl
             {
                 const auto result = event.callback(services, mouse);
 
-                if (processResultAndShouldConsume(result, InputEventType::MouseMove, event.id, Constants::uint32_null_index))
+                if (processResultAndShouldConsume(result, InputCallbackType::MouseMove, event.id, Constants::uint32_null_index))
                 {
                     break;
                 }
@@ -271,7 +261,7 @@ namespace litl
             {
                 const auto result = event.callback(services, mouse, scroll);
 
-                if (processResultAndShouldConsume(result, InputEventType::MouseScroll, event.id, Constants::uint32_null_index))
+                if (processResultAndShouldConsume(result, InputCallbackType::MouseScroll, event.id, Constants::uint32_null_index))
                 {
                     break;
                 }
@@ -295,12 +285,12 @@ namespace litl
         m_pImpl->processDeferredCommands();
     }
 
-    CallbackId InputCallbacks::registerKeyCallback(Key key, OnKeyFunc&& func) noexcept
+    InputCallbackHandle InputCallbacks::registerKeyCallback(Key key, OnKeyFunc&& func) noexcept
     {
         if (key == Key::Unknown)
         {
             logWarning("Requested to registerKeyCallback for unknown/unhandled key.");
-            return Constants::uint32_null_index;
+            return {};
         }
 
         const auto id = nextId();
@@ -308,7 +298,7 @@ namespace litl
         m_pImpl->addDeferredCommand(CallbackCommand{
             .id = id,
             .commandType = CallbackCommandType::Add,
-            .eventType = InputEventType::Key,
+            .eventType = InputCallbackType::Key,
             .eventVecIdx = static_cast<uint32_t>(key),
             .event = OnKeyEvent{
                 .id = id,
@@ -317,15 +307,15 @@ namespace litl
             }
         });
 
-        return id;
+        return InputCallbackHandle{ .type = InputCallbackType::MouseButton, .id = id, .slot = static_cast<uint32_t>(key) };
     }
 
-    CallbackId InputCallbacks::registerMouseButtonCallback(MouseButton button, OnMouseButtonFunc&& func) noexcept
+    InputCallbackHandle InputCallbacks::registerMouseButtonCallback(MouseButton button, OnMouseButtonFunc&& func) noexcept
     {
         if (button == MouseButton::Unknown)
         {
             logWarning("Requested to registerMouseButtonCallback for unknown/unhandled button.");
-            return Constants::uint32_null_index;
+            return {};
         }
 
         const auto id = nextId();
@@ -333,7 +323,7 @@ namespace litl
         m_pImpl->addDeferredCommand(CallbackCommand{
             .id = id,
             .commandType = CallbackCommandType::Add,
-            .eventType = InputEventType::MouseButton,
+            .eventType = InputCallbackType::MouseButton,
             .eventVecIdx = static_cast<uint32_t>(button),
             .event = OnMouseButtonEvent{
                 .id = id,
@@ -342,127 +332,72 @@ namespace litl
             }
         });
 
-        return id;
+        return InputCallbackHandle{ .type = InputCallbackType::MouseButton, .id = id, .slot = static_cast<uint32_t>(button) };
     }
 
-    CallbackId InputCallbacks::registerMouseEnterExitCallback(OnMouseEnterExitFunc&& func) noexcept
+    InputCallbackHandle InputCallbacks::registerMouseEnterExitCallback(OnMouseEnterExitFunc&& func) noexcept
     {
         const auto id = nextId();
 
         m_pImpl->addDeferredCommand(CallbackCommand{
             .id = id,
             .commandType = CallbackCommandType::Add,
-            .eventType = InputEventType::MouseEnterExit,
+            .eventType = InputCallbackType::MouseEnterExit,
             .event = OnMouseEnterExitEvent{
                 .id = id,
                 .callback = std::move(func)
             }
         });
 
-        return id;
+        return InputCallbackHandle{ .type = InputCallbackType::MouseEnterExit, .id = id };
     }
 
-    CallbackId InputCallbacks::registerMouseMoveCallback(OnMouseMoveFunc&& func) noexcept
+    InputCallbackHandle InputCallbacks::registerMouseMoveCallback(OnMouseMoveFunc&& func) noexcept
     {
         const auto id = nextId();
 
         m_pImpl->addDeferredCommand(CallbackCommand{
             .id = id,
             .commandType = CallbackCommandType::Add,
-            .eventType = InputEventType::MouseMove,
+            .eventType = InputCallbackType::MouseMove,
             .event = OnMouseMoveEvent{
                 .id = id,
                 .callback = std::move(func)
             }
         });
 
-        return id;
+        return InputCallbackHandle{ .type = InputCallbackType::MouseMove, .id = id };
     }
 
-    CallbackId InputCallbacks::registerMouseScrollCallback(OnMouseScrollFunc&& func) noexcept
+    InputCallbackHandle InputCallbacks::registerMouseScrollCallback(OnMouseScrollFunc&& func) noexcept
     {
         const auto id = nextId();
 
         m_pImpl->addDeferredCommand(CallbackCommand{
             .id = id,
             .commandType = CallbackCommandType::Add,
-            .eventType = InputEventType::MouseScroll,
+            .eventType = InputCallbackType::MouseScroll,
             .event = OnMouseScrollEvent{
                 .id = id,
                 .callback = std::move(func)
             }
         });
 
-        return id;
+        return InputCallbackHandle{ .type = InputCallbackType::MouseScroll, .id = id };
     }
 
-    void InputCallbacks::unregisterKeyCallback(CallbackId id) noexcept
+    void InputCallbacks::unregisterCallback(InputCallbackHandle handle) noexcept
     {
-        if (id == Constants::uint32_null_index)
+        if ((handle.type == InputCallbackType::Unknown) || (handle.id == Constants::uint32_null_index))
         {
             return;
         }
 
         m_pImpl->addDeferredCommand(CallbackCommand{
-            .id = id,
+            .id = handle.id,
             .commandType = CallbackCommandType::Remove,
-            .eventType = InputEventType::Key
-        });
-    }
-
-    void InputCallbacks::unregisterMouseButtonCallback(CallbackId id) noexcept
-    {
-        if (id == Constants::uint32_null_index)
-        {
-            return;
-        }
-
-        m_pImpl->addDeferredCommand(CallbackCommand{
-            .id = id,
-            .commandType = CallbackCommandType::Remove,
-            .eventType = InputEventType::MouseButton
-        });
-    }
-
-    void InputCallbacks::unregisterMouseEnterExitCallback(CallbackId id) noexcept
-    {
-        if (id == Constants::uint32_null_index)
-        {
-            return;
-        }
-
-        m_pImpl->addDeferredCommand(CallbackCommand{
-            .id = id,
-            .commandType = CallbackCommandType::Remove,
-            .eventType = InputEventType::MouseEnterExit
-        });
-    }
-
-    void InputCallbacks::unregisterMouseMoveCallback(CallbackId id) noexcept
-    {
-        if (id == Constants::uint32_null_index)
-        {
-            return;
-        }
-
-        m_pImpl->addDeferredCommand(CallbackCommand{
-            .id = id,
-            .commandType = CallbackCommandType::Remove,
-            .eventType = InputEventType::MouseMove
-        });
-    }
-
-    void InputCallbacks::unregisterMouseScrollCallback(CallbackId id) noexcept
-    {
-        if (id == Constants::uint32_null_index)
-        {
-            return;
-        }
-
-        m_pImpl->addDeferredCommand(CallbackCommand{
-            .id = id,
-            .commandType = CallbackCommandType::Remove,
-            .eventType = InputEventType::MouseScroll
+            .eventType = handle.type,
+            .eventVecIdx = handle.slot
         });
     }
 
