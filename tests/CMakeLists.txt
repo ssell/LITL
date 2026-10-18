@@ -86,7 +86,8 @@ add_executable(litl-tests
 	"src/litl-import/importPng_tests.cpp"
 	"src/litl-renderer/texture_tests.cpp" 
 	"src/litl-ecs/systemTraits_tests.cpp" 
-	"src/litl-import/importGlb_tests.cpp")
+	"src/litl-import/importGlb_tests.cpp" 
+	"src/litl-platform/inputCallbacks_tests.cpp")
 
 target_link_libraries(litl-tests
 	PRIVATE

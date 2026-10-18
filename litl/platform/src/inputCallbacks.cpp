@@ -236,7 +236,7 @@ namespace litl
 
         void invokeMouseEnterExitEvent(ServiceProvider& services, MousePosition const& mouse) noexcept
         {
-            if (onMouseEnterExitEvents.empty() || !mouse.enteredWindow && !mouse.exitedWindow)
+            if (onMouseEnterExitEvents.empty() || (!mouse.enteredWindow && !mouse.exitedWindow))
             {
                 return;
             }
