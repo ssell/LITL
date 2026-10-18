@@ -1,94 +1,240 @@
+
+#include <atomic>
 #include "litl-platform/inputCallbacks.hpp"
 
 namespace litl
 {
-    void InputCallbacks::invokeKeyEvent(ServiceProvider& services, Key key, bool pressed, bool released, bool down) const noexcept
+    namespace
     {
-        if (!pressed && !released)
+        struct OnKeyEvent
         {
-            return;
+            CallbackId id{ Constants::uint32_null_index };
+            OnKeyFunc callback;
+        };
+
+        struct OnMouseButtonEvent
+        {
+            CallbackId id{ Constants::uint32_null_index };
+            OnMouseButtonFunc callback;
+        };
+
+        struct OnMouseEnterExitEvent
+        {
+            CallbackId id{ Constants::uint32_null_index };
+            OnMouseEnterExitFunc callback;
+        };
+
+        struct OnMouseMoveEvent
+        {
+            CallbackId id{ Constants::uint32_null_index };
+            OnMouseMoveFunc callback;
+        };
+
+        struct OnMouseScrollEvent
+        {
+            CallbackId id{ Constants::uint32_null_index };
+            OnMouseScrollFunc callback;
+        };
+        
+        [[nodiscard]] uint32_t nextId() noexcept
+        {
+            static std::atomic<uint32_t> id{ 0u };
+            return id.fetch_add(1u, std::memory_order::relaxed);
+        }
+    }
+
+    struct InputCallbacks::Impl
+    {
+        std::array<std::vector<OnKeyEvent>, static_cast<uint32_t>(Key::Count)> onKeyEvents;
+        std::array<std::vector<OnMouseButtonEvent>, static_cast<uint32_t>(MouseButton::Count)> onMouseButtonEvents;
+        std::vector<OnMouseEnterExitEvent> onMouseEnterExitEvents;
+        std::vector<OnMouseMoveEvent> onMouseMoveEvents;
+        std::vector<OnMouseScrollEvent> onMouseScrollEvents;
+
+        void invokeKeyEvent(ServiceProvider& services, Key key, bool pressed, bool released, bool down) const noexcept
+        {
+            if (!pressed && !released)
+            {
+                return;
+            }
+
+            auto& events = onKeyEvents[static_cast<uint32_t>(key)];
+
+            if (!events.empty())
+            {
+                for (auto& event : events)
+                {
+                    if (!event.callback(services, key, pressed, released, down))
+                    {
+                        break;
+                    }
+                }
+            }
         }
 
-        auto& callbacks = onKeyEvent[static_cast<uint32_t>(key)];
-
-        if (!callbacks.empty())
+        void invokeMouseButtonEvent(ServiceProvider& services, MousePosition const& mouse, MouseButton button, bool pressed, bool released, bool down) const noexcept
         {
-            for (auto& callback : callbacks)
+            if (!pressed && !released)
             {
-                if (!callback(services, key, pressed, released, down))
+                return;
+            }
+
+            auto& events = onMouseButtonEvents[static_cast<uint32_t>(button)];
+
+            if (!events.empty())
+            {
+                for (auto& event : events)
+                {
+                    if (!event.callback(services, mouse, button, pressed, released, down))
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        void invokeMouseEnterExitEvent(ServiceProvider& services, MousePosition const& mouse) const noexcept
+        {
+            if (onMouseEnterExitEvents.empty() || !mouse.enteredWindow && !mouse.exitedWindow)
+            {
+                return;
+            }
+
+            for (auto& event : onMouseEnterExitEvents)
+            {
+                if (!event.callback(services, mouse))
                 {
                     break;
                 }
             }
         }
-    }
 
-    void InputCallbacks::invokeMouseButtonEvent(ServiceProvider& services, MousePosition const& mouse, MouseButton button, bool pressed, bool released, bool down) const noexcept
-    {
-        if (!pressed && !released)
+        void invokeMouseMoveEvent(ServiceProvider& services, MousePosition const& mouse) const noexcept
         {
-            return;
-        }
-
-        auto& callbacks = onMouseButtonEvent[static_cast<uint32_t>(button)];
-
-        if (!callbacks.empty())
-        {
-            for (auto& callback : callbacks)
+            if (mouse.xyDelta.isZeroed())
             {
-                if (!callback(services, mouse, button, pressed, released, down))
+                return;
+            }
+
+            for (auto& event : onMouseMoveEvents)
+            {
+                if (!event.callback(services, mouse))
                 {
                     break;
                 }
             }
         }
-    }
 
-    void InputCallbacks::invokeMouseEnterExitEvent(ServiceProvider& services, MousePosition const& mouse) const noexcept
-    {
-        if (onMouseEnterExit.empty() || !mouse.enteredWindow && !mouse.exitedWindow)
+        void invokeMouseScrollEvent(ServiceProvider& services, MousePosition const& mouse, vec2 scroll) const noexcept
         {
-            return;
-        }
-
-        for (auto& callback : onMouseEnterExit)
-        {
-            if (!callback(services, mouse))
+            if (scroll.isZeroed())
             {
-                break;
+                return;
+            }
+
+            for (auto& event : onMouseScrollEvents)
+            {
+                if (!event.callback(services, mouse, scroll))
+                {
+                    break;
+                }
             }
         }
+    };
+
+    InputCallbacks::InputCallbacks()
+        : m_pImpl(std::make_unique<Impl>())
+    {
+
     }
 
-    void InputCallbacks::invokeMouseMoveEvent(ServiceProvider& services, MousePosition const& mouse) const noexcept
+    InputCallbacks::~InputCallbacks()
     {
-        if (mouse.xyDelta.isZeroed())
-        {
-            return;
-        }
 
-        for (auto& callback : onMouseMove)
-        {
-            if (!callback(services, mouse))
-            {
-                break;
-            }
-        }
     }
 
-    void InputCallbacks::invokeMouseScrollEvent(ServiceProvider& services, MousePosition const& mouse, vec2 scroll) const noexcept
+    CallbackId InputCallbacks::registerKeyCallback(Key key, OnKeyFunc&& func) noexcept
     {
-        if (scroll.isZeroed())
-        {
-            return;
-        }
+        const auto id = nextId();
 
-        for (auto& callback : onMouseScroll)
-        {
-            if (!callback(services, mouse, scroll))
-            {
-                break;
-            }
-        }
+        m_pImpl->onKeyEvents[static_cast<uint32_t>(key)].push_back(OnKeyEvent{
+            .id = id,
+            .callback = std::move(func)
+        });
+
+        return id;
+    }
+
+    CallbackId InputCallbacks::registerMouseButtonCallback(MouseButton button, OnMouseButtonFunc&& func) noexcept
+    {
+        const auto id = nextId();
+
+        m_pImpl->onMouseButtonEvents[static_cast<uint32_t>(button)].push_back(OnMouseButtonEvent{
+            .id = id,
+            .callback = std::move(func)
+        });
+
+        return id;
+    }
+
+    CallbackId InputCallbacks::registerMouseEnterExitCallback(OnMouseEnterExitFunc&& func) noexcept
+    {
+        const auto id = nextId();
+
+        m_pImpl->onMouseEnterExitEvents.push_back(OnMouseEnterExitEvent{
+            .id = id,
+            .callback = std::move(func)
+        });
+
+        return id;
+    }
+
+    CallbackId InputCallbacks::registerMouseMoveCallback(OnMouseMoveFunc&& func) noexcept
+    {
+        const auto id = nextId();
+
+        m_pImpl->onMouseMoveEvents.push_back(OnMouseMoveEvent{
+            .id = id,
+            .callback = std::move(func)
+        });
+
+        return id;
+    }
+
+    CallbackId InputCallbacks::registerMouseScrollCallback(OnMouseScrollFunc& func) noexcept
+    {
+        const auto id = nextId();
+
+        m_pImpl->onMouseScrollEvents.push_back(OnMouseScrollEvent{
+            .id = id,
+            .callback = std::move(func)
+        });
+
+        return id;
+    }
+
+    void InputCallbacks::invokeKeyEvent(Authority<Input> auth, ServiceProvider& services, Key key, bool pressed, bool released, bool down) const noexcept
+    {
+        m_pImpl->invokeKeyEvent(services, key, pressed, released, down);
+    }
+
+    void InputCallbacks::invokeMouseButtonEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse, MouseButton button, bool pressed, bool released, bool down) const noexcept
+    {
+        m_pImpl->invokeMouseButtonEvent(services, mouse, button, pressed, released, down);
+    }
+
+    void InputCallbacks::invokeMouseEnterExitEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse) const noexcept
+    {
+        m_pImpl->invokeMouseEnterExitEvent(services, mouse);
+    }
+
+    void InputCallbacks::invokeMouseMoveEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse) const noexcept
+    {
+        m_pImpl->invokeMouseMoveEvent(services, mouse);
+    }
+
+    void InputCallbacks::invokeMouseScrollEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse, vec2 scroll) const noexcept
+    {
+        m_pImpl->invokeMouseScrollEvent(services, mouse, scroll);
     }
 }

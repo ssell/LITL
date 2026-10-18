@@ -65,7 +65,7 @@ namespace litl
 
             if (pressed || released)
             {
-                callbacks.invokeKeyEvent(services, static_cast<Key>(i), pressed, released, m_currFrameState.keyboard.down[i]);
+                callbacks.invokeKeyEvent({}, services, static_cast<Key>(i), pressed, released, m_currFrameState.keyboard.down[i]);
             }
         }
 
@@ -77,26 +77,26 @@ namespace litl
 
             if (pressed || released)
             {
-                callbacks.invokeMouseButtonEvent(services, m_currFrameState.mouse.position, static_cast<MouseButton>(i), pressed, released, m_currFrameState.mouse.down[i]);
+                callbacks.invokeMouseButtonEvent({}, services, m_currFrameState.mouse.position, static_cast<MouseButton>(i), pressed, released, m_currFrameState.mouse.down[i]);
             }
         }
 
         // Trigger mouse enter/exit window callbacks
         if (m_currFrameState.mouse.position.enteredWindow || m_currFrameState.mouse.position.exitedWindow)
         {
-            callbacks.invokeMouseEnterExitEvent(services, m_currFrameState.mouse.position);
+            callbacks.invokeMouseEnterExitEvent({}, services, m_currFrameState.mouse.position);
         }
 
         // Trigger mouse move callbacks
         if (!m_currFrameState.mouse.position.xyDelta.isZeroed())
         {
-            callbacks.invokeMouseMoveEvent(services, m_currFrameState.mouse.position);
+            callbacks.invokeMouseMoveEvent({}, services, m_currFrameState.mouse.position);
         }
 
         // Trigger mouse scroll callbacks
         if (!m_currFrameState.mouse.scroll.isZeroed())
         {
-            callbacks.invokeMouseScrollEvent(services, m_currFrameState.mouse.position, m_currFrameState.mouse.scroll);
+            callbacks.invokeMouseScrollEvent({}, services, m_currFrameState.mouse.position, m_currFrameState.mouse.scroll);
         }
     }
 

@@ -77,7 +77,7 @@ void configureFrameCallbacks(std::shared_ptr<FrameCallbacks> callbacks)
 /// </summary>
 void configureInputCallbacks(std::shared_ptr<InputCallbacks> callbacks)
 {
-    callbacks->onMouseButtonEvent[static_cast<uint32_t>(MouseButton::Left)].push_back([](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down) -> bool
+    callbacks->registerMouseButtonCallback(MouseButton::Left, [](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down) -> bool
         {
             if (released && mouse.inWindow)
             {

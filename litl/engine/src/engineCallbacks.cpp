@@ -173,38 +173,16 @@ namespace litl
             };
 
         // ---------------------------------------------------------------------------------
-        // Keyboard Events
+        // Input Events
         // ---------------------------------------------------------------------------------
 
         /*
-        m_impl->engineInputCallbacks->onKeyEvent[static_cast<uint32_t>(Key::Escape)].push_back([this](ServiceProvider& services, Key key, bool pressed, bool released, bool down)
-            {
-                // ... add any ...
-                return true;
-            });
-
-        m_impl->engineInputCallbacks->onMouseButtonEvent[static_cast<uint32_t>(MouseButton::Left)].push_back([this](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down)
-            {
-                // ... add any ...
-                return true;
-            });
-
-        m_impl->engineInputCallbacks->onMouseEnterExit.push_back([this](ServiceProvider& services, MousePosition const& mouse)
-            {
-                // ... add any ...
-                return true;
-
-        m_impl->engineInputCallbacks->onMouseMove.push_back([this](ServiceProvider& services, MousePosition const& mouse)
-            {
-                // ... add any ...
-                return true;
-            });
-
-        m_impl->engineInputCallbacks->onMouseScroll.push_back([this](ServiceProvider& services, MousePosition const& mouse, vec2 scroll)
-            {
-                // ... add any ...
-                return true;
-            });
+        // Example:
+        m_impl->engineInputCallbacks->registerMouseButtonCallback(MouseButton::Left, [](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down) -> bool
+        {
+            // true = continue other callbacks, false = cancel other callbacks
+            return true;
+        });
         */
     }
     
