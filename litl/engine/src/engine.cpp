@@ -73,14 +73,12 @@ namespace litl
                 userFrameCallbacksFunc(userFrameCallbacks);
             }
 
-            std::shared_ptr<InputCallbacks> userInputCallbacks = std::make_shared<InputCallbacks>();
-
             if (userInputCallbacksFunc != nullptr)
             {
-                userInputCallbacksFunc(userInputCallbacks);
+                userInputCallbacksFunc(callbacks.getInputCallbacks());          // Engine and User share the same InputCallbacks instance so that users can set higher priority items if needed.
             }
 
-            callbacks.setup({}, *pServiceProvider, userFrameCallbacks, userInputCallbacks);
+            callbacks.setup({}, *pServiceProvider, userFrameCallbacks);
         }
 
         void prepareCallbacks()

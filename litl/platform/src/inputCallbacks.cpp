@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "litl-platform/inputCallbacks.hpp"
-#include "litl-core/containers/flatHashSet.hpp"
 
 namespace litl
 {
@@ -23,7 +22,7 @@ namespace litl
             CallbackId id{ Constants::uint32_null_index };
             OnKeyFunc callback;
             Key key{ Key::Unknown };
-            uint32_t priority{ static_cast<uint32_t>(InputCallbackPriority::Medium) };
+            InputCallbackPriority priority{ InputCallbackPriority::Medium };
             bool alive{ true };
         };
 
@@ -32,7 +31,7 @@ namespace litl
             CallbackId id{ Constants::uint32_null_index };
             OnMouseButtonFunc callback;
             MouseButton button{ MouseButton::Unknown };
-            uint32_t priority{ static_cast<uint32_t>(InputCallbackPriority::Medium) };
+            InputCallbackPriority priority{ InputCallbackPriority::Medium };
             bool alive{ true };
         };
 
@@ -40,7 +39,7 @@ namespace litl
         {
             CallbackId id{ Constants::uint32_null_index };
             OnMouseEnterExitFunc callback;
-            uint32_t priority{ static_cast<uint32_t>(InputCallbackPriority::Medium) };
+            InputCallbackPriority priority{ InputCallbackPriority::Medium };
             bool alive{ true };
         };
 
@@ -48,7 +47,7 @@ namespace litl
         {
             CallbackId id{ Constants::uint32_null_index };
             OnMouseMoveFunc callback;
-            uint32_t priority{ static_cast<uint32_t>(InputCallbackPriority::Medium) };
+            InputCallbackPriority priority{ InputCallbackPriority::Medium };
             bool alive{ true };
         };
 
@@ -56,7 +55,7 @@ namespace litl
         {
             CallbackId id{ Constants::uint32_null_index };
             OnMouseScrollFunc callback;
-            uint32_t priority{ static_cast<uint32_t>(InputCallbackPriority::Medium) };
+            InputCallbackPriority priority{ InputCallbackPriority::Medium };
             bool alive{ true };
         };
         
@@ -74,85 +73,6 @@ namespace litl
             uint32_t eventVecIdx{ Constants::uint32_null_index };
             std::variant<OnKeyEvent, OnMouseButtonEvent, OnMouseEnterExitEvent, OnMouseMoveEvent, OnMouseScrollEvent> event;
         };
-
-        class DirtyContainerTracker
-        {
-        private:
-
-            struct DirtyEventContainer
-            {
-                InputCallbackType type{ InputCallbackType::Unknown };
-                void* container{ nullptr };
-            };
-
-            template<typename T>
-            void sortDirtyContainerDescendingPriority(void* opaque) noexcept
-            {
-                if (opaque == nullptr)
-                {
-                    return;
-                }
-
-                std::vector<T>* container = static_cast<std::vector<T>*>(opaque);
-                std::sort(container->begin(), container->end(), [](T const& a, T const& b) { return a.priority > b.priority; });
-            }
-
-        public:
-
-            void dirty(InputCallbackType type, void* container) noexcept
-            {
-                if (!dirtyEvents.contains(container))
-                {
-                    dirtyEvents.insert(container);
-                    dirtyEventContainers.push_back(DirtyEventContainer{ .type = type, .container = container });
-                }
-            }
-
-            void sortDirtyContainers() noexcept
-            {
-                if (!dirtyEvents.empty())
-                {
-                    for (auto& dirtyContainer : dirtyEventContainers)
-                    {
-                        if ((dirtyContainer.type == InputCallbackType::Unknown) || (dirtyContainer.container == nullptr))
-                        {
-                            continue;
-                        }
-
-                        switch (dirtyContainer.type)
-                        {
-                        case InputCallbackType::Key:
-                            sortDirtyContainerDescendingPriority<OnKeyEvent>(dirtyContainer.container);
-                            break;
-                        case InputCallbackType::MouseButton:
-                            sortDirtyContainerDescendingPriority<OnMouseButtonEvent>(dirtyContainer.container);
-                            break;
-                        case InputCallbackType::MouseEnterExit:
-                            sortDirtyContainerDescendingPriority<OnMouseEnterExitEvent>(dirtyContainer.container);
-                            break;
-                        case InputCallbackType::MouseMove:
-                            sortDirtyContainerDescendingPriority<OnMouseMoveEvent>(dirtyContainer.container);
-                            break;
-                        case InputCallbackType::MouseScroll:
-                            sortDirtyContainerDescendingPriority<OnMouseScrollEvent>(dirtyContainer.container);
-                            break;
-
-                        default:
-                            logWarning("Unhandled input event type of ", static_cast<uint32_t>(dirtyContainer.type), " encountered in sortDirtyContainers");
-                            break;
-                        }
-                    }
-                }
-
-                dirtyEvents.clear();
-                dirtyEventContainers.clear();
-            }
-
-        private:
-
-            FlatHashSet<void*> dirtyEvents;
-            std::vector<DirtyEventContainer> dirtyEventContainers;
-        };
     }
 
     struct InputCallbacks::Impl
@@ -164,7 +84,6 @@ namespace litl
         std::vector<OnMouseScrollEvent> onMouseScrollEvents;
         std::vector<CallbackCommand> deferredCommands;
         std::mutex deferredCommandsMutex{};
-        DirtyContainerTracker dirtyContainers{};
 
         void addDeferredCommand(CallbackCommand&& command) noexcept
         {
@@ -182,8 +101,8 @@ namespace litl
                     return;
                 }
 
-                events.push_back(std::move(*event));
-                dirtyContainers.dirty(command.eventType, &events);                              // Note we only dirty when adding callbacks. Removing them preserves ordering.
+                auto it = std::upper_bound(events.begin(), events.end(), event->priority, [](auto priority, T const& e) { return priority > e.priority; });
+                events.insert(it, std::move(*event));
             }
             else if (command.commandType == CallbackCommandType::Remove)
             {
@@ -240,8 +159,6 @@ namespace litl
                     break;
                 }
             }
-
-            dirtyContainers.sortDirtyContainers();
         }
 
         [[nodiscard]] bool processResultAndShouldConsume(InputCallbackResult result, InputCallbackType type, CallbackId id, uint32_t eventVecIdx) noexcept
@@ -411,7 +328,7 @@ namespace litl
         m_pImpl->processDeferredCommands();
     }
 
-    InputCallbackHandle InputCallbacks::registerKeyCallback(Key key, OnKeyFunc&& func, uint32_t priority) noexcept
+    InputCallbackHandle InputCallbacks::registerKeyCallback(Key key, OnKeyFunc&& func, InputCallbackPriority priority) noexcept
     {
         if (key == Key::Unknown)
         {
@@ -437,7 +354,7 @@ namespace litl
         return InputCallbackHandle{ .type = InputCallbackType::Key, .id = id, .slot = static_cast<uint32_t>(key) };
     }
 
-    InputCallbackHandle InputCallbacks::registerMouseButtonCallback(MouseButton button, OnMouseButtonFunc&& func, uint32_t priority) noexcept
+    InputCallbackHandle InputCallbacks::registerMouseButtonCallback(MouseButton button, OnMouseButtonFunc&& func, InputCallbackPriority priority) noexcept
     {
         if (button == MouseButton::Unknown)
         {
@@ -463,7 +380,7 @@ namespace litl
         return InputCallbackHandle{ .type = InputCallbackType::MouseButton, .id = id, .slot = static_cast<uint32_t>(button) };
     }
 
-    InputCallbackHandle InputCallbacks::registerMouseEnterExitCallback(OnMouseEnterExitFunc&& func, uint32_t priority) noexcept
+    InputCallbackHandle InputCallbacks::registerMouseEnterExitCallback(OnMouseEnterExitFunc&& func, InputCallbackPriority priority) noexcept
     {
         const auto id = nextId();
 
@@ -481,7 +398,7 @@ namespace litl
         return InputCallbackHandle{ .type = InputCallbackType::MouseEnterExit, .id = id };
     }
 
-    InputCallbackHandle InputCallbacks::registerMouseMoveCallback(OnMouseMoveFunc&& func, uint32_t priority) noexcept
+    InputCallbackHandle InputCallbacks::registerMouseMoveCallback(OnMouseMoveFunc&& func, InputCallbackPriority priority) noexcept
     {
         const auto id = nextId();
 
@@ -499,7 +416,7 @@ namespace litl
         return InputCallbackHandle{ .type = InputCallbackType::MouseMove, .id = id };
     }
 
-    InputCallbackHandle InputCallbacks::registerMouseScrollCallback(OnMouseScrollFunc&& func, uint32_t priority) noexcept
+    InputCallbackHandle InputCallbacks::registerMouseScrollCallback(OnMouseScrollFunc&& func, InputCallbackPriority priority) noexcept
     {
         const auto id = nextId();
 

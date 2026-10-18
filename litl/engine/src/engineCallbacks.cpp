@@ -21,8 +21,7 @@ namespace litl
         std::shared_ptr<MaterialManager> materialManager{ nullptr };
         std::shared_ptr<FrameCallbacks> engineFrameCallbacks{ std::make_shared<FrameCallbacks>() };
         std::shared_ptr<FrameCallbacks> userFrameCallbacks{ nullptr };
-        std::shared_ptr<InputCallbacks> engineInputCallbacks{ std::make_shared<InputCallbacks>() };
-        std::shared_ptr<InputCallbacks> userInputCallbacks{ nullptr };
+        std::shared_ptr<InputCallbacks> inputCallbacks{ std::make_shared<InputCallbacks>() };
     };
 
     EngineCallbacks::EngineCallbacks()
@@ -35,10 +34,9 @@ namespace litl
         // ... needed as we use an ImplPtr which invokes this ...
     }
 
-    void EngineCallbacks::setup(Authority<Engine> authority, ServiceProvider& services, std::shared_ptr<FrameCallbacks> userFrameCallbacks, std::shared_ptr<InputCallbacks> userInputCallbacks) noexcept
+    void EngineCallbacks::setup(Authority<Engine> authority, ServiceProvider& services, std::shared_ptr<FrameCallbacks> userFrameCallbacks) noexcept
     {
         m_impl->userFrameCallbacks = (userFrameCallbacks != nullptr) ? userFrameCallbacks : std::make_shared<FrameCallbacks>();
-        m_impl->userInputCallbacks = (userInputCallbacks != nullptr) ? userInputCallbacks : std::make_shared<InputCallbacks>();
 
         // ---------------------------------------------------------------------------------
         // Intraframe Sync Points
@@ -61,8 +59,7 @@ namespace litl
                 if (input != nullptr)
                 {
                     input->poll();
-                    input->triggerCallbacks(services, *m_impl->engineInputCallbacks);
-                    input->triggerCallbacks(services, *m_impl->userInputCallbacks);
+                    input->triggerCallbacks(services, *m_impl->inputCallbacks);
                 }
 
                 m_impl->taskManager->update();
@@ -178,10 +175,9 @@ namespace litl
 
         /*
         // Example:
-        m_impl->engineInputCallbacks->registerMouseButtonCallback(MouseButton::Left, [](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down) -> bool
+        m_impl->inputCallbacks->registerMouseButtonCallback(MouseButton::Left, [](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down) -> bool
         {
-            // true = continue other callbacks, false = cancel other callbacks
-            return true;
+            return InputCallbackResult::Continue;
         });
         */
     }
@@ -212,6 +208,6 @@ namespace litl
 
     std::shared_ptr<InputCallbacks> EngineCallbacks::getInputCallbacks() noexcept
     {
-        return m_impl->engineInputCallbacks;
+        return m_impl->inputCallbacks;
     }
 }

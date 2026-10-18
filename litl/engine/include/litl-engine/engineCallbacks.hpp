@@ -23,7 +23,7 @@ namespace litl
         EngineCallbacks(EngineCallbacks const&) = delete;
         EngineCallbacks& operator=(EngineCallbacks const&) = delete;
 
-        void setup(Authority<Engine> authority, ServiceProvider& services, std::shared_ptr<FrameCallbacks> userFrameCallbacks, std::shared_ptr<InputCallbacks> userInputCallbacks) noexcept;
+        void setup(Authority<Engine> authority, ServiceProvider& services, std::shared_ptr<FrameCallbacks> userFrameCallbacks) noexcept;
         void prepare(Authority<Engine> authority, ServiceProvider& services) noexcept;
         std::shared_ptr<FrameCallbacks> getFrameCallbacks() noexcept;
         std::shared_ptr<InputCallbacks> getInputCallbacks() noexcept;

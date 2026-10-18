@@ -56,9 +56,35 @@ namespace litl
 
     enum class InputCallbackPriority : uint32_t
     {
-        Low = 10u,
-        Medium = 100u,
-        High = 1000u
+        /// <summary>
+        /// Low priority user provided callbacks.
+        /// </summary>
+        Low = 100u,
+
+        /// <summary>
+        /// Low priority engine provided callbacks.
+        /// </summary>
+        EngineLow = 200u,
+
+        /// <summary>
+        /// Medium priority user provided callbacks.
+        /// </summary>
+        Medium = 300u,
+
+        /// <summary>
+        /// Medium priority engine provided callbacks.
+        /// </summary>
+        EngineMedium = 400u,
+
+        /// <summary>
+        /// High priority user provided callbacks.
+        /// </summary>
+        High = 500u,
+
+        /// <summary>
+        /// High priority engine provided callbacks.
+        /// </summary>
+        EngineHigh = 600u
     };
 
     using OnKeyFunc = inline_function<InputCallbackResult(ServiceProvider& services, Key key, bool pressed, bool released, bool down)>;
@@ -84,11 +110,11 @@ namespace litl
 
         void processDeferredCommands(Authority<Input> auth) noexcept;
 
-        InputCallbackHandle registerKeyCallback(Key key, OnKeyFunc&& func, uint32_t priority = static_cast<uint32_t>(InputCallbackPriority::Medium)) noexcept;
-        InputCallbackHandle registerMouseButtonCallback(MouseButton button, OnMouseButtonFunc&& func, uint32_t priority = static_cast<uint32_t>(InputCallbackPriority::Medium)) noexcept;
-        InputCallbackHandle registerMouseEnterExitCallback(OnMouseEnterExitFunc&& func, uint32_t priority = static_cast<uint32_t>(InputCallbackPriority::Medium)) noexcept;
-        InputCallbackHandle registerMouseMoveCallback(OnMouseMoveFunc&& func, uint32_t priority = static_cast<uint32_t>(InputCallbackPriority::Medium)) noexcept;
-        InputCallbackHandle registerMouseScrollCallback(OnMouseScrollFunc&& func, uint32_t priority = static_cast<uint32_t>(InputCallbackPriority::Medium)) noexcept;
+        InputCallbackHandle registerKeyCallback(Key key, OnKeyFunc&& func, InputCallbackPriority priority = InputCallbackPriority::Medium) noexcept;
+        InputCallbackHandle registerMouseButtonCallback(MouseButton button, OnMouseButtonFunc&& func, InputCallbackPriority priority = InputCallbackPriority::Medium) noexcept;
+        InputCallbackHandle registerMouseEnterExitCallback(OnMouseEnterExitFunc&& func, InputCallbackPriority priority = InputCallbackPriority::Medium) noexcept;
+        InputCallbackHandle registerMouseMoveCallback(OnMouseMoveFunc&& func, InputCallbackPriority priority = InputCallbackPriority::Medium) noexcept;
+        InputCallbackHandle registerMouseScrollCallback(OnMouseScrollFunc&& func, InputCallbackPriority priority = InputCallbackPriority::Medium) noexcept;
 
         void unregisterCallback(InputCallbackHandle handle) noexcept;
 
