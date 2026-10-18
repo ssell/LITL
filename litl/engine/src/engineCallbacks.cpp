@@ -180,28 +180,32 @@ namespace litl
         m_impl->engineInputCallbacks->onKeyEvent[static_cast<uint32_t>(Key::Escape)].push_back([this](ServiceProvider& services, Key key, bool pressed, bool released, bool down)
             {
                 // ... add any ...
+                return true;
             });
 
         m_impl->engineInputCallbacks->onMouseButtonEvent[static_cast<uint32_t>(MouseButton::Left)].push_back([this](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down)
             {
                 // ... add any ...
+                return true;
             });
 
         m_impl->engineInputCallbacks->onMouseEnterExit.push_back([this](ServiceProvider& services, MousePosition const& mouse)
             {
                 // ... add any ...
-            });
+                return true;
 
         m_impl->engineInputCallbacks->onMouseMove.push_back([this](ServiceProvider& services, MousePosition const& mouse)
             {
                 // ... add any ...
+                return true;
             });
-        */
 
         m_impl->engineInputCallbacks->onMouseScroll.push_back([this](ServiceProvider& services, MousePosition const& mouse, vec2 scroll)
             {
-                logInfo("Mouse scrolled ", scroll.toString());
+                // ... add any ...
+                return true;
             });
+        */
     }
     
     void EngineCallbacks::prepare(Authority<Engine> auth, ServiceProvider& services) noexcept

@@ -15,7 +15,10 @@ namespace litl
         {
             for (auto& callback : callbacks)
             {
-                callback(services, key, pressed, released, down);
+                if (!callback(services, key, pressed, released, down))
+                {
+                    break;
+                }
             }
         }
     }
@@ -33,7 +36,10 @@ namespace litl
         {
             for (auto& callback : callbacks)
             {
-                callback(services, mouse, button, pressed, released, down);
+                if (!callback(services, mouse, button, pressed, released, down))
+                {
+                    break;
+                }
             }
         }
     }
@@ -47,7 +53,10 @@ namespace litl
 
         for (auto& callback : onMouseEnterExit)
         {
-            callback(services, mouse);
+            if (!callback(services, mouse))
+            {
+                break;
+            }
         }
     }
 
@@ -60,7 +69,10 @@ namespace litl
 
         for (auto& callback : onMouseMove)
         {
-            callback(services, mouse);
+            if (!callback(services, mouse))
+            {
+                break;
+            }
         }
     }
 
@@ -73,7 +85,10 @@ namespace litl
 
         for (auto& callback : onMouseScroll)
         {
-            callback(services, mouse, scroll);
+            if (!callback(services, mouse, scroll))
+            {
+                break;
+            }
         }
     }
 }
