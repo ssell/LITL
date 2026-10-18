@@ -33,58 +33,19 @@ namespace litl
 
     enum class InputCallbackResult : uint8_t
     {
-        /// <summary>
-        /// Keep propagating and processing callbacks for this event type.
-        /// </summary>
-        Continue = 0u,
-
-        /// <summary>
-        /// Stop propagating and processing callbacks for this event type for the frame.
-        /// </summary>
-        Consume = 1u,
-
-        /// <summary>
-        /// Keep propagating and processing callbacks, and remove this callback.
-        /// </summary>
-        ContinueAndRemove = 2u,
-
-        /// <summary>
-        /// Stop propagating and processing callbacks for this event type for the frame, and remove this callback.
-        /// </summary>
-        ConsumeAndRemove = 3u
+        Continue = 0u,                  // Keep propagating and processing callbacks for this event type.
+        Consume = 1u,                   // Stop propagating and processing callbacks for this event type for the frame.
+        ContinueAndRemove = 2u,         // Keep propagating and processing callbacks, and remove this callback.
+        ConsumeAndRemove = 3u           // Stop propagating and processing callbacks for this event type for the frame, and remove this callback.
     };
 
     enum class InputCallbackPriority : uint32_t
     {
-        /// <summary>
-        /// Low priority user provided callbacks.
-        /// </summary>
-        Low = 100u,
-
-        /// <summary>
-        /// Low priority engine provided callbacks.
-        /// </summary>
-        EngineLow = 200u,
-
-        /// <summary>
-        /// Medium priority user provided callbacks.
-        /// </summary>
-        Medium = 300u,
-
-        /// <summary>
-        /// Medium priority engine provided callbacks.
-        /// </summary>
-        EngineMedium = 400u,
-
-        /// <summary>
-        /// High priority user provided callbacks.
-        /// </summary>
-        High = 500u,
-
-        /// <summary>
-        /// High priority engine provided callbacks.
-        /// </summary>
-        EngineHigh = 600u
+        Fallback = 200u,                // Runs last. Handles anything that nobody else consumed.
+        Gameplay = 400u,                // Default priority level. Used by camera controllers, sample interactions, etc.
+        UI       = 600u,                // In-game UI that should consume clicks before gameplay sees it.
+        Overlay  = 800u,                // Editor, consoles, modal dialogs with focus, etc.
+        Debug    = 1000u                // Debug toggles that must always see input.
     };
 
     using OnKeyFunc = inline_function<InputCallbackResult(ServiceProvider& services, Key key, bool pressed, bool released, bool down)>;
@@ -110,11 +71,11 @@ namespace litl
 
         void processDeferredCommands(Authority<Input> auth) noexcept;
 
-        InputCallbackHandle registerKeyCallback(Key key, OnKeyFunc&& func, InputCallbackPriority priority = InputCallbackPriority::Medium) noexcept;
-        InputCallbackHandle registerMouseButtonCallback(MouseButton button, OnMouseButtonFunc&& func, InputCallbackPriority priority = InputCallbackPriority::Medium) noexcept;
-        InputCallbackHandle registerMouseEnterExitCallback(OnMouseEnterExitFunc&& func, InputCallbackPriority priority = InputCallbackPriority::Medium) noexcept;
-        InputCallbackHandle registerMouseMoveCallback(OnMouseMoveFunc&& func, InputCallbackPriority priority = InputCallbackPriority::Medium) noexcept;
-        InputCallbackHandle registerMouseScrollCallback(OnMouseScrollFunc&& func, InputCallbackPriority priority = InputCallbackPriority::Medium) noexcept;
+        InputCallbackHandle registerKeyCallback(Key key, OnKeyFunc&& func, InputCallbackPriority priority = InputCallbackPriority::Gameplay) noexcept;
+        InputCallbackHandle registerMouseButtonCallback(MouseButton button, OnMouseButtonFunc&& func, InputCallbackPriority priority = InputCallbackPriority::Gameplay) noexcept;
+        InputCallbackHandle registerMouseEnterExitCallback(OnMouseEnterExitFunc&& func, InputCallbackPriority priority = InputCallbackPriority::Gameplay) noexcept;
+        InputCallbackHandle registerMouseMoveCallback(OnMouseMoveFunc&& func, InputCallbackPriority priority = InputCallbackPriority::Gameplay) noexcept;
+        InputCallbackHandle registerMouseScrollCallback(OnMouseScrollFunc&& func, InputCallbackPriority priority = InputCallbackPriority::Gameplay) noexcept;
 
         void unregisterCallback(InputCallbackHandle handle) noexcept;
 

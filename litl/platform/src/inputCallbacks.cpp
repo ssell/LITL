@@ -22,7 +22,7 @@ namespace litl
             CallbackId id{ Constants::uint32_null_index };
             OnKeyFunc callback;
             Key key{ Key::Unknown };
-            InputCallbackPriority priority{ InputCallbackPriority::Medium };
+            InputCallbackPriority priority{ InputCallbackPriority::Gameplay };
             bool alive{ true };
         };
 
@@ -31,7 +31,7 @@ namespace litl
             CallbackId id{ Constants::uint32_null_index };
             OnMouseButtonFunc callback;
             MouseButton button{ MouseButton::Unknown };
-            InputCallbackPriority priority{ InputCallbackPriority::Medium };
+            InputCallbackPriority priority{ InputCallbackPriority::Gameplay };
             bool alive{ true };
         };
 
@@ -39,7 +39,7 @@ namespace litl
         {
             CallbackId id{ Constants::uint32_null_index };
             OnMouseEnterExitFunc callback;
-            InputCallbackPriority priority{ InputCallbackPriority::Medium };
+            InputCallbackPriority priority{ InputCallbackPriority::Gameplay };
             bool alive{ true };
         };
 
@@ -47,7 +47,7 @@ namespace litl
         {
             CallbackId id{ Constants::uint32_null_index };
             OnMouseMoveFunc callback;
-            InputCallbackPriority priority{ InputCallbackPriority::Medium };
+            InputCallbackPriority priority{ InputCallbackPriority::Gameplay };
             bool alive{ true };
         };
 
@@ -55,7 +55,7 @@ namespace litl
         {
             CallbackId id{ Constants::uint32_null_index };
             OnMouseScrollFunc callback;
-            InputCallbackPriority priority{ InputCallbackPriority::Medium };
+            InputCallbackPriority priority{ InputCallbackPriority::Gameplay };
             bool alive{ true };
         };
         
