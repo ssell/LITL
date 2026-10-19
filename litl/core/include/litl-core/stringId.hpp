@@ -21,7 +21,12 @@ namespace litl
         friend constexpr bool operator==(StringId, StringId) noexcept = default;
         friend constexpr auto operator<=>(StringId, StringId) noexcept = default;
 
-        uint64_t value = 0;
+        uint64_t value = 0ull;
+
+        [[nodiscard]] constexpr bool isNull() noexcept
+        {
+            return (value == 0ull);
+        }
     };
 
     /// <summary>

@@ -30,6 +30,12 @@ namespace litl
     {
     public:
 
+        struct DefaultIds
+        {
+            static constexpr StringId UI = "UI"_sid;
+            static constexpr StringId Gameplay = "Gameplay"_sid;
+        };
+
         ActionMap();
         ~ActionMap();
 
@@ -37,6 +43,8 @@ namespace litl
         ActionMap& operator=(ActionMap const&) = delete;
 
         bool bind(StringId name, InputSource source) noexcept;
+        void unbind(StringId name, InputSource source) noexcept;
+        void unbindAll(StringId name) noexcept;
 
     private:
 

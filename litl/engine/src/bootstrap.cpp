@@ -12,10 +12,11 @@
 #include "litl-engine/ecs/systems/cullingSystem.hpp"
 #include "litl-engine/ecs/systems/meshInstantiationSystem.hpp"
 #include "litl-engine/ecs/systems/modelInstantiationSystem.hpp"
+#include "litl-ecs/world.hpp"
 #include "litl-platform/platform.hpp"
 #include "litl-platform/window.hpp"
 #include "litl-platform/input.hpp"
-#include "litl-ecs/world.hpp"
+#include "litl-engine/input/inputActions.hpp"
 
 namespace litl::Internal
 {
@@ -28,6 +29,7 @@ namespace litl::Internal
         services.addSingleton<Platform>();
         services.addSingleton<Window>();
         services.addSingleton<Input>();
+        services.addSingleton<InputActions>();
         services.addSingleton<RenderManager>();
         services.addSingleton<ObjectPool>();
         services.addSingleton<MaterialManager>();

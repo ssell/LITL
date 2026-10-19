@@ -24,6 +24,8 @@ namespace litl
         InputSourceType type{ InputSourceType::Unknown };
         uint32_t code{ Constants::uint32_null_index };
 
+        bool operator==(InputSource const& other) const = default;
+
         [[nodiscard]] constexpr static InputSource fromKey(Key key) noexcept
         {
             return InputSource{
