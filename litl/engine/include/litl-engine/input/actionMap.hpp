@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <string_view>
 
 #include "litl-core/stringId.hpp"
 #include "litl-core/math/types/vec2.hpp"
@@ -26,6 +27,24 @@ namespace litl
         vec2 value{};
     };
 
+    struct ActionMapDescriptor
+    {
+        /// <summary>
+        /// The unique name of this map used both for display and to hash and serve as the key.
+        /// </summary>
+        std::string name;
+
+        /// <summary>
+        /// Should any actions not consumed by this map be propagated down the stack?
+        /// </summary>
+        bool propagateActions{ true };
+
+        /// <summary>
+        /// The cursor mode applied when this map is the active map at the top of the stack.
+        /// </summary>
+        CursorMode cursorMode{ CursorMode::Normal };
+    };
+
     class ActionMap
     {
     public:
@@ -36,15 +55,33 @@ namespace litl
             static constexpr StringId Gameplay = "Gameplay"_sid;
         };
 
-        ActionMap();
+        ActionMap(ActionMapDescriptor const& descriptor);
         ~ActionMap();
 
         ActionMap(ActionMap const&) = delete;
         ActionMap& operator=(ActionMap const&) = delete;
 
-        bool bind(StringId name, InputSource source) noexcept;
-        void unbind(StringId name, InputSource source) noexcept;
-        void unbindAll(StringId name) noexcept;
+        /// <summary>
+        /// Adds a binding with the given name for the specified input source.
+        /// For example: Bind "Move Forward" with "Key W"
+        /// </summary>
+        bool bind(std::string_view name, InputSource source) noexcept;
+
+        /// <summary>
+        /// Unbind the specific input source and name combination.
+        /// For example: Unbind "Key W" from "Move Forward"
+        /// </summary>
+        void unbind(std::string_view name, InputSource source) noexcept;
+
+        /// <summary>
+        /// Unbinds all bindings with the specified name.
+        /// For example: Unbind "Move Forward" which unbinds "Key W", "Key Up Arrow", etc.
+        /// </summary>
+        /// <param name="name"></param>
+        void unbindAll(std::string_view name) noexcept;
+
+        [[nodiscard]] ActionMapDescriptor const& getDescriptor() const noexcept;
+        [[nodiscard]] StringId getId() const noexcept;
 
     private:
 
