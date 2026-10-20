@@ -5,12 +5,15 @@
 #include <memory>
 #include <string_view>
 
+#include "litl-core/authority.hpp"
 #include "litl-core/stringId.hpp"
 #include "litl-core/math/types/vec2.hpp"
 #include "litl-engine/input/inputSource.hpp"
 
 namespace litl
 {
+    class InputActions;
+
     enum class ActionType : uint8_t
     {
         Unknown = 0u,
@@ -61,6 +64,10 @@ namespace litl
         ActionMap(ActionMap const&) = delete;
         ActionMap& operator=(ActionMap const&) = delete;
 
+        // ---------------------------------------------------------------------------------
+        // Bind / Unbind
+        // ---------------------------------------------------------------------------------
+
         /// <summary>
         /// Adds a binding with the given name for the specified input source.
         /// For example: Bind "Move Forward" with "Key W"
@@ -77,11 +84,43 @@ namespace litl
         /// Unbinds all bindings with the specified name.
         /// For example: Unbind "Move Forward" which unbinds "Key W", "Key Up Arrow", etc.
         /// </summary>
-        /// <param name="name"></param>
         void unbindAll(std::string_view name) noexcept;
 
+        // ---------------------------------------------------------------------------------
+        // Set / Unset Active
+        // ---------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Sets the map as the active map. This updates the cursor mode, etc.
+        /// </summary>
+        void setActiveMap(Authority<InputActions> auth) noexcept;
+
+        /// <summary>
+        /// Unsets the map as the active map. This causes the map to mimic cancellation of any active actions.
+        /// For example, any relevant keys being held down are simulated to be released. This prevents unwanted
+        /// actions such as "Move Forward" from continuing indefinitely while a menu (separate action map) is open on top.
+        /// </summary>
+        /// <param name="auth"></param>
+        void unsetActiveMap(Authority<InputActions> auth) noexcept;
+
+        // ---------------------------------------------------------------------------------
+        // Getters
+        // ---------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Returns the descriptor used to create this action map.
+        /// </summary>
         [[nodiscard]] ActionMapDescriptor const& getDescriptor() const noexcept;
+
+        /// <summary>
+        /// Returns the id assigned to the action map.
+        /// </summary>
         [[nodiscard]] StringId getId() const noexcept;
+
+        /// <summary>
+        /// Returns the name of the action map.
+        /// </summary>
+        [[nodiscard]] std::string_view getName() const noexcept;
 
     private:
 

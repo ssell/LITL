@@ -1,5 +1,7 @@
 #include <array>
+
 #include "litl-engine/input/actionMap.hpp"
+#include "litl-engine/input/inputActions.hpp"
 
 namespace litl
 {
@@ -95,6 +97,16 @@ namespace litl
     {
         m_pImpl->unbindAll(name);
     }
+    
+    void ActionMap::setActiveMap(Authority<InputActions> auth) noexcept
+    {
+        // ... todo ...
+    }
+
+    void ActionMap::unsetActiveMap(Authority<InputActions> auth) noexcept
+    {
+        // ... todo ...
+    }
 
     ActionMapDescriptor const& ActionMap::getDescriptor() const noexcept
     {
@@ -104,5 +116,10 @@ namespace litl
     StringId ActionMap::getId() const noexcept
     {
         return m_pImpl->id;
+    }
+
+    std::string_view ActionMap::getName() const noexcept
+    {
+        return m_pImpl->descriptor.name;
     }
 }

@@ -1,12 +1,32 @@
+#include <mutex>
 #include <stack>
 #include "litl-engine/input/inputActions.hpp"
 
 namespace litl
 {
+    namespace
+    {
+        enum class InputActionCommandType : uint8_t
+        {
+            Unknown = 0u,
+            Push = 1u,
+            Pop  = 2u
+        };
+
+        struct InputActionCommand
+        {
+            StringId id{};
+            InputActionCommandType type{ InputActionCommandType::Unknown };
+        };
+    }
+
     struct InputActions::Impl
     {
         std::stack<StringId> mapStack;
         StringIdMap<ActionMap> actionMaps;
+
+        std::mutex commandsMutex{};
+        std::vector<InputActionCommand> commands;
 
         [[nodiscard]] ActionMap& getMap(StringId id) noexcept
         {
@@ -15,44 +35,71 @@ namespace litl
 
         [[nodiscard]] bool pushMap(StringId id) noexcept
         {
-            if (id == mapStack.top())
+            if (!actionMaps.contains(id))
             {
-                // Already the active map.
-                return true;
-            }
-
-            auto find = actionMaps.find(id);
-
-            if (find == actionMaps.end())
-            {
-                // This map does not exist.
                 return false;
             }
 
-            if (!mapStack.empty())
-            {
-                // Gracefully cancel any non-zero actions in the active/top map.
-                // For example if we are transitioning to a menu while the player is moving then we want to send mock released=true,down=false input events to cancel the movement.
+            std::scoped_lock lock{ commandsMutex };
 
-                // ... todo ...
-            }
-
-            mapStack.push(id);
+            commands.push_back(InputActionCommand{
+                .id = id,
+                .type = InputActionCommandType::Push
+            });
 
             return true;
         }
 
         void popMap() noexcept
         {
-            if (actionMaps.empty())
+            std::scoped_lock lock{ commandsMutex };
+
+            commands.push_back(InputActionCommand{
+                .type = InputActionCommandType::Pop
+            });
+        }
+
+        void processCommand(InputActionCommand const& command) noexcept
+        {
+            switch (command.type)
+            {
+            case InputActionCommandType::Push:
+                setTopActive(false);
+                mapStack.push(command.id);
+                setTopActive(true);
+                break;
+
+            case InputActionCommandType::Pop:
+                setTopActive(false);
+                mapStack.pop();
+                setTopActive(true);
+                break;
+
+            default:
+                break;
+            }
+        }
+
+        void setTopActive(bool isActive) noexcept
+        {
+            if (mapStack.empty())
             {
                 return;
             }
 
-            // cancel active map ...
-            // ... todo ...
+            auto top = actionMaps.find(mapStack.top());
 
-            mapStack.pop();
+            if (top != actionMaps.end())
+            {
+                if (isActive)
+                {
+                    top->second.setActiveMap({});
+                }
+                else
+                {
+                    top->second.unsetActiveMap({});
+                }
+            }
         }
     };
 
@@ -81,4 +128,10 @@ namespace litl
     {
         m_pImpl->popMap();
     }
+
+    // ... todo need: 
+    // ... process deferred commands
+    // ... create action maps via InputActions
+    // ... propagate input to action maps so they can trigger callbacks
+    // ... add getter for action maps
 }
