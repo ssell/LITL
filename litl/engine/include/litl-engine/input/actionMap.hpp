@@ -46,6 +46,11 @@ namespace litl
         /// The cursor mode applied when this map is the active map at the top of the stack.
         /// </summary>
         CursorMode cursorMode{ CursorMode::Normal };
+
+        [[nodiscard]] bool isValid() const noexcept
+        {
+            return !name.empty() && (cursorMode != CursorMode::Unknown);
+        }
     };
 
     class ActionMap

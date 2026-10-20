@@ -5,12 +5,15 @@
 
 namespace litl
 {
-    struct ActionBinding
+    namespace
     {
-        std::string name;
-        StringId id;
-        InputSource source{};
-    };
+        struct ActionBinding
+        {
+            std::string name;
+            StringId id;
+            InputSource source{};
+        };
+    }
 
     struct ActionMap::Impl
     {
