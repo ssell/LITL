@@ -1,10 +1,33 @@
 #include "litl-engine/startup.hpp"
+#include "freeFlySystem.hpp"
 #include "spinSystem.hpp"
 
 namespace litl::samples
 {
+    [[nodiscard]] Configuration buildConfig() noexcept
+    {
+        return Configuration{
+            .platform = PlatformConfiguration {
+                .title = "LITL - Sponza Sample"
+            } ,
+            .input = InputConfiguration {
+                .actionMaps = {
+                    ActionMapDescriptor{
+                        .name = "gameplay",
+                        .propagateActions = false,
+                        .cursorMode = CursorMode::Captured,
+                        .bindings = {
+                            { "forward", { InputSource::fromKey(Key::W), InputSource::fromKey(Key::Up) } }
+                        }
+                    }
+                }
+            }
+        };
+    }
+
     void configureSystems(SystemCollection& systems)
     {
+        systems.addSystem<FreeFlySystem>(SystemGroup::Update);
         systems.addSystem<SpinSystem>(SystemGroup::Update);
     }
 
@@ -14,7 +37,8 @@ namespace litl::samples
         auto sceneView = services.get<SceneView>();
         auto assets = services.get<AssetManager>();
 
-        createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(-5.0f, 1.5f, 0.0f), vec3(5.0f, 1.5f, 0.0f), vec3::up(), *objectPool, *sceneView);
+        const auto* mainCamera = createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(-5.0f, 1.5f, 0.0f), vec3(5.0f, 1.5f, 0.0f), vec3::up(), *objectPool, *sceneView);
+        commands.addComponent<FreeFly>(mainCamera->getEntity());
 
         auto sponzaEntity = commands.createEntity();
         commands.addComponent<Transform>(sponzaEntity, Transform::create(vec3::zero(), quat::identity()));
@@ -33,7 +57,7 @@ namespace litl::samples
 int main()
 {
     litl::Engine engine{};
-    litl::Configuration config{ .platform { .title = "LITL - Sponza Sample" } };
+    litl::Configuration config = litl::samples::buildConfig();
 
     engine.setup(config, nullptr, litl::samples::configureSystems, nullptr, nullptr, litl::samples::bootstrap);
     engine.start();

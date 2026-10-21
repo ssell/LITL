@@ -1,5 +1,5 @@
-#ifndef LITL_SAMPLES_TRIANGLE_SPIN_H__
-#define LITL_SAMPLES_TRIANGLE_SPIN_H__
+#ifndef LITL_SAMPLES_TRIANGLE_SPIN_SYSTEM_H__
+#define LITL_SAMPLES_TRIANGLE_SPIN_SYSTEM_H__
 
 #include "litl-ecs/register.hpp"
 #include "litl-engine/ecs/common.hpp"
