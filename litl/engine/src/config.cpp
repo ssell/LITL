@@ -4,27 +4,32 @@
 
 namespace litl
 {
-    void Configuration::sanitize() noexcept
+    void EngineConfiguration::sanitize() noexcept
     {
-        if (!between(engine.framesPerSecond, EngineConfiguration::MinFixedFps, EngineConfiguration::MaxFixedFps))
+        if (!between(framesPerSecond, EngineConfiguration::MinFixedFps, EngineConfiguration::MaxFixedFps))
         {
             logWarning("Engine settings 'framesPerSecond' is outside of acceptable range of [", EngineConfiguration::MinFixedFps, ", ", EngineConfiguration::MaxFixedFps, "]. Clamping.");
-            engine.framesPerSecond = clamp(engine.framesPerSecond, EngineConfiguration::MinFixedFps, EngineConfiguration::MaxFixedFps);
+            framesPerSecond = clamp(framesPerSecond, EngineConfiguration::MinFixedFps, EngineConfiguration::MaxFixedFps);
         }
 
-        if (!between(engine.ticksPerSecond, EngineConfiguration::MinTicksPerSecond, EngineConfiguration::MaxTicksPerSecond))
+        if (!between(ticksPerSecond, EngineConfiguration::MinTicksPerSecond, EngineConfiguration::MaxTicksPerSecond))
         {
             logWarning("Engine settings 'ticksPerSecond' is outside of acceptable range of [", EngineConfiguration::MinTicksPerSecond, ", ", EngineConfiguration::MaxTicksPerSecond, "]. Clamping.");
-            engine.ticksPerSecond = clamp(engine.ticksPerSecond, EngineConfiguration::MinTicksPerSecond, EngineConfiguration::MaxTicksPerSecond);
+            ticksPerSecond = clamp(ticksPerSecond, EngineConfiguration::MinTicksPerSecond, EngineConfiguration::MaxTicksPerSecond);
         }
 
-        if (!between(engine.taskThreadCount, EngineConfiguration::MinTaskThreadCount, EngineConfiguration::MaxTaskThreadCount))
+        if (!between(taskThreadCount, EngineConfiguration::MinTaskThreadCount, EngineConfiguration::MaxTaskThreadCount))
         {
             logWarning("Engine settings 'taskThreadCount' is outside of acceptable range of [", EngineConfiguration::MinTaskThreadCount, ", ", EngineConfiguration::MaxTaskThreadCount, "]. Clamping.");
-            engine.taskThreadCount = clamp(engine.taskThreadCount, EngineConfiguration::MinTaskThreadCount, EngineConfiguration::MaxTaskThreadCount);
+            taskThreadCount = clamp(taskThreadCount, EngineConfiguration::MinTaskThreadCount, EngineConfiguration::MaxTaskThreadCount);
         }
+    }
 
+    void Configuration::sanitize() noexcept
+    {
+        engine.sanitize();
         platform.sanitize();
+        input.sanitize();
         renderer.sanitize();
     }
 

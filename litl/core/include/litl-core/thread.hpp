@@ -11,7 +11,14 @@ namespace litl
     /// </summary>
     struct ThreadInfo
     {
+        /// <summary>
+        /// The unique std thread id for the thread.
+        /// </summary>
         std::thread::id id;
+
+        /// <summary>
+        /// The numerical id of the thread, ordered based on ThreadInfo::get() call order.
+        /// </summary>
         uint32_t index;
         bool mainthread;
 

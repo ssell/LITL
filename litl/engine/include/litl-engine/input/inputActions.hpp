@@ -17,7 +17,7 @@ namespace litl
     using ActionMapHandle = Handle<ActionMapHandleTag>;
 
     /// <summary>
-    /// Service built ontop of Input that allows for more sophisticated input operations.
+    /// Service built on top of Input that allows for more sophisticated input operations.
     /// It does not replace raw Input queries or callbacks, but allows for features such as:
     /// 
     /// * Unified Input: Multiple input sources tied to the same event. For example, both W and UpArrow keys tied to "MoveForward".
@@ -52,6 +52,7 @@ namespace litl
 
         /// <summary>
         /// Sets up InputActions with DI services.
+        /// All action maps are created from those defined in the injected Configuration's InputConfiguration.
         /// </summary>
         void setup(Authority<Engine> auth, ServiceProvider& services) noexcept;
 

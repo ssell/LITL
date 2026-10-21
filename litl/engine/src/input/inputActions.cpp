@@ -33,6 +33,7 @@ namespace litl
         StringIdMap<ActionMapHandle> actionMapLookup;
         std::vector<ActionMapHandle> actionMapStack;
         std::vector<InputActionCommand> actionMapCommands;
+        std::mutex commandsMutex{};
 
         void setup(ServiceProvider& services) noexcept
         {
@@ -42,7 +43,27 @@ namespace litl
             LITL_FATAL_ASSERT_MSG((input != nullptr), "Failed to inject Input into InputActions.");
             LITL_FATAL_ASSERT_MSG((config != nullptr), "Failed to inject Configuration into InputActions.");
 
-            // ... todo build action maps from the configuration ...
+            for (auto& descriptor : config->input.actionMaps)
+            {
+                if (!descriptor.isValid())
+                {
+                    logWarning("InputConfiguration provided with invalid ActionMapDescriptor '", descriptor.name, "'");
+                    continue;
+                }
+
+                ActionMap actionMap{};
+
+                if (!actionMap.create({}, descriptor))
+                {
+                    logError("Failed to create ActionMap");
+                    continue;
+                }
+
+                if (!actionMapPool.create(actionMap).isValid())
+                {
+                    logError("Failed to create ActionMapHandle for ActionMap '", descriptor.name, "'");
+                }
+            }
         }
 
         [[nodiscard]] ActionMapHandle getMap(StringId id) noexcept
@@ -65,6 +86,8 @@ namespace litl
                 return;
             }
 
+            std::scoped_lock lock{ commandsMutex };
+
             actionMapCommands.push_back(InputActionCommand{
                 .handle = handle,
                 .type = InputActionCommandType::Push
@@ -73,6 +96,13 @@ namespace litl
 
         void popMap(ActionMapHandle handle) noexcept
         {
+            if (!handle.isValid())
+            {
+                return;
+            }
+
+            std::scoped_lock lock{ commandsMutex };
+
             actionMapCommands.push_back(InputActionCommand{
                 .handle = handle,
                 .type = InputActionCommandType::Pop
@@ -147,12 +177,11 @@ namespace litl
                 {
                     if (*riter == command.handle)
                     {
-                        actionMapStack.erase(std::next(riter).base()));
+                        actionMapStack.erase(std::next(riter).base());
                         break;
                     }
                 }
             }
-
         }
     };
 
@@ -188,6 +217,5 @@ namespace litl
     }
 
     // ... todo need: 
-    // ... process deferred commands
     // ... propagate input to action maps so they can trigger callbacks
 }

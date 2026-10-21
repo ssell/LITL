@@ -1,6 +1,7 @@
 #ifndef LITL_ENGINE_INPUT_ACTION_MAP_H__
 #define LITL_ENGINE_INPUT_ACTION_MAP_H__
 
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <string_view>
@@ -8,7 +9,7 @@
 #include "litl-core/authority.hpp"
 #include "litl-core/stringId.hpp"
 #include "litl-core/math/types/vec2.hpp"
-#include "litl-engine/input/inputSource.hpp"
+#include "litl-engine/input/actionMapDescriptor.hpp"
 
 namespace litl
 {
@@ -30,29 +31,6 @@ namespace litl
         vec2 value{};
     };
 
-    struct ActionMapDescriptor
-    {
-        /// <summary>
-        /// The unique name of this map used both for display and to hash and serve as the key.
-        /// </summary>
-        std::string name;
-
-        /// <summary>
-        /// Should any actions not consumed by this map be propagated down the stack?
-        /// </summary>
-        bool propagateActions{ true };
-
-        /// <summary>
-        /// The cursor mode applied when this map is the active map at the top of the stack.
-        /// </summary>
-        CursorMode cursorMode{ CursorMode::Normal };
-
-        [[nodiscard]] bool isValid() const noexcept
-        {
-            return !name.empty() && (cursorMode != CursorMode::Unknown);
-        }
-    };
-
     class ActionMap
     {
     public:
@@ -63,11 +41,7 @@ namespace litl
             static constexpr StringId Gameplay = "Gameplay"_sid;
         };
 
-        ActionMap(ActionMapDescriptor const& descriptor);
-        ~ActionMap();
-
-        ActionMap(ActionMap const&) = delete;
-        ActionMap& operator=(ActionMap const&) = delete;
+        [[nodiscard]] bool create(Authority<InputActions> auth, ActionMapDescriptor const& descriptor) noexcept;
 
         // ---------------------------------------------------------------------------------
         // Bind / Unbind
@@ -129,8 +103,17 @@ namespace litl
 
     private:
 
-        struct Impl;
-        std::unique_ptr<Impl> m_pImpl{ nullptr };
+        struct ActionBinding
+        {
+            std::string name;
+            StringId id;
+            InputSource source{};
+        };
+
+        static constexpr uint32_t BindingsPerId = 8u;
+        ActionMapDescriptor m_descriptor{};
+        StringId m_id{};
+        StringIdMap<std::array<ActionBinding, BindingsPerId>> m_actionBindings;
     };
 }
 

@@ -4,8 +4,9 @@
 #include <cstdint>
 
 #include "litl-renderer/rendererConfiguration.hpp"
-#include "litl-engine/scene/sceneConfiguration.hpp"
 #include "litl-platform/platformConfiguration.hpp"
+#include "litl-engine/scene/sceneConfiguration.hpp"
+#include "litl-engine/input/inputConfiguration.hpp"
 
 namespace litl
 {
@@ -34,6 +35,8 @@ namespace litl
         /// The number of threads available in the Task thread pool. Must be on the range [MinTaskThreadCount, MaxTaskThreadCount].
         /// </summary>
         uint32_t taskThreadCount{ 2u };
+
+        void sanitize() noexcept;
     };
 
     struct Configuration
@@ -47,6 +50,11 @@ namespace litl
         /// Platform specific settings.
         /// </summary>
         PlatformConfiguration platform{};
+
+        /// <summary>
+        /// Input specific settings
+        /// </summary>
+        InputConfiguration input{};
 
         /// <summary>
         /// Renderer specific settings.
