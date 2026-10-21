@@ -79,6 +79,17 @@ namespace litl
         }
 
         const auto id = StringId(name);
+        auto find = m_actionBindingsMap.find(id);
+
+        if (find == m_actionBindingsMap.end())
+        {
+            m_actionBindingsMap[id] = m_actionBindings.size();
+            m_actionBindings.push_back(ActionBindings{
+                .name = std::string(name),
+                .id = StringId(name)
+            });
+        }
+
         auto& actionBindings = getActionBindings(id);
 
         for (uint32_t i = 0u; i < BindingsPerId; ++i)

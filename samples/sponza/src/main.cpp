@@ -17,10 +17,16 @@ namespace litl::samples
                         .propagateActions = false,
                         .cursorMode = CursorMode::Captured,
                         .bindings = {
-                            { "forward", { InputSource::fromKey(Key::W), InputSource::fromKey(Key::Up) } }
+                            { "forward", { InputSource::fromKey(Key::W), InputSource::fromKey(Key::Up) } },
+                            { "backward", { InputSource::fromKey(Key::S), InputSource::fromKey(Key::Down) } },
+                            { "left", { InputSource::fromKey(Key::A), InputSource::fromKey(Key::Left) } },
+                            { "right", { InputSource::fromKey(Key::D), InputSource::fromKey(Key::Right) } },
+                            { "up", { InputSource::fromKey(Key::Q) } },
+                            { "down", { InputSource::fromKey(Key::E) } }
                         }
                     }
-                }
+                },
+                .defaultActionMap = "gameplay"
             }
         };
     }

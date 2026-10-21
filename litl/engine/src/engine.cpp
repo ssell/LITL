@@ -18,6 +18,7 @@
 #include "litl-engine/tasks/taskManager.hpp"
 #include "litl-engine/engineCallbacks.hpp"
 #include "litl-engine/render/renderManager.hpp"
+#include "litl-engine/input/inputActions.hpp"
 
 namespace litl
 {
@@ -55,6 +56,7 @@ namespace litl
         std::shared_ptr<Platform> pSharedPlatform{ nullptr };
         std::shared_ptr<Window> pSharedWindow{ nullptr };
         std::shared_ptr<Input> pSharedInput{ nullptr };
+        std::shared_ptr<InputActions> pSharedInputActions{ nullptr };
         std::shared_ptr<JobScheduler> pSharedJobScheduler{ nullptr };
         std::shared_ptr<World> pSharedECSWorld{ nullptr };
         std::shared_ptr<RenderManager> pSharedRenderManager{ nullptr };
@@ -318,6 +320,8 @@ namespace litl
         }
 
         m_pImpl->pSharedInput = m_pImpl->pServiceProvider->get<Input>();
+        m_pImpl->pSharedInputActions = m_pImpl->pServiceProvider->get<InputActions>();
+        m_pImpl->pSharedInputActions->setup({}, *m_pImpl->pServiceProvider);
 
         // ---------------------------------------------------------------------------------
         // Window

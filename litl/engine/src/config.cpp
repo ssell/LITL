@@ -37,6 +37,7 @@ namespace litl
     {
         engine = other.engine;
         platform = other.platform;
+        input = other.input;
         renderer = other.renderer;
         scene = other.scene;
 

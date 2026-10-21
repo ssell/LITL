@@ -106,6 +106,8 @@ namespace litl
 
         struct ActionBindings
         {
+            std::string name;
+            StringId id;
             InputSourceState state{};
             std::array<ActionBinding, BindingsPerId> bindings;
         };

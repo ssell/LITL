@@ -76,10 +76,16 @@ namespace litl
                     logError("Failed to create ActionMapHandle for ActionMap '", descriptor.name, "'");
                 }
 
+                actionMapLookup[StringId(descriptor.name)] = handle;
                 allActionMapHandles.push_back(handle);
             }
 
             actionMapProcessed.resize(allActionMapHandles.size(), false);
+
+            if (!config->input.defaultActionMap.empty())
+            {
+                pushMap(getMap(StringId(config->input.defaultActionMap)));
+            }
         }
 
         // ---------------------------------------------------------------------------------
