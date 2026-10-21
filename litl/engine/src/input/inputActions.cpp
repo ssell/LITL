@@ -1,5 +1,6 @@
 #include <mutex>
-#include <stack>
+#include <ranges>
+#include <vector>
 
 #include "litl-core/assert.hpp"
 #include "litl-core/services/serviceProvider.hpp"
@@ -27,18 +28,21 @@ namespace litl
 
     struct InputActions::Impl
     {
+        std::shared_ptr<Input> input{ nullptr };
         HandlePool<ActionMap, ActionMapHandleTag> actionMapPool{};
         StringIdMap<ActionMapHandle> actionMapLookup;
         std::vector<ActionMapHandle> actionMapStack;
-
-        std::shared_ptr<Input> input{ nullptr };
-        std::stack<StringId> mapStack;
-        std::vector<InputActionCommand> commands;
+        std::vector<InputActionCommand> actionMapCommands;
 
         void setup(ServiceProvider& services) noexcept
         {
             input = services.get<Input>();
+            auto config = services.get<Configuration>();
+
             LITL_FATAL_ASSERT_MSG((input != nullptr), "Failed to inject Input into InputActions.");
+            LITL_FATAL_ASSERT_MSG((config != nullptr), "Failed to inject Configuration into InputActions.");
+
+            // ... todo build action maps from the configuration ...
         }
 
         [[nodiscard]] ActionMapHandle getMap(StringId id) noexcept
@@ -61,7 +65,7 @@ namespace litl
                 return;
             }
 
-            commands.push_back(InputActionCommand{
+            actionMapCommands.push_back(InputActionCommand{
                 .handle = handle,
                 .type = InputActionCommandType::Push
             });
@@ -69,7 +73,7 @@ namespace litl
 
         void popMap(ActionMapHandle handle) noexcept
         {
-            commands.push_back(InputActionCommand{
+            actionMapCommands.push_back(InputActionCommand{
                 .handle = handle,
                 .type = InputActionCommandType::Pop
             });
@@ -94,7 +98,7 @@ namespace litl
 
         void setTopActive(bool isActive) noexcept
         {
-            if (mapStack.empty())
+            if (actionMapStack.empty())
             {
                 return;
             }
@@ -124,9 +128,31 @@ namespace litl
 
         void processCommandPop(InputActionCommand const& command) noexcept
         {
-            setTopActive(false);
-            actionMapStack.pop_back();
-            setTopActive(true);
+            if (actionMapStack.empty())
+            {
+                return;
+            }
+
+            if (actionMapStack.back() == command.handle)
+            {
+                // Requesting to pop the top.
+                setTopActive(false);
+                actionMapStack.pop_back();
+                setTopActive(true);
+            }
+            else
+            {
+                // Otherwise we must descend the stack until we find the top-most instance of the specified action map and then remove it.
+                for (auto riter = actionMapStack.rbegin(); riter != actionMapStack.rend(); ++riter)
+                {
+                    if (*riter == command.handle)
+                    {
+                        actionMapStack.erase(std::next(riter).base()));
+                        break;
+                    }
+                }
+            }
+
         }
     };
 
