@@ -20,19 +20,19 @@ namespace litl
 
         struct InputActionCommand
         {
-            StringId id{};
+            ActionMapHandle handle{};
             InputActionCommandType type{ InputActionCommandType::Unknown };
         };
     }
 
     struct InputActions::Impl
     {
-        std::mutex actionMapsMutex{};
-        std::mutex commandsMutex{};
+        HandlePool<ActionMap, ActionMapHandleTag> actionMapPool{};
+        StringIdMap<ActionMapHandle> actionMapLookup;
+        std::vector<ActionMapHandle> actionMapStack;
 
         std::shared_ptr<Input> input{ nullptr };
         std::stack<StringId> mapStack;
-        StringIdMap<std::unique_ptr<ActionMap>> actionMaps;         // Use unique_ptr so references via getMap are stable even if the underlying map is resized.
         std::vector<InputActionCommand> commands;
 
         void setup(ServiceProvider& services) noexcept
@@ -41,59 +41,36 @@ namespace litl
             LITL_FATAL_ASSERT_MSG((input != nullptr), "Failed to inject Input into InputActions.");
         }
 
-        [[nodiscard]] bool createMap(ActionMapDescriptor const& descriptor) noexcept
+        [[nodiscard]] ActionMapHandle getMap(StringId id) noexcept
         {
-            if (!descriptor.isValid())
+            // Since we enforce when action maps can be created (during setup only) we do not need to lock the lookup in a critical section.
+            auto find = actionMapLookup.find(id);
+
+            if (find == actionMapLookup.end())
             {
-                return false;
+                return {};
             }
 
-            const auto id = StringId(descriptor.name);
-
-            {
-                std::scoped_lock lock(actionMapsMutex);
-
-                if (actionMaps.find(id) != actionMaps.end())
-                {
-                    return false;
-                }
-
-                actionMaps[id] = std::make_unique<ActionMap>(descriptor);
-
-                return true;
-            }
+            return find->second;
         }
 
-        [[nodiscard]] ActionMap* getMap(StringId id) noexcept
+        void pushMap(ActionMapHandle handle) noexcept
         {
-            std::scoped_lock lock(actionMapsMutex);
-
-            auto find = actionMaps.find(id);
-
-            if (find == actionMaps.end())
+            if (!handle.isValid())
             {
-                return nullptr;
+                return;
             }
-
-            return find->second.get();
-        }
-
-        void pushMap(StringId id) noexcept
-        {
-            std::scoped_lock lock{ commandsMutex };
 
             commands.push_back(InputActionCommand{
-                .id = id,
+                .handle = handle,
                 .type = InputActionCommandType::Push
             });
         }
 
-        void popMap(StringId id) noexcept
+        void popMap(ActionMapHandle handle) noexcept
         {
-            std::scoped_lock lock{ commandsMutex };
-
             commands.push_back(InputActionCommand{
-                .id = id,
+                .handle = handle,
                 .type = InputActionCommandType::Pop
             });
         }
@@ -122,17 +99,18 @@ namespace litl
                 return;
             }
 
-            auto top = actionMaps.find(mapStack.top());
+            const ActionMapHandle topHandle = actionMapStack.back();
+            ActionMap* topActionMap = actionMapPool.get(topHandle);
 
-            if (top != actionMaps.end())
+            if (topActionMap != nullptr)
             {
                 if (isActive)
                 {
-                    top->second->setActiveMap({});
+                    topActionMap->setActiveMap({});
                 }
                 else
                 {
-                    top->second->unsetActiveMap({});
+                    topActionMap->unsetActiveMap({});
                 }
             }
         }
@@ -140,14 +118,14 @@ namespace litl
         void processCommandPush(InputActionCommand const& command) noexcept
         {
             setTopActive(false);
-            mapStack.push(command.id);
+            actionMapStack.push_back(command.handle);
             setTopActive(true);
         }
 
         void processCommandPop(InputActionCommand const& command) noexcept
         {
             setTopActive(false);
-            mapStack.pop();
+            actionMapStack.pop_back();
             setTopActive(true);
         }
     };
@@ -155,7 +133,7 @@ namespace litl
     InputActions::InputActions()
         : m_pImpl(std::make_unique<Impl>())
     {
-        m_pImpl->actionMaps.reserve(16u);
+        m_pImpl->actionMapStack.reserve(32u);
     }
 
     InputActions::~InputActions()
@@ -168,24 +146,19 @@ namespace litl
         m_pImpl->setup(services);
     }
 
-    bool InputActions::createMap(ActionMapDescriptor const& descriptor) noexcept
-    {
-        return m_pImpl->createMap(descriptor);
-    }
-
-    ActionMap* InputActions::getMap(StringId id) noexcept
+    ActionMapHandle InputActions::getMap(StringId id) noexcept
     {
         return m_pImpl->getMap(id);
     }
 
-    void InputActions::pushMap(StringId id) noexcept
+    void InputActions::pushMap(ActionMapHandle handle) noexcept
     {
-        m_pImpl->pushMap(id);
+        m_pImpl->pushMap(handle);
     }
 
-    void InputActions::popMap(StringId id) noexcept
+    void InputActions::popMap(ActionMapHandle handle) noexcept
     {
-        m_pImpl->popMap(id);
+        m_pImpl->popMap(handle);
     }
 
     // ... todo need: 

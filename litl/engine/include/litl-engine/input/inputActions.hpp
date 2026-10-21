@@ -5,12 +5,16 @@
 #include <optional>
 
 #include "litl-core/stringId.hpp"
+#include "litl-core/handles.hpp"
 #include "litl-engine/input/actionMap.hpp"
 
 namespace litl
 {
     class Engine;
     class ServiceProvider;
+
+    struct ActionMapHandleTag {};
+    using ActionMapHandle = Handle<ActionMapHandleTag>;
 
     /// <summary>
     /// Service built ontop of Input that allows for more sophisticated input operations.
@@ -24,15 +28,6 @@ namespace litl
     /// and controls setting such as cursor mode. Each map can allow, or disallow, unconsumed actions from propagating down the stack.
     /// To enable an action map, the caller must invoke pushMap. This will enqueue a command to place the map at the top of the stack.
     /// When the map is no longer in use, the caller is then responsible for calling popMap.
-    /// 
-    /// Example flow:
-    /// 
-    ///     pushMap("Gameplay"_sid);
-    ///         pushMap("Menu"_sid);
-    ///             pushMap("Modal"_sid);
-    ///             popMap("Modal"_sid);
-    ///         popMap("Menu"_sid);
-    ///     popMap("Gameplay");
     /// 
     /// Note that the push/pop does not have to be in-sync. For example if the game allows for multiple menus which do not take over
     /// input, the menus can be closed in whichever order that the player wishes.
@@ -61,28 +56,21 @@ namespace litl
         void setup(Authority<Engine> auth, ServiceProvider& services) noexcept;
 
         /// <summary>
-        /// Creates the action map with the specified descriptor.
-        /// Can fail if the descriptor is invalid or an action map already exists with the same name.
-        /// </summary>
-        [[nodiscard]] bool createMap(ActionMapDescriptor const& descriptor) noexcept;
-
-        /// <summary>
         /// Retrieves the action map with the given id.
-        /// Returns null if no such map exists. Returned pointers are stable for the lifetime of InputActions.
-        /// As such, it is recommended to retrieve the map once and then store the pointer to it as this is a locking call.
+        /// It is recommended to retrieve the map once and then store the handle as this is a locking call.
         /// </summary>
-        [[nodiscard]] ActionMap* getMap(StringId id) noexcept;
+        [[nodiscard]] ActionMapHandle getMap(StringId id) noexcept;
 
         /// <summary>
         /// Enqueues a command to push the specified map to the top of the stack.
         /// This map will become the active map and its settings (cursor mode, action propagation, etc.) will be used.
         /// </summary>
-        void pushMap(StringId id) noexcept;
+        void pushMap(ActionMapHandle handle) noexcept;
 
         /// <summary>
         /// Enqueues a command to remove the specified map from the stack.
         /// </summary>
-        void popMap(StringId id) noexcept;
+        void popMap(ActionMapHandle handle) noexcept;
 
     private:
 
