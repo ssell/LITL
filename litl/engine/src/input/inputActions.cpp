@@ -7,6 +7,7 @@
 #include "litl-engine/input/inputActions.hpp"
 #include "litl-engine/engine.hpp"
 #include "litl-platform/input.hpp"
+#include "litl-engine/input/actionMap.hpp"
 
 namespace litl
 {
@@ -263,6 +264,18 @@ namespace litl
                 .type = InputActionCommandType::Pop
             });
         }
+
+        [[nodiscard]] std::optional<InputSourceState> getInputState(ActionMapHandle handle, StringId binding) noexcept
+        {
+            ActionMap* actionMap = actionMapPool.get(handle);
+
+            if (actionMap == nullptr)
+            {
+                return std::nullopt;
+            }
+
+            return actionMap->getBindingState(binding);
+        }
     };
 
     InputActions::InputActions()
@@ -299,5 +312,10 @@ namespace litl
     void InputActions::popMap(ActionMapHandle handle) noexcept
     {
         m_pImpl->popMap(handle);
+    }
+
+    std::optional<InputSourceState> InputActions::getInputState(ActionMapHandle handle, StringId binding) noexcept
+    {
+        return m_pImpl->getInputState(handle, binding);
     }
 }

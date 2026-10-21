@@ -4,9 +4,10 @@
 #include <memory>
 #include <optional>
 
+#include "litl-core/authority.hpp"
 #include "litl-core/stringId.hpp"
 #include "litl-core/handles.hpp"
-#include "litl-engine/input/actionMap.hpp"
+#include "litl-platform/inputSource.hpp"
 
 namespace litl
 {
@@ -78,6 +79,11 @@ namespace litl
         /// Enqueues a command to remove the specified map from the stack.
         /// </summary>
         void popMap(ActionMapHandle handle) noexcept;
+
+        /// <summary>
+        /// Returns the current state of the specified input binding if it exists.
+        /// </summary>
+        [[nodiscard]] std::optional<InputSourceState> getInputState(ActionMapHandle handle, StringId binding) noexcept;
 
     private:
 

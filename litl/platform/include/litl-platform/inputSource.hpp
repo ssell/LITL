@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include "litl-core/constants.hpp"
+#include "litl-core/math/types/vec2.hpp"
 #include "litl-platform/inputEnums.hpp"
 
 namespace litl

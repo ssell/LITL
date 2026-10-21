@@ -4,6 +4,7 @@
 #include <array>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string_view>
 
 #include "litl-core/authority.hpp"
@@ -55,28 +56,6 @@ namespace litl
         [[nodiscard]] bool update(Authority<InputActions> auth, Input const& input, ProcessedInputTracker& inputTracker) noexcept;
 
         // ---------------------------------------------------------------------------------
-        // Bind / Unbind
-        // ---------------------------------------------------------------------------------
-
-        /// <summary>
-        /// Adds a binding with the given name for the specified input source.
-        /// For example: Bind "Move Forward" with "Key W"
-        /// </summary>
-        bool bind(std::string_view name, InputSource source) noexcept;
-
-        /// <summary>
-        /// Unbind the specific input source and name combination.
-        /// For example: Unbind "Key W" from "Move Forward"
-        /// </summary>
-        void unbind(std::string_view name, InputSource source) noexcept;
-
-        /// <summary>
-        /// Unbinds all bindings with the specified name.
-        /// For example: Unbind "Move Forward" which unbinds "Key W", "Key Up Arrow", etc.
-        /// </summary>
-        void unbindAll(std::string_view name) noexcept;
-
-        // ---------------------------------------------------------------------------------
         // Set / Unset Active
         // ---------------------------------------------------------------------------------
 
@@ -112,7 +91,11 @@ namespace litl
         /// </summary>
         [[nodiscard]] std::string_view getName() const noexcept;
 
+        [[nodiscard]] std::optional<InputSourceState> getBindingState(StringId bindingId) const noexcept;
+
     private:
+
+        static constexpr uint32_t BindingsPerId = 8u;
 
         struct ActionBinding
         {
@@ -121,11 +104,20 @@ namespace litl
             InputSource source{};
         };
 
-        static constexpr uint32_t BindingsPerId = 8u;
+        struct ActionBindings
+        {
+            InputSourceState state{};
+            std::array<ActionBinding, BindingsPerId> bindings;
+        };
+
+        bool bind(std::string_view name, InputSource source) noexcept;
+        [[nodiscard]] ActionBindings& getActionBindings(StringId id) noexcept;
+
         ActionMapDescriptor m_descriptor{};
         StringId m_id{};
-        StringIdMap<std::array<ActionBinding, BindingsPerId>> m_actionBindings;
+        StringIdMap<size_t> m_actionBindingsMap;
         std::vector<StringId> m_actionBindingKeys;
+        std::vector<ActionBindings> m_actionBindings;
     };
 }
 
