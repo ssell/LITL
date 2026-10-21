@@ -10,10 +10,12 @@
 #include "litl-core/stringId.hpp"
 #include "litl-core/math/types/vec2.hpp"
 #include "litl-engine/input/actionMapDescriptor.hpp"
+#include "litl-engine/input/processedInputTracker.hpp"
 
 namespace litl
 {
     class InputActions;
+    class Input;
 
     enum class ActionType : uint8_t
     {
@@ -41,7 +43,16 @@ namespace litl
             static constexpr StringId Gameplay = "Gameplay"_sid;
         };
 
+        /// <summary>
+        /// Attempts to create the action map using the provided descriptor.
+        /// </summary>
         [[nodiscard]] bool create(Authority<InputActions> auth, ActionMapDescriptor const& descriptor) noexcept;
+
+        /// <summary>
+        /// Updates the input state of the action map and invokes any callbacks.
+        /// Returns true if propagation of input should continue.
+        /// </summary>
+        [[nodiscard]] bool update(Authority<InputActions> auth, Input const& input, ProcessedInputTracker& inputTracker) noexcept;
 
         // ---------------------------------------------------------------------------------
         // Bind / Unbind

@@ -75,7 +75,9 @@ namespace litl
         RightX         = 3u,
         RightY         = 4u,
         LeftTrigger    = 5u,
-        RightTrigger   = 6u
+        RightTrigger   = 6u,
+        // Number of axis. Not a valid button.
+        Count
     };
 
     /// <summary>

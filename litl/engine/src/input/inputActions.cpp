@@ -31,9 +31,16 @@ namespace litl
         std::shared_ptr<Input> input{ nullptr };
         HandlePool<ActionMap, ActionMapHandleTag> actionMapPool{};
         StringIdMap<ActionMapHandle> actionMapLookup;
+        std::vector<ActionMapHandle> allActionMapHandles;               // This is also tracked by actionMapPool but eliminates the need for us to call getAllHandles each frame since maps are static once they exist.
         std::vector<ActionMapHandle> actionMapStack;
         std::vector<InputActionCommand> actionMapCommands;
+        std::vector<bool> actionMapProcessed;
         std::mutex commandsMutex{};
+        ProcessedInputTracker processedInputTracker{};
+
+        // ---------------------------------------------------------------------------------
+        // Setup
+        // ---------------------------------------------------------------------------------
 
         void setup(ServiceProvider& services) noexcept
         {
@@ -42,6 +49,8 @@ namespace litl
 
             LITL_FATAL_ASSERT_MSG((input != nullptr), "Failed to inject Input into InputActions.");
             LITL_FATAL_ASSERT_MSG((config != nullptr), "Failed to inject Configuration into InputActions.");
+
+            allActionMapHandles.reserve(config->input.actionMaps.size());
 
             for (auto& descriptor : config->input.actionMaps)
             {
@@ -59,54 +68,78 @@ namespace litl
                     continue;
                 }
 
-                if (!actionMapPool.create(actionMap).isValid())
+                const auto handle = actionMapPool.create(actionMap);
+
+                if (!handle.isValid())
                 {
                     logError("Failed to create ActionMapHandle for ActionMap '", descriptor.name, "'");
                 }
+
+                allActionMapHandles.push_back(handle);
             }
+
+            actionMapProcessed.resize(allActionMapHandles.size(), false);
         }
 
-        [[nodiscard]] ActionMapHandle getMap(StringId id) noexcept
-        {
-            // Since we enforce when action maps can be created (during setup only) we do not need to lock the lookup in a critical section.
-            auto find = actionMapLookup.find(id);
+        // ---------------------------------------------------------------------------------
+        // Update
+        // ---------------------------------------------------------------------------------
 
-            if (find == actionMapLookup.end())
+        void update() noexcept
+        {
+            processCommands();
+            updateActionMapsWithInput();
+        }
+
+        void processCommands() noexcept
+        {
+            if (!actionMapCommands.empty())
             {
-                return {};
-            }
+                for (auto& command : actionMapCommands)
+                {
+                    processCommand(command);
+                }
 
-            return find->second;
+                actionMapCommands.clear();
+            }
         }
 
-        void pushMap(ActionMapHandle handle) noexcept
+        void updateActionMapsWithInput() noexcept
         {
-            if (!handle.isValid())
+            if (allActionMapHandles.empty())
             {
                 return;
             }
 
-            std::scoped_lock lock{ commandsMutex };
+            // The same map may be present in the stack multiple times. Track which have already been processed to avoid invoking multiple times.
+            actionMapProcessed.assign(actionMapProcessed.size(), false);
+            uint32_t remainingUnprocessed = static_cast<uint32_t>(actionMapProcessed.size());
+            processedInputTracker.reset();
 
-            actionMapCommands.push_back(InputActionCommand{
-                .handle = handle,
-                .type = InputActionCommandType::Push
-            });
-        }
-
-        void popMap(ActionMapHandle handle) noexcept
-        {
-            if (!handle.isValid())
+            for (auto actionMapIter = actionMapStack.rbegin(); (actionMapIter != actionMapStack.rend()) && (remainingUnprocessed != 0u); ++actionMapIter)
             {
-                return;
+                const auto handle = *actionMapIter;
+
+                if (actionMapProcessed[handle.index])
+                {
+                    // This map was already processed.
+                    continue;
+                }
+
+                actionMapProcessed[handle.index] = true;
+                remainingUnprocessed--;
+
+                auto* actionMap = actionMapPool.get(*actionMapIter);
+
+                if (actionMap != nullptr)
+                {
+                    if (!actionMap->update({}, *input, processedInputTracker))
+                    {
+                        // This action map does not allow propagation of input down the stack.
+                        break;
+                    }
+                }
             }
-
-            std::scoped_lock lock{ commandsMutex };
-
-            actionMapCommands.push_back(InputActionCommand{
-                .handle = handle,
-                .type = InputActionCommandType::Pop
-            });
         }
 
         void processCommand(InputActionCommand const& command) noexcept
@@ -183,6 +216,53 @@ namespace litl
                 }
             }
         }
+
+        // ---------------------------------------------------------------------------------
+        // Utility
+        // ---------------------------------------------------------------------------------
+
+        [[nodiscard]] ActionMapHandle getMap(StringId id) noexcept
+        {
+            // Since we enforce when action maps can be created (during setup only) we do not need to lock the lookup in a critical section.
+            auto find = actionMapLookup.find(id);
+
+            if (find == actionMapLookup.end())
+            {
+                return {};
+            }
+
+            return find->second;
+        }
+
+        void pushMap(ActionMapHandle handle) noexcept
+        {
+            if (!handle.isValid())
+            {
+                return;
+            }
+
+            std::scoped_lock lock{ commandsMutex };
+
+            actionMapCommands.push_back(InputActionCommand{
+                .handle = handle,
+                .type = InputActionCommandType::Push
+            });
+        }
+
+        void popMap(ActionMapHandle handle) noexcept
+        {
+            if (!handle.isValid())
+            {
+                return;
+            }
+
+            std::scoped_lock lock{ commandsMutex };
+
+            actionMapCommands.push_back(InputActionCommand{
+                .handle = handle,
+                .type = InputActionCommandType::Pop
+            });
+        }
     };
 
     InputActions::InputActions()
@@ -201,6 +281,11 @@ namespace litl
         m_pImpl->setup(services);
     }
 
+    void InputActions::update(Authority<EngineCallbacks> auth) noexcept
+    {
+        m_pImpl->update();
+    }
+
     ActionMapHandle InputActions::getMap(StringId id) noexcept
     {
         return m_pImpl->getMap(id);
@@ -215,7 +300,4 @@ namespace litl
     {
         m_pImpl->popMap(handle);
     }
-
-    // ... todo need: 
-    // ... propagate input to action maps so they can trigger callbacks
 }

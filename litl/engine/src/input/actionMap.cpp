@@ -2,6 +2,7 @@
 
 #include "litl-engine/input/actionMap.hpp"
 #include "litl-engine/input/inputActions.hpp"
+#include "litl-platform/input.hpp"
 
 namespace litl
 {
@@ -19,7 +20,22 @@ namespace litl
         m_descriptor = descriptor;
         m_id = StringId(m_descriptor.name);
 
+        for (auto& grouping : m_descriptor.bindings)
+        {
+            for (auto& binding : grouping.second)
+            {
+                bind(grouping.first, binding);
+            }
+        }
+
         return true;
+    }
+
+    bool ActionMap::update(Authority<InputActions> auth, Input const& input, ProcessedInputTracker& inputTracker) noexcept
+    {
+        // ... todo ...
+
+        return m_descriptor.propagateActions;
     }
 
     bool ActionMap::bind(std::string_view name, InputSource source) noexcept

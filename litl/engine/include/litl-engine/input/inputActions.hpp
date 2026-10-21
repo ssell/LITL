@@ -11,6 +11,7 @@
 namespace litl
 {
     class Engine;
+    class EngineCallbacks;
     class ServiceProvider;
 
     struct ActionMapHandleTag {};
@@ -55,6 +56,11 @@ namespace litl
         /// All action maps are created from those defined in the injected Configuration's InputConfiguration.
         /// </summary>
         void setup(Authority<Engine> auth, ServiceProvider& services) noexcept;
+
+        /// <summary>
+        /// Updates the action callbacks once per frame.
+        /// </summary>
+        void update(Authority<EngineCallbacks> auth) noexcept;
 
         /// <summary>
         /// Retrieves the action map with the given id.
