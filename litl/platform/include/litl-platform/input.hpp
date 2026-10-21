@@ -4,6 +4,7 @@
 #include "litl-platform/inputEnums.hpp"
 #include "litl-platform/inputState.hpp"
 #include "litl-platform/inputCallbacks.hpp"
+#include "litl-platform/inputSource.hpp"
 
 namespace litl
 {
@@ -124,6 +125,15 @@ namespace litl
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] vec2 getMouseScroll() const noexcept;
+
+        [[nodiscard]] bool getGamepadButtonPressed(GamepadButton button) const noexcept;
+        [[nodiscard]] bool getGamepadButtonHeld(GamepadButton button) const noexcept;
+        [[nodiscard]] bool getGamepadButtonReleased(GamepadButton button) const noexcept;
+
+        /// <summary>
+        /// Given a generic InputSource, returns the state of the input.
+        /// </summary>
+        [[nodiscard]] InputSourceState getGenericInputSourceState(InputSource inputSource) const noexcept;
 
         /// <summary>
         /// Returns the internal context.

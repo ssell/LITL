@@ -5,7 +5,7 @@
 #include <array>
 
 #include "litl-platform/inputEnums.hpp"
-#include "litl-engine/input/inputSource.hpp"
+#include "litl-platform/inputSource.hpp"
 
 namespace litl
 {

@@ -1,5 +1,5 @@
-#ifndef LITL_ENGINE_INPUT_SOURCE_H__
-#define LITL_ENGINE_INPUT_SOURCE_H__
+#ifndef LITL_INPUT_SOURCE_H__
+#define LITL_INPUT_SOURCE_H__
 
 #include <cstdint>
 
@@ -66,6 +66,19 @@ namespace litl
                 .type = InputSourceType::GamepadAxis,
                 .code = static_cast<uint32_t>(axis)
             };
+        }
+    };
+
+    struct InputSourceState
+    {
+        bool pressed{ false };
+        bool held{ false };
+        bool released{ false };
+        vec2 xyDelta{};
+
+        [[nodiscard]] bool isActive() const noexcept
+        {
+            return (pressed || held || released || !xyDelta.isZeroed());
         }
     };
 }

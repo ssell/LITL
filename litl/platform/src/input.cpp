@@ -161,4 +161,62 @@ namespace litl
     {
         return m_currFrameState.mouse.scroll;
     }
+
+    bool Input::getGamepadButtonPressed(GamepadButton button) const noexcept
+    {
+        return m_currFrameState.gamepad.pressed[static_cast<uint32_t>(button)];
+    }
+
+    bool Input::getGamepadButtonHeld(GamepadButton button) const noexcept
+    {
+        return m_currFrameState.gamepad.down[static_cast<uint32_t>(button)];
+    }
+
+    bool Input::getGamepadButtonReleased(GamepadButton button) const noexcept
+    {
+        return m_currFrameState.gamepad.released[static_cast<uint32_t>(button)];
+    }
+
+    InputSourceState Input::getGenericInputSourceState(InputSource inputSource) const noexcept
+    {
+        InputSourceState state{};
+
+        switch (inputSource.type)
+        {
+        case InputSourceType::Key:
+            state.pressed = getKeyPressed(static_cast<litl::Key>(inputSource.code));
+            state.held = getKeyHeld(static_cast<litl::Key>(inputSource.code));
+            state.released = getKeyReleased(static_cast<litl::Key>(inputSource.code));
+            break;
+
+        case InputSourceType::MouseButton:
+            state.pressed = getMouseButtonPressed(static_cast<litl::MouseButton>(inputSource.code));
+            state.held = getMouseButtonHeld(static_cast<litl::MouseButton>(inputSource.code));
+            state.released = getMouseButtonReleased(static_cast<litl::MouseButton>(inputSource.code));
+            break;
+
+        case InputSourceType::MouseDelta:
+            state.xyDelta = m_currFrameState.mouse.position.xyDelta;
+            break;
+
+        case InputSourceType::MouseScroll:
+            state.xyDelta = m_currFrameState.mouse.scroll;
+            break;
+
+        case InputSourceType::GamepadButton:
+            state.pressed = getGamepadButtonPressed(static_cast<litl::GamepadButton>(inputSource.code));
+            state.held = getGamepadButtonHeld(static_cast<litl::GamepadButton>(inputSource.code));
+            state.released = getGamepadButtonReleased(static_cast<litl::GamepadButton>(inputSource.code));
+            break;
+
+        case InputSourceType::GamepadAxis:
+            logWarning("Requesting getGenericInputSourceState for GamepadAxis. This is not yet implemented.");
+            break;
+
+        default:
+            break;
+        }
+
+        return state;
+    }
 }

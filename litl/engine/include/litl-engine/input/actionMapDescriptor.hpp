@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "litl-engine/input/inputSource.hpp"
+#include "litl-platform/inputSource.hpp"
 
 namespace litl
 {

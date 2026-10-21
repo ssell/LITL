@@ -125,6 +125,7 @@ namespace litl
         ActionMapDescriptor m_descriptor{};
         StringId m_id{};
         StringIdMap<std::array<ActionBinding, BindingsPerId>> m_actionBindings;
+        std::vector<StringId> m_actionBindingKeys;
     };
 }
 

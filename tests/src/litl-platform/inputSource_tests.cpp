@@ -1,5 +1,5 @@
 #include "tests.hpp"
-#include "litl-engine/input/inputSource.hpp"
+#include "litl-platform/inputSource.hpp"
 
 namespace litl::tests
 {

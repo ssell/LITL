@@ -6,10 +6,6 @@
 
 namespace litl
 {
-    namespace
-    {
-    }
-
     bool ActionMap::create(Authority<InputActions> auth, ActionMapDescriptor const& descriptor) noexcept
     {
         if (!descriptor.isValid())
@@ -19,13 +15,21 @@ namespace litl
 
         m_descriptor = descriptor;
         m_id = StringId(m_descriptor.name);
+        m_actionBindingKeys.reserve(m_descriptor.bindings.size());
 
         for (auto& grouping : m_descriptor.bindings)
         {
+            if (grouping.second.empty())
+            {
+                continue;
+            }
+
             for (auto& binding : grouping.second)
             {
                 bind(grouping.first, binding);
             }
+
+            m_actionBindingKeys.push_back(StringId(grouping.first));
         }
 
         return true;
@@ -33,7 +37,24 @@ namespace litl
 
     bool ActionMap::update(Authority<InputActions> auth, Input const& input, ProcessedInputTracker& inputTracker) noexcept
     {
-        // ... todo ...
+        for (const auto key : m_actionBindingKeys)
+        {
+            auto& bindings = m_actionBindings[key];
+
+            for (const auto& binding : bindings)
+            {
+                // Go down the list of each binding until we find an input that could have triggered it.
+                // For example, if both Key:W and Key::Up are bound to "MoveForward" then continue until one of those has input.
+                const auto state = input.getGenericInputSourceState(binding.source);
+
+                if (state.isActive())
+                {
+                    inputTracker.markProcessed(binding.source);
+
+                    // ... todo ... act on it ...
+                }
+            }
+        }
 
         return m_descriptor.propagateActions;
     }
