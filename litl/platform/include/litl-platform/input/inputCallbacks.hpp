@@ -5,9 +5,11 @@
 
 #include "litl-core/authority.hpp"
 #include "litl-core/inlineFunc.hpp"
+#include "litl-core/stringId.hpp"
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-platform/input/inputEnums.hpp"
 #include "litl-platform/input/inputState.hpp"
+#include "litl-platform/input/inputSource.hpp"
 
 namespace litl
 {
@@ -21,7 +23,8 @@ namespace litl
         MouseButton,
         MouseEnterExit,
         MouseMove,
-        MouseScroll
+        MouseScroll,
+        ActionMap
     };
 
     struct InputCallbackHandle
@@ -53,6 +56,7 @@ namespace litl
     using OnMouseEnterExitFunc = inline_function<InputCallbackResult(ServiceProvider& services, MousePosition const& mouse)>;
     using OnMouseMoveFunc = inline_function<InputCallbackResult(ServiceProvider& services, MousePosition const& mouse)>;
     using OnMouseScrollFunc = inline_function<InputCallbackResult(ServiceProvider& services, MousePosition const& mouse, vec2 scroll)>;
+    using OnActionMapFunc = inline_function<InputCallbackResult(ServiceProvider& services, InputSourceState inputState)>;
 
     /// <summary>
     /// Collection of input related callbacks that can be registered.
@@ -76,6 +80,7 @@ namespace litl
         InputCallbackHandle registerMouseEnterExitCallback(OnMouseEnterExitFunc&& func, InputCallbackPriority priority = InputCallbackPriority::Gameplay) noexcept;
         InputCallbackHandle registerMouseMoveCallback(OnMouseMoveFunc&& func, InputCallbackPriority priority = InputCallbackPriority::Gameplay) noexcept;
         InputCallbackHandle registerMouseScrollCallback(OnMouseScrollFunc&& func, InputCallbackPriority priority = InputCallbackPriority::Gameplay) noexcept;
+        InputCallbackHandle registerActionMapCallback(StringId actionMapId, StringId bindingId, OnActionMapFunc&& func, InputCallbackPriority priority = InputCallbackPriority::Gameplay) noexcept;
 
         void unregisterCallback(InputCallbackHandle handle) noexcept;
 
@@ -84,6 +89,7 @@ namespace litl
         void invokeMouseEnterExitEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse) noexcept;
         void invokeMouseMoveEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse) noexcept;
         void invokeMouseScrollEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse, vec2 scroll) noexcept;
+        void invokeActionMapEvent(Authority<Input> auth, ServiceProvider& services, InputSourceState inputState) noexcept;
 
     private:
 

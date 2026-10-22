@@ -58,6 +58,16 @@ namespace litl
             InputCallbackPriority priority{ InputCallbackPriority::Gameplay };
             bool alive{ true };
         };
+
+        struct OnActionMapEvent
+        {
+            CallbackId id{ Constants::uint32_null_index };
+            OnActionMapFunc callback;
+            InputCallbackPriority priority{ InputCallbackPriority::Gameplay };
+            StringId actionMapId{};
+            StringId bindingId{};
+            bool alive{ true };
+        };
         
         [[nodiscard]] uint32_t nextId() noexcept
         {
@@ -71,7 +81,7 @@ namespace litl
             CallbackCommandType commandType{};
             InputCallbackType eventType{};
             uint32_t eventVecIdx{ Constants::uint32_null_index };
-            std::variant<OnKeyEvent, OnMouseButtonEvent, OnMouseEnterExitEvent, OnMouseMoveEvent, OnMouseScrollEvent> event;
+            std::variant<OnKeyEvent, OnMouseButtonEvent, OnMouseEnterExitEvent, OnMouseMoveEvent, OnMouseScrollEvent, OnActionMapEvent> event;
         };
     }
 
@@ -82,6 +92,8 @@ namespace litl
         std::vector<OnMouseEnterExitEvent> onMouseEnterExitEvents;
         std::vector<OnMouseMoveEvent> onMouseMoveEvents;
         std::vector<OnMouseScrollEvent> onMouseScrollEvents;
+        StringIdMap<StringIdMap<std::vector<OnActionMapEvent>>> onActionMapEvents;
+
         std::vector<CallbackCommand> deferredCommands;
         std::mutex deferredCommandsMutex{};
 
@@ -107,6 +119,31 @@ namespace litl
             else if (command.commandType == CallbackCommandType::Remove)
             {
                 std::erase_if(events, [&command](T& e) { return (e.id == command.id); });
+            }
+        }
+
+        void addOrRemoveActionMapEvent(OnActionMapEvent* event, CallbackCommand const& command) noexcept
+        {
+            if ((event != nullptr) && (event->actionMapId.isNull() || event->bindingId.isNull()))
+            {
+                return;
+            }
+
+            auto& eventVec = onActionMapEvents[event->actionMapId][event->bindingId];
+
+            if (command.commandType == CallbackCommandType::Add)
+            {
+                if (event == nullptr)
+                {
+                    return;
+                }
+
+                auto it = std::upper_bound(eventVec.begin(), eventVec.end(), event->priority, [](auto priority, OnActionMapEvent const& e) { return priority > e.priority; });
+                eventVec.insert(it, std::move(*event));
+            }
+            else if (command.commandType == CallbackCommandType::Remove)
+            {
+                std::erase_if(eventVec, [&command](OnActionMapEvent& e) { return (e.id == command.id); });
             }
         }
 
@@ -152,6 +189,10 @@ namespace litl
 
                 case InputCallbackType::MouseScroll:
                     addOrRemoveEvent(onMouseScrollEvents, std::get_if<OnMouseScrollEvent>(&command.event), command);
+                    break;
+
+                case InputCallbackType::ActionMap:
+                    addOrRemoveActionMapEvent(std::get_if<OnActionMapEvent>(&command.event), command);
                     break;
 
                 default:
@@ -434,6 +475,31 @@ namespace litl
         return InputCallbackHandle{ .type = InputCallbackType::MouseScroll, .id = id };
     }
 
+    InputCallbackHandle InputCallbacks::registerActionMapCallback(StringId actionMapId, StringId bindingId, OnActionMapFunc&& func, InputCallbackPriority priority) noexcept
+    {
+        if (actionMapId.isNull() || bindingId.isNull())
+        {
+            return {};
+        }
+
+        const auto id = nextId();
+
+        m_pImpl->addDeferredCommand(CallbackCommand{
+            .id = id,
+            .commandType = CallbackCommandType::Add,
+            .eventType = InputCallbackType::ActionMap,
+            .event = OnActionMapEvent{
+                .id = id,
+                .callback = std::move(func),
+                .priority = priority,
+                .actionMapId = actionMapId,
+                .bindingId = bindingId
+            }
+        });
+
+        return InputCallbackHandle{ .type = InputCallbackType::ActionMap, .id = id };
+    }
+
     void InputCallbacks::unregisterCallback(InputCallbackHandle handle) noexcept
     {
         if ((handle.type == InputCallbackType::Unknown) || (handle.id == Constants::uint32_null_index))
@@ -472,5 +538,10 @@ namespace litl
     void InputCallbacks::invokeMouseScrollEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse, vec2 scroll) noexcept
     {
         m_pImpl->invokeMouseScrollEvent(services, mouse, scroll);
+    }
+
+    void InputCallbacks::invokeActionMapEvent(Authority<Input> auth, ServiceProvider& services, InputSourceState inputState) noexcept
+    {
+        // ... todo ...
     }
 }

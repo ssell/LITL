@@ -14,6 +14,14 @@ namespace litl::samples
                 .input = InputConfiguration {
                     .actionMaps = {
                         ActionMapDescriptor{
+                            .name = "ui",
+                            .propagateActions = false,
+                            .cursorMode = CursorMode::Normal,
+                            .bindings = {
+                                { "click", { InputSource::fromMouseButton(MouseButton::Left) } }
+                            }
+                        },
+                        ActionMapDescriptor{
                             .name = "gameplay",
                             .propagateActions = false,
                             .cursorMode = CursorMode::Disabled,
@@ -24,11 +32,12 @@ namespace litl::samples
                                 { "right", { InputSource::fromKey(Key::D), InputSource::fromKey(Key::Right) } },
                                 { "up", { InputSource::fromKey(Key::Q) } },
                                 { "down", { InputSource::fromKey(Key::E) } },
-                                { "look", { InputSource::fromMouseDelta() } }
+                                { "look", { InputSource::fromMouseDelta() } },
+                                { "escape", { InputSource::fromKey(Key::Escape) } }
                             }
                         }
                     },
-                    .defaultActionMap = "gameplay"
+                    .defaultActionMap = "ui"
                 }
             }
         };
@@ -38,6 +47,23 @@ namespace litl::samples
     {
         systems.addSystem<FreeFlyControllerSystem>(SystemGroup::Update);
         systems.addSystem<SpinSystem>(SystemGroup::Update);
+    }
+
+    void configureInputCallbacks(std::shared_ptr<InputCallbacks> callbacks)
+    {
+        callbacks->registerActionMapCallback("ui"_sid, "click"_sid, [](ServiceProvider& services, InputSourceState inputState)
+            {
+                auto input = services.get<Input>();
+                input->pushMap(input->getMap("gameplay"_sid));
+                return InputCallbackResult::Continue;
+            });
+
+        callbacks->registerActionMapCallback("gameplay"_sid, "escape"_sid, [](ServiceProvider& services, InputSourceState inputState)
+            {
+                auto input = services.get<Input>();
+                input->popMap(input->getMap("gameplay"_sid));
+                return InputCallbackResult::Continue;
+            });
     }
 
     void bootstrap(ServiceProvider& services, EntityCommands& commands)
@@ -68,7 +94,7 @@ int main()
     litl::Engine engine{};
     litl::Configuration config = litl::samples::buildConfig();
 
-    engine.setup(config, nullptr, litl::samples::configureSystems, nullptr, nullptr, litl::samples::bootstrap);
+    engine.setup(config, nullptr, litl::samples::configureSystems, nullptr, litl::samples::configureInputCallbacks, litl::samples::bootstrap);
     engine.start();
     engine.shutdown();
 
