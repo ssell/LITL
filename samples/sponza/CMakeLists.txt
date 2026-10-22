@@ -5,7 +5,7 @@ add_executable(litl-samples-sponza)
 
 target_sources(litl-samples-sponza
 	PRIVATE 
-		"src/main.cpp")
+		"src/main.cpp" "src/freeFlyController.cpp")
 
 target_include_directories(litl-samples-sponza
 	PUBLIC

@@ -1,5 +1,5 @@
 #include "litl-engine/startup.hpp"
-#include "freeFlySystem.hpp"
+#include "freeFlyController.hpp"
 #include "spinSystem.hpp"
 
 namespace litl::samples
@@ -23,7 +23,8 @@ namespace litl::samples
                                 { "left", { InputSource::fromKey(Key::A), InputSource::fromKey(Key::Left) } },
                                 { "right", { InputSource::fromKey(Key::D), InputSource::fromKey(Key::Right) } },
                                 { "up", { InputSource::fromKey(Key::Q) } },
-                                { "down", { InputSource::fromKey(Key::E) } }
+                                { "down", { InputSource::fromKey(Key::E) } },
+                                { "look", { InputSource::fromMouseDelta() } }
                             }
                         }
                     },
@@ -35,7 +36,7 @@ namespace litl::samples
 
     void configureSystems(SystemCollection& systems)
     {
-        systems.addSystem<FreeFlySystem>(SystemGroup::Update);
+        systems.addSystem<FreeFlyControllerSystem>(SystemGroup::Update);
         systems.addSystem<SpinSystem>(SystemGroup::Update);
     }
 
@@ -46,7 +47,7 @@ namespace litl::samples
         auto assets = services.get<AssetManager>();
 
         const auto* mainCamera = createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(-5.0f, 1.5f, 0.0f), vec3(5.0f, 1.5f, 0.0f), vec3::up(), *objectPool, *sceneView);
-        commands.addComponent<FreeFly>(mainCamera->getEntity());
+        commands.addComponent<FreeFlyController>(mainCamera->getEntity());
 
         auto sponzaEntity = commands.createEntity();
         commands.addComponent<Transform>(sponzaEntity, Transform::create(vec3::zero(), quat::identity()));

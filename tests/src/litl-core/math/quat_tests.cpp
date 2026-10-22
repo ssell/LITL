@@ -90,7 +90,7 @@ namespace litl::tests
     LITL_TEST_CASE("quat::fromEuler round-trips through toEuler", "[math::quat]")
     {
         float yaw = 0.3f, pitch = 0.5f, roll = 0.1f;
-        auto q = quat::fromEuler(yaw, pitch, roll);
+        auto q = quat::fromEuler(pitch, yaw, roll);
         vec3 euler = q.toEuler();
 
         REQUIRE(fequals(euler.x(), yaw));
@@ -424,7 +424,7 @@ namespace litl::tests
     LITL_TEST_CASE("quat: yaw/pitch/roll accessors", "[math::quat]")
     {
         float y = 0.3f, p = 0.5f, r = 0.1f;
-        auto q = quat::fromEuler(y, p, r);
+        auto q = quat::fromEuler(p, y, r);
         REQUIRE(fequals(q.yaw(), y));
         REQUIRE(fequals(q.pitch(), p));
         REQUIRE(fequals(q.roll(), r));

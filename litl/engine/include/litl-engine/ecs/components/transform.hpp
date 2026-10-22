@@ -69,7 +69,12 @@ namespace litl
             return transform;
         }
 
-        [[nodiscard]] quat getRotation() const noexcept
+        [[nodiscard]] quat const& getRotation() const noexcept
+        {
+            return rotation;
+        }
+
+        [[nodiscard]] quat& getRotation() noexcept
         {
             return rotation;
         }

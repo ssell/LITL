@@ -140,14 +140,24 @@ namespace litl
             return quat{ glm::angleAxis(angle, axis.data()) };
         }
 
-        [[nodiscard]] static constexpr quat fromEuler(float yaw, float pitch, float roll) noexcept
+        /// <summary>
+        /// Creates a quaternion representation of the specified rotation in euler angles which are expected to be in degrees.
+        /// Note the ordering of pitch-yaw-roll as opposed to some standards which use yaw-pitch-roll. The ordering present here
+        /// is the order in which the euler angles are applied.
+        /// </summary>
+        [[nodiscard]] static constexpr quat fromEuler(float pitch, float yaw, float roll) noexcept
         {
-            return quat{ glm::vec3{ pitch, yaw, roll } };
+            return quat{ glm::vec3{ degreesToRadians(pitch), degreesToRadians(yaw), degreesToRadians(roll) } };
         }
 
+        /// <summary>
+        /// Creates a quaternion representation of the specified rotation in euler angles which are expected to be in degrees.
+        /// Note the ordering of pitch-yaw-roll as opposed to some standards which use yaw-pitch-roll. The ordering present here
+        /// is the order in which the euler angles are applied.
+        /// </summary>
         [[nodiscard]] static constexpr quat fromEuler(vec3 pitchYawRoll) noexcept
         {
-            return quat{ glm::vec3{ pitchYawRoll.x(), pitchYawRoll.y(), pitchYawRoll.z() } };
+            return quat{ glm::vec3{ degreesToRadians(pitchYawRoll.x()), degreesToRadians(pitchYawRoll.y()), degreesToRadians(pitchYawRoll.z()) } };
         }
 
         [[nodiscard]] static constexpr quat lookRotation(vec3 const& forward, vec3 const& up) noexcept
@@ -278,24 +288,36 @@ namespace litl
         [[nodiscard]] mat3 toMat3() const noexcept;
         [[nodiscard]] mat4 toMat4() const noexcept;
 
+        /// <summary>
+        /// Returns the euler angle (pitch-yaw-roll) representation of this quaternion. Returned angles are in degrees.
+        /// </summary>
         [[nodiscard]] vec3 toEuler() const noexcept
         {
-            return vec3{ glm::yaw(value), glm::pitch(value), glm::roll(value) };
+            return vec3{ radiansToDegrees(glm::pitch(value)), radiansToDegrees(glm::yaw(value)), radiansToDegrees(glm::roll(value)) };
         }
 
+        /// <summary>
+        /// Returns the yaw euler angle of this quaternion, in degrees. Yaw is the rotation on the y-axis (left/right).
+        /// </summary>
         [[nodiscard]] float yaw() const noexcept
         {
-            return glm::yaw(value);
+            return radiansToDegrees(glm::yaw(value));
         }
 
+        /// <summary>
+        /// Returns the pitch euler angle of this quaternion, in degrees. Pitch is the rotation on the x-axis (up/down).
+        /// </summary>
         [[nodiscard]] float pitch() const noexcept
         {
-            return glm::pitch(value);
+            return radiansToDegrees(glm::pitch(value));
         }
 
+        /// <summary>
+        /// Returns the roll euler angle of this quaternion, in degrees. Roll is the rotation on the z-axis (tilt).
+        /// </summary>
         [[nodiscard]] float roll() const noexcept
         {
-            return glm::roll(value);
+            return radiansToDegrees(glm::roll(value));
         }
 
         std::string toString() const noexcept

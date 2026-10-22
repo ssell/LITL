@@ -60,7 +60,11 @@ namespace litl
         m_pOps->poll(m_pContext);
         m_lastFrameState = m_currFrameState;
         m_currFrameState = m_pOps->getAccumulatedState(m_pContext, true);
-        m_currFrameState.mouse.position.xyDelta = m_currFrameState.mouse.position.xy - m_lastFrameState.mouse.position.xy;
+
+        if (m_lastFrameState.mouse.position.inWindow)
+        {
+            m_currFrameState.mouse.position.xyDelta = m_currFrameState.mouse.position.xy - m_lastFrameState.mouse.position.xy;
+        }
 
         m_inputActions.update(*this);
     }
