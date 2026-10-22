@@ -6,8 +6,8 @@
 #include "litl-core/authority.hpp"
 #include "litl-core/inlineFunc.hpp"
 #include "litl-core/services/serviceProvider.hpp"
-#include "litl-platform/inputEnums.hpp"
-#include "litl-platform/inputState.hpp"
+#include "litl-platform/input/inputEnums.hpp"
+#include "litl-platform/input/inputState.hpp"
 
 namespace litl
 {

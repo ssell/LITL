@@ -9,7 +9,7 @@
 #include "litl-engine/engine.hpp"
 #include "litl-engine/platformFactory.hpp"
 #include "litl-platform/platform.hpp"
-#include "litl-platform/window.hpp"
+#include "litl-platform/window/window.hpp"
 #include "litl-engine/frameLimiter.hpp"
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/objects/objectPool.hpp"

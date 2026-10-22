@@ -6,7 +6,7 @@
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-engine/input/inputActions.hpp"
 #include "litl-engine/engine.hpp"
-#include "litl-platform/input.hpp"
+#include "litl-platform/input/input.hpp"
 #include "litl-engine/input/actionMap.hpp"
 
 namespace litl

@@ -5,7 +5,7 @@
 
 #include "litl-core/constants.hpp"
 #include "litl-core/math/types/vec2.hpp"
-#include "litl-platform/inputEnums.hpp"
+#include "litl-platform/input/inputEnums.hpp"
 
 namespace litl
 {

@@ -3,8 +3,8 @@
 
 #include <cstdint>
 
-#include "litl-platform/window.hpp"
-#include "litl-platform/input.hpp"
+#include "litl-platform/window/window.hpp"
+#include "litl-platform/input/input.hpp"
 
 namespace litl
 {

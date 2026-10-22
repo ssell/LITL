@@ -1,7 +1,7 @@
 #ifndef LITL_PLATFORM_GLFW_INPUT_H__
 #define LITL_PLATFORM_GLFW_INPUT_H__
 
-#include "litl-platform/input.hpp"
+#include "litl-platform/input/input.hpp"
 
 namespace litl
 {

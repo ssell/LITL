@@ -1,4 +1,4 @@
-#include "litl-platform/window.hpp"
+#include "litl-platform/window/window.hpp"
 #include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
 

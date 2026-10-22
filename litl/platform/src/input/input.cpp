@@ -1,4 +1,4 @@
-#include "litl-platform/input.hpp"
+#include "litl-platform/input/input.hpp"
 #include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
 

@@ -7,7 +7,7 @@
 #include "litl-core/authority.hpp"
 #include "litl-core/stringId.hpp"
 #include "litl-core/handles.hpp"
-#include "litl-platform/inputSource.hpp"
+#include "litl-platform/input/inputSource.hpp"
 
 namespace litl
 {

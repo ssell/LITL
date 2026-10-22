@@ -4,8 +4,7 @@
 #include <cstdint>
 #include <array>
 
-#include "litl-platform/inputEnums.hpp"
-#include "litl-platform/inputSource.hpp"
+#include "litl-platform/input/inputSource.hpp"
 
 namespace litl
 {

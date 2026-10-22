@@ -14,8 +14,8 @@
 #include "litl-engine/ecs/systems/modelInstantiationSystem.hpp"
 #include "litl-ecs/world.hpp"
 #include "litl-platform/platform.hpp"
-#include "litl-platform/window.hpp"
-#include "litl-platform/input.hpp"
+#include "litl-platform/window/window.hpp"
+#include "litl-platform/input/input.hpp"
 #include "litl-engine/input/inputActions.hpp"
 
 namespace litl::Internal

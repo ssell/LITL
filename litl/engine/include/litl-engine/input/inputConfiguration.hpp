@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "litl-platform/inputEnums.hpp"
+#include "litl-platform/input/inputEnums.hpp"
 #include "litl-engine/input/actionMapDescriptor.hpp"
 
 namespace litl

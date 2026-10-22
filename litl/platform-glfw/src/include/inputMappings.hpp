@@ -3,7 +3,7 @@
 
 #include <array>
 
-#include "litl-platform/inputEnums.hpp"
+#include "litl-platform/input/inputEnums.hpp"
 #include "glfw.hpp"
 
 namespace litl::glfw

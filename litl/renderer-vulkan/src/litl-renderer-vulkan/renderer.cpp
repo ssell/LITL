@@ -11,7 +11,7 @@
 #include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/math.hpp"
-#include "litl-platform/window.hpp"
+#include "litl-platform/window/window.hpp"
 #include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer-vulkan/renderer.hpp"
 #include "litl-renderer-vulkan/queueFamily.hpp"

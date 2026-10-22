@@ -6,7 +6,7 @@
 #include "litl-core/authority.hpp"
 #include "litl-core/impl.hpp"
 #include "litl-ecs/frameCallbacks.hpp"
-#include "litl-platform/inputCallbacks.hpp"
+#include "litl-platform/input/inputCallbacks.hpp"
 
 namespace litl
 {

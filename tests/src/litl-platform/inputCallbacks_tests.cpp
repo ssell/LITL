@@ -2,7 +2,7 @@
 
 #include "tests.hpp"
 #include "litl-core/services/serviceCollection.hpp"
-#include "litl-platform/inputCallbacks.hpp"
+#include "litl-platform/input/inputCallbacks.hpp"
 
 namespace litl::tests
 {

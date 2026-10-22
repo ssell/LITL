@@ -1,5 +1,5 @@
 add_library(litl-platform STATIC
-	"src/window.cpp" "src/platformConfiguration.cpp" "src/platform.cpp" "src/input.cpp" "src/inputCallbacks.cpp")
+	"src/window/window.cpp" "src/platformConfiguration.cpp" "src/platform.cpp" "src/input/input.cpp" "src/input/inputCallbacks.cpp")
 
 target_include_directories(litl-platform PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(litl-platform PUBLIC litl-core)

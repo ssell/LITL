@@ -3,7 +3,7 @@
 #include "litl-core/assert.hpp"
 #include "litl-core/constants.hpp"
 #include "litl-renderer-vulkan/platformSpecific.hpp"
-#include "litl-platform/window.hpp"
+#include "litl-platform/window/window.hpp"
 
 // -----------------------------------------------------------------------------------------
 // Windows

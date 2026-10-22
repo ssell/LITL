@@ -1,7 +1,7 @@
 #ifndef LITL_PLATFORM_GLFW_WINDOW_H__
 #define LITL_PLATFORM_GLFW_WINDOW_H__
 
-#include "litl-platform/window.hpp"
+#include "litl-platform/window/window.hpp"
 
 namespace litl
 {

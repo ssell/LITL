@@ -1,10 +1,10 @@
 #ifndef LITL_PLATFORM_INPUT_H__
 #define LITL_PLATFORM_INPUT_H__
 
-#include "litl-platform/inputEnums.hpp"
-#include "litl-platform/inputState.hpp"
-#include "litl-platform/inputCallbacks.hpp"
-#include "litl-platform/inputSource.hpp"
+#include "litl-platform/input/inputEnums.hpp"
+#include "litl-platform/input/inputState.hpp"
+#include "litl-platform/input/inputCallbacks.hpp"
+#include "litl-platform/input/inputSource.hpp"
 
 namespace litl
 {

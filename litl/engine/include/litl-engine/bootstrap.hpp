@@ -7,7 +7,7 @@
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/system/systemCollection.hpp"
 #include "litl-ecs/frameCallbacks.hpp"
-#include "litl-platform/inputCallbacks.hpp"
+#include "litl-platform/input/inputCallbacks.hpp"
 
 namespace litl
 {

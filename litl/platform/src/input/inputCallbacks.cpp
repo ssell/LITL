@@ -5,7 +5,7 @@
 #include <variant>
 #include <vector>
 
-#include "litl-platform/inputCallbacks.hpp"
+#include "litl-platform/input/inputCallbacks.hpp"
 
 namespace litl
 {

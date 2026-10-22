@@ -60,7 +60,6 @@ namespace litl::samples
             {
                 transform.translate(-transform.up() * speed);
             }
-
         }
 
     private:
