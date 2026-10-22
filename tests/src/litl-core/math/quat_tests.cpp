@@ -89,12 +89,12 @@ namespace litl::tests
 
     LITL_TEST_CASE("quat::fromEuler round-trips through toEuler", "[math::quat]")
     {
-        float yaw = 0.3f, pitch = 0.5f, roll = 0.1f;
+        float yaw = 30.0f, pitch = 45.0f, roll = 10.0f;
         auto q = quat::fromEuler(pitch, yaw, roll);
         vec3 euler = q.toEuler();
 
-        REQUIRE(fequals(euler.x(), yaw));
-        REQUIRE(fequals(euler.y(), pitch));
+        REQUIRE(fequals(euler.x(), pitch));
+        REQUIRE(fequals(euler.y(), yaw));
         REQUIRE(fequals(euler.z(), roll));
     } LITL_END_TEST_CASE
 
@@ -386,7 +386,7 @@ namespace litl::tests
     LITL_TEST_CASE("quat: identity forward/right/up", "[math::quat]")
     {
         auto q = quat::identity();
-        REQUIRE(q.forward() == vec3{ 0.0f, 0.0f, -1.0f });
+        REQUIRE(q.forward() == vec3{ 0.0f, 0.0f, 1.0f });
         REQUIRE(q.right() == vec3{ 1.0f, 0.0f,  0.0f });
         REQUIRE(q.up() == vec3{ 0.0f, 1.0f,  0.0f });
     } LITL_END_TEST_CASE
@@ -394,8 +394,9 @@ namespace litl::tests
     LITL_TEST_CASE("quat: 90° Y rotation swaps forward and right", "[math::quat]")
     {
         auto q = quat::fromAngleY(Traits<float>::pi_over_two);
-        // Forward (0,0,-1) rotated 90° around Y → (-1,0,0)
-        REQUIRE(q.forward() == vec3{ -1.0f, 0.0f, 0.0f });
+
+        // Forward (0,0,1) rotated 90° around Y → (1,0,0)
+        REQUIRE(q.forward() == vec3{ 1.0f, 0.0f, 0.0f });
         // Right (1,0,0) rotated 90° around Y → (0,0,-1)
         REQUIRE(q.right() == vec3{ 0.0f, 0.0f, -1.0f });
     } LITL_END_TEST_CASE

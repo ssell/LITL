@@ -89,7 +89,7 @@ namespace litl
             ActionMapState& currState = bindings.actionState;
 
             currState.held      = currState.live && bindings.inputState.held;
-            currState.pressed   = (currState.held && !prevState.held) || (currState.live && bindings.inputState.pressed);                           // If map just became live, then synthesize held if map became active while the key was down. Otherwise compare to last frame.
+            currState.pressed   = (currState.held && !prevState.held) || (currState.live && bindings.inputState.pressed && !prevState.held);        // If map just became live, then synthesize held if map became active while the key was down. Otherwise compare to last frame.
             currState.released  = (prevState.held && !currState.held) || (currState.live && bindings.inputState.released && !currState.held);       // If map just became live, then synthesize released if map became active same frame it was released. Otherwise compare to last frame.
             currState.value     = (currState.live ? bindings.inputState.xyDelta : vec2{});
             currState.triggered = currState.pressed || currState.released || !currState.value.isZeroed();                                           // Note: we do not mark triggered for .held. This matches the behavior of our raw input callbacks.
