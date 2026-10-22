@@ -33,6 +33,8 @@ namespace litl
         InputCallbackType type{ InputCallbackType::Unknown };
         CallbackId id{ Constants::uint32_null_index };
         uint32_t slot{ 0u };
+        StringId actionMapId{};
+        StringId bindingId{};
     };
 
     enum class InputCallbackResult : uint8_t

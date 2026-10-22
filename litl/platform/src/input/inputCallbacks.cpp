@@ -203,47 +203,37 @@ namespace litl
             }
         }
 
-        [[nodiscard]] bool processResultAndShouldConsume(InputCallbackResult result, InputCallbackType type, CallbackId id, uint32_t eventVecIdx) noexcept
+        [[nodiscard]] bool isRemove(InputCallbackResult result) noexcept
         {
-            if ((result == InputCallbackResult::ConsumeAndRemove) || (result == InputCallbackResult::ContinueAndRemove))
-            {
-                addDeferredCommand(CallbackCommand{
-                    .id = id,
-                    .commandType = CallbackCommandType::Remove,
-                    .eventType = type,
-                    .eventVecIdx = eventVecIdx
-                });
-            }
-
-            if ((result == InputCallbackResult::Consume) || (result == InputCallbackResult::ConsumeAndRemove))
-            {
-                return true;
-            }
-
-            return false;
+            return (result == InputCallbackResult::ContinueAndRemove) || (result == InputCallbackResult::ConsumeAndRemove);
         }
 
-        [[nodiscard]] bool processActionMapResultAndShouldConsume(InputCallbackResult result, CallbackId id, StringId actionMapId, StringId bindingId) noexcept
+        [[nodiscard]] bool isConsume(InputCallbackResult result) noexcept
         {
-            if ((result == InputCallbackResult::ConsumeAndRemove) || (result == InputCallbackResult::ContinueAndRemove))
-            {
-                addDeferredCommand(CallbackCommand{
-                    .id = id,
-                    .commandType = CallbackCommandType::Remove,
-                    .eventType = InputCallbackType::ActionMap,
-                    .event = OnActionMapEvent {
-                        .actionMapId = actionMapId,
-                        .bindingId = bindingId
-                    }
-                });
-            }
+            return (result == InputCallbackResult::Consume) || (result == InputCallbackResult::ConsumeAndRemove);
+        }
 
-            if ((result == InputCallbackResult::Consume) || (result == InputCallbackResult::ConsumeAndRemove))
-            {
-                return true;
-            }
+        void enqueueRemoveCommand(InputCallbackType type, CallbackId id, uint32_t eventVecIdx) noexcept
+        {
+            addDeferredCommand(CallbackCommand{
+                .id = id,
+                .commandType = CallbackCommandType::Remove,
+                .eventType = type,
+                .eventVecIdx = eventVecIdx
+            });
+        }
 
-            return false;
+        void enqueueActionMapRemoveCommand(CallbackId id, StringId actionMapId, StringId bindingId) noexcept
+        {
+            addDeferredCommand(CallbackCommand{
+                .id = id,
+                .commandType = CallbackCommandType::Remove,
+                .eventType = InputCallbackType::ActionMap,
+                .event = OnActionMapEvent {
+                    .actionMapId = actionMapId,
+                    .bindingId = bindingId
+                }
+            });
         }
 
         void invokeKeyEvent(ServiceProvider& services, Key key, bool pressed, bool released, bool down) noexcept
@@ -266,9 +256,14 @@ namespace litl
 
                     const auto result = event.callback(services, key, pressed, released, down);
 
-                    if (processResultAndShouldConsume(result, InputCallbackType::Key, event.id, static_cast<uint32_t>(key)))
+                    if (isRemove(result))
                     {
                         event.alive = false;
+                        enqueueRemoveCommand(InputCallbackType::Key, event.id, static_cast<uint32_t>(key));
+                    }
+
+                    if (isConsume(result))
+                    {
                         break;
                     }
                 }
@@ -295,9 +290,14 @@ namespace litl
 
                     const auto result = event.callback(services, mouse, button, pressed, released, down);
 
-                    if (processResultAndShouldConsume(result, InputCallbackType::MouseButton, event.id, static_cast<uint32_t>(button)))
+                    if (isRemove(result))
                     {
                         event.alive = false;
+                        enqueueRemoveCommand(InputCallbackType::MouseButton, event.id, static_cast<uint32_t>(button));
+                    }
+
+                    if (isConsume(result))
+                    {
                         break;
                     }
                 }
@@ -320,9 +320,14 @@ namespace litl
 
                 const auto result = event.callback(services, mouse);
 
-                if (processResultAndShouldConsume(result, InputCallbackType::MouseEnterExit, event.id, Constants::uint32_null_index))
+                if (isRemove(result))
                 {
                     event.alive = false;
+                    enqueueRemoveCommand(InputCallbackType::MouseEnterExit, event.id, Constants::uint32_null_index);
+                }
+
+                if (isConsume(result))
+                {
                     break;
                 }
             }
@@ -344,9 +349,14 @@ namespace litl
 
                 const auto result = event.callback(services, mouse);
 
-                if (processResultAndShouldConsume(result, InputCallbackType::MouseMove, event.id, Constants::uint32_null_index))
+                if (isRemove(result))
                 {
                     event.alive = false;
+                    enqueueRemoveCommand(InputCallbackType::MouseMove, event.id, Constants::uint32_null_index);
+                }
+
+                if (isConsume(result))
+                {
                     break;
                 }
             }
@@ -368,9 +378,14 @@ namespace litl
 
                 const auto result = event.callback(services, mouse, scroll);
 
-                if (processResultAndShouldConsume(result, InputCallbackType::MouseScroll, event.id, Constants::uint32_null_index))
+                if (isRemove(result))
                 {
                     event.alive = false;
+                    enqueueRemoveCommand(InputCallbackType::MouseScroll, event.id, Constants::uint32_null_index);
+                }
+
+                if (isConsume(result))
+                {
                     break;
                 }
             }
@@ -392,9 +407,14 @@ namespace litl
 
                 const auto result = event.callback(services, inputState);
 
-                if (processActionMapResultAndShouldConsume(result, event.id, actionMapId, bindingId))
+                if (isRemove(result))
                 {
                     event.alive = false;
+                    enqueueActionMapRemoveCommand(event.id, actionMapId, bindingId);
+                }
+
+                if (isConsume(result))
+                {
                     break;
                 }
             }
@@ -545,7 +565,12 @@ namespace litl
             }
         });
 
-        return InputCallbackHandle{ .type = InputCallbackType::ActionMap, .id = id };
+        return InputCallbackHandle{ 
+            .type = InputCallbackType::ActionMap, 
+            .id = id,
+            .actionMapId = actionMapId,
+            .bindingId = bindingId
+        };
     }
 
     void InputCallbacks::unregisterCallback(InputCallbackHandle handle) noexcept
@@ -555,12 +580,27 @@ namespace litl
             return;
         }
 
-        m_pImpl->addDeferredCommand(CallbackCommand{
-            .id = handle.id,
-            .commandType = CallbackCommandType::Remove,
-            .eventType = handle.type,
-            .eventVecIdx = handle.slot
-        });
+        if (handle.type == InputCallbackType::ActionMap)
+        {
+            m_pImpl->addDeferredCommand(CallbackCommand{
+                .id = handle.id,
+                .commandType = CallbackCommandType::Remove,
+                .eventType = handle.type,
+                .event = OnActionMapEvent {
+                    .actionMapId = handle.actionMapId,
+                    .bindingId = handle.bindingId
+                }
+            });
+        }
+        else
+        {
+            m_pImpl->addDeferredCommand(CallbackCommand{
+                .id = handle.id,
+                .commandType = CallbackCommandType::Remove,
+                .eventType = handle.type,
+                .eventVecIdx = handle.slot
+            });
+        }
     }
 
     void InputCallbacks::invokeKeyEvent(Authority<Input> auth, ServiceProvider& services, Key key, bool pressed, bool released, bool down) noexcept

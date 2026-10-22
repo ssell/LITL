@@ -196,6 +196,24 @@ namespace litl::tests
     }
     LITL_END_TEST_CASE
 
+    LITL_TEST_CASE_METHOD(InputCallbacksFixture, "consume does not disable the callback", "[platform::inputCallbacks]")
+    {
+        uint32_t consumer = 0u;
+        uint32_t lower = 0u;
+
+        callbacks.registerKeyCallback(Key::A, countingKeyCallback(consumer, InputCallbackResult::Consume), InputCallbackPriority::UI);
+        callbacks.registerKeyCallback(Key::A, countingKeyCallback(lower, InputCallbackResult::Continue), InputCallbackPriority::Gameplay);
+        process();
+
+        pressKey(Key::A);
+        process();
+        pressKey(Key::A);
+
+        REQUIRE(consumer == 2u);   // buggy: 1 (skipped on the second frame because alive == false)
+        REQUIRE(lower == 0u);      // buggy: 1 (the dead consumer no longer blocks it)
+    }
+    LITL_END_TEST_CASE
+
     LITL_TEST_CASE_METHOD(InputCallbacksFixture, "callbacks are invoked in registration order", "[platform::inputCallbacks]")
     {
         uint32_t order[2]{ 0u, 0u };
