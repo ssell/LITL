@@ -87,13 +87,19 @@ namespace litl
 
         void update(Input const& input) noexcept
         {
-            processCommands();
+            processCommands(input);
             updateActionMapsWithInput(input);
         }
 
-        void processCommands() noexcept
+        void processCommands(Input const& input) noexcept
         {
-            if (!actionMapCommands.empty())
+            if (actionMapCommands.empty())
+            {
+                return;
+            }
+
+            const ActionMapHandle prevTopHandle = (actionMapStack.empty() ? ActionMapHandle{} : actionMapStack.back());
+
             {
                 for (auto& command : actionMapCommands)
                 {
@@ -101,6 +107,22 @@ namespace litl
                 }
 
                 actionMapCommands.clear();
+            }
+
+            const ActionMapHandle currTopHandle = (actionMapStack.empty() ? ActionMapHandle{} : actionMapStack.back());
+
+            if (prevTopHandle != currTopHandle)
+            {
+                const ActionMap* prevTop = actionMapPool.get(prevTopHandle);
+                const ActionMap* currTop = actionMapPool.get(currTopHandle);
+
+                const ActionMapDescriptor prevDescriptor = (prevTop != nullptr) ? prevTop->getDescriptor() : ActionMapDescriptor{};
+                const ActionMapDescriptor currDescriptor = (currTop != nullptr) ? currTop->getDescriptor() : ActionMapDescriptor{};
+
+                if (currDescriptor.cursorMode != prevDescriptor.cursorMode)
+                {
+                    input.setCursorMode(currDescriptor.cursorMode);
+                }
             }
         }
 

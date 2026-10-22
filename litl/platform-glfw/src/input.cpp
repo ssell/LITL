@@ -1,5 +1,6 @@
 #include "litl-core/logging/logging.hpp"
 #include "litl-platform-glfw/input.hpp"
+#include "litl-platform-glfw/window.hpp"
 #include "glfw.hpp"
 #include "inputMappings.hpp"
 
@@ -9,6 +10,7 @@ namespace litl
     {
         Input litlInput{};
         InputState frameState{};
+        GLFWwindow* glfwWindow{ nullptr };
     };
 
     InputContext& getGlfwInputContext() noexcept
@@ -46,6 +48,18 @@ namespace litl::glfw
         // ... todo ...
     }
 
+    void setActiveWindow(InputContext* context, Window* window) noexcept
+    {
+        if (window == nullptr)
+        {
+            context->glfwWindow = nullptr;
+        }
+        else
+        {
+            context->glfwWindow = getGlfwWindow(window->getContext());
+        }
+    }
+
     void poll(InputContext* context) noexcept
     {
         // Most input polling is done by the glfwPollEvents in the window, except for gamepad input.
@@ -57,6 +71,42 @@ namespace litl::glfw
         InputState accumulated = context->frameState;
         context->frameState.reset();
         return accumulated;
+    }
+
+    void setCursorMode(InputContext* context, CursorMode mode) noexcept
+    {
+        if (context->frameState.mouse.mode == mode)
+        {
+            return;
+        }
+
+        if (context->glfwWindow == nullptr)
+        {
+            return;
+        }
+
+        context->frameState.mouse.mode = mode;
+
+        switch (mode)
+        {
+        case CursorMode::Captured:
+            glfwSetInputMode(context->glfwWindow, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+            break;
+
+        case CursorMode::Hidden:
+            glfwSetInputMode(context->glfwWindow, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+            break;
+
+        case CursorMode::Disabled:
+            glfwSetInputMode(context->glfwWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            break;
+
+        case CursorMode::Normal:
+        case CursorMode::Unknown:
+        default:
+            glfwSetInputMode(context->glfwWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            break;
+        }
     }
 
     // -------------------------------------------------------------------------------------

@@ -53,6 +53,12 @@ namespace litl
         m_pContext = nullptr;
     }
 
+    void Input::setActiveWindow(Window* window) noexcept
+    {
+        LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
+        m_pOps->setActiveWindow(m_pContext, window);
+    }
+
     void Input::poll() noexcept
     {
         LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
@@ -114,6 +120,12 @@ namespace litl
         {
             callbacks.invokeMouseScrollEvent({}, services, m_currFrameState.mouse.position, m_currFrameState.mouse.scroll);
         }
+    }
+
+    void Input::setCursorMode(CursorMode mode) const noexcept
+    {
+        LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
+        m_pOps->setCursorMode(m_pContext, mode);
     }
 
     bool Input::getKeyPressed(Key key) const noexcept

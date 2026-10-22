@@ -11,9 +11,10 @@ namespace litl
     enum class CursorMode : uint8_t
     {
         Unknown        = 0u,
-        Normal         = 1u,
-        Hidden         = 2u,
-        Captured       = 3u
+        Normal         = 1u,        // Cursor visible and not locked to window.
+        Hidden         = 2u,        // Cursor hidden and not locked to window.
+        Captured       = 3u,        // Cursor visible and locked to window.
+        Disabled       = 4u         // Cursor hidden and locked to window.
     };
 
     /// <summary>

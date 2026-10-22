@@ -2,8 +2,8 @@
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/math/common.hpp"
 #include "litl-platform/platform.hpp"
-#include "litl-platform-glfw/window.hpp"
 #include "litl-platform-glfw/input.hpp"
+#include "litl-platform-glfw/window.hpp"
 #include "glfw.hpp"
 
 namespace litl
@@ -51,7 +51,7 @@ namespace litl
             };
 #elif defined(LITL_LINUX)
             return NativeWindowHandle{
-                .kind = NativeWindowKind::Wayland 
+                .kind = NativeWindowKind::Wayland
                 // .window = wl_surface*
                 // .display = wl_display*
             };
@@ -113,6 +113,11 @@ namespace litl::glfw
         }
 
         return &context.litlWindow;
+    }
+
+    GLFWwindow* getGlfwWindow(WindowContext* context) noexcept
+    {
+        return context->glfwWindow;
     }
 
     GLFWwindow* getGlfwWindow(WindowContext const* context)

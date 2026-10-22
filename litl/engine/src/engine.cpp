@@ -349,6 +349,7 @@ namespace litl
             return false;
         }
 
+        m_pImpl->pSharedInput->setActiveWindow(window);
         m_pImpl->pSharedWindow = m_pImpl->pServiceProvider->get<Window>();
 
         return true;

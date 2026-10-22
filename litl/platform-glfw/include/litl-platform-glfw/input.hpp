@@ -12,8 +12,10 @@ namespace litl
 
         // InputOps implementations
         void destroy(InputContext* context) noexcept;
+        void setActiveWindow(InputContext* context, Window* window) noexcept;
         void poll(InputContext* context) noexcept;
         [[nodiscard]] InputState getAccumulatedState(InputContext* context, bool reset) noexcept;
+        void setCursorMode(InputContext* context, CursorMode mode) noexcept;
 
         // Internal input events routed from Window
         void onGlfwKeyEvent(InputContext* context, int key, int action) noexcept;
@@ -25,8 +27,10 @@ namespace litl
 
     inline constexpr InputOps GlfwInputOps = {
         .destroy = &glfw::destroy,
+        .setActiveWindow = &glfw::setActiveWindow,
         .poll = &glfw::poll,
-        .getAccumulatedState = &glfw::getAccumulatedState
+        .getAccumulatedState = &glfw::getAccumulatedState,
+        .setCursorMode = &glfw::setCursorMode
     };
 }
 

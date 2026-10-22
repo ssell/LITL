@@ -25,8 +25,10 @@ namespace litl
     struct InputOps
     {
         void (*destroy)(InputContext*);
+        void (*setActiveWindow)(InputContext*, Window*);
         void (*poll)(InputContext*);
         InputState (*getAccumulatedState)(InputContext*, bool);
+        void (*setCursorMode)(InputContext*, CursorMode);
     };
 
     class Input final
@@ -55,6 +57,11 @@ namespace litl
         void destroy() noexcept;
 
         /// <summary>
+        /// 
+        /// </summary>
+        void setActiveWindow(Window* window) noexcept;
+
+        /// <summary>
         /// Polls for new input events. Must be called once per frame from the main thread.
         /// </summary>
         void poll() noexcept;
@@ -63,6 +70,11 @@ namespace litl
         /// 
         /// </summary>
         void triggerCallbacks(ServiceProvider& services, InputCallbacks& callbacks) const noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        void setCursorMode(CursorMode mode) const noexcept;
 
         /// <summary>
         /// Returns true if the key was pressed down since the last poll (typically the last frame).

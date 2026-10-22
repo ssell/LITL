@@ -16,7 +16,7 @@ namespace litl::samples
                         ActionMapDescriptor{
                             .name = "gameplay",
                             .propagateActions = false,
-                            .cursorMode = CursorMode::Captured,
+                            .cursorMode = CursorMode::Disabled,
                             .bindings = {
                                 { "forward", { InputSource::fromKey(Key::W), InputSource::fromKey(Key::Up) } },
                                 { "backward", { InputSource::fromKey(Key::S), InputSource::fromKey(Key::Down) } },

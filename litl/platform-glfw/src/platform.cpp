@@ -133,7 +133,6 @@ namespace litl
             }
 
             context->input = createGlfwInput();
-
             return context->input;
         }
 
