@@ -32,9 +32,10 @@ namespace litl::samples
                                 { "backward", { InputSource::fromKey(Key::S), InputSource::fromKey(Key::Down) } },
                                 { "left", { InputSource::fromKey(Key::A), InputSource::fromKey(Key::Left) } },
                                 { "right", { InputSource::fromKey(Key::D), InputSource::fromKey(Key::Right) } },
-                                { "up", { InputSource::fromKey(Key::Q) } },
-                                { "down", { InputSource::fromKey(Key::E) } },
+                                { "up", { InputSource::fromKey(Key::E) } },
+                                { "down", { InputSource::fromKey(Key::Q) } },
                                 { "look", { InputSource::fromMouseDelta() } },
+                                { "sprint", {InputSource::fromKey(Key::LeftShift), InputSource::fromKey(Key::RightShift) } },
                                 { "escape", { InputSource::fromKey(Key::Escape) } }
                             }
                         }

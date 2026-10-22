@@ -11,12 +11,16 @@ namespace litl::samples
 {
     struct FreeFlyController
     {
-        float speed{ 1.0f };
-        float horizontalSensitivity{ 0.085f };
-        float verticalSensitivity{ 0.065f };
-        float minPitch{ -90.0f };
-        float maxPitch{ 90.0f };
-        bool invertY{ false };
+        float speed{ 1.0f };                        // Base movement speed modifier.
+        float sprint{ 3.0f };                       // Movement speed modifier when the "sprint" input is held.
+        float horizontalSensitivity{ 0.085f };      // Modifier applied to rotation from "look".x
+        float verticalSensitivity{ 0.065f };        // Modifier applied to rotation from "look".y
+        float minPitch{ -90.0f };                   // Min pitch value.
+        float maxPitch{ 90.0f };                    // Max pitch value.
+        float yaw{ 0.0f };                          // Current horizontal rotation, in angles.
+        float pitch{ 0.0f };                        // Current vertical rotation, in angles.
+        bool invertY{ false };                      // Is the delta from "look".y inverted?
+        bool initialized{ false };                  // Has this controller received its first update?
     };
 
     struct FreeFlyControllerSystem final
@@ -27,6 +31,7 @@ namespace litl::samples
 
     private:
 
+        void initialize(FreeFlyController& controller, Transform const& transform);
         void updateTranslation(SystemData const& data, FreeFlyController const& controller, Transform& transform);
         void updateYawPitch(SystemData const& data, FreeFlyController& controller, Transform& transform);
 
