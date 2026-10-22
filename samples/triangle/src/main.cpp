@@ -13,7 +13,7 @@ int main()
     Engine engine{};
 
     engine.setup(
-        { .platform { .title = "LITL - Triangle Sample" } },
+        { .platform { .window = {.title = "LITL - Triangle Sample" } } },
         nullptr,
         configureSystems,
         nullptr,

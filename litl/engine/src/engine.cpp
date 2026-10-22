@@ -327,9 +327,9 @@ namespace litl
         // Window
         // ---------------------------------------------------------------------------------
 
-        auto title = m_pImpl->pSharedConfig->platform.title;
-        auto width = m_pImpl->pSharedConfig->platform.windowWidth;
-        auto height = m_pImpl->pSharedConfig->platform.windowHeight;
+        auto title = m_pImpl->pSharedConfig->platform.window.title;
+        auto width = m_pImpl->pSharedConfig->platform.window.width;
+        auto height = m_pImpl->pSharedConfig->platform.window.height;
 
         logInfo("Opening window \"", title, "\" (", width, "x", height, ") ...");
 

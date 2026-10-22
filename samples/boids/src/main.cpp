@@ -21,7 +21,7 @@ int main()
 
     engine.setup(
         Configuration{
-            .platform { .title = "LITL - Boids Sample" },
+            .platform {.window = { .title = "LITL - Boids Sample" } },
             .scene {
                 .partition = ScenePartitionType::UniformGrid,
                 .uniformGridOptions = UniformGridOptions {

@@ -8,7 +8,9 @@ namespace litl::samples
     {
         return Configuration{
             .platform = PlatformConfiguration {
-                .title = "LITL - Sponza Sample"
+                .window = WindowConfiguration {
+                    .title = "LITL - Sponza Sample"
+                }
             } ,
             .input = InputConfiguration {
                 .actionMaps = {
