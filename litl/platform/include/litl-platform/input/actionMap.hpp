@@ -37,12 +37,6 @@ namespace litl
     {
     public:
 
-        struct DefaultIds
-        {
-            static constexpr StringId UI = "UI"_sid;
-            static constexpr StringId Gameplay = "Gameplay"_sid;
-        };
-
         /// <summary>
         /// Attempts to create the action map using the provided descriptor.
         /// </summary>

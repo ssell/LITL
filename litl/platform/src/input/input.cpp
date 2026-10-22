@@ -67,7 +67,13 @@ namespace litl
         m_lastFrameState = m_currFrameState;
         m_currFrameState = m_pOps->getAccumulatedState(m_pContext, true);
 
-        if (m_lastFrameState.mouse.position.inWindow)
+        // We can get a mouse jump from two causes:
+        // 1. Entering the window either the first time or from a different position that we left it
+        // 2. Switching to a virtual cursor position when cursor mode is first set to CursorMode::Disabled.
+        const bool enteredWindow = m_lastFrameState.mouse.position.enteredWindow;
+        const bool switchedToVirtual = (m_lastFrameState.mouse.mode != m_currFrameState.mouse.mode) && (m_currFrameState.mouse.mode == CursorMode::Disabled);
+
+        if (!enteredWindow && !switchedToVirtual)
         {
             m_currFrameState.mouse.position.xyDelta = m_currFrameState.mouse.position.xy - m_lastFrameState.mouse.position.xy;
         }

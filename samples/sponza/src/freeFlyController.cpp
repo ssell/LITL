@@ -31,7 +31,7 @@ namespace litl::samples
         // Set the initial yaw/pitch to match the direction the entity is currently facing.
         const vec3 forward = transform.forward();
         controller.yaw = radiansToDegrees(atan2f(forward.x(), forward.z()));
-        controller.pitch = radiansToDegrees(clamp(asinf(forward.y()), controller.minPitch, controller.maxPitch));
+        controller.pitch = clamp(radiansToDegrees(asinf(forward.y())), controller.minPitch, controller.maxPitch);
     }
 
     void FreeFlyControllerSystem::updateTranslation(SystemData const& data, FreeFlyController const& controller, Transform& transform)

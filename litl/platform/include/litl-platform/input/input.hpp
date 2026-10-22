@@ -174,7 +174,6 @@ namespace litl
 
         /// <summary>
         /// Retrieves the action map with the given id.
-        /// It is recommended to retrieve the map once and then store the handle as this is a locking call.
         /// </summary>
         [[nodiscard]] ActionMapHandle getMap(StringId id) noexcept;
 

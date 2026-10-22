@@ -68,6 +68,7 @@ namespace litl
                 if (!handle.isValid())
                 {
                     logError("Failed to create ActionMapHandle for ActionMap '", descriptor.name, "'");
+                    continue;
                 }
 
                 actionMapLookup[StringId(descriptor.name)] = handle;
@@ -125,12 +126,12 @@ namespace litl
                 const ActionMap* prevTop = actionMapPool.get(prevTopHandle);
                 const ActionMap* currTop = actionMapPool.get(currTopHandle);
 
-                const ActionMapDescriptor prevDescriptor = (prevTop != nullptr) ? prevTop->getDescriptor() : ActionMapDescriptor{};
-                const ActionMapDescriptor currDescriptor = (currTop != nullptr) ? currTop->getDescriptor() : ActionMapDescriptor{};
+                const CursorMode prevCursorMode = (prevTop != nullptr) ? prevTop->getDescriptor().cursorMode : CursorMode::Normal;
+                const CursorMode currCursorMode = (currTop != nullptr) ? currTop->getDescriptor().cursorMode : CursorMode::Normal;
 
-                if (currDescriptor.cursorMode != prevDescriptor.cursorMode)
+                if (currCursorMode != prevCursorMode)
                 {
-                    input.setCursorMode(currDescriptor.cursorMode);
+                    input.setCursorMode(currCursorMode);
                 }
             }
         }

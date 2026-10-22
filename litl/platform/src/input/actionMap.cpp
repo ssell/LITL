@@ -24,12 +24,17 @@ namespace litl
                 continue;
             }
 
+            bool anySuccess = false;
+
             for (auto& binding : grouping.second)
             {
-                bind(grouping.first, binding);
+                anySuccess |= bind(grouping.first, binding);
             }
 
-            m_actionBindingKeys.push_back(StringId(grouping.first));
+            if (anySuccess)
+            {
+                m_actionBindingKeys.push_back(StringId(grouping.first));
+            }
         }
 
         return true;
@@ -128,6 +133,8 @@ namespace litl
                 return true;
             }
         }
+
+        logWarning("Failed to bind action '", name, "' to map '", getName(), "'. Each binding may have up to ", BindingsPerId, " individual sources.");
 
         return false;
     }
