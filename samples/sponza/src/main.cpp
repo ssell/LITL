@@ -56,15 +56,23 @@ namespace litl::samples
     {
         callbacks->registerActionMapCallback("ui"_sid, "click"_sid, [](ServiceProvider& services, InputSourceState inputState)
             {
-                auto input = services.get<Input>();
-                input->pushMap(input->getMap("gameplay"_sid));
+                if (inputState.released)
+                {
+                    auto input = services.get<Input>();
+                    input->pushMap(input->getMap("gameplay"_sid));
+                }
+
                 return InputCallbackResult::Continue;
             });
 
         callbacks->registerActionMapCallback("gameplay"_sid, "escape"_sid, [](ServiceProvider& services, InputSourceState inputState)
             {
-                auto input = services.get<Input>();
-                input->popMap(input->getMap("gameplay"_sid));
+                if (inputState.released)
+                {
+                    auto input = services.get<Input>();
+                    input->popMap(input->getMap("gameplay"_sid));
+                }
+
                 return InputCallbackResult::Continue;
             });
     }
