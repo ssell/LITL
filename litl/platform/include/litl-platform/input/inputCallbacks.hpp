@@ -14,6 +14,7 @@
 namespace litl
 {
     class Input;
+    class InputActions;
     using CallbackId = uint32_t;
 
     enum class InputCallbackType : uint8_t
@@ -89,7 +90,7 @@ namespace litl
         void invokeMouseEnterExitEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse) noexcept;
         void invokeMouseMoveEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse) noexcept;
         void invokeMouseScrollEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse, vec2 scroll) noexcept;
-        void invokeActionMapEvent(Authority<Input> auth, ServiceProvider& services, InputSourceState inputState) noexcept;
+        void invokeActionMapEvent(Authority<InputActions> auth, ServiceProvider& services, StringId actionMapId, StringId bindingId, InputSourceState inputState) noexcept;
 
     private:
 

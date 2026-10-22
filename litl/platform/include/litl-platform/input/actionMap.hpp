@@ -34,6 +34,12 @@ namespace litl
         vec2 value{};
     };
 
+    struct ActionMapBinding
+    {
+        StringId actionMapId{};
+        StringId bindingId{};
+    };
+
     class ActionMap
     {
     public:
@@ -53,7 +59,7 @@ namespace litl
         /// Updates the input state of the action map and invokes any callbacks.
         /// Returns true if propagation of input should continue.
         /// </summary>
-        [[nodiscard]] bool update(Authority<InputActions> auth, Input const& input, ProcessedInputTracker& inputTracker) noexcept;
+        [[nodiscard]] bool update(Authority<InputActions> auth, Input const& input, ProcessedInputTracker& inputTracker, std::vector<ActionMapBinding>& triggeredBindings) noexcept;
 
         // ---------------------------------------------------------------------------------
         // Set / Unset Active

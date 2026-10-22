@@ -35,7 +35,7 @@ namespace litl
         return true;
     }
 
-    bool ActionMap::update(Authority<InputActions> auth, Input const& input, ProcessedInputTracker& inputTracker) noexcept
+    bool ActionMap::update(Authority<InputActions> auth, Input const& input, ProcessedInputTracker& inputTracker, std::vector<ActionMapBinding>& triggeredBindings) noexcept
     {
         // Clear all input source states
         for (auto& actionBindings : m_actionBindings)
@@ -58,8 +58,7 @@ namespace litl
                 {
                     actionBindings.state = state;                       // Record the first active input state into the overall ActionBindings for the key
                     inputTracker.markProcessed(binding.source);         // Mark the individual input source as processed
-
-                    // ... todo ... invoke callbacks ...
+                    triggeredBindings.push_back(ActionMapBinding{ .actionMapId = m_id, .bindingId = binding.id });
 
                     break;                                              // Exit this action bindings once we have found a single active input source
                 }

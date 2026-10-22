@@ -35,6 +35,7 @@ namespace litl
         std::vector<ActionMapHandle> actionMapStack;
         std::vector<InputActionCommand> actionMapCommands;
         std::vector<bool> actionMapProcessed;
+        std::vector<ActionMapBinding> triggeredActionMaps;
         std::mutex commandsMutex{};
         ProcessedInputTracker processedInputTracker{};
 
@@ -128,6 +129,8 @@ namespace litl
 
         void updateActionMapsWithInput(Input const& input) noexcept
         {
+            triggeredActionMaps.clear();
+
             if (allActionMapHandles.empty())
             {
                 return;
@@ -155,7 +158,7 @@ namespace litl
 
                 if (actionMap != nullptr)
                 {
-                    if (!actionMap->update({}, input, processedInputTracker))
+                    if (!actionMap->update({}, input, processedInputTracker, triggeredActionMaps))
                     {
                         // This action map does not allow propagation of input down the stack.
                         break;
@@ -239,6 +242,24 @@ namespace litl
             }
         }
 
+        void triggerCallbacks(ServiceProvider& services, InputCallbacks& callbacks) noexcept
+        {
+            if (triggeredActionMaps.empty())
+            {
+                return;
+            }
+
+            for (auto& triggeredActionMap : triggeredActionMaps)
+            {
+                const auto inputState = getInputState(getMap(triggeredActionMap.actionMapId), triggeredActionMap.bindingId);
+
+                if (inputState.has_value() && inputState.value().isActive())
+                {
+                    callbacks.invokeActionMapEvent({}, services, triggeredActionMap.actionMapId, triggeredActionMap.bindingId, inputState.value());
+                }
+            }
+        }
+
         // ---------------------------------------------------------------------------------
         // Utility
         // ---------------------------------------------------------------------------------
@@ -318,6 +339,11 @@ namespace litl
     void InputActions::update(Input const& input) noexcept
     {
         m_pImpl->update(input);
+    }
+
+    void InputActions::triggerCallbacks(ServiceProvider& services, InputCallbacks& callbacks) noexcept
+    {
+        m_pImpl->triggerCallbacks(services, callbacks);
     }
 
     ActionMapHandle InputActions::getMap(StringId id) noexcept

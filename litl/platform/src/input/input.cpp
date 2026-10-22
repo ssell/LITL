@@ -75,7 +75,7 @@ namespace litl
         m_inputActions.update(*this);
     }
 
-    void Input::triggerCallbacks(ServiceProvider& services, InputCallbacks& callbacks) const noexcept
+    void Input::triggerCallbacks(ServiceProvider& services, InputCallbacks& callbacks) noexcept
     {
         callbacks.processDeferredCommands({});
 
@@ -120,6 +120,9 @@ namespace litl
         {
             callbacks.invokeMouseScrollEvent({}, services, m_currFrameState.mouse.position, m_currFrameState.mouse.scroll);
         }
+
+        // Trigger action map callbacks
+        m_inputActions.triggerCallbacks(services, callbacks);
     }
 
     void Input::setCursorMode(CursorMode mode) const noexcept

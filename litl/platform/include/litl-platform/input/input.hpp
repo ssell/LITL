@@ -69,7 +69,7 @@ namespace litl
         /// <summary>
         /// 
         /// </summary>
-        void triggerCallbacks(ServiceProvider& services, InputCallbacks& callbacks) const noexcept;
+        void triggerCallbacks(ServiceProvider& services, InputCallbacks& callbacks) noexcept;
 
         /// <summary>
         /// 

@@ -13,6 +13,7 @@ namespace litl::samples
                 },
                 .input = InputConfiguration {
                     .actionMaps = {
+                        // UI action map with a normal cursor that listens for a click. On click transitions to the gameplay map.
                         ActionMapDescriptor{
                             .name = "ui",
                             .propagateActions = false,
@@ -21,6 +22,7 @@ namespace litl::samples
                                 { "click", { InputSource::fromMouseButton(MouseButton::Left) } }
                             }
                         },
+                        // Gameplay map for capturing events relevant to the free-fly camera. On "escape" event, returns back to the UI map to free the cursor.
                         ActionMapDescriptor{
                             .name = "gameplay",
                             .propagateActions = false,

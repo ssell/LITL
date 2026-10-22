@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "litl-platform/input/inputCallbacks.hpp"
+#include "litl-platform/input/inputActions.hpp"
 
 namespace litl
 {
@@ -222,6 +223,29 @@ namespace litl
             return false;
         }
 
+        [[nodiscard]] bool processActionMapResultAndShouldConsume(InputCallbackResult result, CallbackId id, StringId actionMapId, StringId bindingId) noexcept
+        {
+            if ((result == InputCallbackResult::ConsumeAndRemove) || (result == InputCallbackResult::ContinueAndRemove))
+            {
+                addDeferredCommand(CallbackCommand{
+                    .id = id,
+                    .commandType = CallbackCommandType::Remove,
+                    .eventType = InputCallbackType::ActionMap,
+                    .event = OnActionMapEvent {
+                        .actionMapId = actionMapId,
+                        .bindingId = bindingId
+                    }
+                });
+            }
+
+            if ((result == InputCallbackResult::Consume) || (result == InputCallbackResult::ConsumeAndRemove))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         void invokeKeyEvent(ServiceProvider& services, Key key, bool pressed, bool released, bool down) noexcept
         {
             if (!pressed && !released)
@@ -345,6 +369,30 @@ namespace litl
                 const auto result = event.callback(services, mouse, scroll);
 
                 if (processResultAndShouldConsume(result, InputCallbackType::MouseScroll, event.id, Constants::uint32_null_index))
+                {
+                    event.alive = false;
+                    break;
+                }
+            }
+        }
+
+        void invokeActionMapEvent(ServiceProvider& services, StringId actionMapId, StringId bindingId, InputSourceState inputState) noexcept
+        {
+            if (actionMapId.isNull() || bindingId.isNull() || !inputState.isActive())
+            {
+                return;
+            }
+
+            for (auto& event : onActionMapEvents[actionMapId][bindingId])
+            {
+                if (!event.alive)
+                {
+                    continue;
+                }
+
+                const auto result = event.callback(services, inputState);
+
+                if (processActionMapResultAndShouldConsume(result, event.id, actionMapId, bindingId))
                 {
                     event.alive = false;
                     break;
@@ -540,8 +588,8 @@ namespace litl
         m_pImpl->invokeMouseScrollEvent(services, mouse, scroll);
     }
 
-    void InputCallbacks::invokeActionMapEvent(Authority<Input> auth, ServiceProvider& services, InputSourceState inputState) noexcept
+    void InputCallbacks::invokeActionMapEvent(Authority<InputActions> auth, ServiceProvider& services, StringId actionMapId, StringId bindingId, InputSourceState inputState) noexcept
     {
-        // ... todo ...
+        m_pImpl->invokeActionMapEvent(services, actionMapId, bindingId, inputState);
     }
 }

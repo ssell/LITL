@@ -15,6 +15,7 @@ namespace litl
     class EngineCallbacks;
     class ServiceProvider;
     class Input;
+    class InputCallbacks;
     struct InputConfiguration;
 
     /// <summary>
@@ -61,6 +62,11 @@ namespace litl
         /// Updates the action callbacks once per frame.
         /// </summary>
         void update(Input const& input) noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        void triggerCallbacks(ServiceProvider& services, InputCallbacks& callbacks) noexcept;
 
         /// <summary>
         /// Retrieves the action map with the given id.
