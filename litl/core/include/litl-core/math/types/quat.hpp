@@ -256,7 +256,7 @@ namespace litl
 
         [[nodiscard]] constexpr vec3 forward() const noexcept
         {
-            return vec3{ glm::normalize(value * glm::vec3(0.0f, 0.0f, -1.0f)) };
+            return vec3{ glm::normalize(value * glm::vec3(0.0f, 0.0f, 1.0f)) };
         }
 
         [[nodiscard]] constexpr vec3 right() const noexcept

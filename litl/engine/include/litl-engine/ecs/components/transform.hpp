@@ -74,6 +74,21 @@ namespace litl
             return rotation;
         }
 
+        [[nodiscard]] vec3 forward() const noexcept
+        {
+            return rotation.forward();
+        }
+
+        [[nodiscard]] vec3 right() const noexcept
+        {
+            return rotation.right();
+        }
+
+        [[nodiscard]] vec3 up() const noexcept
+        {
+            return rotation.up();
+        }
+
         [[nodiscard]] vec3 getPosition() const noexcept
         {
             return position;

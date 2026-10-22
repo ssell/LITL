@@ -30,38 +30,35 @@ namespace litl::samples
         void update(SystemData const& data, Entity entity, FreeFly const& freeFly, Transform& transform)
         {
             const auto speed = data.deltaTime * freeFly.speed;
-            const auto forward = vec3::right();                     // todo get actual forward vector, etc.
-            const auto right = -vec3::forward();
-            const auto up = vec3::up();
 
             if (auto forwardState = m_pInputActions->getInputState(m_actionMapHandle, "forward"_sid); forwardState.has_value() && (forwardState.value().held == true))
             {
-                transform.translate(forward * speed);
+                transform.translate(transform.forward() * speed);
             }
 
             if (auto backwardState = m_pInputActions->getInputState(m_actionMapHandle, "backward"_sid); backwardState.has_value() && (backwardState.value().held == true))
             {
-                transform.translate(-forward * speed);
+                transform.translate(-transform.forward() * speed);
             }
 
             if (auto leftState = m_pInputActions->getInputState(m_actionMapHandle, "left"_sid); leftState.has_value() && (leftState.value().held == true))
             {
-                transform.translate(-right * speed);
+                transform.translate(-transform.right() * speed);
             }
 
             if (auto rightState = m_pInputActions->getInputState(m_actionMapHandle, "right"_sid); rightState.has_value() && (rightState.value().held == true))
             {
-                transform.translate(right * speed);
+                transform.translate(transform.right() * speed);
             }
 
             if (auto upState = m_pInputActions->getInputState(m_actionMapHandle, "up"_sid); upState.has_value() && (upState.value().held == true))
             {
-                transform.translate(up * speed);
+                transform.translate(transform.up() * speed);
             }
 
             if (auto downState = m_pInputActions->getInputState(m_actionMapHandle, "down"_sid); downState.has_value() && (downState.value().held == true))
             {
-                transform.translate(-up * speed);
+                transform.translate(-transform.up() * speed);
             }
 
         }
