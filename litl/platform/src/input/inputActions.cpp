@@ -89,12 +89,22 @@ namespace litl
         void update(Input const& input) noexcept
         {
             processCommands(input);
+
+            updateActionsMaps();
             updateActionMapsWithInput(input);
+            postUpdateActionMaps();
         }
 
         void processCommands(Input const& input) noexcept
         {
-            if (actionMapCommands.empty())
+            std::vector<InputActionCommand> copiedCommands;
+
+            {
+                std::scoped_lock lock{ commandsMutex };
+                copiedCommands = std::move(actionMapCommands);
+            }
+
+            if (copiedCommands.empty())
             {
                 return;
             }
@@ -102,12 +112,10 @@ namespace litl
             const ActionMapHandle prevTopHandle = (actionMapStack.empty() ? ActionMapHandle{} : actionMapStack.back());
 
             {
-                for (auto& command : actionMapCommands)
+                for (auto& command : copiedCommands)
                 {
                     processCommand(command);
                 }
-
-                actionMapCommands.clear();
             }
 
             const ActionMapHandle currTopHandle = (actionMapStack.empty() ? ActionMapHandle{} : actionMapStack.back());
@@ -124,6 +132,15 @@ namespace litl
                 {
                     input.setCursorMode(currDescriptor.cursorMode);
                 }
+            }
+        }
+
+        void updateActionsMaps() noexcept
+        {
+            for (auto actionMapHandle : allActionMapHandles)
+            {
+                auto* actionMap = actionMapPool.get(actionMapHandle);
+                actionMap->onUpdate({});
             }
         }
 
@@ -156,14 +173,20 @@ namespace litl
 
                 auto* actionMap = actionMapPool.get(*actionMapIter);
 
-                if (actionMap != nullptr)
+                if (!actionMap->updateInput({}, input, processedInputTracker, triggeredActionMaps))
                 {
-                    if (!actionMap->update({}, input, processedInputTracker, triggeredActionMaps))
-                    {
-                        // This action map does not allow propagation of input down the stack.
-                        break;
-                    }
+                    // This action map does not allow propagation of input down the stack.
+                    break;
                 }
+            }
+        }
+
+        void postUpdateActionMaps() noexcept
+        {
+            for (auto actionMapHandle : allActionMapHandles)
+            {
+                auto* actionMap = actionMapPool.get(actionMapHandle);
+                actionMap->onPostUpdate({});
             }
         }
 
@@ -184,34 +207,9 @@ namespace litl
             }
         }
 
-        void setTopActive(bool isActive) noexcept
-        {
-            if (actionMapStack.empty())
-            {
-                return;
-            }
-
-            const ActionMapHandle topHandle = actionMapStack.back();
-            ActionMap* topActionMap = actionMapPool.get(topHandle);
-
-            if (topActionMap != nullptr)
-            {
-                if (isActive)
-                {
-                    topActionMap->setActiveMap({});
-                }
-                else
-                {
-                    topActionMap->unsetActiveMap({});
-                }
-            }
-        }
-
         void processCommandPush(InputActionCommand const& command) noexcept
         {
-            setTopActive(false);
             actionMapStack.push_back(command.handle);
-            setTopActive(true);
         }
 
         void processCommandPop(InputActionCommand const& command) noexcept
@@ -224,9 +222,7 @@ namespace litl
             if (actionMapStack.back() == command.handle)
             {
                 // Requesting to pop the top.
-                setTopActive(false);
                 actionMapStack.pop_back();
-                setTopActive(true);
             }
             else
             {
@@ -251,11 +247,11 @@ namespace litl
 
             for (auto& triggeredActionMap : triggeredActionMaps)
             {
-                const auto inputState = getInputState(getMap(triggeredActionMap.actionMapId), triggeredActionMap.bindingId);
+                const auto actionState = getActionState(getMap(triggeredActionMap.actionMapId), triggeredActionMap.bindingId);
 
-                if (inputState.has_value() && inputState.value().isActive())
+                if (actionState.has_value() && actionState.value().triggered)
                 {
-                    callbacks.invokeActionMapEvent({}, services, triggeredActionMap.actionMapId, triggeredActionMap.bindingId, inputState.value());
+                    callbacks.invokeActionMapEvent({}, services, triggeredActionMap.actionMapId, triggeredActionMap.bindingId, actionState.value());
                 }
             }
         }
@@ -307,7 +303,7 @@ namespace litl
             });
         }
 
-        [[nodiscard]] std::optional<InputSourceState> getInputState(ActionMapHandle handle, StringId binding) noexcept
+        [[nodiscard]] std::optional<ActionMapState> getActionState(ActionMapHandle handle, StringId binding) noexcept
         {
             ActionMap* actionMap = actionMapPool.get(handle);
 
@@ -361,8 +357,8 @@ namespace litl
         m_pImpl->popMap(handle);
     }
 
-    std::optional<InputSourceState> InputActions::getInputState(ActionMapHandle handle, StringId binding) noexcept
+    std::optional<ActionMapState> InputActions::getActionState(ActionMapHandle handle, StringId binding) noexcept
     {
-        return m_pImpl->getInputState(handle, binding);
+        return m_pImpl->getActionState(handle, binding);
     }
 }

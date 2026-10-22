@@ -192,7 +192,7 @@ namespace litl
         /// <summary>
         /// Returns the current state of the specified input binding if it exists.
         /// </summary>
-        [[nodiscard]] std::optional<InputSourceState> getInputState(ActionMapHandle handle, StringId binding) noexcept;
+        [[nodiscard]] std::optional<ActionMapState> getActionState(ActionMapHandle handle, StringId binding) noexcept;
 
         /// <summary>
         /// Returns the internal context.

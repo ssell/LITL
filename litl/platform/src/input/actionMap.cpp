@@ -35,18 +35,29 @@ namespace litl
         return true;
     }
 
-    bool ActionMap::update(Authority<InputActions> auth, Input const& input, ProcessedInputTracker& inputTracker, std::vector<ActionMapBinding>& triggeredBindings) noexcept
+    void ActionMap::onUpdate(Authority<InputActions> auth)
+    {
+        // Simply set all bindings .live to false. They will be set to true if visited in updateInput.
+        // All other states will be updated in onPostUpdate once input has been processed.
+        for (auto& bindings : m_actionBindings)
+        {
+            bindings.actionState.live = false;
+        }
+    }
+
+    bool ActionMap::updateInput(Authority<InputActions> auth, Input const& input, ProcessedInputTracker& inputTracker, std::vector<ActionMapBinding>& triggeredBindings) noexcept
     {
         // Clear all input source states
         for (auto& actionBindings : m_actionBindings)
         {
-            actionBindings.state = {};
+            actionBindings.inputState = {};
         }
     
         // Update input source states with the latest input
         for (const auto key : m_actionBindingKeys)
         {
             auto& actionBindings = getActionBindings(key);
+            actionBindings.actionState.live = true;
 
             for (auto& binding : actionBindings.bindings)
             {
@@ -54,9 +65,9 @@ namespace litl
                 // For example, if both Key:W and Key::Up are bound to "MoveForward" then continue until one of those has input.
                 const auto state = input.getGenericInputSourceState(binding.source);
 
-                if (state.isActive())
+                if (state.isActive() && !inputTracker.isProcessed(binding.source))
                 {
-                    actionBindings.state = state;                       // Record the first active input state into the overall ActionBindings for the key
+                    actionBindings.inputState = state;                       // Record the first active input state into the overall ActionBindings for the key
                     inputTracker.markProcessed(binding.source);         // Mark the individual input source as processed
                     triggeredBindings.push_back(ActionMapBinding{ .actionMapId = m_id, .bindingId = binding.id });
 
@@ -66,6 +77,21 @@ namespace litl
         }
 
         return m_descriptor.propagateActions;
+    }
+
+    void ActionMap::onPostUpdate(Authority<InputActions> auth) noexcept
+    {
+        for (auto& bindings : m_actionBindings)
+        {
+            const ActionMapState prevState = bindings.actionState;
+            ActionMapState& currState = bindings.actionState;
+
+            currState.held = currState.live && bindings.inputState.held;
+            currState.pressed = (currState.held && !prevState.held) || (currState.live && bindings.inputState.pressed);
+            currState.released = (prevState.held && !currState.held) || (currState.live && bindings.inputState.released && !currState.held);
+            currState.value = (currState.live ? bindings.inputState.xyDelta : vec2{});
+            currState.triggered = currState.pressed || currState.released || !currState.value.isZeroed();       // Note: we do not mark triggered for .held. This matches the behavior of our raw input callbacks.
+        }
     }
 
     bool ActionMap::bind(std::string_view name, InputSource source) noexcept
@@ -105,22 +131,6 @@ namespace litl
 
         return false;
     }
-    
-    void ActionMap::setActiveMap(Authority<InputActions> auth) noexcept
-    {
-        // ... nothing here yet, future-proofing placeholder ...
-    }
-
-    void ActionMap::unsetActiveMap(Authority<InputActions> auth) noexcept
-    {
-        for (auto& actionBindings : m_actionBindings)
-        {
-            actionBindings.state.released = (actionBindings.state.pressed || actionBindings.state.held) && !actionBindings.state.released;
-            actionBindings.state.pressed = false;
-            actionBindings.state.held = false;
-            actionBindings.state.xyDelta.setZero();
-        }
-    }
 
     ActionMapDescriptor const& ActionMap::getDescriptor() const noexcept
     {
@@ -137,7 +147,7 @@ namespace litl
         return m_descriptor.name;
     }
 
-    std::optional<InputSourceState> ActionMap::getBindingState(StringId bindingId) const noexcept
+    std::optional<ActionMapState> ActionMap::getBindingState(StringId bindingId) const noexcept
     {
         auto find = m_actionBindingsMap.find(bindingId);
 
@@ -146,7 +156,7 @@ namespace litl
             return std::nullopt;
         }
 
-        return m_actionBindings[find->second].state;
+        return m_actionBindings[find->second].actionState;
     }
 
     ActionMap::ActionBindings& ActionMap::getActionBindings(StringId id) noexcept

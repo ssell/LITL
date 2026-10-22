@@ -391,9 +391,9 @@ namespace litl
             }
         }
 
-        void invokeActionMapEvent(ServiceProvider& services, StringId actionMapId, StringId bindingId, InputSourceState inputState) noexcept
+        void invokeActionMapEvent(ServiceProvider& services, StringId actionMapId, StringId bindingId, ActionMapState actionState) noexcept
         {
-            if (actionMapId.isNull() || bindingId.isNull() || !inputState.isActive())
+            if (actionMapId.isNull() || bindingId.isNull() || !actionState.triggered)
             {
                 return;
             }
@@ -405,7 +405,7 @@ namespace litl
                     continue;
                 }
 
-                const auto result = event.callback(services, inputState);
+                const auto result = event.callback(services, actionState);
 
                 if (isRemove(result))
                 {
@@ -628,8 +628,8 @@ namespace litl
         m_pImpl->invokeMouseScrollEvent(services, mouse, scroll);
     }
 
-    void InputCallbacks::invokeActionMapEvent(Authority<InputActions> auth, ServiceProvider& services, StringId actionMapId, StringId bindingId, InputSourceState inputState) noexcept
+    void InputCallbacks::invokeActionMapEvent(Authority<InputActions> auth, ServiceProvider& services, StringId actionMapId, StringId bindingId, ActionMapState actionState) noexcept
     {
-        m_pImpl->invokeActionMapEvent(services, actionMapId, bindingId, inputState);
+        m_pImpl->invokeActionMapEvent(services, actionMapId, bindingId, actionState);
     }
 }

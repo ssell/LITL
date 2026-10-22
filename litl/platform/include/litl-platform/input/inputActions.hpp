@@ -8,6 +8,7 @@
 #include "litl-core/stringId.hpp"
 #include "litl-platform/input/inputSource.hpp"
 #include "litl-platform/input/actionMapHandle.hpp"
+#include "litl-platform/input/actionMapState.hpp"
 
 namespace litl
 {
@@ -88,7 +89,7 @@ namespace litl
         /// <summary>
         /// Returns the current state of the specified input binding if it exists.
         /// </summary>
-        [[nodiscard]] std::optional<InputSourceState> getInputState(ActionMapHandle handle, StringId binding) noexcept;
+        [[nodiscard]] std::optional<ActionMapState> getActionState(ActionMapHandle handle, StringId binding) noexcept;
 
     private:
 

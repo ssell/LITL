@@ -32,7 +32,7 @@ namespace litl::samples
                                 { "backward", { InputSource::fromKey(Key::S), InputSource::fromKey(Key::Down) } },
                                 { "left", { InputSource::fromKey(Key::A), InputSource::fromKey(Key::Left) } },
                                 { "right", { InputSource::fromKey(Key::D), InputSource::fromKey(Key::Right) } },
-                                { "up", { InputSource::fromKey(Key::E) } },
+                                { "up", { InputSource::fromKey(Key::E), InputSource::fromKey(Key::Space) }},
                                 { "down", { InputSource::fromKey(Key::Q) } },
                                 { "look", { InputSource::fromMouseDelta() } },
                                 { "sprint", {InputSource::fromKey(Key::LeftShift), InputSource::fromKey(Key::RightShift) } },
@@ -54,9 +54,9 @@ namespace litl::samples
 
     void configureInputCallbacks(std::shared_ptr<InputCallbacks> callbacks)
     {
-        callbacks->registerActionMapCallback("ui"_sid, "click"_sid, [](ServiceProvider& services, InputSourceState inputState)
+        callbacks->registerActionMapCallback("ui"_sid, "click"_sid, [](ServiceProvider& services, ActionMapState actionState)
             {
-                if (inputState.released)
+                if (actionState.released)
                 {
                     auto input = services.get<Input>();
                     input->pushMap(input->getMap("gameplay"_sid));
@@ -65,9 +65,9 @@ namespace litl::samples
                 return InputCallbackResult::Continue;
             });
 
-        callbacks->registerActionMapCallback("gameplay"_sid, "escape"_sid, [](ServiceProvider& services, InputSourceState inputState)
+        callbacks->registerActionMapCallback("gameplay"_sid, "escape"_sid, [](ServiceProvider& services, ActionMapState actionState)
             {
-                if (inputState.released)
+                if (actionState.released)
                 {
                     auto input = services.get<Input>();
                     input->popMap(input->getMap("gameplay"_sid));

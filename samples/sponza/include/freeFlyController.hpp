@@ -11,7 +11,7 @@ namespace litl::samples
 {
     struct FreeFlyController
     {
-        float speed{ 1.0f };                        // Base movement speed modifier.
+        float speed{ 2.0f };                        // Base movement speed modifier.
         float sprint{ 3.0f };                       // Movement speed modifier when the "sprint" input is held.
         float horizontalSensitivity{ 0.085f };      // Modifier applied to rotation from "look".x
         float verticalSensitivity{ 0.065f };        // Modifier applied to rotation from "look".y

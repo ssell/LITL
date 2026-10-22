@@ -10,6 +10,7 @@
 #include "litl-platform/input/inputEnums.hpp"
 #include "litl-platform/input/inputState.hpp"
 #include "litl-platform/input/inputSource.hpp"
+#include "litl-platform/input/actionMapState.hpp"
 
 namespace litl
 {
@@ -59,7 +60,7 @@ namespace litl
     using OnMouseEnterExitFunc = inline_function<InputCallbackResult(ServiceProvider& services, MousePosition const& mouse)>;
     using OnMouseMoveFunc = inline_function<InputCallbackResult(ServiceProvider& services, MousePosition const& mouse)>;
     using OnMouseScrollFunc = inline_function<InputCallbackResult(ServiceProvider& services, MousePosition const& mouse, vec2 scroll)>;
-    using OnActionMapFunc = inline_function<InputCallbackResult(ServiceProvider& services, InputSourceState inputState)>;
+    using OnActionMapFunc = inline_function<InputCallbackResult(ServiceProvider& services, ActionMapState actionState)>;
 
     /// <summary>
     /// Collection of input related callbacks that can be registered.
@@ -92,7 +93,7 @@ namespace litl
         void invokeMouseEnterExitEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse) noexcept;
         void invokeMouseMoveEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse) noexcept;
         void invokeMouseScrollEvent(Authority<Input> auth, ServiceProvider& services, MousePosition const& mouse, vec2 scroll) noexcept;
-        void invokeActionMapEvent(Authority<InputActions> auth, ServiceProvider& services, StringId actionMapId, StringId bindingId, InputSourceState inputState) noexcept;
+        void invokeActionMapEvent(Authority<InputActions> auth, ServiceProvider& services, StringId actionMapId, StringId bindingId, ActionMapState actionState) noexcept;
 
     private:
 

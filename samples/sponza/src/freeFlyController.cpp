@@ -38,32 +38,32 @@ namespace litl::samples
     {
         vec3 translation{};
 
-        if (auto forwardState = m_pInput->getInputState(m_actionMapHandle, "forward"_sid); forwardState.has_value() && forwardState.value().held)
+        if (auto forwardState = m_pInput->getActionState(m_actionMapHandle, "forward"_sid); forwardState.has_value() && forwardState.value().held)
         {
             translation += transform.forward();
         }
 
-        if (auto backwardState = m_pInput->getInputState(m_actionMapHandle, "backward"_sid); backwardState.has_value() && backwardState.value().held)
+        if (auto backwardState = m_pInput->getActionState(m_actionMapHandle, "backward"_sid); backwardState.has_value() && backwardState.value().held)
         {
             translation += -transform.forward();
         }
 
-        if (auto leftState = m_pInput->getInputState(m_actionMapHandle, "left"_sid); leftState.has_value() && leftState.value().held)
+        if (auto leftState = m_pInput->getActionState(m_actionMapHandle, "left"_sid); leftState.has_value() && leftState.value().held)
         {
             translation += -transform.right();
         }
 
-        if (auto rightState = m_pInput->getInputState(m_actionMapHandle, "right"_sid); rightState.has_value() && rightState.value().held)
+        if (auto rightState = m_pInput->getActionState(m_actionMapHandle, "right"_sid); rightState.has_value() && rightState.value().held)
         {
             translation += transform.right();
         }
 
-        if (auto upState = m_pInput->getInputState(m_actionMapHandle, "up"_sid); upState.has_value() && upState.value().held)
+        if (auto upState = m_pInput->getActionState(m_actionMapHandle, "up"_sid); upState.has_value() && upState.value().held)
         {
             translation += transform.up();
         }
 
-        if (auto downState = m_pInput->getInputState(m_actionMapHandle, "down"_sid); downState.has_value() && downState.value().held)
+        if (auto downState = m_pInput->getActionState(m_actionMapHandle, "down"_sid); downState.has_value() && downState.value().held)
         {
             translation += -transform.up();
         }
@@ -72,7 +72,7 @@ namespace litl::samples
         {
             float speed = data.deltaTime * controller.speed;
 
-            if (auto sprintState = m_pInput->getInputState(m_actionMapHandle, "sprint"_sid); sprintState.has_value() && sprintState.value().held)
+            if (auto sprintState = m_pInput->getActionState(m_actionMapHandle, "sprint"_sid); sprintState.has_value() && sprintState.value().held)
             {
                 speed *= controller.sprint;
             }
@@ -83,15 +83,15 @@ namespace litl::samples
 
     void FreeFlyControllerSystem::updateYawPitch(SystemData const& data, FreeFlyController& controller, Transform& transform)
     {
-        const auto mouseDeltaState = m_pInput->getInputState(m_actionMapHandle, "look"_sid);
+        const auto mouseDeltaState = m_pInput->getActionState(m_actionMapHandle, "look"_sid);
 
-        if (!mouseDeltaState.has_value() || mouseDeltaState->xyDelta.isZeroed())
+        if (!mouseDeltaState.has_value() || mouseDeltaState->value.isZeroed())
         {
             return;
         }
 
-        controller.yaw += mouseDeltaState->xyDelta.x() * controller.horizontalSensitivity;
-        controller.pitch += (mouseDeltaState->xyDelta.y() * controller.verticalSensitivity) * (controller.invertY ? -1.0f : 1.0f);
+        controller.yaw += mouseDeltaState->value.x() * controller.horizontalSensitivity;
+        controller.pitch += (mouseDeltaState->value.y() * controller.verticalSensitivity) * (controller.invertY ? -1.0f : 1.0f);
         controller.pitch = clamp(controller.pitch, controller.minPitch, controller.maxPitch);
 
         transform.setRotation(quat::fromEuler(controller.pitch, controller.yaw, 0.0f));

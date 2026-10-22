@@ -264,8 +264,8 @@ namespace litl
         m_inputActions.popMap(handle);
     }
 
-    std::optional<InputSourceState> Input::getInputState(ActionMapHandle handle, StringId binding) noexcept
+    std::optional<ActionMapState> Input::getActionState(ActionMapHandle handle, StringId binding) noexcept
     {
-        return m_inputActions.getInputState(handle, binding);
+        return m_inputActions.getActionState(handle, binding);
     }
 }

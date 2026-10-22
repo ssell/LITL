@@ -7,7 +7,7 @@ namespace litl
         constexpr uint32_t OffsetKey = 0u;
         constexpr uint32_t OffsetMouseButton = static_cast<uint32_t>(Key::Count);
         constexpr uint32_t OffsetGamepadButton = OffsetMouseButton + static_cast<uint32_t>(MouseButton::Count);
-        constexpr uint32_t OffsetGamepadAxis = OffsetGamepadButton + static_cast<uint32_t>(GamepadAxis::Count);
+        constexpr uint32_t OffsetGamepadAxis = OffsetGamepadButton + static_cast<uint32_t>(GamepadButton::Count);
 
         [[nodiscard]] uint32_t getGeneralIndex(InputSource source) noexcept
         {
@@ -89,9 +89,11 @@ namespace litl
 
         case InputSourceType::MouseDelta:
             m_processedMouseDelta = true;
+            break;
 
         case InputSourceType::MouseScroll:
             m_processedMouseScroll = true;
+            break;
 
         default:
             break;

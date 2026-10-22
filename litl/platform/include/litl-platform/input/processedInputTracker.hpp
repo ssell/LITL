@@ -18,9 +18,9 @@ namespace litl
 
     private:
 
-        static constexpr uint32_t TotalInputSources = static_cast<uint32_t>(Key::Count) + static_cast<uint32_t>(MouseButton::Count) + static_cast<uint32_t>(GamepadButton::Count);
+        static constexpr uint32_t TotalInputSources = static_cast<uint32_t>(Key::Count) + static_cast<uint32_t>(MouseButton::Count) + static_cast<uint32_t>(GamepadButton::Count) + static_cast<uint32_t>(GamepadAxis::Count);
         
-        std::array<bool, TotalInputSources> m_processedGeneral;
+        std::array<bool, TotalInputSources> m_processedGeneral{};
         bool m_processedMouseDelta{ false };
         bool m_processedMouseScroll{ false };
     };

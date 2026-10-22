@@ -11,6 +11,7 @@
 #include "litl-core/stringId.hpp"
 #include "litl-core/math/types/vec2.hpp"
 #include "litl-platform/input/actionMapDescriptor.hpp"
+#include "litl-platform/input/actionMapState.hpp"
 #include "litl-platform/input/processedInputTracker.hpp"
 
 namespace litl
@@ -24,14 +25,6 @@ namespace litl
         Button = 1u,
         Axis1D = 2u,
         Axis2D = 3u
-    };
-
-    struct ActionState
-    {
-        bool pressed{ false };
-        bool released{ false };
-        bool down{ false };
-        vec2 value{};
     };
 
     struct ActionMapBinding
@@ -56,27 +49,20 @@ namespace litl
         [[nodiscard]] bool create(Authority<InputActions> auth, ActionMapDescriptor const& descriptor) noexcept;
 
         /// <summary>
-        /// Updates the input state of the action map and invokes any callbacks.
-        /// Returns true if propagation of input should continue.
+        /// Invoked for all action maps each update.
         /// </summary>
-        [[nodiscard]] bool update(Authority<InputActions> auth, Input const& input, ProcessedInputTracker& inputTracker, std::vector<ActionMapBinding>& triggeredBindings) noexcept;
-
-        // ---------------------------------------------------------------------------------
-        // Set / Unset Active
-        // ---------------------------------------------------------------------------------
+        void onUpdate(Authority<InputActions> auth);
 
         /// <summary>
-        /// Sets the map as the active map.
+        /// Updates the input state of the action map and invokes any callbacks. Returns true if propagation of input should continue.
+        /// This is only invoked on action maps visited during the stack traversal.
         /// </summary>
-        void setActiveMap(Authority<InputActions> auth) noexcept;
+        [[nodiscard]] bool updateInput(Authority<InputActions> auth, Input const& input, ProcessedInputTracker& inputTracker, std::vector<ActionMapBinding>& triggeredBindings) noexcept;
 
         /// <summary>
-        /// Unsets the map as the active map. This causes the map to mimic cancellation of any active actions.
-        /// For example, any relevant keys being held down are simulated to be released. This prevents unwanted
-        /// actions such as "Move Forward" from continuing indefinitely while a menu (separate action map) is open on top.
+        /// Invoked for all action maps following the input update to sync their action states.
         /// </summary>
-        /// <param name="auth"></param>
-        void unsetActiveMap(Authority<InputActions> auth) noexcept;
+        void onPostUpdate(Authority<InputActions> auth) noexcept;
 
         // ---------------------------------------------------------------------------------
         // Getters
@@ -97,7 +83,7 @@ namespace litl
         /// </summary>
         [[nodiscard]] std::string_view getName() const noexcept;
 
-        [[nodiscard]] std::optional<InputSourceState> getBindingState(StringId bindingId) const noexcept;
+        [[nodiscard]] std::optional<ActionMapState> getBindingState(StringId bindingId) const noexcept;
 
     private:
 
@@ -114,7 +100,8 @@ namespace litl
         {
             std::string name;
             StringId id;
-            InputSourceState state{};
+            ActionMapState actionState{};
+            InputSourceState inputState{};
             std::array<ActionBinding, BindingsPerId> bindings;
         };
 
