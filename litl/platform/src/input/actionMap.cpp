@@ -108,12 +108,18 @@ namespace litl
     
     void ActionMap::setActiveMap(Authority<InputActions> auth) noexcept
     {
-        // ... todo ...
+        // ... nothing here yet, future-proofing placeholder ...
     }
 
     void ActionMap::unsetActiveMap(Authority<InputActions> auth) noexcept
     {
-        // ... todo ...
+        for (auto& actionBindings : m_actionBindings)
+        {
+            actionBindings.state.released = (actionBindings.state.pressed || actionBindings.state.held) && !actionBindings.state.released;
+            actionBindings.state.pressed = false;
+            actionBindings.state.held = false;
+            actionBindings.state.xyDelta.setZero();
+        }
     }
 
     ActionMapDescriptor const& ActionMap::getDescriptor() const noexcept

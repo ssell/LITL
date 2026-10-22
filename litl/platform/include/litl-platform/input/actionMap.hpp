@@ -66,7 +66,7 @@ namespace litl
         // ---------------------------------------------------------------------------------
 
         /// <summary>
-        /// Sets the map as the active map. This updates the cursor mode, etc.
+        /// Sets the map as the active map.
         /// </summary>
         void setActiveMap(Authority<InputActions> auth) noexcept;
 
