@@ -81,6 +81,16 @@ namespace litl
         {
             return (pressed || held || released || !xyDelta.isZeroed());
         }
+
+        [[nodiscard]] static InputSourceState merge(InputSourceState const& a, InputSourceState const& b)
+        {
+            return InputSourceState{
+                .pressed = (a.pressed || b.pressed),
+                .held = (a.held || b.held),
+                .released = (a.released || b.released),
+                .xyDelta = (a.xyDelta + b.xyDelta)
+            };
+        }
     };
 }
 

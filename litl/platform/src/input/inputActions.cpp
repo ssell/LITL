@@ -16,8 +16,8 @@ namespace litl
         enum class InputActionCommandType : uint8_t
         {
             Unknown = 0u,
-            Push    = 1u,
-            Pop     = 2u
+            Push = 1u,
+            Pop = 2u
         };
 
         struct InputActionCommand
@@ -33,7 +33,8 @@ namespace litl
         StringIdMap<ActionMapHandle> actionMapLookup;
         std::vector<ActionMapHandle> allActionMapHandles;               // This is also tracked by actionMapPool but eliminates the need for us to call getAllHandles each frame since maps are static once they exist.
         std::vector<ActionMapHandle> actionMapStack;
-        std::vector<InputActionCommand> actionMapCommands;
+        std::vector<InputActionCommand> writeActionMapCommands;
+        std::vector<InputActionCommand> readActionMapCommands;
         std::vector<bool> actionMapProcessed;
         std::vector<ActionMapBinding> triggeredActionMaps;
         std::mutex commandsMutex{};
@@ -46,6 +47,8 @@ namespace litl
         void setup(InputConfiguration const& config) noexcept
         {
             allActionMapHandles.reserve(config.actionMaps.size());
+            writeActionMapCommands.reserve(32u);
+            readActionMapCommands.reserve(32u);
 
             for (auto& descriptor : config.actionMaps)
             {
@@ -98,14 +101,14 @@ namespace litl
 
         void processCommands(Input const& input) noexcept
         {
-            std::vector<InputActionCommand> copiedCommands;
+            readActionMapCommands.clear();
 
             {
                 std::scoped_lock lock{ commandsMutex };
-                copiedCommands = std::move(actionMapCommands);
+                std::swap(readActionMapCommands, writeActionMapCommands);
             }
 
-            if (copiedCommands.empty())
+            if (readActionMapCommands.empty())
             {
                 return;
             }
@@ -113,7 +116,7 @@ namespace litl
             const ActionMapHandle prevTopHandle = (actionMapStack.empty() ? ActionMapHandle{} : actionMapStack.back());
 
             {
-                for (auto& command : copiedCommands)
+                for (auto& command : readActionMapCommands)
                 {
                     processCommand(command);
                 }
@@ -174,7 +177,7 @@ namespace litl
 
                 auto* actionMap = actionMapPool.get(*actionMapIter);
 
-                if (!actionMap->updateInput({}, input, processedInputTracker, triggeredActionMaps))
+                if (!actionMap->updateInput({}, input, processedInputTracker))
                 {
                     // This action map does not allow propagation of input down the stack.
                     break;
@@ -187,7 +190,7 @@ namespace litl
             for (auto actionMapHandle : allActionMapHandles)
             {
                 auto* actionMap = actionMapPool.get(actionMapHandle);
-                actionMap->onPostUpdate({});
+                actionMap->onPostUpdate({}, triggeredActionMaps);
             }
         }
 
@@ -283,10 +286,10 @@ namespace litl
 
             std::scoped_lock lock{ commandsMutex };
 
-            actionMapCommands.push_back(InputActionCommand{
+            writeActionMapCommands.push_back(InputActionCommand{
                 .handle = handle,
                 .type = InputActionCommandType::Push
-            });
+                });
         }
 
         void popMap(ActionMapHandle handle) noexcept
@@ -298,10 +301,10 @@ namespace litl
 
             std::scoped_lock lock{ commandsMutex };
 
-            actionMapCommands.push_back(InputActionCommand{
+            writeActionMapCommands.push_back(InputActionCommand{
                 .handle = handle,
                 .type = InputActionCommandType::Pop
-            });
+                });
         }
 
         [[nodiscard]] std::optional<ActionMapState> getActionState(ActionMapHandle handle, StringId binding) noexcept

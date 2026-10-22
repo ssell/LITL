@@ -125,7 +125,7 @@ namespace litl
 
         void addOrRemoveActionMapEvent(OnActionMapEvent* event, CallbackCommand const& command) noexcept
         {
-            if ((event != nullptr) && (event->actionMapId.isNull() || event->bindingId.isNull()))
+            if ((event == nullptr) || event->actionMapId.isNull() || event->bindingId.isNull())
             {
                 return;
             }

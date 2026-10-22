@@ -192,7 +192,7 @@ namespace litl::tests
         pressKey(Key::A);
 
         REQUIRE(first == 1u);
-        REQUIRE(second == 0u);      // bug #1: currently 1
+        REQUIRE(second == 0u);
     }
     LITL_END_TEST_CASE
 
@@ -209,8 +209,8 @@ namespace litl::tests
         process();
         pressKey(Key::A);
 
-        REQUIRE(consumer == 2u);   // buggy: 1 (skipped on the second frame because alive == false)
-        REQUIRE(lower == 0u);      // buggy: 1 (the dead consumer no longer blocks it)
+        REQUIRE(consumer == 2u);
+        REQUIRE(lower == 0u);
     }
     LITL_END_TEST_CASE
 

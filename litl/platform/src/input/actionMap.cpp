@@ -50,7 +50,7 @@ namespace litl
         }
     }
 
-    bool ActionMap::updateInput(Authority<InputActions> auth, Input const& input, ProcessedInputTracker& inputTracker, std::vector<ActionMapBinding>& triggeredBindings) noexcept
+    bool ActionMap::updateInput(Authority<InputActions> auth, Input const& input, ProcessedInputTracker& inputTracker) noexcept
     {
         // Clear all input source states
         for (auto& actionBindings : m_actionBindings)
@@ -66,17 +66,14 @@ namespace litl
 
             for (auto& binding : actionBindings.bindings)
             {
-                // Go down the list of each binding until we find an input that could have triggered it.
-                // For example, if both Key:W and Key::Up are bound to "MoveForward" then continue until one of those has input.
+                // Go down the list of each binding and merge all input source states.
                 const auto state = input.getGenericInputSourceState(binding.source);
 
                 if (state.isActive() && !inputTracker.isProcessed(binding.source))
                 {
-                    actionBindings.inputState = state;                       // Record the first active input state into the overall ActionBindings for the key
-                    inputTracker.markProcessed(binding.source);         // Mark the individual input source as processed
-                    triggeredBindings.push_back(ActionMapBinding{ .actionMapId = m_id, .bindingId = binding.id });
-
-                    break;                                              // Exit this action bindings once we have found a single active input source
+                    // Mark the individual input source as processed
+                    inputTracker.markProcessed(binding.source);
+                    actionBindings.inputState = InputSourceState::merge(actionBindings.inputState, state);
                 }
             }
         }
@@ -84,18 +81,26 @@ namespace litl
         return m_descriptor.propagateActions;
     }
 
-    void ActionMap::onPostUpdate(Authority<InputActions> auth) noexcept
+    void ActionMap::onPostUpdate(Authority<InputActions> auth, std::vector<ActionMapBinding>& triggeredBindings) noexcept
     {
         for (auto& bindings : m_actionBindings)
         {
             const ActionMapState prevState = bindings.actionState;
             ActionMapState& currState = bindings.actionState;
 
-            currState.held = currState.live && bindings.inputState.held;
-            currState.pressed = (currState.held && !prevState.held) || (currState.live && bindings.inputState.pressed);
-            currState.released = (prevState.held && !currState.held) || (currState.live && bindings.inputState.released && !currState.held);
-            currState.value = (currState.live ? bindings.inputState.xyDelta : vec2{});
-            currState.triggered = currState.pressed || currState.released || !currState.value.isZeroed();       // Note: we do not mark triggered for .held. This matches the behavior of our raw input callbacks.
+            currState.held      = currState.live && bindings.inputState.held;
+            currState.pressed   = (currState.held && !prevState.held) || (currState.live && bindings.inputState.pressed);                           // If map just became live, then synthesize held if map became active while the key was down. Otherwise compare to last frame.
+            currState.released  = (prevState.held && !currState.held) || (currState.live && bindings.inputState.released && !currState.held);       // If map just became live, then synthesize released if map became active same frame it was released. Otherwise compare to last frame.
+            currState.value     = (currState.live ? bindings.inputState.xyDelta : vec2{});
+            currState.triggered = currState.pressed || currState.released || !currState.value.isZeroed();                                           // Note: we do not mark triggered for .held. This matches the behavior of our raw input callbacks.
+
+            if (currState.triggered)
+            {
+                triggeredBindings.push_back(ActionMapBinding{
+                    .actionMapId = m_id,
+                    .bindingId = bindings.id
+                });
+            }
         }
     }
 

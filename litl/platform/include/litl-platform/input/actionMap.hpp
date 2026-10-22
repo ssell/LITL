@@ -51,12 +51,12 @@ namespace litl
         /// Updates the input state of the action map and invokes any callbacks. Returns true if propagation of input should continue.
         /// This is only invoked on action maps visited during the stack traversal.
         /// </summary>
-        [[nodiscard]] bool updateInput(Authority<InputActions> auth, Input const& input, ProcessedInputTracker& inputTracker, std::vector<ActionMapBinding>& triggeredBindings) noexcept;
+        [[nodiscard]] bool updateInput(Authority<InputActions> auth, Input const& input, ProcessedInputTracker& inputTracker) noexcept;
 
         /// <summary>
         /// Invoked for all action maps following the input update to sync their action states.
         /// </summary>
-        void onPostUpdate(Authority<InputActions> auth) noexcept;
+        void onPostUpdate(Authority<InputActions> auth, std::vector<ActionMapBinding>& triggeredBindings) noexcept;
 
         // ---------------------------------------------------------------------------------
         // Getters
