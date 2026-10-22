@@ -1,5 +1,5 @@
-#ifndef LITL_ENGINE_INPUT_ACTION_MAP_H__
-#define LITL_ENGINE_INPUT_ACTION_MAP_H__
+#ifndef LITL_PLATFORM_INPUT_ACTION_MAP_H__
+#define LITL_PLATFORM_INPUT_ACTION_MAP_H__
 
 #include <array>
 #include <cstdint>
@@ -10,8 +10,8 @@
 #include "litl-core/authority.hpp"
 #include "litl-core/stringId.hpp"
 #include "litl-core/math/types/vec2.hpp"
-#include "litl-engine/input/actionMapDescriptor.hpp"
-#include "litl-engine/input/processedInputTracker.hpp"
+#include "litl-platform/input/actionMapDescriptor.hpp"
+#include "litl-platform/input/processedInputTracker.hpp"
 
 namespace litl
 {

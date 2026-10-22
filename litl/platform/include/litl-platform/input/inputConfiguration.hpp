@@ -1,11 +1,11 @@
-#ifndef LITL_ENGINE_INPUT_CONFIGURATION_H__
-#define LITL_ENGINE_INPUT_CONFIGURATION_H__
+#ifndef LITL_PLATFORM_INPUT_CONFIGURATION_H__
+#define LITL_PLATFORM_INPUT_CONFIGURATION_H__
 
 #include <string>
 #include <vector>
 
 #include "litl-platform/input/inputEnums.hpp"
-#include "litl-engine/input/actionMapDescriptor.hpp"
+#include "litl-platform/input/actionMapDescriptor.hpp"
 
 namespace litl
 {

@@ -4,10 +4,10 @@
 
 #include "litl-core/assert.hpp"
 #include "litl-core/services/serviceProvider.hpp"
-#include "litl-engine/input/inputActions.hpp"
-#include "litl-engine/engine.hpp"
+#include "litl-platform/input/inputActions.hpp"
 #include "litl-platform/input/input.hpp"
-#include "litl-engine/input/actionMap.hpp"
+#include "litl-platform/input/actionMap.hpp"
+#include "litl-platform/input/inputConfiguration.hpp"
 
 namespace litl
 {
@@ -29,7 +29,6 @@ namespace litl
 
     struct InputActions::Impl
     {
-        std::shared_ptr<Input> input{ nullptr };
         HandlePool<ActionMap, ActionMapHandleTag> actionMapPool{};
         StringIdMap<ActionMapHandle> actionMapLookup;
         std::vector<ActionMapHandle> allActionMapHandles;               // This is also tracked by actionMapPool but eliminates the need for us to call getAllHandles each frame since maps are static once they exist.
@@ -43,17 +42,11 @@ namespace litl
         // Setup
         // ---------------------------------------------------------------------------------
 
-        void setup(ServiceProvider& services) noexcept
+        void setup(InputConfiguration const& config) noexcept
         {
-            input = services.get<Input>();
-            auto config = services.get<Configuration>();
+            allActionMapHandles.reserve(config.actionMaps.size());
 
-            LITL_FATAL_ASSERT_MSG((input != nullptr), "Failed to inject Input into InputActions.");
-            LITL_FATAL_ASSERT_MSG((config != nullptr), "Failed to inject Configuration into InputActions.");
-
-            allActionMapHandles.reserve(config->input.actionMaps.size());
-
-            for (auto& descriptor : config->input.actionMaps)
+            for (auto& descriptor : config.actionMaps)
             {
                 if (!descriptor.isValid())
                 {
@@ -82,9 +75,9 @@ namespace litl
 
             actionMapProcessed.resize(allActionMapHandles.size(), false);
 
-            if (!config->input.defaultActionMap.empty())
+            if (!config.defaultActionMap.empty())
             {
-                pushMap(getMap(StringId(config->input.defaultActionMap)));
+                pushMap(getMap(StringId(config.defaultActionMap)));
             }
         }
 
@@ -92,10 +85,10 @@ namespace litl
         // Update
         // ---------------------------------------------------------------------------------
 
-        void update() noexcept
+        void update(Input const& input) noexcept
         {
             processCommands();
-            updateActionMapsWithInput();
+            updateActionMapsWithInput(input);
         }
 
         void processCommands() noexcept
@@ -111,7 +104,7 @@ namespace litl
             }
         }
 
-        void updateActionMapsWithInput() noexcept
+        void updateActionMapsWithInput(Input const& input) noexcept
         {
             if (allActionMapHandles.empty())
             {
@@ -140,7 +133,7 @@ namespace litl
 
                 if (actionMap != nullptr)
                 {
-                    if (!actionMap->update({}, *input, processedInputTracker))
+                    if (!actionMap->update({}, input, processedInputTracker))
                     {
                         // This action map does not allow propagation of input down the stack.
                         break;
@@ -295,14 +288,14 @@ namespace litl
 
     }
 
-    void InputActions::setup(Authority<Engine> auth, ServiceProvider& services) noexcept
+    void InputActions::setup(InputConfiguration const& config) noexcept
     {
-        m_pImpl->setup(services);
+        m_pImpl->setup(config);
     }
 
-    void InputActions::update(Authority<EngineCallbacks> auth) noexcept
+    void InputActions::update(Input const& input) noexcept
     {
-        m_pImpl->update();
+        m_pImpl->update(input);
     }
 
     ActionMapHandle InputActions::getMap(StringId id) noexcept

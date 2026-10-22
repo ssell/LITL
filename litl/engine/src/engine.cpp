@@ -18,7 +18,6 @@
 #include "litl-engine/tasks/taskManager.hpp"
 #include "litl-engine/engineCallbacks.hpp"
 #include "litl-engine/render/renderManager.hpp"
-#include "litl-engine/input/inputActions.hpp"
 
 namespace litl
 {
@@ -56,7 +55,6 @@ namespace litl
         std::shared_ptr<Platform> pSharedPlatform{ nullptr };
         std::shared_ptr<Window> pSharedWindow{ nullptr };
         std::shared_ptr<Input> pSharedInput{ nullptr };
-        std::shared_ptr<InputActions> pSharedInputActions{ nullptr };
         std::shared_ptr<JobScheduler> pSharedJobScheduler{ nullptr };
         std::shared_ptr<World> pSharedECSWorld{ nullptr };
         std::shared_ptr<RenderManager> pSharedRenderManager{ nullptr };
@@ -305,7 +303,7 @@ namespace litl
 
         logInfo("Creating input layer ...");
 
-        auto* input = m_pImpl->pSharedPlatform->createInput();
+        auto* input = m_pImpl->pSharedPlatform->createInput(m_pImpl->pSharedConfig->platform.input);
 
         if (input == nullptr)
         {
@@ -320,8 +318,6 @@ namespace litl
         }
 
         m_pImpl->pSharedInput = m_pImpl->pServiceProvider->get<Input>();
-        m_pImpl->pSharedInputActions = m_pImpl->pServiceProvider->get<InputActions>();
-        m_pImpl->pSharedInputActions->setup({}, *m_pImpl->pServiceProvider);
 
         // ---------------------------------------------------------------------------------
         // Window
@@ -333,7 +329,7 @@ namespace litl
 
         logInfo("Opening window \"", title, "\" (", width, "x", height, ") ...");
 
-        auto* window = m_pImpl->pSharedPlatform->createWindow();
+        auto* window = m_pImpl->pSharedPlatform->createWindow(m_pImpl->pSharedConfig->platform.window);
 
         if (window == nullptr)
         {

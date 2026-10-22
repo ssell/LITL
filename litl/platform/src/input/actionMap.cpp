@@ -1,7 +1,5 @@
-
-
-#include "litl-engine/input/actionMap.hpp"
-#include "litl-engine/input/inputActions.hpp"
+#include "litl-platform/input/actionMap.hpp"
+#include "litl-platform/input/inputActions.hpp"
 #include "litl-platform/input/input.hpp"
 
 namespace litl

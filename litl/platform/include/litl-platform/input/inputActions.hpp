@@ -6,17 +6,16 @@
 
 #include "litl-core/authority.hpp"
 #include "litl-core/stringId.hpp"
-#include "litl-core/handles.hpp"
 #include "litl-platform/input/inputSource.hpp"
+#include "litl-platform/input/actionMapHandle.hpp"
 
 namespace litl
 {
     class Engine;
     class EngineCallbacks;
     class ServiceProvider;
-
-    struct ActionMapHandleTag {};
-    using ActionMapHandle = Handle<ActionMapHandleTag>;
+    class Input;
+    struct InputConfiguration;
 
     /// <summary>
     /// Service built on top of Input that allows for more sophisticated input operations.
@@ -56,12 +55,12 @@ namespace litl
         /// Sets up InputActions with DI services.
         /// All action maps are created from those defined in the injected Configuration's InputConfiguration.
         /// </summary>
-        void setup(Authority<Engine> auth, ServiceProvider& services) noexcept;
+        void setup(InputConfiguration const& config) noexcept;
 
         /// <summary>
         /// Updates the action callbacks once per frame.
         /// </summary>
-        void update(Authority<EngineCallbacks> auth) noexcept;
+        void update(Input const& input) noexcept;
 
         /// <summary>
         /// Retrieves the action map with the given id.

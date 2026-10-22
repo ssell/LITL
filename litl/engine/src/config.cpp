@@ -29,7 +29,6 @@ namespace litl
     {
         engine.sanitize();
         platform.sanitize();
-        input.sanitize();
         renderer.sanitize();
     }
 
@@ -37,7 +36,6 @@ namespace litl
     {
         engine = other.engine;
         platform = other.platform;
-        input = other.input;
         renderer = other.renderer;
         scene = other.scene;
 

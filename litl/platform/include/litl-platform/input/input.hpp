@@ -1,15 +1,21 @@
 #ifndef LITL_PLATFORM_INPUT_H__
 #define LITL_PLATFORM_INPUT_H__
 
+#include "litl-core/authority.hpp"
+#include "litl-core/stringId.hpp"
 #include "litl-platform/input/inputEnums.hpp"
 #include "litl-platform/input/inputState.hpp"
 #include "litl-platform/input/inputCallbacks.hpp"
 #include "litl-platform/input/inputSource.hpp"
+#include "litl-platform/input/inputActions.hpp"
+#include "litl-platform/input/actionMapHandle.hpp"
 
 namespace litl
 {
     class Window;
     class ServiceProvider;
+    class Platform;
+    struct InputConfiguration;
 
     /// <summary>
     /// Explicitly not defined in litl-platform, but instead defined in the implementation (litl-platform-glfw, etc.)
@@ -37,6 +43,11 @@ namespace litl
         /// Sets up the input interface with a backend.
         /// </summary>
         [[nodiscard]] bool setup(InputOps const* operations, InputContext* context) noexcept;
+
+        /// <summary>
+        /// Invoked with the configuration after the Input system is created.
+        /// </summary>
+        void prepare(Authority<Platform> auth, InputConfiguration const& config) noexcept;
 
         /// <summary>
         /// Destroys the underlying input backend.
@@ -126,14 +137,50 @@ namespace litl
         /// <returns></returns>
         [[nodiscard]] vec2 getMouseScroll() const noexcept;
 
+        /// <summary>
+        /// Returns true if the button was pressed down since the last poll (typically the last frame).
+        /// The "pressed" state is not exclusive with the "released" state, and a button can be both pressed and released during the same frame.
+        /// </summary>
         [[nodiscard]] bool getGamepadButtonPressed(GamepadButton button) const noexcept;
+
+        /// <summary>
+        /// Returns true if the button was currently down at the last poll.
+        /// A button that is down but was not pressed this frame can be considered "held down", while a button that is not down
+        /// </summary>
         [[nodiscard]] bool getGamepadButtonHeld(GamepadButton button) const noexcept;
+
+        /// <summary>
+        /// Returns true if the button was released since the last poll (typically the last frame).
+        /// The "released" state is not exclusive with the "pressed" state, and a button can be both pressed and released during the same frame.
+        /// </summary>
         [[nodiscard]] bool getGamepadButtonReleased(GamepadButton button) const noexcept;
 
         /// <summary>
         /// Given a generic InputSource, returns the state of the input.
         /// </summary>
         [[nodiscard]] InputSourceState getGenericInputSourceState(InputSource inputSource) const noexcept;
+
+        /// <summary>
+        /// Retrieves the action map with the given id.
+        /// It is recommended to retrieve the map once and then store the handle as this is a locking call.
+        /// </summary>
+        [[nodiscard]] ActionMapHandle getMap(StringId id) noexcept;
+
+        /// <summary>
+        /// Enqueues a command to push the specified map to the top of the stack.
+        /// This map will become the active map and its settings (cursor mode, action propagation, etc.) will be used.
+        /// </summary>
+        void pushMap(ActionMapHandle handle) noexcept;
+
+        /// <summary>
+        /// Enqueues a command to remove the specified map from the stack.
+        /// </summary>
+        void popMap(ActionMapHandle handle) noexcept;
+
+        /// <summary>
+        /// Returns the current state of the specified input binding if it exists.
+        /// </summary>
+        [[nodiscard]] std::optional<InputSourceState> getInputState(ActionMapHandle handle, StringId binding) noexcept;
 
         /// <summary>
         /// Returns the internal context.
@@ -146,6 +193,7 @@ namespace litl
         InputContext* m_pContext{ nullptr };
         InputState m_lastFrameState{};
         InputState m_currFrameState{};
+        InputActions m_inputActions{};
     };
 }
 

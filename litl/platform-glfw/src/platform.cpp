@@ -95,7 +95,7 @@ namespace litl
             return true;
         }
 
-        Window* createWindow(Platform* platform, PlatformContext* context) noexcept
+        Window* createWindow(Platform* platform, PlatformContext* context, WindowConfiguration const& window) noexcept
         {
             if (!context->initialized)
             {
@@ -118,7 +118,7 @@ namespace litl
             return context->window;
         }
 
-        Input* createInput(PlatformContext* context) noexcept
+        Input* createInput(PlatformContext* context, InputConfiguration const& config) noexcept
         {
             if (!context->initialized)
             {
@@ -133,6 +133,7 @@ namespace litl
             }
 
             context->input = createGlfwInput();
+
             return context->input;
         }
 

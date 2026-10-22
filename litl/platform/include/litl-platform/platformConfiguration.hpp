@@ -5,6 +5,7 @@
 
 #include "litl-platform/platformTypes.hpp"
 #include "litl-platform/window/windowConfiguration.hpp"
+#include "litl-platform/input/inputConfiguration.hpp"
 
 namespace litl
 {
@@ -19,6 +20,11 @@ namespace litl
         /// Window-specific settings.
         /// </summary>
         WindowConfiguration window{};
+
+        /// <summary>
+        /// Input-specific settings.
+        /// </summary>
+        InputConfiguration input{};
 
         void sanitize() noexcept;
     };

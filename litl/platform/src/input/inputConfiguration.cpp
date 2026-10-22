@@ -1,4 +1,4 @@
-#include "litl-engine/input/inputConfiguration.hpp"
+#include "litl-platform/input/inputConfiguration.hpp"
 
 namespace litl
 {

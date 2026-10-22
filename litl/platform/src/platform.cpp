@@ -53,10 +53,18 @@ namespace litl
         return true;
     }
 
-    Window* Platform::createWindow() noexcept
+    Window* Platform::createWindow(WindowConfiguration const& config) noexcept
     {
         LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
-        return m_pOps->createWindow(this, m_pContext);
+
+        Window* window = m_pOps->createWindow(this, m_pContext, config);
+
+        if (window != nullptr)
+        {
+            window->prepare({}, config);
+        }
+
+        return window;
     }
 
     Window* Platform::getWindow() const noexcept
@@ -65,10 +73,18 @@ namespace litl
         return m_pOps->getWindow(m_pContext);
     }
     
-    Input* Platform::createInput() const noexcept
+    Input* Platform::createInput(InputConfiguration const& config) const noexcept
     {
         LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
-        return m_pOps->createInput(m_pContext);
+
+        Input* input = m_pOps->createInput(m_pContext, config);
+
+        if (input != nullptr)
+        {
+            input->prepare({}, config);
+        }
+
+        return input;
     }
 
     Input* Platform::getInput() const noexcept

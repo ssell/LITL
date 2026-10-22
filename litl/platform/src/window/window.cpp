@@ -1,6 +1,8 @@
-#include "litl-platform/window/window.hpp"
 #include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
+#include "litl-platform/window/window.hpp"
+#include "litl-platform/window/windowConfiguration.hpp"
+#include "litl-platform/platform.hpp"
 
 namespace litl
 {
@@ -32,6 +34,11 @@ namespace litl
         m_pContext = context;
 
         return true;
+    }
+
+    void Window::prepare(Authority<Platform> auth, WindowConfiguration const& config) noexcept
+    {
+        // ... nothing at the moment, for future use if needed ...
     }
 
     bool Window::open(std::string const& title, uint32_t width, uint32_t height) const noexcept

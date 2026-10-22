@@ -1,5 +1,5 @@
-#ifndef LITL_INPUT_SOURCE_H__
-#define LITL_INPUT_SOURCE_H__
+#ifndef LITL_PLATFORM_INPUT_SOURCE_H__
+#define LITL_PLATFORM_INPUT_SOURCE_H__
 
 #include <cstdint>
 

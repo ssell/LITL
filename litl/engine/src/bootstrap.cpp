@@ -16,7 +16,6 @@
 #include "litl-platform/platform.hpp"
 #include "litl-platform/window/window.hpp"
 #include "litl-platform/input/input.hpp"
-#include "litl-engine/input/inputActions.hpp"
 
 namespace litl::Internal
 {
@@ -29,7 +28,6 @@ namespace litl::Internal
         services.addSingleton<Platform>();
         services.addSingleton<Window>();
         services.addSingleton<Input>();
-        services.addSingleton<InputActions>();
         services.addSingleton<RenderManager>();
         services.addSingleton<ObjectPool>();
         services.addSingleton<MaterialManager>();

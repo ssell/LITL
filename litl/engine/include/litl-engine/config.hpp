@@ -6,7 +6,7 @@
 #include "litl-renderer/rendererConfiguration.hpp"
 #include "litl-platform/platformConfiguration.hpp"
 #include "litl-engine/scene/sceneConfiguration.hpp"
-#include "litl-engine/input/inputConfiguration.hpp"
+#include "litl-platform/input/inputConfiguration.hpp"
 
 namespace litl
 {
@@ -50,11 +50,6 @@ namespace litl
         /// Platform specific settings.
         /// </summary>
         PlatformConfiguration platform{};
-
-        /// <summary>
-        /// Input specific settings
-        /// </summary>
-        InputConfiguration input{};
 
         /// <summary>
         /// Renderer specific settings.

@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <string>
 
+#include "litl-core/authority.hpp"
 #include "litl-platform/nativeWindowHandle.hpp"
 
 namespace litl
@@ -12,6 +13,8 @@ namespace litl
     /// Explicitly not defined in litl-platform, but instead is defined in the implementation (litl-platform-glfw, etc.)
     /// </summary>
     struct WindowContext;
+    struct WindowConfiguration;
+    class Platform;
 
     /// <summary>
     /// Current state of the window.
@@ -54,6 +57,7 @@ namespace litl
         Window& operator=(Window const&) = delete;
 
         [[nodiscard]] bool setup(WindowOps const* operations, WindowContext* context) noexcept;
+        void prepare(Authority<Platform> auth, WindowConfiguration const& config) noexcept;
         [[nodiscard]] bool open(std::string const& title, uint32_t width, uint32_t height) const noexcept;
         void close() const noexcept;
         void destroy() noexcept;

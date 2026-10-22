@@ -227,7 +227,7 @@ bool createWindow(SampleRenderState& sample) noexcept
         return false;
     }
 
-    sample.window = sample.platform->createWindow();
+    sample.window = sample.platform->createWindow({});
 
     if (sample.window == nullptr)
     {

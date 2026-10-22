@@ -1,6 +1,9 @@
-#include "litl-platform/input/input.hpp"
 #include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
+#include "litl-platform/input/input.hpp"
+#include "litl-platform/input/inputConfiguration.hpp"
+#include "litl-platform/input/inputActions.hpp"
+#include "litl-platform/platform.hpp"
 
 namespace litl
 {
@@ -34,6 +37,11 @@ namespace litl
         return true;
     }
 
+    void Input::prepare(Authority<Platform> auth, InputConfiguration const& config) noexcept
+    {
+        m_inputActions.setup(config);
+    }
+
     void Input::destroy() noexcept
     {
         if ((m_pOps != nullptr) && (m_pContext != nullptr))
@@ -53,6 +61,8 @@ namespace litl
         m_lastFrameState = m_currFrameState;
         m_currFrameState = m_pOps->getAccumulatedState(m_pContext, true);
         m_currFrameState.mouse.position.xyDelta = m_currFrameState.mouse.position.xy - m_lastFrameState.mouse.position.xy;
+
+        m_inputActions.update(*this);
     }
 
     void Input::triggerCallbacks(ServiceProvider& services, InputCallbacks& callbacks) const noexcept
@@ -218,5 +228,25 @@ namespace litl
         }
 
         return state;
+    }
+
+    ActionMapHandle Input::getMap(StringId id) noexcept
+    {
+        return m_inputActions.getMap(id);
+    }
+
+    void Input::pushMap(ActionMapHandle handle) noexcept
+    {
+        m_inputActions.pushMap(handle);
+    }
+
+    void Input::popMap(ActionMapHandle handle) noexcept
+    {
+        m_inputActions.popMap(handle);
+    }
+
+    std::optional<InputSourceState> Input::getInputState(ActionMapHandle handle, StringId binding) noexcept
+    {
+        return m_inputActions.getInputState(handle, binding);
     }
 }

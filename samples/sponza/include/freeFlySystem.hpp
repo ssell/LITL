@@ -5,7 +5,7 @@
 
 #include "litl-ecs/register.hpp"
 #include "litl-engine/ecs/common.hpp"
-#include "litl-engine/input/inputActions.hpp"
+#include "litl-platform/input/input.hpp"
 
 namespace litl::samples
 {
@@ -18,8 +18,8 @@ namespace litl::samples
     {
         void setup(ServiceProvider& services)
         {
-            m_pInputActions = services.get<InputActions>();
-            m_actionMapHandle = m_pInputActions->getMap("gameplay"_sid);
+            m_pInput = services.get<Input>();
+            m_actionMapHandle = m_pInput->getMap("gameplay"_sid);
         }
 
         void prepare()
@@ -31,32 +31,32 @@ namespace litl::samples
         {
             const auto speed = data.deltaTime * freeFly.speed;
 
-            if (auto forwardState = m_pInputActions->getInputState(m_actionMapHandle, "forward"_sid); forwardState.has_value() && (forwardState.value().held == true))
+            if (auto forwardState = m_pInput->getInputState(m_actionMapHandle, "forward"_sid); forwardState.has_value() && (forwardState.value().held == true))
             {
                 transform.translate(transform.forward() * speed);
             }
 
-            if (auto backwardState = m_pInputActions->getInputState(m_actionMapHandle, "backward"_sid); backwardState.has_value() && (backwardState.value().held == true))
+            if (auto backwardState = m_pInput->getInputState(m_actionMapHandle, "backward"_sid); backwardState.has_value() && (backwardState.value().held == true))
             {
                 transform.translate(-transform.forward() * speed);
             }
 
-            if (auto leftState = m_pInputActions->getInputState(m_actionMapHandle, "left"_sid); leftState.has_value() && (leftState.value().held == true))
+            if (auto leftState = m_pInput->getInputState(m_actionMapHandle, "left"_sid); leftState.has_value() && (leftState.value().held == true))
             {
                 transform.translate(-transform.right() * speed);
             }
 
-            if (auto rightState = m_pInputActions->getInputState(m_actionMapHandle, "right"_sid); rightState.has_value() && (rightState.value().held == true))
+            if (auto rightState = m_pInput->getInputState(m_actionMapHandle, "right"_sid); rightState.has_value() && (rightState.value().held == true))
             {
                 transform.translate(transform.right() * speed);
             }
 
-            if (auto upState = m_pInputActions->getInputState(m_actionMapHandle, "up"_sid); upState.has_value() && (upState.value().held == true))
+            if (auto upState = m_pInput->getInputState(m_actionMapHandle, "up"_sid); upState.has_value() && (upState.value().held == true))
             {
                 transform.translate(transform.up() * speed);
             }
 
-            if (auto downState = m_pInputActions->getInputState(m_actionMapHandle, "down"_sid); downState.has_value() && (downState.value().held == true))
+            if (auto downState = m_pInput->getInputState(m_actionMapHandle, "down"_sid); downState.has_value() && (downState.value().held == true))
             {
                 transform.translate(-transform.up() * speed);
             }
@@ -64,7 +64,7 @@ namespace litl::samples
 
     private:
 
-        std::shared_ptr<InputActions> m_pInputActions{ nullptr };
+        std::shared_ptr<Input> m_pInput{ nullptr };
         ActionMapHandle m_actionMapHandle{};
     };
 }

@@ -1,7 +1,6 @@
 #include "litl-core/authority.hpp"
 #include "litl-engine/engine.hpp"
 #include "litl-engine/engineCallbacks.hpp"
-#include "litl-engine/input/inputActions.hpp"
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/render/renderManager.hpp"
 #include "litl-engine/scene/sceneManager.hpp"
@@ -15,7 +14,6 @@ namespace litl
     {
         std::shared_ptr<World> world{ nullptr };
         std::shared_ptr<Platform> platform{ nullptr };
-        std::shared_ptr<InputActions> inputActions{ nullptr };
         std::shared_ptr<AssetManager> assetManager{ nullptr };
         std::shared_ptr<RenderManager> renderManager{ nullptr };
         std::shared_ptr<SceneManager> sceneManager{ nullptr };
@@ -29,7 +27,6 @@ namespace litl
         {
             world = services.get<World>();
             platform = services.get<Platform>();
-            inputActions = services.get<InputActions>();
             assetManager = services.get<AssetManager>();
             renderManager = services.get<RenderManager>();
             sceneManager = services.get<SceneManager>();
@@ -38,7 +35,6 @@ namespace litl
 
             LITL_FATAL_ASSERT_MSG((world != nullptr), "Failed to inject World into EngineCallbacks");
             LITL_FATAL_ASSERT_MSG((platform != nullptr), "Failed to inject Platform into EngineCallbacks");
-            LITL_FATAL_ASSERT_MSG((inputActions != nullptr), "Failed to inject InputActions into EngineCallbacks");
             LITL_FATAL_ASSERT_MSG((assetManager != nullptr), "Failed to inject AssetManager into EngineCallbacks");
             LITL_FATAL_ASSERT_MSG((renderManager != nullptr), "Failed to inject RenderManager into EngineCallbacks");
             LITL_FATAL_ASSERT_MSG((sceneManager != nullptr), "Failed to inject SceneManager into EngineCallbacks");
@@ -74,7 +70,6 @@ namespace litl
                         input->triggerCallbacks(services, *inputCallbacks);
                     }
 
-                    inputActions->update({});
                     taskManager->update();
                     assetManager->onFrameStart();
 
