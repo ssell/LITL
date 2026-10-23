@@ -9,5 +9,6 @@
 #include "litl-core/math/types/quat.hpp"
 #include "litl-core/math/types/color.hpp"
 #include "litl-core/math/types/rect2D.hpp"
+#include "litl-core/math/types/ray.hpp"
 
 #endif

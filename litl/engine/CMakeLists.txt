@@ -46,7 +46,8 @@ add_library(litl-engine STATIC
 	"src/utility.cpp" 
 	"src/ecs/systems/meshInstantiationSystem.cpp"
 	"src/assets/fileAssetSource.cpp" 
-	"src/platformFactory.cpp" "../platform/src/input/actionMap.cpp" "../platform/src/input/inputActions.cpp" "../platform/src/input/inputConfiguration.cpp" "../platform/src/input/processedInputTracker.cpp")
+	"src/platformFactory.cpp"
+)
 
 target_include_directories(litl-engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 

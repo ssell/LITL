@@ -311,11 +311,6 @@ namespace litl
         ///     * Left-handed: (+x = right, +y = up, +z = forward<br/>
         ///     * Clip-space Z on the range [0, 1] = [far, near]<br/>
         /// </summary>
-        /// <param name="fovY"></param>
-        /// <param name="aspect"></param>
-        /// <param name="zNear"></param>
-        /// <param name="zFar"></param>
-        /// <returns></returns>
         [[nodiscard]] constexpr static mat4 perspective(float fovY, float aspect, float zNear, float zFar) noexcept
         {
             // Note below we are intentionally flipping the near and flar clip. such that far = 0 and near = w. In floating point numbers, a greater
@@ -332,11 +327,6 @@ namespace litl
         ///     * Left-handed: (+x = right, +y = up, +z = forward<br/>
         ///     * Clip-space Z on the range [0, 1] = [far, near]<br/>
         /// </summary>
-        /// <param name="fovY"></param>
-        /// <param name="aspect"></param>
-        /// <param name="zNear"></param>
-        /// <param name="zFar"></param>
-        /// <returns></returns>
         [[nodiscard]] constexpr static mat4 orthographic(float left, float right, float bottom, float top, float zNear, float zFar) noexcept
         {
             // Note below we are intentionally flipping the near and flar clip. such that far = 0 and near = w. In floating point numbers, a greater

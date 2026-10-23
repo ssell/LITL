@@ -34,7 +34,8 @@ add_library(litl-core STATIC
 	"src/litl-core/math/geometry/tools/normals.cpp" 
 	"src/litl-core/math/geometry/tools/triangulate.cpp" 
 	"src/litl-core/formats/srgb.cpp"  
-	"src/litl-core/string.cpp")
+	"src/litl-core/string.cpp" 
+	"src/litl-core/math/projection.cpp")
 		
 target_include_directories(litl-core 
 	PUBLIC 
