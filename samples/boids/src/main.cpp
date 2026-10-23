@@ -77,14 +77,14 @@ void configureFrameCallbacks(std::shared_ptr<FrameCallbacks> callbacks)
 /// </summary>
 void configureInputCallbacks(std::shared_ptr<InputCallbacks> callbacks)
 {
-    constexpr auto getClickWorldSpacePos = [](ServiceProvider& services, MousePosition const& mouse)
+    static constexpr auto getClickWorldSpacePos = [](ServiceProvider& services, MousePosition const& mouse)
         {
             const auto* camera = services.get<SceneView>()->getMainCamera();
             const auto clickRay = camera->screenPosToWorldRay(mouse.xy);
             return vec3{ clickRay.origin.x(), 0.0f, clickRay.origin.z() };      // Camera is looking DOWN at the x/z plane from +y.
         };
 
-    callbacks->registerMouseButtonCallback(MouseButton::Left, [&getClickWorldSpacePos](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down)
+    callbacks->registerMouseButtonCallback(MouseButton::Left, [](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down)
         {
             if (released && mouse.inWindow)
             {
@@ -94,7 +94,7 @@ void configureInputCallbacks(std::shared_ptr<InputCallbacks> callbacks)
             return InputCallbackResult::Continue;
         });
 
-    callbacks->registerMouseButtonCallback(MouseButton::Right, [&getClickWorldSpacePos](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down)
+    callbacks->registerMouseButtonCallback(MouseButton::Right, [](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down)
         {
             if (released && mouse.inWindow)
             {

@@ -39,9 +39,7 @@ namespace litl
     /// then "Menu" will be in the stack more than once. This is fine as consumed actions, even if propagation is allowed, do not fall down the stack.
     /// So even with multiple instances of "Menu" on the stack, the actual "Menu" action map will only trigger once per action.
     /// 
-    /// Finally, InputActions is thread-safe and can be safely used from a parallel ECS system. Pushing and popping maps are both deferred commands
-    /// that are not processed until a safe sync point. Creating and retrieving maps employ locks to safeguard the underlying containers. Because of 
-    /// the associated cost of locks it is recommended to request a map once and reuse it, for example in an ECS system ::setup method.
+    /// Finally, InputActions is thread-safe and can be safely used from a parallel ECS system. Pushing and popping maps are both deferred commands that are not processed until a safe sync point.
     /// </summary>
     class InputActions final
     {
