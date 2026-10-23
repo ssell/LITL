@@ -7,17 +7,20 @@ namespace litl
     Ray screenToWorldSpace(vec2 screenPos, vec2 screenSize, mat4 const& viewMatrix, mat4 const& projMatrix) noexcept
     {
         const mat4 viewProj = (projMatrix * viewMatrix);
-
         LITL_ASSERT(!isZero(viewProj.determinant()), Ray{});            // Ensure viewProj is not a singular matrix (no inverse) before inverting it.
-
         const mat4 invViewProj = viewProj.inverted();
 
+        return screenToWorldSpace(screenPos, screenSize, invViewProj);
+    }
+
+    Ray screenToWorldSpace(vec2 screenPos, vec2 screenSize, mat4 const& invViewProjMatrix) noexcept
+    {
         const vec2 ndc = screenToNdcSpace(screenPos, screenSize);
         const vec4 ndcNear = vec4{ ndc.x(), ndc.y(), 1.0f, 1.0f };      // We use a reversed-z, so 0=far and 1=near. This is consistent with mat4::perspective, mat4::orthographic, etc.
         const vec4 ndcFar = vec4{ ndc.x(), ndc.y(), 0.0f, 1.0f };
 
-        const vec4 worldNear = invViewProj * ndcNear;
-        const vec4 worldFar = invViewProj * ndcFar;
+        const vec4 worldNear = invViewProjMatrix * ndcNear;
+        const vec4 worldFar = invViewProjMatrix * ndcFar;
 
         LITL_ASSERT(!isZero(worldNear.w()), Ray{});
         LITL_ASSERT(!isZero(worldFar.w()), Ray{});

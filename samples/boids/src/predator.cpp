@@ -49,6 +49,12 @@ namespace litl::samples
 
     void PredatorSystem::update(SystemData const& data, Entity entity, Predator& predator, Acceleration& acceleration, Transform const& transform, Movement const& movement)
     {
+        if (!m_pSimulator->isPredatorAlive(predator.index))
+        {
+            data.commands.destroyEntity(entity);
+            return;
+        }
+
         vec3 selfPos = transform.getPosition();
         m_pSimulator->updatePredatorPosition(predator.index, selfPos);
 

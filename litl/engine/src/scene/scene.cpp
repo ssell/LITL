@@ -194,7 +194,12 @@ namespace litl
                 if (camera->isMainCamera())
                 {
                     // Set the aspect ratio to match the render target.
-                    camera->setAspectRatio(m_pRenderer->getSwapchainDimensions().aspectRatio);
+                    const auto viewport = m_pRenderer->getSwapchainDimensions();
+                    camera->setViewportSize(vec2{ static_cast<float>(viewport.width), static_cast<float>(viewport.height) });
+                }
+                else
+                {
+                    // ... todo ... will need to tie it to the associated render target ... which is also the long-term solution for the main camera ...
                 }
 
                 camera->update({}, m_transforms.getWorldMatrix(gpuIndex));

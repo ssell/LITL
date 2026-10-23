@@ -6,6 +6,7 @@
 namespace litl
 {
     [[nodiscard]] Ray screenToWorldSpace(vec2 screenPos, vec2 screenSize, mat4 const& viewMatrix, mat4 const& projMatrix) noexcept;
+    [[nodiscard]] Ray screenToWorldSpace(vec2 screenPos, vec2 screenSize, mat4 const& invViewProjMatrix) noexcept;
     [[nodiscard]] vec2 screenToNdcSpace(vec2 screenPos, vec2 screenSize) noexcept;
 }
 

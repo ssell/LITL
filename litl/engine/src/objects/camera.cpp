@@ -5,6 +5,7 @@
 #include "litl-engine/scene/scene.hpp"
 #include "litl-engine/scene/sceneView.hpp"
 #include "litl-engine/scene/sceneCameras.hpp"
+#include "litl-core/math/projection.hpp"
 
 namespace litl
 {
@@ -36,6 +37,7 @@ namespace litl
         m_worldMatrix = worldMatrix;
         m_viewMatrix = worldMatrix.inverted();
         m_viewProjMatrix = m_projMatrix * m_viewMatrix;
+        m_invViewProjMatrix = m_viewProjMatrix.inverted();
         m_worldPosition = worldMatrix.position();
         m_frustum = bounds::Frustum::fromViewProjection(
             m_viewProjMatrix, 
@@ -99,11 +101,15 @@ namespace litl
         return m_descriptor.perspective.fieldOfViewY;
     }
 
-    void Camera::setAspectRatio(float aspectRatio) noexcept
+    void Camera::setViewportSize(vec2 viewport) noexcept
     {
-        LITL_ASSERT_MSG((aspectRatio > 0.0f), "Camera aspect ratio must be positive and greater than 0.", );
-        m_descriptor.perspective.aspectRatio = aspectRatio;
-        rebuildProjectionMatrix();
+        m_viewportSize = viewport;
+
+        if (!isZero(viewport.y()))
+        {
+            m_descriptor.perspective.aspectRatio = (m_viewportSize.x() / m_viewportSize.y());
+            rebuildProjectionMatrix();
+        }
     }
 
     float Camera::getAspectRatio() const noexcept
@@ -207,6 +213,11 @@ namespace litl
     void Camera::setClearColor(color const& clearColor) noexcept
     {
         m_descriptor.clearColor = clearColor;
+    }
+
+    Ray Camera::screenPosToWorldRay(vec2 screenPos) const noexcept
+    {
+        return screenToWorldSpace(screenPos, m_viewportSize, m_invViewProjMatrix);
     }
 
     CameraDescriptor const& Camera::getDescriptor() const noexcept

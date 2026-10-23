@@ -59,13 +59,13 @@ namespace litl::samples
             boidCount++;
         }
 
-        [[nodiscard]] vec3 spawnPredator(EntityCommands& commands, Material* material, ModelAssetHandle modelAssetHandle, RandomFast& rng, uint32_t worldDimensions, uint32_t predatorCount) noexcept
+        [[nodiscard]] vec3 spawnPredator(EntityCommands& commands, Material* material, ModelAssetHandle modelAssetHandle, RandomFast& rng, uint32_t worldDimensions, uint32_t predatorCount, std::optional<vec3> position) noexcept
         {
-            const auto position = getRandomSpawnPoint(rng, worldDimensions, 0u);
-            const auto predatorEntity = spawnEntity(commands, material, modelAssetHandle, position, 15.0f, colors::Orange, getRandomSpawnDirection(rng) * g_predatorSteering.maxSpeed);
+            const auto spawnPos = (position.has_value() ? position.value() : getRandomSpawnPoint(rng, worldDimensions, 0u));
+            const auto predatorEntity = spawnEntity(commands, material, modelAssetHandle, spawnPos, 15.0f, colors::Orange, getRandomSpawnDirection(rng) * g_predatorSteering.maxSpeed);
             commands.addComponent<Predator>(predatorEntity, Predator{ .index = static_cast<uint32_t>(predatorCount), .lastTick = -rng.next01() * PredatorSystem::TickIntervalSec });
 
-            return position;
+            return spawnPos;
         }
 
         [[nodiscard]] vec3 spawnFood(EntityCommands& commands, Material* material, ModelAssetHandle modelAssetHandle, RandomFast& rng, uint32_t worldDimensions, uint32_t index) noexcept
@@ -131,16 +131,19 @@ namespace litl::samples
 
     void Simulator::updatePredatorPosition(uint32_t index, vec3 position) noexcept
     {
-        m_trackedPredators[index] = position;
+        m_trackedPredators[index].position = position;
     }
 
     NearestPoint Simulator::getNearestFood(vec3 pos) noexcept
     {
         float nearestSq = std::numeric_limits<float>::max();
         vec3 nearestPos{ static_cast<float>(m_config.worldDimensions / 2u), 0.0f, static_cast<float>(m_config.worldDimensions / 2u) };
+        uint32_t nearestIndex = Constants::uint32_null_index;
 
-        for (auto& trackedFood : m_trackedFood)
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(m_trackedFood.size()); ++i)
         {
+            const auto& trackedFood = m_trackedFood[i];
+
             if (trackedFood.foodStatus == Food::Status::Alive)
             {
                 float distSq = distanceSq(trackedFood.position, pos);
@@ -149,30 +152,41 @@ namespace litl::samples
                 {
                     nearestSq = distSq;
                     nearestPos = trackedFood.position;
+                    nearestIndex = i;
                 }
             }
         }
 
-        return NearestPoint{ .position = nearestPos, .distanceSq = nearestSq };
+        return NearestPoint{ .position = nearestPos, .distanceSq = nearestSq, .index = nearestIndex };
     }
 
     NearestPoint Simulator::getNearestPredator(vec3 pos) noexcept
     {
+        // There is only ever a handful of predators (unless someone went click happy) and so it is more efficient to just linear scan vs going through the scene spatial partition.
         float nearestSq = std::numeric_limits<float>::max();
         vec3 nearestPos{};
+        uint32_t nearestIndex = Constants::uint32_null_index;
 
-        for (vec3 trackedPredator : m_trackedPredators)
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(m_trackedPredators.size()); ++i)
         {
-            float distSq = distanceSq(trackedPredator, pos);
+            const auto& trackedPredator = m_trackedPredators[i];
+
+            if (!trackedPredator.alive)
+            {
+                continue;
+            }
+
+            float distSq = distanceSq(trackedPredator.position, pos);
 
             if (distSq < nearestSq)
             {
                 nearestSq = distSq;
-                nearestPos = trackedPredator;
+                nearestPos = trackedPredator.position;
+                nearestIndex = i;
             }
         }
 
-        return NearestPoint{ .position = nearestPos, .distanceSq = nearestSq };
+        return NearestPoint{ .position = nearestPos, .distanceSq = nearestSq, .index = nearestIndex };
     }
 
     SimulatorConfiguration const& Simulator::getConfig() const noexcept
@@ -180,14 +194,37 @@ namespace litl::samples
         return m_config;
     }
 
-    void Simulator::spawnPredatorAt(vec2 pos) noexcept
+    void Simulator::spawnPredatorAt(vec3 pos) noexcept
     {
         auto& commands = m_pWorld->getCommandBuffer();
         auto& rng = RandomFast::shared();
         auto* material = m_pObjectPool->getMaterial(m_materialHandle);
+        const auto position = spawnPredator(commands, material, m_modelAssetHandle, rng, m_config.worldDimensions, m_predatorCount, pos);
 
-        m_trackedPredators.push_back(spawnPredator(commands, material, m_modelAssetHandle, rng, m_config.worldDimensions, m_predatorCount));
+        m_trackedPredators.push_back(TrackedPredator{ .position = position, .alive = true });
         m_predatorCount++;
+    }
+
+    void Simulator::removePredatorAt(vec3 pos) noexcept
+    {
+        const auto nearest = getNearestPredator(pos);
+
+        if (nearest.index == Constants::uint32_null_index)
+        {
+            return;
+        }
+
+        if (nearest.position.distanceSqTo(pos) > 400.0f)
+        {
+            return;
+        }
+
+        m_trackedPredators[nearest.index].alive = false;
+    }
+
+    bool Simulator::isPredatorAlive(uint32_t index) const noexcept
+    {
+        return m_trackedPredators[index].alive;
     }
 
     void Simulator::tick() noexcept
@@ -213,7 +250,11 @@ namespace litl::samples
 
         while (m_predatorCount < m_config.predatorCount)
         {
-            m_trackedPredators[m_predatorCount] = spawnPredator(commands, material, m_modelAssetHandle, rng, m_config.worldDimensions, m_predatorCount);
+            m_trackedPredators[m_predatorCount] = TrackedPredator{
+                .position = spawnPredator(commands, material, m_modelAssetHandle, rng, m_config.worldDimensions, m_predatorCount, std::nullopt),
+                .alive = true
+            };
+
             m_predatorCount++;
         }
 

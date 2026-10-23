@@ -13,6 +13,51 @@ namespace litl
 
     }
 
+    [[nodiscard]] vec2 vec3::xx() const noexcept
+    {
+        return vec2{ value.x, value.x };
+    }
+
+    [[nodiscard]] vec2 vec3::xy() const noexcept
+    {
+        return vec2{ value.x, value.y };
+    }
+
+    [[nodiscard]] vec2 vec3::xz() const noexcept
+    {
+        return vec2{ value.x, value.z };
+    }
+
+    [[nodiscard]] vec2 vec3::yy() const noexcept
+    {
+        return vec2{ value.y, value.y };
+    }
+
+    [[nodiscard]] vec2 vec3::yx() const noexcept
+    {
+        return vec2{ value.y, value.x };
+    }
+
+    [[nodiscard]] vec2 vec3::yz() const noexcept
+    {
+        return vec2{ value.y, value.z };
+    }
+
+    [[nodiscard]] vec2 vec3::zz() const noexcept
+    {
+        return vec2{ value.z, value.z };
+    }
+
+    [[nodiscard]] vec2 vec3::zx() const noexcept
+    {
+        return vec2{ value.z, value.x };
+    }
+
+    [[nodiscard]] vec2 vec3::zy() const noexcept
+    {
+        return vec2{ value.z, value.y };
+    }
+
     // -------------------------------------------------------------------------------------
     // vec4
     // -------------------------------------------------------------------------------------

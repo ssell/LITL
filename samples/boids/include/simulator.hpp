@@ -36,6 +36,7 @@ namespace litl::samples
     {
         vec3 position{};
         float distanceSq{ 0.0f };
+        uint32_t index{};
     };
 
     /// <summary>
@@ -56,8 +57,9 @@ namespace litl::samples
         [[nodiscard]] NearestPoint getNearestPredator(vec3 pos) noexcept;
         [[nodiscard]] SimulatorConfiguration const& getConfig() const noexcept;
 
-        // ... test code ...
-        void spawnPredatorAt(vec2 pos) noexcept;
+        void spawnPredatorAt(vec3 pos) noexcept;
+        void removePredatorAt(vec3 pos) noexcept;
+        [[nodiscard]] bool isPredatorAlive(uint32_t index) const noexcept;
 
     private:
 
@@ -65,6 +67,12 @@ namespace litl::samples
         {
             vec3 position{};
             Food::Status foodStatus{ Food::Status::None };
+        };
+
+        struct TrackedPredator
+        {
+            vec3 position{};
+            bool alive{ true };
         };
 
         void tick() noexcept;
@@ -82,7 +90,7 @@ namespace litl::samples
         /// <summary>
         /// Positions of all predators. Used to simplify the query for boids looking for predators.
         /// </summary>
-        std::vector<vec3> m_trackedPredators;
+        std::vector<TrackedPredator> m_trackedPredators;
 
         /// <summary>
         /// The global shared object pool. Could request each frame via services, but can also just keep a reference.

@@ -163,7 +163,6 @@ namespace litl
         /// <summary>
         /// Is this camera the current main camera?
         /// </summary>
-        /// <returns></returns>
         [[nodiscard]] bool isMainCamera() const noexcept;
 
         /// <summary>
@@ -180,17 +179,14 @@ namespace litl
         [[nodiscard]] float getFieldOfView() const noexcept;
 
         /// <summary>
-        /// Sets the aspect ratio (width/height) of the camera.
-        /// Only relevant for perspective projections.
+        /// Updates the viewport size and aspect ratio.
         /// </summary>
-        /// <param name="aspectRatio"></param>
-        void setAspectRatio(float aspectRatio) noexcept;
+        void setViewportSize(vec2 size) noexcept;
 
         /// <summary>
         /// Gets the aspect ratio (width/height) of the camera.
         /// Only relevant for perspective projections.
         /// </summary>
-        /// <returns></returns>
         [[nodiscard]] float getAspectRatio() const noexcept;
 
         /// <summary>
@@ -207,21 +203,18 @@ namespace litl
         /// Retrieves the orthographic bounds (left, right, bottom, top) of the camera.
         /// Only relevant for orthographic projections.
         /// </summary>
-        /// <returns></returns>
         [[nodiscard]] vec4 getOrthographicBounds() const noexcept;
 
         /// <summary>
         /// Retrieves the world matrix of the camera.
         /// This may be up to one frame old as it is updated only once during PreRender.
         /// </summary>
-        /// <returns></returns>
         mat4 const& getWorldMatrix() const noexcept;
         
         /// <summary>
         /// Retrieves the view matrix of the camera.
         /// This may be up to one frame old as it is updated only once during PreRender.
         /// </summary>
-        /// <returns></returns>
         mat4 const& getViewMatrix() const noexcept;
 
         /// <summary>
@@ -235,21 +228,18 @@ namespace litl
         /// <summary>
         /// Retrieves the projection matrix of the camera.
         /// </summary>
-        /// <returns></returns>
         [[nodiscard]] mat4 const& getProjectionMatrix() const noexcept;
 
         /// <summary>
         /// Retrieves the view-projection matrix of the camera.
         /// This may be up to one frame old as it is updated only once during PreRender.
         /// </summary>
-        /// <returns></returns>
         [[nodiscard]] mat4 const& getViewProjectionMatrix() const noexcept;
 
         /// <summary>
         /// Retrieves the world position of the camera.
         /// This may be up to one frame old as it is updated only once during PreRender.
         /// </summary>
-        /// <returns></returns>
         [[nodiscard]] vec3 getWorldPosition() const noexcept;
 
         /// <summary>
@@ -275,38 +265,37 @@ namespace litl
         /// Retrieves the viewing frustum of the camera.
         /// This may be up to one frame old as it is updated only once during PreRender.
         /// </summary>
-        /// <returns></returns>
         [[nodiscard]] bounds::Frustum const& getFrustum() const noexcept;
 
         /// <summary>
         /// Retrieves the entity that represents this camera in the world.
         /// </summary>
-        /// <returns></returns>
         [[nodiscard]] Entity getEntity() const noexcept;
 
         /// <summary>
         /// Returns the process order position for the camera.
         /// Lower values are processed first.
         /// </summary>
-        /// <returns></returns>
         [[nodiscard]] uint32_t getProcessPosition() const noexcept;
 
         /// <summary>
         /// Returns the clear color of the camera.
         /// </summary>
-        /// <returns></returns>
         [[nodiscard]] color const& getClearColor() const noexcept;
 
         /// <summary>
         /// Sets the clear color of the camera.
         /// </summary>
-        /// <param name="clearColor"></param>
         void setClearColor(color const& clearColor) noexcept;
+
+        /// <summary>
+        /// Converts the provided 2D screen-space position into a world-space ray whose origin is on the near plane and points towards the far plane.
+        /// </summary>
+        [[nodiscard]] Ray screenPosToWorldRay(vec2 screenPos) const noexcept;
 
         /// <summary>
         /// Retrieves the descriptor that was used to create this camera.
         /// </summary>
-        /// <returns></returns>
         [[nodiscard]] CameraDescriptor const& getDescriptor() const noexcept;
 
     private:
@@ -347,9 +336,19 @@ namespace litl
         mat4 m_viewProjMatrix{};
 
         /// <summary>
+        /// The inverted view-projection matrix.
+        /// </summary>
+        mat4 m_invViewProjMatrix{};
+
+        /// <summary>
         /// The current world-space position of the camera. Updated once per frame during PreRender.
         /// </summary>
         vec3 m_worldPosition{};
+
+        /// <summary>
+        /// Size of the viewport/screen.
+        /// </summary>
+        vec2 m_viewportSize{};
 
         /// <summary>
         /// The world that created this camera.

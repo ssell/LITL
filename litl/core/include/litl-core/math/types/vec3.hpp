@@ -17,6 +17,7 @@
 namespace litl
 {
     struct vec4;
+    struct vec2;
 
     struct vec3
     {
@@ -438,6 +439,20 @@ namespace litl
         {
             return std::format("({:.3f},{:.3f},{:.3f})", value.x, value.y, value.z);
         }
+
+        // ---------------------------------------------------------------------------------
+        // Swizzle
+        // ---------------------------------------------------------------------------------
+
+        [[nodiscard]] vec2 xx() const noexcept;
+        [[nodiscard]] vec2 xy() const noexcept;
+        [[nodiscard]] vec2 xz() const noexcept;
+        [[nodiscard]] vec2 yy() const noexcept;
+        [[nodiscard]] vec2 yx() const noexcept;
+        [[nodiscard]] vec2 yz() const noexcept;
+        [[nodiscard]] vec2 zz() const noexcept;
+        [[nodiscard]] vec2 zx() const noexcept;
+        [[nodiscard]] vec2 zy() const noexcept;
 
         // ---------------------------------------------------------------------------------
         // Access

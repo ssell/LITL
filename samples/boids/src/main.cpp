@@ -77,12 +77,28 @@ void configureFrameCallbacks(std::shared_ptr<FrameCallbacks> callbacks)
 /// </summary>
 void configureInputCallbacks(std::shared_ptr<InputCallbacks> callbacks)
 {
-    callbacks->registerMouseButtonCallback(MouseButton::Left, [](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down)
+    constexpr auto getClickWorldSpacePos = [](ServiceProvider& services, MousePosition const& mouse)
+        {
+            const auto* camera = services.get<SceneView>()->getMainCamera();
+            const auto clickRay = camera->screenPosToWorldRay(mouse.xy);
+            return vec3{ clickRay.origin.x(), 0.0f, clickRay.origin.z() };      // Camera is looking DOWN at the x/z plane from +y.
+        };
+
+    callbacks->registerMouseButtonCallback(MouseButton::Left, [&getClickWorldSpacePos](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down)
         {
             if (released && mouse.inWindow)
             {
-                // This is safe as the input callbacks occur on a mainthread sync point.
-                services.get<samples::Simulator>()->spawnPredatorAt(mouse.xy);
+                services.get<samples::Simulator>()->spawnPredatorAt(getClickWorldSpacePos(services, mouse));
+            }
+
+            return InputCallbackResult::Continue;
+        });
+
+    callbacks->registerMouseButtonCallback(MouseButton::Right, [&getClickWorldSpacePos](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down)
+        {
+            if (released && mouse.inWindow)
+            {
+                services.get<samples::Simulator>()->removePredatorAt(getClickWorldSpacePos(services, mouse));
             }
 
             return InputCallbackResult::Continue;
