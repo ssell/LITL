@@ -46,9 +46,13 @@ _Future release. Planned features include: render targets, render passes, direct
 
 ### [Version 0.3 on 2026-10-23](https://github.com/ssell/LITL/releases/tag/v0.3.0)
 
+**Primary focus: Input**
+
 Features include: introduction of `litl-platform`, migration of window logic to `litl-platform`, raw input polling and callbacks, input action map polling and callbacks, updated samples. See the linked tagged release for a more complete list of updates.
 
 ### [Version 0.2 on 2026-10-13](https://github.com/ssell/LITL/releases/tag/v0.2.0)
+
+**Primary focus: Assets**
 
 Features include: Task async via coroutines, `litl-import` library, assets subsystem, ECS enhancements (optional components, exclusive execution), engine-level materials and textures, renderer depth-stencil and global texture table, etc. See the linked tagged release for a more complete list of updates.
 
