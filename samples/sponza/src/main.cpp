@@ -103,9 +103,8 @@ namespace litl::samples
 int main()
 {
     litl::Engine engine{};
-    litl::Configuration config = litl::samples::buildConfig();
 
-    engine.setup(config, nullptr, litl::samples::configureSystems, nullptr, litl::samples::configureInputCallbacks, litl::samples::bootstrap);
+    engine.setup(litl::samples::buildConfig(), nullptr, litl::samples::configureSystems, nullptr, litl::samples::configureInputCallbacks, litl::samples::bootstrap);
     engine.start();
     engine.shutdown();
 

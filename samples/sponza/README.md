@@ -17,8 +17,8 @@ Note that free-fly controls are not activated until the user clicks into the win
 | `S`, `Down`  | Move backward |
 | `A`, `Left`  | Move left     |
 | `D`, `Right` | Move right    |
+| `Space`, `E` | Move up       |
 | `Q`          | Move down     |
-| `E`          | Move up       |
 | `Shift`      | Sprint        |
 | `Escape`     | Release mouse |
 
