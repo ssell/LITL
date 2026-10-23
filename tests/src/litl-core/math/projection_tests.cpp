@@ -53,21 +53,21 @@ namespace litl::tests
         REQUIRE(fequals(ndc.y(), -1.0f));
     } LITL_END_TEST_CASE
 
-        LITL_TEST_CASE("screenToNdcSpace maps bottom-right to (1, 1)", "[math::projection]")
+    LITL_TEST_CASE("screenToNdcSpace maps bottom-right to (1, 1)", "[math::projection]")
     {
         const vec2 ndc = screenToNdcSpace(kScreen, kScreen);
         REQUIRE(isOne(ndc.x()));
         REQUIRE(isOne(ndc.y()));
     } LITL_END_TEST_CASE
 
-        LITL_TEST_CASE("screenToNdcSpace maps centre to (0, 0)", "[math::projection]")
+    LITL_TEST_CASE("screenToNdcSpace maps centre to (0, 0)", "[math::projection]")
     {
         const vec2 ndc = screenToNdcSpace(vec2{ 400.0f, 200.0f }, kScreen);
         REQUIRE(isZero(ndc.x()));
         REQUIRE(isZero(ndc.y()));
     } LITL_END_TEST_CASE
 
-        LITL_TEST_CASE("screenToNdcSpace handles non-square sizes per axis", "[math::projection]")
+    LITL_TEST_CASE("screenToNdcSpace handles non-square sizes per axis", "[math::projection]")
     {
         // Quarter across, three quarters down.
         const vec2 ndc = screenToNdcSpace(vec2{ 200.0f, 300.0f }, kScreen);
@@ -75,7 +75,7 @@ namespace litl::tests
         REQUIRE(fequals(ndc.y(), 0.5f));
     } LITL_END_TEST_CASE
 
-        LITL_TEST_CASE("screenToNdcSpace asserts on zero-sized screen", "[math::projection]")
+    LITL_TEST_CASE("screenToNdcSpace asserts on zero-sized screen", "[math::projection]")
     {
         LITL_START_ASSERT_CAPTURE
             const vec2 ndc = screenToNdcSpace(vec2{ 10.0f, 10.0f }, vec2{ 0.0f, 100.0f });
@@ -88,69 +88,69 @@ namespace litl::tests
         LITL_END_ASSERT_CAPTURE
     } LITL_END_TEST_CASE
 
-        // -------------------------------------------------------------------------------------
-        // screenToWorldSpace
-        // -------------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------------------
+    // screenToWorldSpace
+    // -------------------------------------------------------------------------------------
 
-            LITL_TEST_CASE("screenToWorldSpace centre ray points along camera forward", "[math::projection]")
+    LITL_TEST_CASE("screenToWorldSpace centre ray points along camera forward", "[math::projection]")
+    {
+        const Ray ray = screenToWorldSpace(vec2{ 400.0f, 200.0f }, kScreen, makeView(), makeProj());
+
+        requireApprox(ray.direction, vec3{ 0.0f, 0.0f, 1.0f });
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("screenToWorldSpace origin lies on the near plane", "[math::projection]")
+    {
+        // The engine uses reversed-Z (NDC z: 1 = near, 0 = far). Catches the near/far being swapped.
+        const Ray ray = screenToWorldSpace(vec2{ 400.0f, 200.0f }, kScreen, makeView(), makeProj());
+
+        requireApprox(ray.origin, vec3{ 0.0f, 0.0f, s_near });
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("screenToWorldSpace direction is normalized", "[math::projection]")
+    {
+        const vec2 points[] = { { 0.0f, 0.0f }, { 800.0f, 0.0f }, { 0.0f, 400.0f }, { 800.0f, 400.0f }, { 123.0f, 321.0f } };
+
+        for (vec2 const& p : points)
         {
-            const Ray ray = screenToWorldSpace(vec2{ 400.0f, 200.0f }, kScreen, makeView(), makeProj());
+            const Ray ray = screenToWorldSpace(p, kScreen, makeView(), makeProj());
+            REQUIRE(isOne(ray.direction.length()));
+        }
+    } LITL_END_TEST_CASE
 
-            requireApprox(ray.direction, vec3{ 0.0f, 0.0f, 1.0f });
-        } LITL_END_TEST_CASE
+    LITL_TEST_CASE("screenToWorldSpace corners match frustum edges", "[math::projection]")
+    {
+        // fovY = 90deg => tan(fovY/2) = 1, so at z = 1 the frustum spans x in [-aspect, aspect], y in [-1, 1].
+        // Screen Y grows downward, so screen y == 0 is the top of the view (+Y in world space).
+        const mat4 view = makeView();
+        const mat4 proj = makeProj();
 
-            LITL_TEST_CASE("screenToWorldSpace origin lies on the near plane", "[math::projection]")
+        const struct { vec2 screen; vec3 expected; } cases[] =
         {
-            // The engine uses reversed-Z (NDC z: 1 = near, 0 = far). Catches the near/far being swapped.
-            const Ray ray = screenToWorldSpace(vec2{ 400.0f, 200.0f }, kScreen, makeView(), makeProj());
+            { vec2{   0.0f,   0.0f }, vec3{ -s_aspect,  1.0f, 1.0f } },   // top-left
+            { vec2{ 800.0f,   0.0f }, vec3{  s_aspect,  1.0f, 1.0f } },   // top-right
+            { vec2{   0.0f, 400.0f }, vec3{ -s_aspect, -1.0f, 1.0f } },   // bottom-left
+            { vec2{ 800.0f, 400.0f }, vec3{  s_aspect, -1.0f, 1.0f } },   // bottom-right
+        };
 
-            requireApprox(ray.origin, vec3{ 0.0f, 0.0f, s_near });
-        } LITL_END_TEST_CASE
-
-            LITL_TEST_CASE("screenToWorldSpace direction is normalized", "[math::projection]")
+        for (auto const& c : cases)
         {
-            const vec2 points[] = { { 0.0f, 0.0f }, { 800.0f, 0.0f }, { 0.0f, 400.0f }, { 800.0f, 400.0f }, { 123.0f, 321.0f } };
+            const Ray ray = screenToWorldSpace(c.screen, kScreen, view, proj);
+            requireApprox(ray.direction, c.expected.normalized());
+        }
+    } LITL_END_TEST_CASE
 
-            for (vec2 const& p : points)
-            {
-                const Ray ray = screenToWorldSpace(p, kScreen, makeView(), makeProj());
-                REQUIRE(isOne(ray.direction.length()));
-            }
-        } LITL_END_TEST_CASE
+    LITL_TEST_CASE("screenToWorldSpace respects camera position and orientation", "[math::projection]")
+    {
+        // Camera at (10, 5, -3) looking down +X.
+        const vec3 camPos{ 10.0f, 5.0f, -3.0f };
+        const mat4 view = mat4::lookAt(camPos, camPos + vec3{ 1.0f, 0.0f, 0.0f }, vec3{ 0.0f, 1.0f, 0.0f });
+        const mat4 proj = makeProj();
 
-            LITL_TEST_CASE("screenToWorldSpace corners match frustum edges", "[math::projection]")
-        {
-            // fovY = 90deg => tan(fovY/2) = 1, so at z = 1 the frustum spans x in [-aspect, aspect], y in [-1, 1].
-            // Screen Y grows downward, so screen y == 0 is the top of the view (+Y in world space).
-            const mat4 view = makeView();
-            const mat4 proj = makeProj();
+        const Ray ray = screenToWorldSpace(vec2{ 400.0f, 200.0f }, kScreen, view, proj);
 
-            const struct { vec2 screen; vec3 expected; } cases[] =
-            {
-                { vec2{   0.0f,   0.0f }, vec3{ -s_aspect,  1.0f, 1.0f } },   // top-left
-                { vec2{ 800.0f,   0.0f }, vec3{  s_aspect,  1.0f, 1.0f } },   // top-right
-                { vec2{   0.0f, 400.0f }, vec3{ -s_aspect, -1.0f, 1.0f } },   // bottom-left
-                { vec2{ 800.0f, 400.0f }, vec3{  s_aspect, -1.0f, 1.0f } },   // bottom-right
-            };
-
-            for (auto const& c : cases)
-            {
-                const Ray ray = screenToWorldSpace(c.screen, kScreen, view, proj);
-                requireApprox(ray.direction, c.expected.normalized());
-            }
-        } LITL_END_TEST_CASE
-
-            LITL_TEST_CASE("screenToWorldSpace respects camera position and orientation", "[math::projection]")
-        {
-            // Camera at (10, 5, -3) looking down +X.
-            const vec3 camPos{ 10.0f, 5.0f, -3.0f };
-            const mat4 view = mat4::lookAt(camPos, camPos + vec3{ 1.0f, 0.0f, 0.0f }, vec3{ 0.0f, 1.0f, 0.0f });
-            const mat4 proj = makeProj();
-
-            const Ray ray = screenToWorldSpace(vec2{ 400.0f, 200.0f }, kScreen, view, proj);
-
-            requireApprox(ray.direction, vec3{ 1.0f, 0.0f, 0.0f });
-            requireApprox(ray.origin, camPos + vec3{ s_near, 0.0f, 0.0f });
+        requireApprox(ray.direction, vec3{ 1.0f, 0.0f, 0.0f });
+        requireApprox(ray.origin, camPos + vec3{ s_near, 0.0f, 0.0f });
     } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("screenToWorldSpace round trips back to the same pixel", "[math::projection]")
