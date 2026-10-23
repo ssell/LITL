@@ -29,3 +29,9 @@ _Not yet implemented._
 ## Screenshots
 
 ![Screenshot of the Sponza sample application.](media/sample.png)
+
+## Changes
+
+* LITL v0.3:
+    * Added input action callbacks to control new free-fly camera.
+* LITL v0.2: Sample created.
