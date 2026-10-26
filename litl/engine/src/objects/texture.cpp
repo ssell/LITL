@@ -1,9 +1,10 @@
+#include "litl-core/enumBitFlags.hpp"
+#include "litl-core/math/textureUtils.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-engine/objects/texture.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/render/renderManager.hpp"
 #include "litl-renderer/renderer.hpp"
-#include "litl-core/math/textureUtils.hpp"
 
 namespace litl
 {
@@ -28,7 +29,14 @@ namespace litl
             m_textureTableIndex = renderManager.getRenderer()->getTextureTableIndex(m_resourceHandle);
         }
 
-        resizePixelBuffer();
+        if (has_any(m_descriptor.textureInfo.usage, TextureUsageFlagBits::TransferDest))
+        {
+            resizePixelBuffer();
+        }
+        else
+        {
+            m_isDirty = false;
+        }
 
         return true;
     }
@@ -58,6 +66,7 @@ namespace litl
             }
         }
 
+        m_selfHandle = {};
         m_pRenderManager = nullptr;
         m_pixelBytes.clear();
         m_pixelBytes.shrink_to_fit();
@@ -82,6 +91,11 @@ namespace litl
     TextureDescriptor const& Texture::getDescriptor() const noexcept
     {
         return m_descriptor;
+    }
+
+    TextureResourceHandle Texture::getTextureResourceHandle() const noexcept
+    {
+        return m_resourceHandle;
     }
 
     uint32_t Texture::getTextureTableIndex() const noexcept

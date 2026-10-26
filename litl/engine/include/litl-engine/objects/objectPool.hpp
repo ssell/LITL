@@ -9,6 +9,7 @@
 #include "litl-engine/objects/material/material.hpp"
 #include "litl-engine/objects/material/materialBindings.hpp"
 #include "litl-engine/objects/mesh.hpp"
+#include "litl-engine/objects/renderTexture.hpp"
 #include "litl-engine/objects/shader.hpp"
 #include "litl-engine/objects/text.hpp"
 #include "litl-engine/objects/texture.hpp"
@@ -61,6 +62,12 @@ namespace litl
         void getAllMeshHandles(std::vector<MeshHandle>& handles) const noexcept;
         void destroyMesh(MeshHandle handle) noexcept;
         void deferDestroyMesh(MeshHandle handle) noexcept;
+
+        [[nodiscard]] RenderTextureHandle createRenderTexture(RenderTextureDescriptor const& descriptor) noexcept;
+        [[nodiscard]] RenderTexture* getRenderTexture(RenderTextureHandle handle) noexcept;
+        void getAllRenderTextureHandles(std::vector<RenderTextureHandle>& handles) const noexcept;
+        void destroyRenderTexture(RenderTextureHandle handle) noexcept;
+        void deferDestroyRenderTexture(RenderTextureHandle handle) noexcept;
 
         [[nodiscard]] ShaderHandle reserveShader(Authority<AssetManager> auth, ObjectDescriptor const& descriptor) noexcept;
         [[nodiscard]] ShaderHandle createShader(ShaderDescriptor const& descriptor) noexcept;

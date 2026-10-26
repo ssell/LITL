@@ -16,7 +16,6 @@ namespace litl
 {
     class ObjectPool;
     class RenderManager;
-    class Renderer;
     struct TextureAsset;
 
     struct TextureDescriptor
@@ -60,6 +59,11 @@ namespace litl
         /// 
         /// </summary>
         [[nodiscard]] TextureDescriptor const& getDescriptor() const noexcept;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [[nodiscard]] TextureResourceHandle getTextureResourceHandle() const noexcept;
 
         /// <summary>
         /// Returns the slot index this texture occupies in the global texture table if it was created with  TextureResourceDescriptor::residesInTextureTable true.

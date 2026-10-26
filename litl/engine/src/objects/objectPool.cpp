@@ -25,6 +25,7 @@ namespace litl
         HandlePool<Material, MaterialHandleTag> materialPool;
         HandlePool<MaterialBindings, MaterialBindingsHandleTag> materialBindingsPool;
         HandlePool<Mesh, MeshHandleTag> meshPool;
+        HandlePool<RenderTexture, RenderTextureHandleTag> renderTexturePool;
         HandlePool<Shader, ShaderHandleTag> shaderPool;
         HandlePool<Text, TextHandleTag> textPool;
         HandlePool<Texture, TextureHandleTag> texturePool;
@@ -105,6 +106,18 @@ namespace litl
             destroyMaterial(materialHandle);
         }
 
+        // ---- Render Textures
+
+        std::vector<RenderTextureHandle> renderTextureHandles;
+        getAllRenderTextureHandles(renderTextureHandles);
+
+        logTrace("... destroying ", renderTextureHandles.size(), " Render Texture handles.");
+
+        for (auto renderTextureHandle : renderTextureHandles)
+        {
+            destroyRenderTexture(renderTextureHandle);
+        }
+
         // ---- Shaders
 
         std::vector<ShaderHandle> shaderHandles;
@@ -117,7 +130,7 @@ namespace litl
             destroyShader(shaderHandle);
         }
 
-        // ---- Texture
+        // ---- Textures
 
         std::vector<TextureHandle> textureHandles;
         getAllTextureHandles(textureHandles);
@@ -425,6 +438,59 @@ namespace litl
     }
 
     //--------------------------------------------------------------------------------------
+    // Render Texture
+    //--------------------------------------------------------------------------------------
+
+    RenderTextureHandle ObjectPool::createRenderTexture(RenderTextureDescriptor const& descriptor) noexcept
+    {
+        RenderTexture renderTexture{};
+
+        if (!renderTexture.create({}, descriptor, *this, *m_impl->renderManager))
+        {
+            logWarning("Failed to create RenderTexture '", descriptor.objectInfo.name, "'");
+            renderTexture.destroy({});
+            return {};
+        }
+
+        auto handle = m_impl->renderTexturePool.create(renderTexture);
+        auto* renderTexturePtr = m_impl->renderTexturePool.get(handle);
+
+        if (renderTexturePtr != nullptr)
+        {
+            renderTexturePtr->setSelfHandle({}, handle);
+        }
+
+        return handle;
+    }
+
+    RenderTexture* ObjectPool::getRenderTexture(RenderTextureHandle handle) noexcept
+    {
+        return m_impl->renderTexturePool.get(handle);
+    }
+
+    void ObjectPool::getAllRenderTextureHandles(std::vector<RenderTextureHandle>& handles) const noexcept
+    {
+        return m_impl->renderTexturePool.getAllHandles(handles);
+    }
+
+    void ObjectPool::destroyRenderTexture(RenderTextureHandle handle) noexcept
+    {
+        RenderTexture* renderTexture = getRenderTexture(handle);
+
+        if (renderTexture != nullptr)
+        {
+            renderTexture->destroy({});
+            m_impl->renderTexturePool.destroy(handle);
+        }
+    }
+
+    void ObjectPool::deferDestroyRenderTexture(RenderTextureHandle handle) noexcept
+    {
+        // ... todo add to a defer destruction queue that is ticked and destroy on a later frame to ensure the resource is not in use by the GPU ...
+        logWarning("ObjectPool::deferDestroyRenderTexture not yet implemented.");
+    }
+
+    //--------------------------------------------------------------------------------------
     // Shader
     //--------------------------------------------------------------------------------------
 
@@ -606,5 +672,6 @@ namespace litl
     void ObjectPool::deferDestroyTexture(TextureHandle handle) noexcept
     {
         // ... todo add to a defer destruction queue that is ticked and destroy on a later frame to ensure the resource is not in use by the GPU ...
+        logWarning("ObjectPool::deferDestroyTexture not yet implemented.");
     }
 }

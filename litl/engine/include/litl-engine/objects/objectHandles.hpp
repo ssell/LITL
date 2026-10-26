@@ -20,6 +20,9 @@ namespace litl
     struct MeshHandleTag {};
     using MeshHandle = Handle<MeshHandleTag>;
 
+    struct RenderTextureHandleTag {};
+    using RenderTextureHandle = Handle<RenderTextureHandleTag>;
+
     struct ShaderHandleTag {};
     using ShaderHandle = Handle<ShaderHandleTag>;
 
@@ -36,6 +39,7 @@ LITL_STD_HASH_HANDLE(litl::GpuBufferHandleTag);
 LITL_STD_HASH_HANDLE(litl::MaterialBindingsHandleTag);
 LITL_STD_HASH_HANDLE(litl::MaterialHandle);
 LITL_STD_HASH_HANDLE(litl::MeshHandleTag);
+LITL_STD_HASH_HANDLE(litl::RenderTextureHandleTag);
 LITL_STD_HASH_HANDLE(litl::ShaderHandleTag);
 LITL_STD_HASH_HANDLE(litl::TextHandleTag);
 LITL_STD_HASH_HANDLE(litl::TextureHandleTag);
