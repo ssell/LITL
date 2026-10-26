@@ -2,6 +2,7 @@
 #include "litl-renderer/renderer.hpp"
 #include "litl-engine/render/renderPass.hpp"
 #include "litl-engine/render/renderStructs.hpp"
+#include "litl-engine/render/renderPassContext.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/objects/camera.hpp"
 #include "litl-engine/objects/gpuBuffer.hpp"
@@ -42,131 +43,134 @@ namespace litl
             this->objectPool = &objectPool;
         }
 
-        void render(CommandBufferHandle frameCommandBuffer, RenderPushConstants pushConstants, Camera& camera, std::vector<RenderableEntity> const& entities) noexcept
+        void render(RenderPassContext& context) noexcept
         {
             // --- Begin rendering
 
-            const BeginRenderCommand beginRenderCommand{
-                .color = ColorAttachmentDescriptor { 
-                    .colorTexture = {},                     // use the swapchain color texture
-                    .clearColor = camera.getClearColor() 
-                },
-                .depth = DepthAttachmentDescriptor {
-                    .depthTexture = {},                     // use the swapchain depth texture
-                    .loadOp = LoadOperationType::Clear,
-                    .storeOp = StoreOperationType::DontCare,
-                    .clearDepth = 0.0f
-                }
-            };
-
-            const SetViewportAndScissorCommand setViewportScissorCommand{
-                .setViewport = SetViewportCommand {
-                    .region = {
-                        .offset = { 0.0f, 0.0f },
-                        .extents = { 1.0f, 1.0f }           // normalized
-                    },
-                    .minDepth = 0.0f,
-                    .maxDepth = 1.0f
-                },
-                .setScissor = SetScissorCommand {
-                    .region = {
-                        .offset = { 0.0f, 0.0f },
-                        .extents = { 1.0f, 1.0f }           // normalized
-                    }
-                }
-            };
-
-            renderer->cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierUndefinedToColor);
-            renderer->cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierUndefinedToDepthStencil);
-            renderer->cmdBeginRender(frameCommandBuffer, beginRenderCommand);
-            renderer->cmdSetViewportAndScissor(frameCommandBuffer, setViewportScissorCommand);
-
-            if (compileDrawList(entities))
+            for (const RenderView& renderView : context.renderViews)
             {
-                // --- Render
-
-                MaterialHandle currMaterialHandle{};
-                MeshHandle currMeshHandle{};
-                uint32_t currVertexCount = 0u;
-
-                for (auto& drawListItem : drawList)
-                {
-                    if (!drawListItem.graphicsPipelineHandle.isValid() ||
-                         drawListItem.vertexCount == 0u ||
-                         drawListItem.indexCount == 0u ||
-                         drawListItem.mesh == nullptr || 
-                         drawListItem.material == nullptr)
-                    {
-                        continue;
+                const BeginRenderCommand beginRenderCommand{
+                    .color = ColorAttachmentDescriptor {
+                        .colorTexture = {},                     // use the swapchain color texture
+                        .clearColor = renderView.camera->getClearColor()
+                    },
+                    .depth = DepthAttachmentDescriptor {
+                        .depthTexture = {},                     // use the swapchain depth texture
+                        .loadOp = LoadOperationType::Clear,
+                        .storeOp = StoreOperationType::DontCare,
+                        .clearDepth = 0.0f
                     }
+                };
 
-                    // --- Material Bind
-
-                    if (drawListItem.materialHandle != currMaterialHandle)
-                    {
-                        pushConstants.materialPropertiesAddr = 0ull;
-                        currMaterialHandle = drawListItem.materialHandle;
-
-                        renderer->cmdBindGraphicsPipeline(frameCommandBuffer, drawListItem.graphicsPipelineHandle);
-                        auto pushConstantStages = renderer->getGraphicsPipelinePushConstantStages(drawListItem.graphicsPipelineHandle);
-
-                        if (pushConstantStages != ShaderStage::None)
-                        {
-                            if (drawListItem.material != nullptr)
-                            {
-                                if (!drawListItem.material->ready())
-                                {
-                                    // This material has properties, but the property buffer is not yet ready.
-                                    // Likely a material created mid-frame. Skip rendering it for now.
-                                    continue;
-                                }
-
-                                const auto materialPropsBda = drawListItem.material->getGraphicsBufferDeviceAddress();
-                                pushConstants.materialPropertiesAddr = materialPropsBda.has_value() ? materialPropsBda.value() : 0ull;
-                            }
-
-                            renderer->cmdPushConstants(
-                                frameCommandBuffer,
-                                ShaderStage::All,
-                                generic_as_byte_span(&pushConstants, sizeof(RenderPushConstants)));
+                const SetViewportAndScissorCommand setViewportScissorCommand{
+                    .setViewport = SetViewportCommand {
+                        .region = {
+                            .offset = { 0.0f, 0.0f },
+                            .extents = { 1.0f, 1.0f }           // normalized
+                        },
+                        .minDepth = 0.0f,
+                        .maxDepth = 1.0f
+                    },
+                    .setScissor = SetScissorCommand {
+                        .region = {
+                            .offset = { 0.0f, 0.0f },
+                            .extents = { 1.0f, 1.0f }           // normalized
                         }
                     }
+                };
 
-                    // --- Mesh Bind
+                renderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierUndefinedToColor);
+                renderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierUndefinedToDepthStencil);
+                renderer->cmdBeginRender(context.commandBufferHandle, beginRenderCommand);
+                renderer->cmdSetViewportAndScissor(context.commandBufferHandle, setViewportScissorCommand);
 
-                    if (drawListItem.meshHandle != currMeshHandle)
+                if (compileDrawList(renderView.entities))
+                {
+                    // --- Render
+
+                    MaterialHandle currMaterialHandle{};
+                    MeshHandle currMeshHandle{};
+                    uint32_t currVertexCount = 0u;
+
+                    for (auto& drawListItem : drawList)
                     {
-                        auto* currVertexBuffer = objectPool->getGpuBuffer(drawListItem.mesh->getVertexBuffer());
-                        auto* currIndexBuffer = objectPool->getGpuBuffer(drawListItem.mesh->getIndexBuffer());
-
-                        if ((currVertexBuffer == nullptr) || (currIndexBuffer == nullptr))
+                        if (!drawListItem.graphicsPipelineHandle.isValid() ||
+                             drawListItem.vertexCount == 0u ||
+                             drawListItem.indexCount == 0u ||
+                             drawListItem.mesh == nullptr ||
+                             drawListItem.material == nullptr)
                         {
-                            // This may be an asset that is still in the process of being loaded in.
-                            // Continue here (move to next drawListItem) to skip both the bind and draw.
                             continue;
                         }
 
-                        renderer->cmdBindVertexBuffer(frameCommandBuffer, currVertexBuffer->getBufferHandle(), 0ull, 0u);
-                        renderer->cmdBindIndexBuffer(frameCommandBuffer, currIndexBuffer->getBufferHandle(), IndexType::Uint32);  // todo support other index sizes
+                        // --- Material Bind
 
-                        currMeshHandle = drawListItem.meshHandle;
+                        if (drawListItem.materialHandle != currMaterialHandle)
+                        {
+                            context.pushConstants.materialPropertiesAddr = 0ull;
+                            currMaterialHandle = drawListItem.materialHandle;
+
+                            renderer->cmdBindGraphicsPipeline(context.commandBufferHandle, drawListItem.graphicsPipelineHandle);
+                            auto pushConstantStages = renderer->getGraphicsPipelinePushConstantStages(drawListItem.graphicsPipelineHandle);
+
+                            if (pushConstantStages != ShaderStage::None)
+                            {
+                                if (drawListItem.material != nullptr)
+                                {
+                                    if (!drawListItem.material->ready())
+                                    {
+                                        // This material has properties, but the property buffer is not yet ready.
+                                        // Likely a material created mid-frame. Skip rendering it for now.
+                                        continue;
+                                    }
+
+                                    const auto materialPropsBda = drawListItem.material->getGraphicsBufferDeviceAddress();
+                                    context.pushConstants.materialPropertiesAddr = materialPropsBda.has_value() ? materialPropsBda.value() : 0ull;
+                                }
+
+                                renderer->cmdPushConstants(
+                                    context.commandBufferHandle,
+                                    ShaderStage::All,
+                                    generic_as_byte_span(&context.pushConstants, sizeof(RenderPushConstants)));
+                            }
+                        }
+
+                        // --- Mesh Bind
+
+                        if (drawListItem.meshHandle != currMeshHandle)
+                        {
+                            auto* currVertexBuffer = objectPool->getGpuBuffer(drawListItem.mesh->getVertexBuffer());
+                            auto* currIndexBuffer = objectPool->getGpuBuffer(drawListItem.mesh->getIndexBuffer());
+
+                            if ((currVertexBuffer == nullptr) || (currIndexBuffer == nullptr))
+                            {
+                                // This may be an asset that is still in the process of being loaded in.
+                                // Continue here (move to next drawListItem) to skip both the bind and draw.
+                                continue;
+                            }
+
+                            renderer->cmdBindVertexBuffer(context.commandBufferHandle, currVertexBuffer->getBufferHandle(), 0ull, 0u);
+                            renderer->cmdBindIndexBuffer(context.commandBufferHandle, currIndexBuffer->getBufferHandle(), IndexType::Uint32);  // todo support other index sizes
+
+                            currMeshHandle = drawListItem.meshHandle;
+                        }
+
+                        // -- Instanced Draw
+
+                        renderer->cmdDrawIndexed(context.commandBufferHandle, drawListItem.indexCount, drawListItem.instanceCount, drawListItem.firstIndex, 0, drawListItem.instanceOffset);
                     }
-
-                    // -- Instanced Draw
-
-                    renderer->cmdDrawIndexed(frameCommandBuffer, drawListItem.indexCount, drawListItem.instanceCount, drawListItem.firstIndex, 0, drawListItem.instanceOffset);
                 }
             }
-            
+
             // -- End rendering
 
-            renderer->cmdEndRender(frameCommandBuffer);
-            renderer->cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierColorToPresent);
-            renderer->cmdEnd(frameCommandBuffer);
-            renderer->submitCommands(frameCommandBuffer);
+            renderer->cmdEndRender(context.commandBufferHandle);
+            renderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierColorToPresent);
+            renderer->cmdEnd(context.commandBufferHandle);
+            renderer->submitCommands(context.commandBufferHandle);
         }
 
-        [[nodiscard]] bool compileDrawList(std::vector<RenderableEntity> const& entities) noexcept
+        [[nodiscard]] bool compileDrawList(std::span<RenderableEntity const> entities) noexcept
         {
             drawList.clear();
 
@@ -276,10 +280,10 @@ namespace litl
         m_pImpl->setup(renderer, objectPool);
     }
 
-    void RenderPass::render(CommandBufferHandle frameCommandBuffer, RenderPushConstants const& pushConstants, Camera& camera, std::vector<RenderableEntity> const& entities) noexcept
+    void RenderPass::render(RenderPassContext& context) noexcept
     {
         // Note that the conversion from 'RenderPushConstants const&' to 'RendererPushConstants' is intentional so that the pass may mutate the push constants.
         // We keep the 'const&' for this non-pimpl implementation to avoid redundant copies.
-        m_pImpl->render(frameCommandBuffer, pushConstants, camera, entities);
+        m_pImpl->render(context);
     }
 }

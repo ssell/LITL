@@ -7,6 +7,7 @@
 #include "litl-engine/engine.hpp"
 #include "litl-engine/render/renderManager.hpp"
 #include "litl-engine/render/renderStructs.hpp"
+#include "litl-engine/render/renderPassContext.hpp"
 #include "litl-engine/engineCallbacks.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/objects/gpuBuffer.hpp"
@@ -286,7 +287,20 @@ namespace litl
 
                         if (goodToGo())
                         { 
-                            renderPass.render(frameCommandBuffer, pushConstants, *renderCamera.camera, renderCamera.entities);
+                            RenderView view{
+                                .camera = renderCamera.camera,
+                                .entities = renderCamera.entities,
+                                .perPassDataAddr = 0ull,
+                                .instanceDataAddr = 0ull
+                            };
+
+                            RenderPassContext renderPassContext{
+                                .commandBufferHandle = frameCommandBuffer,
+                                .pushConstants = pushConstants,
+                                .renderViews = { &view, 1 }
+                            };
+
+                            renderPass.render(renderPassContext);
                         }
 
                         break;

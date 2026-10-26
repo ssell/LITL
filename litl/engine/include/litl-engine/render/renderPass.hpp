@@ -13,6 +13,7 @@ namespace litl
     class Renderer;
     class ObjectPool;
     struct RenderPushConstants;
+    struct RenderPassContext;
 
     class RenderPass
     {
@@ -22,7 +23,7 @@ namespace litl
         ~RenderPass();
 
         void setup(Renderer& renderer, ObjectPool& objectPool) noexcept;
-        void render(CommandBufferHandle frameCommandBuffer, RenderPushConstants const& pushConstants, Camera& camera, std::vector<RenderableEntity> const& entities) noexcept;
+        void render(RenderPassContext& context) noexcept;
 
     private:
 
