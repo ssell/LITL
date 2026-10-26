@@ -5,6 +5,7 @@
 #include <optional>
 
 #include "litl-core/authority.hpp"
+#include "litl-core/math/types/vec2.hpp"
 #include "litl-engine/objects/objectDescriptor.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
 #include "litl-engine/objects/texture.hpp"
@@ -22,6 +23,13 @@ namespace litl
 
     struct RenderTextureResourceDescriptor
     {
+
+    };
+
+    struct RenderTextureDescriptor
+    {
+        ObjectDescriptor objectInfo{};
+
         RenderTextureSizePolicy sizePolicy{ RenderTextureSizePolicy::Fixed };
 
         uint32_t fixedWidth{ 1u };
@@ -29,14 +37,9 @@ namespace litl
 
         float relativeWidth{ 1.0f };
         float relativeHeight{ 1.0f };
-    };
 
-    struct RenderTextureDescriptor
-    {
-        ObjectDescriptor objectInfo{};
-
-        std::optional<RenderTextureResourceDescriptor> color{ std::nullopt };
-        std::optional<RenderTextureResourceDescriptor> depth{ std::nullopt };
+        bool colorComponent{ true };
+        bool depthComponent{ false };
     };
 
     class RenderTexture final
@@ -51,14 +54,20 @@ namespace litl
 
         [[nodiscard]] TextureHandle getColorTextureHandle() const noexcept;
         [[nodiscard]] TextureHandle getDepthTextureHandle() const noexcept;
+        [[nodiscard]] uint32_t getWidth() const noexcept;
+        [[nodiscard]] uint32_t getHeight() const noexcept;
 
     private:
+
+        void setDimensions(uint32_t w, uint32_t h) noexcept;
 
         ObjectPool* m_pObjectPool{ nullptr };
         RenderTextureDescriptor m_descriptor{};
         RenderTextureHandle m_selfHandle{};
         TextureHandle m_colorTextureHandle{};
         TextureHandle m_depthTextureHandle{};
+        uint32_t m_currWidth{ 0u };
+        uint32_t m_currHeight{ 0u };
     };
 }
 
