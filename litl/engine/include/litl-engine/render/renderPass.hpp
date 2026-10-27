@@ -19,16 +19,20 @@ namespace litl
     {
     public:
 
+        RenderPass(RenderPass const&) = delete;
+        RenderPass& operator=(RenderPass const&) = delete;
+
+        RenderPass() = default;
         virtual ~RenderPass() = default;
+
         virtual void setup(Renderer& renderer, ObjectPool& objectPool) noexcept;
-        virtual void render(RenderPassContext& context) noexcept = 0;
+        virtual void render(RenderPassContext const& context) noexcept = 0;
 
     protected:
 
         [[nodiscard]] bool compileRenderList(std::span<RenderableEntity const> entities) noexcept;
-        [[nodiscard]] bool createRenderPassItems(RenderableEntity entity, uint32_t instanceOffset, std::vector<RenderPassItem>& m_renderPassItems, std::optional<MeshHandle>& currMeshHandle, std::optional<MaterialHandle>& currMaterialHandle) noexcept;
-
-        static constexpr uint32_t MaxRenderWaitTimeMs = 1000u;
+        [[nodiscard]] bool createRenderPassItems(RenderableEntity entity, uint32_t instanceOffset, std::optional<MeshHandle>& currMeshHandle, std::optional<MaterialHandle>& currMaterialHandle) noexcept;
+        [[nodiscard]] virtual GraphicsPipelineHandle resolveGraphicsPipelineHandle(Material* material) const noexcept = 0;
 
         Renderer* m_pRenderer{ nullptr };
         ObjectPool* m_pObjectPool{ nullptr };

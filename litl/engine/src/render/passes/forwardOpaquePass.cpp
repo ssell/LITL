@@ -5,14 +5,14 @@
 
 namespace litl
 {
-    void ForwardOpaquePass::setup(Renderer& renderer, ObjectPool& objectPool) noexcept
+    GraphicsPipelineHandle ForwardOpaquePass::resolveGraphicsPipelineHandle(Material* material) const noexcept
     {
-        RenderPass::setup(renderer, objectPool);
+        return material->getGraphicsPipelineHandle();
     }
 
-    void ForwardOpaquePass::render(RenderPassContext& context) noexcept
+    void ForwardOpaquePass::render(RenderPassContext const& context) noexcept
     {
-        // --- Begin rendering
+        RenderPushConstants passPushConstants = context.pushConstants;
 
         for (const RenderView& renderView : context.renderViews)
         {
@@ -57,15 +57,14 @@ namespace litl
 
                 MaterialHandle currMaterialHandle{};
                 MeshHandle currMeshHandle{};
-                uint32_t currVertexCount = 0u;
 
                 for (auto& renderPassItem : m_renderPassItems)
                 {
                     if (!renderPassItem.graphicsPipelineHandle.isValid() ||
-                         renderPassItem.vertexCount == 0u ||
-                         renderPassItem.indexCount == 0u ||
-                         renderPassItem.mesh == nullptr ||
-                         renderPassItem.material == nullptr)
+                        renderPassItem.vertexCount == 0u ||
+                        renderPassItem.indexCount == 0u ||
+                        renderPassItem.mesh == nullptr ||
+                        renderPassItem.material == nullptr)
                     {
                         continue;
                     }
@@ -74,7 +73,7 @@ namespace litl
 
                     if (renderPassItem.materialHandle != currMaterialHandle)
                     {
-                        context.pushConstants.materialPropertiesAddr = 0ull;
+                        passPushConstants.materialPropertiesAddr = 0ull;
                         currMaterialHandle = renderPassItem.materialHandle;
 
                         m_pRenderer->cmdBindGraphicsPipeline(context.commandBufferHandle, renderPassItem.graphicsPipelineHandle);
@@ -92,13 +91,13 @@ namespace litl
                                 }
 
                                 const auto materialPropsBda = renderPassItem.material->getGraphicsBufferDeviceAddress();
-                                context.pushConstants.materialPropertiesAddr = materialPropsBda.has_value() ? materialPropsBda.value() : 0ull;
+                                passPushConstants.materialPropertiesAddr = materialPropsBda.has_value() ? materialPropsBda.value() : 0ull;
                             }
 
                             m_pRenderer->cmdPushConstants(
                                 context.commandBufferHandle,
                                 ShaderStage::All,
-                                generic_as_byte_span(&context.pushConstants, sizeof(RenderPushConstants)));
+                                generic_as_byte_span(&passPushConstants, sizeof(RenderPushConstants)));
                         }
                     }
 
@@ -127,13 +126,8 @@ namespace litl
                     m_pRenderer->cmdDrawIndexed(context.commandBufferHandle, renderPassItem.indexCount, renderPassItem.instanceCount, renderPassItem.firstIndex, 0, renderPassItem.instanceOffset);
                 }
             }
+
+            m_pRenderer->cmdEndRender(context.commandBufferHandle);
         }
-
-        // -- End rendering
-
-        m_pRenderer->cmdEndRender(context.commandBufferHandle);
-        m_pRenderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierColorToPresent);
-        m_pRenderer->cmdEnd(context.commandBufferHandle);
-        m_pRenderer->submitCommands(context.commandBufferHandle);
     }
 }

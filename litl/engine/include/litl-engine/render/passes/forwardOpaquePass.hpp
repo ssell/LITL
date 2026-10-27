@@ -9,8 +9,11 @@ namespace litl
     {
     public:
 
-        void setup(Renderer& renderer, ObjectPool& objectPool) noexcept override;
-        void render(RenderPassContext& context) noexcept override;
+        void render(RenderPassContext const& context) noexcept override;
+
+    protected:
+
+        GraphicsPipelineHandle resolveGraphicsPipelineHandle(Material* material) const noexcept override;
 
     private:
     };

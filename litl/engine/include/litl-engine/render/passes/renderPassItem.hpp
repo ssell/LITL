@@ -2,12 +2,14 @@
 #define LITL_ENGINE_RENDER_PASS_ITEM_H__
 
 #include <cstdint>
+
 #include "litl-renderer/resources/handles.hpp"
+#include "litl-engine/objects/objectHandles.hpp"
 
 namespace litl
 {
-    struct Material;
-    struct Mesh;
+    class Material;
+    class Mesh;
 
     /// <summary>
     /// Item being drawn by a render pass, and the number of times it is being drawn.

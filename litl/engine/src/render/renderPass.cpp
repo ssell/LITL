@@ -45,7 +45,7 @@ namespace litl
                 m_renderPassItems.back().instanceCount = i - m_renderPassItems.back().instanceOffset;
             }
 
-            if (createRenderPassItems(renderableEntity, i, m_renderPassItems, currMeshHandle, currMaterialHandle))
+            if (createRenderPassItems(renderableEntity, i, currMeshHandle, currMaterialHandle))
             {
                 currMeshHandle = renderableEntity.meshRef.handle;
                 currMaterialHandle = renderableEntity.materialRef.handle;
@@ -64,7 +64,7 @@ namespace litl
         return true;
     }
 
-    [[nodiscard]] bool RenderPass::createRenderPassItems(RenderableEntity entity, uint32_t instanceOffset, std::vector<RenderPassItem>& m_renderPassItems, std::optional<MeshHandle>& currMeshHandle, std::optional<MaterialHandle>& currMaterialHandle) noexcept
+    [[nodiscard]] bool RenderPass::createRenderPassItems(RenderableEntity entity, uint32_t instanceOffset, std::optional<MeshHandle>& currMeshHandle, std::optional<MaterialHandle>& currMaterialHandle) noexcept
     {
         auto* mesh = m_pObjectPool->getMesh(entity.meshRef.handle);
 
@@ -90,7 +90,7 @@ namespace litl
         m_renderPassItems.push_back(RenderPassItem{
             .materialHandle = material->getHandle(),
             .material = material,
-            .graphicsPipelineHandle = material->getGraphicsPipelineHandle(),
+            .graphicsPipelineHandle = resolveGraphicsPipelineHandle(material),
             .meshHandle = entity.meshRef.handle,
             .mesh = mesh,
             .firstVertex = 0u,

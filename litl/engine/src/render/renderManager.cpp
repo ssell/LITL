@@ -207,7 +207,10 @@ namespace litl
         [[nodiscard]] RenderPass& getRenderPass(RenderPassType type) const noexcept
         {
             const auto index = static_cast<uint32_t>(type);
+
             LITL_FATAL_ASSERT(renderPasses.size() > index);
+            LITL_FATAL_ASSERT(renderPasses[index] != nullptr);
+
             return *renderPasses[index].get();
         }
 
@@ -327,15 +330,21 @@ namespace litl
 
                         break;
                     }
-
                 }
+
+                renderer->cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierColorToPresent);
             }
             else
             {
                 // No active cameras. Just perform a screen clear.
-                emptyRender(frameCommandBuffer);
+                renderer->cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierUndefinedToColor);
+                renderer->cmdBeginRender(frameCommandBuffer, { .color = ColorAttachmentDescriptor {.clearColor = colors::Black } });
+                renderer->cmdEndRender(frameCommandBuffer);
+                renderer->cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierColorToPresent);
             }
 
+            renderer->cmdEnd(frameCommandBuffer);
+            renderer->submitCommands(frameCommandBuffer);
             renderer->endRender();
         }
 
@@ -560,20 +569,6 @@ namespace litl
             LITL_ASSERT_MSG(pushConstants.worldMatricesAddr != 0ull, "Attempting to render with an invalid WorldMatrices address.", false);
 
             return true;
-        }
-
-        /// <summary>
-        /// Used when there are no active cameras.
-        /// </summary>
-        void emptyRender(CommandBufferHandle commandBuffer) noexcept
-        {
-            // Simply clear the screen to black.
-            renderer->cmdPipelineBarrier(commandBuffer, PipelineBarrierUndefinedToColor);
-            renderer->cmdBeginRender(commandBuffer, { .color = ColorAttachmentDescriptor { .clearColor = colors::Black } });
-            renderer->cmdEndRender(commandBuffer);
-            renderer->cmdPipelineBarrier(commandBuffer, PipelineBarrierColorToPresent);
-            renderer->cmdEnd(commandBuffer);
-            renderer->submitCommands(commandBuffer);
         }
 
         void halt() noexcept
