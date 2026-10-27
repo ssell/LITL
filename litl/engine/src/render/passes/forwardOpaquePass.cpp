@@ -16,40 +16,15 @@ namespace litl
 
         for (const RenderView& renderView : context.renderViews)
         {
-            const BeginRenderCommand beginRenderCommand{
-                .color = ColorAttachmentDescriptor {
-                    .colorTexture = {},                     // use the swapchain color texture
-                    .clearColor = renderView.camera->getClearColor()
-                },
-                .depth = DepthAttachmentDescriptor {
-                    .depthTexture = {},                     // use the swapchain depth texture
-                    .loadOp = LoadOperationType::Clear,
-                    .storeOp = StoreOperationType::DontCare,
-                    .clearDepth = 0.0f
-                }
-            };
-
-            const SetViewportAndScissorCommand setViewportScissorCommand{
-                .setViewport = SetViewportCommand {
-                    .region = {
-                        .offset = { 0.0f, 0.0f },
-                        .extents = { 1.0f, 1.0f }           // normalized
-                    },
-                    .minDepth = 0.0f,
-                    .maxDepth = 1.0f
-                },
-                .setScissor = SetScissorCommand {
-                    .region = {
-                        .offset = { 0.0f, 0.0f },
-                        .extents = { 1.0f, 1.0f }           // normalized
-                    }
-                }
-            };
+            if (renderView.camera == nullptr)
+            {
+                return;
+            }
 
             m_pRenderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierUndefinedToColor);
             m_pRenderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierUndefinedToDepthStencil);
-            m_pRenderer->cmdBeginRender(context.commandBufferHandle, beginRenderCommand);
-            m_pRenderer->cmdSetViewportAndScissor(context.commandBufferHandle, setViewportScissorCommand);
+            m_pRenderer->cmdBeginRender(context.commandBufferHandle, createBeginRenderCommand(*renderView.camera));
+            m_pRenderer->cmdSetViewportAndScissor(context.commandBufferHandle, createSetViewportAndScissorCommand(*renderView.camera));
 
             if (compileRenderList(renderView.entities))
             {
@@ -73,6 +48,12 @@ namespace litl
 
                     if (renderPassItem.materialHandle != currMaterialHandle)
                     {
+                        if ((renderPassItem.material != nullptr) && !renderPassItem.material->ready())
+                        {
+                            // This material has properties, but the property buffer is not yet ready. Likely a material created mid-frame. Skip rendering it for now.
+                            continue;
+                        }
+
                         passPushConstants.materialPropertiesAddr = 0ull;
                         currMaterialHandle = renderPassItem.materialHandle;
 
@@ -83,13 +64,6 @@ namespace litl
                         {
                             if (renderPassItem.material != nullptr)
                             {
-                                if (!renderPassItem.material->ready())
-                                {
-                                    // This material has properties, but the property buffer is not yet ready.
-                                    // Likely a material created mid-frame. Skip rendering it for now.
-                                    continue;
-                                }
-
                                 const auto materialPropsBda = renderPassItem.material->getGraphicsBufferDeviceAddress();
                                 passPushConstants.materialPropertiesAddr = materialPropsBda.has_value() ? materialPropsBda.value() : 0ull;
                             }

@@ -104,4 +104,64 @@ namespace litl
         // Only update current handles on successful object retrievals and subsequent DrawListItem creation.
         return true;
     }
+
+    BeginRenderCommand RenderPass::createBeginRenderCommand(Camera const& camera) const noexcept
+    {
+        auto colorAttachment = ColorAttachmentDescriptor {
+            .colorTexture = {},                                 // If not set, then will use the swapchain.
+            .clearColor = camera.getClearColor()
+        };
+
+        auto depthAttachment = DepthAttachmentDescriptor{
+            .depthTexture = {},                                 // If not set, then will use the swapchain.
+            .loadOp = LoadOperationType::Clear,
+            .storeOp = StoreOperationType::DontCare,
+            .clearDepth = 0.0f
+        };
+
+        RenderTexture* renderTexture = m_pObjectPool->getRenderTexture(camera.getRenderTextureHandle());
+
+        if (renderTexture != nullptr)
+        {
+            Texture* colorTexture = m_pObjectPool->getTexture(renderTexture->getColorTextureHandle());
+            Texture* depthTexture = m_pObjectPool->getTexture(renderTexture->getDepthTextureHandle());
+
+            if (colorTexture != nullptr)
+            {
+                colorAttachment.colorTexture = colorTexture->getTextureResourceHandle();
+            }
+
+            if (depthTexture != nullptr)
+            {
+                depthAttachment.depthTexture = depthTexture->getTextureResourceHandle();
+            }
+        }
+
+        return BeginRenderCommand{
+            .color = colorAttachment,
+            .depth = (camera.getDepthEnabled() ? std::optional<DepthAttachmentDescriptor>(depthAttachment) : std::nullopt)
+        };
+    }
+
+    SetViewportAndScissorCommand RenderPass::createSetViewportAndScissorCommand(Camera const& camera) const noexcept
+    {
+        const SetViewportAndScissorCommand setViewportScissorCommand{
+            .setViewport = SetViewportCommand {
+                .region = {
+                    .offset = { 0.0f, 0.0f },
+                    .extents = { 1.0f, 1.0f }           // normalized
+                },
+                .minDepth = 0.0f,
+                .maxDepth = 1.0f
+            },
+            .setScissor = SetScissorCommand {
+                .region = {
+                    .offset = { 0.0f, 0.0f },
+                    .extents = { 1.0f, 1.0f }           // normalized
+                }
+            }
+        };
+
+        return setViewportScissorCommand;
+    }
 }

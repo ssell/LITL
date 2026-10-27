@@ -122,6 +122,17 @@ namespace litl
         float zFar = 1000.0f;
 
         /// <summary>
+        /// Does this camera render out to a depth texture in addition to the color texture?
+        /// </summary>
+        bool depthEnabled{ true };
+
+        /// <summary>
+        /// Optional render texture for the camera to draw to.
+        /// If this is not specified then the swapchains will be rendered to instead.
+        /// </summary>
+        RenderTextureHandle renderTexture{};
+
+        /// <summary>
         /// The priority level for the camera.
         /// Cameras with a lower level are processed first.
         /// </summary>
@@ -287,6 +298,27 @@ namespace litl
         /// Sets the clear color of the camera.
         /// </summary>
         void setClearColor(color const& clearColor) noexcept;
+
+        /// <summary>
+        /// Returns whether or not the camera renders out depth values.
+        /// </summary>
+        [[nodiscard]] bool getDepthEnabled() const noexcept;
+
+        /// <summary>
+        /// Sets if the camera renders out depth values.
+        /// </summary>
+        void setDepthEnabled(bool enabled) noexcept;
+
+        /// <summary>
+        /// Retrieves the render texture that the camera is rendering to.
+        /// If this is not set, then the camera is rendering to the swapchain.
+        /// </summary>
+        [[nodiscard]] RenderTextureHandle getRenderTextureHandle() const noexcept;
+
+        /// <summary>
+        /// Sets the render texture that the camera is rendering to.
+        /// </summary>
+        void setRenderTextureHandle(RenderTextureHandle handle) noexcept;
 
         /// <summary>
         /// Converts the provided 2D screen-space position into a world-space ray whose origin is on the near plane and points towards the far plane.

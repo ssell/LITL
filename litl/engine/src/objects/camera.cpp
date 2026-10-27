@@ -12,7 +12,7 @@ namespace litl
     void Camera::create(Authority<ObjectPool> auth, CameraDescriptor const& descriptor, World& world, SceneView& sceneView, CameraHandle handle) noexcept
     {
         m_descriptor = descriptor;
-        m_processPosition = descriptor.processOrder;
+        m_processPosition = m_descriptor.processOrder;
         m_entity = world.createImmediate();
         m_pWorld = &world;
 
@@ -213,6 +213,26 @@ namespace litl
     void Camera::setClearColor(color const& clearColor) noexcept
     {
         m_descriptor.clearColor = clearColor;
+    }
+
+    bool Camera::getDepthEnabled() const noexcept
+    {
+        return m_descriptor.depthEnabled;
+    }
+
+    void Camera::setDepthEnabled(bool enabled) noexcept
+    {
+        m_descriptor.depthEnabled = enabled;
+    }
+
+    RenderTextureHandle Camera::getRenderTextureHandle() const noexcept
+    {
+        return m_descriptor.renderTexture;
+    }
+
+    void Camera::setRenderTextureHandle(RenderTextureHandle handle) noexcept
+    {
+        m_descriptor.renderTexture = handle;
     }
 
     Ray Camera::screenPosToWorldRay(vec2 screenPos) const noexcept
