@@ -46,6 +46,7 @@ namespace litl
     {
         RenderPass::setup(services, renderer, objectPool);
         m_pAssetManager = services.get<AssetManager>().get();
+        m_shaderAssetHandle = m_pAssetManager->getShaderHandle("litl/blit");
     }
 
     void BlitPass::render(RenderPassContext const& context) noexcept
@@ -73,6 +74,9 @@ namespace litl
 
     bool BlitPass::ensurePipelineExists() noexcept
     {
+        // We create our own graphics pipeline from a single shader module to avoid limitations of proper Materials.
+        // For example, Materials always provide a vertex input layout which we do not use for a full-screen triangle blit.
+
         if (m_graphicsPipelineHandle.isValid())
         {
             return true;

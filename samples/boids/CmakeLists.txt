@@ -3,9 +3,14 @@ project (litl-samples-boids VERSION 1.0.0 LANGUAGES C CXX)
 
 add_executable(litl-samples-boids)
 
-target_sources(litl-samples-boids
-	PRIVATE 
-		"src/main.cpp" "src/simulator.cpp" "src/boid.cpp" "src/movement.cpp" "src/food.cpp" "src/predator.cpp")
+target_sources(litl-samples-boids PRIVATE 
+	"src/main.cpp" 
+	"src/simulator.cpp" 
+	"src/boid.cpp" 
+	"src/movement.cpp" 
+	"src/food.cpp" 
+	"src/predator.cpp"
+)
 
 target_include_directories(litl-samples-boids
 	PUBLIC

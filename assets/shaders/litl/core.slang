@@ -1,3 +1,8 @@
+// -----------------------------------------------------------------------------------------
+// [core.slang]
+// Core shader functionality and utility for both internal and external LITL shaders.
+// -----------------------------------------------------------------------------------------
+
 module core;
 
 #define BindSetPerFrame    0

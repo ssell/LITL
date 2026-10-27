@@ -3,9 +3,9 @@ project (litl-samples-renderer VERSION 1.0.0 LANGUAGES C CXX)
 
 add_executable(litl-samples-renderer)
 
-target_sources(litl-samples-renderer 
-	PRIVATE
-		"src/main.cpp")
+target_sources(litl-samples-renderer PRIVATE
+	"src/main.cpp"
+)
 
 target_include_directories(litl-samples-renderer 
 	PUBLIC 
