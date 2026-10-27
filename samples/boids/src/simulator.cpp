@@ -91,7 +91,7 @@ namespace litl::samples
         m_trackedFood.resize(m_config.foodCount, {});
         m_trackedPredators.resize(m_config.predatorCount, {});
 
-        auto* materialAsset = assetManager->getMaterial("materials/unlit");
+        auto* materialAsset = assetManager->getMaterial("litl/materials/unlit");
 
         if (materialAsset == nullptr)
         {
@@ -100,7 +100,7 @@ namespace litl::samples
         }
 
         m_materialHandle = materialAsset->materialHandle;
-        m_modelAssetHandle = assetManager->getModelHandle("models/sphere");
+        m_modelAssetHandle = assetManager->getModelHandle("litl/models/sphere");
 
         tick();
     }

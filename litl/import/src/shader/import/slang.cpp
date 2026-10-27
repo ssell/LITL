@@ -54,7 +54,7 @@ namespace litl::import
             };
 
             std::vector<const char*> searchPaths;
-            searchPaths.push_back("assets/shaders");                    // this needs to be the folder containing the "litl/" engine-provided modules folder
+            searchPaths.push_back("assets/litl/shaders");                    // this needs to be the folder containing the "litl/" engine-provided modules folder
             // ... todo add ability for project to specify other module folders ...
 
             const slang::SessionDesc sessionDesc{
@@ -78,7 +78,7 @@ namespace litl::import
         std::expected<SpirvModule, std::string> compileSlang(
             slang::ISession* session,
             std::string_view fileName,                              // "flat"
-            std::string_view fileImportPath,                        // "shaders/flat.slang" (for diagnostics)
+            std::string_view fileImportPath,                        // "litl/shaders/flat.slang" (for diagnostics)
             std::span<std::byte const> sourceBytes) noexcept
         {
             auto slangDiagnosticsText = [](slang::IBlob* blob) noexcept -> std::string { return (blob ? std::string(static_cast<const char*>(blob->getBufferPointer())) : std::string{}); };

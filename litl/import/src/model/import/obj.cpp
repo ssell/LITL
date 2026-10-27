@@ -331,8 +331,8 @@ namespace litl::import
             material->setName(objmtl.name);
 
             // todo store these default shader values _somewhere_. unlit and lit (future)
-            if (!material->setShader(LitlMatShaderStage::Vertex, "shaders/lit", "vertexMain") ||
-                !material->setShader(LitlMatShaderStage::Fragment, "shaders/lit", "fragmentMain"))
+            if (!material->setShader(LitlMatShaderStage::Vertex, "litl/shaders/lit", "vertexMain") ||
+                !material->setShader(LitlMatShaderStage::Fragment, "litl/shaders/lit", "fragmentMain"))
             {
                 logWarning("Failed to assign the default shaders to OBJ material '", objmtl.name, "'. The material will be skipped.");
                 importedData.items.pop_back();

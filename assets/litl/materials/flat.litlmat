@@ -1,8 +1,8 @@
 name = "Flat"
 
 [shaders]
-vertex   = { resource = "shaders/flat", entry = "vertexMain" }
-fragment = { resource = "shaders/flat", entry = "fragmentMain" }
+vertex   = { resource = "litl/shaders/flat", entry = "vertexMain" }
+fragment = { resource = "litl/shaders/flat", entry = "fragmentMain" }
 
 [properties]
 tint   = { type = "color", value = [1.0, 1.0, 1.0, 1.0] }

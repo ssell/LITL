@@ -1,8 +1,8 @@
 name = "Lit"
 
 [shaders]
-vertex = { resource = "shaders/lit", entry = "vertexMain" }
-fragment = { resource = "shaders/lit", entry = "fragmentMain" }
+vertex   = { resource = "litl/shaders/lit", entry = "vertexMain" }
+fragment = { resource = "litl/shaders/lit", entry = "fragmentMain" }
 
 [properties]
 tint      = { type = "color", value = [1.0, 1.0, 1.0, 1.0] }

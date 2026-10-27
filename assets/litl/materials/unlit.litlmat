@@ -1,8 +1,8 @@
 name = "Unlit"
 
 [shaders]
-vertex = { resource = "shaders/unlit", entry = "vertexMain" }
-fragment = { resource = "shaders/unlit", entry = "fragmentMain" }
+vertex   = { resource = "litl/shaders/unlit", entry = "vertexMain" }
+fragment = { resource = "litl/shaders/unlit", entry = "fragmentMain" }
 
 [properties]
 tint = { type = "color", value = [1.0, 1.0, 1.0, 1.0] }

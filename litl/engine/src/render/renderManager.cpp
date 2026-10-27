@@ -328,7 +328,7 @@ namespace litl
                                 .renderViews = { &view, 1 }
                             };
 
-                            getRenderPass(RenderPassType::Blit).render(renderPassContext);
+                            getRenderPass(RenderPassType::ForwardOpaque).render(renderPassContext);
                         }
 
                         break;

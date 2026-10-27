@@ -201,8 +201,8 @@ namespace litl::import
         {
             // TODO general, need to move the default shader paths, default expected property names, etc. to some shared location to also use with OBJ, etc.
 
-            if (!litlMaterial->setShader(LitlMatShaderStage::Vertex, "shaders/lit", "vertexMain") ||
-                !litlMaterial->setShader(LitlMatShaderStage::Fragment, "shaders/lit", "fragmentMain"))
+            if (!litlMaterial->setShader(LitlMatShaderStage::Vertex, "litl/shaders/lit", "vertexMain") ||
+                !litlMaterial->setShader(LitlMatShaderStage::Fragment, "litl/shaders/lit", "fragmentMain"))
             {
                 logWarning("Failed to assign the default shaders to GLB material '", nameOr(glMaterial.name, "UNKNOWN"), "' in model '", location, "'. The material will be skipped.");
                 return false;

@@ -28,28 +28,11 @@ add_custom_command(TARGET litl-samples-sponza POST_BUILD
 )
 
 # ------------------------------------------------------------------------------------------
-# Copy selected engine assets
+# Copy engine assets
 # ------------------------------------------------------------------------------------------
 
-set (LITL_SAMPLES_SPONZA_ASSETS
-	"${LITL_ASSETS_DIR}/shaders/litl/core.slang"
-	"${LITL_ASSETS_DIR}/shaders/unlit.slang"
-	"${LITL_ASSETS_DIR}/shaders/lit.slang"
-	"${LITL_ASSETS_DIR}/materials/unlit.litlmat"
-	"${LITL_ASSETS_DIR}/materials/lit.litlmat"
-	"${LITL_ASSETS_DIR}/models/sphere.glb"
-	"${LITL_ASSETS_DIR}/models/cube.glb"
+add_custom_command(TARGET litl-samples-sponza POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
+	${LITL_ASSETS_DIR}
+	$<TARGET_FILE_DIR:litl-samples-sponza>/assets
 )
-
-foreach(LITL_SAMPLES_SPONZA_ASSET_PATH IN LISTS LITL_SAMPLES_SPONZA_ASSETS)
-	string(REPLACE ${LITL_ASSETS_DIR} "" RELATIVE_ASSET "${LITL_SAMPLES_SPONZA_ASSET_PATH}")
-
-	add_custom_command(
-		TARGET litl-samples-sponza POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy_if_different
-			${LITL_SAMPLES_SPONZA_ASSET_PATH}
-			"$<TARGET_FILE_DIR:litl-samples-sponza>/assets/${RELATIVE_ASSET}"
-		COMMENT "Updating asset: ${RELATIVE_ASSET}"
-		VERBATIM
-	)
-endforeach()

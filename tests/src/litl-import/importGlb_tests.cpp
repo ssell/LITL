@@ -133,10 +133,10 @@ namespace litl::tests
 
         const auto& shaders = material->getShaders();
         REQUIRE(shaders[0].stage == import::LitlMatShaderStage::Vertex);
-        REQUIRE(shaders[0].resource == "shaders/lit");
+        REQUIRE(shaders[0].resource == "litl/shaders/lit");
         REQUIRE(shaders[0].entry == "vertexMain");
         REQUIRE(shaders[1].stage == import::LitlMatShaderStage::Fragment);
-        REQUIRE(shaders[1].resource == "shaders/lit");
+        REQUIRE(shaders[1].resource == "litl/shaders/lit");
         REQUIRE(shaders[1].entry == "fragmentMain");
 
         const auto& settings = material->getSettings();
