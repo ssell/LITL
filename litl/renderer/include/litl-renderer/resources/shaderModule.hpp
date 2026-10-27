@@ -5,7 +5,7 @@
 #include <span>
 #include <string>
 
-#include "litl-core/handles.hpp"
+#include "litl-renderer/resources/handles.hpp"
 #include "litl-renderer/resources/shaderModuleTypes.hpp"
 #include "litl-renderer/reflection.hpp"
 
@@ -34,9 +34,6 @@ namespace litl
         /// </summary>
         std::span<std::byte const> bytes;
     };
-
-    struct ShaderModuleTag {};
-    using ShaderModuleHandle = Handle<ShaderModuleTag>;
 
     /// <summary>
     /// The shader module and entry point into that module.

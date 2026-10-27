@@ -7,9 +7,9 @@
 #include <string_view>
 #include <vector>
 
-#include "litl-core/handles.hpp"
 #include "litl-core/formats/dataFormats.hpp"
 #include "litl-core/math/textureUtils.hpp"
+#include "litl-renderer/resources/handles.hpp"
 #include "litl-renderer/enums.hpp"
 
 namespace litl
@@ -122,9 +122,6 @@ namespace litl
             }
         }
     };
-
-    struct TextureResourceTag {};
-    using TextureResourceHandle = Handle<TextureResourceTag>;
 
     struct MappedTexture
     {

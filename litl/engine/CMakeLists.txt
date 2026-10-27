@@ -48,7 +48,7 @@ add_library(litl-engine STATIC
 	"src/assets/fileAssetSource.cpp" 
 	"src/platformFactory.cpp"
 	"src/objects/renderTexture.cpp"
-)
+ "src/render/passes/forwardOpaquePass.cpp")
 
 target_include_directories(litl-engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 

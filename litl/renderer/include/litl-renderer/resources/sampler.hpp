@@ -4,7 +4,7 @@
 #include <array>
 #include <optional>
 
-#include "litl-core/handles.hpp"
+#include "litl-renderer/resources/handles.hpp"
 #include "litl-renderer/enums.hpp"
 
 namespace litl
@@ -28,9 +28,6 @@ namespace litl
         float minLod = 0.0f;
         float maxLod = 1000.0f;
     };
-
-    struct SamplerTag {};
-    using SamplerHandle = Handle<SamplerTag>;
 
     enum class SamplerPredefines : uint8_t
     {

@@ -1,5 +1,8 @@
+#include <array>
 #include <chrono>
+#include <memory>
 #include <span>
+#include <vector>
 
 #include "litl-core/assert.hpp"
 #include "litl-core/containers/common.hpp"
@@ -8,6 +11,8 @@
 #include "litl-engine/render/renderManager.hpp"
 #include "litl-engine/render/renderStructs.hpp"
 #include "litl-engine/render/renderPassContext.hpp"
+#include "litl-engine/render/passes/forwardOpaquePass.hpp"
+#include "litl-engine/render/passes/renderPassType.hpp"
 #include "litl-engine/engineCallbacks.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/objects/gpuBuffer.hpp"
@@ -68,7 +73,7 @@ namespace litl
         std::queue<TextureHandle> dirtyTextures;
 
         Renderer* renderer{ nullptr };
-        RenderPass renderPass{};
+        std::array<std::unique_ptr<RenderPass>, static_cast<uint32_t>(RenderPassType::Count)> renderPasses;
         FrameData frameData{};
         PassData passData{};
         InstanceData instanceData{};
@@ -136,8 +141,7 @@ namespace litl
             LITL_FATAL_ASSERT_MSG(instanceData.handle.isValid(), "Failed to create Instance Data buffer.");
             LITL_FATAL_ASSERT_MSG(worldMatrices.handle.isValid(), "Failed to create World Matrices buffer.");
 
-            renderPass.setup(*renderer, *objectPool);
-
+            createRenderPasses();
             createDefaultTextures();
         }
 
@@ -187,6 +191,24 @@ namespace litl
                 logError("Failed to build Renderer of type '", getRendererName(rendererDescriptor.rendererType), "'");
                 return;
             }
+        }
+
+        void createRenderPasses() noexcept
+        {
+            renderPasses[static_cast<uint32_t>(RenderPassType::ForwardOpaque)] = std::make_unique<ForwardOpaquePass>();
+            // ... add others (ForwardTransparentPass, DepthPass, ShadowPass, PostProcessPass, DeferredPass, etc) ...
+
+            for (auto& renderPass : renderPasses)
+            {
+                renderPass->setup(*renderer, *objectPool);
+            }
+        }
+
+        [[nodiscard]] RenderPass& getRenderPass(RenderPassType type) const noexcept
+        {
+            const auto index = static_cast<uint32_t>(type);
+            LITL_FATAL_ASSERT(renderPasses.size() > index);
+            return *renderPasses[index].get();
         }
 
         void createDefaultTexture(std::string_view name, color value, uint32_t textureSlot) noexcept
@@ -300,7 +322,7 @@ namespace litl
                                 .renderViews = { &view, 1 }
                             };
 
-                            renderPass.render(renderPassContext);
+                            getRenderPass(RenderPassType::ForwardOpaque).render(renderPassContext);
                         }
 
                         break;

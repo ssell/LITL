@@ -86,13 +86,13 @@ namespace litl::vulkan
         RendererContext* m_pContext = nullptr;
 
         HandlePool<BufferResource, BufferTag> m_bufferPool;
-        HandlePool<CommandBufferResource, CommandBufferTag> m_commandBufferPool;
-        HandlePool<ComputePipelineResource, ComputePipelineTag> m_computePipelinePool;
-        HandlePool<GraphicsPipelineResource, GraphicsPipelineTag> m_graphicsPipelinePool;
-        HandlePool<SamplerResource, SamplerTag> m_samplerPool;
-        HandlePool<TextureResource, TextureResourceTag> m_texturePool;
+        HandlePool<CommandBufferResource, CommandBufferHandleTag> m_commandBufferPool;
+        HandlePool<ComputePipelineResource, ComputePipelineHandleTag> m_computePipelinePool;
+        HandlePool<GraphicsPipelineResource, GraphicsPipelineHandleTag> m_graphicsPipelinePool;
+        HandlePool<SamplerResource, SamplerHandleTag> m_samplerPool;
+        HandlePool<TextureResource, TextureResourceHandleTag> m_texturePool;
 
-        HandlePool<ShaderModuleResource, ShaderModuleTag> m_shaderModulePool;
+        HandlePool<ShaderModuleResource, ShaderModuleHandleTag> m_shaderModulePool;
         StringIdMap<ShaderModuleHandle> m_shaderModuleMap;
         ShaderModuleReferenceMap m_shaderModuleReferenceMap;
 

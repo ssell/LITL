@@ -1,7 +1,7 @@
 #ifndef LITL_RENDERER_COMMAND_BUFFER_H__
 #define LITL_RENDERER_COMMAND_BUFFER_H__
 
-#include "litl-core/handles.hpp"
+#include "litl-renderer/resources/handles.hpp"
 
 namespace litl
 {
@@ -14,9 +14,6 @@ namespace litl
         /// </summary>
         bool isTransient = false;
     };
-
-    struct CommandBufferTag {};
-    using CommandBufferHandle = Handle<CommandBufferTag>;
 
     /// <summary>
     /// A transient command buffer that submits its command when it is destroyed/leaves scope.
