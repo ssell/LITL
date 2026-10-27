@@ -5,15 +5,14 @@
 
 namespace litl
 {
+    /// <summary>
+    /// Responsible for rendering all opaque forward-rendered items.
+    /// </summary>
     class ForwardOpaquePass : public RenderPass
     {
     public:
 
         void render(RenderPassContext const& context) noexcept override;
-
-    protected:
-
-        GraphicsPipelineHandle resolveGraphicsPipelineHandle(Material* material) const noexcept override;
 
     private:
     };

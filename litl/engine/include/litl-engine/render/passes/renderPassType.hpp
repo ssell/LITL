@@ -8,6 +8,7 @@ namespace litl
     enum class RenderPassType : uint8_t
     {
         ForwardOpaque = 0u,
+        Blit = 1u,
         Count
     };
 }

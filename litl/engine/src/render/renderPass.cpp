@@ -1,17 +1,23 @@
 #include "litl-core/assert.hpp"
+#include "litl-core/services/serviceProvider.hpp"
 #include "litl-renderer/renderer.hpp"
 #include "litl-engine/render/renderPass.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 
 namespace litl
 {
-    void RenderPass::setup(Renderer& renderer, ObjectPool& objectPool) noexcept
+    void RenderPass::setup(ServiceProvider& services, Renderer& renderer, ObjectPool& objectPool) noexcept
     {
         m_pRenderer = &renderer;
         m_pObjectPool = &objectPool;
     }
 
-    [[nodiscard]] bool RenderPass::compileRenderList(std::span<RenderableEntity const> entities) noexcept
+    void RenderPass::destroy() noexcept
+    {
+
+    }
+
+    bool RenderPass::compileRenderList(std::span<RenderableEntity const> entities) noexcept
     {
         m_renderPassItems.clear();
 
@@ -64,7 +70,7 @@ namespace litl
         return true;
     }
 
-    [[nodiscard]] bool RenderPass::createRenderPassItems(RenderableEntity entity, uint32_t instanceOffset, std::optional<MeshHandle>& currMeshHandle, std::optional<MaterialHandle>& currMaterialHandle) noexcept
+    bool RenderPass::createRenderPassItems(RenderableEntity entity, uint32_t instanceOffset, std::optional<MeshHandle>& currMeshHandle, std::optional<MaterialHandle>& currMaterialHandle) noexcept
     {
         auto* mesh = m_pObjectPool->getMesh(entity.meshRef.handle);
 
@@ -105,11 +111,16 @@ namespace litl
         return true;
     }
 
-    BeginRenderCommand RenderPass::createBeginRenderCommand(Camera const& camera) const noexcept
+    GraphicsPipelineHandle RenderPass::resolveGraphicsPipelineHandle(Material* material) const noexcept
+    {
+        return material->getGraphicsPipelineHandle();
+    }
+
+    BeginRenderCommand RenderPass::createBeginRenderCommand(Camera const* camera, bool allowDepth) const noexcept
     {
         auto colorAttachment = ColorAttachmentDescriptor {
             .colorTexture = {},                                 // If not set, then will use the swapchain.
-            .clearColor = camera.getClearColor()
+            .clearColor = (camera != nullptr ? camera->getClearColor() : colors::Black)
         };
 
         auto depthAttachment = DepthAttachmentDescriptor{
@@ -119,32 +130,40 @@ namespace litl
             .clearDepth = 0.0f
         };
 
-        RenderTexture* renderTexture = m_pObjectPool->getRenderTexture(camera.getRenderTextureHandle());
-
-        if (renderTexture != nullptr)
+        if (camera != nullptr)
         {
-            Texture* colorTexture = m_pObjectPool->getTexture(renderTexture->getColorTextureHandle());
-            Texture* depthTexture = m_pObjectPool->getTexture(renderTexture->getDepthTextureHandle());
+            allowDepth &= camera->getDepthEnabled();
+            RenderTexture* renderTexture = m_pObjectPool->getRenderTexture(camera->getRenderTextureHandle());
 
-            if (colorTexture != nullptr)
+            if (renderTexture != nullptr)
             {
-                colorAttachment.colorTexture = colorTexture->getTextureResourceHandle();
-            }
+                Texture* colorTexture = m_pObjectPool->getTexture(renderTexture->getColorTextureHandle());
+                Texture* depthTexture = m_pObjectPool->getTexture(renderTexture->getDepthTextureHandle());
 
-            if (depthTexture != nullptr)
-            {
-                depthAttachment.depthTexture = depthTexture->getTextureResourceHandle();
+                if (colorTexture != nullptr)
+                {
+                    colorAttachment.colorTexture = colorTexture->getTextureResourceHandle();
+                }
+
+                if (depthTexture != nullptr)
+                {
+                    depthAttachment.depthTexture = depthTexture->getTextureResourceHandle();
+                }
             }
         }
 
         return BeginRenderCommand{
             .color = colorAttachment,
-            .depth = (camera.getDepthEnabled() ? std::optional<DepthAttachmentDescriptor>(depthAttachment) : std::nullopt)
+            .depth = (allowDepth ? std::optional<DepthAttachmentDescriptor>(depthAttachment) : std::nullopt)
         };
     }
 
-    SetViewportAndScissorCommand RenderPass::createSetViewportAndScissorCommand(Camera const& camera) const noexcept
+    SetViewportAndScissorCommand RenderPass::createSetViewportAndScissorCommand(Camera const* camera) const noexcept
     {
+        // ... todo update this to have the command actually reflect the viewpot of the provided camera ...
+        // ... for now it just renders out the entire viewport for development ...
+        // ... if a camera is not provided in the future then it will just use the entire viewport as it does now ...
+
         const SetViewportAndScissorCommand setViewportScissorCommand{
             .setViewport = SetViewportCommand {
                 .region = {
@@ -163,5 +182,32 @@ namespace litl
         };
 
         return setViewportScissorCommand;
+    }
+
+    void RenderPass::resolveSourceTextures(RenderPassContext const& context, Texture* colorSource, Texture* depthSource) const noexcept
+    {
+        colorSource = nullptr;
+        depthSource = nullptr;
+
+        if ((m_pObjectPool == nullptr) || (context.renderViews.empty()))
+        {
+            return;
+        }
+
+        const RenderView& renderView = context.renderViews[0];
+        const Camera* camera = renderView.camera;
+
+        if (camera == nullptr)
+        {
+            return;
+        }
+
+        const RenderTexture* rt = m_pObjectPool->getRenderTexture(camera->getRenderTextureHandle());
+
+        if (rt != nullptr)
+        {
+            colorSource = m_pObjectPool->getTexture(rt->getColorTextureHandle());
+            depthSource = m_pObjectPool->getTexture(rt->getDepthTextureHandle());
+        }
     }
 }

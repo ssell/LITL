@@ -5,11 +5,6 @@
 
 namespace litl
 {
-    GraphicsPipelineHandle ForwardOpaquePass::resolveGraphicsPipelineHandle(Material* material) const noexcept
-    {
-        return material->getGraphicsPipelineHandle();
-    }
-
     void ForwardOpaquePass::render(RenderPassContext const& context) noexcept
     {
         RenderPushConstants passPushConstants = context.pushConstants;
@@ -23,8 +18,8 @@ namespace litl
 
             m_pRenderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierUndefinedToColor);
             m_pRenderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierUndefinedToDepthStencil);
-            m_pRenderer->cmdBeginRender(context.commandBufferHandle, createBeginRenderCommand(*renderView.camera));
-            m_pRenderer->cmdSetViewportAndScissor(context.commandBufferHandle, createSetViewportAndScissorCommand(*renderView.camera));
+            m_pRenderer->cmdBeginRender(context.commandBufferHandle, createBeginRenderCommand(renderView.camera, true));
+            m_pRenderer->cmdSetViewportAndScissor(context.commandBufferHandle, createSetViewportAndScissorCommand(renderView.camera));
 
             if (compileRenderList(renderView.entities))
             {

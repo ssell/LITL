@@ -75,6 +75,13 @@ namespace litl
         /// Earlier stages than these may still overlap with the prior work.
         /// </summary>
         PipelineStageFlag destStage = static_cast<PipelineStageFlag>(PipelineStageFlagBits::None);
+
+        [[nodiscard]] static PipelineBarrierCommand copyWithTexture(PipelineBarrierCommand const& barrier, TextureResourceHandle textureResource) noexcept
+        {
+            PipelineBarrierCommand copy = barrier;
+            copy.texture = textureResource;
+            return copy;
+        }
     };
 
     /// <summary>

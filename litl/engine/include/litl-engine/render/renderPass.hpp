@@ -14,9 +14,11 @@
 
 namespace litl
 {
+    class ServiceProvider;
     class Renderer;
     class ObjectPool;
     class Camera;
+    class Texture;
 
     class RenderPass
     {
@@ -28,16 +30,18 @@ namespace litl
         RenderPass() = default;
         virtual ~RenderPass() = default;
 
-        virtual void setup(Renderer& renderer, ObjectPool& objectPool) noexcept;
+        virtual void setup(ServiceProvider& services, Renderer& renderer, ObjectPool& objectPool) noexcept;
+        virtual void destroy() noexcept;
         virtual void render(RenderPassContext const& context) noexcept = 0;
 
     protected:
 
         [[nodiscard]] bool compileRenderList(std::span<RenderableEntity const> entities) noexcept;
         [[nodiscard]] bool createRenderPassItems(RenderableEntity entity, uint32_t instanceOffset, std::optional<MeshHandle>& currMeshHandle, std::optional<MaterialHandle>& currMaterialHandle) noexcept;
-        [[nodiscard]] virtual GraphicsPipelineHandle resolveGraphicsPipelineHandle(Material* material) const noexcept = 0;
-        [[nodiscard]] BeginRenderCommand createBeginRenderCommand(Camera const& camera) const noexcept;
-        [[nodiscard]] SetViewportAndScissorCommand createSetViewportAndScissorCommand(Camera const& camera) const noexcept;
+        [[nodiscard]] virtual GraphicsPipelineHandle resolveGraphicsPipelineHandle(Material* material) const noexcept;
+        [[nodiscard]] BeginRenderCommand createBeginRenderCommand(Camera const* camera, bool allowDepth) const noexcept;
+        [[nodiscard]] SetViewportAndScissorCommand createSetViewportAndScissorCommand(Camera const* camera) const noexcept;
+        void resolveSourceTextures(RenderPassContext const& context, Texture* colorSource, Texture* depthSource) const noexcept;
 
         Renderer* m_pRenderer{ nullptr };
         ObjectPool* m_pObjectPool{ nullptr };

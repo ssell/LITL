@@ -11,6 +11,7 @@
 #include "litl-engine/render/renderManager.hpp"
 #include "litl-engine/render/renderStructs.hpp"
 #include "litl-engine/render/renderPassContext.hpp"
+#include "litl-engine/render/passes/blitPass.hpp"
 #include "litl-engine/render/passes/forwardOpaquePass.hpp"
 #include "litl-engine/render/passes/renderPassType.hpp"
 #include "litl-engine/engineCallbacks.hpp"
@@ -141,7 +142,7 @@ namespace litl
             LITL_FATAL_ASSERT_MSG(instanceData.handle.isValid(), "Failed to create Instance Data buffer.");
             LITL_FATAL_ASSERT_MSG(worldMatrices.handle.isValid(), "Failed to create World Matrices buffer.");
 
-            createRenderPasses();
+            createRenderPasses(services);
             createDefaultTextures();
         }
 
@@ -193,14 +194,16 @@ namespace litl
             }
         }
 
-        void createRenderPasses() noexcept
+        void createRenderPasses(ServiceProvider& services) noexcept
         {
             renderPasses[static_cast<uint32_t>(RenderPassType::ForwardOpaque)] = std::make_unique<ForwardOpaquePass>();
+            renderPasses[static_cast<uint32_t>(RenderPassType::Blit)] = std::make_unique<BlitPass>();
+
             // ... add others (ForwardTransparentPass, DepthPass, ShadowPass, PostProcessPass, DeferredPass, etc) ...
 
             for (auto& renderPass : renderPasses)
             {
-                renderPass->setup(*renderer, *objectPool);
+                renderPass->setup(services, *renderer, *objectPool);
             }
         }
 
