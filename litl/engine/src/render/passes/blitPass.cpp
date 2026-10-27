@@ -46,7 +46,7 @@ namespace litl
     {
         RenderPass::setup(services, renderer, objectPool);
         m_pAssetManager = services.get<AssetManager>().get();
-        m_shaderAssetHandle = m_pAssetManager->getShaderHandle("litl/blit");
+        m_shaderAssetHandle = m_pAssetManager->getShaderHandle("litl/shaders/blit");
     }
 
     void BlitPass::render(RenderPassContext const& context) noexcept
@@ -54,7 +54,7 @@ namespace litl
         Texture* colorSource{ nullptr };
         Texture* depthSource{ nullptr };
 
-        resolveSourceTextures(context, colorSource, depthSource);
+        resolveSourceTextures(context, &colorSource, &depthSource);
         cmdPipelineBarriers(context.commandBufferHandle, m_pRenderer, colorSource);
 
         m_pRenderer->cmdBeginRender(context.commandBufferHandle, createBeginRenderCommand(nullptr, false));
@@ -90,6 +90,11 @@ namespace litl
         }
 
         const auto shaderModuleHandle = shaderAsset->shader->getShaderModuleHandle();
+
+        if (!shaderModuleHandle.isValid())
+        {
+            return false;           // Still loading ...
+        }
 
         const GraphicsPipelineDescriptor graphicsPipelineDescriptor{
             .vertex = PipelineShaderDescriptor {

@@ -18,6 +18,15 @@ namespace litl
         camera->setWorldPosition(position);
         camera->lookAt(target, up);
 
+        /*
+        camera->setRenderTextureHandle(objectPool.createRenderTexture(RenderTextureDescriptor{
+            .objectInfo = {.name = "MainCamera_RT" },
+            .sizePolicy = RenderTextureSizePolicy::SwapchainRelative,
+            .colorComponent = true,
+            .depthComponent = true
+        }));
+        */
+
         return camera;
     }
 

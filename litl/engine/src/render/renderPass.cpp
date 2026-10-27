@@ -184,10 +184,10 @@ namespace litl
         return setViewportScissorCommand;
     }
 
-    void RenderPass::resolveSourceTextures(RenderPassContext const& context, Texture* colorSource, Texture* depthSource) const noexcept
+    void RenderPass::resolveSourceTextures(RenderPassContext const& context, Texture** colorSource, Texture** depthSource) const noexcept
     {
-        colorSource = nullptr;
-        depthSource = nullptr;
+        *colorSource = nullptr;
+        *depthSource = nullptr;
 
         if ((m_pObjectPool == nullptr) || (context.renderViews.empty()))
         {
@@ -206,8 +206,8 @@ namespace litl
 
         if (rt != nullptr)
         {
-            colorSource = m_pObjectPool->getTexture(rt->getColorTextureHandle());
-            depthSource = m_pObjectPool->getTexture(rt->getDepthTextureHandle());
+            *colorSource = m_pObjectPool->getTexture(rt->getColorTextureHandle());
+            *depthSource = m_pObjectPool->getTexture(rt->getDepthTextureHandle());
         }
     }
 }

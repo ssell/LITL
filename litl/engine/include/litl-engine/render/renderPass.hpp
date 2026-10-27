@@ -41,7 +41,7 @@ namespace litl
         [[nodiscard]] virtual GraphicsPipelineHandle resolveGraphicsPipelineHandle(Material* material) const noexcept;
         [[nodiscard]] BeginRenderCommand createBeginRenderCommand(Camera const* camera, bool allowDepth) const noexcept;
         [[nodiscard]] SetViewportAndScissorCommand createSetViewportAndScissorCommand(Camera const* camera) const noexcept;
-        void resolveSourceTextures(RenderPassContext const& context, Texture* colorSource, Texture* depthSource) const noexcept;
+        void resolveSourceTextures(RenderPassContext const& context, Texture** colorSource, Texture** depthSource) const noexcept;
 
         Renderer* m_pRenderer{ nullptr };
         ObjectPool* m_pObjectPool{ nullptr };

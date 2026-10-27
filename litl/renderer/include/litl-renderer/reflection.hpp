@@ -1,10 +1,12 @@
 #ifndef LITL_RENDERER_REFLECTION_H__
 #define LITL_RENDERER_REFLECTION_H__
 
+#include <array>
 #include <cstdint>
 #include <optional>
 #include <span>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "litl-core/enumBitFlags.hpp"
@@ -369,16 +371,30 @@ namespace litl
 
     enum class MergeShaderReflectionResult : uint8_t
     {
-        Success = 0,
-        ErrorInvalidShaderStage,    // The descriptor has an invalid shader stage defined
-        ErrorInvalidEntryPoint,     // The specified entry point was not found
-        ErrorDuplicateStage,        // The same stage was defined more than once in the descriptor
-        ErrorStageMismatch,         // The reflected stage does not match the stage specified in the descriptor
-        ErrorTypeMismatch,          // Same (set, binding), different ShaderResourceType
-        ErrorArraySizeMismatch,     // Same (set, binding), different arraySize
-        ErrorBufferSizeMismatch,    // Same (set, binding), different buffer size
-        ErrorPushConstantOverlap,   // Push constants overlap incompatibly across stages
-        ErrorNoVertexStage          // Graphics pipeline with no vertex stage
+        Success                  = 0,
+        ErrorInvalidShaderStage  = 1,   // The descriptor has an invalid shader stage defined
+        ErrorInvalidEntryPoint   = 2,   // The specified entry point was not found
+        ErrorDuplicateStage      = 3,   // The same stage was defined more than once in the descriptor
+        ErrorStageMismatch       = 4,   // The reflected stage does not match the stage specified in the descriptor
+        ErrorTypeMismatch        = 5,   // Same (set, binding), different ShaderResourceType
+        ErrorArraySizeMismatch   = 6,   // Same (set, binding), different arraySize
+        ErrorBufferSizeMismatch  = 7,   // Same (set, binding), different buffer size
+        ErrorPushConstantOverlap = 8,   // Push constants overlap incompatibly across stages
+        ErrorNoVertexStage       = 9,   // Graphics pipeline with no vertex stage
+        Count
+    };
+
+    constexpr std::array<std::string_view, static_cast<uint8_t>(MergeShaderReflectionResult::Count)> MergeShaderReflectionResultStrings{
+        "Success",
+        "Invalid Shader Stage",
+        "Invalid Entry Point",
+        "Duplicate Shader Stage",
+        "Shader Stage Mismatch",
+        "Type Mismatch",
+        "Array Size Mismatch",
+        "Buffer Size Mismatch",
+        "Push-Constant Overlap",
+        "Missing Vertex Stage"
     };
 
     // -------------------------------------------------------------------------------------

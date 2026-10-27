@@ -636,7 +636,7 @@ namespace litl::vulkan
 
         if (mergePipelineLayoutResult != MergeShaderReflectionResult::Success)
         {
-            logError("Failed to create Vulkan Graphics Pipeline for due to failed pipeline layout merger with result ", static_cast<uint32_t>(mergePipelineLayoutResult));
+            logError("Failed to create Vulkan Graphics Pipeline due to failed pipeline layout merger with result '", MergeShaderReflectionResultStrings[static_cast<uint32_t>(mergePipelineLayoutResult)], "' (", static_cast<uint32_t>(mergePipelineLayoutResult), ")");
             return {};
         }
 
