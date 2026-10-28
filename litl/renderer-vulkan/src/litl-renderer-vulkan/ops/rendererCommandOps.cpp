@@ -181,23 +181,25 @@ namespace litl::vulkan
         {
             // Use swapchain color attachment as an override was not provided.
             colorAttachment.imageView = vulkanContext->swapChain.vkSwapChainImageViews[vulkanContext->swapChain.swapChainImageIndex];
-            colorAttachment.loadOp = VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_CLEAR;
-            colorAttachment.storeOp = VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE;
+            colorAttachment.loadOp = toVkAttachmentLoadOp(command.color.loadOp);
+            colorAttachment.storeOp = toVkAttachmentStoreOp(command.color.storeOp);
             vulkanContext->drawInfo.targetTextureSize = vulkanContext->swapChain.vkSwapChainExtent;
         }
         else
         {
             // Use a custom color attachment.
             TextureResource* colorTexture = vulkanContext->resources.getTexture(command.color.colorTexture);
+            VkExtent2D textureExtents{ .width = 1u, .height = 2u };
 
             if (colorTexture != nullptr)
             {
                 colorAttachment.imageView = colorTexture->vkImageView;
+                textureExtents = VkExtent2D{ .width = colorTexture->descriptor.width, .height = colorTexture->descriptor.height };
             }
 
             colorAttachment.loadOp = toVkAttachmentLoadOp(command.color.loadOp);
             colorAttachment.storeOp = toVkAttachmentStoreOp(command.color.storeOp);
-            vulkanContext->drawInfo.targetTextureSize = VkExtent2D{ .width = colorTexture->descriptor.width, .height = colorTexture->descriptor.height };
+            vulkanContext->drawInfo.targetTextureSize = textureExtents;
         }
 
         // ---------------------------------------------------------------------------------
@@ -256,8 +258,8 @@ namespace litl::vulkan
             .flags = 0,
             .renderArea = {
                 .offset = {
-                    .x = static_cast<int32_t>(command.area.offset.x()),
-                    .y = static_cast<int32_t>(command.area.offset.y())
+                    .x = static_cast<int32_t>(command.area.offset.x() * command.area.extents.x()),
+                    .y = static_cast<int32_t>(command.area.offset.y() * command.area.extents.y())
                 },
                 .extent = {
                     .width = static_cast<uint32_t>(vulkanContext->drawInfo.targetTextureSize.width * command.area.extents.x()),

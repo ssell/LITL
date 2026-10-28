@@ -151,6 +151,11 @@ namespace litl
 
         void destroy() noexcept
         {
+            for (auto& renderPass : renderPasses)
+            {
+                renderPass->destroy();
+            }
+
             if (renderer != nullptr)
             {
                 renderer->destroy();
@@ -355,7 +360,7 @@ namespace litl
             {
                 // No active cameras. Just perform a screen clear.
                 renderer->cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierUndefinedToColor);
-                renderer->cmdBeginRender(frameCommandBuffer, { .color = ColorAttachmentDescriptor { .clearColor = colors::Black } });
+                renderer->cmdBeginRender(frameCommandBuffer, BeginRenderCommand{ .color = ColorAttachmentDescriptor {.loadOp = LoadOperationType::Clear }, .depth = DepthAttachmentDescriptor {.loadOp = LoadOperationType::Clear } });
                 renderer->cmdEndRender(frameCommandBuffer);
                 renderer->cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierColorToPresent);
             }

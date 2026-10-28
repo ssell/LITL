@@ -116,18 +116,19 @@ namespace litl
         return material->getGraphicsPipelineHandle();
     }
 
-    BeginRenderCommand RenderPass::createBeginRenderCommand(Camera const* camera, bool clearAttachments, bool allowDepth) const noexcept
+    BeginRenderCommand RenderPass::createBeginRenderCommand(Camera const* camera, LoadOperationType loadOp, StoreOperationType storeOp, bool allowDepth) const noexcept
     {
         auto colorAttachment = ColorAttachmentDescriptor {
             .colorTexture = {},                                 // If not set, then will use the swapchain.
-            .loadOp = (clearAttachments ? LoadOperationType::Clear : LoadOperationType::Load),
+            .loadOp = loadOp,
+            .storeOp = storeOp,
             .clearColor = (camera != nullptr ? camera->getClearColor() : colors::Black)
         };
 
         auto depthAttachment = DepthAttachmentDescriptor{
             .depthTexture = {},                                 // If not set, then will use the swapchain.
-            .loadOp = (clearAttachments ? LoadOperationType::Clear : LoadOperationType::Load),
-            .storeOp = StoreOperationType::DontCare,
+            .loadOp = loadOp,
+            .storeOp = storeOp,
             .clearDepth = 0.0f
         };
 

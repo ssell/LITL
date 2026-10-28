@@ -59,7 +59,7 @@ namespace litl
             resolveSourceTextures(renderView, &colorSource, &depthSource);
             cmdPipelineBarriers(context.commandBufferHandle, m_pRenderer, colorSource);
 
-            m_pRenderer->cmdBeginRender(context.commandBufferHandle, createBeginRenderCommand(nullptr, false, false));
+            m_pRenderer->cmdBeginRender(context.commandBufferHandle, createBeginRenderCommand(nullptr, LoadOperationType::Clear, StoreOperationType::Store, false));
 
             if ((colorSource != nullptr) && ensurePipelineExists())
             {
