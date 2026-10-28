@@ -1,7 +1,10 @@
+#include <algorithm>
 #include <atomic>
 #include <mutex>
+#include <span>
 #include <vector>
 
+#include "litl-core/logging/logging.hpp"
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-platform/platform.hpp"
 #include "litl-platform/window/window.hpp"
@@ -26,7 +29,9 @@ namespace litl
         struct GenericWindowEvent
         {
             WindowCallbackId id{ Constants::uint32_null_index };
-            OnWindowOpenedFunc callback;
+            OnWindowEventFunc callback;
+            WindowCallbackPriority priority{ WindowCallbackPriority::Medium };
+            bool alive{ true };
         };
 
         struct CallbackCommand
@@ -46,12 +51,155 @@ namespace litl
         std::vector<GenericWindowEvent> onWindowMaximizedEvents;
         std::vector<GenericWindowEvent> onWindowResizedEvents;
         std::vector<CallbackCommand> deferredCommands;
+        std::vector<CallbackCommand> copiedDeferredCommands;
         std::mutex deferredCommandsMutex{};
 
         void addDeferredCommand(CallbackCommand&& command) noexcept
         {
             std::scoped_lock lock{ deferredCommandsMutex };
             deferredCommands.push_back(std::move(command));
+        }
+
+        void addOrRemoveGenericEvent(std::vector<GenericWindowEvent>& events, CallbackCommand& command) noexcept
+        {
+            if (command.commandType == CallbackCommandType::Add)
+            {
+                auto it = std::upper_bound(events.begin(), events.end(), command.event.priority, [](WindowCallbackPriority priority, GenericWindowEvent const& e) { return (priority > e.priority); });
+                events.insert(it, std::move(command.event));
+            }
+            else if (command.commandType == CallbackCommandType::Remove)
+            {
+                std::erase_if(events, [&command](GenericWindowEvent& e) { return (e.id == command.id); });
+            }
+        }
+
+        void processDeferredCommands() noexcept
+        {
+            {
+                std::scoped_lock lock{ deferredCommandsMutex };
+                copiedDeferredCommands = std::move(deferredCommands);
+            }
+
+            for (auto& command : copiedDeferredCommands)
+            {
+                if (command.id == Constants::uint32_null_index)
+                {
+                    continue;
+                }
+
+                switch (command.eventType)
+                {
+                case WindowCallbackType::Opened:
+                    addOrRemoveGenericEvent(onWindowOpenedEvents, command);
+                    break;
+
+                case WindowCallbackType::Closed:
+                    addOrRemoveGenericEvent(onWindowClosedEvents, command);
+                    break;
+
+                case WindowCallbackType::Minimized:
+                    addOrRemoveGenericEvent(onWindowMinimizedEvents, command);
+                    break;
+
+                case WindowCallbackType::Maximized:
+                    addOrRemoveGenericEvent(onWindowMaximizedEvents, command);
+                    break;
+
+                case WindowCallbackType::Resized:
+                    addOrRemoveGenericEvent(onWindowResizedEvents, command);
+                    break;
+
+                default:
+                    logWarning("Unhandled input event type of ", static_cast<uint32_t>(command.eventType), " encountered in WindowCallbacks::processDeferredCommands");
+                    break;
+                }
+            }
+        }
+
+        [[nodiscard]] WindowCallbackHandle enqueueAddCommand(WindowCallbackType type, OnWindowEventFunc&& func, WindowCallbackPriority priority) noexcept
+        {
+            const WindowCallbackId id = static_cast<WindowCallbackId>(nextId());
+
+            addDeferredCommand(CallbackCommand{
+                .id = id,
+                .commandType = CallbackCommandType::Add,
+                .eventType = WindowCallbackType::Opened,
+                .event = GenericWindowEvent {
+                    .id = id,
+                    .callback = std::move(func),
+                    .priority = priority
+                }
+            });
+
+            return WindowCallbackHandle{ .type = type, .id = id };
+        }
+
+        void enqueueRemoveCommand(WindowCallbackType type, WindowCallbackId id) noexcept
+        {
+            addDeferredCommand(CallbackCommand{
+                .id = id,
+                .commandType = CallbackCommandType::Remove,
+                .eventType = type
+            });
+        }
+
+        [[nodiscard]] bool isRemove(WindowCallbackResult result) noexcept
+        {
+            return (result == WindowCallbackResult::ContinueAndRemove) || (result == WindowCallbackResult::ConsumeAndRemove);
+        }
+
+        [[nodiscard]] bool isConsume(WindowCallbackResult result) noexcept
+        {
+            return (result == WindowCallbackResult::Consume) || (result == WindowCallbackResult::ConsumeAndRemove);
+        }
+
+        void invokeGenericWindowEvent(WindowCallbackType type, std::span<GenericWindowEvent> events, ServiceProvider& services, Window const& window) noexcept
+        {
+            for (auto& event : events)
+            {
+                if (!event.alive)
+                {
+                    continue;
+                }
+
+                const auto result = event.callback(services, window);
+
+                if (isRemove(result))
+                {
+                    event.alive = false;
+                    enqueueRemoveCommand(type, event.id);
+                }
+
+                if (isConsume(result))
+                {
+                    break;
+                }
+            }
+        }
+
+        void invokeWindowOpenedEvent(ServiceProvider& services, Window const& window) noexcept
+        {
+            invokeGenericWindowEvent(WindowCallbackType::Opened, onWindowOpenedEvents, services, window);
+        }
+
+        void invokeWindowClosedEvent(ServiceProvider& services, Window const& window) noexcept
+        {
+            invokeGenericWindowEvent(WindowCallbackType::Closed, onWindowClosedEvents, services, window);
+        }
+
+        void invokeWindowMinimizedEvent(ServiceProvider& services, Window const& window) noexcept
+        {
+            invokeGenericWindowEvent(WindowCallbackType::Minimized, onWindowMinimizedEvents, services, window);
+        }
+
+        void invokeWindowMaximizedEvent(ServiceProvider& services, Window const& window) noexcept
+        {
+            invokeGenericWindowEvent(WindowCallbackType::Maximized, onWindowMaximizedEvents, services, window);
+        }
+
+        void invokeWindowResizedEvent(ServiceProvider& services, Window const& window) noexcept
+        {
+            invokeGenericWindowEvent(WindowCallbackType::Resized, onWindowResizedEvents, services, window);
         }
     };
 
@@ -68,66 +216,61 @@ namespace litl
 
     void WindowCallbacks::processDeferredCommands(Authority<Platform> auth)
     {
-        // ... todo ...
+        m_pImpl->processDeferredCommands();
     }
 
-    WindowCallbackHandle WindowCallbacks::registerWindowOpenedCallback(OnWindowOpenedFunc&& func) noexcept
+    WindowCallbackHandle WindowCallbacks::registerWindowOpenedCallback(OnWindowEventFunc&& func, WindowCallbackPriority priority) noexcept
     {
-        // ... todo ...
-        return {};
+        return m_pImpl->enqueueAddCommand(WindowCallbackType::Opened, std::move(func), priority);
     }
 
-    WindowCallbackHandle WindowCallbacks::registerWindowClosedCallback(OnWindowClosedFunc&& func) noexcept
+    WindowCallbackHandle WindowCallbacks::registerWindowClosedCallback(OnWindowEventFunc&& func, WindowCallbackPriority priority) noexcept
     {
-        // ... todo ...
-        return {};
+        return m_pImpl->enqueueAddCommand(WindowCallbackType::Closed, std::move(func), priority);
     }
 
-    WindowCallbackHandle WindowCallbacks::registerWindowMinimizedCallback(OnWindowMinimizedFunc&& func) noexcept
+    WindowCallbackHandle WindowCallbacks::registerWindowMinimizedCallback(OnWindowEventFunc&& func, WindowCallbackPriority priority) noexcept
     {
-        // ... todo ...
-        return {};
+        return m_pImpl->enqueueAddCommand(WindowCallbackType::Minimized, std::move(func), priority);
     }
 
-    WindowCallbackHandle WindowCallbacks::registerWindowMaximizedCallback(OnWindowMaximizedFunc&& func) noexcept
+    WindowCallbackHandle WindowCallbacks::registerWindowMaximizedCallback(OnWindowEventFunc&& func, WindowCallbackPriority priority) noexcept
     {
-        // ... todo ...
-        return {};
+        return m_pImpl->enqueueAddCommand(WindowCallbackType::Maximized, std::move(func), priority);
     }
 
-    WindowCallbackHandle WindowCallbacks::registerWindowResizedCallback(OnWindowResizedFunc&& func) noexcept
+    WindowCallbackHandle WindowCallbacks::registerWindowResizedCallback(OnWindowEventFunc&& func, WindowCallbackPriority priority) noexcept
     {
-        // ... todo ...
-        return {};
+        return m_pImpl->enqueueAddCommand(WindowCallbackType::Resized, std::move(func), priority);
     }
 
     void WindowCallbacks::unregisterCallback(WindowCallbackHandle handle) noexcept
     {
-        // ... todo ...
+        m_pImpl->enqueueRemoveCommand(handle.type, handle.id);
     }
 
     void WindowCallbacks::invokeWindowOpenedEvent(Authority<Window> auth, ServiceProvider& services, Window const& window) noexcept
     {
-        // ... todo ...
+        m_pImpl->invokeWindowOpenedEvent(services, window);
     }
 
     void WindowCallbacks::invokeWindowClosedEvent(Authority<Window> auth, ServiceProvider& services, Window const& window) noexcept
     {
-        // ... todo ...
+        m_pImpl->invokeWindowClosedEvent(services, window);
     }
 
     void WindowCallbacks::invokeWindowMinimizedEvent(Authority<Window> auth, ServiceProvider& services, Window const& window) noexcept
     {
-        // ... todo ...
+        m_pImpl->invokeWindowMinimizedEvent(services, window);
     }
 
     void WindowCallbacks::invokeWindowMaximizedEvent(Authority<Window> auth, ServiceProvider& services, Window const& window) noexcept
     {
-        // ... todo ...
+        m_pImpl->invokeWindowMaximizedEvent(services, window);
     }
 
     void WindowCallbacks::invokeWindowResizedEvent(Authority<Window> auth, ServiceProvider& services, Window const& window) noexcept
     {
-        // ... todo ...
+        m_pImpl->invokeWindowResizedEvent(services, window);
     }
 }

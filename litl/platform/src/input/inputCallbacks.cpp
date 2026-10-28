@@ -5,6 +5,7 @@
 #include <variant>
 #include <vector>
 
+#include "litl-core/logging/logging.hpp"
 #include "litl-platform/input/inputCallbacks.hpp"
 #include "litl-platform/input/inputActions.hpp"
 
@@ -96,6 +97,7 @@ namespace litl
         StringIdMap<StringIdMap<std::vector<OnActionMapEvent>>> onActionMapEvents;
 
         std::vector<CallbackCommand> deferredCommands;
+        std::vector<CallbackCommand> copiedDeferredCommands;
         std::mutex deferredCommandsMutex{};
 
         void addDeferredCommand(CallbackCommand&& command) noexcept
@@ -150,8 +152,6 @@ namespace litl
 
         void processDeferredCommands() noexcept
         {
-            std::vector<CallbackCommand> copiedDeferredCommands;
-
             {
                 std::scoped_lock lock{ deferredCommandsMutex };
                 copiedDeferredCommands = std::move(deferredCommands);
@@ -197,7 +197,7 @@ namespace litl
                     break;
 
                 default:
-                    logWarning("Unhandled input event type of ", static_cast<uint32_t>(command.eventType), " encountered in processDeferredCommands");
+                    logWarning("Unhandled input event type of ", static_cast<uint32_t>(command.eventType), " encountered in InputCallbacks::processDeferredCommands");
                     break;
                 }
             }

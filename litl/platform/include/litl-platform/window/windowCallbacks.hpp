@@ -25,6 +25,21 @@ namespace litl
         Resized = 5u
     };
 
+    enum class WindowCallbackResult : uint8_t
+    {
+        Continue = 0u,                  // Keep propagating and processing callbacks for this event type.
+        Consume = 1u,                   // Stop propagating and processing callbacks for this event type for the frame.
+        ContinueAndRemove = 2u,         // Keep propagating and processing callbacks, and remove this callback.
+        ConsumeAndRemove = 3u           // Stop propagating and processing callbacks for this event type for the frame, and remove this callback.
+    };
+
+    enum class WindowCallbackPriority : uint32_t
+    {
+        Low = 200u,
+        Medium = 400u,
+        High = 600u
+    };
+
     struct WindowCallbackHandle
     {
         WindowCallbackType type{ WindowCallbackType::Unknown };
@@ -32,11 +47,7 @@ namespace litl
         uint32_t slot{ 0u };
     };
 
-    using OnWindowOpenedFunc = inline_function<void(ServiceProvider& services, Window const& window)>;
-    using OnWindowClosedFunc = inline_function<void(ServiceProvider& services, Window const& window)>;
-    using OnWindowMinimizedFunc = inline_function<void(ServiceProvider& services, Window const& window)>;
-    using OnWindowMaximizedFunc = inline_function<void(ServiceProvider& services, Window const& window)>;
-    using OnWindowResizedFunc = inline_function<void(ServiceProvider& services, Window const& window)>;
+    using OnWindowEventFunc = inline_function<WindowCallbackResult(ServiceProvider& services, Window const& window)>;
 
     class WindowCallbacks
     {
@@ -50,11 +61,11 @@ namespace litl
 
         void processDeferredCommands(Authority<Platform> auth);
 
-        WindowCallbackHandle registerWindowOpenedCallback(OnWindowOpenedFunc&& func) noexcept;
-        WindowCallbackHandle registerWindowClosedCallback(OnWindowClosedFunc&& func) noexcept;
-        WindowCallbackHandle registerWindowMinimizedCallback(OnWindowMinimizedFunc&& func) noexcept;
-        WindowCallbackHandle registerWindowMaximizedCallback(OnWindowMaximizedFunc&& func) noexcept;
-        WindowCallbackHandle registerWindowResizedCallback(OnWindowResizedFunc&& func) noexcept;
+        WindowCallbackHandle registerWindowOpenedCallback(OnWindowEventFunc&& func, WindowCallbackPriority priority = WindowCallbackPriority::Medium) noexcept;
+        WindowCallbackHandle registerWindowClosedCallback(OnWindowEventFunc&& func, WindowCallbackPriority priority = WindowCallbackPriority::Medium) noexcept;
+        WindowCallbackHandle registerWindowMinimizedCallback(OnWindowEventFunc&& func, WindowCallbackPriority priority = WindowCallbackPriority::Medium) noexcept;
+        WindowCallbackHandle registerWindowMaximizedCallback(OnWindowEventFunc&& func, WindowCallbackPriority priority = WindowCallbackPriority::Medium) noexcept;
+        WindowCallbackHandle registerWindowResizedCallback(OnWindowEventFunc&& func, WindowCallbackPriority priority = WindowCallbackPriority::Medium) noexcept;
 
         void unregisterCallback(WindowCallbackHandle handle) noexcept;
 
