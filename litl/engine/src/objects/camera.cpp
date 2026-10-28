@@ -15,6 +15,7 @@ namespace litl
         m_processPosition = m_descriptor.processOrder;
         m_entity = world.createImmediate();
         m_pWorld = &world;
+        m_renderTextureHandle = m_descriptor.renderTexture;
 
         rebuildProjectionMatrix();
 
@@ -77,10 +78,12 @@ namespace litl
         if (main)
         {
             m_processPosition = static_cast<uint32_t>(CameraProcessOrder::MainCamera);
+            m_renderTextureHandle = {};     // Will be set by the RenderManager each frame
         }
         else
         {
             m_processPosition = m_descriptor.processOrder;
+            m_renderTextureHandle = m_descriptor.renderTexture;
         }
     }
 
@@ -227,12 +230,12 @@ namespace litl
 
     RenderTextureHandle Camera::getRenderTextureHandle() const noexcept
     {
-        return m_descriptor.renderTexture;
+        return m_renderTextureHandle;
     }
 
     void Camera::setRenderTextureHandle(RenderTextureHandle handle) noexcept
     {
-        m_descriptor.renderTexture = handle;
+        m_renderTextureHandle = handle;
     }
 
     Ray Camera::screenPosToWorldRay(vec2 screenPos) const noexcept

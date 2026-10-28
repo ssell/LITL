@@ -42,5 +42,6 @@ VertexOutput vertexMain(uint vertexId : SV_VertexID)
 [shader("fragment")]
 float4 fragmentMain(VertexOutput input) : SV_Target
 {
-    return sampleGlobalTexture(_pc.sourceTextureIndex, input.uv);
+    float4 sampled = sampleGlobalTexture(_pc.sourceTextureIndex, input.uv);
+    return float4(sampled.r, max(sampled.g, 0.5f), sampled.b, 1.0f);
 }

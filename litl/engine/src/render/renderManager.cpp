@@ -1,5 +1,6 @@
 #include <array>
 #include <chrono>
+#include <format>
 #include <memory>
 #include <span>
 #include <vector>
@@ -72,6 +73,7 @@ namespace litl
         std::shared_ptr<SceneView> sceneView{ nullptr };
         std::queue<GpuBufferHandle> dirtyBuffers;
         std::queue<TextureHandle> dirtyTextures;
+        std::vector<RenderTextureHandle> frameRenderTextures;
 
         Renderer* renderer{ nullptr };
         std::array<std::unique_ptr<RenderPass>, static_cast<uint32_t>(RenderPassType::Count)> renderPasses;
@@ -143,6 +145,7 @@ namespace litl
             LITL_FATAL_ASSERT_MSG(worldMatrices.handle.isValid(), "Failed to create World Matrices buffer.");
 
             createRenderPasses(services);
+            createFrameRenderTextures();
             createDefaultTextures();
         }
 
@@ -217,6 +220,27 @@ namespace litl
             return *renderPasses[index].get();
         }
 
+        void createFrameRenderTextures() noexcept
+        {
+            const auto frameData = renderer->getFrameData();
+            frameRenderTextures.resize(frameData.framesInFlight, {});
+
+            for (uint32_t i = 0u; i < frameData.framesInFlight; ++i)
+            {
+                const RenderTextureDescriptor descriptor{
+                    .objectInfo = ObjectDescriptor {
+                        .name = std::format("RenderManagerFrameRT_{}", i)
+                    },
+                    .sizePolicy = RenderTextureSizePolicy::SwapchainRelative,
+                    .colorComponent = true,
+                    .depthComponent = true
+                };
+
+                frameRenderTextures[i] = objectPool->createRenderTexture(descriptor);
+                LITL_FATAL_ASSERT(frameRenderTextures[i].isValid());
+            }
+        }
+
         void createDefaultTexture(std::string_view name, color value, uint32_t textureSlot) noexcept
         {
             const TextureDescriptor textureDesc{
@@ -289,50 +313,40 @@ namespace litl
                 return;
             }
 
+            const auto frameData = renderer->getFrameData();
             auto frameCommandBuffer = renderer->cmdBeginFrame();
 
             sortVisibleEntities(cullingBucket);
             updatePerFrameData(frameCommandBuffer, dt);
             updateWorldMatrices(frameCommandBuffer);
 
-            if (cullingBucket.activeCameraCount() > 0u)
+            // Only main camera for now for development
+            const auto* mainCameraCull = cullingBucket.getMainCameraCull();
+
+            if ((mainCameraCull != nullptr) && (mainCameraCull->camera != nullptr))
             {
-                for (auto& renderCamera : cullingBucket.cameraRenderableEntities)
+                mainCameraCull->camera->setRenderTextureHandle(frameRenderTextures[frameData.frameInFlightIndex]);
+
+                updateInstanceData(frameCommandBuffer, mainCameraCull->entities);
+                updatePerPassData(frameCommandBuffer, *mainCameraCull->camera);
+
+                if (goodToGo())
                 {
-                    if (renderCamera.camera == nullptr)
-                    {
-                        break;
-                    }
+                    RenderView view{
+                        .camera = mainCameraCull->camera,
+                        .entities = mainCameraCull->entities,
+                        .perPassDataAddr = 0ull,
+                        .instanceDataAddr = 0ull
+                    };
 
-                    // Only main camera for now to get things working.
-                    // todo this implementation of "per pass data" via bda wont really work beyond the main camera.
-                    // the draws are deferred but the changes to the data map buffer (pointing to the appropriate per pass buffer) are immediate
+                    RenderPassContext renderPassContext{
+                        .commandBufferHandle = frameCommandBuffer,
+                        .pushConstants = pushConstants,
+                        .renderViews = { &view, 1 }
+                    };
 
-                    if (renderCamera.camera->isMainCamera())
-                    {
-                        updateInstanceData(frameCommandBuffer, renderCamera.entities);
-                        updatePerPassData(frameCommandBuffer, *renderCamera.camera);
-
-                        if (goodToGo())
-                        { 
-                            RenderView view{
-                                .camera = renderCamera.camera,
-                                .entities = renderCamera.entities,
-                                .perPassDataAddr = 0ull,
-                                .instanceDataAddr = 0ull
-                            };
-
-                            RenderPassContext renderPassContext{
-                                .commandBufferHandle = frameCommandBuffer,
-                                .pushConstants = pushConstants,
-                                .renderViews = { &view, 1 }
-                            };
-
-                            getRenderPass(RenderPassType::ForwardOpaque).render(renderPassContext);
-                        }
-
-                        break;
-                    }
+                    getRenderPass(RenderPassType::ForwardOpaque).render(renderPassContext);
+                    getRenderPass(RenderPassType::Blit).render(renderPassContext);
                 }
 
                 renderer->cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierColorToPresent);
@@ -449,7 +463,7 @@ namespace litl
         /// </summary>
         /// <param name="commandBuffer"></param>
         /// <param name="camera"></param>
-        void updatePerPassData(CommandBufferHandle commandBuffer, Camera& camera) noexcept
+        void updatePerPassData(CommandBufferHandle commandBuffer, Camera const& camera) noexcept
         {
             passData.data.projMatrix = camera.getProjectionMatrix();
             passData.data.viewMatrix = camera.getViewMatrix();

@@ -92,6 +92,19 @@ namespace litl
         return count;
     }
 
+    CullingBucket::CameraRenderableEntities const* CullingBucket::getMainCameraCull() const noexcept
+    {
+        for (auto& cameraRenderableEntities : cameraRenderableEntities)
+        {
+            if ((cameraRenderableEntities.camera != nullptr) && cameraRenderableEntities.camera->isMainCamera())
+            {
+                return &cameraRenderableEntities;
+            }
+        }
+
+        return nullptr;
+    }
+
     void CullingSystem::setCameraAtIndex(uint32_t i, Camera* camera) noexcept
     {
         m_cameraVisibleEntities[i].camera = camera;

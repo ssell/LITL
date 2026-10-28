@@ -393,6 +393,13 @@ namespace litl
         Entity m_entity{};
 
         /// <summary>
+        /// Active render texture handle.
+        /// This may not be the texture that the camera was created with if the camera was set as the main camera.
+        /// Unsetting the camera as the main camera will return it to its original render texture.
+        /// </summary>
+        RenderTextureHandle m_renderTextureHandle{};
+
+        /// <summary>
         /// The order that the camera is processed. Lower values are processed first.
         /// This is set at time of creation (via the descriptor) unless the camera is marked as the main camera.
         /// When a camera is set as the main camera it uses the hardcoded CameraProcessOrder::MainCamera value.

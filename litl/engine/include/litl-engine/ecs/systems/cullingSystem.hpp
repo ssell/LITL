@@ -36,7 +36,8 @@ namespace litl
         std::array<CameraRenderableEntities, SceneCameras::MaxSceneCameras> cameraRenderableEntities;
 
         void reset() noexcept;
-        uint32_t activeCameraCount() const noexcept;
+        [[nodiscard]] uint32_t activeCameraCount() const noexcept;
+        [[nodiscard]] CameraRenderableEntities const* getMainCameraCull() const noexcept;
     };
 
     /// <summary>
