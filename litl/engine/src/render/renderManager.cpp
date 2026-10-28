@@ -22,6 +22,7 @@
 #include "litl-engine/scene/sceneView.hpp"
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-engine/ecs/systems/cullingSystem.hpp"
+#include "litl-platform/window/window.hpp"
 
 #ifdef LITL_RENDERER_VULKAN
 #include "litl-renderer-vulkan/integration.hpp"
@@ -91,11 +92,13 @@ namespace litl
 
             auto config = services.get<Configuration>();
             auto window = services.get<Window>();
+            auto engineCallbacks = services.get<EngineCallbacks>();
 
             LITL_FATAL_ASSERT_MSG((objectPool != nullptr), "Failed to inject ObjectPool into RenderManager.");
             LITL_FATAL_ASSERT_MSG((sceneView != nullptr), "Failed to inject SceneView into RenderManager.");
             LITL_FATAL_ASSERT_MSG((config != nullptr), "Failed to inject Configuration into RenderManager.");
             LITL_FATAL_ASSERT_MSG((window != nullptr), "Failed to inject Window into RenderManager.");
+            LITL_FATAL_ASSERT_MSG((engineCallbacks != nullptr), "Failed to inject EngineCallbacks into RenderManager.");
 
             createRenderer(window.get(), config.get()->renderer);
 
@@ -147,6 +150,11 @@ namespace litl
             createRenderPasses(services);
             createFrameRenderTextures();
             createDefaultTextures();
+
+            engineCallbacks->getWindowCallbacks()->registerWindowResizedCallback([this](ServiceProvider& services, Window const& window)
+                {
+                    return this->onWindowResized(services, window);
+                });
         }
 
         void destroy() noexcept
@@ -601,6 +609,27 @@ namespace litl
             }
 
             renderer->halt();
+        }
+
+        WindowCallbackResult onWindowResized(ServiceProvider& services, Window const& window) noexcept
+        {
+            // Quick-and-dirty render texture resizes ...
+            halt();
+
+            for (const auto& rtHandle : frameRenderTextures)
+            {
+                RenderTexture* rt = objectPool->getRenderTexture(rtHandle);
+
+                if (rt != nullptr)
+                {
+                    if (!rt->resize({}, window.getFrameBufferWidth(), window.getFrameBufferHeight()))
+                    {
+                        logWarning("Failed to resize RenderManager frame render texture");
+                    }
+                }
+            }
+
+            return WindowCallbackResult::Continue;
         }
     };
 

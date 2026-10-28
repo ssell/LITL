@@ -1,5 +1,6 @@
 #include "litl-engine/bootstrap.hpp"
 #include "litl-engine/config.hpp"
+#include "litl-engine/engineCallbacks.hpp"
 #include "litl-engine/frameLimiter.hpp"
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/objects/objectPool.hpp"
@@ -35,6 +36,7 @@ namespace litl::Internal
         services.addSingleton<AssetManager>();
         services.addSingleton<SceneManager>();
         services.addSingleton<SceneView>();
+        services.addSingleton<EngineCallbacks>();
     }
 
     void defaultConfigureSystems(SystemCollection& systems)

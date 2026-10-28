@@ -1,3 +1,5 @@
+#include <format>
+
 #include "litl-core/enumBitFlags.hpp"
 #include "litl-core/math/textureUtils.hpp"
 #include "litl-core/logging/logging.hpp"
@@ -12,16 +14,17 @@ namespace litl
     {
         m_descriptor = texDescriptor;
         m_pRenderManager = &renderManager;
+
+        if (m_descriptor.textureInfo.name.empty())
+        {
+            m_descriptor.textureInfo.name = m_descriptor.objectInfo.name;
+        }
+
         m_resourceHandle = renderManager.getRenderer()->createTexture(texDescriptor.textureInfo);
 
         if (!m_resourceHandle.isValid())
         {
             return false;
-        }
-
-        if (m_descriptor.textureInfo.name.empty())
-        {
-            m_descriptor.textureInfo.name = m_descriptor.objectInfo.name;
         }
 
         if (m_descriptor.textureInfo.residesInTextureTable)
@@ -86,6 +89,16 @@ namespace litl
         }
 
         m_pixelBytes.resize(totalBytes, std::byte{ 0 });
+    }
+
+    uint32_t Texture::getWidth() const noexcept
+    {
+        return m_descriptor.textureInfo.width;
+    }
+
+    uint32_t Texture::getHeight() const noexcept
+    {
+        return m_descriptor.textureInfo.height;
     }
 
     TextureDescriptor const& Texture::getDescriptor() const noexcept
@@ -198,6 +211,56 @@ namespace litl
             m_pixelBytes.clear();
             m_pixelBytes.shrink_to_fit();
         }
+    }
+
+    bool Texture::resize(uint32_t width, uint32_t height) noexcept
+    {
+        if ((m_pRenderManager == nullptr) || (width == 0u) || (height == 0u))
+        {
+            return false;
+        }
+
+        if ((width == getWidth()) && (height == getHeight()))
+        {
+            return true;
+        }
+
+        const Renderer* renderer = m_pRenderManager->getRenderer();
+
+        if (renderer == nullptr)
+        {
+            return false;
+        }
+
+        m_generation++;
+
+        TextureResourceDescriptor resizedDescriptor = m_descriptor.textureInfo;
+        resizedDescriptor.width = width;
+        resizedDescriptor.height = height;
+        resizedDescriptor.name = std::format("{}_{}", resizedDescriptor.name, m_generation);
+        resizedDescriptor.textureTableIndexOverride = m_textureTableIndex;
+        const TextureResourceHandle newHandle = renderer->createTexture(resizedDescriptor);
+
+        if (!m_resourceHandle.isValid())
+        {
+            logWarning("Failed to resize texture '", m_descriptor.objectInfo.name, "'");
+            return false;
+        }
+
+        resizePixelBuffer();
+
+        // Only update internal state after successful creation of new underyling texture resource
+        const TextureResourceHandle oldHandle = m_resourceHandle;
+        m_descriptor.textureInfo.width = width;
+        m_descriptor.textureInfo.height = height;
+        m_resourceHandle = newHandle;
+
+        if (oldHandle.isValid())
+        {
+            renderer->destroyTexture(oldHandle);
+        }
+
+        return true;
     }
 
     bool Texture::isValidTextureWrite() const noexcept

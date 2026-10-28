@@ -56,6 +56,16 @@ namespace litl
         void destroy(Authority<ObjectPool> auth) noexcept;
 
         /// <summary>
+        /// Returns the current width of the texture.
+        /// </summary>
+        [[nodiscard]] uint32_t getWidth() const noexcept;
+
+        /// <summary>
+        /// Returns the current height of the texture.
+        /// </summary>
+        [[nodiscard]] uint32_t getHeight() const noexcept;
+
+        /// <summary>
         /// 
         /// </summary>
         [[nodiscard]] TextureDescriptor const& getDescriptor() const noexcept;
@@ -93,6 +103,13 @@ namespace litl
         /// </summary>
         void flushData(Authority<RenderManager> auth, CommandBufferHandle commandBuffer) noexcept;
 
+        /// <summary>
+        /// Attempts to resize the texture. Can fail due to invalid size (0 as a dimension) or underlying renderer failure.
+        /// This is done by creating a new underlying texture resource of the appropriate size and marking the old texture resource to be destroyed.
+        /// It is up to the caller to ensure it is safe to do so (at a sync point, texture not in use, etc.).
+        /// </summary>
+        [[nodiscard]] bool resize(uint32_t width, uint32_t height) noexcept;
+
     private:
 
         /// <summary>
@@ -116,6 +133,7 @@ namespace litl
         TextureResourceHandle m_resourceHandle{};
         uint32_t m_textureTableIndex{ Constants::uint32_null_index };
         std::vector<std::byte> m_pixelBytes;
+        uint32_t m_generation{ 0u };
         bool m_isDirty{ true };                 // Every texture starts as dirty
     };
 }

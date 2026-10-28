@@ -273,12 +273,17 @@ namespace litl::vulkan
         return true;
     }
 
-    bool TextureTable::release(uint32_t slot) noexcept
+    bool TextureTable::release(uint32_t slot, TextureResourceHandle handle) noexcept
     {
         if (slot >= m_capacity)
         {
             logWarning("Attempting to free slot ", slot, " in Vulkan texture table that is out-of-bounds (max = ", m_capacity, ")");
             return false;
+        }
+
+        if (m_slotOwners[slot] != handle)
+        {
+            return true;    // No longer in the slot.
         }
 
         if (!m_slotOwners[slot].isValid())
@@ -325,7 +330,6 @@ namespace litl::vulkan
         if (m_slotOwners[slot].isValid())
         {
             // Updating an existing occupied slot. Capacity is already accounted for.
-            logWarning("Updating an existing occupied Vulkan texture table slot (", slot, "). Release by previous owner may have an unintended result.");
             m_slotOwners[slot] = handle;
             updatedExistingSlot = true;
         }

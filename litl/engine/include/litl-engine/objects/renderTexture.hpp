@@ -48,20 +48,26 @@ namespace litl
 
         static constexpr uint32_t MaxDimensions = 4096u;        // Vulkan minimum. Desktops often support higher. TODO move into config+ask the device.
 
-        [[nodiscard]] bool create(Authority<ObjectPool> auth, RenderTextureDescriptor const& descriptor, ObjectPool& objectPool, RenderManager const& renderManager) noexcept;
+        [[nodiscard]] bool create(Authority<ObjectPool> auth, RenderTextureDescriptor const& descriptor, ObjectPool& objectPool, RenderManager& renderManager) noexcept;
         void setSelfHandle(Authority<ObjectPool> auth, RenderTextureHandle handle) noexcept;
         void destroy(Authority<ObjectPool> auth) noexcept;
 
         [[nodiscard]] TextureHandle getColorTextureHandle() const noexcept;
         [[nodiscard]] TextureHandle getDepthTextureHandle() const noexcept;
+        [[nodiscard]] RenderTextureSizePolicy getSizePolicy() const noexcept;
         [[nodiscard]] uint32_t getWidth() const noexcept;
         [[nodiscard]] uint32_t getHeight() const noexcept;
+
+        [[nodiscard]] bool resize(uint32_t width, uint32_t height) noexcept;
+        [[nodiscard]] bool resize(Authority<RenderManager> auth, uint32_t width, uint32_t height);
 
     private:
 
         void setDimensions(uint32_t w, uint32_t h) noexcept;
+        [[nodiscard]] bool resizeInternal(uint32_t width, uint32_t height) noexcept;
 
         ObjectPool* m_pObjectPool{ nullptr };
+        RenderManager* m_pRenderManager{ nullptr };
         RenderTextureDescriptor m_descriptor{};
         RenderTextureHandle m_selfHandle{};
         TextureHandle m_colorTextureHandle{};

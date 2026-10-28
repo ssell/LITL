@@ -1303,7 +1303,7 @@ namespace litl::vulkan
         {
             if (resource->textureTableSlot != Constants::uint32_null_index)
             {
-                if (!m_pContext->textureTable.release(resource->textureTableSlot))
+                if (!m_pContext->textureTable.release(resource->textureTableSlot, handle))
                 {
                     logError("Failed to release TextureResource from Vulkan texture table at slot ", resource->textureTableSlot);
                 }

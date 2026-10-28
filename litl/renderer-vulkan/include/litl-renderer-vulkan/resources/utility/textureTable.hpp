@@ -24,7 +24,7 @@ namespace litl::vulkan
         void destroy() noexcept;
 
         [[nodiscard]] uint32_t acquire(TextureResourceHandle handle) noexcept;
-        [[nodiscard]] bool release(uint32_t slot) noexcept;
+        [[nodiscard]] bool release(uint32_t slot, TextureResourceHandle handle) noexcept;
         [[nodiscard]] bool update(uint32_t slot, TextureResourceHandle handle) noexcept;
 
         [[nodiscard]] VkDescriptorSet getDescriptorSet() const noexcept;

@@ -46,11 +46,11 @@ namespace litl
         ServiceCollection serviceCollection;
         std::shared_ptr<ServiceProvider> pServiceProvider{ nullptr };
         BootstrapFunc userBootstrap{ nullptr };
-        EngineCallbacks callbacks;
         EngineState state{ EngineState::Waiting };
 
         // The below are also stored in pServiceProvider, but keep them in here to avoid having to frequently refetch.
         std::shared_ptr<Configuration> pSharedConfig{ nullptr };
+        std::shared_ptr<EngineCallbacks> pSharedCallbacks{ nullptr };
         std::shared_ptr<FrameLimiter> pSharedFrameLimiter{ nullptr };
         std::shared_ptr<Platform> pSharedPlatform{ nullptr };
         std::shared_ptr<Window> pSharedWindow{ nullptr };
@@ -68,8 +68,8 @@ namespace litl
         {
             BootstrapCallbacks bootstrapCallbacks{
                 .frameCallbacks = std::make_shared<FrameCallbacks>(),
-                .inputCallbacks = callbacks.getInputCallbacks(),
-                .windowCallbacks = callbacks.getWindowCallbacks()
+                .inputCallbacks = pSharedCallbacks->getInputCallbacks(),
+                .windowCallbacks = pSharedCallbacks->getWindowCallbacks()
             };
 
             if (callbacksFunc != nullptr)
@@ -77,12 +77,12 @@ namespace litl
                 callbacksFunc(bootstrapCallbacks);
             }
 
-            callbacks.setup({}, *pServiceProvider, bootstrapCallbacks.frameCallbacks);
+            pSharedCallbacks->setup({}, *pServiceProvider, bootstrapCallbacks.frameCallbacks);
         }
 
         void prepareCallbacks()
         {
-            callbacks.prepare({}, *pServiceProvider);
+            pSharedCallbacks->prepare({}, *pServiceProvider);
         }
     };
 
@@ -133,6 +133,7 @@ namespace litl
 
         m_pImpl->pServiceProvider = m_pImpl->serviceCollection.build();
         m_pImpl->pSharedConfig = m_pImpl->pServiceProvider->get<Configuration>();
+        m_pImpl->pSharedCallbacks = m_pImpl->pServiceProvider->get<EngineCallbacks>();
         m_pImpl->pSharedFrameLimiter = m_pImpl->pServiceProvider->get<FrameLimiter>();
         m_pImpl->pSharedJobScheduler = m_pImpl->pServiceProvider->get<JobScheduler>();
         m_pImpl->pSharedECSWorld = m_pImpl->pServiceProvider->get<World>();
@@ -236,7 +237,7 @@ namespace litl
         m_pImpl->pSharedRenderManager->setup({}, (*m_pImpl->pServiceProvider));
 
         // Setup ECS
-        m_pImpl->pSharedECSWorld->setup((*m_pImpl->pServiceProvider), m_pImpl->callbacks.getFrameCallbacks());
+        m_pImpl->pSharedECSWorld->setup((*m_pImpl->pServiceProvider), m_pImpl->pSharedCallbacks->getFrameCallbacks());
         m_pImpl->setup.bootstrap((*m_pImpl->pServiceProvider), (m_pImpl->pSharedECSWorld->getCommandBuffer()));
 
         // Setup Scene

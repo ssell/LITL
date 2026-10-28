@@ -28,10 +28,11 @@ namespace litl
             texDesc.textureInfo.name = texDesc.objectInfo.name;
         }
     }
-    [[nodiscard]] bool RenderTexture::create(Authority<ObjectPool> auth, RenderTextureDescriptor const& descriptor, ObjectPool& objectPool, RenderManager const& renderManager) noexcept
+    [[nodiscard]] bool RenderTexture::create(Authority<ObjectPool> auth, RenderTextureDescriptor const& descriptor, ObjectPool& objectPool, RenderManager& renderManager) noexcept
     {
         m_descriptor = descriptor;
         m_pObjectPool = &objectPool;
+        m_pRenderManager = &renderManager;
 
         if (!m_descriptor.colorComponent && !m_descriptor.depthComponent)
         {
@@ -150,6 +151,11 @@ namespace litl
         return m_depthTextureHandle;
     }
 
+    RenderTextureSizePolicy RenderTexture::getSizePolicy() const noexcept
+    {
+        return m_descriptor.sizePolicy;
+    }
+
     void RenderTexture::setDimensions(uint32_t w, uint32_t h) noexcept
     {
         m_currWidth = clamp(w, 1u, MaxDimensions);
@@ -164,5 +170,60 @@ namespace litl
     uint32_t RenderTexture::getHeight() const noexcept
     {
         return m_currHeight;
+    }
+
+    bool RenderTexture::resize(uint32_t width, uint32_t height) noexcept
+    {
+        if (m_descriptor.sizePolicy == RenderTextureSizePolicy::SwapchainRelative)
+        {
+            return false;
+        }
+
+        return resizeInternal(width, height);
+    }
+
+    bool RenderTexture::resize(Authority<RenderManager> auth, uint32_t width, uint32_t height)
+    {
+        return resizeInternal(width, height);
+    }
+
+    bool RenderTexture::resizeInternal(uint32_t width, uint32_t height) noexcept
+    {
+        if ((width == 0u) || (height == 0u))
+        {
+            return false;
+        }
+
+        if ((width == m_currWidth) && (height == m_currHeight))
+        {
+            return true;
+        }
+
+        m_currWidth = width;
+        m_currHeight = height;
+
+        Texture* colorTexture = m_pObjectPool->getTexture(m_colorTextureHandle);
+
+        if (colorTexture != nullptr)
+        {
+            if (!colorTexture->resize(width, height))
+            {
+                logWarning("Failed to resize color texture for render texture '", m_descriptor.objectInfo.name, "'");
+                return false;
+            }
+        }
+
+        Texture* depthTexture = m_pObjectPool->getTexture(m_depthTextureHandle);
+
+        if (depthTexture != nullptr)
+        {
+            if (!depthTexture->resize(width, height))
+            {
+                logWarning("Failed to resize depth texture for render texture '", m_descriptor.objectInfo.name, "'");
+                return false;
+            }
+        }
+
+        return true;
     }
 }
