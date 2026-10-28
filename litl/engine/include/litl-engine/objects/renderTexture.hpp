@@ -52,6 +52,7 @@ namespace litl
         void setSelfHandle(Authority<ObjectPool> auth, RenderTextureHandle handle) noexcept;
         void destroy(Authority<ObjectPool> auth) noexcept;
 
+        [[nodiscard]] RenderTextureDescriptor const& getDescriptor() const noexcept;
         [[nodiscard]] TextureHandle getColorTextureHandle() const noexcept;
         [[nodiscard]] TextureHandle getDepthTextureHandle() const noexcept;
         [[nodiscard]] RenderTextureSizePolicy getSizePolicy() const noexcept;

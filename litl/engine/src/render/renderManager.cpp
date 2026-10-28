@@ -613,18 +613,27 @@ namespace litl
 
         WindowCallbackResult onWindowResized(ServiceProvider& services, Window const& window) noexcept
         {
-            // Quick-and-dirty render texture resizes ...
+            if (window.isMinimized())
+            {
+                return WindowCallbackResult::Continue;
+            }
+
+            // The callback is invoked at a CPU sync point, but need to ensure the GPU is not working on any affected render textures.
             halt();
 
-            for (const auto& rtHandle : frameRenderTextures)
+            // Update ALL render textures whose size is tied to the swapchain.
+            std::vector<RenderTextureHandle> allRenderTextureHandles;
+            objectPool->getAllRenderTextureHandles(allRenderTextureHandles);
+
+            for (const auto& rtHandle : allRenderTextureHandles)
             {
                 RenderTexture* rt = objectPool->getRenderTexture(rtHandle);
 
-                if (rt != nullptr)
+                if ((rt != nullptr) && (rt->getSizePolicy() == RenderTextureSizePolicy::SwapchainRelative))
                 {
                     if (!rt->resize({}, window.getFrameBufferWidth(), window.getFrameBufferHeight()))
                     {
-                        logWarning("Failed to resize RenderManager frame render texture");
+                        logWarning("RenderManager failed to resize render texture '", rt->getDescriptor().objectInfo.name, "' following window resize.");
                     }
                 }
             }

@@ -141,6 +141,11 @@ namespace litl
         m_pObjectPool = nullptr;
     }
 
+    RenderTextureDescriptor const& RenderTexture::getDescriptor() const noexcept
+    {
+        return m_descriptor;
+    }
+
     TextureHandle RenderTexture::getColorTextureHandle() const noexcept
     {
         return m_colorTextureHandle;
@@ -182,7 +187,7 @@ namespace litl
         return resizeInternal(width, height);
     }
 
-    bool RenderTexture::resize(Authority<RenderManager> auth, uint32_t width, uint32_t height)
+    bool RenderTexture::resize(Authority<RenderManager> auth, uint32_t width, uint32_t height) noexcept
     {
         return resizeInternal(width, height);
     }
@@ -194,13 +199,13 @@ namespace litl
             return false;
         }
 
+        width = clamp(static_cast<uint32_t>(ceil(static_cast<float>(width) * m_descriptor.relativeWidth)), 0u, MaxDimensions);
+        height = clamp(static_cast<uint32_t>(ceil(static_cast<float>(height) * m_descriptor.relativeHeight)), 0u, MaxDimensions);
+
         if ((width == m_currWidth) && (height == m_currHeight))
         {
             return true;
         }
-
-        m_currWidth = width;
-        m_currHeight = height;
 
         Texture* colorTexture = m_pObjectPool->getTexture(m_colorTextureHandle);
 
@@ -223,6 +228,9 @@ namespace litl
                 return false;
             }
         }
+
+        m_currWidth = width;
+        m_currHeight = height;
 
         return true;
     }

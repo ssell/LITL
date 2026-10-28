@@ -238,22 +238,27 @@ namespace litl
         resizedDescriptor.width = width;
         resizedDescriptor.height = height;
         resizedDescriptor.name = std::format("{}_{}", resizedDescriptor.name, m_generation);
-        resizedDescriptor.textureTableIndexOverride = m_textureTableIndex;
+        
+        if (resizedDescriptor.residesInTextureTable)
+        {
+            resizedDescriptor.textureTableIndexOverride = m_textureTableIndex;
+        }
+
         const TextureResourceHandle newHandle = renderer->createTexture(resizedDescriptor);
 
-        if (!m_resourceHandle.isValid())
+        if (!newHandle.isValid())
         {
             logWarning("Failed to resize texture '", m_descriptor.objectInfo.name, "'");
             return false;
         }
-
-        resizePixelBuffer();
 
         // Only update internal state after successful creation of new underyling texture resource
         const TextureResourceHandle oldHandle = m_resourceHandle;
         m_descriptor.textureInfo.width = width;
         m_descriptor.textureInfo.height = height;
         m_resourceHandle = newHandle;
+
+        resizePixelBuffer();
 
         if (oldHandle.isValid())
         {
