@@ -2,10 +2,14 @@
 #define LITL_PLATFORM_WINDOW_H__
 
 #include <cstdint>
+#include <memory>
+#include <mutex>
 #include <string>
+#include <vector>
 
 #include "litl-core/authority.hpp"
 #include "litl-platform/nativeWindowHandle.hpp"
+#include "litl-platform/window/windowCallbacks.hpp"
 
 namespace litl
 {
@@ -58,24 +62,30 @@ namespace litl
 
         [[nodiscard]] bool setup(WindowOps const* operations, WindowContext* context) noexcept;
         void prepare(Authority<Platform> auth, WindowConfiguration const& config) noexcept;
-        [[nodiscard]] bool open(std::string const& title, uint32_t width, uint32_t height) const noexcept;
+        [[nodiscard]] bool open(std::string const& title, uint32_t width, uint32_t height) noexcept;
         void close() const noexcept;
         void destroy() noexcept;
-        [[nodiscard]] bool closeRequested() const noexcept;
+        void triggerCallbacks(ServiceProvider& services, WindowCallbacks& callbacks) noexcept;
+        [[nodiscard]] bool closeRequested() noexcept;
         [[nodiscard]] WindowState getState() const noexcept;
         [[nodiscard]] uint32_t getFrameBufferWidth() const noexcept;
         [[nodiscard]] uint32_t getFrameBufferHeight() const noexcept;
         [[nodiscard]] float getAspectRatio() const noexcept;
         [[nodiscard]] NativeWindowHandle getNativeWindowHandle() const noexcept;
-        void onResize(uint32_t width, uint32_t height) const noexcept;
+        void onResize(uint32_t width, uint32_t height) noexcept;
         void pollForEvents() const noexcept;
         void blockForEvents(float timeoutSeconds = 0.0f) const noexcept;
         [[nodiscard]] WindowContext* getContext() noexcept;
 
     private:
 
+        void addDeferredCallbackEvent(WindowCallbackType type) noexcept;
+
         WindowOps const* m_pOps{ nullptr };
         WindowContext* m_pContext{ nullptr };
+        std::vector<WindowCallbackType> m_deferredCallbackEvents;
+        std::vector<WindowCallbackType> m_deferredCallbackEventsCopy;
+        std::mutex m_deferredCallbacksMutex{};
     };
 }
 

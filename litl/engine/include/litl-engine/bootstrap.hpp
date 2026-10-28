@@ -8,9 +8,17 @@
 #include "litl-ecs/system/systemCollection.hpp"
 #include "litl-ecs/frameCallbacks.hpp"
 #include "litl-platform/input/inputCallbacks.hpp"
+#include "litl-platform/window/windowCallbacks.hpp"
 
 namespace litl
 {
+    struct BootstrapCallbacks
+    {
+        std::shared_ptr<FrameCallbacks> frameCallbacks{ nullptr };
+        std::shared_ptr<InputCallbacks> inputCallbacks{ nullptr };
+        std::shared_ptr<WindowCallbacks> windowCallbacks{ nullptr };
+    };
+
     /// <summary>
     /// Optional function provided to the Engine to allow the user to inject their custom services.
     /// </summary>
@@ -27,14 +35,9 @@ namespace litl
     using BootstrapFunc = void(*)(ServiceProvider& services, EntityCommands& commands);
 
     /// <summary>
-    /// Optional function provided to the Engine to allow the user to add custom frame event callbacks. Such as on frame start, on group run, etc.
+    /// Optional function provided to the Engine to allow the user to add custom callbacks.
     /// </summary>
-    using ConfigureFrameCallbacksFunc = void(*)(std::shared_ptr<FrameCallbacks> callbacks);
-
-    /// <summary>
-    /// Optional function provided to the Engine to allow the user to add custom input event callbacks.
-    /// </summary>
-    using ConfigureInputCallbacksFunc = void(*)(std::shared_ptr<InputCallbacks> callbacks);
+    using ConfigureCallbacksFunc = void(*)(BootstrapCallbacks& callbacks);
 
     namespace Internal
     {

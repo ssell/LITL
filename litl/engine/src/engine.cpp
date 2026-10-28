@@ -64,21 +64,20 @@ namespace litl
         std::shared_ptr<AssetManager> pSharedAssetManager{ nullptr };
         std::shared_ptr<SceneManager> pSharedSceneManager{ nullptr };
         
-        void configureCallbacks(ConfigureFrameCallbacksFunc userFrameCallbacksFunc, ConfigureInputCallbacksFunc userInputCallbacksFunc)
+        void configureCallbacks(ConfigureCallbacksFunc callbacksFunc)
         {
-            std::shared_ptr<FrameCallbacks> userFrameCallbacks = std::make_shared<FrameCallbacks>();
+            BootstrapCallbacks bootstrapCallbacks{
+                .frameCallbacks = std::make_shared<FrameCallbacks>(),
+                .inputCallbacks = callbacks.getInputCallbacks(),
+                .windowCallbacks = callbacks.getWindowCallbacks()
+            };
 
-            if (userFrameCallbacksFunc != nullptr)
+            if (callbacksFunc != nullptr)
             {
-                userFrameCallbacksFunc(userFrameCallbacks);
+                callbacksFunc(bootstrapCallbacks);
             }
 
-            if (userInputCallbacksFunc != nullptr)
-            {
-                userInputCallbacksFunc(callbacks.getInputCallbacks());          // Engine and User share the same InputCallbacks instance so that users can set higher priority items if needed.
-            }
-
-            callbacks.setup({}, *pServiceProvider, userFrameCallbacks);
+            callbacks.setup({}, *pServiceProvider, bootstrapCallbacks.frameCallbacks);
         }
 
         void prepareCallbacks()
@@ -110,8 +109,7 @@ namespace litl
         Configuration config, 
         ConfigureServicesFunc servicesFunc, 
         ConfigureSystemsFunc systemsFunc, 
-        ConfigureFrameCallbacksFunc frameCallbacksFunc,
-        ConfigureInputCallbacksFunc inputCallbacksFunc,
+        ConfigureCallbacksFunc callbacksFunc,
         BootstrapFunc bootstrapFunc) noexcept
     {
         if (m_pImpl->state != EngineState::Waiting)
@@ -161,7 +159,7 @@ namespace litl
         }
 
         m_pImpl->userBootstrap = bootstrapFunc;
-        m_pImpl->configureCallbacks(frameCallbacksFunc, inputCallbacksFunc);
+        m_pImpl->configureCallbacks(callbacksFunc);
     }
 
     void Engine::shutdown() noexcept

@@ -21,8 +21,7 @@ namespace litl
         Opened = 1u,
         Closed = 2u,
         Minimized = 3u,
-        Maximized = 4u,
-        Resized = 5u
+        Resized = 4u
     };
 
     enum class WindowCallbackResult : uint8_t
@@ -64,7 +63,6 @@ namespace litl
         WindowCallbackHandle registerWindowOpenedCallback(OnWindowEventFunc&& func, WindowCallbackPriority priority = WindowCallbackPriority::Medium) noexcept;
         WindowCallbackHandle registerWindowClosedCallback(OnWindowEventFunc&& func, WindowCallbackPriority priority = WindowCallbackPriority::Medium) noexcept;
         WindowCallbackHandle registerWindowMinimizedCallback(OnWindowEventFunc&& func, WindowCallbackPriority priority = WindowCallbackPriority::Medium) noexcept;
-        WindowCallbackHandle registerWindowMaximizedCallback(OnWindowEventFunc&& func, WindowCallbackPriority priority = WindowCallbackPriority::Medium) noexcept;
         WindowCallbackHandle registerWindowResizedCallback(OnWindowEventFunc&& func, WindowCallbackPriority priority = WindowCallbackPriority::Medium) noexcept;
 
         void unregisterCallback(WindowCallbackHandle handle) noexcept;
@@ -72,7 +70,6 @@ namespace litl
         void invokeWindowOpenedEvent(Authority<Window> auth, ServiceProvider& services, Window const& window) noexcept;
         void invokeWindowClosedEvent(Authority<Window> auth, ServiceProvider& services, Window const& window) noexcept;
         void invokeWindowMinimizedEvent(Authority<Window> auth, ServiceProvider& services, Window const& window) noexcept;
-        void invokeWindowMaximizedEvent(Authority<Window> auth, ServiceProvider& services, Window const& window) noexcept;
         void invokeWindowResizedEvent(Authority<Window> auth, ServiceProvider& services, Window const& window) noexcept;
 
     private:

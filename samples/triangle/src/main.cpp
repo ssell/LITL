@@ -17,7 +17,6 @@ int main()
         nullptr,
         configureSystems,
         nullptr,
-        nullptr,
         bootstrap);
 
     engine.start();

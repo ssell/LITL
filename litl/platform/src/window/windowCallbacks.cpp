@@ -48,7 +48,6 @@ namespace litl
         std::vector<GenericWindowEvent> onWindowOpenedEvents;
         std::vector<GenericWindowEvent> onWindowClosedEvents;
         std::vector<GenericWindowEvent> onWindowMinimizedEvents;
-        std::vector<GenericWindowEvent> onWindowMaximizedEvents;
         std::vector<GenericWindowEvent> onWindowResizedEvents;
         std::vector<CallbackCommand> deferredCommands;
         std::vector<CallbackCommand> copiedDeferredCommands;
@@ -99,10 +98,6 @@ namespace litl
 
                 case WindowCallbackType::Minimized:
                     addOrRemoveGenericEvent(onWindowMinimizedEvents, command);
-                    break;
-
-                case WindowCallbackType::Maximized:
-                    addOrRemoveGenericEvent(onWindowMaximizedEvents, command);
                     break;
 
                 case WindowCallbackType::Resized:
@@ -192,11 +187,6 @@ namespace litl
             invokeGenericWindowEvent(WindowCallbackType::Minimized, onWindowMinimizedEvents, services, window);
         }
 
-        void invokeWindowMaximizedEvent(ServiceProvider& services, Window const& window) noexcept
-        {
-            invokeGenericWindowEvent(WindowCallbackType::Maximized, onWindowMaximizedEvents, services, window);
-        }
-
         void invokeWindowResizedEvent(ServiceProvider& services, Window const& window) noexcept
         {
             invokeGenericWindowEvent(WindowCallbackType::Resized, onWindowResizedEvents, services, window);
@@ -234,11 +224,6 @@ namespace litl
         return m_pImpl->enqueueAddCommand(WindowCallbackType::Minimized, std::move(func), priority);
     }
 
-    WindowCallbackHandle WindowCallbacks::registerWindowMaximizedCallback(OnWindowEventFunc&& func, WindowCallbackPriority priority) noexcept
-    {
-        return m_pImpl->enqueueAddCommand(WindowCallbackType::Maximized, std::move(func), priority);
-    }
-
     WindowCallbackHandle WindowCallbacks::registerWindowResizedCallback(OnWindowEventFunc&& func, WindowCallbackPriority priority) noexcept
     {
         return m_pImpl->enqueueAddCommand(WindowCallbackType::Resized, std::move(func), priority);
@@ -262,11 +247,6 @@ namespace litl
     void WindowCallbacks::invokeWindowMinimizedEvent(Authority<Window> auth, ServiceProvider& services, Window const& window) noexcept
     {
         m_pImpl->invokeWindowMinimizedEvent(services, window);
-    }
-
-    void WindowCallbacks::invokeWindowMaximizedEvent(Authority<Window> auth, ServiceProvider& services, Window const& window) noexcept
-    {
-        m_pImpl->invokeWindowMaximizedEvent(services, window);
     }
 
     void WindowCallbacks::invokeWindowResizedEvent(Authority<Window> auth, ServiceProvider& services, Window const& window) noexcept

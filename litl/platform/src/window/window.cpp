@@ -38,14 +38,22 @@ namespace litl
 
     void Window::prepare(Authority<Platform> auth, WindowConfiguration const& config) noexcept
     {
-        // ... nothing at the moment, for future use if needed ...
+        // ... nothing here yet, leaving incase needed in the future ...
     }
 
-    bool Window::open(std::string const& title, uint32_t width, uint32_t height) const noexcept
+    bool Window::open(std::string const& title, uint32_t width, uint32_t height) noexcept
     {
         LITL_FATAL_ASSERT(width > 0u);
         LITL_FATAL_ASSERT(height > 0u);
-        return m_pOps->open(m_pContext, title, width, height);
+
+        const bool success = m_pOps->open(m_pContext, title, width, height);
+
+        if (success)
+        {
+            addDeferredCallbackEvent(WindowCallbackType::Opened);
+        }
+
+        return success;
     }
 
     void Window::close() const noexcept
@@ -67,10 +75,52 @@ namespace litl
         m_pContext = nullptr;
     }
 
-    bool Window::closeRequested() const noexcept
+    void Window::triggerCallbacks(ServiceProvider& services, WindowCallbacks& callbacks) noexcept
+    {
+        {
+            std::scoped_lock lock(m_deferredCallbacksMutex);
+            m_deferredCallbackEventsCopy = std::move(m_deferredCallbackEvents);
+        }
+
+        for (auto& deferredEvent : m_deferredCallbackEventsCopy)
+        {
+            switch (deferredEvent)
+            {
+            case WindowCallbackType::Opened:
+                callbacks.invokeWindowOpenedEvent({}, services, *this);
+                break;
+
+            case WindowCallbackType::Closed:
+                callbacks.invokeWindowClosedEvent({}, services, *this);
+                break;
+
+            case WindowCallbackType::Minimized:
+                callbacks.invokeWindowMinimizedEvent({}, services, *this);
+                break;
+
+            case WindowCallbackType::Resized:
+                callbacks.invokeWindowResizedEvent({}, services, *this);
+                break;
+
+            default:
+                logWarning("Requested to trigger unhandled window callback type of ", static_cast<uint32_t>(deferredEvent));
+                break;
+            }
+        }
+    }
+
+    bool Window::closeRequested() noexcept
     {
         LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
-        return m_pOps->closeRequested(m_pContext);
+
+        const bool isClosing = m_pOps->closeRequested(m_pContext);
+
+        if (isClosing)
+        {
+            addDeferredCallbackEvent(WindowCallbackType::Closed);
+        }
+        
+        return isClosing;
     }
 
     WindowState Window::getState() const noexcept
@@ -103,10 +153,16 @@ namespace litl
         return m_pOps->getNativeWindowHandle(m_pContext);
     }
 
-    void Window::onResize(uint32_t width, uint32_t height) const noexcept
+    void Window::onResize(uint32_t width, uint32_t height) noexcept
     {
         LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
         m_pOps->onResize(m_pContext, width, height);
+        addDeferredCallbackEvent(WindowCallbackType::Resized);
+
+        if ((width == 0u) && (height == 0u))
+        {
+            addDeferredCallbackEvent(WindowCallbackType::Minimized);
+        }
     }
 
     void Window::pollForEvents() const noexcept
@@ -124,5 +180,11 @@ namespace litl
     WindowContext* Window::getContext() noexcept
     {
         return m_pContext;
+    }
+
+    void Window::addDeferredCallbackEvent(WindowCallbackType type) noexcept
+    {
+        std::scoped_lock lock(m_deferredCallbacksMutex);
+        m_deferredCallbackEvents.push_back(type);
     }
 }

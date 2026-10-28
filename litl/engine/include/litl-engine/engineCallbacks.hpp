@@ -5,13 +5,14 @@
 
 #include "litl-core/authority.hpp"
 #include "litl-core/impl.hpp"
-#include "litl-ecs/frameCallbacks.hpp"
-#include "litl-platform/input/inputCallbacks.hpp"
 
 namespace litl
 {
     class Engine;
     class ServiceProvider;
+    struct FrameCallbacks;
+    class InputCallbacks;
+    class WindowCallbacks;
 
     class EngineCallbacks
     {
@@ -27,6 +28,7 @@ namespace litl
         void prepare(Authority<Engine> authority, ServiceProvider& services) noexcept;
         std::shared_ptr<FrameCallbacks> getFrameCallbacks() noexcept;
         std::shared_ptr<InputCallbacks> getInputCallbacks() noexcept;
+        std::shared_ptr<WindowCallbacks> getWindowCallbacks() noexcept;
 
     private:
 

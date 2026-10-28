@@ -52,9 +52,9 @@ namespace litl::samples
         systems.addSystem<SpinSystem>(SystemGroup::Update);
     }
 
-    void configureInputCallbacks(std::shared_ptr<InputCallbacks> callbacks)
+    void configureCallbacks(BootstrapCallbacks& callbacks)
     {
-        callbacks->registerActionMapCallback("ui"_sid, "click"_sid, [](ServiceProvider& services, ActionMapState actionState)
+        callbacks.inputCallbacks->registerActionMapCallback("ui"_sid, "click"_sid, [](ServiceProvider& services, ActionMapState actionState)
             {
                 if (actionState.released)
                 {
@@ -65,7 +65,7 @@ namespace litl::samples
                 return InputCallbackResult::Continue;
             });
 
-        callbacks->registerActionMapCallback("gameplay"_sid, "escape"_sid, [](ServiceProvider& services, ActionMapState actionState)
+        callbacks.inputCallbacks->registerActionMapCallback("gameplay"_sid, "escape"_sid, [](ServiceProvider& services, ActionMapState actionState)
             {
                 if (actionState.released)
                 {
@@ -104,7 +104,7 @@ int main()
 {
     litl::Engine engine{};
 
-    engine.setup(litl::samples::buildConfig(), nullptr, litl::samples::configureSystems, nullptr, litl::samples::configureInputCallbacks, litl::samples::bootstrap);
+    engine.setup(litl::samples::buildConfig(), nullptr, litl::samples::configureSystems, litl::samples::configureCallbacks, litl::samples::bootstrap);
     engine.start();
     engine.shutdown();
 

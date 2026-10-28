@@ -11,8 +11,7 @@ constexpr uint32_t WorldDimensions = 1024u;
 
 void configureServices(ServiceCollection& services);
 void configureSystems(SystemCollection& systems);
-void configureFrameCallbacks(std::shared_ptr<FrameCallbacks> callbacks);
-void configureInputCallbacks(std::shared_ptr<InputCallbacks> callbacks);
+void configureCallbacks(BootstrapCallbacks& callbacks);
 void bootstrap(ServiceProvider& services, EntityCommands& commands);
 
 int main()
@@ -32,8 +31,7 @@ int main()
         },
         configureServices,
         configureSystems,
-        configureFrameCallbacks,
-        configureInputCallbacks,
+        configureCallbacks,
         bootstrap);
 
     engine.start();
@@ -64,19 +62,13 @@ void configureSystems(SystemCollection& systems)
 /// <summary>
 /// This is called once by the engine and provides the user a chance to hook their custom callbacks into the frame lifecycle.
 /// </summary>
-void configureFrameCallbacks(std::shared_ptr<FrameCallbacks> callbacks)
+void configureCallbacks(BootstrapCallbacks& callbacks)
 {
-    callbacks->onFrameStart = [](ServiceProvider& services, float dt) -> void
+    callbacks.frameCallbacks->onFrameStart = [](ServiceProvider& services, float dt) -> void
         {
             services.get<samples::Simulator>()->update(dt);
         };
-}
 
-/// <summary>
-/// This is called once by the engine and provides the user a chance to hook their custom callbacks into input events.
-/// </summary>
-void configureInputCallbacks(std::shared_ptr<InputCallbacks> callbacks)
-{
     static constexpr auto getClickWorldSpacePos = [](ServiceProvider& services, MousePosition const& mouse)
         {
             const auto* camera = services.get<SceneView>()->getMainCamera();
@@ -84,7 +76,7 @@ void configureInputCallbacks(std::shared_ptr<InputCallbacks> callbacks)
             return vec3{ clickRay.origin.x(), 0.0f, clickRay.origin.z() };      // Camera is looking DOWN at the x/z plane from +y.
         };
 
-    callbacks->registerMouseButtonCallback(MouseButton::Left, [](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down)
+    callbacks.inputCallbacks->registerMouseButtonCallback(MouseButton::Left, [](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down)
         {
             if (released && mouse.inWindow)
             {
@@ -94,7 +86,7 @@ void configureInputCallbacks(std::shared_ptr<InputCallbacks> callbacks)
             return InputCallbackResult::Continue;
         });
 
-    callbacks->registerMouseButtonCallback(MouseButton::Right, [](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down)
+    callbacks.inputCallbacks->registerMouseButtonCallback(MouseButton::Right, [](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down)
         {
             if (released && mouse.inWindow)
             {

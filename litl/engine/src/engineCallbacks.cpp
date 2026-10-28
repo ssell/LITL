@@ -22,6 +22,7 @@ namespace litl
         std::shared_ptr<FrameCallbacks> engineFrameCallbacks{ std::make_shared<FrameCallbacks>() };
         std::shared_ptr<FrameCallbacks> userFrameCallbacks{ nullptr };
         std::shared_ptr<InputCallbacks> inputCallbacks{ std::make_shared<InputCallbacks>() };
+        std::shared_ptr<WindowCallbacks> windowCallbacks{ std::make_shared<WindowCallbacks>() };
 
         void prepare(ServiceProvider& services) noexcept
         {
@@ -68,6 +69,13 @@ namespace litl
                     {
                         input->poll();
                         input->triggerCallbacks(services, *inputCallbacks);
+                    }
+
+                    auto* window = platform->getWindow();
+
+                    if (window != nullptr)
+                    {
+                        window->triggerCallbacks(services, *windowCallbacks);
                     }
 
                     taskManager->update();
@@ -181,13 +189,13 @@ namespace litl
             // Input Events
             // ---------------------------------------------------------------------------------
 
-            /*
-            // Example:
-            inputCallbacks->registerMouseButtonCallback(MouseButton::Left, [](ServiceProvider& services, MousePosition mouse, MouseButton button, bool pressed, bool released, bool down)
-            {
-                return InputCallbackResult::Continue;
-            });
-            */
+            // ... none at the moment ...
+
+            // ---------------------------------------------------------------------------------
+            // Window Events
+            // ---------------------------------------------------------------------------------
+
+            // ... none at the moment ...
         }
     };
 
@@ -219,5 +227,10 @@ namespace litl
     std::shared_ptr<InputCallbacks> EngineCallbacks::getInputCallbacks() noexcept
     {
         return m_impl->inputCallbacks;
+    }
+
+    std::shared_ptr<WindowCallbacks> EngineCallbacks::getWindowCallbacks() noexcept
+    {
+        return m_impl->windowCallbacks;
     }
 }
