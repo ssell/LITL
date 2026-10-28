@@ -173,10 +173,10 @@ namespace litl
         return m_pOps->cmdEnd(m_pContext, handle);
     }
 
-    void Renderer::cmdBeginRender(CommandBufferHandle handle, BeginRenderCommand const& command) const noexcept
+    bool Renderer::cmdBeginRender(CommandBufferHandle handle, BeginRenderCommand const& command) const noexcept
     {
         LITL_FATAL_ASSERT(valid());
-        m_pOps->cmdBeginRender(m_pContext, handle, command);
+        return m_pOps->cmdBeginRender(m_pContext, handle, command);
     }
 
     void Renderer::cmdEndRender(CommandBufferHandle handle) const noexcept

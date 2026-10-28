@@ -154,14 +154,14 @@ namespace litl::vulkan
         return vkEndCommandBuffer(commandBuffer->vkCommandBuffer) == VK_SUCCESS;
     }
 
-    void cmdBeginRender(litl::RendererContext* context, CommandBufferHandle handle, BeginRenderCommand const& command) noexcept
+    bool cmdBeginRender(litl::RendererContext* context, CommandBufferHandle handle, BeginRenderCommand const& command) noexcept
     {
         auto* vulkanContext = unwrap(context);
         auto* commandBuffer = unwrapCommandBuffer(context, handle);
 
         if (!isValid(commandBuffer))
         {
-            return;
+            return false;
         }
 
         // ---------------------------------------------------------------------------------
@@ -189,17 +189,18 @@ namespace litl::vulkan
         {
             // Use a custom color attachment.
             TextureResource* colorTexture = vulkanContext->resources.getTexture(command.color.colorTexture);
-            VkExtent2D textureExtents{ .width = 1u, .height = 2u };
-
-            if (colorTexture != nullptr)
+            VkExtent2D textureExtents{ .width = 1u, .height = 1u };
+            
+            if (colorTexture == nullptr)
             {
-                colorAttachment.imageView = colorTexture->vkImageView;
-                textureExtents = VkExtent2D{ .width = colorTexture->descriptor.width, .height = colorTexture->descriptor.height };
+                logWarning("cmdBeginRender called with a custom color attachment that is null. Render cancelled.");
+                return false;
             }
 
+            colorAttachment.imageView = colorTexture->vkImageView;
             colorAttachment.loadOp = toVkAttachmentLoadOp(command.color.loadOp);
             colorAttachment.storeOp = toVkAttachmentStoreOp(command.color.storeOp);
-            vulkanContext->drawInfo.targetTextureSize = textureExtents;
+            vulkanContext->drawInfo.targetTextureSize = VkExtent2D{ .width = colorTexture->descriptor.width, .height = colorTexture->descriptor.height };
         }
 
         // ---------------------------------------------------------------------------------
@@ -256,10 +257,10 @@ namespace litl::vulkan
         VkRenderingInfo renderingInfo{
             .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
             .flags = 0,
-            .renderArea = {
+            .renderArea = {     // both command.area.offset and command.area.extents are vectors in normalized texture space on the range of [0, 1]
                 .offset = {
-                    .x = static_cast<int32_t>(command.area.offset.x() * command.area.extents.x()),
-                    .y = static_cast<int32_t>(command.area.offset.y() * command.area.extents.y())
+                    .x = static_cast<int32_t>(vulkanContext->drawInfo.targetTextureSize.width * command.area.offset.x()),
+                    .y = static_cast<int32_t>(vulkanContext->drawInfo.targetTextureSize.height * command.area.offset.y())
                 },
                 .extent = {
                     .width = static_cast<uint32_t>(vulkanContext->drawInfo.targetTextureSize.width * command.area.extents.x()),
@@ -298,6 +299,8 @@ namespace litl::vulkan
             nullptr);
 
         // todo update for Compute pipeline if/when compute shaders ever need to sample from the global texture table
+
+        return true;
     }
 
     void cmdEndRender(litl::RendererContext* context, CommandBufferHandle handle) noexcept
@@ -454,8 +457,8 @@ namespace litl::vulkan
         {
             // Note: incoming viewport regions are normalized so that the command caller does not need to track texture dimensions.
             const VkViewport viewport{
-                .x = command.setViewport->region.offset.x(),
-                .y = command.setViewport->region.offset.y(),
+                .x = vulkanContext->drawInfo.targetTextureSize.width * command.setViewport->region.offset.x(),
+                .y = vulkanContext->drawInfo.targetTextureSize.width * command.setViewport->region.offset.y(),
                 .width = vulkanContext->drawInfo.targetTextureSize.width * command.setViewport->region.extents.x(),
                 .height = vulkanContext->drawInfo.targetTextureSize.height * command.setViewport->region.extents.y(),
                 .minDepth = command.setViewport->minDepth,

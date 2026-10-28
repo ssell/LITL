@@ -59,7 +59,7 @@ namespace litl
         CommandBufferHandle (*cmdBeginFrame)(RendererContext*);
         bool (*cmdBegin)(RendererContext*, CommandBufferHandle);
         bool (*cmdEnd)(RendererContext*, CommandBufferHandle);
-        void (*cmdBeginRender)(RendererContext*, CommandBufferHandle, BeginRenderCommand const&);
+        bool (*cmdBeginRender)(RendererContext*, CommandBufferHandle, BeginRenderCommand const&);
         void (*cmdEndRender)(RendererContext*, CommandBufferHandle);
         void (*cmdPipelineBarrier)(RendererContext*, CommandBufferHandle, PipelineBarrierCommand const&);
         void (*cmdClearImage)(RendererContext*, CommandBufferHandle, ClearImageCommand const&);
@@ -264,7 +264,7 @@ namespace litl
         /// </summary>
         /// <param name="handle"></param>
         /// <param name="command"></param>
-        void cmdBeginRender(CommandBufferHandle handle, BeginRenderCommand const& command) const noexcept;
+        [[nodiscard]] bool cmdBeginRender(CommandBufferHandle handle, BeginRenderCommand const& command) const noexcept;
         
         /// <summary>
         /// Issues a command to end a dynamic render pass.

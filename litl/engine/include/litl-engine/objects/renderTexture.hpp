@@ -60,7 +60,7 @@ namespace litl
         [[nodiscard]] uint32_t getHeight() const noexcept;
 
         [[nodiscard]] bool resize(uint32_t width, uint32_t height) noexcept;
-        [[nodiscard]] bool resize(Authority<RenderManager> auth, uint32_t width, uint32_t height);
+        [[nodiscard]] bool resize(Authority<RenderManager> auth, uint32_t width, uint32_t height) noexcept;
 
     private:
 

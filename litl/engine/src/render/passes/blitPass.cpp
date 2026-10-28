@@ -59,19 +59,20 @@ namespace litl
             resolveSourceTextures(renderView, &colorSource, &depthSource);
             cmdPipelineBarriers(context.commandBufferHandle, m_pRenderer, colorSource);
 
-            m_pRenderer->cmdBeginRender(context.commandBufferHandle, createBeginRenderCommand(nullptr, LoadOperationType::Clear, StoreOperationType::Store, false));
-
-            if ((colorSource != nullptr) && ensurePipelineExists())
+            if (m_pRenderer->cmdBeginRender(context.commandBufferHandle, createBeginRenderCommand(nullptr, LoadOperationType::Clear, StoreOperationType::Store, false)))
             {
-                const auto pushConstants = BlitPushConstants::create(colorSource);
+                if ((colorSource != nullptr) && ensurePipelineExists())
+                {
+                    const auto pushConstants = BlitPushConstants::create(colorSource);
 
-                m_pRenderer->cmdSetViewportAndScissor(context.commandBufferHandle, createSetViewportAndScissorCommand(nullptr));
-                m_pRenderer->cmdBindGraphicsPipeline(context.commandBufferHandle, m_graphicsPipelineHandle);
-                m_pRenderer->cmdPushConstants(context.commandBufferHandle, ShaderStage::All, generic_as_byte_span(&pushConstants, sizeof(BlitPushConstants)));
-                m_pRenderer->cmdDraw(context.commandBufferHandle, 3u, 1u, 0u, 0u);
+                    m_pRenderer->cmdSetViewportAndScissor(context.commandBufferHandle, createSetViewportAndScissorCommand(nullptr));
+                    m_pRenderer->cmdBindGraphicsPipeline(context.commandBufferHandle, m_graphicsPipelineHandle);
+                    m_pRenderer->cmdPushConstants(context.commandBufferHandle, ShaderStage::All, generic_as_byte_span(&pushConstants, sizeof(BlitPushConstants)));
+                    m_pRenderer->cmdDraw(context.commandBufferHandle, 3u, 1u, 0u, 0u);
+                }
+
+                m_pRenderer->cmdEndRender(context.commandBufferHandle);
             }
-
-            m_pRenderer->cmdEndRender(context.commandBufferHandle);
         }
     }
 

@@ -106,7 +106,7 @@ bool createWindow(SampleRenderState& sample) noexcept;
 bool createRenderer(SampleRenderState& sample) noexcept;
 bool createGraphicsPipeline(SampleRenderState& sample) noexcept;
 void updateTiming(SampleRenderState& sample) noexcept;
-void beginRender(SampleRenderState& sample) noexcept;
+bool beginRender(SampleRenderState& sample) noexcept;
 void endRender(SampleRenderState& sample) noexcept;
 bool createResources(SampleRenderState& sample) noexcept;
 bool createVertexBuffer(SampleRenderState& sample, CommandBufferHandle commandBuffer) noexcept;
@@ -152,18 +152,19 @@ int main()
                 updatePerFrameDataBuffer(sample);
                 updatePerCameraDataBuffer(sample);
 
-                beginRender(sample);
+                if (beginRender(sample))
+                {
+                    sample.renderer->cmdBindGraphicsPipeline(sample.commandBuffer, sample.graphicsPipeline);
+                    sample.renderer->cmdPushConstants(sample.commandBuffer, ShaderStage::Fragment, generic_as_byte_span(&sample.pushConstants, sizeof(PushConstants)));
+                    sample.renderer->cmdBindBuffer(sample.commandBuffer, sample.cameraDataBuffers[sample.frameData.frameInFlightIndex], "_cameraData"_sid, true);
+                    sample.renderer->cmdBindVertexBuffer(sample.commandBuffer, sample.vertexBuffer);
+                    sample.renderer->cmdBindIndexBuffer(sample.commandBuffer, sample.indexBuffer);
+                    sample.renderer->cmdBindSampler(sample.commandBuffer, sample.sampler, "_texture_sampler"_sid, true);
+                    sample.renderer->cmdBindTexture(sample.commandBuffer, sample.texture, "_texture"_sid, true);
+                    sample.renderer->cmdDraw(sample.commandBuffer, 3, 1, 0, 0);
 
-                sample.renderer->cmdBindGraphicsPipeline(sample.commandBuffer, sample.graphicsPipeline);
-                sample.renderer->cmdPushConstants(sample.commandBuffer, ShaderStage::Fragment, generic_as_byte_span(&sample.pushConstants, sizeof(PushConstants)));
-                sample.renderer->cmdBindBuffer(sample.commandBuffer, sample.cameraDataBuffers[sample.frameData.frameInFlightIndex], "_cameraData"_sid, true);
-                sample.renderer->cmdBindVertexBuffer(sample.commandBuffer, sample.vertexBuffer);
-                sample.renderer->cmdBindIndexBuffer(sample.commandBuffer, sample.indexBuffer);
-                sample.renderer->cmdBindSampler(sample.commandBuffer, sample.sampler, "_texture_sampler"_sid, true);
-                sample.renderer->cmdBindTexture(sample.commandBuffer, sample.texture, "_texture"_sid, true);
-                sample.renderer->cmdDraw(sample.commandBuffer, 3, 1, 0, 0);
-
-                endRender(sample);
+                    endRender(sample);
+                }
 
                 sample.lastFrameTime = sample.frameStartTime;
             }
@@ -322,7 +323,7 @@ void updateTiming(SampleRenderState& sample) noexcept
 /// Issues the commands to start rendering a new frame.
 /// </summary>
 /// <param name="sample"></param>
-void beginRender(SampleRenderState& sample) noexcept
+bool beginRender(SampleRenderState& sample) noexcept
 {
     const BeginRenderCommand beginRenderCommand{
         .color = ColorAttachmentDescriptor {
@@ -349,8 +350,15 @@ void beginRender(SampleRenderState& sample) noexcept
     };
 
     sample.renderer->cmdPipelineBarrier(sample.commandBuffer, PipelineBarrierUndefinedToColor);
-    sample.renderer->cmdBeginRender(sample.commandBuffer, beginRenderCommand);
+    
+    if (!sample.renderer->cmdBeginRender(sample.commandBuffer, beginRenderCommand))
+    {
+        return false;
+    }
+
     sample.renderer->cmdSetViewportAndScissor(sample.commandBuffer, setViewportScissorCommand);
+
+    return true;
 }
 
 /// <summary>

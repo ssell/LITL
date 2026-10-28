@@ -50,7 +50,7 @@ namespace litl::vulkan
     [[nodiscard]] CommandBufferHandle cmdBeginFrame(litl::RendererContext* context) noexcept;
     [[nodiscard]] bool cmdBegin(litl::RendererContext* context, CommandBufferHandle handle) noexcept;
     [[nodiscard]] bool cmdEnd(litl::RendererContext* context, CommandBufferHandle handle) noexcept;
-    void cmdBeginRender(litl::RendererContext* context, CommandBufferHandle handle, BeginRenderCommand const& command) noexcept;
+    [[nodiscard]] bool cmdBeginRender(litl::RendererContext* context, CommandBufferHandle handle, BeginRenderCommand const& command) noexcept;
     void cmdEndRender(litl::RendererContext* context, CommandBufferHandle handle) noexcept;
     void cmdPipelineBarrier(litl::RendererContext* context, CommandBufferHandle handle, PipelineBarrierCommand const& command) noexcept;
     void cmdClearImage(litl::RendererContext* context, CommandBufferHandle handle, ClearImageCommand const& command) noexcept;

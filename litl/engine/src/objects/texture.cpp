@@ -10,6 +10,13 @@
 
 namespace litl
 {
+    namespace
+    {
+        [[nodiscard]] bool requiresLocalPixelBuffer(TextureDescriptor const& descriptor) noexcept
+        {
+            return has_any(descriptor.textureInfo.usage, TextureUsageFlagBits::TransferDest);
+        }
+    }
     bool Texture::create(Authority<ObjectPool> auth, TextureDescriptor const& texDescriptor, RenderManager& renderManager) noexcept
     {
         m_descriptor = texDescriptor;
@@ -32,7 +39,7 @@ namespace litl
             m_textureTableIndex = renderManager.getRenderer()->getTextureTableIndex(m_resourceHandle);
         }
 
-        if (has_any(m_descriptor.textureInfo.usage, TextureUsageFlagBits::TransferDest))
+        if (requiresLocalPixelBuffer(m_descriptor))
         {
             resizePixelBuffer();
         }
@@ -258,7 +265,10 @@ namespace litl
         m_descriptor.textureInfo.height = height;
         m_resourceHandle = newHandle;
 
-        resizePixelBuffer();
+        if (requiresLocalPixelBuffer(m_descriptor))
+        {
+            resizePixelBuffer();
+        }
 
         if (oldHandle.isValid())
         {

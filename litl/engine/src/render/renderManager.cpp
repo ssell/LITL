@@ -361,14 +361,12 @@ namespace litl
                     getRenderPass(RenderPassType::ForwardOpaque).render(renderPassContext);
                     getRenderPass(RenderPassType::Blit).render(renderPassContext);
                 }
-
-                renderer->cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierColorToPresent);
             }
             else
             {
                 // No active cameras. Just perform a screen clear.
                 renderer->cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierUndefinedToColor);
-                renderer->cmdBeginRender(frameCommandBuffer, BeginRenderCommand{ .color = ColorAttachmentDescriptor {.loadOp = LoadOperationType::Clear }, .depth = DepthAttachmentDescriptor {.loadOp = LoadOperationType::Clear } });
+                renderer->cmdBeginRender(frameCommandBuffer, BeginRenderCommand{ .color = ColorAttachmentDescriptor {.loadOp = LoadOperationType::Clear } });
                 renderer->cmdEndRender(frameCommandBuffer);
                 renderer->cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierColorToPresent);
             }

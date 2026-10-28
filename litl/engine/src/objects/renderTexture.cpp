@@ -28,6 +28,7 @@ namespace litl
             texDesc.textureInfo.name = texDesc.objectInfo.name;
         }
     }
+
     [[nodiscard]] bool RenderTexture::create(Authority<ObjectPool> auth, RenderTextureDescriptor const& descriptor, ObjectPool& objectPool, RenderManager& renderManager) noexcept
     {
         m_descriptor = descriptor;
@@ -199,8 +200,14 @@ namespace litl
             return false;
         }
 
-        width = clamp(static_cast<uint32_t>(ceil(static_cast<float>(width) * m_descriptor.relativeWidth)), 0u, MaxDimensions);
-        height = clamp(static_cast<uint32_t>(ceil(static_cast<float>(height) * m_descriptor.relativeHeight)), 0u, MaxDimensions);
+        if (m_descriptor.sizePolicy == RenderTextureSizePolicy::SwapchainRelative)
+        {
+            width = static_cast<uint32_t>(ceil(static_cast<float>(width) * m_descriptor.relativeWidth));
+            height = static_cast<uint32_t>(ceil(static_cast<float>(height) * m_descriptor.relativeHeight));
+        }
+
+        width = clamp(width, 0u, MaxDimensions);
+        height = clamp(height, 0u, MaxDimensions);
 
         if ((width == m_currWidth) && (height == m_currHeight))
         {
