@@ -27,7 +27,6 @@ namespace litl
         AssetManager* m_pAssetManager{ nullptr };
         ShaderAssetHandle m_shaderAssetHandle{};
         GraphicsPipelineHandle m_graphicsPipelineHandle{};
-        ShaderStage m_pushConstantStages{ ShaderStage::None };
     };
 }
 

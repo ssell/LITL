@@ -330,6 +330,7 @@ namespace litl
                 updateInstanceData(frameCommandBuffer, mainCameraCull->entities);
                 updatePerPassData(frameCommandBuffer, *mainCameraCull->camera);
 
+
                 if (goodToGo())
                 {
                     RenderView view{

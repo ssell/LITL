@@ -184,17 +184,11 @@ namespace litl
         return setViewportScissorCommand;
     }
 
-    void RenderPass::resolveSourceTextures(RenderPassContext const& context, Texture** colorSource, Texture** depthSource) const noexcept
+    void RenderPass::resolveSourceTextures(RenderView const& renderView, Texture** colorSource, Texture** depthSource) const noexcept
     {
         *colorSource = nullptr;
         *depthSource = nullptr;
 
-        if ((m_pObjectPool == nullptr) || (context.renderViews.empty()))
-        {
-            return;
-        }
-
-        const RenderView& renderView = context.renderViews[0];
         const Camera* camera = renderView.camera;
 
         if (camera == nullptr)

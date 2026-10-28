@@ -51,25 +51,28 @@ namespace litl
 
     void BlitPass::render(RenderPassContext const& context) noexcept
     {
-        Texture* colorSource{ nullptr };
-        Texture* depthSource{ nullptr };
-
-        resolveSourceTextures(context, &colorSource, &depthSource);
-        cmdPipelineBarriers(context.commandBufferHandle, m_pRenderer, colorSource);
-
-        m_pRenderer->cmdBeginRender(context.commandBufferHandle, createBeginRenderCommand(nullptr, false));
-
-        if ((colorSource != nullptr) && ensurePipelineExists())
+        for (auto& renderView : context.renderViews)
         {
-            const auto pushConstants = BlitPushConstants::create(colorSource);
+            Texture* colorSource{ nullptr };
+            Texture* depthSource{ nullptr };
 
-            m_pRenderer->cmdSetViewportAndScissor(context.commandBufferHandle, createSetViewportAndScissorCommand(nullptr));
-            m_pRenderer->cmdBindGraphicsPipeline(context.commandBufferHandle, m_graphicsPipelineHandle);
-            m_pRenderer->cmdPushConstants(context.commandBufferHandle, m_pushConstantStages, generic_as_byte_span(&pushConstants, sizeof(BlitPushConstants)));
-            m_pRenderer->cmdDraw(context.commandBufferHandle, 3u, 1u, 0u, 0u);
+            resolveSourceTextures(renderView, &colorSource, &depthSource);
+            cmdPipelineBarriers(context.commandBufferHandle, m_pRenderer, colorSource);
+
+            m_pRenderer->cmdBeginRender(context.commandBufferHandle, createBeginRenderCommand(nullptr, false));
+
+            if ((colorSource != nullptr) && ensurePipelineExists())
+            {
+                const auto pushConstants = BlitPushConstants::create(colorSource);
+
+                m_pRenderer->cmdSetViewportAndScissor(context.commandBufferHandle, createSetViewportAndScissorCommand(nullptr));
+                m_pRenderer->cmdBindGraphicsPipeline(context.commandBufferHandle, m_graphicsPipelineHandle);
+                m_pRenderer->cmdPushConstants(context.commandBufferHandle, ShaderStage::All, generic_as_byte_span(&pushConstants, sizeof(BlitPushConstants)));
+                m_pRenderer->cmdDraw(context.commandBufferHandle, 3u, 1u, 0u, 0u);
+            }
+
+            m_pRenderer->cmdEndRender(context.commandBufferHandle);
         }
-
-        m_pRenderer->cmdEndRender(context.commandBufferHandle);
     }
 
     bool BlitPass::ensurePipelineExists() noexcept
@@ -127,7 +130,6 @@ namespace litl
         };
 
         m_graphicsPipelineHandle = m_pRenderer->createGraphicsPipeline(graphicsPipelineDescriptor);
-        m_pushConstantStages = m_pRenderer->getGraphicsPipelinePushConstantStages(m_graphicsPipelineHandle);
 
         return m_graphicsPipelineHandle.isValid();
     }

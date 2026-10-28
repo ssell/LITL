@@ -13,11 +13,28 @@ namespace litl
         {
             if (renderView.camera == nullptr)
             {
-                return;
+                continue;
             }
 
-            m_pRenderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierUndefinedToColor);
-            m_pRenderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierUndefinedToDepthStencil);
+            Texture* colorSource{ nullptr };
+            Texture* depthSource{ nullptr };
+
+            resolveSourceTextures(renderView, &colorSource, &depthSource);
+
+            if (colorSource != nullptr)
+            {
+                m_pRenderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierCommand::copyWithTexture(PipelineBarrierUndefinedToColor, colorSource->getTextureResourceHandle()));
+            }
+            else
+            {
+                continue;
+            }
+
+            if (depthSource != nullptr)
+            {
+                m_pRenderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierCommand::copyWithTexture(PipelineBarrierUndefinedToDepthStencil, depthSource->getTextureResourceHandle()));
+            }
+
             m_pRenderer->cmdBeginRender(context.commandBufferHandle, createBeginRenderCommand(renderView.camera, true));
             m_pRenderer->cmdSetViewportAndScissor(context.commandBufferHandle, createSetViewportAndScissorCommand(renderView.camera));
 
