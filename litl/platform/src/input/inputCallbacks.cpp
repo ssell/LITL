@@ -20,7 +20,7 @@ namespace litl
 
         struct OnKeyEvent
         {
-            CallbackId id{ Constants::uint32_null_index };
+            InputCallbackId id{ Constants::uint32_null_index };
             OnKeyFunc callback;
             Key key{ Key::Unknown };
             InputCallbackPriority priority{ InputCallbackPriority::Gameplay };
@@ -29,7 +29,7 @@ namespace litl
 
         struct OnMouseButtonEvent
         {
-            CallbackId id{ Constants::uint32_null_index };
+            InputCallbackId id{ Constants::uint32_null_index };
             OnMouseButtonFunc callback;
             MouseButton button{ MouseButton::Unknown };
             InputCallbackPriority priority{ InputCallbackPriority::Gameplay };
@@ -38,7 +38,7 @@ namespace litl
 
         struct OnMouseEnterExitEvent
         {
-            CallbackId id{ Constants::uint32_null_index };
+            InputCallbackId id{ Constants::uint32_null_index };
             OnMouseEnterExitFunc callback;
             InputCallbackPriority priority{ InputCallbackPriority::Gameplay };
             bool alive{ true };
@@ -46,7 +46,7 @@ namespace litl
 
         struct OnMouseMoveEvent
         {
-            CallbackId id{ Constants::uint32_null_index };
+            InputCallbackId id{ Constants::uint32_null_index };
             OnMouseMoveFunc callback;
             InputCallbackPriority priority{ InputCallbackPriority::Gameplay };
             bool alive{ true };
@@ -54,7 +54,7 @@ namespace litl
 
         struct OnMouseScrollEvent
         {
-            CallbackId id{ Constants::uint32_null_index };
+            InputCallbackId id{ Constants::uint32_null_index };
             OnMouseScrollFunc callback;
             InputCallbackPriority priority{ InputCallbackPriority::Gameplay };
             bool alive{ true };
@@ -62,7 +62,7 @@ namespace litl
 
         struct OnActionMapEvent
         {
-            CallbackId id{ Constants::uint32_null_index };
+            InputCallbackId id{ Constants::uint32_null_index };
             OnActionMapFunc callback;
             InputCallbackPriority priority{ InputCallbackPriority::Gameplay };
             StringId actionMapId{};
@@ -78,9 +78,9 @@ namespace litl
 
         struct CallbackCommand
         {
-            uint32_t id{};
+            uint32_t id{ Constants::uint32_null_index  };
             CallbackCommandType commandType{};
-            InputCallbackType eventType{};
+            InputCallbackType eventType{ InputCallbackType::Unknown };
             uint32_t eventVecIdx{ Constants::uint32_null_index };
             std::variant<OnKeyEvent, OnMouseButtonEvent, OnMouseEnterExitEvent, OnMouseMoveEvent, OnMouseScrollEvent, OnActionMapEvent> event;
         };
@@ -213,7 +213,7 @@ namespace litl
             return (result == InputCallbackResult::Consume) || (result == InputCallbackResult::ConsumeAndRemove);
         }
 
-        void enqueueRemoveCommand(InputCallbackType type, CallbackId id, uint32_t eventVecIdx) noexcept
+        void enqueueRemoveCommand(InputCallbackType type, InputCallbackId id, uint32_t eventVecIdx) noexcept
         {
             addDeferredCommand(CallbackCommand{
                 .id = id,
@@ -223,7 +223,7 @@ namespace litl
             });
         }
 
-        void enqueueActionMapRemoveCommand(CallbackId id, StringId actionMapId, StringId bindingId) noexcept
+        void enqueueActionMapRemoveCommand(InputCallbackId id, StringId actionMapId, StringId bindingId) noexcept
         {
             addDeferredCommand(CallbackCommand{
                 .id = id,

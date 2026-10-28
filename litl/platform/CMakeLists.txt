@@ -8,7 +8,7 @@ add_library(litl-platform STATIC
 	"src/input/actionMap.cpp" 
 	"src/input/inputActions.cpp" 
 	"src/input/inputConfiguration.cpp" 
-	"src/input/processedInputTracker.cpp")
+	"src/input/processedInputTracker.cpp" "src/window/windowCallbacks.cpp")
 
 target_include_directories(litl-platform PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(litl-platform PUBLIC litl-core)

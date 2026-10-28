@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include "litl-core/authority.hpp"
+#include "litl-core/constants.hpp"
 #include "litl-core/inlineFunc.hpp"
 #include "litl-core/stringId.hpp"
 #include "litl-core/services/serviceProvider.hpp"
@@ -16,7 +17,7 @@ namespace litl
 {
     class Input;
     class InputActions;
-    using CallbackId = uint32_t;
+    using InputCallbackId = uint32_t;
 
     enum class InputCallbackType : uint8_t
     {
@@ -32,7 +33,7 @@ namespace litl
     struct InputCallbackHandle
     {
         InputCallbackType type{ InputCallbackType::Unknown };
-        CallbackId id{ Constants::uint32_null_index };
+        InputCallbackId id{ Constants::uint32_null_index };
         uint32_t slot{ 0u };
         StringId actionMapId{};
         StringId bindingId{};
@@ -98,7 +99,7 @@ namespace litl
     private:
 
         struct Impl;
-        std::unique_ptr<Impl> m_pImpl;
+        std::unique_ptr<Impl> m_pImpl{ nullptr };
     };
 }
 
