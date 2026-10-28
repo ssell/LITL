@@ -59,7 +59,7 @@ namespace litl
             resolveSourceTextures(renderView, &colorSource, &depthSource);
             cmdPipelineBarriers(context.commandBufferHandle, m_pRenderer, colorSource);
 
-            m_pRenderer->cmdBeginRender(context.commandBufferHandle, createBeginRenderCommand(nullptr, false));
+            m_pRenderer->cmdBeginRender(context.commandBufferHandle, createBeginRenderCommand(nullptr, false, false));
 
             if ((colorSource != nullptr) && ensurePipelineExists())
             {
@@ -89,7 +89,7 @@ namespace litl
 
         if (shaderAsset == nullptr)
         {
-            return false;           // Still loading ...
+            return false;           // Complete asset failure.
         }
 
         const auto shaderModuleHandle = shaderAsset->shader->getShaderModuleHandle();

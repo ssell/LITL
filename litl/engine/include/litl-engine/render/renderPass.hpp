@@ -39,7 +39,7 @@ namespace litl
         [[nodiscard]] bool compileRenderList(std::span<RenderableEntity const> entities) noexcept;
         [[nodiscard]] bool createRenderPassItems(RenderableEntity entity, uint32_t instanceOffset, std::optional<MeshHandle>& currMeshHandle, std::optional<MaterialHandle>& currMaterialHandle) noexcept;
         [[nodiscard]] virtual GraphicsPipelineHandle resolveGraphicsPipelineHandle(Material* material) const noexcept;
-        [[nodiscard]] BeginRenderCommand createBeginRenderCommand(Camera const* camera, bool allowDepth) const noexcept;
+        [[nodiscard]] BeginRenderCommand createBeginRenderCommand(Camera const* camera, bool clearAttachments, bool allowDepth) const noexcept;
         [[nodiscard]] SetViewportAndScissorCommand createSetViewportAndScissorCommand(Camera const* camera) const noexcept;
         void resolveSourceTextures(RenderView const& renderView, Texture** colorSource, Texture** depthSource) const noexcept;
 

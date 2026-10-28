@@ -330,7 +330,6 @@ namespace litl
                 updateInstanceData(frameCommandBuffer, mainCameraCull->entities);
                 updatePerPassData(frameCommandBuffer, *mainCameraCull->camera);
 
-
                 if (goodToGo())
                 {
                     RenderView view{
@@ -356,7 +355,7 @@ namespace litl
             {
                 // No active cameras. Just perform a screen clear.
                 renderer->cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierUndefinedToColor);
-                renderer->cmdBeginRender(frameCommandBuffer, { .color = ColorAttachmentDescriptor {.clearColor = colors::Black } });
+                renderer->cmdBeginRender(frameCommandBuffer, { .color = ColorAttachmentDescriptor { .clearColor = colors::Black } });
                 renderer->cmdEndRender(frameCommandBuffer);
                 renderer->cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierColorToPresent);
             }

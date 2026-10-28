@@ -35,7 +35,7 @@ namespace litl
                 m_pRenderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierCommand::copyWithTexture(PipelineBarrierUndefinedToDepthStencil, depthSource->getTextureResourceHandle()));
             }
 
-            m_pRenderer->cmdBeginRender(context.commandBufferHandle, createBeginRenderCommand(renderView.camera, true));
+            m_pRenderer->cmdBeginRender(context.commandBufferHandle, createBeginRenderCommand(renderView.camera, true, true));
             m_pRenderer->cmdSetViewportAndScissor(context.commandBufferHandle, createSetViewportAndScissorCommand(renderView.camera));
 
             if (compileRenderList(renderView.entities))
