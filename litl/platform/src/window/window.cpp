@@ -82,6 +82,11 @@ namespace litl
             m_deferredCallbackEventsCopy = std::move(m_deferredCallbackEvents);
         }
 
+        if (m_deferredCallbackEventsCopy.empty())
+        {
+            return;
+        }
+
         for (auto& deferredEvent : m_deferredCallbackEventsCopy)
         {
             switch (deferredEvent)
@@ -98,6 +103,10 @@ namespace litl
                 callbacks.invokeWindowMinimizedEvent({}, services, *this);
                 break;
 
+            case WindowCallbackType::Restored:
+                callbacks.invokeWindowRestoredEvent({}, services, *this);
+                break;
+
             case WindowCallbackType::Resized:
                 callbacks.invokeWindowResizedEvent({}, services, *this);
                 break;
@@ -107,6 +116,9 @@ namespace litl
                 break;
             }
         }
+
+        m_deferredCallbackEventsCopy.clear();
+        m_windowSizeDirty = false;
     }
 
     bool Window::closeRequested() noexcept
@@ -147,6 +159,12 @@ namespace litl
         return m_pOps->getAspectRatio(m_pContext);
     }
 
+    bool Window::isMinimized() const noexcept
+    {
+        LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
+        return m_pOps->isMinimized(m_pContext);
+    }
+
     NativeWindowHandle Window::getNativeWindowHandle() const noexcept
     {
         LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
@@ -156,12 +174,19 @@ namespace litl
     void Window::onResize(uint32_t width, uint32_t height) noexcept
     {
         LITL_FATAL_ASSERT((m_pOps != nullptr) && (m_pContext != nullptr));
+
+        const bool wasMinimized = isMinimized();
+
         m_pOps->onResize(m_pContext, width, height);
         addDeferredCallbackEvent(WindowCallbackType::Resized);
 
         if ((width == 0u) && (height == 0u))
         {
             addDeferredCallbackEvent(WindowCallbackType::Minimized);
+        }
+        else if (wasMinimized)
+        {
+            addDeferredCallbackEvent(WindowCallbackType::Restored);
         }
     }
 
@@ -185,6 +210,18 @@ namespace litl
     void Window::addDeferredCallbackEvent(WindowCallbackType type) noexcept
     {
         std::scoped_lock lock(m_deferredCallbacksMutex);
+
+        if (type == WindowCallbackType::Resized)
+        {
+            if (m_windowSizeDirty)
+            {
+                // GLFW triggers resize multiple times when dragging.
+                return;
+            }
+
+            m_windowSizeDirty = true;
+        }
+
         m_deferredCallbackEvents.push_back(type);
     }
 }

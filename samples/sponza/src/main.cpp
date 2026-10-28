@@ -1,6 +1,7 @@
 #include "litl-engine/startup.hpp"
 #include "freeFlyController.hpp"
 #include "spinSystem.hpp"
+#include "litl-platform/window/window.hpp"
 
 namespace litl::samples
 {

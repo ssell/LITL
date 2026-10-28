@@ -75,6 +75,7 @@ namespace litl
 
                     if (window != nullptr)
                     {
+                        windowCallbacks->processDeferredCommands();
                         window->triggerCallbacks(services, *windowCallbacks);
                     }
 

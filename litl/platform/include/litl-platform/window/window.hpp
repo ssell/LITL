@@ -44,6 +44,7 @@ namespace litl
         uint32_t(*getFrameBufferWidth)(WindowContext*);
         uint32_t(*getFrameBufferHeight)(WindowContext*);
         float (*getAspectRatio)(WindowContext*);
+        bool (*isMinimized)(WindowContext*);
         NativeWindowHandle (*getNativeWindowHandle)(WindowContext*);
         void (*onResize)(WindowContext*, uint32_t, uint32_t);
         void (*pollForEvents)(WindowContext*);
@@ -71,6 +72,7 @@ namespace litl
         [[nodiscard]] uint32_t getFrameBufferWidth() const noexcept;
         [[nodiscard]] uint32_t getFrameBufferHeight() const noexcept;
         [[nodiscard]] float getAspectRatio() const noexcept;
+        [[nodiscard]] bool isMinimized() const noexcept;
         [[nodiscard]] NativeWindowHandle getNativeWindowHandle() const noexcept;
         void onResize(uint32_t width, uint32_t height) noexcept;
         void pollForEvents() const noexcept;
@@ -86,6 +88,7 @@ namespace litl
         std::vector<WindowCallbackType> m_deferredCallbackEvents;
         std::vector<WindowCallbackType> m_deferredCallbackEventsCopy;
         std::mutex m_deferredCallbacksMutex{};
+        bool m_windowSizeDirty{ false };
     };
 }
 

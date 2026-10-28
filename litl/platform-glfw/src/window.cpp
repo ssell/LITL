@@ -265,6 +265,11 @@ namespace litl::glfw
             return (static_cast<float>(context->frameBufferWidth) / static_cast<float>(context->frameBufferHeight));
         }
     }
+    
+    bool isMinimized(WindowContext* context) noexcept
+    {
+        return (context->state == WindowState::Minimized);
+    }
 
     NativeWindowHandle getNativeWindowHandle(WindowContext* context) noexcept
     {
