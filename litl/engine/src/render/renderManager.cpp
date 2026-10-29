@@ -1,7 +1,7 @@
 #include <array>
 #include <chrono>
-#include <format>
 #include <memory>
+#include <ranges>
 #include <span>
 #include <vector>
 
@@ -529,6 +529,7 @@ namespace litl
 
         /// <summary>
         /// Decides which views exist this frame and assigned viewIndex and instanceBase with a running total.
+        /// Note that the ordering of the output preparedViews is draw order (based on camera priority) and not viewIndex order.
         /// </summary>
         void gatherPreparedViews(CullingBucket const& bucket, std::vector<PreparedView>& preparedViews) noexcept
         {
@@ -537,7 +538,7 @@ namespace litl
             uint32_t viewIndex{ 0u };
             uint32_t instanceBase{ 0u };
 
-            for (auto& renderableCamera : bucket.cameraRenderableEntities)
+            for (const auto& renderableCamera : bucket.cameraRenderableEntities)
             {
                 if (renderableCamera.camera == nullptr)
                 {
@@ -564,6 +565,9 @@ namespace litl
                 viewIndex += 1u;
                 instanceBase += static_cast<uint32_t>(renderableCamera.entities.size());
             }
+
+            // Sort from lower priority to high
+            std::ranges::stable_sort(preparedViews, std::less{}, [](PreparedView const& v) { return v.camera->getCameraPriority(); });
         }
 
         /// <summary>

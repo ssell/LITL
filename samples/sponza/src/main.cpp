@@ -112,7 +112,8 @@ namespace litl::samples
         const auto altCameraHandle = objectPool->createCamera(CameraDescriptor{
             .objectInfo = {.name = "AltCamera"},
             .viewport = VewportDescriptor{.offset{ 0.75f, 0.0f }, .extents{ 0.25f, 0.25f }},
-            .clearColor = color{ 0.015f, 0.25f, 0.025f }
+            .clearColor = color{ 0.015f, 0.25f, 0.025f },
+            .priority = static_cast<uint32_t>(CameraPriority::High)         // High priority so it is drawn _after_ the main camera and so is drawn ontop of it.
         });
 
         auto* altCamera = objectPool->getCamera(altCameraHandle);

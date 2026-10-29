@@ -17,26 +17,18 @@ namespace litl
     class World;
 
     /// <summary>
-    /// Predefined selection of camera processing order values.
-    /// Lower values are processed first.
+    /// Order in which a camera is drawn. Higher values are drawn last so that they are drawn over earlier/lower priority cameras.
+    /// The main camera, for reference, is by default set to Medium.
     /// </summary>
-    enum class CameraProcessOrder : uint32_t
+    enum class CameraPriority : uint32_t
     {
-        /// <summary>
-        /// Use for cameras that are to be rendered/processed before the main camera.
-        /// </summary>
-        Preprocess = 50u,
-
-        /// <summary>
-        /// The process position enforced for main camera.
-        /// </summary>
-        MainCamera = 100u,
-
-        /// <summary>
-        /// Use for cameras that are to be rendered/processed after the main camera.
-        /// </summary>
-        Postprocess = 150u
+        Low = 100u,
+        Medium = 500u,
+        High = 1000u
     };
+
+    static_assert(static_cast<uint32_t>(CameraPriority::High) > static_cast<uint32_t>(CameraPriority::Medium));
+    static_assert(static_cast<uint32_t>(CameraPriority::Medium) > static_cast<uint32_t>(CameraPriority::Low));
 
     enum class CameraProjection : uint32_t
     {
@@ -165,7 +157,7 @@ namespace litl
         /// The priority level for the camera.
         /// Cameras with a lower level are processed first.
         /// </summary>
-        uint32_t processOrder = static_cast<uint32_t>(CameraProcessOrder::Postprocess);
+        uint32_t priority = static_cast<uint32_t>(CameraPriority::Medium);
     };
 
     class Camera
@@ -313,12 +305,6 @@ namespace litl
         [[nodiscard]] Entity getEntity() const noexcept;
 
         /// <summary>
-        /// Returns the process order position for the camera.
-        /// Lower values are processed first.
-        /// </summary>
-        [[nodiscard]] uint32_t getProcessPosition() const noexcept;
-
-        /// <summary>
         /// Returns the clear color of the camera.
         /// </summary>
         [[nodiscard]] color const& getClearColor() const noexcept;
@@ -368,6 +354,16 @@ namespace litl
         /// Returns if this camera is marked active.
         /// </summary>
         [[nodiscard]] bool getIsActive() const noexcept;
+
+        /// <summary>
+        /// Sets the camera priority level. Higher values are drawn last so that they are drawn over earlier/lower priority cameras.
+        /// </summary>
+        void setCameraPriority(uint32_t priority) noexcept;
+
+        /// <summary>
+        /// Retrieves the camera priority level. Higher values are drawn last so that they are drawn over earlier/lower priority cameras.
+        /// </summary>
+        [[nodiscard]] uint32_t getCameraPriority() const noexcept;
 
     private:
 
@@ -437,14 +433,6 @@ namespace litl
         /// Unsetting the camera as the main camera will return it to its original render texture.
         /// </summary>
         RenderTextureHandle m_renderTextureHandle{};
-
-        /// <summary>
-        /// The order that the camera is processed. Lower values are processed first.
-        /// This is set at time of creation (via the descriptor) unless the camera is marked as the main camera.
-        /// When a camera is set as the main camera it uses the hardcoded CameraProcessOrder::MainCamera value.
-        /// If a camera is unset from being the main camera then it reverts back to its original value.
-        /// </summary>
-        uint32_t m_processPosition{ 0u };
 
         /// <summary>
         /// Is this camera the current main camera?

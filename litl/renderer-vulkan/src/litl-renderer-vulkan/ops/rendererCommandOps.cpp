@@ -473,8 +473,8 @@ namespace litl::vulkan
             // Note: incoming scissor regions are normalized so that the command caller does not need to track texture dimensions.
             const VkRect2D scissorRegion{
                 .offset = VkOffset2D {
-                    .x = static_cast<int32_t>(command.setScissor->region.offset.x()),
-                    .y = static_cast<int32_t>(command.setScissor->region.offset.y())
+                    .x = static_cast<int32_t>(vulkanContext->drawInfo.targetTextureSize.width * command.setScissor->region.offset.x()),
+                    .y = static_cast<int32_t>(vulkanContext->drawInfo.targetTextureSize.height * command.setScissor->region.offset.y())
                 },
                 .extent = VkExtent2D {
                     .width = static_cast<uint32_t>(vulkanContext->drawInfo.targetTextureSize.width * command.setScissor->region.extents.x()),

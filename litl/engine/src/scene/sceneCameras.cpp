@@ -29,7 +29,7 @@ namespace litl
         }
 
         std::sort(m_cameras.begin(), m_cameras.end(), [](Camera* a, Camera* b) -> bool { 
-            return (a->getProcessPosition() < b->getProcessPosition()); 
+            return (a->getCameraPriority() < b->getCameraPriority());
         });
     }
 

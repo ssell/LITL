@@ -139,8 +139,8 @@ namespace litl
             },
             .setScissor = SetScissorCommand {
                 .region = {
-                    .offset = { 0.0f, 0.0f },
-                    .extents = { 1.0f, 1.0f }           // normalized
+                    .offset = viewportOffset,
+                    .extents = viewportExtents
                 }
             }
         };
