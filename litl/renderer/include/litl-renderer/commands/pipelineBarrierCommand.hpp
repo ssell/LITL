@@ -91,12 +91,44 @@ namespace litl
     /// Use before: beginning a pass that clears or fully overwrites the color target.
     /// </summary>
     static constexpr PipelineBarrierCommand PipelineBarrierUndefinedToColor{
-        .fromLayout   = ImageLayoutType::Undefined,
-        .toLayout     = ImageLayoutType::Color,
+        .fromLayout = ImageLayoutType::Undefined,
+        .toLayout = ImageLayoutType::Color,
         .sourceAccess = ImageAccessFlagBits::None,
-        .destAccess   = ImageAccessFlagBits::ColorWrite,
-        .sourceStage  = PipelineStageFlagBits::ColorAttachmentOutput,
-        .destStage    = PipelineStageFlagBits::ColorAttachmentOutput
+        .destAccess = ImageAccessFlagBits::ColorWrite,
+        .sourceStage = PipelineStageFlagBits::ColorAttachmentOutput,
+        .destStage = PipelineStageFlagBits::ColorAttachmentOutput
+    };
+
+    /// <summary>
+    /// Color → Color (no layout transition).
+    /// Makes a previous pass's color writes visible to a pass that continues rendering into the same image; contents are preserved.
+    /// Waits on: color attachment output (prior color writes).
+    /// Use before: beginning a pass with LoadOperationType::Load on the color target (e.g. ForwardTransparent after ForwardOpaque, blending).
+    /// Requires: the image is already in the Color layout from an earlier pass this frame. Not valid on first use, or after it was transitioned to ShaderReadOnly.
+    /// </summary>
+    static constexpr PipelineBarrierCommand PipelineBarrierColorToColor{
+        .fromLayout = ImageLayoutType::Color,
+        .toLayout = ImageLayoutType::Color,
+        .sourceAccess = ImageAccessFlagBits::ColorWrite,
+        .destAccess = ImageAccessFlagBits::ColorRead | ImageAccessFlagBits::ColorWrite,
+        .sourceStage = PipelineStageFlagBits::ColorAttachmentOutput,
+        .destStage = PipelineStageFlagBits::ColorAttachmentOutput
+    };
+
+    /// <summary>
+    /// Depth → Depth (no layout transition).
+    /// Makes a previous pass's depth writes visible to a pass that continues testing against the same depth image; contents are preserved.
+    /// Waits on: early and late fragment tests (prior depth writes).
+    /// Use before: beginning a pass with LoadOperationType::Load on the depth target (e.g. ForwardTransparent testing against opaque depth).
+    /// Requires: the image is already in the DepthStencil layout from an earlier pass this frame.
+    /// </summary>
+    static constexpr PipelineBarrierCommand PipelineBarrierDepthToDepth{
+        .fromLayout = ImageLayoutType::DepthStencil,
+        .toLayout = ImageLayoutType::DepthStencil,
+        .sourceAccess = ImageAccessFlagBits::DepthStencilWrite,
+        .destAccess = ImageAccessFlagBits::DepthStencilRead | ImageAccessFlagBits::DepthStencilWrite,
+        .sourceStage = PipelineStageFlagBits::EarlyFragmentTests | PipelineStageFlagBits::LateFragmentTests,
+        .destStage = PipelineStageFlagBits::EarlyFragmentTests | PipelineStageFlagBits::LateFragmentTests
     };
 
     /// <summary>
