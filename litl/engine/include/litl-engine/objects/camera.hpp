@@ -146,13 +146,18 @@ namespace litl
         float zFar = 1000.0f;
 
         /// <summary>
-        /// Does this camera render out to a depth texture in addition to the color texture?
+        /// Does this camera render out to a color texture?
+        /// </summary>
+        bool colorEnabled{ true };
+
+        /// <summary>
+        /// Does this camera render out to a depth texture?
         /// </summary>
         bool depthEnabled{ true };
 
         /// <summary>
         /// Optional render texture for the camera to draw to.
-        /// If this is not specified then the swapchains will be rendered to instead.
+        /// If this is not specified then a default render texture will be made that tracks the size of the swapchain.
         /// </summary>
         RenderTextureHandle renderTexture{};
 
@@ -174,7 +179,7 @@ namespace litl
         /// <param name="descriptor"></param>
         /// <param name="world"></param>
         /// <param name="handle"></param>
-        void create(Authority<ObjectPool> auth, CameraDescriptor const& descriptor, World& world, SceneView& sceneView, CameraHandle handle) noexcept;
+        void create(Authority<ObjectPool> auth, CameraDescriptor const& descriptor, ObjectPool& objectPool, World& world, SceneView& sceneView, CameraHandle handle) noexcept;
 
         /// <summary>
         /// 

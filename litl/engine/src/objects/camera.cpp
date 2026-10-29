@@ -1,15 +1,19 @@
-#include "litl-engine/objects/camera.hpp"
+#include <format>
+
+#include "litl-core/math/projection.hpp"
 #include "litl-ecs/world.hpp"
+#include "litl-engine/objects/objectPool.hpp"
+#include "litl-engine/objects/camera.hpp"
+#include "litl-engine/objects/renderTexture.hpp"
 #include "litl-engine/ecs/components/transform.hpp"
 #include "litl-engine/ecs/components/cameraRef.hpp"
 #include "litl-engine/scene/scene.hpp"
 #include "litl-engine/scene/sceneView.hpp"
 #include "litl-engine/scene/sceneCameras.hpp"
-#include "litl-core/math/projection.hpp"
 
 namespace litl
 {
-    void Camera::create(Authority<ObjectPool> auth, CameraDescriptor const& descriptor, World& world, SceneView& sceneView, CameraHandle handle) noexcept
+    void Camera::create(Authority<ObjectPool> auth, CameraDescriptor const& descriptor, ObjectPool& objectPool, World& world, SceneView& sceneView, CameraHandle handle) noexcept
     {
         m_descriptor = descriptor;
         m_processPosition = m_descriptor.processOrder;
@@ -26,6 +30,31 @@ namespace litl
         );
 
         sceneView.track(m_entity, world.getComponent<Transform>(m_entity).value());
+
+        if (!m_descriptor.renderTexture.isValid())
+        {
+            // No render texture was assigned. Create one that tracks the swapchain.
+            const RenderTextureDescriptor rtDescriptor{
+                .objectInfo = ObjectDescriptor {
+                    .name = std::format("{}_RT", m_descriptor.objectInfo.name)
+                },
+                .sizePolicy = RenderTextureSizePolicy::SwapchainRelative,
+                .colorComponent = m_descriptor.colorEnabled,
+                .depthComponent = m_descriptor.depthEnabled
+            };
+
+            const RenderTextureHandle rtHandle = objectPool.createRenderTexture(rtDescriptor);
+
+            if (rtHandle.isValid())
+            {
+                m_descriptor.renderTexture = rtHandle;
+                m_renderTextureHandle = rtHandle;
+            }
+            else
+            {
+                logError("Failed to create default render texture for Camera '", m_descriptor.objectInfo.name, "'");
+            }
+        }
     }
 
     void Camera::destroy(Authority<ObjectPool> auth) noexcept
@@ -78,12 +107,10 @@ namespace litl
         if (main)
         {
             m_processPosition = static_cast<uint32_t>(CameraProcessOrder::MainCamera);
-            m_renderTextureHandle = {};     // Will be set by the RenderManager each frame
         }
         else
         {
             m_processPosition = m_descriptor.processOrder;
-            m_renderTextureHandle = m_descriptor.renderTexture;
         }
     }
 

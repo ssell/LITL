@@ -11,8 +11,7 @@ namespace litl
     /// </summary>
     Camera* createMainCamera(CameraDescriptor const& descriptor, vec3 position, vec3 target, vec3 up, ObjectPool& objectPool, SceneView& sceneView) noexcept
     {
-        auto d = descriptor;
-        auto cameraHandle = objectPool.createCamera(d);
+        auto cameraHandle = objectPool.createCamera(descriptor);
         auto* camera = objectPool.getCamera(cameraHandle);
 
         if (camera == nullptr)

@@ -178,7 +178,7 @@ namespace litl
         auto handle = m_impl->cameraPool.create(camera);
         auto* cameraRef = m_impl->cameraPool.get(handle);
 
-        cameraRef->create({}, descriptor, *m_impl->world, *m_impl->sceneView, handle);
+        cameraRef->create({}, descriptor, *this, *m_impl->world, *m_impl->sceneView, handle);
 
         return handle;
     }

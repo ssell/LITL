@@ -58,7 +58,6 @@ namespace litl
 
         case RenderTextureSizePolicy::SwapchainRelative:
             setDimensions(ceil(m_descriptor.relativeWidth * static_cast<float>(swapchainDimensions.width)), ceil(m_descriptor.relativeHeight * static_cast<float>(swapchainDimensions.height)));
-            logWarning("RenderTextureSizePolicy::SwapchainRelative is not fully implemented. Render texture will not resize with the swapchain.");
             break;
 
         default:

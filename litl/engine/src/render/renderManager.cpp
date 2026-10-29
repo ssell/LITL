@@ -85,7 +85,6 @@ namespace litl
         std::shared_ptr<SceneView> sceneView{ nullptr };
         std::queue<GpuBufferHandle> dirtyBuffers;
         std::queue<TextureHandle> dirtyTextures;
-        std::vector<RenderTextureHandle> frameRenderTextures;
         std::vector<PreparedView> framePreparedViews;
         std::vector<RenderView> frameRenderViews;
         std::vector<RenderPerPassData> passDataScratch;
@@ -164,7 +163,6 @@ namespace litl
             LITL_FATAL_ASSERT_MSG(worldMatrices.handle.isValid(), "Failed to create World Matrices buffer.");
 
             createRenderPasses(services);
-            createFrameRenderTextures();
             createDefaultTextures();
 
             engineCallbacks->getWindowCallbacks()->registerWindowResizedCallback([this](ServiceProvider& services, Window const& window)
@@ -247,27 +245,6 @@ namespace litl
             LITL_FATAL_ASSERT(renderPasses[index] != nullptr);
 
             return *renderPasses[index].get();
-        }
-
-        void createFrameRenderTextures() noexcept
-        {
-            const auto frameData = renderer->getFrameData();
-            frameRenderTextures.resize(frameData.framesInFlight, {});
-
-            for (uint32_t i = 0u; i < frameData.framesInFlight; ++i)
-            {
-                const RenderTextureDescriptor descriptor{
-                    .objectInfo = ObjectDescriptor {
-                        .name = std::format("RenderManagerFrameRT_{}", i)
-                    },
-                    .sizePolicy = RenderTextureSizePolicy::SwapchainRelative,
-                    .colorComponent = true,
-                    .depthComponent = true
-                };
-
-                frameRenderTextures[i] = objectPool->createRenderTexture(descriptor);
-                LITL_FATAL_ASSERT(frameRenderTextures[i].isValid());
-            }
         }
 
         void createDefaultTexture(std::string_view name, color value, uint32_t textureSlot) noexcept
@@ -353,15 +330,6 @@ namespace litl
 
             if (!frameRenderViews.empty() && goodToGo())
             {
-                for (auto& renderView : frameRenderViews)
-                {
-                    if (renderView.camera->isMainCamera())
-                    {
-                        renderView.camera->setRenderTextureHandle(frameRenderTextures[frameData.frameInFlightIndex]);
-                        break;
-                    }
-                }
-
                 RenderPassContext renderPassContext{
                     .commandBufferHandle = frameCommandBuffer,
                     .pushConstants = pushConstants,
@@ -577,6 +545,11 @@ namespace litl
                 }
 
                 if (!renderableCamera.camera->getIsActive())
+                {
+                    continue;
+                }
+
+                if (!renderableCamera.camera->getRenderTextureHandle().isValid())
                 {
                     continue;
                 }

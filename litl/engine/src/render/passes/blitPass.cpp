@@ -115,7 +115,7 @@ namespace litl
 
         auto* shaderAsset = (m_pAssetManager != nullptr) ? m_pAssetManager->getShader(m_shaderAssetHandle) : nullptr;
 
-        if (shaderAsset == nullptr)
+        if ((shaderAsset == nullptr) || (shaderAsset->shader == nullptr))
         {
             return false;           // Complete asset failure.
         }

@@ -458,7 +458,7 @@ namespace litl::vulkan
             // Note: incoming viewport regions are normalized so that the command caller does not need to track texture dimensions.
             const VkViewport viewport{
                 .x = vulkanContext->drawInfo.targetTextureSize.width * command.setViewport->region.offset.x(),
-                .y = vulkanContext->drawInfo.targetTextureSize.width * command.setViewport->region.offset.y(),
+                .y = vulkanContext->drawInfo.targetTextureSize.height * command.setViewport->region.offset.y(),
                 .width = vulkanContext->drawInfo.targetTextureSize.width * command.setViewport->region.extents.x(),
                 .height = vulkanContext->drawInfo.targetTextureSize.height * command.setViewport->region.extents.y(),
                 .minDepth = command.setViewport->minDepth,

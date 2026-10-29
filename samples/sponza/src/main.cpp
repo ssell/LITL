@@ -109,25 +109,17 @@ namespace litl::samples
         // ---------------------------------------------------------------------------------
         // Secondary camera to show views are working that is presented in the upper-right corner
 
-        const auto altCameraRtHandle = objectPool->createRenderTexture(RenderTextureDescriptor{
-            .objectInfo = {.name = "AltCamera_RT" },
-            .sizePolicy = RenderTextureSizePolicy::SwapchainRelative,
-            .colorComponent = true,
-            .depthComponent = true
-        });
-
         const auto altCameraHandle = objectPool->createCamera(CameraDescriptor{
             .objectInfo = {.name = "AltCamera"},
             .viewport = VewportDescriptor{.offset{ 0.75f, 0.0f }, .extents{ 0.25f, 0.25f }},
-            .clearColor = color{ 0.015f, 0.25f, 0.025f },
-            .renderTexture = altCameraRtHandle
+            .clearColor = color{ 0.015f, 0.25f, 0.025f }
         });
 
         auto* altCamera = objectPool->getCamera(altCameraHandle);
 
         if (altCamera != nullptr)
         {
-            altCamera->setWorldPosition(vec3(-5.0f, 1.5f, 0.0f));
+            altCamera->setWorldPosition(vec3(-10.0f, 1.5f, 0.0f));
             altCamera->lookAt(vec3(5.0f, 1.5f, 0.0f), vec3::up());
         }
     }
