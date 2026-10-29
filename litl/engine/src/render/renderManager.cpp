@@ -134,7 +134,8 @@ namespace litl
                 .memoryUsage = BufferMemoryUsage::PersistentMap,
                 .bufferStrategy = GpuBufferingStrategy::Frame,
                 .bytes = sizeof(RenderPerPassData),
-                .itemBytes = sizeof(RenderPerPassData)
+                .itemBytes = sizeof(RenderPerPassData),
+                .canResize = true
             });
 
             instanceData.handle = objectPool->createGpuBuffer(GpuBufferDescriptor{
@@ -496,7 +497,7 @@ namespace litl
             {
                 if (!worldMatrixBuffer->resizeItems(currWorldMatrices.size(), 2u, false, true))
                 {
-                    logWarning("Failed to resize internal WorldMatrix GPU Buffer.");
+                    logError("Failed to resize internal WorldMatrix GPU Buffer.");
                 }
             }
 
@@ -698,7 +699,7 @@ namespace litl
             {
                 if (!gpuBuffer->resizeItems(itemCount, 2u, false, true))
                 {
-                    logWarning("Failed to resize GPU Buffer '", gpuBuffer->getDescriptor().objectInfo.name, "' for an item count of ", itemCount);
+                    logError("Failed to resize GPU Buffer '", gpuBuffer->getDescriptor().objectInfo.name, "' for an item count of ", itemCount);
                     return 0ull;
                 }
             }

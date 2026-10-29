@@ -255,7 +255,7 @@ namespace litl
 
         if (!newHandle.isValid())
         {
-            logWarning("Failed to resize texture '", m_descriptor.objectInfo.name, "'");
+            logError("Failed to resize texture '", m_descriptor.objectInfo.name, "'");
             return false;
         }
 

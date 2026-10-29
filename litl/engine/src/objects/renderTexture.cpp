@@ -220,7 +220,7 @@ namespace litl
         {
             if (!colorTexture->resize(width, height))
             {
-                logWarning("Failed to resize color texture for render texture '", m_descriptor.objectInfo.name, "'");
+                logError("Failed to resize color texture for render texture '", m_descriptor.objectInfo.name, "'");
                 return false;
             }
         }
@@ -231,7 +231,7 @@ namespace litl
         {
             if (!depthTexture->resize(width, height))
             {
-                logWarning("Failed to resize depth texture for render texture '", m_descriptor.objectInfo.name, "'");
+                logError("Failed to resize depth texture for render texture '", m_descriptor.objectInfo.name, "'");
                 return false;
             }
         }

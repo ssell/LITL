@@ -11,8 +11,15 @@ namespace litl
     /// </summary>
     Camera* createMainCamera(CameraDescriptor const& descriptor, vec3 position, vec3 target, vec3 up, ObjectPool& objectPool, SceneView& sceneView) noexcept
     {
-        auto cameraHandle = objectPool.createCamera(descriptor);
+        auto d = descriptor;
+        auto cameraHandle = objectPool.createCamera(d);
         auto* camera = objectPool.getCamera(cameraHandle);
+
+        if (camera == nullptr)
+        {
+            logError("Utility failed to create main camera.");
+            return nullptr;
+        }
 
         sceneView.setMainCamera(cameraHandle);
         camera->setWorldPosition(position);
@@ -26,7 +33,12 @@ namespace litl
     /// </summary>
     Camera* createMainCamera(color clearColor, vec3 position, vec3 target, vec3 up, ObjectPool& objectPool, SceneView& sceneView) noexcept
     {
-        return createMainCamera(CameraDescriptor{ .clearColor = clearColor }, position, target, up, objectPool, sceneView);
+        const CameraDescriptor descriptor{
+            .objectInfo = ObjectDescriptor {.name = "MainCamera" },
+            .clearColor = clearColor
+        };
+
+        return createMainCamera(descriptor, position, target, up, objectPool, sceneView);
     }
 
     // -------------------------------------------------------------------------------------

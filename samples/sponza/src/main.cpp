@@ -86,18 +86,43 @@ namespace litl::samples
 
         const auto* mainCamera = createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(-5.0f, 1.5f, 0.0f), vec3(5.0f, 1.5f, 0.0f), vec3::up(), *objectPool, *sceneView);
         commands.addComponent<FreeFlyController>(mainCamera->getEntity());
+        commands.addComponent<PendingModelInstance>(mainCamera->getEntity(), createModelInstance("litl/models/sphere", "litl/materials/lit", *assets));
+        commands.addComponent<LocalBounds>(mainCamera->getEntity());
 
         auto sponzaEntity = commands.createEntity();
         commands.addComponent<Transform>(sponzaEntity, Transform::create(vec3::zero(), quat::identity()));
         commands.addComponent<PendingModelInstance>(sponzaEntity, createModelInstance("models/ignore/sponza", "litl/materials/lit", *assets));
         commands.addComponent<LocalBounds>(sponzaEntity);
 
+        // secondary camera to show views are working
+        const auto altCameraRtHandle = objectPool->createRenderTexture(RenderTextureDescriptor{
+            .objectInfo = {.name = "AltCamera_RT" },
+            .sizePolicy = RenderTextureSizePolicy::SwapchainRelative,
+            .colorComponent = true,
+            .depthComponent = true
+        });
+
+        const auto altCameraHandle = objectPool->createCamera(CameraDescriptor{
+            .objectInfo = {.name = "AltCamera"},
+            .viewport = VewportDescriptor{.offset{ 0.75f, 0.0f }, .extents{ 0.25f, 0.25f }},
+            .clearColor = color{ 0.015f, 0.25f, 0.025f },
+            .renderTexture = altCameraRtHandle
+        });
+
+        auto* altCamera = objectPool->getCamera(altCameraHandle);
+
+        if (altCamera != nullptr)
+        {
+            altCamera->setWorldPosition(vec3(-5.0f, 1.5f, 0.0f));
+            altCamera->lookAt(vec3(5.0f, 1.5f, 0.0f), vec3::up());
+        }
+
         // Small spinning cube to show something is happening while the Sponza loads in. Replace with GUI text in the future, or remove entirely when asset loading performance is improved.
-        auto cubeEntity = commands.createEntity();
-        commands.addComponent<Transform>(cubeEntity, Transform::create(vec3(5.0f, -2.0f, 0.0f), quat::identity()));
-        commands.addComponent<PendingModelInstance>(cubeEntity, createModelInstance("litl/models/cube", "litl/materials/lit", *assets));
-        commands.addComponent<LocalBounds>(cubeEntity);
-        commands.addComponent<Spin>(cubeEntity);
+        //auto cubeEntity = commands.createEntity();
+        //commands.addComponent<Transform>(cubeEntity, Transform::create(vec3(5.0f, -2.0f, 0.0f), quat::identity()));
+        //commands.addComponent<PendingModelInstance>(cubeEntity, createModelInstance("litl/models/cube", "litl/materials/lit", *assets));
+        //commands.addComponent<LocalBounds>(cubeEntity);
+        //commands.addComponent<Spin>(cubeEntity);
     }
 }
 

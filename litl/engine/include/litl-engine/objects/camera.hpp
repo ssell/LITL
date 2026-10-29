@@ -89,8 +89,27 @@ namespace litl
         float top = 10.0f;
     };
 
-    struct CameraDescriptor : ObjectDescriptor
+    /// <summary>
+    /// Defines the screen-space viewport of the camera. 
+    /// All values are in normalized screen-space and stretches from the origin at the upper-left corner (0,0) to the lower-right corner (1,1).
+    /// </summary>
+    struct VewportDescriptor
     {
+        /// <summary>
+        /// Origin of the camera viewport on the screen in normalized space where (0,0) is the upper-left corner and (1,1) is the lower-right.
+        /// </summary>
+        vec2 offset{ 0.0f, 0.0f };
+
+        /// <summary>
+        /// Size of the camera viewport on the screen in normalized space where (1,1) represents the entire screen.
+        /// </summary>
+        vec2 extents{ 1.0f, 1.0f };
+    };
+
+    struct CameraDescriptor
+    {
+        ObjectDescriptor objectInfo{};
+
         /// <summary>
         /// The projection type that the camera is using.
         /// </summary>
@@ -105,6 +124,11 @@ namespace litl
         /// Relevant settings if the projection is set to Orthographic.
         /// </summary>
         OrthographicDescriptor orthographic{};
+
+        /// <summary>
+        /// Camera viewport on the screen.
+        /// </summary>
+        VewportDescriptor viewport{};
 
         /// <summary>
         /// The color the render target is set to at the start of each frame.

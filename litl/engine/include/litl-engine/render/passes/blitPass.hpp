@@ -1,6 +1,8 @@
 #ifndef LITL_ENGINE_RENDER_BLIT_RENDER_PASS_H__
 #define LITL_ENGINE_RENDER_BLIT_RENDER_PASS_H__
 
+#include <vector>
+
 #include "litl-engine/assets/assetHandle.hpp"
 #include "litl-engine/render/renderPass.hpp"
 #include "litl-renderer/resources/handles.hpp"
@@ -22,6 +24,7 @@ namespace litl
 
     private:
 
+        [[nodiscard]] bool barrierAndBeginRender(CommandBufferHandle commandBufferHandle) noexcept;
         [[nodiscard]] bool ensurePipelineExists() noexcept;
 
         AssetManager* m_pAssetManager{ nullptr };

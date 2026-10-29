@@ -160,17 +160,23 @@ namespace litl
         };
     }
 
-    SetViewportAndScissorCommand RenderPass::createSetViewportAndScissorCommand(Camera const* camera) const noexcept
+    SetViewportAndScissorCommand RenderPass::createSetViewportAndScissorCommand(Camera const* camera, bool applyCameraViewport) const noexcept
     {
-        // ... todo update this to have the command actually reflect the viewpot of the provided camera ...
-        // ... for now it just renders out the entire viewport for development ...
-        // ... if a camera is not provided in the future then it will just use the entire viewport as it does now ...
+        vec2 viewportOffset{ 0.0f, 0.0f };
+        vec2 viewportExtents{ 1.0f, 1.0f };
+
+        if (applyCameraViewport && (camera != nullptr))
+        {
+            const auto& viewportDescriptor = camera->getDescriptor().viewport;
+            viewportOffset = viewportDescriptor.offset;
+            viewportExtents = viewportDescriptor.extents;
+        }
 
         const SetViewportAndScissorCommand setViewportScissorCommand{
             .setViewport = SetViewportCommand {
                 .region = {
-                    .offset = { 0.0f, 0.0f },
-                    .extents = { 1.0f, 1.0f }           // normalized
+                    .offset = viewportOffset,
+                    .extents = viewportExtents
                 },
                 .minDepth = 0.0f,
                 .maxDepth = 1.0f
@@ -186,12 +192,10 @@ namespace litl
         return setViewportScissorCommand;
     }
 
-    void RenderPass::resolveSourceTextures(RenderView const& renderView, Texture** colorSource, Texture** depthSource) const noexcept
+    void RenderPass::resolveSourceTextures(Camera const* camera, Texture** colorSource, Texture** depthSource) const noexcept
     {
         *colorSource = nullptr;
         *depthSource = nullptr;
-
-        const Camera* camera = renderView.camera;
 
         if (camera == nullptr)
         {
@@ -205,5 +209,89 @@ namespace litl
             *colorSource = m_pObjectPool->getTexture(rt->getColorTextureHandle());
             *depthSource = m_pObjectPool->getTexture(rt->getDepthTextureHandle());
         }
+    }
+
+    void RenderPass::gatherSourceTexturesIntoScratch(RenderPassContext const& context) noexcept
+    {
+        m_renderViewSourcesScratch.clear();
+
+        for (const RenderView& renderView : context.renderViews)
+        {
+            Texture* colorSource{ nullptr };
+            Texture* depthSource{ nullptr };
+
+            resolveSourceTextures(renderView.camera, &colorSource, &depthSource);
+            m_renderViewSourcesScratch.emplace_back(colorSource, depthSource);
+        }
+    }
+
+    std::span<PipelineBarrierCommand const> RenderPass::RenderTargetSetup::getPipelineBarrierCmds() const noexcept
+    {
+        return { pipelineBarrierCmds.data(), barrierCount };
+    }
+
+    RenderPass::RenderTargetSetup RenderPass::resolveRenderTarget(Camera const* camera, RenderTargetOptions const& options) const noexcept
+    {
+        RenderTargetSetup setup{};
+
+        auto addAttachment = [&](PipelineBarrierCommand const& preset, TextureResourceHandle handle)
+        {
+            setup.pipelineBarrierCmds[setup.barrierCount++] = PipelineBarrierCommand::copyWithTexture(preset, handle);
+        };
+
+        Texture* color{ nullptr };
+        Texture* depth{ nullptr };
+
+        if (camera != nullptr)
+        {
+            const RenderTexture* renderTexture = m_pObjectPool->getRenderTexture(camera->getRenderTextureHandle());
+
+            if (renderTexture != nullptr)
+            {
+                color = m_pObjectPool->getTexture(renderTexture->getColorTextureHandle());
+
+                if (color == nullptr)
+                {
+                    logWarning("Failed to resolve camera render texture color component.");
+                    return setup;
+                }
+
+                depth = m_pObjectPool->getTexture(renderTexture->getDepthTextureHandle());
+
+                if ((depth == nullptr) && options.wantsDepth)
+                {
+                    logWarning("Failed to resolve camera render texture depth component.");
+                    return setup;
+                }
+            }
+        }
+
+        const TextureResourceHandle colorResourceHandle = (color != nullptr) ? color->getTextureResourceHandle() : TextureResourceHandle{};
+        const TextureResourceHandle depthResourceHandle = (depth != nullptr) ? depth->getTextureResourceHandle() : TextureResourceHandle{};
+
+        setup.beginRenderCmd.color = ColorAttachmentDescriptor{
+            .colorTexture = colorResourceHandle,
+            .loadOp = options.loadOp,
+            .storeOp = options.colorStoreOp,
+            .clearColor = (camera != nullptr) ? camera->getClearColor() : colors::Black
+        };
+
+        addAttachment((options.loadOp == LoadOperationType::Load) ? PipelineBarrierColorToColor : PipelineBarrierUndefinedToColor, colorResourceHandle);
+
+        if (depthResourceHandle.isValid() && options.wantsDepth && ((camera != nullptr) && camera->getDepthEnabled()))
+        {
+            setup.beginRenderCmd.depth = DepthAttachmentDescriptor{
+                .depthTexture = depthResourceHandle,
+                .loadOp = options.loadOp,
+                .storeOp = options.depthStoreOp,
+                .clearDepth = 0.0f
+            };
+
+            addAttachment((options.loadOp == LoadOperationType::Load) ? PipelineBarrierDepthToDepth : PipelineBarrierUndefinedToDepthStencil, depthResourceHandle);
+        }
+
+        setup.valid = true;
+
+        return setup;
     }
 }

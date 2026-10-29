@@ -7,113 +7,121 @@ namespace litl
 {
     void ForwardOpaquePass::render(RenderPassContext const& context) noexcept
     {
-        RenderPushConstants passPushConstants = context.pushConstants;
-
         for (const RenderView& renderView : context.renderViews)
         {
-            passPushConstants.perPassDataAddr = renderView.perPassDataAddr;
-            passPushConstants.instanceDataAddr = renderView.instanceDataAddr;
+            render(context.commandBufferHandle, renderView, context.pushConstants);
+        }
+    }
 
-            Texture* colorSource{ nullptr };
-            Texture* depthSource{ nullptr };
+    void ForwardOpaquePass::render(CommandBufferHandle commandBufferHandle, RenderView const& renderView, RenderPushConstants viewPushConstants) noexcept
+    {
+        viewPushConstants.perPassDataAddr = renderView.perPassDataAddr;
+        viewPushConstants.instanceDataAddr = renderView.instanceDataAddr;
 
-            resolveSourceTextures(renderView, &colorSource, &depthSource);
+        if (barrierAndBeginRender(commandBufferHandle, renderView))
+        {
+            m_pRenderer->cmdSetViewportAndScissor(commandBufferHandle, createSetViewportAndScissorCommand(renderView.camera, false));
 
-            if (colorSource != nullptr)
+            if (compileRenderList(renderView.entities))
             {
-                m_pRenderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierCommand::copyWithTexture(PipelineBarrierUndefinedToColor, colorSource->getTextureResourceHandle()));
-            }
-            else
-            {
-                continue;
-            }
+                // --- Render
 
-            if (depthSource != nullptr)
-            {
-                m_pRenderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierCommand::copyWithTexture(PipelineBarrierUndefinedToDepthStencil, depthSource->getTextureResourceHandle()));
-            }
+                MaterialHandle currMaterialHandle{};
+                MeshHandle currMeshHandle{};
 
-            if (m_pRenderer->cmdBeginRender(context.commandBufferHandle, createBeginRenderCommand(renderView.camera, LoadOperationType::Clear, StoreOperationType::Store, true)))       // the loadop will need to be updated if/when this is no longer the first pass to touch this RT
-            {
-                m_pRenderer->cmdSetViewportAndScissor(context.commandBufferHandle, createSetViewportAndScissorCommand(renderView.camera));
-
-                if (compileRenderList(renderView.entities))
+                for (auto& renderPassItem : m_renderPassItems)
                 {
-                    // --- Render
-
-                    MaterialHandle currMaterialHandle{};
-                    MeshHandle currMeshHandle{};
-
-                    for (auto& renderPassItem : m_renderPassItems)
+                    if (!renderPassItem.graphicsPipelineHandle.isValid() ||
+                        renderPassItem.vertexCount == 0u ||
+                        renderPassItem.indexCount == 0u ||
+                        renderPassItem.mesh == nullptr ||
+                        renderPassItem.material == nullptr)
                     {
-                        if (!renderPassItem.graphicsPipelineHandle.isValid() ||
-                            renderPassItem.vertexCount == 0u ||
-                            renderPassItem.indexCount == 0u ||
-                            renderPassItem.mesh == nullptr ||
-                            renderPassItem.material == nullptr)
+                        continue;
+                    }
+
+                    // --- Material Bind
+
+                    if (renderPassItem.materialHandle != currMaterialHandle)
+                    {
+                        if ((renderPassItem.material != nullptr) && !renderPassItem.material->ready())
                         {
+                            // This material has properties, but the property buffer is not yet ready. Likely a material created mid-frame. Skip rendering it for now.
                             continue;
                         }
 
-                        // --- Material Bind
+                        viewPushConstants.materialPropertiesAddr = 0ull;
+                        currMaterialHandle = renderPassItem.materialHandle;
 
-                        if (renderPassItem.materialHandle != currMaterialHandle)
+                        m_pRenderer->cmdBindGraphicsPipeline(commandBufferHandle, renderPassItem.graphicsPipelineHandle);
+                        auto pushConstantStages = m_pRenderer->getGraphicsPipelinePushConstantStages(renderPassItem.graphicsPipelineHandle);
+
+                        if (pushConstantStages != ShaderStage::None)
                         {
-                            if ((renderPassItem.material != nullptr) && !renderPassItem.material->ready())
+                            if (renderPassItem.material != nullptr)
                             {
-                                // This material has properties, but the property buffer is not yet ready. Likely a material created mid-frame. Skip rendering it for now.
-                                continue;
+                                const auto materialPropsBda = renderPassItem.material->getGraphicsBufferDeviceAddress();
+                                viewPushConstants.materialPropertiesAddr = materialPropsBda.has_value() ? materialPropsBda.value() : 0ull;
                             }
 
-                            passPushConstants.materialPropertiesAddr = 0ull;
-                            currMaterialHandle = renderPassItem.materialHandle;
-
-                            m_pRenderer->cmdBindGraphicsPipeline(context.commandBufferHandle, renderPassItem.graphicsPipelineHandle);
-                            auto pushConstantStages = m_pRenderer->getGraphicsPipelinePushConstantStages(renderPassItem.graphicsPipelineHandle);
-
-                            if (pushConstantStages != ShaderStage::None)
-                            {
-                                if (renderPassItem.material != nullptr)
-                                {
-                                    const auto materialPropsBda = renderPassItem.material->getGraphicsBufferDeviceAddress();
-                                    passPushConstants.materialPropertiesAddr = materialPropsBda.has_value() ? materialPropsBda.value() : 0ull;
-                                }
-
-                                m_pRenderer->cmdPushConstants(
-                                    context.commandBufferHandle,
-                                    ShaderStage::All,
-                                    generic_as_byte_span(&passPushConstants, sizeof(RenderPushConstants)));
-                            }
+                            m_pRenderer->cmdPushConstants(
+                                commandBufferHandle,
+                                ShaderStage::All,
+                                generic_as_byte_span(&viewPushConstants, sizeof(RenderPushConstants)));
                         }
-
-                        // --- Mesh Bind
-
-                        if (renderPassItem.meshHandle != currMeshHandle)
-                        {
-                            auto* currVertexBuffer = m_pObjectPool->getGpuBuffer(renderPassItem.mesh->getVertexBuffer());
-                            auto* currIndexBuffer = m_pObjectPool->getGpuBuffer(renderPassItem.mesh->getIndexBuffer());
-
-                            if ((currVertexBuffer == nullptr) || (currIndexBuffer == nullptr))
-                            {
-                                // This may be an asset that is still in the process of being loaded in.
-                                // Continue here (move to next renderPassItem) to skip both the bind and draw.
-                                continue;
-                            }
-
-                            m_pRenderer->cmdBindVertexBuffer(context.commandBufferHandle, currVertexBuffer->getBufferHandle(), 0ull, 0u);
-                            m_pRenderer->cmdBindIndexBuffer(context.commandBufferHandle, currIndexBuffer->getBufferHandle(), IndexType::Uint32);  // todo support other index sizes
-
-                            currMeshHandle = renderPassItem.meshHandle;
-                        }
-
-                        // -- Instanced Draw
-
-                        m_pRenderer->cmdDrawIndexed(context.commandBufferHandle, renderPassItem.indexCount, renderPassItem.instanceCount, renderPassItem.firstIndex, 0, renderPassItem.instanceOffset);
                     }
-                }
 
-                m_pRenderer->cmdEndRender(context.commandBufferHandle);
+                    // --- Mesh Bind
+
+                    if (renderPassItem.meshHandle != currMeshHandle)
+                    {
+                        auto* currVertexBuffer = m_pObjectPool->getGpuBuffer(renderPassItem.mesh->getVertexBuffer());
+                        auto* currIndexBuffer = m_pObjectPool->getGpuBuffer(renderPassItem.mesh->getIndexBuffer());
+
+                        if ((currVertexBuffer == nullptr) || (currIndexBuffer == nullptr))
+                        {
+                            // This may be an asset that is still in the process of being loaded in.
+                            // Continue here (move to next renderPassItem) to skip both the bind and draw.
+                            continue;
+                        }
+
+                        m_pRenderer->cmdBindVertexBuffer(commandBufferHandle, currVertexBuffer->getBufferHandle(), 0ull, 0u);
+                        m_pRenderer->cmdBindIndexBuffer(commandBufferHandle, currIndexBuffer->getBufferHandle(), IndexType::Uint32);  // todo support other index sizes
+
+                        currMeshHandle = renderPassItem.meshHandle;
+                    }
+
+                    // -- Instanced Draw
+
+                    m_pRenderer->cmdDrawIndexed(commandBufferHandle, renderPassItem.indexCount, renderPassItem.instanceCount, renderPassItem.firstIndex, 0, renderPassItem.instanceOffset);
+                }
             }
+
+            m_pRenderer->cmdEndRender(commandBufferHandle);
         }
+    }
+
+    bool ForwardOpaquePass::barrierAndBeginRender(CommandBufferHandle commandBufferHandle, RenderView const& renderView) noexcept
+    {
+        const RenderTargetOptions renderTargetOptions{
+            .loadOp = LoadOperationType::Clear,                     // Will need to change if/when ForwardOpaquePass is not the first pass to write to the camera render textures
+            .colorStoreOp = StoreOperationType::Store,
+            .depthStoreOp = StoreOperationType::DontCare,
+            .wantsDepth = true
+        };
+
+        const auto renderTarget = resolveRenderTarget(renderView.camera, renderTargetOptions);
+
+        if (!renderTarget.valid)
+        {
+            return false;
+        }
+
+        for (auto const& pipelineBarrierCmd : renderTarget.getPipelineBarrierCmds())
+        {
+            m_pRenderer->cmdPipelineBarrier(commandBufferHandle, pipelineBarrierCmd);
+        }
+
+        return m_pRenderer->cmdBeginRender(commandBufferHandle, renderTarget.beginRenderCmd);
     }
 }

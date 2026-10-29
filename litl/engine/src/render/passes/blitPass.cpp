@@ -28,18 +28,6 @@ namespace litl
                 return pushConstants;
             }
         };
-
-        void cmdPipelineBarriers(CommandBufferHandle commandBuffer, Renderer* renderer, Texture* colorSource)
-        {
-            // Barrier to ensure the source color texture that we are blitting is ready
-            if (colorSource != nullptr)
-            {
-                renderer->cmdPipelineBarrier(commandBuffer, PipelineBarrierCommand::copyWithTexture(PipelineBarrierColorToShaderRead, colorSource->getTextureResourceHandle()));
-            }
-
-            // Barrier to ensure the swapchain is ready. Using the default PipelineBarrierUndefinedToColor without a texture set uses the swapchain.
-            renderer->cmdPipelineBarrier(commandBuffer, PipelineBarrierUndefinedToColor);
-        }
     }
 
     void BlitPass::setup(ServiceProvider& services, Renderer& renderer, ObjectPool& objectPool) noexcept
@@ -51,29 +39,68 @@ namespace litl
 
     void BlitPass::render(RenderPassContext const& context) noexcept
     {
-        for (const RenderView& renderView : context.renderViews)
+        // ---------------------------------------------------------------------------------
+        // Barrier on each view's source RT
+
+        gatherSourceTexturesIntoScratch(context);
+
+        for (auto& renderViewSource : m_renderViewSourcesScratch)
         {
-            Texture* colorSource{ nullptr };
-            Texture* depthSource{ nullptr };
-
-            resolveSourceTextures(renderView, &colorSource, &depthSource);
-            cmdPipelineBarriers(context.commandBufferHandle, m_pRenderer, colorSource);
-
-            if (m_pRenderer->cmdBeginRender(context.commandBufferHandle, createBeginRenderCommand(nullptr, LoadOperationType::Clear, StoreOperationType::Store, false)))
+            if (renderViewSource.color != nullptr)
             {
-                if ((colorSource != nullptr) && ensurePipelineExists())
-                {
-                    const auto pushConstants = BlitPushConstants::create(colorSource);
-
-                    m_pRenderer->cmdSetViewportAndScissor(context.commandBufferHandle, createSetViewportAndScissorCommand(nullptr));
-                    m_pRenderer->cmdBindGraphicsPipeline(context.commandBufferHandle, m_graphicsPipelineHandle);
-                    m_pRenderer->cmdPushConstants(context.commandBufferHandle, ShaderStage::All, generic_as_byte_span(&pushConstants, sizeof(BlitPushConstants)));
-                    m_pRenderer->cmdDraw(context.commandBufferHandle, 3u, 1u, 0u, 0u);
-                }
-
-                m_pRenderer->cmdEndRender(context.commandBufferHandle);
+                m_pRenderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierCommand::copyWithTexture(PipelineBarrierColorToShaderRead, renderViewSource.color->getTextureResourceHandle()));
             }
         }
+        // ---------------------------------------------------------------------------------
+        // Barrier on swapchain and then blit each view's source RT onto it
+
+        if (barrierAndBeginRender(context.commandBufferHandle))
+        {
+            if (ensurePipelineExists())
+            {
+                for (uint32_t i = 0u; i < static_cast<uint32_t>(context.renderViews.size()); ++i)
+                {
+                    const RenderView& renderView = context.renderViews[i];
+                    const RenderViewSources& renderViewSources = m_renderViewSourcesScratch[i];
+
+                    if (renderViewSources.color != nullptr)
+                    {
+                        const auto pushConstants = BlitPushConstants::create(renderViewSources.color);
+
+                        m_pRenderer->cmdSetViewportAndScissor(context.commandBufferHandle, createSetViewportAndScissorCommand(renderView.camera, true));
+                        m_pRenderer->cmdBindGraphicsPipeline(context.commandBufferHandle, m_graphicsPipelineHandle);
+                        m_pRenderer->cmdPushConstants(context.commandBufferHandle, ShaderStage::All, generic_as_byte_span(&pushConstants, sizeof(BlitPushConstants)));
+                        m_pRenderer->cmdDraw(context.commandBufferHandle, 3u, 1u, 0u, 0u);
+                    }
+                }
+            }
+
+            m_pRenderer->cmdEndRender(context.commandBufferHandle);
+        }
+    }
+
+    bool BlitPass::barrierAndBeginRender(CommandBufferHandle commandBufferHandle) noexcept
+    {
+        const RenderTargetOptions renderTargetOptions{
+            .loadOp = LoadOperationType::Clear,
+            .colorStoreOp = StoreOperationType::Store,
+            .depthStoreOp = StoreOperationType::DontCare,
+            .wantsDepth = false
+        };
+
+        const auto renderTarget = resolveRenderTarget(nullptr, renderTargetOptions);
+
+        if (!renderTarget.valid)
+        {
+            return false;
+        }
+
+        for (auto const& pipelineBarrierCmd : renderTarget.getPipelineBarrierCmds())
+        {
+            m_pRenderer->cmdPipelineBarrier(commandBufferHandle, pipelineBarrierCmd);
+        }
+
+        return m_pRenderer->cmdBeginRender(commandBufferHandle, renderTarget.beginRenderCmd);
     }
 
     bool BlitPass::ensurePipelineExists() noexcept
