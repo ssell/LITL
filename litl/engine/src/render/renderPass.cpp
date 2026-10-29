@@ -116,50 +116,6 @@ namespace litl
         return material->getGraphicsPipelineHandle();
     }
 
-    BeginRenderCommand RenderPass::createBeginRenderCommand(Camera const* camera, LoadOperationType loadOp, StoreOperationType storeOp, bool allowDepth) const noexcept
-    {
-        auto colorAttachment = ColorAttachmentDescriptor {
-            .colorTexture = {},                                 // If not set, then will use the swapchain.
-            .loadOp = loadOp,
-            .storeOp = storeOp,
-            .clearColor = (camera != nullptr ? camera->getClearColor() : colors::Black)
-        };
-
-        auto depthAttachment = DepthAttachmentDescriptor{
-            .depthTexture = {},                                 // If not set, then will use the swapchain.
-            .loadOp = loadOp,
-            .storeOp = storeOp,
-            .clearDepth = 0.0f
-        };
-
-        if (camera != nullptr)
-        {
-            allowDepth &= camera->getDepthEnabled();
-            RenderTexture* renderTexture = m_pObjectPool->getRenderTexture(camera->getRenderTextureHandle());
-
-            if (renderTexture != nullptr)
-            {
-                Texture* colorTexture = m_pObjectPool->getTexture(renderTexture->getColorTextureHandle());
-                Texture* depthTexture = m_pObjectPool->getTexture(renderTexture->getDepthTextureHandle());
-
-                if (colorTexture != nullptr)
-                {
-                    colorAttachment.colorTexture = colorTexture->getTextureResourceHandle();
-                }
-
-                if (depthTexture != nullptr)
-                {
-                    depthAttachment.depthTexture = depthTexture->getTextureResourceHandle();
-                }
-            }
-        }
-
-        return BeginRenderCommand{
-            .color = colorAttachment,
-            .depth = (allowDepth ? std::optional<DepthAttachmentDescriptor>(depthAttachment) : std::nullopt)
-        };
-    }
-
     SetViewportAndScissorCommand RenderPass::createSetViewportAndScissorCommand(Camera const* camera, bool applyCameraViewport) const noexcept
     {
         vec2 viewportOffset{ 0.0f, 0.0f };

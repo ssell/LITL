@@ -1,7 +1,6 @@
 #include "litl-engine/startup.hpp"
 #include "freeFlyController.hpp"
 #include "spinSystem.hpp"
-#include "litl-platform/window/window.hpp"
 
 namespace litl::samples
 {
@@ -94,7 +93,22 @@ namespace litl::samples
         commands.addComponent<PendingModelInstance>(sponzaEntity, createModelInstance("models/ignore/sponza", "litl/materials/lit", *assets));
         commands.addComponent<LocalBounds>(sponzaEntity);
 
-        // secondary camera to show views are working
+        // ---------------------------------------------------------------------------------
+        // Begin Dev / Test Entities
+        // ---------------------------------------------------------------------------------
+
+        // ---------------------------------------------------------------------------------
+        // Small spinning cube to show something is happening while the Sponza loads in. Replace with GUI text in the future, or remove entirely when asset loading performance is improved.
+
+        auto cubeEntity = commands.createEntity();
+        commands.addComponent<Transform>(cubeEntity, Transform::create(vec3(5.0f, -2.0f, 0.0f), quat::identity()));
+        commands.addComponent<PendingModelInstance>(cubeEntity, createModelInstance("litl/models/cube", "litl/materials/lit", *assets));
+        commands.addComponent<LocalBounds>(cubeEntity);
+        commands.addComponent<Spin>(cubeEntity, Spin{ .rate = 50.0f });
+
+        // ---------------------------------------------------------------------------------
+        // Secondary camera to show views are working that is presented in the upper-right corner
+
         const auto altCameraRtHandle = objectPool->createRenderTexture(RenderTextureDescriptor{
             .objectInfo = {.name = "AltCamera_RT" },
             .sizePolicy = RenderTextureSizePolicy::SwapchainRelative,
@@ -116,13 +130,6 @@ namespace litl::samples
             altCamera->setWorldPosition(vec3(-5.0f, 1.5f, 0.0f));
             altCamera->lookAt(vec3(5.0f, 1.5f, 0.0f), vec3::up());
         }
-
-        // Small spinning cube to show something is happening while the Sponza loads in. Replace with GUI text in the future, or remove entirely when asset loading performance is improved.
-        //auto cubeEntity = commands.createEntity();
-        //commands.addComponent<Transform>(cubeEntity, Transform::create(vec3(5.0f, -2.0f, 0.0f), quat::identity()));
-        //commands.addComponent<PendingModelInstance>(cubeEntity, createModelInstance("litl/models/cube", "litl/materials/lit", *assets));
-        //commands.addComponent<LocalBounds>(cubeEntity);
-        //commands.addComponent<Spin>(cubeEntity);
     }
 }
 
