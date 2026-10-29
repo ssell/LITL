@@ -27,6 +27,8 @@ namespace litl
         mat4 viewProjMatrix;
     };
 
+    static_assert(sizeof(RenderPerPassData) == 3 * sizeof(mat4));
+
     /// <summary>
     /// Engine-provided data that maps an instance id (SV_InstanceID) to a
     /// general GPU buffer index and material slot value.

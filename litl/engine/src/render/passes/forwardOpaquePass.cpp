@@ -11,10 +11,8 @@ namespace litl
 
         for (const RenderView& renderView : context.renderViews)
         {
-            if (renderView.camera == nullptr)
-            {
-                continue;
-            }
+            passPushConstants.perPassDataAddr = renderView.perPassDataAddr;
+            passPushConstants.instanceDataAddr = renderView.instanceDataAddr;
 
             Texture* colorSource{ nullptr };
             Texture* depthSource{ nullptr };

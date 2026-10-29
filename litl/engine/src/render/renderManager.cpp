@@ -41,6 +41,17 @@ namespace litl
     namespace
     {
         static constexpr uint32_t MaxRenderWaitTimeMs = 1000u;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        struct PreparedView
+        {
+            Camera* camera{ nullptr };
+            std::span<RenderableEntity const> entities;
+            uint32_t viewIndex{ 0u };
+            uint32_t instanceBase{ 0u };
+        };
     }
 
     struct RenderManager::Impl
@@ -75,6 +86,10 @@ namespace litl
         std::queue<GpuBufferHandle> dirtyBuffers;
         std::queue<TextureHandle> dirtyTextures;
         std::vector<RenderTextureHandle> frameRenderTextures;
+        std::vector<PreparedView> framePreparedViews;
+        std::vector<RenderView> frameRenderViews;
+        std::vector<RenderPerPassData> passDataScratch;
+        std::vector<RenderInstanceData> instanceDataScratch;
 
         Renderer* renderer{ nullptr };
         std::array<std::unique_ptr<RenderPass>, static_cast<uint32_t>(RenderPassType::Count)> renderPasses;
@@ -332,45 +347,41 @@ namespace litl
             sortVisibleEntities(cullingBucket);
             updatePerFrameData(frameCommandBuffer, dt);
             updateWorldMatrices(frameCommandBuffer);
+            gatherPreparedViews(cullingBucket, framePreparedViews);
+            writeViewData(frameCommandBuffer, framePreparedViews, frameRenderViews);
 
-            // Only main camera for now for development
-            const auto* mainCameraCull = cullingBucket.getMainCameraCull();
-
-            if ((mainCameraCull != nullptr) && (mainCameraCull->camera != nullptr))
+            if (!frameRenderViews.empty() && goodToGo())
             {
-                mainCameraCull->camera->setRenderTextureHandle(frameRenderTextures[frameData.frameInFlightIndex]);
-
-                updateInstanceData(frameCommandBuffer, mainCameraCull->entities);
-                updatePerPassData(frameCommandBuffer, *mainCameraCull->camera);
-
-                if (goodToGo())
+                for (auto& renderView : frameRenderViews)
                 {
-                    RenderView view{
-                        .camera = mainCameraCull->camera,
-                        .entities = mainCameraCull->entities,
-                        .perPassDataAddr = 0ull,
-                        .instanceDataAddr = 0ull
-                    };
-
-                    RenderPassContext renderPassContext{
-                        .commandBufferHandle = frameCommandBuffer,
-                        .pushConstants = pushConstants,
-                        .renderViews = { &view, 1 }
-                    };
-
-                    getRenderPass(RenderPassType::ForwardOpaque).render(renderPassContext);
-                    getRenderPass(RenderPassType::Blit).render(renderPassContext);
+                    if (renderView.camera->isMainCamera())
+                    {
+                        renderView.camera->setRenderTextureHandle(frameRenderTextures[frameData.frameInFlightIndex]);
+                        break;
+                    }
                 }
+
+                RenderPassContext renderPassContext{
+                    .commandBufferHandle = frameCommandBuffer,
+                    .pushConstants = pushConstants,
+                    .renderViews = frameRenderViews
+                };
+
+                getRenderPass(RenderPassType::ForwardOpaque).render(renderPassContext);
+                getRenderPass(RenderPassType::Blit).render(renderPassContext);
             }
             else
             {
-                // No active cameras. Just perform a screen clear.
+                // No active views. Just perform a screen clear.
                 renderer->cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierUndefinedToColor);
-                renderer->cmdBeginRender(frameCommandBuffer, BeginRenderCommand{ .color = ColorAttachmentDescriptor {.loadOp = LoadOperationType::Clear } });
-                renderer->cmdEndRender(frameCommandBuffer);
-                renderer->cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierColorToPresent);
+                
+                if (renderer->cmdBeginRender(frameCommandBuffer, BeginRenderCommand{ .color = ColorAttachmentDescriptor {.loadOp = LoadOperationType::Clear } }))
+                {
+                    renderer->cmdEndRender(frameCommandBuffer);
+                }
             }
 
+            renderer->cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierColorToPresent);
             renderer->cmdEnd(frameCommandBuffer);
             renderer->submitCommands(frameCommandBuffer);
             renderer->endRender();
@@ -470,98 +481,6 @@ namespace litl
         }
 
         /// <summary>
-        /// Updates the PassData buffer which is supplied by default to all shaders via the push constants.
-        /// </summary>
-        /// <param name="commandBuffer"></param>
-        /// <param name="camera"></param>
-        void updatePerPassData(CommandBufferHandle commandBuffer, Camera const& camera) noexcept
-        {
-            passData.data.projMatrix = camera.getProjectionMatrix();
-            passData.data.viewMatrix = camera.getViewMatrix();
-            passData.data.viewProjMatrix = camera.getViewProjectionMatrix();
-
-            auto* passGpuBuffer = objectPool->getGpuBuffer(passData.handle);
-            LITL_ASSERT_MSG((passGpuBuffer != nullptr), "Attempting to render without a valid PerPassData buffer.", );
-
-            passGpuBuffer->swapBuffers(frameData.data.frameIndex);
-            passGpuBuffer->setDataImmediate(generic_as_byte_span(&passData.data, sizeof(RenderPerPassData)), commandBuffer);
-            pushConstants.perPassDataAddr = passGpuBuffer->getBufferDeviceAddress().value();
-        }
-
-        /// <summary>
-        /// Updates the InstanceData buffer which is supplied by default to all shaders via the push constants.
-        /// </summary>
-        void updateInstanceData(CommandBufferHandle commandBuffer, std::span<RenderableEntity const> renderableEntities) noexcept
-        {
-            // --- Update the CPU copy of the data, ordered by our render order. Users key into instanceData based on the instance id supplied to the shader.
-
-            instanceData.data.clear();
-            instanceData.data.reserve(renderableEntities.size());
-
-            for (auto& renderableEntity : renderableEntities)
-            {   
-                if (auto* material = objectPool->getMaterial(renderableEntity.materialRef.handle); material != nullptr)
-                {
-                    const uint32_t materialIndex = material->getSlotIndex(renderableEntity.materialRef.slot);
-
-                    if (materialIndex != Constants::uint32_null_index)
-                    {
-                        instanceData.data.emplace_back(
-                            sceneView->getGpuBufferIndex(renderableEntity.entity),
-                            materialIndex);
-                    }
-                }
-                /*
-                auto* materialBindings = objectPool->getMaterialBindings(renderableEntity.materialRef.handle);
-
-                if (materialBindings == nullptr)
-                {
-                    continue;
-                }
-
-                auto& bindings = materialBindings->getBindings();
-
-                for (auto& binding : bindings)
-                {
-                    auto* material = objectPool->getMaterial(binding.handle);
-
-                    if (material == nullptr)
-                    {
-                        continue;
-                    }
-
-                    const uint32_t materialIndex = material->getSlotIndex(binding.slot);
-
-                    if (materialIndex != Constants::uint32_null_index)
-                    {
-                        instanceData.data.emplace_back(
-                            sceneView->getGpuBufferIndex(renderableEntity.entity),
-                            materialIndex);
-                    }
-                }
-                */
-            }
-
-            // --- Swap, resize, and update the GPU buffer
-
-            auto* instanceDataGpuBuffer = objectPool->getGpuBuffer(instanceData.handle);
-            LITL_ASSERT_MSG((instanceDataGpuBuffer != nullptr), "Attempting to render without a valid InstanceData buffer.", );
-
-            instanceDataGpuBuffer->swapBuffers(frameData.data.frameIndex);
-
-            if (instanceDataGpuBuffer->getItemCapacity() < renderableEntities.size())
-            {
-                if (!instanceDataGpuBuffer->resizeItems(renderableEntities.size(), 2u, false, true))
-                {
-                    logWarning("Failed to resize internal InstanceData GPU Buffer.");
-                }
-            }
-
-            instanceDataGpuBuffer->setDataImmediate(generic_as_byte_span(instanceData.data.data(), sizeof(RenderInstanceData) * instanceData.data.size()), commandBuffer);
-            pushConstants.instanceDataAddr = instanceDataGpuBuffer->getBufferDeviceAddress().value();
-        }
-
-        /// <summary>
         /// Updates the world matrix SSBO whose source is the active SceneTransforms.
         /// </summary>
         /// <param name="commandBuffer"></param>
@@ -588,17 +507,17 @@ namespace litl
         /// <summary>
         /// Are all buffer addresses valid?
         /// </summary>
-        /// <returns></returns>
         bool goodToGo() noexcept
         {
             LITL_ASSERT_MSG(pushConstants.perFrameDataAddr != 0ull, "Attempting to render with an invalid PerFrameData address.", false);
-            LITL_ASSERT_MSG(pushConstants.perPassDataAddr != 0ull, "Attempting to render with an invalid PerPassData address.", false);
-            LITL_ASSERT_MSG(pushConstants.instanceDataAddr != 0ull, "Attempting to render with an invalid InstanceData address.", false);
             LITL_ASSERT_MSG(pushConstants.worldMatricesAddr != 0ull, "Attempting to render with an invalid WorldMatrices address.", false);
 
             return true;
         }
 
+        /// <summary>
+        /// CPU block until the GPU is done.
+        /// </summary>
         void halt() noexcept
         {
             if (renderer == nullptr)
@@ -637,6 +556,156 @@ namespace litl
             }
 
             return WindowCallbackResult::Continue;
+        }
+
+        /// <summary>
+        /// Decides which views exist this frame and assigned viewIndex and instanceBase with a running total.
+        /// </summary>
+        void gatherPreparedViews(CullingBucket const& bucket, std::vector<PreparedView>& preparedViews) noexcept
+        {
+            preparedViews.clear();
+
+            uint32_t viewIndex{ 0u };
+            uint32_t instanceBase{ 0u };
+
+            for (auto& renderableCamera : bucket.cameraRenderableEntities)
+            {
+                if (renderableCamera.camera == nullptr)
+                {
+                    break;      // Fixed number of cameras, and we have reached the first slot without a camera.
+                }
+
+                if (!renderableCamera.camera->getIsActive())
+                {
+                    continue;
+                }
+
+                preparedViews.push_back(PreparedView{
+                    .camera = renderableCamera.camera,
+                    .entities = renderableCamera.entities,
+                    .viewIndex = viewIndex,
+                    .instanceBase = instanceBase
+                });
+
+                viewIndex += 1u;
+                instanceBase += static_cast<uint32_t>(renderableCamera.entities.size());
+            }
+        }
+
+        /// <summary>
+        /// Gathers the RenderPerPassData and RenderInstanceData for each view and uploads it to the GPU.
+        /// RenderViews are returned out which point to the appropriate location into each buffer for each view.
+        /// </summary>
+        void writeViewData(CommandBufferHandle commandBufferHandle, std::span<PreparedView const> preparedViews, std::vector<RenderView>& renderViews) noexcept
+        {
+            renderViews.clear();
+
+            if (preparedViews.empty())
+            {
+                return;
+            }
+
+            // -----------------------------------------------------------------------------
+            // CPU-side RenderPerPassData and RenderInstanceData arrays
+
+            passDataScratch.clear();
+            instanceDataScratch.clear();;
+
+            for (const auto& preparedView : preparedViews)
+            {
+                LITL_ASSERT(preparedView.viewIndex == passDataScratch.size(), );
+                LITL_ASSERT(preparedView.instanceBase == instanceDataScratch.size(), );
+
+                passDataScratch.push_back(RenderPerPassData{
+                    .viewMatrix = preparedView.camera->getViewMatrix(),
+                    .projMatrix = preparedView.camera->getProjectionMatrix(),
+                    .viewProjMatrix = preparedView.camera->getViewProjectionMatrix()
+                });
+
+                for (const auto& entity : preparedView.entities)
+                {
+                    instanceDataScratch.push_back(RenderInstanceData{
+                        .gpuIndex = sceneView->getGpuBufferIndex(entity.entity),
+                        .materialSlot = resolveMaterialSlot(entity)
+                    });
+                }
+            }
+
+            // -----------------------------------------------------------------------------
+            // Upload buffers
+
+            const uint64_t passDataAddr = uploadFrameBuffer(commandBufferHandle, passData.handle, generic_as_byte_span(passDataScratch.data(), passDataScratch.size() * sizeof(RenderPerPassData)), passDataScratch.size());
+            const uint64_t instanceDataAddr = uploadFrameBuffer(commandBufferHandle, instanceData.handle, generic_as_byte_span(instanceDataScratch.data(), instanceDataScratch.size() * sizeof(RenderInstanceData)), instanceDataScratch.size());
+
+            if ((passDataAddr == 0ull) || (instanceDataAddr == 0ull))
+            {
+                // Leave renderViews empty. Caller falls back to the swapchain clear.
+                return;
+            }
+
+            // -----------------------------------------------------------------------------
+            // Hand out the per-view buffer addresses
+
+            renderViews.reserve(preparedViews.size());
+
+            for (const auto& preparedView : preparedViews)
+            {
+                renderViews.push_back(RenderView{
+                    .camera = preparedView.camera,
+                    .entities = preparedView.entities,
+                    .perPassDataAddr = passDataAddr + (preparedView.viewIndex * sizeof(RenderPerPassData)),
+                    .instanceDataAddr = instanceDataAddr + (preparedView.instanceBase * sizeof(RenderInstanceData))
+                });
+            }
+        }
+
+        /// <summary>
+        /// Looks up the material slot index for the specified entity.
+        /// If the entity does not have a valid index then a slot of 0 is returned. We still want to create a record, even if it is ultimately skipped.
+        /// </summary>
+        [[nodiscard]] uint32_t resolveMaterialSlot(RenderableEntity const& renderableEntity) noexcept
+        {
+            const Material* material = objectPool->getMaterial(renderableEntity.materialRef.handle);
+
+            if (material != nullptr)
+            {
+                const uint32_t materialIndex = material->getSlotIndex(renderableEntity.materialRef.slot);
+
+                if (materialIndex != Constants::uint32_null_index)
+                {
+                    return materialIndex;
+                }
+            }
+
+            return 0u;
+        }
+
+        /// <summary>
+        /// Returns the GPU buffer's device address after successful data upload. Returns 0 on failure.
+        /// </summary>
+        [[nodiscard]] uint64_t uploadFrameBuffer(CommandBufferHandle commandBufferHandle, GpuBufferHandle gpuBufferHandle, std::span<std::byte const> bytes, size_t itemCount) noexcept
+        {
+            GpuBuffer* gpuBuffer = objectPool->getGpuBuffer(gpuBufferHandle);
+
+            if (gpuBuffer == nullptr)
+            {
+                return 0ull;
+            }
+
+            gpuBuffer->swapBuffers(frameData.data.frameIndex);
+
+            if (gpuBuffer->getItemCapacity() < itemCount)
+            {
+                if (!gpuBuffer->resizeItems(itemCount, 2u, false, true))
+                {
+                    logWarning("Failed to resize GPU Buffer '", gpuBuffer->getDescriptor().objectInfo.name, "' for an item count of ", itemCount);
+                    return 0ull;
+                }
+            }
+
+            gpuBuffer->setDataImmediate(bytes, commandBufferHandle);
+
+            return gpuBuffer->getBufferDeviceAddress().value_or(0ull);
         }
     };
 

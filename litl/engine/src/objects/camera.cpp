@@ -247,4 +247,14 @@ namespace litl
     {
         return m_descriptor;
     }
+
+    void Camera::setActive(bool active) noexcept
+    {
+        m_isActive = active;
+    }
+
+    bool Camera::getIsActive() const noexcept
+    {
+        return m_isActive;
+    }
 }

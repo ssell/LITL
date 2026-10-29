@@ -51,7 +51,7 @@ namespace litl
 
     void BlitPass::render(RenderPassContext const& context) noexcept
     {
-        for (auto& renderView : context.renderViews)
+        for (const RenderView& renderView : context.renderViews)
         {
             Texture* colorSource{ nullptr };
             Texture* depthSource{ nullptr };

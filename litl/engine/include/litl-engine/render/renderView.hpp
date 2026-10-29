@@ -9,12 +9,19 @@
 
 namespace litl
 {
+    enum class RenderViewType : uint8_t
+    {
+        Camera = 0u,
+        Shadow = 1u
+    };
+
     struct RenderView
     {
-        const Camera* camera{ nullptr };
+        Camera* camera{ nullptr };
         std::span<RenderableEntity const> entities{};
         uint64_t perPassDataAddr{ 0ull };
         uint64_t instanceDataAddr{ 0ull };
+        RenderViewType type{ RenderViewType::Camera };
     };
 }
 

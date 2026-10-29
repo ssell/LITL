@@ -330,6 +330,16 @@ namespace litl
         /// </summary>
         [[nodiscard]] CameraDescriptor const& getDescriptor() const noexcept;
 
+        /// <summary>
+        /// Sets whether this camera is active or not. Cameras that are not active will not draw to their target.
+        /// </summary>
+        void setActive(bool active) noexcept;
+
+        /// <summary>
+        /// Returns if this camera is marked active.
+        /// </summary>
+        [[nodiscard]] bool getIsActive() const noexcept;
+
     private:
 
         /// <summary>
@@ -405,12 +415,17 @@ namespace litl
         /// When a camera is set as the main camera it uses the hardcoded CameraProcessOrder::MainCamera value.
         /// If a camera is unset from being the main camera then it reverts back to its original value.
         /// </summary>
-        uint32_t m_processPosition = 0u;
+        uint32_t m_processPosition{ 0u };
 
         /// <summary>
         /// Is this camera the current main camera?
         /// </summary>
-        bool m_isMain = false;
+        bool m_isMain{ false };
+
+        /// <summary>
+        /// Is this camera currently drawing?
+        /// </summary>
+        bool m_isActive{ true };
     };
 }
 
