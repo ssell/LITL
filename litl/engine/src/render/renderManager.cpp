@@ -13,6 +13,7 @@
 #include "litl-engine/render/renderStructs.hpp"
 #include "litl-engine/render/renderPassContext.hpp"
 #include "litl-engine/render/passes/blitPass.hpp"
+#include "litl-engine/render/passes/depthOnlyPass.hpp"
 #include "litl-engine/render/passes/forwardOpaquePass.hpp"
 #include "litl-engine/render/passes/renderPassType.hpp"
 #include "litl-engine/engineCallbacks.hpp"
@@ -230,10 +231,11 @@ namespace litl
 
         void createRenderPasses(RenderManager* self, ServiceProvider& services) noexcept
         {
+            renderPasses[static_cast<uint32_t>(RenderPassType::DepthOnly)] = std::make_unique<DepthOnlyPass>();
             renderPasses[static_cast<uint32_t>(RenderPassType::ForwardOpaque)] = std::make_unique<ForwardOpaquePass>();
             renderPasses[static_cast<uint32_t>(RenderPassType::Blit)] = std::make_unique<BlitPass>();
 
-            // ... add others (ForwardTransparentPass, DepthPass, ShadowPass, PostProcessPass, DeferredPass, etc) ...
+            // ... add others (ForwardTransparentPass, ShadowPass, PostProcessPass, DeferredPass, etc) ...
 
             for (auto& renderPass : renderPasses)
             {
@@ -340,6 +342,7 @@ namespace litl
                     .renderViews = frameRenderViews
                 };
 
+                getRenderPass(RenderPassType::DepthOnly).render(renderPassContext);
                 getRenderPass(RenderPassType::ForwardOpaque).render(renderPassContext);
                 getRenderPass(RenderPassType::Blit).render(renderPassContext);
             }

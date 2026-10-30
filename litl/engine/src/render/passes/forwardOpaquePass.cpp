@@ -9,7 +9,10 @@ namespace litl
     {
         for (const RenderView& renderView : context.renderViews)
         {
-            render(context.commandBufferHandle, renderView, context.pushConstants);
+            if (renderView.type == RenderViewType::Camera)
+            {
+                render(context.commandBufferHandle, renderView, context.pushConstants);
+            }
         }
     }
 
@@ -22,7 +25,7 @@ namespace litl
         {
             m_pRenderer->cmdSetViewportAndScissor(commandBufferHandle, createSetViewportAndScissorCommand(renderView.camera, false));
 
-            if (compileRenderList(renderView.entities, false))
+            if (compileRenderList(renderView.entities))
             {
                 // --- Render
 
