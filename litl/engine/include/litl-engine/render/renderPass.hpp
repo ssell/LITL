@@ -66,7 +66,8 @@ namespace litl
             LoadOperationType loadOp{ LoadOperationType::Clear };
             StoreOperationType colorStoreOp{ StoreOperationType::Store };
             StoreOperationType depthStoreOp{ StoreOperationType::DontCare };
-            bool wantsDepth{ true };
+            bool hasColorAttachment{ true };
+            bool hasDepthAttachment{ true };
         };
 
         [[nodiscard]] bool compileRenderList(std::span<RenderableEntity const> entities) noexcept;

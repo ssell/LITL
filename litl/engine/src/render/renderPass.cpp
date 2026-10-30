@@ -195,48 +195,64 @@ namespace litl
             setup.pipelineBarrierCmds[setup.barrierCount++] = PipelineBarrierCommand::copyWithTexture(preset, handle);
         };
 
-        Texture* color{ nullptr };
-        Texture* depth{ nullptr };
+        const bool colorEnabled = options.hasColorAttachment && ((camera == nullptr) || camera->getColorEnabled());         // Note: no camera = color enabled (swapchain)
+        const bool depthEnabled = options.hasDepthAttachment && ((camera != nullptr) && camera->getDepthEnabled());         // Note: no camera = depth disabled
+
+        Texture* colorTexture{ nullptr };
+        Texture* depthTexture{ nullptr };
 
         if (camera != nullptr)
         {
-            const RenderTexture* renderTexture = m_pObjectPool->getRenderTexture(camera->getRenderTextureHandle());
-
-            if (renderTexture != nullptr)
+            if (const RenderTexture* renderTexture = m_pObjectPool->getRenderTexture(camera->getRenderTextureHandle()); renderTexture != nullptr)
             {
-                color = m_pObjectPool->getTexture(renderTexture->getColorTextureHandle());
-
-                if (color == nullptr)
+                if (colorEnabled)
                 {
-                    logWarning("Failed to resolve camera render texture color component.");
-                    return setup;
+                    colorTexture = m_pObjectPool->getTexture(renderTexture->getColorTextureHandle());
+
+                    if (colorTexture == nullptr)
+                    {
+                        logWarning("Failed to resolve camera render texture color component.");
+                        return setup;
+                    }
                 }
 
-                depth = m_pObjectPool->getTexture(renderTexture->getDepthTextureHandle());
-
-                if ((depth == nullptr) && options.wantsDepth)
+                if (depthEnabled)
                 {
-                    logWarning("Failed to resolve camera render texture depth component.");
-                    return setup;
+                    depthTexture = m_pObjectPool->getTexture(renderTexture->getDepthTextureHandle());
+
+                    if ((depthTexture == nullptr) && options.hasDepthAttachment)
+                    {
+                        logWarning("Failed to resolve camera render texture depth component.");
+                        return setup;
+                    }
                 }
             }
         }
 
-        const TextureResourceHandle colorResourceHandle = (color != nullptr) ? color->getTextureResourceHandle() : TextureResourceHandle{};
-        const TextureResourceHandle depthResourceHandle = (depth != nullptr) ? depth->getTextureResourceHandle() : TextureResourceHandle{};
+        const TextureResourceHandle colorResourceHandle = (colorTexture != nullptr) ? colorTexture->getTextureResourceHandle() : TextureResourceHandle{};
+        const TextureResourceHandle depthResourceHandle = (depthTexture != nullptr) ? depthTexture->getTextureResourceHandle() : TextureResourceHandle{};
 
-        setup.beginRenderCmd.color = ColorAttachmentDescriptor{
-            .colorTexture = colorResourceHandle,
-            .loadOp = options.loadOp,
-            .storeOp = options.colorStoreOp,
-            .clearColor = (camera != nullptr) ? camera->getClearColor() : colors::Black
-        };
-
-        addAttachment((options.loadOp == LoadOperationType::Load) ? PipelineBarrierColorToColor : PipelineBarrierUndefinedToColor, colorResourceHandle);
-
-        if (depthResourceHandle.isValid() && options.wantsDepth && ((camera != nullptr) && camera->getDepthEnabled()))
+        if (colorEnabled)
         {
-            setup.beginRenderCmd.depth = DepthAttachmentDescriptor{
+            setup.beginRenderCmd.colorAttachmentType = (colorTexture != nullptr ? RenderAttachmentType::Supplied : RenderAttachmentType::Swapchain);
+            setup.beginRenderCmd.colorAttachment = ColorAttachmentDescriptor{
+                .colorTexture = colorResourceHandle,
+                .loadOp = options.loadOp,
+                .storeOp = options.colorStoreOp,
+                .clearColor = (camera != nullptr) ? camera->getClearColor() : colors::Black
+            };
+
+            addAttachment((options.loadOp == LoadOperationType::Load) ? PipelineBarrierColorToColor : PipelineBarrierUndefinedToColor, colorResourceHandle);
+        }
+        else
+        {
+            setup.beginRenderCmd.colorAttachmentType = RenderAttachmentType::None;
+        }
+
+        if (depthEnabled)
+        {
+            setup.beginRenderCmd.depthAttachmentType = (depthTexture != nullptr ? RenderAttachmentType::Supplied : RenderAttachmentType::Swapchain);
+            setup.beginRenderCmd.depthAttachment = DepthAttachmentDescriptor{
                 .depthTexture = depthResourceHandle,
                 .loadOp = options.loadOp,
                 .storeOp = options.depthStoreOp,
@@ -244,6 +260,10 @@ namespace litl
             };
 
             addAttachment((options.loadOp == LoadOperationType::Load) ? PipelineBarrierDepthToDepth : PipelineBarrierUndefinedToDepthStencil, depthResourceHandle);
+        }
+        else
+        {
+            setup.beginRenderCmd.depthAttachmentType = RenderAttachmentType::None;
         }
 
         setup.valid = true;

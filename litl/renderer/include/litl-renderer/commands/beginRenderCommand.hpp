@@ -67,33 +67,40 @@ namespace litl
         uint32_t clearStencil = 0u;
     };
 
-    struct BeginRenderCommand
+    /// <summary>
+    /// The type of color/depth attachment specified in the command.
+    /// </summary>
+    enum class RenderAttachmentType : uint8_t
     {
         /// <summary>
-        /// The color texture to render to.
-        /// If not specified, will default to the current swapchain image.
+        /// Indicates that this attachment type is not used.
         /// </summary>
-        ColorAttachmentDescriptor color;
-        // ^ todo update to allow for multiple?
+        None = 0u,
 
         /// <summary>
-        /// 
+        /// Indicates that this attachment type is used and is provided.
         /// </summary>
-        std::optional<DepthAttachmentDescriptor> depth;
+        Supplied = 1u,
+
+        /// <summary>
+        /// Indicates that this attachment type is used and is the swapchain (not provided directly by the user).
+        /// </summary>
+        Swapchain = 2u
+    };
+
+    struct BeginRenderCommand
+    {
+        RenderAttachmentType colorAttachmentType{ RenderAttachmentType::Swapchain };
+        std::optional<ColorAttachmentDescriptor> colorAttachment{ std::nullopt };
+
+        RenderAttachmentType depthAttachmentType{ RenderAttachmentType::None };
+        std::optional<DepthAttachmentDescriptor> depthAttachment{ std::nullopt };
 
         /// <summary>
         /// Both .offset and .extents are normalized coordinates within the target texture.
         /// </summary>
         rect2D area = { .offset = { 0.0f, 0.0f }, .extents = { 1.0f, 1.0f } };
-
-        /// <summary>
-        /// 
-        /// </summary>
         uint32_t layerCount = 1u;
-
-        /// <summary>
-        /// 
-        /// </summary>
         uint32_t viewMask = 0;
     };
 }

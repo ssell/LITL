@@ -230,6 +230,16 @@ namespace litl
         m_descriptor.clearColor = clearColor;
     }
 
+    bool Camera::getColorEnabled() const noexcept
+    {
+        return m_descriptor.colorEnabled;
+    }
+
+    void Camera::setColorEnabled(bool enabled) noexcept
+    {
+        m_descriptor.colorEnabled = enabled;
+    }
+
     bool Camera::getDepthEnabled() const noexcept
     {
         return m_descriptor.depthEnabled;

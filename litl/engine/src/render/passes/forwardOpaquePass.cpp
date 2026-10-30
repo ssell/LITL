@@ -107,7 +107,8 @@ namespace litl
             .loadOp = LoadOperationType::Clear,                     // Will need to change if/when ForwardOpaquePass is not the first pass to write to the camera render textures
             .colorStoreOp = StoreOperationType::Store,
             .depthStoreOp = StoreOperationType::DontCare,
-            .wantsDepth = true
+            .hasColorAttachment = true,
+            .hasDepthAttachment = true
         };
 
         const auto renderTarget = resolveRenderTarget(renderView.camera, renderTargetOptions);

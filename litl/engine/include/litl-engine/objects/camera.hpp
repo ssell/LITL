@@ -315,6 +315,16 @@ namespace litl
         void setClearColor(color const& clearColor) noexcept;
 
         /// <summary>
+        /// Returns whether or not the camera renders out color values.
+        /// </summary>
+        [[nodiscard]] bool getColorEnabled() const noexcept;
+
+        /// <summary>
+        /// Sets if the camera renders out color values.
+        /// </summary>
+        void setColorEnabled(bool enabled) noexcept;
+
+        /// <summary>
         /// Returns whether or not the camera renders out depth values.
         /// </summary>
         [[nodiscard]] bool getDepthEnabled() const noexcept;

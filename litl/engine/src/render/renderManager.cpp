@@ -344,7 +344,7 @@ namespace litl
                 // No active views. Just perform a screen clear.
                 renderer->cmdPipelineBarrier(frameCommandBuffer, PipelineBarrierUndefinedToColor);
                 
-                if (renderer->cmdBeginRender(frameCommandBuffer, BeginRenderCommand{ .color = ColorAttachmentDescriptor {.loadOp = LoadOperationType::Clear } }))
+                if (renderer->cmdBeginRender(frameCommandBuffer, BeginRenderCommand{ .colorAttachment = ColorAttachmentDescriptor { .loadOp = LoadOperationType::Clear } }))
                 {
                     renderer->cmdEndRender(frameCommandBuffer);
                 }

@@ -154,6 +154,107 @@ namespace litl::vulkan
         return vkEndCommandBuffer(commandBuffer->vkCommandBuffer) == VK_SUCCESS;
     }
 
+    [[nodiscard]] std::optional<VkRenderingAttachmentInfo> createCmdBeginRenderColorAttachment(BeginRenderCommand const& command, RendererContext* vulkanContext) noexcept
+    {
+        if (command.colorAttachmentType == RenderAttachmentType::None)
+        {
+            return std::nullopt;
+        }
+
+        const ColorAttachmentDescriptor cmdColorAttachment = command.colorAttachment.value_or({});
+
+        VkRenderingAttachmentInfo colorAttachment{};
+        colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        colorAttachment.imageView = VK_NULL_HANDLE;
+        colorAttachment.imageLayout = toVkImageLayout(ImageLayoutType::Color);
+        colorAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
+        colorAttachment.clearValue = VkClearValue{ .color = toVkClearColorValue(cmdColorAttachment.clearColor) };
+
+        if (command.colorAttachmentType == RenderAttachmentType::Supplied)
+        {
+            TextureResource const* colorTexture = vulkanContext->resources.getTexture(cmdColorAttachment.colorTexture);
+            VkExtent2D textureExtents{ .width = 1u, .height = 1u };
+
+            if (colorTexture == nullptr)
+            {
+                return std::nullopt;
+            }
+
+            colorAttachment.imageView = colorTexture->vkImageView;
+            colorAttachment.loadOp = toVkAttachmentLoadOp(cmdColorAttachment.loadOp);
+            colorAttachment.storeOp = toVkAttachmentStoreOp(cmdColorAttachment.storeOp);
+            vulkanContext->drawInfo.targetTextureSize = VkExtent2D{ .width = colorTexture->descriptor.width, .height = colorTexture->descriptor.height };
+        }
+        else if (command.colorAttachmentType == RenderAttachmentType::Swapchain)
+        {
+            colorAttachment.imageView = vulkanContext->swapChain.vkSwapChainImageViews[vulkanContext->swapChain.swapChainImageIndex];
+            colorAttachment.loadOp = toVkAttachmentLoadOp(cmdColorAttachment.loadOp);
+            colorAttachment.storeOp = toVkAttachmentStoreOp(cmdColorAttachment.storeOp);
+            vulkanContext->drawInfo.targetTextureSize = vulkanContext->swapChain.vkSwapChainExtent;
+        }
+
+
+        return colorAttachment;
+    }
+
+    [[nodiscard]] std::optional<VkRenderingAttachmentInfo> createCmdBeginRenderDepthAttachment(BeginRenderCommand const& command, RendererContext* vulkanContext, bool& hasStencil) noexcept
+    {
+        hasStencil = false;
+        vulkanContext->drawInfo.depthFormat = VK_FORMAT_UNDEFINED;
+        vulkanContext->drawInfo.stencilFormat = VK_FORMAT_UNDEFINED;
+
+        if (command.depthAttachmentType == RenderAttachmentType::None)
+        {
+            return std::nullopt;
+        }
+
+        const DepthAttachmentDescriptor cmdDepthAttachment = command.depthAttachment.value_or({});
+
+        TextureResource const* depthTexture = !cmdDepthAttachment.depthTexture.isValid() ?
+            vulkanContext->resources.getTexture(vulkanContext->getCurrFrameDepthTexture()) :        // No depth texture supplied, use current frame depth texture
+            vulkanContext->resources.getTexture(cmdDepthAttachment.depthTexture);                     // Use provided depth texture.
+
+        if (depthTexture == nullptr)
+        {
+            return std::nullopt;
+        }
+
+        VkRenderingAttachmentInfo depthAttachment{};
+        depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        depthAttachment.imageLayout = toVkImageLayout(ImageLayoutType::DepthStencil);
+        depthAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
+
+        const auto dataFormat = fromVkFormat(depthTexture->vkFormat);
+
+        if (dataFormatHasDepth(dataFormat))
+        {
+            vulkanContext->drawInfo.depthFormat = depthTexture->vkFormat;
+
+            if (dataFormatHasStencil(dataFormat))
+            {
+                vulkanContext->drawInfo.stencilFormat = depthTexture->vkFormat;
+                hasStencil = true;
+            }
+
+            depthAttachment.imageView  = depthTexture->vkImageView;
+            depthAttachment.loadOp     = toVkAttachmentLoadOp(cmdDepthAttachment.loadOp);
+            depthAttachment.storeOp    = toVkAttachmentStoreOp(cmdDepthAttachment.storeOp);
+            depthAttachment.clearValue = VkClearValue{
+                .depthStencil = VkClearDepthStencilValue{
+                    .depth = cmdDepthAttachment.clearDepth,
+                    .stencil = cmdDepthAttachment.clearStencil
+                }
+            };
+
+            if (command.colorAttachmentType == RenderAttachmentType::None)
+            {
+                vulkanContext->drawInfo.targetTextureSize = VkExtent2D{ .width = depthTexture->descriptor.width, .height = depthTexture->descriptor.height };
+            }
+        }
+
+        return depthAttachment;
+    }
+
     bool cmdBeginRender(litl::RendererContext* context, CommandBufferHandle handle, BeginRenderCommand const& command) noexcept
     {
         auto* vulkanContext = unwrap(context);
@@ -165,120 +266,56 @@ namespace litl::vulkan
         }
 
         // ---------------------------------------------------------------------------------
-        // Color Texture Attachment
+        // Get Attachments
         // ---------------------------------------------------------------------------------
 
-        const bool isSwapChain = !command.color.colorTexture.isValid();
+        bool hasStencil{ false };
 
-        VkRenderingAttachmentInfo colorAttachment{};
-        colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-        colorAttachment.imageView = VK_NULL_HANDLE;
-        colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        colorAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
-        colorAttachment.clearValue = VkClearValue{ .color = toVkClearColorValue(command.color.clearColor) };
+        const auto colorAttachment = createCmdBeginRenderColorAttachment(command, vulkanContext);
+        const auto depthAttachment = createCmdBeginRenderDepthAttachment(command, vulkanContext, hasStencil);
 
-        if (isSwapChain)
+        const auto colorAttachmentCount = (colorAttachment.has_value() ? 1u : 0u);
+        const auto* colorAttachmentPtr = (colorAttachment.has_value() ? &colorAttachment.value() : nullptr);
+        const auto* depthAttachmentPtr = (depthAttachment.has_value() ? &depthAttachment.value() : nullptr);
+
+        if ((command.colorAttachmentType != RenderAttachmentType::None) && !colorAttachment.has_value())
         {
-            // Use swapchain color attachment as an override was not provided.
-            colorAttachment.imageView = vulkanContext->swapChain.vkSwapChainImageViews[vulkanContext->swapChain.swapChainImageIndex];
-            colorAttachment.loadOp = toVkAttachmentLoadOp(command.color.loadOp);
-            colorAttachment.storeOp = toVkAttachmentStoreOp(command.color.storeOp);
-            vulkanContext->drawInfo.targetTextureSize = vulkanContext->swapChain.vkSwapChainExtent;
-        }
-        else
-        {
-            // Use a custom color attachment.
-            TextureResource* colorTexture = vulkanContext->resources.getTexture(command.color.colorTexture);
-            VkExtent2D textureExtents{ .width = 1u, .height = 1u };
-            
-            if (colorTexture == nullptr)
-            {
-                logWarning("cmdBeginRender called with a custom color attachment that is null. Render cancelled.");
-                return false;
-            }
-
-            colorAttachment.imageView = colorTexture->vkImageView;
-            colorAttachment.loadOp = toVkAttachmentLoadOp(command.color.loadOp);
-            colorAttachment.storeOp = toVkAttachmentStoreOp(command.color.storeOp);
-            vulkanContext->drawInfo.targetTextureSize = VkExtent2D{ .width = colorTexture->descriptor.width, .height = colorTexture->descriptor.height };
+            logError("Failed to retrieve color attachment for cmdBeginRender.");
+            return false;
         }
 
-        // ---------------------------------------------------------------------------------
-        // Depth-Stencil Texture Attachment
-        // ---------------------------------------------------------------------------------
-
-        VkRenderingAttachmentInfo depthStencilAttachment{};
-        vulkanContext->drawInfo.depthFormat = VK_FORMAT_UNDEFINED;
-        vulkanContext->drawInfo.stencilFormat = VK_FORMAT_UNDEFINED;
-
-        if (command.depth.has_value())
+        if ((command.depthAttachmentType != RenderAttachmentType::None) && !depthAttachment.has_value())
         {
-            TextureResource* depthTexture = !(*command.depth).depthTexture.isValid() ?
-                vulkanContext->resources.getTexture(vulkanContext->getCurrFrameDepthTexture()) :        // No depth texture supplied, use current frame depth texture
-                vulkanContext->resources.getTexture((*command.depth).depthTexture);                     // Use provided depth texture.
-                 
-            if (depthTexture != nullptr)
-            {
-                const auto dataFormat = fromVkFormat(depthTexture->vkFormat);
-
-                if (dataFormatHasDepth(dataFormat))
-                {
-                    vulkanContext->drawInfo.depthFormat = depthTexture->vkFormat;
-
-                    if (dataFormatHasStencil(dataFormat))
-                    {
-                        vulkanContext->drawInfo.stencilFormat = depthTexture->vkFormat;
-                    }
-
-                    depthStencilAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-                    depthStencilAttachment.imageView = depthTexture->vkImageView;
-                    depthStencilAttachment.imageLayout = toVkImageLayout(ImageLayoutType::DepthStencil);
-                    depthStencilAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
-                    depthStencilAttachment.loadOp = toVkAttachmentLoadOp((*command.depth).loadOp);
-                    depthStencilAttachment.storeOp = toVkAttachmentStoreOp((*command.depth).storeOp);
-                    depthStencilAttachment.clearValue = VkClearValue{
-                        .depthStencil = VkClearDepthStencilValue{
-                            .depth = (*command.depth).clearDepth,
-                            .stencil = (*command.depth).clearStencil
-                        }
-                    };
-                }
-            }
-            else
-            {
-                logWarning("Stale depth texture handle passed to cmdBeginRender");
-            }
+            logError("Failed to retrieve depth attachment for cmdBeginRender.");
+            return false;
         }
 
         // ---------------------------------------------------------------------------------
         // vkCmdBeginRendering
         // ---------------------------------------------------------------------------------
 
-        VkRenderingInfo renderingInfo{
+        const VkRenderingInfo renderingInfo{
             .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
             .flags = 0,
-            .renderArea = {     // both command.area.offset and command.area.extents are vectors in normalized texture space on the range of [0, 1]
-                .offset = {
+            .renderArea = VkRect2D {            // both command.area.offset and command.area.extents are vectors in normalized texture space on the range of [0, 1]
+                .offset = VkOffset2D {
                     .x = static_cast<int32_t>(vulkanContext->drawInfo.targetTextureSize.width * command.area.offset.x()),
                     .y = static_cast<int32_t>(vulkanContext->drawInfo.targetTextureSize.height * command.area.offset.y())
                 },
-                .extent = {
-                    .width = static_cast<uint32_t>(vulkanContext->drawInfo.targetTextureSize.width * command.area.extents.x()),
-                    .height = static_cast<uint32_t>(vulkanContext->drawInfo.targetTextureSize.height * command.area.extents.y())
-                }
+                .extent = (command.colorAttachmentType == RenderAttachmentType::Swapchain) ?
+                        vulkanContext->swapChain.vkSwapChainExtent :
+                        VkExtent2D {
+                            .width = static_cast<uint32_t>(vulkanContext->drawInfo.targetTextureSize.width * command.area.extents.x()),
+                            .height = static_cast<uint32_t>(vulkanContext->drawInfo.targetTextureSize.height * command.area.extents.y())
+                        }
             },
             .layerCount = command.layerCount,
-            .viewMask = command.viewMask,           // the graphics pipeline view mask must match this
-            .colorAttachmentCount = 1u,
-            .pColorAttachments = &colorAttachment,
-            .pDepthAttachment = (vulkanContext->drawInfo.depthFormat != VK_FORMAT_UNDEFINED) ? &depthStencilAttachment : nullptr,
-            .pStencilAttachment = (vulkanContext->drawInfo.stencilFormat != VK_FORMAT_UNDEFINED) ? &depthStencilAttachment : nullptr
+            .viewMask = command.viewMask,                       // the graphics pipeline view mask must match this
+            .colorAttachmentCount = colorAttachmentCount,
+            .pColorAttachments = colorAttachmentPtr,
+            .pDepthAttachment = depthAttachmentPtr,
+            .pStencilAttachment = (hasStencil ? depthAttachmentPtr : nullptr)
         };
-
-        if (isSwapChain)
-        {
-            renderingInfo.renderArea.extent = vulkanContext->swapChain.vkSwapChainExtent;
-        }
 
         vkCmdBeginRendering(commandBuffer->vkCommandBuffer, &renderingInfo);
 

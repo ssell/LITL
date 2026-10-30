@@ -85,7 +85,8 @@ namespace litl
             .loadOp = LoadOperationType::Clear,
             .colorStoreOp = StoreOperationType::Store,
             .depthStoreOp = StoreOperationType::DontCare,
-            .wantsDepth = false
+            .hasColorAttachment = true,
+            .hasDepthAttachment = false
         };
 
         const auto renderTarget = resolveRenderTarget(nullptr, renderTargetOptions);
