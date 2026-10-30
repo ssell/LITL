@@ -1,6 +1,7 @@
 #include <format>
 #include <optional>
 #include <variant>
+#include <vector>
 
 #include "litl-core/assert.hpp"
 #include "litl-engine/assets/assetManager.hpp"
@@ -19,6 +20,12 @@ namespace litl
 {
     struct Material::Impl
     {
+        struct GraphicsPipelineRecord
+        {
+            RenderAttachmentFormats formats{};
+            GraphicsPipelineHandle handle{};
+        };
+
         Renderer const* renderer = nullptr;
         ObjectPool* objectPool = nullptr;
         AssetManager* assetManager = nullptr;
@@ -26,7 +33,7 @@ namespace litl
 
         MaterialDescriptor descriptor;
         MaterialProperties properties;
-        GraphicsPipelineHandle graphicsPipelineHandle{};
+        std::vector<GraphicsPipelineRecord> graphicsPipelines;
         ComputePipelineHandle computePipelineHandle{};
         GpuBufferHandle gpuBufferHandle{};
         std::optional<uint64_t> currGraphicsGpuBufferDeviceAddress{};
@@ -231,7 +238,14 @@ namespace litl
                 }
             }
 
-            return createGraphicsPipeline();
+            if (!createGraphicsInternals())
+            {
+                return false;
+            }
+
+            // ... todo mesh/compute ...
+
+            return true;
         }
 
         void retrieveShaderHandlesFromDescriptor() noexcept
@@ -367,10 +381,55 @@ namespace litl
             return true;
         }
 
-        bool createGraphicsPipeline() noexcept
+        bool createGraphicsInternals() noexcept
         {
-            // ---------------------------------------------------------------------------------
-            // --- Standard Graphics Pipeline (vertex + fragment + optional geometry/tessellation)
+            // Initial graphics pipeline targetting the render scene formats.
+            if (!createGraphicsPipeline(renderSceneFormats).isValid())
+            {
+                return false;
+            }
+
+            // Reflect Properties
+            if (!configureGraphicsPropertiesFromReflection())
+            {
+                logWarning("Material '", descriptor.objectInfo.name, "' failed to reflect properties.");
+                return false;
+            }
+
+            // GPU Buffer
+            if (properties.propertyCount() > 0u)
+            {
+                gpuBufferHandle = objectPool->createGpuBuffer(GpuBufferDescriptor{
+                    .objectInfo = ObjectDescriptor {
+                        .name = std::format("Material Property Buffer ({})", descriptor.objectInfo.name),
+                        .lifetime = descriptor.objectInfo.lifetime
+                    },
+                    .type = BufferTypeFlagBits::BufferDeviceAddress,
+                    .memoryUsage = BufferMemoryUsage::PersistentMap,
+                    .bufferStrategy = GpuBufferingStrategy::Frame,
+                    .bytes = properties.totalMemoryRequirements() * 2,
+                    .itemBytes = properties.individualSlotMemoryRequirements(),
+                    .canResize = true
+                    });
+
+                if (!gpuBufferHandle.isValid())
+                {
+                    logWarning("Material '", descriptor.objectInfo.name, "' failed to create properties GPU buffer.");
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        GraphicsPipelineHandle createGraphicsPipeline(RenderAttachmentFormats const& attachmentFormats) noexcept
+        {
+            GraphicsPipelineHandle graphicsPipelineHandle = getGraphicsPipelineHandle(attachmentFormats);
+
+            if (graphicsPipelineHandle.isValid())
+            {
+                return {};
+            }
 
             if (vertexHandle.isValid() && fragmentHandle.isValid())
             {
@@ -403,10 +462,10 @@ namespace litl
                         .entryPoint = descriptor.tessellationEvaluationShader.entryPoint
                     },
                     .renderTargets = RenderTargetFormats {                                      // ... todo expand this functionality ...
-                        .colorAttachments = { renderSceneFormats.color },
+                        .colorAttachments = { attachmentFormats.color },
                         .colorAttachmentCount = 1u,
-                        .depthFormat = renderSceneFormats.depth,
-                        .stencilFormat = dataFormatHasStencil(renderSceneFormats.depth) ? renderSceneFormats.depth : DataFormat::Undefined
+                        .depthFormat = attachmentFormats.depth,
+                        .stencilFormat = dataFormatHasStencil(attachmentFormats.depth) ? attachmentFormats.depth : DataFormat::Undefined
                     },
                     .vertexInput = VertexInputState{},                                          // ... todo expand this functionality ...
                     .inputAssembly = InputAssemblyState{},                                      // ... todo expand this functionality ...
@@ -458,56 +517,29 @@ namespace litl
 
                 graphicsPipelineHandle = renderer->createGraphicsPipeline(graphicsPipelineDescriptor);
 
-                // --- Configure Material Properties
-
-                if (!configureGraphicsPropertiesFromReflection())
+                if (!graphicsPipelineHandle.isValid())
                 {
-                    logWarning("Material '", descriptor.objectInfo.name, "' failed to reflect properties.");
-                    return false;
+                    logWarning("Failed to create graphics pipeline for material '", descriptor.objectInfo.name, "'");
+                    return {};
                 }
 
-                // --- Create the GPU Buffer
+                graphicsPipelines.emplace_back(attachmentFormats, graphicsPipelineHandle);
+            }
 
-                if (properties.propertyCount() > 0u)
+            return graphicsPipelineHandle;
+        }
+
+        GraphicsPipelineHandle getGraphicsPipelineHandle(RenderAttachmentFormats const& attachmentFormats) const noexcept
+        {
+            for (auto& record : graphicsPipelines)
+            {
+                if (record.formats == attachmentFormats)
                 {
-                    gpuBufferHandle = objectPool->createGpuBuffer(GpuBufferDescriptor{
-                        .objectInfo = ObjectDescriptor {
-                            .name = std::format("Material Property Buffer ({})", descriptor.objectInfo.name),
-                            .lifetime = descriptor.objectInfo.lifetime
-                        },
-                        .type = BufferTypeFlagBits::BufferDeviceAddress,
-                        .memoryUsage = BufferMemoryUsage::PersistentMap,
-                        .bufferStrategy = GpuBufferingStrategy::Frame,
-                        .bytes = properties.totalMemoryRequirements() * 2,
-                        .itemBytes = properties.individualSlotMemoryRequirements(),
-                        .canResize = true
-                        });
-
-                    if (!gpuBufferHandle.isValid())
-                    {
-                        logWarning("Material '", descriptor.objectInfo.name, "' failed to create properties GPU buffer.");
-                        return false;
-                    }
+                    return record.handle;
                 }
             }
 
-            // ---------------------------------------------------------------------------------
-            // --- Alternate Graphics Pipeline (mesh + task)
-
-            else if (meshHandle.isValid())      // task handle is optional
-            {
-                // ... todo ...
-            }
-
-            // ---------------------------------------------------------------------------------
-            // --- Compute Pipeline
-
-            if (computeHandle.isValid())
-            {
-                // ... todo ...
-            }
-
-            return (graphicsPipelineHandle.isValid() || computePipelineHandle.isValid());
+            return GraphicsPipelineHandle{};
         }
 
         bool configureGraphicsPropertiesFromReflection() noexcept
@@ -614,7 +646,11 @@ namespace litl
         {
             if (renderer != nullptr)
             {
-                renderer->destroyGraphicsPipeline(graphicsPipelineHandle); 
+                for (auto& graphicsPipeline : graphicsPipelines)
+                {
+                    renderer->destroyGraphicsPipeline(graphicsPipeline.handle);
+                }
+
                 renderer->destroyComputePipeline(computePipelineHandle); 
                 renderer->destroyShaderModule(vertexHandle); 
                 renderer->destroyShaderModule(fragmentHandle); 
@@ -625,7 +661,7 @@ namespace litl
                 renderer->destroyShaderModule(taskHandle); 
                 renderer->destroyShaderModule(computeHandle); 
 
-                graphicsPipelineHandle = {};
+                graphicsPipelines.clear();
                 computePipelineHandle = {};
                 vertexHandle = {};
                 fragmentHandle = {};
@@ -950,9 +986,16 @@ namespace litl
         m_pImpl->properties.toggleTier3DataSeparation(enabled);
     }
 
-    GraphicsPipelineHandle Material::getGraphicsPipelineHandle() const noexcept
+    GraphicsPipelineHandle Material::getGraphicsPipelineHandle(RenderAttachmentFormats const& attachmentFormats, bool createIfMissing) const noexcept
     {
-        return m_pImpl->graphicsPipelineHandle;
+        GraphicsPipelineHandle handle = m_pImpl->getGraphicsPipelineHandle(attachmentFormats);
+
+        if (!handle.isValid() && createIfMissing)
+        {
+            handle = m_pImpl->createGraphicsPipeline(attachmentFormats);
+        }
+
+        return handle;
     }
 
     ComputePipelineHandle Material::getComputePipelineHandle() const noexcept

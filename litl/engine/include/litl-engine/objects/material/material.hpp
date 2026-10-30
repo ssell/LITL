@@ -30,6 +30,7 @@ namespace litl
     class AssetManager;
     struct MaterialAsset;
     struct MaterialAssetShaderDependency;
+    struct RenderAttachmentFormats;
 
     struct VertexInputDescriptor
     {
@@ -132,7 +133,7 @@ namespace litl
         /// <summary>
         /// Retrieves the Graphics Pipeline associated with this material.
         /// </summary>
-        [[nodiscard]] GraphicsPipelineHandle getGraphicsPipelineHandle() const noexcept;
+        [[nodiscard]] GraphicsPipelineHandle getGraphicsPipelineHandle(RenderAttachmentFormats const& attachmentFormats, bool createIfMissing) const noexcept;
 
         /// <summary>
         /// Retrieves the Compute Pipeline associated with this material.

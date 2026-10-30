@@ -13,6 +13,8 @@ namespace litl
     {
         DataFormat color{ DataFormat::Undefined };
         DataFormat depth{ DataFormat::Undefined };
+
+        bool operator==(RenderAttachmentFormats const&) const = default;
     };
 }
 

@@ -16,6 +16,7 @@
 namespace litl
 {
     class ServiceProvider;
+    class RenderManager;
     class Renderer;
     class ObjectPool;
     class Camera;
@@ -31,7 +32,7 @@ namespace litl
         RenderPass() = default;
         virtual ~RenderPass() = default;
 
-        virtual void setup(ServiceProvider& services, Renderer& renderer, ObjectPool& objectPool) noexcept;
+        virtual void setup(ServiceProvider& services, RenderManager& renderManager, ObjectPool& objectPool) noexcept;
         virtual void destroy() noexcept;
         virtual void render(RenderPassContext const& context) noexcept = 0;
 
@@ -78,7 +79,8 @@ namespace litl
         void gatherSourceTexturesIntoScratch(RenderPassContext const& context) noexcept;
         [[nodiscard]] RenderTargetSetup resolveRenderTarget(Camera const* camera, RenderTargetOptions const& options) const noexcept;
 
-        Renderer* m_pRenderer{ nullptr };
+        const RenderManager* m_pRenderManager{ nullptr };
+        const Renderer* m_pRenderer{ nullptr };
         ObjectPool* m_pObjectPool{ nullptr };
         std::vector<RenderPassItem> m_renderPassItems;
         std::vector<RenderViewSources> m_renderViewSourcesScratch;

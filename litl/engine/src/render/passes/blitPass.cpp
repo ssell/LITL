@@ -30,9 +30,9 @@ namespace litl
         };
     }
 
-    void BlitPass::setup(ServiceProvider& services, Renderer& renderer, ObjectPool& objectPool) noexcept
+    void BlitPass::setup(ServiceProvider& services, RenderManager& renderManager, ObjectPool& objectPool) noexcept
     {
-        RenderPass::setup(services, renderer, objectPool);
+        RenderPass::setup(services, renderManager, objectPool);
         m_pAssetManager = services.get<AssetManager>().get();
         m_shaderAssetHandle = m_pAssetManager->getShaderHandle("litl/shaders/blit");
     }

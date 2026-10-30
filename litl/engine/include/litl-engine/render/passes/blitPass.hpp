@@ -19,7 +19,7 @@ namespace litl
     {
     public:
 
-        void setup(ServiceProvider& services, Renderer& renderer, ObjectPool& objectPool) noexcept override;
+        void setup(ServiceProvider& services, RenderManager& renderManager, ObjectPool& objectPool) noexcept override;
         void render(RenderPassContext const& context) noexcept override;
 
     private:

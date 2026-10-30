@@ -99,7 +99,7 @@ namespace litl
         RenderPushConstants pushConstants{};
         RenderAttachmentFormats sceneAttachmentFormats{};
 
-        void setup(ServiceProvider& services) noexcept
+        void setup(RenderManager* self, ServiceProvider& services) noexcept
         {
             startTime = std::chrono::steady_clock::now();
             objectPool = services.get<ObjectPool>();
@@ -163,7 +163,7 @@ namespace litl
             LITL_FATAL_ASSERT_MSG(instanceData.handle.isValid(), "Failed to create Instance Data buffer.");
             LITL_FATAL_ASSERT_MSG(worldMatrices.handle.isValid(), "Failed to create World Matrices buffer.");
 
-            createRenderPasses(services);
+            createRenderPasses(self, services);
             createDefaultTextures();
 
             engineCallbacks->getWindowCallbacks()->registerWindowResizedCallback([this](ServiceProvider& services, Window const& window)
@@ -228,7 +228,7 @@ namespace litl
             }
         }
 
-        void createRenderPasses(ServiceProvider& services) noexcept
+        void createRenderPasses(RenderManager* self, ServiceProvider& services) noexcept
         {
             renderPasses[static_cast<uint32_t>(RenderPassType::ForwardOpaque)] = std::make_unique<ForwardOpaquePass>();
             renderPasses[static_cast<uint32_t>(RenderPassType::Blit)] = std::make_unique<BlitPass>();
@@ -237,7 +237,7 @@ namespace litl
 
             for (auto& renderPass : renderPasses)
             {
-                renderPass->setup(services, *renderer, *objectPool);
+                renderPass->setup(services, *self, *objectPool);
             }
         }
 
@@ -704,7 +704,7 @@ namespace litl
 
     void RenderManager::setup(Authority<Engine> authority, ServiceProvider& services) noexcept
     {
-        m_pImpl->setup(services);
+        m_pImpl->setup(this, services);
     }
 
     void RenderManager::destroy(Authority<Engine> authority) noexcept

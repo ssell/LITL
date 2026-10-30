@@ -2,13 +2,15 @@
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-renderer/renderer.hpp"
 #include "litl-engine/render/renderPass.hpp"
+#include "litl-engine/render/renderManager.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 
 namespace litl
 {
-    void RenderPass::setup(ServiceProvider& services, Renderer& renderer, ObjectPool& objectPool) noexcept
+    void RenderPass::setup(ServiceProvider& services, RenderManager& renderManager, ObjectPool& objectPool) noexcept
     {
-        m_pRenderer = &renderer;
+        m_pRenderManager = &renderManager;
+        m_pRenderer = renderManager.getRenderer();
         m_pObjectPool = &objectPool;
     }
 
@@ -113,7 +115,7 @@ namespace litl
 
     GraphicsPipelineHandle RenderPass::resolveGraphicsPipelineHandle(Material* material) const noexcept
     {
-        return material->getGraphicsPipelineHandle();
+        return material->getGraphicsPipelineHandle(m_pRenderManager->getSceneRenderFormats(), true);
     }
 
     SetViewportAndScissorCommand RenderPass::createSetViewportAndScissorCommand(Camera const* camera, bool applyCameraViewport) const noexcept
