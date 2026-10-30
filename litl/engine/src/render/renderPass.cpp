@@ -19,7 +19,7 @@ namespace litl
 
     }
 
-    bool RenderPass::compileRenderList(std::span<RenderableEntity const> entities) noexcept
+    bool RenderPass::compileRenderList(std::span<RenderableEntity const> entities, bool depthOnly) noexcept
     {
         m_renderPassItems.clear();
 
@@ -53,7 +53,7 @@ namespace litl
                 m_renderPassItems.back().instanceCount = i - m_renderPassItems.back().instanceOffset;
             }
 
-            if (createRenderPassItems(renderableEntity, i, currMeshHandle, currMaterialHandle))
+            if (createRenderPassItems(renderableEntity, i, currMeshHandle, currMaterialHandle, depthOnly))
             {
                 currMeshHandle = renderableEntity.meshRef.handle;
                 currMaterialHandle = renderableEntity.materialRef.handle;
@@ -72,7 +72,7 @@ namespace litl
         return true;
     }
 
-    bool RenderPass::createRenderPassItems(RenderableEntity entity, uint32_t instanceOffset, std::optional<MeshHandle>& currMeshHandle, std::optional<MaterialHandle>& currMaterialHandle) noexcept
+    bool RenderPass::createRenderPassItems(RenderableEntity entity, uint32_t instanceOffset, std::optional<MeshHandle>& currMeshHandle, std::optional<MaterialHandle>& currMaterialHandle, bool depthOnly) noexcept
     {
         auto* mesh = m_pObjectPool->getMesh(entity.meshRef.handle);
 
@@ -98,7 +98,7 @@ namespace litl
         m_renderPassItems.push_back(RenderPassItem{
             .materialHandle = material->getHandle(),
             .material = material,
-            .graphicsPipelineHandle = resolveGraphicsPipelineHandle(material),
+            .graphicsPipelineHandle = resolveGraphicsPipelineHandle(material, depthOnly),
             .meshHandle = entity.meshRef.handle,
             .mesh = mesh,
             .firstVertex = 0u,
@@ -113,9 +113,9 @@ namespace litl
         return true;
     }
 
-    GraphicsPipelineHandle RenderPass::resolveGraphicsPipelineHandle(Material* material) const noexcept
+    GraphicsPipelineHandle RenderPass::resolveGraphicsPipelineHandle(Material* material, bool depthOnly) const noexcept
     {
-        return material->getGraphicsPipelineHandle(m_pRenderManager->getSceneRenderFormats(), true);
+        return material->getGraphicsPipelineHandle((depthOnly ? MaterialVariantType::DepthOnly : MaterialVariantType::Color), m_pRenderManager->getSceneRenderFormats(), true);
     }
 
     SetViewportAndScissorCommand RenderPass::createSetViewportAndScissorCommand(Camera const* camera, bool applyCameraViewport) const noexcept

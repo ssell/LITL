@@ -20,8 +20,9 @@ namespace litl
 {
     struct Material::Impl
     {
-        struct GraphicsPipelineRecord
+        struct MaterialVariant
         {
+            MaterialVariantType type{};
             RenderAttachmentFormats formats{};
             GraphicsPipelineHandle handle{};
         };
@@ -33,7 +34,7 @@ namespace litl
 
         MaterialDescriptor descriptor;
         MaterialProperties properties;
-        std::vector<GraphicsPipelineRecord> graphicsPipelines;
+        std::vector<MaterialVariant> variants;
         ComputePipelineHandle computePipelineHandle{};
         GpuBufferHandle gpuBufferHandle{};
         std::optional<uint64_t> currGraphicsGpuBufferDeviceAddress{};
@@ -384,15 +385,16 @@ namespace litl
         bool createGraphicsInternals() noexcept
         {
             // Initial graphics pipeline targetting the render scene formats.
-            if (!createGraphicsPipeline(renderSceneFormats).isValid())
+            if (!createGraphicsPipelineVariants(renderSceneFormats))
             {
+                logError("Material '", descriptor.objectInfo.name, "' failed create graphics pipeline(s).");
                 return false;
             }
 
             // Reflect Properties
             if (!configureGraphicsPropertiesFromReflection())
             {
-                logWarning("Material '", descriptor.objectInfo.name, "' failed to reflect properties.");
+                logError("Material '", descriptor.objectInfo.name, "' failed to reflect properties.");
                 return false;
             }
 
@@ -422,9 +424,26 @@ namespace litl
             return true;
         }
 
-        GraphicsPipelineHandle createGraphicsPipeline(RenderAttachmentFormats const& attachmentFormats) noexcept
+        [[nodiscard]] bool createGraphicsPipelineVariants(RenderAttachmentFormats const& attachmentFormats) noexcept
         {
-            GraphicsPipelineHandle graphicsPipelineHandle = getGraphicsPipelineHandle(attachmentFormats);
+            if (!createGraphicsPipeline(MaterialVariantType::Color, attachmentFormats).isValid())
+            {
+                logError("Material '", descriptor.objectInfo.name, "' failed to create color graphics pipeline variant.");
+                return false;
+            }
+
+            if (!createGraphicsPipeline(MaterialVariantType::DepthOnly, attachmentFormats).isValid())
+            {
+                logError("Material '", descriptor.objectInfo.name, "' failed to create depth-only graphics pipeline variant.");
+                return false;
+            }
+
+            return true;
+        }
+
+        GraphicsPipelineHandle createGraphicsPipeline(MaterialVariantType type, RenderAttachmentFormats const& attachmentFormats) noexcept
+        {
+            GraphicsPipelineHandle graphicsPipelineHandle = getGraphicsPipelineHandle(type, attachmentFormats);
 
             if (graphicsPipelineHandle.isValid())
             {
@@ -435,65 +454,46 @@ namespace litl
             {
                 // --- Base Graphics Pipeline Descriptor
 
-                GraphicsPipelineDescriptor graphicsPipelineDescriptor{
-                    .vertex = PipelineShaderDescriptor {
-                        .handle = vertexHandle,
-                        .stage = ShaderStage::Vertex,
-                        .entryPoint = descriptor.vertexShader.entryPoint
-                    },
-                    .fragment = PipelineShaderDescriptor {
-                        .handle = fragmentHandle,
-                        .stage = ShaderStage::Fragment,
-                        .entryPoint = descriptor.fragmentShader.entryPoint
-                    },
-                    .geometry = PipelineShaderDescriptor {
-                        .handle = geometryHandle,
-                        .stage = ShaderStage::Geometry,
-                        .entryPoint = descriptor.geometryShader.entryPoint
-                    },
-                    .tessellationControl = PipelineShaderDescriptor {
-                        .handle = tessellationControlHandle,
-                        .stage = ShaderStage::TessellationControl,
-                        .entryPoint = descriptor.tessellationControlShader.entryPoint
-                    },
-                    .tessellationEvaluation = PipelineShaderDescriptor {
-                        .handle = tessellationEvaluationHandle,
-                        .stage = ShaderStage::TessellationEvaluation,
-                        .entryPoint = descriptor.tessellationEvaluationShader.entryPoint
-                    },
-                    .renderTargets = RenderTargetFormats {                                      // ... todo expand this functionality ...
-                        .colorAttachments = { attachmentFormats.color },
-                        .colorAttachmentCount = 1u,
-                        .depthFormat = attachmentFormats.depth,
-                        .stencilFormat = dataFormatHasStencil(attachmentFormats.depth) ? attachmentFormats.depth : DataFormat::Undefined
-                    },
-                    .vertexInput = VertexInputState{},                                          // ... todo expand this functionality ...
-                    .inputAssembly = InputAssemblyState{},                                      // ... todo expand this functionality ...
-                    .tessellation = std::nullopt,                                               // ... todo expand this functionality ...
-                    .rasterization = descriptor.rasterizerState,
-                    .multisample = MultisampleState{},                                          // ... todo expand this functionality ...
-                    .depthStencil = DepthStencilState{
+                GraphicsPipelineDescriptor graphicsPipelineDescriptor{};
+                graphicsPipelineDescriptor.vertex = PipelineShaderDescriptor{ .handle = vertexHandle, .stage = ShaderStage::Vertex, .entryPoint = descriptor.vertexShader.entryPoint };
+                
+                if (type == MaterialVariantType::Color)
+                {
+                    // DepthOnly variant is the vertex shader only. Color adds all other stages.
+                    graphicsPipelineDescriptor.fragment = PipelineShaderDescriptor{ .handle = fragmentHandle, .stage = ShaderStage::Fragment, .entryPoint = descriptor.fragmentShader.entryPoint }; 
+                    graphicsPipelineDescriptor.geometry = PipelineShaderDescriptor{ .handle = geometryHandle, .stage = ShaderStage::Geometry, .entryPoint = descriptor.geometryShader.entryPoint };
+                    graphicsPipelineDescriptor.tessellationControl = PipelineShaderDescriptor{ .handle = tessellationControlHandle, .stage = ShaderStage::TessellationControl, .entryPoint = descriptor.tessellationControlShader.entryPoint }; 
+                    graphicsPipelineDescriptor.tessellationEvaluation = PipelineShaderDescriptor{ .handle = tessellationEvaluationHandle, .stage = ShaderStage::TessellationEvaluation, .entryPoint = descriptor.tessellationEvaluationShader.entryPoint };
+                }
 
-                    },
-                    .colorBlend = ColorBlendState{                                              // ... todo expand this functionality ...
-                        .logicOpEnabled = false,
-                        .colorAttachmentBlendStates = {
-                            ColorBlendAttachmentState {
-                                .attachmentBlendEnabled = false
-                            }
-                        }
-                    },
-                    .dynamicState = DynamicStateMask{},                                         // ... todo expand this functionality ...
-                    .specializationConstants = SpecializationConstants{}                        // ... todo expand this functionality ...
+                graphicsPipelineDescriptor.renderTargets = RenderTargetFormats{                                      // ... todo expand this functionality ...
+                    .colorAttachments = { attachmentFormats.color },
+                    .colorAttachmentCount = 1u,
+                    .depthFormat = attachmentFormats.depth,
+                    .stencilFormat = dataFormatHasStencil(attachmentFormats.depth) ? attachmentFormats.depth : DataFormat::Undefined
                 };
-
-                // --- Vertex Input
+                graphicsPipelineDescriptor.vertexInput = VertexInputState{};                                          // ... todo expand this functionality ...
+                graphicsPipelineDescriptor.inputAssembly = InputAssemblyState{};                                      // ... todo expand this functionality ...
+                graphicsPipelineDescriptor.tessellation = std::nullopt;                                               // ... todo expand this functionality ...
+                graphicsPipelineDescriptor.rasterization = descriptor.rasterizerState;
+                graphicsPipelineDescriptor.multisample = MultisampleState{};                                          // ... todo expand this functionality ...
+                graphicsPipelineDescriptor.depthStencil = DepthStencilState{};
+                graphicsPipelineDescriptor.colorBlend = ColorBlendState{                                              // ... todo expand this functionality ...
+                    .logicOpEnabled = false,
+                    .colorAttachmentBlendStates = {
+                        ColorBlendAttachmentState {
+                            .attachmentBlendEnabled = false
+                        }
+                    }
+                };
+                graphicsPipelineDescriptor.dynamicState = DynamicStateMask{};                                         // ... todo expand this functionality ...
+                graphicsPipelineDescriptor.specializationConstants = SpecializationConstants{};                       // ... todo expand this functionality ...
 
                 graphicsPipelineDescriptor.vertexInput.addBinding(VertexBinding{
                     .binding = 0u,
                     .stride = descriptor.inputDescriptor.vertexSize,
                     .rate = VertexInputRate::PerVertex
-                    });
+                });
 
                 uint32_t runningAttributeOffset = 0u;
 
@@ -523,19 +523,19 @@ namespace litl
                     return {};
                 }
 
-                graphicsPipelines.emplace_back(attachmentFormats, graphicsPipelineHandle);
+                variants.emplace_back(type, attachmentFormats, graphicsPipelineHandle);
             }
 
             return graphicsPipelineHandle;
         }
 
-        GraphicsPipelineHandle getGraphicsPipelineHandle(RenderAttachmentFormats const& attachmentFormats) const noexcept
+        GraphicsPipelineHandle getGraphicsPipelineHandle(MaterialVariantType type, RenderAttachmentFormats const& attachmentFormats) const noexcept
         {
-            for (auto& record : graphicsPipelines)
+            for (auto& variant : variants)
             {
-                if (record.formats == attachmentFormats)
+                if ((variant.type == type) && (variant.formats == attachmentFormats))
                 {
-                    return record.handle;
+                    return variant.handle;
                 }
             }
 
@@ -646,9 +646,9 @@ namespace litl
         {
             if (renderer != nullptr)
             {
-                for (auto& graphicsPipeline : graphicsPipelines)
+                for (auto& variant : variants)
                 {
-                    renderer->destroyGraphicsPipeline(graphicsPipeline.handle);
+                    renderer->destroyGraphicsPipeline(variant.handle);
                 }
 
                 renderer->destroyComputePipeline(computePipelineHandle); 
@@ -661,7 +661,7 @@ namespace litl
                 renderer->destroyShaderModule(taskHandle); 
                 renderer->destroyShaderModule(computeHandle); 
 
-                graphicsPipelines.clear();
+                variants.clear();
                 computePipelineHandle = {};
                 vertexHandle = {};
                 fragmentHandle = {};
@@ -986,13 +986,13 @@ namespace litl
         m_pImpl->properties.toggleTier3DataSeparation(enabled);
     }
 
-    GraphicsPipelineHandle Material::getGraphicsPipelineHandle(RenderAttachmentFormats const& attachmentFormats, bool createIfMissing) const noexcept
+    GraphicsPipelineHandle Material::getGraphicsPipelineHandle(MaterialVariantType type, RenderAttachmentFormats const& attachmentFormats, bool createIfMissing) const noexcept
     {
-        GraphicsPipelineHandle handle = m_pImpl->getGraphicsPipelineHandle(attachmentFormats);
+        GraphicsPipelineHandle handle = m_pImpl->getGraphicsPipelineHandle(type, attachmentFormats);
 
         if (!handle.isValid() && createIfMissing)
         {
-            handle = m_pImpl->createGraphicsPipeline(attachmentFormats);
+            handle = m_pImpl->createGraphicsPipeline(type, attachmentFormats);
         }
 
         return handle;

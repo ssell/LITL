@@ -71,9 +71,9 @@ namespace litl
             bool hasDepthAttachment{ true };
         };
 
-        [[nodiscard]] bool compileRenderList(std::span<RenderableEntity const> entities) noexcept;
-        [[nodiscard]] bool createRenderPassItems(RenderableEntity entity, uint32_t instanceOffset, std::optional<MeshHandle>& currMeshHandle, std::optional<MaterialHandle>& currMaterialHandle) noexcept;
-        [[nodiscard]] virtual GraphicsPipelineHandle resolveGraphicsPipelineHandle(Material* material) const noexcept;
+        [[nodiscard]] bool compileRenderList(std::span<RenderableEntity const> entities, bool depthOnly) noexcept;
+        [[nodiscard]] bool createRenderPassItems(RenderableEntity entity, uint32_t instanceOffset, std::optional<MeshHandle>& currMeshHandle, std::optional<MaterialHandle>& currMaterialHandle, bool depthOnly) noexcept;
+        [[nodiscard]] virtual GraphicsPipelineHandle resolveGraphicsPipelineHandle(Material* material, bool depthOnly) const noexcept;
         [[nodiscard]] SetViewportAndScissorCommand createSetViewportAndScissorCommand(Camera const* camera, bool applyCameraViewport) const noexcept;
         void resolveSourceTextures(Camera const* camera, Texture** colorSource, Texture** depthSource) const noexcept;
         void gatherSourceTexturesIntoScratch(RenderPassContext const& context) noexcept;

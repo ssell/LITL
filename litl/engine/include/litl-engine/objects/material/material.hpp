@@ -1,6 +1,7 @@
 #ifndef LITL_ENGINE_MATERIAL_H__
 #define LITL_ENGINE_MATERIAL_H__
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -31,6 +32,13 @@ namespace litl
     struct MaterialAsset;
     struct MaterialAssetShaderDependency;
     struct RenderAttachmentFormats;
+
+    enum class MaterialVariantType : uint8_t
+    {
+        Color = 0u,
+        DepthOnly = 1u,
+        Count
+    };
 
     struct VertexInputDescriptor
     {
@@ -133,7 +141,7 @@ namespace litl
         /// <summary>
         /// Retrieves the Graphics Pipeline associated with this material.
         /// </summary>
-        [[nodiscard]] GraphicsPipelineHandle getGraphicsPipelineHandle(RenderAttachmentFormats const& attachmentFormats, bool createIfMissing) const noexcept;
+        [[nodiscard]] GraphicsPipelineHandle getGraphicsPipelineHandle(MaterialVariantType type, RenderAttachmentFormats const& attachmentFormats, bool createIfMissing) const noexcept;
 
         /// <summary>
         /// Retrieves the Compute Pipeline associated with this material.

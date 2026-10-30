@@ -22,7 +22,7 @@ namespace litl
         {
             m_pRenderer->cmdSetViewportAndScissor(commandBufferHandle, createSetViewportAndScissorCommand(renderView.camera, false));
 
-            if (compileRenderList(renderView.entities))
+            if (compileRenderList(renderView.entities, false))
             {
                 // --- Render
 
