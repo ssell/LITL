@@ -97,6 +97,7 @@ namespace litl
         InstanceData instanceData{};
         EntityWorldMatrices worldMatrices{};
         RenderPushConstants pushConstants{};
+        RenderAttachmentFormats sceneAttachmentFormats{};
 
         void setup(ServiceProvider& services) noexcept
         {
@@ -169,6 +170,9 @@ namespace litl
                 {
                     return this->onWindowResized(services, window);
                 });
+
+            sceneAttachmentFormats.color = renderer->getSwapchainImageFormat(); // TODO change to DataFormat::RGBA16_SFloat when ready for HDR
+            sceneAttachmentFormats.depth = renderer->getSwapchainDepthFormat();
         }
 
         void destroy() noexcept
@@ -731,5 +735,25 @@ namespace litl
     void RenderManager::onRender(Authority<EngineCallbacks> authority, float dt) noexcept
     {
         m_pImpl->onRender(dt);
+    }
+
+    RenderAttachmentFormats RenderManager::getSceneRenderFormats() const noexcept
+    {
+        return m_pImpl->sceneAttachmentFormats;
+    }
+
+    RenderAttachmentFormats RenderManager::getSwapchainRenderFormats() const noexcept
+    {
+        if (m_pImpl->renderer == nullptr)
+        {
+            return RenderAttachmentFormats{};
+        }
+        else
+        {
+            return RenderAttachmentFormats{
+                .color = m_pImpl->renderer->getSwapchainImageFormat(),
+                .depth = m_pImpl->renderer->getSwapchainDepthFormat()
+            };
+        }
     }
 }

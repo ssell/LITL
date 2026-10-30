@@ -26,7 +26,7 @@ namespace litl
     class MaterialManager;
     class DeferredMaterialCommands;
     class ObjectPool;
-    class Renderer;
+    class RenderManager;
     class AssetManager;
     struct MaterialAsset;
     struct MaterialAssetShaderDependency;
@@ -91,12 +91,12 @@ namespace litl
         /// <summary>
         /// Path when being created all at once.
         /// </summary>
-        [[nodiscard]] bool create(Authority<ObjectPool> auth, MaterialDescriptor const& descriptor, Renderer const& renderer, ObjectPool& objectPool) noexcept;
+        [[nodiscard]] bool create(Authority<ObjectPool> auth, MaterialDescriptor const& descriptor, RenderManager const& renderManager, ObjectPool& objectPool) noexcept;
 
         /// <summary>
         /// Path when being created incrementally by the asset system.
         /// </summary>
-        [[nodiscard]] bool create(Authority<ObjectPool> auth, ObjectDescriptor const& descriptor, Renderer const& renderer, ObjectPool& objectPool, AssetManager& assetManager) noexcept;
+        [[nodiscard]] bool create(Authority<ObjectPool> auth, ObjectDescriptor const& descriptor, RenderManager const& renderManager, ObjectPool& objectPool, AssetManager& assetManager) noexcept;
 
         /// <summary>
         /// 

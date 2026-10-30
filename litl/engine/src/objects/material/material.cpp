@@ -11,6 +11,7 @@
 #include "litl-engine/objects/material/deferredMaterialCommands.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/objects/shader.hpp"
+#include "litl-engine/render/renderManager.hpp"
 #include "litl-renderer/renderer.hpp"
 #include "litl-import/material/intermediate/materialIntermediateData.hpp"
 
@@ -41,17 +42,19 @@ namespace litl
 
         std::vector<MaterialPropertyBlockPointer> dirtyPropertyBlocks;
 
+        RenderAttachmentFormats renderSceneFormats{};
         uint32_t frameInFlightIndex{ 0u }; 
 
         // ---------------------------------------------------------------------------------
         // Creation Initiation
         // ---------------------------------------------------------------------------------
 
-        bool create(MaterialDescriptor const& materialDescriptor, Renderer const& pRenderer, ObjectPool& pObjectPool) noexcept
+        bool create(MaterialDescriptor const& materialDescriptor, RenderManager const& renderManager, ObjectPool& inObjectPool) noexcept
         {
             descriptor = materialDescriptor;
-            renderer = &pRenderer;
-            objectPool = &pObjectPool;
+            renderer = renderManager.getRenderer();
+            objectPool = &inObjectPool;
+            renderSceneFormats = renderManager.getSceneRenderFormats();
 
             if (!createInternalState(true, nullptr, {}))
             {
@@ -63,12 +66,13 @@ namespace litl
             return true;
         }
 
-        bool create(ObjectDescriptor const& objectDescriptor, Renderer const& pRenderer, ObjectPool& pObjectPool, AssetManager& pAssetManager) noexcept
+        bool create(ObjectDescriptor const& objectDescriptor, RenderManager const& renderManager, ObjectPool& inObjectPool, AssetManager& inAssetManager) noexcept
         {
             descriptor.objectInfo = objectDescriptor;
-            renderer = &pRenderer;
-            objectPool = &pObjectPool;
-            assetManager = &pAssetManager;
+            renderer = renderManager.getRenderer();
+            objectPool = &inObjectPool;
+            assetManager = &inAssetManager;
+            renderSceneFormats = renderManager.getSceneRenderFormats();
 
             return true;
         }
@@ -399,10 +403,10 @@ namespace litl
                         .entryPoint = descriptor.tessellationEvaluationShader.entryPoint
                     },
                     .renderTargets = RenderTargetFormats {                                      // ... todo expand this functionality ...
-                        .colorAttachments = { renderer->getSwapchainImageFormat() },
+                        .colorAttachments = { renderSceneFormats.color },
                         .colorAttachmentCount = 1u,
-                        .depthFormat = renderer->getSwapchainDepthFormat(),
-                        .stencilFormat = renderer->getSwapchainDepthFormat()
+                        .depthFormat = renderSceneFormats.depth,
+                        .stencilFormat = dataFormatHasStencil(renderSceneFormats.depth) ? renderSceneFormats.depth : DataFormat::Undefined
                     },
                     .vertexInput = VertexInputState{},                                          // ... todo expand this functionality ...
                     .inputAssembly = InputAssemblyState{},                                      // ... todo expand this functionality ...
@@ -908,14 +912,14 @@ namespace litl
 
     }
 
-    bool Material::create(Authority<ObjectPool> auth, MaterialDescriptor const& descriptor, Renderer const& renderer, ObjectPool& objectPool) noexcept
+    bool Material::create(Authority<ObjectPool> auth, MaterialDescriptor const& descriptor, RenderManager const& renderManager, ObjectPool& objectPool) noexcept
     {
-        return m_pImpl->create(descriptor, renderer, objectPool);
+        return m_pImpl->create(descriptor, renderManager, objectPool);
     }
 
-    bool Material::create(Authority<ObjectPool> auth, ObjectDescriptor const& descriptor, Renderer const& renderer, ObjectPool& objectPool, AssetManager& assetManager) noexcept
+    bool Material::create(Authority<ObjectPool> auth, ObjectDescriptor const& descriptor, RenderManager const& renderManager, ObjectPool& objectPool, AssetManager& assetManager) noexcept
     {
-        return m_pImpl->create(descriptor, renderer, objectPool, assetManager);
+        return m_pImpl->create(descriptor, renderManager, objectPool, assetManager);
     }
     
     void Material::setSelfHandle(Authority<ObjectPool> auth, MaterialHandle selfHandle) noexcept

@@ -264,7 +264,7 @@ namespace litl
     {
         Material material{};
 
-        if (!material.create({}, descriptor, *(m_impl->renderManager->getRenderer()), *this, *m_impl->assetManager))
+        if (!material.create({}, descriptor, *m_impl->renderManager, *this, *m_impl->assetManager))
         {
             logWarning("Failed to reserve Material '", descriptor.name, "'");
             material.destroy({});
@@ -286,7 +286,7 @@ namespace litl
     {
         Material material{};
 
-        if (!material.create({}, descriptor, *(m_impl->renderManager->getRenderer()), *this))
+        if (!material.create({}, descriptor, *m_impl->renderManager, *this))
         {
             logWarning("Failed to create Material '", descriptor.objectInfo.name, "'");
             material.destroy({});
