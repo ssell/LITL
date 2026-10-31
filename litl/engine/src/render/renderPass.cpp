@@ -188,7 +188,7 @@ namespace litl
         return { pipelineBarrierCmds.data(), barrierCount };
     }
 
-    RenderPass::RenderTargetSetup RenderPass::resolveRenderTarget(Camera const* camera, RenderTargetOptions const& options) const noexcept
+    RenderPass::RenderTargetSetup RenderPass::resolveRenderTarget(Camera const* camera, RenderTexture const* renderTexture, RenderTargetOptions const& options) const noexcept
     {
         RenderTargetSetup setup{};
 
@@ -200,33 +200,36 @@ namespace litl
         const bool colorEnabled = options.hasColorAttachment && ((camera == nullptr) || camera->getColorEnabled());         // Note: no camera = color enabled (swapchain)
         const bool depthEnabled = options.hasDepthAttachment && ((camera != nullptr) && camera->getDepthEnabled());         // Note: no camera = depth disabled
 
+        RenderTexture const* resolvedRT{ renderTexture };
         Texture* colorTexture{ nullptr };
         Texture* depthTexture{ nullptr };
 
-        if (camera != nullptr)
+        if ((resolvedRT == nullptr) && (camera != nullptr))
         {
-            if (const RenderTexture* renderTexture = m_pObjectPool->getRenderTexture(camera->getRenderTextureHandle()); renderTexture != nullptr)
+            resolvedRT = m_pObjectPool->getRenderTexture(camera->getRenderTextureHandle());
+        }
+
+        if (resolvedRT != nullptr)
+        {
+            if (colorEnabled)
             {
-                if (colorEnabled)
-                {
-                    colorTexture = m_pObjectPool->getTexture(renderTexture->getColorTextureHandle());
+                colorTexture = m_pObjectPool->getTexture(resolvedRT->getColorTextureHandle());
 
-                    if (colorTexture == nullptr)
-                    {
-                        logWarning("Failed to resolve camera render texture color component.");
-                        return setup;
-                    }
+                if (colorTexture == nullptr)
+                {
+                    logWarning("Failed to resolve render texture color component.");
+                    return setup;
                 }
+            }
 
-                if (depthEnabled)
+            if (depthEnabled)
+            {
+                depthTexture = m_pObjectPool->getTexture(resolvedRT->getDepthTextureHandle());
+
+                if ((depthTexture == nullptr) && options.hasDepthAttachment)
                 {
-                    depthTexture = m_pObjectPool->getTexture(renderTexture->getDepthTextureHandle());
-
-                    if ((depthTexture == nullptr) && options.hasDepthAttachment)
-                    {
-                        logWarning("Failed to resolve camera render texture depth component.");
-                        return setup;
-                    }
+                    logWarning("Failed to resolve render texture depth component.");
+                    return setup;
                 }
             }
         }

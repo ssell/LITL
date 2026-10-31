@@ -21,6 +21,7 @@ namespace litl
     class ObjectPool;
     class Camera;
     class Texture;
+    class RenderTexture;
 
     class RenderPass
     {
@@ -77,7 +78,7 @@ namespace litl
         [[nodiscard]] SetViewportAndScissorCommand createSetViewportAndScissorCommand(Camera const* camera, bool applyCameraViewport) const noexcept;
         void resolveSourceTextures(Camera const* camera, Texture** colorSource, Texture** depthSource) const noexcept;
         void gatherSourceTexturesIntoScratch(RenderPassContext const& context) noexcept;
-        [[nodiscard]] RenderTargetSetup resolveRenderTarget(Camera const* camera, RenderTargetOptions const& options) const noexcept;
+        [[nodiscard]] RenderTargetSetup resolveRenderTarget(Camera const* camera, RenderTexture const* renderTexture, RenderTargetOptions const& options) const noexcept;
 
         const RenderManager* m_pRenderManager{ nullptr };
         const Renderer* m_pRenderer{ nullptr };

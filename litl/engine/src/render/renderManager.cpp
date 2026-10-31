@@ -637,6 +637,7 @@ namespace litl
             {
                 renderViews.push_back(RenderView{
                     .camera = preparedView.camera,
+                    .renderTexture = (preparedView.camera != nullptr) ? objectPool->getRenderTexture(preparedView.camera->getRenderTextureHandle()) : nullptr,
                     .entities = preparedView.entities,
                     .perPassDataAddr = passDataAddr + (preparedView.viewIndex * sizeof(RenderPerPassData)),
                     .instanceDataAddr = instanceDataAddr + (preparedView.instanceBase * sizeof(RenderInstanceData))

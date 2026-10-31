@@ -6,6 +6,7 @@
 
 #include "litl-engine/render/renderableEntity.hpp"
 #include "litl-engine/objects/camera.hpp"
+#include "litl-engine/objects/renderTexture.hpp"
 
 namespace litl
 {
@@ -18,6 +19,7 @@ namespace litl
     struct RenderView
     {
         Camera* camera{ nullptr };
+        RenderTexture* renderTexture{ nullptr };
         std::span<RenderableEntity const> entities{};
         uint64_t perPassDataAddr{ 0ull };
         uint64_t instanceDataAddr{ 0ull };

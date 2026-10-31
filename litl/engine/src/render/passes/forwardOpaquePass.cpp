@@ -114,7 +114,7 @@ namespace litl
             .hasDepthAttachment = true
         };
 
-        const auto renderTarget = resolveRenderTarget(renderView.camera, renderTargetOptions);
+        const auto renderTarget = resolveRenderTarget(renderView.camera, renderView.renderTexture, renderTargetOptions);
 
         if (!renderTarget.valid)
         {

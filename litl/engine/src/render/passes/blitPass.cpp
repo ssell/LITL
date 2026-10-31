@@ -89,7 +89,7 @@ namespace litl
             .hasDepthAttachment = false
         };
 
-        const auto renderTarget = resolveRenderTarget(nullptr, renderTargetOptions);
+        const auto renderTarget = resolveRenderTarget(nullptr, nullptr, renderTargetOptions);
 
         if (!renderTarget.valid)
         {
