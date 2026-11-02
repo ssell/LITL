@@ -15,6 +15,7 @@
 #include "litl-engine/render/passes/blitPass.hpp"
 #include "litl-engine/render/passes/depthOnlyPass.hpp"
 #include "litl-engine/render/passes/forwardOpaquePass.hpp"
+#include "litl-engine/render/passes/forwardTransparentPass.hpp"
 #include "litl-engine/render/passes/renderPassType.hpp"
 #include "litl-engine/engineCallbacks.hpp"
 #include "litl-engine/objects/objectPool.hpp"
@@ -233,6 +234,7 @@ namespace litl
         {
             renderPasses[static_cast<uint32_t>(RenderPassType::DepthOnly)] = std::make_unique<DepthOnlyPass>();
             renderPasses[static_cast<uint32_t>(RenderPassType::ForwardOpaque)] = std::make_unique<ForwardOpaquePass>();
+            renderPasses[static_cast<uint32_t>(RenderPassType::ForwardTransparent)] = std::make_unique<ForwardTransparentPass>();
             renderPasses[static_cast<uint32_t>(RenderPassType::Blit)] = std::make_unique<BlitPass>();
 
             // ... add others (ForwardTransparentPass, ShadowPass, PostProcessPass, DeferredPass, etc) ...
@@ -344,6 +346,7 @@ namespace litl
 
                 getRenderPass(RenderPassType::DepthOnly).render(renderPassContext);
                 getRenderPass(RenderPassType::ForwardOpaque).render(renderPassContext);
+                getRenderPass(RenderPassType::ForwardTransparent).render(renderPassContext);
                 getRenderPass(RenderPassType::Blit).render(renderPassContext);
             }
             else

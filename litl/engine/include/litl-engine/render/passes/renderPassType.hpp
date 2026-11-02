@@ -9,7 +9,8 @@ namespace litl
     {
         DepthOnly = 0u,
         ForwardOpaque = 1u,
-        Blit = 2u,
+        ForwardTransparent = 2u,
+        Blit = 3u,
         Count
     };
 }

@@ -51,7 +51,7 @@ namespace litl
             return false;
         }
 
-        for (auto const& pipelineBarrierCmd : renderTarget.getPipelineBarrierCmds())
+        for (const auto& pipelineBarrierCmd : renderTarget.getPipelineBarrierCmds())
         {
             m_pRenderer->cmdPipelineBarrier(commandBufferHandle, pipelineBarrierCmd);
         }
