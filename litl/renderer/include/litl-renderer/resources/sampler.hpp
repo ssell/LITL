@@ -218,7 +218,7 @@ namespace litl
             .addressV = SamplerAddressMode::ClampEdge,
             .addressW = SamplerAddressMode::ClampEdge,
             .anisotropy = SamplerAnisotropy::Off,
-            .compareOp = CompareOperationType::LessOrEqual
+            .compareOp = CompareOperationType::GreaterOrEqual           // Note not LesserOrEqual as we use reversed z-values.
         },
         // LinearClampBorderWhite
         SamplerDescriptor{

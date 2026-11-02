@@ -29,6 +29,8 @@ namespace litl::vulkan
             !vulkan11Features.shaderDrawParameters ||
             !supportedFeatures.features.geometryShader ||
             !supportedFeatures.features.tessellationShader ||
+            !supportedFeatures.features.depthClamp ||
+            !supportedFeatures.features.depthBiasClamp ||
             !supportedFeatures.features.samplerAnisotropy ||
             !supportedFeatures.features.shaderSampledImageArrayDynamicIndexing || 
             !supportedFeatures.features.shaderInt64 ||
@@ -89,6 +91,8 @@ namespace litl::vulkan
             .features = VkPhysicalDeviceFeatures {
                 .geometryShader = VK_TRUE,                                  // Enables geometry shader support.
                 .tessellationShader = VK_TRUE,                              // Enables tessellation shader suport.
+                .depthClamp = VK_TRUE,                                      // Controls if primitives are clipped or clamped to the near/far planes. Used in shadow maps.
+                .depthBiasClamp = VK_TRUE,                                  // Enables bias for depth clamping. Used in shadow maps.
                 .samplerAnisotropy = VK_TRUE,                               // Enables the use of anisotropic filtering in samplers.
                 .textureCompressionBC = VK_TRUE,                            // Enable Block Compression (BC) texture formats. We make use of BC4, BC5, BC6H, and BC7.
                 .shaderSampledImageArrayDynamicIndexing = VK_TRUE,          // Enable sampling of dynamic image arrays (like our global texture array).
