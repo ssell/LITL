@@ -478,19 +478,7 @@ namespace litl
                 graphicsPipelineDescriptor.rasterization = descriptor.rasterizerState;
                 graphicsPipelineDescriptor.multisample = MultisampleState{};                                          // ... todo expand this functionality ...
                 graphicsPipelineDescriptor.depthStencil = DepthStencilState{};
-
-                if (attachmentFormats.color != DataFormat::Undefined)
-                {
-                    graphicsPipelineDescriptor.colorBlend = ColorBlendState{
-                        .logicOpEnabled = false,
-                        .colorAttachmentBlendStates = {
-                            ColorBlendAttachmentState {
-                                .attachmentBlendEnabled = false
-                            }
-                        }
-                    };
-                }
-
+                graphicsPipelineDescriptor.colorBlend = descriptor.blendState;
                 graphicsPipelineDescriptor.dynamicState = DynamicStateMask{};                                         // ... todo expand this functionality ...
                 graphicsPipelineDescriptor.specializationConstants = SpecializationConstants{};                       // ... todo expand this functionality ...
 

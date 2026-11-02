@@ -37,6 +37,7 @@ namespace litl
     {
         Color = 0u,
         DepthOnly = 1u,
+        Blended = 2u,
         Count
     };
 
@@ -71,6 +72,7 @@ namespace litl
     {
         ObjectDescriptor objectInfo{};
         RasterizationState rasterizerState{};
+        ColorBlendState blendState{ ColorBlendState::noBlend() };
         VertexInputDescriptor inputDescriptor{};
         ShaderResourceDescriptor vertexShader{};
         ShaderResourceDescriptor fragmentShader{};

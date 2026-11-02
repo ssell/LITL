@@ -410,6 +410,14 @@ namespace litl
         /// An array of four values used as the R, G, B, and A components of the blend constant that are used in blending, depending on the blend factor.
         /// </summary>
         std::array<float, 4> blendConstants;
+
+        static constexpr ColorBlendState noBlend() noexcept
+        {
+            return ColorBlendState{
+                .logicOpEnabled = false,
+                .colorAttachmentBlendStates = { ColorBlendAttachmentState { .attachmentBlendEnabled = false  } }
+            };
+        }
     };
 
     /// <summary>
