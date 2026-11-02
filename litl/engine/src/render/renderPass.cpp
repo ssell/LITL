@@ -1,3 +1,5 @@
+#include <optional>
+
 #include "litl-core/assert.hpp"
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-renderer/renderer.hpp"
@@ -274,5 +276,80 @@ namespace litl
         setup.valid = true;
 
         return setup;
+    }
+
+    void RenderPass::drawRenderList(CommandBufferHandle commandBufferHandle, RenderPushConstants pushConstants, DrawListOptions const& options) noexcept
+    {
+        GraphicsPipelineHandle boundPipelineHandle{};
+        MeshHandle boundMeshHandle{};
+        std::optional<uint64_t> pushedMaterialPropertiesAddr{ std::nullopt };
+
+        for (const auto& renderPassItem : m_renderPassItems)
+        {
+            // --- Validate
+
+            if (!renderPassItem.graphicsPipelineHandle.isValid() ||
+                renderPassItem.vertexCount == 0u ||
+                renderPassItem.indexCount == 0u ||
+                renderPassItem.mesh == nullptr ||
+                renderPassItem.material == nullptr)
+            {
+                continue;
+            }
+
+            // --- Resolve Material Properties
+
+            uint64_t materialPropertiesAddr{ 0ull };
+
+            if (options.requiresMaterialProperties)
+            {
+                if ((renderPassItem.material != nullptr) && !renderPassItem.material->ready())
+                {
+                    // This material has properties, but the property buffer is not yet ready. Likely a material created mid-frame. Skip rendering it for now.
+                    continue;
+                }
+
+                materialPropertiesAddr = renderPassItem.material->getGraphicsBufferDeviceAddress().value_or(0ull);
+            }
+
+            // --- Resolve Mesh Buffers
+
+            GpuBuffer* vertexBuffer = (renderPassItem.meshHandle != boundMeshHandle) ? m_pObjectPool->getGpuBuffer(renderPassItem.mesh->getVertexBuffer()) : nullptr;
+            GpuBuffer* indexBuffer = (renderPassItem.meshHandle != boundMeshHandle) ? m_pObjectPool->getGpuBuffer(renderPassItem.mesh->getIndexBuffer()) : nullptr;
+
+            if ((renderPassItem.meshHandle != boundMeshHandle) && ((vertexBuffer == nullptr) || (indexBuffer == nullptr)))
+            {
+                // This may be an asset that is still in the process of being loaded in.
+                continue;
+            }
+
+            // --- Bind
+
+            if (renderPassItem.graphicsPipelineHandle != boundPipelineHandle)
+            {
+                m_pRenderer->cmdBindGraphicsPipeline(commandBufferHandle, renderPassItem.graphicsPipelineHandle);
+                boundPipelineHandle = renderPassItem.graphicsPipelineHandle;
+            }
+
+            // Push constants survive pipeline binds because every pipeline layout shares the identical fixed push constant range ({All, 0, 128}). 
+            // If that ever changes, this must also re-push on pipeline change.
+            if (pushedMaterialPropertiesAddr != materialPropertiesAddr)
+            {
+                pushConstants.materialPropertiesAddr = materialPropertiesAddr;
+                m_pRenderer->cmdPushConstants(commandBufferHandle, ShaderStage::All, generic_as_byte_span(&pushConstants, sizeof(RenderPushConstants)));
+                pushedMaterialPropertiesAddr = materialPropertiesAddr;
+            }
+
+            if (renderPassItem.meshHandle != boundMeshHandle)
+            {
+                m_pRenderer->cmdBindVertexBuffer(commandBufferHandle, vertexBuffer->getBufferHandle(), 0ull, 0u);
+                m_pRenderer->cmdBindIndexBuffer(commandBufferHandle, indexBuffer->getBufferHandle(), IndexType::Uint32);        // todo support other index sizes
+                boundMeshHandle = renderPassItem.meshHandle;
+            }
+
+            // --- Instances Draw
+
+            m_pRenderer->cmdDrawIndexed(commandBufferHandle, renderPassItem.indexCount, renderPassItem.instanceCount, renderPassItem.firstIndex, 0, renderPassItem.instanceOffset);
+        }
     }
 }

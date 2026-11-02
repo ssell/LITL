@@ -66,6 +66,18 @@ namespace litl
         DataFormat depthFormat{ DataFormat::Undefined };
 
         /// <summary>
+        /// Should the color texture be registered in the global texture table?
+        /// </summary>
+        bool colorComponentInTextureTable{ true };
+
+        /// <summary>
+        /// Should the depth texture be registered in the global texture table?
+        /// This is false by default as the global texture table is an array of float4 values which a standard depth format can be sampled from.
+        /// But alternative depth formats (such as D32_SFloat used by DepthOnly cameras) can be used in the texture table.
+        /// </summary>
+        bool depthComponentInTextureTable{ false };
+
+        /// <summary>
         /// Is the color component of the render texture enabled?
         /// </summary>
         bool colorComponent{ true };

@@ -1,3 +1,4 @@
+#include "litl-core/math/common.hpp"
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/objects/objectPool.hpp"
@@ -12,17 +13,38 @@ namespace litl
     {
         struct BlitPushConstants
         {
-            uint32_t sourceTextureIndex{ 0u };
+            enum class Mode : uint32_t
+            {
+                Color = 0u,
+                DepthFinite = 1u,
+                DepthInfinite = 2u,
+                DepthOrthographic = 3u
+            };
 
-            [[nodiscard]] static BlitPushConstants create(Texture* source) noexcept
+            uint32_t sourceTextureIndex{ 0u };
+            uint32_t mode{ static_cast<uint32_t>(Mode::Color) };
+            float zNear{ 0.0f };
+            float zFar{ 0.0f };
+
+            [[nodiscard]] static BlitPushConstants create(RenderView const& view, Texture* color, Texture* depth) noexcept
             {
                 BlitPushConstants pushConstants{};
 
-                if (source != nullptr)
+                if (color != nullptr)
                 {
-                    pushConstants.sourceTextureIndex = packTextureSlotSamplerIndex(
-                        source->getTextureTableIndex(), 
-                        static_cast<uint32_t>(SamplerPredefines::LinearClampNoMip));
+                    pushConstants.sourceTextureIndex = packTextureSlotSamplerIndex(color->getTextureTableIndex(), static_cast<uint32_t>(SamplerPredefines::LinearClampNoMip));
+                    pushConstants.mode = static_cast<uint32_t>(Mode::Color);
+                }
+                else if (depth != nullptr)
+                {
+                    pushConstants.sourceTextureIndex = packTextureSlotSamplerIndex(depth->getTextureTableIndex(), static_cast<uint32_t>(SamplerPredefines::LinearClampNoMip));
+                    pushConstants.mode = static_cast<uint32_t>(Mode::DepthInfinite);
+                }
+
+                if (view.camera != nullptr)
+                {
+                    pushConstants.zNear = max(view.camera->getNear(), Traits<float>::epsilon);
+                    pushConstants.zFar = view.camera->getFar();
                 }
 
                 return pushConstants;
@@ -50,7 +72,12 @@ namespace litl
             {
                 m_pRenderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierCommand::copyWithTexture(PipelineBarrierColorToShaderRead, renderViewSource.color->getTextureResourceHandle()));
             }
+            else if (renderViewSource.depth != nullptr)
+            {
+                m_pRenderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierCommand::copyWithTexture(PipelineBarrierDepthToShaderRead, renderViewSource.depth->getTextureResourceHandle()));
+            }
         }
+
         // ---------------------------------------------------------------------------------
         // Barrier on swapchain and then blit each view's source RT onto it
 
@@ -63,15 +90,17 @@ namespace litl
                     const RenderView& renderView = context.renderViews[i];
                     const RenderViewSources& renderViewSources = m_renderViewSourcesScratch[i];
 
-                    if (renderViewSources.color != nullptr)
+                    if ((renderViewSources.color == nullptr) && (renderViewSources.depth == nullptr))
                     {
-                        const auto pushConstants = BlitPushConstants::create(renderViewSources.color);
-
-                        m_pRenderer->cmdSetViewportAndScissor(context.commandBufferHandle, createSetViewportAndScissorCommand(renderView.camera, true));
-                        m_pRenderer->cmdBindGraphicsPipeline(context.commandBufferHandle, m_graphicsPipelineHandle);
-                        m_pRenderer->cmdPushConstants(context.commandBufferHandle, ShaderStage::All, generic_as_byte_span(&pushConstants, sizeof(BlitPushConstants)));
-                        m_pRenderer->cmdDraw(context.commandBufferHandle, 3u, 1u, 0u, 0u);
+                        continue;
                     }
+
+                    const BlitPushConstants pushConstants = BlitPushConstants::create(renderView, renderViewSources.color, renderViewSources.depth);
+
+                    m_pRenderer->cmdSetViewportAndScissor(context.commandBufferHandle, createSetViewportAndScissorCommand(renderView.camera, true));
+                    m_pRenderer->cmdBindGraphicsPipeline(context.commandBufferHandle, m_graphicsPipelineHandle);
+                    m_pRenderer->cmdPushConstants(context.commandBufferHandle, ShaderStage::All, generic_as_byte_span(&pushConstants, sizeof(BlitPushConstants)));
+                    m_pRenderer->cmdDraw(context.commandBufferHandle, 3u, 1u, 0u, 0u);
                 }
             }
 

@@ -75,7 +75,7 @@ namespace litl
                 .textureInfo = TextureResourceDescriptor {
                     .format = (m_descriptor.colorFormat != DataFormat::Undefined) ? m_descriptor.colorFormat : renderFormats.color,
                     .usage = TextureUsageFlagBits::ColorAttachment | TextureUsageFlagBits::Sampled,
-                    .residesInTextureTable = true
+                    .residesInTextureTable = m_descriptor.colorComponentInTextureTable
                 }
             };
 
@@ -97,7 +97,8 @@ namespace litl
                 },
                 .textureInfo = TextureResourceDescriptor {
                     .format = (m_descriptor.depthFormat != DataFormat::Undefined) ? m_descriptor.depthFormat : renderFormats.depth,
-                    .usage = TextureUsageFlagBits::DepthStencilAttachment | TextureUsageFlagBits::Sampled
+                    .usage = TextureUsageFlagBits::DepthStencilAttachment | TextureUsageFlagBits::Sampled,
+                    .residesInTextureTable = m_descriptor.depthComponentInTextureTable
                 }
             };
 

@@ -192,7 +192,7 @@ namespace litl::vulkan
 
             // Depth
         case DataFormat::D32_SFloat:
-            return VkFormat::VK_FORMAT_R32G32_SFLOAT;
+            return VkFormat::VK_FORMAT_D32_SFLOAT;
 
         case DataFormat::D24_UNorm_S8_UInt:
             return VkFormat::VK_FORMAT_D24_UNORM_S8_UINT;

@@ -8,15 +8,63 @@ namespace litl
     {
         for (const RenderView& renderView : context.renderViews)
         {
-            if (renderView.type == RenderViewType::Shadow)
+            if (renderView.type == RenderViewType::DepthOnly)
             {
-                // ... todo ...
+                render(context.commandBufferHandle, renderView, context.pushConstants);
             }
         }
     }
 
-    GraphicsPipelineHandle DepthOnlyPass::resolveGraphicsPipelineHandle(Material* material) const
+    void DepthOnlyPass::render(CommandBufferHandle commandBufferHandle, RenderView const& renderView, RenderPushConstants viewPushConstants) noexcept
     {
-        return material->getGraphicsPipelineHandle(MaterialVariantType::DepthOnly, m_pRenderManager->getSceneRenderFormats(), true);
+        viewPushConstants.perPassDataAddr = renderView.perPassDataAddr;
+        viewPushConstants.instanceDataAddr = renderView.instanceDataAddr;
+
+        if (barrierAndBeginRender(commandBufferHandle, renderView))
+        {
+            m_pRenderer->cmdSetViewportAndScissor(commandBufferHandle, createSetViewportAndScissorCommand(renderView.camera, false));
+
+            if (compileRenderList(renderView.entities))
+            {
+                drawRenderList(commandBufferHandle, viewPushConstants, DrawListOptions{ .requiresMaterialProperties = false });
+            }
+
+            m_pRenderer->cmdEndRender(commandBufferHandle);
+        }
+    }
+
+    bool DepthOnlyPass::barrierAndBeginRender(CommandBufferHandle commandBufferHandle, RenderView const& renderView) noexcept
+    {
+        const RenderTargetOptions renderTargetOptions{
+            .loadOp = LoadOperationType::Clear,
+            .colorStoreOp = StoreOperationType::DontCare,
+            .depthStoreOp = StoreOperationType::Store,
+            .hasColorAttachment = false,
+            .hasDepthAttachment = true
+        };
+
+        const auto renderTarget = resolveRenderTarget(renderView.camera, renderView.renderTexture, renderTargetOptions);
+
+        if (!renderTarget.valid)
+        {
+            return false;
+        }
+
+        for (const auto& pipelineBarrierCmd : renderTarget.getPipelineBarrierCmds())
+        {
+            m_pRenderer->cmdPipelineBarrier(commandBufferHandle, pipelineBarrierCmd);
+        }
+
+        return m_pRenderer->cmdBeginRender(commandBufferHandle, renderTarget.beginRenderCmd);
+    }
+
+    GraphicsPipelineHandle DepthOnlyPass::resolveGraphicsPipelineHandle(Material* material) const noexcept
+    {
+        constexpr RenderAttachmentFormats formats{
+            .color = DataFormat::Undefined,
+            .depth = DataFormat::D32_SFloat
+        };
+
+        return material->getGraphicsPipelineHandle(MaterialVariantType::DepthOnly, formats, true);
     }
 }

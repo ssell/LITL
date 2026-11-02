@@ -13,7 +13,8 @@ namespace litl
     enum class RenderViewType : uint8_t
     {
         Camera = 0u,
-        Shadow = 1u
+        DepthOnly = 1u,
+        Shadow = 2u
     };
 
     struct RenderView
@@ -24,6 +25,26 @@ namespace litl
         uint64_t perPassDataAddr{ 0ull };
         uint64_t instanceDataAddr{ 0ull };
         RenderViewType type{ RenderViewType::Camera };
+
+        [[nodiscard]] static RenderViewType resolveType(Camera* camera) noexcept
+        {
+            if (camera != nullptr)
+            {
+                switch (camera->getCameraType())
+                {
+                case CameraType::DepthOnly:
+                    return RenderViewType::DepthOnly;
+
+                case CameraType::Standard:
+                default:
+                    return RenderViewType::Camera;
+                }
+            }
+            else
+            {
+                return RenderViewType::Shadow;
+            }
+        }
     };
 }
 

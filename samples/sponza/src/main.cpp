@@ -111,8 +111,10 @@ namespace litl::samples
 
         const auto altCameraHandle = objectPool->createCamera(CameraDescriptor{
             .objectInfo = {.name = "AltCamera"},
-            .viewport = VewportDescriptor{.offset{ 0.75f, 0.0f }, .extents{ 0.25f, 0.25f }},
+            .type = CameraType::DepthOnly,
+            .viewport = ViewportDescriptor{.offset{ 0.75f, 0.0f }, .extents{ 0.25f, 0.25f }},
             .clearColor = color{ 0.015f, 0.25f, 0.025f },
+            .zFar = 30.0f,
             .priority = static_cast<uint32_t>(CameraPriority::High)         // High priority so it is drawn _after_ the main camera and so is drawn ontop of it.
         });
 
@@ -120,7 +122,7 @@ namespace litl::samples
 
         if (altCamera != nullptr)
         {
-            altCamera->setWorldPosition(vec3(-10.0f, 1.5f, 0.0f));
+            altCamera->setWorldPosition(vec3(0.0f, 1.5f, 0.0f));
             altCamera->lookAt(vec3(5.0f, 1.5f, 0.0f), vec3::up());
         }
     }

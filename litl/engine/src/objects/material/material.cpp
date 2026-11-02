@@ -447,7 +447,7 @@ namespace litl
 
             if (graphicsPipelineHandle.isValid())
             {
-                return {};
+                return graphicsPipelineHandle;
             }
 
             if (vertexHandle.isValid() && fragmentHandle.isValid())
@@ -468,7 +468,7 @@ namespace litl
 
                 graphicsPipelineDescriptor.renderTargets = RenderTargetFormats{                                      // ... todo expand this functionality ...
                     .colorAttachments = { attachmentFormats.color },
-                    .colorAttachmentCount = 1u,
+                    .colorAttachmentCount = (attachmentFormats.color != DataFormat::Undefined) ? 1u : 0u,
                     .depthFormat = attachmentFormats.depth,
                     .stencilFormat = dataFormatHasStencil(attachmentFormats.depth) ? attachmentFormats.depth : DataFormat::Undefined
                 };
@@ -478,14 +478,19 @@ namespace litl
                 graphicsPipelineDescriptor.rasterization = descriptor.rasterizerState;
                 graphicsPipelineDescriptor.multisample = MultisampleState{};                                          // ... todo expand this functionality ...
                 graphicsPipelineDescriptor.depthStencil = DepthStencilState{};
-                graphicsPipelineDescriptor.colorBlend = ColorBlendState{                                              // ... todo expand this functionality ...
-                    .logicOpEnabled = false,
-                    .colorAttachmentBlendStates = {
-                        ColorBlendAttachmentState {
-                            .attachmentBlendEnabled = false
+
+                if (attachmentFormats.color != DataFormat::Undefined)
+                {
+                    graphicsPipelineDescriptor.colorBlend = ColorBlendState{
+                        .logicOpEnabled = false,
+                        .colorAttachmentBlendStates = {
+                            ColorBlendAttachmentState {
+                                .attachmentBlendEnabled = false
+                            }
                         }
-                    }
-                };
+                    };
+                }
+
                 graphicsPipelineDescriptor.dynamicState = DynamicStateMask{};                                         // ... todo expand this functionality ...
                 graphicsPipelineDescriptor.specializationConstants = SpecializationConstants{};                       // ... todo expand this functionality ...
 

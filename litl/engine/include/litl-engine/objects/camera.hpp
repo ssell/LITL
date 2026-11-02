@@ -35,6 +35,12 @@ namespace litl
         Perspective = 0u,
         Orthographic = 1u
     };
+    
+    enum class CameraType : uint8_t
+    {
+        Standard = 0u,
+        DepthOnly = 1u
+    };
 
     /// <summary>
     /// Series of fields related to configuring a perspective projection.
@@ -85,7 +91,7 @@ namespace litl
     /// Defines the screen-space viewport of the camera. 
     /// All values are in normalized screen-space and stretches from the origin at the upper-left corner (0,0) to the lower-right corner (1,1).
     /// </summary>
-    struct VewportDescriptor
+    struct ViewportDescriptor
     {
         /// <summary>
         /// Origin of the camera viewport on the screen in normalized space where (0,0) is the upper-left corner and (1,1) is the lower-right.
@@ -101,6 +107,11 @@ namespace litl
     struct CameraDescriptor
     {
         ObjectDescriptor objectInfo{};
+
+        /// <summary>
+        /// 
+        /// </summary>
+        CameraType type{ CameraType::Standard };
 
         /// <summary>
         /// The projection type that the camera is using.
@@ -120,7 +131,7 @@ namespace litl
         /// <summary>
         /// Camera viewport on the screen.
         /// </summary>
-        VewportDescriptor viewport{};
+        ViewportDescriptor viewport{};
 
         /// <summary>
         /// The color the render target is set to at the start of each frame.
@@ -136,11 +147,6 @@ namespace litl
         /// The far clip-plane of the frustum in world units.
         /// </summary>
         float zFar = 1000.0f;
-
-        /// <summary>
-        /// Does this camera render out to a color texture?
-        /// </summary>
-        bool colorEnabled{ true };
 
         /// <summary>
         /// Does this camera render out to a depth texture?
@@ -320,19 +326,9 @@ namespace litl
         [[nodiscard]] bool getColorEnabled() const noexcept;
 
         /// <summary>
-        /// Sets if the camera renders out color values.
-        /// </summary>
-        void setColorEnabled(bool enabled) noexcept;
-
-        /// <summary>
         /// Returns whether or not the camera renders out depth values.
         /// </summary>
         [[nodiscard]] bool getDepthEnabled() const noexcept;
-
-        /// <summary>
-        /// Sets if the camera renders out depth values.
-        /// </summary>
-        void setDepthEnabled(bool enabled) noexcept;
 
         /// <summary>
         /// Retrieves the render texture that the camera is rendering to.
@@ -374,6 +370,14 @@ namespace litl
         /// Retrieves the camera priority level. Higher values are drawn last so that they are drawn over earlier/lower priority cameras.
         /// </summary>
         [[nodiscard]] uint32_t getCameraPriority() const noexcept;
+
+        /// <summary>
+        /// Retrieves the type of camera this was created as.
+        /// </summary>
+        [[nodiscard]] CameraType getCameraType() const noexcept;
+
+        [[nodiscard]] float getNear() const noexcept;
+        [[nodiscard]] float getFar() const noexcept;
 
     private:
 

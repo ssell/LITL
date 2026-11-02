@@ -33,14 +33,29 @@ namespace litl
         if (!m_descriptor.renderTexture.isValid())
         {
             // No render texture was assigned. Create one that tracks the swapchain.
-            const RenderTextureDescriptor rtDescriptor{
+            RenderTextureDescriptor rtDescriptor{
                 .objectInfo = ObjectDescriptor {
                     .name = std::format("{}_RT", m_descriptor.objectInfo.name)
                 },
                 .sizePolicy = RenderTextureSizePolicy::SwapchainRelative,
-                .colorComponent = m_descriptor.colorEnabled,
-                .depthComponent = m_descriptor.depthEnabled
             };
+
+            if (m_descriptor.type == CameraType::Standard)
+            {
+                rtDescriptor.colorComponent = getColorEnabled();
+                rtDescriptor.depthComponent = getDepthEnabled();
+            }
+            else if (m_descriptor.type == CameraType::DepthOnly)
+            {
+                // Note that for DepthOnly we use D32_SFloat and not R32_SFloat.
+                // The DepthOnly variant of the graphics pipelines are vertex shaders ONLY, with no fragment shader.
+                // If we use R32_SFloat then it would force a fragment stage on every draw. 
+                // Additionally shadow comparisons, such as SampleCmp and SamplerComparisonState, work on depth formats.
+                rtDescriptor.colorComponent = false;
+                rtDescriptor.depthComponent = true;
+                rtDescriptor.depthFormat = DataFormat::D32_SFloat;
+                rtDescriptor.depthComponentInTextureTable = true;
+            }
 
             const RenderTextureHandle rtHandle = objectPool.createRenderTexture(rtDescriptor);
 
@@ -232,22 +247,12 @@ namespace litl
 
     bool Camera::getColorEnabled() const noexcept
     {
-        return m_descriptor.colorEnabled;
-    }
-
-    void Camera::setColorEnabled(bool enabled) noexcept
-    {
-        m_descriptor.colorEnabled = enabled;
+        return m_descriptor.type == CameraType::Standard;
     }
 
     bool Camera::getDepthEnabled() const noexcept
     {
-        return m_descriptor.depthEnabled;
-    }
-
-    void Camera::setDepthEnabled(bool enabled) noexcept
-    {
-        m_descriptor.depthEnabled = enabled;
+        return (m_descriptor.type == CameraType::DepthOnly) || m_descriptor.depthEnabled;
     }
 
     RenderTextureHandle Camera::getRenderTextureHandle() const noexcept
@@ -289,4 +294,20 @@ namespace litl
     {
         return m_descriptor.priority;
     }
+
+    CameraType Camera::getCameraType() const noexcept
+    {
+        return m_descriptor.type;
+    }
+
+    float Camera::getNear() const noexcept
+    {
+        return m_descriptor.zNear;
+    }
+
+    float Camera::getFar() const noexcept
+    {
+        return m_descriptor.zFar;
+    }
+
 }

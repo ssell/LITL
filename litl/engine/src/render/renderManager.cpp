@@ -640,7 +640,8 @@ namespace litl
                     .renderTexture = (preparedView.camera != nullptr) ? objectPool->getRenderTexture(preparedView.camera->getRenderTextureHandle()) : nullptr,
                     .entities = preparedView.entities,
                     .perPassDataAddr = passDataAddr + (preparedView.viewIndex * sizeof(RenderPerPassData)),
-                    .instanceDataAddr = instanceDataAddr + (preparedView.instanceBase * sizeof(RenderInstanceData))
+                    .instanceDataAddr = instanceDataAddr + (preparedView.instanceBase * sizeof(RenderInstanceData)),
+                    .type = RenderView::resolveType(preparedView.camera)
                 });
             }
         }

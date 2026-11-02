@@ -13,7 +13,9 @@ namespace litl
 
     protected:
 
-        [[nodiscard]] GraphicsPipelineHandle resolveGraphicsPipelineHandle(Material* material) const override;
+        void render(CommandBufferHandle commandBufgferHandle, RenderView const& renderView, RenderPushConstants viewPushConstants) noexcept;
+        [[nodiscard]] bool barrierAndBeginRender(CommandBufferHandle commandBufferHandle, RenderView const& renderView) noexcept;
+        [[nodiscard]] GraphicsPipelineHandle resolveGraphicsPipelineHandle(Material* material) const noexcept override;
     };
 }
 
