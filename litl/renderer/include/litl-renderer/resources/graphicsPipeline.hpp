@@ -455,7 +455,7 @@ namespace litl
         RasterizationState rasterization;
         MultisampleState multisample;
         DepthStencilState depthStencil;
-        ColorBlendState colorBlend;
+        ColorBlendState colorBlend{ ColorBlendState::noBlend() };
         DynamicStateMask dynamicState;
         SpecializationConstants specializationConstants;
     };

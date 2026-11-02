@@ -459,26 +459,33 @@ namespace litl
                 
                 if (type == MaterialVariantType::Color)
                 {
-                    // DepthOnly variant is the vertex shader only. Color adds all other stages.
                     graphicsPipelineDescriptor.fragment = PipelineShaderDescriptor{ .handle = fragmentHandle, .stage = ShaderStage::Fragment, .entryPoint = descriptor.fragmentShader.entryPoint }; 
                     graphicsPipelineDescriptor.geometry = PipelineShaderDescriptor{ .handle = geometryHandle, .stage = ShaderStage::Geometry, .entryPoint = descriptor.geometryShader.entryPoint };
                     graphicsPipelineDescriptor.tessellationControl = PipelineShaderDescriptor{ .handle = tessellationControlHandle, .stage = ShaderStage::TessellationControl, .entryPoint = descriptor.tessellationControlShader.entryPoint }; 
                     graphicsPipelineDescriptor.tessellationEvaluation = PipelineShaderDescriptor{ .handle = tessellationEvaluationHandle, .stage = ShaderStage::TessellationEvaluation, .entryPoint = descriptor.tessellationEvaluationShader.entryPoint };
+
+                    graphicsPipelineDescriptor.renderTargets.colorAttachmentCount = 1u;
+                    graphicsPipelineDescriptor.renderTargets.colorAttachments = { attachmentFormats.color };
+
+                    if (descriptor.blendState.mode == MaterialBlendMode::Transparent)
+                    {
+                        graphicsPipelineDescriptor.colorBlend = descriptor.blendState.colorBlend;
+                    }
+                }
+                else if (type == MaterialVariantType::DepthOnly)
+                {
+                    // DepthOnly variant is the vertex shader only.
                 }
 
-                graphicsPipelineDescriptor.renderTargets = RenderTargetFormats{                                      // ... todo expand this functionality ...
-                    .colorAttachments = { attachmentFormats.color },
-                    .colorAttachmentCount = (attachmentFormats.color != DataFormat::Undefined) ? 1u : 0u,
-                    .depthFormat = attachmentFormats.depth,
-                    .stencilFormat = dataFormatHasStencil(attachmentFormats.depth) ? attachmentFormats.depth : DataFormat::Undefined
-                };
+                graphicsPipelineDescriptor.renderTargets.depthFormat = attachmentFormats.depth;
+                graphicsPipelineDescriptor.renderTargets.stencilFormat = dataFormatHasStencil(attachmentFormats.depth) ? attachmentFormats.depth : DataFormat::Undefined;
+
                 graphicsPipelineDescriptor.vertexInput = VertexInputState{};                                          // ... todo expand this functionality ...
                 graphicsPipelineDescriptor.inputAssembly = InputAssemblyState{};                                      // ... todo expand this functionality ...
                 graphicsPipelineDescriptor.tessellation = std::nullopt;                                               // ... todo expand this functionality ...
                 graphicsPipelineDescriptor.rasterization = descriptor.rasterizerState;
                 graphicsPipelineDescriptor.multisample = MultisampleState{};                                          // ... todo expand this functionality ...
                 graphicsPipelineDescriptor.depthStencil = DepthStencilState{};
-                graphicsPipelineDescriptor.colorBlend = descriptor.blendState;
                 graphicsPipelineDescriptor.dynamicState = DynamicStateMask{};                                         // ... todo expand this functionality ...
                 graphicsPipelineDescriptor.specializationConstants = SpecializationConstants{};                       // ... todo expand this functionality ...
 
@@ -1172,6 +1179,11 @@ namespace litl
     bool Material::setDefaultTexture(StringId property, TextureHandle handle) noexcept
     {
         return m_pImpl->setTexture(property, handle, {}, true);
+    }
+
+    MaterialBlendMode Material::getBlendMode() const noexcept
+    {
+        return m_pImpl->descriptor.blendState.mode;
     }
 
     // -------------------------------------------------------------------------------------

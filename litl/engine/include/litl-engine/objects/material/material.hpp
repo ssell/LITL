@@ -37,8 +37,20 @@ namespace litl
     {
         Color = 0u,
         DepthOnly = 1u,
-        Blended = 2u,
         Count
+    };
+
+    enum class MaterialBlendMode : uint8_t
+    {
+        Opaque = 0u,
+        Masked = 1u,
+        Transparent = 2u
+    };
+
+    struct MaterialBlendState
+    {
+        MaterialBlendMode mode{ MaterialBlendMode::Opaque };
+        ColorBlendState colorBlend{ ColorBlendState::noBlend() };
     };
 
     struct VertexInputDescriptor
@@ -72,7 +84,7 @@ namespace litl
     {
         ObjectDescriptor objectInfo{};
         RasterizationState rasterizerState{};
-        ColorBlendState blendState{ ColorBlendState::noBlend() };
+        MaterialBlendState blendState{};
         VertexInputDescriptor inputDescriptor{};
         ShaderResourceDescriptor vertexShader{};
         ShaderResourceDescriptor fragmentShader{};
@@ -348,6 +360,12 @@ namespace litl
         /// This value will be applied to all slots that have do have a custom value set.
         /// </summary>
         bool setDefaultTexture(StringId property, TextureHandle handle) noexcept;
+
+        /// <summary>
+        /// Returns the material blend mode: opaque, mask, or transparent.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] MaterialBlendMode getBlendMode() const noexcept;
 
     private:
 
