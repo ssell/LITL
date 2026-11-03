@@ -422,7 +422,7 @@ namespace litl
                     break;
                 }
 
-                std::sort(renderCamera.entities.begin(), renderCamera.entities.end(), [](RenderableEntity const& a, RenderableEntity const& b) -> bool {
+                std::sort(renderCamera.opaque.begin(), renderCamera.opaque.end(), [](RenderableEntity const& a, RenderableEntity const& b) -> bool {
                     // Simple sort by material and then mesh for now. In the future will need to check if the material is transparent so we can also sort from far to near.
                     // This sort will group all entities of the same material and mesh together. Example result:
                     //     [(mat0, mesh0), (mat0, mesh0), (mat0, mesh3), (mat1, mesh2), (mat1, mesh2), (mat1, mesh4), (mat2, mesh5)]
@@ -567,13 +567,13 @@ namespace litl
 
                 preparedViews.push_back(PreparedView{
                     .camera = renderableCamera.camera,
-                    .entities = renderableCamera.entities,
+                    .entities = renderableCamera.opaque,
                     .viewIndex = viewIndex,
                     .instanceBase = instanceBase
                 });
 
                 viewIndex += 1u;
-                instanceBase += static_cast<uint32_t>(renderableCamera.entities.size());
+                instanceBase += static_cast<uint32_t>(renderableCamera.opaque.size());
             }
 
             // Sort from lower priority to high

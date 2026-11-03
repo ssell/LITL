@@ -8,7 +8,7 @@
 
 #include "litl-core/containers/flatHashSet.hpp"
 #include "litl-engine/scene/sceneCameras.hpp"
-#include "litl-engine/render/renderableEntity.hpp"
+#include "litl-engine/render/cameraRenderEntities.hpp"
 #include "litl-engine/scene/partition/scenePartition.hpp"
 
 namespace litl
@@ -17,27 +17,16 @@ namespace litl
     class ServiceProvider;
     class EntityCommands;
     class SceneView;
-    class Camera;
 
     /// <summary>
     /// A bucket of visible and renderable entities for each camera.
     /// </summary>
     struct alignas(Constants::cache_line_size) CullingBucket
     {
-        /// <summary>
-        /// All visible renderable entities for a specific camera.
-        /// </summary>
-        struct CameraRenderableEntities
-        {
-            Camera* camera = nullptr;
-            std::vector<RenderableEntity> entities;
-        };
-
-        std::array<CameraRenderableEntities, SceneCameras::MaxSceneCameras> cameraRenderableEntities;
+        std::array<CameraRenderEntities, SceneCameras::MaxSceneCameras> cameraRenderableEntities;
 
         void reset() noexcept;
         [[nodiscard]] uint32_t activeCameraCount() const noexcept;
-        [[nodiscard]] CameraRenderableEntities const* getMainCameraCull() const noexcept;
     };
 
     /// <summary>
@@ -52,8 +41,8 @@ namespace litl
         struct CameraFrustumEntities
         {
             Camera* camera = nullptr;
-            //FlatHashSet<Entity> entities;
-            std::unordered_set<Entity> entities;
+            std::unordered_map<Entity, uint32_t> entities;                  // key = entity, value = index into entityQueryResults
+            std::vector<PartitionQueryResult> entityQueryResults;           // stores entity + position + distance sq to camera
         };
 
     public:
@@ -89,7 +78,6 @@ namespace litl
 
         std::shared_ptr<ObjectPool> m_pObjectPool;
         std::shared_ptr<SceneView> m_pSceneView;
-        std::vector<PartitionQueryResult> m_tempVisibleEntities;
         std::array<CameraFrustumEntities, SceneCameras::MaxSceneCameras> m_cameraVisibleEntities;
 
         static std::array<CullingBucket, Constants::max_thread_count> s_cullingBuckets;

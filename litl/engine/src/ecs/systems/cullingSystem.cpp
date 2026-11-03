@@ -30,18 +30,16 @@ namespace litl
 
         for (uint32_t i = 0u; (i < cameras.size()) && (i < m_cameraVisibleEntities.size()); ++i)
         {
-            m_tempVisibleEntities.clear();
-
             auto* camera = cameras[i];
             auto& visibleEntities = m_cameraVisibleEntities[i];
 
             setCameraAtIndex(i, camera);
 
-            m_pSceneView->query(camera->getFrustum(), m_tempVisibleEntities, false);
+            m_pSceneView->query(camera->getFrustum(), visibleEntities.entityQueryResults, false);
 
-            for (auto entity : m_tempVisibleEntities)
+            for (uint32_t i = 0u; i < static_cast<uint32_t>(visibleEntities.entityQueryResults.size()); ++i)
             {
-                visibleEntities.entities.insert(entity.entity);
+                visibleEntities.entities[visibleEntities.entityQueryResults[i].entity] = i;
             }
         }
     }
@@ -54,6 +52,7 @@ namespace litl
         {
             cameraEntities.camera = nullptr;
             cameraEntities.entities.clear();
+            cameraEntities.entityQueryResults.clear();
         }
 
         s_combinedBucket.reset();
@@ -71,7 +70,8 @@ namespace litl
         for (auto& cameraRenderableEntities : cameraRenderableEntities)
         {
             cameraRenderableEntities.camera = nullptr;
-            cameraRenderableEntities.entities.clear();
+            cameraRenderableEntities.opaque.clear();
+            cameraRenderableEntities.transparent.clear();
         }
     }
 
@@ -90,19 +90,6 @@ namespace litl
         }
 
         return count;
-    }
-
-    CullingBucket::CameraRenderableEntities const* CullingBucket::getMainCameraCull() const noexcept
-    {
-        for (auto& cameraRenderableEntities : cameraRenderableEntities)
-        {
-            if ((cameraRenderableEntities.camera != nullptr) && cameraRenderableEntities.camera->isMainCamera())
-            {
-                return &cameraRenderableEntities;
-            }
-        }
-
-        return nullptr;
     }
 
     void CullingSystem::setCameraAtIndex(uint32_t i, Camera* camera) noexcept
@@ -132,29 +119,52 @@ namespace litl
 
         for (uint32_t cameraIndex = 0u; cameraIndex < m_cameraVisibleEntities.size(); ++cameraIndex)
         {
-            if (m_cameraVisibleEntities[cameraIndex].camera == nullptr)
+            const auto& cameraVisibleEntities = m_cameraVisibleEntities[cameraIndex];
+
+            if (cameraVisibleEntities.camera == nullptr)
             {
                 // We have checked all cameras. Break out.
                 break;
             }
 
-            if (m_cameraVisibleEntities[cameraIndex].entities.contains(entity))
+            const auto findEntity = cameraVisibleEntities.entities.find(entity);
+
+            if (findEntity != cameraVisibleEntities.entities.end())
             {
+                const auto& entityPartition = cameraVisibleEntities.entityQueryResults[findEntity->second];
+
                 // We are visible to this camera, add to our thread-specific culling bucket.
+                // Use of a MaterialRef indicates that the entire mesh is drawn with the same material.
                 if (materialRef != nullptr)
                 {
-                    // Use of a MaterialRef indicates that the entire mesh is drawn with the same material.
-                    s_cullingBuckets[data.threadIndex].cameraRenderableEntities[cameraIndex].entities.push_back(RenderableEntity{
-                        .entity = entity,
-                        .meshRef = meshRef,
-                        .materialRef = *materialRef,
-                        .firstIndex = 0u,
-                        .indexCount = Constants::uint32_null_index
-                    });
+                    const Material* material = m_pObjectPool->getMaterial(materialRef->handle);
+
+                    if (material != nullptr)
+                    {
+                        const RenderableEntity renderableEntity{
+                            .entity = entity,
+                            .meshRef = meshRef,
+                            .materialRef = *materialRef,
+                            .materialBlendMode = material->getBlendMode(),
+                            .position = entityPartition.worldPosition,
+                            .distanceSquared = entityPartition.distanceSquared,
+                            .firstIndex = 0u,
+                            .indexCount = Constants::uint32_null_index
+                        };
+
+                        if (renderableEntity.materialBlendMode == MaterialBlendMode::Transparent)
+                        {
+                            s_cullingBuckets[data.threadIndex].cameraRenderableEntities[cameraIndex].transparent.push_back(renderableEntity);
+                        }
+                        else
+                        {
+                            s_cullingBuckets[data.threadIndex].cameraRenderableEntities[cameraIndex].opaque.push_back(renderableEntity);
+                        }
+                    }
                 }
+                // Use of a VariableMaterialsRef indicates that only the submeshes with a matching material index are rendered.
                 else if (variableMaterialsRef != nullptr)
                 {
-                    // Use of a VariableMaterialsRef indicates that only the submeshes with a matching material index are rendered.
                     // For variable materials we need to fetch both the mesh and the bindings.
                     auto* mesh = m_pObjectPool->getMesh(meshRef.handle);
                     auto* materialBindings = m_pObjectPool->getMaterialBindings(variableMaterialsRef->handle);
@@ -172,19 +182,32 @@ namespace litl
                             }
 
                             const auto& binding = bindings[submeshes[i].materialSlot];
+                            const Material* material = m_pObjectPool->getMaterial(binding.handle);
 
-                            if (!binding.handle.isValid() || !binding.slot.isValid())
+                            if (material == nullptr || !binding.slot.isValid())
                             {
                                 continue;
                             }
 
-                            s_cullingBuckets[data.threadIndex].cameraRenderableEntities[cameraIndex].entities.push_back(RenderableEntity{
+                            const RenderableEntity renderableEntity{
                                 .entity = entity,
                                 .meshRef = meshRef,
-                                .materialRef = MaterialRef { .handle = binding.handle, .slot = binding.slot},
+                                .materialRef = MaterialRef {.handle = binding.handle, .slot = binding.slot},
+                                .materialBlendMode = material->getBlendMode(),
+                                .position = entityPartition.worldPosition,
+                                .distanceSquared = entityPartition.distanceSquared,
                                 .firstIndex = submeshes[i].firstIndex,
                                 .indexCount = submeshes[i].indexCount
-                            });
+                            };
+
+                            if (renderableEntity.materialBlendMode == MaterialBlendMode::Transparent)
+                            {
+                                s_cullingBuckets[data.threadIndex].cameraRenderableEntities[cameraIndex].transparent.push_back(renderableEntity);
+                            }
+                            else
+                            {
+                                s_cullingBuckets[data.threadIndex].cameraRenderableEntities[cameraIndex].opaque.push_back(renderableEntity);
+                            }
                         }
                     }
                 }
@@ -207,19 +230,27 @@ namespace litl
                     break;
                 }
 
-                uint32_t totalCameraEntities = 0u;
+                uint32_t totalOpaqueEntities = 0u;
+                uint32_t totalTransparentEntities = 0u;
 
                 for (auto& threadCullingBucket : s_cullingBuckets)
                 {
-                    totalCameraEntities += threadCullingBucket.cameraRenderableEntities[cameraIndex].entities.size();
+                    totalOpaqueEntities += threadCullingBucket.cameraRenderableEntities[cameraIndex].opaque.size();
+                    totalTransparentEntities += threadCullingBucket.cameraRenderableEntities[cameraIndex].transparent.size();
                 }
+
+                cameraRenderableEntities.opaque.reserve(totalOpaqueEntities);
+                cameraRenderableEntities.transparent.reserve(totalTransparentEntities);
 
                 // For each thread,
                 for (auto& threadCullingBucket : s_cullingBuckets)
                 {
                     // Add the visible renderable entities found for this camera for this thread
-                    auto& threadRenderableEntities = threadCullingBucket.cameraRenderableEntities[cameraIndex].entities;
-                    cameraRenderableEntities.entities.insert(cameraRenderableEntities.entities.end(), threadRenderableEntities.begin(), threadRenderableEntities.end());
+                    auto& opaqueEntities = threadCullingBucket.cameraRenderableEntities[cameraIndex].opaque;
+                    cameraRenderableEntities.opaque.insert(cameraRenderableEntities.opaque.end(), opaqueEntities.begin(), opaqueEntities.end());
+
+                    auto& transparentEntities = threadCullingBucket.cameraRenderableEntities[cameraIndex].transparent;
+                    cameraRenderableEntities.transparent.insert(cameraRenderableEntities.transparent.end(), transparentEntities.begin(), transparentEntities.end());
                 }
             }
 
