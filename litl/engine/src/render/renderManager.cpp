@@ -349,7 +349,7 @@ namespace litl
 
                 getRenderPass(RenderPassType::DepthOnly).render(renderPassContext);
                 getRenderPass(RenderPassType::ForwardOpaque).render(renderPassContext);
-                //getRenderPass(RenderPassType::ForwardTransparent).render(renderPassContext);
+                getRenderPass(RenderPassType::ForwardTransparent).render(renderPassContext);
                 getRenderPass(RenderPassType::Blit).render(renderPassContext);
             }
             else
@@ -426,8 +426,7 @@ namespace litl
                 }
 
                 std::sort(renderCamera.opaque.begin(), renderCamera.opaque.end(), [](RenderableEntity const& a, RenderableEntity const& b) -> bool {
-                    // Simple sort by material and then mesh for now. In the future will need to check if the material is transparent so we can also sort from far to near.
-                    // This sort will group all entities of the same material and mesh together. Example result:
+                    // Simple sort by material and then mesh for now. This sort will group all entities of the same material and mesh together. Example result:
                     //     [(mat0, mesh0), (mat0, mesh0), (mat0, mesh3), (mat1, mesh2), (mat1, mesh2), (mat1, mesh4), (mat2, mesh5)]
 
                     if (a.materialRef.handle.index != b.materialRef.handle.index)
@@ -439,8 +438,8 @@ namespace litl
                 });
 
                 std::sort(renderCamera.transparent.begin(), renderCamera.transparent.end(), [](RenderableEntity const& a, RenderableEntity const& b) -> bool {
-                    // Transparent entities are sorted purely by distance from the camera.
-                    return (a.distanceSquared < b.distanceSquared);
+                    // Transparent entities are sorted by distance to camera, descending (back-to-front)
+                    return (a.distanceSquared > b.distanceSquared);
                 });
             }
         }

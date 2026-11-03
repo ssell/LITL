@@ -253,6 +253,11 @@ namespace litl::import
             {
             case cgltf_alpha_mode::cgltf_alpha_mode_mask:
                 litlMaterial->setBlendMode(LitlMatBlendMode::Masked);
+                
+                if (!litlMaterial->addProperty("alphaCutoff", LitlMatPropertyType::Float, glMaterial.alpha_cutoff))
+                {
+                    logWarning("Failed to assign the 'alphaCutoff' property to GLB material '", nameOr(glMaterial.name, "UNKNOWN"), "' in model '", location, "'");
+                }
                 break;
 
             case cgltf_alpha_mode::cgltf_alpha_mode_blend:
@@ -264,19 +269,6 @@ namespace litl::import
                 litlMaterial->setBlendMode(LitlMatBlendMode::Opaque);
                 break;
             }
-
-            if (glMaterial.alpha_mode != cgltf_alpha_mode::cgltf_alpha_mode_opaque)
-            {
-                logWarning("GLB material '", nameOr(glMaterial.name, "UNKNOWN"), "' in model '", location, "' specifies a non-opaque alpha mode which is currently not supported. Defaulting to opaque.");
-                // ... todo ...
-            }
-
-            if (!fequals(glMaterial.alpha_cutoff, 0.5f))
-            {
-                logWarning("GLB material '", nameOr(glMaterial.name, "UNKNOWN"), "' in model '", location, "' specifies a non-default (0.5) alpha cutoff value of ", glMaterial.alpha_cutoff, "'. This is currently not supported.");
-            }
-
-            // ... todo ...
 
             return true;
         }
