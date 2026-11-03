@@ -19,13 +19,13 @@ namespace litl
     void ForwardOpaquePass::render(CommandBufferHandle commandBufferHandle, RenderView const& renderView, RenderPushConstants viewPushConstants) noexcept
     {
         viewPushConstants.perPassDataAddr = renderView.perPassDataAddr;
-        viewPushConstants.instanceDataAddr = renderView.instanceDataAddr;
+        viewPushConstants.instanceDataAddr = renderView.opaqueInstanceDataAddr;
 
         if (barrierAndBeginRender(commandBufferHandle, renderView))
         {
             m_pRenderer->cmdSetViewportAndScissor(commandBufferHandle, createSetViewportAndScissorCommand(renderView.camera, false));
 
-            if (compileRenderList(renderView.entities))
+            if (compileRenderList(renderView.sortedOpaqueEntities))
             {
                 drawRenderList(commandBufferHandle, viewPushConstants, DrawListOptions{ .requiresMaterialProperties = true });
             }

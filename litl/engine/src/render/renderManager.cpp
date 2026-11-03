@@ -44,15 +44,18 @@ namespace litl
     {
         static constexpr uint32_t MaxRenderWaitTimeMs = 1000u;
 
-        /// <summary>
-        /// 
-        /// </summary>
+        struct PreparedSubView
+        {
+            std::span<RenderableEntity const> entities;
+            uint32_t instanceBase{ 0u };
+        };
+
         struct PreparedView
         {
             Camera* camera{ nullptr };
-            std::span<RenderableEntity const> entities;
+            PreparedSubView opaque{};
+            PreparedSubView transparent{};
             uint32_t viewIndex{ 0u };
-            uint32_t instanceBase{ 0u };
         };
     }
 
@@ -434,6 +437,11 @@ namespace litl
 
                     return (a.meshRef.handle.index < b.meshRef.handle.index);
                 });
+
+                std::sort(renderCamera.transparent.begin(), renderCamera.transparent.end(), [](RenderableEntity const& a, RenderableEntity const& b) -> bool {
+                    // Transparent entities are sorted purely by distance from the camera.
+                    return (a.distanceSquared < b.distanceSquared);
+                });
             }
         }
 
@@ -547,6 +555,7 @@ namespace litl
 
             uint32_t viewIndex{ 0u };
             uint32_t instanceBase{ 0u };
+            uint32_t transparentInstanceBase{ 0u };
 
             for (const auto& renderableCamera : bucket.cameraRenderableEntities)
             {
@@ -565,15 +574,20 @@ namespace litl
                     continue;
                 }
 
-                preparedViews.push_back(PreparedView{
+                PreparedView preparedView{
                     .camera = renderableCamera.camera,
-                    .entities = renderableCamera.opaque,
-                    .viewIndex = viewIndex,
-                    .instanceBase = instanceBase
-                });
+                    .opaque = PreparedSubView { .entities = renderableCamera.opaque },
+                    .transparent = PreparedSubView{ .entities = renderableCamera.transparent },
+                    .viewIndex = viewIndex
+                };
 
-                viewIndex += 1u;
+                preparedView.opaque.instanceBase = instanceBase;                                        // This matches the logic in writeViewData where all opaque entity instance data is added and then all transparent entity instance data is added.
                 instanceBase += static_cast<uint32_t>(renderableCamera.opaque.size());
+                preparedView.transparent.instanceBase = instanceBase;
+                instanceBase += static_cast<uint32_t>(renderableCamera.transparent.size());
+
+                preparedViews.push_back(preparedView);
+                viewIndex += 1u;
             }
 
             // Sort from lower priority to high
@@ -597,12 +611,12 @@ namespace litl
             // CPU-side RenderPerPassData and RenderInstanceData arrays
 
             passDataScratch.clear();
-            instanceDataScratch.clear();;
+            instanceDataScratch.clear();
 
             for (const auto& preparedView : preparedViews)
             {
                 LITL_ASSERT(preparedView.viewIndex == passDataScratch.size(), );
-                LITL_ASSERT(preparedView.instanceBase == instanceDataScratch.size(), );
+                LITL_ASSERT(preparedView.opaque.instanceBase == instanceDataScratch.size(), );
 
                 passDataScratch.push_back(RenderPerPassData{
                     .viewMatrix = preparedView.camera->getViewMatrix(),
@@ -610,11 +624,19 @@ namespace litl
                     .viewProjMatrix = preparedView.camera->getViewProjectionMatrix()
                 });
 
-                for (const auto& entity : preparedView.entities)
+                for (const auto& opaqueEntity : preparedView.opaque.entities)
                 {
                     instanceDataScratch.push_back(RenderInstanceData{
-                        .gpuIndex = sceneView->getGpuBufferIndex(entity.entity),
-                        .materialSlot = resolveMaterialSlot(entity)
+                        .gpuIndex = sceneView->getGpuBufferIndex(opaqueEntity.entity),
+                        .materialSlot = resolveMaterialSlot(opaqueEntity)
+                    });
+                }
+
+                for (const auto& transparentEntity : preparedView.transparent.entities)
+                {
+                    instanceDataScratch.push_back(RenderInstanceData{
+                        .gpuIndex = sceneView->getGpuBufferIndex(transparentEntity.entity),
+                        .materialSlot = resolveMaterialSlot(transparentEntity)
                     });
                 }
             }
@@ -641,9 +663,11 @@ namespace litl
                 renderViews.push_back(RenderView{
                     .camera = preparedView.camera,
                     .renderTexture = (preparedView.camera != nullptr) ? objectPool->getRenderTexture(preparedView.camera->getRenderTextureHandle()) : nullptr,
-                    .entities = preparedView.entities,
+                    .sortedOpaqueEntities = preparedView.opaque.entities,
+                    .sortedTransparentEntities = preparedView.transparent.entities,
                     .perPassDataAddr = passDataAddr + (preparedView.viewIndex * sizeof(RenderPerPassData)),
-                    .instanceDataAddr = instanceDataAddr + (preparedView.instanceBase * sizeof(RenderInstanceData)),
+                    .opaqueInstanceDataAddr = instanceDataAddr + (preparedView.opaque.instanceBase * sizeof(RenderInstanceData)),
+                    .transparentInstanceDataAddr = instanceDataAddr + (preparedView.transparent.instanceBase * sizeof(RenderInstanceData)),
                     .type = RenderView::resolveType(preparedView.camera)
                 });
             }

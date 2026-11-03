@@ -21,13 +21,13 @@ namespace litl
     void ForwardTransparentPass::render(CommandBufferHandle commandBufferHandle, RenderView const& renderView, RenderPushConstants viewPushConstants) noexcept
     {
         viewPushConstants.perPassDataAddr = renderView.perPassDataAddr;
-        viewPushConstants.instanceDataAddr = renderView.instanceDataAddr;
+        viewPushConstants.instanceDataAddr = renderView.transparentInstanceDataAddr;
 
         if (barrierAndBeginRender(commandBufferHandle, renderView))
         {
             m_pRenderer->cmdSetViewportAndScissor(commandBufferHandle, createSetViewportAndScissorCommand(renderView.camera, false));
 
-            if (compileRenderList(renderView.entities))
+            if (compileRenderList(renderView.sortedTransparentEntities))
             {
                 drawRenderList(commandBufferHandle, viewPushConstants, DrawListOptions{ .requiresMaterialProperties = true });
             }

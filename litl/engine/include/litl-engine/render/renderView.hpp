@@ -21,9 +21,11 @@ namespace litl
     {
         Camera* camera{ nullptr };
         RenderTexture* renderTexture{ nullptr };
-        std::span<RenderableEntity const> entities{};
+        std::span<RenderableEntity const> sortedOpaqueEntities{};
+        std::span<RenderableEntity const> sortedTransparentEntities{};
         uint64_t perPassDataAddr{ 0ull };
-        uint64_t instanceDataAddr{ 0ull };
+        uint64_t opaqueInstanceDataAddr{ 0ull };
+        uint64_t transparentInstanceDataAddr{ 0ull };
         RenderViewType type{ RenderViewType::Camera };
 
         [[nodiscard]] static RenderViewType resolveType(Camera* camera) noexcept
