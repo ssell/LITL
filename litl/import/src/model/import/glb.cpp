@@ -249,6 +249,22 @@ namespace litl::import
                 litlMaterial->setRasterCullMode(LitlMatCullMode::None);
             }
 
+            switch (glMaterial.alpha_mode)
+            {
+            case cgltf_alpha_mode::cgltf_alpha_mode_mask:
+                litlMaterial->setBlendMode(LitlMatBlendMode::Masked);
+                break;
+
+            case cgltf_alpha_mode::cgltf_alpha_mode_blend:
+                litlMaterial->setBlendMode(LitlMatBlendMode::Transparent);
+                break;
+
+            case cgltf_alpha_mode::cgltf_alpha_mode_opaque:
+            default:
+                litlMaterial->setBlendMode(LitlMatBlendMode::Opaque);
+                break;
+            }
+
             if (glMaterial.alpha_mode != cgltf_alpha_mode::cgltf_alpha_mode_opaque)
             {
                 logWarning("GLB material '", nameOr(glMaterial.name, "UNKNOWN"), "' in model '", location, "' specifies a non-opaque alpha mode which is currently not supported. Defaulting to opaque.");

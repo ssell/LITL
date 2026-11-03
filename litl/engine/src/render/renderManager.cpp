@@ -349,7 +349,7 @@ namespace litl
 
                 getRenderPass(RenderPassType::DepthOnly).render(renderPassContext);
                 getRenderPass(RenderPassType::ForwardOpaque).render(renderPassContext);
-                getRenderPass(RenderPassType::ForwardTransparent).render(renderPassContext);
+                //getRenderPass(RenderPassType::ForwardTransparent).render(renderPassContext);
                 getRenderPass(RenderPassType::Blit).render(renderPassContext);
             }
             else

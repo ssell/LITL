@@ -75,6 +75,11 @@ namespace litl::import
         std::string frontFace;
     };
 
+    struct BlendSettingsStruct
+    {
+        std::string blendMode;
+    };
+
     struct HintsStruct
     {
         bool frequentUpdates = false;
@@ -94,6 +99,7 @@ namespace litl::import
         std::string name;
         ShaderMap shaders;
         RasterSettingsStruct raster;
+        BlendSettingsStruct blend;
         PropertyMap properties;
         HintsStruct hints;
     };
@@ -202,6 +208,31 @@ namespace litl::import
         return true;
     }
 
+    bool importBlendTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* intermediateData, std::string_view location) noexcept
+    {
+        const auto blendMode = toLowercase(inputMaterial.blend.blendMode);
+
+        if (blendMode.empty() || blendMode == "opaque")
+        {
+            intermediateData->setBlendMode(LitlMatBlendMode::Opaque);
+        }
+        else if (blendMode == "mask" || blendMode == "masked")
+        {
+            intermediateData->setBlendMode(LitlMatBlendMode::Masked);
+        }
+        else if (blendMode == "transparent")
+        {
+            intermediateData->setBlendMode(LitlMatBlendMode::Transparent);
+        }
+        else
+        {
+            logWarning(".litlmat import of ", location, ": blend state 'blendMode' set to invalid value of '", blendMode, "'. Expected: 'opaque', 'masked', 'transparent' or not provided. Rejecting.");
+            return false;
+        }
+
+        return true;
+    }
+
     bool importPropertiesTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* intermediateMaterial, std::string_view location) noexcept
     {
         for (auto& propertyKvp : inputMaterial.properties)
@@ -283,6 +314,11 @@ namespace litl::import
         if (!importRasterStateTable(inputMaterial, intermediateMaterial, context.location))
         {
             return Result::Error(ErrorType::ImporterFailed, std::format(".litlmat import of {}: Error encountered importing [raster] table.", context.location));
+        }
+
+        if (!importBlendTable(inputMaterial, intermediateMaterial, context.location))
+        {
+            return Result::Error(ErrorType::ImporterFailed, std::format(".litlmat import of {}: Error encountered importing [blend] table.", context.location));
         }
 
         if (!importPropertiesTable(inputMaterial, intermediateMaterial, context.location))

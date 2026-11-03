@@ -51,6 +51,13 @@ namespace litl::import
         Both = 3u
     };
 
+    enum class LitlMatBlendMode : uint32_t
+    {
+        Opaque = 0u,
+        Masked = 1u,
+        Transparent = 2u
+    };
+
     /// <summary>
     /// Supported types to come over directly from an external file.
     /// </summary>
@@ -109,6 +116,9 @@ namespace litl::import
         LitlMatCullMode cullMode{ LitlMatCullMode::Back };
         bool clockwise{ true };
 
+        // Blend
+        LitlMatBlendMode blendMode{ LitlMatBlendMode::Opaque };
+
         // Hints
         bool frequentUpdates{ false };
     };
@@ -124,6 +134,7 @@ namespace litl::import
         void setName(std::string_view name) noexcept;
         void setRasterCullMode(LitlMatCullMode cullMode) noexcept;
         void setRasterWinding(bool clockwise) noexcept;
+        void setBlendMode(LitlMatBlendMode blendMode) noexcept;
         void setHintFrequentUpdates(bool frequentUpdates) noexcept;
 
         /// <summary>

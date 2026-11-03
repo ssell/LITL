@@ -165,6 +165,11 @@ namespace litl::import
         m_settings.clockwise = clockwise;
     }
 
+    void MaterialIntermediateData::setBlendMode(LitlMatBlendMode blendMode) noexcept
+    {
+        m_settings.blendMode = blendMode;
+    }
+
     void MaterialIntermediateData::setHintFrequentUpdates(bool frequentUpdates) noexcept
     {
         m_settings.frequentUpdates = frequentUpdates;

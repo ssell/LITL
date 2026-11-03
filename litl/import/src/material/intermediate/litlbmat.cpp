@@ -40,13 +40,16 @@ namespace litl::import
             LitlMatCullMode cullMode{ LitlMatCullMode::Back };
             bool clockwise{ true };
 
+            // Blend
+            LitlMatBlendMode blendMode{ LitlMatBlendMode::Opaque };
+
             // Hints
             bool frequentUpdates{ false };
 
             std::array<uint8_t, 10> padding{};
         };
 
-        static_assert(sizeof(LitlMatBinarySettings) == 32);
+        static_assert(sizeof(LitlMatBinarySettings) == 40);
         static_assert(std::is_trivially_copyable_v<LitlMatBinarySettings>);
 
         // -------------------------------------------------------------------------------------
@@ -142,6 +145,7 @@ namespace litl::import
             settings.materialName = BinaryBlockFile::serializeString(matSettings.materialName, stringMap);
             settings.cullMode = matSettings.cullMode;
             settings.clockwise = matSettings.clockwise;
+            settings.blendMode = matSettings.blendMode;
             settings.frequentUpdates = matSettings.frequentUpdates;
         }
     }
@@ -406,6 +410,7 @@ namespace litl::import
 
             material.setName(materialName);
             material.setRasterCullMode(settings.cullMode);
+            material.setBlendMode(settings.blendMode);
             material.setRasterWinding(settings.clockwise);
             material.setHintFrequentUpdates(settings.frequentUpdates);
 

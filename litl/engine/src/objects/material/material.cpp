@@ -18,6 +18,10 @@
 
 namespace litl
 {
+    static_assert(static_cast<uint32_t>(MaterialBlendMode::Opaque) == static_cast<uint32_t>(import::LitlMatBlendMode::Opaque));
+    static_assert(static_cast<uint32_t>(MaterialBlendMode::Masked) == static_cast<uint32_t>(import::LitlMatBlendMode::Masked));
+    static_assert(static_cast<uint32_t>(MaterialBlendMode::Transparent) == static_cast<uint32_t>(import::LitlMatBlendMode::Transparent));
+
     struct Material::Impl
     {
         struct MaterialVariant
@@ -97,6 +101,7 @@ namespace litl
             descriptor.objectInfo.name = settings.materialName;
             descriptor.rasterizerState.cullMode = static_cast<CullMode>(settings.cullMode);
             descriptor.rasterizerState.frontFace = (settings.clockwise ? FrontFace::Clockwise : FrontFace::CounterClockwise);
+            descriptor.blendState.mode = static_cast<MaterialBlendMode>(settings.blendMode);
             properties.toggleTier3DataSeparation(!settings.frequentUpdates);
             // ... update descriptor as more settings are exposed in the .litlmat format ...
 
