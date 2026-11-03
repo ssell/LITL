@@ -411,11 +411,33 @@ namespace litl
         /// </summary>
         std::array<float, 4> blendConstants;
 
+        /// <summary>
+        /// Blending disabled.
+        /// </summary>
+        /// <returns></returns>
         static constexpr ColorBlendState noBlend() noexcept
         {
             return ColorBlendState{
                 .logicOpEnabled = false,
                 .colorAttachmentBlendStates = { ColorBlendAttachmentState { .attachmentBlendEnabled = false  } }
+            };
+        }
+
+        /// <summary>
+        /// Traditional transparency.
+        /// </summary>
+        static constexpr ColorBlendState alphaBlend() noexcept
+        {
+            return ColorBlendState{
+                .colorAttachmentBlendStates = { ColorBlendAttachmentState {
+                    .attachmentBlendEnabled = true,
+                    .srcColorBlendFactor = BlendFactor::SrcAlpha,
+                    .dstColorBlendFactor = BlendFactor::OneMinusSrcAlpha,
+                    .colorBlendOp = BlendOperationType::Add,
+                    .srcAlphaBlendFactor = BlendFactor::One,
+                    .dstAlphaBlendFactor = BlendFactor::OneMinusSrcAlpha,
+                    .alphaBlendOp = BlendOperationType::Add
+                }}
             };
         }
     };

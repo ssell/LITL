@@ -83,7 +83,7 @@ namespace litl::samples
         auto sceneView = services.get<SceneView>();
         auto assets = services.get<AssetManager>();
 
-        const auto* mainCamera = createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(-5.0f, 1.5f, 0.0f), vec3(5.0f, 1.5f, 0.0f), vec3::up(), *objectPool, *sceneView);
+        const auto* mainCamera = createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(-5.0f, 1.5f, 0.25f), vec3(5.0f, 1.5f, 0.25f), vec3::up(), *objectPool, *sceneView);
         commands.addComponent<FreeFlyController>(mainCamera->getEntity());
         commands.addComponent<PendingModelInstance>(mainCamera->getEntity(), createModelInstance("litl/models/sphere", "litl/materials/lit", *assets));
         commands.addComponent<LocalBounds>(mainCamera->getEntity());
@@ -98,11 +98,11 @@ namespace litl::samples
         // ---------------------------------------------------------------------------------
 
         // ---------------------------------------------------------------------------------
-        // Small spinning cube to show something is happening while the Sponza loads in. Replace with GUI text in the future, or remove entirely when asset loading performance is improved.
+        // Small spinning transparent cube.
 
         auto cubeEntity = commands.createEntity();
-        commands.addComponent<Transform>(cubeEntity, Transform::create(vec3(5.0f, -2.0f, 0.0f), quat::identity()));
-        commands.addComponent<PendingModelInstance>(cubeEntity, createModelInstance("litl/models/cube", "litl/materials/lit", *assets));
+        commands.addComponent<Transform>(cubeEntity, Transform::create(vec3(0.0f, 1.0f, 0.25f), quat::identity()));
+        commands.addComponent<PendingModelInstance>(cubeEntity, createModelInstance("litl/models/cube", "litl/materials/litTransparent", *assets));
         commands.addComponent<LocalBounds>(cubeEntity);
         commands.addComponent<Spin>(cubeEntity, Spin{ .rate = 50.0f });
 
@@ -125,8 +125,8 @@ namespace litl::samples
             altCamera->setWorldPosition(vec3(0.0f, 1.5f, 0.0f));
             altCamera->lookAt(vec3(5.0f, 1.5f, 0.0f), vec3::up());
         }
-
     }
+
 }
 
 int main()

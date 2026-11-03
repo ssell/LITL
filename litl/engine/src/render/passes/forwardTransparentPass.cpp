@@ -7,7 +7,6 @@ namespace litl
 {
     void ForwardTransparentPass::render(RenderPassContext const& context) noexcept
     {
-        /*
         for (const RenderView& renderView : context.renderViews)
         {
             if (renderView.type == RenderViewType::Camera)
@@ -15,7 +14,6 @@ namespace litl
                 render(context.commandBufferHandle, renderView, context.pushConstants);
             }
         }
-        */
     }
 
     void ForwardTransparentPass::render(CommandBufferHandle commandBufferHandle, RenderView const& renderView, RenderPushConstants viewPushConstants) noexcept

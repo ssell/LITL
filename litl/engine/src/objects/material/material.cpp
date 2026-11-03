@@ -102,6 +102,7 @@ namespace litl
             descriptor.rasterizerState.cullMode = static_cast<CullMode>(settings.cullMode);
             descriptor.rasterizerState.frontFace = (settings.clockwise ? FrontFace::Clockwise : FrontFace::CounterClockwise);
             descriptor.blendState.mode = static_cast<MaterialBlendMode>(settings.blendMode);
+            descriptor.blendState.colorBlend = (descriptor.blendState.mode == MaterialBlendMode::Transparent) ? ColorBlendState::alphaBlend() : ColorBlendState::noBlend();
             properties.toggleTier3DataSeparation(!settings.frequentUpdates);
             // ... update descriptor as more settings are exposed in the .litlmat format ...
 

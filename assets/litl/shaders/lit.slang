@@ -63,6 +63,7 @@ FragmentOutput fragmentMain(VertexOutput input)
     const float4 texColor = sampleGlobalTexture(matProps.baseColor, input.uv);
     const float4 baseColor = texColor * matProps.tint;
 
+    // todo need specialization constants so this is not present among all opaques
     if (baseColor.a < matProps.alphaCutoff)
     {
         discard;
