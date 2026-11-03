@@ -230,6 +230,8 @@ namespace litl::import
             return false;
         }
 
+        // ... todo blend factors and ops ...
+
         return true;
     }
 

@@ -170,6 +170,38 @@ namespace litl::import
         m_settings.blendMode = blendMode;
     }
 
+
+    void MaterialIntermediateData::setBlendSrcColor(LitlMatBlendFactor factor) noexcept
+    {
+        m_settings.srcColor = factor;
+    }
+
+    void MaterialIntermediateData::setBlendDstColor(LitlMatBlendFactor factor) noexcept
+    {
+        m_settings.dstColor = factor;
+    }
+
+    void MaterialIntermediateData::setBlendColorOp(LitlMatBlendOperation op) noexcept
+    {
+        m_settings.colorBlendOp = op;
+    }
+
+    void MaterialIntermediateData::setBlendSrcAlpha(LitlMatBlendFactor factor) noexcept
+    {
+        m_settings.srcAlpha = factor;
+    }
+
+    void MaterialIntermediateData::setBlendDstAlpha(LitlMatBlendFactor factor) noexcept
+    {
+        m_settings.dstAlpha = factor;
+    }
+
+    void MaterialIntermediateData::setBlendAlphaOp(LitlMatBlendOperation op) noexcept
+    {
+        m_settings.alphaBlendOp = op;
+    }
+
+
     void MaterialIntermediateData::setHintFrequentUpdates(bool frequentUpdates) noexcept
     {
         m_settings.frequentUpdates = frequentUpdates;

@@ -42,6 +42,12 @@ namespace litl::import
 
             // Blend
             LitlMatBlendMode blendMode{ LitlMatBlendMode::Opaque };
+            LitlMatBlendFactor srcColor{ LitlMatBlendFactor::Zero };
+            LitlMatBlendFactor dstColor{ LitlMatBlendFactor::Zero };
+            LitlMatBlendOperation colorBlendOp{ LitlMatBlendOperation::Add };
+            LitlMatBlendFactor srcAlpha{ LitlMatBlendFactor::Zero };
+            LitlMatBlendFactor dstAlpha{ LitlMatBlendFactor::Zero };
+            LitlMatBlendOperation alphaBlendOp{ LitlMatBlendOperation::Add };
 
             // Hints
             bool frequentUpdates{ false };
@@ -49,7 +55,7 @@ namespace litl::import
             std::array<uint8_t, 10> padding{};
         };
 
-        static_assert(sizeof(LitlMatBinarySettings) == 40);
+        static_assert(sizeof(LitlMatBinarySettings) == 64);
         static_assert(std::is_trivially_copyable_v<LitlMatBinarySettings>);
 
         // -------------------------------------------------------------------------------------

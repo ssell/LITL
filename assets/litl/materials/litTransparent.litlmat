@@ -11,4 +11,10 @@ metallic    = { type = "float", value = 0.0 }
 baseColor   = { type = "texture", value = "white" }                  # "white" is one of the reserved, globally present textures. Others include: "pink", "black", and "normal".
 
 [blend]
-blendMode = "transparent"
+blendMode    = "transparent"
+srcColor     = "SrcAlpha"
+dstColor     = "OneMinusSrcAlpha"
+colorBlendOp = "Add"
+srcAlpha     = "One"
+dstAlpha     = "OneMinusSrcAlpha"
+alphaBlendOp = "Add"

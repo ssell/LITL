@@ -51,11 +51,48 @@ namespace litl::import
         Both = 3u
     };
 
+    /// <summary>
+    /// Must match MaterialBlendMode in litl-engine/objects/material/material.hpp
+    /// </summary>
     enum class LitlMatBlendMode : uint32_t
     {
-        Opaque = 0u,
-        Masked = 1u,
+        Opaque      = 0u,
+        Masked      = 1u,
         Transparent = 2u
+    };
+
+    /// <summary>
+    /// Must match BlendOperationType in litl-renderer/enums.hpp
+    /// </summary>
+    enum class LitlMatBlendOperation : uint32_t
+    {
+        Add             = 0u,
+        Subtract        = 1u,
+        ReverseSubtract = 2u,
+        Min             = 3u,
+        Max             = 4u
+    };
+
+    /// <summary>
+    /// Must match BlendFactor in litl-renderer/enums.hpp
+    /// </summary>
+    enum class LitlMatBlendFactor : uint32_t
+    {
+        Zero                  = 0u,
+        One                   = 1u,
+        SrcColor              = 2u,
+        OneMinusSrcColor      = 3u,
+        DstColor              = 4u,
+        OneMinusDstColor      = 5u,
+        SrcAlpha              = 6u,
+        OneMinusSrcAlpha      = 7u,
+        DstAlpha              = 8u,
+        OneMinusDstAlpha      = 9u,
+        ConstantColor         = 10u,
+        OneMinusConstantColor = 11u,
+        ConstantAlpha         = 12u,
+        OneMinusConstantAlpha = 13u,
+        SrcAlphaSaturate      = 14u
     };
 
     /// <summary>
@@ -118,6 +155,12 @@ namespace litl::import
 
         // Blend
         LitlMatBlendMode blendMode{ LitlMatBlendMode::Opaque };
+        LitlMatBlendFactor srcColor{ LitlMatBlendFactor::Zero };
+        LitlMatBlendFactor dstColor{ LitlMatBlendFactor::Zero };
+        LitlMatBlendOperation colorBlendOp{ LitlMatBlendOperation::Add };
+        LitlMatBlendFactor srcAlpha{ LitlMatBlendFactor::Zero };
+        LitlMatBlendFactor dstAlpha{ LitlMatBlendFactor::Zero };
+        LitlMatBlendOperation alphaBlendOp{ LitlMatBlendOperation::Add };
 
         // Hints
         bool frequentUpdates{ false };
@@ -135,6 +178,12 @@ namespace litl::import
         void setRasterCullMode(LitlMatCullMode cullMode) noexcept;
         void setRasterWinding(bool clockwise) noexcept;
         void setBlendMode(LitlMatBlendMode blendMode) noexcept;
+        void setBlendSrcColor(LitlMatBlendFactor factor) noexcept;
+        void setBlendDstColor(LitlMatBlendFactor factor) noexcept;
+        void setBlendColorOp(LitlMatBlendOperation op) noexcept;
+        void setBlendSrcAlpha(LitlMatBlendFactor factor) noexcept;
+        void setBlendDstAlpha(LitlMatBlendFactor factor) noexcept;
+        void setBlendAlphaOp(LitlMatBlendOperation op) noexcept;
         void setHintFrequentUpdates(bool frequentUpdates) noexcept;
 
         /// <summary>
