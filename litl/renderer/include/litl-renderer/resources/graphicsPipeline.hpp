@@ -415,7 +415,7 @@ namespace litl
         /// Blending disabled.
         /// </summary>
         /// <returns></returns>
-        static constexpr ColorBlendState noBlend() noexcept
+        [[nodiscard]] static constexpr ColorBlendState noBlend() noexcept
         {
             return ColorBlendState{
                 .logicOpEnabled = false,
@@ -423,22 +423,33 @@ namespace litl
             };
         }
 
-        /// <summary>
-        /// Traditional transparency.
-        /// </summary>
-        static constexpr ColorBlendState alphaBlend() noexcept
+        [[nodiscard]] static constexpr ColorBlendState create(BlendFactor srcColor, BlendFactor dstColor, BlendOperationType colorBlendOp, BlendFactor srcAlpha, BlendFactor dstAlpha, BlendOperationType alphaBlendOp) noexcept
         {
             return ColorBlendState{
                 .colorAttachmentBlendStates = { ColorBlendAttachmentState {
                     .attachmentBlendEnabled = true,
-                    .srcColorBlendFactor = BlendFactor::SrcAlpha,
-                    .dstColorBlendFactor = BlendFactor::OneMinusSrcAlpha,
-                    .colorBlendOp = BlendOperationType::Add,
-                    .srcAlphaBlendFactor = BlendFactor::One,
-                    .dstAlphaBlendFactor = BlendFactor::OneMinusSrcAlpha,
-                    .alphaBlendOp = BlendOperationType::Add
+                    .srcColorBlendFactor = srcColor,
+                    .dstColorBlendFactor = dstColor,
+                    .colorBlendOp = colorBlendOp,
+                    .srcAlphaBlendFactor = srcAlpha,
+                    .dstAlphaBlendFactor = dstAlpha,
+                    .alphaBlendOp = alphaBlendOp
                 }}
             };
+        }
+
+        /// <summary>
+        /// Traditional transparency.
+        /// </summary>
+        [[nodiscard]] static constexpr ColorBlendState alphaBlend() noexcept
+        {
+            return create(
+                BlendFactor::SrcAlpha,
+                BlendFactor::OneMinusSrcAlpha, 
+                BlendOperationType::Add, 
+                BlendFactor::One, 
+                BlendFactor::OneMinusSrcAlpha, 
+                BlendOperationType::Add);
         }
     };
 

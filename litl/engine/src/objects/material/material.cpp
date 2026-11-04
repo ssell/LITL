@@ -18,10 +18,6 @@
 
 namespace litl
 {
-    static_assert(static_cast<uint32_t>(MaterialBlendMode::Opaque) == static_cast<uint32_t>(import::LitlMatBlendMode::Opaque));
-    static_assert(static_cast<uint32_t>(MaterialBlendMode::Masked) == static_cast<uint32_t>(import::LitlMatBlendMode::Masked));
-    static_assert(static_cast<uint32_t>(MaterialBlendMode::Transparent) == static_cast<uint32_t>(import::LitlMatBlendMode::Transparent));
-
     struct Material::Impl
     {
         struct MaterialVariant
@@ -102,7 +98,32 @@ namespace litl
             descriptor.rasterizerState.cullMode = static_cast<CullMode>(settings.cullMode);
             descriptor.rasterizerState.frontFace = (settings.clockwise ? FrontFace::Clockwise : FrontFace::CounterClockwise);
             descriptor.blendState.mode = static_cast<MaterialBlendMode>(settings.blendMode);
-            descriptor.blendState.colorBlend = (descriptor.blendState.mode == MaterialBlendMode::Transparent) ? ColorBlendState::alphaBlend() : ColorBlendState::noBlend();
+
+            if (descriptor.blendState.mode == MaterialBlendMode::Transparent)
+            {
+                const auto presetBlendMode = descriptor.blendState.presetBlendMode.value_or("");
+
+                if (!presetBlendMode.empty())
+                {
+                    logWarning("Material provided presetBlendMode which is currently not supported.");
+                }
+                else
+                {
+                    descriptor.blendState.colorBlend = ColorBlendState::create(
+                        static_cast<BlendFactor>(settings.srcColor),
+                        static_cast<BlendFactor>(settings.dstColor),
+                        static_cast<BlendOperationType>(settings.colorBlendOp),
+                        static_cast<BlendFactor>(settings.srcAlpha),
+                        static_cast<BlendFactor>(settings.dstAlpha),
+                        static_cast<BlendOperationType>(settings.alphaBlendOp)
+                    );
+                }
+            }
+            else
+            {
+                descriptor.blendState.colorBlend = ColorBlendState::noBlend();
+            }
+
             properties.toggleTier3DataSeparation(!settings.frequentUpdates);
             // ... update descriptor as more settings are exposed in the .litlmat format ...
 
@@ -1196,8 +1217,38 @@ namespace litl
     // Various static asserts needed to ensure no drift between Material definitions in litl-engine and litl-import
     // -------------------------------------------------------------------------------------
 
+    // CullMode == LitlMatCullMode
     static_assert(static_cast<uint32_t>(CullMode::Back) == static_cast<uint32_t>(import::LitlMatCullMode::Back));
     static_assert(static_cast<uint32_t>(CullMode::Front) == static_cast<uint32_t>(import::LitlMatCullMode::Front));
     static_assert(static_cast<uint32_t>(CullMode::None) == static_cast<uint32_t>(import::LitlMatCullMode::None));
     static_assert(static_cast<uint32_t>(CullMode::Both) == static_cast<uint32_t>(import::LitlMatCullMode::Both));
+
+    // MaterialBlendMode == LitlMatBlendMode
+    static_assert(static_cast<uint32_t>(MaterialBlendMode::Opaque) == static_cast<uint32_t>(import::LitlMatBlendMode::Opaque));
+    static_assert(static_cast<uint32_t>(MaterialBlendMode::Masked) == static_cast<uint32_t>(import::LitlMatBlendMode::Masked));
+    static_assert(static_cast<uint32_t>(MaterialBlendMode::Transparent) == static_cast<uint32_t>(import::LitlMatBlendMode::Transparent));
+
+    // BlendOperationType == LitlMatBlendOperation
+    static_assert(static_cast<uint32_t>(BlendOperationType::Add) == static_cast<uint32_t>(import::LitlMatBlendOperation::Add));
+    static_assert(static_cast<uint32_t>(BlendOperationType::Subtract) == static_cast<uint32_t>(import::LitlMatBlendOperation::Subtract));
+    static_assert(static_cast<uint32_t>(BlendOperationType::ReverseSubtract) == static_cast<uint32_t>(import::LitlMatBlendOperation::ReverseSubtract));
+    static_assert(static_cast<uint32_t>(BlendOperationType::Min) == static_cast<uint32_t>(import::LitlMatBlendOperation::Min));
+    static_assert(static_cast<uint32_t>(BlendOperationType::Max) == static_cast<uint32_t>(import::LitlMatBlendOperation::Max));
+
+    // BlendFactor == LitlMatBlendFactor
+    static_assert(static_cast<uint32_t>(BlendFactor::Zero) == static_cast<uint32_t>(import::LitlMatBlendFactor::Zero));
+    static_assert(static_cast<uint32_t>(BlendFactor::One) == static_cast<uint32_t>(import::LitlMatBlendFactor::One));
+    static_assert(static_cast<uint32_t>(BlendFactor::SrcColor) == static_cast<uint32_t>(import::LitlMatBlendFactor::SrcColor));
+    static_assert(static_cast<uint32_t>(BlendFactor::OneMinusSrcColor) == static_cast<uint32_t>(import::LitlMatBlendFactor::OneMinusSrcColor));
+    static_assert(static_cast<uint32_t>(BlendFactor::DstColor) == static_cast<uint32_t>(import::LitlMatBlendFactor::DstColor));
+    static_assert(static_cast<uint32_t>(BlendFactor::OneMinusDstColor) == static_cast<uint32_t>(import::LitlMatBlendFactor::OneMinusDstColor));
+    static_assert(static_cast<uint32_t>(BlendFactor::SrcAlpha) == static_cast<uint32_t>(import::LitlMatBlendFactor::SrcAlpha));
+    static_assert(static_cast<uint32_t>(BlendFactor::OneMinusSrcAlpha) == static_cast<uint32_t>(import::LitlMatBlendFactor::OneMinusSrcAlpha));
+    static_assert(static_cast<uint32_t>(BlendFactor::DstAlpha) == static_cast<uint32_t>(import::LitlMatBlendFactor::DstAlpha));
+    static_assert(static_cast<uint32_t>(BlendFactor::OneMinusDstAlpha) == static_cast<uint32_t>(import::LitlMatBlendFactor::OneMinusDstAlpha));
+    static_assert(static_cast<uint32_t>(BlendFactor::ConstantColor) == static_cast<uint32_t>(import::LitlMatBlendFactor::ConstantColor));
+    static_assert(static_cast<uint32_t>(BlendFactor::OneMinusConstantColor) == static_cast<uint32_t>(import::LitlMatBlendFactor::OneMinusConstantColor));
+    static_assert(static_cast<uint32_t>(BlendFactor::ConstantAlpha) == static_cast<uint32_t>(import::LitlMatBlendFactor::ConstantAlpha));
+    static_assert(static_cast<uint32_t>(BlendFactor::OneMinusConstantAlpha) == static_cast<uint32_t>(import::LitlMatBlendFactor::OneMinusConstantAlpha));
+    static_assert(static_cast<uint32_t>(BlendFactor::SrcAlphaSaturate) == static_cast<uint32_t>(import::LitlMatBlendFactor::SrcAlphaSaturate));
 }

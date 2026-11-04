@@ -12,9 +12,9 @@ baseColor   = { type = "texture", value = "white" }                  # "white" i
 
 [blend]
 blendMode    = "transparent"
-srcColor     = "SrcAlpha"
-dstColor     = "OneMinusSrcAlpha"
+srcColor     = "Zero"
+dstColor     = "Zero"
 colorBlendOp = "Add"
-srcAlpha     = "One"
-dstAlpha     = "OneMinusSrcAlpha"
+srcAlpha     = "Zero"
+dstAlpha     = "Zero"
 alphaBlendOp = "Add"

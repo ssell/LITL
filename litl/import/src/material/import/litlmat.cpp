@@ -78,6 +78,13 @@ namespace litl::import
     struct BlendSettingsStruct
     {
         std::string blendMode;
+        std::string blendPreset;
+        std::string srcColor;
+        std::string dstColor;
+        std::string colorBlendOp;
+        std::string srcAlpha;
+        std::string dstAlpha;
+        std::string alphaBlendOp;
     };
 
     struct HintsStruct
@@ -208,6 +215,99 @@ namespace litl::import
         return true;
     }
 
+    [[nodiscard]] LitlMatBlendFactor parseBlendFactor(std::string_view str, std::string_view factor, std::string_view location) noexcept
+    {
+        if (str.empty())
+        {
+            return LitlMatBlendFactor::Zero;
+        }
+
+        const StringId strId = StringId(str);
+
+        switch (strId.value)
+        {
+        case ("zero"_sid).value:
+            return LitlMatBlendFactor::Zero;
+
+        case ("one"_sid).value:
+            return LitlMatBlendFactor::One;
+
+        case ("srccolor"_sid).value:
+            return LitlMatBlendFactor::SrcColor;
+
+        case ("oneminussrccolor"_sid).value:
+            return LitlMatBlendFactor::OneMinusSrcColor;
+
+        case ("dstcolor"_sid).value:
+            return LitlMatBlendFactor::DstColor;
+
+        case ("oneminusdstcolor"_sid).value:
+            return LitlMatBlendFactor::OneMinusDstColor;
+
+        case ("srcalpha"_sid).value:
+            return LitlMatBlendFactor::SrcAlpha;
+
+        case ("oneminussrcalpha"_sid).value:
+            return LitlMatBlendFactor::OneMinusSrcAlpha;
+
+        case ("dstalpha"_sid).value:
+            return LitlMatBlendFactor::DstAlpha;
+
+        case ("oneminusdstalpha"_sid).value:
+            return LitlMatBlendFactor::OneMinusDstAlpha;
+
+        case ("constantcolor"_sid).value:
+            return LitlMatBlendFactor::ConstantColor;
+
+        case ("oneminusconstantcolor"_sid).value:
+            return LitlMatBlendFactor::OneMinusConstantColor;
+
+        case ("constantalpha"_sid).value:
+            return LitlMatBlendFactor::ConstantAlpha;
+
+        case ("oneminusconstantalpha"_sid).value:
+            return LitlMatBlendFactor::OneMinusConstantAlpha;
+
+        case ("srcalphasaturate"_sid).value:
+            return LitlMatBlendFactor::SrcAlphaSaturate;
+
+        default:
+            logWarning(".litlmat import of ", location, ": blend factor '", factor, "' set to invalid value of '", str, "'. Expected: 'Zero', 'One', 'SrcColor', 'OneMinusSrcColor', 'DstColor', 'OneMinusDstColor', 'SrcAlpha', 'OneMinusSrcAlpha', 'DstAlpha', 'OneMinusDstAlpha', 'ConstantColor', 'OneMinusConstantColor', 'ConstantAlpha', 'OneMinusConstantAlpha', 'SrcAlphaSaturate', or not provided. Defaulting to 'Zero'.");
+            return LitlMatBlendFactor::Zero;
+        }
+    }
+
+    [[nodiscard]] LitlMatBlendOperation parseBlendOp(std::string_view str, std::string_view op, std::string_view location) noexcept
+    {
+        if (str.empty())
+        {
+            return LitlMatBlendOperation::Add;
+        }
+
+        const StringId strId = StringId(str);
+
+        switch (strId.value)
+        {
+        case ("add"_sid).value:
+            return LitlMatBlendOperation::Add;
+
+        case ("subtract"_sid).value:
+            return LitlMatBlendOperation::Subtract;
+
+        case ("reversesubtract"_sid).value:
+            return LitlMatBlendOperation::ReverseSubtract;
+
+        case ("min"_sid).value:
+            return LitlMatBlendOperation::Min;
+
+        case ("max"_sid).value:
+            return LitlMatBlendOperation::Max;
+        default:
+            logWarning(".litlmat import of ", location, ": blend operation '", op, "' set to invalid value of '", str, "'. Expected: 'Add', 'Subtract', 'ReverseSubtract', 'Min', 'Max', or not provided. Defaulting to 'Add'.");
+            return LitlMatBlendOperation::Add;
+        }
+    }
+
     bool importBlendTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* intermediateData, std::string_view location) noexcept
     {
         const auto blendMode = toLowercase(inputMaterial.blend.blendMode);
@@ -230,7 +330,20 @@ namespace litl::import
             return false;
         }
 
-        // ... todo blend factors and ops ...
+        if (!inputMaterial.blend.blendPreset.empty())
+        {
+            logWarning(".litlmat import of ", location, ": provided blendPreset value but this field is not yet supported.");
+            // ... todo blend preset ...
+        }
+        else
+        {
+            intermediateData->setBlendSrcColor(parseBlendFactor(toLowercase(inputMaterial.blend.srcColor), "srcColor", location));
+            intermediateData->setBlendDstColor(parseBlendFactor(toLowercase(inputMaterial.blend.dstColor), "dstColor", location));
+            intermediateData->setBlendColorOp(parseBlendOp(toLowercase(inputMaterial.blend.colorBlendOp), "colorBlendOp", location));
+            intermediateData->setBlendSrcAlpha(parseBlendFactor(toLowercase(inputMaterial.blend.srcAlpha), "srcAlpha", location));
+            intermediateData->setBlendDstAlpha(parseBlendFactor(toLowercase(inputMaterial.blend.dstAlpha), "dstAlpha", location));
+            intermediateData->setBlendAlphaOp(parseBlendOp(toLowercase(inputMaterial.blend.alphaBlendOp), "alphaBlendOp", location));
+        }
 
         return true;
     }

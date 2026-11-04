@@ -50,6 +50,7 @@ namespace litl
     struct MaterialBlendState
     {
         MaterialBlendMode mode{ MaterialBlendMode::Opaque };
+        std::optional<std::string> presetBlendMode;
         ColorBlendState colorBlend{ ColorBlendState::noBlend() };
     };
 
