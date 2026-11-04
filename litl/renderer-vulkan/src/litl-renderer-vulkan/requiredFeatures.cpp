@@ -20,6 +20,7 @@ namespace litl::vulkan
         if (!extendedDynamicStateFeatures.extendedDynamicState ||
             !vulkan14Features.pushDescriptor ||
             !vulkan13Features.synchronization2 ||
+            !vulkan13Features.shaderDemoteToHelperInvocation ||
             !vulkan13Features.dynamicRendering ||
             !vulkan12Features.shaderSampledImageArrayNonUniformIndexing ||
             !vulkan12Features.descriptorBindingSampledImageUpdateAfterBind ||
@@ -65,6 +66,7 @@ namespace litl::vulkan
         chain.vulkan13Features = VkPhysicalDeviceVulkan13Features{
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
             .pNext = &chain.vulkan14Features,
+            .shaderDemoteToHelperInvocation = VK_TRUE,                      // Calling "discard" in a Slang fragment shader compiles to OpDemoteToHelperInvocation instead of OpKill (as of SPIR-V 1.6).
             .synchronization2 = VK_TRUE,                                    // Replaces the legacy Synchronization API with a cleaner easier-to-use design.
             .dynamicRendering = VK_TRUE,                                    // Removes the need to create explicit VkRenderPass and VkFramebuffer objects allowing us to begin and end rendering directly on image views.
         };
