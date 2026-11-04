@@ -308,6 +308,48 @@ namespace litl::import
         }
     }
 
+    [[nodiscard]] LitlMatBlendPreset parseBlendPreset(std::string str, std::string_view location) noexcept
+    {
+        if (str.empty())
+        {
+            return LitlMatBlendPreset::None;
+        }
+
+        switch (StringId(toLowercase(str)).value)
+        {
+        case ("alpha"_sid).value:
+            return LitlMatBlendPreset::Alpha;
+
+        case ("premultiplied"_sid).value:
+            return LitlMatBlendPreset::Premultiplied;
+
+        case ("additive"_sid).value:
+            return LitlMatBlendPreset::Additive;
+
+        case ("additivealpha"_sid).value:
+            return LitlMatBlendPreset::AdditiveAlpha;
+
+        case ("multiply"_sid).value:
+            return LitlMatBlendPreset::Multiply;
+
+        case ("multiply2x"_sid).value:
+            return LitlMatBlendPreset::Multiply2x;
+
+        case ("screen"_sid).value:
+            return LitlMatBlendPreset::Screen;
+
+        case ("min"_sid).value:
+            return LitlMatBlendPreset::Min;
+
+        case ("max"_sid).value:
+            return LitlMatBlendPreset::Max;
+
+        default:
+            logWarning(".litlmat import of ", location, ": blendPreset set to invalid value of '", str, "'. Expected: 'Alpha', 'Premultiplied', 'Additive', 'AdditiveAlpha', 'Multiply', 'Multiply2x', 'Screen', 'Min', 'Max', or not provided. Ignored.");
+            return LitlMatBlendPreset::None;
+        }
+    }
+
     bool importBlendTable(ExpectedMaterialStructure const& inputMaterial, MaterialIntermediateData* intermediateData, std::string_view location) noexcept
     {
         const auto blendMode = toLowercase(inputMaterial.blend.blendMode);
@@ -332,8 +374,7 @@ namespace litl::import
 
         if (!inputMaterial.blend.blendPreset.empty())
         {
-            logWarning(".litlmat import of ", location, ": provided blendPreset value but this field is not yet supported.");
-            // ... todo blend preset ...
+            intermediateData->setBlendPreset(parseBlendPreset(inputMaterial.blend.blendPreset, location));
         }
         else
         {

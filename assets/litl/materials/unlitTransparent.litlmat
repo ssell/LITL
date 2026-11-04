@@ -1,0 +1,13 @@
+name = "Unlit"
+
+[shaders]
+vertex   = { resource = "litl/shaders/unlit", entry = "vertexMain" }
+fragment = { resource = "litl/shaders/unlit", entry = "fragmentMain" }
+
+[properties]
+tint = { type = "color", value = [1.0, 1.0, 1.0, 0.25] }
+baseColor = { type = "texture", value = "white" }                  # "white" is one of the reserved, globally present textures. Others include: "pink", "black", and "normal".
+
+[blend]
+blendMode    = "transparent"
+blendPreset  = "premultiplied"

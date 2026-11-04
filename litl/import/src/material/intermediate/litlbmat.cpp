@@ -42,6 +42,7 @@ namespace litl::import
 
             // Blend
             LitlMatBlendMode blendMode{ LitlMatBlendMode::Opaque };
+            LitlMatBlendPreset blendPreset{ LitlMatBlendPreset::None };
             LitlMatBlendFactor srcColor{ LitlMatBlendFactor::Zero };
             LitlMatBlendFactor dstColor{ LitlMatBlendFactor::Zero };
             LitlMatBlendOperation colorBlendOp{ LitlMatBlendOperation::Add };
@@ -55,7 +56,7 @@ namespace litl::import
             std::array<uint8_t, 10> padding{};
         };
 
-        static_assert(sizeof(LitlMatBinarySettings) == 64);
+        static_assert(sizeof(LitlMatBinarySettings) == 72);
         static_assert(std::is_trivially_copyable_v<LitlMatBinarySettings>);
 
         // -------------------------------------------------------------------------------------
@@ -152,6 +153,13 @@ namespace litl::import
             settings.cullMode = matSettings.cullMode;
             settings.clockwise = matSettings.clockwise;
             settings.blendMode = matSettings.blendMode;
+            settings.blendPreset = matSettings.blendPreset;
+            settings.srcColor = matSettings.srcColor;
+            settings.dstColor = matSettings.dstColor;
+            settings.colorBlendOp = matSettings.colorBlendOp;
+            settings.srcAlpha = matSettings.srcAlpha;
+            settings.dstAlpha = matSettings.dstAlpha;
+            settings.alphaBlendOp = matSettings.alphaBlendOp;
             settings.frequentUpdates = matSettings.frequentUpdates;
         }
     }
@@ -417,6 +425,7 @@ namespace litl::import
             material.setName(materialName);
             material.setRasterCullMode(settings.cullMode);
             material.setBlendMode(settings.blendMode);
+            material.setBlendPreset(settings.blendPreset);
             material.setRasterWinding(settings.clockwise);
             material.setHintFrequentUpdates(settings.frequentUpdates);
 

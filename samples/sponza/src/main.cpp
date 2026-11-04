@@ -102,7 +102,7 @@ namespace litl::samples
 
         auto cubeEntity = commands.createEntity();
         commands.addComponent<Transform>(cubeEntity, Transform::create(vec3(0.0f, 1.0f, 0.25f), quat::identity()));
-        commands.addComponent<PendingModelInstance>(cubeEntity, createModelInstance("litl/models/cube", "litl/materials/litTransparent", *assets));
+        commands.addComponent<PendingModelInstance>(cubeEntity, createModelInstance("litl/models/cube", "litl/materials/unlitTransparent", *assets));
         commands.addComponent<LocalBounds>(cubeEntity);
         commands.addComponent<Spin>(cubeEntity, Spin{ .rate = 50.0f });
 

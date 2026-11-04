@@ -7,7 +7,7 @@ import litl.core;
 
 struct MaterialProperties
 {
-    float3 tint;
+    float4 tint;
     uint baseColor;
 };
 
@@ -58,10 +58,11 @@ FragmentOutput fragmentMain(VertexOutput input)
     FragmentOutput output = (FragmentOutput)0;
 
     const MaterialProperties matProps = _pc.getMaterial(input.materialSlot);
-    const float3 tint     = matProps.tint;
-    const float3 texColor = sampleGlobalTexture(matProps.baseColor, input.uv).rgb;
-    
-    output.color = float4(texColor * tint, 1.0f);
+    const float4 texColor = sampleGlobalTexture(matProps.baseColor, input.uv);
+    const float4 tint = matProps.tint;
+    const float alpha = texColor.a * tint.a;
+
+    output.color = float4((texColor.rgb * tint.rgb) * alpha, alpha);            // Multiply .rgb by alpha for premultiplied transparency
 
     return output;
 }

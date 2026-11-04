@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "litl-core/assert.hpp"
+#include "litl-core/string.hpp"
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/assets/materialAsset.hpp"
 #include "litl-engine/objects/material/material.hpp"
@@ -101,11 +102,52 @@ namespace litl
 
             if (descriptor.blendState.mode == MaterialBlendMode::Transparent)
             {
-                const auto presetBlendMode = descriptor.blendState.presetBlendMode.value_or("");
-
-                if (!presetBlendMode.empty())
+                if (settings.blendPreset != import::LitlMatBlendPreset::None)
                 {
-                    logWarning("Material provided presetBlendMode which is currently not supported.");
+                    descriptor.blendState.preset = static_cast<MaterialBlendPreset>(settings.blendPreset);
+
+                    switch (descriptor.blendState.preset)
+                    {
+                    case MaterialBlendPreset::Alpha:
+                        descriptor.blendState.colorBlend = ColorBlendState::alphaBlend();
+                        break;
+
+                    case MaterialBlendPreset::Premultiplied:
+                        descriptor.blendState.colorBlend = ColorBlendState::premultiplied();
+                        break;
+
+                    case MaterialBlendPreset::Additive:
+                        descriptor.blendState.colorBlend = ColorBlendState::additive();
+                        break;
+
+                    case MaterialBlendPreset::AdditiveAlpha:
+                        descriptor.blendState.colorBlend = ColorBlendState::additiveAlphaWeighted();
+                        break;
+
+                    case MaterialBlendPreset::Multiply:
+                        descriptor.blendState.colorBlend = ColorBlendState::multiply();
+                        break;
+
+                    case MaterialBlendPreset::Multiply2x:
+                        descriptor.blendState.colorBlend = ColorBlendState::multiply2x();
+                        break;
+
+                    case MaterialBlendPreset::Screen:
+                        descriptor.blendState.colorBlend = ColorBlendState::screen();
+                        break;
+
+                    case MaterialBlendPreset::Min:
+                        descriptor.blendState.colorBlend = ColorBlendState::min();
+                        break;
+
+                    case MaterialBlendPreset::Max:
+                        descriptor.blendState.colorBlend = ColorBlendState::max();
+                        break;
+
+                    default:
+                        logWarning("Material '", descriptor.objectInfo.name, "' provided with unknown blend preset enum of ", static_cast<uint32_t>(descriptor.blendState.preset), ". Ignored.");
+                        break;
+                    }
                 }
                 else
                 {
@@ -1251,4 +1293,16 @@ namespace litl
     static_assert(static_cast<uint32_t>(BlendFactor::ConstantAlpha) == static_cast<uint32_t>(import::LitlMatBlendFactor::ConstantAlpha));
     static_assert(static_cast<uint32_t>(BlendFactor::OneMinusConstantAlpha) == static_cast<uint32_t>(import::LitlMatBlendFactor::OneMinusConstantAlpha));
     static_assert(static_cast<uint32_t>(BlendFactor::SrcAlphaSaturate) == static_cast<uint32_t>(import::LitlMatBlendFactor::SrcAlphaSaturate));
+
+    // MaterialBlendPreset == LitlMatBlendPreset
+    static_assert(static_cast<uint32_t>(MaterialBlendPreset::None) == static_cast<uint32_t>(import::LitlMatBlendPreset::None));
+    static_assert(static_cast<uint32_t>(MaterialBlendPreset::Alpha) == static_cast<uint32_t>(import::LitlMatBlendPreset::Alpha));
+    static_assert(static_cast<uint32_t>(MaterialBlendPreset::Premultiplied) == static_cast<uint32_t>(import::LitlMatBlendPreset::Premultiplied));
+    static_assert(static_cast<uint32_t>(MaterialBlendPreset::Additive) == static_cast<uint32_t>(import::LitlMatBlendPreset::Additive));
+    static_assert(static_cast<uint32_t>(MaterialBlendPreset::AdditiveAlpha) == static_cast<uint32_t>(import::LitlMatBlendPreset::AdditiveAlpha));
+    static_assert(static_cast<uint32_t>(MaterialBlendPreset::Multiply) == static_cast<uint32_t>(import::LitlMatBlendPreset::Multiply));
+    static_assert(static_cast<uint32_t>(MaterialBlendPreset::Multiply2x) == static_cast<uint32_t>(import::LitlMatBlendPreset::Multiply2x));
+    static_assert(static_cast<uint32_t>(MaterialBlendPreset::Screen) == static_cast<uint32_t>(import::LitlMatBlendPreset::Screen));
+    static_assert(static_cast<uint32_t>(MaterialBlendPreset::Min) == static_cast<uint32_t>(import::LitlMatBlendPreset::Min));
+    static_assert(static_cast<uint32_t>(MaterialBlendPreset::Max) == static_cast<uint32_t>(import::LitlMatBlendPreset::Max));
 }

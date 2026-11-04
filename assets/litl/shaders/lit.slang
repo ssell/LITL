@@ -69,10 +69,15 @@ FragmentOutput fragmentMain(VertexOutput input)
         discard;
     }
 
+    // TODO lighting
     const float ambient = 0.1f;
     const float shading = max(ambient, (normalize(input.normal).y + 1.0f) * 0.5f);
+    const float3 diffuse = float3(1.0f, 1.0f, 1.0f);
+    const float3 specular = float3(0.0f, 0.0f, 0.0f);
+    const float3 emissive = float3(0.0f, 0.0f, 0.0f);
+    const float3 color = (baseColor.rgb * diffuse * shading * baseColor.a) + specular + emissive;           // * baseColor.a for premultiplied transparency
 
-    output.color = float4(baseColor.rgb * shading, baseColor.a);
+    output.color = float4(color.rgb, baseColor.a);
 
     return output;
 }

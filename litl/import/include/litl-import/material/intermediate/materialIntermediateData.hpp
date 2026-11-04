@@ -96,6 +96,23 @@ namespace litl::import
     };
 
     /// <summary>
+    /// Enum identifiers for the blend mode presets to avoid having to store strings in the binary.
+    /// </summary>
+    enum class LitlMatBlendPreset : uint32_t
+    {
+        None          = 0u,
+        Alpha         = 1u,
+        Premultiplied = 2u,
+        Additive      = 3u,
+        AdditiveAlpha = 4u,
+        Multiply      = 5u,
+        Multiply2x    = 6u,
+        Screen        = 7u,
+        Min           = 8u,
+        Max           = 9u
+    };
+
+    /// <summary>
     /// Supported types to come over directly from an external file.
     /// </summary>
     using LitlMatSupportedRawPropertyTypes = std::variant<
@@ -155,6 +172,7 @@ namespace litl::import
 
         // Blend
         LitlMatBlendMode blendMode{ LitlMatBlendMode::Opaque };
+        LitlMatBlendPreset blendPreset{ LitlMatBlendPreset::None };
         LitlMatBlendFactor srcColor{ LitlMatBlendFactor::Zero };
         LitlMatBlendFactor dstColor{ LitlMatBlendFactor::Zero };
         LitlMatBlendOperation colorBlendOp{ LitlMatBlendOperation::Add };
@@ -178,6 +196,7 @@ namespace litl::import
         void setRasterCullMode(LitlMatCullMode cullMode) noexcept;
         void setRasterWinding(bool clockwise) noexcept;
         void setBlendMode(LitlMatBlendMode blendMode) noexcept;
+        void setBlendPreset(LitlMatBlendPreset blendPreset) noexcept;
         void setBlendSrcColor(LitlMatBlendFactor factor) noexcept;
         void setBlendDstColor(LitlMatBlendFactor factor) noexcept;
         void setBlendColorOp(LitlMatBlendOperation op) noexcept;

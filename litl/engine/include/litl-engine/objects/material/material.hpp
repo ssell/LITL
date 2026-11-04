@@ -47,10 +47,24 @@ namespace litl
         Transparent = 2u
     };
 
+    enum class MaterialBlendPreset : uint32_t
+    {
+        None = 0u,
+        Alpha = 1u,
+        Premultiplied = 2u,
+        Additive = 3u,
+        AdditiveAlpha = 4u,
+        Multiply = 5u,
+        Multiply2x = 6u,
+        Screen = 7u,
+        Min = 8u,
+        Max = 9u
+    };
+
     struct MaterialBlendState
     {
         MaterialBlendMode mode{ MaterialBlendMode::Opaque };
-        std::optional<std::string> presetBlendMode;
+        MaterialBlendPreset preset{ MaterialBlendPreset::None };
         ColorBlendState colorBlend{ ColorBlendState::noBlend() };
     };
 

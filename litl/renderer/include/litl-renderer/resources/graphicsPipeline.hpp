@@ -439,17 +439,134 @@ namespace litl
         }
 
         /// <summary>
-        /// Traditional transparency.
+        /// Traditional alpha blending transparency.
         /// </summary>
         [[nodiscard]] static constexpr ColorBlendState alphaBlend() noexcept
         {
             return create(
                 BlendFactor::SrcAlpha,
-                BlendFactor::OneMinusSrcAlpha, 
-                BlendOperationType::Add, 
-                BlendFactor::One, 
-                BlendFactor::OneMinusSrcAlpha, 
+                BlendFactor::OneMinusSrcAlpha,
+                BlendOperationType::Add,
+                BlendFactor::One,
+                BlendFactor::OneMinusSrcAlpha,
                 BlendOperationType::Add);
+        }
+
+        /// <summary>
+        /// Commonly used transparency that avoids dark fringes. Additionally, can output an alpha of zero and the blending becomes additive.
+        /// Shader must remember to multiply the .rgb by the alpha value as well.
+        /// </summary>
+        [[nodiscard]] static constexpr ColorBlendState premultiplied() noexcept
+        {
+            return create(
+                BlendFactor::One,
+                BlendFactor::OneMinusSrcAlpha,
+                BlendOperationType::Add,
+                BlendFactor::One,
+                BlendFactor::OneMinusSrcAlpha,
+                BlendOperationType::Add);
+        }
+
+        /// <summary>
+        /// Generally used for transparent objects that emit light (fire, sparks, lasers, lens flares, light shafts, etc.).
+        /// </summary>
+        [[nodiscard]] static constexpr ColorBlendState additive() noexcept
+        {
+            return create(
+                BlendFactor::One,
+                BlendFactor::One,
+                BlendOperationType::Add,
+                BlendFactor::Zero,
+                BlendFactor::One,
+                BlendOperationType::Add);
+        }
+
+        /// <summary>
+        /// Same use case as additive, but the lighting effect can be faded with the alpha value.
+        /// </summary>
+        [[nodiscard]] static constexpr ColorBlendState additiveAlphaWeighted() noexcept
+        {
+            return create(
+                BlendFactor::SrcAlpha,
+                BlendFactor::One,
+                BlendOperationType::Add,
+                BlendFactor::Zero,
+                BlendFactor::One,
+                BlendOperationType::Add);
+        }
+
+        /// <summary>
+        /// Colors and darkens what is already there, but never brightens it.
+        /// Use for effects such as tinted windows, blob shadows under characters, grime/dirt decals, etc.
+        /// </summary>
+        [[nodiscard]] static constexpr ColorBlendState multiply() noexcept
+        {
+            return create(
+                BlendFactor::DstColor,
+                BlendFactor::Zero,
+                BlendOperationType::Add,
+                BlendFactor::Zero,
+                BlendFactor::One,
+                BlendOperationType::Add);
+        }
+
+        /// <summary>
+        /// An alpha of 0.5 leaves the destination unchanges, a value smaller darkens, and a value greater lightens.
+        /// </summary>
+        [[nodiscard]] static constexpr ColorBlendState multiply2x() noexcept
+        {
+            return create(
+                BlendFactor::DstColor,
+                BlendFactor::SrcColor,
+                BlendOperationType::Add,
+                BlendFactor::Zero,
+                BlendFactor::One,
+                BlendOperationType::Add);
+        }
+
+        /// <summary>
+        /// Brightens softly without blowing out the way that additive can.
+        /// Can be used for glows over bright backgrounds, haze, and some UI effects.
+        /// </summary>
+        [[nodiscard]] static constexpr ColorBlendState screen() noexcept
+        {
+            return create(
+                BlendFactor::One,
+                BlendFactor::OneMinusSrcColor,
+                BlendOperationType::Add,
+                BlendFactor::Zero,
+                BlendFactor::One,
+                BlendOperationType::Add);
+        }
+
+        /// <summary>
+        /// Typically used for ultility passes and not for "presentation". 
+        /// Use cases include getting nearest depth value, tracking per-pixel extremes, etc.
+        /// </summary>
+        [[nodiscard]] static constexpr ColorBlendState (min)() noexcept
+        {
+            return create(
+                BlendFactor::Zero,
+                BlendFactor::Zero,
+                BlendOperationType::Min,
+                BlendFactor::Zero,
+                BlendFactor::Zero,
+                BlendOperationType::Min);
+        }
+
+        /// <summary>
+        /// Typically used for ultility passes and not for "presentation". 
+        /// Use cases include getting maximum depth value, tracking per-pixel extremes, etc.
+        /// </summary>
+        [[nodiscard]] static constexpr ColorBlendState (max)() noexcept
+        {
+            return create(
+                BlendFactor::Zero,
+                BlendFactor::Zero,
+                BlendOperationType::Max,
+                BlendFactor::Zero,
+                BlendFactor::Zero,
+                BlendOperationType::Max);
         }
     };
 

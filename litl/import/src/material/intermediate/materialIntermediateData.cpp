@@ -170,6 +170,10 @@ namespace litl::import
         m_settings.blendMode = blendMode;
     }
 
+    void MaterialIntermediateData::setBlendPreset(LitlMatBlendPreset blendPreset) noexcept
+    {
+        m_settings.blendPreset = blendPreset;
+    }
 
     void MaterialIntermediateData::setBlendSrcColor(LitlMatBlendFactor factor) noexcept
     {

@@ -12,9 +12,4 @@ baseColor   = { type = "texture", value = "white" }                  # "white" i
 
 [blend]
 blendMode    = "transparent"
-srcColor     = "Zero"
-dstColor     = "Zero"
-colorBlendOp = "Add"
-srcAlpha     = "Zero"
-dstAlpha     = "Zero"
-alphaBlendOp = "Add"
+blendPreset  = "premultiplied"
