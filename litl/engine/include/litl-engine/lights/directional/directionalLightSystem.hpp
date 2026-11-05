@@ -12,7 +12,11 @@
 namespace litl
 {
     class LightManager;
+    class SceneView;
 
+    /// <summary>
+    /// Updates the LightManager with active directional lights.
+    /// </summary>
     class DirectionalLightSystem final
     {
     public:
@@ -24,6 +28,7 @@ namespace litl
     private:
 
         std::shared_ptr<LightManager> m_pLightManager{ nullptr };
+        std::shared_ptr<SceneView> m_pSceneView{ nullptr };
     };
 }
 

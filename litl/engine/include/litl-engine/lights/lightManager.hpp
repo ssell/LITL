@@ -13,12 +13,8 @@ namespace litl
     class EngineCallbacks;
     class ServiceProvider;
     class GpuBuffer;
-
-    struct DirectionalLightDescriptor
-    {
-        color color{ colors::White };
-        float intensity{ 1.0f };
-    };
+    class DirectionalLightSystem;
+    struct DirectionalLight;
 
     class LightManager
     {
@@ -37,6 +33,15 @@ namespace litl
         [[nodiscard]] GpuBuffer const* getLightDataBuffer() const noexcept;
 
         void setAmbientColor(color rgb) noexcept;
+
+        /// <summary>
+        /// Marks the directional light attached to the specified entity as active.
+        /// </summary>
+        /// <param name="auth"></param>
+        /// <param name="entity"></param>
+        /// <param name="light"></param>
+        /// <param name="toLightDir"></param>
+        void markActive(Authority<DirectionalLightSystem> auth, Entity entity, DirectionalLight const& light, vec3 toLightDir) noexcept;
 
     private:
 

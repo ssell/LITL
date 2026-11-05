@@ -1,5 +1,4 @@
 #include <array>
-#include <mutex>
 #include <variant>
 #include <vector>
 
@@ -13,6 +12,7 @@
 #include "litl-engine/lights/lightManager.hpp"
 #include "litl-engine/lights/lightData.hpp"
 #include "litl-engine/lights/directional/directionalLight.hpp"
+#include "litl-engine/lights/directional/directionalLightSystem.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 
 namespace litl
@@ -21,12 +21,21 @@ namespace litl
     {
         enum class LightCommandType
         {
-            Unknown = 0u
+            Unknown = 0u,
+            MarkDirectionalActive = 1u
+        };
+
+        struct MarkDirectionalActiveCommand
+        {
+            Entity entity{};
+            DirectionalLight light{};
+            vec3 toLightDir{};
         };
 
         using LightCommandVar = std::variant<
-            std::monostate                          // LightCommandType::Unknown
-        >;        // LightCommandType::DestroyDirectional
+            std::monostate,                         // LightCommandType::Unknown
+            MarkDirectionalActiveCommand            // LightCommandType::MarkDirectionalActive
+        >;
 
         struct LightCommand
         {
@@ -50,8 +59,7 @@ namespace litl
 
         LightDataInfo lightData{};
 
-        std::mutex commandsMutex{};
-        std::vector<LightCommand> commands;
+        PerJobVector<LightCommand> commands;
         std::vector<LightCommand> commandsCopy;
 
         // ---------------------------------------------------------------------------------
@@ -66,7 +74,7 @@ namespace litl
             LITL_FATAL_ASSERT_MSG((objectPool != nullptr), "Failed to inject ObjectPool into LightManager");
             LITL_FATAL_ASSERT_MSG((world != nullptr), "Failed to inject World into LightManager");
 
-            commands.reserve(32ull);
+            commands.reserve_each(32u);
         }
 
         void destroy() noexcept
@@ -87,8 +95,6 @@ namespace litl
         template<typename T>
         void enqueueCommand(LightCommandType type, T command) noexcept
         {
-            std::scoped_lock lock{ commandsMutex };
-
             commands.push_back(LightCommand{
                 .type = type,
                 .command = command
@@ -97,16 +103,24 @@ namespace litl
 
         void processDeferredCommands() noexcept
         {
-            {
-                std::scoped_lock lock{ commandsMutex };
-                commandsCopy = std::move(commands);
-                commands.clear();
-            }
+            commands.drain_into(commandsCopy);
 
             for (const auto& command : commandsCopy)
             {
                 switch (command.type)
                 {
+                case LightCommandType::MarkDirectionalActive:
+                {
+                    const MarkDirectionalActiveCommand* ptr = std::get_if<MarkDirectionalActiveCommand>(&command.command);
+
+                    if (ptr != nullptr)
+                    {
+                        processMarkDirectionalLightActiveCommand(*ptr);
+                    }
+
+                    break;
+                }
+
                 case LightCommandType::Unknown:
                 default:
                     break;
@@ -114,6 +128,11 @@ namespace litl
             }
 
             commandsCopy.clear();
+        }
+
+        void processMarkDirectionalLightActiveCommand(MarkDirectionalActiveCommand const& command) noexcept
+        {
+            // ... todo ...
         }
 
         // ---------------------------------------------------------------------------------
@@ -200,5 +219,14 @@ namespace litl
     {
         m_pImpl->lightData.data.ambientColor = rgb;
         m_pImpl->lightData.dirty = true;
+    }
+
+    void LightManager::markActive(Authority<DirectionalLightSystem> auth, Entity entity, DirectionalLight const& light, vec3 toLightDir) noexcept
+    {
+        m_pImpl->enqueueCommand(LightCommandType::MarkDirectionalActive, MarkDirectionalActiveCommand{
+            .entity = entity,
+            .light = light,
+            .toLightDir = toLightDir
+        });
     }
 }
