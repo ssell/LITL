@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "litl-core/assert.hpp"
+#include "litl-core/containers/perThreadVector.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-ecs/world.hpp"
@@ -11,7 +12,7 @@
 #include "litl-engine/engineCallbacks.hpp"
 #include "litl-engine/lights/lightManager.hpp"
 #include "litl-engine/lights/lightData.hpp"
-#include "litl-engine/lights/directionalLight.hpp"
+#include "litl-engine/lights/directional/directionalLight.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 
 namespace litl

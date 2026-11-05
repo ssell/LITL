@@ -20,6 +20,10 @@ namespace litl
         /// The numerical id of the thread, ordered based on ThreadInfo::get() call order.
         /// </summary>
         uint32_t index;
+
+        /// <summary>
+        /// Is this the main thread?
+        /// </summary>
         bool mainthread;
 
         /// <summary>

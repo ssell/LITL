@@ -7,6 +7,7 @@
 #include "litl-engine/objects/material/materialManager.hpp"
 #include "litl-engine/render/renderManager.hpp"
 #include "litl-engine/lights/lightManager.hpp"
+#include "litl-engine/lights/directional/directionalLightSystem.hpp"
 #include "litl-engine/scene/sceneManager.hpp"
 #include "litl-engine/scene/sceneView.hpp"
 #include "litl-engine/tasks/taskManager.hpp"
@@ -46,6 +47,7 @@ namespace litl::Internal
         systems.addSystem<MeshInstantiationSystem>(SystemGroup::Startup);
         systems.addSystem<ModelInstantiationSystem>(SystemGroup::Startup);
         systems.addSystem<ActiveMaterialSystem>(SystemGroup::PreRender);
+        systems.addSystem<DirectionalLightSystem>(SystemGroup::LateUpdate);
         systems.addSystem<ActiveVariableMaterialSystem>(SystemGroup::PreRender);
         systems.addSystem<PendingModelMaterialSystem>(SystemGroup::PreRender);
         systems.addSystem<CullingSystem>(SystemGroup::PreRender);
