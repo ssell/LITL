@@ -148,7 +148,14 @@ namespace litl
 
             engineFrameCallbacks->onPreGroup[static_cast<uint32_t>(SystemGroup::PreRender)] = [this, userFrameCallbacks](ServiceProvider& services, float dt, SystemGroup group)
                 {
-                    lightManager->onPreRender({});
+                    auto* renderer = renderManager->getRenderer();
+
+                    if (renderer != nullptr)
+                    {
+                        const auto frameData = renderer->getFrameData();
+                        lightManager->onPreRender({}, frameData.framesInFlight, frameData.frameInFlightIndex);
+                    }
+
                     sceneManager->onPreRender({}, *world);
                     materialManager->onPreRender({});
                     userFrameCallbacks->invokePreGroup(services, dt, group);

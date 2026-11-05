@@ -84,6 +84,8 @@ namespace litl::samples
         auto assets = services.get<AssetManager>();
         auto lights = services.get<LightManager>();
 
+        lights->setAmbientColor(color(0.05f, 0.025f, 0.05f, 1.0f));
+
         const auto* mainCamera = createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(-5.0f, 1.5f, 0.25f), vec3(5.0f, 1.5f, 0.25f), vec3::up(), *objectPool, *sceneView);
         commands.addComponent<FreeFlyController>(mainCamera->getEntity());
         commands.addComponent<PendingModelInstance>(mainCamera->getEntity(), createModelInstance("litl/models/sphere", "litl/materials/lit", *assets));

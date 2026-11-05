@@ -12,6 +12,7 @@ namespace litl
     class Engine;
     class EngineCallbacks;
     class ServiceProvider;
+    class GpuBuffer;
 
     struct DirectionalLightDescriptor
     {
@@ -31,7 +32,11 @@ namespace litl
 
         void setup(Authority<Engine> auth, ServiceProvider& services) noexcept;
         void destroy(Authority<Engine> auth) noexcept;
-        void onPreRender(Authority<EngineCallbacks> auth) noexcept;
+        void onPreRender(Authority<EngineCallbacks> auth, uint32_t framesInFlight, uint32_t framesInFlightIndex) noexcept;
+
+        [[nodiscard]] GpuBuffer const* getLightDataBuffer() const noexcept;
+
+        void setAmbientColor(color rgb) noexcept;
 
     private:
 

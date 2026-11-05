@@ -5,6 +5,8 @@
 
 module core;
 
+import lighting;
+
 #define BindSetPerFrame    0
 #define BindSetPerPass     1
 #define BindSetPerMaterial 2
@@ -106,11 +108,12 @@ public struct RenderInstanceData
 // Maps to RenderPushConstants in litl-engine/render/renderStructs.hpp
 public struct PushConstants<MatProps>
 {
-    public PerFrameData *frameData;
-    public PerPassData *passData;
-    public RenderInstanceData *instanceData;
-    public float4x4 *worldMatrices;
-    public MatProps *materialProperties;
+    public PerFrameData* frameData;
+    public PerPassData* passData;
+    public RenderInstanceData* instanceData;
+    public float4x4* worldMatrices;
+    public MatProps* materialProperties;
+    public LightData* lightData;
 
     public uint getGpuIndex(in uint globalInstanceId)
     {

@@ -17,6 +17,7 @@
 #include "litl-engine/render/passes/forwardOpaquePass.hpp"
 #include "litl-engine/render/passes/forwardTransparentPass.hpp"
 #include "litl-engine/render/passes/renderPassType.hpp"
+#include "litl-engine/lights/lightManager.hpp"
 #include "litl-engine/engineCallbacks.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/objects/gpuBuffer.hpp"
@@ -87,6 +88,7 @@ namespace litl
 
         std::chrono::steady_clock::time_point startTime;
         std::shared_ptr<ObjectPool> objectPool{ nullptr };
+        std::shared_ptr<LightManager> lightManager{ nullptr };
         std::shared_ptr<SceneView> sceneView{ nullptr };
         std::queue<GpuBufferHandle> dirtyBuffers;
         std::queue<TextureHandle> dirtyTextures;
@@ -109,12 +111,14 @@ namespace litl
             startTime = std::chrono::steady_clock::now();
             objectPool = services.get<ObjectPool>();
             sceneView = services.get<SceneView>();
+            lightManager = services.get<LightManager>();
 
             auto config = services.get<Configuration>();
             auto window = services.get<Window>();
             auto engineCallbacks = services.get<EngineCallbacks>();
 
             LITL_FATAL_ASSERT_MSG((objectPool != nullptr), "Failed to inject ObjectPool into RenderManager.");
+            LITL_FATAL_ASSERT_MSG((lightManager != nullptr), "Failed to inject LightManager into RenderManager.");
             LITL_FATAL_ASSERT_MSG((sceneView != nullptr), "Failed to inject SceneView into RenderManager.");
             LITL_FATAL_ASSERT_MSG((config != nullptr), "Failed to inject Configuration into RenderManager.");
             LITL_FATAL_ASSERT_MSG((window != nullptr), "Failed to inject Window into RenderManager.");
@@ -335,6 +339,7 @@ namespace litl
 
             sortVisibleEntities(cullingBucket);
             updatePerFrameData(frameCommandBuffer, dt);
+            updateLightData();
             updateWorldMatrices(frameCommandBuffer);
             gatherPreparedViews(cullingBucket, framePreparedViews);
             writeViewData(frameCommandBuffer, framePreparedViews, frameRenderViews);
@@ -447,8 +452,6 @@ namespace litl
         /// <summary>
         /// Updates the FrameData buffer which is supplied by default to all shaders via the push constants.
         /// </summary>
-        /// <param name="commandBuffer"></param>
-        /// <param name="dt"></param>
         void updatePerFrameData(CommandBufferHandle commandBuffer, float dt) noexcept
         {
             auto data = renderer->getFrameData();
@@ -467,9 +470,18 @@ namespace litl
         }
 
         /// <summary>
+        /// Updates the pushed light data buffer address.
+        /// </summary>
+        void updateLightData() noexcept
+        {
+            const auto* lightGpuBuffer = lightManager->getLightDataBuffer();
+            LITL_ASSERT_MSG((lightGpuBuffer != nullptr), "Attempting to render without a valid light data buffer.", );
+            pushConstants.lightDataAddr = lightGpuBuffer->getBufferDeviceAddress().value();
+        }
+
+        /// <summary>
         /// Updates the world matrix SSBO whose source is the active SceneTransforms.
         /// </summary>
-        /// <param name="commandBuffer"></param>
         void updateWorldMatrices(CommandBufferHandle commandBuffer) noexcept
         {
             auto currWorldMatrices = sceneView->getWorldMatrices();

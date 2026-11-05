@@ -70,8 +70,8 @@ FragmentOutput fragmentMain(VertexOutput input)
     }
 
     // TODO lighting
-    const float ambient = 0.1f;
-    const float shading = max(ambient, (normalize(input.normal).y + 1.0f) * 0.5f);
+    const float3 ambient = _pc.lightData->ambient.rgb;
+    const float3 shading = max(ambient, ((normalize(input.normal).y + 1.0f) * 0.5f).rrr);
     const float3 diffuse = float3(1.0f, 1.0f, 1.0f);
     const float3 specular = float3(0.0f, 0.0f, 0.0f);
     const float3 emissive = float3(0.0f, 0.0f, 0.0f);

@@ -10,7 +10,9 @@
 #include "litl-engine/engine.hpp"
 #include "litl-engine/engineCallbacks.hpp"
 #include "litl-engine/lights/lightManager.hpp"
+#include "litl-engine/lights/lightData.hpp"
 #include "litl-engine/lights/directionalLight.hpp"
+#include "litl-engine/objects/objectPool.hpp"
 
 namespace litl
 {
@@ -31,37 +33,21 @@ namespace litl
             LightCommandVar command{};
         };
 
-        /// <summary>
-        /// Individual directional light record which is uploaded to the GPU.
-        /// This is built/updated each frame from DirectionalLight components added to entities.
-        /// </summary>
-        struct DirectionalLightRecord
+        struct LightDataInfo
         {
-            color color{ colors::White };               // Color of the light.
-            vec3 position{ vec3::zero() };              // World-space position of the light.
-            vec3 lightDir{ vec3::forward() };           // Normalized directional vector that the light is travelling along.
-            float intensity{ 1.0f };                    // Intensity/brightness of the light.
-        };
-
-        /// <summary>
-        /// Block of directional lights that is uploaded to the GPU.
-        /// </summary>
-        struct DirectionalLightBlock
-        {
-            static constexpr uint32_t DirectionalLightsPerBlock = 32u;
-
-            /// <summary>
-            /// The raw byte data stored within this block. This is copied directly over to the GPU.
-            /// </summary>
-            std::vector<std::byte> data;
+            LightData data{};
+            GpuBufferHandle handle{};
+            bool dirty{ true };
+            uint32_t dirtyFrames{ 0u };
         };
     }
 
     struct LightManager::Impl
     {
+        std::shared_ptr<ObjectPool> objectPool{ nullptr };
         std::shared_ptr<World> world{ nullptr };
 
-        HandlePool<DirectionalLightRecord, DirectionalLightHandleTag> directionalLightPool;
+        LightDataInfo lightData{};
 
         std::mutex commandsMutex{};
         std::vector<LightCommand> commands;
@@ -73,9 +59,11 @@ namespace litl
 
         void setup(ServiceProvider& services) noexcept
         {
+            objectPool = services.get<ObjectPool>();
             world = services.get<World>();
 
-            LITL_FATAL_ASSERT_MSG((world != nullptr), "Failed to inkect World into LightManager");
+            LITL_FATAL_ASSERT_MSG((objectPool != nullptr), "Failed to inject ObjectPool into LightManager");
+            LITL_FATAL_ASSERT_MSG((world != nullptr), "Failed to inject World into LightManager");
 
             commands.reserve(32ull);
         }
@@ -85,10 +73,10 @@ namespace litl
             // ... todo if needed ...
         }
 
-        void onPreRender() noexcept
+        void onPreRender(uint32_t framesInFlight, uint32_t framesInFlightIndex) noexcept
         {
             processDeferredCommands();
-            // ... todo update GPU light data ...
+            updateLightDataBuffer(framesInFlight, framesInFlightIndex);
         }
 
         // ---------------------------------------------------------------------------------
@@ -126,10 +114,58 @@ namespace litl
 
             commandsCopy.clear();
         }
+
+        // ---------------------------------------------------------------------------------
+        // Updates
+        // ---------------------------------------------------------------------------------
+
+        GpuBuffer* getLightDataBuffer() noexcept
+        {
+            if (!lightData.handle.isValid())
+            {
+                // Lazily create the buffer as the renderer may not be render when Setup is called.
+                lightData.handle = objectPool->createGpuBuffer(GpuBufferDescriptor{
+                    .objectInfo = ObjectDescriptor{.name = "LITL_INTERNAL_Buffer_LightData" },
+                    .type = BufferTypeFlagBits::BufferDeviceAddress,
+                    .memoryUsage = BufferMemoryUsage::PersistentMap,
+                    .bufferStrategy = GpuBufferingStrategy::Frame,
+                    .bytes = sizeof(LightData),
+                    .itemBytes = sizeof(LightData)
+                });
+
+                LITL_FATAL_ASSERT_MSG(lightData.handle.isValid(), "Failedto create Light Data buffer.");
+            }
+
+            return objectPool->getGpuBuffer(lightData.handle);
+        }
+
+        void updateLightDataBuffer(uint32_t framesInFlight, uint32_t framesInFlightIndex) noexcept
+        {
+            auto* lightDataBuffer = getLightDataBuffer();
+            LITL_ASSERT_MSG((lightDataBuffer != nullptr), "Failed to retrieve Light Data buffer.", );
+
+            if (lightData.dirty)
+            {
+                lightData.dirtyFrames = framesInFlight;
+                lightData.dirty = false;
+            }
+
+            lightDataBuffer->swapBuffers(framesInFlightIndex);
+
+            if (lightData.dirtyFrames > 0u)
+            {
+                lightData.dirtyFrames--;
+
+                lightDataBuffer->recordChunkDataWrite(GpuBufferChunk{
+                    .sourcePtr = generic_as_byte_span(&lightData.data, sizeof(LightData)),
+                    .offset = 0ull
+                });
+            }
+        }
     };
 
     LightManager::LightManager()
-        : m_pImpl(std::make_unique<Impl>())
+        : m_pImpl(std::make_unique<LightManager::Impl>())
     {
 
     }
@@ -149,8 +185,19 @@ namespace litl
         m_pImpl->destroy();
     }
 
-    void LightManager::onPreRender(Authority<EngineCallbacks> auth) noexcept
+    void LightManager::onPreRender(Authority<EngineCallbacks> auth, uint32_t framesInFlight, uint32_t framesInFlightIndex) noexcept
     {
-        m_pImpl->onPreRender();
+        m_pImpl->onPreRender(framesInFlight, framesInFlightIndex);
+    }
+
+    GpuBuffer const* LightManager::getLightDataBuffer() const noexcept
+    {
+        return m_pImpl->getLightDataBuffer();
+    }
+
+    void LightManager::setAmbientColor(color rgb) noexcept
+    {
+        m_pImpl->lightData.data.ambientColor = rgb;
+        m_pImpl->lightData.dirty = true;
     }
 }

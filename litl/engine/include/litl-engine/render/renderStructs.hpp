@@ -49,6 +49,7 @@ namespace litl
         uint64_t instanceDataAddr = 0ull;
         uint64_t worldMatricesAddr = 0ull;
         uint64_t materialPropertiesAddr = 0ull;
+        uint64_t lightDataAddr = 0ull;
     };
 
     static_assert(sizeof(RenderPushConstants) <= RendererConstants::MaxPushConstantSize);
