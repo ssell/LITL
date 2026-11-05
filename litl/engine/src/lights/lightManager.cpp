@@ -70,7 +70,19 @@ namespace litl
 
         void destroy() noexcept
         {
-            // ... todo ...
+            logInfo("Destroying LightManager ...");
+
+            // ---- Directional Lights
+
+            std::vector<DirectionalLightHandle> directionalLightHandles;
+            directionalLightPool.getAllHandles(directionalLightHandles);
+
+            logTrace("... destroying ", directionalLightHandles.size(), " Directional Light handles.");
+
+            for (auto handle : directionalLightHandles)
+            {
+                destroyDirectionalLight(handle, true);
+            }
         }
 
         void onPreRender() noexcept

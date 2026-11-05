@@ -183,6 +183,12 @@ namespace litl
             m_pImpl->pSharedRenderManager->halt();
         }
 
+        if (m_pImpl->pSharedLightManager != nullptr)
+        {
+            logInfo("Shutdown Light Manager ...");
+            m_pImpl->pSharedLightManager->destroy({});
+        }
+
         if (m_pImpl->pSharedAssetManager != nullptr)
         {
             logInfo("Shutdown Asset Manager ...");
