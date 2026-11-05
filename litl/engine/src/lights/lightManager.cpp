@@ -2,8 +2,10 @@
 #include <variant>
 #include <vector>
 
+#include "litl-core/assert.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/services/serviceProvider.hpp"
+#include "litl-ecs/world.hpp"
 #include "litl-engine/engine.hpp"
 #include "litl-engine/engineCallbacks.hpp"
 #include "litl-engine/lights/lightManager.hpp"
@@ -45,6 +47,8 @@ namespace litl
 
     struct LightManager::Impl
     {
+        std::shared_ptr<World> world{ nullptr };
+
         HandlePool<DirectionalLightRecord, DirectionalLightHandleTag> directionalLightPool;
 
         std::mutex commandsMutex{};
@@ -57,12 +61,22 @@ namespace litl
 
         void setup(ServiceProvider& services) noexcept
         {
+            world = services.get<World>();
+
+            LITL_FATAL_ASSERT_MSG((world != nullptr), "Failed to inkect World into LightManager");
+
             commands.reserve(32ull);
         }
 
         void destroy() noexcept
         {
             // ... todo ...
+        }
+
+        void onPreRender() noexcept
+        {
+            processDeferredCommands();
+            // ... todo update GPU light data ...
         }
 
         // ---------------------------------------------------------------------------------
@@ -110,7 +124,7 @@ namespace litl
 
                     if (commandPtr != nullptr)
                     {
-                        destroyDirectionalLight(commandPtr->handle);
+                        destroyDirectionalLight(commandPtr->handle, true);
                     }
 
                     break;
@@ -125,29 +139,55 @@ namespace litl
             commandsCopy.clear();
         }
 
+        void destroyLightEntity(Entity entity, bool atSyncPoint) noexcept
+        {
+            if (entity.isNull())
+            {
+                return;
+            }
+
+            if (atSyncPoint)
+            {
+                world->destroyImmediate(entity);
+            }
+            else
+            {
+                world->getCommandBuffer().destroyEntity(entity);
+            }
+        }
+
         // ---------------------------------------------------------------------------------
         // Directional Lights
         // ---------------------------------------------------------------------------------
 
-        void createDirectionalLight(CreateDirectionalLightCommand const& command)
+        void createDirectionalLight(CreateDirectionalLightCommand const& command)           
         {
-            if (!command.handle.isValid())
+            DirectionalLightRecord* record = directionalLightPool.get(command.handle);
+
+            if ((record == nullptr) || !record->entity.isNull())
             {
                 return;
             }
 
-            // ... todo ...
+            const DirectionalLight light{
+                .color = command.descriptor.color,
+                .intensity = command.descriptor.intensity
+            };
+
+            record->entity = world->createImmediate();
+            world->addComponentImmediate<DirectionalLight>(record->entity, light);
         }
 
-        void destroyDirectionalLight(DirectionalLightHandle handle) noexcept
+        void destroyDirectionalLight(DirectionalLightHandle handle, bool atSyncPoint) noexcept
         {
-            if (!handle.isValid())
+            DirectionalLightRecord* record = directionalLightPool.get(handle);
+
+            if (record == nullptr)
             {
                 return;
             }
 
-            // ... todo ...
-
+            destroyLightEntity(record->entity, atSyncPoint);
             directionalLightPool.destroy(handle);
         }
     };
@@ -175,11 +215,13 @@ namespace litl
 
     void LightManager::onPreRender(Authority<EngineCallbacks> auth) noexcept
     {
-        m_pImpl->processDeferredCommands();
+        m_pImpl->onPreRender();
     }
 
     DirectionalLightHandle LightManager::createDirectionalLight(DirectionalLightDescriptor const& descriptor, vec3 position, quat rotation) noexcept
     {
+        // Reminder: do not call m_pImpl->createDirectionalLight directly as it invokes world->createImmediate. It needs to be done during a sync point.
+
         DirectionalLightRecord record{};
         const DirectionalLightHandle handle = m_pImpl->directionalLightPool.create(record);
 
@@ -199,7 +241,7 @@ namespace litl
 
     void LightManager::destroyDirectionalLight(DirectionalLightHandle handle) noexcept
     {
-        m_pImpl->destroyDirectionalLight(handle);
+        m_pImpl->destroyDirectionalLight(handle, false);
     }
 
     void LightManager::deferDestroyDirectionalLight(DirectionalLightHandle handle) noexcept
