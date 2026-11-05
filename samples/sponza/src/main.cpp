@@ -82,6 +82,7 @@ namespace litl::samples
         auto objectPool = services.get<ObjectPool>();
         auto sceneView = services.get<SceneView>();
         auto assets = services.get<AssetManager>();
+        auto lights = services.get<LightManager>();
 
         const auto* mainCamera = createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(-5.0f, 1.5f, 0.25f), vec3(5.0f, 1.5f, 0.25f), vec3::up(), *objectPool, *sceneView);
         commands.addComponent<FreeFlyController>(mainCamera->getEntity());
@@ -92,6 +93,8 @@ namespace litl::samples
         commands.addComponent<Transform>(sponzaEntity, Transform::create(vec3::zero(), quat::identity()));
         commands.addComponent<PendingModelInstance>(sponzaEntity, createModelInstance("models/ignore/sponza", "litl/materials/lit", *assets));
         commands.addComponent<LocalBounds>(sponzaEntity);
+
+        lights->createDirectionalLight(DirectionalLightDescriptor{ .color = colors::Red, .intensity = 1.0f }, vec3{}, quat{});
 
         // ---------------------------------------------------------------------------------
         // Begin Dev / Test Entities

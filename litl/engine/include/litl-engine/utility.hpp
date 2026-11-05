@@ -11,6 +11,7 @@
 #include "litl-engine/ecs/common.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/scene/sceneView.hpp"
+#include "litl-engine/lights/lightManager.hpp"
 
 namespace litl
 {

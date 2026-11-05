@@ -6,6 +6,7 @@
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/objects/material/materialManager.hpp"
 #include "litl-engine/render/renderManager.hpp"
+#include "litl-engine/lights/lightManager.hpp"
 #include "litl-engine/scene/sceneManager.hpp"
 #include "litl-engine/scene/sceneView.hpp"
 #include "litl-engine/tasks/taskManager.hpp"
@@ -37,6 +38,7 @@ namespace litl::Internal
         services.addSingleton<SceneManager>();
         services.addSingleton<SceneView>();
         services.addSingleton<EngineCallbacks>();
+        services.addSingleton<LightManager>();
     }
 
     void defaultConfigureSystems(SystemCollection& systems)

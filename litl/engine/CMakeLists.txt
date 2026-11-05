@@ -49,7 +49,11 @@ add_library(litl-engine STATIC
 	"src/platformFactory.cpp"
 	"src/objects/renderTexture.cpp" 
 	"src/render/passes/forwardOpaquePass.cpp" 
-	"src/render/passes/blitPass.cpp" "src/render/passes/depthOnlyPass.cpp" "src/render/passes/forwardTransparentPass.cpp")
+	"src/render/passes/blitPass.cpp" 
+	"src/render/passes/depthOnlyPass.cpp" 
+	"src/render/passes/forwardTransparentPass.cpp"
+	"src/lights/lightManager.cpp"
+)
 
 target_include_directories(litl-engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 

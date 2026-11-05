@@ -18,6 +18,7 @@
 #include "litl-engine/tasks/taskManager.hpp"
 #include "litl-engine/engineCallbacks.hpp"
 #include "litl-engine/render/renderManager.hpp"
+#include "litl-engine/lights/lightManager.hpp"
 
 namespace litl
 {
@@ -63,6 +64,7 @@ namespace litl
         std::shared_ptr<MaterialManager> pSharedMaterialManager{ nullptr };
         std::shared_ptr<AssetManager> pSharedAssetManager{ nullptr };
         std::shared_ptr<SceneManager> pSharedSceneManager{ nullptr };
+        std::shared_ptr<LightManager> pSharedLightManager{ nullptr };
         
         void configureCallbacks(ConfigureCallbacksFunc callbacksFunc)
         {
@@ -143,12 +145,14 @@ namespace litl
         m_pImpl->pSharedAssetManager = m_pImpl->pServiceProvider->get<AssetManager>();
         m_pImpl->pSharedSceneManager = m_pImpl->pServiceProvider->get<SceneManager>();
         m_pImpl->pSharedRenderManager = m_pImpl->pServiceProvider->get<RenderManager>();
+        m_pImpl->pSharedLightManager = m_pImpl->pServiceProvider->get<LightManager>();
 
         m_pImpl->pSharedTaskManager->setup({}, *m_pImpl->pServiceProvider);
         m_pImpl->pSharedObjectPool->setup({}, *m_pImpl->pServiceProvider);
         m_pImpl->pSharedMaterialManager->setup({}, *m_pImpl->pServiceProvider);
         m_pImpl->pSharedAssetManager->setup({}, *m_pImpl->pServiceProvider);
         m_pImpl->pSharedSceneManager->setup({}, (*m_pImpl->pServiceProvider));
+        m_pImpl->pSharedLightManager->setup({}, (*m_pImpl->pServiceProvider));
         m_pImpl->pSharedConfig->set(config);
         m_pImpl->pSharedFrameLimiter->setTargetFps(static_cast<float>(m_pImpl->pSharedConfig->engine.framesPerSecond));
 
