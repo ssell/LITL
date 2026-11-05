@@ -33,10 +33,6 @@ namespace litl
         void destroy(Authority<Engine> auth) noexcept;
         void onPreRender(Authority<EngineCallbacks> auth) noexcept;
 
-        DirectionalLightHandle createDirectionalLight(DirectionalLightDescriptor const& descriptor, vec3 position, quat rotation) noexcept;
-        void destroyDirectionalLight(DirectionalLightHandle handle) noexcept;
-        void deferDestroyDirectionalLight(DirectionalLightHandle handle) noexcept;
-
     private:
 
         struct Impl;

@@ -94,8 +94,6 @@ namespace litl::samples
         commands.addComponent<PendingModelInstance>(sponzaEntity, createModelInstance("models/ignore/sponza", "litl/materials/lit", *assets));
         commands.addComponent<LocalBounds>(sponzaEntity);
 
-        lights->createDirectionalLight(DirectionalLightDescriptor{ .color = colors::Red, .intensity = 1.0f }, vec3{}, quat{});
-
         // ---------------------------------------------------------------------------------
         // Begin Dev / Test Entities
         // ---------------------------------------------------------------------------------
