@@ -257,6 +257,8 @@ namespace litl
     void JobScheduler::workerInternalLoop(uint32_t threadIndex) const
     {
         t_threadIndex = threadIndex;
+        ThreadInfo::get().jobIndex = threadIndex;
+
         auto& self = *(m_pImpl->workers[t_threadIndex]);
 
         // While the scheduler is running ...

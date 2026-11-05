@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <thread>
 
+#include "litl-core/constants.hpp"
+
 namespace litl
 {
     /// <summary>
@@ -20,6 +22,11 @@ namespace litl
         /// The numerical id of the thread, ordered based on ThreadInfo::get() call order.
         /// </summary>
         uint32_t index;
+
+        /// <summary>
+        /// If this is a thread running a job, then what index is it.
+        /// </summary>
+        uint32_t jobIndex{ Constants::uint32_null_index };
 
         /// <summary>
         /// Is this the main thread?

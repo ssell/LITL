@@ -1,5 +1,5 @@
-#ifndef LITL_CORE_CONTAINERS_PER_THREAD_VECTOR_H__
-#define LITL_CORE_CONTAINERS_PER_THREAD_VECTOR_H__
+#ifndef LITL_CORE_JOBS_PER_JOB_VECTOR_H__
+#define LITL_CORE_JOBS_PER_JOB_VECTOR_H__
 
 #include <algorithm>
 #include <array>
@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <iterator>
 #include <numeric>
+#include <optional>
 #include <ranges>
 #include <type_traits>
 #include <utility>
@@ -18,46 +19,103 @@
 
 namespace litl
 {
-    template <class T, size_t MaxThreads = Constants::max_thread_count>
-    class PerThreadVector
+    /// <summary>
+    /// Wrapper around an array of per-thread vectors to be used with the jobs system.
+    /// Each job thread gets its own vector which can then be drained/combined into a single vector at a sync point.
+    /// </summary>
+    template <class T>
+    class PerJobVector
     {
-        static_assert(MaxThreads > 0ull);
         static_assert(!std::is_same_v<T, bool>, "std::vector<bool> is not a real container; use a byte type");
+        static constexpr uint32_t JobThreadCount = Constants::max_thread_count + 1;          // +1 for the main thread which can also run jobs while waiting.
 
     public:
 
         /// <summary>
         /// Retrieves the vector local to the calling thread. Asserts on the ThreadInfo::index value.
+        /// May return nullptr if calling from a non-job non-main thread.
         /// </summary>
-        [[nodiscard]] std::vector<T>& local(this auto& self) noexcept
+        [[nodiscard]] std::vector<T>* local() noexcept
         {
-            LITL_FATAL_ASSERT(ThreadInfo::get().index < MaxThreads);
-            return self.m_alignedVectorSlots[ThreadInfo::get().index].vector;
+            if (ThreadInfo::get().isMainThread())
+            {
+                return &m_alignedVectorSlots[Constants::max_thread_count].vector;
+            }
+            else
+            {
+                const uint32_t jobIndex = ThreadInfo::get().jobIndex;
+
+                if (jobIndex < Constants::max_thread_count)
+                {
+                    return &m_alignedVectorSlots[jobIndex].vector;
+                }
+            }
+
+            return nullptr;
+        }
+
+        /// <summary>
+        /// Retrieves the vector local to the calling thread. Asserts on the ThreadInfo::index value.
+        /// May return nullptr if calling from a non-job non-main thread.
+        /// </summary>
+        [[nodiscard]] std::vector<T> const* local() const noexcept
+        {
+            return const_cast<std::vector<T> const*>(local());
         }
 
         /// <summary>
         /// Appends the element to the back of the thread-local vector.
+        /// Returns true if the item was added, false if it failed. May fail if called from a non-job/non-main thread.
         /// </summary>
-        T& push_back(const T& v)
+        bool push_back(const T& value)
         {
-            return local().emplace_back(v);
+            auto* vector = local();
+
+            if (vector == nullptr)
+            {
+                return false;
+            }
+
+            vector->emplace_back(value);
+
+            return true;
         }
 
         /// <summary>
         /// Appends the element to the back of the thread-local vector.
+        /// Returns true if the item was added, false if it failed. May fail if called from a non-job/non-main thread.
         /// </summary>
-        T& push_back(T&& v)
+        bool push_back(T&& value)
         {
-            return local().emplace_back(std::move(v));
+            auto* vector = local();
+
+            if (vector == nullptr)
+            {
+                return false;
+            }
+
+            vector->emplace_back(std::move(value));
+
+            return true;
         }
 
         /// <summary>
         /// Appends the element to the back of the thread-local vector.
+        /// Returns true if the item was added, false if it failed. May fail if called from a non-job/non-main thread.
         /// </summary>
         template <class... Args>
-        T& emplace_back(Args&&... args)
+        bool emplace_back(Args&&... args)
         {
-            return local().emplace_back(std::forward<Args>(args)...);
+            auto* vector = local();
+
+            if (vector == nullptr)
+            {
+                return false;
+            }
+
+            vector->emplace_back(std::forward<Args>(args)...);
+
+            return true;
         }
 
         /// <summary>
@@ -121,7 +179,7 @@ namespace litl
         }
 
         /// <summary>
-        /// Range over the per-thread vectors themselves (size MaxThreads).
+        /// Range over the per-thread vectors themselves.
         /// This should be called only from the main thread/sync point.
         /// </summary>
         [[nodiscard]] auto vectors(this auto& self) noexcept
@@ -190,12 +248,12 @@ namespace litl
     private:
 
         // Pad each slot to a cache line so threads pushing to adjacent slots don't ping-pong the vector headers (begin/end/cap pointers get written on every push_back).
-        struct alignas(64) Slot
+        struct alignas(Constants::cache_line_size) Slot
         {
             std::vector<T> vector;
         };
 
-        std::array<Slot, MaxThreads> m_alignedVectorSlots{};
+        std::array<Slot, JobThreadCount> m_alignedVectorSlots{};
     };
 }
 

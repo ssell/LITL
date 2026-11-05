@@ -92,7 +92,9 @@ add_executable(litl-tests
 	"src/litl-platform/input/input_tests.cpp" 
 	"src/litl-platform/input/inputActions_tests.cpp" 
 	"src/litl-core/math/projection_tests.cpp" 
-	"src/litl-platform/window/windowCallbacks_tests.cpp" "src/litl-core/containers/perThreadVector_tests.cpp")
+	"src/litl-platform/window/windowCallbacks_tests.cpp" 
+	"src/litl-core/job/perJobVector_tests.cpp"
+)
 
 target_link_libraries(litl-tests
 	PRIVATE
