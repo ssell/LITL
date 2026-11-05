@@ -60,7 +60,7 @@ namespace litl
         /// </summary>
         [[nodiscard]] std::vector<T> const* local() const noexcept
         {
-            return const_cast<std::vector<T> const*>(local());
+            return const_cast<PerJobVector<T>*>(this)->local();
         }
 
         /// <summary>

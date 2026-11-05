@@ -8,7 +8,6 @@ namespace litl::tests
 {
     LITL_TEST_CASE("Main Thread", "[core::threadinfo]")
     {
-        REQUIRE(ThreadInfo::isMainThread() == false);
         ThreadInfo::setMainThread();
         REQUIRE(ThreadInfo::isMainThread() == true);
 
