@@ -39,12 +39,27 @@ namespace litl::import
     };
 
     /// <summary>
+    /// For packed textures, which channel is referenced?
+    /// </summary>
+    enum class MaterialTextureChannel : uint8_t
+    {
+        All = 0u,
+        R = 1u,
+        G = 2u,
+        B = 3u,
+        A = 4u
+    };
+
+    constexpr std::array<std::string_view, 5u> MaterialTextureChannelName = { "RGBA", "R", "G", "B", "A" };
+
+    /// <summary>
     /// Link together a material and texture at a given property name.
     /// </summary>
     struct MaterialTextureLink
     {
         uint32_t materialItemIndex{ Constants::uint32_null_index };
         uint32_t textureItemIndex{ Constants::uint32_null_index };
+        MaterialTextureChannel textureChannel{ MaterialTextureChannel::All };
         std::string propertyName;
     };
 

@@ -191,6 +191,8 @@ namespace litl::import
         struct MaterialTextureItemIndices
         {
             uint32_t baseColor{ Constants::uint32_null_index };
+            uint32_t normalMap{ Constants::uint32_null_index };
+            uint32_t ormMap{ Constants::uint32_null_index };          // gltf pack occlusion+roughness+metallic together in a single texture (.r = occlusion, .g = roughness, .b = metallic, .a = unused)
             // ... todo add normal map, etc ...
         };
 
@@ -215,9 +217,9 @@ namespace litl::import
                 glMaterial.pbr_metallic_roughness.base_color_factor[3]
             };
 
-            if (const auto* glTexture = glMaterial.pbr_metallic_roughness.base_color_texture.texture; (glTexture != nullptr) && (glTexture->image != nullptr))
+            if (const auto* glBaseTexture = glMaterial.pbr_metallic_roughness.base_color_texture.texture; (glBaseTexture != nullptr) && (glBaseTexture->image != nullptr))
             {
-                const auto glImageIndex = cgltf_image_index(glData, glTexture->image);
+                const auto glImageIndex = cgltf_image_index(glData, glBaseTexture->image);
 
                 if (glImageIndex < glImageIndexToModelTextureIndex.size())
                 {
@@ -226,6 +228,34 @@ namespace litl::import
                 else
                 {
                     logWarning("Failed to link the 'baseColor' texture of GLB material '", nameOr(glMaterial.name, "UNKNOWN"), "' in model '", location, "' as the image index was invalid.");
+                }
+            }
+
+            if (const auto* glNormalTexture = glMaterial.normal_texture.texture; (glNormalTexture != nullptr) && (glNormalTexture->image != nullptr))
+            {
+                const auto glImageIndex = cgltf_image_index(glData, glNormalTexture->image);
+
+                if (glImageIndex < glImageIndexToModelTextureIndex.size())
+                {
+                    textureItemIndices.normalMap = glImageIndexToModelTextureIndex[glImageIndex];
+                }
+                else
+                {
+                    logWarning("Failed to link the 'normalMap' texture of GLB material '", nameOr(glMaterial.name, "UNKNOWN"), "' in model '", location, "' as the image index was invalid.");
+                }
+            }
+
+            if (const auto* glORMTexture = glMaterial.pbr_metallic_roughness.metallic_roughness_texture.texture; (glORMTexture != nullptr) && (glORMTexture->image != nullptr))
+            {
+                const auto glImageIndex = cgltf_image_index(glData, glORMTexture->image);
+
+                if (glImageIndex < glImageIndexToModelTextureIndex.size())
+                {
+                    textureItemIndices.ormMap = glImageIndexToModelTextureIndex[glImageIndex];
+                }
+                else
+                {
+                    logWarning("Failed to link the ORM texture of GLB material '", nameOr(glMaterial.name, "UNKNOWN"), "' in model '", location, "' as the image index was invalid.");
                 }
             }
 
@@ -324,10 +354,44 @@ namespace litl::import
                 modelImportResult->textureLinks.push_back(MaterialTextureLink{
                     .materialItemIndex = materialDataItemIndex,
                     .textureItemIndex = textureItemIndices.baseColor,
+                    .textureChannel = MaterialTextureChannel::All,
                     .propertyName = "baseColor"
                 });
             }
-            // ... todo handle normal map, etc ...
+
+            if (textureItemIndices.normalMap != Constants::uint32_null_index)
+            {
+                modelImportResult->textureLinks.push_back(MaterialTextureLink{
+                    .materialItemIndex = materialDataItemIndex,
+                    .textureItemIndex = textureItemIndices.normalMap,
+                    .textureChannel = MaterialTextureChannel::All,
+                    .propertyName = "normalMap"
+                });
+            }
+
+            if (textureItemIndices.ormMap != Constants::uint32_null_index)
+            {
+                modelImportResult->textureLinks.push_back(MaterialTextureLink{
+                    .materialItemIndex = materialDataItemIndex,
+                    .textureItemIndex = textureItemIndices.ormMap,
+                    .textureChannel = MaterialTextureChannel::R,
+                    .propertyName = "occlusionMap"
+                });
+
+                modelImportResult->textureLinks.push_back(MaterialTextureLink{
+                    .materialItemIndex = materialDataItemIndex,
+                    .textureItemIndex = textureItemIndices.ormMap,
+                    .textureChannel = MaterialTextureChannel::G,
+                    .propertyName = "roughnessMap"
+                });
+
+                modelImportResult->textureLinks.push_back(MaterialTextureLink{
+                    .materialItemIndex = materialDataItemIndex,
+                    .textureItemIndex = textureItemIndices.ormMap,
+                    .textureChannel = MaterialTextureChannel::B,
+                    .propertyName = "metallicMap"
+                });
+            }
 
             return materialIndex;
         }

@@ -18,6 +18,14 @@ namespace litl
     class RenderManager;
     struct TextureAsset;
 
+    enum class TextureChannel : uint8_t
+    {
+        R = 0,
+        G = 1,
+        B = 2,
+        A = 3
+    };
+
     struct TextureDescriptor
     {
         ObjectDescriptor objectInfo{};
@@ -109,6 +117,11 @@ namespace litl
         /// It is up to the caller to ensure it is safe to do so (at a sync point, texture not in use, etc.).
         /// </summary>
         [[nodiscard]] bool resize(uint32_t width, uint32_t height) noexcept;
+
+        /// <summary>
+        /// Clears all channels but the specified channel. If moveToR is true, then the specified channel values are moved to the R channel.
+        /// </summary>
+        bool isolateChannel(TextureChannel channel, bool moveToR) noexcept;
 
     private:
 

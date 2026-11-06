@@ -1,6 +1,7 @@
 #include <format>
 #include <unordered_map>
 
+#include "litl-core/hash.hpp"
 #include "litl-engine/assets/modelAsset.hpp"
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/objects/objectPool.hpp"
@@ -9,6 +10,31 @@
 #include "litl-import/texture/import/result.hpp"
 #include "litl-import/material/import/result.hpp"
 #include "litl-import/model/import/result.hpp"
+
+namespace litl
+{
+    namespace 
+    {
+        struct TextureItemKey
+        {
+            uint32_t textureItemIndex{ 0u };
+            import::MaterialTextureChannel channel{ import::MaterialTextureChannel::All };
+            bool operator==(TextureItemKey const& other) const = default;
+        };
+    }
+}
+
+namespace std
+{
+    template<>
+    struct hash<litl::TextureItemKey>
+    {
+        size_t operator()(litl::TextureItemKey const& key) const noexcept
+        {
+            return static_cast<size_t>(litl::hashPOD(key));
+        }
+    };
+}
 
 namespace litl
 {
@@ -171,7 +197,7 @@ namespace litl
         // ---------------------------------------------------------------------------------
 
         auto& items = modelAsset->importedData->items;
-        std::unordered_map<uint32_t, std::string> textureItemKeys;
+        std::unordered_map<TextureItemKey, std::string> textureItemKeys;
 
         for (const auto& textureLink : modelDataPtr->textureLinks)
         {
@@ -189,17 +215,39 @@ namespace litl
                 continue;
             }
 
-            auto [keyIter, isNewTexture] = textureItemKeys.try_emplace(textureLink.textureItemIndex);
+            auto [keyIter, isNewTexture] = textureItemKeys.try_emplace({ textureLink.textureItemIndex, textureLink.textureChannel });
 
             if (isNewTexture)
             {
                 // Names are final here (sanitized + deduplicated during import)
-                keyIter->second = std::format("{}/{}", modelAsset->key, items[textureLink.textureItemIndex].getName());
+                keyIter->second = std::format("{}/{}_{}", modelAsset->key, items[textureLink.textureItemIndex].getName(), import::MaterialTextureChannelName[static_cast<uint32_t>(textureLink.textureChannel)]);
 
                 auto textureHandle = assetManager.createTextureAssetFromMemory({}, keyIter->second, textureItem->intermediateTexture);
 
                 if (auto* textureAsset = assetManager.getTexture(textureHandle); (textureAsset != nullptr))
                 {
+                    switch (textureLink.textureChannel)
+                    {
+                    case import::MaterialTextureChannel::R:
+                        textureAsset->texture->isolateChannel(TextureChannel::R, false);
+                        break;
+
+                    case import::MaterialTextureChannel::G:
+                        textureAsset->texture->isolateChannel(TextureChannel::G, true);
+                        break;
+
+                    case import::MaterialTextureChannel::B:
+                        textureAsset->texture->isolateChannel(TextureChannel::B, true);
+                        break;
+
+                    case import::MaterialTextureChannel::A:
+                        textureAsset->texture->isolateChannel(TextureChannel::A, true);
+                        break;
+
+                    default:
+                        break;
+                    }
+
                     dependencies.push_back(textureAsset);
                 }
                 else

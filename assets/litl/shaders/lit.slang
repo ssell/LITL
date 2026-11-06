@@ -10,6 +10,8 @@ struct MaterialProperties
 {
     float4 tint;
     uint baseColor;
+    uint metallicMap;
+    uint roughnessMap;
     float alphaCutoff;
 };
 
@@ -43,7 +45,7 @@ VertexOutput vertexMain(VertexInput input, uint globalInstanceId: SV_VulkanInsta
     output.uv           = input.uv;
     output.color        = float3(1.0f, 1.0f, 1.0f);
     output.materialSlot = _pc.getMaterialSlot(globalInstanceId);
-
+    
     return output;
 }
 
@@ -57,7 +59,7 @@ struct FragmentOutput
 };
 
 [shader("fragment")]
-FragmentOutput fragmentMain(VertexOutput input)
+FragmentOutput fragmentMain(VertexOutput input, bool isFrontFace: SV_IsFrontFace)
 {
     FragmentOutput output = (FragmentOutput)0;
 
@@ -73,10 +75,10 @@ FragmentOutput fragmentMain(VertexOutput input)
     }
 
     SurfaceData surface;
-    surface.normal    = normalize(input.normal);        // Normalize again since its been interpolated across the surface
+    surface.normal    = normalize(input.normal) * (isFrontFace ? 1.0f : -1.0f);     // Normalize again since its been interpolated across the surface
     surface.albedo    = baseColor.rgb;
-    surface.roughness = 1.0f;                                   // todo
-    surface.metallic  = 0.0f;                                   // todo
+    surface.roughness = 1.0f;                                                       // todo
+    surface.metallic  = 0.0f;                                                       // todo
 
     const float3 ambient = _pc.lightData->ambient.rgb * surface.albedo;
     const float3 directional = shadeDirectionalLights(_pc.lightData, surface, toViewDir);
@@ -89,6 +91,6 @@ FragmentOutput fragmentMain(VertexOutput input)
 
     // todo if transparency is premultiplied. again, need a specialization constant.
     //output.color.rgb *= baseColor.a;
-
+    
     return output;
 }

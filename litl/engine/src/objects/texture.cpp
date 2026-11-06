@@ -278,6 +278,12 @@ namespace litl
         return true;
     }
 
+    bool Texture::isolateChannel(TextureChannel channel, bool moveToR) noexcept
+    {
+        // ... todo ...
+        return true;
+    }
+
     bool Texture::isValidTextureWrite() const noexcept
     {
         if (m_pixelBytes.empty())
