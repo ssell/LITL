@@ -3,7 +3,7 @@
 // Basic shader that applies tint and textures without any lighting or other effects.
 // -----------------------------------------------------------------------------------------
 
-import litl.core;
+import litl.library;
 
 struct MaterialProperties
 {

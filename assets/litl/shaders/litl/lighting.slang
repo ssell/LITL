@@ -4,6 +4,7 @@
 // -----------------------------------------------------------------------------------------
 
 module lighting;
+__exported import brdf;
 
 public struct DirectionalLight
 {
@@ -17,4 +18,23 @@ public struct LightData
     public float4 ambient;                          // (color.r, color.g, color.b, unused)
     public DirectionalLight* directionalLights;     // Pointer to the directional light buffer.
     public uint directionalLightCount;              // Number of directional lights;
+}
+
+public float3 shadeDirectionalLights(LightData* lightData, SurfaceData surface, float3 toViewDir)
+{
+    float3 total = 0;
+
+    for (uint i = 0; i < lightData->directionalLightCount; ++i)
+    {
+        const DirectionalLight light = lightData->directionalLights[i];
+        const float3 L = light.toLight;
+        const float NdotL = saturate(dot(surface.normal, L));
+        const float3 radiance = light.colorIntensity.rgb * light.colorIntensity.a;
+
+        // ... todo multiply by per-light shadow/visibility factor ...
+
+        total += evaluateBRDF(surface, toViewDir, L) * radiance * NdotL;
+    }
+
+    return total;
 }

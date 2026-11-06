@@ -4,7 +4,7 @@
 // It is inteded that this shader is used on its own and not as part of a Material.
 // -----------------------------------------------------------------------------------------
 
-import litl.core;
+import litl.library;
 
 static const uint BlitModeColor = 0;
 static const uint BlitModeDepthFinite = 1;
