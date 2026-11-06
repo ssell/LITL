@@ -50,6 +50,25 @@ namespace litl
             bool dirty{ true };
             uint32_t dirtyFrames{ 0u };
         };
+
+        struct DirectionalLightDataInfo
+        {
+            std::vector<DirectionalLightData> data{};
+            std::vector<Entity> entities{};
+            GpuBufferHandle handle{};
+
+            void reserve(size_t count) noexcept
+            {
+                data.reserve(count);
+                entities.reserve(count);
+            }
+
+            void clear() noexcept
+            {
+                data.clear();
+                entities.clear();
+            }
+        };
     }
 
     struct LightManager::Impl
@@ -58,6 +77,7 @@ namespace litl
         std::shared_ptr<World> world{ nullptr };
 
         LightDataInfo lightData{};
+        DirectionalLightDataInfo directionalLightData{};
 
         PerJobVector<LightCommand> commands;
         std::vector<LightCommand> commandsCopy;
@@ -74,7 +94,8 @@ namespace litl
             LITL_FATAL_ASSERT_MSG((objectPool != nullptr), "Failed to inject ObjectPool into LightManager");
             LITL_FATAL_ASSERT_MSG((world != nullptr), "Failed to inject World into LightManager");
 
-            commands.reserve_each(32u);
+            commands.reserve_each(32ull);
+            directionalLightData.reserve(32ull);
         }
 
         void destroy() noexcept
@@ -84,7 +105,11 @@ namespace litl
 
         void onPreRender(uint32_t framesInFlight, uint32_t framesInFlightIndex) noexcept
         {
+            directionalLightData.clear();
+
             processDeferredCommands();
+
+            updateDirectionalLightDataBuffer(framesInFlightIndex);
             updateLightDataBuffer(framesInFlight, framesInFlightIndex);
         }
 
@@ -132,12 +157,71 @@ namespace litl
 
         void processMarkDirectionalLightActiveCommand(MarkDirectionalActiveCommand const& command) noexcept
         {
-            // ... todo ...
+            directionalLightData.data.push_back(DirectionalLightData{
+                .colorIntensity = vec4(command.light.color.r(), command.light.color.g(), command.light.color.b(), command.light.intensity),
+                .toLight = command.toLightDir,
+                .shadowIndex = Constants::uint32_null_index
+            });
+
+            directionalLightData.entities.push_back(command.entity);
         }
 
         // ---------------------------------------------------------------------------------
         // Updates
         // ---------------------------------------------------------------------------------
+
+        GpuBuffer* getDirectionalLightDataBuffer() noexcept
+        {
+            if (!directionalLightData.handle.isValid())
+            {
+                // Lazily create the buffer as the renderer may not be render when Setup is called.
+                directionalLightData.handle = objectPool->createGpuBuffer(GpuBufferDescriptor{
+                    .objectInfo = ObjectDescriptor{.name = "LITL_INTERNAL_Buffer_DirectionalLightData" },
+                    .type = BufferTypeFlagBits::BufferDeviceAddress,
+                    .memoryUsage = BufferMemoryUsage::PersistentMap,
+                    .bufferStrategy = GpuBufferingStrategy::Frame,
+                    .bytes = sizeof(DirectionalLightData) * directionalLightData.data.size(),
+                    .itemBytes = sizeof(DirectionalLightData),
+                    .canResize = true
+                    });
+
+                LITL_FATAL_ASSERT_MSG(lightData.handle.isValid(), "Failed to create Directional Light Data buffer.");
+            }
+
+            return objectPool->getGpuBuffer(directionalLightData.handle);
+        }
+
+        void updateDirectionalLightDataBuffer(uint32_t framesInFlightIndex) noexcept
+        {
+            if (directionalLightData.data.empty())
+            {
+                lightData.data.directionalLightsAddr = 0ull;
+                lightData.data.directionalLightsCount = 0u;
+                return;
+            }
+
+            auto* directionalLightDataBuffer = getDirectionalLightDataBuffer();
+            LITL_ASSERT_MSG((directionalLightDataBuffer != nullptr), "Failed to retrieve Directional Light Data buffer.", );
+
+            directionalLightDataBuffer->swapBuffers(framesInFlightIndex);
+
+            if (directionalLightDataBuffer->getItemCapacity() < directionalLightData.data.size())
+            {
+                if (!directionalLightDataBuffer->resizeItems(directionalLightData.data.size(), 2u, false, true))
+                {
+                    logError("Failed to resize Directional Light Data buffer.");
+                    return;
+                }
+            }
+
+            directionalLightDataBuffer->recordChunkDataWrite(GpuBufferChunk{
+                .sourcePtr = generic_as_byte_span(directionalLightData.data.data(), sizeof(DirectionalLightData)),
+                .offset = 0ull
+                });
+
+            lightData.data.directionalLightsAddr = directionalLightDataBuffer->getBufferDeviceAddress().value();
+            lightData.data.directionalLightsCount = static_cast<uint32_t>(directionalLightData.data.size());
+        }
 
         GpuBuffer* getLightDataBuffer() noexcept
         {
@@ -145,7 +229,7 @@ namespace litl
             {
                 // Lazily create the buffer as the renderer may not be render when Setup is called.
                 lightData.handle = objectPool->createGpuBuffer(GpuBufferDescriptor{
-                    .objectInfo = ObjectDescriptor{.name = "LITL_INTERNAL_Buffer_LightData" },
+                    .objectInfo = ObjectDescriptor{ .name = "LITL_INTERNAL_Buffer_LightData" },
                     .type = BufferTypeFlagBits::BufferDeviceAddress,
                     .memoryUsage = BufferMemoryUsage::PersistentMap,
                     .bufferStrategy = GpuBufferingStrategy::Frame,
@@ -153,7 +237,7 @@ namespace litl
                     .itemBytes = sizeof(LightData)
                 });
 
-                LITL_FATAL_ASSERT_MSG(lightData.handle.isValid(), "Failedto create Light Data buffer.");
+                LITL_FATAL_ASSERT_MSG(lightData.handle.isValid(), "Failed to create Light Data buffer.");
             }
 
             return objectPool->getGpuBuffer(lightData.handle);
@@ -210,11 +294,6 @@ namespace litl
         m_pImpl->onPreRender(framesInFlight, framesInFlightIndex);
     }
 
-    GpuBuffer const* LightManager::getLightDataBuffer() const noexcept
-    {
-        return m_pImpl->getLightDataBuffer();
-    }
-
     void LightManager::setAmbientColor(color rgb) noexcept
     {
         m_pImpl->lightData.data.ambientColor = rgb;
@@ -228,5 +307,31 @@ namespace litl
             .light = light,
             .toLightDir = toLightDir
         });
+    }
+
+    GpuBuffer const* LightManager::getLightDataBuffer() const noexcept
+    {
+        return m_pImpl->getLightDataBuffer();
+    }
+
+    uint32_t LightManager::getDirectionalLightCount() const noexcept
+    {
+        return static_cast<uint32_t>(m_pImpl->directionalLightData.data.size());
+    }
+
+    std::vector<DirectionalLightDataEntity> LightManager::getDirectionalLightData() const noexcept
+    {
+        std::vector<DirectionalLightDataEntity> lights;
+        lights.reserve(m_pImpl->directionalLightData.data.size());
+
+        for (uint32_t i = 0u; i < static_cast<uint32_t>(m_pImpl->directionalLightData.data.size()); ++i)
+        {
+            lights.push_back(DirectionalLightDataEntity{
+                .data = m_pImpl->directionalLightData.data[i],
+                .entity = m_pImpl->directionalLightData.entities[i]
+            });
+        }
+
+        return lights;
     }
 }

@@ -495,6 +495,7 @@ namespace litl
                 if (!worldMatrixBuffer->resizeItems(currWorldMatrices.size(), 2u, false, true))
                 {
                     logError("Failed to resize internal WorldMatrix GPU Buffer.");
+                    return;
                 }
             }
 
@@ -632,7 +633,8 @@ namespace litl
                 passDataScratch.push_back(RenderPerPassData{
                     .viewMatrix = preparedView.camera->getViewMatrix(),
                     .projMatrix = preparedView.camera->getProjectionMatrix(),
-                    .viewProjMatrix = preparedView.camera->getViewProjectionMatrix()
+                    .viewProjMatrix = preparedView.camera->getViewProjectionMatrix(),
+                    .cameraPosition = vec4(preparedView.camera->getWorldPosition())
                 });
 
                 for (const auto& opaqueEntity : preparedView.opaque.entities)

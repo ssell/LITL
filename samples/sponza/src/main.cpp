@@ -129,6 +129,8 @@ namespace litl::samples
             altCamera->lookAt(vec3(5.0f, 1.5f, 0.0f), vec3::up());
         }
     }
+
+
 }
 
 int main()

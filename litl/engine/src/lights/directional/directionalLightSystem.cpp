@@ -21,7 +21,7 @@ namespace litl
 
     void DirectionalLightSystem::update(SystemData const& data, Entity entity, DirectionalLight const& light, Transform const& transform)
     {
-        // Make sure to use world-space forward and not local forward from the transform.
+        // Make sure to use world-space forward and not local-space forward from the transform.
         const auto worldMatrix = m_pSceneView->getWorldMatrix(entity);
         m_pLightManager->markActive({}, entity, light, -worldMatrix.forward());
     }

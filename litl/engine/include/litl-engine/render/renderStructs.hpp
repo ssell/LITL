@@ -25,9 +25,10 @@ namespace litl
         mat4 viewMatrix;
         mat4 projMatrix;
         mat4 viewProjMatrix;
+        vec4 cameraPosition;
     };
 
-    static_assert(sizeof(RenderPerPassData) == 3 * sizeof(mat4));
+    static_assert(sizeof(RenderPerPassData) % 16 == 0);
 
     /// <summary>
     /// Engine-provided data that maps an instance id (SV_InstanceID) to a
