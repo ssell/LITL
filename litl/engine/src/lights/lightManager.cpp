@@ -185,7 +185,7 @@ namespace litl
                     .canResize = true
                     });
 
-                LITL_FATAL_ASSERT_MSG(lightData.handle.isValid(), "Failed to create Directional Light Data buffer.");
+                LITL_FATAL_ASSERT_MSG(directionalLightData.handle.isValid(), "Failed to create Directional Light Data buffer.");
             }
 
             return objectPool->getGpuBuffer(directionalLightData.handle);

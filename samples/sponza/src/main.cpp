@@ -109,6 +109,14 @@ namespace litl::samples
         commands.addComponent<LocalBounds>(cubeEntity);
         commands.addComponent<Spin>(cubeEntity, Spin{ .rate = 50.0f });
 
+
+        // ---------------------------------------------------------------------------------
+        // Single directional light
+
+        auto dirLightEntity = commands.createEntity();
+        commands.addComponent<Transform>(dirLightEntity, Transform::create(vec3::zero(), quat::fromEuler(60.0f, 100.0f, 0.0f)));
+        commands.addComponent<DirectionalLight>(dirLightEntity, DirectionalLight{ .color = color{ 0.95f, 0.95f, 1.0f }, .intensity = 2.0f});
+
         // ---------------------------------------------------------------------------------
         // Secondary camera to show views are working that is presented in the upper-right corner
 
@@ -129,8 +137,6 @@ namespace litl::samples
             altCamera->lookAt(vec3(5.0f, 1.5f, 0.0f), vec3::up());
         }
     }
-
-
 }
 
 int main()
