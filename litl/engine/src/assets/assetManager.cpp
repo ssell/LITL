@@ -1201,7 +1201,7 @@ namespace litl
         return texture;
     }
 
-    TextureAssetHandle AssetManager::createTextureAssetFromMemory(Authority<ModelAsset> auth, std::string_view key, std::shared_ptr<import::TextureIntermediateData> intermediateData) noexcept
+    TextureAssetHandle AssetManager::createTextureAssetFromMemory(Authority<ModelAsset> auth, std::string_view key, std::shared_ptr<import::TextureIntermediateData> intermediateData, TextureChannel channels) noexcept
     {
         if (intermediateData == nullptr)
         {
@@ -1243,6 +1243,7 @@ namespace litl
 
             // TextureAsset::processOnMain reads mipmaps (and residesInTextureTable) from the registration.
             assetRegistration.importSettings.texture.mipmaps = intermediateData->getDataDescriptor().mipmaps;
+            assetRegistration.importSettings.texture.channel = channels;
 
             textureAssetHandle = m_impl->createBaseTextureAsset(assetRegistration, AssetStatus::Loading);
             m_impl->assetRegistrations[hashedAssetKey] = assetRegistration;

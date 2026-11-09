@@ -18,7 +18,7 @@ namespace litl
         struct TextureItemKey
         {
             uint32_t textureItemIndex{ 0u };
-            import::MaterialTextureChannel channel{ import::MaterialTextureChannel::All };
+            TextureChannel channel{ TextureChannel::All };
             bool operator==(TextureItemKey const& other) const = default;
         };
     }
@@ -220,34 +220,12 @@ namespace litl
             if (isNewTexture)
             {
                 // Names are final here (sanitized + deduplicated during import)
-                keyIter->second = std::format("{}/{}_{}", modelAsset->key, items[textureLink.textureItemIndex].getName(), import::MaterialTextureChannelName[static_cast<uint32_t>(textureLink.textureChannel)]);
+                keyIter->second = std::format("{}/{}_{}", modelAsset->key, items[textureLink.textureItemIndex].getName(), TextureChannelName[static_cast<uint32_t>(textureLink.textureChannel)]);
 
-                auto textureHandle = assetManager.createTextureAssetFromMemory({}, keyIter->second, textureItem->intermediateTexture);
+                auto textureHandle = assetManager.createTextureAssetFromMemory({}, keyIter->second, textureItem->intermediateTexture, textureLink.textureChannel);
 
                 if (auto* textureAsset = assetManager.getTexture(textureHandle); (textureAsset != nullptr))
                 {
-                    switch (textureLink.textureChannel)
-                    {
-                    case import::MaterialTextureChannel::R:
-                        textureAsset->texture->isolateChannel(TextureChannel::R, false);
-                        break;
-
-                    case import::MaterialTextureChannel::G:
-                        textureAsset->texture->isolateChannel(TextureChannel::G, true);
-                        break;
-
-                    case import::MaterialTextureChannel::B:
-                        textureAsset->texture->isolateChannel(TextureChannel::B, true);
-                        break;
-
-                    case import::MaterialTextureChannel::A:
-                        textureAsset->texture->isolateChannel(TextureChannel::A, true);
-                        break;
-
-                    default:
-                        break;
-                    }
-
                     dependencies.push_back(textureAsset);
                 }
                 else

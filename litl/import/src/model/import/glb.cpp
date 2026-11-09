@@ -354,7 +354,7 @@ namespace litl::import
                 modelImportResult->textureLinks.push_back(MaterialTextureLink{
                     .materialItemIndex = materialDataItemIndex,
                     .textureItemIndex = textureItemIndices.baseColor,
-                    .textureChannel = MaterialTextureChannel::All,
+                    .textureChannel = TextureChannel::All,
                     .propertyName = "baseColor"
                 });
             }
@@ -364,7 +364,7 @@ namespace litl::import
                 modelImportResult->textureLinks.push_back(MaterialTextureLink{
                     .materialItemIndex = materialDataItemIndex,
                     .textureItemIndex = textureItemIndices.normalMap,
-                    .textureChannel = MaterialTextureChannel::All,
+                    .textureChannel = TextureChannel::All,
                     .propertyName = "normalMap"
                 });
             }
@@ -374,21 +374,21 @@ namespace litl::import
                 modelImportResult->textureLinks.push_back(MaterialTextureLink{
                     .materialItemIndex = materialDataItemIndex,
                     .textureItemIndex = textureItemIndices.ormMap,
-                    .textureChannel = MaterialTextureChannel::R,
+                    .textureChannel = TextureChannel::R,
                     .propertyName = "occlusionMap"
                 });
 
                 modelImportResult->textureLinks.push_back(MaterialTextureLink{
                     .materialItemIndex = materialDataItemIndex,
                     .textureItemIndex = textureItemIndices.ormMap,
-                    .textureChannel = MaterialTextureChannel::G,
+                    .textureChannel = TextureChannel::G,
                     .propertyName = "roughnessMap"
                 });
 
                 modelImportResult->textureLinks.push_back(MaterialTextureLink{
                     .materialItemIndex = materialDataItemIndex,
                     .textureItemIndex = textureItemIndices.ormMap,
-                    .textureChannel = MaterialTextureChannel::B,
+                    .textureChannel = TextureChannel::B,
                     .propertyName = "metallicMap"
                 });
             }

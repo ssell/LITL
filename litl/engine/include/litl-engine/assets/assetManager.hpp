@@ -17,6 +17,7 @@
 #include "litl-engine/assets/textureAsset.hpp"
 #include "litl-engine/ecs/components/materialRef.hpp"
 #include "litl-engine/ecs/components/meshRef.hpp"
+#include "litl-renderer/resources/textureChannel.hpp"
 
 namespace litl
 {
@@ -88,7 +89,7 @@ namespace litl
         [[nodiscard]] AssetStatus getTextureAssetStatus(TextureAssetHandle handle) noexcept;
         [[nodiscard]] TextureAsset* getTexture(std::string_view resource) noexcept;
         [[nodiscard]] TextureAsset* getTexture(TextureAssetHandle handle) noexcept;
-        [[nodiscard]] TextureAssetHandle createTextureAssetFromMemory(Authority<ModelAsset> auth, std::string_view key, std::shared_ptr<import::TextureIntermediateData> intermediateData) noexcept;
+        [[nodiscard]] TextureAssetHandle createTextureAssetFromMemory(Authority<ModelAsset> auth, std::string_view key, std::shared_ptr<import::TextureIntermediateData> intermediateData, TextureChannel channels) noexcept;
 
     private:
 

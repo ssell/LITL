@@ -5,6 +5,7 @@
 #include <type_traits>
 
 #include "litl-core/formats/transferFunction.hpp"
+#include "litl-renderer/resources/textureChannel.hpp"
 
 namespace litl::import
 {
@@ -24,6 +25,7 @@ namespace litl::import
     {
         TextureSemantic semantic{ TextureSemantic::Unknown };
         TransferFunction transfer{ TransferFunction::Linear };
+        TextureChannel channel{ TextureChannel::All };
         bool mipmaps{ false };
         bool residesInTextureTable{ true };
     };
