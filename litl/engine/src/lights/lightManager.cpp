@@ -193,34 +193,43 @@ namespace litl
 
         void updateDirectionalLightDataBuffer(uint32_t framesInFlightIndex) noexcept
         {
+            const uint64_t prevAddr = lightData.data.directionalLightsAddr;
+            const uint32_t prevCount = lightData.data.directionalLightsCount;
+
             if (directionalLightData.data.empty())
             {
                 lightData.data.directionalLightsAddr = 0ull;
                 lightData.data.directionalLightsCount = 0u;
-                return;
             }
-
-            auto* directionalLightDataBuffer = getDirectionalLightDataBuffer();
-            LITL_ASSERT_MSG((directionalLightDataBuffer != nullptr), "Failed to retrieve Directional Light Data buffer.", );
-
-            directionalLightDataBuffer->swapBuffers(framesInFlightIndex);
-
-            if (directionalLightDataBuffer->getItemCapacity() < directionalLightData.data.size())
+            else
             {
-                if (!directionalLightDataBuffer->resizeItems(directionalLightData.data.size(), 2u, false, true))
+                auto* directionalLightDataBuffer = getDirectionalLightDataBuffer();
+                LITL_ASSERT_MSG((directionalLightDataBuffer != nullptr), "Failed to retrieve Directional Light Data buffer.", );
+
+                directionalLightDataBuffer->swapBuffers(framesInFlightIndex);
+
+                if (directionalLightDataBuffer->getItemCapacity() < directionalLightData.data.size())
                 {
-                    logError("Failed to resize Directional Light Data buffer.");
-                    return;
+                    if (!directionalLightDataBuffer->resizeItems(directionalLightData.data.size(), 2u, false, true))
+                    {
+                        logError("Failed to resize Directional Light Data buffer.");
+                        return;
+                    }
                 }
+
+                directionalLightDataBuffer->recordChunkDataWrite(GpuBufferChunk{
+                    .sourcePtr = generic_as_byte_span(directionalLightData.data.data(), sizeof(DirectionalLightData) * directionalLightData.data.size()),
+                    .offset = 0ull
+                    });
+
+                lightData.data.directionalLightsAddr = directionalLightDataBuffer->getBufferDeviceAddress().value();
+                lightData.data.directionalLightsCount = static_cast<uint32_t>(directionalLightData.data.size());
             }
 
-            directionalLightDataBuffer->recordChunkDataWrite(GpuBufferChunk{
-                .sourcePtr = generic_as_byte_span(directionalLightData.data.data(), sizeof(DirectionalLightData)),
-                .offset = 0ull
-                });
-
-            lightData.data.directionalLightsAddr = directionalLightDataBuffer->getBufferDeviceAddress().value();
-            lightData.data.directionalLightsCount = static_cast<uint32_t>(directionalLightData.data.size());
+            if ((prevAddr != lightData.data.directionalLightsAddr) || (prevCount != lightData.data.directionalLightsCount))
+            {
+                lightData.dirty = true;
+            }
         }
 
         GpuBuffer* getLightDataBuffer() noexcept

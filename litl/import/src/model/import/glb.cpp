@@ -514,7 +514,6 @@ namespace litl::import
         }
     }
 
-
     GlbImporter::GlbImporter()
     {
 

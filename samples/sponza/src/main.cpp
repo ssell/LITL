@@ -170,6 +170,9 @@ namespace litl::samples
         }
     }
 
+
+
+
     void bootstrap(ServiceProvider& services, EntityCommands& commands)
     {
         auto objectPool = services.get<ObjectPool>();

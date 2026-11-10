@@ -943,7 +943,7 @@ namespace litl
                 logError("Attempting to set global texture table index for material but the provided texture does not exist.");
             }
 
-            uint32_t samplerIndex = static_cast<uint32_t>(SamplerPredefines::LinearRepeat);
+            uint32_t samplerIndex = static_cast<uint32_t>(SamplerPredefines::LinearRepeatAniso);        // Oblique surfaces (floors, etc.) stay sharper compared to LinearRepeat at nearly no extra cost.
 
             // ... todo specify sampler in material ...
 

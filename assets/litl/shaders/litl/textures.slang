@@ -36,6 +36,11 @@ public static const uint DefaultSamplerIndex_Reserved13 = 13;
 public static const uint DefaultSamplerIndex_Reserved14 = 14;
 public static const uint DefaultSamplerIndex_Reserved15 = 15;
 
+public SamplerState getGlobalSampler(uint samplerIndex)
+{
+    return g_Samplers[samplerIndex];
+}
+
 void unpackPackedTextureSlotSamplerIndex(in uint packedTextureSlotSamplerIndex, out uint textureIndex, out uint samplerIndex)
 {
     // The texture slot occupies the lower 24-bits and the sampler index is in the upper 8-bits.
