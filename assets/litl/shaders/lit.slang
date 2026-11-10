@@ -30,9 +30,10 @@ struct MaterialProperties
 struct VertexOutput
 {
     float4 position : SV_Position;
-    float3 normal   : NORMAL;
-    float2 uv       : UV;
-    float3 color    : COLOR;
+    float3 normal;
+    float4 tangent;
+    float2 uv;
+    float3 color;
     float3 positionWS;
     nointerpolation uint materialSlot;
 };
@@ -44,10 +45,14 @@ VertexOutput vertexMain(VertexInput input, uint globalInstanceId: SV_VulkanInsta
 
     const float4x4 worldMatrix = _pc.getWorldMatrix(globalInstanceId);
     const float4x4 mvpMatrix = mul(_pc.getViewProjectionMatrix(), worldMatrix);
+    const float3x3 m3 = (float3x3)worldMatrix;
+    const float detS = sign(determinant(m3));
 
     output.position     = mul(mvpMatrix, float4(input.position.xyz, 1.0f));
     output.positionWS   = input.position.xyz;
-    output.normal       = normalize(mul(float3x3(worldMatrix), input.normal));
+    output.normal       = mul(cofactor(m3), input.normal) * detS;       // Fine only for uniform scaled objects. Non-uniform scaled will need to transform by the inverse-transpose of the world matrix.
+    output.tangent.xyz  = mul(m3, input.tangent.xyz);
+    output.tangent.w    = input.tangent.w * detS;                       // Mirroring flips the handiness
     output.uv           = input.uv;
     output.color        = float3(1.0f, 1.0f, 1.0f);
     output.materialSlot = _pc.getMaterialSlot(globalInstanceId);
@@ -64,11 +69,39 @@ struct FragmentOutput
     float4 color : SV_Target;
 };
 
-void sampleOcclusionRoughnessMetallic(in MaterialProperties matProps, float2 uv, out float occlusion, out float roughness, out float metallic)
+float3 buildSurfaceNormal(in VertexOutput input, in MaterialProperties matProps, bool isFrontFace)
 {
-    occlusion = sampleGlobalTexture(matProps.occlusionMap, uv).r * matProps.occlusionFactor;
-    roughness = sampleGlobalTexture(matProps.roughnessMap, uv).r * matProps.roughnessFactor;
-    metallic = sampleGlobalTexture(matProps.metallicMap, uv).r * matProps.metallicFactor;
+    // Rebuild the frame from the interpolated vectors
+    float3 N = normalize(input.normal);
+    float3 T = normalize(input.tangent.xyz - N * dot(N, input.tangent.xyz));
+    float3 B = cross(N, T) * (input.tangent.w < 0.0f ? -1.0f : 1.0f);
+
+    if (dot(T, T) < EPSILON)
+    {
+        return (N * (isFrontFace ? 1.0f : -1.0f));
+    }
+
+    // Decode the tangent-space normal
+    float3 nTS = float3(0.0f, 0.0f, 0.0f);//sampleGlobalTexture(matProps.normalMap, input.uv).xyz * 2.0f - 1.0f;
+    nTS.xy *= matProps.normalFactor;
+    nTS = normalize(nTS);
+
+    // Tangent space -> world space
+    float3 Nw = normalize((T * nTS.x) + (B * nTS.y) + (N * nTS.z));
+    Nw *= (isFrontFace ? 1.0f : -1.0f);
+
+    return Nw;
+}
+
+SurfaceData buildSurfaceFromMaterial(in MaterialProperties matProps, float2 uv)
+{
+    SurfaceData surface;
+
+    surface.occlusion = sampleGlobalTexture(matProps.occlusionMap, uv).r * matProps.occlusionFactor;
+    surface.roughness = sampleGlobalTexture(matProps.roughnessMap, uv).r * matProps.roughnessFactor;
+    surface.metallic = sampleGlobalTexture(matProps.metallicMap, uv).r * matProps.metallicFactor;
+
+    return surface;
 }
 
 [shader("fragment")]
@@ -87,11 +120,9 @@ FragmentOutput fragmentMain(VertexOutput input, bool isFrontFace: SV_IsFrontFace
         discard;
     }
 
-    SurfaceData surface;
-    surface.normal    = normalize(input.normal) * (isFrontFace ? 1.0f : -1.0f);     // Normalize again since its been interpolated across the surface
+    SurfaceData surface = buildSurfaceFromMaterial(matProps, input.uv);
+    surface.normal    = buildSurfaceNormal(input, matProps, isFrontFace);
     surface.albedo    = baseColor.rgb;
-
-    sampleOcclusionRoughnessMetallic(matProps, input.uv, surface.occlusion, surface.roughness, surface.metallic);
 
     const float3 ambient = _pc.lightData->ambient.rgb * surface.albedo;
     const float3 directional = shadeDirectionalLights(_pc.lightData, surface, toViewDir);
@@ -104,7 +135,7 @@ FragmentOutput fragmentMain(VertexOutput input, bool isFrontFace: SV_IsFrontFace
 
     // todo if transparency is premultiplied. again, need a specialization constant.
     // output.color.rgb *= baseColor.a;
-    output.color.rgb = surface.roughness.rrr;
+    output.color.rgb = (surface.normal + 1.0f) * 0.5f;
     
     return output;
 }

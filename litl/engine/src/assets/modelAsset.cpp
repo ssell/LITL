@@ -19,6 +19,8 @@ namespace litl
         {
             uint32_t textureItemIndex{ 0u };
             TextureChannel channel{ TextureChannel::All };
+            uint8_t padding[3]{};
+
             bool operator==(TextureItemKey const& other) const = default;
         };
     }
