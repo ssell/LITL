@@ -30,18 +30,36 @@ namespace litl::import
         bool residesInTextureTable{ true };
     };
 
+    /// <summary>
+    /// Base color/albedo maps.
+    /// </summary>
     inline constexpr TextureImportSettings ColorTextureImportSettings{
         .semantic = TextureSemantic::BaseColor,
         .transfer = TransferFunction::SRGB,
         .mipmaps = true
     };
 
+    /// <summary>
+    /// Normal tangent maps.
+    /// </summary>
     inline constexpr TextureImportSettings NormalMapImportSettings{
         .semantic = TextureSemantic::NormalTangent,
         .transfer = TransferFunction::Linear,
         .mipmaps = false
     };
 
+    /// <summary>
+    /// RGBA color maps that are not SRGB but want mipmaps. Metallic, roughness, etc.
+    /// </summary>
+    inline constexpr TextureImportSettings ColorDataTextureImportSettings{
+        .semantic = TextureSemantic::BaseColor,
+        .transfer = TransferFunction::Linear,
+        .mipmaps = true
+    };
+
+    /// <summary>
+    /// Pure data textures without mipmaps.
+    /// </summary>
     inline constexpr TextureImportSettings MaskTextureImportSettings{
         .semantic = TextureSemantic::Mask,
         .transfer = TransferFunction::Linear,

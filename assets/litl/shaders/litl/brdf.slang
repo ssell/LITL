@@ -17,8 +17,8 @@
 module brdf;
 import common;
 
-static const float MIN_ALPHA = 0.002f;      // Minimum α value. ~= perceptual roughness 0.045; avoids D -> inf in fp16
-static const float MIN_NOV = 1e-4;          // Minimum (normal dot toView) value.
+static const float MIN_ALPHA = 0.002025f;       // Minimum α value (roughness * roughness). This is 0.045*0.045. Avoids D -> inf in fp16
+static const float MIN_NOV = 1e-4;              // Minimum (normal dot toView) value.
 
 // Resolved from material textures and properties. All vectors are expected to be normalized and in world-space.
 public struct SurfaceData

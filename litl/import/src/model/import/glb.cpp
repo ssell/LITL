@@ -502,7 +502,7 @@ namespace litl::import
                 }
                 else if ((metallicRoughnessTexture != nullptr) && (metallicRoughnessTexture->image == texture.image))
                 {
-                    return MaskTextureImportSettings;
+                    return ColorDataTextureImportSettings;
                 }
                 else if ((occlusionTexture != nullptr) && (occlusionTexture->image == texture.image))
                 {

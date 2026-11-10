@@ -181,7 +181,7 @@ namespace litl::samples
         lightingBootstrap(commands, lights);
         sponzaBootstrap(commands, assets);
         //transparentCubeBootstrap(commands, assets);
-        pbrSphereGridBootstrap(commands, assets, services.get<RenderManager>());
+        //pbrSphereGridBootstrap(commands, assets, services.get<RenderManager>());
     }
 }
 
