@@ -452,7 +452,7 @@ namespace litl::import
         /// Creates the texture item for the ImportedData, adds it to the model, and converts the cgltf texture to our intermediate format.
         /// Returns the ImportedData::items index of the texture if successful. Returns Constants::uint32_null_index on failure.
         /// </summary>
-        [[nodiscard]] uint32_t createTextureDataItem(cgltf_image const& glImage, ModelImportResult* modelImportResult, ImportedData& importedData, ImportContext const& context) noexcept
+        [[nodiscard]] uint32_t createTextureDataItem(cgltf_image const& glImage, ModelImportResult* modelImportResult, ImportedData& importedData, ImportContext const& context, TextureImportSettings const& textureImportSettings) noexcept
         {
             const auto imageName = nameOr(glImage.name, "Image");
             const auto mimeType = nameOr(glImage.mime_type, "UNKNOWN");
@@ -471,7 +471,7 @@ namespace litl::import
             }
 
             ImportSettings importSettings = context.settings;
-            importSettings.texture = ColorTextureImportSettings;        // ... todo we are only during baseColor at the moment so hardcoding to color (sRGB) ...
+            importSettings.texture = textureImportSettings;
 
             const std::span<std::byte const> imageBytes{ reinterpret_cast<std::byte const*>(cgltf_buffer_view_data(glImage.buffer_view)), glImage.buffer_view->size };
             const auto textureDataItemIndex = context.embeddedImporter.importEmbedded(sourceType, imageName, imageBytes, importSettings);
@@ -483,6 +483,34 @@ namespace litl::import
             }
 
             return textureDataItemIndex.value();
+        }
+
+        [[nodiscard]] TextureImportSettings determineImportSettingsForTexture(cgltf_material* materials, cgltf_size materialsCount, cgltf_texture const& texture) noexcept
+        {
+            // Scan all materials. If the texture is used as a non-color texture (normal, roughness, metallic, occlusion) then return the appropriate import settings. AKA don't import a linear texture as SRGB.
+            for (cgltf_size i = 0; i < materialsCount; ++i)
+            {
+                cgltf_material const& material = materials[i];
+
+                const auto* normalTexture = material.normal_texture.texture;
+                const auto* metallicRoughnessTexture = material.pbr_metallic_roughness.metallic_roughness_texture.texture;
+                const auto* occlusionTexture = material.occlusion_texture.texture;
+
+                if ((normalTexture != nullptr) && (normalTexture->image == texture.image))
+                {
+                    return NormalMapImportSettings;
+                }
+                else if ((metallicRoughnessTexture != nullptr) && (metallicRoughnessTexture->image == texture.image))
+                {
+                    return MaskTextureImportSettings;
+                }
+                else if ((occlusionTexture != nullptr) && (occlusionTexture->image == texture.image))
+                {
+                    return MaskTextureImportSettings;
+                }
+            }
+
+            return ColorTextureImportSettings;
         }
     }
 
@@ -557,7 +585,8 @@ namespace litl::import
 
         for (cgltf_size imgIdx = 0; imgIdx < data->images_count; ++imgIdx)
         {
-            glImageIndexToModelTextureIndex[imgIdx] = createTextureDataItem(data->images[imgIdx], modelImportResult, importedData, context);
+            const auto textureImportSettings = determineImportSettingsForTexture(data->materials, data->materials_count, data->textures[imgIdx]);
+            glImageIndexToModelTextureIndex[imgIdx] = createTextureDataItem(data->images[imgIdx], modelImportResult, importedData, context, textureImportSettings);
         }
 
         // ---------------------------------------------------------------------------------

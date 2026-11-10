@@ -82,7 +82,7 @@ float3 buildSurfaceNormal(in VertexOutput input, in MaterialProperties matProps,
     }
 
     // Decode the tangent-space normal
-    float3 nTS = float3(0.0f, 0.0f, 0.0f);//sampleGlobalTexture(matProps.normalMap, input.uv).xyz * 2.0f - 1.0f;
+    float3 nTS = sampleGlobalTexture(matProps.normalMap, input.uv).xyz * 2.0f - 1.0f;
     nTS.xy *= matProps.normalFactor;
     nTS = normalize(nTS);
 
@@ -135,7 +135,6 @@ FragmentOutput fragmentMain(VertexOutput input, bool isFrontFace: SV_IsFrontFace
 
     // todo if transparency is premultiplied. again, need a specialization constant.
     // output.color.rgb *= baseColor.a;
-    output.color.rgb = (surface.normal + 1.0f) * 0.5f;
     
     return output;
 }
