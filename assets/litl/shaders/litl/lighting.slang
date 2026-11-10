@@ -20,7 +20,7 @@ public struct LightData
     public uint directionalLightCount;              // Number of directional lights;
 }
 
-public float3 shadeDirectionalLights(LightData* lightData, SurfaceData surface, float3 toViewDir)
+float3 shadeDirectionalLights(LightData* lightData, in SurfaceData surface, in BrdfParams brdf)
 {
     float3 total = 0;
 
@@ -31,10 +31,23 @@ public float3 shadeDirectionalLights(LightData* lightData, SurfaceData surface, 
         const float NdotL = saturate(dot(surface.normal, L));
         const float3 radiance = light.colorIntensity.rgb * light.colorIntensity.a;
 
+        float3 lighting = evaluateBRDF(surface, brdf, L, radiance);
+
         // ... todo multiply by per-light shadow/visibility factor ...
 
-        total += evaluateBRDF(surface, toViewDir, L) * radiance * NdotL;
+        total += lighting;
     }
 
     return total;
+}
+
+public float3 shadeLights(LightData* lightData, in SurfaceData surface)
+{
+    const BrdfParams brdf = prepareBRDF(surface);
+
+    const float3 directionalLighting = shadeDirectionalLights(lightData, surface, brdf);
+    // ... todo other light types ...
+    // float3 lighting = directionalLighting + ...;
+
+    return directionalLighting;
 }

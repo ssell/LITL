@@ -56,7 +56,6 @@ namespace litl::import
         int height = 0;
         int channels = 0;
 
-        // Note that stb_image automatically handles flipping images to top-left origin if they are not already
         // Note that we do not use stbi_loadf_from_memory as that performs a forced sRGB conversion, and it uses a different EOTF than we do.
         const ScopedData scopedData{
             .data = stbi_load_from_memory(

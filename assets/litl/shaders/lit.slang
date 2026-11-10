@@ -109,7 +109,6 @@ FragmentOutput fragmentMain(VertexOutput input, bool isFrontFace: SV_IsFrontFace
 {
     FragmentOutput output = (FragmentOutput)0;
 
-    const float3 toViewDir = normalize(_pc.passData.cameraPosition.xyz - input.positionWS);
     const MaterialProperties matProps = _pc.getMaterial(input.materialSlot);
     const float4 texColor = sampleGlobalTexture(matProps.baseColor, input.uv);
     const float4 baseColor = texColor * matProps.tint;
@@ -122,14 +121,13 @@ FragmentOutput fragmentMain(VertexOutput input, bool isFrontFace: SV_IsFrontFace
 
     SurfaceData surface = buildSurfaceFromMaterial(matProps, input.uv);
     surface.normal    = buildSurfaceNormal(input, matProps, isFrontFace);
-    surface.albedo    = baseColor.rgb;
+    surface.toView    = normalize(_pc.passData.cameraPosition.xyz - input.positionWS);
+    surface.baseColor = baseColor.rgb;
 
-    const float3 ambient = _pc.lightData->ambient.rgb * surface.albedo;
-    const float3 directional = shadeDirectionalLights(_pc.lightData, surface, toViewDir);
-    const float3 diffuse = directional + ambient;
-    const float3 specular = float3(0.0f, 0.0f, 0.0f);
-    const float3 emissive = float3(0.0f, 0.0f, 0.0f);
-    const float3 color = diffuse + specular + emissive;
+    const float3 lighting = shadeLights(_pc.lightData, surface);
+    const float3 ambient  = _pc.lightData->ambient.rgb * surface.baseColor * (1.0f - surface.metallic);
+    const float3 emissive = float3(0.0f);
+    const float3 color    = lighting + ambient + emissive;
 
     output.color = float4(color.rgb, baseColor.a);
 
