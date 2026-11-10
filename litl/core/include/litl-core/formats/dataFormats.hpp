@@ -1,7 +1,10 @@
 #ifndef LITL_CORE_DATA_FORMATS_H__
 #define LITL_CORE_DATA_FORMATS_H__
 
+#include <array>
 #include <cstdint>
+#include <string_view>
+
 #include "litl-core/enumBitFlags.hpp"
 
 namespace litl
@@ -61,7 +64,51 @@ namespace litl
         BC6H_SFloat,            // A three-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of signed floating-point RGB texel data. No alpha, strictly RGB.
         BC7_UNorm,              // A four-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned normalized RGBA texel data. Used for color textures such as base color, emissive, etc.
         BC7_SRGB,               // A four-component, block-compressed format where each 128-bit compressed texel block encodes a 4×4 rectangle of unsigned normalized RGBA texel data with sRGB nonlinear encoding applied to the RGB components. Used for color textures such as base color, emissive, etc.
+
+        Count
     };
+
+    constexpr std::array<std::string_view, static_cast<uint32_t>(DataFormat::Count)> DataFormatName = {
+        "Undefined",
+        "RGBA8_UNorm",
+        "RGBA8_SRGB",
+        "BGRA8_Unorm",
+        "BGRA8_SRGB",
+        "ABGR10_UNorm_Pack32",
+        "RGBA16_SFloat",
+        "RGB32_SFloat",
+        "RGBA32_SFloat",
+        "R11G11B10_UFloat",
+        "R8_UNorm",
+        "R16_SFloat",
+        "R32_SFloat",
+        "RG8_UNorm",
+        "RG16_SFloat",
+        "RG32_SFloat",
+        "D32_SFloat",
+        "D24_UNorm_S8_UInt",
+        "D32_SFloat_S8_UInt",
+        "BC4_UNorm",
+        "BC5_UNorm",
+        "BC6H_UFloat",
+        "BC6H_SFloat",
+        "BC7_UNorm",
+        "BC7_SRGB"
+    };
+
+    constexpr std::string_view const getDataFormatName(DataFormat format) noexcept
+    {
+        const uint32_t index = static_cast<uint32_t>(format);
+
+        if (index < static_cast<uint32_t>(DataFormat::Count))
+        {
+            return DataFormatName[index];
+        }
+        else
+        {
+            return "Unknown";
+        }
+    }
 
     [[nodiscard]] constexpr bool dataFormatHasDepth(DataFormat format) noexcept
     {
@@ -94,6 +141,7 @@ namespace litl
         case DataFormat::BC6H_UFloat:
         case DataFormat::BC6H_SFloat:
         case DataFormat::Undefined:
+        case DataFormat::Count:
             return false;
         }
 
@@ -131,6 +179,7 @@ namespace litl
         case DataFormat::BC6H_UFloat:
         case DataFormat::BC6H_SFloat:
         case DataFormat::Undefined:
+        case DataFormat::Count:
             return false;
         }
 
@@ -169,6 +218,7 @@ namespace litl
         case DataFormat::BC6H_UFloat: return 16u;
         case DataFormat::BC6H_SFloat: return 16u;
         case DataFormat::Undefined: return 0u;
+        case DataFormat::Count: return 0u;
         }
 
         return 0u;

@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "litl-import/texture/intermediate/litlbtex.hpp"
 #include "litl-core/logging/logging.hpp"
 #include "litl-engine/assets/textureAsset.hpp"
@@ -88,6 +90,70 @@ namespace litl
                 return false;
             }
         }
+
+        static_assert(static_cast<size_t>(TextureChannel::R) == 1u);
+        static_assert(static_cast<size_t>(TextureChannel::G) == 2u);
+        static_assert(static_cast<size_t>(TextureChannel::B) == 3u);
+        static_assert(static_cast<size_t>(TextureChannel::A) == 4u);
+
+        [[nodiscard]] bool isolateTextureChannel(std::span<std::byte const> source, std::vector<std::byte>& isolated, DataFormat sourceFormat, DataFormat& destFormat, TextureChannel channel, std::string_view location) noexcept
+        {
+            if ((channel == TextureChannel::All) || (static_cast<uint32_t>(channel) > static_cast<uint32_t>(TextureChannel::A)))
+            {
+                return false;
+            }
+
+            size_t channelBytes = 0ull;
+
+            switch (sourceFormat)
+            {
+            case DataFormat::RGBA8_UNorm:
+                channelBytes = 1ull;
+                destFormat = DataFormat::R8_UNorm;
+                break;
+
+            case DataFormat::RGBA32_SFloat:
+                channelBytes = 4ull;
+                destFormat = DataFormat::R32_SFloat;
+                break;
+
+            default:
+                // Unsupported texture format for automatic channel isolation.
+                logWarning("Texture Asset '", location, "' specified channel isolation for unsupported format ", getDataFormatName(sourceFormat), " (", static_cast<uint32_t>(sourceFormat), "). Supported formats: RGBA8_UNorm or RGBA32_SFloat.");
+                return false;
+            }
+
+            if ((source.size() % (channelBytes * 4)) != 0)
+            {
+                logWarning("Unexpected source byte size of ", source.size(), " during channel isolation for texture at '", location, "'");
+                return false;
+            }
+
+            const size_t texelCount = source.size() / (channelBytes * 4ull);
+            isolated.resize(texelCount * channelBytes);
+
+            const size_t channelOffset = (static_cast<size_t>(channel) - 1ull) * channelBytes;
+            const std::byte* __restrict psrc = source.data();
+            std::byte* __restrict pdst = isolated.data();
+
+            // Branch once outside the loop so that the size is a compile constant which clang emits as a single load and store.
+            if (channelBytes == 1ull)
+            {
+                for (size_t i = 0ull; i < texelCount; ++i)
+                {
+                    std::memcpy(pdst + i, psrc + (i * 4ull) + channelOffset, 1ull);
+                }
+            }
+            else // if (channelBytes == 4ull)
+            {
+                for (size_t i = 0ull; i < texelCount; ++i)
+                {
+                    std::memcpy(pdst + (i * 4ull), psrc + (i * 16ull) + channelOffset, 4ull);
+                }
+            }
+
+            return true;
+        }
     }
 
     bool TextureAsset::decodeBytes(Asset* asset, AssetRegistration const& assetRegistration, std::span<std::byte const> bytes, std::span<import::ImportCompanion const> companions, AssetErrorCode& error) noexcept
@@ -147,11 +213,20 @@ namespace litl
             .name = textureAsset->key
         };
 
-        resourceDescriptor.calculateDimensionality();
+        std::span<std::byte const> sourcePixels = textureAsset->textureIntermediateData->getPixelBytes();
+        std::vector<std::byte> isolatedChannel;
+        DataFormat isolatedFormat = dataDescriptor.format;
 
+        if (isolateTextureChannel(sourcePixels, isolatedChannel, dataDescriptor.format, isolatedFormat, assetRegistration.importSettings.texture.channel, textureAsset->key))
+        {
+            sourcePixels = isolatedChannel;
+            resourceDescriptor.format = isolatedFormat;
+        }
+
+        resourceDescriptor.calculateDimensionality();
         textureAsset->texture->updateDescriptor({}, resourceDescriptor, false);     // persistsOnCpu to false for now. may change if needed in the future.
 
-        if (textureAsset->texture->setPixelBytes(textureAsset->textureIntermediateData->getPixelBytes()))
+        if (textureAsset->texture->setPixelBytes(sourcePixels))
         {
             if (!textureAsset->texture->apply(std::nullopt))
             {

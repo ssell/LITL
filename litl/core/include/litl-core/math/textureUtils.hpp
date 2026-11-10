@@ -77,6 +77,7 @@ namespace litl
         case DataFormat::D24_UNorm_S8_UInt:
         case DataFormat::D32_SFloat_S8_UInt:
         case DataFormat::Undefined:
+        case DataFormat::Count:
             return { 1u, 1u };
         }
 
