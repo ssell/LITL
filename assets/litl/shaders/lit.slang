@@ -104,7 +104,7 @@ FragmentOutput fragmentMain(VertexOutput input, bool isFrontFace: SV_IsFrontFace
 
     // todo if transparency is premultiplied. again, need a specialization constant.
     // output.color.rgb *= baseColor.a;
-    output.color.rgb = surface.metallic.rrr;
+    output.color.rgb = surface.roughness.rrr;
     
     return output;
 }

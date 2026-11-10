@@ -264,12 +264,12 @@ namespace litl::import
                 logWarning("Failed to assign the 'tint' property to GLB material '", nameOr(glMaterial.name, "UNKNOWN"), "' in model '", location, "'");
             }
 
-            if (!litlMaterial->addProperty("roughness", LitlMatPropertyType::Float, glMaterial.pbr_metallic_roughness.roughness_factor))
+            if (!litlMaterial->addProperty("roughnessFactor", LitlMatPropertyType::Float, glMaterial.pbr_metallic_roughness.roughness_factor))
             {
                 logWarning("Failed to assign the 'roughness' property to GLB material '", nameOr(glMaterial.name, "UNKNOWN"), "' in model '", location, "'");
             }
 
-            if (!litlMaterial->addProperty("metallic", LitlMatPropertyType::Float, glMaterial.pbr_metallic_roughness.metallic_factor))
+            if (!litlMaterial->addProperty("metallicFactor", LitlMatPropertyType::Float, glMaterial.pbr_metallic_roughness.metallic_factor))
             {
                 logWarning("Failed to assign the 'metallic' property to GLB material '", nameOr(glMaterial.name, "UNKNOWN"), "' in model '", location, "'");
             }
