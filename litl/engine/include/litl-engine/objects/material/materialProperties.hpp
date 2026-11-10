@@ -171,7 +171,7 @@ namespace litl
         /// <summary>
         /// Configures the underlying property blocks to accomodate slots of the specified byte size.
         /// </summary>
-        bool configure(MaterialPropertyReflection const& reflectedProperties, uint32_t framesInFlight) noexcept;
+        bool configure(MaterialPropertyReflection const& reflectedProperties, uint32_t framesInFlight, ObjectPool& objectPool) noexcept;
 
         /// <summary>
         /// Enables/disables the split of Tier 3 data into its own separate GPU buffer space.
@@ -351,6 +351,12 @@ namespace litl
         /// Sets the texture with the specified property name at the provided slot index.
         /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
         /// </summary>
+        bool setTexture(StringId property, TextureHandle handle, MaterialPropertySlotId slot, bool defaultValue) noexcept;
+
+        /// <summary>
+        /// Sets the texture with the specified property name at the provided slot index.
+        /// May return false if there was an error setting the value (type mismatch, invalid slot, etc.).
+        /// </summary>
         bool setTexture(StringId property, Texture* texture, MaterialPropertySlotId slot, bool defaultValue) noexcept;
 
         /// <summary>
@@ -363,9 +369,9 @@ namespace litl
 
     private:
 
-        using ValidPropertyType = std::variant<bool, int32_t, uint32_t, float, double, vec2, vec3, vec4, color, mat3, mat4>;
+        using ValidPropertyType = std::variant<bool, int32_t, uint32_t, float, double, vec2, vec3, vec4, color, mat3, mat4, TextureHandle>;
 
-        enum class PropertyWriteType
+        enum class DeferredPropertyWriteType
         {
             Unknown = 0u,
             Bool,
@@ -378,14 +384,15 @@ namespace litl
             Vec4,
             Color,
             Mat3,
-            Mat4
+            Mat4,
+            Texture
         };
 
         struct DeferredDataSetRequest
         {
             StringId propertyId{};
             MaterialPropertySlotId slotId{};
-            PropertyWriteType type{ PropertyWriteType::Unknown };
+            DeferredPropertyWriteType type{ DeferredPropertyWriteType::Unknown };
             ValidPropertyType value;
             bool defaultValue{ false };
         };
@@ -416,9 +423,14 @@ namespace litl
         /// </summary>
         bool setData(uint32_t propertyOffset, uint32_t propertySize, void const* propertyData, MaterialPropertySlotId slotId, bool defaultValue) noexcept;
 
-        bool deferSetData(PropertyWriteType type, StringId propertyId, ValidPropertyType const& value, MaterialPropertySlotId slotId, bool defaultValue) noexcept;
+        bool deferSetData(DeferredPropertyWriteType type, StringId propertyId, ValidPropertyType const& value, MaterialPropertySlotId slotId, bool defaultValue) noexcept;
 
         void processDeferredDataSet(DeferredDataSetRequest const& request) noexcept;
+
+        /// <summary>
+        /// Used for resolving deferred texture property sets.
+        /// </summary>
+        ObjectPool* m_pObjectPool{ nullptr };
 
         /// <summary>
         /// Size of an individual slot in a block.

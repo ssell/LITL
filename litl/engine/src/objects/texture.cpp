@@ -65,6 +65,11 @@ namespace litl
         m_selfHandle = handle;
     }
 
+    TextureHandle Texture::getHandle() const noexcept
+    {
+        return m_selfHandle;
+    }
+
     void Texture::destroy(Authority<ObjectPool> auth) noexcept
     {
         if (m_pRenderManager != nullptr)

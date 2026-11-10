@@ -3,6 +3,7 @@
 
 #include "litl-core/logging/logging.hpp"
 #include "litl-core/math/common.hpp"
+#include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/objects/material/materialConstants.hpp"
 #include "litl-engine/objects/material/materialProperties.hpp"
 #include "litl-engine/objects/material/deferredMaterialCommands.hpp"
@@ -49,8 +50,10 @@ namespace litl
         }
     }
 
-    bool MaterialProperties::configure(MaterialPropertyReflection const& reflectedProperties, uint32_t framesInFlight) noexcept
+    bool MaterialProperties::configure(MaterialPropertyReflection const& reflectedProperties, uint32_t framesInFlight, ObjectPool& objectPool) noexcept
     {
+        m_pObjectPool = &objectPool;
+
         if (!m_propertyBlocks.empty())
         {
             // TODO update for shader hot reload
@@ -454,7 +457,7 @@ namespace litl
         return &m_properties[find->second];
     }
 
-    bool MaterialProperties::deferSetData(PropertyWriteType type, StringId propertyId, ValidPropertyType const& value, MaterialPropertySlotId slotId, bool defaultValue) noexcept
+    bool MaterialProperties::deferSetData(DeferredPropertyWriteType type, StringId propertyId, ValidPropertyType const& value, MaterialPropertySlotId slotId, bool defaultValue) noexcept
     {
         std::scoped_lock lock{ m_deferredWriteMutex };
         m_deferredWriteRequests.emplace_back();
@@ -473,39 +476,44 @@ namespace litl
     {
         switch (request.type)
         {
-        case PropertyWriteType::Bool:
+        case DeferredPropertyWriteType::Bool:
             if (auto* value = std::get_if<bool>(&request.value); value != nullptr) { setBool(request.propertyId, *value, request.slotId, request.defaultValue); }
             break;
-        case PropertyWriteType::Int32:
+        case DeferredPropertyWriteType::Int32:
             if (auto* value = std::get_if<int32_t>(&request.value); value != nullptr) { setInt32(request.propertyId, *value, request.slotId, request.defaultValue); }
             break;
-        case PropertyWriteType::Uint32:
+        case DeferredPropertyWriteType::Uint32:
             if (auto* value = std::get_if<uint32_t>(&request.value); value != nullptr) { setUint32(request.propertyId, *value, request.slotId, request.defaultValue); }
             break;
-        case PropertyWriteType::Float:
+        case DeferredPropertyWriteType::Float:
             if (auto* value = std::get_if<float>(&request.value); value != nullptr) { setFloat(request.propertyId, *value, request.slotId, request.defaultValue); }
             break;
-        case PropertyWriteType::Double:
+        case DeferredPropertyWriteType::Double:
             if (auto* value = std::get_if<double>(&request.value); value != nullptr) { setDouble(request.propertyId, *value, request.slotId, request.defaultValue); }
             break;
-        case PropertyWriteType::Vec2:
+        case DeferredPropertyWriteType::Vec2:
             if (auto* value = std::get_if<vec2>(&request.value); value != nullptr) { setVec2(request.propertyId, *value, request.slotId, request.defaultValue); }
             break;
-        case PropertyWriteType::Vec3:
+        case DeferredPropertyWriteType::Vec3:
             if (auto* value = std::get_if<vec3>(&request.value); value != nullptr) { setVec3(request.propertyId, *value, request.slotId, request.defaultValue); }
             break;
-        case PropertyWriteType::Vec4:
+        case DeferredPropertyWriteType::Vec4:
             if (auto* value = std::get_if<vec4>(&request.value); value != nullptr) { setVec4(request.propertyId, *value, request.slotId, request.defaultValue); }
             break;
-        case PropertyWriteType::Color:
+        case DeferredPropertyWriteType::Color:
             if (auto* value = std::get_if<color>(&request.value); value != nullptr) { setColor(request.propertyId, *value, request.slotId, request.defaultValue); }
             break;
-        case PropertyWriteType::Mat3:
+        case DeferredPropertyWriteType::Mat3:
             if (auto* value = std::get_if<mat3>(&request.value); value != nullptr) { setMat3(request.propertyId, *value, request.slotId, request.defaultValue); }
             break;
-        case PropertyWriteType::Mat4:
+        case DeferredPropertyWriteType::Mat4:
             if (auto* value = std::get_if<mat4>(&request.value); value != nullptr) { setMat4(request.propertyId, *value, request.slotId, request.defaultValue); }
             break;
+
+        case DeferredPropertyWriteType::Texture:
+            if (auto* value = std::get_if<TextureHandle>(&request.value); value != nullptr) { setTexture(request.propertyId, *value, request.slotId, request.defaultValue); }
+            break;
+
         default:
             break;
         }
@@ -569,7 +577,7 @@ namespace litl
     {
         if (!m_ready)
         {
-            return deferSetData(PropertyWriteType::Bool, property, value, slot, defaultValue);
+            return deferSetData(DeferredPropertyWriteType::Bool, property, value, slot, defaultValue);
         }
 
         auto* reflectedProperty = getReflectedProperty(property);
@@ -600,7 +608,7 @@ namespace litl
     {
         if (!m_ready)
         {
-            return deferSetData(PropertyWriteType::Int32, property, value, slot, defaultValue);
+            return deferSetData(DeferredPropertyWriteType::Int32, property, value, slot, defaultValue);
         }
 
         auto* reflectedProperty = getReflectedProperty(property);
@@ -630,7 +638,7 @@ namespace litl
     {
         if (!m_ready)
         {
-            return deferSetData(PropertyWriteType::Uint32, property, value, slot, defaultValue);
+            return deferSetData(DeferredPropertyWriteType::Uint32, property, value, slot, defaultValue);
         }
 
         auto* reflectedProperty = getReflectedProperty(property);
@@ -660,7 +668,7 @@ namespace litl
     {
         if (!m_ready)
         {
-            return deferSetData(PropertyWriteType::Float, property, value, slot, defaultValue);
+            return deferSetData(DeferredPropertyWriteType::Float, property, value, slot, defaultValue);
         }
 
         auto* reflectedProperty = getReflectedProperty(property);
@@ -684,7 +692,7 @@ namespace litl
     {
         if (!m_ready)
         {
-            return deferSetData(PropertyWriteType::Double, property, value, slot, defaultValue);
+            return deferSetData(DeferredPropertyWriteType::Double, property, value, slot, defaultValue);
         }
 
         auto* reflectedProperty = getReflectedProperty(property);
@@ -708,7 +716,7 @@ namespace litl
     {
         if (!m_ready)
         {
-            return deferSetData(PropertyWriteType::Vec2, property, value, slot, defaultValue);
+            return deferSetData(DeferredPropertyWriteType::Vec2, property, value, slot, defaultValue);
         }
 
         auto* reflectedProperty = getReflectedProperty(property);
@@ -734,7 +742,7 @@ namespace litl
     {
         if (!m_ready)
         {
-            return deferSetData(PropertyWriteType::Vec3, property, value, slot, defaultValue);
+            return deferSetData(DeferredPropertyWriteType::Vec3, property, value, slot, defaultValue);
         }
 
         auto* reflectedProperty = getReflectedProperty(property);
@@ -760,7 +768,7 @@ namespace litl
     {
         if (!m_ready)
         {
-            return deferSetData(PropertyWriteType::Vec4, property, value, slot, defaultValue);
+            return deferSetData(DeferredPropertyWriteType::Vec4, property, value, slot, defaultValue);
         }
 
         auto* reflectedProperty = getReflectedProperty(property);
@@ -786,7 +794,7 @@ namespace litl
     {
         if (!m_ready)
         {
-            return deferSetData(PropertyWriteType::Color, property, value, slot, defaultValue);
+            return deferSetData(DeferredPropertyWriteType::Color, property, value, slot, defaultValue);
         }
 
         auto* reflectedProperty = getReflectedProperty(property);
@@ -812,7 +820,7 @@ namespace litl
     {
         if (!m_ready)
         {
-            return deferSetData(PropertyWriteType::Mat3, property, value, slot, defaultValue);
+            return deferSetData(DeferredPropertyWriteType::Mat3, property, value, slot, defaultValue);
         }
 
         auto* reflectedProperty = getReflectedProperty(property);
@@ -856,7 +864,7 @@ namespace litl
     {
         if (!m_ready)
         {
-            return deferSetData(PropertyWriteType::Mat4, property, value, slot, defaultValue);
+            return deferSetData(DeferredPropertyWriteType::Mat4, property, value, slot, defaultValue);
         }
 
         auto* reflectedProperty = getReflectedProperty(property);
@@ -879,8 +887,30 @@ namespace litl
         return setData(reflectedProperty->offset, reflectedProperty->variable.scalarSize * reflectedProperty->variable.componentCount, &value, slot, defaultValue);
     }
 
+    bool MaterialProperties::setTexture(StringId property, TextureHandle handle, MaterialPropertySlotId slot, bool defaultValue) noexcept
+    {
+        if (m_pObjectPool == nullptr)
+        {
+            return false;
+        }
+
+        Texture* texture = m_pObjectPool->getTexture(handle);
+
+        return setTexture(property, texture, slot, defaultValue);
+    }
+
     bool MaterialProperties::setTexture(StringId property, Texture* texture, MaterialPropertySlotId slot, bool defaultValue) noexcept
     {
+        if (texture == nullptr)
+        {
+            return false;
+        }
+
+        if (!m_ready)
+        {
+            return deferSetData(DeferredPropertyWriteType::Texture, property, texture->getHandle(), slot, defaultValue);
+        }
+
         auto* reflectedProperty = getReflectedProperty(property);
 
         if (reflectedProperty == nullptr)

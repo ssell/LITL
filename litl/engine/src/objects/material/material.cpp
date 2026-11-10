@@ -636,7 +636,7 @@ namespace litl
                 // Our GPU Buffer is buffered based on frames-in-flight, so we need to inform the MaterialProperties on the frame count so that all N buffers can be updated on changes.
                 const uint32_t framesInFlight = renderer->getFrameData().framesInFlight;
 
-                if (!properties.configure(MaterialPropertyReflection{ .sizeBytes = propertyStructSizeBytes, .properties = std::move(reflectedProperties) }, framesInFlight))
+                if (!properties.configure(MaterialPropertyReflection{ .sizeBytes = propertyStructSizeBytes, .properties = std::move(reflectedProperties) }, framesInFlight, *objectPool))
                 {
                     logWarning("Material '", descriptor.objectInfo.name, "' failed to populate properties. Rejecting.");
                     return false;

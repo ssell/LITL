@@ -15,8 +15,8 @@ occlusionMap    = { type = "texture", value = "white" }
 occlusionFactor = { type = "float", value = 1.0 }
 roughnessMap    = { type = "texture", value = "white" }
 roughnessFactor = { type = "float", value = 1.0 }
-metallicMap     = { type = "texture", value = "black" }
-metallicFactor  = { type = "float", value = 1.0 }
+metallicMap     = { type = "texture", value = "white" }
+metallicFactor  = { type = "float", value = 0.0 }
 alphaCutoff     = { type = "float", value = 1.0 }
 
 [blend]

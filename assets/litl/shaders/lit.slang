@@ -49,7 +49,7 @@ VertexOutput vertexMain(VertexInput input, uint globalInstanceId: SV_VulkanInsta
     const float detS = sign(determinant(m3));
 
     output.position     = mul(mvpMatrix, float4(input.position.xyz, 1.0f));
-    output.positionWS   = input.position.xyz;
+    output.positionWS   = mul(worldMatrix, float4(input.position.xyz, 1.0f)).xyz;
     output.normal       = mul(cofactor(m3), input.normal) * detS;       // Fine only for uniform scaled objects. Non-uniform scaled will need to transform by the inverse-transpose of the world matrix.
     output.tangent.xyz  = mul(m3, input.tangent.xyz);
     output.tangent.w    = input.tangent.w * detS;                       // Mirroring flips the handiness
@@ -73,13 +73,14 @@ float3 buildSurfaceNormal(in VertexOutput input, in MaterialProperties matProps,
 {
     // Rebuild the frame from the interpolated vectors
     float3 N = normalize(input.normal);
-    float3 T = normalize(input.tangent.xyz - N * dot(N, input.tangent.xyz));
-    float3 B = cross(N, T) * (input.tangent.w < 0.0f ? -1.0f : 1.0f);
 
-    if (dot(T, T) < EPSILON)
+    if (dot(input.tangent.xyz, input.tangent.xyz) < EPSILON)
     {
         return (N * (isFrontFace ? 1.0f : -1.0f));
     }
+
+    float3 T = normalize(input.tangent.xyz - N * dot(N, input.tangent.xyz));
+    float3 B = cross(N, T) * (input.tangent.w < 0.0f ? -1.0f : 1.0f);
 
     // Decode the tangent-space normal
     float3 nTS = sampleGlobalTexture(matProps.normalMap, input.uv).xyz * 2.0f - 1.0f;
@@ -133,6 +134,6 @@ FragmentOutput fragmentMain(VertexOutput input, bool isFrontFace: SV_IsFrontFace
 
     // todo if transparency is premultiplied. again, need a specialization constant.
     // output.color.rgb *= baseColor.a;
-    
+
     return output;
 }

@@ -51,6 +51,8 @@ namespace litl
         /// </summary>
         void setSelfHandle(Authority<ObjectPool> auth, TextureHandle handle) noexcept;
 
+        [[nodiscard]] TextureHandle getHandle() const noexcept;
+
         /// <summary>
         /// 
         /// </summary>

@@ -53,6 +53,8 @@ namespace litl
         /// </summary>
         [[nodiscard]] RenderAttachmentFormats getSwapchainRenderFormats() const noexcept;
 
+        [[nodiscard]] TextureHandle getDefaultTextureHandle(TextureTableReservedIndices textureIndex) const noexcept;
+
     private:
 
         struct Impl;

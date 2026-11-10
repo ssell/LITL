@@ -96,6 +96,7 @@ namespace litl
         std::vector<RenderView> frameRenderViews;
         std::vector<RenderPerPassData> passDataScratch;
         std::vector<RenderInstanceData> instanceDataScratch;
+        std::array<TextureHandle, static_cast<uint32_t>(TextureTableReservedIndices::ReservedIndicesCount)> defaultTextures;
 
         Renderer* renderer{ nullptr };
         std::array<std::unique_ptr<RenderPass>, static_cast<uint32_t>(RenderPassType::Count)> renderPasses;
@@ -299,6 +300,8 @@ namespace litl
                     logError("Failed to set pixel bytes for default texture '", name, "'");
                 }
             }
+
+            defaultTextures[textureSlot] = textureHandle;
         }
 
         void createDefaultTextures() noexcept
@@ -800,5 +803,17 @@ namespace litl
                 .depth = m_pImpl->renderer->getSwapchainDepthFormat()
             };
         }
+    }
+
+    TextureHandle RenderManager::getDefaultTextureHandle(TextureTableReservedIndices textureIndex) const noexcept
+    {
+        const uint32_t index = static_cast<uint32_t>(textureIndex);
+
+        if (index >= static_cast<uint32_t>(TextureTableReservedIndices::ReservedIndicesCount))
+        {
+            return TextureHandle{};
+        }
+
+        return m_pImpl->defaultTextures[index];
     }
 }

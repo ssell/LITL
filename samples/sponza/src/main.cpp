@@ -1,4 +1,5 @@
 #include "litl-engine/startup.hpp"
+#include "litl-engine/render/renderManager.hpp"
 #include "freeFlyController.hpp"
 #include "spinSystem.hpp"
 
@@ -77,6 +78,98 @@ namespace litl::samples
             });
     }
 
+    void cameraBootstrap(EntityCommands& commands, std::shared_ptr<ObjectPool> objectPool, std::shared_ptr<SceneView> sceneView, std::shared_ptr<AssetManager> assets, bool addAltCamera) noexcept
+    {
+        const auto* mainCamera = createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(-5.0f, 1.5f, 0.25f), vec3(5.0f, 1.5f, 0.25f), vec3::up(), *objectPool, *sceneView);
+        commands.addComponent<FreeFlyController>(mainCamera->getEntity());
+        commands.addComponent<PendingModelInstance>(mainCamera->getEntity(), createModelInstance("litl/models/sphere", "litl/materials/lit", *assets));
+        commands.addComponent<LocalBounds>(mainCamera->getEntity());
+
+        if (addAltCamera)
+        {
+            // Secondary camera to show views are working that is presented in the upper-right corner
+            const auto altCameraHandle = objectPool->createCamera(CameraDescriptor{
+                .objectInfo = {.name = "AltCamera"},
+                .type = CameraType::DepthOnly,
+                .viewport = ViewportDescriptor{.offset{ 0.75f, 0.0f }, .extents{ 0.25f, 0.25f }},
+                .clearColor = color{ 0.015f, 0.25f, 0.025f },
+                .zFar = 30.0f,
+                .priority = static_cast<uint32_t>(CameraPriority::High)         // High priority so it is drawn _after_ the main camera and so is drawn ontop of it.
+                });
+
+            auto* altCamera = objectPool->getCamera(altCameraHandle);
+
+            if (altCamera != nullptr)
+            {
+                altCamera->setWorldPosition(vec3(0.0f, 1.5f, 0.0f));
+                altCamera->lookAt(vec3(5.0f, 1.5f, 0.0f), vec3::up());
+            }
+        }
+    }
+
+    void lightingBootstrap(EntityCommands& commands, std::shared_ptr<LightManager> lights) noexcept
+    {
+        auto dirLightEntity = commands.createEntity();
+        commands.addComponent<Transform>(dirLightEntity, Transform::create(vec3::zero(), quat::fromEuler(60.0f, 100.0f, 0.0f)));
+        commands.addComponent<DirectionalLight>(dirLightEntity, DirectionalLight{ .color = color{ 0.95f, 0.95f, 1.0f }, .intensity = 1.0f });
+
+        lights->setAmbientColor(color(0.05f, 0.025f, 0.05f, 1.0f));
+    }
+
+    void sponzaBootstrap(EntityCommands& commands, std::shared_ptr<AssetManager> assets) noexcept
+    {
+        auto sponzaEntity = commands.createEntity();
+        commands.addComponent<Transform>(sponzaEntity, Transform::create(vec3::zero(), quat::identity()));
+        commands.addComponent<PendingModelInstance>(sponzaEntity, createModelInstance("models/ignore/sponza", "litl/materials/lit", *assets));
+        commands.addComponent<LocalBounds>(sponzaEntity);
+    }
+
+    void transparentCubeBootstrap(EntityCommands& commands, std::shared_ptr<AssetManager> assets) noexcept
+    {
+        auto cubeEntity = commands.createEntity();
+        commands.addComponent<Transform>(cubeEntity, Transform::create(vec3(0.0f, 1.0f, 0.25f), quat::identity()));
+        commands.addComponent<PendingModelInstance>(cubeEntity, createModelInstance("litl/models/cube", "litl/materials/litTransparent", *assets));
+        commands.addComponent<LocalBounds>(cubeEntity);
+        commands.addComponent<Spin>(cubeEntity, Spin{ .rate = 50.0f });
+    }
+
+    void pbrSphereGridBootstrap(EntityCommands& commands, std::shared_ptr<AssetManager> assets, std::shared_ptr<RenderManager> renderManager) noexcept
+    {
+        const float spacing = 2.0f;
+
+        ModelAsset* modelAsset = assets->getModel("litl/models/sphere");
+        MaterialAsset* materialAsset = assets->getMaterial("litl/materials/lit");
+
+        if ((modelAsset == nullptr) || (materialAsset == nullptr) || (materialAsset->material == nullptr))
+        {
+            return;
+        }
+
+        PendingModelInstance pendingModel{
+            .modelHandle = modelAsset->selfHandle.modelHandle,
+            .fallbackMaterialHandle = materialAsset->materialHandle
+        };
+
+        for (float roughness = 0.0f; roughness <= 1.0f; roughness += 0.1f)
+        {
+            for (float metallic = 0.0f; metallic <= 1.0f; metallic += 0.1f)
+            {
+                const float x = (roughness * 10.0f) * spacing;
+                const float z = (metallic * 10.0f) * spacing;
+
+                const auto materialSlot = materialAsset->material->allocateSlot();
+                materialAsset->material->setFloat("roughnessFactor"_sid, roughness, materialSlot);
+                materialAsset->material->setFloat("metallicFactor"_sid, metallic, materialSlot);
+                pendingModel.fallbackMaterialSlot = materialSlot;
+
+                auto pbrSphereEntity = commands.createEntity();
+                commands.addComponent<Transform>(pbrSphereEntity, Transform::create(vec3(x, 0.0f, z)));
+                commands.addComponent<PendingModelInstance>(pbrSphereEntity, pendingModel);
+                commands.addComponent<LocalBounds>(pbrSphereEntity);
+            }
+        }
+    }
+
     void bootstrap(ServiceProvider& services, EntityCommands& commands)
     {
         auto objectPool = services.get<ObjectPool>();
@@ -84,59 +177,12 @@ namespace litl::samples
         auto assets = services.get<AssetManager>();
         auto lights = services.get<LightManager>();
 
-        lights->setAmbientColor(color(0.05f, 0.025f, 0.05f, 1.0f));
-
-        const auto* mainCamera = createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(-5.0f, 1.5f, 0.25f), vec3(5.0f, 1.5f, 0.25f), vec3::up(), *objectPool, *sceneView);
-        commands.addComponent<FreeFlyController>(mainCamera->getEntity());
-        commands.addComponent<PendingModelInstance>(mainCamera->getEntity(), createModelInstance("litl/models/sphere", "litl/materials/lit", *assets));
-        commands.addComponent<LocalBounds>(mainCamera->getEntity());
-
-        auto sponzaEntity = commands.createEntity();
-        commands.addComponent<Transform>(sponzaEntity, Transform::create(vec3::zero(), quat::identity()));
-        commands.addComponent<PendingModelInstance>(sponzaEntity, createModelInstance("models/ignore/sponza", "litl/materials/lit", *assets));
-        commands.addComponent<LocalBounds>(sponzaEntity);
-
-        // ---------------------------------------------------------------------------------
-        // Begin Dev / Test Entities
-        // ---------------------------------------------------------------------------------
-
-        // ---------------------------------------------------------------------------------
-        // Small spinning transparent cube.
-
-        auto cubeEntity = commands.createEntity();
-        commands.addComponent<Transform>(cubeEntity, Transform::create(vec3(0.0f, 1.0f, 0.25f), quat::identity()));
-        commands.addComponent<PendingModelInstance>(cubeEntity, createModelInstance("litl/models/cube", "litl/materials/litTransparent", *assets));
-        commands.addComponent<LocalBounds>(cubeEntity);
-        commands.addComponent<Spin>(cubeEntity, Spin{ .rate = 50.0f });
-
-        // ---------------------------------------------------------------------------------
-        // Single directional light
-
-        auto dirLightEntity = commands.createEntity();
-        commands.addComponent<Transform>(dirLightEntity, Transform::create(vec3::zero(), quat::fromEuler(60.0f, 100.0f, 0.0f)));
-        commands.addComponent<DirectionalLight>(dirLightEntity, DirectionalLight{ .color = color{ 0.95f, 0.95f, 1.0f }, .intensity = 1.0f});
-
-        // ---------------------------------------------------------------------------------
-        // Secondary camera to show views are working that is presented in the upper-right corner
-
-        const auto altCameraHandle = objectPool->createCamera(CameraDescriptor{
-            .objectInfo = {.name = "AltCamera"},
-            .type = CameraType::DepthOnly,
-            .viewport = ViewportDescriptor{.offset{ 0.75f, 0.0f }, .extents{ 0.25f, 0.25f }},
-            .clearColor = color{ 0.015f, 0.25f, 0.025f },
-            .zFar = 30.0f,
-            .priority = static_cast<uint32_t>(CameraPriority::High)         // High priority so it is drawn _after_ the main camera and so is drawn ontop of it.
-        });
-
-        auto* altCamera = objectPool->getCamera(altCameraHandle);
-
-        if (altCamera != nullptr)
-        {
-            altCamera->setWorldPosition(vec3(0.0f, 1.5f, 0.0f));
-            altCamera->lookAt(vec3(5.0f, 1.5f, 0.0f), vec3::up());
-        }
+        cameraBootstrap(commands, objectPool, sceneView, assets, false);
+        lightingBootstrap(commands, lights);
+        sponzaBootstrap(commands, assets);
+        //transparentCubeBootstrap(commands, assets);
+        pbrSphereGridBootstrap(commands, assets, services.get<RenderManager>());
     }
-
 }
 
 int main()
