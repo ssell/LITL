@@ -109,7 +109,6 @@ namespace litl::samples
         commands.addComponent<LocalBounds>(cubeEntity);
         commands.addComponent<Spin>(cubeEntity, Spin{ .rate = 50.0f });
 
-
         // ---------------------------------------------------------------------------------
         // Single directional light
 
@@ -136,6 +135,8 @@ namespace litl::samples
             altCamera->setWorldPosition(vec3(0.0f, 1.5f, 0.0f));
             altCamera->lookAt(vec3(5.0f, 1.5f, 0.0f), vec3::up());
         }
+
+
     }
 }
 

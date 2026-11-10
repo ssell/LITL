@@ -10,8 +10,14 @@ struct MaterialProperties
 {
     float4 tint;
     uint baseColor;
-    uint metallicMap;
+    uint normalMap;
+    uint occlusionMap;
     uint roughnessMap;
+    uint metallicMap;
+    float normalFactor;
+    float occlusionFactor;
+    float roughnessFactor;
+    float metallicFactor;
     float alphaCutoff;
 };
 
@@ -58,6 +64,13 @@ struct FragmentOutput
     float4 color : SV_Target;
 };
 
+void sampleOcclusionRoughnessMetallic(in MaterialProperties matProps, float2 uv, out float occlusion, out float roughness, out float metallic)
+{
+    occlusion = sampleGlobalTexture(matProps.occlusionMap, uv).r * matProps.occlusionFactor;
+    roughness = sampleGlobalTexture(matProps.roughnessMap, uv).r * matProps.roughnessFactor;
+    metallic = sampleGlobalTexture(matProps.metallicMap, uv).r * matProps.metallicFactor;
+}
+
 [shader("fragment")]
 FragmentOutput fragmentMain(VertexOutput input, bool isFrontFace: SV_IsFrontFace)
 {
@@ -77,8 +90,8 @@ FragmentOutput fragmentMain(VertexOutput input, bool isFrontFace: SV_IsFrontFace
     SurfaceData surface;
     surface.normal    = normalize(input.normal) * (isFrontFace ? 1.0f : -1.0f);     // Normalize again since its been interpolated across the surface
     surface.albedo    = baseColor.rgb;
-    surface.roughness = 1.0f;                                                       // todo
-    surface.metallic  = 0.0f;                                                       // todo
+
+    sampleOcclusionRoughnessMetallic(matProps, input.uv, surface.occlusion, surface.roughness, surface.metallic);
 
     const float3 ambient = _pc.lightData->ambient.rgb * surface.albedo;
     const float3 directional = shadeDirectionalLights(_pc.lightData, surface, toViewDir);
@@ -90,7 +103,8 @@ FragmentOutput fragmentMain(VertexOutput input, bool isFrontFace: SV_IsFrontFace
     output.color = float4(color.rgb, baseColor.a);
 
     // todo if transparency is premultiplied. again, need a specialization constant.
-    //output.color.rgb *= baseColor.a;
+    // output.color.rgb *= baseColor.a;
+    output.color.rgb = surface.metallic.rrr;
     
     return output;
 }

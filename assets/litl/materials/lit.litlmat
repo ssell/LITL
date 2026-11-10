@@ -5,14 +5,19 @@ vertex   = { resource = "litl/shaders/lit", entry = "vertexMain" }
 fragment = { resource = "litl/shaders/lit", entry = "fragmentMain" }
 
 [properties]
-tint         = { type = "color", value = [1.0, 1.0, 1.0, 1.0] }
-roughness    = { type = "float", value = 0.5 }
-metallic     = { type = "float", value = 0.0 }
-baseColor    = { type = "texture", value = "white" }                  # "white" is one of the reserved, globally present textures. Others include: "pink", "black", and "normal".
-normalMap    = { type = "texture", value = "normalTangent" }
-roughnessMap = { type = "texture", value = "white" }
-metallicMap  = { type = "texture", value = "black" }
-alphaCutoff  = { type = "float", value = 1.0 }
+tint            = { type = "color", value = [1.0, 1.0, 1.0, 1.0] }
+roughness       = { type = "float", value = 0.5 }
+metallic        = { type = "float", value = 0.0 }
+baseColor       = { type = "texture", value = "white" }                  # "white" is one of the reserved, globally present textures. Others include: "pink", "black", and "normal".
+normalMap       = { type = "texture", value = "normal" }
+normalFactor    = { type = "float", value = 1.0 }
+occlusionMap    = { type = "texture", value = "white" }
+occlusionFactor = { type = "float", value = 1.0 }
+roughnessMap    = { type = "texture", value = "white" }
+roughnessFactor = { type = "float", value = 1.0 }
+metallicMap     = { type = "texture", value = "black" }
+metallicFactor  = { type = "float", value = 1.0 }
+alphaCutoff     = { type = "float", value = 1.0 }
 
 [blend]
 blendMode = "opaque"

@@ -13,10 +13,11 @@ import common;
 
 public struct SurfaceData
 {
-    public float3 normal;
-    public float3 albedo;
-    public float roughness;
-    public float metallic;
+    public float3 normal = float3(0.0f, 0.0f, 0.0f);
+    public float3 albedo = float3(1.0f, 1.0f, 1.0f);
+    public float occlusion = 1.0f;
+    public float roughness = 1.0f;
+    public float metallic = 0.0f;
 };
 
 public float3 evaluateBRDF(SurfaceData surface, float3 V, float3 L)
