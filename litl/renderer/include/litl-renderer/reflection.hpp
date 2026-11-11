@@ -186,6 +186,9 @@ namespace litl
     /// </summary>
     struct SpecializationConstant
     {
+        /// <summary>
+        /// Numeric id of the constant.
+        /// </summary>
         uint32_t id;
 
         /// <summary>

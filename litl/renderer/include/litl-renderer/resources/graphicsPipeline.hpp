@@ -2,7 +2,10 @@
 #define LITL_RENDERER_GRAPHICS_PIPELINE_H__
 
 #include <array>
+#include <cstdint>
 #include <optional>
+#include <span>
+#include <string>
 
 #include "litl-renderer/enums.hpp"
 #include "litl-renderer/resources/handles.hpp"
@@ -581,9 +584,20 @@ namespace litl
         std::vector<DynamicState> states;
     };
 
+    /// <summary>
+    /// Constants provided to the shader.
+    /// One of the following scalars: bool, int, uint, float, or double.
+    /// </summary>
+    struct SpecializationConstantEntry
+    {
+        uint32_t id;
+        uint32_t size;                      // 4 or 8 bytes. A bool is 4 bytes (VkBool32).
+        std::array<std::byte, 8> data;
+    };
+
     struct SpecializationConstants
     {
-        // ... placeholder, not yet used ...
+        std::vector<SpecializationConstantEntry> entries;
     };
 
     struct GraphicsPipelineDescriptor

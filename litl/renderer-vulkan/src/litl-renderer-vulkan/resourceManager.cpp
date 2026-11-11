@@ -1,4 +1,5 @@
 #include <array>
+#include <cstring>
 #include <format>
 
 #include "litl-core/hash.hpp"
@@ -368,18 +369,68 @@ namespace litl::vulkan
     // GraphicsPipeline
     //--------------------------------------------------------------------------------------
 
-    void createPipelineShaderStageCreateInfo(ShaderModuleResource* resource, PipelineShaderDescriptor const& descriptor, std::array<VkPipelineShaderStageCreateInfo, 7>& stages, uint32_t& count, PipelineLayoutDescriptorCreateInfo& pipelineLayoutDescriptorCreateInfo) noexcept
+    namespace
+    {
+        /// <summary>
+        /// Specialization constant data that needs to persist until the pipelines are created.
+        /// </summary>
+        struct SpecConstantData
+        {
+            VkSpecializationInfo vkSpecConstants;
+            std::vector<VkSpecializationMapEntry> vkSpecEntries;
+            std::vector<std::byte> data;
+        };
+    }
+
+    void createVkSpecializationInfo(SpecializationConstants const& specConstants, SpecConstantData& specConstantData) noexcept
+    {
+        if (specConstants.entries.empty())
+        {
+            return;
+        }
+
+        specConstantData.vkSpecEntries.reserve(specConstants.entries.size());
+
+        uint64_t totalByteSize = 0ull;
+
+        for (const auto& entry : specConstants.entries)
+        {
+            totalByteSize += entry.size;
+        }
+
+        specConstantData.data.resize(totalByteSize, std::byte(0));
+        uint64_t offset = 0ull;
+
+        for (const auto& entry : specConstants.entries)
+        {
+            specConstantData.vkSpecEntries.push_back(VkSpecializationMapEntry{
+                .constantID = entry.id,
+                .offset = static_cast<uint32_t>(totalByteSize),
+                .size = entry.size
+            });
+
+            std::memcpy(specConstantData.data.data() + offset, entry.data.data(), entry.size);
+            offset += entry.size;
+        }
+
+        specConstantData.vkSpecConstants.mapEntryCount = static_cast<uint32_t>(specConstantData.vkSpecEntries.size());
+        specConstantData.vkSpecConstants.pMapEntries = specConstantData.vkSpecEntries.data();
+        specConstantData.vkSpecConstants.dataSize = specConstantData.data.size();
+        specConstantData.vkSpecConstants.pData = specConstantData.data.data();
+    }
+
+    void createPipelineShaderStageCreateInfo(ShaderModuleResource* resource, PipelineShaderDescriptor const& shaderDescriptor, std::array<VkPipelineShaderStageCreateInfo, 7>& stages, uint32_t& count, PipelineLayoutDescriptorCreateInfo& pipelineLayoutDescriptorCreateInfo, VkSpecializationInfo const& vkSpecConstants) noexcept
     {
         if (resource == nullptr)
         {
             return;
         }
 
-        auto entryPoint = resource->reflection.getEntryPoint(descriptor.entryPoint);
+        auto entryPoint = resource->reflection.getEntryPoint(shaderDescriptor.entryPoint);
 
         if (!entryPoint.has_value() || (*entryPoint) == nullptr)
         {
-            logWarning("Vulkan Graphics Pipeline creation requested invalid shader with entry point of '", descriptor.entryPoint, "'");
+            logWarning("Vulkan Graphics Pipeline creation requested invalid shader with entry point of '", shaderDescriptor.entryPoint, "'");
             return;
         }
 
@@ -387,16 +438,16 @@ namespace litl::vulkan
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
                 .pNext = nullptr,
                 .flags = 0,
-                .stage = static_cast<VkShaderStageFlagBits>(toVkShaderStageFlags(descriptor.stage)),
+                .stage = static_cast<VkShaderStageFlagBits>(toVkShaderStageFlags(shaderDescriptor.stage)),
                 .module = resource->vkShaderModule,
-                .pName = descriptor.entryPoint.c_str(),
-                .pSpecializationInfo = nullptr
+                .pName = shaderDescriptor.entryPoint.c_str(),
+                .pSpecializationInfo = &vkSpecConstants
         };
 
         pipelineLayoutDescriptorCreateInfo.stages.push_back(PipelineLayoutDescriptorShaderModuleInfo{
             .resource = resource,
-            .stage = descriptor.stage,
-            .entryPoint = descriptor.entryPoint
+            .stage = shaderDescriptor.stage,
+            .entryPoint = shaderDescriptor.entryPoint
         });
     }
 
@@ -472,14 +523,17 @@ namespace litl::vulkan
         uint32_t shaderStageCount = 0;
         std::array<VkPipelineShaderStageCreateInfo, 7> shaderStages;
         PipelineLayoutDescriptorCreateInfo pipelineLayoutDescriptorCreateInfo{};        // used later, but everything we need to make it is retrieved now.
+        SpecConstantData specConstantData{};
 
-        createPipelineShaderStageCreateInfo(resources.getShaderModule(descriptor.vertex.handle), descriptor.vertex, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
-        createPipelineShaderStageCreateInfo(resources.getShaderModule(descriptor.fragment.handle), descriptor.fragment, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
-        createPipelineShaderStageCreateInfo(resources.getShaderModule(descriptor.geometry.handle), descriptor.geometry, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
-        createPipelineShaderStageCreateInfo(resources.getShaderModule(descriptor.tessellationEvaluation.handle), descriptor.tessellationEvaluation, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
-        createPipelineShaderStageCreateInfo(resources.getShaderModule(descriptor.tessellationControl.handle), descriptor.tessellationControl, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
-        createPipelineShaderStageCreateInfo(resources.getShaderModule(descriptor.mesh.handle), descriptor.mesh, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
-        createPipelineShaderStageCreateInfo(resources.getShaderModule(descriptor.task.handle), descriptor.task, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo);
+        createVkSpecializationInfo(descriptor.specializationConstants, specConstantData);
+
+        createPipelineShaderStageCreateInfo(resources.getShaderModule(descriptor.vertex.handle), descriptor.vertex, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo, specConstantData.vkSpecConstants);
+        createPipelineShaderStageCreateInfo(resources.getShaderModule(descriptor.fragment.handle), descriptor.fragment, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo, specConstantData.vkSpecConstants);
+        createPipelineShaderStageCreateInfo(resources.getShaderModule(descriptor.geometry.handle), descriptor.geometry, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo, specConstantData.vkSpecConstants);
+        createPipelineShaderStageCreateInfo(resources.getShaderModule(descriptor.tessellationEvaluation.handle), descriptor.tessellationEvaluation, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo, specConstantData.vkSpecConstants);
+        createPipelineShaderStageCreateInfo(resources.getShaderModule(descriptor.tessellationControl.handle), descriptor.tessellationControl, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo, specConstantData.vkSpecConstants);
+        createPipelineShaderStageCreateInfo(resources.getShaderModule(descriptor.mesh.handle), descriptor.mesh, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo, specConstantData.vkSpecConstants);
+        createPipelineShaderStageCreateInfo(resources.getShaderModule(descriptor.task.handle), descriptor.task, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo, specConstantData.vkSpecConstants);
 
         // ---- Vertex Input
 
