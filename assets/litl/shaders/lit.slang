@@ -113,9 +113,8 @@ FragmentOutput fragmentMain(VertexOutput input, bool isFrontFace: SV_IsFrontFace
     const MaterialProperties matProps = _pc.getMaterial(input.materialSlot);
     const float4 texColor = sampleGlobalTexture(matProps.baseColor, input.uv);
     const float4 baseColor = texColor * matProps.tint;
-
-    // todo need specialization constants so this is not present among all opaques
-    if (baseColor.a < matProps.alphaCutoff)
+    
+    if (LITL_SC_RENDER_MASKED && (baseColor.a < matProps.alphaCutoff))
     {
         discard;
     }
@@ -132,10 +131,10 @@ FragmentOutput fragmentMain(VertexOutput input, bool isFrontFace: SV_IsFrontFace
 
     output.color = float4(color.rgb, baseColor.a);
 
-    // todo if transparency is premultiplied. again, need a specialization constant.
-    // output.color.rgb *= baseColor.a;
-
-    // output.color.rgb = surface.metallic.rrr;
+    if (LITL_SC_RENDER_BLENDED_PREMULTIPLY)
+    {
+        output.color.rgb *= baseColor.a;
+    }
 
     return output;
 }

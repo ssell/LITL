@@ -10,6 +10,7 @@
 #include "litl-renderer/enums.hpp"
 #include "litl-renderer/resources/handles.hpp"
 #include "litl-renderer/resources/shaderModule.hpp"
+#include "litl-renderer/resources/specializationConstants.hpp"
 #include "litl-renderer/resources/texture.hpp"
 
 namespace litl
@@ -582,22 +583,6 @@ namespace litl
     struct DynamicStateMask
     {
         std::vector<DynamicState> states;
-    };
-
-    /// <summary>
-    /// Constants provided to the shader.
-    /// One of the following scalars: bool, int, uint, float, or double.
-    /// </summary>
-    struct SpecializationConstantEntry
-    {
-        uint32_t id;
-        uint32_t size;                      // 4 or 8 bytes. A bool is 4 bytes (VkBool32).
-        std::array<std::byte, 8> data;
-    };
-
-    struct SpecializationConstants
-    {
-        std::vector<SpecializationConstantEntry> entries;
     };
 
     struct GraphicsPipelineDescriptor

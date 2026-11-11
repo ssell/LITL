@@ -36,6 +36,7 @@ namespace litl
         MaterialDescriptor descriptor;
         MaterialProperties properties;
         std::vector<MaterialVariant> variants;
+        StringIdMap<uint32_t> specConstantMap;
         ComputePipelineHandle computePipelineHandle{};
         GpuBufferHandle gpuBufferHandle{};
         std::optional<uint64_t> currGraphicsGpuBufferDeviceAddress{};
@@ -453,6 +454,9 @@ namespace litl
 
         bool createGraphicsInternals() noexcept
         {
+            // Specialization constants must be set prior to the graphics pipeline(s) being created.
+            configureSpecConstants();
+
             // Initial graphics pipeline targetting the render scene formats.
             if (!createGraphicsPipelineVariants(renderSceneFormats))
             {
@@ -556,7 +560,7 @@ namespace litl
                 graphicsPipelineDescriptor.multisample = MultisampleState{};                                          // ... todo expand this functionality ...
                 graphicsPipelineDescriptor.depthStencil = DepthStencilState{};
                 graphicsPipelineDescriptor.dynamicState = DynamicStateMask{};                                         // ... todo expand this functionality ...
-                graphicsPipelineDescriptor.specializationConstants = SpecializationConstants{};                       // ... todo expand this functionality ...
+                graphicsPipelineDescriptor.specializationConstants = descriptor.specializationConstants;
 
                 graphicsPipelineDescriptor.vertexInput.addBinding(VertexBinding{
                     .binding = 0u,
@@ -654,6 +658,48 @@ namespace litl
             return true;
         }
 
+        void configureSpecConstants() noexcept
+        {
+            // Reflect spec constants
+            std::vector<SpecializationConstant> reflectedSpecConstants;
+
+            compileReflectedSpecConstants(vertexHandle, reflectedSpecConstants);
+            compileReflectedSpecConstants(fragmentHandle, reflectedSpecConstants);
+            compileReflectedSpecConstants(geometryHandle, reflectedSpecConstants);
+            compileReflectedSpecConstants(tessellationEvaluationHandle, reflectedSpecConstants);
+
+            for (const auto& sc : reflectedSpecConstants)
+            {
+                specConstantMap[StringId(sc.name)] = sc.id;
+            }
+
+            // Set spec constants based on descriptor properties
+            switch (descriptor.blendState.mode)
+            {
+            case MaterialBlendMode::Transparent:
+                setConstantBool(InternalSpecializationConstantNames[static_cast<uint32_t>(InternalSpecializationConstant::RenderBlended)], true);
+                break;
+
+            case MaterialBlendMode::Masked:
+                setConstantBool(InternalSpecializationConstantNames[static_cast<uint32_t>(InternalSpecializationConstant::RenderMasked)], true);
+                break;
+
+            case MaterialBlendMode::Opaque:
+                setConstantBool(InternalSpecializationConstantNames[static_cast<uint32_t>(InternalSpecializationConstant::RenderOpaque)], true);
+                break;
+
+            default:
+                logWarning("Unknown material blend mode ", static_cast<uint32_t>(descriptor.blendState.mode), " during spec constant configuration. Defaulting to opaque.");
+                setConstantBool(InternalSpecializationConstantNames[static_cast<uint32_t>(InternalSpecializationConstant::RenderOpaque)], true);
+                break;
+            }
+
+            if (descriptor.blendState.preset == MaterialBlendPreset::Premultiplied)
+            {
+                setConstantBool(InternalSpecializationConstantNames[static_cast<uint32_t>(InternalSpecializationConstant::RenderBlendedPremultiply)], true);
+            }
+        }
+
         bool compileReflectedProperties(ShaderModuleHandle handle, std::string_view entryPointName, uint32_t& propertyStructSizeBytes, std::vector<ResourceProperty>& reflectedProperties) noexcept
         {
             if (!handle.isValid())
@@ -677,9 +723,10 @@ namespace litl
                 return false;
             }
 
+            // Reflected material properties from the material struct
             for (uint32_t i = 0u; i < static_cast<uint32_t>((*entryPoint)->pushConstants.size()); ++i)
             {
-                auto& pushConstant = (*entryPoint)->pushConstants[i];
+                const auto& pushConstant = (*entryPoint)->pushConstants[i];
 
                 for (uint32_t j = 0u; j < static_cast<uint32_t>(pushConstant.referenceProperties.size()); ++j)
                 {
@@ -704,7 +751,129 @@ namespace litl
                 }
             }
 
-            return true;    // No reflected properties is OK - the shader stage isn't using any.
+            return true;
+        }
+
+        void compileReflectedSpecConstants(ShaderModuleHandle handle, std::vector<SpecializationConstant>& reflectedSpecConstants) noexcept
+        {
+            if (!handle.isValid())
+            {
+                return;
+            }
+
+            auto* reflection = renderer->getShaderReflection(handle);
+
+            if (reflection == nullptr)
+            {
+                logWarning("Failed to retrieve shader reflection data for material '", descriptor.objectInfo.name, "'. Is there a mismatch between set call and/or material definition and/or shader implementation?");
+                return;
+            }
+
+            constexpr auto isSpecConstantDuplicated = [](SpecializationConstant const& specConstant, std::vector<SpecializationConstant>& known)
+                {
+                    for (const auto& sc : known)
+                    {
+                        if ((specConstant.id == sc.id) || (specConstant.name == sc.name))
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                };
+
+            // Reflected specialization constants
+            for (uint32_t i = 0u; i < static_cast<uint32_t>(reflection->specializationConstants.size()); ++i)
+            {
+                const auto& specConstant = reflection->specializationConstants[i];
+
+                if (isSpecConstantDuplicated(specConstant, reflectedSpecConstants))
+                {
+                    logWarning("Specialization constant duplicated on id (", specConstant.id, ") or name (", specConstant.name, "). Rejecting.");
+                    continue;
+                }
+
+                reflectedSpecConstants.push_back(specConstant);
+            }
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Set Specialization Constants
+        // ---------------------------------------------------------------------------------
+         
+        // The following functions simply update the material descriptor accordingly. A change to spec constants requires
+        // a rebuild of the underlying graphics pipeline. When users are allows to set spec constants it
+        // needs to be done in a way where either they are specified before the initial graphics pipeline
+        // is created or it triggers a rebuild of it.
+
+        bool setConstantBool(StringId name, bool value) noexcept
+        {
+            const auto findSC = specConstantMap.find(name);
+
+            if (findSC == specConstantMap.end())
+            {
+                return false;
+            }
+
+            descriptor.specializationConstants.addEntry(findSC->second, value);
+
+            return true;
+        }
+
+        bool setConstantInt32(StringId name, int32_t value) noexcept
+        {
+            const auto findSC = specConstantMap.find(name);
+
+            if (findSC == specConstantMap.end())
+            {
+                return false;
+            }
+
+            descriptor.specializationConstants.addEntry(findSC->second, value);
+
+            return true;
+        }
+
+        bool setConstantUint32(StringId name, uint32_t value) noexcept
+        {
+            const auto findSC = specConstantMap.find(name);
+
+            if (findSC == specConstantMap.end())
+            {
+                return false;
+            }
+
+            descriptor.specializationConstants.addEntry(findSC->second, value);
+
+            return true;
+        }
+
+        bool setConstantFloat(StringId name, float value) noexcept
+        {
+            const auto findSC = specConstantMap.find(name);
+
+            if (findSC == specConstantMap.end())
+            {
+                return false;
+            }
+
+            descriptor.specializationConstants.addEntry(findSC->second, value);
+
+            return true;
+        }
+
+        bool setConstantDouble(StringId name, double value) noexcept
+        {
+            const auto findSC = specConstantMap.find(name);
+
+            if (findSC == specConstantMap.end())
+            {
+                return false;
+            }
+
+            descriptor.specializationConstants.addEntry(findSC->second, value);
+
+            return true;
         }
 
         // ---------------------------------------------------------------------------------

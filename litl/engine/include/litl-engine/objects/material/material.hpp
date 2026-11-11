@@ -101,6 +101,7 @@ namespace litl
         RasterizationState rasterizerState{};
         MaterialBlendState blendState{};
         VertexInputDescriptor inputDescriptor{};
+        SpecializationConstants specializationConstants{};
         ShaderResourceDescriptor vertexShader{};
         ShaderResourceDescriptor fragmentShader{};
         ShaderResourceDescriptor geometryShader{};

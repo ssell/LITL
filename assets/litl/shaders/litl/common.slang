@@ -15,6 +15,12 @@ public static const float PI_OVER_TWO = 1.57079632679f;
 public static const float ONE_OVER_PI = 0.31830988618f;
 public static const float EPSILON     = 1e-6;
 
+// Keep in sync with specializationConstants.hpp
+[SpecializationConstant] public const bool LITL_SC_RENDER_OPAQUE = true;
+[SpecializationConstant] public const bool LITL_SC_RENDER_MASKED = false;
+[SpecializationConstant] public const bool LITL_SC_RENDER_BLENDED = false;
+[SpecializationConstant] public const bool LITL_SC_RENDER_BLENDED_PREMULTIPLY = false;
+
 // -----------------------------------------------------------------------------------------
 // Utility Functions
 // -----------------------------------------------------------------------------------------

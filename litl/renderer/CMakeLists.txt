@@ -5,7 +5,7 @@ add_library(litl-renderer STATIC
 	"src/litl-renderer/renderer.cpp" 
 	"src/litl-renderer/resources/pipelineResource.cpp" 
 	"src/litl-renderer/resources/commandBuffer.cpp" 
-	"src/litl-renderer/resources/texture.cpp")
+	"src/litl-renderer/resources/texture.cpp" "src/litl-renderer/resources/specializationConstants.cpp")
 
 target_include_directories(litl-renderer 
 	PUBLIC 
