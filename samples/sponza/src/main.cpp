@@ -111,9 +111,10 @@ namespace litl::samples
     {
         auto dirLightEntity = commands.createEntity();
         commands.addComponent<Transform>(dirLightEntity, Transform::create(vec3::zero(), quat::fromEuler(60.0f, 100.0f, 0.0f)));
-        commands.addComponent<DirectionalLight>(dirLightEntity, DirectionalLight{ .color = color{ 0.95f, 0.95f, 1.0f }, .intensity = 1.0f });
+        commands.addComponent<DirectionalLight>(dirLightEntity, DirectionalLight{ .color = color{ 0.95f, 0.95f, 1.0f }, .intensity = 1.0f }); 
+        //commands.addComponent<Spin>(dirLightEntity, Spin{ .rate = 50.0f });
 
-        lights->setAmbientColor(color(0.05f, 0.025f, 0.05f, 1.0f));
+        lights->setAmbientColor(color(0.125f, 0.1f, 0.125f, 1.0f));
     }
 
     void sponzaBootstrap(EntityCommands& commands, std::shared_ptr<AssetManager> assets) noexcept
@@ -169,9 +170,6 @@ namespace litl::samples
             }
         }
     }
-
-
-
 
     void bootstrap(ServiceProvider& services, EntityCommands& commands)
     {

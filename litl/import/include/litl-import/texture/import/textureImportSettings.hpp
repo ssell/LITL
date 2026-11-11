@@ -15,10 +15,11 @@ namespace litl::import
     enum class TextureSemantic : uint8_t
     {
         Unknown = 0u,
-        BaseColor = 1u,         // Color data (RGBA32_SFloat)
-        NormalTangent = 2u,     // Tangent-space normal map (RGBA32_SFloat)
-        Mask = 3u,              // Masking texture (RGBA32_SFloat)
-        Hdr = 4u                // High-dynamic range texture (RGBA16_SFLOAT)
+        BaseColor = 1u,         // SRGB color data (RGBA32_SFloat)
+        LinearColor = 2u,       // Linear color data (RGBA32_SFloat)
+        NormalTangent = 3u,     // Tangent-space normal map (RGBA32_SFloat)
+        Mask = 4u,              // Masking texture (RGBA32_SFloat)
+        Hdr = 5u                // High-dynamic range texture (RGBA16_SFLOAT)
     };
 
     struct TextureImportSettings
@@ -40,19 +41,19 @@ namespace litl::import
     };
 
     /// <summary>
+    /// RGBA color maps that are not SRGB but want mipmaps. Metallic, roughness, etc.
+    /// </summary>
+    inline constexpr TextureImportSettings LinearColorTextureImportSettings{
+        .semantic = TextureSemantic::LinearColor,
+        .transfer = TransferFunction::Linear,
+        .mipmaps = true
+    };
+
+    /// <summary>
     /// Normal tangent maps.
     /// </summary>
     inline constexpr TextureImportSettings NormalMapImportSettings{
         .semantic = TextureSemantic::NormalTangent,
-        .transfer = TransferFunction::Linear,
-        .mipmaps = false
-    };
-
-    /// <summary>
-    /// RGBA color maps that are not SRGB but want mipmaps. Metallic, roughness, etc.
-    /// </summary>
-    inline constexpr TextureImportSettings ColorDataTextureImportSettings{
-        .semantic = TextureSemantic::BaseColor,
         .transfer = TransferFunction::Linear,
         .mipmaps = true
     };

@@ -124,7 +124,7 @@ FragmentOutput fragmentMain(VertexOutput input, bool isFrontFace: SV_IsFrontFace
     surface.normal    = buildSurfaceNormal(input, matProps, isFrontFace);
     surface.toView    = normalize(_pc.passData.cameraPosition.xyz - input.positionWS);
     surface.baseColor = baseColor.rgb;
-
+    
     const float3 lighting = shadeLights(_pc.lightData, surface);
     const float3 ambient  = _pc.lightData->ambient.rgb * surface.baseColor * (1.0f - surface.metallic);
     const float3 emissive = float3(0.0f);
@@ -135,7 +135,7 @@ FragmentOutput fragmentMain(VertexOutput input, bool isFrontFace: SV_IsFrontFace
     // todo if transparency is premultiplied. again, need a specialization constant.
     // output.color.rgb *= baseColor.a;
 
-    //output.color.rgb = surface.metallic.rrr;
-    
+    // output.color.rgb = surface.metallic.rrr;
+
     return output;
 }

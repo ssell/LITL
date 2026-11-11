@@ -488,6 +488,11 @@ namespace litl::import
         [[nodiscard]] TextureImportSettings determineImportSettingsForTexture(cgltf_material* materials, cgltf_size materialsCount, cgltf_texture const& texture) noexcept
         {
             // Scan all materials. If the texture is used as a non-color texture (normal, roughness, metallic, occlusion) then return the appropriate import settings. AKA don't import a linear texture as SRGB.
+
+            bool usedAsNormal = false;
+            bool usedAsLinearMippedColorData = false;
+            bool usedAsLinearNonMippedColorData = false;
+
             for (cgltf_size i = 0; i < materialsCount; ++i)
             {
                 cgltf_material const& material = materials[i];
@@ -498,19 +503,34 @@ namespace litl::import
 
                 if ((normalTexture != nullptr) && (normalTexture->image == texture.image))
                 {
-                    return NormalMapImportSettings;
+                    usedAsNormal = true;
                 }
                 else if ((metallicRoughnessTexture != nullptr) && (metallicRoughnessTexture->image == texture.image))
                 {
-                    return ColorDataTextureImportSettings;
+                    usedAsLinearMippedColorData = true;
                 }
                 else if ((occlusionTexture != nullptr) && (occlusionTexture->image == texture.image))
                 {
-                    return MaskTextureImportSettings;
+                    usedAsLinearNonMippedColorData = true;
                 }
             }
 
-            return ColorTextureImportSettings;
+            if (usedAsNormal)
+            {
+                return NormalMapImportSettings;
+            }
+            else if (usedAsLinearMippedColorData)
+            {
+                return LinearColorTextureImportSettings;
+            }
+            else if (usedAsLinearNonMippedColorData)
+            {
+                return MaskTextureImportSettings;
+            }
+            else
+            {
+                return ColorTextureImportSettings;
+            }
         }
     }
 
