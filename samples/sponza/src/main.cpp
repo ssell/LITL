@@ -178,11 +178,11 @@ namespace litl::samples
         auto assets = services.get<AssetManager>();
         auto lights = services.get<LightManager>();
 
-        cameraBootstrap(commands, objectPool, sceneView, assets, false);
+        cameraBootstrap(commands, objectPool, sceneView, assets, true);
         lightingBootstrap(commands, lights);
-        sponzaBootstrap(commands, assets);
+        //sponzaBootstrap(commands, assets);
         //transparentCubeBootstrap(commands, assets);
-        //pbrSphereGridBootstrap(commands, assets, services.get<RenderManager>());
+        pbrSphereGridBootstrap(commands, assets, services.get<RenderManager>());
     }
 }
 

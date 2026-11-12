@@ -70,7 +70,7 @@ namespace litl
         }
 
         m_renderPassItems.back().instanceCount = static_cast<uint32_t>(entities.size()) - m_renderPassItems.back().instanceOffset;    // Update instance count for the last drawable item
-        
+
         return true;
     }
 
@@ -195,9 +195,9 @@ namespace litl
         RenderTargetSetup setup{};
 
         auto addAttachment = [&](PipelineBarrierCommand const& preset, TextureResourceHandle handle)
-        {
-            setup.pipelineBarrierCmds[setup.barrierCount++] = PipelineBarrierCommand::copyWithTexture(preset, handle);
-        };
+            {
+                setup.pipelineBarrierCmds[setup.barrierCount++] = PipelineBarrierCommand::copyWithTexture(preset, handle);
+            };
 
         const bool colorEnabled = options.hasColorAttachment && ((camera == nullptr) || camera->getColorEnabled());         // Note: no camera = color enabled (swapchain)
         const bool depthEnabled = options.hasDepthAttachment && ((camera != nullptr) && camera->getDepthEnabled());         // Note: no camera = depth disabled
@@ -351,5 +351,22 @@ namespace litl
 
             m_pRenderer->cmdDrawIndexed(commandBufferHandle, renderPassItem.indexCount, renderPassItem.instanceCount, renderPassItem.firstIndex, 0, renderPassItem.instanceOffset);
         }
+    }
+
+    bool RenderPass::barrierAndBeginRender(CommandBufferHandle commandBufferHandle, RenderView const& renderView, RenderTargetOptions const& renderTargetOptions) noexcept
+    {
+        const auto renderTarget = resolveRenderTarget(renderView.camera, renderView.renderTexture, renderTargetOptions);
+
+        if (!renderTarget.valid)
+        {
+            return false;
+        }
+
+        for (const auto& pipelineBarrierCmd : renderTarget.getPipelineBarrierCmds())
+        {
+            m_pRenderer->cmdPipelineBarrier(commandBufferHandle, pipelineBarrierCmd);
+        }
+
+        return m_pRenderer->cmdBeginRender(commandBufferHandle, renderTarget.beginRenderCmd);
     }
 }

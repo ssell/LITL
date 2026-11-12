@@ -14,7 +14,6 @@ namespace litl
     private:
 
         void render(CommandBufferHandle commandBufferHandle, RenderView const& renderView, RenderPushConstants viewPushConstants) noexcept;
-        [[nodiscard]] bool barrierAndBeginRender(CommandBufferHandle commandBufferHandle, RenderView const& renderView) noexcept;
     };
 }
 

@@ -77,6 +77,7 @@ namespace litl
             bool requiresMaterialProperties{ true };
         };
 
+        [[nodiscard]] bool barrierAndBeginRender(CommandBufferHandle commandBufferHandle, RenderView const& renderView, RenderTargetOptions const& renderTargetOptions) noexcept;
         [[nodiscard]] virtual GraphicsPipelineHandle resolveGraphicsPipelineHandle(Material* material) const noexcept;
         [[nodiscard]] bool compileRenderList(std::span<RenderableEntity const> entities) noexcept;
         [[nodiscard]] bool createRenderPassItems(RenderableEntity entity, uint32_t instanceOffset, std::optional<MeshHandle>& currMeshHandle, std::optional<MaterialHandle>& currMaterialHandle) noexcept;

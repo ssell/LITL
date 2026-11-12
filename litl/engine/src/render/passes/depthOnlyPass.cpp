@@ -17,10 +17,18 @@ namespace litl
 
     void DepthOnlyPass::render(CommandBufferHandle commandBufferHandle, RenderView const& renderView, RenderPushConstants viewPushConstants) noexcept
     {
+        const RenderTargetOptions renderTargetOptions{
+            .loadOp = LoadOperationType::Clear,
+            .colorStoreOp = StoreOperationType::DontCare,
+            .depthStoreOp = StoreOperationType::Store,
+            .hasColorAttachment = false,
+            .hasDepthAttachment = true
+        };
+
         viewPushConstants.perPassDataAddr = renderView.perPassDataAddr;
         viewPushConstants.instanceDataAddr = renderView.opaqueInstanceDataAddr;
 
-        if (barrierAndBeginRender(commandBufferHandle, renderView))
+        if (barrierAndBeginRender(commandBufferHandle, renderView, renderTargetOptions))
         {
             m_pRenderer->cmdSetViewportAndScissor(commandBufferHandle, createSetViewportAndScissorCommand(renderView.camera, false));
 
@@ -31,31 +39,6 @@ namespace litl
 
             m_pRenderer->cmdEndRender(commandBufferHandle);
         }
-    }
-
-    bool DepthOnlyPass::barrierAndBeginRender(CommandBufferHandle commandBufferHandle, RenderView const& renderView) noexcept
-    {
-        const RenderTargetOptions renderTargetOptions{
-            .loadOp = LoadOperationType::Clear,
-            .colorStoreOp = StoreOperationType::DontCare,
-            .depthStoreOp = StoreOperationType::Store,
-            .hasColorAttachment = false,
-            .hasDepthAttachment = true
-        };
-
-        const auto renderTarget = resolveRenderTarget(renderView.camera, renderView.renderTexture, renderTargetOptions);
-
-        if (!renderTarget.valid)
-        {
-            return false;
-        }
-
-        for (const auto& pipelineBarrierCmd : renderTarget.getPipelineBarrierCmds())
-        {
-            m_pRenderer->cmdPipelineBarrier(commandBufferHandle, pipelineBarrierCmd);
-        }
-
-        return m_pRenderer->cmdBeginRender(commandBufferHandle, renderTarget.beginRenderCmd);
     }
 
     GraphicsPipelineHandle DepthOnlyPass::resolveGraphicsPipelineHandle(Material* material) const noexcept

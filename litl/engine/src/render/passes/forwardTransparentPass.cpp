@@ -18,10 +18,18 @@ namespace litl
 
     void ForwardTransparentPass::render(CommandBufferHandle commandBufferHandle, RenderView const& renderView, RenderPushConstants viewPushConstants) noexcept
     {
+        const RenderTargetOptions renderTargetOptions{
+            .loadOp = LoadOperationType::Load,
+            .colorStoreOp = StoreOperationType::Store,
+            .depthStoreOp = StoreOperationType::DontCare,
+            .hasColorAttachment = true,
+            .hasDepthAttachment = true
+        };
+
         viewPushConstants.perPassDataAddr = renderView.perPassDataAddr;
         viewPushConstants.instanceDataAddr = renderView.transparentInstanceDataAddr;
 
-        if (barrierAndBeginRender(commandBufferHandle, renderView))
+        if (barrierAndBeginRender(commandBufferHandle, renderView, renderTargetOptions))
         {
             m_pRenderer->cmdSetViewportAndScissor(commandBufferHandle, createSetViewportAndScissorCommand(renderView.camera, false));
 
@@ -32,30 +40,5 @@ namespace litl
 
             m_pRenderer->cmdEndRender(commandBufferHandle);
         }
-    }
-
-    bool ForwardTransparentPass::barrierAndBeginRender(CommandBufferHandle commandBufferHandle, RenderView const& renderView) noexcept
-    {
-        const RenderTargetOptions renderTargetOptions{
-            .loadOp = LoadOperationType::Load,
-            .colorStoreOp = StoreOperationType::Store,
-            .depthStoreOp = StoreOperationType::DontCare,
-            .hasColorAttachment = true,
-            .hasDepthAttachment = true
-        };
-
-        const auto renderTarget = resolveRenderTarget(renderView.camera, renderView.renderTexture, renderTargetOptions);
-
-        if (!renderTarget.valid)
-        {
-            return false;
-        }
-
-        for (const auto& pipelineBarrierCmd : renderTarget.getPipelineBarrierCmds())
-        {
-            m_pRenderer->cmdPipelineBarrier(commandBufferHandle, pipelineBarrierCmd);
-        }
-
-        return m_pRenderer->cmdBeginRender(commandBufferHandle, renderTarget.beginRenderCmd);
     }
 }
