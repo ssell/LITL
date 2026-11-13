@@ -93,7 +93,7 @@ namespace litl
         {
             if (entry.frameLastUsed != frame)
             {
-                release(entry.key, frame);
+                retire(entry.allocation, frame);
             }
         }
 

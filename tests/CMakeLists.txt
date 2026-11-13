@@ -94,7 +94,7 @@ add_executable(litl-tests
 	"src/litl-core/math/projection_tests.cpp" 
 	"src/litl-platform/window/windowCallbacks_tests.cpp" 
 	"src/litl-core/job/perJobVector_tests.cpp"
- "src/litl-core/layerRangeAllocator_tests.cpp")
+ "src/litl-core/layerRangeAllocator_tests.cpp" "src/litl-engine/lights/shadowAllocator_tests.cpp")
 
 target_link_libraries(litl-tests
 	PRIVATE
