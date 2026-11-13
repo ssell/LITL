@@ -26,7 +26,9 @@ namespace litl
         /// Point light shadow caster.
         /// 6 views, one per cube face, does not depend on a camera.
         /// </summary>
-        Point = 2u
+        Point = 2u,
+
+        Count
     };
 }
 

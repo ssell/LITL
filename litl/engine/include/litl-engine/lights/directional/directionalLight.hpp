@@ -14,6 +14,7 @@ namespace litl
     {
         color color{ colors::White };       // Color of the light.
         float intensity{ 1.0f };            // Intensity/brightness of the light.
+        bool castsShadows{ false };         // Does this light source cast shadows?
     };
 
     /// <summary>
