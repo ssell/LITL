@@ -150,13 +150,16 @@ namespace litl
                 {
                     auto* renderer = renderManager->getRenderer();
 
-                    if (renderer != nullptr)
+                    if (renderer == nullptr)
                     {
-                        const auto frameData = renderer->getFrameData();
-                        lightManager->onPreRender({}, frameData.framesInFlight, frameData.frameInFlightIndex);
+                        return;
                     }
 
+                    const auto frameData = renderer->getFrameData();
+
+                    lightManager->onPreRender({}, frameData.framesInFlight, frameData.frameInFlightIndex);
                     sceneManager->onPreRender({}, *world);
+                    lightManager->buildShadowViews({});
                     materialManager->onPreRender({});
                     userFrameCallbacks->invokePreGroup(services, dt, group);
                 };

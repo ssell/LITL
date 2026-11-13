@@ -13,6 +13,7 @@ namespace litl
     class EngineCallbacks;
     class World;
     class ServiceProvider;
+    class Scene;
     struct EntityChange;
 
     /// <summary>
@@ -32,6 +33,7 @@ namespace litl
         void createScene(SceneConfiguration const& config) noexcept;
         [[nodiscard]] uint32_t getSceneCount() const noexcept;
         [[nodiscard]] uint32_t getActiveSceneIndex() const noexcept;
+        [[nodiscard]] Scene* getActiveScene() noexcept;
         void setActiveScene(uint32_t index) noexcept;
 
         void processEntityChanges(Authority<EngineCallbacks> authority, World& world, std::span<EntityChange const> entityChanges) noexcept;

@@ -154,6 +154,11 @@ namespace litl
         bool depthEnabled{ true };
 
         /// <summary>
+        /// Should shadowmaps be generated for this camera?
+        /// </summary>
+        bool shadowsEnabled{ false };
+
+        /// <summary>
         /// Optional render texture for the camera to draw to.
         /// If this is not specified then a default render texture will be made that tracks the size of the swapchain.
         /// </summary>
@@ -376,8 +381,27 @@ namespace litl
         /// </summary>
         [[nodiscard]] CameraType getCameraType() const noexcept;
 
+        /// <summary>
+        /// Returns the near clip distance for the camera.
+        /// </summary>
+        /// <returns></returns>
         [[nodiscard]] float getNear() const noexcept;
+
+        /// <summary>
+        /// Returns the far clip distance for the camera.
+        /// </summary>
+        /// <returns></returns>
         [[nodiscard]] float getFar() const noexcept;
+
+        /// <summary>
+        /// Returns if shadowmaps should be generated for this camera.
+        /// </summary>
+        [[nodiscard]] bool getShadowsEnabled() const noexcept;
+
+        /// <summary>
+        /// Sets if shaodwmaps should be generated for this camera.
+        /// </summary>
+        void setShadowsEnabled(bool enabled) noexcept;
 
     private:
 

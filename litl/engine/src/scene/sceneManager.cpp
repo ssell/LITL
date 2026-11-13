@@ -91,6 +91,16 @@ namespace litl
         return m_impl->activeIndex;
     }
 
+    Scene* SceneManager::getActiveScene() noexcept
+    {
+        if (m_impl->activeIndex < m_impl->scenes.size())
+        {
+            return m_impl->scenes[m_impl->activeIndex].get();
+        }
+
+        return nullptr;
+    }
+
     void SceneManager::setActiveScene(uint32_t index) noexcept
     {
         if (m_impl->activeIndex == index)

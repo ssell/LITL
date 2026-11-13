@@ -310,4 +310,13 @@ namespace litl
         return m_descriptor.zFar;
     }
 
+    bool Camera::getShadowsEnabled() const noexcept
+    {
+        return m_descriptor.shadowsEnabled;
+    }
+
+    void Camera::setShadowsEnabled(bool enabled) noexcept
+    {
+        m_descriptor.shadowsEnabled = enabled;
+    }
 }
