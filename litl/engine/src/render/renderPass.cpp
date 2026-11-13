@@ -120,16 +120,15 @@ namespace litl
         return material->getGraphicsPipelineHandle(MaterialVariantType::Color, m_pRenderManager->getSceneRenderFormats(), true);
     }
 
-    SetViewportAndScissorCommand RenderPass::createSetViewportAndScissorCommand(Camera const* camera, bool applyCameraViewport) const noexcept
+    SetViewportAndScissorCommand RenderPass::createSetViewportAndScissorCommand(RenderView const& renderView, bool applyCameraViewport) const noexcept
     {
-        vec2 viewportOffset{ 0.0f, 0.0f };
-        vec2 viewportExtents{ 1.0f, 1.0f };
+        vec2 viewportOffset{ vec2::zero() };
+        vec2 viewportExtents{ vec2::one() };
 
-        if (applyCameraViewport && (camera != nullptr))
+        if (applyCameraViewport)
         {
-            const auto& viewportDescriptor = camera->getDescriptor().viewport;
-            viewportOffset = viewportDescriptor.offset;
-            viewportExtents = viewportDescriptor.extents;
+            viewportOffset = renderView.view.viewport.offset;
+            viewportExtents = renderView.view.viewport.extents;
         }
 
         const SetViewportAndScissorCommand setViewportScissorCommand{
@@ -152,23 +151,18 @@ namespace litl
         return setViewportScissorCommand;
     }
 
-    void RenderPass::resolveSourceTextures(Camera const* camera, Texture** colorSource, Texture** depthSource) const noexcept
+    void RenderPass::resolveSourceTextures(RenderView const& renderView, Texture** colorSource, Texture** depthSource) const noexcept
     {
         *colorSource = nullptr;
         *depthSource = nullptr;
 
-        if (camera == nullptr)
+        if (renderView.renderTexture == nullptr)
         {
             return;
         }
 
-        const RenderTexture* rt = m_pObjectPool->getRenderTexture(camera->getRenderTextureHandle());
-
-        if (rt != nullptr)
-        {
-            *colorSource = m_pObjectPool->getTexture(rt->getColorTextureHandle());
-            *depthSource = m_pObjectPool->getTexture(rt->getDepthTextureHandle());
-        }
+        *colorSource = m_pObjectPool->getTexture(renderView.renderTexture->getColorTextureHandle());
+        *depthSource = m_pObjectPool->getTexture(renderView.renderTexture->getDepthTextureHandle());
     }
 
     void RenderPass::gatherSourceTexturesIntoScratch(RenderPassContext const& context) noexcept
@@ -180,7 +174,7 @@ namespace litl
             Texture* colorSource{ nullptr };
             Texture* depthSource{ nullptr };
 
-            resolveSourceTextures(renderView.camera, &colorSource, &depthSource);
+            resolveSourceTextures(renderView, &colorSource, &depthSource);
             m_renderViewSourcesScratch.emplace_back(colorSource, depthSource);
         }
     }
@@ -190,32 +184,26 @@ namespace litl
         return { pipelineBarrierCmds.data(), barrierCount };
     }
 
-    RenderPass::RenderTargetSetup RenderPass::resolveRenderTarget(Camera const* camera, RenderTexture const* renderTexture, RenderTargetOptions const& options) const noexcept
+    RenderPass::RenderTargetSetup RenderPass::resolveRenderTarget(RenderView const& renderView, RenderTargetOptions const& options) const noexcept
     {
         RenderTargetSetup setup{};
 
         auto addAttachment = [&](PipelineBarrierCommand const& preset, TextureResourceHandle handle)
-            {
-                setup.pipelineBarrierCmds[setup.barrierCount++] = PipelineBarrierCommand::copyWithTexture(preset, handle);
-            };
+        {
+            setup.pipelineBarrierCmds[setup.barrierCount++] = PipelineBarrierCommand::copyWithTexture(preset, handle);
+        };
 
-        const bool colorEnabled = options.hasColorAttachment && ((camera == nullptr) || camera->getColorEnabled());         // Note: no camera = color enabled (swapchain)
-        const bool depthEnabled = options.hasDepthAttachment && ((camera != nullptr) && camera->getDepthEnabled());         // Note: no camera = depth disabled
+        const bool colorEnabled = options.hasColorAttachment && renderView.view.colorEnabled;
+        const bool depthEnabled = options.hasDepthAttachment && renderView.view.depthEnabled;
 
-        RenderTexture const* resolvedRT{ renderTexture };
         Texture* colorTexture{ nullptr };
         Texture* depthTexture{ nullptr };
 
-        if ((resolvedRT == nullptr) && (camera != nullptr))
-        {
-            resolvedRT = m_pObjectPool->getRenderTexture(camera->getRenderTextureHandle());
-        }
-
-        if (resolvedRT != nullptr)
+        if (renderView.renderTexture != nullptr)
         {
             if (colorEnabled)
             {
-                colorTexture = m_pObjectPool->getTexture(resolvedRT->getColorTextureHandle());
+                colorTexture = m_pObjectPool->getTexture(renderView.renderTexture->getColorTextureHandle());
 
                 if (colorTexture == nullptr)
                 {
@@ -226,7 +214,7 @@ namespace litl
 
             if (depthEnabled)
             {
-                depthTexture = m_pObjectPool->getTexture(resolvedRT->getDepthTextureHandle());
+                depthTexture = m_pObjectPool->getTexture(renderView.renderTexture->getDepthTextureHandle());
 
                 if ((depthTexture == nullptr) && options.hasDepthAttachment)
                 {
@@ -246,7 +234,7 @@ namespace litl
                 .colorTexture = colorResourceHandle,
                 .loadOp = options.loadOp,
                 .storeOp = options.colorStoreOp,
-                .clearColor = (camera != nullptr) ? camera->getClearColor() : colors::Black
+                .clearColor = renderView.view.clearColor
             };
 
             addAttachment((options.loadOp == LoadOperationType::Load) ? PipelineBarrierColorToColor : PipelineBarrierUndefinedToColor, colorResourceHandle);
@@ -355,7 +343,7 @@ namespace litl
 
     bool RenderPass::barrierAndBeginRender(CommandBufferHandle commandBufferHandle, RenderView const& renderView, RenderTargetOptions const& renderTargetOptions) noexcept
     {
-        const auto renderTarget = resolveRenderTarget(renderView.camera, renderView.renderTexture, renderTargetOptions);
+        const auto renderTarget = resolveRenderTarget(renderView, renderTargetOptions);
 
         if (!renderTarget.valid)
         {

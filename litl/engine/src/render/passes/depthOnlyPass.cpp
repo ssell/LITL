@@ -17,7 +17,7 @@ namespace litl
 
     void DepthOnlyPass::render(CommandBufferHandle commandBufferHandle, RenderView const& renderView, RenderPushConstants viewPushConstants) noexcept
     {
-        const RenderTargetOptions renderTargetOptions{
+        constexpr RenderTargetOptions renderTargetOptions{
             .loadOp = LoadOperationType::Clear,
             .colorStoreOp = StoreOperationType::DontCare,
             .depthStoreOp = StoreOperationType::Store,
@@ -30,7 +30,7 @@ namespace litl
 
         if (barrierAndBeginRender(commandBufferHandle, renderView, renderTargetOptions))
         {
-            m_pRenderer->cmdSetViewportAndScissor(commandBufferHandle, createSetViewportAndScissorCommand(renderView.camera, false));
+            m_pRenderer->cmdSetViewportAndScissor(commandBufferHandle, createSetViewportAndScissorCommand(renderView, false));
 
             if (compileRenderList(renderView.sortedOpaqueEntities))
             {

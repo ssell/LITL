@@ -26,7 +26,7 @@ namespace litl
             float zNear{ 0.0f };
             float zFar{ 0.0f };
 
-            [[nodiscard]] static BlitPushConstants create(RenderView const& view, Texture* color, Texture* depth) noexcept
+            [[nodiscard]] static BlitPushConstants create(RenderView const& renderView, Texture* color, Texture* depth) noexcept
             {
                 BlitPushConstants pushConstants{};
 
@@ -41,10 +41,10 @@ namespace litl
                     pushConstants.mode = static_cast<uint32_t>(Mode::DepthInfinite);
                 }
 
-                if (view.camera != nullptr)
+                if ((renderView.type == RenderViewType::Camera) || (renderView.type == RenderViewType::DepthOnly))
                 {
-                    pushConstants.zNear = max(view.camera->getNear(), Traits<float>::epsilon);
-                    pushConstants.zFar = view.camera->getFar();
+                    pushConstants.zNear = max(renderView.view.near, Traits<float>::epsilon);
+                    pushConstants.zFar = renderView.view.far;
                 }
 
                 return pushConstants;
@@ -97,7 +97,7 @@ namespace litl
 
                     const BlitPushConstants pushConstants = BlitPushConstants::create(renderView, renderViewSources.color, renderViewSources.depth);
 
-                    m_pRenderer->cmdSetViewportAndScissor(context.commandBufferHandle, createSetViewportAndScissorCommand(renderView.camera, true));
+                    m_pRenderer->cmdSetViewportAndScissor(context.commandBufferHandle, createSetViewportAndScissorCommand(renderView, true));
                     m_pRenderer->cmdBindGraphicsPipeline(context.commandBufferHandle, m_graphicsPipelineHandle);
                     m_pRenderer->cmdPushConstants(context.commandBufferHandle, ShaderStage::All, generic_as_byte_span(&pushConstants, sizeof(BlitPushConstants)));
                     m_pRenderer->cmdDraw(context.commandBufferHandle, 3u, 1u, 0u, 0u);
@@ -110,7 +110,7 @@ namespace litl
 
     bool BlitPass::barrierAndBeginRender(CommandBufferHandle commandBufferHandle) noexcept
     {
-        const RenderTargetOptions renderTargetOptions{
+        constexpr RenderTargetOptions renderTargetOptions{
             .loadOp = LoadOperationType::Clear,
             .colorStoreOp = StoreOperationType::Store,
             .depthStoreOp = StoreOperationType::DontCare,
@@ -118,7 +118,15 @@ namespace litl
             .hasDepthAttachment = false
         };
 
-        const auto renderTarget = resolveRenderTarget(nullptr, nullptr, renderTargetOptions);
+        constexpr RenderView blitRenderView{
+            .view = ResolvedView {
+                .colorEnabled = true,
+                .depthEnabled = false
+            },
+            .renderTexture = nullptr
+        };
+
+        const auto renderTarget = resolveRenderTarget(blitRenderView, renderTargetOptions);
 
         if (!renderTarget.valid)
         {

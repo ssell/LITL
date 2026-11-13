@@ -18,7 +18,7 @@ namespace litl
 
     void ForwardTransparentPass::render(CommandBufferHandle commandBufferHandle, RenderView const& renderView, RenderPushConstants viewPushConstants) noexcept
     {
-        const RenderTargetOptions renderTargetOptions{
+        constexpr RenderTargetOptions renderTargetOptions{
             .loadOp = LoadOperationType::Load,
             .colorStoreOp = StoreOperationType::Store,
             .depthStoreOp = StoreOperationType::DontCare,
@@ -31,7 +31,7 @@ namespace litl
 
         if (barrierAndBeginRender(commandBufferHandle, renderView, renderTargetOptions))
         {
-            m_pRenderer->cmdSetViewportAndScissor(commandBufferHandle, createSetViewportAndScissorCommand(renderView.camera, false));
+            m_pRenderer->cmdSetViewportAndScissor(commandBufferHandle, createSetViewportAndScissorCommand(renderView, false));
 
             if (compileRenderList(renderView.sortedTransparentEntities))
             {

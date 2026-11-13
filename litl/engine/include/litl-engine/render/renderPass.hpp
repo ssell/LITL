@@ -81,10 +81,10 @@ namespace litl
         [[nodiscard]] virtual GraphicsPipelineHandle resolveGraphicsPipelineHandle(Material* material) const noexcept;
         [[nodiscard]] bool compileRenderList(std::span<RenderableEntity const> entities) noexcept;
         [[nodiscard]] bool createRenderPassItems(RenderableEntity entity, uint32_t instanceOffset, std::optional<MeshHandle>& currMeshHandle, std::optional<MaterialHandle>& currMaterialHandle) noexcept;
-        [[nodiscard]] SetViewportAndScissorCommand createSetViewportAndScissorCommand(Camera const* camera, bool applyCameraViewport) const noexcept;
-        void resolveSourceTextures(Camera const* camera, Texture** colorSource, Texture** depthSource) const noexcept;
+        [[nodiscard]] SetViewportAndScissorCommand createSetViewportAndScissorCommand(RenderView const& renderView, bool applyCameraViewport) const noexcept;
+        void resolveSourceTextures(RenderView const& renderView, Texture** colorSource, Texture** depthSource) const noexcept;
         void gatherSourceTexturesIntoScratch(RenderPassContext const& context) noexcept;
-        [[nodiscard]] RenderTargetSetup resolveRenderTarget(Camera const* camera, RenderTexture const* renderTexture, RenderTargetOptions const& options) const noexcept;
+        [[nodiscard]] RenderTargetSetup resolveRenderTarget(RenderView const& renderView, RenderTargetOptions const& options) const noexcept;
         void drawRenderList(CommandBufferHandle commandBufferHandle, RenderPushConstants pushConstants, DrawListOptions const& options) noexcept;
 
 

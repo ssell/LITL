@@ -12,10 +12,12 @@
 #include "litl-engine/render/renderManager.hpp"
 #include "litl-engine/render/renderStructs.hpp"
 #include "litl-engine/render/renderPassContext.hpp"
+#include "litl-engine/render/renderView.hpp"
 #include "litl-engine/render/passes/blitPass.hpp"
 #include "litl-engine/render/passes/depthOnlyPass.hpp"
 #include "litl-engine/render/passes/forwardOpaquePass.hpp"
 #include "litl-engine/render/passes/forwardTransparentPass.hpp"
+#include "litl-engine/render/passes/shadowPass.hpp"
 #include "litl-engine/render/passes/renderPassType.hpp"
 #include "litl-engine/lights/lightManager.hpp"
 #include "litl-engine/engineCallbacks.hpp"
@@ -241,6 +243,7 @@ namespace litl
         void createRenderPasses(RenderManager* self, ServiceProvider& services) noexcept
         {
             renderPasses[static_cast<uint32_t>(RenderPassType::DepthOnly)] = std::make_unique<DepthOnlyPass>();
+            renderPasses[static_cast<uint32_t>(RenderPassType::Shadow)] = std::make_unique<ShadowPass>();
             renderPasses[static_cast<uint32_t>(RenderPassType::ForwardOpaque)] = std::make_unique<ForwardOpaquePass>();
             renderPasses[static_cast<uint32_t>(RenderPassType::ForwardTransparent)] = std::make_unique<ForwardTransparentPass>();
             renderPasses[static_cast<uint32_t>(RenderPassType::Blit)] = std::make_unique<BlitPass>();
@@ -349,13 +352,14 @@ namespace litl
 
             if (!frameRenderViews.empty() && goodToGo())
             {
-                RenderPassContext renderPassContext{
+                const RenderPassContext renderPassContext{
                     .commandBufferHandle = frameCommandBuffer,
                     .pushConstants = pushConstants,
                     .renderViews = frameRenderViews
                 };
 
                 getRenderPass(RenderPassType::DepthOnly).render(renderPassContext);
+                getRenderPass(RenderPassType::Shadow).render(renderPassContext);
                 getRenderPass(RenderPassType::ForwardOpaque).render(renderPassContext);
                 getRenderPass(RenderPassType::ForwardTransparent).render(renderPassContext);
                 getRenderPass(RenderPassType::Blit).render(renderPassContext);
@@ -677,7 +681,7 @@ namespace litl
             for (const auto& preparedView : preparedViews)
             {
                 renderViews.push_back(RenderView{
-                    .camera = preparedView.camera,
+                    .view = ResolvedView::fromCamera(*preparedView.camera),
                     .renderTexture = (preparedView.camera != nullptr) ? objectPool->getRenderTexture(preparedView.camera->getRenderTextureHandle()) : nullptr,
                     .sortedOpaqueEntities = preparedView.opaque.entities,
                     .sortedTransparentEntities = preparedView.transparent.entities,
