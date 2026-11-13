@@ -312,11 +312,11 @@ namespace litl
 
     bool Camera::getShadowsEnabled() const noexcept
     {
-        return m_descriptor.shadowsEnabled;
+        return m_descriptor.shadows.enabled;
     }
 
     void Camera::setShadowsEnabled(bool enabled) noexcept
     {
-        m_descriptor.shadowsEnabled = enabled;
+        m_descriptor.shadows.enabled = enabled;
     }
 }

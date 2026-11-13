@@ -104,6 +104,13 @@ namespace litl
         vec2 extents{ 1.0f, 1.0f };
     };
 
+    struct CameraShadowSettings
+    {
+        bool enabled{ false };
+        uint32_t resolution{ 1024u };
+        uint32_t cascadeCount{ 1u };
+    };
+
     struct CameraDescriptor
     {
         ObjectDescriptor objectInfo{};
@@ -154,11 +161,6 @@ namespace litl
         bool depthEnabled{ true };
 
         /// <summary>
-        /// Should shadowmaps be generated for this camera?
-        /// </summary>
-        bool shadowsEnabled{ false };
-
-        /// <summary>
         /// Optional render texture for the camera to draw to.
         /// If this is not specified then a default render texture will be made that tracks the size of the swapchain.
         /// </summary>
@@ -169,6 +171,8 @@ namespace litl
         /// Cameras with a lower level are processed first.
         /// </summary>
         uint32_t priority = static_cast<uint32_t>(CameraPriority::Medium);
+
+        CameraShadowSettings shadows{};
     };
 
     class Camera
