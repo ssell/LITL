@@ -31,7 +31,6 @@ namespace litl
         void setup(Authority<Engine> auth, ServiceProvider& services) noexcept;
         void destroy(Authority<Engine> auth) noexcept;
         void onPreRender(Authority<EngineCallbacks> auth, uint32_t framesInFlight, uint32_t framesInFlightIndex) noexcept;
-        void buildShadowViews(Authority<EngineCallbacks> auth) noexcept;
 
         /// <summary>
         /// Sets the current ambient RGB color.

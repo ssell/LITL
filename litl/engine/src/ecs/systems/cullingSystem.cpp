@@ -1,256 +1,321 @@
-#include <atomic>
-#include <vector>
-
+#include "litl-core/assert.hpp"
 #include "litl-core/services/serviceProvider.hpp"
-#include "litl-ecs/entity/entityCommands.hpp"
 #include "litl-engine/ecs/systems/cullingSystem.hpp"
-#include "litl-engine/scene/sceneView.hpp"
+#include "litl-engine/lights/shadows/shadowManager.hpp"
 #include "litl-engine/objects/objectPool.hpp"
+#include "litl-engine/scene/sceneView.hpp"
 
 namespace litl
 {
+    std::array<CullView, constants::MaxCullViews> CullingSystem::s_views{};
+    constinit uint32_t CullingSystem::s_viewCount{ 0u };
+
     std::array<CullingBucket, constants::max_thread_count> CullingSystem::s_cullingBuckets{};
     CullingBucket CullingSystem::s_combinedBucket{};
-    bool CullingSystem::s_combined{ false };
+    constinit bool CullingSystem::s_combined{ false };
+
+    bool isCameraCullable(Camera const& camera) noexcept
+    {
+        return camera.getIsActive() && camera.getRenderTextureHandle().isValid();
+    }
+
+    // -------------------------------------------------------------------------------------
+    // Setup / Prepare
+    // -------------------------------------------------------------------------------------
 
     void CullingSystem::setup(ServiceProvider& services)
     {
         m_pObjectPool = services.get<ObjectPool>();
         m_pSceneView = services.get<SceneView>();
+        m_pShadowManager = services.get<ShadowManager>();
+
+        LITL_FATAL_ASSERT_MSG((m_pObjectPool != nullptr), "Failed to inject ObjectPool into CullingSystem");
+        LITL_FATAL_ASSERT_MSG((m_pSceneView != nullptr), "Failed to inject SceneView into CullingSystem");
+        LITL_FATAL_ASSERT_MSG((m_pShadowManager != nullptr), "Failed to inject ShadowManager into CullingSystem");
     }
 
     void CullingSystem::prepare()
     {
-        // Perform frustum culling for each camera and repopulate the visible entities. Note that this is only a preprocess step - hence why this is a system. 
-        // The frustum query gives all entities in the frustum with a transform. But all visible renderable entities is only a subset of that result.
-
         reset();
+
+        // 1. Gather this frame's views.
 
         auto cameras = m_pSceneView->getCameras();
 
-        for (uint32_t i = 0u; (i < cameras.size()) && (i < m_cameraVisibleEntities.size()); ++i)
+        for (uint32_t slot = 0u; slot < cameras.size(); ++slot)
         {
-            auto* camera = cameras[i];
-            auto& visibleEntities = m_cameraVisibleEntities[i];
+            Camera* camera = cameras[slot];
 
-            setCameraAtIndex(i, camera);
-
-            m_pSceneView->query(camera->getFrustum(), visibleEntities.entityQueryResults, false);
-
-            for (uint32_t i = 0u; i < static_cast<uint32_t>(visibleEntities.entityQueryResults.size()); ++i)
+            if ((camera == nullptr) || !isCameraCullable(*camera))
             {
-                visibleEntities.entities[visibleEntities.entityQueryResults[i].entity] = i;
+                continue;
+            }
+
+            addView(CullView{
+                .frustum = camera->getFrustum(),
+                .camera = camera,
+                .sourceIndex = slot,
+                .type = CullViewType::Camera,
+                .wantsTransparent = (camera->getCameraType() != CameraType::DepthOnly)
+            });
+        }
+
+        if (m_pShadowManager != nullptr)
+        {
+            const auto shadowViews = m_pShadowManager->getShadowViews();
+
+            for (uint32_t i = 0u; i < static_cast<uint32_t>(shadowViews.size()); ++i)
+            {
+                addView(CullView{
+                    .frustum = shadowViews[i].cullFrustum,
+                    .camera = nullptr,
+                    .sourceIndex = i,
+                    .type = CullViewType::Shadow,
+                    .wantsTransparent = false
+                });
             }
         }
+
+        // 2. Query each view and fold the results into the per-entity visibility masks.
+        //    The frustum query returns every entity with a transform, so renderables are a subset of this.
+
+        for (uint32_t viewIndex = 0u; viewIndex < s_viewCount; ++viewIndex)
+        {
+            m_queryScratch.clear();
+            m_pSceneView->query(s_views[viewIndex].frustum, m_queryScratch, false);
+            markVisible(viewIndex, m_queryScratch);
+        }
     }
+
+    bool CullingSystem::addView(CullView const& view) noexcept
+    {
+        LITL_ASSERT_MSG((s_viewCount < constants::MaxCullViews), "CullingSystem exceeded MaxCullViews. View dropped.", false);
+
+        s_views[s_viewCount] = view;
+        s_viewCount += 1u;
+
+        return true;
+    }
+
+    void CullingSystem::markVisible(uint32_t viewIndex, std::span<PartitionQueryResult const> results) noexcept
+    {
+        for (const auto& result : results)
+        {
+            if (result.entity.isNull())
+            {
+                continue;
+            }
+
+            const uint32_t index = result.entity.index;
+
+            if (index >= m_visibility.size())
+            {
+                m_visibility.resize(static_cast<size_t>(index) + 1u);
+            }
+
+            auto& slot = m_visibility[index];
+
+            if (slot.entity != result.entity)
+            {
+                // First view to see this entity this frame. reset() nulls touched slots, so a match
+                // here always means "already touched this frame", never a stale previous frame.
+                slot.entity = result.entity;
+                slot.worldPosition = result.worldPosition;
+                slot.views.reset();
+
+                m_touchedSlots.push_back(index);
+            }
+
+            slot.views[viewIndex] = true;
+        }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // Reset
+    // -------------------------------------------------------------------------------------
 
     void CullingSystem::reset() noexcept
     {
-        // Clear, but dont destroy, the camera entity containers. Eventually the cameras will reach a high-water mark of entities and the reallocations will stop.
-        
-        for (auto& cameraEntities : m_cameraVisibleEntities)
+        // Clear, but don't destroy, the containers. They reach a high-water mark and reallocations stop.
+
+        for (const uint32_t index : m_touchedSlots)
         {
-            cameraEntities.camera = nullptr;
-            cameraEntities.entities.clear();
-            cameraEntities.entityQueryResults.clear();
+            m_visibility[index].entity = Entity::null();
+            m_visibility[index].views.reset();
         }
 
-        s_combinedBucket.reset();
+        m_touchedSlots.clear();
+
+        // Clear using last frame's view count before it is reset.
+        s_combinedBucket.reset(s_viewCount);
 
         for (auto& cullingBucket : s_cullingBuckets)
         {
-            cullingBucket.reset();
+            cullingBucket.reset(s_viewCount);
         }
 
+        s_viewCount = 0u;
         s_combined = false;
     }
 
-    void CullingBucket::reset() noexcept
+    void CullingBucket::reset(uint32_t viewCount) noexcept
     {
-        for (auto& cameraRenderableEntities : cameraRenderableEntities)
+        for (uint32_t i = 0u; i < viewCount; ++i)
         {
-            cameraRenderableEntities.camera = nullptr;
-            cameraRenderableEntities.opaque.clear();
-            cameraRenderableEntities.transparent.clear();
+            viewRenderableEntities[i].opaque.clear();
+            viewRenderableEntities[i].transparent.clear();
         }
     }
 
-    uint32_t CullingBucket::activeCameraCount() const noexcept
-    {
-        uint32_t count = 0u;
+    // -------------------------------------------------------------------------------------
+    // Update
+    // -------------------------------------------------------------------------------------
 
-        for (auto& cameraRenderableEntities : cameraRenderableEntities)
-        {
-            if (cameraRenderableEntities.camera == nullptr)
-            {
-                break;
-            }
-
-            count++;
-        }
-
-        return count;
-    }
-
-    void CullingSystem::setCameraAtIndex(uint32_t i, Camera* camera) noexcept
-    {
-        m_cameraVisibleEntities[i].camera = camera;
-        s_combinedBucket.cameraRenderableEntities[i].camera = camera;
-
-        for (auto& cullingBucket : s_cullingBuckets)
-        {
-            cullingBucket.cameraRenderableEntities[i].camera = camera;
-        }
-    }
-
-    void CullingSystem::update(SystemData const& data, Entity entity, Transform const& transform, MeshRef const& meshRef, MaterialRef const* materialRef, VariableMaterialsRef const* variableMaterialsRef)
+    void CullingSystem::update(SystemData const& data, Entity entity, Transform const& /*transform*/, MeshRef const& meshRef, MaterialRef const* materialRef, VariableMaterialsRef const* variableMaterialsRef)
     {
         if (!meshRef.handle.isValid())
         {
-            // Mesh is not valid
             return;
         }
 
         if (((materialRef == nullptr) || !materialRef->handle.isValid()) && ((variableMaterialsRef == nullptr) || !variableMaterialsRef->handle.isValid()))
         {
-            // Neither material option is valid
             return;
         }
 
-        for (uint32_t cameraIndex = 0u; cameraIndex < m_cameraVisibleEntities.size(); ++cameraIndex)
+        if (entity.index >= m_visibility.size())
         {
-            const auto& cameraVisibleEntities = m_cameraVisibleEntities[cameraIndex];
+            return;     // Not returned by any view's query this frame.
+        }
 
-            if (cameraVisibleEntities.camera == nullptr)
+        const EntityVisibility& visibility = m_visibility[entity.index];
+
+        if ((visibility.entity != entity) || visibility.views.none())
+        {
+            return;     // Not visible to any view (or the slot belongs to a different version of this index).
+        }
+
+        // Material lookups happen once per entity/submesh, then the result is fanned out to each visible view.
+
+        // Use of a MaterialRef indicates that the entire mesh is drawn with the same material.
+        if (materialRef != nullptr)
+        {
+            const Material* material = m_pObjectPool->getMaterial(materialRef->handle);
+
+            if (material != nullptr)
             {
-                // We have checked all cameras. Break out.
-                break;
+                pushRenderable(data.threadIndex, visibility, RenderableEntity{
+                    .entity = entity,
+                    .meshRef = meshRef,
+                    .materialRef = *materialRef,
+                    .materialBlendMode = material->getBlendMode(),
+                    .position = visibility.worldPosition,
+                    .distanceSquared = 0.0f,                            // Per-view, set in pushRenderable.
+                    .firstIndex = 0u,
+                    .indexCount = constants::uint32_null_index
+                    });
+            }
+        }
+        // Use of a VariableMaterialsRef indicates that only the submeshes with a matching material index are rendered.
+        else if (variableMaterialsRef != nullptr)
+        {
+            auto* mesh = m_pObjectPool->getMesh(meshRef.handle);
+            auto* materialBindings = m_pObjectPool->getMaterialBindings(variableMaterialsRef->handle);
+
+            if ((mesh == nullptr) || (materialBindings == nullptr))
+            {
+                return;
             }
 
-            const auto findEntity = cameraVisibleEntities.entities.find(entity);
+            const auto& submeshes = mesh->getGeoMesh().getSubmeshes();
+            const auto& bindings = materialBindings->getBindings();
 
-            if (findEntity != cameraVisibleEntities.entities.end())
+            for (size_t i = 0u; i < submeshes.size(); ++i)
             {
-                const auto& entityPartition = cameraVisibleEntities.entityQueryResults[findEntity->second];
-
-                // We are visible to this camera, add to our thread-specific culling bucket.
-                // Use of a MaterialRef indicates that the entire mesh is drawn with the same material.
-                if (materialRef != nullptr)
+                if (submeshes[i].materialSlot >= bindings.size())
                 {
-                    const Material* material = m_pObjectPool->getMaterial(materialRef->handle);
-
-                    if (material != nullptr)
-                    {
-                        const RenderableEntity renderableEntity{
-                            .entity = entity,
-                            .meshRef = meshRef,
-                            .materialRef = *materialRef,
-                            .materialBlendMode = material->getBlendMode(),
-                            .position = entityPartition.worldPosition,
-                            .distanceSquared = entityPartition.distanceSquared,
-                            .firstIndex = 0u,
-                            .indexCount = constants::uint32_null_index
-                        };
-
-                        if (renderableEntity.materialBlendMode == MaterialBlendMode::Transparent)
-                        {
-                            s_cullingBuckets[data.threadIndex].cameraRenderableEntities[cameraIndex].transparent.push_back(renderableEntity);
-                        }
-                        else
-                        {
-                            s_cullingBuckets[data.threadIndex].cameraRenderableEntities[cameraIndex].opaque.push_back(renderableEntity);
-                        }
-                    }
+                    continue;
                 }
-                // Use of a VariableMaterialsRef indicates that only the submeshes with a matching material index are rendered.
-                else if (variableMaterialsRef != nullptr)
+
+                const auto& binding = bindings[submeshes[i].materialSlot];
+                const Material* material = m_pObjectPool->getMaterial(binding.handle);
+
+                if ((material == nullptr) || !binding.slot.isValid())
                 {
-                    // For variable materials we need to fetch both the mesh and the bindings.
-                    auto* mesh = m_pObjectPool->getMesh(meshRef.handle);
-                    auto* materialBindings = m_pObjectPool->getMaterialBindings(variableMaterialsRef->handle);
-
-                    if ((mesh != nullptr) && (materialBindings != nullptr))
-                    {
-                        const auto& submeshes = mesh->getGeoMesh().getSubmeshes();
-                        const auto& bindings = materialBindings->getBindings();
-
-                        for (auto i = 0; i < submeshes.size(); ++i)
-                        {
-                            if (submeshes[i].materialSlot >= bindings.size())
-                            {
-                                continue;
-                            }
-
-                            const auto& binding = bindings[submeshes[i].materialSlot];
-                            const Material* material = m_pObjectPool->getMaterial(binding.handle);
-
-                            if (material == nullptr || !binding.slot.isValid())
-                            {
-                                continue;
-                            }
-
-                            const RenderableEntity renderableEntity{
-                                .entity = entity,
-                                .meshRef = meshRef,
-                                .materialRef = MaterialRef {.handle = binding.handle, .slot = binding.slot},
-                                .materialBlendMode = material->getBlendMode(),
-                                .position = entityPartition.worldPosition,
-                                .distanceSquared = entityPartition.distanceSquared,
-                                .firstIndex = submeshes[i].firstIndex,
-                                .indexCount = submeshes[i].indexCount
-                            };
-
-                            if (renderableEntity.materialBlendMode == MaterialBlendMode::Transparent)
-                            {
-                                s_cullingBuckets[data.threadIndex].cameraRenderableEntities[cameraIndex].transparent.push_back(renderableEntity);
-                            }
-                            else
-                            {
-                                s_cullingBuckets[data.threadIndex].cameraRenderableEntities[cameraIndex].opaque.push_back(renderableEntity);
-                            }
-                        }
-                    }
+                    continue;
                 }
+
+                pushRenderable(data.threadIndex, visibility, RenderableEntity{
+                    .entity = entity,
+                    .meshRef = meshRef,
+                    .materialRef = MaterialRef{.handle = binding.handle, .slot = binding.slot },
+                    .materialBlendMode = material->getBlendMode(),
+                    .position = visibility.worldPosition,
+                    .distanceSquared = 0.0f,
+                    .firstIndex = submeshes[i].firstIndex,
+                    .indexCount = submeshes[i].indexCount
+                    });
             }
         }
     }
+
+    void CullingSystem::pushRenderable(uint32_t threadIndex, EntityVisibility const& visibility, RenderableEntity renderable) noexcept
+    {
+        auto& bucket = s_cullingBuckets[threadIndex];
+        const bool isTransparent = (renderable.materialBlendMode == MaterialBlendMode::Transparent);
+
+        for (uint32_t viewIndex = 0u; viewIndex < s_viewCount; ++viewIndex)
+        {
+            if (!visibility.views[viewIndex])
+            {
+                continue;
+            }
+
+            const CullView& view = s_views[viewIndex];
+
+            if (isTransparent && !view.wantsTransparent)
+            {
+                continue;
+            }
+
+            renderable.distanceSquared = view.frustum.getOrigin().distanceSqTo(visibility.worldPosition);
+
+            auto& viewEntities = bucket.viewRenderableEntities[viewIndex];
+            (isTransparent ? viewEntities.transparent : viewEntities.opaque).push_back(renderable);
+        }
+    }
+
+    // -------------------------------------------------------------------------------------
+    // Results
+    // -------------------------------------------------------------------------------------
 
     CullingBucket& CullingSystem::getCombinedCullingBucket() noexcept
     {
         if (!s_combined)
         {
-            // For each camera,
-            for (uint32_t cameraIndex = 0u; cameraIndex < s_combinedBucket.cameraRenderableEntities.size(); ++cameraIndex)
+            for (uint32_t viewIndex = 0u; viewIndex < s_viewCount; ++viewIndex)
             {
-                auto& cameraRenderableEntities = s_combinedBucket.cameraRenderableEntities[cameraIndex];
+                auto& combined = s_combinedBucket.viewRenderableEntities[viewIndex];
 
-                if (cameraRenderableEntities.camera == nullptr)
+                size_t totalOpaque = 0u;
+                size_t totalTransparent = 0u;
+
+                for (const auto& threadBucket : s_cullingBuckets)
                 {
-                    // We have checked all cameras. Break out.
-                    break;
+                    totalOpaque += threadBucket.viewRenderableEntities[viewIndex].opaque.size();
+                    totalTransparent += threadBucket.viewRenderableEntities[viewIndex].transparent.size();
                 }
 
-                uint32_t totalOpaqueEntities = 0u;
-                uint32_t totalTransparentEntities = 0u;
+                combined.opaque.reserve(totalOpaque);
+                combined.transparent.reserve(totalTransparent);
 
-                for (auto& threadCullingBucket : s_cullingBuckets)
+                for (const auto& threadBucket : s_cullingBuckets)
                 {
-                    totalOpaqueEntities += threadCullingBucket.cameraRenderableEntities[cameraIndex].opaque.size();
-                    totalTransparentEntities += threadCullingBucket.cameraRenderableEntities[cameraIndex].transparent.size();
-                }
+                    const auto& opaque = threadBucket.viewRenderableEntities[viewIndex].opaque;
+                    const auto& transparent = threadBucket.viewRenderableEntities[viewIndex].transparent;
 
-                cameraRenderableEntities.opaque.reserve(totalOpaqueEntities);
-                cameraRenderableEntities.transparent.reserve(totalTransparentEntities);
-
-                // For each thread,
-                for (auto& threadCullingBucket : s_cullingBuckets)
-                {
-                    // Add the visible renderable entities found for this camera for this thread
-                    auto& opaqueEntities = threadCullingBucket.cameraRenderableEntities[cameraIndex].opaque;
-                    cameraRenderableEntities.opaque.insert(cameraRenderableEntities.opaque.end(), opaqueEntities.begin(), opaqueEntities.end());
-
-                    auto& transparentEntities = threadCullingBucket.cameraRenderableEntities[cameraIndex].transparent;
-                    cameraRenderableEntities.transparent.insert(cameraRenderableEntities.transparent.end(), transparentEntities.begin(), transparentEntities.end());
+                    combined.opaque.insert(combined.opaque.end(), opaque.begin(), opaque.end());
+                    combined.transparent.insert(combined.transparent.end(), transparent.begin(), transparent.end());
                 }
             }
 
@@ -258,5 +323,10 @@ namespace litl
         }
 
         return s_combinedBucket;
+    }
+
+    std::span<CullView const> CullingSystem::getCullViews() noexcept
+    {
+        return std::span<CullView const>(s_views.data(), s_viewCount);
     }
 }

@@ -78,8 +78,8 @@ namespace litl
         std::shared_ptr<ObjectPool> objectPool{ nullptr };
         std::shared_ptr<World> world{ nullptr };
         std::shared_ptr<SceneView> sceneView{ nullptr };
+        std::shared_ptr<ShadowManager> shadowManager{ nullptr };
 
-        ShadowManager shadowManager{};
         LightDataInfo lightData{};
         DirectionalLightDataInfo directionalLightData{};
 
@@ -95,10 +95,12 @@ namespace litl
             objectPool = services.get<ObjectPool>();
             world = services.get<World>();
             sceneView = services.get<SceneView>();
+            shadowManager = services.get<ShadowManager>();
 
             LITL_FATAL_ASSERT_MSG((objectPool != nullptr), "Failed to inject ObjectPool into LightManager");
             LITL_FATAL_ASSERT_MSG((world != nullptr), "Failed to inject World into LightManager");
             LITL_FATAL_ASSERT_MSG((sceneView != nullptr), "Failed to inject SceneView into LightManager");
+            LITL_FATAL_ASSERT_MSG((shadowManager != nullptr), "Failed to inject ShadowManager into LightManager");
 
             commands.reserve_each(32ull);
             directionalLightData.reserve(32ull);
@@ -116,8 +118,6 @@ namespace litl
             processDeferredCommands();
             updateDirectionalLightDataBuffer(framesInFlightIndex);
             updateLightDataBuffer(framesInFlight, framesInFlightIndex);
-            
-            shadowManager.onPreRender();
         }
 
         // ---------------------------------------------------------------------------------
@@ -282,25 +282,6 @@ namespace litl
                 });
             }
         }
-
-        // ---------------------------------------------------------------------------------
-        // Shadow Views
-        // ---------------------------------------------------------------------------------
-
-        void buildShadowViews() noexcept
-        {
-            auto cameras = sceneView->getCameras();
-
-            for (auto* camera : cameras)
-            {
-                if ((camera == nullptr) || !camera->getShadowsEnabled())
-                {
-                    continue;
-                }
-
-                // ... todo ...
-            }
-        }
     };
 
     LightManager::LightManager()
@@ -327,11 +308,6 @@ namespace litl
     void LightManager::onPreRender(Authority<EngineCallbacks> auth, uint32_t framesInFlight, uint32_t framesInFlightIndex) noexcept
     {
         m_pImpl->onPreRender(framesInFlight, framesInFlightIndex);
-    }
-
-    void LightManager::buildShadowViews(Authority<EngineCallbacks> auth) noexcept
-    {
-        m_pImpl->buildShadowViews();
     }
 
     void LightManager::setAmbientColor(color rgb) noexcept

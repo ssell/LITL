@@ -19,6 +19,7 @@
 #include "litl-engine/engineCallbacks.hpp"
 #include "litl-engine/render/renderManager.hpp"
 #include "litl-engine/lights/lightManager.hpp"
+#include "litl-engine/lights/shadows/shadowManager.hpp"
 
 namespace litl
 {
@@ -65,6 +66,7 @@ namespace litl
         std::shared_ptr<AssetManager> pSharedAssetManager{ nullptr };
         std::shared_ptr<SceneManager> pSharedSceneManager{ nullptr };
         std::shared_ptr<LightManager> pSharedLightManager{ nullptr };
+        std::shared_ptr<ShadowManager> pSharedShadowManager{ nullptr };
         
         void configureCallbacks(ConfigureCallbacksFunc callbacksFunc)
         {
@@ -146,6 +148,7 @@ namespace litl
         m_pImpl->pSharedSceneManager = m_pImpl->pServiceProvider->get<SceneManager>();
         m_pImpl->pSharedRenderManager = m_pImpl->pServiceProvider->get<RenderManager>();
         m_pImpl->pSharedLightManager = m_pImpl->pServiceProvider->get<LightManager>();
+        m_pImpl->pSharedShadowManager = m_pImpl->pServiceProvider->get<ShadowManager>();
 
         m_pImpl->pSharedTaskManager->setup({}, *m_pImpl->pServiceProvider);
         m_pImpl->pSharedObjectPool->setup({}, *m_pImpl->pServiceProvider);
@@ -153,6 +156,7 @@ namespace litl
         m_pImpl->pSharedAssetManager->setup({}, *m_pImpl->pServiceProvider);
         m_pImpl->pSharedSceneManager->setup({}, (*m_pImpl->pServiceProvider));
         m_pImpl->pSharedLightManager->setup({}, (*m_pImpl->pServiceProvider));
+        m_pImpl->pSharedShadowManager->setup({}, (*m_pImpl->pServiceProvider));
         m_pImpl->pSharedConfig->set(config);
         m_pImpl->pSharedFrameLimiter->setTargetFps(static_cast<float>(m_pImpl->pSharedConfig->engine.framesPerSecond));
 
@@ -181,6 +185,12 @@ namespace litl
         {
             logInfo("Halting Renderer ...");
             m_pImpl->pSharedRenderManager->halt();
+        }
+
+        if (m_pImpl->pSharedShadowManager != nullptr)
+        {
+            logInfo("Shutdown Shadow Manager ...");
+            m_pImpl->pSharedShadowManager->destroy({});
         }
 
         if (m_pImpl->pSharedLightManager != nullptr)

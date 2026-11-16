@@ -7,6 +7,9 @@
 
 namespace litl
 {
+    /// <summary>
+    /// Shadow view data uploaded to the GPU.
+    /// </summary>
     struct ShadowRenderViewData
     {
         mat4 cascadeViewProj[MaxShadowCascades];

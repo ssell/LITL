@@ -7,6 +7,7 @@
 #include "litl-engine/objects/material/materialManager.hpp"
 #include "litl-engine/render/renderManager.hpp"
 #include "litl-engine/lights/lightManager.hpp"
+#include "litl-engine/lights/shadows/shadowManager.hpp"
 #include "litl-engine/lights/directional/directionalLightSystem.hpp"
 #include "litl-engine/scene/sceneManager.hpp"
 #include "litl-engine/scene/sceneView.hpp"
@@ -40,6 +41,7 @@ namespace litl::Internal
         services.addSingleton<SceneView>();
         services.addSingleton<EngineCallbacks>();
         services.addSingleton<LightManager>();
+        services.addSingleton<ShadowManager>();
     }
 
     void defaultConfigureSystems(SystemCollection& systems)

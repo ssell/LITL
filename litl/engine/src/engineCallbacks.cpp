@@ -4,6 +4,7 @@
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/render/renderManager.hpp"
 #include "litl-engine/lights/lightManager.hpp"
+#include "litl-engine/lights/shadows/shadowManager.hpp"
 #include "litl-engine/scene/sceneManager.hpp"
 #include "litl-engine/tasks/taskManager.hpp"
 #include "litl-engine/objects/material/materialManager.hpp"
@@ -18,6 +19,7 @@ namespace litl
         std::shared_ptr<AssetManager> assetManager{ nullptr };
         std::shared_ptr<RenderManager> renderManager{ nullptr };
         std::shared_ptr<LightManager> lightManager{ nullptr };
+        std::shared_ptr<ShadowManager> shadowManager{ nullptr };
         std::shared_ptr<SceneManager> sceneManager{ nullptr };
         std::shared_ptr<TaskManager> taskManager{ nullptr };
         std::shared_ptr<MaterialManager> materialManager{ nullptr };
@@ -33,6 +35,7 @@ namespace litl
             assetManager = services.get<AssetManager>();
             renderManager = services.get<RenderManager>();
             lightManager = services.get<LightManager>();
+            shadowManager = services.get<ShadowManager>();
             sceneManager = services.get<SceneManager>();
             taskManager = services.get<TaskManager>();
             materialManager = services.get<MaterialManager>();
@@ -42,6 +45,7 @@ namespace litl
             LITL_FATAL_ASSERT_MSG((assetManager != nullptr), "Failed to inject AssetManager into EngineCallbacks");
             LITL_FATAL_ASSERT_MSG((renderManager != nullptr), "Failed to inject RenderManager into EngineCallbacks");
             LITL_FATAL_ASSERT_MSG((lightManager != nullptr), "Failed to inject LightManager into EngineCallbacks");
+            LITL_FATAL_ASSERT_MSG((shadowManager != nullptr), "Failed to inject ShadowManager into EngineCallbacks");
             LITL_FATAL_ASSERT_MSG((sceneManager != nullptr), "Failed to inject SceneManager into EngineCallbacks");
             LITL_FATAL_ASSERT_MSG((taskManager != nullptr), "Failed to inject TaskManager into EngineCallbacks");
             LITL_FATAL_ASSERT_MSG((materialManager != nullptr), "Failed to inject MaterialManager into EngineCallbacks");
@@ -159,7 +163,7 @@ namespace litl
 
                     lightManager->onPreRender({}, frameData.framesInFlight, frameData.frameInFlightIndex);
                     sceneManager->onPreRender({}, *world);
-                    lightManager->buildShadowViews({});
+                    shadowManager->onPreRender({});
                     materialManager->onPreRender({});
                     userFrameCallbacks->invokePreGroup(services, dt, group);
                 };

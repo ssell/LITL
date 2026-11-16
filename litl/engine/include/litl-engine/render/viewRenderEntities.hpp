@@ -1,19 +1,16 @@
-#ifndef LITL_ENGINE_RENDER_CAMERA_RENDER_ENTITIES_H__
-#define LITL_ENGINE_RENDER_CAMERA_RENDER_ENTITIES_H__
+#ifndef LITL_ENGINE_RENDER_VIEW_RENDER_ENTITIES_H__
+#define LITL_ENGINE_RENDER_VIEW_RENDER_ENTITIES_H__
 
-#include "litl-core/constants.hpp"
-#include "litl-engine/objects/camera.hpp"
+#include <vector>
 #include "litl-engine/render/renderableEntity.hpp"
 
 namespace litl
 {
     /// <summary>
-    /// All visible renderable entities for a specific camera.
+    /// All visible renderable entities for a specific view (camera or shadow).
     /// </summary>
-    struct CameraRenderEntities
+    struct ViewRenderEntities
     {
-        Camera* camera = nullptr;
-
         /// <summary>
         /// Entities whose material blend mode is Opaque or Masked.
         /// These are typically sorted by material and mesh.
