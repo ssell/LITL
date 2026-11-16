@@ -46,7 +46,7 @@ namespace litl
     /// </summary>
     struct alignas(constants::cache_line_size) CullingBucket
     {
-        std::array<ViewRenderEntities, constants::MaxCullViews> viewRenderableEntities;
+        std::array<ViewRenderEntities, constants::MaxCullViews> views;
         void reset(uint32_t viewCount) noexcept;
     };
 

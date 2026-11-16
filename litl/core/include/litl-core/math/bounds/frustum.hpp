@@ -5,7 +5,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "litl-core/math/types/mat4.hpp"
+#include "litl-core/math/types.hpp"
 #include "litl-core/math/bounds/plane.hpp"
 
 namespace litl::bounds

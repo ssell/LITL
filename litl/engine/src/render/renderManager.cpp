@@ -430,14 +430,16 @@ namespace litl
             // Do a single-thread sequential sort of all camera entities for now.
             // Profile in the future under stress tests and determine if we need to split work into jobs.
 
-            for (auto& renderCamera : cullingBucket.cameraRenderableEntities)
+            for (size_t vidx = 0u; vidx < CullingSystem::getCullViews().size(); vidx++)
             {
-                if (renderCamera.camera == nullptr)
+                auto& cullBucketView = cullingBucket.views[vidx];
+
+                if (cullBucketView.opaque.empty() && cullBucketView.transparent.empty())
                 {
-                    break;
+                    continue;
                 }
 
-                std::sort(renderCamera.opaque.begin(), renderCamera.opaque.end(), [](RenderableEntity const& a, RenderableEntity const& b) -> bool {
+                std::sort(cullBucketView.opaque.begin(), cullBucketView.opaque.end(), [](RenderableEntity const& a, RenderableEntity const& b) -> bool {
                     // Simple sort by material and then mesh for now. This sort will group all entities of the same material and mesh together. Example result:
                     //     [(mat0, mesh0), (mat0, mesh0), (mat0, mesh3), (mat1, mesh2), (mat1, mesh2), (mat1, mesh4), (mat2, mesh5)]
 
@@ -449,7 +451,7 @@ namespace litl
                     return (a.meshRef.handle.index < b.meshRef.handle.index);
                 });
 
-                std::sort(renderCamera.transparent.begin(), renderCamera.transparent.end(), [](RenderableEntity const& a, RenderableEntity const& b) -> bool {
+                std::sort(cullBucketView.transparent.begin(), cullBucketView.transparent.end(), [](RenderableEntity const& a, RenderableEntity const& b) -> bool {
                     // Transparent entities are sorted by distance to camera, descending (back-to-front)
                     return (a.distanceSquared > b.distanceSquared);
                 });
@@ -568,7 +570,7 @@ namespace litl
         /// Decides which views exist this frame and assigned viewIndex and instanceBase with a running total.
         /// Note that the ordering of the output preparedViews is draw order (based on camera priority) and not viewIndex order.
         /// </summary>
-        void gatherPreparedViews(CullingBucket const& bucket, std::vector<PreparedView>& preparedViews) noexcept
+        void gatherPreparedViews(CullingBucket const& cullingBucket, std::vector<PreparedView>& preparedViews) noexcept
         {
             preparedViews.clear();
 
@@ -576,34 +578,26 @@ namespace litl
             uint32_t instanceBase{ 0u };
             uint32_t transparentInstanceBase{ 0u };
 
-            for (const auto& renderableCamera : bucket.cameraRenderableEntities)
+            for (size_t vidx = 0ull; vidx < CullingSystem::getCullViews().size(); ++vidx)
             {
-                if (renderableCamera.camera == nullptr)
-                {
-                    break;      // Fixed number of cameras, and we have reached the first slot without a camera.
-                }
+                const auto& cullBucketView = cullingBucket.views[vidx];
 
-                if (!renderableCamera.camera->getIsActive())
-                {
-                    continue;
-                }
-
-                if (!renderableCamera.camera->getRenderTextureHandle().isValid())
+                if (cullBucketView.opaque.empty() && cullBucketView.transparent.empty())
                 {
                     continue;
                 }
 
                 PreparedView preparedView{
-                    .camera = renderableCamera.camera,
-                    .opaque = PreparedSubView { .entities = renderableCamera.opaque },
-                    .transparent = PreparedSubView{ .entities = renderableCamera.transparent },
+                    .camera = CullingSystem::getCullViews()[vidx].camera,
+                    .opaque = PreparedSubView {.entities = cullBucketView.opaque},
+                    .transparent = PreparedSubView{.entities = cullBucketView.transparent},
                     .viewIndex = viewIndex
                 };
 
                 preparedView.opaque.instanceBase = instanceBase;                                        // This matches the logic in writeViewData where all opaque entity instance data is added and then all transparent entity instance data is added.
-                instanceBase += static_cast<uint32_t>(renderableCamera.opaque.size());
+                instanceBase += static_cast<uint32_t>(cullBucketView.opaque.size());
                 preparedView.transparent.instanceBase = instanceBase;
-                instanceBase += static_cast<uint32_t>(renderableCamera.transparent.size());
+                instanceBase += static_cast<uint32_t>(cullBucketView.transparent.size());
 
                 preparedViews.push_back(preparedView);
                 viewIndex += 1u;

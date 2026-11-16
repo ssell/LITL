@@ -162,8 +162,8 @@ namespace litl
     {
         for (uint32_t i = 0u; i < viewCount; ++i)
         {
-            viewRenderableEntities[i].opaque.clear();
-            viewRenderableEntities[i].transparent.clear();
+            views[i].opaque.clear();
+            views[i].transparent.clear();
         }
     }
 
@@ -280,7 +280,7 @@ namespace litl
 
             renderable.distanceSquared = view.frustum.getOrigin().distanceSqTo(visibility.worldPosition);
 
-            auto& viewEntities = bucket.viewRenderableEntities[viewIndex];
+            auto& viewEntities = bucket.views[viewIndex];
             (isTransparent ? viewEntities.transparent : viewEntities.opaque).push_back(renderable);
         }
     }
@@ -295,15 +295,15 @@ namespace litl
         {
             for (uint32_t viewIndex = 0u; viewIndex < s_viewCount; ++viewIndex)
             {
-                auto& combined = s_combinedBucket.viewRenderableEntities[viewIndex];
+                auto& combined = s_combinedBucket.views[viewIndex];
 
                 size_t totalOpaque = 0u;
                 size_t totalTransparent = 0u;
 
                 for (const auto& threadBucket : s_cullingBuckets)
                 {
-                    totalOpaque += threadBucket.viewRenderableEntities[viewIndex].opaque.size();
-                    totalTransparent += threadBucket.viewRenderableEntities[viewIndex].transparent.size();
+                    totalOpaque += threadBucket.views[viewIndex].opaque.size();
+                    totalTransparent += threadBucket.views[viewIndex].transparent.size();
                 }
 
                 combined.opaque.reserve(totalOpaque);
@@ -311,8 +311,8 @@ namespace litl
 
                 for (const auto& threadBucket : s_cullingBuckets)
                 {
-                    const auto& opaque = threadBucket.viewRenderableEntities[viewIndex].opaque;
-                    const auto& transparent = threadBucket.viewRenderableEntities[viewIndex].transparent;
+                    const auto& opaque = threadBucket.views[viewIndex].opaque;
+                    const auto& transparent = threadBucket.views[viewIndex].transparent;
 
                     combined.opaque.insert(combined.opaque.end(), opaque.begin(), opaque.end());
                     combined.transparent.insert(combined.transparent.end(), transparent.begin(), transparent.end());
