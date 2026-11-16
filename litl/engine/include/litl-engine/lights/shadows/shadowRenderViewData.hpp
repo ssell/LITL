@@ -1,0 +1,21 @@
+#ifndef LITL_ENGINE_LIGHTS_SHADOW_RENDER_VIEW_DATA_H__
+#define LITL_ENGINE_LIGHTS_SHADOW_RENDER_VIEW_DATA_H__
+
+#include "litl-core/constants.hpp"
+#include "litl-core/math/types.hpp"
+#include "litl-engine/lights/shadows/shadowConstants.hpp"
+
+namespace litl
+{
+    struct ShadowRenderViewData
+    {
+        mat4 cascadeViewProj[MaxShadowCascades];
+        vec4 cascadeSplits{};
+        uint32_t shadowArrayIndex{ Constants::uint32_null_index };
+        uint32_t firstLayer{ 0u };
+        uint32_t cascadeCount{ 1u };
+        uint32_t padding{ 0u };
+    };
+}
+
+#endif

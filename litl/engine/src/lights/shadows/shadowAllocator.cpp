@@ -1,5 +1,5 @@
 #include <algorithm>
-#include "litl-engine/lights/shadowAllocator.hpp"
+#include "litl-engine/lights/shadows/shadowAllocator.hpp"
 
 namespace litl
 {

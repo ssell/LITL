@@ -13,6 +13,7 @@
 #include "litl-engine/lights/lightData.hpp"
 #include "litl-engine/lights/directional/directionalLight.hpp"
 #include "litl-engine/lights/directional/directionalLightSystem.hpp"
+#include "litl-engine/lights/shadows/shadowManager.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/scene/sceneView.hpp"
 
@@ -78,6 +79,7 @@ namespace litl
         std::shared_ptr<World> world{ nullptr };
         std::shared_ptr<SceneView> sceneView{ nullptr };
 
+        ShadowManager shadowManager{};
         LightDataInfo lightData{};
         DirectionalLightDataInfo directionalLightData{};
 
@@ -114,6 +116,8 @@ namespace litl
             processDeferredCommands();
             updateDirectionalLightDataBuffer(framesInFlightIndex);
             updateLightDataBuffer(framesInFlight, framesInFlightIndex);
+            
+            shadowManager.onPreRender();
         }
 
         // ---------------------------------------------------------------------------------

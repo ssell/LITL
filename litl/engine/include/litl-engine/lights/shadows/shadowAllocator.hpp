@@ -6,7 +6,7 @@
 #include "litl-core/constants.hpp"
 #include "litl-core/layerRangeAllocator.hpp"
 #include "litl-ecs/entity/entity.hpp"
-#include "litl-engine/lights/shadowCasterType.hpp"
+#include "litl-engine/lights/shadows/shadowCasterType.hpp"
 
 namespace litl
 {
