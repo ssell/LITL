@@ -1,4 +1,5 @@
 #include <array>
+#include <optional>
 #include <vector>
 
 #include "litl-core/assert.hpp"
@@ -13,7 +14,6 @@
 #include "litl-engine/lights/lightManager.hpp"
 #include "litl-engine/lights/shadows/shadowManager.hpp"
 #include "litl-engine/lights/shadows/shadowAllocator.hpp"
-#include "litl-engine/lights/shadows/shadowRenderViewData.hpp"
 #include "litl-engine/scene/sceneView.hpp"
 #include "litl-renderer/renderer.hpp"
 
@@ -170,6 +170,139 @@ namespace litl
             {
                 initialize(frame);
             }
+
+            shadowViews.clear();
+            cameraShadowData.fill(ShadowRenderViewData{});
+            allocator.beginFrame(frame.frameCount);
+
+            if (const auto directionalLight = selectShadowedDirectionalLight(); directionalLight.has_value())
+            {
+                auto cameras = sceneView->getCameras();
+                const uint32_t slotCount = min(static_cast<uint32_t>(cameras.size()), constants::MaxSceneCameras);
+
+                for (uint32_t slot = 0u; slot < slotCount; ++slot)
+                {
+                    const Camera* camera = cameras[slot];
+
+                    if (ShadowManager::cameraValidForShadows(camera))
+                    {
+                        buildCameraDirectionalShadows(slot, *camera, *directionalLight, frame.frameCount);
+                    }
+                }
+            }
+            
+            // Anything not acquired this frame(camera disabled shadows, light stopped casting, ...) is retired and becomes reusable framesInFlight frames from now.
+            allocator.releaseUnused(frame.frameCount);
+            upload(frame.frameInFlightIndex);
+        }
+
+        /// <summary>
+        /// Returns the first directional light that is marked as casting shadows.
+        /// We currently only support a single directional cascaded shadow caster.
+        /// </summary>
+        [[nodiscard]] std::optional<ShadowedLight> selectShadowedDirectionalLight() const noexcept
+        {
+            const auto lights = lightManager->getDirectionalLightData();
+
+            for (uint32_t i = 0u; i < static_cast<uint32_t>(lights.size()); ++i)
+            {
+                if (lights[i].castsShadows)
+                {
+                    return ShadowedLight{ .index = i, .entity = lights[i].entity, .toLight = lights[i].data.toLight };
+                }
+            }
+
+            return std::nullopt;
+        }
+
+        void buildCameraDirectionalShadows(uint32_t slot, Camera const& camera, ShadowedLight const& light, uint32_t frameCount) noexcept
+        {
+            const uint32_t cascadeCount = clamp(camera.getDescriptor().shadows.cascadeCount, 1u, constants::MaxShadowCascades);
+
+            const auto acquired = allocator.acquire(
+                ShadowKey{ .light = light.entity, .cameraSlot = slot },
+                ShadowCasterType::Directional,
+                cascadeCount,
+                frameCount
+            );
+
+            if (!acquired.has_value())
+            {
+                // Pool exhausted. Camera stays at the sentinel (unshadowed) this frame.
+                return;
+            }
+
+            const Texture* texture = objectPool->getTexture(directionalShadowTextureHandle);
+
+            if (texture == nullptr)
+            {
+                return;
+            }
+
+            const float camNear = camera.getNear();
+            const float camFar = camera.getFar();
+            const float shadowFar = min(shadowConfig.directionalShadowDistance, camFar);
+
+            std::array<float, constants::MaxShadowCascades> cascadeSplits{};
+
+            computeCascadeSplits(camNear, shadowFar, cascadeCount, shadowConfig.cascadeSplitLambda, cascadeSplits);
+
+            const auto corners = bounds::Frustum::extractCorners(camera.getFrustum());
+            auto& shadowData = cameraShadowData[slot];
+
+            shadowData.shadowArrayIndex = texture->getTextureTableIndex();
+            shadowData.firstLayer = acquired->allocation.range.first;
+            shadowData.cascadeCount = cascadeCount;
+            shadowData.lightIndex = light.index;
+
+            float sliceNear = camNear;
+            
+            for (uint32_t cascadeIndex = 0u; cascadeIndex < cascadeCount; ++cascadeIndex)
+            {
+                const auto slice = sliceCorners(corners, camNear, camFar, sliceNear, cascadeSplits[cascadeIndex]);
+                const auto sphere = bounds::Sphere::fromCorners(slice);
+                const auto fit = fitDirectionalLight(light.toLight, sphere, shadowConfig.resolution, shadowConfig.directionalCasterPullback);
+
+                shadowData.cascadeViewProj[cascadeIndex] = fit.viewProj;
+
+                shadowViews.push_back(ShadowView{
+                    .cullFrustum = bounds::Frustum::fromViewProjection(fit.cullViewProj, bounds::FrustumExtractionOptions{ .reverseZ = true }),
+                    .viewMatrix = fit.view,
+                    .projMatrix = fit.proj,
+                    .viewProjMatrix = fit.viewProj,
+                    .eyePosition = fit.eye,
+                    .type = ShadowCasterType::Directional,
+                    .layer = acquired->allocation.range.first + cascadeIndex,
+                    .cameraSlot = slot,
+                    .cascadeIndex = cascadeIndex,
+                    .resolution = shadowConfig.resolution
+                });
+
+                sliceNear = cascadeSplits[cascadeIndex];
+            }
+
+            shadowData.cascadeSplits = vec4(cascadeSplits[0], cascadeSplits[1], cascadeSplits[2], cascadeSplits[3]);
+        }
+
+        void upload(uint32_t frameInFlightIndex) noexcept
+        {
+            GpuBuffer* buffer = objectPool->getGpuBuffer(shadowDataBufferHandle);
+
+            if (buffer == nullptr)
+            {
+                shadowDataAddress = 0ull;
+                return;
+            }
+
+            const GpuBufferChunk bufferWrite{
+                .sourcePtr = generic_as_byte_span(cameraShadowData.data(), sizeof(ShadowRenderViewData) * cameraShadowData.size()),
+                .offset = 0ull
+            };
+
+            buffer->swapBuffers(frameInFlightIndex);
+            buffer->recordChunkDataWrite(bufferWrite);
+            
+            shadowDataAddress = buffer->getBufferDeviceAddress().value();
         }
     };
 
@@ -199,16 +332,37 @@ namespace litl
         m_pImpl->onPreRender(frame);
     }
 
-    std::span<ShadowView const> ShadowManager::getShadowViews() const noexcept
-    {
-        return m_pImpl->shadowViews;
-    }
-
     bool ShadowManager::cameraValidForShadows(Camera const* camera) noexcept
     {
         return (camera != nullptr) &&
             camera->getIsActive() &&
             (camera->getCameraType() == CameraType::Standard) &&
             camera->getShadowsEnabled();
+    }
+
+    std::span<ShadowView const> ShadowManager::getShadowViews() const noexcept
+    {
+        return m_pImpl->shadowViews;
+    }
+
+    ShadowRenderViewData const& ShadowManager::getCameraShadowData(uint32_t cameraSlot) const noexcept
+    {
+        static constexpr ShadowRenderViewData unshadowed{};
+        return (cameraSlot < m_pImpl->cameraShadowData.size()) ? m_pImpl->cameraShadowData[cameraSlot] : unshadowed;
+    }
+
+    uint64_t ShadowManager::getCameraShadowDataAddress(uint32_t cameraSlot) const noexcept
+    {
+        if((m_pImpl->shadowDataAddress == 0ull) || (cameraSlot >= m_pImpl->cameraShadowData.size()))
+        {
+            return 0ull;
+        }
+
+        return m_pImpl->shadowDataAddress + (static_cast<uint64_t>(cameraSlot) * sizeof(ShadowRenderViewData));
+    }
+
+    TextureHandle ShadowManager::getDirectionalShadowTexture() const noexcept
+    {
+        return m_pImpl->directionalShadowTextureHandle;
     }
 }

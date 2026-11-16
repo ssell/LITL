@@ -32,6 +32,7 @@ namespace litl
             Entity entity{};
             DirectionalLight light{};
             vec3 toLightDir{};
+            bool castsShadows{ false };
         };
 
         using LightCommandVar = std::variant<
@@ -82,6 +83,7 @@ namespace litl
 
         LightDataInfo lightData{};
         DirectionalLightDataInfo directionalLightData{};
+        std::vector<DirectionalLightDataEntity> directionalLightDataEntities;
 
         PerJobVector<LightCommand> commands;
         std::vector<LightCommand> commandsCopy;
@@ -114,6 +116,7 @@ namespace litl
         void onPreRender(uint32_t framesInFlight, uint32_t framesInFlightIndex) noexcept
         {
             directionalLightData.clear();
+            directionalLightDataEntities.clear();
 
             processDeferredCommands();
             updateDirectionalLightDataBuffer(framesInFlightIndex);
@@ -171,6 +174,12 @@ namespace litl
             });
 
             directionalLightData.entities.push_back(command.entity);
+
+            directionalLightDataEntities.push_back(DirectionalLightDataEntity{
+                .data = directionalLightData.data.back(),
+                .entity = command.entity,
+                .castsShadows = command.castsShadows
+                });
         }
 
         // ---------------------------------------------------------------------------------
@@ -190,7 +199,7 @@ namespace litl
                     .bytes = sizeof(DirectionalLightData) * directionalLightData.data.size(),
                     .itemBytes = sizeof(DirectionalLightData),
                     .canResize = true
-                    });
+                });
 
                 LITL_FATAL_ASSERT_MSG(directionalLightData.handle.isValid(), "Failed to create Directional Light Data buffer.");
             }
@@ -321,7 +330,8 @@ namespace litl
         m_pImpl->enqueueCommand(LightCommandType::MarkDirectionalActive, MarkDirectionalActiveCommand{
             .entity = entity,
             .light = light,
-            .toLightDir = toLightDir
+            .toLightDir = toLightDir,
+            .castsShadows = light.castsShadows
         });
     }
 
@@ -335,19 +345,8 @@ namespace litl
         return static_cast<uint32_t>(m_pImpl->directionalLightData.data.size());
     }
 
-    std::vector<DirectionalLightDataEntity> LightManager::getDirectionalLightData() const noexcept
+    std::span<DirectionalLightDataEntity const> LightManager::getDirectionalLightData() const noexcept
     {
-        std::vector<DirectionalLightDataEntity> lights;
-        lights.reserve(m_pImpl->directionalLightData.data.size());
-
-        for (uint32_t i = 0u; i < static_cast<uint32_t>(m_pImpl->directionalLightData.data.size()); ++i)
-        {
-            lights.push_back(DirectionalLightDataEntity{
-                .data = m_pImpl->directionalLightData.data[i],
-                .entity = m_pImpl->directionalLightData.entities[i]
-            });
-        }
-
-        return lights;
+        return m_pImpl->directionalLightDataEntities;
     }
 }

@@ -16,7 +16,7 @@ namespace litl
         uint32_t shadowArrayIndex{ constants::uint32_null_index };
         uint32_t firstLayer{ 0u };
         uint32_t cascadeCount{ 1u };
-        uint32_t padding{ 0u };
+        uint32_t lightIndex{ 0u };
     };
 }
 

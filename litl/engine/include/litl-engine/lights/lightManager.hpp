@@ -7,6 +7,7 @@
 #include "litl-engine/lights/directional/directionalLight.hpp"
 
 #include <memory>
+#include <span>
 
 namespace litl
 {
@@ -57,7 +58,7 @@ namespace litl
         /// <summary>
         /// Returns a copy of all directional light data and the entities they are attached to.
         /// </summary>
-        [[nodiscard]] std::vector<DirectionalLightDataEntity> getDirectionalLightData() const noexcept;
+        [[nodiscard]] std::span<DirectionalLightDataEntity const> getDirectionalLightData() const noexcept;
 
     private:
 

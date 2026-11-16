@@ -34,6 +34,7 @@ namespace litl
     {
         DirectionalLightData data{};
         Entity entity{};
+        bool castsShadows{ false };
     };
 
     static_assert(sizeof(DirectionalLightData) % 16u == 0u);

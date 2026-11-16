@@ -5,7 +5,9 @@
 #include <span>
 
 #include "litl-core/authority.hpp"
+#include "litl-engine/objects/objectHandles.hpp"
 #include "litl-engine/lights/shadows/shadowView.hpp"
+#include "litl-engine/lights/shadows/shadowRenderViewData.hpp"
 
 namespace litl
 {
@@ -32,6 +34,9 @@ namespace litl
 
         [[nodiscard]] static bool cameraValidForShadows(Camera const* camera) noexcept;
         [[nodiscard]] std::span<ShadowView const> getShadowViews() const noexcept;
+        [[nodiscard]] ShadowRenderViewData const& getCameraShadowData(uint32_t cameraSlot) const noexcept;
+        [[nodiscard]] uint64_t getCameraShadowDataAddress(uint32_t cameraSlot) const noexcept;
+        [[nodiscard]] TextureHandle getDirectionalShadowTexture() const noexcept;
 
     private:
 

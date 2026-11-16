@@ -1,7 +1,8 @@
 #ifndef LITL_ENGINE_LIGHTS_SHADOW_VIEW_H__
 #define LITL_ENGINE_LIGHTS_SHADOW_VIEW_H__
 
-#include "litl-core/math/bounds/frustum.hpp"
+#include "litl-core/math.hpp"
+#include "litl-engine/lights/shadows/shadowCasterType.hpp"
 
 namespace litl
 {
@@ -11,7 +12,15 @@ namespace litl
     struct ShadowView
     {
         bounds::Frustum cullFrustum{};
-        // ... render frustum, matrices, target layer, owner camera, etc. ...
+        mat4 viewMatrix{};
+        mat4 projMatrix{};
+        mat4 viewProjMatrix{};
+        vec3 eyePosition{};
+        ShadowCasterType type{ ShadowCasterType::Directional };
+        uint32_t layer{ 0u };
+        uint32_t cameraSlot{ 0u };
+        uint32_t cascadeIndex{ 0u };
+        uint32_t resolution{ 0u };
     };
 }
 
