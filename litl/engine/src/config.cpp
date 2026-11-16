@@ -30,6 +30,7 @@ namespace litl
         engine.sanitize();
         platform.sanitize();
         renderer.sanitize();
+        shadow.sanitize();
     }
 
     void Configuration::set(Configuration& other) noexcept

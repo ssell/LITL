@@ -3,7 +3,6 @@
 
 #include "litl-core/constants.hpp"
 #include "litl-core/math/types.hpp"
-#include "litl-engine/lights/shadows/shadowConstants.hpp"
 
 namespace litl
 {

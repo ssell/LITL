@@ -107,7 +107,6 @@ namespace litl
     struct CameraShadowSettings
     {
         bool enabled{ false };
-        uint32_t resolution{ 1024u };
         uint32_t cascadeCount{ 1u };
     };
 
@@ -398,12 +397,12 @@ namespace litl
         [[nodiscard]] float getFar() const noexcept;
 
         /// <summary>
-        /// Returns if shadowmaps should be generated for this camera.
+        /// Returns if shadow maps should be generated for this camera.
         /// </summary>
         [[nodiscard]] bool getShadowsEnabled() const noexcept;
 
         /// <summary>
-        /// Sets if shaodwmaps should be generated for this camera.
+        /// Sets if shadow maps should be generated for this camera.
         /// </summary>
         void setShadowsEnabled(bool enabled) noexcept;
 

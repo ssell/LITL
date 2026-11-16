@@ -4,8 +4,9 @@
 #include <cstdint>
 
 #include "litl-renderer/rendererConfiguration.hpp"
-#include "litl-platform/platformConfiguration.hpp"
 #include "litl-engine/scene/sceneConfiguration.hpp"
+#include "litl-engine/lights/shadows/shadowConfiguration.hpp"
+#include "litl-platform/platformConfiguration.hpp"
 #include "litl-platform/input/inputConfiguration.hpp"
 
 namespace litl
@@ -60,6 +61,11 @@ namespace litl
         /// Settings for the initial scene.
         /// </summary>
         SceneConfiguration scene{};
+
+        /// <summary>
+        /// Settings for shadows.
+        /// </summary>
+        ShadowConfiguration shadow{};
 
     private:
 

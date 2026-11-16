@@ -3,6 +3,8 @@
 
 #include <cstdint>
 
+#include "litl-core/constants.hpp"
+
 namespace litl::constants
 {
     /// <summary>

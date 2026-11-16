@@ -39,6 +39,33 @@ namespace litl::bounds
 
             return Sphere{ .center = (minPoint + radius), .radius = radius };
         }
+
+        /// <summary>
+        /// Centroid sphere with a quantized radius. A stable radius keeps the ortho extents,
+        /// and therefore the world-space texel size, constant while the camera rotates.
+        /// </summary>
+        [[nodiscard]] static constexpr bounds::Sphere fromCorners(std::span<vec3 const, 8> points) noexcept
+        {
+            vec3 center{ 0.0f, 0.0f, 0.0f };
+
+            for (const auto& p : points)
+            {
+                center = center + p;
+            }
+
+            center = center * (1.0f / 8.0f);
+
+            float radius = 0.0f;
+
+            for (const auto& p : points)
+            {
+                radius = std::max(radius, (p - center).length());
+            }
+
+            radius = std::ceil(radius * 16.0f) / 16.0f;
+
+            return bounds::Sphere{ .center = center, .radius = radius };
+        }
     };
 
     static_assert(std::is_trivially_copyable_v<Sphere>);

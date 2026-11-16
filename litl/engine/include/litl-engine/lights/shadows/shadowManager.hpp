@@ -12,6 +12,7 @@ namespace litl
     class Engine;
     class EngineCallbacks;
     class ServiceProvider;
+    class Camera;
 
     class ShadowManager
     {
@@ -27,6 +28,7 @@ namespace litl
         void destroy(Authority<Engine> auth) noexcept;
         void onPreRender(Authority<EngineCallbacks> auth) noexcept;
 
+        [[nodiscard]] static bool cameraValidForShadows(Camera const* camera) noexcept;
         [[nodiscard]] std::span<ShadowView const> getShadowViews() const noexcept;
 
     private:
