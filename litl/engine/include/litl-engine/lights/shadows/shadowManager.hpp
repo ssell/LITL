@@ -14,6 +14,8 @@ namespace litl
     class ServiceProvider;
     class Camera;
 
+    struct FrameData;
+
     class ShadowManager
     {
     public:
@@ -26,7 +28,7 @@ namespace litl
 
         void setup(Authority<Engine> auth, ServiceProvider& services) noexcept;
         void destroy(Authority<Engine> auth) noexcept;
-        void onPreRender(Authority<EngineCallbacks> auth) noexcept;
+        void onPreRender(Authority<EngineCallbacks> auth, FrameData const& frame) noexcept;
 
         [[nodiscard]] static bool cameraValidForShadows(Camera const* camera) noexcept;
         [[nodiscard]] std::span<ShadowView const> getShadowViews() const noexcept;

@@ -2,6 +2,7 @@
 #define LITL_ENGINE_LIGHTS_SHADOW_CONFIGURATION_H__
 
 #include <cstdint>
+#include "litl-engine/constants.hpp"
 
 namespace litl
 {
@@ -25,9 +26,11 @@ namespace litl
         uint32_t resolution{ 2048u };
 
         /// <summary>
-        /// Shadow pool size. Default of 8 = 2 cameras * 4 cascades.
+        /// The array size of the directional light shadow map.
+        /// This corresponds to the maximimum direction light shadow rendering cameras * maximum cascades.
+        /// Default of 2 cameras * max cascades.
         /// </summary>
-        uint32_t directionalLayers{ 8u };
+        uint32_t directionalLayers{ 2u * constants::MaxShadowCascades };
 
         /// <summary>
         /// Max view distance that receives directional shadows.

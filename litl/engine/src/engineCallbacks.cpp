@@ -163,7 +163,7 @@ namespace litl
 
                     lightManager->onPreRender({}, frameData.framesInFlight, frameData.frameInFlightIndex);
                     sceneManager->onPreRender({}, *world);
-                    shadowManager->onPreRender({});
+                    shadowManager->onPreRender({}, frameData);
                     materialManager->onPreRender({});
                     userFrameCallbacks->invokePreGroup(services, dt, group);
                 };

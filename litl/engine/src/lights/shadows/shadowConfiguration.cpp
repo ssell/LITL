@@ -4,7 +4,7 @@
 
 namespace litl
 {
-    void ShadowConfiguration::sanitize()
+    void ShadowConfiguration::sanitize() noexcept
     {
         if (!between(resolution, MinResolution, MaxResolution))
         {

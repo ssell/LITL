@@ -1,5 +1,7 @@
+#include <array>
 #include <vector>
 
+#include "litl-core/assert.hpp"
 #include "litl-core/math/types.hpp"
 #include "litl-core/math/bounds.hpp"
 #include "litl-core/math/shadows.hpp"
@@ -10,7 +12,10 @@
 #include "litl-engine/objects/camera.hpp"
 #include "litl-engine/lights/lightManager.hpp"
 #include "litl-engine/lights/shadows/shadowManager.hpp"
+#include "litl-engine/lights/shadows/shadowAllocator.hpp"
+#include "litl-engine/lights/shadows/shadowRenderViewData.hpp"
 #include "litl-engine/scene/sceneView.hpp"
+#include "litl-renderer/renderer.hpp"
 
 namespace litl
 {
@@ -70,9 +75,22 @@ namespace litl
         std::shared_ptr<ObjectPool> objectPool;
         std::shared_ptr<LightManager> lightManager;
         std::shared_ptr<SceneView> sceneView;
-        std::vector<ShadowView> shadowViews;
 
         ShadowConfiguration shadowConfig{};
+        ShadowAllocator allocator{};
+
+        TextureHandle directionalShadowTextureHandle{};
+        GpuBufferHandle shadowDataBufferHandle{};
+        uint64_t shadowDataAddress{ 0ull };
+
+        std::array<ShadowRenderViewData, constants::MaxSceneCameras> cameraShadowData{};
+        std::vector<ShadowView> shadowViews;
+
+        bool initialized{ false };
+
+        // ---------------------------------------------------------------------------------
+        // Lifecycle
+        // ---------------------------------------------------------------------------------
 
         void setup(ServiceProvider& services) noexcept
         {
@@ -81,10 +99,10 @@ namespace litl
             sceneView = services.get<SceneView>();
             auto config = services.get<Configuration>();
 
-            LITL_FATAL_ASSERT((objectPool != nullptr), "Failed to inject ObjectPool into ShadowManager");
-            LITL_FATAL_ASSERT((lightManager != nullptr), "Failed to inject LightManager into ShadowManager");
-            LITL_FATAL_ASSERT((sceneView != nullptr), "Failed to inject SceneView into ShadowManager");
-            LITL_FATAL_ASSERT((config != nullptr), "Failed to inject Configuration into ShadowManager");
+            LITL_FATAL_ASSERT_MSG((objectPool != nullptr), "Failed to inject ObjectPool into ShadowManager");
+            LITL_FATAL_ASSERT_MSG((lightManager != nullptr), "Failed to inject LightManager into ShadowManager");
+            LITL_FATAL_ASSERT_MSG((sceneView != nullptr), "Failed to inject SceneView into ShadowManager");
+            LITL_FATAL_ASSERT_MSG((config != nullptr), "Failed to inject Configuration into ShadowManager");
             
             shadowConfig = config->shadow;
             shadowViews.reserve(constants::MaxShadowCameras * constants::MaxShadowCascades);
@@ -92,12 +110,66 @@ namespace litl
 
         void destroy() noexcept
         {
-            // ... todo ...
+            if (directionalShadowTextureHandle.isValid())
+            {
+                objectPool->destroyTexture(directionalShadowTextureHandle);
+                directionalShadowTextureHandle = {};
+            }
+
+            shadowViews.clear();
+            initialized = false;
         }
 
-        void onPreRender() noexcept
+        void initialize(FrameData const& frame) noexcept
         {
+            allocator.setup(ShadowPoolCapacities{
+                .directionalLayers = shadowConfig.directionalLayers,
+                .spotLayers = 0u,                                           // TODO add support for spot light shadows
+                .pointCubes = 0u                                            // TODO add support for point light shadows
+            }, frame.framesInFlight);
 
+            const TextureDescriptor directionalShadowTextureDesc{
+                .objectInfo = ObjectDescriptor {.name = "LITL_INTERNAL_TEXTURE_DirectionalShadowArray" },
+                .textureInfo = TextureResourceDescriptor {
+                    .width = shadowConfig.resolution,
+                    .height = shadowConfig.resolution,
+                    .format = DataFormat::D32_SFloat,
+                    .usage = TextureUsageFlagBits::DepthStencilAttachment | TextureUsageFlagBits::Sampled,      // Render depth to it, and sample from a shader.
+                    .arrayLayers = shadowConfig.directionalLayers,
+                    .residesInTextureTable = true
+                }
+            };
+
+            directionalShadowTextureHandle = objectPool->createTexture(directionalShadowTextureDesc);
+
+            LITL_FATAL_ASSERT_MSG(directionalShadowTextureHandle.isValid(), "Failed to create directional shadow array texture.");
+
+            const GpuBufferDescriptor shadowDataBufferDesc{
+                .objectInfo = ObjectDescriptor {.name = "LITL_INTERNAL_BUFFER_ShadowViewData" },
+                .type = BufferTypeFlagBits::BufferDeviceAddress,
+                .memoryUsage = BufferMemoryUsage::PersistentMap,
+                .bufferStrategy = GpuBufferingStrategy::Frame,
+                .bytes = sizeof(ShadowRenderViewData) * cameraShadowData.size(),
+                .itemBytes = sizeof(ShadowRenderViewData)
+            };
+
+            shadowDataBufferHandle = objectPool->createGpuBuffer(shadowDataBufferDesc);
+
+            LITL_FATAL_ASSERT_MSG(shadowDataBufferHandle.isValid(), "Failed to create shadow data buffer.");
+
+            initialized = true;
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Per Frame Update
+        // ---------------------------------------------------------------------------------
+
+        void onPreRender(FrameData const& frame) noexcept
+        {
+            if (!initialized)
+            {
+                initialize(frame);
+            }
         }
     };
 
@@ -122,9 +194,9 @@ namespace litl
         m_pImpl->destroy();
     }
 
-    void ShadowManager::onPreRender(Authority<EngineCallbacks> auth) noexcept
+    void ShadowManager::onPreRender(Authority<EngineCallbacks> auth, FrameData const& frame) noexcept
     {
-        m_pImpl->onPreRender();
+        m_pImpl->onPreRender(frame);
     }
 
     std::span<ShadowView const> ShadowManager::getShadowViews() const noexcept

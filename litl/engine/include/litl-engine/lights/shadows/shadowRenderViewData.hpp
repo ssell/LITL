@@ -7,11 +7,11 @@
 namespace litl
 {
     /// <summary>
-    /// Shadow view data uploaded to the GPU.
+    /// Shadow view data uploaded to the GPU in the LITL_INTERNAL_BUFFER_ShadowViewData
     /// </summary>
     struct ShadowRenderViewData
     {
-        mat4 cascadeViewProj[MaxShadowCascades];
+        mat4 cascadeViewProj[constants::MaxShadowCascades];
         vec4 cascadeSplits{};
         uint32_t shadowArrayIndex{ constants::uint32_null_index };
         uint32_t firstLayer{ 0u };
