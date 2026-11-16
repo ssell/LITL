@@ -74,7 +74,7 @@ namespace litl
         std::vector<std::unique_ptr<Worker>> workers;
     };
 
-    struct alignas(Constants::cache_line_size) JobScheduler::Worker
+    struct alignas(constants::cache_line_size) JobScheduler::Worker
     {
         /// <summary>
         /// Collection of Jobs that are waiting to be executed.
@@ -109,7 +109,7 @@ namespace litl
         // Work Scheduler needs to be created on the main thread so that this properly captures.
         t_threadIndex = MainThreadIndex;
 
-        uint32_t threadCount = min(max(2u, std::thread::hardware_concurrency()), Constants::max_thread_count);  // - 1 (to prevent main thread being a dedicated worker, but then) + 1 (to have a dedicated worker for High priority jobs)
+        uint32_t threadCount = min(max(2u, std::thread::hardware_concurrency()), constants::max_thread_count);  // - 1 (to prevent main thread being a dedicated worker, but then) + 1 (to have a dedicated worker for High priority jobs)
 
         m_pImpl->workers.resize(threadCount);
         m_pImpl->syncBarrier = std::make_unique<std::barrier<>>(threadCount);

@@ -24,7 +24,7 @@ namespace litl
         std::shared_ptr<World> world;
 
         SceneChangeProcessor sceneChangeProcessor;
-        uint32_t activeIndex{ Constants::uint32_null_index };
+        uint32_t activeIndex{ constants::uint32_null_index };
 
         void processEntityChanges(World& world, std::span<EntityChange const> entityChanges) noexcept
         {
@@ -75,7 +75,7 @@ namespace litl
         m_impl->scenes.push_back(std::make_shared<Scene>(config, m_impl->renderManager->getRenderer(), m_impl->objectPool.get(), m_impl->world.get()));
 
         // If this is the first scene, automatically set it as the active scene.
-        if (m_impl->activeIndex == Constants::uint32_null_index)
+        if (m_impl->activeIndex == constants::uint32_null_index)
         {
             setActiveScene(0u);
         }

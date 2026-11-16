@@ -6,7 +6,7 @@
 
 namespace litl
 {
-    constexpr uint32_t BlockSize = ecs::Constants::max_component_size * 16;
+    constexpr uint32_t BlockSize = ecs::constants::max_component_size * 16;
 
     struct EntityCommands::Impl
     {

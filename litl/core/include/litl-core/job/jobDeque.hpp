@@ -80,14 +80,14 @@ namespace litl
         /// The next available write index.
         /// Incremented on every push/pop operation.
         /// </summary>
-        alignas(Constants::cache_line_size) std::atomic<int64_t> m_bottom;
+        alignas(constants::cache_line_size) std::atomic<int64_t> m_bottom;
         // ^ Store the bottom/top indices on different cache lines to avoid false sharing.
 
         /// <summary>
         /// The next read index.
         /// Incremented on every steal operation.
         /// </summary>
-        alignas(Constants::cache_line_size) std::atomic<int64_t> m_top;
+        alignas(constants::cache_line_size) std::atomic<int64_t> m_top;
         // ^ Store the bottom/top indices on different cache lines to avoid false sharing.
 
         /// <summary>

@@ -6,7 +6,7 @@ namespace litl
     void EntityRecord::update(Archetype* pArchetype, uint32_t index) noexcept
     {
         archetype = pArchetype;
-        archetypeId = (archetype != nullptr ? archetype->id() : ecs::Constants::null_archetype_id);
+        archetypeId = (archetype != nullptr ? archetype->id() : ecs::constants::null_archetype_id);
         archetypeIndex = index;
     }
 }

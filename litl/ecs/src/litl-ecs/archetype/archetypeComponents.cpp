@@ -15,9 +15,9 @@ namespace litl
 
     ArchetypeComponents::ArchetypeComponents(std::span<ComponentTypeId> components)
     {
-        assert(components.size() <= ecs::Constants::max_components);
+        assert(components.size() <= ecs::constants::max_components);
 
-        m_components.fill(ecs::Constants::null_component_id);
+        m_components.fill(ecs::constants::null_component_id);
 
         for (auto i = 0; i < components.size(); ++i)
         {
@@ -36,7 +36,7 @@ namespace litl
 
     void ArchetypeComponents::populate(ChunkLayout const* layout) noexcept
     {
-        assert(layout->componentTypeCount < ecs::Constants::max_components);
+        assert(layout->componentTypeCount < ecs::constants::max_components);
 
         for (auto i = 0; i < layout->componentTypeCount; ++i)
         {
@@ -50,7 +50,7 @@ namespace litl
 
     bool ArchetypeComponents::add(ComponentTypeId component) noexcept
     {
-        if (m_size == ecs::Constants::max_components)
+        if (m_size == ecs::constants::max_components)
         {
             return false;
         }
@@ -63,7 +63,7 @@ namespace litl
 
     bool ArchetypeComponents::add(std::span<ComponentTypeId> components) noexcept
     {
-        if ((m_size + components.size()) > ecs::Constants::max_components)
+        if ((m_size + components.size()) > ecs::constants::max_components)
         {
             return false;
         }
@@ -81,7 +81,7 @@ namespace litl
 
     bool ArchetypeComponents::add(std::span<ComponentData> components) noexcept
     {
-        if ((m_size + components.size()) > ecs::Constants::max_components)
+        if ((m_size + components.size()) > ecs::constants::max_components)
         {
             return false;
         }
@@ -140,7 +140,7 @@ namespace litl
                 return true;
             }
 
-            if (m_components[i] == ecs::Constants::null_component_id)
+            if (m_components[i] == ecs::constants::null_component_id)
             {
                 return false;
             }
@@ -149,7 +149,7 @@ namespace litl
         return false;
     }
 
-    std::array<ComponentTypeId, ecs::Constants::max_components> const& ArchetypeComponents::data() const noexcept
+    std::array<ComponentTypeId, ecs::constants::max_components> const& ArchetypeComponents::data() const noexcept
     {
         return m_components;
     }
@@ -161,7 +161,7 @@ namespace litl
 
     size_t ArchetypeComponents::capacity() const noexcept
     {
-        return ecs::Constants::max_components;
+        return ecs::constants::max_components;
     }
 
     uint64_t ArchetypeComponents::hash() noexcept

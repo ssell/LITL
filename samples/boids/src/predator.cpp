@@ -14,7 +14,7 @@ namespace litl::samples
         /// <summary>
         /// For each thread, we accumulate the number of consumed boids. That is then flattened in the prepare method.
         /// </summary>
-        static thread_local std::array<uint32_t, litl::Constants::max_thread_count> t_consumedBoidCounts;
+        static thread_local std::array<uint32_t, litl::constants::max_thread_count> t_consumedBoidCounts;
     }
 
     void PredatorSystem::setup(ServiceProvider& services)

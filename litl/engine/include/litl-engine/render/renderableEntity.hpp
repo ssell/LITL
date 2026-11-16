@@ -54,7 +54,7 @@ namespace litl
 
         /// <summary>
         /// The number of indices being rendered, offset by the firstIndex.
-        /// If this is set to Constants::uint32_null_index (~0) then all indices from the firstIndex are to be rendered.
+        /// If this is set to constants::uint32_null_index (~0) then all indices from the firstIndex are to be rendered.
         /// </summary>
         uint32_t indexCount{ 0u };
     };

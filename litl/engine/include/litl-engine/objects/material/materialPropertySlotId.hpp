@@ -11,12 +11,12 @@ namespace litl
         /// <summary>
         /// The global slot index.
         /// </summary>
-        uint32_t index = Constants::uint32_null_index;
+        uint32_t index = constants::uint32_null_index;
 
         /// <summary>
         /// If this slot is stored in a frequent update index, this is the global index into it.
         /// </summary>
-        uint32_t frequentIndex = Constants::uint32_null_index;
+        uint32_t frequentIndex = constants::uint32_null_index;
 
         /// <summary>
         /// The version/generation of the slot that this is valid for.
@@ -25,7 +25,7 @@ namespace litl
 
         [[nodiscard]] constexpr bool isValid() const noexcept
         {
-            return (index != Constants::uint32_null_index) && (version != 0u);
+            return (index != constants::uint32_null_index) && (version != 0u);
         }
     };
 }

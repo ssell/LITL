@@ -53,7 +53,7 @@ namespace litl
         uint64_t lightDataAddr = 0ull;
     };
 
-    static_assert(sizeof(RenderPushConstants) <= RendererConstants::MaxPushConstantSize);
+    static_assert(sizeof(RenderPushConstants) <= constants::MaxPushConstantSize);
 }
 
 #endif

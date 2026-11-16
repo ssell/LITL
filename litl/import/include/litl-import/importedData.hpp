@@ -150,7 +150,7 @@ namespace litl::import
         /// <summary>
         /// If an item failed to be processed, this is its index in the items vector.
         /// </summary>
-        uint32_t errorIndex{ Constants::uint32_null_index };
+        uint32_t errorIndex{ constants::uint32_null_index };
 
         /// <summary>
         /// True if all items were properly processed.

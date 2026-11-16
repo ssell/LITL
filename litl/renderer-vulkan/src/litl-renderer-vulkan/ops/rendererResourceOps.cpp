@@ -275,7 +275,7 @@ namespace litl::vulkan
 
         if (texture == nullptr)
         {
-            return Constants::uint32_null_index;
+            return constants::uint32_null_index;
         }
 
         return texture->textureTableSlot;

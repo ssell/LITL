@@ -55,14 +55,14 @@ namespace litl
             });
 
         std::vector<ComponentData> addedComponents;
-        addedComponents.reserve(ecs::Constants::max_components * 2);
+        addedComponents.reserve(ecs::constants::max_components * 2);
 
         std::vector<ComponentTypeId> removedComponents;
-        removedComponents.reserve(ecs::Constants::max_components * 2);
+        removedComponents.reserve(ecs::constants::max_components * 2);
 
         Entity currEntity{};
-        ArchetypeId prevArchetype = ecs::Constants::null_archetype_id;
-        ArchetypeId currArchetype = ecs::Constants::null_archetype_id;
+        ArchetypeId prevArchetype = ecs::constants::null_archetype_id;
+        ArchetypeId currArchetype = ecs::constants::null_archetype_id;
         bool entityRemoved = false;
         bool archetypeChanged = false;
 
@@ -103,7 +103,7 @@ namespace litl
             case EntityCommandType::DestroyEntity:
                 entityRemoved = true;
                 world.destroyImmediate(currEntity);
-                entityChanges.emplace_back(EntityChangeType::DestroyEntity, currEntity, prevArchetype, ecs::Constants::empty_archetype_id);
+                entityChanges.emplace_back(EntityChangeType::DestroyEntity, currEntity, prevArchetype, ecs::constants::empty_archetype_id);
                 break;
 
             case EntityCommandType::AddComponent:

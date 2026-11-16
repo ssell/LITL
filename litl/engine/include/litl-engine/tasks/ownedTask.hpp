@@ -38,7 +38,7 @@ namespace litl
 
         std::coroutine_handle<> m_handle;
         IsFinishedFunc m_isFinished{ nullptr };
-        TaskId m_id{ Constants::uint32_null_index };
+        TaskId m_id{ constants::uint32_null_index };
         bool m_destroyOnComplete{ false };
     };
 

@@ -60,7 +60,7 @@ namespace litl
 
     uint32_t SceneView::getGpuBufferIndex(Entity entity) const noexcept
     {
-        LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::getGpuBufferIndex on a null scene.", Constants::uint32_null_index);
+        LITL_ASSERT_MSG((m_pActiveScene != nullptr), "Attempting to use SceneView::getGpuBufferIndex on a null scene.", constants::uint32_null_index);
         return m_pActiveScene->getGpuBufferIndex(entity);
     }
 

@@ -199,7 +199,7 @@ namespace litl
         std::vector<Entity> m_nodeToEntity;
 
         /// <summary>
-        /// The scene node index of the parent of the scene node. If no parent, then will be equal to Constants::null_index32.
+        /// The scene node index of the parent of the scene node. If no parent, then will be equal to constants::null_index32.
         /// This represents "child -> parent"
         /// </summary>
         std::vector<uint32_t> m_nodeParent;

@@ -202,7 +202,7 @@ namespace litl::vulkan
 
     uint32_t TextureTable::acquire(TextureResourceHandle handle) noexcept
     {
-        uint32_t slot = Constants::uint32_null_index;
+        uint32_t slot = constants::uint32_null_index;
 
         if (!handle.isValid())
         {
@@ -239,7 +239,7 @@ namespace litl::vulkan
             m_freeSlots.push_back(slot);
             m_slotOwners[slot] = {};
 
-            return Constants::uint32_null_index;
+            return constants::uint32_null_index;
         }
 
         return slot;

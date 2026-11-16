@@ -7,7 +7,7 @@
 #include <cmath>
 #include <span>
 
-#include "litl-core/math/traits.hpp"
+#include "litl-core/constants.hpp"
 
 namespace litl
 {
@@ -85,7 +85,7 @@ namespace litl
         return (std::max)(a, b);
     }
 
-    [[nodiscard]] constexpr bool fequals(float a, float b, float relEpsilon = Traits<float>::relative_epsilon, float epsilon = Traits<float>::epsilon) noexcept
+    [[nodiscard]] constexpr bool fequals(float a, float b, float relEpsilon = constants::relative_epsilon, float epsilon = constants::epsilon) noexcept
     {
         // Note we use both an epsilon and relative epsilon value.
         // Absolute epsilon by itself can fail for large numbers where the gap between representable floats is greater than epsilon itself.
@@ -100,7 +100,7 @@ namespace litl
         return diff <= relEpsilon * (max)(abs(a), abs(b));
     }
 
-    [[nodiscard]] constexpr bool fequals(double a, double b, double relEpsilon = Traits<double>::relative_epsilon, double epsilon = Traits<double>::epsilon) noexcept
+    [[nodiscard]] constexpr bool fequals(double a, double b, double relEpsilon = constants::relative_epsilon_d, double epsilon = constants::epsilon_d) noexcept
     {
         // Note we use both an epsilon and relative epsilon value.
         // Absolute epsilon by itself can fail for large numbers where the gap between representable floats is greater than epsilon itself.
@@ -115,7 +115,7 @@ namespace litl
         return diff <= relEpsilon * (max)(abs(a), abs(b));
     }
 
-    [[nodiscard]] constexpr bool allEquals(std::span<float const> values, float check, float relEpsilon = Traits<float>::relative_epsilon, float epsilon = Traits<float>::epsilon) noexcept
+    [[nodiscard]] constexpr bool allEquals(std::span<float const> values, float check, float relEpsilon = constants::relative_epsilon, float epsilon = constants::epsilon) noexcept
     {
         bool all = true;
 
@@ -127,14 +127,14 @@ namespace litl
         return all;
     }
 
-    [[nodiscard]] constexpr bool isZero(float x, float epsilon = Traits<float>::epsilon) noexcept
+    [[nodiscard]] constexpr bool isZero(float x, float epsilon = constants::epsilon) noexcept
     {
         if (std::isnan(x)) { return false; }
         if (!std::isfinite(x)) { return false; }
         return ((x < epsilon) && (x > -epsilon));
     }
 
-    [[nodiscard]] constexpr bool isZero(double x, double epsilon = Traits<double>::epsilon) noexcept
+    [[nodiscard]] constexpr bool isZero(double x, double epsilon = constants::epsilon_d) noexcept
     {
         if (std::isnan(x)) { return false; }
         if (!std::isfinite(x)) { return false; }
@@ -171,14 +171,14 @@ namespace litl
         return anyZero(std::span{ values, count });
     }
 
-    [[nodiscard]] constexpr bool isOne(float x, float relEpsilon = Traits<float>::relative_epsilon, float epsilon = Traits<float>::epsilon) noexcept
+    [[nodiscard]] constexpr bool isOne(float x, float relEpsilon = constants::relative_epsilon, float epsilon = constants::epsilon) noexcept
     {
         if (std::isnan(x)) { return false; }
         if (!std::isfinite(x)) { return false; }
         return (std::abs(x - 1.0f) < epsilon);
     }
 
-    [[nodiscard]] constexpr bool isOne(double x, double relEpsilon = Traits<double>::relative_epsilon, double epsilon = Traits<double>::epsilon) noexcept
+    [[nodiscard]] constexpr bool isOne(double x, double relEpsilon = constants::relative_epsilon_d, double epsilon = constants::epsilon_d) noexcept
     {
         if (std::isnan(x)) { return false; }
         if (!std::isfinite(x)) { return false; }
@@ -283,22 +283,22 @@ namespace litl
 
     [[nodiscard]] constexpr float degreesToRadians(float deg) noexcept
     {
-        return (deg * Traits<float>::deg_to_rad);
+        return (deg * constants::deg_to_rad);
     }
 
     [[nodiscard]] constexpr double degreesToRadians(double deg) noexcept
     {
-        return (deg * Traits<double>::deg_to_rad);
+        return (deg * constants::deg_to_rad_d);
     }
 
     [[nodiscard]] constexpr float radiansToDegrees(float rad) noexcept
     {
-        return (rad * Traits<float>::rad_to_deg);
+        return (rad * constants::rad_to_deg);
     }
 
     [[nodiscard]] constexpr double radiansToDegrees(double const rad) noexcept
     {
-        return (rad * Traits<double>::rad_to_deg);
+        return (rad * constants::rad_to_deg_d);
     }
 
     [[nodiscard]] constexpr uint32_t isPow2(int32_t x) noexcept

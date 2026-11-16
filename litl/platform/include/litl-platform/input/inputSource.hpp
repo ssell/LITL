@@ -23,7 +23,7 @@ namespace litl
     struct InputSource
     {
         InputSourceType type{ InputSourceType::Unknown };
-        uint32_t code{ Constants::uint32_null_index };
+        uint32_t code{ constants::uint32_null_index };
 
         bool operator==(InputSource const& other) const = default;
 

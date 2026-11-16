@@ -21,7 +21,7 @@ namespace litl
         {
             assert(descriptor != nullptr);
 
-            if ((m_currOffset + descriptor->size) > ecs::Constants::entity_command_pool_size)
+            if ((m_currOffset + descriptor->size) > ecs::constants::entity_command_pool_size)
             {
                 // pool if full
                 return false;
@@ -51,7 +51,7 @@ namespace litl
 
     private:
 
-        alignas(Constants::cache_line_size) std::byte m_buffer[ecs::Constants::entity_command_pool_size];
+        alignas(constants::cache_line_size) std::byte m_buffer[ecs::constants::entity_command_pool_size];
         uint32_t m_currOffset{ 0 };
     };
 
@@ -106,7 +106,7 @@ namespace litl
                 if ((command.type == EntityCommandType::SetParent) && !command.setParentInfo.deferredParent.isNull())
                 {
                     command.setParentInfo.parent = materialized[command.setParentInfo.deferredParent.index];
-                    command.setParentInfo.deferredParent.index = ecs::Constants::null_entity_id;
+                    command.setParentInfo.deferredParent.index = ecs::constants::null_entity_id;
                 }
             }
         }

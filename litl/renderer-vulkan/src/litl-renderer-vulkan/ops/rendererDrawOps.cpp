@@ -39,7 +39,7 @@ namespace litl::vulkan
 
         uint32_t swapChainImageIndex = 0;
 
-        if (!acquireSwapChainIndex(*vulkanContext, frameSync, Constants::millisecond_to_nanoseconds * 32, vulkanContext->renderInfo.frame.frameInFlightIndex, &swapChainImageIndex))
+        if (!acquireSwapChainIndex(*vulkanContext, frameSync, constants::millisecond_to_nanoseconds * 32, vulkanContext->renderInfo.frame.frameInFlightIndex, &swapChainImageIndex))
         {
             // Swapchain not ready.
             return false;
@@ -61,7 +61,7 @@ namespace litl::vulkan
     bool isRenderReady(RendererContext& context, PerFrameSyncInfo const& frameSync, uint32_t maxWaitMs) noexcept
     {
         // wait time for vkWaitForFences is in nanoseconds
-        const VkResult fenceResult = vkWaitForFences(context.device.vkDevice, 1u, &frameSync.renderFence, VK_TRUE, static_cast<uint64_t>(Constants::millisecond_to_nanoseconds) * static_cast<uint64_t>(maxWaitMs));
+        const VkResult fenceResult = vkWaitForFences(context.device.vkDevice, 1u, &frameSync.renderFence, VK_TRUE, static_cast<uint64_t>(constants::millisecond_to_nanoseconds) * static_cast<uint64_t>(maxWaitMs));
         return fenceResult == VK_SUCCESS;
     }
 

@@ -52,7 +52,7 @@ namespace litl
         /// 
         /// It should be noted also that this slot index is not stable and can change every frame.
         /// </summary>
-        uint32_t frequentGlobalSlot = Constants::uint32_null_index;
+        uint32_t frequentGlobalSlot = constants::uint32_null_index;
 
         /// <summary>
         /// Is there an active material instance associated with this slot?
@@ -227,7 +227,7 @@ namespace litl
 
         /// <summary>
         /// Given a material slot, returns the global slot index into its frequent block data.
-        /// If the slot is not a resident of the frequent update block, then Constants::uint32_null_index is returned instead.
+        /// If the slot is not a resident of the frequent update block, then constants::uint32_null_index is returned instead.
         /// </summary>
         [[nodiscard]] uint32_t getFrequentUpdateSlot(MaterialPropertySlotId slot) noexcept;
 

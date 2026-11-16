@@ -27,7 +27,7 @@ namespace litl
     class PerJobVector
     {
         static_assert(!std::is_same_v<T, bool>, "std::vector<bool> is not a real container; use a byte type");
-        static constexpr uint32_t JobThreadCount = Constants::max_thread_count + 1;          // +1 for the main thread which can also run jobs while waiting.
+        static constexpr uint32_t JobThreadCount = constants::max_thread_count + 1;          // +1 for the main thread which can also run jobs while waiting.
 
     public:
 
@@ -39,13 +39,13 @@ namespace litl
         {
             if (ThreadInfo::get().isMainThread())
             {
-                return &m_alignedVectorSlots[Constants::max_thread_count].vector;
+                return &m_alignedVectorSlots[constants::max_thread_count].vector;
             }
             else
             {
                 const uint32_t jobIndex = ThreadInfo::get().jobIndex;
 
-                if (jobIndex < Constants::max_thread_count)
+                if (jobIndex < constants::max_thread_count)
                 {
                     return &m_alignedVectorSlots[jobIndex].vector;
                 }
@@ -248,7 +248,7 @@ namespace litl
     private:
 
         // Pad each slot to a cache line so threads pushing to adjacent slots don't ping-pong the vector headers (begin/end/cap pointers get written on every push_back).
-        struct alignas(Constants::cache_line_size) Slot
+        struct alignas(constants::cache_line_size) Slot
         {
             std::vector<T> vector;
         };

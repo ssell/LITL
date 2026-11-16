@@ -30,10 +30,10 @@ namespace litl
 
         const uint32_t chunkHeaderSize = static_cast<uint32_t>(sizeof(ChunkHeader));
         const uint32_t chunkEntityArraySize = static_cast<uint32_t>(sizeof(ChunkEntities));
-        uint32_t remaining = ecs::Constants::chunk_size - chunkHeaderSize - chunkEntityArraySize;
+        uint32_t remaining = ecs::constants::chunk_size - chunkHeaderSize - chunkEntityArraySize;
 
         // First estimate of how many entities can fit. This is close, but may not be exact due to alignment.
-        entityCapacity = min(ecs::Constants::max_entities_per_chunk, (componentBytesPerEntity == 0 ? ecs::Constants::max_entities_per_chunk : remaining / componentBytesPerEntity));
+        entityCapacity = min(ecs::constants::max_entities_per_chunk, (componentBytesPerEntity == 0 ? ecs::constants::max_entities_per_chunk : remaining / componentBytesPerEntity));
 
         // Get memory position of entity array
         uint32_t offset = chunkHeaderSize;
@@ -59,7 +59,7 @@ namespace litl
                 offset += componentOrder[i]->size * entityCapacity;
             }
 
-            if (offset <= ecs::Constants::chunk_size)
+            if (offset <= ecs::constants::chunk_size)
             {
                 // All component columns fit in the chunk
                 break;
@@ -81,7 +81,7 @@ namespace litl
         }
 
         // Failed to find. Realistically, should never get here.
-        return ecs::Constants::max_components;
+        return ecs::constants::max_components;
     }
 
     void populateChunkLayout(ChunkLayout* layout, ArchetypeComponents const& components)

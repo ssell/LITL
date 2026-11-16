@@ -5,7 +5,7 @@ namespace litl
 {
     TaskThreadPool::TaskThreadPool(uint32_t threadCount)
     {
-        for (uint32_t i = 0u; i < threadCount && i < Constants::max_thread_count; ++i)
+        for (uint32_t i = 0u; i < threadCount && i < constants::max_thread_count; ++i)
         {
             m_workers.emplace_back([this](std::stop_token stop) -> void
             {

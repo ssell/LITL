@@ -4,7 +4,7 @@
 #include <type_traits>
 
 #include "litl-core/math/bounds/intersectionResult.hpp"
-#include "litl-core/math/traits.hpp"
+#include "litl-core/constants.hpp"
 #include "litl-core/math/types/vec3.hpp"
 #include "litl-core/math/types/vec4.hpp"
 

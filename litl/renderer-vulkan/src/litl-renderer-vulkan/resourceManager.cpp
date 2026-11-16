@@ -1335,7 +1335,7 @@ namespace litl::vulkan
                 textureResource->textureTableSlot = m_pContext->textureTable.acquire(textureHandle);
             }
 
-            if (textureResource->textureTableSlot == Constants::uint32_null_index)
+            if (textureResource->textureTableSlot == constants::uint32_null_index)
             {
                 logError("Failed to acquire slot for new Texture resource '", textureResource->descriptor.name, "' in Vulkan texture table.");
             }
@@ -1355,7 +1355,7 @@ namespace litl::vulkan
 
         if (resource != nullptr)
         {
-            if (resource->textureTableSlot != Constants::uint32_null_index)
+            if (resource->textureTableSlot != constants::uint32_null_index)
             {
                 if (!m_pContext->textureTable.release(resource->textureTableSlot, handle))
                 {

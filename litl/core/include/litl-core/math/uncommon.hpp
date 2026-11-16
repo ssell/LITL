@@ -26,7 +26,7 @@ namespace litl
     {
         vec3 scaledNormal = faceNormalScaledCCW(a, b, c);
 
-        if (scaledNormal.lengthSquared() > Traits<float>::epsilon)
+        if (scaledNormal.lengthSquared() > constants::epsilon)
         {
             scaledNormal.normalize();
         }
@@ -55,7 +55,7 @@ namespace litl
     {
         vec3 scaledNormal = faceNormalScaled(a, b, c);
 
-        if (scaledNormal.lengthSquared() > Traits<float>::epsilon)
+        if (scaledNormal.lengthSquared() > constants::epsilon)
         {
             scaledNormal.normalize();
         }
@@ -97,7 +97,7 @@ namespace litl
     {
         vec3 scaledNormal = ngonFaceNormalScaledCCW(face);
 
-        if (scaledNormal.lengthSquared() > Traits<float>::epsilon)
+        if (scaledNormal.lengthSquared() > constants::epsilon)
         {
             scaledNormal.normalize();
         }
@@ -159,7 +159,7 @@ namespace litl
     {
         vec3 scaledNormal = ngonFaceNormalScaledCCW(face);
 
-        if (scaledNormal.lengthSquared() > Traits<float>::epsilon)
+        if (scaledNormal.lengthSquared() > constants::epsilon)
         {
             scaledNormal.normalize();
         }

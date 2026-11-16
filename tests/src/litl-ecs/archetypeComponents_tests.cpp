@@ -14,7 +14,7 @@ namespace litl::tests
     {
         ArchetypeComponents components;
 
-        REQUIRE(components.capacity() == ecs::Constants::max_components);
+        REQUIRE(components.capacity() == ecs::constants::max_components);
         REQUIRE(components.size() == 0);
         REQUIRE(components.dirty() == false);
         REQUIRE(components.hash() == 0);
@@ -24,7 +24,7 @@ namespace litl::tests
         const auto fooHash = hash64(&fooId, sizeof(uint32_t));
 
         REQUIRE(components.add(fooId) == true);
-        REQUIRE(components.capacity() == ecs::Constants::max_components);
+        REQUIRE(components.capacity() == ecs::constants::max_components);
         REQUIRE(components.size() == 1);
         REQUIRE(components.dirty() == true);
         REQUIRE(components.has(getComponentTypeId<Foo>()) == true);
@@ -55,7 +55,7 @@ namespace litl::tests
 
         REQUIRE(components.remove(fooId) == true);
         REQUIRE(components.size() == 0);
-        REQUIRE(components.capacity() == ecs::Constants::max_components);
+        REQUIRE(components.capacity() == ecs::constants::max_components);
         REQUIRE(components.dirty() == true);
         REQUIRE(components.hash() == 0);
         REQUIRE(components.dirty() == false);

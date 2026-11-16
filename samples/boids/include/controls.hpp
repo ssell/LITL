@@ -35,7 +35,7 @@ namespace litl::samples
     {
         const float lengthSq = desired.lengthSquared();
 
-        if (lengthSq < Traits<float>::epsilon)
+        if (lengthSq < constants::epsilon)
         {
             return vec3{};
         }

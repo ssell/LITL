@@ -257,7 +257,7 @@ namespace litl::tests
     {
         const auto radius = 0.5f;
         const auto aabb = bounds::AABB::fromMinMax(vec3{ -radius }, vec3{ radius });
-        const auto transformMatrix = mat4::rotation(Traits<float>::pi_over_four, vec3::up());
+        const auto transformMatrix = mat4::rotation(constants::pi_over_four, vec3::up());
         const auto rotatedAABB = aabb.transformed(transformMatrix);
 
         const auto aabbExtents = aabb.extents();
@@ -265,25 +265,25 @@ namespace litl::tests
         REQUIRE(aabbExtents == expectedAABBExtents);
 
         const auto rotatedAABBExtents = rotatedAABB.extents();
-        const auto expectedRotatedAABBExtents = vec3{ Traits<float>::sqrt_two, 1.0f, Traits<float>::sqrt_two };
-        REQUIRE(rotatedAABBExtents == expectedRotatedAABBExtents); 
+        const auto expectedRotatedAABBExtents = vec3{ constants::sqrt_two, 1.0f, constants::sqrt_two };
+        REQUIRE(rotatedAABBExtents == expectedRotatedAABBExtents);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("aabb transformed scale", "[math::bounds]")
+        LITL_TEST_CASE("aabb transformed scale", "[math::bounds]")
     {
         const auto aabb = bounds::AABB::fromMinMax(vec3{ -50.0f, -100.0f, -150.0f }, vec3{ 50.0f, 100.0f, 150.0f });
         const auto transformMatrix = mat4::scaling(vec3{ 0.1f, 0.1f, 0.1f });
         const auto scaledAABB = aabb.transformed(transformMatrix);
 
         REQUIRE(scaledAABB.min == vec3{ -5.0f, -10.0f, -15.0f });
-        REQUIRE(scaledAABB.max == vec3{  5.0f,  10.0f,  15.0f });
+        REQUIRE(scaledAABB.max == vec3{ 5.0f,  10.0f,  15.0f });
     } LITL_END_TEST_CASE
-        
-    // -------------------------------------------------------------------------------------
-    // Sphere
-    // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("sphere from center radius", "[math::bounds]")
+        // -------------------------------------------------------------------------------------
+        // Sphere
+        // -------------------------------------------------------------------------------------
+
+        LITL_TEST_CASE("sphere from center radius", "[math::bounds]")
     {
         bounds::Sphere sphere = bounds::Sphere::fromCenterRadius(vec3{ 0.0f, 5.0f, 0.0f }, 5.0f);
 
@@ -292,7 +292,7 @@ namespace litl::tests
     } LITL_END_TEST_CASE
 
 
-    LITL_TEST_CASE("sphere from points", "[math::bounds]")
+        LITL_TEST_CASE("sphere from points", "[math::bounds]")
     {
         std::array<vec3, 5> points{
             vec3{0.0f, 0.0f, 0.0f},
@@ -320,7 +320,7 @@ namespace litl::tests
         REQUIRE(isZero(sphere.radius));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("sphere contains point", "[math::bounds]")
+        LITL_TEST_CASE("sphere contains point", "[math::bounds]")
     {
         bounds::Sphere sphere{ vec3{ 0.0f, 5.0f, 0.0f }, 5.0f };
 
@@ -338,7 +338,7 @@ namespace litl::tests
         REQUIRE(bounds::contains(sphere, vec3{ 0.0f, 5.0f, 5.1f }) == false);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("sphere intersects aabb", "[math::bounds]")
+        LITL_TEST_CASE("sphere intersects aabb", "[math::bounds]")
     {
         bounds::Sphere sphere{ vec3{ 0.0f, 0.0f, 0.0f }, 1.0f };
         bounds::AABB inside{ vec3{ -0.1f, -0.1f, -0.1f}, vec3{ 0.1f, 0.1f, 0.1f } };
@@ -349,12 +349,12 @@ namespace litl::tests
         REQUIRE(bounds::intersects(sphere, straddles) == true);
         REQUIRE(bounds::intersects(sphere, outside) == false);
     } LITL_END_TEST_CASE
-        
-    // -------------------------------------------------------------------------------------
-    // Plane
-    // -------------------------------------------------------------------------------------
-        
-    LITL_TEST_CASE("plane from point normal", "[math::bounds]")
+
+        // -------------------------------------------------------------------------------------
+        // Plane
+        // -------------------------------------------------------------------------------------
+
+        LITL_TEST_CASE("plane from point normal", "[math::bounds]")
     {
         auto planeY = bounds::Plane::fromPointNormal(vec3{ 0.0f, 10.0f, 0.0f }, vec3::up());
         auto planeYNeg = bounds::Plane::fromPointNormal(vec3{ 0.0f, -10.0f, 0.0f }, -vec3::up());
@@ -365,8 +365,8 @@ namespace litl::tests
         REQUIRE(planeYNeg.normal() == -vec3::up());
         REQUIRE(fequals(planeY.d(), 10.0f));
     } LITL_END_TEST_CASE
-        
-    LITL_TEST_CASE("plane from triangle", "[math::bounds]")
+
+        LITL_TEST_CASE("plane from triangle", "[math::bounds]")
     {
         /**
          *              c
@@ -383,7 +383,7 @@ namespace litl::tests
         const vec3 c = vec3{ 1.0f, 1.0f, 0.0f };
 
         auto planeCCW = bounds::Plane::fromTriangleCCW(a, b, c);
-        auto planeCW  = bounds::Plane::fromTriangleCW(a, c, b);
+        auto planeCW = bounds::Plane::fromTriangleCW(a, c, b);
 
         REQUIRE(planeCCW.normal() == vec3::forward());
         REQUIRE(fequals(planeCCW.d(), 0.0f));
@@ -391,8 +391,8 @@ namespace litl::tests
         REQUIRE(planeCW.normal() == vec3::forward());
         REQUIRE(fequals(planeCW.d(), 0.0f));
     } LITL_END_TEST_CASE
-        
-    LITL_TEST_CASE("plane signed distance", "[math::bounds]")
+
+        LITL_TEST_CASE("plane signed distance", "[math::bounds]")
     {
         auto plane = bounds::Plane::fromPointNormal(vec3{ 0.0f, 0.0f, 0.0f }, vec3::up());
 
@@ -408,8 +408,8 @@ namespace litl::tests
         REQUIRE(fequals(plane.signedDistance(vec3{ 100.0f, -1.0f, -100.0f }), -1.0f));
         REQUIRE(fequals(plane.signedDistance(vec3{ 100.0f, -10.0f, -100.0f }), -10.0f));
     } LITL_END_TEST_CASE
-        
-    LITL_TEST_CASE("plane contains point", "[math::bounds]")
+
+        LITL_TEST_CASE("plane contains point", "[math::bounds]")
     {
         // plane normal points inward
         auto plane = bounds::Plane::fromPointNormal(vec3{ 0.0f, 0.0f, 0.0f }, vec3::up());
@@ -423,14 +423,14 @@ namespace litl::tests
         REQUIRE(bounds::contains(plane, vec3{ 100.0f, -0.01f, -100.0f }) == false);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("plane d is signed distance from origin", "[math::bounds]")
+        LITL_TEST_CASE("plane d is signed distance from origin", "[math::bounds]")
     {
         auto plane = bounds::Plane::fromPointNormal(vec3{ 1.0f, 0.0f, 0.0f }, vec3{ 1.0f, 0.0f, 0.0f });
         auto d = plane.d();
         REQUIRE(fequals(d, 1.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("plane from point-normal contains the point", "[math::bounds]") {
+        LITL_TEST_CASE("plane from point-normal contains the point", "[math::bounds]") {
         const vec3 point{ 10.0f, 0.0f, 0.0f };
         const vec3 normal{ 1.0f, 0.0f, 0.0f };
         auto plane = bounds::Plane::fromPointNormal(point, normal);
@@ -445,7 +445,7 @@ namespace litl::tests
         REQUIRE(fequals(plane.signedDistance(point - normal * 5.0f), -5.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("plane flip", "[math::bounds]")
+        LITL_TEST_CASE("plane flip", "[math::bounds]")
     {
         auto plane = bounds::Plane::fromPointNormal(vec3{ 1.0f, 0.0f, 0.0f }, vec3{ 1.0f, 0.0f, 0.0f });
         auto flipped = plane.flipped();
@@ -453,7 +453,7 @@ namespace litl::tests
         REQUIRE(flipped.value == -plane.value);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("plane contains sphere", "[math::bounds]")
+        LITL_TEST_CASE("plane contains sphere", "[math::bounds]")
     {
         auto plane = bounds::Plane::fromPointNormal(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 0.0f, 1.0f, 0.0f });
         auto sphereInside = bounds::Sphere::fromCenterRadius(vec3{ 0.0f, 1.0f, 0.0f }, 0.5f);
@@ -465,7 +465,7 @@ namespace litl::tests
         REQUIRE(bounds::contains(plane, sphereOutside) == false);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("plane intersects sphere", "[math::bounds]")
+        LITL_TEST_CASE("plane intersects sphere", "[math::bounds]")
     {
         auto plane = bounds::Plane::fromPointNormal(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 0.0f, 1.0f, 0.0f });
         auto sphereInside = bounds::Sphere::fromCenterRadius(vec3{ 0.0f, 1.0f, 0.0f }, 0.5f);
@@ -477,7 +477,7 @@ namespace litl::tests
         REQUIRE(bounds::intersects(plane, sphereOutside) == false);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("sphere outside plane", "[math::bounds]")
+        LITL_TEST_CASE("sphere outside plane", "[math::bounds]")
     {
         auto plane = bounds::Plane::fromPointNormal(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 0.0f, 1.0f, 0.0f });
         auto sphereInside = bounds::Sphere::fromCenterRadius(vec3{ 0.0f, 1.0f, 0.0f }, 0.5f);
@@ -489,7 +489,7 @@ namespace litl::tests
         REQUIRE(bounds::isOutside(plane, sphereOutside) == true);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("plane contains aabb", "[math::bounds]")
+        LITL_TEST_CASE("plane contains aabb", "[math::bounds]")
     {
         auto plane = bounds::Plane::fromPointNormal(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 0.0f, 1.0f, 0.0f });
         auto aabbInside = bounds::AABB::fromMinMax(vec3{ 1.0f, 1.0f, 1.0f }, vec3{ 2.0f, 2.0f, 2.0f });
@@ -500,9 +500,9 @@ namespace litl::tests
         REQUIRE(bounds::contains(plane, aabbStraddle) == false);
         REQUIRE(bounds::contains(plane, aabbOutside) == false);
     } LITL_END_TEST_CASE
-        
 
-    LITL_TEST_CASE("plane intersects aabb", "[math::bounds]")
+
+        LITL_TEST_CASE("plane intersects aabb", "[math::bounds]")
     {
         auto plane = bounds::Plane::fromPointNormal(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 0.0f, 1.0f, 0.0f });
         auto aabbInside = bounds::AABB::fromMinMax(vec3{ 1.0f, 1.0f, 1.0f }, vec3{ 2.0f, 2.0f, 2.0f });
@@ -514,7 +514,7 @@ namespace litl::tests
         REQUIRE(bounds::intersects(plane, aabbOutside) == false);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("aabb outside plane", "[math::bounds]")
+        LITL_TEST_CASE("aabb outside plane", "[math::bounds]")
     {
         auto plane = bounds::Plane::fromPointNormal(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 0.0f, 1.0f, 0.0f });
         auto aabbInside = bounds::AABB::fromMinMax(vec3{ 1.0f, 1.0f, 1.0f }, vec3{ 2.0f, 2.0f, 2.0f });
@@ -526,7 +526,7 @@ namespace litl::tests
         REQUIRE(bounds::isOutside(plane, aabbOutside) == true);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("plane nearest point", "[math::bounds]")
+        LITL_TEST_CASE("plane nearest point", "[math::bounds]")
     {
         auto plane = bounds::Plane::fromPointNormal(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 0.0f, 1.0f, 0.0f });
 
@@ -534,12 +534,12 @@ namespace litl::tests
         REQUIRE(plane.nearestPoint(vec3{ 100.0f, 100.0f, 100.0f }) == vec3{ 100.0f, 0.0f, 100.0f });
         REQUIRE(plane.nearestPoint(vec3{ -100.0f, -100.0f, -100.0f }) == vec3{ -100.0f, 0.0f, -100.0f });
     } LITL_END_TEST_CASE
-        
-    // -------------------------------------------------------------------------------------
-    // Frustum
-    // -------------------------------------------------------------------------------------
 
-    namespace
+        // -------------------------------------------------------------------------------------
+        // Frustum
+        // -------------------------------------------------------------------------------------
+
+        namespace
     {
         /// <summary>
         /// Constructs an unit-cube frustum that ranges from:
@@ -547,15 +547,15 @@ namespace litl::tests
         ///     y: [-1, 1]
         ///     z: [-1, 1]
         /// </summary>
-        static bounds::FrustumCorners unitCubeCorners {
+        static bounds::FrustumCorners unitCubeCorners{
             .nearLL = vec3{-1.0f, -1.0f, -1.0f },
             .nearLR = vec3{ 1.0f, -1.0f, -1.0f },
             .nearUR = vec3{ 1.0f,  1.0f, -1.0f },
             .nearUL = vec3{-1.0f,  1.0f, -1.0f },
-            .farLL  = vec3{-1.0f, -1.0f, 1.0f},
-            .farLR  = vec3{ 1.0f, -1.0f, 1.0f},
-            .farUR  = vec3{ 1.0f,  1.0f, 1.0f},
-            .farUL  = vec3{-1.0f,  1.0f, 1.0f}
+            .farLL = vec3{-1.0f, -1.0f, 1.0f},
+            .farLR = vec3{ 1.0f, -1.0f, 1.0f},
+            .farUR = vec3{ 1.0f,  1.0f, 1.0f},
+            .farUL = vec3{-1.0f,  1.0f, 1.0f}
         };
     }
 
@@ -574,7 +574,7 @@ namespace litl::tests
         REQUIRE(extractedCorners.farUL == unitCubeCorners.farUL);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("frustum planes face inward", "[math::bounds]")
+        LITL_TEST_CASE("frustum planes face inward", "[math::bounds]")
     {
         // Interior point should have positive signed distance to all planes
         auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
@@ -627,7 +627,7 @@ namespace litl::tests
         REQUIRE(isZero(far.signedDistance(unitCubeCorners.farUL)));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("fromViewProjection produces inward-facing planes", "[math::bounds]")
+        LITL_TEST_CASE("fromViewProjection produces inward-facing planes", "[math::bounds]")
     {
         // Standard perspective, reverse-Z, Vulkan-style
         const auto targetPos = vec3{ 0.0f, 0.0f, 0.0f };
@@ -644,7 +644,7 @@ namespace litl::tests
         }
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("frustum rejects points outside each plane", "[math::bounds]")
+        LITL_TEST_CASE("frustum rejects points outside each plane", "[math::bounds]")
     {
         // A point far outside each plane should not be contained.
         auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
@@ -657,7 +657,7 @@ namespace litl::tests
         REQUIRE(!contains(frustum, vec3{ 0, 0, 1.1f }));            // past Far
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("every corner lies on its three planes", "[math::bounds]")
+        LITL_TEST_CASE("every corner lies on its three planes", "[math::bounds]")
     {
         auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
 
@@ -687,7 +687,7 @@ namespace litl::tests
         }
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("infinite far frustum has 5 planes", "[math::bounds]") 
+        LITL_TEST_CASE("infinite far frustum has 5 planes", "[math::bounds]")
     {
         const auto view = mat4::lookAt(vec3{ 0, 0, -5 }, vec3{ 0, 0, 0 }, vec3{ 0, 1, 0 });
         const auto proj = mat4::perspective(degreesToRadians(60.0f), 1.0f, 0.1f, 100.0f);
@@ -704,7 +704,7 @@ namespace litl::tests
         REQUIRE(contains(frustum, veryFar) == true);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("reverseZ flag produces same geometric frustum", "[math::bounds]") 
+        LITL_TEST_CASE("reverseZ flag produces same geometric frustum", "[math::bounds]")
     {
         // Build two matrices that represent the same frustum, one standard-Z one reverse-Z.
         const auto view = mat4::lookAt(vec3{ 0, 0, -5 }, vec3{ 0, 0, 0 }, vec3{ 0, 1, 0 });
@@ -715,7 +715,7 @@ namespace litl::tests
         const auto f2 = bounds::Frustum::fromViewProjection(vp, { .reverseZ = true });
 
         // Side planes should be identical
-        for (auto side : { bounds::Frustum::Left, bounds::Frustum::Right, bounds::Frustum::Top,  bounds::Frustum::Bottom }) 
+        for (auto side : { bounds::Frustum::Left, bounds::Frustum::Right, bounds::Frustum::Top,  bounds::Frustum::Bottom })
         {
             REQUIRE(f1.getSide(side).value == f2.getSide(side).value);
         }
@@ -725,7 +725,7 @@ namespace litl::tests
         REQUIRE(f1.getSide(bounds::Frustum::Far).value == f2.getSide(bounds::Frustum::Near).value);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("normalization doesn't change contains results", "[math::bounds]") 
+        LITL_TEST_CASE("normalization doesn't change contains results", "[math::bounds]")
     {
         auto f_norm = bounds::Frustum::fromCorners(unitCubeCorners, { .normalize = true });
         auto f_unnorm = bounds::Frustum::fromCorners(unitCubeCorners, { .normalize = false });
@@ -737,13 +737,13 @@ namespace litl::tests
             vec3{1.0f, 0, 1.0f}         // on boundary
         };
 
-        for (const auto& p : testPoints) 
+        for (const auto& p : testPoints)
         {
             REQUIRE(contains(f_norm, p) == contains(f_unnorm, p));
         }
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("points exactly on the frustum boundary are contained", "[math::bounds]") 
+        LITL_TEST_CASE("points exactly on the frustum boundary are contained", "[math::bounds]")
     {
         auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
 
@@ -765,7 +765,7 @@ namespace litl::tests
         REQUIRE(contains(frustum, (unitCubeCorners.nearLL + unitCubeCorners.farUR) * 0.5f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("frustum contains sphere", "[math::bounds]")
+        LITL_TEST_CASE("frustum contains sphere", "[math::bounds]")
     {
         auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
         auto sphereInside = bounds::Sphere::fromCenterRadius(vec3{ 0.0f, 0.0f, 0.0f }, 0.5f);
@@ -777,7 +777,7 @@ namespace litl::tests
         REQUIRE(contains(frustum, sphereOutside) == false);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("frustum intersects sphere", "[math::bounds]")
+        LITL_TEST_CASE("frustum intersects sphere", "[math::bounds]")
     {
         auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
         auto sphereInside = bounds::Sphere::fromCenterRadius(vec3{ 0.0f, 0.0f, 0.0f }, 0.5f);
@@ -789,7 +789,7 @@ namespace litl::tests
         REQUIRE(intersects(frustum, sphereOutside) == false);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("frustum classify sphere", "[math::bounds]")
+        LITL_TEST_CASE("frustum classify sphere", "[math::bounds]")
     {
         auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
         auto sphereInside = bounds::Sphere::fromCenterRadius(vec3{ 0.0f, 0.0f, 0.0f }, 0.5f);
@@ -825,7 +825,7 @@ namespace litl::tests
         REQUIRE(sphereCoverClassification.straddleMask == 0b111111);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("frustum classify sphere active mask", "[math::bounds]")
+        LITL_TEST_CASE("frustum classify sphere active mask", "[math::bounds]")
     {
         auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
         auto sphereOutside = bounds::Sphere::fromCenterRadius(vec3{ 0.0f, 2.0f, 0.0f }, 0.5f);      // outside top plane
@@ -843,7 +843,7 @@ namespace litl::tests
         REQUIRE(classification.straddleMask == 0b000000);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("frustum contains aabb", "[math::bounds]")
+        LITL_TEST_CASE("frustum contains aabb", "[math::bounds]")
     {
         auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
         auto aabbInside = bounds::AABB::fromMinMax(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 0.5f, 0.5f, 0.5f });
@@ -855,7 +855,7 @@ namespace litl::tests
         REQUIRE(contains(frustum, aabbOutside) == false);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("frustum classify aabb", "[math::bounds]")
+        LITL_TEST_CASE("frustum classify aabb", "[math::bounds]")
     {
         auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
         auto aabbInside = bounds::AABB::fromMinMax(vec3{ 0.0f, 0.0f, 0.0f }, vec3{ 0.5f, 0.5f, 0.5f });
@@ -891,7 +891,7 @@ namespace litl::tests
         REQUIRE(aabbCoverClassification.straddleMask == 0b111111);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("frustum classify aabb active mask", "[math::bounds]")
+        LITL_TEST_CASE("frustum classify aabb active mask", "[math::bounds]")
     {
         auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
         auto aabbOutside = bounds::AABB::fromMinMax(vec3{ 0.5f, 1.5f, 0.5f }, vec3{ 0.5f, 2.0f, 0.5f });            // outside top plane
@@ -909,7 +909,7 @@ namespace litl::tests
         REQUIRE(classification.straddleMask == 0b000000);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("edgeDirection", "[math::bounds]")
+        LITL_TEST_CASE("edgeDirection", "[math::bounds]")
     {
         auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
 
@@ -919,7 +919,7 @@ namespace litl::tests
         REQUIRE(frustum.edgeDirection(bounds::Frustum::Right, bounds::Frustum::Top) == vec3::forward());
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("extractMinMaxPoints", "[math::bounds]")
+        LITL_TEST_CASE("extractMinMaxPoints", "[math::bounds]")
     {
         auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
         auto minMax = bounds::Frustum::extractMinMaxPoints(frustum);
@@ -928,7 +928,7 @@ namespace litl::tests
         REQUIRE(minMax.second == vec3{ 1.0f, 1.0f, 1.0f });
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("extractMinMaxPoints infinite z", "[math::bounds]")
+        LITL_TEST_CASE("extractMinMaxPoints infinite z", "[math::bounds]")
     {
         const auto view = mat4::lookAt(vec3{ 0, 0, 0 }, vec3{ 0, 0, 5 }, vec3{ 0, 1, 0 });
         const auto proj = mat4::orthographic(-1.0f, 1.0f, -1.0f, 1.0f, 0.01f, 1.0f);
@@ -940,7 +940,7 @@ namespace litl::tests
         REQUIRE(fequals(minMax.second.z(), 1000.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("frustum intersects aabb", "[math::bounds]")
+        LITL_TEST_CASE("frustum intersects aabb", "[math::bounds]")
     {
         const auto frustum = bounds::Frustum::fromCorners(unitCubeCorners, {});
         const auto inside = bounds::AABB::fromMinMax(vec3{ -0.1f, -0.1f, -0.1f }, vec3{ 0.1f, 0.1f, 0.1f });
@@ -951,18 +951,18 @@ namespace litl::tests
         REQUIRE(bounds::intersects(frustum, straddles) == true);
         REQUIRE(bounds::intersects(frustum, outside) == false);
     } LITL_END_TEST_CASE
-        
-    // -------------------------------------------------------------------------------------
-    // Compute
-    // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("compute sphere from aabb", "[math::bounds]")
+        // -------------------------------------------------------------------------------------
+        // Compute
+        // -------------------------------------------------------------------------------------
+
+        LITL_TEST_CASE("compute sphere from aabb", "[math::bounds]")
     {
         const auto aabb = bounds::AABB::fromMinMax(vec3{ -1.0f, 0.0f, -1.0f }, vec3{ 1.0f, 2.0f, 1.0f });
         const auto sphere = bounds::computeSphere(aabb);
 
         REQUIRE(sphere.center == vec3{ 0.0f, 1.0f, 0.0f });
-        REQUIRE(fequals(sphere.radius, Traits<float>::sqrt_three));
+        REQUIRE(fequals(sphere.radius, constants::sqrt_three));
     } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("compute aabb from frustum", "[math::bounds]")

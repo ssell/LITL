@@ -53,12 +53,12 @@ namespace litl
             const vec3 min2max = (maxPoint - minPoint);
             const float diagonal2 = dot(min2max, min2max);
 
-            earEpsilon = Traits<float>::epsilon * diagonal2;
+            earEpsilon = constants::epsilon * diagonal2;
 
             // ratio between (2*area) and the squared aabb diagonal.
             // this makes the test dimensionless as degeneracy is a test of an invalid shape and not just size.
             // an absolute area threshold by itself can not distinguish between a valid 0.1mm quad and a 100m needle as they have the same area.
-            if ((diagonal2 < Traits<float>::epsilon) || (normalLength < earEpsilon))
+            if ((diagonal2 < constants::epsilon) || (normalLength < earEpsilon))
             {
                 return true;
             }
@@ -382,7 +382,7 @@ namespace litl
 
         if (faceMaterialSlots.empty())
         {
-            defaultFaceMaterialSlots.resize(faceIndexCounts.size(), Constants::uint32_null_index);
+            defaultFaceMaterialSlots.resize(faceIndexCounts.size(), constants::uint32_null_index);
             faceMaterialSlots = defaultFaceMaterialSlots;
         }
 

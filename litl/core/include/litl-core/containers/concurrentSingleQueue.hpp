@@ -118,8 +118,8 @@ namespace litl
         }
 
         const uint32_t m_capacity;
-        alignas(Constants::cache_line_size) std::atomic<uint32_t> m_writeAt;        // aka head
-        alignas(Constants::cache_line_size) std::atomic<uint32_t> m_readAt;         // aka tail
+        alignas(constants::cache_line_size) std::atomic<uint32_t> m_writeAt;        // aka head
+        alignas(constants::cache_line_size) std::atomic<uint32_t> m_readAt;         // aka tail
         std::vector<T> m_buffer;
         // ^ both always moving "forward", with the tail chasing the head
     };

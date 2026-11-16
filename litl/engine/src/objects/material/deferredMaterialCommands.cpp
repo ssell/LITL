@@ -6,7 +6,7 @@
 
 namespace litl
 {
-    std::array<std::vector<DeferredMaterialCommands::DeferredMaterialCommand>, Constants::max_thread_count> DeferredMaterialCommands::t_threadCommands{};
+    std::array<std::vector<DeferredMaterialCommands::DeferredMaterialCommand>, constants::max_thread_count> DeferredMaterialCommands::t_threadCommands{};
 
     namespace
     {

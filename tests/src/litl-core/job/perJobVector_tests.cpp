@@ -44,7 +44,7 @@ namespace litl::tests
         REQUIRE(v.size() == 0);
         REQUIRE(v.collect().empty());
         REQUIRE(std::ranges::distance(v.view()) == 0);
-        REQUIRE(std::ranges::size(v.vectors()) == static_cast<size_t>(Constants::max_thread_count) + 1);
+        REQUIRE(std::ranges::size(v.vectors()) == static_cast<size_t>(constants::max_thread_count) + 1);
     } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Slots Are Cache Line Aligned", "[core::job::perJobVector]")
@@ -53,7 +53,7 @@ namespace litl::tests
 
         for (auto const& vec : v.vectors())
         {
-            REQUIRE(reinterpret_cast<std::uintptr_t>(&vec) % Constants::cache_line_size == 0);
+            REQUIRE(reinterpret_cast<std::uintptr_t>(&vec) % constants::cache_line_size == 0);
         }
     } LITL_END_TEST_CASE
 
@@ -254,7 +254,7 @@ namespace litl::tests
         REQUIRE_FALSE(cv.empty());
         REQUIRE(cv.collect() == std::vector<int>{ 4, 5 });
         REQUIRE(std::ranges::distance(cv.view()) == 2);
-        REQUIRE(std::ranges::size(cv.vectors()) == static_cast<size_t>(Constants::max_thread_count) + 1);
+        REQUIRE(std::ranges::size(cv.vectors()) == static_cast<size_t>(constants::max_thread_count) + 1);
 
         // Currently infinitely recursive (see review notes); will not compile under -Werror until fixed.
         REQUIRE(cv.local() == v.local());

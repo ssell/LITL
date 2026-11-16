@@ -43,7 +43,7 @@ namespace litl
 
                 if ((renderView.type == RenderViewType::Camera) || (renderView.type == RenderViewType::DepthOnly))
                 {
-                    pushConstants.zNear = max(renderView.view.near, Traits<float>::epsilon);
+                    pushConstants.zNear = max(renderView.view.near, constants::epsilon);
                     pushConstants.zFar = renderView.view.far;
                 }
 

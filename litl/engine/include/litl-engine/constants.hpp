@@ -1,10 +1,12 @@
-#ifndef LITL_ENGINE_LIGHTS_SHADOW_CONSTANTS_H__
-#define LITL_ENGINE_LIGHTS_SHADOW_CONSTANTS_H__
+#ifndef LITL_ENGINE_CONSTANTS_H__
+#define LITL_ENGINE_CONSTANTS_H__
 
 #include <cstdint>
 
-namespace litl
+namespace litl::constants
 {
+    static constexpr uint32_t MaxSceneCameras = 32u;
+
     /// <summary>
     /// Maximum number of cascades for directional shadow maps.
     /// </summary>

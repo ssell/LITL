@@ -101,7 +101,7 @@ namespace litl::samples
             const auto awayFromNeighbor = selfPos - neighbor.worldPosition;
             const auto distFromNeighborSq = awayFromNeighbor.lengthSquared();
 
-            if (distFromNeighborSq < Traits<float>::epsilon)
+            if (distFromNeighborSq < constants::epsilon)
             {
                 continue;
             }
@@ -124,7 +124,7 @@ namespace litl::samples
         if (flockCount > 0u)
         {
             // Add our separation force acceleration
-            if (accumulatedSeparation.lengthSquared() > Traits<float>::epsilon)
+            if (accumulatedSeparation.lengthSquared() > constants::epsilon)
             {
                 acceleration += steerTowards(accumulatedSeparation, selfVelocity, g_boidSteering) * g_boidFlocking.separationWeight;
             }

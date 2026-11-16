@@ -70,7 +70,7 @@ namespace litl
 
     private:
 
-        alignas(Constants::cache_line_size) std::byte m_buffer[JobPoolBufferSize];
+        alignas(constants::cache_line_size) std::byte m_buffer[JobPoolBufferSize];
         uint32_t m_currOffset = 0;
     };
 
@@ -162,7 +162,7 @@ namespace litl
 
         struct Block
         {
-            alignas(Constants::cache_line_size) std::byte buffer[JobPoolBufferSize];
+            alignas(constants::cache_line_size) std::byte buffer[JobPoolBufferSize];
             std::atomic<uint32_t> currOffset;
         };
 

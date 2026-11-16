@@ -15,7 +15,7 @@ namespace litl
         struct PendingModelNode
         {
             DeferredEntity parent{};
-            uint32_t index{ Constants::uint32_null_index };
+            uint32_t index{ constants::uint32_null_index };
         };
 
         void transitionToFailedModelInstance(EntityCommands& commands, Entity entity, ModelAssetHandle modelHandle) noexcept

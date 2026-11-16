@@ -103,7 +103,7 @@ namespace litl::tests
         uint32_t count = 0u;
         const auto handle = callbacks.registerWindowResizedCallback(countingCallback(count));
 
-        REQUIRE(handle.id != Constants::uint32_null_index);
+        REQUIRE(handle.id != constants::uint32_null_index);
         REQUIRE(handle.type == WindowCallbackType::Resized);
 
         resize();

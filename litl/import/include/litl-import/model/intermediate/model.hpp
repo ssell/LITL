@@ -13,7 +13,7 @@ namespace litl::import
     {
         std::string name;
         std::array<float, 16> localTransform{ mat4::identity().toArray() };     // Use array instead of mat4 directly for (de)serialization
-        uint32_t meshIndex{ Constants::uint32_null_index };
+        uint32_t meshIndex{ constants::uint32_null_index };
         std::vector<uint32_t> materialIndices;
         std::vector<uint32_t> children;
     };

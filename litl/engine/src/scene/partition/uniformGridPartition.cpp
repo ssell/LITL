@@ -669,7 +669,7 @@ namespace litl
 
     void UniformGridPartition::query(bounds::AABB aabb, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept
     {
-        m_impl->query(aabb, nullptr, ecs::Constants::null_component_id, entities, limit);
+        m_impl->query(aabb, nullptr, ecs::constants::null_component_id, entities, limit);
     }
 
     void UniformGridPartition::query(bounds::AABB aabb, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept
@@ -679,7 +679,7 @@ namespace litl
 
     void UniformGridPartition::query(bounds::Sphere sphere, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept
     {
-        m_impl->query(sphere, nullptr, ecs::Constants::null_component_id, entities, limit);
+        m_impl->query(sphere, nullptr, ecs::constants::null_component_id, entities, limit);
     }
 
     void UniformGridPartition::query(bounds::Sphere sphere, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept
@@ -689,7 +689,7 @@ namespace litl
 
     void UniformGridPartition::query(bounds::Frustum const& frustum, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept
     {
-        m_impl->query(frustum, nullptr, ecs::Constants::null_component_id, entities, limit);
+        m_impl->query(frustum, nullptr, ecs::constants::null_component_id, entities, limit);
     }
 
     void UniformGridPartition::query(bounds::Frustum const& frustum, World& world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept

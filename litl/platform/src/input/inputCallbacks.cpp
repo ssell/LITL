@@ -21,7 +21,7 @@ namespace litl
 
         struct OnKeyEvent
         {
-            InputCallbackId id{ Constants::uint32_null_index };
+            InputCallbackId id{ constants::uint32_null_index };
             OnKeyFunc callback;
             Key key{ Key::Unknown };
             InputCallbackPriority priority{ InputCallbackPriority::Gameplay };
@@ -30,7 +30,7 @@ namespace litl
 
         struct OnMouseButtonEvent
         {
-            InputCallbackId id{ Constants::uint32_null_index };
+            InputCallbackId id{ constants::uint32_null_index };
             OnMouseButtonFunc callback;
             MouseButton button{ MouseButton::Unknown };
             InputCallbackPriority priority{ InputCallbackPriority::Gameplay };
@@ -39,7 +39,7 @@ namespace litl
 
         struct OnMouseEnterExitEvent
         {
-            InputCallbackId id{ Constants::uint32_null_index };
+            InputCallbackId id{ constants::uint32_null_index };
             OnMouseEnterExitFunc callback;
             InputCallbackPriority priority{ InputCallbackPriority::Gameplay };
             bool alive{ true };
@@ -47,7 +47,7 @@ namespace litl
 
         struct OnMouseMoveEvent
         {
-            InputCallbackId id{ Constants::uint32_null_index };
+            InputCallbackId id{ constants::uint32_null_index };
             OnMouseMoveFunc callback;
             InputCallbackPriority priority{ InputCallbackPriority::Gameplay };
             bool alive{ true };
@@ -55,7 +55,7 @@ namespace litl
 
         struct OnMouseScrollEvent
         {
-            InputCallbackId id{ Constants::uint32_null_index };
+            InputCallbackId id{ constants::uint32_null_index };
             OnMouseScrollFunc callback;
             InputCallbackPriority priority{ InputCallbackPriority::Gameplay };
             bool alive{ true };
@@ -63,7 +63,7 @@ namespace litl
 
         struct OnActionMapEvent
         {
-            InputCallbackId id{ Constants::uint32_null_index };
+            InputCallbackId id{ constants::uint32_null_index };
             OnActionMapFunc callback;
             InputCallbackPriority priority{ InputCallbackPriority::Gameplay };
             StringId actionMapId{};
@@ -79,10 +79,10 @@ namespace litl
 
         struct CallbackCommand
         {
-            uint32_t id{ Constants::uint32_null_index  };
+            uint32_t id{ constants::uint32_null_index  };
             CallbackCommandType commandType{};
             InputCallbackType eventType{ InputCallbackType::Unknown };
-            uint32_t eventVecIdx{ Constants::uint32_null_index };
+            uint32_t eventVecIdx{ constants::uint32_null_index };
             std::variant<OnKeyEvent, OnMouseButtonEvent, OnMouseEnterExitEvent, OnMouseMoveEvent, OnMouseScrollEvent, OnActionMapEvent> event;
         };
     }
@@ -159,7 +159,7 @@ namespace litl
 
             for (auto& command : copiedDeferredCommands)
             {
-                if (command.id == Constants::uint32_null_index)
+                if (command.id == constants::uint32_null_index)
                 {
                     continue;
                 }
@@ -323,7 +323,7 @@ namespace litl
                 if (isRemove(result))
                 {
                     event.alive = false;
-                    enqueueRemoveCommand(InputCallbackType::MouseEnterExit, event.id, Constants::uint32_null_index);
+                    enqueueRemoveCommand(InputCallbackType::MouseEnterExit, event.id, constants::uint32_null_index);
                 }
 
                 if (isConsume(result))
@@ -352,7 +352,7 @@ namespace litl
                 if (isRemove(result))
                 {
                     event.alive = false;
-                    enqueueRemoveCommand(InputCallbackType::MouseMove, event.id, Constants::uint32_null_index);
+                    enqueueRemoveCommand(InputCallbackType::MouseMove, event.id, constants::uint32_null_index);
                 }
 
                 if (isConsume(result))
@@ -381,7 +381,7 @@ namespace litl
                 if (isRemove(result))
                 {
                     event.alive = false;
-                    enqueueRemoveCommand(InputCallbackType::MouseScroll, event.id, Constants::uint32_null_index);
+                    enqueueRemoveCommand(InputCallbackType::MouseScroll, event.id, constants::uint32_null_index);
                 }
 
                 if (isConsume(result))
@@ -575,7 +575,7 @@ namespace litl
 
     void InputCallbacks::unregisterCallback(InputCallbackHandle handle) noexcept
     {
-        if ((handle.type == InputCallbackType::Unknown) || (handle.id == Constants::uint32_null_index))
+        if ((handle.type == InputCallbackType::Unknown) || (handle.id == constants::uint32_null_index))
         {
             return;
         }

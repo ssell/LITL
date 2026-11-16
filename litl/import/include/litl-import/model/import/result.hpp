@@ -30,13 +30,13 @@ namespace litl::import
         /// <summary>
         /// The index into the parent ImportedData that points to the mesh, material, etc.
         /// </summary>
-        uint32_t importedDataItemIndex{ Constants::uint32_null_index };
+        uint32_t importedDataItemIndex{ constants::uint32_null_index };
 
         /// <summary>
         /// The index of the appropriate container in the ModelIntermediateData that stores the name of the item.
         /// The ImportedDataItem's ImportedDataType is used to resolve which container to reference.
         /// </summary>
-        uint32_t modelNameIndex{ Constants::uint32_null_index };
+        uint32_t modelNameIndex{ constants::uint32_null_index };
     };
 
     /// <summary>
@@ -44,8 +44,8 @@ namespace litl::import
     /// </summary>
     struct MaterialTextureLink
     {
-        uint32_t materialItemIndex{ Constants::uint32_null_index };
-        uint32_t textureItemIndex{ Constants::uint32_null_index };
+        uint32_t materialItemIndex{ constants::uint32_null_index };
+        uint32_t textureItemIndex{ constants::uint32_null_index };
         TextureChannel textureChannel{ TextureChannel::All };
         std::string propertyName;
     };

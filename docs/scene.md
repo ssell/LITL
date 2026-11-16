@@ -273,7 +273,7 @@ struct SceneManager::Impl
     std::shared_ptr<RenderManager>      renderManager;
     std::shared_ptr<World>              world;
     SceneChangeProcessor                sceneChangeProcessor;
-    uint32_t                            activeIndex{ Constants::uint32_null_index };
+    uint32_t                            activeIndex{ constants::uint32_null_index };
 };
 ```
 

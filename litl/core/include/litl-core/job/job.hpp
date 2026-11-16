@@ -46,7 +46,7 @@ namespace litl
     // can reduce to two (or 1 on m-series) by: reducing buffer to 48 (from 64) and max dependent count to 6 (from 12)
     // time will tell if (a) we need as big of a buffer and/or (b) need as many dependents. can in the future add a BigJob or similar.
 
-    struct alignas(Constants::cache_line_size) Job
+    struct alignas(constants::cache_line_size) Job
     {
         using JobFunc = void(*)(Job* job);
         static constexpr uint32_t JobLocalBufferSize = 64;          // As big as we can get while keeping to two-cache lines on most systems.
@@ -103,7 +103,7 @@ namespace litl
         /// Small buffer of user data stored as part of the Job.
         /// This data is valid for the lifetime of the job.
         /// </summary>
-        alignas(Constants::cache_line_size) std::byte localData[JobLocalBufferSize];
+        alignas(constants::cache_line_size) std::byte localData[JobLocalBufferSize];
 
         // --- end cache line 1
         // --- start cache line 2
@@ -111,7 +111,7 @@ namespace litl
         /// <summary>
         /// All jobs that are dependent on this job to finish before they can run.
         /// </summary>
-        alignas(Constants::cache_line_size) std::array<JobHandle, JobMaxDependentsCount> dependents{ };
+        alignas(constants::cache_line_size) std::array<JobHandle, JobMaxDependentsCount> dependents{ };
 
         // --- end cache line 2
 

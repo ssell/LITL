@@ -551,7 +551,7 @@ namespace litl::vulkan
 
     RendererResult cmdPushConstants(litl::RendererContext* context, CommandBufferHandle handle, ShaderStage shaderStage, std::span<std::byte const> data) noexcept
     {
-        if (data.size() > RendererConstants::MaxPushConstantSize)
+        if (data.size() > constants::MaxPushConstantSize)
         {
             return RendererResult::InvalidPushConstantSize;
         }

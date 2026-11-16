@@ -142,7 +142,7 @@ namespace litl
     {
         uint32_t componentIndex = layout.getComponentIndex(componentTypeId);
 
-        if (componentIndex >= ecs::Constants::max_components)
+        if (componentIndex >= ecs::constants::max_components)
         {
             return nullptr;
         }
@@ -153,7 +153,7 @@ namespace litl
     void Chunk::setComponentValue(ChunkLayout const& layout, ComponentDescriptor const* component, uint32_t entityChunkIndex, void* from) noexcept
     {
         uint32_t componentIndex = layout.getComponentIndex(component->id);
-        assert(componentIndex < ecs::Constants::max_components);
+        assert(componentIndex < ecs::constants::max_components);
 
         auto to = data();
         component->move(from, to + layout.componentOffsets[componentIndex] + (component->size * entityChunkIndex));

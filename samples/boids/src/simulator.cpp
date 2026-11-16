@@ -138,7 +138,7 @@ namespace litl::samples
     {
         float nearestSq = std::numeric_limits<float>::max();
         vec3 nearestPos{ static_cast<float>(m_config.worldDimensions / 2u), 0.0f, static_cast<float>(m_config.worldDimensions / 2u) };
-        uint32_t nearestIndex = Constants::uint32_null_index;
+        uint32_t nearestIndex = constants::uint32_null_index;
 
         for (uint32_t i = 0u; i < static_cast<uint32_t>(m_trackedFood.size()); ++i)
         {
@@ -165,7 +165,7 @@ namespace litl::samples
         // There is only ever a handful of predators (unless someone went click happy) and so it is more efficient to just linear scan vs going through the scene spatial partition.
         float nearestSq = std::numeric_limits<float>::max();
         vec3 nearestPos{};
-        uint32_t nearestIndex = Constants::uint32_null_index;
+        uint32_t nearestIndex = constants::uint32_null_index;
 
         for (uint32_t i = 0u; i < static_cast<uint32_t>(m_trackedPredators.size()); ++i)
         {
@@ -209,7 +209,7 @@ namespace litl::samples
     {
         const auto nearest = getNearestPredator(pos);
 
-        if (nearest.index == Constants::uint32_null_index)
+        if (nearest.index == constants::uint32_null_index)
         {
             return;
         }
@@ -270,7 +270,7 @@ namespace litl::samples
 
         while (m_foodCount < m_config.foodCount)
         {
-            uint32_t nextIndex = Constants::uint32_null_index;
+            uint32_t nextIndex = constants::uint32_null_index;
 
             for (uint32_t i = 0u; i < static_cast<uint32_t>(m_trackedFood.size()); ++i)
             {
@@ -281,7 +281,7 @@ namespace litl::samples
                 }
             }
 
-            if (nextIndex != Constants::uint32_null_index)
+            if (nextIndex != constants::uint32_null_index)
             {
                 m_trackedFood[nextIndex].position = spawnFood(commands, material, m_modelAssetHandle, rng, m_config.worldDimensions, nextIndex);
                 m_trackedFood[nextIndex].foodStatus = Food::Status::Alive;

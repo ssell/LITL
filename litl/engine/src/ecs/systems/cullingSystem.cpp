@@ -9,7 +9,7 @@
 
 namespace litl
 {
-    std::array<CullingBucket, Constants::max_thread_count> CullingSystem::s_cullingBuckets{};
+    std::array<CullingBucket, constants::max_thread_count> CullingSystem::s_cullingBuckets{};
     CullingBucket CullingSystem::s_combinedBucket{};
     bool CullingSystem::s_combined{ false };
 
@@ -149,7 +149,7 @@ namespace litl
                             .position = entityPartition.worldPosition,
                             .distanceSquared = entityPartition.distanceSquared,
                             .firstIndex = 0u,
-                            .indexCount = Constants::uint32_null_index
+                            .indexCount = constants::uint32_null_index
                         };
 
                         if (renderableEntity.materialBlendMode == MaterialBlendMode::Transparent)

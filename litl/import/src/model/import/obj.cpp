@@ -86,7 +86,7 @@ namespace litl::import
             // This needs remapping to the mesh local slots such that a mesh assigned to material 3 and 7 globally, refer to them locally as 0 and 1.
 
             FlatHashSet<int32_t> localUsedMaterialSlots{};
-            globalToLocalMaterialSlot.insert(-1, Constants::uint32_null_index);
+            globalToLocalMaterialSlot.insert(-1, constants::uint32_null_index);
 
             for (auto& materialIndex : objMesh.material_ids)
             {
@@ -110,7 +110,7 @@ namespace litl::import
 
         /// <summary>
         /// Returns the lowest global (objResult.materials) material index referenced by the shape,
-        /// or Constants::uint32_null_index if the shape references no material at all.
+        /// or constants::uint32_null_index if the shape references no material at all.
         /// </summary>
         uint32_t findFirstGlobalMaterialIndex(rapidobj::Mesh const& objMesh) noexcept
         {
@@ -124,7 +124,7 @@ namespace litl::import
                 }
             }
 
-            return ((first < 0) ? Constants::uint32_null_index : static_cast<uint32_t>(first));
+            return ((first < 0) ? constants::uint32_null_index : static_cast<uint32_t>(first));
         }
 
         /// <summary>
@@ -187,11 +187,11 @@ namespace litl::import
 
                 if (!objMesh.material_ids.empty())
                 {
-                    faceMaterialSlots.push_back(globalToLocalMaterialSlot.findOr(objMesh.material_ids[face], Constants::uint32_null_index));
+                    faceMaterialSlots.push_back(globalToLocalMaterialSlot.findOr(objMesh.material_ids[face], constants::uint32_null_index));
                 }
                 else
                 {
-                    faceMaterialSlots.push_back(Constants::uint32_null_index);
+                    faceMaterialSlots.push_back(constants::uint32_null_index);
                 }
 
                 for (uint32_t faceIndex = 0u; faceIndex < faceIndexCount; ++faceIndex)
@@ -304,8 +304,8 @@ namespace litl::import
         // ---------------------------------------------------------------------------------
 
         // Maps a global (objResult.materials) index onto the material index within the Model. These hold the
-        // same value unless a material failed to be created, in which case it is Constants::uint32_null_index.
-        std::vector<uint32_t> globalToModelMaterialIndex(objResult.materials.size(), Constants::uint32_null_index);
+        // same value unless a material failed to be created, in which case it is constants::uint32_null_index.
+        std::vector<uint32_t> globalToModelMaterialIndex(objResult.materials.size(), constants::uint32_null_index);
 
         for (uint32_t m = 0u; m < static_cast<uint32_t>(objResult.materials.size()); ++m)
         {
@@ -401,7 +401,7 @@ namespace litl::import
 
             // A shape may reference several materials across its faces. Until submesh-level material bindings are in place, the node takes the first material the shape uses.
             const auto globalMaterialIndex = findFirstGlobalMaterialIndex(shape.mesh);
-            const auto nodeMaterialIndex = ((globalMaterialIndex < static_cast<uint32_t>(globalToModelMaterialIndex.size())) ? globalToModelMaterialIndex[globalMaterialIndex] : Constants::uint32_null_index);
+            const auto nodeMaterialIndex = ((globalMaterialIndex < static_cast<uint32_t>(globalToModelMaterialIndex.size())) ? globalToModelMaterialIndex[globalMaterialIndex] : constants::uint32_null_index);
 
             {
                 Node node{ .name = shape.name, .meshIndex = meshIndex };

@@ -105,7 +105,7 @@ namespace litl
     {
         uint32_t gpuBufferIndexForEntity = m_graph.getGpuBufferIndex(entity);
 
-        if (gpuBufferIndexForEntity == Constants::uint32_null_index)
+        if (gpuBufferIndexForEntity == constants::uint32_null_index)
         {
             return {};
         }
@@ -139,12 +139,12 @@ namespace litl
                 mat4 worldMatrix = localTransform->getWorldMatrix();
                 uint32_t parentIndex = m_graph.m_nodeParent[sortedIndex];
 
-                if (parentIndex != Constants::uint32_null_index)
+                if (parentIndex != constants::uint32_null_index)
                 {
                     // This node has a parent. Use it to calculate the world transform.
                     uint32_t parentGpuIndex = m_graph.m_nodeGpuIndex[parentIndex];
 
-                    if (parentGpuIndex != Constants::uint32_null_index)
+                    if (parentGpuIndex != constants::uint32_null_index)
                     {
                         worldMatrix = m_transforms.getWorldMatrix(parentGpuIndex) * worldMatrix;
                     }
@@ -153,7 +153,7 @@ namespace litl
                 // Set the world matrix in the scene transforms buffer
                 uint32_t gpuIndex = m_graph.m_nodeGpuIndex[sortedIndex];
 
-                if (gpuIndex != Constants::uint32_null_index)
+                if (gpuIndex != constants::uint32_null_index)
                 {
                     m_transforms.setWorldMatrix(gpuIndex, worldMatrix);
                 }
@@ -189,7 +189,7 @@ namespace litl
             auto entity = camera->getEntity();
             auto gpuIndex = m_graph.getGpuBufferIndex(entity);
 
-            if (gpuIndex != Constants::uint32_null_index)
+            if (gpuIndex != constants::uint32_null_index)
             {
                 if (camera->isMainCamera())
                 {

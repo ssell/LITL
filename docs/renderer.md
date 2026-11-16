@@ -110,7 +110,7 @@ ResourceManager::buildLate    → PipelineLayoutCache (needs the TextureTable's 
 
 ### Frames in flight
 
-The renderer keeps `framesInFlight` slots (`RendererConfiguration` suggests 1–2; `RendererConstants::MaxFramesInFlight` is 4). Each slot has its own:
+The renderer keeps `framesInFlight` slots (`RendererConfiguration` suggests 1–2; `constants::MaxFramesInFlight` is 4). Each slot has its own:
 
 - **Command buffer** — recorded into during the frame, submitted at frame end.
 - **Render fence** — signals when the GPU is done with this slot's work.

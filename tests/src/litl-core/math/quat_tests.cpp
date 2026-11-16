@@ -1,6 +1,6 @@
 #include "tests.hpp"
 #include "litl-core/math/types.hpp"
-#include "litl-core/math/traits.hpp"
+#include "litl-core/constants.hpp"
 
 namespace litl::tests
 {
@@ -55,16 +55,16 @@ namespace litl::tests
     LITL_TEST_CASE("quat::fromAxisAngle", "[math::quat]")
     {
         // 90° around Y axis
-        auto q = quat::fromAxisAngle(vec3{ 0.0f, 1.0f, 0.0f }, Traits<float>::pi_over_two);
+        auto q = quat::fromAxisAngle(vec3{ 0.0f, 1.0f, 0.0f }, constants::pi_over_two);
         REQUIRE(fequals(q.length(), 1.0f));
-        REQUIRE(fequals(q.angle(), Traits<float>::pi_over_two));
+        REQUIRE(fequals(q.angle(), constants::pi_over_two));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat::fromAngleX/Y/Z produce axis-aligned rotations", "[math::quat]")
+        LITL_TEST_CASE("quat::fromAngleX/Y/Z produce axis-aligned rotations", "[math::quat]")
     {
         SECTION("fromAngleX rotates around X")
         {
-            auto q = quat::fromAngleX(Traits<float>::pi_over_two);
+            auto q = quat::fromAngleX(constants::pi_over_two);
             // Rotating (0,1,0) by 90° around X should give (0,0,1)
             vec3 result = q.rotate(vec3{ 0.0f, 1.0f, 0.0f });
             REQUIRE(result == vec3{ 0.0f, 0.0f, 1.0f });
@@ -72,7 +72,7 @@ namespace litl::tests
 
         SECTION("fromAngleY rotates around Y")
         {
-            auto q = quat::fromAngleY(Traits<float>::pi_over_two);
+            auto q = quat::fromAngleY(constants::pi_over_two);
             // Rotating (0,0,-1) by 90° around Y should give (-1,0,0)
             vec3 result = q.rotate(vec3{ 0.0f, 0.0f, -1.0f });
             REQUIRE(result == vec3{ -1.0f, 0.0f, 0.0f });
@@ -80,14 +80,14 @@ namespace litl::tests
 
         SECTION("fromAngleZ rotates around Z")
         {
-            auto q = quat::fromAngleZ(Traits<float>::pi_over_two);
+            auto q = quat::fromAngleZ(constants::pi_over_two);
             // Rotating (1,0,0) by 90° around Z should give (0,1,0)
             vec3 result = q.rotate(vec3{ 1.0f, 0.0f, 0.0f });
             REQUIRE(result == vec3{ 0.0f, 1.0f, 0.0f });
         }
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat::fromEuler round-trips through toEuler", "[math::quat]")
+        LITL_TEST_CASE("quat::fromEuler round-trips through toEuler", "[math::quat]")
     {
         float yaw = 30.0f, pitch = 45.0f, roll = 10.0f;
         auto q = quat::fromEuler(pitch, yaw, roll);
@@ -98,7 +98,7 @@ namespace litl::tests
         REQUIRE(fequals(euler.z(), roll));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat::fromVector rotates one direction to another", "[math::quat]")
+        LITL_TEST_CASE("quat::fromVector rotates one direction to another", "[math::quat]")
     {
         vec3 from{ 1.0f, 0.0f, 0.0f };
         vec3 to{ 0.0f, 1.0f, 0.0f };
@@ -107,7 +107,7 @@ namespace litl::tests
         REQUIRE(result == to);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat::lookRotation", "[math::quat]")
+        LITL_TEST_CASE("quat::lookRotation", "[math::quat]")
     {
         vec3 fwd{ 0.0f, 0.0f, -1.0f };
         vec3 upDir{ 0.0f, 1.0f, 0.0f };
@@ -115,11 +115,11 @@ namespace litl::tests
         REQUIRE(fequals(q.length(), 1.0f));
     } LITL_END_TEST_CASE
 
-    // -------------------------------------------------------------------------------------
-    // Equality
-    // -------------------------------------------------------------------------------------
+        // -------------------------------------------------------------------------------------
+        // Equality
+        // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("quat: equality operators", "[math::quat]")
+        LITL_TEST_CASE("quat: equality operators", "[math::quat]")
     {
         quat a(1.0f, 0.0f, 0.0f, 0.0f);
         quat b(1.0f, 0.0f, 0.0f, 0.0f);
@@ -129,18 +129,18 @@ namespace litl::tests
         REQUIRE_FALSE(a == c);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat: equality with glm::quat", "[math::quat]")
+        LITL_TEST_CASE("quat: equality with glm::quat", "[math::quat]")
     {
         quat q(1.0f, 0.0f, 0.0f, 0.0f);
         glm::quat g(1.0f, 0.0f, 0.0f, 0.0f);
         REQUIRE(q == g);
     } LITL_END_TEST_CASE
 
-    // -------------------------------------------------------------------------------------
-    // Negation
-    // -------------------------------------------------------------------------------------
+        // -------------------------------------------------------------------------------------
+        // Negation
+        // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("quat: unary negation", "[math::quat]")
+        LITL_TEST_CASE("quat: unary negation", "[math::quat]")
     {
         quat q(0.5f, 0.1f, 0.2f, 0.3f);
         quat neg = -q;
@@ -150,20 +150,20 @@ namespace litl::tests
         REQUIRE(fequals(neg.z(), -0.3f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat: negated quat represents the same rotation", "[math::quat]")
+        LITL_TEST_CASE("quat: negated quat represents the same rotation", "[math::quat]")
     {
-        auto q = quat::fromAngleY(Traits<float>::pi / 3.0f);
+        auto q = quat::fromAngleY(constants::pi / 3.0f);
         auto neg = -q;
         vec3 v{ 1.0f, 2.0f, 3.0f };
         // q and -q encode the same rotation
         REQUIRE(q.rotate(v) == neg.rotate(v));
     } LITL_END_TEST_CASE
 
-    // -------------------------------------------------------------------------------------
-    // Multiplication
-    // -------------------------------------------------------------------------------------
+        // -------------------------------------------------------------------------------------
+        // Multiplication
+        // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("quat: identity multiplication", "[math::quat]")
+        LITL_TEST_CASE("quat: identity multiplication", "[math::quat]")
     {
         auto id = quat::identity();
         auto q = quat::fromAngleX(0.5f);
@@ -171,7 +171,7 @@ namespace litl::tests
         REQUIRE((id * q) == q);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat: q * inverse == identity", "[math::quat]")
+        LITL_TEST_CASE("quat: q * inverse == identity", "[math::quat]")
     {
         auto q = quat::fromAxisAngle(vec3{ 0.0f, 1.0f, 0.0f }, 1.2f);
         auto inv = q.getInverse();
@@ -179,16 +179,16 @@ namespace litl::tests
         REQUIRE(result.isIdentity());
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat: compound rotation via operator*", "[math::quat]")
+        LITL_TEST_CASE("quat: compound rotation via operator*", "[math::quat]")
     {
         // Two 90° rotations around Y should equal one 180° rotation
-        auto q90 = quat::fromAngleY(Traits<float>::pi_over_two);
+        auto q90 = quat::fromAngleY(constants::pi_over_two);
         auto q180 = q90 * q90;
-        auto expected = quat::fromAngleY(Traits<float>::pi);
+        auto expected = quat::fromAngleY(constants::pi);
         REQUIRE(fequals(q180.angle(), expected.angle()));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat: operator*= quat", "[math::quat]")
+        LITL_TEST_CASE("quat: operator*= quat", "[math::quat]")
     {
         auto a = quat::fromAngleX(0.3f);
         auto b = quat::fromAngleY(0.5f);
@@ -197,44 +197,44 @@ namespace litl::tests
         REQUIRE(a == expected);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat: scalar multiplication", "[math::quat]")
+        LITL_TEST_CASE("quat: scalar multiplication", "[math::quat]")
     {
         quat q(1.0f, 0.0f, 0.0f, 0.0f);
         auto scaled = q * 2.0f;
         REQUIRE(fequals(scaled.w(), 2.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat: operator*= scalar", "[math::quat]")
+        LITL_TEST_CASE("quat: operator*= scalar", "[math::quat]")
     {
         quat q(1.0f, 0.0f, 0.0f, 0.0f);
         q *= 3.0f;
         REQUIRE(fequals(q.w(), 3.0f));
     } LITL_END_TEST_CASE
 
-    // -------------------------------------------------------------------------------------
-    // Rotation
-    // -------------------------------------------------------------------------------------
+        // -------------------------------------------------------------------------------------
+        // Rotation
+        // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("quat: rotate vec3 (value)", "[math::quat]")
+        LITL_TEST_CASE("quat: rotate vec3 (value)", "[math::quat]")
     {
-        auto q = quat::fromAngleZ(Traits<float>::pi_over_two);
+        auto q = quat::fromAngleZ(constants::pi_over_two);
         vec3 v{ 1.0f, 0.0f, 0.0f };
         vec3 result = q.rotate(v);
         REQUIRE(result == vec3{ 0.0f, 1.0f, 0.0f });
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat: operator* vec3 matches rotate", "[math::quat]")
+        LITL_TEST_CASE("quat: operator* vec3 matches rotate", "[math::quat]")
     {
         auto q = quat::fromAngleX(1.0f);
         vec3 v{ 0.0f, 1.0f, 0.0f };
         REQUIRE((q * v) == q.rotate(v));
     } LITL_END_TEST_CASE
 
-    // -------------------------------------------------------------------------------------
-    // Accessors
-    // -------------------------------------------------------------------------------------
+        // -------------------------------------------------------------------------------------
+        // Accessors
+        // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("quat: mutable accessors", "[math::quat]")
+        LITL_TEST_CASE("quat: mutable accessors", "[math::quat]")
     {
         quat q;
         q.x() = 0.5f;
@@ -247,33 +247,33 @@ namespace litl::tests
         REQUIRE(fequals(q.w(), 0.8f));
     } LITL_END_TEST_CASE
 
-    // -------------------------------------------------------------------------------------
-    // Utility
-    // -------------------------------------------------------------------------------------
+        // -------------------------------------------------------------------------------------
+        // Utility
+        // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("quat: length of unit quaternion is 1", "[math::quat]")
+        LITL_TEST_CASE("quat: length of unit quaternion is 1", "[math::quat]")
     {
         auto q = quat::fromAngleY(1.0f);
         REQUIRE(fequals(q.length(), 1.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat: lengthSquared", "[math::quat]")
+        LITL_TEST_CASE("quat: lengthSquared", "[math::quat]")
     {
         quat q(2.0f, 0.0f, 0.0f, 0.0f);
         REQUIRE(fequals(q.lengthSquared(), 4.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat: dot product", "[math::quat]")
+        LITL_TEST_CASE("quat: dot product", "[math::quat]")
     {
         auto id = quat::identity();
         REQUIRE(fequals(id.dot(id), 1.0f));
 
-        auto q = quat::fromAngleY(Traits<float>::pi);
+        auto q = quat::fromAngleY(constants::pi);
         // dot with self should be 1 for unit quaternion
         REQUIRE(fequals(q.dot(q), 1.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat: getNormalized", "[math::quat]")
+        LITL_TEST_CASE("quat: getNormalized", "[math::quat]")
     {
         quat q(2.0f, 0.0f, 0.0f, 0.0f);
         auto n = q.getNormalized();
@@ -281,7 +281,7 @@ namespace litl::tests
         REQUIRE(fequals(n.w(), 1.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat: normalize resets to identity", "[math::quat]")
+        LITL_TEST_CASE("quat: normalize resets to identity", "[math::quat]")
     {
         // NOTE: The current implementation of normalize() resets to identity.
         // This test documents that behavior — it may be a bug (should probably
@@ -291,7 +291,7 @@ namespace litl::tests
         REQUIRE(q.isIdentity());
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat: getInverse", "[math::quat]")
+        LITL_TEST_CASE("quat: getInverse", "[math::quat]")
     {
         auto q = quat::fromAxisAngle(vec3{ 1.0f, 0.0f, 0.0f }, 1.0f);
         auto inv = q.getInverse();
@@ -299,7 +299,7 @@ namespace litl::tests
         REQUIRE(product.isIdentity());
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat: inverse() in-place", "[math::quat]")
+        LITL_TEST_CASE("quat: inverse() in-place", "[math::quat]")
     {
         auto q = quat::fromAngleZ(0.7f);
         auto original = q;
@@ -308,7 +308,7 @@ namespace litl::tests
         REQUIRE(product.isIdentity());
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat: getConjugate", "[math::quat]")
+        LITL_TEST_CASE("quat: getConjugate", "[math::quat]")
     {
         quat q(0.5f, 0.1f, 0.2f, 0.3f);
         auto conj = q.getConjugate();
@@ -318,7 +318,7 @@ namespace litl::tests
         REQUIRE(fequals(conj.z(), -q.z()));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat: conjugate() in-place", "[math::quat]")
+        LITL_TEST_CASE("quat: conjugate() in-place", "[math::quat]")
     {
         quat q(0.5f, 0.1f, 0.2f, 0.3f);
         auto expected = q.getConjugate();
@@ -326,17 +326,17 @@ namespace litl::tests
         REQUIRE(q == expected);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat: conjugate equals inverse for unit quaternions", "[math::quat]")
+        LITL_TEST_CASE("quat: conjugate equals inverse for unit quaternions", "[math::quat]")
     {
         auto q = quat::fromAngleX(1.5f);
         REQUIRE(q.getConjugate() == q.getInverse());
     } LITL_END_TEST_CASE
 
-    // -------------------------------------------------------------------------------------
-    // Interpolation
-    // -------------------------------------------------------------------------------------
+        // -------------------------------------------------------------------------------------
+        // Interpolation
+        // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("quat: lerp at boundaries", "[math::quat]")
+        LITL_TEST_CASE("quat: lerp at boundaries", "[math::quat]")
     {
         auto a = quat::fromAngleX(0.0f);
         auto b = quat::fromAngleX(1.0f);
@@ -345,31 +345,31 @@ namespace litl::tests
         REQUIRE(a.lerp(b, 1.0f) == b);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat: slerp at boundaries", "[math::quat]")
+        LITL_TEST_CASE("quat: slerp at boundaries", "[math::quat]")
     {
         auto a = quat::fromAngleY(0.0f);
-        auto b = quat::fromAngleY(Traits<float>::pi / 2.0f);
+        auto b = quat::fromAngleY(constants::pi / 2.0f);
 
         REQUIRE(a.slerp(b, 0.0f) == a);
         REQUIRE(a.slerp(b, 1.0f) == b);
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat: slerp midpoint", "[math::quat]")
+        LITL_TEST_CASE("quat: slerp midpoint", "[math::quat]")
     {
         auto a = quat::identity();
-        auto b = quat::fromAngleY(Traits<float>::pi / 2.0f);
+        auto b = quat::fromAngleY(constants::pi / 2.0f);
         auto mid = a.slerp(b, 0.5f);
 
         // Midpoint should be 45° around Y
-        auto expected = quat::fromAngleY(Traits<float>::pi / 4.0f);
+        auto expected = quat::fromAngleY(constants::pi / 4.0f);
         REQUIRE(mid == expected);
     } LITL_END_TEST_CASE
 
-    // -------------------------------------------------------------------------------------
-    // Axis / Angle extraction
-    // -------------------------------------------------------------------------------------
+        // -------------------------------------------------------------------------------------
+        // Axis / Angle extraction
+        // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("quat: angle() and axis() round-trip", "[math::quat]")
+        LITL_TEST_CASE("quat: angle() and axis() round-trip", "[math::quat]")
     {
         vec3 ax{ 0.0f, 0.0f, 1.0f };
         float ang = 1.2f;
@@ -379,11 +379,11 @@ namespace litl::tests
         REQUIRE(q.axis() == ax);
     } LITL_END_TEST_CASE
 
-    // -------------------------------------------------------------------------------------
-    // Direction vectors
-    // -------------------------------------------------------------------------------------
+        // -------------------------------------------------------------------------------------
+        // Direction vectors
+        // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("quat: identity forward/right/up", "[math::quat]")
+        LITL_TEST_CASE("quat: identity forward/right/up", "[math::quat]")
     {
         auto q = quat::identity();
         REQUIRE(q.forward() == vec3{ 0.0f, 0.0f, 1.0f });
@@ -391,9 +391,9 @@ namespace litl::tests
         REQUIRE(q.up() == vec3{ 0.0f, 1.0f,  0.0f });
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat: 90° Y rotation swaps forward and right", "[math::quat]")
+        LITL_TEST_CASE("quat: 90° Y rotation swaps forward and right", "[math::quat]")
     {
-        auto q = quat::fromAngleY(Traits<float>::pi_over_two);
+        auto q = quat::fromAngleY(constants::pi_over_two);
 
         // Forward (0,0,1) rotated 90° around Y → (1,0,0)
         REQUIRE(q.forward() == vec3{ 1.0f, 0.0f, 0.0f });
@@ -401,21 +401,21 @@ namespace litl::tests
         REQUIRE(q.right() == vec3{ 0.0f, 0.0f, -1.0f });
     } LITL_END_TEST_CASE
 
-    // -------------------------------------------------------------------------------------
-    // angleBetween
-    // -------------------------------------------------------------------------------------
+        // -------------------------------------------------------------------------------------
+        // angleBetween
+        // -------------------------------------------------------------------------------------
 
-    LITL_TEST_CASE("quat: angleBetween identical quats is zero", "[math::quat]")
+        LITL_TEST_CASE("quat: angleBetween identical quats is zero", "[math::quat]")
     {
         auto q = quat::fromAngleX(0.5f);
         REQUIRE(fequals(q.angleBetween(q), 0.0f));
     } LITL_END_TEST_CASE
 
-    LITL_TEST_CASE("quat: angleBetween measures angular difference", "[math::quat]")
+        LITL_TEST_CASE("quat: angleBetween measures angular difference", "[math::quat]")
     {
         auto a = quat::identity();
-        auto b = quat::fromAngleY(Traits<float>::pi_over_two);
-        REQUIRE(fequals(a.angleBetween(b), Traits<float>::pi_over_two));
+        auto b = quat::fromAngleY(constants::pi_over_two);
+        REQUIRE(fequals(a.angleBetween(b), constants::pi_over_two));
     } LITL_END_TEST_CASE
 
     // -------------------------------------------------------------------------------------

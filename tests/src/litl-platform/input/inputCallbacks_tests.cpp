@@ -84,7 +84,7 @@ namespace litl::tests
         uint32_t count = 0u;
         const auto handle = callbacks.registerKeyCallback(Key::A, countingKeyCallback(count, InputCallbackResult::Continue));
 
-        REQUIRE(handle.id != Constants::uint32_null_index);
+        REQUIRE(handle.id != constants::uint32_null_index);
         REQUIRE(handle.type == InputCallbackType::Key);
         REQUIRE(handle.slot == static_cast<uint32_t>(Key::A));
 
@@ -103,7 +103,7 @@ namespace litl::tests
         const auto handle = callbacks.registerKeyCallback(Key::Unknown, countingKeyCallback(count, InputCallbackResult::Continue));
 
         REQUIRE(handle.type == InputCallbackType::Unknown);
-        REQUIRE(handle.id == Constants::uint32_null_index);
+        REQUIRE(handle.id == constants::uint32_null_index);
     }
     LITL_END_TEST_CASE
 

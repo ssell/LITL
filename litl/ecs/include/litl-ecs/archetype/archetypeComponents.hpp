@@ -28,7 +28,7 @@ namespace litl
         bool remove(ComponentTypeId component) noexcept;
         bool remove(std::span<ComponentTypeId> components) noexcept;
         bool has(ComponentTypeId component) const noexcept;
-        std::array<ComponentTypeId, ecs::Constants::max_components> const& data() const noexcept;
+        std::array<ComponentTypeId, ecs::constants::max_components> const& data() const noexcept;
 
         size_t size() const noexcept;
         size_t capacity() const noexcept;
@@ -39,7 +39,7 @@ namespace litl
 
     private:
 
-        std::array<ComponentTypeId, ecs::Constants::max_components> m_components{};
+        std::array<ComponentTypeId, ecs::constants::max_components> m_components{};
         size_t m_size{ 0 };
         uint64_t m_hash{ 0 };
         bool m_hashDirty{ false };

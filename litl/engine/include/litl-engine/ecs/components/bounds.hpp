@@ -25,7 +25,7 @@ namespace litl
         /// The current version of the WorldBounds.
         /// Used to keep the bounds in sync with the Transform component.
         /// </summary>
-        uint32_t version{ Constants::uint32_null_index };
+        uint32_t version{ constants::uint32_null_index };
     };
 }
 

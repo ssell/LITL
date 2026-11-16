@@ -705,7 +705,7 @@ namespace litl
             {
                 const uint32_t materialIndex = material->getSlotIndex(renderableEntity.materialRef.slot);
 
-                if (materialIndex != Constants::uint32_null_index)
+                if (materialIndex != constants::uint32_null_index)
                 {
                     return materialIndex;
                 }

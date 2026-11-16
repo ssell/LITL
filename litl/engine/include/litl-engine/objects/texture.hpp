@@ -80,7 +80,7 @@ namespace litl
 
         /// <summary>
         /// Returns the slot index this texture occupies in the global texture table if it was created with  TextureResourceDescriptor::residesInTextureTable true.
-        /// Otherwise returns Constants::uint32_null_index if it does not reside in the table.
+        /// Otherwise returns constants::uint32_null_index if it does not reside in the table.
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] uint32_t getTextureTableIndex() const noexcept;
@@ -134,7 +134,7 @@ namespace litl
         TextureDescriptor m_descriptor{};
         TextureHandle m_selfHandle{};
         TextureResourceHandle m_resourceHandle{};
-        uint32_t m_textureTableIndex{ Constants::uint32_null_index };
+        uint32_t m_textureTableIndex{ constants::uint32_null_index };
         std::vector<std::byte> m_pixelBytes;
         uint32_t m_generation{ 0u };
         bool m_isDirty{ true };                 // Every texture starts as dirty

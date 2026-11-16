@@ -33,7 +33,7 @@ namespace litl
     struct InputCallbackHandle
     {
         InputCallbackType type{ InputCallbackType::Unknown };
-        InputCallbackId id{ Constants::uint32_null_index };
+        InputCallbackId id{ constants::uint32_null_index };
         uint32_t slot{ 0u };
         StringId actionMapId{};
         StringId bindingId{};

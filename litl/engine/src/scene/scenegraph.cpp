@@ -34,7 +34,7 @@ namespace litl
             m_childNodes[parent.index].push_back(entity.index);
         }
 
-        updateEntity(entity.index, entity, parent, 0, Constants::uint32_null_index);
+        updateEntity(entity.index, entity, parent, 0, constants::uint32_null_index);
         m_activeCount++;
         m_isDirty = true;
     }
@@ -47,7 +47,7 @@ namespace litl
         // Remove from parent
         uint32_t parentIndex = m_nodeParent[entity.index];
 
-        if (parentIndex != Constants::uint32_null_index)
+        if (parentIndex != constants::uint32_null_index)
         {
             auto& siblings = m_childNodes[parentIndex];
             std::erase(siblings, entity.index);
@@ -58,12 +58,12 @@ namespace litl
 
         for (auto childNode : childNodes)
         {
-            m_nodeParent[childNode] = Constants::uint32_null_index;
+            m_nodeParent[childNode] = constants::uint32_null_index;
         }
 
         m_childNodes.erase(entity.index);
 
-        updateEntity(entity.index, Entity::null(), Entity::null(), 0, Constants::uint32_null_index);
+        updateEntity(entity.index, Entity::null(), Entity::null(), 0, constants::uint32_null_index);
         m_activeCount--;
         m_isDirty = true;
     }
@@ -80,7 +80,7 @@ namespace litl
         // remove from parents children
         uint32_t prevParent = m_nodeParent[child.index];
 
-        if (prevParent != Constants::uint32_null_index)
+        if (prevParent != constants::uint32_null_index)
         {
             auto& siblings = m_childNodes[prevParent];
             std::erase(siblings, child.index);
@@ -111,7 +111,7 @@ namespace litl
 
         for (uint32_t i = 0; i < storageSize(); ++i)
         {
-            if ((m_nodeOccupied[i] == NodeState::Present) && (m_nodeParent[i] == Constants::uint32_null_index))
+            if ((m_nodeOccupied[i] == NodeState::Present) && (m_nodeParent[i] == constants::uint32_null_index))
             {
                 m_nodeDepth[i] = 0;
                 frontier.push(i);
@@ -146,7 +146,7 @@ namespace litl
 
         uint32_t parentNodeIndex = m_nodeParent[entity.index];
 
-        if (parentNodeIndex != Constants::uint32_null_index)
+        if (parentNodeIndex != constants::uint32_null_index)
         {
             return m_nodeToEntity[parentNodeIndex];
         }
@@ -224,7 +224,7 @@ namespace litl
             return m_nodeGpuIndex[entity.index];
         }
 
-        return Constants::uint32_null_index;
+        return constants::uint32_null_index;
     }
 
     uint32_t SceneGraph::count() const noexcept
@@ -249,7 +249,7 @@ namespace litl
     void SceneGraph::ensureFit(uint32_t index)
     {
         // These two should be the same value, but just incase ...
-        if (index == Constants::uint32_null_index)
+        if (index == constants::uint32_null_index)
         {
             return;
         }
@@ -263,9 +263,9 @@ namespace litl
         }
 
         grow(count, m_nodeToEntity, Entity::null());
-        grow(count, m_nodeParent, Constants::uint32_null_index);
+        grow(count, m_nodeParent, constants::uint32_null_index);
         grow(count, m_nodeDepth, 0u);
-        grow(count, m_nodeGpuIndex, Constants::uint32_null_index);
+        grow(count, m_nodeGpuIndex, constants::uint32_null_index);
         grow(count, m_nodeOccupied, NodeState::Vacant);
     }
 

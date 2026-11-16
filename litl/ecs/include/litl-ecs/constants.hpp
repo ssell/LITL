@@ -33,77 +33,74 @@ namespace litl
     /// </summary>
     using ArchetypeId = uint32_t;
 
-    namespace ecs
+    namespace ecs::constants
     {
-        struct Constants
-        {
-            /// <summary>
-            /// Represents an uninitialized Entity.
-            /// This does not signify that an Entity is destroyed. Only the World can determine that.
-            /// </summary>
-            static constexpr uint32_t null_entity_id = litl::Constants::uint32_null_index;
+        /// <summary>
+        /// Represents an uninitialized Entity.
+        /// This does not signify that an Entity is destroyed. Only the World can determine that.
+        /// </summary>
+        static constexpr uint32_t null_entity_id = litl::constants::uint32_null_index;
 
-            static_assert((null_entity_id == litl::Constants::uint32_null_index), "What are you doing touching this? Please don't.");
+        static_assert((null_entity_id == litl::constants::uint32_null_index), "What are you doing touching this? Please don't.");
 
-            /// <summary>
-            /// Represents an unset component unstable id.
-            /// </summary>
-            static constexpr ComponentTypeId null_component_id = 0;
+        /// <summary>
+        /// Represents an unset component unstable id.
+        /// </summary>
+        static constexpr ComponentTypeId null_component_id = 0;
 
-            /// <summary>
-            /// Represents an unset archetype id.
-            /// </summary>
-            static constexpr ArchetypeId null_archetype_id = litl::Constants::uint32_null_index;
+        /// <summary>
+        /// Represents an unset archetype id.
+        /// </summary>
+        static constexpr ArchetypeId null_archetype_id = litl::constants::uint32_null_index;
 
-            /// <summary>
-            /// The id of the archetype that has no components.
-            /// </summary>
-            static constexpr ArchetypeId empty_archetype_id = 0;
+        /// <summary>
+        /// The id of the archetype that has no components.
+        /// </summary>
+        static constexpr ArchetypeId empty_archetype_id = 0;
 
-            /// <summary>
-            /// Maximum size, in bytes, of a single component.
-            /// This is an upper extreme, and components generally should be as small as possible
-            /// to allow for more efficient entity packing within archetype chunks.
-            /// </summary>
-            static constexpr uint32_t max_component_size = 1024;
+        /// <summary>
+        /// Maximum size, in bytes, of a single component.
+        /// This is an upper extreme, and components generally should be as small as possible
+        /// to allow for more efficient entity packing within archetype chunks.
+        /// </summary>
+        static constexpr uint32_t max_component_size = 1024;
 
-            /// <summary>
-            /// Maximum number of components which can be attached to a single entity at a time.
-            /// Which is the same as the maximum number of components which may comprise an archetype.
-            /// </summary>
-            static constexpr uint32_t max_components = 64;
+        /// <summary>
+        /// Maximum number of components which can be attached to a single entity at a time.
+        /// Which is the same as the maximum number of components which may comprise an archetype.
+        /// </summary>
+        static constexpr uint32_t max_components = 64;
 
-            /// <summary>
-            /// Maximum number of unique component definitions allowed in a single application run.
-            /// </summary>
-            static constexpr uint32_t max_component_types = 4096;
+        /// <summary>
+        /// Maximum number of unique component definitions allowed in a single application run.
+        /// </summary>
+        static constexpr uint32_t max_component_types = 4096;
 
-            /// <summary>
-            /// The size, in bytes, of a single archetype chunk.
-            /// </summary>
-            static constexpr uint32_t chunk_size = 16384;
+        /// <summary>
+        /// The size, in bytes, of a single archetype chunk.
+        /// </summary>
+        static constexpr uint32_t chunk_size = 16384;
 
-            /// <summary>
-            /// The maximum number of entities which may be stored within a single archetype chunk.
-            /// </summary>
-            static constexpr uint32_t max_entities_per_chunk = 512;
+        /// <summary>
+        /// The maximum number of entities which may be stored within a single archetype chunk.
+        /// </summary>
+        static constexpr uint32_t max_entities_per_chunk = 512;
 
-            /// <summary>
-            /// The size, in bytes, of a single deferred entity command pool.
-            /// </summary>
-            static constexpr uint32_t entity_command_pool_size = 1024 * 16;
+        /// <summary>
+        /// The size, in bytes, of a single deferred entity command pool.
+        /// </summary>
+        static constexpr uint32_t entity_command_pool_size = 1024 * 16;
 
-            /// <summary>
-            /// The number of chunks per archetype page. 16kb chunk * 16 = 256kb pages.
-            /// </summary>
-            static constexpr uint32_t chunks_per_page = 16;
-        };
+        /// <summary>
+        /// The number of chunks per archetype page. 16kb chunk * 16 = 256kb pages.
+        /// </summary>
+        static constexpr uint32_t chunks_per_page = 16;
     }
 
     template<typename T>
     concept ValidComponentType = 
         std::is_standard_layout_v<T> && 
-        sizeof(T) <= ecs::Constants::max_component_size;
+        sizeof(T) <= ecs::constants::max_component_size;
 }
 
 #endif

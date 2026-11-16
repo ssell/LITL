@@ -4,6 +4,7 @@
 #include <vector>
 #include <span>
 
+#include "litl-engine/constants.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
 
 namespace litl
@@ -14,8 +15,6 @@ namespace litl
     class SceneCameras
     {
     public:
-
-        static constexpr uint32_t MaxSceneCameras = 32u;
 
         void setup(ObjectPool* objectPool) noexcept;
 

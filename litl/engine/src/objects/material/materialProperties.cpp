@@ -235,10 +235,10 @@ namespace litl
         if (getBlockLocalSlot(slotId, blockIndex, localSlot, slotVersion, true))
         {
             auto& slot = m_propertyBlocks[blockIndex]->slots[localSlot];
-            return (slot.frequentGlobalSlot == Constants::uint32_null_index ? slotId.index : slot.frequentGlobalSlot);
+            return (slot.frequentGlobalSlot == constants::uint32_null_index ? slotId.index : slot.frequentGlobalSlot);
         }
 
-        return Constants::uint32_null_index;
+        return constants::uint32_null_index;
     }
 
     void MaterialProperties::markSlotActive(MaterialPropertySlotId slot) noexcept
@@ -273,7 +273,7 @@ namespace litl
             }
         }
 
-        return Constants::uint32_null_index;
+        return constants::uint32_null_index;
     }
 
     void MaterialProperties::rebuildFrequentUpdateBlock() noexcept
@@ -338,7 +338,7 @@ namespace litl
             m_frequentUpdateBlock.removeResident(globalSlotIndex);
 
             slot.consecutiveWriteFrames = 0u;
-            slot.frequentGlobalSlot = Constants::uint32_null_index;
+            slot.frequentGlobalSlot = constants::uint32_null_index;
             slot.isInFrequentUpdateBlock = false;
             block.dirtyFrameCount = m_framesInFlight;                   // Data in the non-frequent slot on the GPU may be stale. Force a refresh.
         };

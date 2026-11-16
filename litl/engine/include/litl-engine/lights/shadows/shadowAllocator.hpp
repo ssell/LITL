@@ -13,7 +13,7 @@ namespace litl
     struct ShadowKey
     {
         Entity light{};
-        uint32_t cameraSlot{ Constants::uint32_null_index };
+        uint32_t cameraSlot{ constants::uint32_null_index };
         auto operator<=>(ShadowKey const&) const = default;
     };
 

@@ -22,7 +22,7 @@ namespace litl
         /// <summary>
         /// The id of the archetype. Used for one less pointer redirection.
         /// </summary>
-        ArchetypeId archetypeId = ecs::Constants::null_archetype_id;
+        ArchetypeId archetypeId = ecs::constants::null_archetype_id;
 
         /// <summary>
         /// The index into the Archetype.

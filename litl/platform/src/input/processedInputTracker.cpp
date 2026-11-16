@@ -26,7 +26,7 @@ namespace litl
                 return (OffsetGamepadAxis + source.code);
 
             default:
-                return Constants::uint32_null_index;
+                return constants::uint32_null_index;
             }
         }
     }
@@ -48,7 +48,7 @@ namespace litl
             {
                 const auto index = getGeneralIndex(source);
 
-                if (index != Constants::uint32_null_index)
+                if (index != constants::uint32_null_index)
                 {
                     return m_processedGeneral[index];
                 }
@@ -80,7 +80,7 @@ namespace litl
         {
             const auto index = getGeneralIndex(source);
 
-            if (index != Constants::uint32_null_index)
+            if (index != constants::uint32_null_index)
             {
                 m_processedGeneral[index] = true;
             }

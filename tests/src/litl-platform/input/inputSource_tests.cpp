@@ -15,11 +15,11 @@ namespace litl::tests
 
         const auto mouseDeltaSource = InputSource::fromMouseDelta();
         REQUIRE(mouseDeltaSource.type == InputSourceType::MouseDelta);
-        REQUIRE(mouseDeltaSource.code == Constants::uint32_null_index);
+        REQUIRE(mouseDeltaSource.code == constants::uint32_null_index);
 
         const auto mouseScrollSource = InputSource::fromMouseScroll();
         REQUIRE(mouseScrollSource.type == InputSourceType::MouseScroll);
-        REQUIRE(mouseScrollSource.code == Constants::uint32_null_index);
+        REQUIRE(mouseScrollSource.code == constants::uint32_null_index);
 
         const auto gamepadButtonSource = InputSource::fromGamepadButton(GamepadButton::A);
         REQUIRE(gamepadButtonSource.type == InputSourceType::GamepadButton);

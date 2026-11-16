@@ -1,5 +1,5 @@
 #include "tests.hpp"
-#include "litl-core/math/traits.hpp"
+#include "litl-core/constants.hpp"
 #include "litl-engine/frameLimiter.hpp"
 
 namespace litl::tests
@@ -23,8 +23,8 @@ namespace litl::tests
 
         // 60 frames should have taken AT LEAST 1 seconds due to the frame limiter.
         // It is difficult/unreliable to measure at a finer level due to OS variability in granularity for sleep_for (which runs the coarse sleep section)
-        REQUIRE(elapsed >= Constants::second_to_nanoseconds);
-        REQUIRE(elapsed < (Constants::second_to_nanoseconds * 2));
+        REQUIRE(elapsed >= constants::second_to_nanoseconds);
+        REQUIRE(elapsed < (constants::second_to_nanoseconds * 2));
     } LITL_END_TEST_CASE
 
     LITL_TEST_CASE("Frame Limiter 30 FPS", "[engine::frame]")
@@ -46,7 +46,7 @@ namespace litl::tests
         auto elapsed = static_cast<uint64_t>((endTime - startTime).count());
 
         // 60 frames should have taken AT LEAST 2 seconds due to the frame limiter.
-        REQUIRE(elapsed >= (Constants::second_to_nanoseconds * 2));
-        REQUIRE(elapsed < (Constants::second_to_nanoseconds * 3));        // careful here. getting close to the limit of uint32_t ...
+        REQUIRE(elapsed >= (constants::second_to_nanoseconds * 2));
+        REQUIRE(elapsed < (constants::second_to_nanoseconds * 3));        // careful here. getting close to the limit of uint32_t ...
     } LITL_END_TEST_CASE
 }

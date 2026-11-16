@@ -82,7 +82,7 @@ _Note: the lambda must still have the `Job::JobFunc` signature (`void(Job*)`). I
 
 Jobs are run by Workers and are processed in accordance to their priority: High, Normal, Low.
 
-The scheduler creates `min(max(2, CPU concurrency), 32)` workers (`Constants::max_thread_count` is 32). Worker 0 is the main thread: it has no thread loop of its own and only executes jobs while the main thread is blocked in `JobFence::wait` or `JobScheduler::wait`. Every other worker runs on its own thread. The last worker is dedicated to High priority jobs and ignores Normal and Low work, which avoids edge-cases where every worker is busy with slower, low priority work while high priority jobs pile up.
+The scheduler creates `min(max(2, CPU concurrency), 32)` workers (`constants::max_thread_count` is 32). Worker 0 is the main thread: it has no thread loop of its own and only executes jobs while the main thread is blocked in `JobFence::wait` or `JobScheduler::wait`. Every other worker runs on its own thread. The last worker is dedicated to High priority jobs and ignores Normal and Low work, which avoids edge-cases where every worker is busy with slower, low priority work while high priority jobs pile up.
 
 When a job is submitted it is added to the deque of the thread-local worker. Each worker has one deque per priority level. When a worker runs, it walks the priority levels from highest to lowest and, at each level, first pops from its own deque and then tries to steal from a random other worker before moving to the next level:
 

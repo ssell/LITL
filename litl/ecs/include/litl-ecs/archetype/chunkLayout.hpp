@@ -29,7 +29,7 @@ namespace litl
 
         /// <summary>
         /// Retrieves the index (into componentOrder and componentOffsets) for the specified component type.
-        /// If component is not found, returns ecs::Constants::max_components to indicate an invalid index.
+        /// If component is not found, returns ecs::constants::max_components to indicate an invalid index.
         /// </summary>
         /// <param name="componentTypeId"></param>
         uint32_t getComponentIndex(ComponentTypeId componentTypeId) const;
@@ -58,12 +58,12 @@ namespace litl
         /// The order which the components appear within the chunk.
         /// The value is the component id.
         /// </summary>
-        std::array<ComponentDescriptor const*, ecs::Constants::max_components> componentOrder;
+        std::array<ComponentDescriptor const*, ecs::constants::max_components> componentOrder;
 
         /// <summary>
         /// The offset into the chunk that each component begins.
         /// </summary>
-        std::array<uint32_t, ecs::Constants::max_components> componentOffsets;
+        std::array<uint32_t, ecs::constants::max_components> componentOffsets;
     };
 
     /// <summary>

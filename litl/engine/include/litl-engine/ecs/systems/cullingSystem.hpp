@@ -21,9 +21,9 @@ namespace litl
     /// <summary>
     /// A bucket of visible and renderable entities for each camera.
     /// </summary>
-    struct alignas(Constants::cache_line_size) CullingBucket
+    struct alignas(constants::cache_line_size) CullingBucket
     {
-        std::array<CameraRenderEntities, SceneCameras::MaxSceneCameras> cameraRenderableEntities;
+        std::array<CameraRenderEntities, constants::MaxSceneCameras> cameraRenderableEntities;
 
         void reset() noexcept;
         [[nodiscard]] uint32_t activeCameraCount() const noexcept;
@@ -78,9 +78,9 @@ namespace litl
 
         std::shared_ptr<ObjectPool> m_pObjectPool;
         std::shared_ptr<SceneView> m_pSceneView;
-        std::array<CameraFrustumEntities, SceneCameras::MaxSceneCameras> m_cameraVisibleEntities;
+        std::array<CameraFrustumEntities, constants::MaxSceneCameras> m_cameraVisibleEntities;
 
-        static std::array<CullingBucket, Constants::max_thread_count> s_cullingBuckets;
+        static std::array<CullingBucket, constants::max_thread_count> s_cullingBuckets;
         static CullingBucket s_combinedBucket;
         static bool s_combined;
     };

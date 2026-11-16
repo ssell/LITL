@@ -52,12 +52,12 @@ namespace litl
 
         [[nodiscard]] constexpr bool operator==(mat3 const& other) const noexcept
         {
-            return glm::all(glm::equal(value, other.value, Traits<float>::epsilon));
+            return glm::all(glm::equal(value, other.value, constants::epsilon));
         }
 
         [[nodiscard]] constexpr bool operator==(glm::mat3 const& other) const noexcept
         {
-            return glm::all(glm::equal(value, other, Traits<float>::epsilon));
+            return glm::all(glm::equal(value, other, constants::epsilon));
         }
 
         // ---------------------------------------------------------------------------------

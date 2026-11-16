@@ -76,7 +76,7 @@ namespace litl::vulkan
         /// <summary>
         /// The slot that this texture occupies in the global bindless texture table.
         /// </summary>
-        uint32_t textureTableSlot{ Constants::uint32_null_index };
+        uint32_t textureTableSlot{ constants::uint32_null_index };
 
         /// <summary>
         /// The descriptor that created the texture.

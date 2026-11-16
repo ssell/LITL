@@ -64,7 +64,7 @@ namespace litl
             /// <summary>
             /// Indices of the neighboring faces.
             /// </summary>
-            uint32_t neighbor[3] { Constants::uint32_null_index, Constants::uint32_null_index, Constants::uint32_null_index };
+            uint32_t neighbor[3] { constants::uint32_null_index, constants::uint32_null_index, constants::uint32_null_index };
 
             /// <summary>
             /// Does each neighbor agree in orientation?
@@ -97,7 +97,7 @@ namespace litl
             /// The index of the vertex that lies the furthest along the randomized extrema direction vector.
             /// The extremal vertex lies on the mesh manifold and thus its vertex should always be pointing outwards (if well formed).
             /// </summary>
-            uint32_t extremalVert = Constants::uint32_null_index;
+            uint32_t extremalVert = constants::uint32_null_index;
 
             /// <summary>
             /// The normal of the extremal vertex.
@@ -219,7 +219,7 @@ namespace litl
 
             for (uint32_t i = 0u; i < faceCount; ++i)
             {
-                if (components[i] != Constants::uint32_null_index)
+                if (components[i] != constants::uint32_null_index)
                 {
                     continue;
                 }
@@ -239,7 +239,7 @@ namespace litl
                         const uint32_t neighbor = adjacentFaces[face].neighbor[j];
                         const uint8_t want = shouldFlip[face] ^ (adjacentFaces[face].agrees[j] ? 0u : 1u);
 
-                        if (components[neighbor] == Constants::uint32_null_index)
+                        if (components[neighbor] == constants::uint32_null_index)
                         {
                             components[neighbor] = component;
                             shouldFlip[neighbor] = want;
@@ -340,7 +340,7 @@ namespace litl
 
         std::vector<HalfEdge> edges;
         std::vector<FaceAdj> adjacentFaces(faceCount);
-        std::vector<std::uint32_t> components(faceCount, Constants::uint32_null_index);
+        std::vector<std::uint32_t> components(faceCount, constants::uint32_null_index);
         std::vector<std::uint8_t> shouldFlip(faceCount, 0);
 
         buildAndSortHalfEdges(edges, faceCount, indices);

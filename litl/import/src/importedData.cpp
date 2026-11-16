@@ -125,7 +125,7 @@ namespace litl::import
 
                             auto& modelDataItem = items[modelItem.importedDataItemIndex];
 
-                            if (modelItem.modelNameIndex != Constants::uint32_null_index)
+                            if (modelItem.modelNameIndex != constants::uint32_null_index)
                             {
                                 switch (modelDataItem.getType())
                                 {

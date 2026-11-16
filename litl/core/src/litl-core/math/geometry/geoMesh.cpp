@@ -124,7 +124,7 @@ namespace litl
     void GeoMesh::setFaceDefaultMaterialSlots() noexcept
     {
         m_faceMaterialSlots.clear();
-        m_faceMaterialSlots.resize(m_faceIndexCounts.size(), Constants::uint32_null_index);
+        m_faceMaterialSlots.resize(m_faceIndexCounts.size(), constants::uint32_null_index);
     }
 
     void GeoMesh::setSubmeshes(std::span<Submesh const> submeshes) noexcept
@@ -253,7 +253,7 @@ namespace litl
         for (auto& v : m_vertices)
         {
             // Consider both external origin points (0,0) and vulkan origin points (0,1) 
-            if (!isZero(v.texcoord.x()) || (between(v.texcoord.y(), Traits<float>::epsilon, 1.0f - Traits<float>::epsilon)))
+            if (!isZero(v.texcoord.x()) || (between(v.texcoord.y(), constants::epsilon, 1.0f - constants::epsilon)))
             {
                 return true;
             }
@@ -379,7 +379,7 @@ namespace litl
             m_submeshes.push_back(Submesh{
                 .firstIndex = 0u,
                 .indexCount = static_cast<uint32_t>(m_indices.size()),
-                .materialSlot = Constants::uint32_null_index,
+                .materialSlot = constants::uint32_null_index,
                 .bounds = m_bounds,
             });
         }

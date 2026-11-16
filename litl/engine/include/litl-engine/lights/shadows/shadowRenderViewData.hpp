@@ -11,7 +11,7 @@ namespace litl
     {
         mat4 cascadeViewProj[MaxShadowCascades];
         vec4 cascadeSplits{};
-        uint32_t shadowArrayIndex{ Constants::uint32_null_index };
+        uint32_t shadowArrayIndex{ constants::uint32_null_index };
         uint32_t firstLayer{ 0u };
         uint32_t cascadeCount{ 1u };
         uint32_t padding{ 0u };

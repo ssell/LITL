@@ -72,7 +72,7 @@ namespace litl
         /// <returns></returns>
         [[nodiscard]] static constexpr Entity null() noexcept
         {
-            return Entity{ .index = ecs::Constants::null_entity_id };
+            return Entity{ .index = ecs::constants::null_entity_id };
         }
 
         /// <summary>

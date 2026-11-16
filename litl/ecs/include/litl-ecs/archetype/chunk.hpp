@@ -92,7 +92,7 @@ namespace litl
 
     private:
 
-        std::byte m_data[ecs::Constants::chunk_size];
+        std::byte m_data[ecs::constants::chunk_size];
     };
 }
 

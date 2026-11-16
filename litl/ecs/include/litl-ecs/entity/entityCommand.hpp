@@ -38,7 +38,7 @@ namespace litl
         /// <summary>
         /// The component being added or removed.
         /// </summary>
-        ComponentTypeId component{ ecs::Constants::null_component_id };
+        ComponentTypeId component{ ecs::constants::null_component_id };
 
         /// <summary>
         /// The address to the component data being added.
@@ -135,8 +135,8 @@ namespace litl
     {
         EntityChangeType type{ EntityChangeType::None };
         Entity entity{ Entity::null() };
-        ArchetypeId prevArchetype{ ecs::Constants::null_archetype_id };
-        ArchetypeId currArchetype{ ecs::Constants::null_archetype_id };
+        ArchetypeId prevArchetype{ ecs::constants::null_archetype_id };
+        ArchetypeId currArchetype{ ecs::constants::null_archetype_id };
         Entity parent{ Entity::null() };
     };
 }

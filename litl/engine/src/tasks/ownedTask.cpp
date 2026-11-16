@@ -12,7 +12,7 @@ namespace litl
     }
 
     OwnedTask::OwnedTask(OwnedTask&& other) noexcept :
-        m_id(std::exchange(other.m_id, Constants::uint32_null_index)),
+        m_id(std::exchange(other.m_id, constants::uint32_null_index)),
         m_handle(std::exchange(other.m_handle, {})),
         m_isFinished(std::exchange(other.m_isFinished, nullptr)),
         m_destroyOnComplete(std::exchange(other.m_destroyOnComplete, false))
@@ -26,7 +26,7 @@ namespace litl
         {
             reset();
 
-            m_id = std::exchange(other.m_id, Constants::uint32_null_index);
+            m_id = std::exchange(other.m_id, constants::uint32_null_index);
             m_handle = std::exchange(other.m_handle, {});
             m_isFinished = std::exchange(other.m_isFinished, nullptr);
             m_destroyOnComplete = std::exchange(other.m_destroyOnComplete, false);
@@ -44,7 +44,7 @@ namespace litl
     {
         if (m_handle)
         {
-            m_id = Constants::uint32_null_index;
+            m_id = constants::uint32_null_index;
             m_handle.destroy(); m_handle = nullptr;
             m_destroyOnComplete = false;
         }

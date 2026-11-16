@@ -93,7 +93,7 @@ namespace litl::tests
     LITL_TEST_CASE("Queue Many Components", "[ecs::entityCommands]")
     {
         // Tests adding a lot of components (enough to make 10 pool) and that they can be loaded.
-        constexpr uint32_t commandCount = (ecs::Constants::entity_command_pool_size / sizeof(Foo)) * 10;
+        constexpr uint32_t commandCount = (ecs::constants::entity_command_pool_size / sizeof(Foo)) * 10;
 
         EntityCommandQueue queue;
         Foo foo{ 0 };

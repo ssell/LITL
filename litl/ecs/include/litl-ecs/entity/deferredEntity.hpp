@@ -26,7 +26,7 @@ namespace litl
 
         [[nodiscard]] static constexpr DeferredEntity null() noexcept
         {
-            return DeferredEntity{ .index = ecs::Constants::null_entity_id };
+            return DeferredEntity{ .index = ecs::constants::null_entity_id };
         }
 
         [[nodiscard]] constexpr bool isNull() const noexcept

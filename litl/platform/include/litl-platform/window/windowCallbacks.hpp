@@ -43,7 +43,7 @@ namespace litl
     struct WindowCallbackHandle
     {
         WindowCallbackType type{ WindowCallbackType::Unknown };
-        WindowCallbackId id{ Constants::uint32_null_index };
+        WindowCallbackId id{ constants::uint32_null_index };
         uint32_t slot{ 0u };
     };
 

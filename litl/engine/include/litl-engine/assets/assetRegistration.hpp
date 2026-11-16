@@ -49,12 +49,12 @@ namespace litl
         /// <summary>
         /// Which source owns it. This is the index into AssetManager::assetSources.
         /// </summary>
-        uint32_t sourceIndex{ Constants::uint32_null_index };
+        uint32_t sourceIndex{ constants::uint32_null_index };
 
         /// <summary>
         /// File table index, bundle entry index, etc.
         /// </summary>
-        uint32_t entryIndex{ Constants::uint32_null_index };
+        uint32_t entryIndex{ constants::uint32_null_index };
     };
 
     /// <summary>

@@ -36,7 +36,7 @@ namespace litl
 
     Archetype* ArchetypeRegistry::Empty() noexcept
     {
-        static Archetype* EmptyArchetype = buildArchetype(ecs::Constants::empty_archetype_id, {});
+        static Archetype* EmptyArchetype = buildArchetype(ecs::constants::empty_archetype_id, {});
         return EmptyArchetype;
     }
 
@@ -83,7 +83,7 @@ namespace litl
 
         for (auto componentType : components.data())
         {
-            if (componentType != ecs::Constants::null_component_id)
+            if (componentType != ecs::constants::null_component_id)
             {
                 registry.componentArchetypeMap[componentType].push_back(newArchetypeIndex);
             }

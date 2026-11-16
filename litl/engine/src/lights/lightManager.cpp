@@ -167,7 +167,7 @@ namespace litl
             directionalLightData.data.push_back(DirectionalLightData{
                 .colorIntensity = vec4(command.light.color.r(), command.light.color.g(), command.light.color.b(), command.light.intensity),
                 .toLight = command.toLightDir,
-                .shadowIndex = Constants::uint32_null_index
+                .shadowIndex = constants::uint32_null_index
             });
 
             directionalLightData.entities.push_back(command.entity);

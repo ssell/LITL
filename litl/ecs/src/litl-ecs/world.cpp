@@ -273,7 +273,7 @@ namespace litl
     {
         if (entity.isNull() || !EntityRegistry::isAlive(entity))
         {
-            return ecs::Constants::null_archetype_id;
+            return ecs::constants::null_archetype_id;
         }
 
         return EntityRegistry::getRecord(entity).archetypeId;
@@ -441,7 +441,7 @@ namespace litl
     {
         if (!EntityRegistry::isAlive(entity))
         {
-            return ecs::Constants::empty_archetype_id;
+            return ecs::constants::empty_archetype_id;
         }
 
         auto entityRecord = EntityRegistry::getRecord(entity);

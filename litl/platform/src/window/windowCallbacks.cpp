@@ -28,7 +28,7 @@ namespace litl
 
         struct GenericWindowEvent
         {
-            WindowCallbackId id{ Constants::uint32_null_index };
+            WindowCallbackId id{ constants::uint32_null_index };
             OnWindowEventFunc callback;
             WindowCallbackPriority priority{ WindowCallbackPriority::Medium };
             bool alive{ true };
@@ -36,7 +36,7 @@ namespace litl
 
         struct CallbackCommand
         {
-            uint32_t id{ Constants::uint32_null_index };
+            uint32_t id{ constants::uint32_null_index };
             CallbackCommandType commandType{};
             WindowCallbackType eventType{ WindowCallbackType::Unknown };
             GenericWindowEvent event{};                                     // update to a variant if we ever have non-generic events.
@@ -82,7 +82,7 @@ namespace litl
 
             for (auto& command : copiedDeferredCommands)
             {
-                if (command.id == Constants::uint32_null_index)
+                if (command.id == constants::uint32_null_index)
                 {
                     continue;
                 }

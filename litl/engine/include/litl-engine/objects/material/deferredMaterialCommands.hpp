@@ -50,7 +50,7 @@ namespace litl
             std::variant<UpdateSlotToFrequentBlockCommand> command;
         };
 
-        static std::array<std::vector<DeferredMaterialCommand>, Constants::max_thread_count> t_threadCommands;
+        static std::array<std::vector<DeferredMaterialCommand>, constants::max_thread_count> t_threadCommands;
     };
 }
 

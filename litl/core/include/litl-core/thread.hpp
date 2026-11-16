@@ -26,7 +26,7 @@ namespace litl
         /// <summary>
         /// If this is a thread running a job, then what index is it.
         /// </summary>
-        uint32_t jobIndex{ Constants::uint32_null_index };
+        uint32_t jobIndex{ constants::uint32_null_index };
 
         /// <summary>
         /// Is this the main thread?

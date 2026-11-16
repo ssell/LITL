@@ -190,10 +190,10 @@ namespace litl::import
 
         struct MaterialTextureItemIndices
         {
-            uint32_t baseColor{ Constants::uint32_null_index };
-            uint32_t normalMap{ Constants::uint32_null_index };
-            uint32_t occlusionMap{ Constants::uint32_null_index };
-            uint32_t roughnessMetallicMap{ Constants::uint32_null_index };          // gltf pack roughness+metallic together in a single texture (.r = unused, .g = roughness, .b = metallic, .a = unused)
+            uint32_t baseColor{ constants::uint32_null_index };
+            uint32_t normalMap{ constants::uint32_null_index };
+            uint32_t occlusionMap{ constants::uint32_null_index };
+            uint32_t roughnessMetallicMap{ constants::uint32_null_index };          // gltf pack roughness+metallic together in a single texture (.r = unused, .g = roughness, .b = metallic, .a = unused)
             // ... todo add normal map, etc ...
         };
 
@@ -341,7 +341,7 @@ namespace litl::import
             {
                 // Do not fail out the entire GLB due to a material failure.
                 importedData.items.pop_back();
-                return Constants::uint32_null_index;
+                return constants::uint32_null_index;
             }
 
             // Update model
@@ -361,7 +361,7 @@ namespace litl::import
             if (!convertToLitlMaterial(glData, litlMaterial, glMaterial, location, glImageIndexToModelTextureIndex, textureItemIndices))
             {
                 importedData.items.pop_back();
-                return Constants::uint32_null_index;
+                return constants::uint32_null_index;
             }
 
             // Add the material to the model
@@ -374,7 +374,7 @@ namespace litl::import
             });
 
             // Link the textures to the material
-            if (textureItemIndices.baseColor != Constants::uint32_null_index)
+            if (textureItemIndices.baseColor != constants::uint32_null_index)
             {
                 modelImportResult->textureLinks.push_back(MaterialTextureLink{
                     .materialItemIndex = materialDataItemIndex,
@@ -384,7 +384,7 @@ namespace litl::import
                 });
             }
 
-            if (textureItemIndices.normalMap != Constants::uint32_null_index)
+            if (textureItemIndices.normalMap != constants::uint32_null_index)
             {
                 modelImportResult->textureLinks.push_back(MaterialTextureLink{
                     .materialItemIndex = materialDataItemIndex,
@@ -394,7 +394,7 @@ namespace litl::import
                 });
             }
 
-            if (textureItemIndices.occlusionMap != Constants::uint32_null_index)
+            if (textureItemIndices.occlusionMap != constants::uint32_null_index)
             {
                 modelImportResult->textureLinks.push_back(MaterialTextureLink{
                     .materialItemIndex = materialDataItemIndex,
@@ -404,7 +404,7 @@ namespace litl::import
                 });
             }
 
-            if (textureItemIndices.roughnessMetallicMap != Constants::uint32_null_index)
+            if (textureItemIndices.roughnessMetallicMap != constants::uint32_null_index)
             {
                 modelImportResult->textureLinks.push_back(MaterialTextureLink{
                     .materialItemIndex = materialDataItemIndex,
@@ -450,7 +450,7 @@ namespace litl::import
 
         /// <summary>
         /// Creates the texture item for the ImportedData, adds it to the model, and converts the cgltf texture to our intermediate format.
-        /// Returns the ImportedData::items index of the texture if successful. Returns Constants::uint32_null_index on failure.
+        /// Returns the ImportedData::items index of the texture if successful. Returns constants::uint32_null_index on failure.
         /// </summary>
         [[nodiscard]] uint32_t createTextureDataItem(cgltf_image const& glImage, ModelImportResult* modelImportResult, ImportedData& importedData, ImportContext const& context, TextureImportSettings const& textureImportSettings) noexcept
         {
@@ -461,13 +461,13 @@ namespace litl::import
             if (sourceType == ImportSourceType::Unknown)
             {
                 logWarning("GLB image '", imageName, "' in model '", context.location, "' has an unsupported mime type of '", mimeType, "'. Skipping.");
-                return Constants::uint32_null_index;
+                return constants::uint32_null_index;
             }
 
             if ((glImage.buffer_view == nullptr) || (glImage.buffer_view->buffer == nullptr) || (glImage.buffer_view->buffer->data == nullptr) || (glImage.buffer_view->buffer->size == 0))
             {
                 logWarning("GLB image '", imageName, "' in model '", context.location, "' has a missing or empty buffer. Skipping.");
-                return Constants::uint32_null_index;
+                return constants::uint32_null_index;
             }
 
             ImportSettings importSettings = context.settings;
@@ -479,7 +479,7 @@ namespace litl::import
             if (!textureDataItemIndex.has_value())
             {
                 logError("GLB image '", imageName, "' in model '", context.location, "' failed to be imported.");
-                return Constants::uint32_null_index;
+                return constants::uint32_null_index;
             }
 
             return textureDataItemIndex.value();
@@ -600,7 +600,7 @@ namespace litl::import
         // ---------------------------------------------------------------------------------
 
         // Reminder: gltf images = raw image (png, etc.), textures = image+sampler.
-        std::vector<uint32_t> glImageIndexToModelTextureIndex(data->images_count, Constants::uint32_null_index);
+        std::vector<uint32_t> glImageIndexToModelTextureIndex(data->images_count, constants::uint32_null_index);
 
         for (cgltf_size imgIdx = 0; imgIdx < data->images_count; ++imgIdx)
         {
@@ -613,11 +613,11 @@ namespace litl::import
         // ---------------------------------------------------------------------------------
 
         // Maps glTF materialIndex -> model material index
-        std::vector<uint32_t> glMatIndexToModelMatIndex(data->materials_count, Constants::uint32_null_index);
+        std::vector<uint32_t> glMatIndexToModelMatIndex(data->materials_count, constants::uint32_null_index);
 
         for (cgltf_size matIdx = 0; matIdx < data->materials_count; ++matIdx)
         {
-            // Returns either the model material index (result of model->addMaterial()) or Constants::uint32_null_index on failure.
+            // Returns either the model material index (result of model->addMaterial()) or constants::uint32_null_index on failure.
             glMatIndexToModelMatIndex[matIdx] = createMaterialDataItem(data, data->materials[matIdx], modelImportResult, importedData, context.location, glImageIndexToModelTextureIndex);
         }
 
@@ -632,7 +632,7 @@ namespace litl::import
         {
             const cgltf_mesh& glMesh = data->meshes[meshIdx];
             auto& slotTable = meshSlotMaterials[meshIdx];
-            slotTable.resize(glMesh.primitives_count, Constants::uint32_null_index);
+            slotTable.resize(glMesh.primitives_count, constants::uint32_null_index);
 
             for (cgltf_size p = 0; p < glMesh.primitives_count; ++p)
             {
