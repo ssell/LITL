@@ -23,9 +23,9 @@ namespace litl::vulkan
         [[nodiscard]] bool build(RendererContext& context) noexcept;
         void destroy() noexcept;
 
-        [[nodiscard]] uint32_t acquire(TextureResourceHandle handle) noexcept;
-        [[nodiscard]] bool release(uint32_t slot, TextureResourceHandle handle) noexcept;
-        [[nodiscard]] bool update(uint32_t slot, TextureResourceHandle handle) noexcept;
+        [[nodiscard]] uint32_t acquire(TextureResourceHandle handle, bool isArray, bool isCube) noexcept;
+        [[nodiscard]] bool release(uint32_t slot, TextureResourceHandle handle, bool isArray, bool isCube) noexcept;
+        [[nodiscard]] bool update(uint32_t slot, TextureResourceHandle handle, bool isArray, bool isCube) noexcept;
 
         [[nodiscard]] VkDescriptorSet getDescriptorSet() const noexcept;
         [[nodiscard]] VkDescriptorSetLayout getDescriptorSetLayout() const noexcept;
@@ -33,23 +33,38 @@ namespace litl::vulkan
 
     private:
 
+        enum class TextureSubTableType
+        {
+            Texture2D = 0u,
+            Texture2DArray = 1u,
+            Texture2DCubeArray = 2u,
+            Count
+        };
+
+        struct TextureSubTable
+        {
+            std::vector<TextureResourceHandle> slotOwners;
+            std::vector<uint32_t> freeSlots;
+            uint32_t capacity{ 0u };
+            uint32_t head{ 0u };
+            uint32_t freeCount{ 0u };
+            TextureResourceHandle fallbackHandle{};
+        };
+
         [[nodiscard]] bool buildDescriptorPool() noexcept;
         [[nodiscard]] bool buildDescriptorSetLayout() noexcept;
         [[nodiscard]] bool buildDescriptorSet() noexcept;
         [[nodiscard]] bool buildPipelineLayout() noexcept;
         [[nodiscard]] bool writeSlot(uint32_t slot, TextureResource* texture) noexcept;
+        [[nodiscard]] TextureSubTableType getSubTableType(bool isArray, bool isCube) const noexcept;
+        [[nodiscard]] TextureSubTable& getSubTable(TextureSubTableType type) noexcept;
 
         RendererContext* m_pContext{ nullptr };
         VkDescriptorPool m_vkDescriptorPool{ VK_NULL_HANDLE };
         VkDescriptorSetLayout m_vkDescriptorSetLayout{ VK_NULL_HANDLE };
         VkDescriptorSet m_vkDescriptorSet{ VK_NULL_HANDLE };
         VkPipelineLayout m_vkPipelineLayout{ VK_NULL_HANDLE };
-        TextureResourceHandle m_fallbackHandle{};
-        std::vector<TextureResourceHandle> m_slotOwners;
-        std::vector<uint32_t> m_freeSlots;
-        uint32_t m_head{ 0u };
-        uint32_t m_capacity{ 0u };
-        uint32_t m_freeCount{ 0u };
+        std::array<TextureSubTable, static_cast<size_t>(TextureSubTableType::Count)> m_subtables;
     };
 }
 

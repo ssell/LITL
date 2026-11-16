@@ -9,8 +9,11 @@ import common;
 // -----------------------------------------------------------------------------------------
 // Global Texture Utilities
 
-[[vk::binding(0, BindSetPerFrame)]] Texture2D<float4> g_Textures[];
-[[vk::binding(1, BindSetPerFrame)]] SamplerState g_Samplers[16];
+// These bindings are defined in TextureTable::buildDescriptorSetLayout
+[[vk::binding(0, BindSetPerFrame)]] Texture2D<float4> g_Textures[];                     // Most 2D textures end up here
+[[vk::binding(1, BindSetPerFrame)]] Texture2DArray<float4> g_TextureArrays[];           // Texture arrays such as cascaded shadow maps
+[[vk::binding(2, BindSetPerFrame)]] TextureCubeArray<float4> g_TextureCubeArrays[];     // Cube arrays such as point light shadows
+[[vk::binding(3, BindSetPerFrame)]] SamplerState g_Samplers[16];
 
 // These correlate to TextureTableReservedIndices in litl-renderer
 public static const uint DefaultTextureIndex_Pink = 0;
@@ -41,30 +44,58 @@ public SamplerState getGlobalSampler(uint samplerIndex)
     return g_Samplers[samplerIndex];
 }
 
-void unpackPackedTextureSlotSamplerIndex(in uint packedTextureSlotSamplerIndex, out uint textureIndex, out uint samplerIndex)
+uint unpackTextureIndex(uint packedTextureSlotSamplerIndex)
 {
     // The texture slot occupies the lower 24-bits and the sampler index is in the upper 8-bits.
     // This must be kept in sync with packing/unpacking functions in litl-renderer/utility.hpp
-    textureIndex = packedTextureSlotSamplerIndex & 0x00FFFFFF;
-    samplerIndex = (packedTextureSlotSamplerIndex >> 24u);
+    return packedTextureSlotSamplerIndex & 0x00FFFFFF;
 }
 
+uint unpackSamplerIndex(uint packedTextureSlotSamplerIndex)
+{
+    // The texture slot occupies the lower 24-bits and the sampler index is in the upper 8-bits.
+    // This must be kept in sync with packing/unpacking functions in litl-renderer/utility.hpp
+    return (packedTextureSlotSamplerIndex >> 24u);
+}
+
+/**
+ * Samples from the global 2D texture table using the packed sampler.
+ */
 public float4 sampleGlobalTexture(uint packedTextureSlotSamplerIndex, float2 uv)
 {
-    uint textureIndex = 0;
-    uint samplerIndex = 0;
-
-    unpackPackedTextureSlotSamplerIndex(packedTextureSlotSamplerIndex, /* out */ textureIndex, /* out */ samplerIndex);
-
+    const uint textureIndex = unpackTextureIndex(packedTextureSlotSamplerIndex);
+    const uint samplerIndex = unpackSamplerIndex(packedTextureSlotSamplerIndex);
     return g_Textures[NonUniformResourceIndex(textureIndex)].Sample(g_Samplers[NonUniformResourceIndex(samplerIndex)], uv);
 }
 
+/**
+ * Samples from the global 2D texture table using the specified sampler.
+ */
 public float4 sampleGlobalTexture(uint packedTextureSlotSamplerIndex, in SamplerState samplerOverride, float2 uv)
 {
-    uint textureIndex = 0;
-    uint samplerIndex = 0;
-
-    unpackPackedTextureSlotSamplerIndex(packedTextureSlotSamplerIndex, /* out */ textureIndex, /* out */ samplerIndex);
-
+    const uint textureIndex = unpackTextureIndex(packedTextureSlotSamplerIndex);
     return g_Textures[NonUniformResourceIndex(textureIndex)].Sample(samplerOverride, uv);
+}
+
+/**
+ * Samples from the global 2D texture array table using the packed sampler.
+ */
+public float4 sampleGlobalTextureArray(uint packedTextureSlotSamplerIndex, uint layer, float2 uv)
+{
+    const uint textureIndex = unpackTextureIndex(packedTextureSlotSamplerIndex);
+    const uint samplerIndex = unpackSamplerIndex(packedTextureSlotSamplerIndex);
+    const float3 uvw = float3(uv, float(layer));
+
+    return g_TextureArrays[NonUniformResourceIndex(textureIndex)].Sample(g_Samplers[NonUniformResourceIndex(samplerIndex)], uvw);
+}
+
+/**
+ * Samples from the global 2D texture array table using the specified sampler.
+ */
+public float4 sampleGlobalTextureArray(uint packedTextureSlotSamplerIndex, in SamplerState samplerOverride, uint layer, float2 uv)
+{
+    const uint textureIndex = unpackTextureIndex(packedTextureSlotSamplerIndex);
+    const float3 uvw = float3(uv, float(layer));
+
+    return g_TextureArrays[NonUniformResourceIndex(textureIndex)].Sample(samplerOverride, uvw);
 }

@@ -544,9 +544,13 @@ namespace litl::vulkan
         if (context.device.vkPhysicalDevice != VK_NULL_HANDLE)
         {
             logInfo("Selected Vulkan Physical Device");
+
+            const auto uabMax = context.device.getUabRuntimeArrayCapacityFor(ShaderResourceType::SampledImage);
             
             context.device.vkDepthStencilFormat = findSupportedDepthStencilFormat(context.device.vkPhysicalDevice).value();     // confirmed present by isPhysicalDeviceSuitable
-            context.device.textureTableCapacity = (litl::min)(context.config.globalTexturePoolCapacity, context.device.getUabRuntimeArrayCapacityFor(ShaderResourceType::SampledImage));
+            context.device.texture2DTableCapacity = (litl::min)(context.config.globalTexture2DPoolCapacity, uabMax);
+            context.device.texture2DArrayTableCapacity = (litl::min)(context.config.globalTexture2DArrayPoolCapacity, uabMax);
+            context.device.texture2DCubeTableCapacity = (litl::min)(context.config.globalTexture2DCubePoolCapacity, uabMax);
             
             return true;
         }

@@ -41,7 +41,7 @@ namespace litl::vulkan
             .accelerationStructure = m_pContext->device.getUabRuntimeArrayCapacityFor(ShaderResourceType::AccelerationStructure),
             .imageBuffer = m_pContext->device.getUabRuntimeArrayCapacityFor(ShaderResourceType::ImageBuffer),
             .inputAttachment = m_pContext->device.getUabRuntimeArrayCapacityFor(ShaderResourceType::InputAttachment),
-            .sampledImage = m_pContext->device.textureTableCapacity,
+            .sampledImage = m_pContext->device.texture2DTableCapacity + m_pContext->device.texture2DArrayTableCapacity + m_pContext->device.texture2DCubeTableCapacity,
             .sampler = m_pContext->device.getUabRuntimeArrayCapacityFor(ShaderResourceType::Sampler),
             .storageBuffer = m_pContext->device.getUabRuntimeArrayCapacityFor(ShaderResourceType::StorageBuffer),
             .storageImage = m_pContext->device.getUabRuntimeArrayCapacityFor(ShaderResourceType::StorageImage),
@@ -1321,7 +1321,7 @@ namespace litl::vulkan
         {
             if (descriptor.textureTableIndexOverride.has_value())
             {
-                if (m_pContext->textureTable.update(descriptor.textureTableIndexOverride.value(), textureHandle))
+                if (m_pContext->textureTable.update(descriptor.textureTableIndexOverride.value(), textureHandle, descriptor.isArray(), descriptor.isCubeMap))
                 {
                     textureResource->textureTableSlot = descriptor.textureTableIndexOverride.value();
                 }
@@ -1332,7 +1332,7 @@ namespace litl::vulkan
             }
             else
             {
-                textureResource->textureTableSlot = m_pContext->textureTable.acquire(textureHandle);
+                textureResource->textureTableSlot = m_pContext->textureTable.acquire(textureHandle, descriptor.isArray(), descriptor.isCubeMap);
             }
 
             if (textureResource->textureTableSlot == constants::uint32_null_index)
@@ -1357,7 +1357,7 @@ namespace litl::vulkan
         {
             if (resource->textureTableSlot != constants::uint32_null_index)
             {
-                if (!m_pContext->textureTable.release(resource->textureTableSlot, handle))
+                if (!m_pContext->textureTable.release(resource->textureTableSlot, handle, resource->descriptor.isArray(), resource->descriptor.isCubeMap))
                 {
                     logError("Failed to release TextureResource from Vulkan texture table at slot ", resource->textureTableSlot);
                 }

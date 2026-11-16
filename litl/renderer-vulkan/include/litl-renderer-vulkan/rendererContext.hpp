@@ -119,7 +119,11 @@ namespace litl
             /// <summary>
             /// The max between the per-descriptor set and per-shader stage bound sample image limits.
             /// </summary>
-            uint32_t textureTableCapacity = 0u;
+            uint32_t texture2DTableCapacity = 0u;
+
+            uint32_t texture2DArrayTableCapacity = 0u;
+
+            uint32_t texture2DCubeTableCapacity = 0u;
 
             /// <summary>
             /// Max sampler anisotropy value.

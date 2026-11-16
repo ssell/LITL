@@ -73,6 +73,8 @@ namespace litl
         /// </summary>
         uint32_t arrayLayers = 1u;
 
+        [[nodiscard]] constexpr bool isArray() const noexcept { return arrayLayers > 1u; }
+
         uint32_t faceCount = 1u;
 
         /// <summary>
