@@ -174,6 +174,29 @@ namespace litl
         .destStage    = PipelineStageFlagBits::EarlyFragmentTests | PipelineStageFlagBits::LateFragmentTests
     };
 
+    /// <summary>
+    /// Undefined → ShaderRead
+    /// </summary>
+    static constexpr PipelineBarrierCommand PipelineBarrierUndefinedToShaderRead{
+        .fromLayout   = ImageLayoutType::Undefined,
+        .toLayout     = ImageLayoutType::ShaderReadOnly,
+        .sourceAccess = static_cast<ImageAccessFlag>(ImageAccessFlagBits::None),
+        .destAccess   = ImageAccessFlagBits::ShaderSampledRead,
+        .sourceStage  = static_cast<PipelineStageFlag>(PipelineStageFlagBits::None),
+        .destStage    = PipelineStageFlagBits::FragmentShader
+    };
+
+    /// <summary>
+    /// ShaderRead → DepthStencil
+    /// </summary>
+    static constexpr PipelineBarrierCommand PipelineBarrierShaderReadToDepthStencil{
+        .fromLayout   = ImageLayoutType::ShaderReadOnly, 
+        .toLayout     = ImageLayoutType::DepthStencil,
+        .sourceAccess = static_cast<ImageAccessFlag>(ImageAccessFlagBits::None),
+        .destAccess   = ImageAccessFlagBits::DepthStencilWrite | ImageAccessFlagBits::DepthStencilRead,
+        .sourceStage  = PipelineStageFlagBits::FragmentShader,
+        .destStage    = PipelineStageFlagBits::EarlyFragmentTests | PipelineStageFlagBits::LateFragmentTests
+    };
 
     /// <summary>
     /// Undefined → TransferDst. 

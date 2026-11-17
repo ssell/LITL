@@ -376,7 +376,11 @@ namespace litl::vulkan
             }
 
             vkImage = texture->vkImage;
-            subresourceRange = texture->vkImageSubresourceRange;
+            subresourceRange = texture->vkImageSubresourceRange; 
+            subresourceRange.baseArrayLayer += command.layer;          // relative to the resource's base, same as stagingTexture.cpp:159
+            subresourceRange.layerCount = command.layerCount;
+
+            LITL_ASSERT((subresourceRange.baseArrayLayer + subresourceRange.layerCount) <= texture->vkImageSubresourceRange.layerCount, );
         }
         else
         {
@@ -393,6 +397,8 @@ namespace litl::vulkan
 
                 vkImage = depthTexture->vkImage;
                 subresourceRange = depthTexture->vkImageSubresourceRange;
+
+                LITL_ASSERT((subresourceRange.baseArrayLayer + subresourceRange.layerCount) <= depthTexture->vkImageSubresourceRange.layerCount, );
             }
             else
             {

@@ -258,9 +258,13 @@ namespace litl
                 .loadOp = options.loadOp,
                 .storeOp = options.depthStoreOp,
                 .clearDepth = 0.0f
-            };
+            }; 
 
-            addAttachment((options.loadOp == LoadOperationType::Load) ? PipelineBarrierDepthToDepth : PipelineBarrierUndefinedToDepthStencil, depthResourceHandle, setup.beginRenderCmd.layer, 1u);
+            const PipelineBarrierCommand& depthPreset = (options.depthBarrierOverride != nullptr) ? *options.depthBarrierOverride : 
+                (options.loadOp == LoadOperationType::Load) ? PipelineBarrierDepthToDepth : 
+                PipelineBarrierUndefinedToDepthStencil;
+
+            addAttachment(depthPreset, depthResourceHandle, setup.beginRenderCmd.layer, 1u);
         }
         else
         {

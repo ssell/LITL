@@ -68,6 +68,7 @@ namespace litl
             LoadOperationType loadOp{ LoadOperationType::Clear };
             StoreOperationType colorStoreOp{ StoreOperationType::Store };
             StoreOperationType depthStoreOp{ StoreOperationType::DontCare };
+            PipelineBarrierCommand const* depthBarrierOverride{ nullptr };
             bool hasColorAttachment{ true };
             bool hasDepthAttachment{ true };
         };

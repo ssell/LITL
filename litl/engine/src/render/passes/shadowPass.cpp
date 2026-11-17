@@ -1,16 +1,40 @@
 #include "litl-engine/render/passes/shadowPass.hpp"
 #include "litl-engine/render/renderManager.hpp"
+#include "litl-engine/objects/objectPool.hpp"
 
 namespace litl
 {
     void ShadowPass::render(RenderPassContext const& context) noexcept
     {
+        // Render into the shadow maps
         for (const RenderView& renderView : context.renderViews)
         {
             if (renderView.type == RenderViewType::Shadow)
             {
                 render(context.commandBufferHandle, renderView, context.pushConstants);
             }
+        }
+
+        // Barrier the shadow maps
+        for (const RenderView& renderView : context.renderViews)
+        {
+            if (renderView.type != RenderViewType::Shadow)
+            {
+                continue;
+            }
+
+            const Texture* shadowPoolTexture = m_pObjectPool->getTexture(renderView.depthTargetOverrideHandle);
+
+            if (shadowPoolTexture == nullptr)
+            {
+                continue;
+            }
+
+            m_pRenderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierCommand::copyWithTexture(
+                PipelineBarrierDepthToShaderRead,
+                shadowPoolTexture->getTextureResourceHandle(),
+                renderView.depthTargetOverrideLayer,
+                1u));
         }
     }
 

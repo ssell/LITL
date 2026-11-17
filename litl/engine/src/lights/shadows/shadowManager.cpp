@@ -14,6 +14,7 @@
 #include "litl-engine/lights/lightManager.hpp"
 #include "litl-engine/lights/shadows/shadowManager.hpp"
 #include "litl-engine/lights/shadows/shadowAllocator.hpp"
+#include "litl-engine/render/renderManager.hpp"
 #include "litl-engine/scene/sceneView.hpp"
 #include "litl-renderer/renderer.hpp"
 
@@ -75,6 +76,7 @@ namespace litl
         std::shared_ptr<ObjectPool> objectPool;
         std::shared_ptr<LightManager> lightManager;
         std::shared_ptr<SceneView> sceneView;
+        std::shared_ptr<RenderManager> renderManager;
 
         ShadowConfiguration shadowConfig{};
         ShadowAllocator allocator{};
@@ -97,11 +99,13 @@ namespace litl
             objectPool = services.get<ObjectPool>();
             lightManager = services.get<LightManager>();
             sceneView = services.get<SceneView>();
+            renderManager = services.get<RenderManager>();
             auto config = services.get<Configuration>();
 
             LITL_FATAL_ASSERT_MSG((objectPool != nullptr), "Failed to inject ObjectPool into ShadowManager");
             LITL_FATAL_ASSERT_MSG((lightManager != nullptr), "Failed to inject LightManager into ShadowManager");
             LITL_FATAL_ASSERT_MSG((sceneView != nullptr), "Failed to inject SceneView into ShadowManager");
+            LITL_FATAL_ASSERT_MSG((renderManager != nullptr), "Failed to inject RenderManager into ShadowManager");
             LITL_FATAL_ASSERT_MSG((config != nullptr), "Failed to inject Configuration into ShadowManager");
             
             shadowConfig = config->shadow;
@@ -128,6 +132,9 @@ namespace litl
                 .pointCubes = 0u                                            // TODO add support for point light shadows
             }, frame.framesInFlight);
 
+            // -----------------------------------------------------------------------------
+            // Create the Directional Shadow Pool Texture
+
             const TextureDescriptor directionalShadowTextureDesc{
                 .objectInfo = ObjectDescriptor {.name = "LITL_INTERNAL_TEXTURE_DirectionalShadowArray" },
                 .textureInfo = TextureResourceDescriptor {
@@ -142,8 +149,21 @@ namespace litl
             };
 
             directionalShadowTextureHandle = objectPool->createTexture(directionalShadowTextureDesc);
+            auto* directionalShadowTexture = objectPool->getTexture(directionalShadowTextureHandle);
 
-            LITL_FATAL_ASSERT_MSG(directionalShadowTextureHandle.isValid(), "Failed to create directional shadow array texture.");
+            LITL_FATAL_ASSERT_MSG((directionalShadowTexture != nullptr), "Failed to create directional shadow array texture.");
+
+            // -----------------------------------------------------------------------------
+            // Barrier the Shadow Texture from Undefined to Shader Read
+
+            {
+                auto* renderer = renderManager->getRenderer();
+                auto scopedCommandBuffer = renderer->createScopedCommandBuffer();
+                renderer->cmdPipelineBarrier(scopedCommandBuffer.get(), PipelineBarrierCommand::copyWithTexture(PipelineBarrierUndefinedToShaderRead, directionalShadowTexture->getTextureResourceHandle(), 0u, shadowConfig.directionalLayers));
+            }
+
+            // -----------------------------------------------------------------------------
+            // Create the Shadow Data GPU Buffer
 
             const GpuBufferDescriptor shadowDataBufferDesc{
                 .objectInfo = ObjectDescriptor {.name = "LITL_INTERNAL_BUFFER_ShadowViewData" },
