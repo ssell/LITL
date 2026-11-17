@@ -4,6 +4,7 @@
 #include "litl-ecs/register.hpp"
 #include "litl-ecs/entity/entity.hpp"
 #include "litl-core/math/types.hpp"
+#include "litl-engine/lights/shadows/shadowBiasSettings.hpp"
 
 namespace litl
 {
@@ -14,7 +15,9 @@ namespace litl
     {
         color color{ colors::White };       // Color of the light.
         float intensity{ 1.0f };            // Intensity/brightness of the light.
+        ShadowBiasSettings shadowBias{};    // Optional shadow depth bias override. Ignored unless overidesDepthBias is true.
         bool castsShadows{ false };         // Does this light source cast shadows?
+        bool overridesDepthBias{ false };   // Does this light specify its own ShadowDepthBias override?
     };
 
     /// <summary>
@@ -34,7 +37,9 @@ namespace litl
     {
         DirectionalLightData data{};
         Entity entity{};
+        ShadowBiasSettings shadowBias{};
         bool castsShadows{ false };
+        bool biasOverride{ false };
     };
 
     static_assert(sizeof(DirectionalLightData) % 16u == 0u);

@@ -3,6 +3,7 @@
 
 #include "litl-core/math.hpp"
 #include "litl-engine/lights/shadows/shadowCasterType.hpp"
+#include "litl-engine/lights/shadows/shadowBiasSettings.hpp"
 
 namespace litl
 {
@@ -21,6 +22,7 @@ namespace litl
         uint32_t cameraSlot{ 0u };
         uint32_t cascadeIndex{ 0u };
         uint32_t resolution{ 0u };
+        ShadowBiasSettings bias{};
     };
 }
 

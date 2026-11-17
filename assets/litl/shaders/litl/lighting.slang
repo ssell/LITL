@@ -14,6 +14,7 @@ public struct ShadowRenderViewData
 {
     public float4x4 cascadeViewProj[MaxShadowCascades];
     public float4 cascadeSplits;
+    public float4 cascadeNormalOffset;
     public uint shadowArrayIndex;
     public uint firstLayer;
     public uint cascadeCount;

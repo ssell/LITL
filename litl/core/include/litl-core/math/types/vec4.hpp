@@ -207,6 +207,11 @@ namespace litl
         // Accessors
         // ---------------------------------------------------------------------------------
 
+        [[nodiscard]] constexpr float& operator[](size_t i) noexcept
+        {
+            return value[i];
+        }
+
         [[nodiscard]] constexpr float& x() noexcept
         {
             return value.x;

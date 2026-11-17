@@ -13,11 +13,14 @@ namespace litl
     {
         mat4 cascadeViewProj[constants::MaxShadowCascades];
         vec4 cascadeSplits{};
+        vec4 cascadeNormalOffset{};
         uint32_t shadowArrayIndex{ constants::uint32_null_index };
         uint32_t firstLayer{ 0u };
         uint32_t cascadeCount{ 1u };
         uint32_t lightIndex{ 0u };
     };
+
+    static_assert(sizeof(ShadowRenderViewData) % 16 == 0);
 }
 
 #endif

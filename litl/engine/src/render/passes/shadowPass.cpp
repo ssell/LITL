@@ -66,10 +66,26 @@ namespace litl
             };
 
             m_pRenderer->cmdSetViewportAndScissor(commandBufferHandle, setViewportScissorCmd);
+            m_pRenderer->cmdSetDepthBias(commandBufferHandle, renderView.shadowBias.depthBiasConstantFactor, renderView.shadowBias.depthBiasClamp, renderView.shadowBias.depthBiasSlopeFactor);
 
             // ... todo ...
 
             m_pRenderer->cmdEndRender(commandBufferHandle);
         }
+    }
+
+    GraphicsPipelineHandle ShadowPass::resolveGraphicsPipelineHandle(Material* material) const noexcept
+    {
+        constexpr RenderAttachmentFormats formats{
+            .color = DataFormat::Undefined,
+            .depth = DataFormat::D32_SFloat
+        };
+
+        return material->getGraphicsPipelineHandle(MaterialVariantType::Shadow, formats, true);
+    }
+
+    bool ShadowPass::isValidRenderPassMaterial(Material const& material) const noexcept
+    {
+        return material.getCastsShadows();
     }
 }

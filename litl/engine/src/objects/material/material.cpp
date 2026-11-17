@@ -511,6 +511,15 @@ namespace litl
                 return false;
             }
 
+            if (descriptor.castsShadows)
+            {
+                if (!createGraphicsPipeline(MaterialVariantType::Shadow, attachmentFormats).isValid())
+                {
+                    logError("Material '", descriptor.objectInfo.name, "' failed to create shadow graphics pipeline variant.");
+                    return false;
+                }
+            }
+
             return true;
         }
 
@@ -545,9 +554,10 @@ namespace litl
                         graphicsPipelineDescriptor.colorBlend = descriptor.blendState.colorBlend;
                     }
                 }
-                else if (type == MaterialVariantType::DepthOnly)
+                else if ((type == MaterialVariantType::DepthOnly) || (type == MaterialVariantType::Shadow))
                 {
                     // DepthOnly variant is the vertex shader only.
+                    // TODO this needs to be changed for alpha mask, etc.
                 }
 
                 graphicsPipelineDescriptor.renderTargets.depthFormat = attachmentFormats.depth;
@@ -1422,6 +1432,16 @@ namespace litl
     MaterialBlendMode Material::getBlendMode() const noexcept
     {
         return m_pImpl->descriptor.blendState.mode;
+    }
+
+    bool Material::getCastsShadows() const noexcept
+    {
+        return m_pImpl->descriptor.castsShadows;
+    }
+
+    void Material::setCastsShadows(bool casts) noexcept
+    {
+        m_pImpl->descriptor.castsShadows = casts;
     }
 
     // -------------------------------------------------------------------------------------

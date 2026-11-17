@@ -55,7 +55,7 @@ namespace litl
                 m_renderPassItems.back().instanceCount = i - m_renderPassItems.back().instanceOffset;
             }
 
-            if (createRenderPassItems(renderableEntity, i, currMeshHandle, currMaterialHandle))
+            if (createRenderPassItems(renderableEntity, i))
             {
                 currMeshHandle = renderableEntity.meshRef.handle;
                 currMaterialHandle = renderableEntity.materialRef.handle;
@@ -74,7 +74,7 @@ namespace litl
         return true;
     }
 
-    bool RenderPass::createRenderPassItems(RenderableEntity entity, uint32_t instanceOffset, std::optional<MeshHandle>& currMeshHandle, std::optional<MaterialHandle>& currMaterialHandle) noexcept
+    bool RenderPass::createRenderPassItems(RenderableEntity entity, uint32_t instanceOffset) noexcept
     {
         auto* mesh = m_pObjectPool->getMesh(entity.meshRef.handle);
 
@@ -92,7 +92,7 @@ namespace litl
 
         auto* material = m_pObjectPool->getMaterial(entity.materialRef.handle);
 
-        if (material == nullptr)
+        if ((material == nullptr) || !isValidRenderPassMaterial(*material))
         {
             return false;
         }
@@ -112,6 +112,11 @@ namespace litl
             });
 
         // Only update current handles on successful object retrievals and subsequent DrawListItem creation.
+        return true;
+    }
+
+    bool RenderPass::isValidRenderPassMaterial(Material const& material) const noexcept
+    {
         return true;
     }
 

@@ -471,7 +471,7 @@ namespace litl
         /// <summary>
         /// Sets the active depth bias factors.
         /// </summary>
-        void cmdSetDepthBias(CommandBufferHandle commandBuffer, float constantFactor, float biasClamp, float biasSlope);
+        void cmdSetDepthBias(CommandBufferHandle commandBuffer, float constantFactor, float biasClamp, float biasSlope) const noexcept;
 
         // ---------------------------------------------------------------------------------
         // Drawing

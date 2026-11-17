@@ -32,7 +32,9 @@ namespace litl
             Entity entity{};
             DirectionalLight light{};
             vec3 toLightDir{};
+            ShadowBiasSettings shadowBias{};
             bool castsShadows{ false };
+            bool biasOverride{ false };
         };
 
         using LightCommandVar = std::variant<
@@ -331,7 +333,9 @@ namespace litl
             .entity = entity,
             .light = light,
             .toLightDir = toLightDir,
-            .castsShadows = light.castsShadows
+            .shadowBias = light.shadowBias,
+            .castsShadows = light.castsShadows,
+            .biasOverride = light.overridesDepthBias
         });
     }
 

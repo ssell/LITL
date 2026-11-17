@@ -2,7 +2,9 @@
 #define LITL_ENGINE_LIGHTS_SHADOW_CONFIGURATION_H__
 
 #include <cstdint>
+
 #include "litl-engine/constants.hpp"
+#include "litl-engine/lights/shadows/shadowBiasSettings.hpp"
 
 namespace litl
 {
@@ -46,6 +48,21 @@ namespace litl
         /// 0 = uniform splits, 1 = logarithmic.
         /// </summary>
         float cascadeSplitLambda{ 0.75f };
+
+        /// <summary>
+        /// Default depth bias for directional light shadows.
+        /// </summary>
+        ShadowBiasSettings defaultDirectionalBias{};
+
+        /// <summary>
+        /// Default depth bias for spot light shadows.
+        /// </summary>
+        ShadowBiasSettings defaultSpotBias{};
+
+        /// <summary>
+        /// Default depth bias for point light shadows.
+        /// </summary>
+        ShadowBiasSettings defaultPointBias{};
         
         void sanitize() noexcept;
     };

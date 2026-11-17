@@ -11,6 +11,10 @@ namespace litl
 
         void render(RenderPassContext const& context) noexcept override;
 
+    protected:
+
+        [[nodiscard]] GraphicsPipelineHandle resolveGraphicsPipelineHandle(Material* material) const noexcept override;
+        [[nodiscard]] bool isValidRenderPassMaterial(Material const& material) const noexcept override;
     private:
 
         void render(CommandBufferHandle commandBufferHandle, RenderView const& renderView, RenderPushConstants viewPushConstants) noexcept;

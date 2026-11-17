@@ -37,6 +37,7 @@ namespace litl
     {
         Color = 0u,
         DepthOnly = 1u,
+        Shadow = 2u,
         Count
     };
 
@@ -110,6 +111,7 @@ namespace litl
         ShaderResourceDescriptor computeShader{};
         ShaderResourceDescriptor meshShader{};
         ShaderResourceDescriptor taskShader{};
+        bool castsShadows{ true };
     };
 
     class Material
@@ -382,6 +384,16 @@ namespace litl
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] MaterialBlendMode getBlendMode() const noexcept;
+
+        /// <summary>
+        /// Is the material rendered by the shadow pass?
+        /// </summary>
+        [[nodiscard]] bool getCastsShadows() const noexcept;
+
+        /// <summary>
+        /// Is the material rendered by the shadow pass?
+        /// </summary>
+        void setCastsShadows(bool casts) noexcept;
 
     private:
 

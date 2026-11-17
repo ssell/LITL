@@ -27,6 +27,8 @@ namespace litl
             uint32_t index{ constants::uint32_null_index };
             Entity entity{};
             vec3 toLight{};
+            ShadowBiasSettings bias{};
+            bool biasOverride{ false };
         };
 
         struct DirectionalLightFit
@@ -229,12 +231,20 @@ namespace litl
             {
                 if (lights[i].castsShadows)
                 {
-                    return ShadowedLight{ .index = i, .entity = lights[i].entity, .toLight = lights[i].data.toLight };
+                    return ShadowedLight{ 
+                        .index = i, 
+                        .entity = lights[i].entity, 
+                        .toLight = lights[i].data.toLight,
+                        .bias = lights[i].shadowBias,
+                        .biasOverride = lights[i].biasOverride
+                    };
                 }
             }
 
             return std::nullopt;
         }
+
+        static_assert(constants::MaxShadowCascades <= 4, "constants::MaxShadowCascades must be less or equal to 4 as cascade biases are passed as float4");
 
         void buildCameraDirectionalShadows(uint32_t slot, Camera const& camera, ShadowedLight const& light, uint32_t frameCount) noexcept
         {
@@ -277,14 +287,17 @@ namespace litl
             shadowData.lightIndex = light.index;
 
             float sliceNear = camNear;
+            const ShadowBiasSettings bias = (light.biasOverride ? light.bias : shadowConfig.defaultDirectionalBias);
             
             for (uint32_t cascadeIndex = 0u; cascadeIndex < cascadeCount; ++cascadeIndex)
             {
                 const auto slice = sliceCorners(corners, camNear, camFar, sliceNear, cascadeSplits[cascadeIndex]);
                 const auto sphere = bounds::Sphere::fromCorners(slice);
                 const auto fit = fitDirectionalLight(light.toLight, sphere, shadowConfig.resolution, shadowConfig.directionalCasterPullback);
+                const float texelWorld = (2.0f * sphere.radius) / static_cast<float>(shadowConfig.resolution);
 
                 shadowData.cascadeViewProj[cascadeIndex] = fit.viewProj;
+                shadowData.cascadeNormalOffset[cascadeIndex] = texelWorld * bias.normalOffsetTexels;
 
                 shadowViews.push_back(ShadowView{
                     .cullFrustum = bounds::Frustum::fromViewProjection(fit.cullViewProj, bounds::FrustumExtractionOptions{ .reverseZ = true }),
@@ -296,7 +309,8 @@ namespace litl
                     .layer = acquired->allocation.range.first + cascadeIndex,
                     .cameraSlot = slot,
                     .cascadeIndex = cascadeIndex,
-                    .resolution = shadowConfig.resolution
+                    .resolution = shadowConfig.resolution,
+                    .bias = (light.biasOverride ? light.bias : shadowConfig.defaultDirectionalBias)
                 });
 
                 sliceNear = cascadeSplits[cascadeIndex];

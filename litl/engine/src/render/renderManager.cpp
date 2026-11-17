@@ -763,6 +763,7 @@ namespace litl
                     if (shadowView != nullptr)
                     {
                         renderView.view = ResolvedView::fromShadowView(*shadowView);
+                        renderView.shadowBias = shadowView->bias;
                     }
                     else
                     {

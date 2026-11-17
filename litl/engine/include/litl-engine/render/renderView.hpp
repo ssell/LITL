@@ -10,6 +10,7 @@
 #include "litl-engine/render/renderableEntity.hpp"
 #include "litl-engine/objects/renderTexture.hpp"
 #include "litl-engine/lights/shadows/shadowView.hpp"
+#include "litl-engine/lights/shadows/shadowBiasSettings.hpp"
 
 namespace litl
 {
@@ -52,6 +53,7 @@ namespace litl
         uint64_t opaqueInstanceDataAddr{ 0ull };
         uint64_t transparentInstanceDataAddr{ 0ull };
         RenderViewType type{ RenderViewType::Camera };
+        ShadowBiasSettings shadowBias{};
     };
 }
 
