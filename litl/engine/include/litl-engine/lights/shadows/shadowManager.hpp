@@ -2,6 +2,7 @@
 #define LITL_ENGINE_LIGHTS_SHADOW_MANAGER_H__
 
 #include <memory>
+#include <optional>
 #include <span>
 
 #include "litl-core/authority.hpp"
@@ -34,6 +35,7 @@ namespace litl
 
         [[nodiscard]] static bool cameraValidForShadows(Camera const* camera) noexcept;
         [[nodiscard]] std::span<ShadowView const> getShadowViews() const noexcept;
+        [[nodiscard]] ShadowView const* getShadowView(uint32_t index) const noexcept;
         [[nodiscard]] ShadowRenderViewData const& getCameraShadowData(uint32_t cameraSlot) const noexcept;
         [[nodiscard]] uint64_t getCameraShadowDataAddress(uint32_t cameraSlot) const noexcept;
         [[nodiscard]] TextureHandle getDirectionalShadowTexture() const noexcept;

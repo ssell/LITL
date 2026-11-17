@@ -7,8 +7,8 @@ namespace litl
 {
     enum class RenderPassType : uint8_t
     {
-        DepthOnly = 0u,
-        Shadow = 1u,
+        Shadow = 0u,
+        DepthOnly = 1u,
         ForwardOpaque = 2u,
         ForwardTransparent = 3u,
         Blit = 4u,

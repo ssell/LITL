@@ -20,6 +20,7 @@
 #include "litl-engine/render/passes/shadowPass.hpp"
 #include "litl-engine/render/passes/renderPassType.hpp"
 #include "litl-engine/lights/lightManager.hpp"
+#include "litl-engine/lights/shadows/shadowManager.hpp"
 #include "litl-engine/engineCallbacks.hpp"
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/objects/gpuBuffer.hpp"
@@ -55,10 +56,12 @@ namespace litl
 
         struct PreparedView
         {
+            RenderViewType type{ RenderViewType::Camera };
             Camera* camera{ nullptr };
             PreparedSubView opaque{};
             PreparedSubView transparent{};
             uint32_t viewIndex{ 0u };
+            uint32_t sourceIndex{ 0u };             // If a shadow view, then this is the ShadowManager index
         };
     }
 
@@ -91,6 +94,7 @@ namespace litl
         std::chrono::steady_clock::time_point startTime;
         std::shared_ptr<ObjectPool> objectPool{ nullptr };
         std::shared_ptr<LightManager> lightManager{ nullptr };
+        std::shared_ptr<ShadowManager> shadowManager{ nullptr };
         std::shared_ptr<SceneView> sceneView{ nullptr };
         std::queue<GpuBufferHandle> dirtyBuffers;
         std::queue<TextureHandle> dirtyTextures;
@@ -115,6 +119,7 @@ namespace litl
             objectPool = services.get<ObjectPool>();
             sceneView = services.get<SceneView>();
             lightManager = services.get<LightManager>();
+            shadowManager = services.get<ShadowManager>();
 
             auto config = services.get<Configuration>();
             auto window = services.get<Window>();
@@ -122,6 +127,7 @@ namespace litl
 
             LITL_FATAL_ASSERT_MSG((objectPool != nullptr), "Failed to inject ObjectPool into RenderManager.");
             LITL_FATAL_ASSERT_MSG((lightManager != nullptr), "Failed to inject LightManager into RenderManager.");
+            LITL_FATAL_ASSERT_MSG((shadowManager != nullptr), "Failed to inject ShadowManager into RenderManager.");
             LITL_FATAL_ASSERT_MSG((sceneView != nullptr), "Failed to inject SceneView into RenderManager.");
             LITL_FATAL_ASSERT_MSG((config != nullptr), "Failed to inject Configuration into RenderManager.");
             LITL_FATAL_ASSERT_MSG((window != nullptr), "Failed to inject Window into RenderManager.");
@@ -242,8 +248,8 @@ namespace litl
 
         void createRenderPasses(RenderManager* self, ServiceProvider& services) noexcept
         {
-            renderPasses[static_cast<uint32_t>(RenderPassType::DepthOnly)] = std::make_unique<DepthOnlyPass>();
             renderPasses[static_cast<uint32_t>(RenderPassType::Shadow)] = std::make_unique<ShadowPass>();
+            renderPasses[static_cast<uint32_t>(RenderPassType::DepthOnly)] = std::make_unique<DepthOnlyPass>();
             renderPasses[static_cast<uint32_t>(RenderPassType::ForwardOpaque)] = std::make_unique<ForwardOpaquePass>();
             renderPasses[static_cast<uint32_t>(RenderPassType::ForwardTransparent)] = std::make_unique<ForwardTransparentPass>();
             renderPasses[static_cast<uint32_t>(RenderPassType::Blit)] = std::make_unique<BlitPass>();
@@ -358,8 +364,8 @@ namespace litl
                     .renderViews = frameRenderViews
                 };
 
-                getRenderPass(RenderPassType::DepthOnly).render(renderPassContext);
                 getRenderPass(RenderPassType::Shadow).render(renderPassContext);
+                getRenderPass(RenderPassType::DepthOnly).render(renderPassContext);
                 getRenderPass(RenderPassType::ForwardOpaque).render(renderPassContext);
                 getRenderPass(RenderPassType::ForwardTransparent).render(renderPassContext);
                 getRenderPass(RenderPassType::Blit).render(renderPassContext);
@@ -580,19 +586,28 @@ namespace litl
 
             for (size_t vidx = 0ull; vidx < CullingSystem::getCullViews().size(); ++vidx)
             {
+                const auto& cullView = CullingSystem::getCullViews()[vidx];
                 const auto& cullBucketView = cullingBucket.views[vidx];
 
-                if (cullBucketView.opaque.empty() && cullBucketView.transparent.empty())
+                if ((cullView.type != CullViewType::Shadow) && (cullBucketView.opaque.empty() && cullBucketView.transparent.empty()))
                 {
+                    // Skip cameras with no renderables. Do not skip shadows with no renderables or else their layers will never be cleared.
                     continue;
                 }
 
                 PreparedView preparedView{
-                    .camera = CullingSystem::getCullViews()[vidx].camera,
+                    .type = (cullView.type == CullViewType::Shadow ? RenderViewType::Shadow : RenderViewType::Camera),
+                    .camera = cullView.camera,
                     .opaque = PreparedSubView {.entities = cullBucketView.opaque},
                     .transparent = PreparedSubView{.entities = cullBucketView.transparent},
-                    .viewIndex = viewIndex
+                    .viewIndex = viewIndex,
+                    .sourceIndex = cullView.sourceIndex
                 };
+
+                if ((preparedView.type == RenderViewType::Camera) && (preparedView.camera != nullptr) && (preparedView.camera->getColorEnabled() == false))
+                {
+                    preparedView.type = RenderViewType::DepthOnly;
+                }
 
                 preparedView.opaque.instanceBase = instanceBase;                                        // This matches the logic in writeViewData where all opaque entity instance data is added and then all transparent entity instance data is added.
                 instanceBase += static_cast<uint32_t>(cullBucketView.opaque.size());
@@ -604,7 +619,7 @@ namespace litl
             }
 
             // Sort from lower priority to high
-            std::ranges::stable_sort(preparedViews, std::less{}, [](PreparedView const& v) { return v.camera->getCameraPriority(); });
+            std::ranges::stable_sort(preparedViews, std::less{}, [](PreparedView const& v) { return (v.camera != nullptr ? v.camera->getCameraPriority() : 0u); });
         }
 
         /// <summary>
@@ -631,12 +646,56 @@ namespace litl
                 LITL_ASSERT(preparedView.viewIndex == passDataScratch.size(), );
                 LITL_ASSERT(preparedView.opaque.instanceBase == instanceDataScratch.size(), );
 
-                passDataScratch.push_back(RenderPerPassData{
-                    .viewMatrix = preparedView.camera->getViewMatrix(),
-                    .projMatrix = preparedView.camera->getProjectionMatrix(),
-                    .viewProjMatrix = preparedView.camera->getViewProjectionMatrix(),
-                    .cameraPosition = vec4(preparedView.camera->getWorldPosition())
-                });
+                RenderPerPassData perPassData;
+                bool perPassDataError = false;
+
+                if ((preparedView.type == RenderViewType::Camera) || (preparedView.type == RenderViewType::DepthOnly))
+                {
+                    if (preparedView.camera != nullptr)
+                    {
+                        perPassData.viewMatrix = preparedView.camera->getViewMatrix();
+                        perPassData.projMatrix = preparedView.camera->getProjectionMatrix();
+                        perPassData.viewProjMatrix = preparedView.camera->getViewProjectionMatrix();
+                        perPassData.cameraPosition = vec4(preparedView.camera->getWorldPosition());
+                        perPassData.shadowDataAddr = shadowManager->getCameraShadowDataAddress(preparedView.sourceIndex);
+                    }
+                    else
+                    {
+                        logError("Null camera provided while building prepared views.");
+                        perPassDataError = true;
+                    }
+                }
+                else if (preparedView.type == RenderViewType::Shadow)
+                {
+                    const auto* shadowView = shadowManager->getShadowView(preparedView.sourceIndex);
+
+                    if (shadowView != nullptr)
+                    {
+                        perPassData.viewMatrix = shadowView->viewMatrix;
+                        perPassData.projMatrix = shadowView->projMatrix;
+                        perPassData.viewProjMatrix = shadowView->viewProjMatrix;
+                        perPassData.cameraPosition = vec4(shadowView->eyePosition);
+                    }
+                    else
+                    {
+                        logError("Failed to retrieve ShadowView at index ", preparedView.sourceIndex, " while building prepared views.");
+                        perPassDataError = true;
+                    }
+                }
+                else
+                {
+                    logError("PreparedView with unhandled type of ", static_cast<uint32_t>(preparedView.type), " found while building RenderPerPassData.");
+                    perPassDataError = true;
+                }
+
+                if (!perPassDataError)
+                {
+                    passDataScratch.push_back(perPassData);
+                }
+                else
+                {
+                    passDataScratch.emplace_back();         // Maintain indexing
+                }
 
                 for (const auto& opaqueEntity : preparedView.opaque.entities)
                 {
@@ -674,16 +733,65 @@ namespace litl
 
             for (const auto& preparedView : preparedViews)
             {
-                renderViews.push_back(RenderView{
-                    .view = ResolvedView::fromCamera(*preparedView.camera),
+                RenderView renderView{
                     .renderTexture = (preparedView.camera != nullptr) ? objectPool->getRenderTexture(preparedView.camera->getRenderTextureHandle()) : nullptr,
                     .sortedOpaqueEntities = preparedView.opaque.entities,
                     .sortedTransparentEntities = preparedView.transparent.entities,
                     .perPassDataAddr = passDataAddr + (preparedView.viewIndex * sizeof(RenderPerPassData)),
                     .opaqueInstanceDataAddr = instanceDataAddr + (preparedView.opaque.instanceBase * sizeof(RenderInstanceData)),
                     .transparentInstanceDataAddr = instanceDataAddr + (preparedView.transparent.instanceBase * sizeof(RenderInstanceData)),
-                    .type = RenderView::resolveType(preparedView.camera)
-                });
+                    .type = preparedView.type
+                };
+
+                if ((preparedView.type == RenderViewType::Camera) || (preparedView.type == RenderViewType::DepthOnly))
+                {
+                    if (preparedView.camera != nullptr)
+                    {
+                        renderView.view = ResolvedView::fromCamera(*preparedView.camera);
+                    }
+                    else
+                    {
+                        logError("PreparedView with type of Camera or DepthOnly has null .camera");
+                        continue;
+                    }
+                }
+                else if (preparedView.type == RenderViewType::Shadow)
+                {
+                    // .view
+                    const auto* shadowView = shadowManager->getShadowView(preparedView.sourceIndex);
+
+                    if (shadowView != nullptr)
+                    {
+                        renderView.view = ResolvedView::fromShadowView(*shadowView);
+                    }
+                    else
+                    {
+                        logError("Failed to retrieve ShadowView at index ", preparedView.sourceIndex, " while building render views.");
+                        continue;
+                    }
+
+                    // .renderTargetOverrideHandle and .renderTargetOverrideLayer
+                    switch (shadowView->type)
+                    {
+                    case ShadowCasterType::Directional:
+                        renderView.depthTargetOverrideHandle = shadowManager->getDirectionalShadowTexture();
+                        renderView.depthTargetOverrideLayer = shadowView->layer;
+                        break;
+
+                    case ShadowCasterType::Spot:
+                    case ShadowCasterType::Point:
+                    default:
+                        logError("Unhandled ShadowCasterType of ", static_cast<uint32_t>(shadowView->type), " encountered while building render views.");
+                        continue;
+                    }
+                }
+                else
+                {
+                    logError("PreparedView with unhandled type of ", static_cast<uint32_t>(preparedView.type), " while building ResolvedViews.");
+                    continue;
+                }
+
+                renderViews.push_back(renderView);
             }
         }
 

@@ -70,11 +70,11 @@ namespace litl
         {
             if (renderViewSource.color != nullptr)
             {
-                m_pRenderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierCommand::copyWithTexture(PipelineBarrierColorToShaderRead, renderViewSource.color->getTextureResourceHandle()));
+                m_pRenderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierCommand::copyWithTexture(PipelineBarrierColorToShaderRead, renderViewSource.color->getTextureResourceHandle(), 0u, 1u));
             }
             else if (renderViewSource.depth != nullptr)
             {
-                m_pRenderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierCommand::copyWithTexture(PipelineBarrierDepthToShaderRead, renderViewSource.depth->getTextureResourceHandle()));
+                m_pRenderer->cmdPipelineBarrier(context.commandBufferHandle, PipelineBarrierCommand::copyWithTexture(PipelineBarrierDepthToShaderRead, renderViewSource.depth->getTextureResourceHandle(), 0u, 1u));
             }
         }
 

@@ -346,6 +346,18 @@ namespace litl
         return m_pImpl->shadowViews;
     }
 
+    ShadowView const* ShadowManager::getShadowView(uint32_t index) const noexcept
+    {
+        if (index < m_pImpl->shadowViews.size())
+        {
+            return &m_pImpl->shadowViews[index];
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+
     ShadowRenderViewData const& ShadowManager::getCameraShadowData(uint32_t cameraSlot) const noexcept
     {
         static constexpr ShadowRenderViewData unshadowed{};

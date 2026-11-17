@@ -28,6 +28,9 @@ public struct PerPassData
     public float4x4 projection;
     public float4x4 viewProjection;
     public float4 cameraPosition;
+    public ShadowRenderViewData *shadowData;
+    uint padding0;
+    uint padding1;
 };
 
 // Maps to RenderDataMap in litl-engine/render/renderStructs.hpp
@@ -40,12 +43,12 @@ public struct RenderInstanceData
 // Maps to RenderPushConstants in litl-engine/render/renderStructs.hpp
 public struct PushConstants<MatProps>
 {
-    public PerFrameData *frameData;
-    public PerPassData *passData;
-    public RenderInstanceData *instanceData;
-    public float4x4 *worldMatrices;
-    public MatProps *materialProperties;
-    public LightData *lightData;
+    public PerFrameData* frameData;
+    public PerPassData* passData;
+    public RenderInstanceData* instanceData;
+    public float4x4* worldMatrices;
+    public MatProps* materialProperties;
+    public LightData* lightData;
 
     public uint getGpuIndex(in uint globalInstanceId)
     {

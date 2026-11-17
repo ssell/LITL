@@ -86,10 +86,13 @@ namespace litl
         /// </summary>
         uint32_t layerCount = 1u;
 
-        [[nodiscard]] static PipelineBarrierCommand copyWithTexture(PipelineBarrierCommand const& barrier, TextureResourceHandle textureResource) noexcept
+        [[nodiscard]] static PipelineBarrierCommand copyWithTexture(PipelineBarrierCommand const& barrier, TextureResourceHandle textureResource, uint32_t layer, uint32_t layerCount) noexcept
         {
             PipelineBarrierCommand copy = barrier;
             copy.texture = textureResource;
+            copy.layer = layer;
+            copy.layerCount = layerCount;
+
             return copy;
         }
     };

@@ -188,9 +188,9 @@ namespace litl
     {
         RenderTargetSetup setup{};
 
-        auto addAttachment = [&](PipelineBarrierCommand const& preset, TextureResourceHandle handle)
+        auto addAttachment = [&](PipelineBarrierCommand const& preset, TextureResourceHandle handle, uint32_t layer, uint32_t layerCount)
         {
-            setup.pipelineBarrierCmds[setup.barrierCount++] = PipelineBarrierCommand::copyWithTexture(preset, handle);
+            setup.pipelineBarrierCmds[setup.barrierCount++] = PipelineBarrierCommand::copyWithTexture(preset, handle, layer, layerCount);
         };
 
         const bool colorEnabled = options.hasColorAttachment && renderView.view.colorEnabled;
@@ -199,33 +199,39 @@ namespace litl
         Texture* colorTexture{ nullptr };
         Texture* depthTexture{ nullptr };
 
-        if (renderView.renderTexture != nullptr)
+        if (colorEnabled && (renderView.renderTexture != nullptr))
         {
-            if (colorEnabled)
-            {
-                colorTexture = m_pObjectPool->getTexture(renderView.renderTexture->getColorTextureHandle());
+            colorTexture = m_pObjectPool->getTexture(renderView.renderTexture->getColorTextureHandle());
 
-                if (colorTexture == nullptr)
-                {
-                    logWarning("Failed to resolve render texture color component.");
-                    return setup;
-                }
+            if (colorTexture == nullptr)
+            {
+                logWarning("Failed to resolve render texture color component.");
+                return setup;
+            }
+        }
+
+        if (depthEnabled && ((renderView.renderTexture != nullptr) || renderView.depthTargetOverrideHandle.isValid()))
+        {
+            TextureHandle depthTargetHandle = renderView.depthTargetOverrideHandle;
+
+            if (!depthTargetHandle.isValid() && (renderView.renderTexture != nullptr))
+            {
+                depthTargetHandle = renderView.renderTexture->getDepthTextureHandle();
             }
 
-            if (depthEnabled)
-            {
-                depthTexture = m_pObjectPool->getTexture(renderView.renderTexture->getDepthTextureHandle());
+            depthTexture = m_pObjectPool->getTexture(depthTargetHandle);
 
-                if ((depthTexture == nullptr) && options.hasDepthAttachment)
-                {
-                    logWarning("Failed to resolve render texture depth component.");
-                    return setup;
-                }
+            if ((depthTexture == nullptr) && options.hasDepthAttachment)
+            {
+                logWarning("Failed to resolve render texture depth component.");
+                return setup;
             }
         }
 
         const TextureResourceHandle colorResourceHandle = (colorTexture != nullptr) ? colorTexture->getTextureResourceHandle() : TextureResourceHandle{};
         const TextureResourceHandle depthResourceHandle = (depthTexture != nullptr) ? depthTexture->getTextureResourceHandle() : TextureResourceHandle{};
+
+        setup.beginRenderCmd.layer = renderView.depthTargetOverrideLayer;
 
         if (colorEnabled)
         {
@@ -237,7 +243,7 @@ namespace litl
                 .clearColor = renderView.view.clearColor
             };
 
-            addAttachment((options.loadOp == LoadOperationType::Load) ? PipelineBarrierColorToColor : PipelineBarrierUndefinedToColor, colorResourceHandle);
+            addAttachment((options.loadOp == LoadOperationType::Load) ? PipelineBarrierColorToColor : PipelineBarrierUndefinedToColor, colorResourceHandle, 0u, 1u);
         }
         else
         {
@@ -254,7 +260,7 @@ namespace litl
                 .clearDepth = 0.0f
             };
 
-            addAttachment((options.loadOp == LoadOperationType::Load) ? PipelineBarrierDepthToDepth : PipelineBarrierUndefinedToDepthStencil, depthResourceHandle);
+            addAttachment((options.loadOp == LoadOperationType::Load) ? PipelineBarrierDepthToDepth : PipelineBarrierUndefinedToDepthStencil, depthResourceHandle, setup.beginRenderCmd.layer, 1u);
         }
         else
         {

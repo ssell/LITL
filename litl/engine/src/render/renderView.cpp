@@ -20,23 +20,17 @@ namespace litl
         };
     }
 
-    RenderViewType RenderView::resolveType(Camera* camera) noexcept
+    ResolvedView ResolvedView::fromShadowView(ShadowView const& view) noexcept
     {
-        if (camera != nullptr)
-        {
-            switch (camera->getCameraType())
-            {
-            case CameraType::DepthOnly:
-                return RenderViewType::DepthOnly;
-
-            case CameraType::Standard:
-            default:
-                return RenderViewType::Camera;
-            }
-        }
-        else
-        {
-            return RenderViewType::Shadow;
-        }
+        return ResolvedView{
+            .viewMat = view.viewMatrix,
+            .projMat = view.projMatrix,
+            .viewProjMat = view.viewProjMatrix,
+            .position = view.eyePosition,
+            .frustum = view.cullFrustum,
+            .colorEnabled = false,
+            .depthEnabled = true,
+            .clearColor = colors::Black,
+        };
     }
 }

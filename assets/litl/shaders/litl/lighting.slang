@@ -6,6 +6,20 @@
 module lighting;
 __exported import brdf;
 
+// Must match constants::MaxShadowCascades
+public static const uint MaxShadowCascades = 4;
+
+// Must match ShadowRenderViewData.hpp
+public struct ShadowRenderViewData
+{
+    public float4x4 cascadeViewProj[MaxShadowCascades];
+    public float4 cascadeSplits;
+    public uint shadowArrayIndex;
+    public uint firstLayer;
+    public uint cascadeCount;
+    public uint lightIndex;
+}
+
 public struct DirectionalLight
 {
     public float4 colorIntensity;                   // (color.r, color.g, color.b, intensity)

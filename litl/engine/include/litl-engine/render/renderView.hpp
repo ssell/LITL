@@ -9,6 +9,7 @@
 #include "litl-core/math/bounds.hpp"
 #include "litl-engine/render/renderableEntity.hpp"
 #include "litl-engine/objects/renderTexture.hpp"
+#include "litl-engine/lights/shadows/shadowView.hpp"
 
 namespace litl
 {
@@ -36,20 +37,21 @@ namespace litl
         float far{ 1.0f };
 
         [[nodiscard]] static ResolvedView fromCamera(Camera const& camera) noexcept;
+        [[nodiscard]] static ResolvedView fromShadowView(ShadowView const& view) noexcept;
     };
 
     struct RenderView
     {
         ResolvedView view{};
         RenderTexture* renderTexture{ nullptr };
+        TextureHandle depthTargetOverrideHandle{};
+        uint32_t depthTargetOverrideLayer{ 0u };
         std::span<RenderableEntity const> sortedOpaqueEntities{};
         std::span<RenderableEntity const> sortedTransparentEntities{};
         uint64_t perPassDataAddr{ 0ull };
         uint64_t opaqueInstanceDataAddr{ 0ull };
         uint64_t transparentInstanceDataAddr{ 0ull };
         RenderViewType type{ RenderViewType::Camera };
-
-        [[nodiscard]] static RenderViewType resolveType(Camera* camera) noexcept;
     };
 }
 

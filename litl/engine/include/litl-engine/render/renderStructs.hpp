@@ -22,10 +22,12 @@ namespace litl
     /// </summary>
     struct RenderPerPassData
     {
-        mat4 viewMatrix;
-        mat4 projMatrix;
-        mat4 viewProjMatrix;
-        vec4 cameraPosition;
+        mat4 viewMatrix{};
+        mat4 projMatrix{};
+        mat4 viewProjMatrix{};
+        vec4 cameraPosition{};
+        uint64_t shadowDataAddr{};
+        uint64_t padding{ 0ull };
     };
 
     static_assert(sizeof(RenderPerPassData) % 16 == 0);
