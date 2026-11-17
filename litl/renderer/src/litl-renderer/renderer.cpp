@@ -342,6 +342,12 @@ namespace litl
         return m_pOps->getTextureTableIndex(m_pContext, texture);
     }
 
+    void Renderer::cmdSetDepthBias(CommandBufferHandle commandBuffer, float constantFactor, float biasClamp, float biasSlope)
+    {
+        LITL_FATAL_ASSERT(valid());
+        return m_pOps->cmdSetDepthBias(m_pContext, commandBuffer, constantFactor, biasClamp, biasSlope);
+    }
+
     // ---------------------------------------------------------------------------------
     // Drawing
     // ---------------------------------------------------------------------------------

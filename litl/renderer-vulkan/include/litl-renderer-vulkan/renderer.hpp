@@ -69,6 +69,7 @@ namespace litl::vulkan
     [[nodiscard]] RendererResult cmdBindTexture(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, TextureResourceHandle textureHandle, StringId textureId, bool isGraphics) noexcept;
     [[nodiscard]] RendererResult cmdBindSampler(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, SamplerHandle samplerHandle, StringId samplerId, bool isGraphics) noexcept;
     [[nodiscard]] RendererResult cmdTextureUpload(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, std::span<std::byte const> source, std::span<TextureUploadRegion const> regions, TextureResourceHandle destTextureHandle) noexcept;
+    void cmdSetDepthBias(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, float constantFactor, float biasClamp, float biasSlope) noexcept;
 
     // -------------------------------------------------------------------------------------
     // rendererDrawOps.cpp
@@ -135,6 +136,7 @@ namespace litl::vulkan
         .cmdPushConstants = &cmdPushConstants,
         .cmdDraw = &cmdDraw,
         .cmdDrawIndexed = &cmdDrawIndexed,
+        .cmdSetDepthBias = &cmdSetDepthBias,
         .cmdBindVertexBuffer = &cmdBindVertexBuffer,
         .cmdBindVertexBuffers = &cmdBindVertexBuffers,
         .cmdBindIndexBuffer = &cmdBindIndexBuffer,

@@ -76,6 +76,16 @@ namespace litl
         /// </summary>
         PipelineStageFlag destStage = static_cast<PipelineStageFlag>(PipelineStageFlagBits::None);
 
+        /// <summary>
+        /// The base layer index to barrier on. Use 0 for non-array textures.
+        /// </summary>
+        uint32_t layer = 0u;
+
+        /// <summary>
+        /// The number of layers to barrier. Use 1 for non-array textures.
+        /// </summary>
+        uint32_t layerCount = 1u;
+
         [[nodiscard]] static PipelineBarrierCommand copyWithTexture(PipelineBarrierCommand const& barrier, TextureResourceHandle textureResource) noexcept
         {
             PipelineBarrierCommand copy = barrier;

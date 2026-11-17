@@ -401,8 +401,8 @@ namespace litl::vulkan
                     .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
                     .baseMipLevel = 0,
                     .levelCount = 1,
-                    .baseArrayLayer = 0,
-                    .layerCount = 1
+                    .baseArrayLayer = command.layer,
+                    .layerCount = command.layerCount
                 };
             }
         }
@@ -988,5 +988,18 @@ namespace litl::vulkan
             firstIndex,
             vertexOffset,
             firstInstance);
+    }
+
+    void cmdSetDepthBias(litl::RendererContext* context, CommandBufferHandle commandBufferHandle, float constantFactor, float biasClamp, float biasSlope) noexcept
+    {
+        auto* vulkanContext = unwrap(context);
+        auto* commandBuffer = unwrapCommandBuffer(context, commandBufferHandle);
+
+        if (!isValid(commandBuffer))
+        {
+            return;
+        }
+
+        vkCmdSetDepthBias(commandBuffer->vkCommandBuffer, constantFactor, biasClamp, biasSlope);
     }
 }

@@ -68,6 +68,7 @@ namespace litl
         RendererResult (*cmdPushConstants)(RendererContext*, CommandBufferHandle, ShaderStage, std::span<std::byte const>);
         void (*cmdDraw)(RendererContext*, CommandBufferHandle, uint32_t, uint32_t, uint32_t, uint32_t);
         void (*cmdDrawIndexed)(RendererContext*, CommandBufferHandle, uint32_t, uint32_t, uint32_t, int32_t, uint32_t);
+        void (*cmdSetDepthBias)(RendererContext*, CommandBufferHandle, float, float, float);
 
         // buffer commands and operations
         RendererResult (*cmdBindVertexBuffer)(RendererContext*, CommandBufferHandle, BufferHandle, uint64_t, uint32_t);
@@ -466,6 +467,11 @@ namespace litl
         /// If the texture is not in the texture table then returns the uint32_t null index.
         /// </summary>
         [[nodiscard]] uint32_t getTextureTableIndex(TextureResourceHandle texture) const noexcept;
+
+        /// <summary>
+        /// Sets the active depth bias factors.
+        /// </summary>
+        void cmdSetDepthBias(CommandBufferHandle commandBuffer, float constantFactor, float biasClamp, float biasSlope);
 
         // ---------------------------------------------------------------------------------
         // Drawing
