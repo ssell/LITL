@@ -1,6 +1,8 @@
 #ifndef LITL_RENDERER_VULKAN_TEXTURE_H__
 #define LITL_RENDERER_VULKAN_TEXTURE_H__
 
+#include <vector>
+
 #include "litl-core/stringId.hpp"
 #include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer/resources/texture.hpp"
@@ -42,6 +44,12 @@ namespace litl::vulkan
         /// For use with textures that require a separate view for sampling (such as depth-stencil).
         /// </summary>
         VkImageView vkSampledImageView = VK_NULL_HANDLE;
+
+        /// <summary>
+        /// If the texture has more than one layer, and the texture has a color or depth attachment, these are
+        /// the per-layer attachment views. Needed to dynamically render into a specific layer (shadow cascades, etc.).
+        /// </summary>
+        std::vector<VkImageView> layerAttachmentViews;
 
         /// <summary>
         /// 

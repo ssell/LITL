@@ -1146,6 +1146,207 @@ namespace litl::vulkan
         return {};
     }
 
+    namespace
+    {
+        [[nodiscard]] bool createTextureResource(TextureResource& resource, TextureResourceDescriptor const& descriptor, RendererContext const& context) noexcept
+        {
+            const VkImageAspectFlags aspectMask = deriveAspectMaskFromFormat(resource.vkFormat);
+
+            if (aspectMask == VkImageAspectFlagBits::VK_IMAGE_ASPECT_NONE)
+            {
+                // Invalid aspect mask. Early exit.
+                logError("Invalid aspect mask for texture ", descriptor.name);
+                return false;
+            }
+
+            VkImageCreateInfo createImageInfo{
+                .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+                .imageType = toVkImageType(descriptor.dimensions),
+                .format = resource.vkFormat,
+                .extent = resource.vkExtent,
+                .mipLevels = descriptor.mipLevels,
+                .arrayLayers = descriptor.arrayLayers,
+                .samples = static_cast<VkSampleCountFlagBits>(toVkSampleCountFlag(descriptor.sampleCount)),
+                .tiling = VK_IMAGE_TILING_OPTIMAL,
+                .usage = toVkImageUsageFlags(descriptor.usage),
+                .sharingMode = toVkSharingMode(descriptor.sharing),
+                .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
+            };
+
+            uint32_t layerCount = descriptor.arrayLayers;
+
+            if (descriptor.isCubeMap)
+            {
+                // 6 layers = 1 cube map, 18 layers = array of 3 cube maps, etc.
+                layerCount = descriptor.arrayLayers / 6u;
+
+                if (descriptor.width != descriptor.height)
+                {
+                    logError("Failed to create Vulkan image: descriptor specified cube map but dimensions are not square. Width must equal height.");
+                    return false;
+                }
+
+                if ((descriptor.arrayLayers == 0u) || ((descriptor.arrayLayers % 6u) != 0u))
+                {
+                    logError("Failed to create Vulkan image: descriptor specified cube map but layer count must be a multiple of 6.");
+                    return false;
+                }
+
+                createImageInfo.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+            }
+
+            bool isArray = layerCount > 1u;
+
+            const VmaAllocationCreateInfo allocateInfo{
+                .flags = toVmaAllocationCreateFlag(descriptor.memoryUsage),
+                .usage = toVmaMemoryUsage(descriptor.memory)
+            };
+
+            const VkResult createImageResult = vmaCreateImage(
+                context.device.vmaAllocator,
+                &createImageInfo,
+                &allocateInfo,
+                &resource.vkImage,
+                &resource.allocation,
+                &resource.allocationInfo);
+
+            if (createImageResult != VK_SUCCESS)
+            {
+                logError("Failed to create Vulkan image with result ", createImageResult);
+                return false;
+            }
+
+            resource.vkImageSubresourceRange = VkImageSubresourceRange{
+                .aspectMask = aspectMask,
+                .baseMipLevel = 0u,
+                .levelCount = descriptor.mipLevels,
+                .baseArrayLayer = 0u,
+                .layerCount = descriptor.arrayLayers,
+            };
+
+            const VkImageViewCreateInfo createImageViewInfo{
+                .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+                .image = resource.vkImage,
+                .viewType = toVkImageViewType(descriptor.dimensions, isArray, descriptor.isCubeMap),
+                .format = resource.vkFormat,
+                .components = { VK_COMPONENT_SWIZZLE_IDENTITY },
+                .subresourceRange = resource.vkImageSubresourceRange
+            };
+
+            const VkResult createImageViewResult = vkCreateImageView(
+                context.device.vkDevice,
+                &createImageViewInfo,
+                nullptr,
+                &resource.vkImageView);
+
+            if (createImageViewResult != VK_SUCCESS)
+            {
+                logError("Failed to create Vulkan image view with result ", createImageViewResult);
+                return false;
+            }
+
+            const auto imageLayerCount = descriptor.arrayLayers * descriptor.faceCount;
+            const auto hasDepth = dataFormatHasDepth(descriptor.format);
+            const auto hasStencil = dataFormatHasStencil(descriptor.format);
+
+            if ((imageLayerCount > 1u) && (has_any(descriptor.usage, TextureUsageFlagBits::ColorAttachment | TextureUsageFlagBits::DepthStencilAttachment)))
+            {
+                // Create an attachment view for each layer. This is needed to dynamically render into a specific layer, for example with shadow cascades.
+                VkImageViewCreateInfo createLayerAttachViewInfo{
+                    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+                    .image = resource.vkImage,
+                    .viewType = VK_IMAGE_VIEW_TYPE_2D,
+                    .format = resource.vkFormat,
+                    .components = { VK_COMPONENT_SWIZZLE_IDENTITY },
+                    .subresourceRange = VkImageSubresourceRange {
+                        .aspectMask = aspectMask,
+                        .baseMipLevel = 0u,
+                        .levelCount = 1u,
+                        .baseArrayLayer = 0u,
+                        .layerCount = 1u,
+                    }
+                };
+
+                resource.layerAttachmentViews.resize(imageLayerCount);
+
+                for (uint32_t layer = 0u; layer < imageLayerCount; ++layer)
+                {
+                    createLayerAttachViewInfo.subresourceRange.baseArrayLayer = layer;
+
+                    const VkResult createLayerAttachViewResult = vkCreateImageView(
+                        context.device.vkDevice,
+                        &createLayerAttachViewInfo,
+                        nullptr,
+                        &resource.layerAttachmentViews[layer]);
+
+                    if (createLayerAttachViewResult != VK_SUCCESS)
+                    {
+                        logError("Failed to create Vulkan image attachment view for layer ", layer, " with result ", createLayerAttachViewResult);
+                        return false;
+                    }
+                }
+            }
+
+            if (hasDepth && hasStencil && has_any(descriptor.usage, TextureUsageFlagBits::Sampled))
+            {
+                // A depth-stencil can not sample from both depth and stencil together. 
+                // It needs a separate view that targets one or the other. So create one that targets the depth.
+                VkImageSubresourceRange depthOnlySubresourceRange = resource.vkImageSubresourceRange;
+                depthOnlySubresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+
+                const VkImageViewCreateInfo createDepthOnlySampleViewInfo{
+                    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+                    .image = resource.vkImage,
+                    .viewType = VK_IMAGE_VIEW_TYPE_2D,
+                    .format = resource.vkFormat,
+                    .components = { VK_COMPONENT_SWIZZLE_IDENTITY },
+                    .subresourceRange = depthOnlySubresourceRange
+                };
+
+                const VkResult createDepthOnlySampleViewResult = vkCreateImageView(
+                    context.device.vkDevice,
+                    &createDepthOnlySampleViewInfo,
+                    nullptr,
+                    &resource.vkSampledImageView);
+
+                if (createDepthOnlySampleViewResult != VK_SUCCESS)
+                {
+                    logError("Failed to create Vulkan depth-only sample view with result ", createDepthOnlySampleViewResult);
+                    return false;
+                }
+            }
+
+            resource.memoryMap.persistent = resource.allocationInfo.pMappedData;
+
+            return true;
+        }
+
+        void cleanupFailedTextureResource(TextureResource& resource, RendererContext const& context) noexcept
+        {
+            if (resource.vkImageView != VK_NULL_HANDLE)
+            {
+                vkDestroyImageView(context.device.vkDevice, resource.vkImageView, nullptr);
+                resource.vkImageView = VK_NULL_HANDLE;
+            }
+
+            for (auto attachmentImageView : resource.layerAttachmentViews)
+            {
+                if (attachmentImageView != VK_NULL_HANDLE)
+                {
+                    vkDestroyImageView(context.device.vkDevice, attachmentImageView, nullptr);
+                }
+            }
+
+            resource.layerAttachmentViews.clear();
+
+            if (resource.vkImage != VK_NULL_HANDLE)
+            {
+                vmaDestroyImage(context.device.vmaAllocator, resource.vkImage, resource.allocation);
+                resource.vkImage = VK_NULL_HANDLE;
+            }
+        }
+    }
+
     TextureResourceHandle ResourceManager::createTexture(TextureResourceDescriptor const& descriptor) noexcept
     {
         auto name = generateResourceId<TextureResource>(descriptor.name, "Texture");
@@ -1175,173 +1376,51 @@ namespace litl::vulkan
 
         resource.descriptor.name = name;
 
-        const VkImageAspectFlags aspectMask = deriveAspectMaskFromFormat(resource.vkFormat);
-
-        if (aspectMask == VkImageAspectFlagBits::VK_IMAGE_ASPECT_NONE)
+        if (createTextureResource(resource, descriptor, *m_pContext))
         {
-            // Invalid aspect mask. Early exit.
-            logError("Invalid aspect mask for texture ", name);
-            return {};
-        }
+            auto textureHandle = m_texturePool.create(resource);
+            auto* textureResource = m_texturePool.get(textureHandle);
 
-        VkImageCreateInfo createImageInfo{
-            .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
-            .imageType = toVkImageType(descriptor.dimensions),
-            .format = resource.vkFormat,
-            .extent = resource.vkExtent,
-            .mipLevels = descriptor.mipLevels,
-            .arrayLayers = descriptor.arrayLayers,
-            .samples = static_cast<VkSampleCountFlagBits>(toVkSampleCountFlag(descriptor.sampleCount)),
-            .tiling = VK_IMAGE_TILING_OPTIMAL,
-            .usage = toVkImageUsageFlags(descriptor.usage),
-            .sharingMode = toVkSharingMode(descriptor.sharing),
-            .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
-        };
-
-        uint32_t layerCount = descriptor.arrayLayers;
-
-        if (descriptor.isCubeMap)
-        {
-            // 6 layers = 1 cube map, 18 layers = array of 3 cube maps, etc.
-            layerCount = descriptor.arrayLayers / 6u;
-
-            if (descriptor.width != descriptor.height)
+            if (textureResource == nullptr)
             {
-                logError("Failed to create Vulkan image: descriptor specified cube map but dimensions are not square. Width must equal height.");
-                return {};
+                logError("Failed to retrieve Vulkan Texture Resource on new handle. Pool exhaustion.");
+                return textureHandle;
             }
 
-            if ((descriptor.arrayLayers == 0u) || ((descriptor.arrayLayers % 6u) != 0u))
+            m_textureMap[nameId] = textureHandle;
+
+            if (descriptor.residesInTextureTable)
             {
-                logError("Failed to create Vulkan image: descriptor specified cube map but layer count must be a multiple of 6.");
-                return {};
-            }
-
-            createImageInfo.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
-        }
-
-        bool isArray = layerCount > 1u;
-
-        const VmaAllocationCreateInfo allocateInfo{
-            .flags = toVmaAllocationCreateFlag(descriptor.memoryUsage),
-            .usage = toVmaMemoryUsage(descriptor.memory)
-        };
-
-        const VkResult createImageResult = vmaCreateImage(
-            m_pContext->device.vmaAllocator, 
-            &createImageInfo,
-            &allocateInfo, 
-            &resource.vkImage, 
-            &resource.allocation, 
-            &resource.allocationInfo);
-
-        if (createImageResult != VK_SUCCESS)
-        {
-            logError("Failed to create Vulkan image with result ", createImageResult);
-            return {};
-        }
-
-        resource.vkImageSubresourceRange = VkImageSubresourceRange {
-            .aspectMask = aspectMask,
-            .baseMipLevel = 0u,
-            .levelCount = descriptor.mipLevels,
-            .baseArrayLayer = 0u,
-            .layerCount = descriptor.arrayLayers,
-        };
-
-        const VkImageViewCreateInfo createImageViewInfo{
-            .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-            .image = resource.vkImage,
-            .viewType = toVkImageViewType(descriptor.dimensions, isArray, descriptor.isCubeMap),
-            .format = resource.vkFormat,
-            .components = { VK_COMPONENT_SWIZZLE_IDENTITY },
-            .subresourceRange = resource.vkImageSubresourceRange
-        };
-
-        const VkResult createImageViewResult = vkCreateImageView(
-            m_pContext->device.vkDevice,
-            &createImageViewInfo, 
-            nullptr,
-            &resource.vkImageView);
-
-        if (createImageViewResult != VK_SUCCESS)
-        {
-            logError("Failed to create Vulkan image view with result ", createImageViewResult);
-            vmaDestroyImage(m_pContext->device.vmaAllocator, resource.vkImage, resource.allocation);
-            return {};
-        }
-
-        if (dataFormatHasDepth(descriptor.format) && 
-            dataFormatHasStencil(descriptor.format) && 
-            has_any(descriptor.usage, TextureUsageFlagBits::Sampled))
-        {
-            // A depth-stencil can not sample from both depth and stencil together. 
-            // It needs a separate view that targets one or the other. So create one that targets the depth.
-            VkImageSubresourceRange depthOnlySubresourceRange = resource.vkImageSubresourceRange;
-            depthOnlySubresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-
-            const VkImageViewCreateInfo createDepthOnlySampleViewInfo{
-                .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-                .image = resource.vkImage,
-                .viewType = VK_IMAGE_VIEW_TYPE_2D,
-                .format = resource.vkFormat,
-                .components = { VK_COMPONENT_SWIZZLE_IDENTITY },
-                .subresourceRange = depthOnlySubresourceRange
-            };
-
-            const VkResult createDepthOnlySampleViewResult = vkCreateImageView(
-                m_pContext->device.vkDevice,
-                &createDepthOnlySampleViewInfo,
-                nullptr,
-                &resource.vkSampledImageView);
-
-            if (createDepthOnlySampleViewResult != VK_SUCCESS)
-            {
-                logError("Failed to create Vulkan depth-only sample view with result ", createDepthOnlySampleViewResult);
-                vkDestroyImageView(m_pContext->device.vkDevice, resource.vkImageView, nullptr);
-                vmaDestroyImage(m_pContext->device.vmaAllocator, resource.vkImage, resource.allocation);
-                return {};
-            }
-        }
-
-        resource.memoryMap.persistent = resource.allocationInfo.pMappedData;
-
-        auto textureHandle = m_texturePool.create(resource);
-        auto* textureResource = m_texturePool.get(textureHandle);
-
-        if (textureResource == nullptr)
-        {
-            logError("Failed to retrieve Vulkan Texture Resource on new handle. Pool exhaustion.");
-            return textureHandle;
-        }
-
-        m_textureMap[nameId] = textureHandle;
-
-        if (descriptor.residesInTextureTable)
-        {
-            if (descriptor.textureTableIndexOverride.has_value())
-            {
-                if (m_pContext->textureTable.update(descriptor.textureTableIndexOverride.value(), textureHandle, descriptor.isArray(), descriptor.isCubeMap))
+                if (descriptor.textureTableIndexOverride.has_value())
                 {
-                    textureResource->textureTableSlot = descriptor.textureTableIndexOverride.value();
+                    if (m_pContext->textureTable.update(descriptor.textureTableIndexOverride.value(), textureHandle, descriptor.isArray(), descriptor.isCubeMap))
+                    {
+                        textureResource->textureTableSlot = descriptor.textureTableIndexOverride.value();
+                    }
+                    else
+                    {
+                        logError("Failed to acquire slot ", descriptor.textureTableIndexOverride.value(), " for new Texture resource '", textureResource->descriptor.name, "' in Vulkan texture table.");
+                    }
                 }
                 else
                 {
-                    logError("Failed to acquire slot ", descriptor.textureTableIndexOverride.value(), " for new Texture resource '", textureResource->descriptor.name, "' in Vulkan texture table.");
+                    textureResource->textureTableSlot = m_pContext->textureTable.acquire(textureHandle, descriptor.isArray(), descriptor.isCubeMap);
+                }
+
+                if (textureResource->textureTableSlot == constants::uint32_null_index)
+                {
+                    logError("Failed to acquire slot for new Texture resource '", textureResource->descriptor.name, "' in Vulkan texture table.");
                 }
             }
-            else
-            {
-                textureResource->textureTableSlot = m_pContext->textureTable.acquire(textureHandle, descriptor.isArray(), descriptor.isCubeMap);
-            }
 
-            if (textureResource->textureTableSlot == constants::uint32_null_index)
-            {
-                logError("Failed to acquire slot for new Texture resource '", textureResource->descriptor.name, "' in Vulkan texture table.");
-            }
+            return textureHandle;
         }
-
-        return textureHandle;
+        else
+        {
+            logError("Failed to create Vulkan texture resource '", resource.descriptor.name, "'");
+            cleanupFailedTextureResource(resource, *m_pContext);
+            return {};
+        }
     }
 
     TextureResource* ResourceManager::getTexture(TextureResourceHandle handle) noexcept

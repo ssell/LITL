@@ -218,7 +218,8 @@ namespace litl
             .addressV = SamplerAddressMode::ClampEdge,
             .addressW = SamplerAddressMode::ClampEdge,
             .anisotropy = SamplerAnisotropy::Off,
-            .compareOp = CompareOperationType::GreaterOrEqual           // Note not LesserOrEqual as we use reversed z-values.
+            .compareOp = CompareOperationType::GreaterOrEqual,          // Note not LesserOrEqual as we use reversed z-values.
+            .border = SamplerBorderColor::OpaqueBlack                   // "Lit" border color as 0 is near and so the comparison passes.
         },
         // LinearClampBorderWhite
         SamplerDescriptor{

@@ -13,8 +13,22 @@ namespace litl::vulkan
     struct TextureResource;
 
     /// <summary>
-    /// The global texture table used for bindless texture sampling.
-    /// This is bound at set 0 (PerFrame) and binding 0 for our standard Vulkan 1.4+ rendering path.
+    /// The global texture table used for bindless texture sampling. Manages three distinct texture arrays:
+    /// 
+    ///     * g_Textures: 2D Textures bound at set 0, binding 0.
+    ///     * g_TextureArrays: 2D Texture Arrays bound at set 0, binding 1.
+    ///     * g_TextureCubeArrays: Cubemap Textures bound at set 0, binding 2.
+    /// 
+    /// When acquiring a texture slot index, the index is distinct based on the underlying array that is
+    /// appropriate for the texture type. This means there may be duplicate integer indices handed out by
+    /// the texture table, but there is no overlap of indices within the same type. Example:
+    /// 
+    ///     acquire(handle, false, false)   ->  0
+    ///     acquire(handle, true, false)    ->  0
+    ///     acquire(handle, false, true)    ->  0
+    ///     acquire(handle, false, false)   ->  1
+    ///     acquire(handle, false, false)   ->  2
+    ///     acquire(handle, true, false)    ->  1
     /// </summary>
     class TextureTable final
     {
