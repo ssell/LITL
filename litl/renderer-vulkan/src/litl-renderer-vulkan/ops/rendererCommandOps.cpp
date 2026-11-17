@@ -454,8 +454,8 @@ namespace litl::vulkan
             .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
             .baseMipLevel = 0,
             .levelCount = 1,
-            .baseArrayLayer = 0,
-            .layerCount = 1,
+            .baseArrayLayer = command.layer,
+            .layerCount = command.layerCount,
         };
 
         TextureResource* targetTexture = vulkanContext->resources.getTexture(command.image);

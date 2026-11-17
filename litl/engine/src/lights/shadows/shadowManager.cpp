@@ -136,6 +136,7 @@ namespace litl
                     .format = DataFormat::D32_SFloat,
                     .usage = TextureUsageFlagBits::DepthStencilAttachment | TextureUsageFlagBits::Sampled,      // Render depth to it, and sample from a shader.
                     .arrayLayers = shadowConfig.directionalLayers,
+                    .forcedArray = true,                                                                        // Place the texture in the array table even if layers/cascades is just 1 to keep the shader sampling consistent.
                     .residesInTextureTable = true
                 }
             };

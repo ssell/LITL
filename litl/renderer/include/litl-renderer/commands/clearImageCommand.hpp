@@ -23,6 +23,16 @@ namespace litl
         /// 
         /// </summary>
         ImageLayoutType destLayout;
+
+        /// <summary>
+        /// The base layer index to clear.
+        /// </summary>
+        uint32_t layer = 0u;
+
+        /// <summary>
+        /// The number of layers to clear.
+        /// </summary>
+        uint32_t layerCount = 1u;
     };
 }
 

@@ -1297,7 +1297,7 @@ namespace litl::vulkan
                 const VkImageViewCreateInfo createDepthOnlySampleViewInfo{
                     .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
                     .image = resource.vkImage,
-                    .viewType = VK_IMAGE_VIEW_TYPE_2D,
+                    .viewType = createImageViewInfo.viewType,
                     .format = resource.vkFormat,
                     .components = { VK_COMPONENT_SWIZZLE_IDENTITY },
                     .subresourceRange = depthOnlySubresourceRange
@@ -1321,12 +1321,18 @@ namespace litl::vulkan
             return true;
         }
 
-        void cleanupFailedTextureResource(TextureResource& resource, RendererContext const& context) noexcept
+        void destroyTextureResources(TextureResource& resource, RendererContext const& context) noexcept
         {
             if (resource.vkImageView != VK_NULL_HANDLE)
             {
                 vkDestroyImageView(context.device.vkDevice, resource.vkImageView, nullptr);
                 resource.vkImageView = VK_NULL_HANDLE;
+            }
+
+            if (resource.vkSampledImageView != VK_NULL_HANDLE)
+            {
+                vkDestroyImageView(context.device.vkDevice, resource.vkSampledImageView, nullptr);
+                resource.vkSampledImageView = VK_NULL_HANDLE;
             }
 
             for (auto attachmentImageView : resource.layerAttachmentViews)
@@ -1418,7 +1424,7 @@ namespace litl::vulkan
         else
         {
             logError("Failed to create Vulkan texture resource '", resource.descriptor.name, "'");
-            cleanupFailedTextureResource(resource, *m_pContext);
+            destroyTextureResources(resource, *m_pContext);
             return {};
         }
     }
@@ -1442,20 +1448,7 @@ namespace litl::vulkan
                 }
             }
 
-            if (resource->vkImage != VK_NULL_HANDLE)
-            {
-                vmaDestroyImage(m_pContext->device.vmaAllocator, resource->vkImage, resource->allocation);
-            }
-
-            if (resource->vkImageView != VK_NULL_HANDLE)
-            {
-                vkDestroyImageView(m_pContext->device.vkDevice, resource->vkImageView, nullptr);
-            }
-
-            if (resource->vkSampledImageView != VK_NULL_HANDLE)
-            {
-                vkDestroyImageView(m_pContext->device.vkDevice, resource->vkSampledImageView, nullptr);
-            }
+            destroyTextureResources(*resource, *m_pContext);
 
             m_textureMap.erase(resource->id);
             m_texturePool.destroy(handle);

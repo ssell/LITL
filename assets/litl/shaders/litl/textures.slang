@@ -14,6 +14,7 @@ import common;
 [[vk::binding(1, BindSetPerFrame)]] Texture2DArray<float4> g_TextureArrays[];           // Texture arrays such as cascaded shadow maps
 [[vk::binding(2, BindSetPerFrame)]] TextureCubeArray<float4> g_TextureCubeArrays[];     // Cube arrays such as point light shadows
 [[vk::binding(3, BindSetPerFrame)]] SamplerState g_Samplers[16];
+[[vk::binding(3, BindSetPerFrame)]] SamplerComparisonState g_ComparisonSamplers[16];    // Aliased view of g_Samplers for comparison samplers.
 
 // These correlate to TextureTableReservedIndices in litl-renderer
 public static const uint DefaultTextureIndex_Pink = 0;

@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include "litl-core/assert.hpp"
 #include "litl-core/stringId.hpp"
 #include "litl-renderer-vulkan/common.hpp"
 #include "litl-renderer/resources/texture.hpp"
@@ -104,6 +105,7 @@ namespace litl::vulkan
             }
             else
             {
+                LITL_ASSERT_MSG((layer < layerAttachmentViews.size()), "TextureResource::getAttachmentView called with out-of-bounds layer index. Defaulting to index 0.", layerAttachmentViews[0]);
                 return layerAttachmentViews[layer];
             }
         }

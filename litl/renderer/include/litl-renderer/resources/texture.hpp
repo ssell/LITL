@@ -73,8 +73,24 @@ namespace litl
         /// </summary>
         uint32_t arrayLayers = 1u;
 
-        [[nodiscard]] constexpr bool isArray() const noexcept { return arrayLayers > 1u; }
+        /// <summary>
+        /// Set to true for single-layer arrays.
+        /// 
+        /// For example, a cascaded shadow map that only has a single cascade.
+        /// Without this, the shader would attempt to sample from the texture array pool while
+        /// the texture would actually exist in the standard texture pool.
+        /// </summary>
+        bool forcedArray{ false };
 
+        /// <summary>
+        /// Is the texture an array? Returns true if array layers is greater than 1 or if forced array is set to true.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] constexpr bool isArray() const noexcept { return (forcedArray || (arrayLayers > 1u)); }
+
+        /// <summary>
+        /// Number of faces. 1 = standard texture, 6 = cube map.
+        /// </summary>
         uint32_t faceCount = 1u;
 
         /// <summary>
