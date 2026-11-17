@@ -90,6 +90,23 @@ namespace litl::vulkan
         /// The descriptor that created the texture.
         /// </summary>
         TextureResourceDescriptor descriptor{};
+
+        [[nodiscard]] VkImageView getSampledView() const noexcept
+        {
+            return (vkSampledImageView != VK_NULL_HANDLE) ? vkSampledImageView : vkImageView;
+        }
+
+        [[nodiscard]] VkImageView getAttachmentView(uint32_t layer) const noexcept
+        {
+            if (layerAttachmentViews.empty())
+            {
+                return vkImageView;
+            }
+            else
+            {
+                return layerAttachmentViews[layer];
+            }
+        }
     };
 }
 

@@ -289,7 +289,7 @@ namespace litl::vulkan
 
         const VkDescriptorImageInfo imageInfo{
             .sampler = VK_NULL_HANDLE,              // We have a separate sampler array and not a combined texture+sampler array.
-            .imageView = (texture->vkSampledImageView != VK_NULL_HANDLE ? texture->vkSampledImageView : texture->vkImageView),
+            .imageView = texture->getSampledView(),
             .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
         };
 

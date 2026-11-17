@@ -100,7 +100,18 @@ namespace litl
         /// Both .offset and .extents are normalized coordinates within the target texture.
         /// </summary>
         rect2D area = { .offset = { 0.0f, 0.0f }, .extents = { 1.0f, 1.0f } };
+
+        /// <summary>
+        /// Which layer we are rendering into. Should be 0 if the target texture is not an array.
+        /// Otherwise this is the 0-based array index.
+        /// </summary>
+        uint32_t layer = 0u;
+
+        /// <summary>
+        /// The number of layers to render into in a single pass. Typically 1.
+        /// </summary>
         uint32_t layerCount = 1u;
+
         uint32_t viewMask = 0;
     };
 }

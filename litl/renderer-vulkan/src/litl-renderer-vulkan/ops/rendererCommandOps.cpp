@@ -180,7 +180,7 @@ namespace litl::vulkan
                 return std::nullopt;
             }
 
-            colorAttachment.imageView = colorTexture->vkImageView;
+            colorAttachment.imageView = colorTexture->getAttachmentView(command.layer);
             colorAttachment.loadOp = toVkAttachmentLoadOp(cmdColorAttachment.loadOp);
             colorAttachment.storeOp = toVkAttachmentStoreOp(cmdColorAttachment.storeOp);
             vulkanContext->drawInfo.targetTextureSize = VkExtent2D{ .width = colorTexture->descriptor.width, .height = colorTexture->descriptor.height };
@@ -236,9 +236,9 @@ namespace litl::vulkan
                 hasStencil = true;
             }
 
-            depthAttachment.imageView  = depthTexture->vkImageView;
-            depthAttachment.loadOp     = toVkAttachmentLoadOp(cmdDepthAttachment.loadOp);
-            depthAttachment.storeOp    = toVkAttachmentStoreOp(cmdDepthAttachment.storeOp);
+            depthAttachment.imageView = depthTexture->getAttachmentView(command.layer);
+            depthAttachment.loadOp = toVkAttachmentLoadOp(cmdDepthAttachment.loadOp);
+            depthAttachment.storeOp = toVkAttachmentStoreOp(cmdDepthAttachment.storeOp);
             depthAttachment.clearValue = VkClearValue{
                 .depthStencil = VkClearDepthStencilValue{
                     .depth = cmdDepthAttachment.clearDepth,
@@ -818,7 +818,7 @@ namespace litl::vulkan
             toVkDescriptorType(bindingResource->type),
             VkDescriptorImageInfo{
                 .sampler = VK_NULL_HANDLE,
-                .imageView = (textureResource->vkSampledImageView != VK_NULL_HANDLE) ? textureResource->vkSampledImageView : textureResource->vkImageView,
+                .imageView = textureResource->getSampledView(),
                 .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             });
 
