@@ -15,25 +15,25 @@ namespace litl
         if (!between(directionalLayers, MinDirectionalLayers, MaxDirectionalLayers))
         {
             logWarning("Shadow settings 'resolution' is outside of acceptable range of [", MinDirectionalLayers, ", ", MaxDirectionalLayers, "]. Clamping.");
-            resolution = clamp(directionalLayers, MinDirectionalLayers, MaxDirectionalLayers);
+            directionalLayers = clamp(directionalLayers, MinDirectionalLayers, MaxDirectionalLayers);
         }
 
         if (!between(directionalShadowDistance, MinDirectionalShadowDistance, MaxDirectionalShadowDistance))
         {
             logWarning("Shadow settings 'directionalShadowDistance' is outside of acceptable range of [", MinDirectionalShadowDistance, ", ", MaxDirectionalShadowDistance, "]. Clamping.");
-            resolution = clamp(directionalShadowDistance, MinDirectionalShadowDistance, MaxDirectionalShadowDistance);
+            directionalShadowDistance = clamp(directionalShadowDistance, MinDirectionalShadowDistance, MaxDirectionalShadowDistance);
         }
 
         if (!between(directionalCasterPullback, MinDirectionalCasterPullback, MaxDirectionalCasterPullback))
         {
             logWarning("Shadow settings 'directionalCasterPullback' is outside of acceptable range of [", MinDirectionalCasterPullback, ", ", MaxDirectionalCasterPullback, "]. Clamping.");
-            resolution = clamp(directionalCasterPullback, MinDirectionalCasterPullback, MaxDirectionalCasterPullback);
+            directionalCasterPullback = clamp(directionalCasterPullback, MinDirectionalCasterPullback, MaxDirectionalCasterPullback);
         }
 
         if (!between(cascadeSplitLambda, MinCascadeSplitLambda, MaxCascadeSplitLambsa))
         {
             logWarning("Shadow settings 'cascadeSplitLambda' is outside of acceptable range of [", MinCascadeSplitLambda, ", ", MaxCascadeSplitLambsa, "]. Clamping.");
-            resolution = clamp(cascadeSplitLambda, MinCascadeSplitLambda, MaxCascadeSplitLambsa);
+            cascadeSplitLambda = clamp(cascadeSplitLambda, MinCascadeSplitLambda, MaxCascadeSplitLambsa);
         }
     }
 }

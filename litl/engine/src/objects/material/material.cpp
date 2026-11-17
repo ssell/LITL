@@ -66,6 +66,11 @@ namespace litl
             objectPool = &inObjectPool;
             renderSceneFormats = renderManager.getSceneRenderFormats();
 
+            if (descriptor.blendState.mode == MaterialBlendMode::Transparent)
+            {
+                descriptor.castsShadows = false;
+            }
+
             if (!createInternalState(true, nullptr, {}))
             {
                 return false;
@@ -556,7 +561,7 @@ namespace litl
                 }
                 else if ((type == MaterialVariantType::DepthOnly) || (type == MaterialVariantType::Shadow))
                 {
-                    // DepthOnly variant is the vertex shader only.
+                    // DepthOnly and Shadow variants are vertex shader only.
                     // TODO this needs to be changed for alpha mask, etc.
                 }
 
@@ -594,6 +599,13 @@ namespace litl
                         .binding = 0u,
                         .format = format
                         }, runningAttributeOffset);
+                }
+
+                if (type == MaterialVariantType::Shadow)
+                {
+                    graphicsPipelineDescriptor.rasterization.depthClampEnabled = true;
+                    graphicsPipelineDescriptor.rasterization.depthBiasEnabled = true;
+                    graphicsPipelineDescriptor.dynamicState.states.push_back(DynamicState::DepthBias);
                 }
 
                 // --- Create the Pipeline

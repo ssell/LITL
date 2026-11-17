@@ -111,6 +111,11 @@ namespace litl
         ShaderResourceDescriptor computeShader{};
         ShaderResourceDescriptor meshShader{};
         ShaderResourceDescriptor taskShader{};
+
+        /// <summary>
+        /// Should this surface cast shadows?
+        /// Note this is overriden and set to false if the blendState.mode is MaterialBlendMode::Transparent.
+        /// </summary>
         bool castsShadows{ true };
     };
 
