@@ -551,9 +551,6 @@ namespace litl
                     graphicsPipelineDescriptor.tessellationControl = PipelineShaderDescriptor{ .handle = tessellationControlHandle, .stage = ShaderStage::TessellationControl, .entryPoint = descriptor.tessellationControlShader.entryPoint }; 
                     graphicsPipelineDescriptor.tessellationEvaluation = PipelineShaderDescriptor{ .handle = tessellationEvaluationHandle, .stage = ShaderStage::TessellationEvaluation, .entryPoint = descriptor.tessellationEvaluationShader.entryPoint };
 
-                    graphicsPipelineDescriptor.renderTargets.colorAttachmentCount = 1u;
-                    graphicsPipelineDescriptor.renderTargets.colorAttachments = { attachmentFormats.color };
-
                     if (descriptor.blendState.mode == MaterialBlendMode::Transparent)
                     {
                         graphicsPipelineDescriptor.colorBlend = descriptor.blendState.colorBlend;
@@ -565,8 +562,19 @@ namespace litl
                     // TODO this needs to be changed for alpha mask, etc.
                 }
 
-                graphicsPipelineDescriptor.renderTargets.depthFormat = attachmentFormats.depth;
-                graphicsPipelineDescriptor.renderTargets.stencilFormat = dataFormatHasStencil(attachmentFormats.depth) ? attachmentFormats.depth : DataFormat::Undefined;
+                if (type == MaterialVariantType::Color)
+                {
+                    graphicsPipelineDescriptor.renderTargets.colorAttachmentCount = 1u;
+                    graphicsPipelineDescriptor.renderTargets.colorAttachments = { attachmentFormats.color };
+                    graphicsPipelineDescriptor.renderTargets.depthFormat = attachmentFormats.depth;
+                    graphicsPipelineDescriptor.renderTargets.stencilFormat = dataFormatHasStencil(attachmentFormats.depth) ? attachmentFormats.depth : DataFormat::Undefined;
+                }
+                else
+                {
+                    graphicsPipelineDescriptor.renderTargets.colorAttachmentCount = 0u;
+                    graphicsPipelineDescriptor.renderTargets.depthFormat = DataFormat::D32_SFloat;
+                    graphicsPipelineDescriptor.renderTargets.stencilFormat = DataFormat::Undefined;
+                }
 
                 graphicsPipelineDescriptor.vertexInput = VertexInputState{};                                          // ... todo expand this functionality ...
                 graphicsPipelineDescriptor.inputAssembly = InputAssemblyState{};                                      // ... todo expand this functionality ...

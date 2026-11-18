@@ -14,7 +14,7 @@ namespace litl
 
         if (!between(directionalLayers, MinDirectionalLayers, MaxDirectionalLayers))
         {
-            logWarning("Shadow settings 'resolution' is outside of acceptable range of [", MinDirectionalLayers, ", ", MaxDirectionalLayers, "]. Clamping.");
+            logWarning("Shadow settings 'directionalLayers' is outside of acceptable range of [", MinDirectionalLayers, ", ", MaxDirectionalLayers, "]. Clamping.");
             directionalLayers = clamp(directionalLayers, MinDirectionalLayers, MaxDirectionalLayers);
         }
 
