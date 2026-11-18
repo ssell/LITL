@@ -68,7 +68,10 @@ namespace litl
             m_pRenderer->cmdSetViewportAndScissor(commandBufferHandle, setViewportScissorCmd);
             m_pRenderer->cmdSetDepthBias(commandBufferHandle, renderView.shadowBias.depthBiasConstantFactor, renderView.shadowBias.depthBiasClamp, renderView.shadowBias.depthBiasSlopeFactor);
 
-            // ... todo ...
+            if (compileRenderList(renderView.sortedOpaqueEntities))
+            {
+                drawRenderList(commandBufferHandle, viewPushConstants, DrawListOptions{ .requiresMaterialProperties = false });
+            }
 
             m_pRenderer->cmdEndRender(commandBufferHandle);
         }

@@ -80,7 +80,7 @@ namespace litl::samples
 
     void cameraBootstrap(EntityCommands& commands, std::shared_ptr<ObjectPool> objectPool, std::shared_ptr<SceneView> sceneView, std::shared_ptr<AssetManager> assets, bool addAltCamera) noexcept
     {
-        const auto* mainCamera = createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(-5.0f, 1.5f, 0.25f), vec3(5.0f, 1.5f, 0.25f), vec3::up(), *objectPool, *sceneView);
+        const auto* mainCamera = createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(-5.0f, 1.5f, 0.25f), vec3(5.0f, 1.5f, 0.25f), vec3::up(), *objectPool, *sceneView, true);
         commands.addComponent<FreeFlyController>(mainCamera->getEntity());
         commands.addComponent<PendingModelInstance>(mainCamera->getEntity(), createModelInstance("litl/models/sphere", "litl/materials/lit", *assets));
         commands.addComponent<LocalBounds>(mainCamera->getEntity());
@@ -111,7 +111,7 @@ namespace litl::samples
     {
         auto dirLightEntity = commands.createEntity();
         commands.addComponent<Transform>(dirLightEntity, Transform::create(vec3::zero(), quat::fromEuler(60.0f, 100.0f, 0.0f)));
-        commands.addComponent<DirectionalLight>(dirLightEntity, DirectionalLight{ .color = color{ 0.95f, 0.95f, 1.0f }, .intensity = 1.0f }); 
+        commands.addComponent<DirectionalLight>(dirLightEntity, DirectionalLight{ .color = color{ 0.95f, 0.95f, 1.0f }, .intensity = 1.0f, .castsShadows = true });
         //commands.addComponent<Spin>(dirLightEntity, Spin{ .rate = 50.0f });
 
         lights->setAmbientColor(color(0.125f, 0.1f, 0.125f, 1.0f));

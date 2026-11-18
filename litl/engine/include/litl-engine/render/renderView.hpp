@@ -54,6 +54,7 @@ namespace litl
         uint64_t transparentInstanceDataAddr{ 0ull };
         RenderViewType type{ RenderViewType::Camera };
         ShadowBiasSettings shadowBias{};
+        uint32_t priority{ 0u };
     };
 }
 

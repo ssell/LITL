@@ -214,9 +214,9 @@ namespace litl
             .minFilter = SamplerFilter::Linear,
             .magFilter = SamplerFilter::Linear,
             .mipFilter = SamplerMipFilter::Nearest,
-            .addressU = SamplerAddressMode::ClampEdge,
-            .addressV = SamplerAddressMode::ClampEdge,
-            .addressW = SamplerAddressMode::ClampEdge,
+            .addressU = SamplerAddressMode::ClampBorder,
+            .addressV = SamplerAddressMode::ClampBorder,
+            .addressW = SamplerAddressMode::ClampBorder,
             .anisotropy = SamplerAnisotropy::Off,
             .compareOp = CompareOperationType::GreaterOrEqual,          // Note not LesserOrEqual as we use reversed z-values.
             .border = SamplerBorderColor::OpaqueBlack                   // "Lit" border color as 0 is near and so the comparison passes.

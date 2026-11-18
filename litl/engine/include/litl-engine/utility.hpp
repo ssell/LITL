@@ -27,7 +27,7 @@ namespace litl
     /// <summary>
     /// Creates a new camera and assigns it as the main camera.
     /// </summary>
-    Camera* createMainCamera(color clearColor, vec3 position, vec3 target, vec3 up, ObjectPool& objectPool, SceneView& sceneView) noexcept;
+    Camera* createMainCamera(color clearColor, vec3 position, vec3 target, vec3 up, ObjectPool& objectPool, SceneView& sceneView, bool enableShadows) noexcept;
 
     // -------------------------------------------------------------------------------------
     // Create Renderable

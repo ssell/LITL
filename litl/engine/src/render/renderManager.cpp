@@ -62,6 +62,7 @@ namespace litl
             PreparedSubView transparent{};
             uint32_t viewIndex{ 0u };
             uint32_t sourceIndex{ 0u };             // If a shadow view, then this is the ShadowManager index
+            uint32_t priority{ 0u };
         };
     }
 
@@ -574,7 +575,6 @@ namespace litl
 
         /// <summary>
         /// Decides which views exist this frame and assigned viewIndex and instanceBase with a running total.
-        /// Note that the ordering of the output preparedViews is draw order (based on camera priority) and not viewIndex order.
         /// </summary>
         void gatherPreparedViews(CullingBucket const& cullingBucket, std::vector<PreparedView>& preparedViews) noexcept
         {
@@ -601,7 +601,8 @@ namespace litl
                     .opaque = PreparedSubView {.entities = cullBucketView.opaque},
                     .transparent = PreparedSubView{.entities = cullBucketView.transparent},
                     .viewIndex = viewIndex,
-                    .sourceIndex = cullView.sourceIndex
+                    .sourceIndex = cullView.sourceIndex,
+                    .priority = (cullView.camera != nullptr ? cullView.camera->getCameraPriority() : 0u)
                 };
 
                 if ((preparedView.type == RenderViewType::Camera) && (preparedView.camera != nullptr) && (preparedView.camera->getColorEnabled() == false))
@@ -617,14 +618,12 @@ namespace litl
                 preparedViews.push_back(preparedView);
                 viewIndex += 1u;
             }
-
-            // Sort from lower priority to high
-            std::ranges::stable_sort(preparedViews, std::less{}, [](PreparedView const& v) { return (v.camera != nullptr ? v.camera->getCameraPriority() : 0u); });
         }
 
         /// <summary>
         /// Gathers the RenderPerPassData and RenderInstanceData for each view and uploads it to the GPU.
         /// RenderViews are returned out which point to the appropriate location into each buffer for each view.
+        /// Note that the ordering of the output RenderViews is draw order (based on camera priority if present).
         /// </summary>
         void writeViewData(CommandBufferHandle commandBufferHandle, std::span<PreparedView const> preparedViews, std::vector<RenderView>& renderViews) noexcept
         {
@@ -643,8 +642,8 @@ namespace litl
 
             for (const auto& preparedView : preparedViews)
             {
-                LITL_ASSERT(preparedView.viewIndex == passDataScratch.size(), );
-                LITL_ASSERT(preparedView.opaque.instanceBase == instanceDataScratch.size(), );
+                LITL_ASSERT_MSG(preparedView.viewIndex == passDataScratch.size(), "Mismatch between preparedView.viewIndex and passData.size", );
+                LITL_ASSERT_MSG(preparedView.opaque.instanceBase == instanceDataScratch.size(), "Mismatch between preparedView.opaque.instanceBase and instanceDataScratch.size", );
 
                 RenderPerPassData perPassData;
                 bool perPassDataError = false;
@@ -740,7 +739,8 @@ namespace litl
                     .perPassDataAddr = passDataAddr + (preparedView.viewIndex * sizeof(RenderPerPassData)),
                     .opaqueInstanceDataAddr = instanceDataAddr + (preparedView.opaque.instanceBase * sizeof(RenderInstanceData)),
                     .transparentInstanceDataAddr = instanceDataAddr + (preparedView.transparent.instanceBase * sizeof(RenderInstanceData)),
-                    .type = preparedView.type
+                    .type = preparedView.type,
+                    .priority = preparedView.priority
                 };
 
                 if ((preparedView.type == RenderViewType::Camera) || (preparedView.type == RenderViewType::DepthOnly))
@@ -794,6 +794,9 @@ namespace litl
 
                 renderViews.push_back(renderView);
             }
+
+            // Sort from lower priority to high
+            std::ranges::stable_sort(renderViews, std::less{}, [](RenderView const& v) { return v.priority; });
         }
 
         /// <summary>
