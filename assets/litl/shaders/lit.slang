@@ -123,8 +123,14 @@ FragmentOutput fragmentMain(VertexOutput input, bool isFrontFace: SV_IsFrontFace
     surface.normal    = buildSurfaceNormal(input, matProps, isFrontFace);
     surface.toView    = normalize(_pc.passData.cameraPosition.xyz - input.positionWS);
     surface.baseColor = baseColor.rgb;
-    
-    const float3 lighting = shadeLights(_pc.lightData, surface);
+
+    ShadowInputs shadowInput;
+    shadowInput.data = _pc.passData.shadowData;
+    shadowInput.positionWS = input.positionWS;
+    shadowInput.geometricNormal = surface.normal;
+    shadowInput.viewDepth = mul(_pc.passData->view, float4(input.positionWS, 1.0f)).z;      // LH: +z forward
+
+    const float3 lighting = shadeLights(_pc.lightData, surface, shadowInput);
     const float3 ambient  = _pc.lightData->ambient.rgb * surface.baseColor * (1.0f - surface.metallic);
     const float3 emissive = float3(0.0f);
     const float3 color    = lighting + ambient + emissive;

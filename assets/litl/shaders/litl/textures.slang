@@ -12,6 +12,7 @@ import common;
 // These bindings are defined in TextureTable::buildDescriptorSetLayout
 [[vk::binding(0, BindSetPerFrame)]] Texture2D<float4> g_Textures[];                     // Most 2D textures end up here
 [[vk::binding(1, BindSetPerFrame)]] Texture2DArray<float4> g_TextureArrays[];           // Texture arrays such as cascaded shadow maps
+[[vk::binding(1, BindSetPerFrame)]] Texture2DArray<float> g_ShadowTextureArrays[];      // Aliased view of g_TextureArrays for depth compares.
 [[vk::binding(2, BindSetPerFrame)]] TextureCubeArray<float4> g_TextureCubeArrays[];     // Cube arrays such as point light shadows
 [[vk::binding(3, BindSetPerFrame)]] SamplerState g_Samplers[16];
 [[vk::binding(3, BindSetPerFrame)]] SamplerComparisonState g_ComparisonSamplers[16];    // Aliased view of g_Samplers for comparison samplers.
@@ -99,4 +100,9 @@ public float4 sampleGlobalTextureArray(uint packedTextureSlotSamplerIndex, in Sa
     const float3 uvw = float3(uv, float(layer));
 
     return g_TextureArrays[NonUniformResourceIndex(textureIndex)].Sample(samplerOverride, uvw);
+}
+
+public float sampleGlobalShadowTextureArray(uint index, float3 uvw, float ref)
+{
+    return g_ShadowTextureArrays[index].SampleCmpLevelZero(g_ComparisonSamplers[DefaultSamplerIndex_ShadowCompare], uvw, ref);
 }

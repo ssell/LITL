@@ -28,7 +28,7 @@ public struct PerPassData
     public float4x4 projection;
     public float4x4 viewProjection;
     public float4 cameraPosition;
-    public ShadowRenderViewData *shadowData;
+    public ShadowRenderViewData* shadowData;
     uint padding0;
     uint padding1;
 };

@@ -10,6 +10,7 @@ public static const uint BindSetPerPass = 1;
 public static const uint BindSetPerMaterial = 2;
 public static const uint BindSetPerObject = 3;
 
+public static const uint  UINT32_NULL_INDEX = ~0u;
 public static const float PI          = 3.14159265359f;
 public static const float PI_OVER_TWO = 1.57079632679f;
 public static const float ONE_OVER_PI = 0.31830988618f;

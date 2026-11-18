@@ -180,9 +180,12 @@ namespace litl::samples
 
         cameraBootstrap(commands, objectPool, sceneView, assets, true);
         lightingBootstrap(commands, lights);
-        //sponzaBootstrap(commands, assets);
+        sponzaBootstrap(commands, assets);
         //transparentCubeBootstrap(commands, assets);
-        pbrSphereGridBootstrap(commands, assets, services.get<RenderManager>());
+        //pbrSphereGridBootstrap(commands, assets, services.get<RenderManager>());
+
+
+
     }
 }
 

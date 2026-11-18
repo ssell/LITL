@@ -4,15 +4,22 @@
 // -----------------------------------------------------------------------------------------
 
 module lighting;
+import common;
+import textures;
+
 __exported import brdf;
 
+// -----------------------------------------------------------------------------------------
+// Shadows
+// -----------------------------------------------------------------------------------------
+
 // Must match constants::MaxShadowCascades
-public static const uint MaxShadowCascades = 4;
+public static const uint MAX_SHADOW_CASCADES = 4;
 
 // Must match ShadowRenderViewData.hpp
 public struct ShadowRenderViewData
 {
-    public float4x4 cascadeViewProj[MaxShadowCascades];
+    public float4x4 cascadeViewProj[MAX_SHADOW_CASCADES];
     public float4 cascadeSplits;
     public float4 cascadeNormalOffset;
     public uint shadowArrayIndex;
@@ -20,6 +27,51 @@ public struct ShadowRenderViewData
     public uint cascadeCount;
     public uint lightIndex;
 }
+
+public struct ShadowInputs
+{
+    public ShadowRenderViewData* data;
+    public float3 positionWS;
+    public float3 geometricNormal;
+    public float viewDepth;
+};
+
+float calcDirectionalLightShadow(in float3 L, in ShadowInputs shadow, uint lightIndex)
+{
+    if ((shadow.data == nullptr) || 
+        (shadow.data->shadowArrayIndex == UINT32_NULL_INDEX) || 
+        (shadow.data->lightIndex != lightIndex) || 
+        (shadow.data->cascadeCount == 0))
+    {
+        return 1.0f;
+    }
+
+    for (uint cidx = 0; cidx < MAX_SHADOW_CASCADES; ++cidx)
+    {
+        if (shadow.viewDepth < shadow.data->cascadeSplits[cidx])
+        {
+            // Normal offset. Push the lookup position along the geometric normal before projecting. 
+            // This removes most acne without inflating the depth bias. Scaling by (1 - NoL) keeps lit-facing surfaces tight
+            // Note: the C++ side pre-scales the cascadeNormalOffset by world texel size.
+            const float NoLg = saturate(dot(shadow.geometricNormal, L));
+            const float3 posOffset = shadow.positionWS + shadow.geometricNormal * (shadow.data->cascadeNormalOffset[cidx] * (1.0f - NoLg));
+
+            // Project into the light. The shadow view for directional is orthographic, so w == 1 and no divide is needed.
+            // Additionally, the orthographic projection already negates [1][1] for our Vulkan backend, so NDC +y points down and lines up with texture v, so no flip needed.
+            const float4 clip = mul(shadow.data->cascadeViewProj[cidx], float4(posOffset, 1.0f));
+            const float2 uv = clip.xy * 0.5f + 0.5f;
+            const float ref = saturate(clip.z); // reverse-Z: 1 = at the light's near plane, 0 = far. Outside of [0,1] needs no code: ClampBorder + OpaqueBlack returns "lit"
+
+            return sampleGlobalShadowTextureArray(shadow.data->shadowArrayIndex, float3(uv, float(shadow.data->firstLayer + cidx)), ref);
+        }
+    }
+
+    return 1.0f;
+}
+
+// -----------------------------------------------------------------------------------------
+// Lights
+// -----------------------------------------------------------------------------------------
 
 public struct DirectionalLight
 {
@@ -35,7 +87,7 @@ public struct LightData
     public uint directionalLightCount;              // Number of directional lights;
 }
 
-float3 shadeDirectionalLights(LightData* lightData, in SurfaceData surface, in BrdfParams brdf)
+float3 shadeDirectionalLights(LightData *lightData, in SurfaceData surface, in BrdfParams brdf, in ShadowInputs shadow)
 {
     float3 total = 0;
 
@@ -47,20 +99,20 @@ float3 shadeDirectionalLights(LightData* lightData, in SurfaceData surface, in B
         const float3 radiance = light.colorIntensity.rgb * light.colorIntensity.a;
 
         float3 lighting = evaluateBRDF(surface, brdf, L, radiance);
-
+        float shadow = calcDirectionalLightShadow(L, shadow, i);
         // ... todo multiply by per-light shadow/visibility factor ...
 
-        total += lighting;
+        total += lighting * shadow;
     }
 
     return total;
 }
 
-public float3 shadeLights(LightData* lightData, in SurfaceData surface)
+public float3 shadeLights(LightData *lightData, in SurfaceData surface, in ShadowInputs shadow)
 {
     const BrdfParams brdf = prepareBRDF(surface);
 
-    const float3 directionalLighting = shadeDirectionalLights(lightData, surface, brdf);
+    const float3 directionalLighting = shadeDirectionalLights(lightData, surface, brdf, shadow);
     // ... todo other light types ...
     // float3 lighting = directionalLighting + ...;
 
