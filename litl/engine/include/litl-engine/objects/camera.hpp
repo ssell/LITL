@@ -406,6 +406,8 @@ namespace litl
         /// </summary>
         void setShadowsEnabled(bool enabled) noexcept;
 
+        [[nodiscard]] CameraProjection getProjection() const noexcept;
+
     private:
 
         /// <summary>

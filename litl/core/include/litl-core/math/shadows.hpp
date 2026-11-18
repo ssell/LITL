@@ -26,20 +26,55 @@ namespace litl
     }
 
     /// <summary>
-    /// World-space corners of the camera frustum between two view distances.
-    /// Each frustum edge is a straight line on which view depth is linear, so a plain lerp is exact.
+    /// Corners of the camera frustum between view depths sliceNear and sliceFar.
+    /// Built from the near corners alone, so it works for infinite-far projections.
+    /// Perspective cameras only.
     /// </summary>
-    [[nodiscard]] std::array<vec3, 8> sliceCorners(bounds::FrustumCorners const& corners, float camNear, float camFar, float sliceNear, float sliceFar) noexcept
+    [[nodiscard]] std::array<vec3, 8> sliceCornersPerspective(bounds::FrustumCorners const& corners, vec3 eye, float camNear, float sliceNear, float sliceFar) noexcept
     {
-        const float tN = (sliceNear - camNear) / (camFar - camNear);
-        const float tF = (sliceFar - camNear) / (camFar - camNear);
+        const std::array<vec3, 4> rays{
+           corners.nearLL - eye, corners.nearLR - eye,
+           corners.nearUR - eye, corners.nearUL - eye
+        };
 
-        const auto at = [](vec3 const& n, vec3 const& f, float t) { return n + ((f - n) * t); };
+        const float sN = sliceNear / camNear;
+        const float sF = sliceFar / camNear;
 
         return {
-            at(corners.nearLL, corners.farLL, tN), at(corners.nearLR, corners.farLR, tN), at(corners.nearUR, corners.farUR, tN), at(corners.nearUL, corners.farUL, tN),
-            at(corners.nearLL, corners.farLL, tF), at(corners.nearLR, corners.farLR, tF), at(corners.nearUR, corners.farUR, tF), at(corners.nearUL, corners.farUL, tF)
+            eye + rays[0] * sN, eye + rays[1] * sN, eye + rays[2] * sN, eye + rays[3] * sN,
+            eye + rays[0] * sF, eye + rays[1] * sF, eye + rays[2] * sF, eye + rays[3] * sF
         };
+    }
+
+    /// <summary>
+    /// Corners of the frustum between view depths sliceNear and sliceFar.
+    /// Uses the near corners and side edges only: works for perspective, orthographic and infinite-far.
+    /// </summary>
+    [[nodiscard]] std::array<vec3, 8> sliceCornersOrthographic(bounds::Frustum const& frustum, float camNear, float sliceNear, float sliceFar) noexcept
+    {
+        using F = bounds::Frustum;
+
+        const auto c = F::extractCorners(frustum);                 // near* are valid even when infinite
+        const vec3 forward = frustum.getSide(F::Near).normal();
+
+        const std::array<vec3, 4> nearCorners{ c.nearLL, c.nearLR, c.nearUR, c.nearUL };
+        const std::array<vec3, 4> edges{
+            frustum.edgeDirection(F::Left,  F::Bottom),
+            frustum.edgeDirection(F::Right, F::Bottom),
+            frustum.edgeDirection(F::Right, F::Top),
+            frustum.edgeDirection(F::Left,  F::Top)
+        };
+
+        std::array<vec3, 8> out{};
+
+        for (uint32_t i = 0u; i < 4u; ++i)
+        {
+            const float invDepthPerUnit = 1.0f / dot(edges[i], forward);
+            out[i] = nearCorners[i] + edges[i] * ((sliceNear - camNear) * invDepthPerUnit);
+            out[i + 4u] = nearCorners[i] + edges[i] * ((sliceFar - camNear) * invDepthPerUnit);
+        }
+
+        return out;
     }
 }
 

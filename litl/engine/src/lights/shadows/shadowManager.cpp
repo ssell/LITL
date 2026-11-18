@@ -278,7 +278,8 @@ namespace litl
 
             computeCascadeSplits(camNear, shadowFar, cascadeCount, shadowConfig.cascadeSplitLambda, cascadeSplits);
 
-            const auto corners = bounds::Frustum::extractCorners(camera.getFrustum());
+            const auto frustum = camera.getFrustum();
+            const auto corners = bounds::Frustum::extractCorners(frustum);
             auto& shadowData = cameraShadowData[slot];
 
             shadowData.shadowArrayIndex = texture->getTextureTableIndex();
@@ -288,11 +289,24 @@ namespace litl
 
             float sliceNear = camNear;
             const ShadowBiasSettings bias = (light.biasOverride ? light.bias : shadowConfig.defaultDirectionalBias);
+
+            const auto getFrustumSphere = [&camera, &frustum, &corners, &camNear, &sliceNear](float sliceFar) -> bounds::Sphere
+                {
+                    if (camera.getProjection() == CameraProjection::Perspective)
+                    {
+                        const auto slice = sliceCornersPerspective(corners, camera.getWorldPosition(), camNear, sliceNear, sliceFar);
+                        return bounds::Sphere::fromCorners(slice);
+                    }
+                    else
+                    {
+                        const auto slice = sliceCornersOrthographic(frustum, camNear, sliceNear, sliceFar);
+                        return bounds::Sphere::fromCorners(slice);
+                    }
+                };
             
             for (uint32_t cascadeIndex = 0u; cascadeIndex < cascadeCount; ++cascadeIndex)
             {
-                const auto slice = sliceCorners(corners, camNear, camFar, sliceNear, cascadeSplits[cascadeIndex]);
-                const auto sphere = bounds::Sphere::fromCorners(slice);
+                const auto sphere = getFrustumSphere(cascadeSplits[cascadeIndex]);
                 const auto fit = fitDirectionalLight(light.toLight, sphere, shadowConfig.resolution, shadowConfig.directionalCasterPullback);
                 const float texelWorld = (2.0f * sphere.radius) / static_cast<float>(shadowConfig.resolution);
 

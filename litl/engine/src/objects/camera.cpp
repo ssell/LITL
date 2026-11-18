@@ -319,4 +319,9 @@ namespace litl
     {
         m_descriptor.shadows.enabled = enabled;
     }
+
+    CameraProjection Camera::getProjection() const noexcept
+    {
+        return m_descriptor.projection;
+    }
 }
