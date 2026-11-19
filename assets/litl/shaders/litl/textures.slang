@@ -9,7 +9,8 @@ import common;
 // -----------------------------------------------------------------------------------------
 // Global Texture Utilities
 
-// These bindings are defined in TextureTable::buildDescriptorSetLayout
+// These bindings are defined in TextureTable::buildDescriptorSetLayout.
+// Additionally, the (index, type) pairing is validated in pipelineLayoutCache.cpp in validatePerFrameSetDeclaration and must match there as well.
 [[vk::binding(0, BindSetPerFrame)]] Texture2D<float4> g_Textures[];                     // Most 2D textures end up here
 [[vk::binding(1, BindSetPerFrame)]] Texture2DArray<float4> g_TextureArrays[];           // Texture arrays such as cascaded shadow maps
 [[vk::binding(1, BindSetPerFrame)]] Texture2DArray<float> g_ShadowTextureArrays[];      // Aliased view of g_TextureArrays for depth compares.

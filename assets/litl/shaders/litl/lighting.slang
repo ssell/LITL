@@ -60,7 +60,9 @@ float calcDirectionalLightShadow(in float3 L, in ShadowInputs shadow, uint light
             // Additionally, the orthographic projection already negates [1][1] for our Vulkan backend, so NDC +y points down and lines up with texture v, so no flip needed.
             const float4 clip = mul(shadow.data->cascadeViewProj[cidx], float4(posOffset, 1.0f));
             const float2 uv = clip.xy * 0.5f + 0.5f;
-            const float ref = saturate(clip.z); // reverse-Z: 1 = at the light's near plane, 0 = far. Outside of [0,1] needs no code: ClampBorder + OpaqueBlack returns "lit"
+
+            // reverse-Z: 1 = at the light's near plane, 0 = far. Outside of [0,1] needs no code: ClampBorder + OpaqueBlack returns "lit"
+            const float ref = saturate(clip.z);
 
             return sampleGlobalShadowTextureArray(shadow.data->shadowArrayIndex, float3(uv, float(shadow.data->firstLayer + cidx)), ref);
         }

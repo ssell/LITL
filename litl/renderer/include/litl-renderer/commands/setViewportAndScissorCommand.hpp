@@ -2,6 +2,7 @@
 #define LITL_RENDERER_COMMANDS_SET_VIEWPORT_AND_SCISSOR_H__
 
 #include <optional>
+
 #include "litl-core/math/types/rect2D.hpp"
 
 namespace litl

@@ -62,7 +62,12 @@ namespace litl
                     .minDepth = 0.0f,
                     .maxDepth = 1.0f
                 },
-                .setScissor = std::nullopt
+                .setScissor = SetScissorCommand {
+                    .region = rect2D {
+                        .offset = vec2::zero(),
+                        .extents = vec2::one()
+                    }
+                }
             };
 
             m_pRenderer->cmdSetViewportAndScissor(commandBufferHandle, setViewportScissorCmd);
