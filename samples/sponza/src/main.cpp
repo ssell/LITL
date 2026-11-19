@@ -111,7 +111,7 @@ namespace litl::samples
     {
         auto dirLightEntity = commands.createEntity();
         commands.addComponent<Transform>(dirLightEntity, Transform::create(vec3::zero(), quat::fromEuler(55.0f, 100.0f, 0.0f)));
-        commands.addComponent<DirectionalLight>(dirLightEntity, DirectionalLight{ .color = color{ 0.95f, 0.95f, 1.0f }, .intensity = 1.0f, .castsShadows = true });
+        commands.addComponent<DirectionalLight>(dirLightEntity, DirectionalLight{ .color = color{ 0.95f, 0.95f, 1.0f }, .intensity = 1.5f, .castsShadows = true });
         //commands.addComponent<Spin>(dirLightEntity, Spin{ .rate = 50.0f });
 
         lights->setAmbientColor(color(0.1f, 0.075f, 0.1f, 1.0f));

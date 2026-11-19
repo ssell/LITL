@@ -282,6 +282,8 @@ namespace litl
             const auto corners = bounds::Frustum::extractCorners(frustum);
             auto& shadowData = cameraShadowData[slot];
 
+            shadowData.resolution = static_cast<float>(shadowConfig.resolution);
+            shadowData.resolutionInverse = 1.0f / shadowData.resolution;
             shadowData.shadowArrayIndex = texture->getTextureTableIndex();
             shadowData.firstLayer = acquired->allocation.range.first;
             shadowData.cascadeCount = cascadeCount;
