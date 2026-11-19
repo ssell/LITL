@@ -6,7 +6,7 @@ This is a learning engine and very (very) early in development. It is public mer
 
 ## Screenshots
 
-![](media/litl_v0p2_sponza.png)
+![](media/litl_v0p4_sponza.png)
 
 ## Requirements
 
