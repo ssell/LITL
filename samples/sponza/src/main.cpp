@@ -80,7 +80,7 @@ namespace litl::samples
 
     void cameraBootstrap(EntityCommands& commands, std::shared_ptr<ObjectPool> objectPool, std::shared_ptr<SceneView> sceneView, std::shared_ptr<AssetManager> assets, bool addAltCamera) noexcept
     {
-        const auto* mainCamera = createMainCamera(color{ 0.015f, 0.015f, 0.025f }, vec3(-5.0f, 1.5f, 0.25f), vec3(5.0f, 1.5f, 0.25f), vec3::up(), *objectPool, *sceneView, true);
+        const auto* mainCamera = createMainCamera(color{ 60.0f / 255.0f, 82.0f / 255.0f, 168.0f / 255.0f }, vec3(-5.0f, 1.5f, 0.25f), vec3(5.0f, 1.5f, 0.25f), vec3::up(), *objectPool, *sceneView, true);
         commands.addComponent<FreeFlyController>(mainCamera->getEntity());
         commands.addComponent<PendingModelInstance>(mainCamera->getEntity(), createModelInstance("litl/models/sphere", "litl/materials/lit", *assets));
         commands.addComponent<LocalBounds>(mainCamera->getEntity());
@@ -110,11 +110,11 @@ namespace litl::samples
     void lightingBootstrap(EntityCommands& commands, std::shared_ptr<LightManager> lights) noexcept
     {
         auto dirLightEntity = commands.createEntity();
-        commands.addComponent<Transform>(dirLightEntity, Transform::create(vec3::zero(), quat::fromEuler(60.0f, 100.0f, 0.0f)));
+        commands.addComponent<Transform>(dirLightEntity, Transform::create(vec3::zero(), quat::fromEuler(55.0f, 100.0f, 0.0f)));
         commands.addComponent<DirectionalLight>(dirLightEntity, DirectionalLight{ .color = color{ 0.95f, 0.95f, 1.0f }, .intensity = 1.0f, .castsShadows = true });
         //commands.addComponent<Spin>(dirLightEntity, Spin{ .rate = 50.0f });
 
-        lights->setAmbientColor(color(0.125f, 0.1f, 0.125f, 1.0f));
+        lights->setAmbientColor(color(0.1f, 0.075f, 0.1f, 1.0f));
     }
 
     void sponzaBootstrap(EntityCommands& commands, std::shared_ptr<AssetManager> assets) noexcept
@@ -178,18 +178,11 @@ namespace litl::samples
         auto assets = services.get<AssetManager>();
         auto lights = services.get<LightManager>();
 
-        cameraBootstrap(commands, objectPool, sceneView, assets, true);
+        cameraBootstrap(commands, objectPool, sceneView, assets, false);
         lightingBootstrap(commands, lights);
         sponzaBootstrap(commands, assets);
         //transparentCubeBootstrap(commands, assets);
         //pbrSphereGridBootstrap(commands, assets, services.get<RenderManager>());
-
-
-
-
-
-
-
     }
 }
 

@@ -64,7 +64,12 @@ float calcDirectionalLightShadow(in float3 L, in ShadowInputs shadow, uint light
             // reverse-Z: 1 = at the light's near plane, 0 = far. Outside of [0,1] needs no code: ClampBorder + OpaqueBlack returns "lit"
             const float ref = saturate(clip.z);
 
-            return sampleGlobalShadowTextureArray(shadow.data->shadowArrayIndex, float3(uv, float(shadow.data->firstLayer + cidx)), ref);
+            // TODO pass these in
+            const float2 resolution = float2(2048.0f);
+            const float2 invResolution = float2(0.00048828125f); // 1 / 2048
+            const uint layer = shadow.data->firstLayer + cidx;
+
+            return sampleGlobalShadowTextureArray5x5(shadow.data->shadowArrayIndex, uv, layer, ref, resolution, invResolution);
         }
     }
 

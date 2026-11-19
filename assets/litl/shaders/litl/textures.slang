@@ -103,7 +103,37 @@ public float4 sampleGlobalTextureArray(uint packedTextureSlotSamplerIndex, in Sa
     return g_TextureArrays[NonUniformResourceIndex(textureIndex)].Sample(samplerOverride, uvw);
 }
 
-public float sampleGlobalShadowTextureArray(uint index, float3 uvw, float ref)
+/**
+ * Samples from the global 2D texture array table using the specified sampler using a 5x5 optimized tent (Ignacio Castano's optimized PCF).
+ * uv: [0,1] shadow-map coordinates, already projected. ref: reverse-Z receiver depth.
+ */
+public float sampleGlobalShadowTextureArray5x5(uint index, float2 uv, float layer, float ref, float2 resolution, float2 invResolution)
 {
-    return g_ShadowTextureArrays[index].SampleCmpLevelZero(g_ComparisonSamplers[DefaultSamplerIndex_ShadowCompare], uvw, ref);
+    // Work in texel units. Snap to the nearest texel corner and keep the fraction.
+    const float2 tc = uv * resolution + 0.5f;
+    const float2 base = floor(tc);
+    const float2 f = tc - base; // (s, t) in [0, 1)
+    const float2 baseUV = (base - 0.5f) * invResolution;
+
+    // Per-axis weights and sub-texel offsets (relative to baseUV, in texels).
+    const float3 wx = float3(4.0f - 3.0f * f.x, 7.0f, 1.0f + 3.0f * f.x);
+    const float3 wy = float3(4.0f - 3.0f * f.y, 7.0f, 1.0f + 3.0f * f.y);
+
+    const float3 ox = float3((3.0f - 2.0f * f.x) / wx.x - 2.0f, (3.0f + f.x) / wx.y, f.x / wx.z + 2.0f);
+    const float3 oy = float3((3.0f - 2.0f * f.y) / wy.x - 2.0f, (3.0f + f.y) / wy.y, f.y / wy.z + 2.0f);
+
+    float sum = 0.0f;
+
+    [unroll]
+    for (int j = 0; j < 3; ++j)
+    {
+        [unroll]
+        for (int i = 0; i < 3; ++i)
+        {
+            const float2 p = baseUV + float2(ox[i], oy[j]) * invResolution;
+            sum += (wx[i] * wy[j]) * g_ShadowTextureArrays[index].SampleCmpLevelZero(g_ComparisonSamplers[DefaultSamplerIndex_ShadowCompare], float3(p, layer), ref);
+        }
+    }
+
+    return sum * (1.0f / 144.0f);
 }
