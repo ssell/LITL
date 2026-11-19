@@ -36,7 +36,8 @@ namespace litl
             .objectInfo = ObjectDescriptor {.name = "MainCamera" },
             .clearColor = clearColor,
             .shadows = CameraShadowSettings {
-                .enabled = enableShadows
+                .enabled = enableShadows,
+                .cascadeCount = 4u
             }
         };
 
