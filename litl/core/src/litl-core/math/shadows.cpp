@@ -56,4 +56,20 @@ namespace litl
 
         return out;
     }
+
+    bounds::Sphere sliceSpherePerspective(vec3 eye, vec3 forward, float tanHalfFovX, float tanHalfFovY, float sliceNear, float sliceFar) noexcept
+    {
+        const float n = sliceNear;
+        const float f = sliceFar;
+        const float T = (tanHalfFovX * tanHalfFovX) + (tanHalfFovY * tanHalfFovY);     // squared corner offset per unit depth
+
+        // Depth along forward where the near and far corners are equidistant. Past f the far corners alone bound the slice, so the center sits on the far plane.
+        const float c = min(0.5f * (n + f) * (1.0f + T), f);
+        const float r = std::sqrt((f * f * T) + ((f - c) * (f - c)));
+
+        return bounds::Sphere{
+            .center = eye + (forward * c),
+            .radius = std::ceil(r * 16.0f) / 16.0f
+        };
+    }
 }

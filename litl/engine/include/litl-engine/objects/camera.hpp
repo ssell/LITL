@@ -406,9 +406,24 @@ namespace litl
         /// </summary>
         void setShadowsEnabled(bool enabled) noexcept;
 
+        /// <summary>
+        /// Returns the type of projection used by the camera.
+        /// </summary>
         [[nodiscard]] CameraProjection getProjection() const noexcept;
 
+        /// <summary>
+        /// Returns the normalized forward vector of the camera.
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] vec3 getForward() const noexcept;
+
+        [[nodiscard]] float getTanFovXHalf() const noexcept;
+
+        [[nodiscard]] float getTanFovYHalf() const noexcept;
+
     private:
+
+        void recalculateTanHalfFov() noexcept;
 
         /// <summary>
         /// Rebuilds the projection matrix.
@@ -456,6 +471,11 @@ namespace litl
         vec3 m_worldPosition{};
 
         /// <summary>
+        /// The normalized forward vector of the camera. Updated once per frame during PreRender.
+        /// </summary>
+        vec3 m_forward{};
+
+        /// <summary>
         /// Size of the viewport/screen.
         /// </summary>
         vec2 m_viewportSize{};
@@ -486,6 +506,16 @@ namespace litl
         /// Is this camera currently drawing?
         /// </summary>
         bool m_isActive{ true };
+
+        /// <summary>
+        /// tan²(fovX/2), used for shadow spheres.
+        /// </summary>
+        float m_tanFovXHalf{ 0.0f };
+
+        /// <summary>
+        /// tan²(fovY/2), used for shadow spheres.
+        /// </summary>
+        float m_tanFovYHalf{ 0.0f };
     };
 }
 

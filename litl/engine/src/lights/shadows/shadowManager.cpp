@@ -295,12 +295,17 @@ namespace litl
             float sliceNear = camNear;
             const ShadowBiasSettings bias = (light.biasOverride ? light.bias : shadowConfig.defaultDirectionalBias);
 
-            const auto getFrustumSphere = [&camera, &frustum, &corners, &camNear, &sliceNear](float sliceFar) -> bounds::Sphere
+            const auto getFrustumSphere = [&camera, &frustum, &camNear, &sliceNear](float sliceFar) -> bounds::Sphere
                 {
                     if (camera.getProjection() == CameraProjection::Perspective)
                     {
-                        const auto slice = sliceCornersPerspective(corners, camera.getWorldPosition(), camNear, sliceNear, sliceFar);
-                        return bounds::Sphere::fromCorners(slice);
+                        return sliceSpherePerspective(
+                            camera.getWorldPosition(),
+                            camera.getForward(),
+                            camera.getTanFovXHalf(),
+                            camera.getTanFovYHalf(),
+                            sliceNear,
+                            sliceFar);
                     }
                     else
                     {

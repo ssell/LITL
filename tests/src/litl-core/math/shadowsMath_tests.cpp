@@ -4,6 +4,7 @@
 #include "tests.hpp"
 #include "litl-core/math.hpp"
 #include "litl-core/math/shadows.hpp"
+#include "litl-engine/constants.hpp"
 
 namespace litl::tests
 {
@@ -57,6 +58,26 @@ namespace litl::tests
         constexpr float depthEps(float depth) noexcept
         {
             return 1e-4f * depth + 1e-5f;
+        }
+
+        vec3 forwardFromYawPitch(float yawDeg, float pitchDeg) noexcept
+        {
+            const float yaw = yawDeg * (constants::pi / 180.0f);
+            const float pitch = pitchDeg * (constants::pi / 180.0f);
+            return normalize(vec3{ std::cos(pitch) * std::sin(yaw), std::sin(pitch), std::cos(pitch) * std::cos(yaw) });
+        }
+
+        bounds::Sphere sliceSphere(vec3 const& forward, float sliceNear, float sliceFar) noexcept
+        {
+            const auto aspectRatio = 16.0f / 9.0f;
+            const auto fovY = constants::pi / 3.0f;
+            const auto tanY = std::tan(fovY * 0.5f);
+            const auto tanX = aspectRatio * tanY;
+            const auto view = mat4::lookAt(s_eye, s_eye + forward, s_worldUp);
+            const auto proj = mat4::perspective(fovY, aspectRatio, s_near, s_far);
+            const auto frustum = bounds::Frustum::fromViewProjection(proj * view, bounds::FrustumExtractionOptions{ .useInfiniteFar = true });
+            
+            return sliceSpherePerspective(s_eye, forward, tanX, tanY, sliceNear, sliceFar);
         }
     }
 
@@ -196,6 +217,96 @@ namespace litl::tests
         for (uint32_t i = 0u; i < 8u; ++i)
         {
             requireNear(viaEdges[i], viaRays[i], depthEps(s_sliceFar) * 10.0f);
+        }
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("computeCascadeSplits is strictly increasing and ends at far", "[math::shadows]")
+    {
+        for (const float lambda : { 0.0f, 0.5f, 0.75f, 1.0f })
+        {
+            for (uint32_t count = 1u; count <= constants::MaxShadowCascades; ++count)
+            {
+                INFO("lambda " << lambda << ", count " << count);
+
+                std::array<float, 4> splits{};
+                computeCascadeSplits(s_near, s_far, count, lambda, splits);
+
+                float previous = s_near;
+
+                for (uint32_t i = 0u; i < count; ++i)
+                {
+                    INFO("split " << i << " = " << splits[i] << ", previous " << previous);
+                    REQUIRE(splits[i] > previous);
+                    previous = splits[i];
+                }
+
+                requireNear(splits[count - 1u], s_far, 1e-5f * s_far);
+            }
+        }
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("computeCascadeSplits lambda endpoints are uniform and logarithmic", "[math::shadows]")
+    {
+        constexpr uint32_t count = 4u;
+        std::array<float, count> uniform{};
+        std::array<float, count> logarithmic{};
+
+        computeCascadeSplits(s_near, s_far, count, 0.0f, uniform);
+        computeCascadeSplits(s_near, s_far, count, 1.0f, logarithmic);
+
+        const float step = (s_far - s_near) / static_cast<float>(count);
+        const float ratio = std::pow(s_far / s_near, 1.0f / static_cast<float>(count));
+
+        for (uint32_t i = 0u; i < count; ++i)
+        {
+            requireNear(uniform[i], s_near + (step * static_cast<float>(i + 1u)), 1e-4f);
+        }
+
+        // Logarithmic: each split is a constant multiple of the previous one (s_near for i == 0).
+        float previous = s_near;
+
+        for (uint32_t i = 0u; i < count; ++i)
+        {
+            requireNear(logarithmic[i] / previous, ratio, 1e-4f);
+            previous = logarithmic[i];
+        }
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("computeCascadeSplits writes only count entries", "[math::shadows]")
+    {
+        // The shader's cascade search relied on unused splits being 0. This pins down that the
+        // function itself never touches them, so the zeros come only from ShadowRenderViewData{}.
+        std::array<float, 4> splits{ -1.0f, -1.0f, -1.0f, -1.0f };
+        computeCascadeSplits(s_near, s_far, 2u, 0.75f, splits);
+
+        REQUIRE(splits[2] == -1.0f);
+        REQUIRE(splits[3] == -1.0f);
+    } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("Slice sphere radius is invariant under camera rotation", "[math::shadows]")
+    {
+        // A changing radius changes the ortho extents, which changes world texel size,
+        // which shows up as shimmering shadow edges while the camera turns.
+        std::array<float, 4> splits{};
+        computeCascadeSplits(s_near, s_far, 4u, 0.75f, splits);
+
+        float sliceNear = s_near;
+
+        for (uint32_t c = 0u; c < 4u; ++c)
+        {
+            const float baseline = sliceSphere(forwardFromYawPitch(0.0f, 0.0f), sliceNear, splits[c]).radius;
+
+            // Pitch stays clear of +-90 where lookAt with a +Y up degenerates.
+            for (float pitch = -80.0f; pitch <= 80.0f; pitch += 10.0f)
+            {
+                for (float yaw = 0.0f; yaw < 360.0f; yaw += 7.0f)
+                {
+                    const float radius = sliceSphere(forwardFromYawPitch(yaw, pitch), sliceNear, splits[c]).radius;
+                    REQUIRE(radius == baseline);
+                }
+            }
+
+            sliceNear = splits[c];
         }
     } LITL_END_TEST_CASE
 }

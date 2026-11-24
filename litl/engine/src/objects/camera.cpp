@@ -20,6 +20,7 @@ namespace litl
         m_pWorld = &world;
         m_renderTextureHandle = m_descriptor.renderTexture;
 
+        recalculateTanHalfFov();
         rebuildProjectionMatrix();
 
         world.addComponentsImmediate<Transform, CameraRef>(
@@ -83,6 +84,7 @@ namespace litl
         m_viewProjMatrix = m_projMatrix * m_viewMatrix;
         m_invViewProjMatrix = m_viewProjMatrix.inverted();
         m_worldPosition = worldMatrix.position();
+        m_forward = m_worldMatrix.forward().normalized();
         m_frustum = bounds::Frustum::fromViewProjection(
             m_viewProjMatrix, 
             bounds::FrustumExtractionOptions{
@@ -128,6 +130,8 @@ namespace litl
     {
         LITL_ASSERT_MSG((radians > 0.0f), "Camera field-of-view must be positive and greater than 0.", );
         m_descriptor.perspective.fieldOfViewY = radians;
+        m_tanFovYHalf = std::tan(m_descriptor.perspective.fieldOfViewY * 0.5f);
+        recalculateTanHalfFov();
         rebuildProjectionMatrix();
     }
 
@@ -323,5 +327,26 @@ namespace litl
     CameraProjection Camera::getProjection() const noexcept
     {
         return m_descriptor.projection;
+    }
+
+    vec3 Camera::getForward() const noexcept
+    {
+        return m_forward;
+    }
+
+    void Camera::recalculateTanHalfFov() noexcept
+    {
+        m_tanFovYHalf = std::tan(m_descriptor.perspective.fieldOfViewY * 0.5f);
+        m_tanFovXHalf = m_tanFovYHalf * m_descriptor.perspective.aspectRatio;
+    }
+
+    float Camera::getTanFovXHalf() const noexcept
+    {
+        return m_tanFovXHalf;
+    }
+
+    float Camera::getTanFovYHalf() const noexcept
+    {
+        return m_tanFovYHalf;
     }
 }

@@ -27,6 +27,13 @@ namespace litl
     /// Uses the near corners and side edges only: works for perspective, orthographic and infinite-far.
     /// </summary>
     [[nodiscard]] std::array<vec3, 8> sliceCornersOrthographic(bounds::Frustum const& frustum, float camNear, float sliceNear, float sliceFar) noexcept;
+
+    /// <summary>
+    /// Tight bounding sphere of the perspective frustum slice between view depths sliceNear and sliceFar.
+    /// Computed analytically from the projection, so it does not depend on camera orientation.
+    /// Symmetric frustums only. The radius is quantized the same way as bounds::Sphere::fromCorners.
+    /// </summary>
+    [[nodiscard]] bounds::Sphere sliceSpherePerspective(vec3 eye, vec3 forward, float tanHalfFovX, float tanHalfFovY, float sliceNear, float sliceFar) noexcept;
 }
 
 #endif
