@@ -16,6 +16,9 @@ __exported import brdf;
 // Must match constants::MaxShadowCascades
 public static const uint MAX_SHADOW_CASCADES = 4;
 
+// Must match CascadeBlendFraction in ShadowManager
+static const float CASCADE_BLEND_FRACTION = 0.1f;       // 10% of the cascade's depth range
+
 // Must match ShadowRenderViewData.hpp
 public struct ShadowRenderViewData
 {
@@ -38,6 +41,32 @@ public struct ShadowInputs
     public float viewDepth;
 };
 
+float sampleCascade(in ShadowRenderViewData* data, in ShadowInputs shadow, float3 L, uint cidx)
+{
+    // Normal offset. Push the lookup position along the geometric normal before projecting.
+    // This removes most acne without inflating the depth bias. Scaling by (1 - NoL) keeps lit-facing surfaces tight
+    // Note: the C++ side pre-scales the cascadeNormalOffset by world texel size.
+    const float NoLg = saturate(dot(shadow.geometricNormal, L));
+    const float3 posOffset = shadow.positionWS + shadow.geometricNormal * (shadow.data->cascadeNormalOffset[cidx] * (1.0f - NoLg));
+
+    // Project into the light. The shadow view for directional is orthographic, so w == 1 and no divide is needed.
+    // Additionally, the orthographic projection already negates [1][1] for our Vulkan backend, so NDC +y points down and lines up with texture v, so no flip needed.
+    const float4 clip = mul(shadow.data->cascadeViewProj[cidx], float4(posOffset, 1.0f));
+    const float2 uv = clip.xy * 0.5f + 0.5f;
+
+    // reverse-Z: 1 = at the light's near plane, 0 = far. Outside of [0,1] needs no code: ClampBorder + OpaqueBlack returns "lit"
+    const float ref = saturate(clip.z);
+    const uint layer = shadow.data->firstLayer + cidx;
+
+    return sampleGlobalShadowTextureArray5x5(
+        shadow.data->shadowArrayIndex,
+        uv,
+        layer,
+        ref,
+        float2(shadow.data->resolution),
+        float2(shadow.data->resolutionInverse));
+}
+
 float calcDirectionalLightShadow(in float3 L, in ShadowInputs shadow, uint lightIndex)
 {
     if ((shadow.data == nullptr) || 
@@ -48,36 +77,41 @@ float calcDirectionalLightShadow(in float3 L, in ShadowInputs shadow, uint light
         return 1.0f;
     }
 
-    for (uint cidx = 0; cidx < MAX_SHADOW_CASCADES; ++cidx)
+    ShadowRenderViewData* data = shadow.data;
+    const uint count = data->cascadeCount;
+    uint cidx = 0;
+
+    // Select the first cadcade whose far split is beyond this fragment
+    for (; cidx < count; ++cidx)
     {
-        if (shadow.viewDepth < shadow.data->cascadeSplits[cidx])
+        if (shadow.viewDepth < data->cascadeSplits[cidx])
         {
-            // Normal offset. Push the lookup position along the geometric normal before projecting. 
-            // This removes most acne without inflating the depth bias. Scaling by (1 - NoL) keeps lit-facing surfaces tight
-            // Note: the C++ side pre-scales the cascadeNormalOffset by world texel size.
-            const float NoLg = saturate(dot(shadow.geometricNormal, L));
-            const float3 posOffset = shadow.positionWS + shadow.geometricNormal * (shadow.data->cascadeNormalOffset[cidx] * (1.0f - NoLg));
-
-            // Project into the light. The shadow view for directional is orthographic, so w == 1 and no divide is needed.
-            // Additionally, the orthographic projection already negates [1][1] for our Vulkan backend, so NDC +y points down and lines up with texture v, so no flip needed.
-            const float4 clip = mul(shadow.data->cascadeViewProj[cidx], float4(posOffset, 1.0f));
-            const float2 uv = clip.xy * 0.5f + 0.5f;
-
-            // reverse-Z: 1 = at the light's near plane, 0 = far. Outside of [0,1] needs no code: ClampBorder + OpaqueBlack returns "lit"
-            const float ref = saturate(clip.z);
-            const uint layer = shadow.data->firstLayer + cidx;
-
-            return sampleGlobalShadowTextureArray5x5(
-                shadow.data->shadowArrayIndex, 
-                uv, 
-                layer, 
-                ref, 
-                float2(shadow.data->resolution), 
-                float2(shadow.data->resolutionInverse));
+            break;
         }
     }
 
-    return 1.0f;
+    // If the furthest cascade no blending can/needs to be done.
+    if (cidx == count)
+    {
+        return 1.0f;
+    }
+
+    // Blend weight: 0 for most of the cascade, ramping to 1 across the last 10% before the next split.
+    const float cascadeStart = (cidx == 0) ? 0.0f : data->cascadeSplits[cidx - 1];
+    const float cascadeEnd = data->cascadeSplits[cidx];
+    const float band = (cascadeEnd - cascadeStart) * CASCADE_BLEND_FRACTION;
+    const float frac = saturate((shadow.viewDepth) - (cascadeEnd - band)) / band;
+
+    const float cascadeSampleA = sampleCascade(data, shadow, L, cidx);
+
+    if (frac <= 0.0f)
+    {
+        return cascadeSampleA;
+    }
+
+    const float cascadeSampleB = ((cidx + 1) < count) ? sampleCascade(data, shadow, L, cidx + 1) : 1.0f;
+
+    return lerp(cascadeSampleA, cascadeSampleB, frac);
 }
 
 // -----------------------------------------------------------------------------------------

@@ -22,6 +22,9 @@ namespace litl
 {
     namespace
     {
+        // This must agree with CASCADE_BLEND_FRACTION in lighting.slang
+        constexpr float CascadeBlendFraction = 0.1f;
+
         struct ShadowedLight
         {
             uint32_t index{ constants::uint32_null_index };
@@ -329,7 +332,9 @@ namespace litl
                     .bias = (light.biasOverride ? light.bias : shadowConfig.defaultDirectionalBias)
                 });
 
-                sliceNear = cascadeSplits[cascadeIndex];
+                const float prevStart = (cascadeIndex == 0u) ? camNear : cascadeSplits[cascadeIndex - 1u];
+                const float band = (cascadeSplits[cascadeIndex] - prevStart) * CascadeBlendFraction;
+                sliceNear = cascadeSplits[cascadeIndex] - band;
             }
 
             shadowData.cascadeSplits = vec4(cascadeSplits[0], cascadeSplits[1], cascadeSplits[2], cascadeSplits[3]);
