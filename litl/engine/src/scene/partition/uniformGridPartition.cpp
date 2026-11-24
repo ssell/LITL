@@ -9,8 +9,22 @@ namespace litl
     /// Represents a single cell within the grid.
     /// Each cell contains a list of entities and their AABB bounds.
     /// </summary>
-    struct GridCell
+    class GridCell
     {
+    public:
+
+        /// <summary>
+        /// The AABB bounds of the cell.
+        /// These bounds are rigid and are used to determine which cell an entity belongs to (getIndexForPoint).
+        /// </summary>
+        const bounds::AABB cellBounds{};
+
+        /// <summary>
+        /// The loose AABB bounds of the cell that grow/shrink as entities are added/removed from it.
+        /// These bounds are for the actual spatial queries.
+        /// </summary>
+        bounds::AABB looseBounds{};
+
         /// <summary>
         /// All entities in the cell.
         /// </summary>
@@ -21,10 +35,35 @@ namespace litl
         /// </summary>
         std::vector<bounds::AABB> entityBounds;
 
+        /// <summary>
+        /// Set to true if an entity was added or removed to it.
+        /// </summary>
+        bool requiresRecompute{ false };
+
         GridCell(float x, float z, float size, float yMin, float yMax)
             : cellBounds(bounds::AABB::fromMinMax(vec3{ x, yMin, z }, vec3{ x + size, yMax, z + size }))
         {
 
+        }
+
+        /// <summary>
+        /// Recomputes the loose bounds of the cell.
+        /// This is needed if an entity was updated or removed from the cell.
+        /// </summary>
+        void recomputeLooseBounds() noexcept
+        {
+            if (!requiresRecompute)
+            {
+                return;
+            }
+
+            requiresRecompute = false;
+            looseBounds = cellBounds;
+
+            for (const auto& b : entityBounds)
+            {
+                looseBounds.grow(b);
+            }
         }
 
         /// <summary>
@@ -34,7 +73,7 @@ namespace litl
         /// <param name="outEntities"></param>
         void query(bounds::AABB aabb, World* world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& outEntities, uint32_t limit) const noexcept
         {
-            const auto intersection = bounds::classify(aabb, cellBounds);
+            const auto intersection = bounds::classify(aabb, looseBounds);
 
             switch (intersection)
             {
@@ -79,7 +118,7 @@ namespace litl
         /// <param name="outEntities"></param>
         void query(bounds::Sphere sphere, World* world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& outEntities, uint32_t limit) const noexcept
         {
-            const auto intersection = bounds::classify(sphere, cellBounds);
+            const auto intersection = bounds::classify(sphere, looseBounds);
 
             switch (intersection)
             {
@@ -124,7 +163,7 @@ namespace litl
         /// <param name="outEntities"></param>
         void query(bounds::Frustum const& frustum, World* world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& outEntities, uint32_t limit) const noexcept
         {
-            const auto classification = bounds::classify(frustum, cellBounds);
+            const auto classification = bounds::classify(frustum, looseBounds);
 
             switch (classification.type())
             {
@@ -197,11 +236,6 @@ namespace litl
                 }
             }
         }
-
-        /// <summary>
-        /// The AABB bounds of the cell.
-        /// </summary>
-        const bounds::AABB cellBounds;
     };
 
     struct UniformGridPartition::Impl
@@ -236,6 +270,11 @@ namespace litl
         /// Maps an entity to the slot within the GridCell it s in.
         /// </summary>
         std::unordered_map<EntityId, uint32_t> entityToCellSlot;
+
+        /// <summary>
+        /// Does one or more cell require a recompute?
+        /// </summary>
+        bool requiresRecompute{ false };
 
         /// <summary>
         /// Returns the index of the cell along the x-axis that the specified world position-x fits into.
@@ -365,8 +404,6 @@ namespace litl
         /// Updates the bounds of the entity in the grid.
         /// As a result of this, the entity may be moved to a different cell if it has moved sufficiently enough.
         /// </summary>
-        /// <param name="entity"></param>
-        /// <param name="bounds"></param>
         void update(Entity entity, bounds::AABB bounds) noexcept
         {
             if (!newEntities.empty() && newEntities.contains(entity))
@@ -393,6 +430,8 @@ namespace litl
                 {
                     // The entity is in the same cell. Just update the bounds.
                     cells[prevEntityIndex].entityBounds[prevEntitySlot] = bounds;
+                    cells[prevEntityIndex].requiresRecompute = true;
+                    requiresRecompute = true;
                 }
                 else
                 {
@@ -403,6 +442,19 @@ namespace litl
             }
         }
 
+        void postUpdate() noexcept
+        {
+            if (!requiresRecompute)
+            {
+                return;
+            }
+
+            for (auto& cell : cells)
+            {
+                cell.recomputeLooseBounds();
+            }
+        }
+
         /// <summary>
         /// Queries for all entities in the grid that intersect the specified AABB.
         /// </summary>
@@ -410,11 +462,16 @@ namespace litl
         /// <param name="entities"></param>
         void query(bounds::AABB aabb, World* world, ComponentTypeId componentType, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept
         {
-            const uint32_t startX = getCellIndexX(aabb.min.x());
-            const uint32_t endX = getCellIndexX(aabb.max.x());
+            uint32_t startX = getCellIndexX(aabb.min.x());
+            uint32_t endX = getCellIndexX(aabb.max.x());
+            uint32_t startZ = getCellIndexZ(aabb.min.z());
+            uint32_t endZ = getCellIndexZ(aabb.max.z());
 
-            const uint32_t startZ = getCellIndexZ(aabb.min.z());
-            const uint32_t endZ = getCellIndexZ(aabb.max.z());
+            // Pad the search range by 1 for oversized entities.
+            startX = (startX > 0u ? startX - 1u : startX);
+            startZ = (startZ > 0u ? startZ - 1u : startZ);
+            endX = (endX < (options.cellCount - 2u) ? endX + 1u : endX);
+            endZ = (endZ < (options.cellCount - 2u) ? endZ + 1u : endZ);
 
             bool withinLimit = true;
 
@@ -559,12 +616,17 @@ namespace litl
         /// <param name="entity"></param>
         /// <param name="bounds"></param>
         /// <param name="cellIndex"></param>
-        void addEntityTo(Entity entity, bounds::AABB bounds, uint32_t cellIndex) noexcept
+        void addEntityTo(Entity entity, bounds::AABB const& bounds, uint32_t cellIndex) noexcept
         {
             entityToCell[entity.index] = cellIndex;
             entityToCellSlot[entity.index] = cells[cellIndex].entities.size();
-            cells[cellIndex].entities.push_back(entity);
-            cells[cellIndex].entityBounds.push_back(bounds);
+
+            auto& cell = cells[cellIndex];
+
+            cell.entities.push_back(entity);
+            cell.entityBounds.push_back(bounds);
+            cell.looseBounds.grow(bounds);
+            // for a simple add, no need for a full recompute. just grow in place.
         }
 
         /// <summary>
@@ -595,6 +657,8 @@ namespace litl
             cell.entityBounds.pop_back();
             entityToCell.erase(entity.index);
             entityToCellSlot.erase(entity.index);
+            cell.requiresRecompute = true;
+            requiresRecompute = true;
         }
     };
 
@@ -665,6 +729,11 @@ namespace litl
     void UniformGridPartition::update(Entity entity, bounds::AABB bounds) noexcept
     {
         m_impl->update(entity, bounds);
+    }
+
+    void UniformGridPartition::postUpdate() noexcept
+    {
+        m_impl->postUpdate();
     }
 
     void UniformGridPartition::query(bounds::AABB aabb, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept

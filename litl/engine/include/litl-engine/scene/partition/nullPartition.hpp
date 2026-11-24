@@ -78,6 +78,11 @@ namespace litl
             }
         }
 
+        void postUpdate() noexcept
+        {
+            // ... no action ...
+        }
+
         void query(bounds::AABB bounds, std::vector<PartitionQueryResult>& entities, uint32_t limit) const noexcept
         {
             auto queryCenter = bounds.center();

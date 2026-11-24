@@ -37,7 +37,7 @@ namespace litl
         /// <summary>
         /// Max view distance that receives directional shadows.
         /// </summary>
-        float directionalShadowDistance{ 100.0f };
+        float directionalShadowDistance{ 50.0f };
 
         /// <summary>
         /// How far behind the fitted view box casters are still culled in.

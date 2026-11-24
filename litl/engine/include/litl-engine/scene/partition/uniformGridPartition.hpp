@@ -66,6 +66,11 @@ namespace litl
         void update(Entity entity, bounds::AABB bounds) noexcept;
 
         /// <summary>
+        /// Recomputes bounds of cells that had entities added/removed in the previous update.
+        /// </summary>
+        void postUpdate() noexcept;
+
+        /// <summary>
         /// Queries for all entities in the grid that intersect the specified AABB.
         /// </summary>
         /// <param name="aabb"></param>
@@ -168,7 +173,7 @@ namespace litl
 
         void configure(UniformGridOptions const& options) noexcept;
 
-        struct Impl; ImplPtr<Impl, 256> m_impl;
+        struct Impl; ImplPtr<Impl, 264> m_impl;
     };
 
     static_assert(ScenePartition<UniformGridPartition>);

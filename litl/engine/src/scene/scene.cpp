@@ -180,6 +180,8 @@ namespace litl
             }
         }
 
+        std::visit([&](auto& partition) { partition.postUpdate(); }, m_partition);
+
         // Update all cameras
         m_cameras.update();
         auto cameras = m_cameras.getCameras();
