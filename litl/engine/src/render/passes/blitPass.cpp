@@ -4,6 +4,7 @@
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/render/renderPassContext.hpp"
 #include "litl-engine/render/passes/blitPass.hpp"
+#include "litl-engine/lights/tonemapping.hpp"
 #include "litl-renderer/renderer.hpp"
 #include "litl-renderer/utility.hpp"
 
@@ -25,6 +26,8 @@ namespace litl
             uint32_t mode{ static_cast<uint32_t>(Mode::Color) };
             float zNear{ 0.0f };
             float zFar{ 0.0f };
+            float exposure{ 1.0f };         // Linear multiplier applied to the sampled color before passing to the tonemapper.
+            uint32_t tonemapper{ static_cast<uint32_t>(ToneMapper::None) };
 
             [[nodiscard]] static BlitPushConstants create(RenderView const& renderView, Texture* color, Texture* depth) noexcept
             {

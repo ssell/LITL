@@ -5,6 +5,7 @@
 // -----------------------------------------------------------------------------------------
 
 import litl.library;
+import litl.tonemapping;
 
 static const uint BlitModeColor = 0;
 static const uint BlitModeDepthFinite = 1;
@@ -18,6 +19,8 @@ struct BlitPushConstants
     uint mode;
     float zNear;
     float zFar;
+    float exposure;
+    uint tonemapper;
 };
 
 [[vk::push_constant]] ConstantBuffer<BlitPushConstants> _pc;
@@ -68,7 +71,11 @@ float4 fragmentMain(VertexOutput input) : SV_Target
     const float4 sampled = sampleGlobalTexture(_pc.sourceTextureIndex, input.uv);
     float4 color = sampled;
 
-    if (_pc.mode != BlitModeColor)
+    if (_pc.mode == BlitModeColor)
+    {
+        color.rgb = applyTonemap(color.rgb * _pc.exposure, _pc.tonemapper);
+    }
+    else
     {
         float viewZ = 0.0f;
 

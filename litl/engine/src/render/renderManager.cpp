@@ -190,7 +190,7 @@ namespace litl
                     return this->onWindowResized(services, window);
                 });
 
-            sceneAttachmentFormats.color = renderer->getSwapchainImageFormat(); // TODO change to DataFormat::RGBA16_SFloat when ready for HDR
+            sceneAttachmentFormats.color = DataFormat::RGBA16_SFloat;               // For HDR. Swapchain is BGRA8_SRGB.
             sceneAttachmentFormats.depth = renderer->getSwapchainDepthFormat();
         }
 
