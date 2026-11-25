@@ -488,6 +488,10 @@ namespace litl
             {
                 getOversizedCell().query(aabb, world, componentType, entities, limit);
             }
+            else if (entities.size() > limit)
+            {
+                entities.resize(limit);
+            }
 
             auto queryCenter = aabb.center();
 

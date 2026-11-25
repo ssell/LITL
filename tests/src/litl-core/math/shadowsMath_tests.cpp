@@ -309,4 +309,51 @@ namespace litl::tests
             sliceNear = splits[c];
         }
     } LITL_END_TEST_CASE
+
+    LITL_TEST_CASE("sliceSpherePerspective contains every slice corner", "[math::shadows]")
+    {
+        constexpr float fovY = constants::pi / 3.0f;
+        constexpr float aspect = 16.0f / 9.0f;
+        const float tanY = std::tan(fovY * 0.5f);
+        const float tanX = aspect * tanY;
+
+        const auto proj = mat4::perspective(fovY, aspect, s_near, s_far);
+
+        std::array<float, 4> splits{};
+        computeCascadeSplits(s_near, s_far, 4u, 0.75f, splits);
+
+        // Pitch stays clear of +-90 where lookAt with a +Y up degenerates.
+        for (float pitch = -80.0f; pitch <= 80.0f; pitch += 10.0f)
+        {
+            for (float yaw = 0.0f; yaw < 360.0f; yaw += 7.0f)
+            {
+                const vec3 forward = forwardFromYawPitch(yaw, pitch);
+                const auto view = mat4::lookAt(s_eye, s_eye + forward, s_worldUp);
+                const auto frustum = bounds::Frustum::fromViewProjection(proj * view, bounds::FrustumExtractionOptions{ .useInfiniteFar = true });
+                const auto corners = bounds::Frustum::extractCorners(frustum);
+
+                float sliceNear = s_near;
+
+                for (uint32_t c = 0u; c < 4u; ++c)
+                {
+                    const auto sphere = sliceSpherePerspective(s_eye, forward, tanX, tanY, sliceNear, splits[c]);
+                    const auto slice = sliceCornersPerspective(corners, s_eye, s_near, sliceNear, splits[c]);
+
+                    // The corners are the noisy side (scaled by d / near), so the tolerance follows depth.
+                    const float eps = depthEps(splits[c]) * 10.0f;
+
+                    for (uint32_t i = 0u; i < 8u; ++i)
+                    {
+                        const float dist = (slice[i] - sphere.center).length();
+
+                        INFO("yaw " << yaw << ", pitch " << pitch << ", cascade " << c << ", corner " << i
+                            << ", dist " << dist << ", radius " << sphere.radius << ", eps " << eps);
+                        REQUIRE(dist <= sphere.radius + eps);
+                    }
+
+                    sliceNear = splits[c];
+                }
+            }
+        }
+    } LITL_END_TEST_CASE
 }

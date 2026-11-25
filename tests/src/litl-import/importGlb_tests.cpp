@@ -153,17 +153,17 @@ namespace litl::tests
         REQUIRE(tintValue != nullptr);
         REQUIRE(*tintValue == colors::White);
 
-        const auto roughness = material->getProperty("roughness");
+        const auto roughness = material->getProperty("roughnessFactor");
         REQUIRE(roughness.has_value());
-        REQUIRE(roughness.value().name == "roughness");
+        REQUIRE(roughness.value().name == "roughnessFactor");
         REQUIRE(roughness.value().type == import::LitlMatPropertyType::Float);
         auto const* roughnessValue = std::get_if<float>(&roughness.value().value);
         REQUIRE(roughnessValue != nullptr);
         REQUIRE(isOne(*roughnessValue));
 
-        const auto metallic = material->getProperty("metallic");
+        const auto metallic = material->getProperty("metallicFactor");
         REQUIRE(metallic.has_value());
-        REQUIRE(metallic.value().name == "metallic");
+        REQUIRE(metallic.value().name == "metallicFactor");
         REQUIRE(metallic.value().type == import::LitlMatPropertyType::Float);
         auto const* metallicValue = std::get_if<float>(&metallic.value().value);
         REQUIRE(metallicValue != nullptr);
