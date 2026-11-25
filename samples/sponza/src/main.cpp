@@ -8,6 +8,7 @@ namespace litl::samples
     [[nodiscard]] Configuration buildConfig() noexcept
     {
         return Configuration{
+            .engine = EngineConfiguration { .tonemapping = DefaultToneMapACES },
             .platform = PlatformConfiguration {
                 .window = WindowConfiguration {
                     .title = "LITL - Sponza Sample"

@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include "litl-renderer/rendererConfiguration.hpp"
+#include "litl-engine/render/tonemapping.hpp"
 #include "litl-engine/scene/sceneConfiguration.hpp"
 #include "litl-engine/lights/shadows/shadowConfiguration.hpp"
 #include "litl-platform/platformConfiguration.hpp"
@@ -36,6 +37,11 @@ namespace litl
         /// The number of threads available in the Task thread pool. Must be on the range [MinTaskThreadCount, MaxTaskThreadCount].
         /// </summary>
         uint32_t taskThreadCount{ 2u };
+
+        /// <summary>
+        /// Tonemapping settings.
+        /// </summary>
+        ToneMappingConfiguration tonemapping{};
 
         void sanitize() noexcept;
     };

@@ -192,6 +192,9 @@ namespace litl
 
             sceneAttachmentFormats.color = DataFormat::RGBA16_SFloat;               // For HDR. Swapchain is BGRA8_SRGB.
             sceneAttachmentFormats.depth = renderer->getSwapchainDepthFormat();
+
+            setToneMap(config->engine.tonemapping.tonemapper);
+            setToneMapExposure(config->engine.tonemapping.exposure);
         }
 
         void destroy() noexcept
@@ -847,6 +850,16 @@ namespace litl
 
             return gpuBuffer->getBufferDeviceAddress().value_or(0ull);
         }
+
+        void setToneMap(ToneMapper tonemap) noexcept
+        {
+            static_cast<BlitPass*>(&getRenderPass(RenderPassType::Blit))->setToneMapper(tonemap);
+        }
+
+        void setToneMapExposure(float exposure) noexcept
+        {
+            static_cast<BlitPass*>(&getRenderPass(RenderPassType::Blit))->setToneMapExposure(exposure);
+        }
     };
 
     RenderManager::RenderManager()
@@ -929,12 +942,12 @@ namespace litl
 
     void RenderManager::setToneMap(ToneMapper tonemap) noexcept
     {
-        static_cast<BlitPass*>(&m_pImpl->getRenderPass(RenderPassType::Blit))->setToneMapper(tonemap);
+        m_pImpl->setToneMap(tonemap);
     }
 
     void RenderManager::setToneMapExposure(float exposure) noexcept
     {
-        static_cast<BlitPass*>(&m_pImpl->getRenderPass(RenderPassType::Blit))->setToneMapExposure(exposure);
+        m_pImpl->setToneMapExposure(exposure);
     }
 
     ToneMapper RenderManager::getToneMapper() const noexcept
