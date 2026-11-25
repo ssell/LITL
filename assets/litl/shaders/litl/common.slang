@@ -10,6 +10,8 @@ public static const uint BindSetPerPass = 1;
 public static const uint BindSetPerMaterial = 2;
 public static const uint BindSetPerObject = 3;
 
+public static const uint  LITL_TRUE = 1u;
+public static const uint  LITL_FALSE = 0u;
 public static const uint  UINT32_NULL_INDEX = ~0u;
 public static const float PI          = 3.14159265359f;
 public static const float PI_OVER_TWO = 1.57079632679f;
@@ -47,4 +49,11 @@ public float3x3 cofactor(float3x3 m)
         cross(m[1], m[2]),
         cross(m[2], m[0]),
         cross(m[0], m[1]));
+}
+
+public float3 linearToSRGB(float3 c)
+{
+    const float3 lo = c * 12.92f;
+    const float3 hi = 1.055f * pow(c, 1.0f / 2.4f) - 0.055f;
+    return select(c <= 0.0031308f, lo, hi);
 }

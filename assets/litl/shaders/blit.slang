@@ -21,6 +21,7 @@ struct BlitPushConstants
     float zFar;
     float exposure;
     uint tonemapper;
+    uint convertSRGB;
 };
 
 [[vk::push_constant]] ConstantBuffer<BlitPushConstants> _pc;
@@ -74,6 +75,11 @@ float4 fragmentMain(VertexOutput input) : SV_Target
     if (_pc.mode == BlitModeColor)
     {
         color.rgb = applyTonemap(color.rgb * _pc.exposure, _pc.tonemapper);
+
+        if (_pc.convertSRGB == LITL_TRUE)
+        {
+            color.rgb = linearToSRGB(color.rgb);
+        }
     }
     else
     {

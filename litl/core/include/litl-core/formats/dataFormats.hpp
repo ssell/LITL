@@ -110,6 +110,44 @@ namespace litl
         }
     }
 
+    [[nodiscard]] constexpr bool dataFormatIsSRGB(DataFormat format) noexcept
+    {
+        switch (format)
+        {
+        case DataFormat::RGBA8_SRGB:
+        case DataFormat::BGRA8_SRGB:
+        case DataFormat::BC7_SRGB:
+            return true;
+
+        case DataFormat::D32_SFloat:
+        case DataFormat::D24_UNorm_S8_UInt:
+        case DataFormat::D32_SFloat_S8_UInt:
+        case DataFormat::RGBA8_UNorm:
+        case DataFormat::BGRA8_Unorm:
+        case DataFormat::ABGR10_UNorm_Pack32:
+        case DataFormat::RGBA16_SFloat:
+        case DataFormat::RGB32_SFloat:
+        case DataFormat::RGBA32_SFloat:
+        case DataFormat::R11G11B10_UFloat:
+        case DataFormat::R8_UNorm:
+        case DataFormat::R16_SFloat:
+        case DataFormat::R32_SFloat:
+        case DataFormat::RG8_UNorm:
+        case DataFormat::RG16_SFloat:
+        case DataFormat::RG32_SFloat:
+        case DataFormat::BC7_UNorm:
+        case DataFormat::BC4_UNorm:
+        case DataFormat::BC5_UNorm:
+        case DataFormat::BC6H_UFloat:
+        case DataFormat::BC6H_SFloat:
+        case DataFormat::Undefined:
+        case DataFormat::Count:
+            return false;
+        }
+
+        return false;
+    }
+
     [[nodiscard]] constexpr bool dataFormatHasDepth(DataFormat format) noexcept
     {
         switch (format)

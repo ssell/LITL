@@ -36,6 +36,7 @@ namespace litl
         GraphicsPipelineHandle m_graphicsPipelineHandle{};
         ToneMapper m_tonemapper{ ToneMapper::None };
         float m_tonemapExposure{ 1.0f };
+        bool m_requireManualSRGB{ false };
     };
 }
 

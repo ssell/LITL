@@ -2,6 +2,7 @@
 #include "litl-core/services/serviceProvider.hpp"
 #include "litl-engine/assets/assetManager.hpp"
 #include "litl-engine/objects/objectPool.hpp"
+#include "litl-engine/render/renderManager.hpp"
 #include "litl-engine/render/renderPassContext.hpp"
 #include "litl-engine/render/passes/blitPass.hpp"
 #include "litl-renderer/renderer.hpp"
@@ -27,8 +28,9 @@ namespace litl
             float zFar{ 0.0f };
             float exposure{ 1.0f };         // Linear multiplier applied to the sampled color before passing to the tonemapper.
             uint32_t tonemapper{ static_cast<uint32_t>(ToneMapper::None) };
+            uint32_t convertSRGB{ 0u };
 
-            [[nodiscard]] static BlitPushConstants create(RenderView const& renderView, Texture* color, Texture* depth, ToneMapper tonemapper, float exposure) noexcept
+            [[nodiscard]] static BlitPushConstants create(RenderView const& renderView, Texture* color, Texture* depth, ToneMapper tonemapper, float exposure, bool convertSRGB) noexcept
             {
                 BlitPushConstants pushConstants{};
 
@@ -51,6 +53,7 @@ namespace litl
 
                 pushConstants.tonemapper = static_cast<uint32_t>(tonemapper);
                 pushConstants.exposure = exposure;
+                pushConstants.convertSRGB = convertSRGB;
 
                 return pushConstants;
             }
@@ -62,6 +65,12 @@ namespace litl
         RenderPass::setup(services, renderManager, objectPool);
         m_pAssetManager = services.get<AssetManager>().get();
         m_shaderAssetHandle = m_pAssetManager->getShaderHandle("litl/shaders/blit");
+
+        if (!dataFormatIsSRGB(renderManager.getRenderer()->getSwapchainImageFormat()))
+        {
+            // Swapchain is not a _SRGB format, so we will need to manually convert during the blit.
+            m_requireManualSRGB = true;
+        }
     }
 
     void BlitPass::setToneMapper(ToneMapper tonemapper) noexcept
@@ -120,7 +129,7 @@ namespace litl
                         continue;
                     }
 
-                    const BlitPushConstants pushConstants = BlitPushConstants::create(renderView, renderViewSources.color, renderViewSources.depth, m_tonemapper, m_tonemapExposure);
+                    const BlitPushConstants pushConstants = BlitPushConstants::create(renderView, renderViewSources.color, renderViewSources.depth, m_tonemapper, m_tonemapExposure, m_requireManualSRGB);
 
                     m_pRenderer->cmdSetViewportAndScissor(context.commandBufferHandle, createSetViewportAndScissorCommand(renderView, true));
                     m_pRenderer->cmdBindGraphicsPipeline(context.commandBufferHandle, m_graphicsPipelineHandle);
