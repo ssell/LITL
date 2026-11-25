@@ -926,4 +926,24 @@ namespace litl
 
         return m_pImpl->defaultTextures[index];
     }
+
+    void RenderManager::setToneMap(ToneMapper tonemap) noexcept
+    {
+        static_cast<BlitPass*>(&m_pImpl->getRenderPass(RenderPassType::Blit))->setToneMapper(tonemap);
+    }
+
+    void RenderManager::setToneMapExposure(float exposure) noexcept
+    {
+        static_cast<BlitPass*>(&m_pImpl->getRenderPass(RenderPassType::Blit))->setToneMapExposure(exposure);
+    }
+
+    ToneMapper RenderManager::getToneMapper() const noexcept
+    {
+        return static_cast<BlitPass*>(&m_pImpl->getRenderPass(RenderPassType::Blit))->getToneMapper();
+    }
+
+    float RenderManager::getToneMapExposure() const noexcept
+    {
+        return static_cast<BlitPass*>(&m_pImpl->getRenderPass(RenderPassType::Blit))->getToneMapExposure();
+    }
 }

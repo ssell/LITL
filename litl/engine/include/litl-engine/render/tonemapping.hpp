@@ -1,5 +1,5 @@
-#ifndef LITL_ENGINE_LIGHTS_TONEMAPPING_H__
-#define LITL_ENGINE_LIGHTS_TONEMAPPING_H__
+#ifndef LITL_ENGINE_RENDER_TONEMAPPING_H__
+#define LITL_ENGINE_RENDER_TONEMAPPING_H__
 
 #include <cstdint>
 
@@ -9,7 +9,9 @@ namespace litl
     {
         None = 0u,
         ACES = 1u,
-        KronosNeutralPBR = 2u
+        KronosNeutralPBR = 2u,
+
+        Count
     };
 }
 

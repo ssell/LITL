@@ -10,6 +10,7 @@
 #include "litl-engine/render/renderAttachmentFormats.hpp"
 #include "litl-engine/render/renderPass.hpp"
 #include "litl-engine/objects/objectHandles.hpp"
+#include "litl-engine/render/tonemapping.hpp"
 
 namespace litl
 {
@@ -53,7 +54,31 @@ namespace litl
         /// </summary>
         [[nodiscard]] RenderAttachmentFormats getSwapchainRenderFormats() const noexcept;
 
+        /// <summary>
+        /// 
+        /// </summary>
         [[nodiscard]] TextureHandle getDefaultTextureHandle(TextureTableReservedIndices textureIndex) const noexcept;
+
+        /// <summary>
+        /// Sets the tone map used by the final blit pass to pushes to the swapchain.
+        /// </summary>
+        void setToneMap(ToneMapper tonemapper) noexcept;
+
+        /// <summary>
+        /// Sets the exposure value of the tone map used the final blit pass to pushes to the swapchain.
+        /// </summary>
+        /// <param name="exposure"></param>
+        void setToneMapExposure(float exposure) noexcept;
+
+        /// <summary>
+        /// Returns the tonemapper currently being used.
+        /// </summary>
+        [[nodiscard]] ToneMapper getToneMapper() const noexcept;
+
+        /// <summary>
+        /// Returns the exposure currently being applied to the tonemapper.
+        /// </summary>
+        [[nodiscard]] float getToneMapExposure() const noexcept;
 
     private:
 

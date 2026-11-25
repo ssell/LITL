@@ -76,11 +76,44 @@ namespace litl::samples
 
                 return InputCallbackResult::Continue;
             });
+
+        callbacks.inputCallbacks->registerKeyCallback(Key::Tilde, [](ServiceProvider& services, Key key, bool pressed, bool released, bool down)
+            {
+                if (released)
+                {
+                    auto renderer = services.get<RenderManager>();
+                    renderer->setToneMap(static_cast<ToneMapper>((static_cast<uint32_t>(renderer->getToneMapper()) + 1u) % static_cast<uint32_t>(ToneMapper::Count)));
+                }
+                
+                return InputCallbackResult::Continue;
+            }, InputCallbackPriority::Debug);
+
+        callbacks.inputCallbacks->registerKeyCallback(Key::D1, [](ServiceProvider& services, Key key, bool pressed, bool released, bool down)
+            {
+                if (released)
+                {
+                    auto renderer = services.get<RenderManager>();
+                    renderer->setToneMapExposure(renderer->getToneMapExposure() - 0.1f);
+                }
+
+                return InputCallbackResult::Continue;
+            }, InputCallbackPriority::Debug);
+
+        callbacks.inputCallbacks->registerKeyCallback(Key::D2, [](ServiceProvider& services, Key key, bool pressed, bool released, bool down)
+            {
+                if (released)
+                {
+                    auto renderer = services.get<RenderManager>();
+                    renderer->setToneMapExposure(renderer->getToneMapExposure() + 0.1f);
+                }
+
+                return InputCallbackResult::Continue;
+            }, InputCallbackPriority::Debug);
     }
 
     void cameraBootstrap(EntityCommands& commands, std::shared_ptr<ObjectPool> objectPool, std::shared_ptr<SceneView> sceneView, std::shared_ptr<AssetManager> assets, bool addAltCamera) noexcept
     {
-        const auto* mainCamera = createMainCamera(color{ 60.0f / 255.0f, 82.0f / 255.0f, 168.0f / 255.0f }, vec3(-5.0f, 1.5f, 0.25f), vec3(5.0f, 1.5f, 0.25f), vec3::up(), *objectPool, *sceneView, true);
+        const auto* mainCamera = createMainCamera(color{ 30.0f / 255.0f, 70.0f / 255.0f, 128.0f / 255.0f }, vec3(-5.0f, 1.5f, 0.25f), vec3(5.0f, 1.5f, 0.25f), vec3::up(), *objectPool, *sceneView, true);
         commands.addComponent<FreeFlyController>(mainCamera->getEntity());
         commands.addComponent<PendingModelInstance>(mainCamera->getEntity(), createModelInstance("litl/models/sphere", "litl/materials/lit", *assets));
         commands.addComponent<LocalBounds>(mainCamera->getEntity());
@@ -114,7 +147,7 @@ namespace litl::samples
         commands.addComponent<DirectionalLight>(dirLightEntity, DirectionalLight{ .color = color{ 0.95f, 0.95f, 1.0f }, .intensity = 1.5f, .castsShadows = true });
         //commands.addComponent<Spin>(dirLightEntity, Spin{ .rate = 50.0f });
 
-        lights->setAmbientColor(color(0.1f, 0.075f, 0.1f, 1.0f));
+        lights->setAmbientColor(color(0.2f, 0.15f, 0.2f, 1.0f));
     }
 
     void sponzaBootstrap(EntityCommands& commands, std::shared_ptr<AssetManager> assets) noexcept

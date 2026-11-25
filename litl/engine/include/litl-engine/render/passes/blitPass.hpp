@@ -5,9 +5,9 @@
 
 #include "litl-engine/assets/assetHandle.hpp"
 #include "litl-engine/render/renderPass.hpp"
+#include "litl-engine/render/tonemapping.hpp"
 #include "litl-renderer/resources/handles.hpp"
 #include "litl-renderer/resources/shaderModuleTypes.hpp"
-
 namespace litl
 {
     class AssetManager;
@@ -21,6 +21,10 @@ namespace litl
 
         void setup(ServiceProvider& services, RenderManager& renderManager, ObjectPool& objectPool) noexcept override;
         void render(RenderPassContext const& context) noexcept override;
+        void setToneMapper(ToneMapper tonemapper) noexcept;
+        void setToneMapExposure(float exposure) noexcept;
+        [[nodiscard]] ToneMapper getToneMapper() const noexcept;
+        [[nodiscard]] float getToneMapExposure() const noexcept;
 
     private:
 
@@ -30,6 +34,8 @@ namespace litl
         AssetManager* m_pAssetManager{ nullptr };
         ShaderAssetHandle m_shaderAssetHandle{};
         GraphicsPipelineHandle m_graphicsPipelineHandle{};
+        ToneMapper m_tonemapper{ ToneMapper::None };
+        float m_tonemapExposure{ 1.0f };
     };
 }
 

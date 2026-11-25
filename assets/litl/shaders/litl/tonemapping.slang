@@ -5,7 +5,7 @@
 
 module tonemapping;
 
-// Must match ToneMapper in engine/lights/tonemapping.hpp
+// Must match ToneMapper in litl-engine/render/tonemapping.hpp
 public static const uint ToneMapNone = 0;
 public static const uint ToneMapACES = 1;
 public static const uint ToneMapKhronosNeutralPBR = 2;

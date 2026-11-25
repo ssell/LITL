@@ -172,6 +172,7 @@ namespace litl
         Right          = 75u,
         Down           = 76u,
         // Punctuation (US layout)
+        Grave          = 77u,       // ` ~
         Tilde          = 77u,       // ` ~
         Minus          = 78u,       // - _
         Equals         = 79u,       // = +

@@ -4,7 +4,6 @@
 #include "litl-engine/objects/objectPool.hpp"
 #include "litl-engine/render/renderPassContext.hpp"
 #include "litl-engine/render/passes/blitPass.hpp"
-#include "litl-engine/lights/tonemapping.hpp"
 #include "litl-renderer/renderer.hpp"
 #include "litl-renderer/utility.hpp"
 
@@ -29,7 +28,7 @@ namespace litl
             float exposure{ 1.0f };         // Linear multiplier applied to the sampled color before passing to the tonemapper.
             uint32_t tonemapper{ static_cast<uint32_t>(ToneMapper::None) };
 
-            [[nodiscard]] static BlitPushConstants create(RenderView const& renderView, Texture* color, Texture* depth) noexcept
+            [[nodiscard]] static BlitPushConstants create(RenderView const& renderView, Texture* color, Texture* depth, ToneMapper tonemapper, float exposure) noexcept
             {
                 BlitPushConstants pushConstants{};
 
@@ -50,6 +49,9 @@ namespace litl
                     pushConstants.zFar = renderView.view.far;
                 }
 
+                pushConstants.tonemapper = static_cast<uint32_t>(tonemapper);
+                pushConstants.exposure = exposure;
+
                 return pushConstants;
             }
         };
@@ -60,6 +62,26 @@ namespace litl
         RenderPass::setup(services, renderManager, objectPool);
         m_pAssetManager = services.get<AssetManager>().get();
         m_shaderAssetHandle = m_pAssetManager->getShaderHandle("litl/shaders/blit");
+    }
+
+    void BlitPass::setToneMapper(ToneMapper tonemapper) noexcept
+    {
+        m_tonemapper = tonemapper;
+    }
+
+    void BlitPass::setToneMapExposure(float exposure) noexcept
+    {
+        m_tonemapExposure = max(exposure, 0.0f);
+    }
+
+    ToneMapper BlitPass::getToneMapper() const noexcept
+    {
+        return m_tonemapper;
+    }
+
+    float BlitPass::getToneMapExposure() const noexcept
+    {
+        return m_tonemapExposure;
     }
 
     void BlitPass::render(RenderPassContext const& context) noexcept
@@ -98,7 +120,7 @@ namespace litl
                         continue;
                     }
 
-                    const BlitPushConstants pushConstants = BlitPushConstants::create(renderView, renderViewSources.color, renderViewSources.depth);
+                    const BlitPushConstants pushConstants = BlitPushConstants::create(renderView, renderViewSources.color, renderViewSources.depth, m_tonemapper, m_tonemapExposure);
 
                     m_pRenderer->cmdSetViewportAndScissor(context.commandBufferHandle, createSetViewportAndScissorCommand(renderView, true));
                     m_pRenderer->cmdBindGraphicsPipeline(context.commandBufferHandle, m_graphicsPipelineHandle);
