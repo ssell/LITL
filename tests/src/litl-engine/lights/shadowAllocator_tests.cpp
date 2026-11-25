@@ -22,7 +22,7 @@ namespace litl::tests
 
         [[nodiscard]] ShadowKey directionalKey(uint32_t entityIndex, uint32_t cameraSlot, uint32_t version = 0u)
         {
-            return ShadowKey{ .light = Entity{.index = entityIndex, .version = version }, .cameraSlot = cameraSlot };
+            return ShadowKey{ .light = Entity{.index = entityIndex, .version = version }, .camera = CameraHandle {.index = cameraSlot, .version = 1u} };
         }
 
         [[nodiscard]] bool overlaps(LayerRange const& a, LayerRange const& b)
