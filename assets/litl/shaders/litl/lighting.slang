@@ -41,6 +41,22 @@ public struct ShadowInputs
     public float viewDepth;
 };
 
+public float calcDirectionalLightShadowCascadeIndex(in ShadowInputs shadow)
+{
+    uint cidx = 0;
+
+    // Select the first cadcade whose far split is beyond this fragment
+    for (; cidx < shadow.data->cascadeCount; ++cidx)
+    {
+        if (shadow.viewDepth < shadow.data->cascadeSplits[cidx])
+        {
+            break;
+        }
+    }
+
+    return cidx;
+}
+
 float sampleCascade(in ShadowRenderViewData* data, in ShadowInputs shadow, float3 L, uint cidx)
 {
     // Normal offset. Push the lookup position along the geometric normal before projecting.
@@ -79,16 +95,7 @@ float calcDirectionalLightShadow(in float3 L, in ShadowInputs shadow, uint light
 
     ShadowRenderViewData* data = shadow.data;
     const uint count = data->cascadeCount;
-    uint cidx = 0;
-
-    // Select the first cadcade whose far split is beyond this fragment
-    for (; cidx < count; ++cidx)
-    {
-        if (shadow.viewDepth < data->cascadeSplits[cidx])
-        {
-            break;
-        }
-    }
+    const uint cidx = calcDirectionalLightShadowCascadeIndex(shadow);
 
     // If the furthest cascade no blending can/needs to be done.
     if (cidx == count)

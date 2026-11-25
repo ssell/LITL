@@ -142,5 +142,10 @@ FragmentOutput fragmentMain(VertexOutput input, bool isFrontFace: SV_IsFrontFace
         output.color.rgb *= baseColor.a;
     }
 
+    // --- DEBUG - Output cascade indices ---
+    //const uint cidx = calcDirectionalLightShadowCascadeIndex(shadowInput);
+    //const float cfrac = saturate(float(cidx) / float(shadowInput.data->cascadeCount));
+    //output.color = float4(cfrac.rrr, 1.0f);
+
     return output;
 }
