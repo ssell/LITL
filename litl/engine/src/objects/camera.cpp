@@ -19,6 +19,7 @@ namespace litl
         m_entity = world.createImmediate();
         m_pWorld = &world;
         m_renderTextureHandle = m_descriptor.renderTexture;
+        m_handle = handle;
 
         recalculateTanHalfFov();
         rebuildProjectionMatrix();
@@ -75,6 +76,11 @@ namespace litl
     void Camera::destroy(Authority<ObjectPool> auth) noexcept
     {
         // ... todo? ...
+    }
+
+    CameraHandle Camera::getHandle() const noexcept
+    {
+        return m_handle;
     }
 
     void Camera::update(Authority<Scene> authority, mat4 worldMatrix) noexcept

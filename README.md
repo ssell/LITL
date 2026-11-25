@@ -1,6 +1,6 @@
 # LITL Engine
 
-**Current Version:** v0.3.0
+**Current Version:** v0.4.0
 
 This is a learning engine and very (very) early in development. It is public merely to show that it exists, but not for it to see any use (yet).
 
@@ -40,9 +40,11 @@ _Future release. Planned features include: editor._
 
 _Future release. Planned features include: deferred rendering, post-processing stack._
 
-### Version 0.4
+### [Version 0.4 on 2026-11-25](https://github.com/ssell/LITL/releases/tag/v0.4.0)
 
-_Future release. Planned features include: render targets, render passes, directional light, primary directional light cascaded shadowmaps._
+**Primary focus: Directional Light and Shadows**
+
+Features include: render targets, render passes, alpha cutoff, blending, directional light, cascaded shadow maps, PBR BRDF, multiple camera support, and tonemapping (ACES, Khronos Neutral). See the linked tagged release for a more complete list of updates.
 
 ### [Version 0.3 on 2026-10-23](https://github.com/ssell/LITL/releases/tag/v0.3.0)
 

@@ -194,6 +194,11 @@ namespace litl
         void destroy(Authority<ObjectPool> auth) noexcept;
 
         /// <summary>
+        /// Returns the handle that points to this camera instance.
+        /// </summary>
+        [[nodiscard]] CameraHandle getHandle() const noexcept;
+
+        /// <summary>
         /// Updates the cameras view matrix, world position, etc. with the provided world matrix.
         /// </summary>
         /// <param name="worldMatrix"></param>
@@ -489,6 +494,11 @@ namespace litl
         /// The entity associated with this camera.
         /// </summary>
         Entity m_entity{};
+
+        /// <summary>
+        /// Handle that points to this camera instance.
+        /// </summary>
+        CameraHandle m_handle{};
 
         /// <summary>
         /// Active render texture handle.

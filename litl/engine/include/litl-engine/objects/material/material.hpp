@@ -147,10 +147,10 @@ namespace litl
         /// <summary>
         /// 
         /// </summary>
-        void setSelfHandle(Authority<ObjectPool> author, MaterialHandle handle) noexcept;
+        void setSelfHandle(Authority<ObjectPool> auth, MaterialHandle handle) noexcept;
 
         /// <summary>
-        /// 
+        /// Returns the handle that points to this material instance.
         /// </summary>
         [[nodiscard]] MaterialHandle getHandle() const noexcept;
 

@@ -7,13 +7,14 @@
 #include "litl-core/layerRangeAllocator.hpp"
 #include "litl-ecs/entity/entity.hpp"
 #include "litl-engine/lights/shadows/shadowCasterType.hpp"
+#include "litl-engine/objects/objectHandles.hpp"
 
 namespace litl
 {
     struct ShadowKey
     {
         Entity light{};
-        uint32_t cameraSlot{ constants::uint32_null_index };
+        CameraHandle camera{};
         auto operator<=>(ShadowKey const&) const = default;
     };
 

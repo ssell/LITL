@@ -15,6 +15,7 @@ namespace litl
         uint32_t version{ 0u };
 
         [[nodiscard]] bool operator==(Handle const&) const noexcept = default;
+        [[nodiscard]] auto operator<=>(Handle const&) const noexcept = default;
         [[nodiscard]] bool isValid() const noexcept { return version != 0; }
     };
 }

@@ -254,7 +254,7 @@ namespace litl
             const uint32_t cascadeCount = clamp(camera.getDescriptor().shadows.cascadeCount, 1u, constants::MaxShadowCascades);
 
             const auto acquired = allocator.acquire(
-                ShadowKey{ .light = light.entity, .cameraSlot = slot },
+                ShadowKey{ .light = light.entity, .camera = camera.getHandle() },
                 ShadowCasterType::Directional,
                 cascadeCount,
                 frameCount
