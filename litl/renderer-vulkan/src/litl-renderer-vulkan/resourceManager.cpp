@@ -325,48 +325,7 @@ namespace litl::vulkan
     }
 
     //--------------------------------------------------------------------------------------
-    // ComputePipeline
-    //--------------------------------------------------------------------------------------
-
-    /// <summary>
-    /// Creates the resource.
-    /// This is split out because two paths need to be able to create a compute pipeline resource: createComputePipeline and onShaderModuleReload.
-    /// </summary>
-    /// <param name="resources"></param>
-    /// <param name="context"></param>
-    /// <param name="resource"></param>
-    /// <param name="descriptor"></param>
-    /// <returns></returns>
-    bool createComputePipelineResource(ResourceManager& resources, RendererContext* context, ComputePipelineResource& resource, ComputePipelineDescriptor const& descriptor)
-    {
-        // ... todo ...
-
-        return true;
-    }
-
-    ComputePipelineHandle ResourceManager::createComputePipeline(ComputePipelineDescriptor const& descriptor) noexcept
-    {
-        // ... todo ...
-        // ... remember to update shader module reference map ...
-        return ComputePipelineHandle{};
-    }
-
-    ComputePipelineResource* ResourceManager::getComputePipeline(ComputePipelineHandle handle) noexcept
-    {
-        return m_computePipelinePool.get(handle);
-    }
-
-    void ResourceManager::destroyComputePipeline(ComputePipelineHandle handle) noexcept
-    {
-        if (m_computePipelinePool.destroy(handle))
-        {
-            // ... todo ...
-            // ... remember to update shader module reference map ...
-        }
-    }
-
-    //--------------------------------------------------------------------------------------
-    // GraphicsPipeline
+    // Shared Compute and Graphics
     //--------------------------------------------------------------------------------------
 
     namespace
@@ -380,76 +339,242 @@ namespace litl::vulkan
             std::vector<VkSpecializationMapEntry> vkSpecEntries;
             std::vector<std::byte> data;
         };
+
+        void createVkSpecializationInfo(SpecializationConstants const& specConstants, SpecConstantData& specConstantData) noexcept
+        {
+            if (specConstants.entries.empty())
+            {
+                return;
+            }
+
+            specConstantData.vkSpecEntries.reserve(specConstants.entries.size());
+
+            uint64_t totalByteSize = 0ull;
+
+            for (const auto& entry : specConstants.entries)
+            {
+                totalByteSize += entry.size;
+            }
+
+            specConstantData.data.resize(totalByteSize, std::byte(0));
+            uint64_t offset = 0ull;
+
+            for (const auto& entry : specConstants.entries)
+            {
+                specConstantData.vkSpecEntries.push_back(VkSpecializationMapEntry{
+                    .constantID = entry.id,
+                    .offset = static_cast<uint32_t>(totalByteSize),
+                    .size = entry.size
+                    });
+
+                std::memcpy(specConstantData.data.data() + offset, entry.data.data(), entry.size);
+                offset += entry.size;
+            }
+
+            specConstantData.vkSpecConstants.mapEntryCount = static_cast<uint32_t>(specConstantData.vkSpecEntries.size());
+            specConstantData.vkSpecConstants.pMapEntries = specConstantData.vkSpecEntries.data();
+            specConstantData.vkSpecConstants.dataSize = specConstantData.data.size();
+            specConstantData.vkSpecConstants.pData = specConstantData.data.data();
+        }
+
+        void createPipelineShaderStageCreateInfo(ShaderModuleResource* resource, PipelineShaderDescriptor const& shaderDescriptor, std::array<VkPipelineShaderStageCreateInfo, 7>& stages, uint32_t& count, PipelineLayoutDescriptorCreateInfo& pipelineLayoutDescriptorCreateInfo, VkSpecializationInfo const& vkSpecConstants) noexcept
+        {
+            if (resource == nullptr)
+            {
+                return;
+            }
+
+            auto entryPoint = resource->reflection.getEntryPoint(shaderDescriptor.entryPoint);
+
+            if (!entryPoint.has_value() || (*entryPoint) == nullptr)
+            {
+                logWarning("Vulkan Graphics Pipeline creation requested invalid shader with entry point of '", shaderDescriptor.entryPoint, "'");
+                return;
+            }
+
+            stages[count++] = VkPipelineShaderStageCreateInfo{
+                    .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+                    .pNext = nullptr,
+                    .flags = 0,
+                    .stage = static_cast<VkShaderStageFlagBits>(toVkShaderStageFlags(shaderDescriptor.stage)),
+                    .module = resource->vkShaderModule,
+                    .pName = shaderDescriptor.entryPoint.c_str(),
+                    .pSpecializationInfo = &vkSpecConstants
+            };
+
+            pipelineLayoutDescriptorCreateInfo.stages.push_back(PipelineLayoutDescriptorShaderModuleInfo{
+                .resource = resource,
+                .stage = shaderDescriptor.stage,
+                .entryPoint = shaderDescriptor.entryPoint
+                });
+        }
+
+        /// <summary>
+        /// From the merge pipeline layout descriptors, populates the PipelineResourceMap which is used during buffer/resource binding
+        /// to map a resource name (in the form of a StringId) to the bound resource set, binding, and type.
+        /// </summary>
+        void populatePipelineResourceMap(std::vector<PipelineResourceBinding>& resourceMapBindings, PipelineLayoutDescriptor const& pipelineLayout) noexcept
+        {
+            for (uint32_t set = 0u; set < static_cast<uint32_t>(pipelineLayout.setLayouts.size()); ++set)
+            {
+                for (uint32_t binding = 0u; binding < static_cast<uint32_t>(pipelineLayout.setLayouts[set].bindings.size()); ++binding)
+                {
+                    auto& boundResource = pipelineLayout.setLayouts[set].bindings[binding];
+
+                    resourceMapBindings.push_back(PipelineResourceBinding{
+                        .id = boundResource.id,
+                        .type = boundResource.type,
+                        .set = set,
+                        .binding = boundResource.binding
+                        });
+                }
+            }
+        }
+
+        [[nodiscard]] VkPipelineLayout createVkPipelineLayout(ResourceManager& resources, PipelineLayoutDescriptorCreateInfo& pipelineLayoutDescriptorCreateInfo, PipelineResource& pipelineResource) noexcept
+        {
+            PipelineLayoutDescriptor pipelineLayoutDescriptor{};
+            const MergeShaderReflectionResult mergeResult = createPipelineLayoutDescriptor(pipelineLayoutDescriptorCreateInfo, pipelineLayoutDescriptor);
+
+            if (mergeResult != MergeShaderReflectionResult::Success)
+            {
+                logError("Failed to create Vulkan Compute Pipeline due to failed pipeline layout merger with result '", MergeShaderReflectionResultStrings[static_cast<uint32_t>(mergeResult)], "'");
+                return VK_NULL_HANDLE;
+            }
+
+            const VkPipelineLayout vkPipelineLayout = resources.getOrCreatePipelineLayout(pipelineLayoutDescriptor);
+
+            if (vkPipelineLayout == VK_NULL_HANDLE)
+            {
+                logError("Failed to create Vulkan Compute Pipeline due to failure to get or create Pipeline Layout");
+                return VK_NULL_HANDLE;
+            }
+
+            populatePipelineResourceMap(pipelineResource.resourceMap.resources, pipelineLayoutDescriptor);
+
+            pipelineResource.setLayouts.reserve(pipelineLayoutDescriptor.setLayouts.size());
+
+            for (auto i = 0u; i < static_cast<uint32_t>(pipelineLayoutDescriptor.setLayouts.size()); ++i)
+            {
+                pipelineResource.setLayouts.push_back(resources.getOrCreateSetLayout(pipelineLayoutDescriptor.setLayouts[i], i));
+            }
+
+            for (auto const& pushConstant : pipelineLayoutDescriptor.pushConstants)
+            {
+                pipelineResource.pushConstantStages |= pushConstant.stages;
+            }
+
+            return vkPipelineLayout;
+        }
     }
 
-    void createVkSpecializationInfo(SpecializationConstants const& specConstants, SpecConstantData& specConstantData) noexcept
+    //--------------------------------------------------------------------------------------
+    // ComputePipeline
+    //--------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// Creates the resource.
+    /// This is split out because two paths need to be able to create a compute pipeline resource: createComputePipeline and onShaderModuleReload.
+    /// </summary>
+    bool createComputePipelineResource(ResourceManager& resources, RendererContext* context, ComputePipelineResource& resource, ComputePipelineDescriptor const& descriptor)
     {
-        if (specConstants.entries.empty())
+        // ---- Shader Stage
+        // Reuse helpers from the graphics pipeline where possible (hence the 7 element array).
+
+        uint32_t shaderStageCount = 0u;
+        std::array<VkPipelineShaderStageCreateInfo, 7u> shaderStages;
+        PipelineLayoutDescriptorCreateInfo pipelineLayoutDescriptorCreateInfo{};
+        SpecConstantData specConstantData{};
+
+        createVkSpecializationInfo(descriptor.specializationConstants, specConstantData);
+        createPipelineShaderStageCreateInfo(resources.getShaderModule(descriptor.compute.handle), descriptor.compute, shaderStages, shaderStageCount, pipelineLayoutDescriptorCreateInfo, specConstantData.vkSpecConstants);
+
+        if (shaderStageCount != 1u)
         {
-            return;
+            logError("Failed to create Vulkan Compute Pipeline: missing or invalid compute shader '", descriptor.compute.entryPoint, "'");
+            return false;
         }
 
-        specConstantData.vkSpecEntries.reserve(specConstants.entries.size());
+        // ---- Pipeline Layout
 
-        uint64_t totalByteSize = 0ull;
+        const VkPipelineLayout vkPipelineLayout = createVkPipelineLayout(resources, pipelineLayoutDescriptorCreateInfo, resource.pipeline);
 
-        for (const auto& entry : specConstants.entries)
+        if (vkPipelineLayout == VK_NULL_HANDLE)
         {
-            totalByteSize += entry.size;
+            logError("Failed to create Vulkan Compute Pipeline due to failure to create pipeline layout");
+            return false;
         }
 
-        specConstantData.data.resize(totalByteSize, std::byte(0));
-        uint64_t offset = 0ull;
+        // ---- Create the pipeline
 
-        for (const auto& entry : specConstants.entries)
-        {
-            specConstantData.vkSpecEntries.push_back(VkSpecializationMapEntry{
-                .constantID = entry.id,
-                .offset = static_cast<uint32_t>(totalByteSize),
-                .size = entry.size
-            });
-
-            std::memcpy(specConstantData.data.data() + offset, entry.data.data(), entry.size);
-            offset += entry.size;
-        }
-
-        specConstantData.vkSpecConstants.mapEntryCount = static_cast<uint32_t>(specConstantData.vkSpecEntries.size());
-        specConstantData.vkSpecConstants.pMapEntries = specConstantData.vkSpecEntries.data();
-        specConstantData.vkSpecConstants.dataSize = specConstantData.data.size();
-        specConstantData.vkSpecConstants.pData = specConstantData.data.data();
-    }
-
-    void createPipelineShaderStageCreateInfo(ShaderModuleResource* resource, PipelineShaderDescriptor const& shaderDescriptor, std::array<VkPipelineShaderStageCreateInfo, 7>& stages, uint32_t& count, PipelineLayoutDescriptorCreateInfo& pipelineLayoutDescriptorCreateInfo, VkSpecializationInfo const& vkSpecConstants) noexcept
-    {
-        if (resource == nullptr)
-        {
-            return;
-        }
-
-        auto entryPoint = resource->reflection.getEntryPoint(shaderDescriptor.entryPoint);
-
-        if (!entryPoint.has_value() || (*entryPoint) == nullptr)
-        {
-            logWarning("Vulkan Graphics Pipeline creation requested invalid shader with entry point of '", shaderDescriptor.entryPoint, "'");
-            return;
-        }
-
-        stages[count++] = VkPipelineShaderStageCreateInfo{
-                .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-                .pNext = nullptr,
-                .flags = 0,
-                .stage = static_cast<VkShaderStageFlagBits>(toVkShaderStageFlags(shaderDescriptor.stage)),
-                .module = resource->vkShaderModule,
-                .pName = shaderDescriptor.entryPoint.c_str(),
-                .pSpecializationInfo = &vkSpecConstants
+        const VkComputePipelineCreateInfo vkComputePipelineCreateInfo{
+            .sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0u,
+            .stage = shaderStages[0],
+            .layout = resource.pipeline.vkPipelineLayout,
+            .basePipelineHandle = VK_NULL_HANDLE,
+            .basePipelineIndex = -1
         };
 
-        pipelineLayoutDescriptorCreateInfo.stages.push_back(PipelineLayoutDescriptorShaderModuleInfo{
-            .resource = resource,
-            .stage = shaderDescriptor.stage,
-            .entryPoint = shaderDescriptor.entryPoint
-        });
+        const VkResult createComputePipelineResult = vkCreateComputePipelines(context->device.vkDevice, context->device.vkPipelineCache, 1u, &vkComputePipelineCreateInfo, nullptr, &resource.pipeline.vkPipeline);
+
+        if (createComputePipelineResult != VK_SUCCESS)
+        {
+            logError("Failed to create Vulkan Compute Pipeline with result ", createComputePipelineResult);
+            return false;
+        }
+
+        resource.pipeline.vkPipelineLayout = vkPipelineLayout;
+
+        return true;
     }
+
+    ComputePipelineHandle ResourceManager::createComputePipeline(ComputePipelineDescriptor const& descriptor) noexcept
+    {
+        ComputePipelineResource resource{};
+        ComputePipelineHandle handle{};
+
+        if (createComputePipelineResource(*this, m_pContext, resource, descriptor))
+        {
+            resource.descriptor = descriptor;
+            handle = m_computePipelinePool.create(resource);
+            m_shaderModuleReferenceMap.onComputePipelineAdded(this, m_computePipelinePool.get(handle));
+        }
+        else
+        {
+            logError("Error creating Vulkan Compute Pipeline");
+        }
+
+        return handle;
+    }
+
+    ComputePipelineResource* ResourceManager::getComputePipeline(ComputePipelineHandle handle) noexcept
+    {
+        return m_computePipelinePool.get(handle);
+    }
+
+    void ResourceManager::destroyComputePipeline(ComputePipelineHandle handle) noexcept
+    {
+        ComputePipelineResource* resource = m_computePipelinePool.get(handle);
+
+        if (resource != nullptr)
+        {
+            // Unmap before the pool destroys the slot as the map holds raw pointers into the pool.
+            m_shaderModuleReferenceMap.onComputePipelineDestroyed(this, resource);
+
+            if (resource->pipeline.vkPipeline != VK_NULL_HANDLE)
+            {
+                vkDestroyPipeline(m_pContext->device.vkDevice, resource->pipeline.vkPipeline, nullptr);
+            }
+
+            m_computePipelinePool.destroy(handle);
+        }
+    }
+
+    //--------------------------------------------------------------------------------------
+    // GraphicsPipeline
+    //--------------------------------------------------------------------------------------
 
     VkPipelineVertexInputStateCreateInfo createVertexInputStateCreateInfo(VertexInputState const& vertexInput, std::vector<VkVertexInputBindingDescription>& bindingDescriptions, std::vector<VkVertexInputAttributeDescription>& attributeDescriptions)
     {
@@ -484,30 +609,6 @@ namespace litl::vulkan
             .vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size()),
             .pVertexAttributeDescriptions = attributeDescriptions.data()
         };
-    }
-
-    /// <summary>
-    /// From the merge pipeline layout descriptors, populates the PipelineResourceMap which is used during buffer/resource binding
-    /// to map a resource name (in the form of a StringId) to the bound resource set, binding, and type.
-    /// </summary>
-    /// <param name="resource"></param>
-    /// <param name="pipelineLayout"></param>
-    void populatePipelineResourceMap(GraphicsPipelineResource& resource, PipelineLayoutDescriptor const& pipelineLayout) noexcept
-    {
-        for (uint32_t set = 0u; set < static_cast<uint32_t>(pipelineLayout.setLayouts.size()); ++set)
-        {
-            for (uint32_t binding = 0u; binding < static_cast<uint32_t>(pipelineLayout.setLayouts[set].bindings.size()); ++binding)
-            {
-                auto& boundResource = pipelineLayout.setLayouts[set].bindings[binding];
-
-                resource.pipeline.resourceMap.resources.push_back(PipelineResourceBinding{
-                    .id = boundResource.id,
-                    .type = boundResource.type,
-                    .set = set,
-                    .binding = boundResource.binding
-                });
-            }
-        }
     }
 
     /// <summary>
@@ -685,35 +786,12 @@ namespace litl::vulkan
 
         // ---- Pipeline Layout
 
-        PipelineLayoutDescriptor pipelineLayoutDescriptor{};
-        const MergeShaderReflectionResult mergePipelineLayoutResult = createPipelineLayoutDescriptor(pipelineLayoutDescriptorCreateInfo, pipelineLayoutDescriptor);
-
-        if (mergePipelineLayoutResult != MergeShaderReflectionResult::Success)
-        {
-            logError("Failed to create Vulkan Graphics Pipeline due to failed pipeline layout merger with result '", MergeShaderReflectionResultStrings[static_cast<uint32_t>(mergePipelineLayoutResult)], "' (", static_cast<uint32_t>(mergePipelineLayoutResult), ")");
-            return {};
-        }
-
-        const VkPipelineLayout vkPipelineLayout = resources.getOrCreatePipelineLayout(pipelineLayoutDescriptor);
+        const VkPipelineLayout vkPipelineLayout = createVkPipelineLayout(resources, pipelineLayoutDescriptorCreateInfo, resource.pipeline);
 
         if (vkPipelineLayout == VK_NULL_HANDLE)
         {
-            logError("Failed to create Vulkan Graphics Pipeline due to failure to get or create Pipeline Layout");
-            return {};
-        }
-
-        populatePipelineResourceMap(resource, pipelineLayoutDescriptor);
-
-        resource.pipeline.setLayouts.reserve(pipelineLayoutDescriptor.setLayouts.size());
-
-        for (auto i = 0u; i < pipelineLayoutDescriptor.setLayouts.size(); ++i)
-        {
-            resource.pipeline.setLayouts.push_back(resources.getOrCreateSetLayout(pipelineLayoutDescriptor.setLayouts[i], i));
-        }
-
-        for (auto i = 0u; i < pipelineLayoutDescriptor.pushConstants.size(); ++i)
-        {
-            resource.pipeline.pushConstantStages |= pipelineLayoutDescriptor.pushConstants[i].stages;
+            logError("Failed to create Vulkan Graphics Pipeline due to failure to create pipeline layout");
+            return false;
         }
 
         // ---- Rendering Info

@@ -3,6 +3,7 @@
 
 #include "litl-renderer/resources/handles.hpp"
 #include "litl-renderer/resources/shaderModule.hpp"
+#include "litl-renderer/resources/specializationConstants.hpp"
 #include "litl-renderer/enums.hpp"
 
 namespace litl
@@ -10,8 +11,7 @@ namespace litl
     struct ComputePipelineDescriptor
     {
         PipelineShaderDescriptor compute;
-
-        // ... todo ...
+        SpecializationConstants specializationConstants;
 
         PipelineShaderDescriptor* getShaderDescriptor(ShaderStage stage) noexcept
         {
